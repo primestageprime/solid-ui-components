@@ -4,14 +4,37 @@ SolidJS UI component library. All components accept standard HTML attributes via
 
 **Always prefer a curried variant over configuring a base component.** If no curried variant exists for your use case, propose one upstream rather than repeatedly passing the same props.
 
+## Theming
+
+Components use `--sui-*` CSS custom properties for all colors, spacing, and visual tokens. The library ships two built-in themes:
+
+- **`themes/default.css`** — Clean, neutral theme suitable for standard business applications.
+- **`themes/hud.css`** — Sci-fi / heads-up-display theme with glow effects, scan lines, and angular decorations.
+
+Import one theme in your app entry point:
+
+```ts
+import "solid-ui-components/themes/hud.css";
+```
+
+To create a custom theme, define `--sui-*` variables in a CSS file and import it instead. See the built-in themes for the full list of available tokens.
+
+**Shared types** exported from the library root:
+
+- `ColorVariant` — `"default" | "primary" | "danger" | "warning" | "success"`
+- `CornerStyle` — `"clip" | "bracket" | "notch" | "round" | "none"`
+
 ---
 
 ## Badge
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 
 ## Button
-- **Button** — Multi-variant button with loading spinner. Key props: `variant` (`default`|`primary`|`danger`|`ghost`), `size` (`sm`|`md`|`lg`), `loading`. Use for: all clickable actions. Disables automatically when loading.
+- **Button** — Multi-variant button with loading spinner. Key props: `variant` (`default`|`primary`|`danger`|`ghost`), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
 - **PrimaryButton / DangerButton / GhostButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props.
+
+## ButtonGroup
+- **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
 
 ## Card
 - **VesselCard** — Interactive card displaying a vessel with title, remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable vessel list items.
@@ -46,6 +69,9 @@ SolidJS UI component library. All components accept standard HTML attributes via
 - **Units** — Muted inline units suffix. Use for: appending unit text after values.
 - **Badge** — Backwards-compatible wrapper around StatusBadge. Key props: `variant` (`default`|`high`|`success`|`warning`|`error`). Use for: inline badges within data lists.
 
+## Divider
+- **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
+
 ## Feedback
 - **AlertBox** — Status-colored alert with title, description, and action slot. Key props: `variant` (`info`|`warning`|`success`|`danger`), `title`, `description`, `action`. Use for: warnings, errors, success messages, info banners.
 - **EmptyState** — Centered placeholder with icon and message. Key props: `variant` (`default`|`muted`|`accent`), `size` (`sm`|`md`|`lg`), `message`, `icon`. Use for: empty lists, no-data states, loading placeholders.
@@ -64,18 +90,6 @@ SolidJS UI component library. All components accept standard HTML attributes via
 ## HeatStreamGrid
 - **HeatStreamGrid** — Table where each cell contains a compact HeatStream. Key props: `rows`, `columns`, `keys`, `data` (function returning items per row/col), `onCellClick`, `selectionStore`. Use for: asset-by-time-window data completeness matrices with selection support.
 
-## HUD
-- **HUDPage** — Full-page container with optional scanline and grid overlays. Key props: `scanLines`, `gridPattern`. Use for: top-level sci-fi themed page wrapper.
-- **HUDSection** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `corners` (`clip`|`bracket`|`notch`|`round`|`none`), `variant`, `collapsible`, `collapsed`, `onToggleCollapse`, `headerAction`. Use for: major page sections.
-- **HUDPanel** — Styled panel with corner brackets, glow effects, and edge accents. Key props: `title`, `corners`, `variant`, `size` (`sm`|`md`|`lg`), `glow` (`none`|`subtle`|`medium`|`strong`), `edgeAccents`. Use for: decorated content containers.
-- **HUDModal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners`, `variant`, `size` (`sm`|`md`|`lg`|`xl`), `footer`, `showClose`. Use for: dialog windows.
-- **HUDConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on HUDModal. Key props: `open`, `onClose`, `onConfirm`, `title`, `description`, `confirmLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
-- **HUDTabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `HUDTab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color`. Use for: switching between views/panels.
-- **HUDButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons.
-- **HUDButton** — Styled button for use within HUDButtonGroup. Key props: `variant` (`default`|`primary`|`danger`|`ghost`), `active`. Use for: toggle-style button groups.
-- **HUDToggle** — Sci-fi toggle switch with multiple visual styles. Key props: `checked`, `onChange`, `label`, `labelPosition`, `variant` (`default`|`power`|`circuit`|`minimal`), `size`, `color`, `disabled`. Use for: on/off toggles in HUD-themed UI.
-- **HUDList / HUDListItem** — Styled list with status dots, icons, dividers. HUDList props: `variant` (`default`|`numbered`|`status`|`menu`), `dividers`, `compact`. HUDListItem props: `status`, `icon`, `secondary`, `interactive`, `selected`. Use for: status lists, menus, settings lists.
-
 ## Icon
 - **Icon** — SVG icon component with 27 named icons across 6 groups (status, navigation, data, time, actions, UI/cache). Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). Use for: all iconography. Spinner icon auto-animates.
 
@@ -89,15 +103,40 @@ SolidJS UI component library. All components accept standard HTML attributes via
 - **Box** — Flex child with grow/shrink control. Key props: `grow`, `shrink`. Use for: controlling flex item sizing.
 - Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
 
+## List
+- **List** — Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`. Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists.
+- **ListItem** — List item with status indicators and interactive states. Key props: `status` (`active`|`inactive`|`warning`|`error`|`success`), `icon`, `secondary`, `interactive`, `selected`. Use for: items within List.
+
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.
 - **FormulaVarRow** — Table `<tr>` that highlights when its corresponding formula variable is hovered. Key props: `varId`. Use for: variable definition rows that link to formula terms.
 
+## Modal
+- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`), `showClose`, `footer`. Use for: dialog windows.
+
+## ConfirmationModal
+- **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
+
 ## Navigation
 - **NavLink** — Anchor link with active state, color variants, and optional badge. Key props: `active`, `color` (`accent`|`warning`|`danger`|`success`), `badge`. Use for: navigation menus, sidebar links.
 - **Link** — Minimal themed anchor wrapper. Use for: inline text links.
 - **NewTabLink** — Link that always opens in a new tab (`target="_blank"`). Use for: external links.
+
+## Page
+- **Page** — Full-page container with optional scanline and grid overlays. Key props: `scanLines`, `gridPattern`. Use for: top-level page wrapper. Scanline and grid effects are theme-dependent.
+
+## Panel
+- **Panel** — Styled container with corner decorations, glow effects, and edge accents. Key props: `title`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`none`|`sm`|`md`|`lg` — replaces old `padding` prop), `glow` (`none`|`subtle`|`medium`|`strong`), `edgeAccents`. Has `createPanel` factory for curried variants. Use for: decorated content containers.
+- **InfoPanel** — Default color, subtle glow, clipped corners.
+- **AccentPanel** — Primary color, medium glow, bracket corners.
+- **DangerPanel** — Danger color, strong glow, clipped corners.
+- **WarningPanel** — Warning color, subtle glow, clipped corners.
+- **SuccessPanel** — Success color, subtle glow, clipped corners.
+- **CompactPanel** — Small size, no glow, clipped corners.
+- **DecoratedPanel** — Bracket corners with edge accents and medium glow.
+- **SimplePanel** — Small size, no decorations. (Formerly CompactJTFPanel.)
+- **SpaciousPanel** — Large size.
 
 ## Progress
 - **StackedProgressBar** — Multi-segment progress bar. Key props: `segments` (array of `{percentage, color}`), `direction` (`horizontal`|`vertical`), `label`, `background`. Use for: multi-category progress visualization, stacked bar charts.
@@ -108,9 +147,7 @@ SolidJS UI component library. All components accept standard HTML attributes via
 - **CacheProgressCard** — Pre-built 5-step cache workflow progress card (Minutes, Hours, Stats, Coverage, Calcs). Use for: data caching pipeline status.
 
 ## Section
-- **Section** — Content section with header, subtitle, and action slot. Key props: `title`, `subtitle`, `variant` (`default`|`bordered`|`decorated`), `fill`, `headerAction`. Use for: page content sections with optional corner decorations.
-- **Panel** — Simple titled container with padding control. Key props: `title`, `padding` (`none`|`sm`|`md`|`lg`). Use for: lightweight content grouping.
-- **Divider** — Content separator line. Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
+- **Section** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `variant` (`ColorVariant` — sets accent color), `corners` (`CornerStyle` — visual corner treatment; replaces old `"bordered"`/`"decorated"` variant values), `fill`, `showHeader`, `headerAction`, `collapsible`, `collapsed`, `onToggleCollapse`, `defaultExpanded`. Has `createSection` factory. Use for: major page sections.
 
 ## Selector
 - **SidebarSelector** — Sidebar card list with selection content area (generic). Key props: `items`, `selectedId`, `onSelect`, `renderCard`, `renderSelection`, `sidebarWidth`, `maxHeight`, `label`. Use for: master-detail selection patterns, sidebar navigation with preview pane.
@@ -128,6 +165,9 @@ SolidJS UI component library. All components accept standard HTML attributes via
 - **createSelectionStore / fromSignal** — Utilities to create or wrap selection state (`SelectionStore<Id>`). Use for: managing checkbox selection state, optionally backed by persistent storage.
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
+
+## Tabs
+- **Tabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `Tab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color` (`ColorVariant`). Exports `TabStatus` type (`"warning" | "error"`). Use for: switching between views/panels.
 
 ## Text
 - **Text** — Polymorphic text element with variant and color. Key props: `variant` (`value`|`label`|`title`|`body`|`units`|`sublabel`), `color`, `as` (`span`|`p`|`h1`..`h4`|`div`). Use for: all themed text rendering.
@@ -148,7 +188,7 @@ SolidJS UI component library. All components accept standard HTML attributes via
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
 
 ## Toggle
-- **Toggle** — Checkbox toggle switch with label positioning. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), plus all native checkbox attributes. Use for: boolean on/off controls in standard (non-HUD) UI.
+- **Toggle** — Checkbox toggle switch with label positioning and accent color. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), `variant` (`default`|`minimal`), `color` (`ColorVariant`), plus all native checkbox attributes. Note: `power` and `circuit` variants have been removed. Use for: boolean on/off controls.
 
 ## VesselCallHeader
 - **VesselCallHeader** — Vessel name + time range + duration + badge display. Key props: `vesselName`, `connectedAt`, `disconnectedAt`, `assetId`, `badge`, `action`, `href`. Use for: vessel call detail page headers, vessel call list item titles.

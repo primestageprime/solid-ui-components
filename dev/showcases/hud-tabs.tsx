@@ -1,7 +1,7 @@
 import { Component, createSignal } from "solid-js";
-import { HUDTabs } from "../../src/components/HUD";
+import { Tabs } from "../../src/components/Tabs";
 
-export const HUDTabsShowcase: Component = () => {
+export const TabsShowcase: Component = () => {
   const [active, setActive] = createSignal("overview");
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -12,21 +12,21 @@ export const HUDTabsShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>HUDTabs — Atomic (Depth 1)</h2>
+      <h2>Tabs — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Tab bar with variant styles.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Default (Underline)</h3>
-          <HUDTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
+          <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Boxed</h3>
-          <HUDTabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="boxed" />
+          <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="boxed" />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Pill</h3>
-          <HUDTabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="pill" />
+          <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="pill" />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — With Status</h3>
-          <HUDTabs
+          <Tabs
             tabs={[
               { id: "a", label: "Clean" },
               { id: "b", label: "Warning", status: "warning" },

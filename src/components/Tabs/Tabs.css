@@ -1,0 +1,57 @@
+/* ============================================
+   Tabs Component — Structural
+   ============================================ */
+.sui-tabs {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+
+.sui-tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Default tab style - underline indicator */
+.sui-tabs--default .sui-tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+/* Underline variant */
+.sui-tabs--underline {
+  gap: 4px;
+}
+
+/* Boxed variant */
+.sui-tabs--boxed {
+  padding: 4px;
+}
+
+/* Pill variant */
+.sui-tabs--pill {
+  gap: 8px;
+  padding: 4px;
+}
+
+/* Tab icon */
+.sui-tab__icon {
+  margin-right: 6px;
+}
+
+/* Tab status indicator */
+.sui-tab__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}

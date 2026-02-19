@@ -1,12 +1,12 @@
 import { Component, createSignal } from "solid-js";
-import { HUDConfirmationModal } from "../../src/components/HUD";
+import { ConfirmationModal } from "../../src/components/Modal";
 import { Button } from "../../src/components/Button";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
 }
 
-export const HUDConfirmationModalShowcase: Component<Depth2Props> = (props) => {
+export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
   const [open, setOpen] = createSignal(false);
   const [loading, setLoading] = createSignal(false);
   const [dangerOpen, setDangerOpen] = createSignal(false);
@@ -21,7 +21,7 @@ export const HUDConfirmationModalShowcase: Component<Depth2Props> = (props) => {
 
   return (
     <div class="component-section">
-      <h2>HUDConfirmationModal — Depth 2 (zero CSS)</h2>
+      <h2>ConfirmationModal — Depth 2 (zero CSS)</h2>
       <p class="text-meta">
         Composes HUDModal (Atomic) + Button (Atomic). Confirmation dialog with
         Cancel/Confirm footer, loading state, and scrollable body.
@@ -30,7 +30,7 @@ export const HUDConfirmationModalShowcase: Component<Depth2Props> = (props) => {
         <div class="depth2-composed">
           <h3>Composed — Standard Confirm</h3>
           <button class="demo-btn" onClick={() => setOpen(true)}>Open Confirmation</button>
-          <HUDConfirmationModal
+          <ConfirmationModal
             open={open()}
             onClose={() => { setOpen(false); setLoading(false); }}
             onConfirm={handleConfirm}
@@ -67,11 +67,11 @@ export const HUDConfirmationModalShowcase: Component<Depth2Props> = (props) => {
                 </tr>
               </tbody>
             </table>
-          </HUDConfirmationModal>
+          </ConfirmationModal>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Danger Variant</h3>
           <button class="demo-btn" onClick={() => setDangerOpen(true)}>Open Danger Confirm</button>
-          <HUDConfirmationModal
+          <ConfirmationModal
             open={dangerOpen()}
             onClose={() => setDangerOpen(false)}
             onConfirm={() => setDangerOpen(false)}
@@ -86,7 +86,7 @@ export const HUDConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             <p style={{ margin: "0", color: "var(--text-muted)", "font-size": "0.875rem" }}>
               3 records will be permanently removed.
             </p>
-          </HUDConfirmationModal>
+          </ConfirmationModal>
         </div>
         <div class="depth2-atoms">
           <h3>Sub-Components</h3>

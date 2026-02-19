@@ -1,0 +1,58 @@
+/* ============================================
+   Divider Component — Structural
+   ============================================ */
+.sui-divider {
+  border: none;
+  margin: 0;
+}
+
+.sui-divider--horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.sui-divider--vertical {
+  width: 1px;
+  height: 100%;
+}
+
+.sui-divider--dashed.sui-divider--horizontal {
+  height: 0;
+}
+
+.sui-divider--dashed.sui-divider--vertical {
+  width: 0;
+}
+
+.sui-divider--dotted.sui-divider--horizontal {
+  height: 0;
+}
+
+.sui-divider--dotted.sui-divider--vertical {
+  width: 0;
+}
+
+/* Spacing */
+.sui-divider--spacing-sm.sui-divider--horizontal {
+  margin: 8px 0;
+}
+
+.sui-divider--spacing-md.sui-divider--horizontal {
+  margin: 16px 0;
+}
+
+.sui-divider--spacing-lg.sui-divider--horizontal {
+  margin: 24px 0;
+}
+
+.sui-divider--spacing-sm.sui-divider--vertical {
+  margin: 0 8px;
+}
+
+.sui-divider--spacing-md.sui-divider--vertical {
+  margin: 0 16px;
+}
+
+.sui-divider--spacing-lg.sui-divider--vertical {
+  margin: 0 24px;
+}

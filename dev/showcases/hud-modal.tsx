@@ -1,23 +1,23 @@
 import { Component, createSignal } from "solid-js";
-import { HUDModal } from "../../src/components/HUD";
+import { Modal } from "../../src/components/Modal";
 import { Button } from "../../src/components/Button";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
 }
 
-export const HUDModalShowcase: Component<Depth2Props> = (props) => {
+export const ModalShowcase: Component<Depth2Props> = (props) => {
   const [open, setOpen] = createSignal(false);
 
   return (
     <div class="component-section">
-      <h2>HUDModal — Atomic (Depth 1)</h2>
+      <h2>Modal — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Portal-based modal with overlay and escape key.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
           <button class="demo-btn" onClick={() => setOpen(true)}>Open Modal</button>
-          <HUDModal
+          <Modal
             open={open()}
             onClose={() => setOpen(false)}
             title="Confirm Action"
@@ -32,7 +32,7 @@ export const HUDModalShowcase: Component<Depth2Props> = (props) => {
             <p style={{ margin: "0", color: "var(--hud-text-dim, var(--jtf-text-secondary))" }}>
               Are you sure you want to proceed with this action?
             </p>
-          </HUDModal>
+          </Modal>
         </div>
         <div class="depth2-atoms">
           <h3>Atomic</h3>

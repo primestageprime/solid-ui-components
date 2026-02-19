@@ -2,6 +2,7 @@
 import { render, Dynamic } from "solid-js/web";
 import { createSignal, For, Show, Component } from "solid-js";
 import "../src/styles/global.css";
+import "../src/themes/hud.css";
 import "./main.css";
 
 import { ButtonShowcase } from "./showcases/button";
@@ -19,8 +20,8 @@ import { SurfaceShowcase } from "./showcases/surface";
 import { AlertBoxShowcase } from "./showcases/alert-box";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
-import { HUDModalShowcase } from "./showcases/hud-modal";
-import { HUDSectionShowcase } from "./showcases/hud-section";
+import { ModalShowcase } from "./showcases/hud-modal";
+import { AccentSectionShowcase } from "./showcases/hud-section";
 import { NavBarShowcase } from "./showcases/nav-bar";
 import { ResultDisplayShowcase } from "./showcases/result-display";
 import { SectionShowcase } from "./showcases/section";
@@ -28,8 +29,8 @@ import { VesselCallHeaderShowcase } from "./showcases/vessel-call-header";
 import { HopperShowcase } from "./showcases/hopper";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
-import { HUDPageShowcase } from "./showcases/hud-page";
-import { HUDToggleShowcase } from "./showcases/hud-toggle";
+import { PageShowcase } from "./showcases/hud-page";
+import { ToggleShowcase } from "./showcases/hud-toggle";
 import { MathFormulaShowcase } from "./showcases/math-formula";
 import { InteractiveFormulaShowcase } from "./showcases/interactive-formula";
 import { MetricCardShowcase } from "./showcases/metric-card";
@@ -37,10 +38,10 @@ import { NumberWithUnitsShowcase } from "./showcases/number-with-units";
 import { VesselCardShowcase } from "./showcases/vessel-card";
 import { DataListShowcase } from "./showcases/data-list";
 import { StatsTableShowcase } from "./showcases/stats-table";
-import { HUDPanelShowcase } from "./showcases/hud-panel";
-import { HUDTabsShowcase } from "./showcases/hud-tabs";
-import { HUDButtonGroupShowcase } from "./showcases/hud-button-group";
-import { HUDListShowcase } from "./showcases/hud-list";
+import { PanelShowcase } from "./showcases/hud-panel";
+import { TabsShowcase } from "./showcases/hud-tabs";
+import { ButtonGroupShowcase } from "./showcases/hud-button-group";
+import { ListShowcase } from "./showcases/hud-list";
 import { ProgressCardShowcase } from "./showcases/progress-card";
 import { BaseTableShowcase } from "./showcases/base-table";
 import { HeatmapShowcase } from "./showcases/heatmap";
@@ -50,7 +51,7 @@ import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
 import { EngineDataSectionShowcase } from "./showcases/engine-data-section";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
-import { HUDConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
+import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { ResultPanelShowcase } from "./showcases/result-panel";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 
@@ -64,7 +65,7 @@ const nav: TabGroup[] = [
     children: [
       { id: "button", label: "Button", component: ButtonShowcase },
       { id: "icon", label: "Icon", component: IconShowcase },
-      { id: "toggle", label: "Toggle", component: HUDToggleShowcase },
+      { id: "toggle", label: "Toggle", component: ToggleShowcase },
       { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase },
       { id: "inputs", label: "Inputs", component: InputsShowcase },
       { id: "nav-item", label: "NavItem", component: NavItemShowcase },
@@ -74,16 +75,16 @@ const nav: TabGroup[] = [
       { id: "text", label: "Text", component: TextShowcase },
       { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase },
       { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase },
-      { id: "hud-page", label: "Page", component: HUDPageShowcase },
+      { id: "hud-page", label: "Page", component: PageShowcase },
       { id: "math-formula", label: "MathFormula", component: MathFormulaShowcase },
-      { id: "hud-modal", label: "Modal", component: HUDModalShowcase },
-      { id: "hud-section", label: "HUDSection", component: HUDSectionShowcase },
+      { id: "hud-modal", label: "Modal", component: ModalShowcase },
+      { id: "hud-section", label: "Section (Accent)", component: AccentSectionShowcase },
       { id: "section", label: "Section", component: SectionShowcase },
       { id: "stats-table", label: "StatsTable", component: StatsTableShowcase },
-      { id: "hud-panel", label: "HUDPanel", component: HUDPanelShowcase },
-      { id: "hud-tabs", label: "HUDTabs", component: HUDTabsShowcase },
-      { id: "hud-button-group", label: "HUDButtonGroup", component: HUDButtonGroupShowcase },
-      { id: "hud-list", label: "HUDList", component: HUDListShowcase },
+      { id: "hud-panel", label: "Panel", component: PanelShowcase },
+      { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
+      { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase },
+      { id: "hud-list", label: "List", component: ListShowcase },
       { id: "base-table", label: "BaseTable", component: BaseTableShowcase },
       { id: "heatmap", label: "Heatmap", component: HeatmapShowcase },
       { id: "heatstream", label: "HeatStream", component: HeatStreamShowcase },
@@ -110,7 +111,7 @@ const nav: TabGroup[] = [
       { id: "quick-filter", label: "QuickFilter", component: QuickFilterShowcase },
       { id: "selectable-table", label: "SelectableTable", component: SelectableTableShowcase },
       { id: "progress-card", label: "ProgressCard", component: ProgressCardShowcase },
-      { id: "hud-confirmation-modal", label: "ConfirmationModal", component: HUDConfirmationModalShowcase },
+      { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase },
       { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase },
     ],
   },

@@ -11,7 +11,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./dist/index.css"
+    "./themes/default.css": "./dist/themes/default.css",
+    "./themes/hud.css": "./dist/themes/hud.css",
+    "./styles.css": "./dist/themes/default.css"
   },
   "files": [
     "dist"

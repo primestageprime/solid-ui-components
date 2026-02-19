@@ -1,14 +1,14 @@
 // ============================================
-// HUDConfirmationModal — Depth 2 (zero CSS)
-// Composes HUDModal (Atomic) + Button (Atomic).
+// ConfirmationModal — Depth 2 (zero CSS)
+// Composes Modal (Atomic) + Button (Atomic).
 // Confirmation dialog with Cancel/Confirm footer.
 // ============================================
 import { Component, JSX, splitProps, Show } from "solid-js";
-import { HUDModal } from "./HUDModal";
+import { Modal } from "./Modal";
 import { Button } from "../Button/Button";
-import type { CornerStyle, HUDVariant } from "./types";
+import type { ColorVariant, CornerStyle } from "../../types";
 
-export interface HUDConfirmationModalProps {
+export interface ConfirmationModalProps {
   /** Whether the modal is open */
   open: boolean;
   /** Called when the modal is closed (via overlay, escape, or cancel) */
@@ -26,7 +26,7 @@ export interface HUDConfirmationModalProps {
   /** Corner decoration style (default: "clip") */
   corners?: CornerStyle;
   /** Accent color variant (default: "primary") */
-  variant?: HUDVariant;
+  variant?: ColorVariant;
   /** Label for the confirm button (default: "Confirm") */
   confirmLabel?: string;
   /** Label shown on confirm button when loading (default: confirmLabel) */
@@ -41,7 +41,7 @@ export interface HUDConfirmationModalProps {
   children?: JSX.Element;
 }
 
-export const HUDConfirmationModal: Component<HUDConfirmationModalProps> = (props) => {
+export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
   const [local, others] = splitProps(props, [
     "open",
     "onClose",
@@ -66,7 +66,7 @@ export const HUDConfirmationModal: Component<HUDConfirmationModalProps> = (props
   };
 
   return (
-    <HUDModal
+    <Modal
       open={local.open}
       onClose={local.onClose}
       title={local.title}
@@ -98,7 +98,7 @@ export const HUDConfirmationModal: Component<HUDConfirmationModalProps> = (props
         <Show when={local.description}>
           <p style={{
             margin: "0 0 16px",
-            color: "var(--text-secondary, var(--jtf-text-secondary))",
+            color: "var(--sui-text-secondary)",
             "font-size": "0.875rem",
           }}>
             {local.description}
@@ -106,6 +106,6 @@ export const HUDConfirmationModal: Component<HUDConfirmationModalProps> = (props
         </Show>
         {local.children}
       </div>
-    </HUDModal>
+    </Modal>
   );
 };

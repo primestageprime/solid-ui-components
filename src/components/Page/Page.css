@@ -1,0 +1,25 @@
+/* ============================================
+   Page Component — Structural
+   ============================================ */
+.sui-page {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.sui-page--scanlines::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.sui-page__content {
+  position: relative;
+  z-index: 1;
+  padding: 24px;
+}

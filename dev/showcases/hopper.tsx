@@ -30,19 +30,14 @@ import {
   GroupedTableDemo,
   DataTableContainer,
 } from "../../src/components/Table";
-import { Section, Panel, Divider } from "../../src/components/Section";
-import {
-  HUDPage,
-  HUDSection,
-  HUDPanel,
-  HUDModal,
-  HUDTabs,
-  HUDButtonGroup,
-  HUDButton,
-  HUDToggle,
-  HUDList,
-  HUDListItem,
-} from "../../src/components/HUD";
+import { Section } from "../../src/components/Section";
+import { Panel } from "../../src/components/Panel";
+import { Divider } from "../../src/components/Divider";
+import { Page } from "../../src/components/Page";
+import { Modal } from "../../src/components/Modal";
+import { Tabs } from "../../src/components/Tabs";
+import { ButtonGroup } from "../../src/components/ButtonGroup";
+import { List, ListItem } from "../../src/components/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
 import { VesselCard } from "../../src/components/Card";
 
@@ -67,7 +62,7 @@ const HUDShowcase: Component = () => {
   ];
 
   return (
-    <HUDPage gridPattern class="hud-showcase">
+    <Page gridPattern class="hud-showcase">
       <div style={{ padding: "24px" }}>
         <h2 style={{ color: "var(--hud-accent)", "margin-bottom": "24px", "text-transform": "uppercase", "letter-spacing": "0.1em" }}>
           HUD Component System
@@ -76,56 +71,56 @@ const HUDShowcase: Component = () => {
           Sci-fi inspired interface components with clipped corners, edge accents, and glowing effects.
         </p>
 
-        <HUDSection title="Navigation Tabs" subtitle="Tab Variants" variant="primary">
+        <Section title="Navigation Tabs" subtitle="Tab Variants" variant="primary">
           <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
             <div>
               <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Default (Underline)</p>
-              <HUDTabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} />
+              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} />
             </div>
             <div>
               <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Boxed</p>
-              <HUDTabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="boxed" />
+              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="boxed" />
             </div>
             <div>
               <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Pill</p>
-              <HUDTabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="pill" />
+              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="pill" />
             </div>
           </div>
-        </HUDSection>
+        </Section>
 
-        <HUDSection title="Panel Variants" subtitle="Corner Styles & Glow Effects" variant="primary">
+        <Section title="Panel Variants" subtitle="Corner Styles & Glow Effects" variant="primary">
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px" }}>
-            <HUDPanel title="Clip Corners" corners="clip" glow="subtle">
+            <Panel title="Clip Corners" corners="clip" glow="subtle">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 Angled corners using clip-path for a tech aesthetic.
               </p>
-            </HUDPanel>
-            <HUDPanel title="Bracket Corners" corners="bracket" glow="medium">
+            </Panel>
+            <Panel title="Bracket Corners" corners="bracket" glow="medium">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 L-shaped bracket decorations at each corner.
               </p>
-            </HUDPanel>
-            <HUDPanel title="Notch Corners" corners="notch" glow="strong">
+            </Panel>
+            <Panel title="Notch Corners" corners="notch" glow="strong">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 Asymmetric notch cut-outs for visual interest.
               </p>
-            </HUDPanel>
+            </Panel>
           </div>
 
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px", "margin-top": "16px" }}>
-            <HUDPanel title="Primary" variant="primary" corners="clip" size="sm">
+            <Panel title="Primary" variant="primary" corners="clip" size="sm">
               <span style={{ color: "var(--hud-accent)" }}>Accent color panel</span>
-            </HUDPanel>
-            <HUDPanel title="Danger" variant="danger" corners="clip" size="sm">
+            </Panel>
+            <Panel title="Danger" variant="danger" corners="clip" size="sm">
               <span style={{ color: "var(--hud-danger)" }}>Warning state</span>
-            </HUDPanel>
-            <HUDPanel title="Success" variant="success" corners="clip" size="sm">
+            </Panel>
+            <Panel title="Success" variant="success" corners="clip" size="sm">
               <span style={{ color: "var(--hud-success)" }}>Positive state</span>
-            </HUDPanel>
+            </Panel>
           </div>
-        </HUDSection>
+        </Section>
 
-        <HUDSection
+        <Section
           title="System Controls"
           subtitle="Toggle Variants"
           variant="primary"
@@ -134,94 +129,94 @@ const HUDShowcase: Component = () => {
           onToggleCollapse={() => setSectionCollapsed(!sectionCollapsed())}
         >
           <div style={{ display: "grid", "grid-template-columns": "repeat(2, 1fr)", gap: "24px" }}>
-            <HUDPanel corners="bracket">
+            <Panel corners="bracket">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Default Style</p>
               <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
-                <HUDToggle
+                <Toggle
                   label="Primary Power"
                   checked={toggles().power}
                   onChange={(v) => setToggles({ ...toggles(), power: v })}
                 />
-                <HUDToggle
+                <Toggle
                   label="Sensor Array"
                   checked={toggles().sensors}
                   onChange={(v) => setToggles({ ...toggles(), sensors: v })}
                   color="warning"
                 />
-                <HUDToggle
+                <Toggle
                   label="Target Tracking"
                   checked={toggles().tracking}
                   onChange={(v) => setToggles({ ...toggles(), tracking: v })}
                   color="success"
                 />
               </div>
-            </HUDPanel>
+            </Panel>
 
-            <HUDPanel corners="bracket">
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Power Style</p>
+            <Panel corners="bracket">
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Minimal Style</p>
               <div style={{ display: "flex", gap: "24px", "align-items": "center" }}>
-                <HUDToggle variant="power" checked={toggles().power} onChange={(v) => setToggles({ ...toggles(), power: v })} />
-                <HUDToggle variant="power" checked={toggles().sensors} onChange={(v) => setToggles({ ...toggles(), sensors: v })} color="warning" />
-                <HUDToggle variant="power" checked={toggles().tracking} onChange={(v) => setToggles({ ...toggles(), tracking: v })} color="success" />
+                <Toggle variant="minimal" checked={toggles().power} onChange={(v) => setToggles({ ...toggles(), power: v })} />
+                <Toggle variant="minimal" checked={toggles().sensors} onChange={(v) => setToggles({ ...toggles(), sensors: v })} color="warning" />
+                <Toggle variant="minimal" checked={toggles().tracking} onChange={(v) => setToggles({ ...toggles(), tracking: v })} color="success" />
               </div>
-            </HUDPanel>
+            </Panel>
           </div>
-        </HUDSection>
+        </Section>
 
-        <HUDSection title="Action Controls" subtitle="Button Groups" variant="primary">
+        <Section title="Action Controls" subtitle="Button Groups" variant="primary">
           <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
             <div>
               <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Horizontal Group</p>
-              <HUDButtonGroup>
-                <HUDButton>Scan</HUDButton>
-                <HUDButton>Analyze</HUDButton>
-                <HUDButton>Deploy</HUDButton>
-                <HUDButton variant="primary">Execute</HUDButton>
-              </HUDButtonGroup>
+              <ButtonGroup>
+                <Button>Scan</Button>
+                <Button>Analyze</Button>
+                <Button>Deploy</Button>
+                <Button variant="primary">Execute</Button>
+              </ButtonGroup>
             </div>
 
             <div>
               <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Connected Buttons</p>
-              <HUDButtonGroup gap="none">
-                <HUDButton active>Day</HUDButton>
-                <HUDButton>Week</HUDButton>
-                <HUDButton>Month</HUDButton>
-                <HUDButton>Year</HUDButton>
-              </HUDButtonGroup>
+              <ButtonGroup gap="none">
+                <Button active>Day</Button>
+                <Button>Week</Button>
+                <Button>Month</Button>
+                <Button>Year</Button>
+              </ButtonGroup>
             </div>
           </div>
-        </HUDSection>
+        </Section>
 
-        <HUDSection title="Status Displays" subtitle="List Variants" variant="primary">
+        <Section title="Status Displays" subtitle="List Variants" variant="primary">
           <div style={{ display: "grid", "grid-template-columns": "repeat(2, 1fr)", gap: "16px" }}>
-            <HUDPanel title="System Status" corners="clip">
-              <HUDList variant="status" dividers>
-                <HUDListItem status="active" secondary="Nominal">Primary Systems</HUDListItem>
-                <HUDListItem status="success" secondary="100%">Shield Generator</HUDListItem>
-                <HUDListItem status="warning" secondary="72%">Fuel Reserves</HUDListItem>
-                <HUDListItem status="error" secondary="Offline">Communications</HUDListItem>
-              </HUDList>
-            </HUDPanel>
+            <Panel title="System Status" corners="clip">
+              <List variant="status" dividers>
+                <ListItem status="active" secondary="Nominal">Primary Systems</ListItem>
+                <ListItem status="success" secondary="100%">Shield Generator</ListItem>
+                <ListItem status="warning" secondary="72%">Fuel Reserves</ListItem>
+                <ListItem status="error" secondary="Offline">Communications</ListItem>
+              </List>
+            </Panel>
 
-            <HUDPanel title="Navigation Menu" corners="clip">
-              <HUDList variant="menu">
-                <HUDListItem>Dashboard</HUDListItem>
-                <HUDListItem>System Diagnostics</HUDListItem>
-                <HUDListItem>Navigation</HUDListItem>
-                <HUDListItem>Settings</HUDListItem>
-              </HUDList>
-            </HUDPanel>
+            <Panel title="Navigation Menu" corners="clip">
+              <List variant="menu">
+                <ListItem>Dashboard</ListItem>
+                <ListItem>System Diagnostics</ListItem>
+                <ListItem>Navigation</ListItem>
+                <ListItem>Settings</ListItem>
+              </List>
+            </Panel>
           </div>
-        </HUDSection>
+        </Section>
 
-        <HUDSection title="Modal Dialog" subtitle="Overlay Panel" variant="primary">
-          <HUDButtonGroup>
-            <HUDButton variant="primary" onClick={() => setModalOpen(true)}>
+        <Section title="Modal Dialog" subtitle="Overlay Panel" variant="primary">
+          <ButtonGroup>
+            <Button variant="primary" onClick={() => setModalOpen(true)}>
               Open Modal
-            </HUDButton>
-          </HUDButtonGroup>
+            </Button>
+          </ButtonGroup>
 
-          <HUDModal
+          <Modal
             open={modalOpen()}
             onClose={() => setModalOpen(false)}
             title="System Alert"
@@ -230,23 +225,23 @@ const HUDShowcase: Component = () => {
             corners="clip"
             footer={
               <>
-                <HUDButton onClick={() => setModalOpen(false)}>Cancel</HUDButton>
-                <HUDButton variant="primary" onClick={() => setModalOpen(false)}>Confirm</HUDButton>
+                <Button onClick={() => setModalOpen(false)}>Cancel</Button>
+                <Button variant="primary" onClick={() => setModalOpen(false)}>Confirm</Button>
               </>
             }
           >
             <p style={{ color: "var(--hud-text)", margin: "0 0 16px" }}>
               Incoming transmission detected from unknown source.
             </p>
-            <HUDPanel corners="bracket" variant="warning" size="sm">
+            <Panel corners="bracket" variant="warning" size="sm">
               <p style={{ color: "var(--hud-warning)", margin: 0, "font-size": "12px" }}>
                 Warning: Unauthorized access attempt logged
               </p>
-            </HUDPanel>
-          </HUDModal>
-        </HUDSection>
+            </Panel>
+          </Modal>
+        </Section>
       </div>
-    </HUDPage>
+    </Page>
   );
 };
 
@@ -1268,7 +1263,7 @@ const TableShowcase: Component = () => {
           Scrollable wrapper with max-height and overflow. Wraps any table content.
         </p>
         <DataTableContainer maxHeight="180px">
-          <table class="hud-table__table" style={{ width: "100%" }}>
+          <table class="sui-table__table" style={{ width: "100%" }}>
             <thead><tr><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--jtf-border)" }}>Row</th><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--jtf-border)" }}>Value</th></tr></thead>
             <tbody>
               <For each={Array.from({ length: 20 }, (_, i) => i + 1)}>

@@ -1,56 +1,56 @@
 import { Component } from "solid-js";
-import { HUDPanel } from "../../src/components/HUD";
 import {
+  Panel,
   InfoPanel, AccentPanel, DangerPanel, WarningPanel,
   SuccessPanel, CompactPanel, DecoratedPanel,
-} from "../../src/components/HUD";
+} from "../../src/components/Panel";
 import { Stack } from "../../src/components/Layout";
 
-export const HUDPanelShowcase: Component = () => {
+export const PanelShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>HUDPanel — Atomic (Depth 1)</h2>
+      <h2>Panel — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Sci-fi panel with title, corners, glow.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Corner Variants</h3>
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px" }}>
-            <HUDPanel title="Clip Corners" corners="clip" glow="subtle">
+            <Panel title="Clip Corners" corners="clip" glow="subtle">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 Angled corners using clip-path.
               </p>
-            </HUDPanel>
-            <HUDPanel title="Bracket Corners" corners="bracket" glow="medium">
+            </Panel>
+            <Panel title="Bracket Corners" corners="bracket" glow="medium">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 L-shaped bracket decorations.
               </p>
-            </HUDPanel>
-            <HUDPanel title="Notch Corners" corners="notch" glow="strong">
+            </Panel>
+            <Panel title="Notch Corners" corners="notch" glow="strong">
               <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
                 Asymmetric notch cut-outs.
               </p>
-            </HUDPanel>
+            </Panel>
           </div>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Color Variants</h3>
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px" }}>
-            <HUDPanel title="Primary" variant="primary" corners="clip" size="sm">
+            <Panel title="Primary" variant="primary" corners="clip" size="sm">
               <span style={{ color: "var(--hud-accent)" }}>Accent color</span>
-            </HUDPanel>
-            <HUDPanel title="Danger" variant="danger" corners="clip" size="sm">
+            </Panel>
+            <Panel title="Danger" variant="danger" corners="clip" size="sm">
               <span style={{ color: "var(--hud-danger)" }}>Warning state</span>
-            </HUDPanel>
-            <HUDPanel title="Success" variant="success" corners="clip" size="sm">
+            </Panel>
+            <Panel title="Success" variant="success" corners="clip" size="sm">
               <span style={{ color: "var(--hud-success)" }}>Positive state</span>
-            </HUDPanel>
+            </Panel>
           </div>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Edge Accents</h3>
-          <HUDPanel title="With Edge Accents" corners="clip" edgeAccents glow="subtle">
+          <Panel title="With Edge Accents" corners="clip" edgeAccents glow="subtle">
             <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
               Decorative edge lines on the panel borders.
             </p>
-          </HUDPanel>
+          </Panel>
 
           <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
           <Stack gap="md">

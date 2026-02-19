@@ -1,20 +1,15 @@
 // ============================================
 // Section Curried Variants — Depth 1 (zero CSS)
-// Pre-configured Section and Panel via createSection()/createPanel() factories.
+// Pre-configured Section via createSection() factory.
+// Updated to use new props (corners instead of variant="decorated").
 // ============================================
-import { createSection, createPanel } from "./Section";
+import { createSection } from "./Section";
 
-// Collapsible section — bordered with collapse support
-export const CollapsibleSection = createSection({ variant: "bordered", collapsible: true, defaultExpanded: true });
+// Collapsible section — with collapse support
+export const CollapsibleSection = createSection({ collapsible: true, defaultExpanded: true });
 
-// Decorated section — corner brackets, fills parent
-export const DecoratedSection = createSection({ variant: "decorated", fill: true });
+// Decorated section — bracket corner brackets, fills parent
+export const DecoratedSection = createSection({ corners: "bracket", fill: true });
 
-// Bordered section — simple bordered container
-export const BorderedSection = createSection({ variant: "bordered" });
-
-// Compact panel — small padding
-export const CompactJTFPanel = createPanel({ padding: "sm" });
-
-// Spacious panel — large padding
-export const SpaciousPanel = createPanel({ padding: "lg" });
+// Bordered section — simple bordered container (now uses round corners)
+export const BorderedSection = createSection({ corners: "round" });

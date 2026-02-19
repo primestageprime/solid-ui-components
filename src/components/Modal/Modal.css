@@ -1,0 +1,73 @@
+/* ============================================
+   Modal Component — Structural
+   ============================================ */
+
+/* Overlay */
+.sui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal container */
+.sui-modal {
+  position: relative;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal sizes */
+.sui-modal--sm { width: 360px; }
+.sui-modal--md { width: 520px; }
+.sui-modal--lg { width: 720px; }
+.sui-modal--xl { width: 960px; }
+
+/* Modal header */
+.sui-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.sui-modal__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sui-modal__title {
+  margin: 0;
+}
+
+.sui-modal__subtitle {
+  margin: 0;
+}
+
+.sui-modal__close {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.sui-modal__body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sui-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+}

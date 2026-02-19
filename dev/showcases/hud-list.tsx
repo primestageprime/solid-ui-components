@@ -1,35 +1,35 @@
 import { Component } from "solid-js";
-import { HUDList, HUDListItem } from "../../src/components/HUD";
+import { List, ListItem } from "../../src/components/List";
 
-export const HUDListShowcase: Component = () => {
+export const ListShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>HUDList + HUDListItem — Atomic (Depth 1)</h2>
+      <h2>List + ListItem — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Status/menu list with dividers.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Status List</h3>
-          <HUDList variant="status" dividers>
-            <HUDListItem status="active" secondary="Nominal">Primary Systems</HUDListItem>
-            <HUDListItem status="success" secondary="100%">Shield Generator</HUDListItem>
-            <HUDListItem status="warning" secondary="72%">Fuel Reserves</HUDListItem>
-            <HUDListItem status="error" secondary="Offline">Communications</HUDListItem>
-          </HUDList>
+          <List variant="status" dividers>
+            <ListItem status="active" secondary="Nominal">Primary Systems</ListItem>
+            <ListItem status="success" secondary="100%">Shield Generator</ListItem>
+            <ListItem status="warning" secondary="72%">Fuel Reserves</ListItem>
+            <ListItem status="error" secondary="Offline">Communications</ListItem>
+          </List>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Menu List</h3>
-          <HUDList variant="menu">
-            <HUDListItem interactive>Dashboard</HUDListItem>
-            <HUDListItem interactive selected>System Diagnostics</HUDListItem>
-            <HUDListItem interactive>Navigation</HUDListItem>
-            <HUDListItem interactive>Settings</HUDListItem>
-          </HUDList>
+          <List variant="menu">
+            <ListItem interactive>Dashboard</ListItem>
+            <ListItem interactive selected>System Diagnostics</ListItem>
+            <ListItem interactive>Navigation</ListItem>
+            <ListItem interactive>Settings</ListItem>
+          </List>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Compact</h3>
-          <HUDList compact dividers>
-            <HUDListItem>Item one</HUDListItem>
-            <HUDListItem>Item two</HUDListItem>
-            <HUDListItem>Item three</HUDListItem>
-          </HUDList>
+          <List compact dividers>
+            <ListItem>Item one</ListItem>
+            <ListItem>Item two</ListItem>
+            <ListItem>Item three</ListItem>
+          </List>
         </div>
         <div class="depth2-atoms">
           <h3>Props — List</h3>

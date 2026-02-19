@@ -1,20 +1,20 @@
 import { Component } from "solid-js";
-import { HUDSection } from "../../src/components/HUD";
+import { Section } from "../../src/components/Section";
 import { Button } from "../../src/components/Button";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
 }
 
-export const HUDSectionShowcase: Component<Depth2Props> = (props) => {
+export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>HUDSection — Atomic (Depth 1)</h2>
+      <h2>Section — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Collapsible section with title, subtitle, corners.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <HUDSection
+          <Section
             title="System Status"
             subtitle="Real-time monitoring"
             headerAction={<Button variant="primary" size="sm">Refresh</Button>}
@@ -22,7 +22,7 @@ export const HUDSectionShowcase: Component<Depth2Props> = (props) => {
             <p style={{ margin: "0", color: "var(--hud-text-dim)", "font-size": "0.875rem" }}>
               HUD section content goes here.
             </p>
-          </HUDSection>
+          </Section>
         </div>
         <div class="depth2-atoms">
           <h3>Atomic</h3>

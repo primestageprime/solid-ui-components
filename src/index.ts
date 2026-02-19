@@ -1,3 +1,6 @@
+// Types
+export type { ColorVariant, CornerStyle } from "./types";
+
 // Components
 export * from "./components/Layout";
 export * from "./components/Text";
@@ -19,10 +22,27 @@ export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";
 export * from "./components/Section";
+export * from "./components/Panel";
+export * from "./components/Divider";
+export * from "./components/Page";
+export * from "./components/Modal";
+export * from "./components/Tabs";
+export * from "./components/ButtonGroup";
+export * from "./components/List";
 export * from "./components/Selector";
-export * from "./components/HUD";
 export * from "./components/VesselCallHeader";
 export * from "./components/DataList";
 export * from "./components/MathFormula";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
+
+// Backward compatibility — will be removed in a future version
+export { Page as HUDPage } from "./components/Page";
+export { Section as HUDSection } from "./components/Section";
+export { Panel as HUDPanel } from "./components/Panel";
+export { Modal as HUDModal } from "./components/Modal";
+export { ConfirmationModal as HUDConfirmationModal } from "./components/Modal";
+export { Tabs as HUDTabs } from "./components/Tabs";
+export { ButtonGroup as HUDButtonGroup } from "./components/ButtonGroup";
+export { List as HUDList, ListItem as HUDListItem } from "./components/List";
+export { createPanel as createHUDPanel } from "./components/Panel";

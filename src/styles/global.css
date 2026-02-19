@@ -31,6 +31,57 @@
 
   --jtf-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --jtf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ============================================
+     Unified --sui-* tokens (transition period)
+     Both namespaces coexist until component
+     migration is complete.
+     ============================================ */
+
+  /* Accent / Primary */
+  --sui-accent: #3b82f6;
+  --sui-accent-dim: #2563eb;
+  --sui-accent-rgb: 59, 130, 246;
+
+  /* Semantic Colors */
+  --sui-danger: #ef4444;
+  --sui-danger-rgb: 239, 68, 68;
+  --sui-warning: #f59e0b;
+  --sui-warning-rgb: 245, 158, 11;
+  --sui-success: #22c55e;
+  --sui-success-rgb: 34, 197, 94;
+
+  /* Backgrounds */
+  --sui-bg-deep: #0d0d1a;
+  --sui-bg-primary: #1a1a2e;
+  --sui-bg-secondary: #16213e;
+  --sui-bg-tertiary: #0f3460;
+  --sui-bg-elevated: #1e2a3e;
+
+  /* Text */
+  --sui-text-primary: #f1f5f9;
+  --sui-text-secondary: #94a3b8;
+  --sui-text-muted: #64748b;
+
+  /* Borders */
+  --sui-border: #334155;
+  --sui-border-bright: #475569;
+  --sui-border-focus: #3b82f6;
+
+  /* Radii */
+  --sui-radius-sm: 4px;
+  --sui-radius-md: 8px;
+  --sui-radius-lg: 12px;
+
+  /* Clip Sizes */
+  --sui-clip-sm: 8px;
+  --sui-clip-md: 12px;
+  --sui-clip-lg: 16px;
+  --sui-clip-xl: 24px;
+
+  /* Typography */
+  --sui-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sui-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 *, *::before, *::after {

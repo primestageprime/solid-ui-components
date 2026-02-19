@@ -1,43 +1,44 @@
 import { Component } from "solid-js";
-import { HUDButtonGroup, HUDButton } from "../../src/components/HUD";
+import { ButtonGroup } from "../../src/components/ButtonGroup";
+import { Button } from "../../src/components/Button";
 
-export const HUDButtonGroupShowcase: Component = () => {
+export const ButtonGroupShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>HUDButtonGroup + HUDButton — Atomic (Depth 1)</h2>
+      <h2>ButtonGroup + Button — Atomic (Depth 1)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Button arrangement with gap variants.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Horizontal</h3>
-          <HUDButtonGroup>
-            <HUDButton>Scan</HUDButton>
-            <HUDButton>Analyze</HUDButton>
-            <HUDButton>Deploy</HUDButton>
-            <HUDButton variant="primary">Execute</HUDButton>
-          </HUDButtonGroup>
+          <ButtonGroup>
+            <Button>Scan</Button>
+            <Button>Analyze</Button>
+            <Button>Deploy</Button>
+            <Button variant="primary">Execute</Button>
+          </ButtonGroup>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Connected (gap: none)</h3>
-          <HUDButtonGroup gap="none">
-            <HUDButton active>Day</HUDButton>
-            <HUDButton>Week</HUDButton>
-            <HUDButton>Month</HUDButton>
-            <HUDButton>Year</HUDButton>
-          </HUDButtonGroup>
+          <ButtonGroup gap="none">
+            <Button active>Day</Button>
+            <Button>Week</Button>
+            <Button>Month</Button>
+            <Button>Year</Button>
+          </ButtonGroup>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Vertical</h3>
-          <HUDButtonGroup orientation="vertical" gap="sm">
-            <HUDButton>Option A</HUDButton>
-            <HUDButton>Option B</HUDButton>
-            <HUDButton variant="danger">Delete</HUDButton>
-          </HUDButtonGroup>
+          <ButtonGroup orientation="vertical" gap="sm">
+            <Button>Option A</Button>
+            <Button>Option B</Button>
+            <Button variant="danger">Delete</Button>
+          </ButtonGroup>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Button Variants</h3>
-          <HUDButtonGroup>
-            <HUDButton>Default</HUDButton>
-            <HUDButton variant="primary">Primary</HUDButton>
-            <HUDButton variant="danger">Danger</HUDButton>
-            <HUDButton variant="ghost">Ghost</HUDButton>
-          </HUDButtonGroup>
+          <ButtonGroup>
+            <Button>Default</Button>
+            <Button variant="primary">Primary</Button>
+            <Button variant="danger">Danger</Button>
+            <Button variant="ghost">Ghost</Button>
+          </ButtonGroup>
         </div>
         <div class="depth2-atoms">
           <h3>Props — Group</h3>

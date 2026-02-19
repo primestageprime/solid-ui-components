@@ -1,145 +1,128 @@
-.jtf-toggle {
+/* ============================================
+   Toggle Component — Structural
+   ============================================ */
+.sui-toggle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
 }
 
-.jtf-toggle--label-left {
+.sui-toggle--label-left {
   flex-direction: row;
 }
 
-.jtf-toggle__label {
-  font-size: 14px;
-  color: var(--jtf-text-primary, var(--hud-text, #e0f4ff));
+.sui-toggle__label {
   user-select: none;
   cursor: pointer;
 }
 
-.jtf-toggle__track {
+.sui-toggle__track {
   position: relative;
   display: inline-block;
 }
 
-.jtf-toggle__input {
+.sui-toggle__input {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.jtf-toggle__slider {
+.sui-toggle__slider {
   display: block;
-  background-color: var(--jtf-bg-tertiary, var(--hud-bg-panel, #1a1a2e));
-  border: 1px solid var(--jtf-border, var(--hud-border, rgba(0, 212, 255, 0.3)));
-  border-radius: 999px;
   transition: all 0.2s ease;
   position: relative;
   cursor: pointer;
 }
 
-.jtf-toggle__slider::after {
+.sui-toggle__slider::after {
   content: "";
   position: absolute;
-  background-color: var(--jtf-text-muted, var(--hud-text-dim, #7aa8c0));
-  border-radius: 50%;
   transition: all 0.2s ease;
 }
 
 /* Sizes */
-.jtf-toggle--sm .jtf-toggle__slider {
+.sui-toggle--sm .sui-toggle__slider {
   width: 32px;
   height: 18px;
 }
 
-.jtf-toggle--sm .jtf-toggle__slider::after {
+.sui-toggle--sm .sui-toggle__slider::after {
   width: 12px;
   height: 12px;
   top: 2px;
   left: 2px;
 }
 
-.jtf-toggle--sm .jtf-toggle__input:checked + .jtf-toggle__slider::after {
+.sui-toggle--sm .sui-toggle__input:checked + .sui-toggle__slider::after {
   transform: translateX(14px);
 }
 
-.jtf-toggle--sm .jtf-toggle__label {
-  font-size: 13px;
-}
-
-.jtf-toggle--md .jtf-toggle__slider {
+.sui-toggle--md .sui-toggle__slider {
   width: 44px;
   height: 24px;
 }
 
-.jtf-toggle--md .jtf-toggle__slider::after {
+.sui-toggle--md .sui-toggle__slider::after {
   width: 18px;
   height: 18px;
   top: 2px;
   left: 2px;
 }
 
-.jtf-toggle--md .jtf-toggle__input:checked + .jtf-toggle__slider::after {
+.sui-toggle--md .sui-toggle__input:checked + .sui-toggle__slider::after {
   transform: translateX(20px);
 }
 
-.jtf-toggle--lg .jtf-toggle__slider {
+.sui-toggle--lg .sui-toggle__slider {
   width: 56px;
   height: 30px;
 }
 
-.jtf-toggle--lg .jtf-toggle__slider::after {
+.sui-toggle--lg .sui-toggle__slider::after {
   width: 24px;
   height: 24px;
   top: 2px;
   left: 2px;
 }
 
-.jtf-toggle--lg .jtf-toggle__input:checked + .jtf-toggle__slider::after {
+.sui-toggle--lg .sui-toggle__input:checked + .sui-toggle__slider::after {
   transform: translateX(26px);
 }
 
-.jtf-toggle--lg .jtf-toggle__label {
-  font-size: 15px;
+/* Minimal variant (structural) */
+.sui-toggle--minimal .sui-toggle__slider {
+  width: 32px;
+  height: 4px;
 }
 
-/* Checked state */
-.jtf-toggle__input:checked + .jtf-toggle__slider {
-  background-color: var(--jtf-primary, var(--hud-accent, #00d4ff));
-  border-color: var(--jtf-primary, var(--hud-accent, #00d4ff));
+.sui-toggle--minimal .sui-toggle__slider::after {
+  width: 12px;
+  height: 12px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
 }
 
-.jtf-toggle__input:checked + .jtf-toggle__slider::after {
-  background-color: white;
+.sui-toggle--minimal .sui-toggle__input:checked + .sui-toggle__slider::after {
+  transform: translateY(-50%) translateX(20px);
 }
 
-/* Focus state */
-.jtf-toggle__input:focus-visible + .jtf-toggle__slider {
-  outline: 2px solid var(--jtf-border-focus, var(--hud-accent, #00d4ff));
+/* Focus state (structural) */
+.sui-toggle__input:focus-visible + .sui-toggle__slider {
   outline-offset: 2px;
 }
 
 /* Disabled state */
-.jtf-toggle__input:disabled + .jtf-toggle__slider {
-  opacity: 0.5;
+.sui-toggle__input:disabled + .sui-toggle__slider {
   cursor: not-allowed;
 }
 
-.jtf-toggle:has(.jtf-toggle__input:disabled) {
+.sui-toggle:has(.sui-toggle__input:disabled) {
   cursor: not-allowed;
 }
 
-.jtf-toggle:has(.jtf-toggle__input:disabled) .jtf-toggle__label {
-  opacity: 0.5;
+.sui-toggle:has(.sui-toggle__input:disabled) .sui-toggle__label {
   cursor: not-allowed;
-}
-
-/* Hover state */
-.jtf-toggle__track:hover .jtf-toggle__slider:not(:has(+ .jtf-toggle__input:disabled)) {
-  border-color: var(--jtf-text-secondary, var(--hud-text-dim, #7aa8c0));
-}
-
-.jtf-toggle__input:checked:hover + .jtf-toggle__slider {
-  background-color: var(--jtf-primary-hover, var(--hud-accent, #00d4ff));
-  border-color: var(--jtf-primary-hover, var(--hud-accent, #00d4ff));
 }

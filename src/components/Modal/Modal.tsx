@@ -1,14 +1,32 @@
 // ============================================
-// HUDModal — Atomic (Depth 1)
-// Owns CSS (HUD.css), no component imports.
+// Modal — Atomic (Depth 1)
+// Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
 // ============================================
-import { Component, Show, createEffect, onCleanup } from "solid-js";
+import { Component, JSX, Show, createEffect, onCleanup } from "solid-js";
 import { Portal } from "solid-js/web";
-import { HUDModalProps } from "./types";
-import "./HUD.css";
+import type { ColorVariant, CornerStyle } from "../../types";
+import "./Modal.css";
 
-export const HUDModal: Component<HUDModalProps> = (props) => {
+export interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  /** Corner decoration style */
+  corners?: CornerStyle;
+  /** Accent color variant */
+  variant?: ColorVariant;
+  /** Modal size */
+  size?: "sm" | "md" | "lg" | "xl";
+  /** Show close button */
+  showClose?: boolean;
+  children?: JSX.Element;
+  /** Footer content */
+  footer?: JSX.Element;
+}
+
+export const Modal: Component<ModalProps> = (props) => {
   // Handle escape key to close modal
   createEffect(() => {
     if (props.open) {
@@ -28,10 +46,10 @@ export const HUDModal: Component<HUDModalProps> = (props) => {
   });
 
   const modalClasses = () => {
-    const classList = ["hud-modal"];
-    if (props.size) classList.push(`hud-modal--${props.size}`);
-    if (props.corners) classList.push(`hud-modal--corners-${props.corners}`);
-    if (props.variant) classList.push(`hud-modal--${props.variant}`);
+    const classList = ["sui-modal"];
+    if (props.size) classList.push(`sui-modal--${props.size}`);
+    if (props.corners) classList.push(`sui-modal--corners-${props.corners}`);
+    if (props.variant) classList.push(`sui-modal--${props.variant}`);
     return classList.join(" ");
   };
 
@@ -44,21 +62,21 @@ export const HUDModal: Component<HUDModalProps> = (props) => {
   return (
     <Show when={props.open}>
       <Portal>
-        <div class="hud-modal-overlay" onClick={handleOverlayClick}>
+        <div class="sui-modal-overlay" onClick={handleOverlayClick}>
           <div class={modalClasses()} role="dialog" aria-modal="true">
             <Show when={props.title || props.showClose !== false}>
-              <div class="hud-modal__header">
-                <div class="hud-modal__title-group">
+              <div class="sui-modal__header">
+                <div class="sui-modal__title-group">
                   <Show when={props.title}>
-                    <h2 class="hud-modal__title">{props.title}</h2>
+                    <h2 class="sui-modal__title">{props.title}</h2>
                   </Show>
                   <Show when={props.subtitle}>
-                    <p class="hud-modal__subtitle">{props.subtitle}</p>
+                    <p class="sui-modal__subtitle">{props.subtitle}</p>
                   </Show>
                 </div>
                 <Show when={props.showClose !== false}>
                   <button
-                    class="hud-modal__close"
+                    class="sui-modal__close"
                     onClick={props.onClose}
                     aria-label="Close modal"
                   >
@@ -68,12 +86,12 @@ export const HUDModal: Component<HUDModalProps> = (props) => {
               </div>
             </Show>
 
-            <div class="hud-modal__body">
+            <div class="sui-modal__body">
               {props.children}
             </div>
 
             <Show when={props.footer}>
-              <div class="hud-modal__footer">
+              <div class="sui-modal__footer">
                 {props.footer}
               </div>
             </Show>

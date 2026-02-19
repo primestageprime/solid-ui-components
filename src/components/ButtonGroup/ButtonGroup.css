@@ -1,0 +1,35 @@
+/* ============================================
+   ButtonGroup Component — Structural
+   ============================================ */
+.sui-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.sui-btn-group--vertical {
+  flex-direction: column;
+}
+
+.sui-btn-group--gap-none { gap: 0; }
+.sui-btn-group--gap-sm { gap: 4px; }
+.sui-btn-group--gap-md { gap: 8px; }
+.sui-btn-group--gap-lg { gap: 12px; }
+
+.sui-btn-group--bordered {
+  padding: 8px;
+}
+
+/* Connected buttons (gap-none) */
+.sui-btn-group--gap-none > button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.sui-btn-group--gap-none > button:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.sui-btn-group--gap-none > button:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
