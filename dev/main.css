@@ -282,3 +282,43 @@
   font-family: monospace;
   color: var(--jtf-text-muted);
 }
+
+/* ── Theme Switcher ───────────────────────────────────── */
+
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--jtf-border);
+}
+
+.theme-switcher__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jtf-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.theme-switcher__btn {
+  padding: 4px 10px;
+  background: var(--jtf-bg-tertiary);
+  border: 1px solid var(--jtf-border);
+  border-radius: var(--jtf-radius-sm);
+  color: var(--jtf-text-primary);
+  font-family: var(--jtf-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+
+.theme-switcher__btn:hover {
+  background: var(--jtf-bg-secondary);
+  border-color: var(--jtf-primary);
+  color: var(--jtf-primary);
+}

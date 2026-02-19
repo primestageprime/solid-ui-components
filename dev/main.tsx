@@ -2,8 +2,8 @@
 import { render, Dynamic } from "solid-js/web";
 import { createSignal, For, Show, Component } from "solid-js";
 import "../src/styles/global.css";
-import "../src/themes/hud.css";
 import "./main.css";
+import { ThemeSwitcher } from "./theme-switcher";
 
 import { ButtonShowcase } from "./showcases/button";
 import { IconShowcase } from "./showcases/icon";
@@ -163,6 +163,7 @@ const App: Component = () => {
         <div class="showcase__brand">
           <h1>Solid Components</h1>
           <p>SolidJS Component Library</p>
+          <ThemeSwitcher />
         </div>
         <For each={nav}>
           {(group) => (
