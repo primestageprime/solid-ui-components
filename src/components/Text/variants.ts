@@ -31,6 +31,9 @@ export const MonoValue = createText({
 // Inline units — inherits font-size from parent, muted color, left margin
 export const InlineUnits = createText({ variant: "sublabel", style: { "font-size": "inherit", "margin-left": "4px" } });
 
+// Semantic heading — top-level page title, renders as <h1>
+export const PageTitle = createText({ variant: "title", as: "h1" });
+
 // Status-colored titles
 export const InfoTitle = createText({ variant: "title", color: "#00d4ff" });
 export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
