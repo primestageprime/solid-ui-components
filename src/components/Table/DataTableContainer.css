@@ -1,0 +1,41 @@
+.data-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  position: relative;
+}
+
+.data-table-container--fill {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Sticky table header — apply to <thead> for scroll-locked headers */
+.sticky-table-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--sticky-header-bg, rgba(10, 14, 26, 0.98));
+}
+
+.sticky-table-header th {
+  background: inherit;
+}
+
+/* Sticky row cell — apply to first-column <th> in sticky headers for horizontal scroll lock */
+.sticky-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: var(--sticky-header-bg, rgba(10, 14, 26, 0.98));
+}
+
+/* Sticky row cell — apply to first-column <td> for horizontal scroll lock */
+.sticky-row-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--sticky-cell-bg, rgba(10, 14, 26, 0.95));
+  font-weight: 600;
+  border-right: 1px solid var(--sticky-cell-border, var(--border-color));
+  white-space: nowrap;
+}

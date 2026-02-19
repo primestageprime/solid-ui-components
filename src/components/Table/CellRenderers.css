@@ -1,0 +1,323 @@
+/* ============================================
+   Cell Renderers - HUD Style
+   ============================================ */
+
+/* Empty state */
+.cell-empty {
+  color: var(--hud-text-muted, #4a6a80);
+  font-style: italic;
+}
+
+/* ID Cell */
+.cell-id {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--hud-text-dim, #7aa8c0);
+  padding: 2px 6px;
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+
+/* String Cell */
+.cell-string {
+  color: var(--hud-text, #e0f4ff);
+}
+
+/* Tag Cell */
+.cell-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+
+.cell-tag--default {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--hud-text, #e0f4ff);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cell-tag--primary {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--hud-accent, #00d4ff);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+.cell-tag--success {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--hud-success, #00ff88);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+}
+
+.cell-tag--warning {
+  background: rgba(255, 170, 0, 0.15);
+  color: var(--hud-warning, #ffaa00);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  box-shadow: 0 0 8px rgba(255, 170, 0, 0.2);
+}
+
+.cell-tag--danger {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--hud-danger, #ff3366);
+  border: 1px solid rgba(255, 51, 102, 0.3);
+  box-shadow: 0 0 8px rgba(255, 51, 102, 0.2);
+}
+
+.cell-tag--info {
+  background: rgba(102, 153, 255, 0.15);
+  color: #6699ff;
+  border: 1px solid rgba(102, 153, 255, 0.3);
+  box-shadow: 0 0 8px rgba(102, 153, 255, 0.2);
+}
+
+/* Money Cell */
+.cell-money {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: var(--hud-success, #00ff88);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+/* Date Cell */
+.cell-date {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--hud-text-dim, #7aa8c0);
+  white-space: nowrap;
+}
+
+/* DateTime Cell */
+.cell-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cell-datetime__date {
+  color: var(--hud-text, #e0f4ff);
+}
+
+.cell-datetime__time {
+  color: var(--hud-text-dim, #7aa8c0);
+  font-size: 11px;
+}
+
+.cell-datetime--single {
+  flex-direction: row;
+  color: var(--hud-text-dim, #7aa8c0);
+}
+
+/* Duration Cell */
+.cell-duration {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--hud-accent, #00d4ff);
+  padding: 2px 8px;
+  background: rgba(0, 212, 255, 0.08);
+  border-left: 2px solid var(--hud-accent, #00d4ff);
+}
+
+/* Status Cell */
+.cell-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cell-status__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cell-status--active .cell-status__indicator {
+  background: var(--hud-accent, #00d4ff);
+  box-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.cell-status--active .cell-status__label {
+  color: var(--hud-accent, #00d4ff);
+}
+
+.cell-status--success .cell-status__indicator {
+  background: var(--hud-success, #00ff88);
+  box-shadow: 0 0 8px var(--hud-success, #00ff88);
+}
+
+.cell-status--success .cell-status__label {
+  color: var(--hud-success, #00ff88);
+}
+
+.cell-status--warning .cell-status__indicator {
+  background: var(--hud-warning, #ffaa00);
+  box-shadow: 0 0 8px var(--hud-warning, #ffaa00);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.cell-status--warning .cell-status__label {
+  color: var(--hud-warning, #ffaa00);
+}
+
+.cell-status--error .cell-status__indicator {
+  background: var(--hud-danger, #ff3366);
+  box-shadow: 0 0 8px var(--hud-danger, #ff3366);
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+.cell-status--error .cell-status__label {
+  color: var(--hud-danger, #ff3366);
+}
+
+.cell-status--pending .cell-status__indicator {
+  background: var(--hud-text-dim, #7aa8c0);
+  box-shadow: 0 0 6px rgba(122, 168, 192, 0.5);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.cell-status--pending .cell-status__label {
+  color: var(--hud-text-dim, #7aa8c0);
+}
+
+.cell-status--inactive .cell-status__indicator {
+  background: var(--hud-text-muted, #4a6a80);
+  box-shadow: none;
+}
+
+.cell-status--inactive .cell-status__label {
+  color: var(--hud-text-muted, #4a6a80);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Checkbox Cell */
+.cell-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.cell-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cell-checkbox__indicator {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  background-color: var(--hud-bg-dark, #0a1420);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+
+.cell-checkbox input:checked + .cell-checkbox__indicator {
+  background-color: var(--hud-accent, #00d4ff);
+  border-color: var(--hud-accent, #00d4ff);
+  box-shadow: 0 0 10px var(--hud-accent, #00d4ff);
+}
+
+.cell-checkbox input:checked + .cell-checkbox__indicator::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid var(--hud-bg-deep, #030810);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.cell-checkbox:hover .cell-checkbox__indicator {
+  border-color: var(--hud-accent, #00d4ff);
+  box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+}
+
+.cell-checkbox input:disabled + .cell-checkbox__indicator {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Metric Status Cell — uppercase status text with dynamic color */
+.cell-metric-status {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Metric Value Cell — compliance-colored number display */
+.cell-metric-value {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Float Cell */
+.cell-float {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: inherit;
+  text-align: right;
+}
+
+/* Int Cell */
+.cell-int {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: inherit;
+  text-align: right;
+}
+
+/* Long Text Cell */
+.cell-longtext {
+  display: inline;
+  font-size: 13px;
+  color: var(--hud-text, #e0f4ff);
+  line-height: 1.4;
+}
+
+.cell-longtext__text {
+  word-break: break-word;
+}
+
+.cell-longtext__more,
+.cell-longtext__less {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--hud-accent, #00d4ff);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: all 0.15s ease;
+}
+
+.cell-longtext__more:hover,
+.cell-longtext__less:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+}

@@ -1,0 +1,63 @@
+/* ============================================
+   Cell Table
+   ============================================ */
+
+.cell-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  border: none;
+}
+
+.cell-table tr {
+  background: transparent !important;
+}
+
+.cell-table.margin-bottom-12 {
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Cell Row
+   ============================================ */
+
+.cell-row--border {
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.cell-row--header {
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.cell-row--highlight {
+  background: rgba(0, 255, 136, 0.05);
+}
+
+/* ============================================
+   Cell (td / th)
+   ============================================ */
+
+.cell {
+  padding: 6px;
+  font-size: inherit;
+  border-right: none;
+}
+
+/* Alignment */
+.cell--align-right {
+  text-align: right;
+}
+
+.cell--align-center {
+  text-align: center;
+}
+
+/* Weight */
+.cell--weight-medium {
+  font-weight: 500;
+}
+
+.cell--weight-semibold {
+  font-weight: 600;
+}

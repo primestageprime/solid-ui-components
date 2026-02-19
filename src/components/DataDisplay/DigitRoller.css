@@ -1,0 +1,32 @@
+.digit-roller {
+  display: inline-flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+
+.digit-roller__column {
+  display: inline-block;
+  overflow: hidden;
+  height: 1em;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.digit-roller__strip {
+  display: flex;
+  flex-direction: column;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.digit-roller__char {
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.digit-roller__static {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: baseline;
+}

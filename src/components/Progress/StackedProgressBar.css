@@ -1,0 +1,28 @@
+.stacked-progress-bar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--stacked-bar-bg, rgba(0, 168, 204, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stacked-progress-bar__segment {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: 0;
+}
+
+.stacked-progress-bar--vertical .stacked-progress-bar__segment {
+  top: auto;
+  left: 0;
+  width: 100%;
+  height: auto;
+}
+
+.stacked-progress-bar__label {
+  position: relative;
+  z-index: 1;
+}

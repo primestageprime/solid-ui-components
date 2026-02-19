@@ -1,0 +1,213 @@
+/* HeatStack base styles */
+.jtf-heatstack {
+  font-family: var(--jtf-font-family);
+  width: 100%;
+}
+
+/* Legend */
+.jtf-heatstack__legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.jtf-heatstack__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jtf-heatstack__legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.jtf-heatstack__legend-color--full {
+  background-color: #00d4ff;
+}
+
+.jtf-heatstack__legend-color--partial {
+  background-color: var(--status-partial);
+}
+
+.jtf-heatstack__legend-color--missing {
+  background-color: var(--status-missing);
+}
+
+.jtf-heatstack__legend-color--unknown {
+  background-color: transparent;
+  border: 1px solid var(--jtf-text-muted);
+}
+
+.jtf-heatstack__legend-label {
+  font-size: 12px;
+  color: var(--jtf-text-secondary);
+}
+
+/* Header row (key labels) */
+.jtf-heatstack__header {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 4px;
+}
+
+.jtf-heatstack__key-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jtf-text-muted);
+  text-align: center;
+}
+
+/* Row label — shared between header spacer and data rows */
+.jtf-heatstack__row-label {
+  width: 60px;
+  flex-shrink: 0;
+  padding-right: 8px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--jtf-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cells container — fills remaining width */
+.jtf-heatstack__cells {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Rows */
+.jtf-heatstack__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.jtf-heatstack__row {
+  display: flex;
+  align-items: center;
+}
+
+/* Cells — 3px tall by default */
+.jtf-heatstack__cell {
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  border-radius: 1px;
+}
+
+/* When labels are shown, cells match the text height */
+.jtf-heatstack--labeled .jtf-heatstack__cell {
+  height: 14px;
+  border-radius: 2px;
+}
+
+.jtf-heatstack--labeled .jtf-heatstack__rows {
+  gap: 2px;
+}
+
+.jtf-heatstack__cell--full {
+  background-color: #00d4ff;
+}
+
+.jtf-heatstack__cell--partial {
+  background-color: var(--status-partial);
+}
+
+.jtf-heatstack__cell--missing {
+  background-color: var(--status-missing);
+}
+
+.jtf-heatstack__cell--unknown {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--jtf-text-muted);
+}
+
+/* Compact variant — no labels, no headers, dense */
+.jtf-heatstack--compact .jtf-heatstack__header {
+  display: none;
+}
+
+.jtf-heatstack--compact .jtf-heatstack__row-label {
+  display: none;
+}
+
+.jtf-heatstack--compact .jtf-heatstack__rows {
+  gap: 0;
+}
+
+.jtf-heatstack--compact .jtf-heatstack__cells {
+  gap: 0;
+}
+
+.jtf-heatstack--compact .jtf-heatstack__cell {
+  height: 2px;
+  border-radius: 0;
+}
+
+/* Hover preview — hidden by default, shown on parent :hover */
+.jtf-heatstack__preview {
+  display: none;
+  min-width: 360px;
+  padding: 8px;
+  background: var(--hud-bg-elevated, #0a1628);
+  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.jtf-heatstack--compact:hover > .jtf-heatstack__preview {
+  display: block;
+}
+
+.jtf-heatstack__preview-header {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 4px;
+}
+
+.jtf-heatstack__preview-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Preview inner elements — avoid compact overrides entirely */
+.jtf-heatstack__preview-row {
+  display: flex;
+  align-items: center;
+}
+
+.jtf-heatstack__preview-label {
+  width: 60px;
+  flex-shrink: 0;
+  padding-right: 8px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--jtf-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jtf-heatstack__preview-cells {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jtf-heatstack__preview-cells .jtf-heatstack__cell {
+  height: 14px;
+  border-radius: 2px;
+}

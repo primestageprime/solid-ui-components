@@ -1,0 +1,36 @@
+.engine-data-section__warning {
+  padding: 12px;
+  background: rgba(255, 204, 0, 0.1);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  border-radius: 6px;
+}
+
+.engine-data-section__warning-title {
+  color: #ffcc00;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.engine-data-section__warning-text {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}
+
+.engine-data-section__warning-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ffcc00 0%, #ff9900 100%);
+  color: #000;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.engine-data-section__warning-action:hover {
+  filter: brightness(1.1);
+}

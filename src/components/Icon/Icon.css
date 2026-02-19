@@ -1,0 +1,51 @@
+.jtf-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.jtf-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Sizes */
+.jtf-icon--xs {
+  width: 12px;
+  height: 12px;
+}
+
+.jtf-icon--sm {
+  width: 14px;
+  height: 14px;
+}
+
+.jtf-icon--md {
+  width: 16px;
+  height: 16px;
+}
+
+.jtf-icon--lg {
+  width: 20px;
+  height: 20px;
+}
+
+.jtf-icon--xl {
+  width: 24px;
+  height: 24px;
+}
+
+/* Spinning animation */
+.jtf-icon--spinning svg {
+  animation: jtf-icon-spin 1s linear infinite;
+}
+
+@keyframes jtf-icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

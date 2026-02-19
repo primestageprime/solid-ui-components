@@ -1,0 +1,100 @@
+/* ============================================
+   Math Formula (KaTeX) - Dark Theme
+   ============================================ */
+
+.math-formula {
+  padding: 12px 16px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* Override KaTeX's default background */
+.math-formula .katex-display {
+  margin: 0;
+  background: transparent;
+}
+
+.math-formula .katex-display > .katex {
+  background: transparent;
+}
+
+/* KaTeX base styling for dark theme */
+.math-formula .katex {
+  font-size: 1.1em;
+  color: var(--text-secondary, #b0d4e8);
+  background: transparent;
+}
+
+/* All text in KaTeX should inherit our color */
+.math-formula .katex * {
+  color: inherit;
+}
+
+/* Variables (letters) - cyan */
+.math-formula .katex .mord.mathnormal,
+.math-formula .katex .mord.mathdefault {
+  color: #00d4ff;
+}
+
+/* Numbers - gold/yellow */
+.math-formula .katex .mord:not(.mathnormal):not(.mathdefault) {
+  color: #ffcc00;
+}
+
+/* Operators (+, -, ×, etc) */
+.math-formula .katex .mbin,
+.math-formula .katex .mrel {
+  color: var(--text-muted, #7aa8c0);
+}
+
+/* Parentheses and brackets */
+.math-formula .katex .mopen,
+.math-formula .katex .mclose {
+  color: var(--text-secondary, #b0d4e8);
+}
+
+/* Fraction line */
+.math-formula .katex .frac-line {
+  border-color: var(--text-muted, #7aa8c0);
+  background: var(--text-muted, #7aa8c0);
+}
+
+/* ============================================
+   Formula Variable Row Highlighting
+   ============================================ */
+
+.formula-row-highlight {
+  background: rgba(0, 255, 136, 0.15) !important;
+}
+
+.formula-row-highlight td {
+  color: #00ff88 !important;
+}
+
+.data-row[class*="formula-row"] {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+/* ============================================
+   Formula Variable Highlighting (in formula)
+   ============================================ */
+
+.math-formula .katex .formula-var {
+  cursor: pointer;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+  border-radius: 2px;
+}
+
+.math-formula .katex .formula-var:hover,
+.math-formula .katex .formula-var-highlight {
+  color: #00ff88 !important;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+/* Make sure all children of the highlighted var also get the color */
+.math-formula .katex .formula-var-highlight *,
+.math-formula .katex .formula-var:hover * {
+  color: #00ff88 !important;
+}

@@ -1,0 +1,70 @@
+/* HeatStreamGrid — Depth 2 */
+.jtf-heatstream-grid {
+  font-family: var(--jtf-font-family);
+  width: 100%;
+}
+
+.jtf-heatstream-grid__table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.jtf-heatstream-grid__header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jtf-text-muted);
+  text-align: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--hud-border, rgba(0, 212, 255, 0.15));
+  white-space: nowrap;
+}
+
+.jtf-heatstream-grid__header--label {
+  width: 100px;
+}
+
+.jtf-heatstream-grid__row-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--jtf-text-secondary);
+  padding: 2px 8px 2px 0;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.jtf-heatstream-grid__cell {
+  padding: 1px;
+  vertical-align: bottom;
+}
+
+/* Selection mode */
+.jtf-heatstream-grid--selectable .jtf-heatstream-grid__header,
+.jtf-heatstream-grid--selectable .jtf-heatstream-grid__row-label {
+  cursor: pointer;
+  user-select: none;
+}
+
+.jtf-heatstream-grid--selectable .jtf-heatstream-grid__header:hover,
+.jtf-heatstream-grid--selectable .jtf-heatstream-grid__row-label:hover {
+  color: var(--hud-accent, #00d4ff);
+}
+
+.jtf-heatstream-grid__header--all-selected {
+  color: var(--hud-accent, #00d4ff) !important;
+  font-weight: 700;
+}
+
+.jtf-heatstream-grid__row-label--all-selected {
+  color: var(--hud-accent, #00d4ff) !important;
+  font-weight: 700;
+}
+
+/* Dim unselected cells only when something is selected */
+.jtf-heatstream-grid--has-selection .jtf-heatstream-grid__cell {
+  filter: brightness(0.4);
+}
+
+.jtf-heatstream-grid--has-selection .jtf-heatstream-grid__cell--selected {
+  filter: brightness(1.2);
+}

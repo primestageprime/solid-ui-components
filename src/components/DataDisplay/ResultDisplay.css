@@ -1,0 +1,55 @@
+.result-display__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.result-display__label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, var(--jtf-text-primary));
+}
+
+.result-display__sublabel {
+  color: var(--text-muted, var(--jtf-text-muted));
+  font-size: 0.75rem;
+}
+
+.result-display__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.result-display__value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, var(--jtf-text-primary));
+}
+
+.result-display__units {
+  color: var(--text-secondary, var(--jtf-text-secondary));
+  font-size: 0.9rem;
+}
+
+/* Formula result highlighting — used by createFormulaResult */
+
+.formula-result {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: -8px -12px;
+}
+
+.formula-result--highlight {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.formula-result--highlight .result-display__value,
+.formula-result--highlight .result-display__units {
+  color: #00ff88 !important;
+}

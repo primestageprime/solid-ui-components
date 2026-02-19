@@ -1,0 +1,53 @@
+.nav-link {
+  color: var(--text-secondary, var(--jtf-text-secondary));
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 400;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--hud-accent, #00d4ff);
+}
+
+/* Active state */
+.nav-link--active {
+  color: var(--hud-accent, #00d4ff);
+  font-weight: 600;
+  border-bottom-color: var(--hud-accent, #00d4ff);
+}
+
+/* Color variants */
+.nav-link--warning {
+  color: #ffcc00;
+}
+
+.nav-link--warning.nav-link--active {
+  border-bottom-color: #ffcc00;
+}
+
+.nav-link--danger {
+  color: #ff0040;
+}
+
+.nav-link--danger.nav-link--active {
+  border-bottom-color: #ff0040;
+}
+
+.nav-link--success {
+  color: #00ff88;
+}
+
+.nav-link--success.nav-link--active {
+  border-bottom-color: #00ff88;
+}
+
+/* Badge */
+.nav-link__badge {
+  margin-left: 4px;
+  font-size: 0.8em;
+  opacity: 0.8;
+}

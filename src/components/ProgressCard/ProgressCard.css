@@ -1,0 +1,143 @@
+.jtf-progress-card {
+  background-color: rgba(0, 212, 255, 0.05);
+  border: 1px solid var(--jtf-border);
+  border-radius: var(--jtf-radius-lg);
+  padding: 12px;
+}
+
+.jtf-progress-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.jtf-progress-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--jtf-text-primary);
+}
+
+.jtf-progress-card__subtitle {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--jtf-text-muted);
+}
+
+.jtf-progress-card__steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jtf-progress-card__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Circle container */
+.jtf-progress-card__step-circle {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Circle background */
+.jtf-progress-card__step-circle-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid #444;
+}
+
+.jtf-progress-card__step--completed .jtf-progress-card__step-circle-bg {
+  background: #00d4ff;
+  border: none;
+}
+
+.jtf-progress-card__step--active .jtf-progress-card__step-circle-bg {
+  border: none;
+}
+
+.jtf-progress-card__step--error .jtf-progress-card__step-circle-bg {
+  background: var(--jtf-danger);
+  border: none;
+}
+
+/* Spinner for active state */
+.jtf-progress-card__step-spinner {
+  position: absolute;
+  inset: 0;
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-top-color: #00d4ff;
+  border-radius: 50%;
+  animation: jtf-progress-spin 1s linear infinite;
+}
+
+/* Icon */
+.jtf-progress-card__step-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  color: #666;
+}
+
+.jtf-progress-card__step-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.jtf-progress-card__step--completed .jtf-progress-card__step-icon {
+  color: #0a0e17;
+}
+
+.jtf-progress-card__step--active .jtf-progress-card__step-icon {
+  color: #00d4ff;
+}
+
+.jtf-progress-card__step--error .jtf-progress-card__step-icon {
+  color: #0a0e17;
+}
+
+/* Arrow connector */
+.jtf-progress-card__connector {
+  color: #444;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.jtf-progress-card__connector--completed {
+  color: #00d4ff;
+}
+
+/* Message */
+.jtf-progress-card__message {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--jtf-border);
+  font-size: 12px;
+  color: var(--jtf-text-secondary);
+}
+
+@keyframes jtf-progress-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

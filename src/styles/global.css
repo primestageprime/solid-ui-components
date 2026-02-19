@@ -1,0 +1,46 @@
+:root {
+  --jtf-primary: #3b82f6;
+  --jtf-primary-hover: #2563eb;
+  --jtf-secondary: #64748b;
+  --jtf-secondary-hover: #475569;
+  --jtf-success: #22c55e;
+  --jtf-warning: #f59e0b;
+  --jtf-danger: #ef4444;
+  --jtf-danger-hover: #dc2626;
+
+  /* Status colors */
+  --status-full: #00d4ff;
+  --status-partial: #ffcc00;
+  --status-sparse: #ff8800;
+  --status-missing: #ff0040;
+
+  --jtf-bg-primary: #1a1a2e;
+  --jtf-bg-secondary: #16213e;
+  --jtf-bg-tertiary: #0f3460;
+
+  --jtf-text-primary: #f1f5f9;
+  --jtf-text-secondary: #94a3b8;
+  --jtf-text-muted: #64748b;
+
+  --jtf-border: #334155;
+  --jtf-border-focus: #3b82f6;
+
+  --jtf-radius-sm: 4px;
+  --jtf-radius-md: 8px;
+  --jtf-radius-lg: 12px;
+
+  --jtf-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --jtf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--jtf-font-family);
+  background-color: var(--jtf-bg-primary);
+  color: var(--jtf-text-primary);
+  margin: 0;
+  padding: 0;
+}

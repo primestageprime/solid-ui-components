@@ -1,0 +1,221 @@
+/* HeatStream base styles */
+.jtf-heatstream {
+  font-family: var(--jtf-font-family);
+  width: 100%;
+}
+
+/* Legend */
+.jtf-heatstream__legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.jtf-heatstream__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jtf-heatstream__legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.jtf-heatstream__legend-color--full {
+  background-color: #00d4ff;
+}
+
+.jtf-heatstream__legend-color--partial {
+  background-color: var(--status-partial);
+}
+
+.jtf-heatstream__legend-color--missing {
+  background-color: var(--status-missing);
+}
+
+.jtf-heatstream__legend-color--unknown {
+  background-color: transparent;
+  border: 1px solid var(--jtf-text-muted);
+}
+
+.jtf-heatstream__legend-label {
+  font-size: 12px;
+  color: var(--jtf-text-secondary);
+}
+
+/* Header row (item name labels across top) */
+.jtf-heatstream__header {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 4px;
+}
+
+.jtf-heatstream__col-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jtf-text-muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Row label (key names on the left) */
+.jtf-heatstream__row-label {
+  width: 48px;
+  flex-shrink: 0;
+  padding-right: 6px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--jtf-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cells container — fills remaining width */
+.jtf-heatstream__cells {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Rows */
+.jtf-heatstream__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.jtf-heatstream__row {
+  display: flex;
+  align-items: center;
+}
+
+/* Cells — 3px tall by default */
+.jtf-heatstream__cell {
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  border-radius: 1px;
+}
+
+/* When labels are shown, cells match the text height */
+.jtf-heatstream--labeled .jtf-heatstream__cell {
+  height: 14px;
+  border-radius: 2px;
+}
+
+.jtf-heatstream--labeled .jtf-heatstream__rows {
+  gap: 2px;
+}
+
+.jtf-heatstream__cell--full {
+  background-color: #00d4ff;
+}
+
+.jtf-heatstream__cell--partial {
+  background-color: var(--status-partial);
+}
+
+.jtf-heatstream__cell--missing {
+  background-color: var(--status-missing);
+}
+
+.jtf-heatstream__cell--unknown {
+  background-color: #333;
+  outline: 1px solid rgba(0, 212, 255, 0.25);
+  outline-offset: -1px;
+}
+
+/* Compact variant — no labels, no headers, dense */
+.jtf-heatstream--compact .jtf-heatstream__header {
+  display: none;
+}
+
+.jtf-heatstream--compact .jtf-heatstream__row-label {
+  display: none;
+}
+
+.jtf-heatstream--compact .jtf-heatstream__rows {
+  gap: 0;
+}
+
+.jtf-heatstream--compact .jtf-heatstream__cells {
+  gap: 0;
+  flex: none;
+}
+
+.jtf-heatstream--compact .jtf-heatstream__cell {
+  flex: none;
+  width: 3px;
+  height: 2px;
+  border-radius: 0;
+}
+
+/* Hover preview — hidden by default, shown on parent :hover */
+.jtf-heatstream__preview {
+  display: none;
+  padding: 8px;
+  background: var(--hud-bg-elevated, #0a1628);
+  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.jtf-heatstream--compact:hover > .jtf-heatstream__preview {
+  display: block;
+}
+
+.jtf-heatstream__preview-heading {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--jtf-text-muted);
+  margin-bottom: 4px;
+}
+
+.jtf-heatstream__preview-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Preview inner elements — avoid compact overrides entirely */
+.jtf-heatstream__preview-row {
+  display: flex;
+  align-items: center;
+}
+
+.jtf-heatstream__preview-label {
+  width: 48px;
+  flex-shrink: 0;
+  padding-right: 6px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--jtf-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jtf-heatstream__preview-cells {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jtf-heatstream__preview-cells .jtf-heatstream__cell {
+  flex: none;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+}
