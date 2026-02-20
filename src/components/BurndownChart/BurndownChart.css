@@ -1,0 +1,70 @@
+.sui-burndown {
+  display: block;
+  overflow: visible;
+}
+
+.sui-burndown__axis {
+  stroke: var(--sui-border-primary, rgba(0, 168, 204, 0.3));
+  stroke-width: 1;
+}
+
+.sui-burndown__tick {
+  stroke: var(--sui-border-primary, rgba(0, 168, 204, 0.3));
+  stroke-width: 1;
+}
+
+/* ── Segments ── */
+
+.sui-burndown__seg {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.sui-burndown__seg:hover {
+  opacity: 0.75;
+}
+
+.sui-burndown__seg--pc {
+  fill: var(--sui-color-success, #22c55e);
+}
+
+.sui-burndown__seg--pi {
+  fill: var(--sui-text-muted, rgba(128, 128, 128, 0.5));
+}
+
+.sui-burndown__seg--uc {
+  fill: var(--sui-color-warning, #f59e0b);
+}
+
+.sui-burndown__seg--ui {
+  fill: var(--sui-color-danger, #ef4444);
+}
+
+/* ── Trendline ── */
+
+.sui-burndown__trend {
+  stroke: var(--sui-color-primary, #00a8cc);
+  stroke-width: 2;
+  fill: none;
+}
+
+.sui-burndown__trend--proj {
+  stroke-dasharray: 6 4;
+  opacity: 0.6;
+}
+
+/* ── Labels ── */
+
+.sui-burndown__label-x,
+.sui-burndown__label-y {
+  font-size: 11px;
+  fill: var(--sui-text-muted, rgba(128, 128, 128, 0.8));
+  font-family: inherit;
+}
+
+.sui-burndown__annotation {
+  font-size: 11px;
+  fill: var(--sui-color-primary, #00a8cc);
+  font-family: inherit;
+  font-weight: 600;
+}
