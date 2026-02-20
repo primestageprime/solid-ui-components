@@ -13,7 +13,8 @@
     },
     "./themes/default.css": "./dist/themes/default.css",
     "./themes/hud.css": "./dist/themes/hud.css",
-    "./styles.css": "./dist/themes/default.css"
+    "./styles.css": "./dist/themes/default.css",
+    "./index.css": "./dist/index.css"
   },
   "files": [
     "dist"
