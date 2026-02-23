@@ -39,6 +39,9 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 ## Card
 - **VesselCard** — Interactive card displaying a vessel with title, remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable vessel list items.
 
+## DagChart
+- **DagChart** — SVG directed acyclic graph with dagre-computed layout. Key props: `nodes` (array of `DagNode` with `id`, `label`, `status` (`ColorVariant`), optional `metadata`, optional `sublabel`, optional `avatar`), `edges` (array of `DagEdge` with `source`/`target`), `onNodeClick`, `direction` (`TB`|`LR`), `height`. Nodes render as rounded rects colored by status. When `avatar` is provided, a circular 20px image renders left-aligned inside the node and the label shifts right. When `sublabel` is provided, muted smaller text renders below the label. Edges are directed paths with arrowheads. SVG auto-sizes viewBox to fit all content. Uses `--sui-*` CSS variables. Exported types: `DagNode`, `DagEdge`, `DagChartProps`. Use for: task dependency graphs, workflow DAGs, pipeline visualization.
+
 ## Cell
 - **Cell** — Table cell primitive (`<td>` or `<th>`) with alignment, color, and weight. Key props: `align`, `color`, `weight`, `as` (`td`|`th`). Use for: building custom table layouts.
 - **CellTable** — `<table>` wrapper with optional `<thead>`. Key props: `header`. Use for: wrapping Cell-based rows.

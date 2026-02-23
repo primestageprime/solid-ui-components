@@ -793,3 +793,57 @@ body {
   content: ">";
   color: var(--sui-text-muted);
 }
+
+/* ---- DagChart ---- */
+.sui-dag__node-bg {
+  fill: rgba(13, 26, 42, 0.8);
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  transition: filter 0.15s ease, stroke 0.15s ease;
+}
+
+.sui-dag__node--clickable:hover .sui-dag__node-bg {
+  stroke: var(--sui-border-bright);
+  filter: drop-shadow(0 0 8px rgba(var(--sui-accent-rgb), 0.2));
+}
+
+.sui-dag__node--active .sui-dag__node-bg {
+  stroke: var(--sui-accent);
+  filter: drop-shadow(0 0 12px rgba(var(--sui-accent-rgb), 0.35));
+}
+
+.sui-dag__edge {
+  stroke: rgba(var(--sui-accent-rgb), 0.25);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 3px rgba(var(--sui-accent-rgb), 0.15));
+}
+
+.sui-dag__arrow {
+  fill: var(--sui-accent);
+}
+
+.sui-dag__label {
+  fill: var(--sui-text-primary);
+}
+
+.sui-dag__sublabel {
+  fill: var(--sui-text-secondary);
+}
+
+.sui-dag__node-border--default { fill: var(--sui-text-muted); }
+.sui-dag__node-border--success {
+  fill: var(--sui-success);
+  filter: drop-shadow(0 0 4px rgba(var(--sui-success-rgb), 0.4));
+}
+.sui-dag__node-border--warning {
+  fill: var(--sui-warning);
+  filter: drop-shadow(0 0 4px rgba(var(--sui-warning-rgb), 0.4));
+}
+.sui-dag__node-border--danger {
+  fill: var(--sui-danger);
+  filter: drop-shadow(0 0 4px rgba(var(--sui-danger-rgb), 0.4));
+}
+.sui-dag__node-border--pending {
+  fill: var(--sui-accent);
+  filter: drop-shadow(0 0 4px rgba(var(--sui-accent-rgb), 0.4));
+}

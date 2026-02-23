@@ -742,3 +742,39 @@ body {
   content: ">";
   color: var(--sui-text-muted);
 }
+
+/* ---- DagChart ---- */
+.sui-dag__node-bg {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.sui-dag__node--clickable:hover .sui-dag__node-bg {
+  stroke: var(--sui-accent);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.sui-dag__edge {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1.5;
+}
+
+.sui-dag__arrow {
+  fill: var(--sui-text-muted);
+}
+
+.sui-dag__label {
+  fill: var(--sui-text-primary);
+}
+
+.sui-dag__sublabel {
+  fill: var(--sui-text-muted);
+}
+
+.sui-dag__node-border--default { fill: var(--sui-text-muted); }
+.sui-dag__node-border--success { fill: var(--sui-success); }
+.sui-dag__node-border--warning { fill: var(--sui-warning); }
+.sui-dag__node-border--danger  { fill: var(--sui-danger); }
+.sui-dag__node-border--pending { fill: var(--sui-accent); }
