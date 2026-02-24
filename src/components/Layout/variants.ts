@@ -11,7 +11,8 @@ export const TightStack = createStack({ gap: "xs" });
 export const NarrowStack = createStack({ gap: "sm" });
 export const SpacedStack = createStack({ gap: "md" });
 
-// Stack variants — named by role
+// Stack variants — named by role / page layout
+export const PageStack = createStack({ gap: "sm", style: { padding: "24px", "max-width": "1000px" } });
 export const ContentStack = createStack({ gap: "xs", style: { flex: "1", "min-width": "0" } });
 export const CenteredStack = createStack({ align: "center", justify: "center", gap: "sm" });
 

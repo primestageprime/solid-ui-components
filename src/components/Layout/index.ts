@@ -5,7 +5,7 @@ export type { RowProps } from "./Row";
 export { Box, createBox } from "./Box";
 export type { BoxProps } from "./Box";
 export {
-  TightStack, NarrowStack, SpacedStack, ContentStack, CenteredStack,
+  TightStack, NarrowStack, SpacedStack, ContentStack, CenteredStack, PageStack,
   SmRegion, MdRegion, LgRegion,
   SpreadRow, ClusterRow,
   ActionSlot, FadedBox, ConstrainedBox,

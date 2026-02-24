@@ -12,7 +12,7 @@ export type TextVariant = "value" | "label" | "title" | "body" | "units" | "subl
 export interface TextProps extends JSX.HTMLAttributes<HTMLElement> {
   variant?: TextVariant;
   color?: string;
-  as?: "span" | "p" | "h1" | "h2" | "h3" | "h4" | "div";
+  as?: "span" | "p" | "pre" | "h1" | "h2" | "h3" | "h4" | "div";
 }
 
 export const Text: Component<TextProps> = (props) => {

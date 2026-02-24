@@ -16,3 +16,28 @@ export const InfoSurface = createSurface({ padding: "md", radius: "md", bg: "rgb
 export const WarningSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(255,204,0,0.1)", borderColor: "rgba(255,204,0,0.3)" });
 export const SuccessSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(0,255,136,0.1)", borderColor: "rgba(0,255,136,0.3)" });
 export const DangerSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(255,0,64,0.1)", borderColor: "rgba(255,0,64,0.3)" });
+
+// Card frame variants (responsive sizing via min/max-width)
+export const CompactCard = createSurface({
+  padding: "sm", radius: "sm",
+  direction: "row", align: "center", gap: "sm",
+  minWidth: "200px", maxWidth: "360px",
+});
+
+export const NoteCard = createSurface({
+  padding: "md", radius: "md",
+  direction: "column", align: "stretch", gap: "md",
+  minWidth: "260px", maxWidth: "400px",
+});
+
+export const WideCard = createSurface({
+  padding: "md", radius: "md",
+  direction: "row", align: "start", gap: "md",
+  minWidth: "320px", maxWidth: "1000px",
+});
+
+export const SquareCard = createSurface({
+  padding: "md", radius: "md",
+  direction: "column", align: "center", gap: "sm",
+  minWidth: "180px", maxWidth: "260px",
+});

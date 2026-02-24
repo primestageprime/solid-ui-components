@@ -13,6 +13,16 @@
 .surface--radius-md { border-radius: 8px; }
 .surface--radius-lg { border-radius: 12px; }
 
+.surface--dir-row    { display: flex; flex-direction: row; }
+.surface--dir-column { display: flex; flex-direction: column; }
+.surface--align-start   { align-items: flex-start; }
+.surface--align-center  { align-items: center; }
+.surface--align-stretch { align-items: stretch; text-align: center; }
+.surface--gap-none { gap: 0; }
+.surface--gap-sm   { gap: 6px; }
+.surface--gap-md   { gap: 12px; }
+.surface--gap-lg   { gap: 20px; }
+
 .surface--interactive {
   cursor: pointer;
   transition: all 0.2s ease;

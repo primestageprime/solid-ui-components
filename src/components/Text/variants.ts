@@ -12,6 +12,9 @@ export const TextBody = createText({ variant: "body" });
 export const TextUnits = createText({ variant: "units" });
 export const TextSublabel = createText({ variant: "sublabel" });
 
+// Right-aligned sublabel — for counts/metadata in card corners
+export const EndSublabel = createText({ variant: "sublabel", style: { "text-align": "right" } });
+
 // Flex-filling label — title text that grows to fill available space
 export const FlexLabel = createText({ variant: "label", style: { flex: "1" } });
 
@@ -26,6 +29,13 @@ export const AccentBody = createText({ variant: "body", color: "var(--hud-accent
 export const MonoValue = createText({
   variant: "value",
   style: { "font-family": '"JetBrains Mono", "Fira Code", monospace' },
+});
+
+// Preformatted mono dump — for JSON/debug output beneath cards
+export const MonoDump = createText({
+  variant: "value",
+  as: "pre",
+  style: { "font-family": '"JetBrains Mono", "Fira Code", monospace', "font-size": "10px", "white-space": "pre", margin: "0" },
 });
 
 // Inline units — inherits font-size from parent, muted color, left margin

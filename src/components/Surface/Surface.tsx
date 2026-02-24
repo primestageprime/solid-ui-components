@@ -13,6 +13,11 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   borderColor?: string;
   interactive?: boolean;
   active?: boolean;
+  direction?: "row" | "column";
+  align?: "start" | "center" | "stretch";
+  gap?: "none" | "sm" | "md" | "lg";
+  minWidth?: string;
+  maxWidth?: string;
 }
 
 export const Surface: Component<SurfaceProps> = (props) => {
@@ -23,6 +28,11 @@ export const Surface: Component<SurfaceProps> = (props) => {
     "borderColor",
     "interactive",
     "active",
+    "direction",
+    "align",
+    "gap",
+    "minWidth",
+    "maxWidth",
     "class",
     "children",
     "style",
@@ -32,6 +42,9 @@ export const Surface: Component<SurfaceProps> = (props) => {
     const classList = ["surface"];
     if (local.padding) classList.push(`surface--padding-${local.padding}`);
     if (local.radius) classList.push(`surface--radius-${local.radius}`);
+    if (local.direction) classList.push(`surface--dir-${local.direction}`);
+    if (local.align) classList.push(`surface--align-${local.align}`);
+    if (local.gap) classList.push(`surface--gap-${local.gap}`);
     if (local.interactive) classList.push("surface--interactive");
     if (local.active) classList.push("surface--active");
     if (local.class) classList.push(local.class);
@@ -42,7 +55,9 @@ export const Surface: Component<SurfaceProps> = (props) => {
     const custom: JSX.CSSProperties = {};
     if (local.bg) custom["background"] = local.bg;
     if (local.borderColor) custom["border-color"] = local.borderColor;
-    if (!local.bg && !local.borderColor) return local.style as JSX.CSSProperties | undefined;
+    if (local.minWidth) custom["min-width"] = local.minWidth;
+    if (local.maxWidth) custom["max-width"] = local.maxWidth;
+    if (!local.bg && !local.borderColor && !local.minWidth && !local.maxWidth) return local.style as JSX.CSSProperties | undefined;
     const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
     return { ...base, ...custom };
   };
