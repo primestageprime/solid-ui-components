@@ -1,11 +1,13 @@
 .themed-input-group {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .themed-input-label {
   display: block;
-  color: var(--text-secondary, var(--jtf-text-secondary));
+  color: var(--sui-text-secondary, #aaa);
   font-size: 0.875rem;
   margin-bottom: 8px;
 }
@@ -14,11 +16,11 @@
 .themed-textarea {
   width: 100%;
   padding: 12px;
-  background: rgba(0, 20, 30, 0.6);
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  border-radius: 6px;
-  color: var(--text-primary, var(--jtf-text-primary));
-  font-family: var(--jtf-font-family, system-ui, sans-serif);
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
+  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-radius: var(--sui-radius-sm, 6px);
+  color: var(--sui-text-primary, #ddd);
+  font-family: var(--sui-font-family, system-ui, sans-serif);
   font-size: 0.875rem;
   transition: border-color 0.15s ease;
   box-sizing: border-box;
@@ -27,12 +29,12 @@
 .themed-input:focus,
 .themed-textarea:focus {
   outline: none;
-  border-color: var(--hud-accent, #00d4ff);
+  border-color: var(--sui-border-focus, var(--sui-accent, #00d4ff));
 }
 
 .themed-input::placeholder,
 .themed-textarea::placeholder {
-  color: var(--text-muted, var(--jtf-text-muted));
+  color: var(--sui-text-muted, #888);
 }
 
 .themed-textarea {
