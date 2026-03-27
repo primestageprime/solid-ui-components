@@ -30,11 +30,13 @@ export * from "./components/Tabs";
 export * from "./components/ButtonGroup";
 export * from "./components/List";
 export * from "./components/Selector";
+export * from "./components/Dropdown";
 export * from "./components/VesselCallHeader";
 export * from "./components/DataList";
 export * from "./components/MathFormula";
 export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
+export * from "./components/SprintSelector";
 export * from "./components/DagChart";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
