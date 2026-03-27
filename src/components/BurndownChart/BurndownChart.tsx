@@ -96,7 +96,7 @@ export const BurndownChart: Component<BurndownChartProps> = (props) => {
   const click = (i: number, seg: BurndownSegmentKind) => local.onSegmentClick?.(i, seg);
 
   return (
-    <svg class="sui-burndown" width={w()} height={h()} viewBox={`0 0 ${w()} ${h()}`}>
+    <svg class="sui-burndown" viewBox={`0 0 ${w()} ${h()}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto" }}>
       {/* Axes */}
       <line x1={chartL} y1={zeroY()} x2={chartR()} y2={zeroY()} class="sui-burndown__axis" />
       <line x1={chartL} y1={chartT} x2={chartL} y2={chartB()} class="sui-burndown__axis" />
