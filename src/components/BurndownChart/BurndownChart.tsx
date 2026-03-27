@@ -58,10 +58,12 @@ export const BurndownChart: Component<BurndownChartProps> = (props) => {
   const barX = (i: number) => chartL + i * colW() + (colW() - barW()) / 2;
   const barCX = (i: number) => chartL + i * colW() + colW() / 2;
 
-  // Y-axis tick marks
+  // Y-axis tick marks — show every 5th value (5, 10, 15, ...) to avoid clutter
   const yTicks = createMemo(() => {
+    const max = maxAbove();
+    const step = max <= 10 ? 1 : 5;
     const ticks: number[] = [];
-    for (let v = 1; v <= maxAbove(); v++) ticks.push(v);
+    for (let v = step; v <= max; v += step) ticks.push(v);
     return ticks;
   });
 
@@ -96,7 +98,7 @@ export const BurndownChart: Component<BurndownChartProps> = (props) => {
   const click = (i: number, seg: BurndownSegmentKind) => local.onSegmentClick?.(i, seg);
 
   return (
-    <svg class="sui-burndown" viewBox={`0 0 ${w()} ${h()}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto" }}>
+    <svg class="sui-burndown" viewBox={`0 0 ${w()} ${h()}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", "max-height": "100%" }}>
       {/* Axes */}
       <line x1={chartL} y1={zeroY()} x2={chartR()} y2={zeroY()} class="sui-burndown__axis" />
       <line x1={chartL} y1={chartT} x2={chartL} y2={chartB()} class="sui-burndown__axis" />
