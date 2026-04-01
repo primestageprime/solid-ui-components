@@ -1,6 +1,6 @@
 import { createMemo, createEffect, createSignal, on, For, onMount, onCleanup } from "solid-js";
 import type { DAGProps, PositionedNode } from "./types";
-import { computeLayout } from "./layout";
+import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
 import { createPanZoom } from "./pan-zoom";
 import "./DagChart.css";
@@ -83,9 +83,16 @@ export function DagChart<T>(props: DAGProps<T>) {
   const { transformString, fitToView, pointerHandlers, onWheel } = createPanZoom();
 
   // Always layout the FULL graph to preserve node ordering across focus changes
-  const fullLayout = createMemo(() =>
-    computeLayout(props.nodes, props.edges, direction(), props.nodeSize),
-  );
+  const EMPTY: LayoutResult = { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0 };
+
+  const fullLayout = createMemo(() => {
+    try {
+      return computeLayout(props.nodes, props.edges, direction(), props.nodeSize);
+    } catch (err) {
+      console.error("[DagChart] fullLayout memo failed:", err);
+      return EMPTY;
+    }
+  });
 
   // Collapse determines which nodes are visible and which become summaries
   const collapsed = createMemo(() =>

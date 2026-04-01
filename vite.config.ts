@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
         fileName: "index",
       },
       rollupOptions: {
-        external: ["solid-js", "solid-js/web", "solid-js/store", "katex"],
+        external: ["solid-js", "solid-js/web", "solid-js/store", "katex", "d3-dag"],
         output: {
           globals: {
             "solid-js": "solidJs",
