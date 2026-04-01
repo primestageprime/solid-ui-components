@@ -7,7 +7,7 @@
 // ============================================
 import { splitProps, For, createMemo, Show, createEffect } from "solid-js";
 import { SelectableTableProps, getCellValue, tableContainerStyle } from "./types";
-import { Button } from "../Button";
+import { Button } from "../Button/Button";
 
 export function SelectableTable<T extends Record<string, any>>(props: SelectableTableProps<T>) {
   const [local, others] = splitProps(props, [

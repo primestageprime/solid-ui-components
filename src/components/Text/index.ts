@@ -1,4 +1,4 @@
-export { Text, createText } from "./Text";
+export { createText } from "./Text";
 export type { TextProps, TextVariant, TextOverrides, TextDataProps } from "./Text";
 export { TextValue, TextLabel, TextTitle, TextBody, TextUnits, TextSublabel } from "./variants";
 export { MonoValue, MonoDump, NowrapBody, MutedBody, AccentBody } from "./variants";
