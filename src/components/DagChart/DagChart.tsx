@@ -80,7 +80,7 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const direction = createMemo(() => props.direction ?? autoDirection());
 
-  const { transformString, fitToView, pointerHandlers, onWheel } = createPanZoom();
+  const { transformString, fitToView, centerOnPoint, pointerHandlers, onWheel } = createPanZoom();
 
   // Always layout the FULL graph to preserve node ordering across focus changes
   const EMPTY: LayoutResult = { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0 };
@@ -157,10 +157,10 @@ export function DagChart<T>(props: DAGProps<T>) {
     });
   });
 
-  // Fit to view based on visible nodes' bounding box
+  // Fit to view: center on focused node if one exists, otherwise fit all visible nodes
   const viewBounds = createMemo(() => {
     const nodes = positionedNodes();
-    if (nodes.length === 0) return { width: 0, height: 0 };
+    if (nodes.length === 0) return { width: 0, height: 0, centerX: 0, centerY: 0 };
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.x - n.width / 2);
@@ -168,13 +168,26 @@ export function DagChart<T>(props: DAGProps<T>) {
       maxX = Math.max(maxX, n.x + n.width / 2);
       maxY = Math.max(maxY, n.y + n.height / 2);
     }
-    return { width: maxX - minX, height: maxY - minY };
+    return { width: maxX - minX, height: maxY - minY, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2 };
+  });
+
+  // Find the focused node's position for centering
+  const focusedPosition = createMemo(() => {
+    if (!props.focusedNodeId) return null;
+    const node = positionedNodes().find((n) => n.node.id === props.focusedNodeId);
+    return node ? { x: node.x, y: node.y } : null;
   });
 
   createEffect(
     on(
-      () => [viewBounds().width, viewBounds().height, containerWidth(), containerHeight()] as const,
-      ([w, h, cw, ch]) => fitToView(w, h, cw, ch),
+      () => [viewBounds(), focusedPosition(), containerWidth(), containerHeight()] as const,
+      ([bounds, focused, cw, ch]) => {
+        if (focused) {
+          centerOnPoint(focused.x, focused.y, cw, ch);
+        } else {
+          fitToView(bounds.width, bounds.height, cw, ch, bounds.centerX, bounds.centerY);
+        }
+      },
     ),
   );
 

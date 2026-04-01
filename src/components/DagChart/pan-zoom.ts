@@ -62,6 +62,8 @@ export function createPanZoom() {
     graphHeight: number,
     containerWidth: number,
     containerHeight: number,
+    centerX?: number,
+    centerY?: number,
   ) => {
     if (graphWidth === 0 || graphHeight === 0) return;
     if (containerWidth === 0 || containerHeight === 0) {
@@ -74,8 +76,29 @@ export function createPanZoom() {
     const scaleX = availableWidth / graphWidth;
     const scaleY = availableHeight / graphHeight;
     const scale = Math.max(MIN_SCALE, Math.min(scaleX, scaleY, 1));
-    const x = (containerWidth - graphWidth * scale) / 2;
-    const y = (containerHeight - graphHeight * scale) / 2;
+
+    // Center on the graph's center point (not assuming origin at 0,0)
+    const cx = centerX ?? graphWidth / 2;
+    const cy = centerY ?? graphHeight / 2;
+    const x = containerWidth / 2 - cx * scale;
+    const y = containerHeight / 2 - cy * scale;
+
+    setTransform({ x, y, scale });
+  };
+
+  /** Center the viewport on a specific point in graph space at the current scale (or scale 1). */
+  const centerOnPoint = (
+    pointX: number,
+    pointY: number,
+    containerWidth: number,
+    containerHeight: number,
+  ) => {
+    if (containerWidth === 0 || containerHeight === 0) return;
+
+    // Use current scale or default to 1
+    const scale = Math.max(MIN_SCALE, Math.min(transform().scale || 1, MAX_SCALE));
+    const x = containerWidth / 2 - pointX * scale;
+    const y = containerHeight / 2 - pointY * scale;
 
     setTransform({ x, y, scale });
   };
@@ -88,6 +111,7 @@ export function createPanZoom() {
   return {
     transformString,
     fitToView,
+    centerOnPoint,
     pointerHandlers: { onPointerDown, onPointerMove, onPointerUp },
     onWheel,
   };
