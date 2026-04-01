@@ -68,12 +68,20 @@ export function collapseGraph<T>(
 
   const summaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> = [];
   const summaryEdges: DAGEdge[] = [];
-  const processedBeyond = new Set<string>();
+  // Maps hidden node ID → the summary node ID that represents its subtree
+  const hiddenToSummary = new Map<string, string>();
 
   for (const neighborId of neighbors) {
     const neighborAdj = adj.get(neighborId) ?? new Set<string>();
     for (const beyondId of neighborAdj) {
-      if (visibleIds.has(beyondId) || processedBeyond.has(beyondId)) continue;
+      if (visibleIds.has(beyondId)) continue;
+
+      // If this hidden node's subtree already has a summary, just add an edge from this neighbor
+      const existingSummary = hiddenToSummary.get(beyondId);
+      if (existingSummary) {
+        summaryEdges.push({ source: neighborId, target: existingSummary });
+        continue;
+      }
 
       const reachable = reachableFrom(beyondId, adj, visibleIds);
       if (reachable.size === 0) continue;
@@ -87,7 +95,7 @@ export function collapseGraph<T>(
       });
       summaryEdges.push({ source: neighborId, target: summaryId });
 
-      for (const rid of reachable) processedBeyond.add(rid);
+      for (const rid of reachable) hiddenToSummary.set(rid, summaryId);
     }
   }
 
