@@ -17,6 +17,7 @@ export interface HeatStreamGridProps extends JSX.HTMLAttributes<HTMLDivElement> 
   data: (row: string, col: string) => HeatStreamItem[];
   onCellClick?: (row: string, col: string) => void;
   selectionStore?: SelectionStore<string>;
+  rowLabels?: Record<string, string>;
 }
 
 const cellKey = (row: string, col: string) => `${row}:${col}`;
@@ -29,6 +30,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
     "data",
     "onCellClick",
     "selectionStore",
+    "rowLabels",
     "class",
   ]);
 
@@ -142,6 +144,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                             keys={local.keys}
                             variant="compact"
                             showLabels={false}
+                            previewLabel={local.rowLabels?.[row] ?? row}
                           />
                         </Show>
                       </td>

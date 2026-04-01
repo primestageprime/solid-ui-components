@@ -69,6 +69,15 @@ export const Surface: Component<SurfaceProps> = (props) => {
   );
 };
 
-export function createSurface(defaults: Partial<Omit<SurfaceProps, "children">>): Component<SurfaceProps> {
+/** Props that are visual/layout overrides — locked at variant-definition time. */
+export type SurfaceOverrides = Pick<SurfaceProps,
+  "padding" | "radius" | "bg" | "borderColor" | "interactive" |
+  "direction" | "align" | "gap" | "minWidth" | "maxWidth"
+>;
+
+/** Props that remain available to consumers of a curried Surface variant. */
+export type SurfaceDataProps = Omit<SurfaceProps, keyof SurfaceOverrides>;
+
+export function createSurface(defaults: Partial<Omit<SurfaceProps, "children">>): Component<SurfaceDataProps> {
   return (props) => <Surface {...mergeProps(defaults, props)} />;
 }

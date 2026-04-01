@@ -48,6 +48,12 @@ export const Button: Component<ButtonProps> = (props) => {
   );
 };
 
-export function createButton(defaults: Partial<Omit<ButtonProps, "children">>): Component<ButtonProps> {
+/** Props that are visual/static overrides — locked at variant-definition time. */
+export type ButtonOverrides = Pick<ButtonProps, "variant" | "size" | "loading">;
+
+/** Props that remain available to consumers of a curried Button variant. */
+export type ButtonDataProps = Omit<ButtonProps, keyof ButtonOverrides>;
+
+export function createButton(defaults: Partial<Omit<ButtonProps, "children">>): Component<ButtonDataProps> {
   return (props) => <Button {...mergeProps(defaults, props)} />;
 }

@@ -45,6 +45,12 @@ export const Text: Component<TextProps> = (props) => {
   );
 };
 
-export function createText(defaults: Partial<Omit<TextProps, "children">>): Component<TextProps> {
+/** Props that are visual overrides — locked at variant-definition time. */
+export type TextOverrides = Pick<TextProps, "variant" | "color" | "as">;
+
+/** Props that remain available to consumers of a curried Text variant. */
+export type TextDataProps = Omit<TextProps, keyof TextOverrides>;
+
+export function createText(defaults: Partial<Omit<TextProps, "children">>): Component<TextDataProps> {
   return (props) => <Text {...mergeProps(defaults, props)} />;
 }

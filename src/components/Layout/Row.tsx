@@ -40,6 +40,12 @@ export const Row: Component<RowProps> = (props) => {
   );
 };
 
-export function createRow(defaults: Partial<Omit<RowProps, "children">>): Component<RowProps> {
+/** Props that are layout overrides — locked at variant-definition time. */
+export type RowOverrides = Pick<RowProps, "gap" | "align" | "justify" | "wrap">;
+
+/** Props that remain available to consumers of a curried Row variant. */
+export type RowDataProps = Omit<RowProps, keyof RowOverrides>;
+
+export function createRow(defaults: Partial<Omit<RowProps, "children">>): Component<RowDataProps> {
   return (props) => <Row {...mergeProps(defaults, props)} />;
 }

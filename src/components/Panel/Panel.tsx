@@ -63,6 +63,12 @@ export const Panel: Component<PanelProps> = (props) => {
   );
 };
 
-export function createPanel(defaults: Partial<Omit<PanelProps, "children">>): Component<PanelProps> {
+/** Props that are visual overrides — locked at variant-definition time. */
+export type PanelOverrides = Pick<PanelProps, "corners" | "variant" | "size" | "glow" | "edgeAccents">;
+
+/** Props that remain available to consumers of a curried Panel variant. */
+export type PanelDataProps = Omit<PanelProps, keyof PanelOverrides>;
+
+export function createPanel(defaults: Partial<Omit<PanelProps, "children">>): Component<PanelDataProps> {
   return (props) => <Panel {...mergeProps(defaults, props)} />;
 }

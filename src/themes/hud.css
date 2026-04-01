@@ -794,6 +794,70 @@ body {
   color: var(--sui-text-muted);
 }
 
+/* ---- Dropdown ---- */
+.sui-dropdown__trigger {
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-family);
+  font-weight: 500;
+}
+
+.sui-dropdown__trigger:hover {
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+}
+
+.sui-dropdown--open .sui-dropdown__trigger {
+  border-color: var(--sui-accent);
+}
+
+/* Subtle variant — looks like text until hover */
+.sui-dropdown--subtle .sui-dropdown__trigger {
+  background: transparent;
+  border-color: transparent;
+}
+
+.sui-dropdown--subtle .sui-dropdown__trigger:hover {
+  background: rgba(var(--sui-accent-rgb), 0.05);
+  border-color: var(--sui-border);
+}
+
+.sui-dropdown--subtle.sui-dropdown--open .sui-dropdown__trigger {
+  background: rgba(var(--sui-accent-rgb), 0.05);
+  border-color: var(--sui-border);
+}
+
+.sui-dropdown__menu {
+  background: var(--sui-bg-primary);
+  border: 1px solid var(--sui-border-bright);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(var(--sui-accent-rgb), 0.1);
+}
+
+.sui-dropdown__item {
+  background: transparent;
+  color: var(--sui-text-primary);
+}
+
+.sui-dropdown__item:hover {
+  background: rgba(var(--sui-accent-rgb), 0.1);
+}
+
+.sui-dropdown__item--active {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-accent);
+}
+
+.sui-dropdown__item--active .sui-dropdown__dot {
+  box-shadow: 0 0 6px currentColor;
+}
+
+.sui-dropdown__footer {
+  border-top: 1px solid var(--sui-border);
+}
+
 /* ---- DagChart ---- */
 .sui-dag__node-bg {
   fill: rgba(13, 26, 42, 0.8);

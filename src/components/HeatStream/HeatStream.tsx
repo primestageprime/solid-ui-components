@@ -20,6 +20,7 @@ export interface HeatStreamProps extends JSX.HTMLAttributes<HTMLDivElement> {
   showLegend?: boolean;
   showLabels?: boolean;
   variant?: "default" | "compact";
+  previewLabel?: string;
   onItemClick?: (name: string, key: string) => void;
 }
 
@@ -32,6 +33,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
     "showLegend",
     "showLabels",
     "variant",
+    "previewLabel",
     "onItemClick",
     "class",
   ]);
@@ -137,7 +139,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
       {/* Hover preview for compact variant */}
       <Show when={local.variant === "compact" && local.items.length > 0}>
         <div class="jtf-heatstream__preview" style={previewStyle()}>
-          <div class="jtf-heatstream__preview-heading">{local.items.length} vessel call{local.items.length !== 1 ? "s" : ""}</div>
+          <div class="jtf-heatstream__preview-heading">{local.previewLabel ? `${local.previewLabel} — ` : ""}{local.items.length} vessel call{local.items.length !== 1 ? "s" : ""}</div>
           <div class="jtf-heatstream__preview-rows">
             <For each={keys()}>
               {(key) => (

@@ -37,6 +37,12 @@ export const Stack: Component<StackProps> = (props) => {
   );
 };
 
-export function createStack(defaults: Partial<Omit<StackProps, "children">>): Component<StackProps> {
+/** Props that are layout overrides — locked at variant-definition time. */
+export type StackOverrides = Pick<StackProps, "gap" | "align" | "justify">;
+
+/** Props that remain available to consumers of a curried Stack variant. */
+export type StackDataProps = Omit<StackProps, keyof StackOverrides>;
+
+export function createStack(defaults: Partial<Omit<StackProps, "children">>): Component<StackDataProps> {
   return (props) => <Stack {...mergeProps(defaults, props)} />;
 }

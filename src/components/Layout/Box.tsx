@@ -34,6 +34,12 @@ export const Box: Component<BoxProps> = (props) => {
   );
 };
 
-export function createBox(defaults: Partial<Omit<BoxProps, "children">>): Component<BoxProps> {
+/** Props that are layout overrides — locked at variant-definition time. */
+export type BoxOverrides = Pick<BoxProps, "grow" | "shrink">;
+
+/** Props that remain available to consumers of a curried Box variant. */
+export type BoxDataProps = Omit<BoxProps, keyof BoxOverrides>;
+
+export function createBox(defaults: Partial<Omit<BoxProps, "children">>): Component<BoxDataProps> {
   return (props) => <Box {...mergeProps(defaults, props)} />;
 }

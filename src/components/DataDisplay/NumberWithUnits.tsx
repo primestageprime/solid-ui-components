@@ -4,7 +4,7 @@
 // Monospace value paired with units label.
 // ============================================
 import { Component, splitProps } from "solid-js";
-import { MonoValue } from "../Text/variants";
+import { Text } from "../Text/Text";
 import { TextUnits } from "../Text/variants";
 
 export interface NumberWithUnitsProps {
@@ -28,7 +28,7 @@ export const NumberWithUnits: Component<NumberWithUnitsProps> = (props) => {
 
   return (
     <span style={{ display: "inline-flex", "align-items": "baseline", gap: "4px", "white-space": "nowrap" }}>
-      <MonoValue color={local.color}>{formatted()}</MonoValue>
+      <Text variant="value" color={local.color} style={{ "font-family": '"JetBrains Mono", "Fira Code", monospace' }}>{formatted()}</Text>
       <TextUnits>{local.units}</TextUnits>
     </span>
   );

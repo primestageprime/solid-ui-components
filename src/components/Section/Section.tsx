@@ -92,6 +92,12 @@ export const Section: Component<SectionProps> = (props) => {
   );
 };
 
-export function createSection(defaults: Partial<Omit<SectionProps, "children">>): Component<SectionProps> {
+/** Props that are visual/behavioral overrides — locked at variant-definition time. */
+export type SectionOverrides = Pick<SectionProps, "variant" | "corners" | "fill" | "collapsible" | "defaultExpanded">;
+
+/** Props that remain available to consumers of a curried Section variant. */
+export type SectionDataProps = Omit<SectionProps, keyof SectionOverrides>;
+
+export function createSection(defaults: Partial<Omit<SectionProps, "children">>): Component<SectionDataProps> {
   return (props) => <Section {...mergeProps(defaults, props)} />;
 }
