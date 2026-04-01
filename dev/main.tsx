@@ -156,19 +156,57 @@ const nav: TabGroup[] = [
 
 const allItems = nav.flatMap((g) => g.children);
 
+/** Build a URL-friendly slug from group label: "Depth 2" → "depth-2" */
+const slugify = (label: string) => label.toLowerCase().replace(/\s+/g, "-");
+
+/** Map of item id → hash path, e.g. "dag-chart" → "atomic/dag-chart" */
+const itemPaths = new Map<string, string>();
+for (const group of nav) {
+  const groupSlug = slugify(group.label);
+  for (const item of group.children) {
+    itemPaths.set(item.id, `${groupSlug}/${item.id}`);
+  }
+}
+
+/** Find item id from a hash path like "atomic/dag-chart" */
+const idFromHash = (hash: string): string | null => {
+  const path = hash.replace(/^#\/?/, "");
+  for (const [id, p] of itemPaths) {
+    if (p === path) return id;
+  }
+  return null;
+};
+
 const App: Component = () => {
-  const [activeTab, setActiveTab] = createSignal("base-table");
+  const initialId = idFromHash(location.hash) ?? "base-table";
+  const [activeTab, setActiveTab] = createSignal(initialId);
   const openDefaults = Object.fromEntries(nav.map((g) => [g.label, true]));
   const [openGroups, setOpenGroups] = createSignal<Record<string, boolean>>(openDefaults);
+
+  // Sync hash → state on popstate (browser back/forward)
+  window.addEventListener("hashchange", () => {
+    const id = idFromHash(location.hash);
+    if (id) navigate(id, false);
+  });
 
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
 
-  const navigate = (id: string) => {
+  const navigate = (id: string, pushHash = true) => {
     setActiveTab(id);
     const group = nav.find((g) => g.children.some((c) => c.id === id));
     if (group) setOpenGroups((prev) => ({ ...prev, [group.label]: true }));
+    if (pushHash) {
+      const path = itemPaths.get(id);
+      if (path) location.hash = `/${path}`;
+    }
   };
+
+  // Set initial hash if not already set
+  if (!location.hash) {
+    const path = itemPaths.get(initialId);
+    if (path) location.hash = `/${path}`;
+  }
 
   return (
     <div class="showcase">
