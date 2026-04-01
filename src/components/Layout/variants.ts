@@ -24,6 +24,12 @@ export const LgRegion = createStack({ align: "center", justify: "center", gap: "
 // Row variants — named by layout behavior
 export const SpreadRow = createRow({ align: "center", justify: "between", gap: "md" });
 export const ClusterRow = createRow({ align: "center", gap: "sm" });
+export const TightClusterRow = createRow({ gap: "xs", align: "center" });
+export const TopClusterRow = createRow({ gap: "sm", align: "start" });
+export const TagRow = createRow({ gap: "xs", wrap: true, align: "center" });
+export const WrapRow = createRow({ gap: "xs", wrap: true });
+export const SpacedClusterRow = createRow({ gap: "md", align: "center" });
+export const FlexRow = createRow({});
 
 // Box variants — named by flex-child behavior
 export const ActionSlot = createBox({ shrink: false });

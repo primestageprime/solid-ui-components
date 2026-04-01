@@ -7,6 +7,6 @@ export type { BoxProps, BoxOverrides, BoxDataProps } from "./Box";
 export {
   TightStack, NarrowStack, SpacedStack, ContentStack, CenteredStack, PageStack,
   SmRegion, MdRegion, LgRegion,
-  SpreadRow, ClusterRow,
+  SpreadRow, ClusterRow, TightClusterRow, TopClusterRow, TagRow, WrapRow, SpacedClusterRow, FlexRow,
   ActionSlot, FadedBox, ConstrainedBox,
 } from "./variants";
