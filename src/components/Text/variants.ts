@@ -49,3 +49,17 @@ export const InfoTitle = createText({ variant: "title", color: "#00d4ff" });
 export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
 export const SuccessTitle = createText({ variant: "title", color: "#00ff88" });
 export const DangerTitle = createText({ variant: "title", color: "#ff0040" });
+
+// ── Dashboard / game text roles ──
+
+/** Large score readout — 3rem, tight line-height */
+export const ScoreValue = createText({ variant: "value", as: "div", style: { "font-size": "3rem", "line-height": "1" } });
+
+/** Multiplier readout — primary-colored, medium size */
+export const MultiplierLabel = createText({ variant: "value", color: "var(--sui-color-primary, #00d4ff)", style: { "font-size": "1.25rem" } });
+
+/** Monospace formula variable */
+export const FormulaVar = createText({ variant: "value", style: { "font-family": "ui-monospace, monospace", "font-size": "1rem" } });
+
+/** Centered hint/insight text */
+export const HintText = createText({ variant: "sublabel", style: { "text-align": "center" } });

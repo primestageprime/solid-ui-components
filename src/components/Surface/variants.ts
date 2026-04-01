@@ -41,3 +41,6 @@ export const SquareCard = createSurface({
   direction: "column", align: "center", gap: "sm",
   minWidth: "180px", maxWidth: "260px",
 });
+
+/** Dark recessed container for formula/code displays */
+export const FormulaBlock = createSurface({ padding: "sm", radius: "sm", bg: "var(--sui-bg-inset, #0a0a0a)" });
