@@ -1,11 +1,10 @@
 .sui-dag {
   display: block;
   width: 100%;
-  height: auto;
-  overflow: visible;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
 }
-
-/* ── Edges ── */
 
 .sui-dag__edge {
   stroke: var(--sui-border, #334155);
@@ -13,169 +12,10 @@
   fill: none;
 }
 
-.sui-dag__arrow {
-  fill: var(--sui-border, #334155);
-}
-
-/* ── Nodes ── */
-
-.sui-dag__node {
-  cursor: default;
-}
-
-.sui-dag__node--clickable {
+.sui-dag__node-wrapper {
   cursor: pointer;
 }
 
-.sui-dag__node-rect {
-  fill: var(--sui-bg-elevated, #1e2a3e);
-  stroke-width: 2;
-  transition: filter 0.15s;
-}
-
-/* Status border/fill colors */
-
-.sui-dag__node--success .sui-dag__node-rect {
-  stroke: var(--sui-success, #22c55e);
-  fill: rgba(var(--sui-success-rgb, 34, 197, 94), 0.1);
-}
-
-.sui-dag__node--warning .sui-dag__node-rect {
-  stroke: var(--sui-warning, #f59e0b);
-  fill: rgba(var(--sui-warning-rgb, 245, 158, 11), 0.1);
-}
-
-.sui-dag__node--danger .sui-dag__node-rect {
-  stroke: var(--sui-danger, #ef4444);
-  fill: rgba(var(--sui-danger-rgb, 239, 68, 68), 0.1);
-}
-
-.sui-dag__node--pending .sui-dag__node-rect {
-  stroke: var(--sui-text-muted, #64748b);
-  fill: var(--sui-bg-elevated, #1e2a3e);
-}
-
-/* Hover: brighten node border */
-
-.sui-dag__node--clickable:hover .sui-dag__node-rect {
-  filter: brightness(1.3);
-}
-
-/* ── Text ── */
-
-.sui-dag__node-label {
-  font-size: 15px;
-  fill: var(--sui-text-primary, #f1f5f9);
-  font-family: inherit;
-  font-weight: 600;
-  pointer-events: none;
-}
-
-.sui-dag__node-sublabel {
-  font-size: 12px;
-  fill: var(--sui-text-muted, #64748b);
-  font-family: inherit;
-  pointer-events: none;
-}
-
-.sui-dag__node-estimate {
-  font-size: 12px;
-  fill: var(--sui-text-muted, #64748b);
-  font-family: inherit;
-  pointer-events: none;
-}
-
-.sui-dag__node-tags {
-  font-size: 11px;
-  fill: var(--sui-accent, #38bdf8);
-  font-family: inherit;
-  pointer-events: none;
-}
-
-.sui-dag__node-files {
-  font-size: 11px;
-  fill: var(--sui-text-muted, #64748b);
-  font-family: inherit;
-  cursor: default;
-  text-decoration: underline dotted;
-}
-
-.sui-dag__node-avatar {
-  pointer-events: none;
-}
-
-/* ── Compact node text ── */
-
-.sui-dag__node-label--compact {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.sui-dag__node-duration {
-  font-size: 11px;
-  fill: var(--sui-text-muted, #64748b);
-  font-family: inherit;
-  pointer-events: none;
-}
-
-/* ── Description (3-line clamp inside foreignObject) ── */
-
-.sui-dag__desc-wrap {
-  font-family: inherit;
-}
-
-.sui-dag__desc-clamp {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--sui-text-secondary, #94a3b8);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.sui-dag__desc-more {
-  font-size: 11px;
-  color: var(--sui-accent, #38bdf8);
-  cursor: pointer;
-  display: inline-block;
-  margin-top: 2px;
-}
-
-.sui-dag__desc-more:hover {
-  text-decoration: underline;
-}
-
-/* ── Expanded description overlay ── */
-
-.sui-dag__expanded-bg {
-  fill: var(--sui-bg-elevated, #1e2a3e);
-  stroke: var(--sui-accent, #38bdf8);
-  stroke-width: 1;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-}
-
-.sui-dag__desc-full {
-  font-family: inherit;
-  overflow-y: auto;
-  max-height: 100%;
-}
-
-.sui-dag__desc-full-text {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--sui-text-secondary, #94a3b8);
-  white-space: pre-wrap;
-}
-
-.sui-dag__desc-less {
-  font-size: 11px;
-  color: var(--sui-accent, #38bdf8);
-  cursor: pointer;
-  display: inline-block;
-  margin-top: 6px;
-}
-
-.sui-dag__desc-less:hover {
-  text-decoration: underline;
+.sui-dag__node-wrapper:hover {
+  filter: brightness(1.15);
 }
