@@ -30,7 +30,6 @@ export * from "./components/Tabs";
 export * from "./components/ButtonGroup";
 export * from "./components/List";
 export * from "./components/Selector";
-export * from "./components/Dropdown";
 export * from "./components/VesselCallHeader";
 export * from "./components/DataList";
 export * from "./components/MathFormula";
