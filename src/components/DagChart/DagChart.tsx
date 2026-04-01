@@ -140,9 +140,14 @@ export function DagChart<T>(props: DAGProps<T>) {
                 width={positioned.width}
                 height={positioned.height}
                 class="sui-dag__node-wrapper"
-                onClick={() => handleNodeClick(positioned.node.id)}
               >
-                {props.renderNode(positioned.node, positioned.state)}
+                <div
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => handleNodeClick(positioned.node.id)}
+                  style={{ width: "100%", height: "100%", cursor: "pointer" }}
+                >
+                  {props.renderNode(positioned.node, positioned.state)}
+                </div>
               </foreignObject>
             )}
           </For>

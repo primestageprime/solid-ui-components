@@ -56,10 +56,14 @@ export function computeLayout<T>(
 
   const dag = graphStratify()(stratifyData);
 
-  // nodeSize callback receives a dag node with a `.data` property holding stratifyData items
+  // nodeSize callback receives a dag node with a `.data` property holding stratifyData items.
+  // Sugiyama nodeSize is [across-layer, along-layer]. In vertical mode (top→bottom),
+  // across=width, along=height. In horizontal mode we swap x/y after layout, so we must
+  // also swap nodeSize: across=height, along=width.
   const layout = sugiyama()
     .nodeSize((dagNode: { data: { id: string } }) => {
-      return sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
+      const [w, h] = sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
+      return direction === "horizontal" ? [h, w] : [w, h];
     })
     .gap(DEFAULT_GAP);
 
