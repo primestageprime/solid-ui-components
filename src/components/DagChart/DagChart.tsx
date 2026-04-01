@@ -10,24 +10,26 @@ const RESPONSIVE_BREAKPOINT = 640;
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
 
-/** Clip a point to the boundary of a rectangle, moving it along the line from center to point. */
-function clipToRect(point: Point, center: Point, rect: Rect): Point {
-  const dx = point.x - center.x;
-  const dy = point.y - center.y;
-  if (dx === 0 && dy === 0) return point;
+/**
+ * Find where the line from `from` toward `to` exits `rect` (centered at `from`).
+ * Returns the intersection point on the rectangle boundary.
+ */
+function clipToRectBoundary(from: Point, to: Point, rect: Rect): Point {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (dx === 0 && dy === 0) return from;
 
   const halfW = rect.width / 2;
   const halfH = rect.height / 2;
 
-  // Find the intersection with the rectangle boundary
   const scaleX = dx !== 0 ? halfW / Math.abs(dx) : Infinity;
   const scaleY = dy !== 0 ? halfH / Math.abs(dy) : Infinity;
   const scale = Math.min(scaleX, scaleY);
 
-  return { x: center.x + dx * scale, y: center.y + dy * scale };
+  return { x: from.x + dx * scale, y: from.y + dy * scale };
 }
 
-/** Convert an array of {x,y} points into a smooth SVG path, clipping endpoints to node boundaries. */
+/** Convert points into a smooth SVG path, clipping endpoints to node boundaries. */
 function buildEdgePath(
   points: Point[],
   sourceRect: Rect | undefined,
@@ -35,19 +37,18 @@ function buildEdgePath(
 ): string {
   if (points.length < 2) return "";
 
-  // Clone points so we can modify endpoints
   const pts = points.map((p) => ({ ...p }));
 
-  // Clip start point to source node boundary
-  if (sourceRect && pts.length >= 2) {
+  // Clip start: from source center outward toward the next waypoint
+  if (sourceRect) {
     const center = { x: sourceRect.x, y: sourceRect.y };
-    pts[0] = clipToRect(pts[1], center, sourceRect);
+    pts[0] = clipToRectBoundary(center, pts[1], sourceRect);
   }
 
-  // Clip end point to target node boundary
-  if (targetRect && pts.length >= 2) {
+  // Clip end: from target center outward toward the previous waypoint
+  if (targetRect) {
     const center = { x: targetRect.x, y: targetRect.y };
-    pts[pts.length - 1] = clipToRect(pts[pts.length - 2], center, targetRect);
+    pts[pts.length - 1] = clipToRectBoundary(center, pts[pts.length - 2], targetRect);
   }
 
   const start = pts[0];
@@ -79,18 +80,16 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const direction = createMemo(() => props.direction ?? autoDirection());
 
-  const { transformString, fitToView, handlers } = createPanZoom();
+  const { transformString, fitToView, pointerHandlers, onWheel } = createPanZoom();
 
   // Collapse graph around focused node
   const collapsed = createMemo(() =>
     collapseGraph(props.nodes, props.edges, props.focusedNodeId),
   );
 
-  // Extract collapsed nodes as plain DAGNode array for layout
   const collapsedNodes = createMemo(() => collapsed().visibleNodes.map((v) => v.node));
   const collapsedEdges = createMemo(() => collapsed().visibleEdges);
 
-  // Build a lookup from node id → NodeRenderState for merging with layout positions
   const stateMap = createMemo(() =>
     new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
   );
@@ -100,30 +99,39 @@ export function DagChart<T>(props: DAGProps<T>) {
     computeLayout(collapsedNodes(), collapsedEdges(), direction(), props.nodeSize),
   );
 
-  // Merge layout positions with node data and render state into PositionedNode[]
-  const positionedNodes = createMemo((): PositionedNode<T>[] => {
-    const { positions } = layout();
-    return collapsedNodes().flatMap((node) => {
-      const pos = positions.get(node.id);
+  // Hoist positions for use in both edge and node rendering
+  const positions = createMemo(() => layout().positions);
+
+  // Merge layout positions with node data and render state
+  const positionedNodes = createMemo((): PositionedNode<T>[] =>
+    collapsedNodes().flatMap((node) => {
+      const pos = positions().get(node.id);
       const state = stateMap().get(node.id);
       if (!pos || !state) return [];
       return [{ node, x: pos.x, y: pos.y, width: pos.width, height: pos.height, state }];
-    });
-  });
+    }),
+  );
 
   // Fit to view whenever the layout dimensions change
   createEffect(
     on(
       () => [layout().totalWidth, layout().totalHeight] as const,
-      ([w, h]) => {
-        fitToView(w, h, containerWidth(), containerHeight());
-      },
+      ([w, h]) => fitToView(w, h, containerWidth(), containerHeight()),
     ),
   );
+
+  // Attach wheel handler imperatively with { passive: false } so preventDefault works
+  onMount(() => {
+    if (!svgRef) return;
+    const handler = onWheel as EventListener;
+    svgRef.addEventListener("wheel", handler, { passive: false });
+    onCleanup(() => svgRef!.removeEventListener("wheel", handler));
+  });
 
   // Auto-detect direction from container width via ResizeObserver
   onMount(() => {
     if (!containerRef) return;
+    if (typeof ResizeObserver === "undefined") return;
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
@@ -149,25 +157,19 @@ export function DagChart<T>(props: DAGProps<T>) {
       <svg
         ref={svgRef}
         class="sui-dag"
-        onPointerDown={handlers.onPointerDown}
-        onPointerMove={handlers.onPointerMove}
-        onPointerUp={handlers.onPointerUp}
-        onWheel={handlers.onWheel}
+        onPointerDown={pointerHandlers.onPointerDown}
+        onPointerMove={pointerHandlers.onPointerMove}
+        onPointerUp={pointerHandlers.onPointerUp}
       >
         <g transform={transformString()}>
           {/* Edges */}
           <For each={layout().edges}>
-            {(edge) => {
-              const positions = layout().positions;
-              const sourceRect = positions.get(edge.sourceId);
-              const targetRect = positions.get(edge.targetId);
-              return (
-                <path
-                  class="sui-dag__edge"
-                  d={buildEdgePath(edge.points, sourceRect, targetRect)}
-                />
-              );
-            }}
+            {(edge) => (
+              <path
+                class="sui-dag__edge"
+                d={buildEdgePath(edge.points, positions().get(edge.sourceId), positions().get(edge.targetId))}
+              />
+            )}
           </For>
 
           {/* Nodes */}

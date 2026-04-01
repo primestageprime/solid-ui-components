@@ -5,27 +5,19 @@ export type CollapseResult<T> = {
   visibleEdges: DAGEdge[];
 };
 
-/** Builds an undirected adjacency map from a set of directed edges. */
 function buildAdjacency(edges: DAGEdge[]): Map<string, Set<string>> {
   const adj = new Map<string, Set<string>>();
-
   const ensureSet = (id: string): Set<string> => {
     if (!adj.has(id)) adj.set(id, new Set());
     return adj.get(id)!;
   };
-
   for (const e of edges) {
     ensureSet(e.source).add(e.target);
     ensureSet(e.target).add(e.source);
   }
-
   return adj;
 }
 
-/**
- * BFS from `start`, treating `excluded` as a boundary that stops traversal.
- * Returns all reachable node ids (not including nodes in `excluded`).
- */
 function reachableFrom(
   start: string,
   adj: Map<string, Set<string>>,
@@ -33,38 +25,17 @@ function reachableFrom(
 ): Set<string> {
   const visited = new Set<string>();
   const queue = [start];
-
   while (queue.length > 0) {
     const id = queue.pop()!;
     if (visited.has(id) || excluded.has(id)) continue;
     visited.add(id);
-
     for (const neighbor of adj.get(id) ?? []) {
-      if (!excluded.has(neighbor) && !visited.has(neighbor)) {
-        queue.push(neighbor);
-      }
+      if (!excluded.has(neighbor) && !visited.has(neighbor)) queue.push(neighbor);
     }
   }
-
   return visited;
 }
 
-/**
- * Collapses the graph around a focused node.
- *
- * When `focusedNodeId` is provided:
- * - The focused node and its immediate neighbors remain visible.
- * - Sub-graphs beyond those neighbors are replaced by a single collapsed summary node
- *   attached to the neighbor that connects to them.
- * - Summary nodes carry `state.collapsed = true` and `state.collapsedCount`.
- *
- * When `focusedNodeId` is absent, all nodes and edges are returned unmodified.
- *
- * @param nodes         - All nodes in the graph.
- * @param edges         - All directed edges (source → target).
- * @param focusedNodeId - The node to focus on, or `undefined` for no focus.
- * @returns Visible nodes with render states, and the edges that connect them.
- */
 export function collapseGraph<T>(
   nodes: DAGNode<T>[],
   edges: DAGEdge[],
@@ -72,17 +43,26 @@ export function collapseGraph<T>(
 ): CollapseResult<T> {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
-  if (!focusedNodeId || !nodeMap.has(focusedNodeId)) {
+  if (!focusedNodeId) {
     return {
-      visibleNodes: nodes.map((n) => ({
-        node: n,
-        state: { collapsed: false, collapsedCount: 0, focused: false, adjacent: false },
-      })),
+      visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
       visibleEdges: edges,
     };
   }
 
-  const adj = buildAdjacency(edges);
+  if (!nodeMap.has(focusedNodeId)) {
+    console.warn("[DagChart] focusedNodeId not found in nodes — showing full graph.", { focusedNodeId });
+    return {
+      visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
+      visibleEdges: edges,
+    };
+  }
+
+  // Filter edges to only those referencing known nodes
+  const knownIds = new Set(nodes.map((n) => n.id));
+  const validEdges = edges.filter((e) => knownIds.has(e.source) && knownIds.has(e.target));
+
+  const adj = buildAdjacency(validEdges);
   const neighbors = adj.get(focusedNodeId) ?? new Set<string>();
   const visibleIds = new Set([focusedNodeId, ...neighbors]);
 
@@ -92,11 +72,9 @@ export function collapseGraph<T>(
 
   for (const neighborId of neighbors) {
     const neighborAdj = adj.get(neighborId) ?? new Set<string>();
-
     for (const beyondId of neighborAdj) {
       if (visibleIds.has(beyondId) || processedBeyond.has(beyondId)) continue;
 
-      // BFS the sub-graph beyond this entry point, excluding already-visible nodes
       const reachable = reachableFrom(beyondId, adj, visibleIds);
       if (reachable.size === 0) continue;
 
@@ -105,11 +83,10 @@ export function collapseGraph<T>(
 
       summaryNodes.push({
         node: { id: summaryId, data: (firstHidden?.data ?? {}) as T },
-        state: { collapsed: true, collapsedCount: reachable.size, focused: false, adjacent: false },
+        state: { kind: "collapsed", collapsedCount: reachable.size },
       });
       summaryEdges.push({ source: neighborId, target: summaryId });
 
-      // Mark all reachable nodes as processed so they are not double-summarised
       for (const rid of reachable) processedBeyond.add(rid);
     }
   }
@@ -117,26 +94,18 @@ export function collapseGraph<T>(
   const primaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> = [...visibleIds]
     .flatMap((id) => {
       const node = nodeMap.get(id);
-      return node
-        ? [
-            {
-              node,
-              state: {
-                collapsed: false,
-                collapsedCount: 0,
-                focused: id === focusedNodeId,
-                adjacent: id !== focusedNodeId,
-              },
-            },
-          ]
-        : [];
+      if (!node) return [];
+      const state: NodeRenderState = id === focusedNodeId
+        ? { kind: "focused" }
+        : { kind: "adjacent" };
+      return [{ node, state }];
     });
 
   const visibleNodes = [...primaryNodes, ...summaryNodes];
   const allVisibleIds = new Set(visibleNodes.map((v) => v.node.id));
 
   const visibleEdges = [
-    ...edges.filter((e) => allVisibleIds.has(e.source) && allVisibleIds.has(e.target)),
+    ...validEdges.filter((e) => allVisibleIds.has(e.source) && allVisibleIds.has(e.target)),
     ...summaryEdges,
   ];
 

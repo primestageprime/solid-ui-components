@@ -1,6 +1,6 @@
 /* @refresh reload */
 import { render, Dynamic } from "solid-js/web";
-import { createSignal, For, Show, Component } from "solid-js";
+import { createSignal, For, Show, Component, onMount, onCleanup } from "solid-js";
 import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -183,12 +183,6 @@ const App: Component = () => {
   const openDefaults = Object.fromEntries(nav.map((g) => [g.label, true]));
   const [openGroups, setOpenGroups] = createSignal<Record<string, boolean>>(openDefaults);
 
-  // Sync hash → state on popstate (browser back/forward)
-  window.addEventListener("hashchange", () => {
-    const id = idFromHash(location.hash);
-    if (id) navigate(id, false);
-  });
-
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
 
@@ -201,6 +195,16 @@ const App: Component = () => {
       if (path) location.hash = `/${path}`;
     }
   };
+
+  // Sync hash → state on browser back/forward
+  onMount(() => {
+    const handler = () => {
+      const id = idFromHash(location.hash);
+      if (id) navigate(id, false);
+    };
+    window.addEventListener("hashchange", handler);
+    onCleanup(() => window.removeEventListener("hashchange", handler));
+  });
 
   // Set initial hash if not already set
   if (!location.hash) {

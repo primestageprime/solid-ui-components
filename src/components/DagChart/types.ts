@@ -10,12 +10,11 @@ export type DAGEdge = {
   target: string;
 };
 
-export type NodeRenderState = {
-  collapsed: boolean;
-  collapsedCount: number;
-  focused: boolean;
-  adjacent: boolean;
-};
+export type NodeRenderState =
+  | { kind: "focused" }
+  | { kind: "adjacent" }
+  | { kind: "normal" }
+  | { kind: "collapsed"; collapsedCount: number };
 
 export type DAGProps<T = unknown> = {
   nodes: DAGNode<T>[];
@@ -27,7 +26,7 @@ export type DAGProps<T = unknown> = {
   focusedNodeId?: string;
 };
 
-/** Internal positioned node after layout + collapse. */
+/** Internal: positioned node after layout + collapse. */
 export type PositionedNode<T = unknown> = {
   node: DAGNode<T>;
   x: number;
@@ -37,7 +36,7 @@ export type PositionedNode<T = unknown> = {
   state: NodeRenderState;
 };
 
-/** Internal edge path after layout. */
+/** Internal: edge path after layout. */
 export type LayoutEdge = {
   sourceId: string;
   targetId: string;

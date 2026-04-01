@@ -8,36 +8,23 @@ const ZOOM_IN_FACTOR = 1.1;
 const ZOOM_OUT_FACTOR = 0.9;
 const FIT_PADDING = 40;
 
-/**
- * Creates a reactive pan/zoom manager for an SVG canvas.
- *
- * Returns a transform signal, event handlers to attach to the SVG element,
- * a `fitToView` helper for centering the graph, and a `transformString`
- * accessor that produces the SVG `transform` attribute value.
- *
- * All state transitions are pure: the `setTransform` updater functions
- * never mutate their input and always derive a fresh `Transform`.
- *
- * @example
- * ```tsx
- * const { transformString, fitToView, handlers } = createPanZoom();
- * <svg {...handlers}>
- *   <g transform={transformString()}>...</g>
- * </svg>
- * ```
- */
 export function createPanZoom() {
   const [transform, setTransform] = createSignal<Transform>({ x: 0, y: 0, scale: 1 });
 
-  // Mutable interaction state — kept outside signals because these are
-  // transient mid-gesture values, not reactive UI state.
   let dragging = false;
   let lastPointer = { x: 0, y: 0 };
 
   const onPointerDown = (e: PointerEvent) => {
     dragging = true;
     lastPointer = { x: e.clientX, y: e.clientY };
-    (e.currentTarget as SVGElement).setPointerCapture(e.pointerId);
+    const el = e.currentTarget as SVGElement | null;
+    if (el && typeof el.setPointerCapture === "function") {
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // setPointerCapture can throw InvalidStateError; pan still works without capture.
+      }
+    }
   };
 
   const onPointerMove = (e: PointerEvent) => {
@@ -52,12 +39,15 @@ export function createPanZoom() {
     dragging = false;
   };
 
+  // Exposed as a raw handler for imperative addEventListener({ passive: false })
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
     setTransform((t) => {
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor));
-      const rect = (e.currentTarget as SVGElement).getBoundingClientRect();
+      const el = e.currentTarget as SVGElement | null;
+      if (!el) return t;
+      const rect = el.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
       const ds = newScale / t.scale;
@@ -65,17 +55,15 @@ export function createPanZoom() {
     });
   };
 
-  /**
-   * Centers and scales the graph to fill the container, capped at scale 1
-   * so the graph is never enlarged beyond its natural size.
-   */
   const fitToView = (
     graphWidth: number,
     graphHeight: number,
     containerWidth: number,
     containerHeight: number,
   ) => {
-    if (graphWidth === 0 || graphHeight === 0 || containerWidth === 0 || containerHeight === 0) {
+    if (graphWidth === 0 || graphHeight === 0) return;
+    if (containerWidth === 0 || containerHeight === 0) {
+      console.warn("[DagChart] fitToView skipped — container has zero dimensions.");
       return;
     }
 
@@ -83,23 +71,22 @@ export function createPanZoom() {
     const availableHeight = containerHeight - FIT_PADDING * 2;
     const scaleX = availableWidth / graphWidth;
     const scaleY = availableHeight / graphHeight;
-    const scale = Math.min(scaleX, scaleY, 1);
+    const scale = Math.max(MIN_SCALE, Math.min(scaleX, scaleY, 1));
     const x = (containerWidth - graphWidth * scale) / 2;
     const y = (containerHeight - graphHeight * scale) / 2;
 
     setTransform({ x, y, scale });
   };
 
-  /** Returns the SVG `transform` attribute string for the current state. */
   const transformString = (): string => {
     const t = transform();
     return `translate(${t.x}, ${t.y}) scale(${t.scale})`;
   };
 
   return {
-    transform,
     transformString,
     fitToView,
-    handlers: { onPointerDown, onPointerMove, onPointerUp, onWheel },
+    pointerHandlers: { onPointerDown, onPointerMove, onPointerUp },
+    onWheel,
   };
 }

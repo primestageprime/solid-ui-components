@@ -45,7 +45,7 @@ const statusBg: Record<TaskData["status"], string> = {
 };
 
 function renderTaskNode(node: DAGNode<TaskData>, state: NodeRenderState) {
-  if (state.collapsed) {
+  if (state.kind === "collapsed") {
     return (
       <div style={{
         display: "flex",
@@ -68,7 +68,7 @@ function renderTaskNode(node: DAGNode<TaskData>, state: NodeRenderState) {
   const d = node.data;
   const borderColor = statusColors[d.status];
   const bg = statusBg[d.status];
-  const opacity = state.focused ? "1" : state.adjacent ? "0.85" : "0.6";
+  const opacity = state.kind === "focused" ? "1" : state.kind === "adjacent" ? "0.85" : "0.6";
 
   return (
     <div style={{
