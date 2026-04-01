@@ -212,7 +212,9 @@ export function DagChart<T>(props: DAGProps<T>) {
       setContainerWidth(width);
       setContainerHeight(height);
       if (!props.direction) {
-        setAutoDirection(width < RESPONSIVE_BREAKPOINT ? "vertical" : "horizontal");
+        // Default to vertical (most DAGs are deeper than wide). Only switch to
+        // horizontal when the container is very wide and short (e.g. landscape > 2:1).
+        setAutoDirection(width > height * 2 ? "horizontal" : "vertical");
       }
     });
 
