@@ -21,8 +21,10 @@ export function createPanZoom() {
     if (el && typeof el.setPointerCapture === "function") {
       try {
         el.setPointerCapture(e.pointerId);
-      } catch {
-        // setPointerCapture can throw InvalidStateError; pan still works without capture.
+      } catch (err) {
+        if (!(err instanceof DOMException && err.name === "InvalidStateError")) {
+          console.warn("[DagChart] setPointerCapture threw:", err);
+        }
       }
     }
   };
@@ -42,14 +44,14 @@ export function createPanZoom() {
   // Exposed as a raw handler for imperative addEventListener({ passive: false })
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
+    const el = e.currentTarget as SVGElement | null;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const factor = e.deltaY > 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
     setTransform((t) => {
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor));
-      const el = e.currentTarget as SVGElement | null;
-      if (!el) return t;
-      const rect = el.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
       const ds = newScale / t.scale;
       return { x: cx - ds * (cx - t.x), y: cy - ds * (cy - t.y), scale: newScale };
     });

@@ -166,17 +166,18 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   createEffect(
     on(
-      () => [viewBounds().width, viewBounds().height] as const,
-      ([w, h]) => fitToView(w, h, containerWidth(), containerHeight()),
+      () => [viewBounds().width, viewBounds().height, containerWidth(), containerHeight()] as const,
+      ([w, h, cw, ch]) => fitToView(w, h, cw, ch),
     ),
   );
 
   // Attach wheel handler imperatively with { passive: false } so preventDefault works
   onMount(() => {
-    if (!svgRef) return;
+    const svg = svgRef;
+    if (!svg) return;
     const handler = onWheel as EventListener;
-    svgRef.addEventListener("wheel", handler, { passive: false });
-    onCleanup(() => svgRef!.removeEventListener("wheel", handler));
+    svg.addEventListener("wheel", handler, { passive: false });
+    onCleanup(() => svg.removeEventListener("wheel", handler));
   });
 
   // Auto-detect direction from container width via ResizeObserver

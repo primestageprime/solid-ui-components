@@ -42,25 +42,20 @@ export function collapseGraph<T>(
   focusedNodeId: string | undefined,
 ): CollapseResult<T> {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const knownIds = new Set(nodes.map((n) => n.id));
+  const validEdges = edges.filter((e) => knownIds.has(e.source) && knownIds.has(e.target));
 
-  if (!focusedNodeId) {
-    return {
-      visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
-      visibleEdges: edges,
-    };
-  }
+  const fullGraph = {
+    visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
+    visibleEdges: validEdges,
+  };
+
+  if (!focusedNodeId) return fullGraph;
 
   if (!nodeMap.has(focusedNodeId)) {
     console.warn("[DagChart] focusedNodeId not found in nodes — showing full graph.", { focusedNodeId });
-    return {
-      visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
-      visibleEdges: edges,
-    };
+    return fullGraph;
   }
-
-  // Filter edges to only those referencing known nodes
-  const knownIds = new Set(nodes.map((n) => n.id));
-  const validEdges = edges.filter((e) => knownIds.has(e.source) && knownIds.has(e.target));
 
   const adj = buildAdjacency(validEdges);
   const neighbors = adj.get(focusedNodeId) ?? new Set<string>();
@@ -76,10 +71,12 @@ export function collapseGraph<T>(
     for (const beyondId of neighborAdj) {
       if (visibleIds.has(beyondId)) continue;
 
-      // If this hidden node's subtree already has a summary, just add an edge from this neighbor
+      // If this hidden node's subtree already has a summary, add an edge (if not duplicate)
       const existingSummary = hiddenToSummary.get(beyondId);
       if (existingSummary) {
-        summaryEdges.push({ source: neighborId, target: existingSummary });
+        if (!summaryEdges.some((se) => se.source === neighborId && se.target === existingSummary)) {
+          summaryEdges.push({ source: neighborId, target: existingSummary });
+        }
         continue;
       }
 
