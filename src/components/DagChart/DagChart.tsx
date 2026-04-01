@@ -82,40 +82,74 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const { transformString, fitToView, pointerHandlers, onWheel } = createPanZoom();
 
-  // Collapse graph around focused node
+  // Always layout the FULL graph to preserve node ordering across focus changes
+  const fullLayout = createMemo(() =>
+    computeLayout(props.nodes, props.edges, direction(), props.nodeSize),
+  );
+
+  // Collapse determines which nodes are visible and which become summaries
   const collapsed = createMemo(() =>
     collapseGraph(props.nodes, props.edges, props.focusedNodeId),
   );
-
-  const collapsedNodes = createMemo(() => collapsed().visibleNodes.map((v) => v.node));
-  const collapsedEdges = createMemo(() => collapsed().visibleEdges);
 
   const stateMap = createMemo(() =>
     new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
   );
 
-  // Compute layout
-  const layout = createMemo(() =>
-    computeLayout(collapsedNodes(), collapsedEdges(), direction(), props.nodeSize),
-  );
+  // Merge full-graph positions with collapse state.
+  // Real nodes use their full-graph position. Summary nodes (__collapsed_<beyondId>)
+  // use the position of the first hidden node from the full graph.
+  const DEFAULT_SIZE: [number, number] = [180, 60];
 
-  // Hoist positions for use in both edge and node rendering
-  const positions = createMemo(() => layout().positions);
+  const positionedNodes = createMemo((): PositionedNode<T>[] => {
+    const positions = fullLayout().positions;
+    return collapsed().visibleNodes.flatMap(({ node, state }) => {
+      const pos = positions.get(node.id);
+      if (pos) {
+        return [{ node, x: pos.x, y: pos.y, width: pos.width, height: pos.height, state }];
+      }
+      // Summary node: extract beyondId from __collapsed_<beyondId> and use its position
+      const beyondId = node.id.startsWith("__collapsed_") ? node.id.slice(12) : null;
+      const fallbackPos = beyondId ? positions.get(beyondId) : undefined;
+      if (fallbackPos) {
+        const size = props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
+        return [{ node, x: fallbackPos.x, y: fallbackPos.y, width: size[0], height: size[1], state }];
+      }
+      return [];
+    });
+  });
 
-  // Merge layout positions with node data and render state
-  const positionedNodes = createMemo((): PositionedNode<T>[] =>
-    collapsedNodes().flatMap((node) => {
-      const pos = positions().get(node.id);
-      const state = stateMap().get(node.id);
-      if (!pos || !state) return [];
-      return [{ node, x: pos.x, y: pos.y, width: pos.width, height: pos.height, state }];
-    }),
-  );
+  // Positions map: real nodes from full layout + summary nodes from positionedNodes
+  const positions = createMemo(() => {
+    const map = new Map(fullLayout().positions);
+    for (const pn of positionedNodes()) {
+      if (!map.has(pn.node.id)) {
+        map.set(pn.node.id, { x: pn.x, y: pn.y, width: pn.width, height: pn.height });
+      }
+    }
+    return map as ReadonlyMap<string, { x: number; y: number; width: number; height: number }>;
+  });
 
-  // Fit to view whenever the layout dimensions change
+  // Edges: filter full-graph edges to visible pairs + summary edges from collapse
+  const visibleEdges = createMemo(() => collapsed().visibleEdges);
+
+  // Fit to view based on visible nodes' bounding box
+  const viewBounds = createMemo(() => {
+    const nodes = positionedNodes();
+    if (nodes.length === 0) return { width: 0, height: 0 };
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of nodes) {
+      minX = Math.min(minX, n.x - n.width / 2);
+      minY = Math.min(minY, n.y - n.height / 2);
+      maxX = Math.max(maxX, n.x + n.width / 2);
+      maxY = Math.max(maxY, n.y + n.height / 2);
+    }
+    return { width: maxX - minX, height: maxY - minY };
+  });
+
   createEffect(
     on(
-      () => [layout().totalWidth, layout().totalHeight] as const,
+      () => [viewBounds().width, viewBounds().height] as const,
       ([w, h]) => fitToView(w, h, containerWidth(), containerHeight()),
     ),
   );
@@ -163,13 +197,27 @@ export function DagChart<T>(props: DAGProps<T>) {
       >
         <g transform={transformString()}>
           {/* Edges */}
-          <For each={layout().edges}>
-            {(edge) => (
-              <path
-                class="sui-dag__edge"
-                d={buildEdgePath(edge.points, positions().get(edge.sourceId), positions().get(edge.targetId))}
-              />
-            )}
+          <For each={visibleEdges()}>
+            {(edge) => {
+              const sourceRect = positions().get(edge.source);
+              const targetRect = positions().get(edge.target);
+              if (!sourceRect || !targetRect) return null;
+
+              // Check if the full layout has a computed path for this edge
+              const fullEdge = fullLayout().edges.find(
+                (e) => e.sourceId === edge.source && e.targetId === edge.target,
+              );
+              const points = fullEdge
+                ? fullEdge.points
+                : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
+
+              return (
+                <path
+                  class="sui-dag__edge"
+                  d={buildEdgePath(points, sourceRect, targetRect)}
+                />
+              );
+            }}
           </For>
 
           {/* Nodes */}
