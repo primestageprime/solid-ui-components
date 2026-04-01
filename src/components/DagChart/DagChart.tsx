@@ -7,30 +7,64 @@ import "./DagChart.css";
 
 const RESPONSIVE_BREAKPOINT = 640;
 
-/** Convert an array of {x,y} points into a smooth SVG path using quadratic bezier curves. */
-function buildEdgePath(points: Array<{ x: number; y: number }>): string {
-  if (points.length === 0) return "";
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+type Rect = { x: number; y: number; width: number; height: number };
+type Point = { x: number; y: number };
 
-  const start = points[0];
-  const end = points[points.length - 1];
+/** Clip a point to the boundary of a rectangle, moving it along the line from center to point. */
+function clipToRect(point: Point, center: Point, rect: Rect): Point {
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  if (dx === 0 && dy === 0) return point;
 
-  if (points.length === 2) {
+  const halfW = rect.width / 2;
+  const halfH = rect.height / 2;
+
+  // Find the intersection with the rectangle boundary
+  const scaleX = dx !== 0 ? halfW / Math.abs(dx) : Infinity;
+  const scaleY = dy !== 0 ? halfH / Math.abs(dy) : Infinity;
+  const scale = Math.min(scaleX, scaleY);
+
+  return { x: center.x + dx * scale, y: center.y + dy * scale };
+}
+
+/** Convert an array of {x,y} points into a smooth SVG path, clipping endpoints to node boundaries. */
+function buildEdgePath(
+  points: Point[],
+  sourceRect: Rect | undefined,
+  targetRect: Rect | undefined,
+): string {
+  if (points.length < 2) return "";
+
+  // Clone points so we can modify endpoints
+  const pts = points.map((p) => ({ ...p }));
+
+  // Clip start point to source node boundary
+  if (sourceRect && pts.length >= 2) {
+    const center = { x: sourceRect.x, y: sourceRect.y };
+    pts[0] = clipToRect(pts[1], center, sourceRect);
+  }
+
+  // Clip end point to target node boundary
+  if (targetRect && pts.length >= 2) {
+    const center = { x: targetRect.x, y: targetRect.y };
+    pts[pts.length - 1] = clipToRect(pts[pts.length - 2], center, targetRect);
+  }
+
+  const start = pts[0];
+  const end = pts[pts.length - 1];
+
+  if (pts.length === 2) {
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   }
 
-  // M start  Q control midpoint ... L end
   let d = `M ${start.x} ${start.y}`;
-
-  for (let i = 1; i < points.length - 1; i++) {
-    const ctrl = points[i];
-    const next = points[i + 1];
-    // midpoint between control and next as the on-curve point
+  for (let i = 1; i < pts.length - 1; i++) {
+    const ctrl = pts[i];
+    const next = pts[i + 1];
     const mx = (ctrl.x + next.x) / 2;
     const my = (ctrl.y + next.y) / 2;
     d += ` Q ${ctrl.x} ${ctrl.y} ${mx} ${my}`;
   }
-
   d += ` L ${end.x} ${end.y}`;
   return d;
 }
@@ -123,12 +157,17 @@ export function DagChart<T>(props: DAGProps<T>) {
         <g transform={transformString()}>
           {/* Edges */}
           <For each={layout().edges}>
-            {(edge) => (
-              <path
-                class="sui-dag__edge"
-                d={buildEdgePath(edge.points)}
-              />
-            )}
+            {(edge) => {
+              const positions = layout().positions;
+              const sourceRect = positions.get(edge.sourceId);
+              const targetRect = positions.get(edge.targetId);
+              return (
+                <path
+                  class="sui-dag__edge"
+                  d={buildEdgePath(edge.points, sourceRect, targetRect)}
+                />
+              );
+            }}
           </For>
 
           {/* Nodes */}
