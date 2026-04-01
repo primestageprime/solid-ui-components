@@ -130,8 +130,25 @@ export function DagChart<T>(props: DAGProps<T>) {
     return map as ReadonlyMap<string, { x: number; y: number; width: number; height: number }>;
   });
 
-  // Edges: filter full-graph edges to visible pairs + summary edges from collapse
-  const visibleEdges = createMemo(() => collapsed().visibleEdges);
+  // Precompute edge SVG path strings reactively (depends on both visibleEdges and layout positions)
+  const edgePaths = createMemo(() => {
+    const pos = positions();
+    const fullEdges = fullLayout().edges;
+    return collapsed().visibleEdges.flatMap((edge) => {
+      const sourceRect = pos.get(edge.source);
+      const targetRect = pos.get(edge.target);
+      if (!sourceRect || !targetRect) return [];
+
+      const fullEdge = fullEdges.find(
+        (e) => e.sourceId === edge.source && e.targetId === edge.target,
+      );
+      const points = fullEdge
+        ? fullEdge.points
+        : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
+
+      return [{ d: buildEdgePath(points, sourceRect, targetRect) }];
+    });
+  });
 
   // Fit to view based on visible nodes' bounding box
   const viewBounds = createMemo(() => {
@@ -197,27 +214,8 @@ export function DagChart<T>(props: DAGProps<T>) {
       >
         <g transform={transformString()}>
           {/* Edges */}
-          <For each={visibleEdges()}>
-            {(edge) => {
-              const sourceRect = positions().get(edge.source);
-              const targetRect = positions().get(edge.target);
-              if (!sourceRect || !targetRect) return null;
-
-              // Check if the full layout has a computed path for this edge
-              const fullEdge = fullLayout().edges.find(
-                (e) => e.sourceId === edge.source && e.targetId === edge.target,
-              );
-              const points = fullEdge
-                ? fullEdge.points
-                : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
-
-              return (
-                <path
-                  class="sui-dag__edge"
-                  d={buildEdgePath(points, sourceRect, targetRect)}
-                />
-              );
-            }}
+          <For each={edgePaths()}>
+            {(edge) => <path class="sui-dag__edge" d={edge.d} />}
           </For>
 
           {/* Nodes */}
