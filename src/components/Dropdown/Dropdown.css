@@ -1,0 +1,98 @@
+/* ============================================
+   Dropdown Component — Structural
+   ============================================ */
+.sui-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Trigger button */
+.sui-dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  border: none;
+  background: none;
+}
+
+.sui-dropdown--md .sui-dropdown__trigger {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.sui-dropdown--sm .sui-dropdown__trigger {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Label */
+.sui-dropdown__label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Caret */
+.sui-dropdown__caret {
+  font-size: 8px;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.sui-dropdown--open .sui-dropdown__caret {
+  transform: rotate(180deg);
+}
+
+/* Dot indicator */
+.sui-dropdown__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Menu */
+.sui-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  padding: 4px;
+  z-index: 100;
+}
+
+/* Menu items */
+.sui-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+/* ---- Subtle variant ---- */
+/* Caret hidden until hover or open */
+.sui-dropdown--subtle .sui-dropdown__caret {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sui-dropdown--subtle:hover .sui-dropdown__caret,
+.sui-dropdown--subtle.sui-dropdown--open .sui-dropdown__caret {
+  opacity: 0.5;
+}
+
+/* Footer (e.g. "Add new" action) */
+.sui-dropdown__footer {
+  padding-top: 4px;
+  margin-top: 4px;
+}
