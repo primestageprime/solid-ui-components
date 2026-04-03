@@ -5,11 +5,23 @@
 // NOTE: CSS removed — inherits Table.css via
 // BaseTable's shared stylesheet.
 // ============================================
-import { splitProps, For, createMemo, Show, createEffect } from "solid-js";
+import { splitProps, For, createMemo, Show, createEffect, onMount, onCleanup } from "solid-js";
 import { SelectableTableProps, getCellValue, tableContainerStyle } from "./types";
 import { Button } from "../Button/Button";
 
 export function SelectableTable<T extends Record<string, any>>(props: SelectableTableProps<T>) {
+  // Track shift key state globally for shift-select
+  let shiftHeld = false;
+  const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Shift") shiftHeld = true; };
+  const onKeyUp = (e: KeyboardEvent) => { if (e.key === "Shift") shiftHeld = false; };
+  onMount(() => {
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+  });
+  onCleanup(() => {
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keyup", onKeyUp);
+  });
   const [local, others] = splitProps(props, [
     "data",
     "columns",
@@ -21,6 +33,7 @@ export function SelectableTable<T extends Record<string, any>>(props: Selectable
     "getRowId",
     "selectionStore",
     "selectionActions",
+    "resultCount",
   ]);
 
   const { selected, setSelected } = local.selectionStore;
@@ -49,17 +62,38 @@ export function SelectableTable<T extends Record<string, any>>(props: Selectable
 
   const isRowSelected = (row: T) => selected().has(local.getRowId(row));
 
-  const toggleRow = (row: T) => {
+  // Track last clicked index for shift-select
+  let lastClickedIndex: number | null = null;
+
+  const toggleRow = (row: T, index?: number, shiftKey?: boolean) => {
     const id = local.getRowId(row);
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+
+    if (shiftKey && lastClickedIndex !== null && index !== undefined && index !== lastClickedIndex) {
+      // Shift-click: select range between last clicked and current
+      const start = Math.min(lastClickedIndex, index);
+      const end = Math.max(lastClickedIndex, index);
+      setSelected(prev => {
+        const next = new Set(prev);
+        for (let i = start; i <= end; i++) {
+          const rangeId = local.getRowId(local.data[i]);
+          next.add(rangeId);
+        }
+        return next;
+      });
+    } else {
+      // Normal click: toggle single row
+      setSelected(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+        return next;
+      });
+    }
+
+    if (index !== undefined) lastClickedIndex = index;
   };
 
   const toggleAll = () => {
@@ -129,6 +163,11 @@ export function SelectableTable<T extends Record<string, any>>(props: Selectable
       </Show>
 
       <div class={classes()} style={tableContainerStyle(local.maxHeight)} {...others}>
+        {local.resultCount && (
+          <div class="hud-table__result-count">
+            Showing {local.resultCount.shown.toLocaleString()} of {local.resultCount.total.toLocaleString()}
+          </div>
+        )}
         <table class="hud-table__table">
           <thead class="hud-table__head">
             <tr class="hud-table__row">
@@ -149,6 +188,7 @@ export function SelectableTable<T extends Record<string, any>>(props: Selectable
                     class="hud-table__header-cell"
                     style={{
                       width: column.width,
+                      "max-width": column.width,
                       "text-align": column.align || "left",
                     }}
                   >
@@ -167,11 +207,15 @@ export function SelectableTable<T extends Record<string, any>>(props: Selectable
                   style={local.onRowClick ? { cursor: "pointer" } : undefined}
                 >
                   <td class="hud-table__cell hud-table__cell--checkbox">
-                    <label class="hud-table__checkbox">
+                    <label class="hud-table__checkbox" onMouseDown={(e) => {
+                      // Intercept before checkbox toggles — capture shiftKey and handle selection ourselves
+                      e.preventDefault();
+                      toggleRow(row, rowIndex(), e.shiftKey);
+                    }}>
                       <input
                         type="checkbox"
                         checked={isRowSelected(row)}
-                        onChange={() => toggleRow(row)}
+                        onChange={() => {/* handled by mousedown on label */}}
                       />
                       <span class="hud-table__checkbox-indicator" />
                     </label>
