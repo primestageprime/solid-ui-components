@@ -13,6 +13,8 @@ export interface Tab {
   id: string;
   label: string;
   icon?: JSX.Element;
+  /** Keyboard shortcut or auxiliary hint text displayed after the label */
+  hint?: string;
   /** Status indicator for data issues */
   status?: TabStatus;
 }
@@ -49,6 +51,9 @@ export const Tabs: Component<TabsProps> = (props) => {
               <span class="sui-tab__icon">{tab.icon}</span>
             </Show>
             {tab.label}
+            <Show when={tab.hint}>
+              <span class="sui-tab__hint">{tab.hint}</span>
+            </Show>
             <Show when={tab.status}>
               <span class={`sui-tab__status sui-tab__status--${tab.status}`} title={tab.status === "error" ? "Missing data" : "Partial data"}>
                 !

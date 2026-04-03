@@ -45,6 +45,13 @@
   margin-right: 6px;
 }
 
+/* Tab hint text (e.g., keyboard shortcut) */
+.sui-tab__hint {
+  margin-left: 6px;
+  font-size: 0.75em;
+  opacity: 0.5;
+}
+
 /* Tab status indicator */
 .sui-tab__status {
   display: inline-flex;
