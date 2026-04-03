@@ -1,0 +1,17 @@
+/* ============================================
+   DragItem Component — Structural
+   ============================================ */
+.sui-drag-item {
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.sui-drag-item--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.sui-drag-item--disabled {
+  cursor: default;
+}
