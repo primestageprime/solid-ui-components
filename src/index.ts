@@ -37,6 +37,7 @@ export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
+export * from "./components/DragDrop";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
