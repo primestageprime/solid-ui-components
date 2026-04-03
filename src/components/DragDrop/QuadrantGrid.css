@@ -1,0 +1,34 @@
+/* ============================================
+   QuadrantGrid Component — Structural
+   ============================================ */
+.sui-quadrant-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--sui-border, rgba(255, 255, 255, 0.1));
+}
+
+.sui-quadrant-grid__cell {
+  background-color: var(--sui-surface, #1a1a2e);
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sui-quadrant-grid__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sui-quadrant-color);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.sui-quadrant-grid__content {
+  flex: 1;
+  min-height: 0;
+}
