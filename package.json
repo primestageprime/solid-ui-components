@@ -45,6 +45,7 @@
     "vite-plugin-solid": "^2.11.6"
   },
   "dependencies": {
+    "@thisbeyond/solid-dnd": "^0.7.5",
     "d3-dag": "^1.1.0",
     "katex": "^0.16.0"
   }
