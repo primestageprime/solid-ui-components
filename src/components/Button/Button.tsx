@@ -49,7 +49,7 @@ export const Button: Component<ButtonProps> = (props) => {
 };
 
 /** Props that are visual/static overrides — locked at variant-definition time. */
-export type ButtonOverrides = Pick<ButtonProps, "variant" | "size" | "loading">;
+export type ButtonOverrides = Pick<ButtonProps, "variant" | "size">;
 
 /** Props that remain available to consumers of a curried Button variant. */
 export type ButtonDataProps = Omit<ButtonProps, keyof ButtonOverrides>;

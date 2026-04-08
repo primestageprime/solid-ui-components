@@ -223,6 +223,14 @@
   gap: 0;
 }
 
+/* Result count */
+.hud-table__result-count {
+  text-align: right;
+  font-size: 12px;
+  color: var(--hud-text-dim, #7aa8c0);
+  padding: 4px 8px;
+}
+
 /* Checkbox cells */
 .hud-table__header-cell--checkbox,
 .hud-table__cell--checkbox {

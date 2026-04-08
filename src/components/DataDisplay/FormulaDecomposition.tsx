@@ -45,6 +45,8 @@ export interface FormulaConfig {
   compute: (v: Record<string, number>) => number;
   /** Generate LaTeX string; must include \var{result}{resultStr} for result highlighting */
   latex: (resultStr: string) => string;
+  /** Optional border color for the panel Surface */
+  borderColor?: string;
 }
 
 // ============================================
@@ -162,7 +164,7 @@ export function createFormulaPanel(config: FormulaConfig): FormulaPanelBundle {
   const Panel: Component<FormulaValuesProps & { class?: string; style?: JSX.CSSProperties }> = (props) => {
     return (
       <FormulaProvider>
-        <Surface padding="md" radius="md" class={props.class} style={props.style}>
+        <Surface padding="md" radius="md" borderColor={config.borderColor} class={props.class} style={props.style}>
           <NarrowStack>
             <Result values={props.values} />
             <Givens values={props.values} />

@@ -143,6 +143,7 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
       class={`hud-table__header-cell ${extraClass || ""} ${column.sortable ? "hud-table__header-cell--sortable" : ""} ${sortColumn() === column.id ? "hud-table__header-cell--sorted" : ""}`}
       style={{
         width: column.width,
+        "max-width": column.width,
         "text-align": column.align || "left",
       }}
       rowspan={rowspan}
@@ -225,7 +226,13 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
                     {(column) => (
                       <td
                         class="hud-table__cell"
-                        style={{ "text-align": column.align || "left" }}
+                        style={{
+                          "text-align": column.align || "left",
+                          "max-width": column.width,
+                          overflow: column.width ? "hidden" : undefined,
+                          "text-overflow": column.width ? "ellipsis" : undefined,
+                          "white-space": column.width ? "nowrap" : undefined,
+                        }}
                       >
                         {getCellValue(row, column)}
                       </td>

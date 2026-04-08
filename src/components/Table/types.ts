@@ -48,6 +48,8 @@ export interface SelectableTableProps<T> extends BaseTableProps<T> {
   selectionStore: SelectionStore<string>;
   /** Actions to show when items are selected */
   selectionActions?: SelectionAction<T>[];
+  /** Optional result count to display above the table (e.g. "showing 622 of 2131") */
+  resultCount?: { shown: number; total: number };
 }
 
 /** Shared accessor helper used by BaseTable, GroupedTable, SelectableTable */
