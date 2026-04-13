@@ -141,6 +141,10 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **SimplePanel** — Small size, no decorations. (Formerly CompactJTFPanel.)
 - **SpaciousPanel** — Large size.
 
+## PopoverMenu
+- **PopoverMenu** — Trigger button with positioned action dropdown. Key props: `trigger` (JSX content for the trigger button), `items` (array of `PopoverMenuItem` with `id`, `label`, optional `icon`), `onSelect` (callback with item `id`), `align` (`left`|`right`), `size` (`sm`|`md`). Internals: GhostButton trigger with chevron-down caret, List with `variant="menu"` for items. Closes on click-outside and Escape. Use for: action menus, user menus, context menus.
+- **RightPopoverMenu** — Right-aligned, small trigger. Use for: header action menus.
+
 ## ProgressCheck
 - **ProgressCheck** — Three-state progress indicator: empty checkbox (0%), partial fill (1-99%), green check (100%). Key props: `progress` (0-1 number), `size` (`xs`|`sm`|`md`|`lg`|`xl`, default `sm`). SVG-based, matches Icon sizing. Use for: task completion indicators, goal progress, hierarchical rollup status.
 
