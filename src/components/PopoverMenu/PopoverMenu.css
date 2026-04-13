@@ -1,0 +1,43 @@
+/* ============================================
+   PopoverMenu — Structural
+   Trigger + positioned dropdown menu.
+   ============================================ */
+.sui-popover-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.sui-popover-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sui-popover-menu__caret {
+  transition: transform 0.15s ease;
+}
+
+.sui-popover-menu--open .sui-popover-menu__caret {
+  transform: rotate(180deg);
+}
+
+/* Menu panel */
+.sui-popover-menu__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  min-width: 140px;
+  z-index: 100;
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  padding: 4px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sui-popover-menu--align-right .sui-popover-menu__panel {
+  right: 0;
+}
+
+.sui-popover-menu--align-left .sui-popover-menu__panel {
+  left: 0;
+}
