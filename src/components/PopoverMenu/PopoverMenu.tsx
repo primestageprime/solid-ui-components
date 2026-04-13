@@ -4,44 +4,45 @@
 // Trigger button with positioned action menu.
 // ============================================
 import { Component, For, Show, JSX, createSignal, onCleanup, mergeProps } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { GhostButton, SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
 import type { IconName } from "../Icon";
 import { List, ListItem } from "../List";
 import "./PopoverMenu.css";
 
-export interface PopoverMenuItem {
-  id: string;
+export interface PopoverMenuItem<Id extends string = string> {
+  id: Id;
   label: string;
   icon?: IconName;
 }
 
-export interface PopoverMenuProps {
+export interface PopoverMenuProps<Id extends string = string> {
   /** Content rendered inside the trigger button */
   trigger: JSX.Element;
-  /** Menu items */
-  items: PopoverMenuItem[];
+  /** Menu items (at least one required) */
+  items: [PopoverMenuItem<Id>, ...PopoverMenuItem<Id>[]];
   /** Called when an item is selected */
-  onSelect: (id: string) => void;
+  onSelect: (id: Id) => void;
   /** Menu alignment relative to trigger */
   align?: "left" | "right";
   /** Trigger button size */
   size?: "sm" | "md";
 }
 
-export const PopoverMenu: Component<PopoverMenuProps> = (props) => {
+export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<Id>) => {
   const merged = mergeProps({ align: "right" as const, size: "md" as const }, props);
   const [open, setOpen] = createSignal(false);
   let containerRef: HTMLDivElement | undefined;
 
   const handleClickOutside = (e: MouseEvent) => {
     if (containerRef && !containerRef.contains(e.target as Node)) {
-      setOpen(false);
+      close();
     }
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") setOpen(false);
+    if (e.key === "Escape") close();
   };
 
   const setupListeners = () => {
@@ -54,22 +55,29 @@ export const PopoverMenu: Component<PopoverMenuProps> = (props) => {
     document.removeEventListener("keydown", handleKeydown);
   };
 
-  onCleanup(teardownListeners);
-
-  const toggle = () => {
-    const next = !open();
-    setOpen(next);
-    if (next) setupListeners();
-    else teardownListeners();
-  };
-
-  const select = (id: string) => {
-    merged.onSelect(id);
+  const close = () => {
     setOpen(false);
     teardownListeners();
   };
 
-  const TriggerButton = merged.size === "sm" ? SmallGhostButton : GhostButton;
+  onCleanup(teardownListeners);
+
+  const toggle = () => {
+    if (open()) {
+      close();
+    } else {
+      setOpen(true);
+      setupListeners();
+    }
+  };
+
+  const select = (id: Id) => {
+    try {
+      merged.onSelect(id);
+    } finally {
+      close();
+    }
+  };
 
   const containerClass = () => {
     const classes = ["sui-popover-menu"];
@@ -80,14 +88,14 @@ export const PopoverMenu: Component<PopoverMenuProps> = (props) => {
 
   return (
     <div class={containerClass()} ref={containerRef}>
-      <TriggerButton onClick={toggle}>
+      <Dynamic component={merged.size === "sm" ? SmallGhostButton : GhostButton} onClick={toggle}>
         <span class="sui-popover-menu__trigger">
           {merged.trigger}
           <span class="sui-popover-menu__caret">
             <Icon name="chevron-down" size="xs" />
           </span>
         </span>
-      </TriggerButton>
+      </Dynamic>
 
       <Show when={open()}>
         <div class="sui-popover-menu__panel">
@@ -110,5 +118,9 @@ export const PopoverMenu: Component<PopoverMenuProps> = (props) => {
 };
 
 /** Right-aligned, small trigger — common header use case. */
-export const RightPopoverMenu: Component<Omit<PopoverMenuProps, "align" | "size">> = (props) =>
-  PopoverMenu(mergeProps({ align: "right" as const, size: "sm" as const }, props));
+export const RightPopoverMenu = <Id extends string = string>(
+  props: Omit<PopoverMenuProps<Id>, "align" | "size">,
+) => {
+  const merged = mergeProps({ align: "right" as const, size: "sm" as const }, props);
+  return <PopoverMenu {...merged} />;
+};
