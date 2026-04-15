@@ -40,6 +40,7 @@ export * from "./components/SprintSelector";
 export * from "./components/DagChart";
 export * from "./components/DragDrop";
 export * from "./components/Dropdown";
+export * from "./components/TagInput";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
