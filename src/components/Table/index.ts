@@ -8,3 +8,4 @@ export * from "./CellRenderers";
 export * from "./DataTableContainer";
 export * from "./variants";
 export * from "./columnHelpers";
+export * from "./VirtualTable";

@@ -1,0 +1,178 @@
+/**
+ * VirtualTable — renders only visible rows using @tanstack/solid-virtual.
+ * Same API as BaseTable but with virtual scrolling for large datasets.
+ */
+import { createSignal, For, Show, type JSX, type Component } from "solid-js";
+import { splitProps } from "solid-js";
+import { createVirtualizer } from "@tanstack/solid-virtual";
+import type { BaseTableProps, TableColumn } from "./types";
+import { getCellValue } from "./types";
+
+export interface VirtualTableProps<T> extends BaseTableProps<T> {
+  /** Height of each row in pixels. Default: 36 */
+  rowHeight?: number;
+  /** Number of rows to render outside visible area. Default: 5 */
+  overscan?: number;
+}
+
+export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
+  const [local, others] = splitProps(props, [
+    "data",
+    "columns",
+    "maxHeight",
+    "fill",
+    "stickyHeader",
+    "striped",
+    "hoverable",
+    "compact",
+    "getRowClass",
+    "onRowClick",
+    "emptyMessage",
+    "rowHeight",
+    "overscan",
+    "class",
+  ]);
+
+  const rowHeight = () => local.rowHeight ?? 36;
+  const overscan = () => local.overscan ?? 5;
+
+  let scrollRef!: HTMLDivElement;
+
+  const virtualizer = createVirtualizer({
+    get count() { return local.data.length; },
+    getScrollElement: () => scrollRef,
+    estimateSize: () => rowHeight(),
+    overscan: overscan(),
+  });
+
+  const cellPad = () => local.compact ? "4px 6px" : "6px 10px";
+
+  function headerCellStyle(col: TableColumn<T>): JSX.CSSProperties {
+    return {
+      padding: cellPad(),
+      "text-align": col.align ?? "left",
+      "font-size": "11px",
+      "text-transform": "uppercase",
+      "letter-spacing": "0.03em",
+      color: "var(--sui-accent, #00d4ff)",
+      "white-space": "nowrap",
+      ...(col.width ? { width: col.width, "min-width": col.width } : {}),
+    };
+  }
+
+  function cellStyle(col: TableColumn<T>): JSX.CSSProperties {
+    return {
+      padding: cellPad(),
+      "text-align": col.align ?? "left",
+      ...(col.width ? { width: col.width, "min-width": col.width } : {}),
+    };
+  }
+
+  const containerHeight = () => local.maxHeight ?? "calc(100vh - 300px)";
+
+  return (
+    <div
+      class={["sui-virtual-table", local.class].filter(Boolean).join(" ")}
+      {...others}
+    >
+      {/* Scrollable container */}
+      <div
+        ref={scrollRef!}
+        style={{
+          "max-height": containerHeight(),
+          "overflow-y": "auto",
+          "overflow-x": "auto",
+          position: "relative",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            "border-collapse": "collapse",
+            "font-size": local.compact ? "12px" : "13px",
+            "table-layout": "fixed",
+          }}
+        >
+          {/* Sticky header */}
+          <thead>
+            <tr
+              style={{
+                "border-bottom": "1px solid var(--sui-border, rgba(0,212,255,0.3))",
+                ...(local.stickyHeader !== false ? {
+                  position: "sticky",
+                  top: "0",
+                  background: "var(--sui-bg-primary, #0a1420)",
+                  "z-index": "2",
+                } : {}),
+              }}
+            >
+              <For each={local.columns}>
+                {(col) => <th style={headerCellStyle(col)}>{col.header}</th>}
+              </For>
+            </tr>
+          </thead>
+
+          {/* Virtual body */}
+          <tbody>
+            <Show when={local.data.length > 0} fallback={
+              <tr>
+                <td
+                  colspan={local.columns.length}
+                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted, #4a6a80)" }}
+                >
+                  {local.emptyMessage ?? "No data"}
+                </td>
+              </tr>
+            }>
+              {/* Spacer for rows above viewport */}
+              <tr style={{ height: `${virtualizer.getVirtualItems()[0]?.start ?? 0}px` }}>
+                <td colspan={local.columns.length} style={{ padding: "0", border: "none" }} />
+              </tr>
+
+              <For each={virtualizer.getVirtualItems()}>
+                {(virtualRow) => {
+                  const row = () => local.data[virtualRow.index];
+                  const rowClass = () => local.getRowClass?.(row(), virtualRow.index) ?? "";
+                  return (
+                    <tr
+                      data-index={virtualRow.index}
+                      class={rowClass()}
+                      style={{
+                        height: `${rowHeight()}px`,
+                        "border-bottom": "1px solid rgba(74,106,128,0.15)",
+                        cursor: local.onRowClick ? "pointer" : undefined,
+                        ...(local.striped && virtualRow.index % 2 === 1
+                          ? { background: "rgba(0,212,255,0.02)" }
+                          : {}),
+                      }}
+                      onClick={() => local.onRowClick?.(row(), virtualRow.index)}
+                      onMouseEnter={local.hoverable ? (e) => { e.currentTarget.style.background = "rgba(0,212,255,0.04)"; } : undefined}
+                      onMouseLeave={local.hoverable ? (e) => { e.currentTarget.style.background = local.striped && virtualRow.index % 2 === 1 ? "rgba(0,212,255,0.02)" : ""; } : undefined}
+                    >
+                      <For each={local.columns}>
+                        {(col) => (
+                          <td style={cellStyle(col)}>
+                            {getCellValue(row(), col)}
+                          </td>
+                        )}
+                      </For>
+                    </tr>
+                  );
+                }}
+              </For>
+
+              {/* Spacer for rows below viewport */}
+              <tr style={{
+                height: `${virtualizer.getTotalSize() - (virtualizer.getVirtualItems().at(-1)?.end ?? 0)}px`,
+              }}>
+                <td colspan={local.columns.length} style={{ padding: "0", border: "none" }} />
+              </tr>
+            </Show>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default VirtualTable;
