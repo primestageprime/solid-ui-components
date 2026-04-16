@@ -36,11 +36,11 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
   const rowHeight = () => local.rowHeight ?? 36;
   const overscan = () => local.overscan ?? 5;
 
-  const [scrollRef, setScrollRef] = createSignal<HTMLDivElement | null>(null);
+  let scrollEl: HTMLDivElement | undefined;
 
   const virtualizer = createVirtualizer({
     get count() { return local.data.length; },
-    getScrollElement: () => scrollRef(),
+    getScrollElement: () => scrollEl ?? null,
     estimateSize: () => rowHeight(),
     overscan: overscan(),
   });
@@ -77,7 +77,11 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
     >
       {/* Scrollable container */}
       <div
-        ref={setScrollRef}
+        ref={(el) => {
+          scrollEl = el;
+          // Force virtualizer to re-measure once the element is available
+          queueMicrotask(() => virtualizer.measure());
+        }}
         style={{
           "max-height": containerHeight(),
           "overflow-y": "auto",
