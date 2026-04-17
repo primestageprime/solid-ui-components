@@ -1,6 +1,7 @@
 /**
  * VirtualTable — renders only visible rows using @tanstack/solid-virtual.
  * Same API as BaseTable but with virtual scrolling for large datasets.
+ * Uses dynamic row measurement for correct behavior under browser zoom.
  */
 import { createSignal, For, Show, type JSX, type Component } from "solid-js";
 import { splitProps } from "solid-js";
@@ -9,7 +10,7 @@ import type { BaseTableProps, TableColumn } from "./types";
 import { getCellValue } from "./types";
 
 export interface VirtualTableProps<T> extends BaseTableProps<T> {
-  /** Height of each row in pixels. Default: 36 */
+  /** Estimated height of each row in pixels (used before measurement). Default: 36 */
   rowHeight?: number;
   /** Number of rows to render outside visible area. Default: 5 */
   overscan?: number;
@@ -139,10 +140,11 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                   const rowClass = () => local.getRowClass?.(row(), virtualRow.index) ?? "";
                   return (
                     <tr
+                      ref={(el) => queueMicrotask(() => virtualizer.measureElement(el))}
                       data-index={virtualRow.index}
                       class={rowClass()}
                       style={{
-                        height: `${rowHeight()}px`,
+                        "min-height": `${rowHeight()}px`,
                         "border-bottom": "1px solid rgba(74,106,128,0.15)",
                         cursor: local.onRowClick ? "pointer" : undefined,
                         ...(local.striped && virtualRow.index % 2 === 1
