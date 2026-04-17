@@ -4,6 +4,15 @@
 
 ## TODO
 
+### Type-annotate remaining curried variant exports (TS2742 portability)
+
+Button variants (`src/components/Button/variants.ts`) carry explicit `Component<ButtonDataProps>` annotations as of v0.3.1 — without them, `vite-plugin-dts` inlines solid-js type paths through pnpm's ephemeral github-dep build-store temp directory (TS2742 "inferred type cannot be named…"), which strips the declarations from the shipped `.d.ts` and surfaces as TS2305 downstream. Apply the same annotation pattern when a downstream first imports from:
+
+- [ ] **Cell curried variants** (`src/components/Cell/variants.ts`) — `KVTable`, `BorderRow`, `DataTerm`, `DataTermMuted`, `DataValue`, `DataValueHighlight`, `DataValueSuccess`, `DataValuePrimary`, `DataValueMuted`, `DataHeader`, `DataHeaderRight`, `DataHeaderCenter`. Annotate with `Component<CellDataProps>` / `Component<CellTableDataProps>` / `Component<CellRowDataProps>` as appropriate.
+- [ ] **Layout curried variants** (`src/components/Layout/variants.ts`) — `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `TightClusterRow`, `TopClusterRow`, `TagRow`, `WrapRow`, `SpacedClusterRow`, `FlexRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Annotate with `Component<StackDataProps>` / `Component<RowDataProps>` / `Component<BoxDataProps>` as appropriate.
+
+These are latent — not emitting TS2305 today because no downstream imports them — but will re-surface the same build-store bug the first time they are. Fixing them proactively also avoids a per-consumer debugging cycle.
+
 ### Component Adoption in jtf-ui
 
 Replace bespoke inline markup in `jtf-ui/src/` with solid-ui-components. Tasks are organized by file for parallel execution. Each task is independent — no cross-task dependencies.
