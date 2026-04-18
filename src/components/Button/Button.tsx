@@ -8,7 +8,16 @@ import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import "./Button.css";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "primary" | "danger" | "ghost";
+  variant?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "danger"
+    | "warning"
+    | "ghost"
+    | "outlined"
+    | "text"
+    | "icon-only";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   /** Active/selected state (absorbed from HUDButton) */

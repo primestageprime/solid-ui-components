@@ -16,11 +16,26 @@ import type { Component } from "solid-js";
 // Primary button — default size
 export const PrimaryButton: Component<ButtonDataProps> = createButton({ variant: "primary" });
 
+// Secondary button — neutral/supporting action
+export const SecondaryButton: Component<ButtonDataProps> = createButton({ variant: "secondary" });
+
 // Danger button — default size
 export const DangerButton: Component<ButtonDataProps> = createButton({ variant: "danger" });
 
+// Warning button — amber-informational, distinct from danger
+export const WarningButton: Component<ButtonDataProps> = createButton({ variant: "warning" });
+
 // Ghost button — default size
 export const GhostButton: Component<ButtonDataProps> = createButton({ variant: "ghost" });
+
+// Outlined button — transparent fill, accent border + text
+export const OutlinedButton: Component<ButtonDataProps> = createButton({ variant: "outlined" });
+
+// Text button — link-like, no border or fill
+export const TextButton: Component<ButtonDataProps> = createButton({ variant: "text" });
+
+// Icon-only button — square 1.4rem, accent-colored icon
+export const IconOnlyButton: Component<ButtonDataProps> = createButton({ variant: "icon-only" });
 
 // Small primary button — compact primary action
 export const SmallPrimaryButton: Component<ButtonDataProps> = createButton({ variant: "primary", size: "sm" });
