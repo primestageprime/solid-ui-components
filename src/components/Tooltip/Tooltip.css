@@ -1,0 +1,71 @@
+/* ============================================
+   Tooltip — Structural
+   Kobalte-driven hover/focus tooltip. Visuals use `--sui-*` theme tokens.
+   ============================================ */
+.sui-tooltip__trigger {
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: inherit;
+}
+
+.sui-tooltip__trigger:focus-visible {
+  outline: 2px solid var(--sui-border-focus, hsl(200 98% 39%));
+  outline-offset: 2px;
+}
+
+/* `cell` modifier — applied when the trigger wraps a table/data cell.
+   Downstream TooltipCell semantics: fill the cell, clip overflow, preserve
+   ellipsis + left alignment. Phase 8 will pass `class="cell"` directly. */
+.sui-tooltip__trigger--cell {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.sui-tooltip__content {
+  z-index: 50;
+  max-width: min(calc(100vw - 32px), 600px);
+  border: 1px solid var(--sui-border, hsl(240 5% 84%));
+  border-radius: var(--sui-radius-sm, 6px);
+  padding: 8px;
+  background-color: var(--sui-bg-secondary, hsl(214, 55%, 20%));
+  color: var(--sui-text-primary, white);
+  font-size: 14px;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform-origin: var(--kb-tooltip-content-transform-origin);
+  animation: sui-tooltip-hide 250ms ease-in forwards;
+}
+
+.sui-tooltip__content[data-expanded] {
+  animation: sui-tooltip-show 250ms ease-out;
+}
+
+@keyframes sui-tooltip-show {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sui-tooltip-hide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
