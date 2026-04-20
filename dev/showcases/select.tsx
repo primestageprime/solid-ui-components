@@ -18,6 +18,12 @@ const STATUS_OPTIONS: SelectOption[] = [
   { value: "blocked", label: "Blocked" },
 ];
 
+// 30 options to exercise listbox scroll / overflow CSS.
+const LONG_OPTIONS: SelectOption[] = Array.from({ length: 30 }, (_, i) => ({
+  value: `asset-${i + 1}`,
+  label: `Asset ${String(i + 1).padStart(3, "0")}`,
+}));
+
 export const SelectShowcase: Component = () => {
   const [priority, setPriority] = createSignal<SelectOption | null>(
     PRIORITY_OPTIONS[1],
@@ -26,6 +32,8 @@ export const SelectShowcase: Component = () => {
     STATUS_OPTIONS[0],
     STATUS_OPTIONS[2],
   ]);
+  const [lockedPriority] = createSignal<SelectOption | null>(PRIORITY_OPTIONS[3]);
+  const [asset, setAsset] = createSignal<SelectOption | null>(null);
 
   return (
     <div class="component-section">
@@ -80,6 +88,42 @@ export const SelectShowcase: Component = () => {
             Labels: {statuses().map((o) => o.label).join(", ") || "(none)"}
           </Text>
         </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Disabled</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          `disabled` is forwarded to Kobalte's root — the trigger is
+          non-interactive and the opacity drops to 50%.
+        </div>
+        <div style={{ "max-width": "240px" }}>
+          <Select
+            label="Priority (locked)"
+            options={() => PRIORITY_OPTIONS}
+            value={lockedPriority}
+            disabled
+          />
+        </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Long option list (30 items — scrolling)</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          Validates the listbox `max-height: 280px` overflow rule — the
+          popup should scroll, the trigger should not grow.
+        </div>
+        <div style={{ "max-width": "280px" }}>
+          <Select
+            label="Asset"
+            placeholder="Pick an asset…"
+            options={() => LONG_OPTIONS}
+            value={asset}
+            onChange={setAsset}
+          />
+        </div>
+        <Text variant="sublabel">
+          Selected: {asset()?.label ?? "(none)"}
+        </Text>
       </div>
     </div>
   );

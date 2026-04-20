@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { Component, createMemo, createSignal } from "solid-js";
 import {
   Combobox,
   type ComboboxOption,
@@ -19,6 +19,31 @@ const INITIAL_TAGS: ComboboxOption[] = [
   { value: "reliability", label: "Reliability" },
   { value: "security", label: "Security" },
 ];
+
+// Large catalog for the onInputChange filter demo.
+const CATALOG: ComboboxOption[] = [
+  "Aluminum",
+  "Brass",
+  "Bronze",
+  "Carbon Steel",
+  "Cast Iron",
+  "Chromium",
+  "Cobalt",
+  "Copper",
+  "Gold",
+  "Inconel",
+  "Lead",
+  "Magnesium",
+  "Molybdenum",
+  "Nickel",
+  "Platinum",
+  "Silver",
+  "Stainless Steel",
+  "Tin",
+  "Titanium",
+  "Tungsten",
+  "Zinc",
+].map((label) => ({ value: label.toLowerCase().replace(/\s+/g, "-"), label }));
 
 export const ComboboxShowcase: Component = () => {
   // Single-mode
@@ -42,6 +67,18 @@ export const ComboboxShowcase: Component = () => {
     setTags([...tags(), created]);
     setSelectedTags([...selectedTags(), created]);
   };
+
+  // Disabled demo — a pre-selected, read-only combobox.
+  const [lockedCountry] = createSignal<ComboboxOption | null>(INITIAL_COUNTRIES[0]);
+
+  // onInputChange demo — parent-side filter against a catalog.
+  const [query, setQuery] = createSignal("");
+  const [material, setMaterial] = createSignal<ComboboxOption | null>(null);
+  const filteredCatalog = createMemo(() => {
+    const q = query().trim().toLowerCase();
+    if (!q) return CATALOG;
+    return CATALOG.filter((opt) => opt.label.toLowerCase().includes(q));
+  });
 
   return (
     <div class="component-section">
@@ -113,6 +150,49 @@ export const ComboboxShowcase: Component = () => {
             onChange={setSelectedTags}
           />
         </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Disabled</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          `disabled` is forwarded to both the input and the trigger.
+          Opacity drops and pointer events are suppressed.
+        </div>
+        <div style={{ "max-width": "320px" }}>
+          <Combobox
+            placeholder="Locked"
+            options={() => INITIAL_COUNTRIES}
+            value={lockedCountry}
+            disabled
+          />
+        </div>
+      </div>
+
+      <div class="example-group">
+        <h3>onInputChange — parent-side filtering</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          `onInputChange` fires on every keystroke. Here the parent derives
+          a filtered option list via `createMemo` — type "st" to see only
+          Stainless Steel.
+        </div>
+        <div style={{ "max-width": "320px" }}>
+          <Combobox
+            placeholder="Search materials…"
+            options={filteredCatalog}
+            value={material}
+            onChange={setMaterial}
+            onInputChange={setQuery}
+          />
+        </div>
+        <Stack gap="xs">
+          <Text variant="sublabel">Query: {query() || "(empty)"}</Text>
+          <Text variant="sublabel">
+            Visible options: {filteredCatalog().length} / {CATALOG.length}
+          </Text>
+          <Text variant="sublabel">
+            Selected: {material()?.label ?? "(none)"}
+          </Text>
+        </Stack>
       </div>
     </div>
   );

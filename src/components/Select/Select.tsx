@@ -128,7 +128,7 @@ export const Select: Component<SelectProps> = (props) => {
         aria-label={local.label}
       >
         <KobalteSelect.Value<SelectOption> class="sui-select__value">
-          {(state) => renderValue(state, placeholder(), Boolean(local.multiple))}
+          {(state) => renderValue(state, placeholder(), local.multiple === true)}
         </KobalteSelect.Value>
         <KobalteSelect.Icon class="sui-select__icon">
           <Icon name="chevron-down" size="sm" />

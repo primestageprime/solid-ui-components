@@ -143,10 +143,10 @@ const renderSingle = (
 ) => {
   const [inputValue, setInputValue] = createSignal("");
 
-  // Keep input in sync with externally-selected option.
+  // Keep input in sync with externally-selected option — including external clears.
   createEffect(() => {
     const selected = local.value?.();
-    if (selected) setInputValue(selected.label);
+    setInputValue(selected ? selected.label : "");
   });
 
   const updateInput = (text: string) => {
