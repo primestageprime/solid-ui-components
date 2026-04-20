@@ -370,6 +370,73 @@ body {
   border-color: transparent;
 }
 
+.sui-btn--secondary {
+  background: var(--sui-bg-tertiary);
+  border-color: var(--sui-text-muted);
+  color: var(--sui-text-primary);
+}
+
+.sui-btn--secondary:hover:not(:disabled) {
+  background: var(--sui-text-muted);
+  border-color: var(--sui-text-secondary);
+  color: var(--sui-bg-deep);
+}
+
+.sui-btn--warning {
+  background: var(--sui-warning);
+  border-color: var(--sui-warning);
+  color: var(--sui-bg-deep);
+}
+
+.sui-btn--warning:hover:not(:disabled) {
+  background: rgba(var(--sui-warning-rgb), 0.85);
+  border-color: var(--sui-warning);
+  box-shadow: 0 0 20px rgba(var(--sui-warning-rgb), 0.4);
+  color: var(--sui-bg-deep);
+}
+
+.sui-btn--outlined {
+  background: transparent;
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+}
+
+.sui-btn--outlined:hover:not(:disabled) {
+  background: rgba(var(--sui-accent-rgb), 0.12);
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+}
+
+.sui-btn--text {
+  background: transparent;
+  border-color: transparent;
+  color: var(--sui-accent);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sui-btn--text:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--sui-accent-dim);
+  text-decoration: underline;
+}
+
+.sui-btn--icon-only {
+  background: transparent;
+  border: none;
+  color: var(--sui-accent);
+  padding: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  min-width: 1.4rem;
+}
+
+.sui-btn--icon-only:hover:not(:disabled) {
+  background: rgba(var(--sui-accent-rgb), 0.12);
+  color: var(--sui-accent);
+}
+
 .sui-btn--sm {
   font-size: 11px;
 }
