@@ -35,6 +35,7 @@ import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
 
 // Layout
+import { ResizableContainerShowcase } from "./showcases/resizable-container";
 import { RowShowcase } from "./showcases/row";
 import { StackShowcase } from "./showcases/stack";
 import { SurfaceShowcase } from "./showcases/surface";
@@ -107,6 +108,7 @@ const nav: TabGroup[] = [
   {
     label: "Layout",
     children: [
+      { id: "resizable-container", label: "ResizableContainer", component: ResizableContainerShowcase },
       { id: "row", label: "Row", component: RowShowcase },
       { id: "stack", label: "Stack", component: StackShowcase },
       { id: "surface", label: "Surface", component: SurfaceShowcase },

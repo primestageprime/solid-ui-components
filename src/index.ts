@@ -41,6 +41,7 @@ export * from "./components/DagChart";
 export * from "./components/DragDrop";
 export * from "./components/Dropdown";
 export * from "./components/TagInput";
+export * from "./components/ResizableContainer";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

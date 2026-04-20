@@ -31,7 +31,7 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 
 ## Button
 - **Button** — Multi-variant button with loading spinner. Key props: `variant` (`default`|`primary`|`danger`|`ghost`), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
-- **PrimaryButton / DangerButton / GhostButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props.
+- **PrimaryButton / DangerButton / GhostButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. Same pattern should be applied to Cell and Layout curried variants when they're first consumed downstream (see TODO.md).
 
 ## ButtonGroup
 - **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
@@ -104,6 +104,7 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg`|`xl`), `align`, `justify`. Use for: vertical stacking of elements.
 - **Row** — Flex-row container. Key props: `gap`, `align`, `justify`, `wrap`. Use for: horizontal arrangement of elements.
 - **Box** — Flex child with grow/shrink control. Key props: `grow`, `shrink`. Use for: controlling flex item sizing.
+- **ResizableContainer** — Container with draggable edge handles for manual resize. Key props: `directions` (array of `"top"`|`"right"`|`"bottom"`|`"left"`, default `["right", "bottom"]`), `minWidth`/`maxWidth`/`initialWidth`, `minHeight`/`maxHeight`/`initialHeight`, `onResize` (called with `{ width, height }` during drag), `gridMode` (skip inline width/height when parent grid controls sizing), `externalWidth` (accessor that syncs internal width from an external source). Exports `ResizeDirection` and `ResizeDimensions` types. Use for: side panels, resizable columns, draggable split views. Uses `--sui-accent-rgb` for handle hover color. Note: the `onResize` callback intentionally uses the `{ width, height }` object shape rather than positional `(width, height)` arguments — this is the upstream-canonical signature; downstream callers using the legacy positional form must adapt.
 - Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
 
 ## List
