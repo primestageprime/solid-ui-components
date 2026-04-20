@@ -35,6 +35,7 @@ import { SidebarSelectorShowcase } from "./showcases/sidebar-selector";
 import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
+import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { TooltipShowcase } from "./showcases/tooltip";
 
 // Layout
@@ -107,6 +108,7 @@ const nav: TabGroup[] = [
       { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase },
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
+      { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
       { id: "tooltip", label: "Tooltip", component: TooltipShowcase },
     ],

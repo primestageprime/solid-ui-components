@@ -1,0 +1,118 @@
+/* ============================================
+   ThemedNumberInput — Structural
+   Visual family with ThemedInput / ThemedTextarea: same paddings, borders,
+   focus ring. Adds a stacked stepper column on the trailing edge.
+   All visual values come from `--sui-*` tokens; fallbacks match the
+   `ThemedInputs.css` palette so the base visual works without a theme.
+   ============================================ */
+.sui-number-input {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+}
+
+.sui-number-input__label {
+  display: block;
+  color: var(--sui-text-secondary, #aaa);
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+.sui-number-input__group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
+  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-radius: var(--sui-radius-sm, 6px);
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.sui-number-input__group:focus-within {
+  border-color: var(--sui-border-focus, var(--sui-accent, #00d4ff));
+}
+
+.sui-number-input[data-invalid] .sui-number-input__group {
+  border-color: var(--sui-danger, #ff3366);
+}
+
+.sui-number-input[data-disabled] .sui-number-input__group {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-number-input__input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sui-text-primary, #ddd);
+  font-family: inherit;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  /* Suppress native number spinners — we render themed triggers. */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.sui-number-input__input::-webkit-outer-spin-button,
+.sui-number-input__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sui-number-input__input::placeholder {
+  color: var(--sui-text-muted, #888);
+}
+
+.sui-number-input__triggers {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+}
+
+.sui-number-input__trigger {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  color: var(--sui-text-secondary, #7aa8c0);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.sui-number-input__trigger:hover:not(:disabled) {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
+  color: var(--sui-accent, #00d4ff);
+}
+
+.sui-number-input__trigger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sui-number-input__trigger--increment {
+  border-bottom: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+}
+
+.sui-number-input__error {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--sui-danger, #ff3366);
+}
+
+.sui-number-input__description {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--sui-text-muted, #888);
+}

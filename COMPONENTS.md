@@ -134,6 +134,25 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 
 ## Inputs
 - **ThemedInput** — Styled text input with optional label. Key props: `label`, plus all native `<input>` attributes. Use for: themed form text inputs.
+- **ThemedNumberInput** — Themed numeric field built on `@kobalte/core/number-field` with stacked increment/decrement triggers. Key props: `value` (`Accessor<number | undefined>`), `onChange` (`(value: number | undefined) => void`), `name`, `label`, `description`, `errorMessage`, `min`, `max`, `step` (default `1`). Friendly names `min`/`max` map to kobalte's `minValue`/`maxValue`; any other `NumberFieldRootProps` (e.g. `disabled`, `required`, `format`, `formatOptions`, `changeOnWheel`) is forwarded via spread. When `errorMessage` is set, the field renders in invalid state and suppresses the description. Kobalte emits `NaN` on clear — normalized to `undefined` before `onChange`. Uses `--sui-bg-secondary`, `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-danger`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: numeric form fields (RPM, counts, thresholds, bounded parameters).
+  - Example:
+    ```tsx
+    import { ThemedNumberInput } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [rpm, setRpm] = createSignal<number | undefined>(undefined);
+
+    <ThemedNumberInput
+      name="rpm"
+      label="Engine RPM"
+      description="Target steady-state RPM."
+      value={rpm}
+      onChange={setRpm}
+      min={0}
+      max={10000}
+      step={50}
+    />
+    ```
 - **ThemedTextarea** — Styled textarea with optional label. Key props: `label`, plus all native `<textarea>` attributes. Use for: themed form textareas.
 
 ## Layout
