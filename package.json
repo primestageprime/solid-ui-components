@@ -1,6 +1,6 @@
 {
   "name": "solid-ui-components",
-  "version": "1.0.0",
+  "version": "0.4.1",
   "description": "SolidJS UI Components Library",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,7 +9,12 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "worker": "./dist/server.js",
+      "deno": "./dist/server.js",
+      "node": "./dist/server.js",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./themes/default.css": "./dist/themes/default.css",
     "./themes/hud.css": "./dist/themes/hud.css",
@@ -21,7 +26,9 @@
   ],
   "scripts": {
     "dev": "vite --port 6006",
-    "build": "vite build --mode production",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "SUI_BUILD_TARGET=client vite build --mode production",
+    "build:server": "SUI_BUILD_TARGET=server vite build --mode production --ssr src/index.ts",
     "watch": "vite build --mode production --watch",
     "preview": "vite preview",
     "prepare": "npm run build"
