@@ -48,6 +48,11 @@
   color: var(--sui-text-muted);
 }
 
+.sui-value__circular {
+  color: var(--sui-text-muted);
+  font-style: italic;
+}
+
 .sui-value__array {
   color: var(--sui-text-primary);
 }

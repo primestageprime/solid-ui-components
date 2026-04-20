@@ -62,6 +62,39 @@ export const ValueRendererShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>JSX passthrough</h3>
+        <Text variant="sublabel">
+          Pre-rendered JSX elements pass through the default dispatcher
+          unchanged — detected via the <code>$$typeof</code> sentinel.
+        </Text>
+        <Stack gap="sm">
+          <ValueRenderer
+            label="Pre-rendered"
+            value={<span style={{ color: "var(--sui-accent)" }}>pre-rendered JSX</span>}
+          />
+          <ValueRenderer
+            label="Bold"
+            value={<strong>strong child JSX</strong>}
+          />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Non-plain objects (stringified)</h3>
+        <Text variant="sublabel">
+          <code>Date</code>, <code>Map</code>, <code>Set</code>, class
+          instances, and other non-plain-object types fall through to{" "}
+          <code>String(value)</code>. Supply a <code>renderValue</code>{" "}
+          override for nicer formatting.
+        </Text>
+        <Stack gap="sm">
+          <ValueRenderer label="Date" value={new Date(1_700_000_000_000)} />
+          <ValueRenderer label="Map" value={new Map([["a", 1], ["b", 2]])} />
+          <ValueRenderer label="Set" value={new Set([1, 2, 3])} />
+        </Stack>
+      </div>
+
+      <div class="example-group">
         <h3>Arrays</h3>
         <Stack gap="sm">
           <ValueRenderer

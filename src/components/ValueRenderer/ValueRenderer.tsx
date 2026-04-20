@@ -4,16 +4,19 @@
 //
 // Meta-primitive for labeled label/value layout. Dispatches a value of
 // unknown shape to a sensible default rendering:
-//   - string      → plain text
-//   - number      → toLocaleString (with precision if configured)
-//   - boolean     → "true" / "false"
-//   - null/undef  → em-dash (muted)
-//   - object      → key/value entry list (recursing via the same default dispatch)
-//   - JSX element → passed through unchanged
+//   - string          → plain text
+//   - number          → toLocaleString (with precision if configured)
+//   - boolean         → "true" / "false"
+//   - null/undef      → em-dash (muted)
+//   - plain object    → key/value entry list (recursing via the same default dispatch)
+//   - non-plain object → stringified via String(value) (Date, Map, Set, class instances…)
+//   - JSX element     → passed through unchanged
 //
 // Callers can override the dispatch entirely via the `renderValue` prop —
 // useful for wiring domain-specific types (status badges, candlesticks,
-// epoch-millis dates, etc.) from the host application.
+// epoch-millis dates, etc.) from the host application. Return `undefined`
+// from the override to defer to the default dispatcher; any other return
+// value (including `null`) is respected as the caller's chosen output.
 // ============================================
 import {
   type Component,
@@ -24,8 +27,12 @@ import {
 } from "solid-js";
 import "./ValueRenderer.css";
 
-/** Optional render override — receives the raw value, returns JSX. */
-export type RenderValueFn = (value: unknown) => JSX.Element;
+/**
+ * Optional render override — receives the raw value, returns JSX or
+ * `undefined` to defer to the built-in default dispatcher. Returning `null`
+ * is respected as "render nothing for this value".
+ */
+export type RenderValueFn = (value: unknown) => JSX.Element | undefined;
 
 export interface ValueRendererProps {
   /** Optional label; when provided, renders `{label}: {value}` in a row. */
@@ -51,6 +58,17 @@ const isJSXElement = (value: unknown): value is JSX.Element =>
   && typeof value === "object"
   && "$$typeof" in (value as Record<string, unknown>);
 
+/**
+ * Plain object = object literal or `Object.create(null)`. Class instances,
+ * `Date`, `Map`, `Set`, `RegExp`, etc. have different prototypes and should
+ * not be treated as key/value bags.
+ */
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== "object" || value === null) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+};
+
 const formatNumber = (value: number, precision: number): string =>
   Number.isFinite(value)
     ? value.toLocaleString(undefined, {
@@ -60,9 +78,13 @@ const formatNumber = (value: number, precision: number): string =>
     : String(value);
 
 /**
- * Default value dispatcher — renders primitives inline, objects as key/value
- * entries. Recurses through `renderOne` for nested values so a caller-supplied
- * override takes effect at every level.
+ * Default value dispatcher — renders primitives inline, plain objects as
+ * key/value entries. Non-plain objects (Date, Map, Set, class instances) are
+ * stringified via `String(value)`; callers who want a nicer format pass a
+ * `renderValue` override.
+ *
+ * Recurses through `renderOne` for nested array/object values so a
+ * caller-supplied override takes effect at every level.
  */
 const defaultDispatch = (
   value: unknown,
@@ -100,8 +122,8 @@ const defaultDispatch = (
       </span>
     );
   }
-  if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>);
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value);
     return (
       <Show
         when={entries.length > 0}
@@ -120,6 +142,9 @@ const defaultDispatch = (
       </Show>
     );
   }
+  // Non-plain objects (Date, Map, Set, RegExp, class instances) and any other
+  // unhandled type — fall through to the native string coercion. Callers
+  // wanting a nicer format (e.g. formatted Date) supply a `renderValue`.
   return <span class="sui-value__text">{String(value)}</span>;
 };
 
@@ -155,13 +180,25 @@ export const ValueRenderer: Component<ValueRendererProps> = (rawProps) => {
     rawProps,
   );
 
+  // Cycle guard — any object visited earlier in the same render pass that
+  // reappears gets a "[circular]" placeholder instead of infinite recursion.
+  // Scoped per render tree, so it picks up the fresh identity on every call.
+  const seen = new WeakSet<object>();
+
   // A single render function that prefers the caller override but falls back
   // to the default dispatcher — recursion uses the same function so overrides
-  // apply at every nesting level.
+  // apply at every nesting level. Only `undefined` from the override means
+  // "defer to default"; `null` and any other return is respected.
   const renderOne: RenderValueFn = (v) => {
     const override = props.renderValue?.(v);
-    if (override !== undefined && override !== null) {
+    if (override !== undefined) {
       return override;
+    }
+    if (typeof v === "object" && v !== null) {
+      if (seen.has(v)) {
+        return <span class="sui-value__circular">[circular]</span>;
+      }
+      seen.add(v);
     }
     return defaultDispatch(v, renderOne, props.numberPrecision);
   };

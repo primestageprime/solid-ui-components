@@ -56,6 +56,13 @@ export const ChangeRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Object changes</h3>
+        <Text variant="sublabel">
+          Each side renders through <code>ValueRenderer</code>'s default
+          key/value entry list. Per-key aligned diff (added / removed /
+          changed / unchanged highlighting) is NOT shown — that's a domain
+          concern. Callers needing per-key diff build it on top via a{" "}
+          <code>renderValue</code> override or a wrapping component.
+        </Text>
         <Stack gap="md">
           <ChangeRenderer
             label="Context"
