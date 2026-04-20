@@ -25,7 +25,13 @@ import "./ThemedNumberInput.css";
 interface ThemedNumberInputOwnProps {
   /** Reactive accessor for the numeric value. `undefined` clears the field. */
   value?: Accessor<number | undefined>;
-  /** Called whenever the raw numeric value changes. `undefined` when cleared. */
+  /**
+   * Called whenever the raw numeric value changes. `undefined` when cleared.
+   *
+   * Note: Kobalte's NumberField emits `NaN` when the input is cleared; this
+   * component normalizes that to `undefined` before invoking your handler,
+   * so you never receive `NaN`.
+   */
   onChange?: (value: number | undefined) => void;
   /** Form field name — forwarded to kobalte's hidden input. */
   name: string;
