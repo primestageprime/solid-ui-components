@@ -128,9 +128,9 @@ export const ToastShowcase: Component = () => {
         Owns CSS (Toast.css). Kobalte-backed toast with four variants
         (info/success/warning/error), optional description, actions, and
         persistent mode. Ships as a base `Toast` plus `ToastRegion` +
-        `ToastList` curried atomics for mounting, a `ToastPrimitive` namespace
-        re-export for escape-hatch callers, and a typed `showToast` wrapper
-        over kobalte's imperative `toaster`.
+        `ToastList` curried atomics for mounting, a typed `showToast` wrapper
+        over kobalte's imperative `toaster`, and a raw `toaster` re-export for
+        `update` / `clear` / `promise` edge cases.
       </p>
 
       <div class="example-group">
@@ -206,9 +206,9 @@ export const ToastShowcase: Component = () => {
           <Text variant="body">
             These curried atomics ship with styling baked in. Mount once near
             the app root (inside a `Portal` so they escape clipped parents) and
-            call `showToast(...)` anywhere. For low-level control over
-            `Root` / `Title` / `Description`, use the `ToastPrimitive`
-            namespace.
+            call `showToast(...)` anywhere. Callers that genuinely need
+            `Root` / `Title` / `Description` directly can import
+            `@kobalte/core/toast` — already an installed peer.
           </Text>
           <pre class="code-block">
 {`import { Portal } from "solid-js/web";

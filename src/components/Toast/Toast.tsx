@@ -1,10 +1,11 @@
 // ============================================
 // Toast — Atomic (Depth 1)
-// Owns CSS (Toast.css), only Icon (sibling Depth 1) imported.
-// Kobalte-backed toast built on `@kobalte/core/toast`. Ships the base `Toast`
-// component plus provider atomics (`ToastRegion`, `ToastList`), a raw
-// `ToastPrimitive` re-export for escape-hatch callers, and a typed
-// `showToast` wrapper over kobalte's `toaster`.
+// Owns CSS (Toast.css). No imports from other Atomic/Layout components
+// (per STYLE_GUIDE.md). Kobalte-backed toast built on
+// `@kobalte/core/toast`. Ships the base `Toast` component plus provider
+// atomics (`ToastRegion`, `ToastList`) and a typed `showToast` wrapper over
+// kobalte's `toaster`. Callers needing raw `Toast.Root` / `Toast.Title` /
+// `Toast.Description` etc. should import directly from `@kobalte/core/toast`.
 // ============================================
 import {
   Toast as KobalteToast,
@@ -20,7 +21,6 @@ import {
   Show,
   splitProps,
 } from "solid-js";
-import { Icon } from "../Icon/Icon";
 import "./Toast.css";
 
 /** Action button rendered in the toast's action row. */
@@ -52,6 +52,30 @@ export interface ToastProps extends Omit<KobalteToastRootProps, "toastId"> {
   /** Suppress auto-dismiss and the progress bar. */
   persistent?: boolean;
 }
+
+// Inlined close-button glyph. Geometry mirrors the `close` outline path from
+// the Icon atomic (`M4 4L12 12M12 4L4 12` on a 16×16 viewBox) so visual
+// weight matches the rest of the library — but the SVG lives here so Toast
+// stays free of cross-atomic imports (STYLE_GUIDE.md: Atomics must not
+// import other Atomics). Uses `currentColor` so the variant color flows in
+// naturally via the `.sui-toast__close-button` CSS rules.
+const CloseGlyph = (): JSX.Element => (
+  <svg
+    class="sui-toast__close-icon"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <path
+      d="M4 4L12 12M12 4L4 12"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      fill="none"
+    />
+  </svg>
+);
 
 export const Toast: Component<ToastProps> = (props) => {
   const [local, rest] = splitProps(props, [
@@ -98,7 +122,7 @@ export const Toast: Component<ToastProps> = (props) => {
           </Show>
         </div>
         <KobalteToast.CloseButton class="sui-toast__close-button" aria-label="Close">
-          <Icon name="close" size="sm" />
+          <CloseGlyph />
         </KobalteToast.CloseButton>
       </div>
       <Show when={!local.persistent}>
@@ -124,20 +148,21 @@ export const ToastRegion: Component<ToastRegionCurriedProps> = (props) => (
   <KobalteToast.Region {...props}>{props.children}</KobalteToast.Region>
 );
 
-export type ToastListCurriedProps = KobalteToastListProps;
+/**
+ * Curried `ToastList` props. Widens the kobalte base props with an explicit
+ * `class` field (kobalte's type only lists event handlers + ref in
+ * `ToastListCommonProps`, but the underlying element is an `<ol>` that
+ * accepts `class` natively — we just need TS to see it so the user-supplied
+ * class can merge with `"sui-toast__list"` without a cast).
+ */
+export type ToastListCurriedProps = KobalteToastListProps & { class?: string };
 
 export const ToastList: Component<ToastListCurriedProps> = (props) => {
-  const [local, rest] = splitProps(props as { class?: string } & ToastListCurriedProps, ["class"]);
+  const [local, rest] = splitProps(props, ["class"]);
   const listClass = () =>
     ["sui-toast__list", local.class].filter(Boolean).join(" ");
   return <KobalteToast.List {...rest} class={listClass()} />;
 };
-
-/**
- * Raw kobalte Toast namespace — escape hatch for callers that need
- * Root/Title/Description/etc. directly. Prefer the curried atomics above.
- */
-export { KobalteToast as ToastPrimitive };
 
 // ============================================
 // Toaster wrapper — typed `showToast` over kobalte's imperative API

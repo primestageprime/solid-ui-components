@@ -2,7 +2,6 @@ export {
   Toast,
   ToastRegion,
   ToastList,
-  ToastPrimitive,
   showToast,
   toaster,
 } from "./Toast";

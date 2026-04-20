@@ -177,6 +177,12 @@
   outline-offset: 2px;
 }
 
+.sui-toast__close-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
 .sui-toast__progress-track {
   height: 3px;
   width: 100%;

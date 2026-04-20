@@ -20,8 +20,6 @@ Phase 8 swap time.
   `@kobalte/core/toast`'s `Region` and `List` with baked-in styling. Mount once
   near the app root (inside a `Portal`) and call `showToast(...)` from
   anywhere.
-- **`ToastPrimitive`** — Re-export of the raw kobalte `Toast` namespace for
-  callers that need `Root` / `Title` / `Description` directly.
 - **`showToast(input)`** — Typed imperative helper. Returns
   `{ id: number, dismiss: () => void }`. Callers pass the same shape as
   `ToastProps` (minus `toastId`, which kobalte injects).
@@ -33,12 +31,16 @@ Phase 8 swap time.
 
 ### Provider surface decision
 
-Ships **all three** options from the audit:
+Ships a **two-option surface**:
 
 1. `ToastRegion` + `ToastList` curried atomics — the 80% case; zero-config.
-2. `ToastPrimitive` namespace — escape hatch for callers that need
-   `Root` / `Title` / `Description` directly (multi-region, custom layouts).
-3. (Implicitly) the raw kobalte subpath is still installed as a peer.
+2. Raw `toaster` re-export — imperative escape hatch (`update` / `clear` /
+   `promise`).
+
+For callers that genuinely need `Toast.Root` / `Toast.Title` /
+`Toast.Description` directly (rare — custom layouts, multi-region setups),
+`@kobalte/core/toast` is already an installed peer and can be imported
+directly. No upstream re-export is needed for that case.
 
 Phase 8's `Routes.tsx` diff becomes a 1-line import swap —
 `import { Toast } from "@kobalte/core/toast"` → `import { ToastRegion, ToastList }
@@ -60,6 +62,9 @@ site; the raw re-export keeps every kobalte capability accessible.
 - Action button styling is baked into `Toast.css` rather than composing the
   `Button` atomic (Atomic components may not import other Atomics per
   `STYLE_GUIDE.md`).
+- Close-button glyph is inlined as a hardcoded `<svg>` in `Toast.tsx` rather
+  than composing the `Icon` atomic — same rationale. Geometry mirrors the
+  Icon atomic's `close` outline path so visual weight matches.
 
 ### Driving downstream sites
 
