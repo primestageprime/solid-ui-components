@@ -1,5 +1,106 @@
 # Changelog
 
+## v0.9.0 — Data primitives: ValueRenderer + ChangeRenderer + CandlestickRenderer (Phase 1.6)
+
+Ships the three data-primitive components identified by the migration audit's
+Phase 1.6 batch. Consolidates the downstream renderer family
+(`ObjectRenderer` + `ChangeRenderer` + `ChangeObjectRenderer`) into a
+`ValueRenderer` meta-primitive with a pluggable `renderValue` dispatcher plus
+a `ChangeRenderer` composite that reuses the same dispatch on both sides.
+`CandlestickRenderer` ships separately (OHLC shape does not fit the generic
+dispatch).
+
+### Added
+
+- **`ValueRenderer`** (`src/components/ValueRenderer/ValueRenderer.tsx`) —
+  Atomic (Depth 1). Labeled label/value layout with a hybrid dispatcher:
+  zero-config for primitives (`string`, `number`, `boolean`, `null`/`undefined`),
+  arrays, plain objects, and pre-rendered JSX; host supplies an optional
+  `renderValue?: (v: unknown) => JSX.Element | undefined` to inject domain
+  renderers (status badges, candlesticks, epoch-millis dates, etc.). Returning
+  `undefined` from the override falls through to the default dispatcher. Object
+  rendering recurses through the same pipeline so overrides apply at every
+  nesting level. Owns `ValueRenderer.css`. Annotated `Component<ValueRendererProps>`
+  for TS2742 / pnpm-portability. Exported types: `ValueRendererProps`,
+  `RenderValueFn`.
+- **`ChangeRenderer`** (`src/components/ChangeRenderer/ChangeRenderer.tsx`) —
+  Depth 2 (Composite). Before/after pair with a directional arrow; both sides
+  render through `ValueRenderer` so a single `renderValue` override applies
+  consistently to both. Accepts optional custom `arrow` element. Owns
+  `ChangeRenderer.css`. Annotated `Component<ChangeRendererProps>`.
+- **`CandlestickRenderer`** (`src/components/CandlestickRenderer/CandlestickRenderer.tsx`) —
+  Atomic (Depth 1). OHLC box visualization: open/close flanks, high/low stacked
+  markers, mean inside the box. Default bullish/bearish coloring via
+  `--sui-success`/`--sui-danger`; `getBoxColor` override for custom rules
+  (e.g., doji detection). No component imports; owns `CandlestickRenderer.css`.
+  Annotated `Component<CandlestickRendererProps>`. Exported types:
+  `CandlestickRendererProps`, `Candlestick`.
+
+### Scope decisions
+
+**Decision 1 — Dispatch API shape.** Hybrid: minimal built-in default dispatch
+for primitives and plain objects, with a `renderValue` prop as an explicit
+extension hook. Ship no opinionated sub-renderers (e.g., status-keyword
+detection, epoch-millis-as-date heuristics) — those are domain policies that
+belong to the host. Objects on each side dispatch through `ValueRenderer` in
+`ChangeRenderer`, which means a single host-supplied `renderValue` applies to
+primitive values on both sides AND to nested values inside objects.
+
+**Decision 2 — No sub-renderers upstream.** Downstream's
+`String/Number/Duration/Date/StatusBadge` renderers carry
+host-specific concerns (smart tooltip hook, alarm-color generation, Luxon
+duration formatting, pacific-timezone format strings) that are not generic
+enough for an atomic library. `ValueRenderer`'s default dispatcher renders
+primitives inline without importing sub-atomics, honoring the "atomics must
+NOT import other atomics" rule. Phase 7 can collapse the downstream
+renderer files into call sites of `ValueRenderer` with a host-local
+`renderValue` that wires in whatever domain atomics the app keeps around
+(e.g., a project-local `StatusBadgeRenderer` + `DateRenderer` would stay
+downstream as thin renderers; `ObjectRenderer.tsx` goes away entirely).
+
+**Decision 3 — Single v0.9.0 release.** All three components share CSS
+conventions (`--sui-*` tokens, label/value grid), ship together as the audit's
+Phase 1.6 batch, and have low individual surface. One PR, one review, one
+release. No batch chaining.
+
+### Documented divergences
+
+- **`ChangeRenderer` does not replicate downstream `ChangeObjectRenderer`'s per-key
+  aligned grid.** When `before`/`after` are objects, each side renders through
+  `ValueRenderer`'s default key/value entry list — the key-level diff (added /
+  removed / changed / unchanged highlighting) remains a domain concern. If
+  downstream needs that behavior, it stays as a domain component that
+  composes `ValueRenderer` + custom per-key layout.
+- **`CandlestickRenderer` does not embed a hover tooltip.** The downstream
+  `useSmartTooltip`-based floating panel is host-specific. Callers wrap the
+  base in the library `Tooltip` to reintroduce the behavior.
+
+### CSS
+
+- `src/components/ValueRenderer/ValueRenderer.css` — label/value grid, object
+  entry list with alternating-row tint, primitive variants.
+- `src/components/ChangeRenderer/ChangeRenderer.css` — pair layout, arrow
+  styling, opacity-based before/after emphasis.
+- `src/components/CandlestickRenderer/CandlestickRenderer.css` — OHLC box,
+  absolute-positioned high/low markers, token-driven bullish/bearish fill.
+
+### Component classification
+
+- `ValueRenderer` — **Atomic (Depth 1)**. No component imports; owns CSS.
+- `ChangeRenderer` — **Depth 2 (Composite)**. Composes `ValueRenderer`; owns
+  its own CSS for the pair layout.
+- `CandlestickRenderer` — **Atomic (Depth 1)**. No component imports; owns CSS.
+
+The taxonomy is unchanged — `STYLE_GUIDE.md` already accommodates Depth 2
+composites that own CSS for their own layout concerns on top of Atomic children.
+
+### Phase 1.6 sequencing unblocks
+
+These three exports plus `PivotTable` (still outstanding) complete the data
+primitives batch. Phase 7 (downstream `renderers/*` migration) can now consume
+`ValueRenderer`, `ChangeRenderer`, `CandlestickRenderer` directly from
+`solid-ui-components`.
+
 ## v0.8.0 — Toast (Phase 1.5)
 
 Wraps `@kobalte/core/toast` into an opinionated toast component plus the

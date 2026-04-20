@@ -8,6 +8,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
 import { ButtonShowcase } from "./showcases/button";
+import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
@@ -38,6 +39,7 @@ import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
+import { ValueRendererShowcase } from "./showcases/value-renderer";
 
 // Layout
 import { ResizableContainerShowcase } from "./showcases/resizable-container";
@@ -47,6 +49,7 @@ import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
+import { ChangeRendererShowcase } from "./showcases/change-renderer";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
@@ -84,6 +87,7 @@ const nav: TabGroup[] = [
       { id: "base-table", label: "BaseTable", component: BaseTableShowcase },
       { id: "button", label: "Button", component: ButtonShowcase },
       { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase },
+      { id: "candlestick-renderer", label: "CandlestickRenderer", component: CandlestickRendererShowcase },
       { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase },
       { id: "combobox", label: "Combobox", component: ComboboxShowcase },
       { id: "dag-chart", label: "DagChart", component: DagChartShowcase },
@@ -113,6 +117,7 @@ const nav: TabGroup[] = [
       { id: "toast", label: "Toast", component: ToastShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
       { id: "tooltip", label: "Tooltip", component: TooltipShowcase },
+      { id: "value-renderer", label: "ValueRenderer", component: ValueRendererShowcase },
     ],
   },
   {
@@ -128,6 +133,7 @@ const nav: TabGroup[] = [
     label: "Depth 2",
     children: [
       { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase },
+      { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase },
       { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase },
       { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase },
       { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase },

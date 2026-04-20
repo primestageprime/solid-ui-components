@@ -337,5 +337,77 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
     ```
   - Divergence from initial audit sketch: `class` is used instead of `className` (upstream convention); `openDelay`/`closeDelay` are not separately declared on `TooltipProps` because Kobalte's `TooltipRootProps` already includes them — `mergeProps` injects the 100 ms defaults before the passthrough spread.
 
+## Renderers
+
+The renderers family is a set of small, composable components for displaying field-style data: primitives with labels, before/after diffs, and OHLC candlesticks. They share a `--sui-*` token-driven label/value grid and render zero-config for common cases; host code can opt into a `renderValue` dispatcher hook when a domain needs custom types (status badges, epoch-millis dates, etc.).
+
+- **ValueRenderer** — Atomic (Depth 1). Labeled label/value layout with a pluggable value dispatcher. Key props: `label?`, `value` (`unknown`), `renderValue?` (`(v: unknown) => JSX.Element | undefined` — host override; returning `undefined` falls through to the default dispatcher), `numberPrecision?` (default `2`), `class?`. Default dispatch handles `string`, `number`, `boolean`, `null`/`undefined`, arrays, plain objects, and pre-rendered JSX elements (`$$typeof` sentinel) — everything else falls through to `String(v)`. Objects render as a key/value entry list and recurse through the same `renderValue` pipeline so overrides apply at every nesting level. No component imports; owns `ValueRenderer.css`. Uses `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-font-family` tokens. Use for: generic field display, object dumps, anywhere you previously wrote `<span>{label}:</span><span>{value}</span>`.
+  - Example:
+    ```tsx
+    import { ValueRenderer } from "solid-ui-components";
+
+    // Zero-config primitives
+    <ValueRenderer label="Count" value={1234.5678} />
+    <ValueRenderer label="Active" value={true} />
+    <ValueRenderer label="Missing" value={null} />
+
+    // Objects — recurse through the default dispatcher
+    <ValueRenderer
+      label="Context"
+      value={{ temperature: 45.2, active: true, name: "Engine #3" }}
+    />
+
+    // Custom dispatch — host injects a domain renderer; return undefined to
+    // defer to the default dispatcher.
+    <ValueRenderer
+      label="Status"
+      value="ALARM"
+      renderValue={(v) => (isStatus(v) ? <StatusBadge status={v} /> : undefined)}
+    />
+    ```
+
+- **ChangeRenderer** — Depth 2 (Composite; composes `ValueRenderer` twice). Before/after pair layout with a directional arrow. Key props: `label?`, `before` (`unknown`), `after` (`unknown`), `renderValue?` (shared override applied to both sides), `numberPrecision?`, `arrow?` (`JSX.Element`; default `"→"`), `class?`. Dispatches each side through `ValueRenderer` so any override stays consistent across the pair. Owns `ChangeRenderer.css`. Uses the same `--sui-*` token set as `ValueRenderer`, plus the arrow styling. Use for: single-field diffs, alarm before/after displays, config change rows.
+  - Example:
+    ```tsx
+    import { ChangeRenderer } from "solid-ui-components";
+
+    <ChangeRenderer label="Count" before={12} after={15} />
+    <ChangeRenderer
+      label="Context"
+      before={{ temp: 45, active: true }}
+      after={{ temp: 50, active: true }}
+    />
+    <ChangeRenderer
+      label="Status"
+      before="NOMINAL"
+      after="ALARM"
+      renderValue={(v) => (isStatus(v) ? <StatusBadge status={v} /> : undefined)}
+    />
+    ```
+  - Divergence from initial audit sketch (documented, intentional): the upstream `ChangeRenderer` does not replicate downstream `ChangeObjectRenderer`'s per-key aligned grid with added/removed/changed/unchanged highlighting. Objects on each side render through `ValueRenderer`'s default entry list — the key-level diff remains a domain concern. Host code that needs that behavior can keep it as a domain component wrapping `ValueRenderer` or two `ChangeRenderer`s, following the audit's "absorb what fits, leave domain behavior behind" principle.
+
+- **CandlestickRenderer** — Atomic (Depth 1). OHLC box visualization with open/close flanks, high/low stacked markers, and a mean value inside the box. Key props: `label?`, `candlestick` (`Candlestick | null | undefined` where `Candlestick = { open, close, high, low, mean, openAt?, closeAt? }`), `getBoxColor?` (`(c: Candlestick) => string`; default colors bullish candles green and bearish red via `--sui-success` / `--sui-danger`), `precision?` (default `2`), `class?`. Null/undefined candlestick renders an em-dash. No component imports; owns `CandlestickRenderer.css`. Uses `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-success`, `--sui-danger`, `--sui-warning`, `--sui-radius-sm`, `--sui-font-family` tokens. Use for: price/metric candles, bucket-aggregated statistics (where min/max/avg + open/close make sense). Exported types: `CandlestickRendererProps`, `Candlestick`.
+  - To show OHLC details on hover, wrap the component in `Tooltip` and supply your own date/duration formatting — this library's Candlestick is visualization-only.
+  - Divergence from downstream: the upstream component does not embed a hover tooltip (the downstream `CandlestickRenderer` uses `useSmartTooltip` with full OHLC breakdown). Callers that need the tooltip wrap the base in the library's `Tooltip` component and supply their own content.
+  - Example:
+    ```tsx
+    import { CandlestickRenderer } from "solid-ui-components";
+
+    <CandlestickRenderer
+      label="Price"
+      candlestick={{ open: 100, close: 105, high: 107, low: 99, mean: 103 }}
+    />
+
+    // Custom color (e.g., doji-aware)
+    <CandlestickRenderer
+      candlestick={cs}
+      getBoxColor={(c) =>
+        Math.abs(c.close - c.open) / (c.high - c.low || 1) < 0.03
+          ? "var(--sui-warning)"
+          : c.close >= c.open ? "var(--sui-success)" : "var(--sui-danger)"
+      }
+    />
+    ```
+
 ## VesselCallHeader
 - **VesselCallHeader** — Vessel name + time range + duration + badge display. Key props: `vesselName`, `connectedAt`, `disconnectedAt`, `assetId`, `badge`, `action`, `href`. Use for: vessel call detail page headers, vessel call list item titles.
