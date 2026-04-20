@@ -46,6 +46,7 @@ export * from "./components/Tooltip";
 export * from "./components/Select";
 export * from "./components/Combobox";
 export * from "./components/ThemedNumberInput";
+export * from "./components/Toast";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
