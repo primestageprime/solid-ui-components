@@ -9,6 +9,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 import { BaseTableShowcase } from "./showcases/base-table";
 import { ButtonShowcase } from "./showcases/button";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
+import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
@@ -29,6 +30,7 @@ import { MathFormulaShowcase } from "./showcases/math-formula";
 import { NavItemShowcase } from "./showcases/nav-item";
 import { ProgressBarShowcase } from "./showcases/progress-bar";
 import { SectionShowcase } from "./showcases/section";
+import { SelectShowcase } from "./showcases/select";
 import { SidebarSelectorShowcase } from "./showcases/sidebar-selector";
 import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
@@ -81,6 +83,7 @@ const nav: TabGroup[] = [
       { id: "button", label: "Button", component: ButtonShowcase },
       { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase },
       { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase },
+      { id: "combobox", label: "Combobox", component: ComboboxShowcase },
       { id: "dag-chart", label: "DagChart", component: DagChartShowcase },
       { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase },
       { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase },
@@ -98,6 +101,7 @@ const nav: TabGroup[] = [
       { id: "progress-bar", label: "ProgressBar", component: ProgressBarShowcase },
       { id: "section", label: "Section", component: SectionShowcase },
       { id: "hud-section", label: "Section (Accent)", component: AccentSectionShowcase },
+      { id: "select", label: "Select", component: SelectShowcase },
       { id: "sidebar-selector", label: "SidebarSelector", component: SidebarSelectorShowcase },
       { id: "stats-table", label: "StatsTable", component: StatsTableShowcase },
       { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase },

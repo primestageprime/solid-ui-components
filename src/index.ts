@@ -43,6 +43,8 @@ export * from "./components/Dropdown";
 export * from "./components/TagInput";
 export * from "./components/ResizableContainer";
 export * from "./components/Tooltip";
+export * from "./components/Select";
+export * from "./components/Combobox";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

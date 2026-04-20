@@ -58,6 +58,32 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **CellRow** — `<tr>` wrapper with border and highlight options. Key props: `border`, `highlight`. Use for: rows in CellTable.
 - Curried variants exported: `KVTable`, `BorderRow`, `DataTerm`, `DataTermMuted`, `DataValue`, `DataValueHighlight`, `DataValueSuccess`, `DataValuePrimary`, `DataValueMuted`, `DataHeader`, `DataHeaderRight`, `DataHeaderCenter`. Use for: key-value data tables without wiring alignment/weight manually.
 
+## Combobox
+- **Combobox** — Unified single- and multi-combobox built on `@kobalte/core/combobox`. The `multiple?` literal narrows `value`/`onChange`: `false`/absent → `ComboboxOption | null`; `true` → `ComboboxOption[]`. Key props: `options` (`Accessor<ComboboxOption[]>`), `value`, `onChange`, `placeholder`, `disabled`, `id`, `onInputChange`, `onCreate` (fires on Enter when input doesn't match an existing option — parent appends to `options`), plus (multi-only) `onRemove`, `showChips` (default `true`). Any other kobalte `ComboboxRootProps` field (e.g., `placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `defaultFilter`) is forwarded via spread. Exported types: `ComboboxProps`, `ComboboxOption`, `SingleComboboxProps`, `MultiComboboxProps`. Uses `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-border-bright`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-danger`, `--sui-danger-rgb`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: searchable selects, tag editors, freeform "pick-or-create" inputs.
+  - API divergence from downstream: single-site `onCreateNew` is renamed to `onCreate` (aligned with the multi-site contract).
+  - Example:
+    ```tsx
+    import { Combobox, type ComboboxOption } from "solid-ui-components";
+
+    // Single with create-on-Enter
+    <Combobox
+      options={countries}
+      value={country}
+      onChange={setCountry}
+      onCreate={(label) => addCountry({ value: slug(label), label })}
+    />
+
+    // Multi with chips
+    <Combobox
+      multiple
+      options={tags}
+      value={selectedTags}
+      onChange={setSelectedTags}
+      onCreate={(label) => addTag({ value: slug(label), label })}
+      onRemove={(opt) => console.log("removed", opt)}
+    />
+    ```
+
 ## DataDisplay
 - **DateTimeRange** — Formats ISO start/end timestamps into a readable range string. Key props: `start`, `end`, `mode` (`date`|`datetime`). Use for: displaying time periods.
 - **DigitRoller** — Animated digit-by-digit value transition (slot-machine effect). Key props: `value`, `previousValue`, `animate`, `duration`, `stagger`, `onAnimationEnd`. Use for: animated number reveals in dashboards.
@@ -172,6 +198,24 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 
 ## Section
 - **Section** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `variant` (`ColorVariant` — sets accent color), `corners` (`CornerStyle` — visual corner treatment; replaces old `"bordered"`/`"decorated"` variant values), `fill`, `showHeader`, `headerAction`, `collapsible`, `collapsed`, `onToggleCollapse`, `defaultExpanded`. Has `createSection` factory. Use for: major page sections.
+
+## Select
+- **Select** — Unified single- and multi-select built on `@kobalte/core/select`. The `multiple?` literal narrows `value`/`onChange`: `false`/absent → `SelectOption | null`; `true` → `SelectOption[]`. Key props: `options` (`Accessor<SelectOption[]>`), `value`, `onChange`, `label`, `description`, `placeholder`, `id`. Any other kobalte `SelectRootProps` field (e.g. `placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `disabled`) is forwarded via spread. Single-mode uses `disallowEmptySelection={false}`; multi-mode renders a comma-joined preview plus an inline clear button in the trigger. Exported types: `SelectProps`, `SelectOption`, `SingleSelectProps`, `MultiSelectProps`. Uses `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-border-bright`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: priority pickers, status filters, tag selectors, any single- or multi-select form field.
+  - Example:
+    ```tsx
+    import { Select, type SelectOption } from "solid-ui-components";
+
+    const options: SelectOption[] = [
+      { value: "low", label: "Low" },
+      { value: "high", label: "High" },
+    ];
+
+    // Single
+    <Select label="Priority" options={() => options} value={priority} onChange={setPriority} />
+
+    // Multi
+    <Select multiple label="Statuses" options={() => options} value={statuses} onChange={setStatuses} />
+    ```
 
 ## Selector
 - **SidebarSelector** — Sidebar card list with selection content area (generic). Key props: `items`, `selectedId`, `onSelect`, `renderCard`, `renderSelection`, `sidebarWidth`, `maxHeight`, `label`. Use for: master-detail selection patterns, sidebar navigation with preview pane.
