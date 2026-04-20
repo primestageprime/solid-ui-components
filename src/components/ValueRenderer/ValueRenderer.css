@@ -1,0 +1,88 @@
+/* ============================================
+   ValueRenderer — Atomic (Depth 1)
+   Labeled value row with default primitive/object dispatch.
+   Uses --sui-* tokens from the active theme.
+   ============================================ */
+
+.sui-value {
+  display: block;
+  min-width: 0;
+  font-family: var(--sui-font-family);
+  color: var(--sui-text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.sui-value--with-label {
+  display: grid;
+  grid-template-columns: minmax(80px, max-content) 1fr;
+  gap: 12px;
+  align-items: baseline;
+  width: 100%;
+}
+
+.sui-value__label {
+  color: var(--sui-text-secondary);
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.sui-value__body {
+  min-width: 0;
+  color: var(--sui-text-primary);
+  overflow-wrap: anywhere;
+}
+
+/* Primitive value classes */
+
+.sui-value__text {
+  color: var(--sui-text-primary);
+}
+
+.sui-value__number {
+  color: var(--sui-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-value__empty {
+  color: var(--sui-text-muted);
+}
+
+.sui-value__array {
+  color: var(--sui-text-primary);
+}
+
+.sui-value__sep {
+  color: var(--sui-text-muted);
+  margin-right: 2px;
+}
+
+/* Object entries */
+
+.sui-value__entries {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sui-value__entry {
+  display: grid;
+  grid-template-columns: minmax(80px, max-content) 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 4px;
+}
+
+.sui-value__entry:nth-child(odd) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.sui-value__entry-key {
+  color: var(--sui-text-secondary);
+  font-weight: 400;
+}
+
+.sui-value__entry-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

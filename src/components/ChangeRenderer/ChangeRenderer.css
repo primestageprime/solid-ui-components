@@ -1,0 +1,55 @@
+/* ============================================
+   ChangeRenderer — Depth 2 (Composite)
+   Before/after pair layout. Uses --sui-* tokens from the active theme.
+   ============================================ */
+
+.sui-change {
+  display: block;
+  min-width: 0;
+  font-family: var(--sui-font-family);
+  color: var(--sui-text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.sui-change--with-label {
+  display: grid;
+  grid-template-columns: minmax(80px, max-content) 1fr;
+  gap: 12px;
+  align-items: baseline;
+  width: 100%;
+}
+
+.sui-change__label {
+  color: var(--sui-text-secondary);
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.sui-change__pair {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sui-change__side {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.sui-change__arrow {
+  color: var(--sui-text-muted);
+  flex: 0 0 auto;
+  font-weight: 400;
+}
+
+/* Subtle emphasis — after side renders slightly brighter to highlight the change. */
+.sui-change__side--before {
+  opacity: 0.82;
+}
+
+.sui-change__side--after {
+  color: var(--sui-text-primary);
+}

@@ -47,6 +47,9 @@ export * from "./components/Select";
 export * from "./components/Combobox";
 export * from "./components/ThemedNumberInput";
 export * from "./components/Toast";
+export * from "./components/ValueRenderer";
+export * from "./components/ChangeRenderer";
+export * from "./components/CandlestickRenderer";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
