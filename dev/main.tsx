@@ -33,6 +33,7 @@ import { SidebarSelectorShowcase } from "./showcases/sidebar-selector";
 import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
+import { TooltipShowcase } from "./showcases/tooltip";
 
 // Layout
 import { ResizableContainerShowcase } from "./showcases/resizable-container";
@@ -103,6 +104,7 @@ const nav: TabGroup[] = [
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
+      { id: "tooltip", label: "Tooltip", component: TooltipShowcase },
     ],
   },
   {
