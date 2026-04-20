@@ -1,0 +1,188 @@
+/* ============================================
+   Select — Structural
+   Kobalte-driven select (single + multi). Visuals via `--sui-*` tokens.
+   ============================================ */
+.sui-select {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  color: var(--sui-text-primary, #e0f4ff);
+}
+
+.sui-select__label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sui-text-secondary, #7aa8c0);
+}
+
+.sui-select__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--sui-bg-elevated, #142535);
+  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-radius: var(--sui-radius-sm, 0);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.sui-select__trigger:hover:not(:disabled) {
+  border-color: var(--sui-accent, #00d4ff);
+}
+
+.sui-select__trigger:focus-visible,
+.sui-select__trigger[data-expanded] {
+  outline: none;
+  border-color: var(--sui-accent, #00d4ff);
+  box-shadow: 0 0 0 2px rgba(var(--sui-accent-rgb, 0, 212, 255), 0.25);
+}
+
+.sui-select__trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-select__value {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sui-select__value-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sui-select__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--sui-text-secondary, #7aa8c0);
+  transition: transform 120ms ease;
+}
+
+.sui-select__trigger[data-expanded] .sui-select__icon {
+  transform: rotate(180deg);
+  color: var(--sui-accent, #00d4ff);
+}
+
+.sui-select__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  margin: 0;
+  color: var(--sui-text-muted, #4a6a80);
+  cursor: pointer;
+  border-radius: var(--sui-radius-sm, 0);
+}
+
+.sui-select__clear:hover {
+  color: var(--sui-danger, #ff3366);
+  background: rgba(var(--sui-danger-rgb, 255, 51, 102), 0.12);
+}
+
+.sui-select__description {
+  font-size: 11px;
+  color: var(--sui-text-muted, #4a6a80);
+}
+
+.sui-select__content {
+  z-index: 50;
+  min-width: var(--kb-select-trigger-width, 160px);
+  max-width: min(calc(100vw - 32px), 480px);
+  background: var(--sui-bg-primary, #0a1420);
+  border: 1px solid var(--sui-border-bright, rgba(0, 212, 255, 0.6));
+  border-radius: var(--sui-radius-sm, 0);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(var(--sui-accent-rgb, 0, 212, 255), 0.1);
+  overflow: hidden;
+  transform-origin: var(--kb-select-content-transform-origin);
+  animation: sui-select-hide 120ms ease-in forwards;
+}
+
+.sui-select__content[data-expanded] {
+  animation: sui-select-show 140ms ease-out;
+}
+
+.sui-select__listbox {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  outline: none;
+}
+
+.sui-select__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--sui-text-primary, #e0f4ff);
+  border-radius: var(--sui-radius-sm, 0);
+  cursor: pointer;
+  outline: none;
+}
+
+.sui-select__item[data-highlighted] {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
+  color: var(--sui-accent, #00d4ff);
+}
+
+.sui-select__item[data-selected] {
+  color: var(--sui-accent, #00d4ff);
+}
+
+.sui-select__item[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-select__item-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: var(--sui-accent, #00d4ff);
+}
+
+@keyframes sui-select-show {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sui-select-hide {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
