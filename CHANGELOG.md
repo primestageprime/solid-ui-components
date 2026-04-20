@@ -1,5 +1,44 @@
 # Changelog
 
+## v0.7.0 — ThemedNumberInput (Phase 1.4)
+
+Rounds out the themed input family with a numeric field. Kobalte-backed
+(`@kobalte/core/number-field`) — gets the stepper keyboard semantics, bounds
+enforcement, and locale-aware formatting without re-implementing them.
+
+### Added
+
+- **`ThemedNumberInput`** (`src/components/ThemedNumberInput/`) — Themed
+  numeric field with stacked increment/decrement triggers. Key props: `value`
+  (`Accessor<number | undefined>`), `onChange`, `name`, `label`, `description`,
+  `errorMessage`, `min`, `max`, `step?` (default `1`). Friendly `min`/`max`
+  names map to kobalte's `minValue`/`maxValue`; all other `NumberFieldRootProps`
+  forward via spread. Visual family with `ThemedInput` / `ThemedTextarea`
+  (shared paddings, borders, focus ring).
+
+### API divergences from downstream
+
+- Downstream `amygdala-ui/src/components/forms/inputs/NumberInput.tsx` used
+  `value?: number | Accessor<number | undefined>` and `onChange?: (value: number) => void`.
+  Upstream tightens to `value?: Accessor<number | undefined>` (accessor-only —
+  matches the rest of the library's reactive-prop convention) and changes
+  `onChange` to `(value: number | undefined) => void` so callers don't need to
+  guard on `NaN` when the field is cleared (kobalte emits `NaN`; we normalize
+  to `undefined` at the boundary).
+- Downstream surfaced `min` / `max` as its own props while the rest of the
+  kobalte API was spread; upstream keeps that same friendly surface but
+  explicitly `Omit`s `minValue` / `maxValue` from the forwarded kobalte props
+  so the two spellings can't collide.
+
+### Driving downstream site
+
+- `amygdala-ui/src/components/forms/inputs/NumberInput.tsx` (sole call site).
+
+### Unblocks
+
+- Phase 5 forms — numeric threshold / bound fields (engine parameters, alarm
+  thresholds, sampling rates).
+
 ## v0.6.0 — Selection Primitives (Phase 1.3)
 
 Adds unified `Select` and `Combobox` primitives — each folds the single- and multi-mode downstream variants into a single upstream component via a `multiple?: boolean` literal that narrows `value` / `onChange`.
