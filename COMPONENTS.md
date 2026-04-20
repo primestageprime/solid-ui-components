@@ -274,6 +274,44 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
 
+## Toast
+- **Toast** — Kobalte-backed toast built on `@kobalte/core/toast`. Key props: `toastId` (`number`, injected by `toaster.show`), `title` (required), `description?` (`string | JSX.Element`), `variant?` (`info`|`success`|`warning`|`error`, default `info`), `actions?` (array of `ToastAction { label, onClick, variant? }`), `duration?` (ms; falls back to kobalte default), `persistent?` (suppress auto-dismiss + progress bar). Any other `ToastRootProps` field (`priority`, swipe handlers, escape-key, etc.) is forwarded to `Toast.Root`. Exported types: `ToastProps`, `ToastAction`, `ToastVariant`, `ShowToastInput`, `ToastHandle`. Uses `--sui-bg-elevated`, `--sui-bg-secondary`, `--sui-bg-tertiary`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-success`, `--sui-success-rgb`, `--sui-warning`, `--sui-warning-rgb`, `--sui-danger`, `--sui-danger-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: imperative notifications (save confirmations, error messages, prompts with actions, session warnings).
+- **ToastRegion** / **ToastList** — Curried atomics that wrap kobalte's `Toast.Region` / `Toast.List` with baked-in viewport styling. Mount once near the app root inside a `Portal`. Exported types: `ToastRegionCurriedProps`, `ToastListCurriedProps`.
+- **showToast(input)** — Imperative helper. Returns `{ id: number, dismiss: () => void }`. Accepts the same shape as `ToastProps` minus `toastId`.
+- **toaster** — Re-export of kobalte's raw `toaster` for `update` / `clear` / `promise` use cases beyond `showToast`. For sub-components like `Toast.Root` / `Toast.Title` / `Toast.Description` directly, import from `@kobalte/core/toast` (already an installed peer).
+  - Example:
+    ```tsx
+    import { Portal } from "solid-js/web";
+    import {
+      showToast,
+      toaster,
+      ToastList,
+      ToastRegion,
+    } from "solid-ui-components";
+
+    // 1. Mount the region once (near app root):
+    <Portal>
+      <ToastRegion limit={10}>
+        <ToastList />
+      </ToastRegion>
+    </Portal>
+
+    // 2. Fire toasts imperatively:
+    const handle = showToast({
+      title: "Unsaved changes",
+      description: "Your work will be lost if you leave this page.",
+      variant: "warning",
+      actions: [
+        { label: "Save",    variant: "primary",   onClick: save    },
+        { label: "Discard", variant: "secondary", onClick: discard },
+      ],
+    });
+
+    // 3. Dismiss by handle or by id:
+    handle.dismiss();
+    toaster.clear();
+    ```
+
 ## Toggle
 - **Toggle** — Checkbox toggle switch with label positioning and accent color. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), `variant` (`default`|`minimal`), `color` (`ColorVariant`), plus all native checkbox attributes. Note: `power` and `circuit` variants have been removed. Use for: boolean on/off controls.
 
