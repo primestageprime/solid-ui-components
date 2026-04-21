@@ -108,6 +108,39 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **Units** — Muted inline units suffix. Use for: appending unit text after values.
 - **Badge** — Backwards-compatible wrapper around StatusBadge. Key props: `variant` (`default`|`high`|`success`|`warning`|`error`). Use for: inline badges within data lists.
 
+## DateRangePicker
+- **DateRangePicker** — Composite (Depth 2). Popover-anchored date-range picker built on `@kobalte/core/popover`. Composes the upstream `Button` for presets; internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under the component directory and are NOT re-exported (zero-config call site). Date math is vanilla `Date` + `Intl.DateTimeFormat` — no Luxon / date-fns dependency; locale-aware month and short-date formatting comes from the browser's built-in i18n. Key props: `value` (`Accessor<DateRange>`), `onChange` (`(range: DateRange) => void`), `presets?` (`DateRangePreset[]` — caller-supplied, no defaults; omit to suppress the preset row), `maxRangeDays?` (disables days beyond the cap once an anchor is selected and clamps preset/second-click selections to the same bound; non-positive values log a console error and are dropped), `placeholder?`, `class?`. Exported types: `DateRangePickerProps`, `DateRange`, `DateRangePreset`. Uses `--sui-bg-primary`, `--sui-bg-elevated`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: time-range filters, alarm-investigation timespan controls, reporting period selection.
+  - Formatter contract: the component formats the trigger label ("Apr 13 – Apr 20, 2026") and month header ("April 2026") itself via `Intl.DateTimeFormat` using the browser's default locale. No `formatDate` / `parseDate` props are required from callers. Timezone handling is browser-local — callers needing deterministic cross-timezone display should pre-convert `value.start` / `value.end` before passing them in.
+  - Selection model: first click sets the pending start, second click commits `[start, end]` via `onChange`. Presets select `[now - days, now]`. When the optional "Set time" toggle is enabled, committed ranges apply the configured `HH:mm` to both ends.
+  - Example:
+    ```tsx
+    import { DateRangePicker, type DateRange, type DateRangePreset } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const PRESETS: DateRangePreset[] = [
+      { label: "24h", days: 1 },
+      { label: "7d",  days: 7 },
+      { label: "30d", days: 30 },
+    ];
+
+    const now = new Date();
+    const [range, setRange] = createSignal<DateRange>({
+      start: new Date(now.getTime() - 14 * 86_400_000),
+      end: now,
+    });
+
+    <DateRangePicker
+      value={range}
+      onChange={setRange}
+      presets={PRESETS}
+      maxRangeDays={30}
+    />
+    ```
+  - Divergences from the downstream driving sites (intentional):
+    - Internal sub-components are private, not exported (downstream has them as separate `CalendarGrid` / `CalendarHeader` / `PresetButtons` / `TimeInputs` files inside the feature folder; upstream treats them as implementation details).
+    - Downstream uses Luxon for weekday/month formatting and the `MMM d`/`MMMM yyyy` trigger label; upstream uses vanilla `Date` arithmetic plus `Intl.DateTimeFormat`. Behavior and layout match; the library surface does not add Luxon as a dependency.
+    - Downstream uses SCSS CSS modules (`dateRangePicker.module.scss`); upstream uses a single plain CSS file (`DateRangePicker.css`) with BEM-ish `.sui-drp__*` class names and `--sui-*` tokens.
+
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
 

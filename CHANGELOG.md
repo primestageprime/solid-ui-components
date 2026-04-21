@@ -1,5 +1,81 @@
 # Changelog
 
+## v0.10.0 — Composite primitive: DateRangePicker (Phase 1.7)
+
+Ships the composed date-range picker identified by the migration audit's
+Phase 1.7 batch. Folds the downstream `forms/DateRangePicker/` subdirectory
+(root component + CalendarGrid + CalendarHeader + PresetButtons + TimeInputs +
+`calendarUtils.ts`) into a single upstream composite with only the root
+component exported. Phase 5 (Forms) can now delete the entire downstream
+subdirectory and import `DateRangePicker` from the library.
+
+### Added
+
+- **`DateRangePicker`** (`src/components/DateRangePicker/DateRangePicker.tsx`)
+  — Composite (Depth 2). Popover-anchored date-range picker built on
+  `@kobalte/core/popover`. Owns `DateRangePicker.css`. Composes the upstream
+  `Button` (Atomic) for preset chips. Internal `CalendarGrid`,
+  `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under
+  the component directory and are NOT re-exported — zero-config at the call
+  site (Decision 1a). Annotated `Component<DateRangePickerProps>` for
+  TS2742 / pnpm-portability. Exported types: `DateRangePickerProps`,
+  `DateRange`, `DateRangePreset`.
+
+### Scope decisions
+
+**Decision 1 — Sub-components private.** Only `DateRangePicker` is exported
+from the library root. `CalendarGrid`, `CalendarHeader`, `PresetButtons`, and
+`TimeInputs` are implementation details. Matches the audit's recommendation
+and keeps the public surface minimal.
+
+**Decision 2 — Vanilla `Date` + `Intl.DateTimeFormat`.** No Luxon, no
+date-fns, no caller-supplied formatter contract. The downstream used Luxon
+for weekday offsets and month/short-date formatting; all of that is replaced
+with `new Date(year, month, 1).getDay()` + `Intl.DateTimeFormat` at zero
+bundle cost. Keeps the library dep-light (Luxon would have added ~70 kB to
+every consumer; requiring formatter props would have added 4–5 props to
+every call site). Locale-aware formatting comes from the browser's built-in
+i18n — no work for callers.
+
+**Decision 3 — Presets caller-supplied.** `presets?: DateRangePreset[]`
+matches the downstream contract. Omit or pass `[]` to suppress the preset
+row. No built-in default preset set.
+
+**Decision 4 — Browser-local timezone.** Falls out of Decision 2: all
+internal math operates on `Date` objects without explicit timezone
+conversion, matching the downstream behavior. Callers needing deterministic
+cross-timezone display should pre-convert `value.start` / `value.end` before
+passing them in.
+
+### Kobalte — built from scratch, no `@kobalte/core/date-picker`
+
+Kobalte does not ship a `date-picker` primitive (checked
+`@kobalte/core/dist` subpaths). The picker is built on
+`@kobalte/core/popover` plus hand-rolled calendar math and day buttons.
+Popover is already covered by `vite.config.ts`'s `noExternal` pattern
+(`/^@kobalte\//`), so no SSR config changes were needed.
+
+### Divergences from downstream (intentional)
+
+- Internal sub-components are not exported (downstream had them as separate
+  files inside the feature folder; upstream treats them as private).
+- Luxon replaced with vanilla `Date` + `Intl.DateTimeFormat`.
+- SCSS CSS modules replaced with a plain `.css` file using BEM-ish
+  `.sui-drp__*` class names and `--sui-*` theme tokens.
+- `sanitizeMaxRangeDays` downgrades the dev-mode `throw` to a `console.error`
+  + graceful fallback (`import.meta.env.DEV` is not available in this
+  library's tsconfig/context; throwing in prod would have been worse than
+  the downstream dev-only throw).
+
+### Known gaps
+
+- **No upstream test coverage for `calendarUtils`.** The downstream ships a
+  Vitest `calendarUtils.test.ts` with month-boundary / range / clamp /
+  sanitize coverage. Upstream has no test framework configured — tests are
+  not ported in this release. Tracking follow-up: add Vitest to
+  `solid-ui-components` so this and any future utility modules can ship
+  with tests.
+
 ## v0.9.0 — Data primitives: ValueRenderer + ChangeRenderer + CandlestickRenderer (Phase 1.6)
 
 Ships the three data-primitive components identified by the migration audit's
