@@ -50,6 +50,7 @@ import { SurfaceShowcase } from "./showcases/surface";
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
 import { ChangeRendererShowcase } from "./showcases/change-renderer";
+import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
@@ -135,6 +136,7 @@ const nav: TabGroup[] = [
       { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase },
       { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase },
       { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase },
+      { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase },
       { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase },
       { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase },
       { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase },

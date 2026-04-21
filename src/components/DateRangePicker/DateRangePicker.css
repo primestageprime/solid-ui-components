@@ -1,0 +1,246 @@
+/* ============================================
+   DateRangePicker — Composite (Depth 2)
+   Single stylesheet shared across the composed root + private
+   sub-components (calendar grid, header, presets, time inputs).
+   All visuals resolve from `--sui-*` theme tokens.
+   ============================================ */
+
+/* ---- Trigger button ---- */
+.sui-drp__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--sui-bg-elevated, #142535);
+  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-radius: var(--sui-radius-sm, 0);
+  color: var(--sui-text-primary, #e0f4ff);
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+
+.sui-drp__trigger:hover {
+  border-color: var(--sui-border-bright, rgba(0, 212, 255, 0.6));
+}
+
+.sui-drp__trigger:focus-visible {
+  outline: 2px solid var(--sui-border-focus, #00d4ff);
+  outline-offset: 2px;
+}
+
+.sui-drp__trigger-icon {
+  opacity: 0.6;
+  font-size: 10px;
+}
+
+/* ---- Popover surface ---- */
+.sui-drp__popover-content {
+  z-index: 50;
+  min-width: 280px;
+  padding: 12px;
+  background: var(--sui-bg-primary, #0a1420);
+  border: 1px solid var(--sui-border-bright, rgba(0, 212, 255, 0.6));
+  border-radius: var(--sui-radius-sm, 0);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(var(--sui-accent-rgb, 0, 212, 255), 0.1);
+  color: var(--sui-text-primary, #e0f4ff);
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+}
+
+/* ---- Preset row ---- */
+.sui-drp__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+}
+
+.sui-drp__preset-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  line-height: 1.2;
+}
+
+/* ---- Calendar header ---- */
+.sui-drp__calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sui-drp__month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sui-text-primary, #e0f4ff);
+}
+
+.sui-drp__nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--sui-text-secondary, #7aa8c0);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: var(--sui-radius-sm, 0);
+  line-height: 1;
+}
+
+.sui-drp__nav-btn:hover {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
+  color: var(--sui-accent, #00d4ff);
+}
+
+/* ---- Calendar grid ---- */
+.sui-drp__calendar-grid {
+  user-select: none;
+}
+
+.sui-drp__weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.sui-drp__weekday-cell {
+  text-align: center;
+  font-size: 11px;
+  color: var(--sui-text-muted, #4a6a80);
+  font-weight: 500;
+  padding: 2px 0;
+}
+
+.sui-drp__days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.sui-drp__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--sui-text-primary, #e0f4ff);
+  background: transparent;
+  border: none;
+  border-radius: var(--sui-radius-sm, 0);
+  cursor: pointer;
+  position: relative;
+}
+
+.sui-drp__day:hover {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
+}
+
+.sui-drp__day--outside {
+  color: var(--sui-text-muted, #4a6a80);
+  opacity: 0.6;
+}
+
+.sui-drp__day--disabled {
+  color: var(--sui-text-muted, #4a6a80);
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sui-drp__day--disabled:hover {
+  background: transparent;
+}
+
+.sui-drp__day--today {
+  font-weight: 700;
+}
+
+.sui-drp__day--today::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--sui-accent, #00d4ff);
+}
+
+.sui-drp__day--in-range {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
+  border-radius: 0;
+}
+
+.sui-drp__day--range-start,
+.sui-drp__day--range-end {
+  background: var(--sui-accent, #00d4ff);
+  color: var(--sui-bg-primary, #0a1420);
+}
+
+.sui-drp__day--range-start:hover,
+.sui-drp__day--range-end:hover {
+  background: var(--sui-accent, #00d4ff);
+}
+
+.sui-drp__day--range-start {
+  border-radius: var(--sui-radius-sm, 4px) 0 0 var(--sui-radius-sm, 4px);
+}
+
+.sui-drp__day--range-end {
+  border-radius: 0 var(--sui-radius-sm, 4px) var(--sui-radius-sm, 4px) 0;
+}
+
+.sui-drp__day--range-start.sui-drp__day--range-end {
+  border-radius: var(--sui-radius-sm, 4px);
+}
+
+/* ---- Time toggle + inputs ---- */
+.sui-drp__time-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  font-size: 12px;
+  color: var(--sui-text-secondary, #7aa8c0);
+  cursor: pointer;
+}
+
+.sui-drp__time-toggle input[type="checkbox"] {
+  accent-color: var(--sui-accent, #00d4ff);
+}
+
+.sui-drp__time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sui-drp__time-input {
+  background: var(--sui-bg-elevated, #142535);
+  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-radius: var(--sui-radius-sm, 0);
+  color: var(--sui-text-primary, #e0f4ff);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  width: 96px;
+}
+
+.sui-drp__time-input:focus {
+  border-color: var(--sui-border-focus, #00d4ff);
+  outline: none;
+}
+
+.sui-drp__time-separator {
+  color: var(--sui-text-muted, #4a6a80);
+  font-size: 12px;
+}
