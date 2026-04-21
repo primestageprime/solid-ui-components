@@ -29,4 +29,13 @@ export interface DateRangePickerProps {
   placeholder?: string;
   /** Additional class applied to the trigger button. */
   class?: string;
+  /**
+   * Optional IANA timezone identifier (e.g. `"America/Los_Angeles"`, `"UTC"`).
+   * When set, the trigger label, month header, calendar-day highlighting, and
+   * committed time-of-day selections are all resolved in this TZ — preventing
+   * off-by-one mismatches between the picker and the rest of an app that
+   * pins display to a non-local TZ. When omitted, the component falls back
+   * to the browser's local TZ.
+   */
+  timeZone?: string;
 }

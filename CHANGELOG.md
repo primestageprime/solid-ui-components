@@ -20,6 +20,33 @@ subdirectory and import `DateRangePicker` from the library.
   site (Decision 1a). Annotated `Component<DateRangePickerProps>` for
   TS2742 / pnpm-portability. Exported types: `DateRangePickerProps`,
   `DateRange`, `DateRangePreset`.
+- **`timeZone?: string` prop on `DateRangePicker`.** Optional IANA TZ
+  identifier (e.g. `"America/Los_Angeles"`, `"UTC"`). When set, the trigger
+  label, month header, calendar-day highlighting, and committed time-of-day
+  selections are all resolved in this TZ; when omitted, the component falls
+  back to the browser's local TZ. Pre-empts Phase 5 migration mismatch: the
+  downstream app pins operational timestamps to Pacific via
+  `CellRenderers.tsx`, `OperationalEdgesTable.tsx`,
+  `CandlestickRenderer.tsx`, `TimeRangeSelector.tsx` — forwarding the same
+  IANA TZ here keeps the picker aligned with the surrounding UI at
+  day-boundary transitions. Implementation uses a two-pass
+  `zonedDateTimeToInstant` helper to resolve `HH:mm` + (year, month, day)
+  into a committed UTC instant, and a cell-vs-instant comparison pair
+  (`cellMatchesBoundary`, `cellInRange`) so the cell `Date` objects built
+  by `getCalendarDays` line up with boundary instants observed in the
+  target TZ.
+
+### Behavioral delta vs project-local downstream
+
+- **`class` now APPENDS to the default trigger class** (`sui-drp__trigger`)
+  rather than replacing it. The project-local downstream substituted the
+  caller's `class` for its internal `styles.trigger`; upstream layers the
+  two via `["sui-drp__trigger", props.class].filter(Boolean).join(" ")`.
+  Callers who previously passed `class` to customize the trigger keep
+  default trigger styling and get their overrides layered on top. Phase 5
+  migrations benefit automatically; any downstream consumer relying on the
+  old replace-semantics must move trigger styles into a CSS override that
+  coexists with `sui-drp__trigger`.
 
 ### Scope decisions
 
@@ -41,11 +68,14 @@ i18n — no work for callers.
 matches the downstream contract. Omit or pass `[]` to suppress the preset
 row. No built-in default preset set.
 
-**Decision 4 — Browser-local timezone.** Falls out of Decision 2: all
-internal math operates on `Date` objects without explicit timezone
-conversion, matching the downstream behavior. Callers needing deterministic
-cross-timezone display should pre-convert `value.start` / `value.end` before
-passing them in.
+**Decision 4 — Browser-local timezone by default, opt-in `timeZone?` prop.**
+The initial release shipped browser-local behavior only. Post-review
+revision: added `timeZone?: string` (IANA identifier) so callers can pin
+the picker to the same TZ the rest of their app renders in — preventing
+off-by-one mismatches at TZ boundaries. Omitting the prop preserves
+browser-local behavior; passing it threads TZ-aware comparison + formatting
+through every touch point (trigger label, month header, calendar-cell
+highlighting, committed `HH:mm` resolution).
 
 ### Kobalte — built from scratch, no `@kobalte/core/date-picker`
 

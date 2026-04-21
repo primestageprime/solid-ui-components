@@ -2,12 +2,20 @@
 // DateRangePicker/CalendarGrid — Internal (not exported from library root).
 // 42-cell (6-week) day grid with Monday-first week; handles range highlight,
 // pending-start hover preview, today marker, and max-range disabled state.
+//
+// Cell `Date` objects are browser-local wall-clock midnight constructions
+// produced by `getCalendarDays`. User-supplied range boundaries are real
+// instants that should be interpreted in `timeZone` (when set) to match the
+// rest of the host app. The cell-aware comparison helpers
+// (`cellMatchesBoundary`, `cellInRange`) bridge those two coordinate
+// systems so the highlighting stays consistent at TZ boundaries.
 // ============================================
 import { type Accessor, type Component, For, createMemo } from "solid-js";
 import {
+  cellInRange,
+  cellMatchesBoundary,
   clampToMaxRange,
   getCalendarDays,
-  isInRange,
   isOutOfMaxRange,
   isSameDay,
 } from "./calendarUtils";
@@ -23,6 +31,8 @@ export interface CalendarGridProps {
   hoveredDate: Accessor<Date | undefined>;
   pendingStart: Accessor<Date | undefined>;
   maxRangeDays?: number;
+  /** IANA TZ identifier for boundary comparison. Undefined = browser-local. */
+  timeZone?: string;
   onDayClick: (day: Date) => void;
   onDayHover: (day: Date) => void;
   onDayHoverEnd: () => void;
@@ -37,27 +47,30 @@ const buildDayClass = (
   hovered: Date | undefined,
   pendingStart: Date | undefined,
   maxRangeDays: number | undefined,
+  timeZone: string | undefined,
   disabled: boolean,
 ): string => {
   const classes: string[] = ["sui-drp__day"];
   if (day.getMonth() !== currentMonth) classes.push("sui-drp__day--outside");
   if (disabled) classes.push("sui-drp__day--disabled");
 
+  // Hover-preview clamping uses cell-vs-cell math (both `hovered` and
+  // `pendingStart` originate as cell clicks), so TZ does not apply here.
   const clampedHover =
     hovered && pendingStart && maxRangeDays !== undefined
       ? clampToMaxRange(hovered, pendingStart, maxRangeDays)
       : hovered;
 
-  if (rangeStart && isSameDay(day, rangeStart))
+  if (rangeStart && cellMatchesBoundary(day, rangeStart, timeZone))
     classes.push("sui-drp__day--range-start");
-  if (rangeEnd && isSameDay(day, rangeEnd))
+  if (rangeEnd && cellMatchesBoundary(day, rangeEnd, timeZone))
     classes.push("sui-drp__day--range-end");
 
   if (rangeStart && !rangeEnd && clampedHover && isSameDay(day, clampedHover))
     classes.push("sui-drp__day--range-end");
 
   const effectiveEnd = rangeEnd ?? clampedHover;
-  if (rangeStart && effectiveEnd && isInRange(day, rangeStart, effectiveEnd))
+  if (rangeStart && effectiveEnd && cellInRange(day, rangeStart, effectiveEnd, timeZone))
     classes.push("sui-drp__day--in-range");
 
   if (isSameDay(day, today)) classes.push("sui-drp__day--today");
@@ -98,6 +111,7 @@ export const CalendarGrid: Component<CalendarGridProps> = (props) => {
                 props.hoveredDate(),
                 props.pendingStart(),
                 props.maxRangeDays,
+                props.timeZone,
                 isDayDisabled(day),
               )}
               disabled={isDayDisabled(day)}

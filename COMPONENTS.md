@@ -109,8 +109,8 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **Badge** — Backwards-compatible wrapper around StatusBadge. Key props: `variant` (`default`|`high`|`success`|`warning`|`error`). Use for: inline badges within data lists.
 
 ## DateRangePicker
-- **DateRangePicker** — Composite (Depth 2). Popover-anchored date-range picker built on `@kobalte/core/popover`. Composes the upstream `Button` for presets; internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under the component directory and are NOT re-exported (zero-config call site). Date math is vanilla `Date` + `Intl.DateTimeFormat` — no Luxon / date-fns dependency; locale-aware month and short-date formatting comes from the browser's built-in i18n. Key props: `value` (`Accessor<DateRange>`), `onChange` (`(range: DateRange) => void`), `presets?` (`DateRangePreset[]` — caller-supplied, no defaults; omit to suppress the preset row), `maxRangeDays?` (disables days beyond the cap once an anchor is selected and clamps preset/second-click selections to the same bound; non-positive values log a console error and are dropped), `placeholder?`, `class?`. Exported types: `DateRangePickerProps`, `DateRange`, `DateRangePreset`. Uses `--sui-bg-primary`, `--sui-bg-elevated`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: time-range filters, alarm-investigation timespan controls, reporting period selection.
-  - Formatter contract: the component formats the trigger label ("Apr 13 – Apr 20, 2026") and month header ("April 2026") itself via `Intl.DateTimeFormat` using the browser's default locale. No `formatDate` / `parseDate` props are required from callers. Timezone handling is browser-local — callers needing deterministic cross-timezone display should pre-convert `value.start` / `value.end` before passing them in.
+- **DateRangePicker** — Composite (Depth 2). Popover-anchored date-range picker built on `@kobalte/core/popover`. Composes the upstream `Button` for presets; internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under the component directory and are NOT re-exported (zero-config call site). Date math is vanilla `Date` + `Intl.DateTimeFormat` — no Luxon / date-fns dependency; locale-aware month and short-date formatting comes from the browser's built-in i18n. Key props: `value` (`Accessor<DateRange>`), `onChange` (`(range: DateRange) => void`), `presets?` (`DateRangePreset[]` — caller-supplied, no defaults; omit to suppress the preset row), `maxRangeDays?` (disables days beyond the cap once an anchor is selected and clamps preset/second-click selections to the same bound; non-positive values log a console error and are dropped), `placeholder?`, `class?` (appended to the default `sui-drp__trigger` class — caller styles layer on top of the default trigger styling rather than replacing it), `timeZone?` (IANA TZ identifier, e.g. `"America/Los_Angeles"`, `"UTC"` — pins the trigger label, month header, calendar-day highlighting, and committed time-of-day selections to this TZ; omit for browser-local). Exported types: `DateRangePickerProps`, `DateRange`, `DateRangePreset`. Uses `--sui-bg-primary`, `--sui-bg-elevated`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: time-range filters, alarm-investigation timespan controls, reporting period selection.
+  - Formatter contract: the component formats the trigger label ("Apr 13 – Apr 20, 2026") and month header ("April 2026") itself via `Intl.DateTimeFormat` using the browser's default locale. No `formatDate` / `parseDate` props are required from callers. Timezone handling: set `timeZone` to pin the picker to a specific IANA TZ; omit for browser-local. Pinning prevents off-by-one mismatches in apps that render the rest of their timestamps in a non-local TZ (e.g. operational dashboards fixed to Pacific or UTC).
   - Selection model: first click sets the pending start, second click commits `[start, end]` via `onChange`. Presets select `[now - days, now]`. When the optional "Set time" toggle is enabled, committed ranges apply the configured `HH:mm` to both ends.
   - Example:
     ```tsx
@@ -134,6 +134,14 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
       onChange={setRange}
       presets={PRESETS}
       maxRangeDays={30}
+    />
+
+    // Pin to a specific TZ (display + committed times resolved in LA)
+    <DateRangePicker
+      value={range}
+      onChange={setRange}
+      presets={PRESETS}
+      timeZone="America/Los_Angeles"
     />
     ```
   - Divergences from the downstream driving sites (intentional):

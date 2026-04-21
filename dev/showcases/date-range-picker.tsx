@@ -43,9 +43,21 @@ export const DateRangePickerShowcase: Component = () => {
     end: new Date(),
   });
   const [withTime, setWithTime] = createSignal<DateRange>(initial);
+  const [tzLa, setTzLa] = createSignal<DateRange>(initial);
+  const [tzNy, setTzNy] = createSignal<DateRange>(initial);
+  const [tzUtc, setTzUtc] = createSignal<DateRange>(initial);
+  const [custom, setCustom] = createSignal<DateRange>(initial);
 
   return (
     <div class="component-section">
+      <style>
+        {`.sui-drp-demo-custom-trigger {
+            border-color: var(--sui-accent, #00d4ff) !important;
+            border-width: 2px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }`}
+      </style>
       <h2>DateRangePicker — Composite (Depth 2)</h2>
       <p class="text-meta">
         Owns CSS (DateRangePicker.css). Composes the upstream `Button` (Atomic)
@@ -112,6 +124,79 @@ export const DateRangePickerShowcase: Component = () => {
             presets={PRESETS}
           />
           <Debug range={withTime()} />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Pinned timezone — America/Los_Angeles</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          `timeZone="America/Los_Angeles"` pins the trigger label, month header,
+          calendar-day highlighting, and committed time-of-day selections to
+          LA — regardless of the browser's local TZ. Useful when the host app
+          renders all other timestamps in a fixed TZ.
+        </div>
+        <Stack>
+          <DateRangePicker
+            value={tzLa}
+            onChange={setTzLa}
+            presets={PRESETS}
+            timeZone="America/Los_Angeles"
+          />
+          <Debug range={tzLa()} />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Pinned timezone — America/New_York</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          Same component, `timeZone="America/New_York"`. Viewed side-by-side
+          with the LA picker above, the trigger labels and highlighted cells
+          may differ by one calendar day at TZ boundaries — this is the
+          correctness guarantee the prop provides.
+        </div>
+        <Stack>
+          <DateRangePicker
+            value={tzNy}
+            onChange={setTzNy}
+            presets={PRESETS}
+            timeZone="America/New_York"
+          />
+          <Debug range={tzNy()} />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Pinned timezone — UTC</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          `timeZone="UTC"` anchors all display and math to UTC — the
+          deterministic choice for cross-region dashboards.
+        </div>
+        <Stack>
+          <DateRangePicker
+            value={tzUtc}
+            onChange={setTzUtc}
+            presets={PRESETS}
+            timeZone="UTC"
+          />
+          <Debug range={tzUtc()} />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Custom trigger class (class-merge demo)</h3>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          Custom `class` is APPENDED to the default `sui-drp__trigger` class —
+          host overrides layer on top of default styling instead of replacing
+          it. The demo class here adds a thicker accent border.
+        </div>
+        <Stack>
+          <DateRangePicker
+            value={custom}
+            onChange={setCustom}
+            presets={PRESETS}
+            class="sui-drp-demo-custom-trigger"
+          />
+          <Debug range={custom()} />
         </Stack>
       </div>
     </div>

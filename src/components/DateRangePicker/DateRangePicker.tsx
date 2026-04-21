@@ -26,6 +26,7 @@ import {
   clampRange,
   clampToMaxRange,
   formatRangeLabel,
+  getDateParts,
   orderDates,
   sanitizeMaxRangeDays,
 } from "./calendarUtils";
@@ -40,13 +41,12 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
     sanitizeMaxRangeDays(props.maxRangeDays),
   );
 
-  // View state: which month is displayed.
-  const [viewYear, setViewYear] = createSignal(
-    props.value().start.getFullYear(),
-  );
-  const [viewMonth, setViewMonth] = createSignal(
-    props.value().start.getMonth(),
-  );
+  // View state: which month is displayed. Derived from the committed range
+  // start as observed in the caller's TZ, so a pinned-TZ picker opens on the
+  // same calendar month the label advertises.
+  const initialParts = getDateParts(props.value().start, props.timeZone);
+  const [viewYear, setViewYear] = createSignal(initialParts.year);
+  const [viewMonth, setViewMonth] = createSignal(initialParts.month);
 
   // Selection state machine: picking start, then end.
   const [pendingStart, setPendingStart] = createSignal<Date | undefined>(
@@ -66,7 +66,7 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   const triggerLabel = createMemo(() => {
     const range = props.value();
     if (props.placeholder && !range) return props.placeholder;
-    return formatRangeLabel(range.start, range.end);
+    return formatRangeLabel(range.start, range.end, props.timeZone);
   });
 
   const navigateMonth = (delta: number) => {
@@ -87,8 +87,8 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   };
 
   const commitRange = (start: Date, end: Date) => {
-    const s = showTime() ? applyTimeToDate(start, startTime()) : start;
-    const e = showTime() ? applyTimeToDate(end, endTime()) : end;
+    const s = showTime() ? applyTimeToDate(start, startTime(), props.timeZone) : start;
+    const e = showTime() ? applyTimeToDate(end, endTime(), props.timeZone) : end;
     const ordered = orderDates(s, e);
     props.onChange(clampRange(ordered.start, ordered.end, maxRangeDays()));
   };
@@ -110,10 +110,10 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) return;
-    const range = props.value();
+    const parts = getDateParts(props.value().start, props.timeZone);
     batch(() => {
-      setViewYear(range.start.getFullYear());
-      setViewMonth(range.start.getMonth());
+      setViewYear(parts.year);
+      setViewMonth(parts.month);
       setPendingStart(undefined);
       setHoveredDate(undefined);
     });
@@ -153,6 +153,7 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
             hoveredDate={hoveredDate}
             pendingStart={pendingStart}
             maxRangeDays={maxRangeDays()}
+            timeZone={props.timeZone}
             onDayClick={handleDayClick}
             onDayHover={setHoveredDate}
             onDayHoverEnd={() => setHoveredDate(undefined)}
