@@ -51,6 +51,7 @@ export * from "./components/ValueRenderer";
 export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
+export * from "./components/ThreePanelLayout";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

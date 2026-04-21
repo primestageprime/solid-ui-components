@@ -37,6 +37,7 @@ import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
+import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
 import { ValueRendererShowcase } from "./showcases/value-renderer";
@@ -115,6 +116,7 @@ const nav: TabGroup[] = [
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
       { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
+      { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase },
       { id: "toast", label: "Toast", component: ToastShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
       { id: "tooltip", label: "Tooltip", component: TooltipShowcase },
