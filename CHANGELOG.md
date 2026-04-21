@@ -1,5 +1,58 @@
 # Changelog
 
+## v0.11.0 — Atomic primitive: ThreePanelLayout (Phase 1.8)
+
+Ships the top-bar + three-column (left / center / right) page scaffold
+identified by the migration audit's Phase 1.8 batch. This is the final
+Veronica primitive of Phase 1 — with it merged, all upstream prerequisites
+for the downstream alarm-lab / analysis-page migration are complete.
+
+### Added
+
+- **`ThreePanelLayout`** (`src/components/ThreePanelLayout/ThreePanelLayout.tsx`)
+  — Atomic (Depth 1). Top-bar + three-column page scaffold. Owns
+  `ThreePanelLayout.css`. Imports zero other library components (pure leaf
+  primitive). Annotated `Component<ThreePanelLayoutProps>` for
+  TS2742 / pnpm-portability. Exported types: `ThreePanelLayoutProps`.
+- **Configurable panel widths.** `leftPanelWidth?` / `rightPanelWidth?`
+  (defaults `"220px"` / `"240px"`) let callers pick column sizes per-page
+  without needing a separate "variant" component. Omitted side-panel slots
+  collapse their grid column to `0` so the center expands fully.
+- **App-chrome-decoupled height.** `height?` (default `"100%"`) accepts any
+  CSS length — callers that want "viewport minus app header" pass
+  `"calc(100vh - var(--app-header-height, 64px))"` (or equivalent) from the
+  host app. Upstream stays fully decoupled from app-specific header tokens.
+  `fullHeight?` is kept as a backwards-compatible alias for `height="100%"`
+  so existing downstream call sites (`<ThreePanelLayout fullHeight>`) migrate
+  without an API rewrite — `height` wins if both are supplied.
+- **Mobile collapse.** At `max-width: 900px` (matches the downstream
+  `$mobile-width`) the content grid switches to a single column, side panels
+  drop their border and cap at `200px` max-height. Breakpoint is hardcoded
+  because the library has no `--sui-breakpoint-*` scale yet — revisit once a
+  breakpoint scale lands.
+
+### Tokens
+
+- Colors / borders use the existing theme tokens:
+  `--sui-bg-primary`, `--sui-text-primary`, `--sui-border`.
+- Spacing (8 / 12 / 16 px gaps and paddings) is hardcoded to match the
+  downstream `$gap-small` / `$gap-medium` / `$gap-large` and
+  `$padding-small` / `$padding-medium` scales; the library has no
+  `--sui-space-*` tokens yet. Follows the same pattern as `Divider.css`.
+- No new tokens were introduced in `themes/hud.css` or `themes/default.css`.
+
+### Divergences from the downstream driving site (intentional)
+
+- Downstream `threePanelLayout.module.scss` uses `height: calc(100vh - $header-height)`
+  where `$header-height` is an app-level SCSS variable. Upstream replaces this
+  with a caller-supplied `height` prop to avoid leaking app-specific tokens
+  into the library.
+- Downstream hardcodes `grid-template-columns: 220px 1fr 240px`. Upstream
+  exposes `leftPanelWidth` / `rightPanelWidth` props with those values as
+  defaults.
+- Downstream uses SCSS CSS modules; upstream uses a single plain CSS file
+  with BEM-ish `.sui-three-panel__*` class names and `--sui-*` tokens.
+
 ## v0.10.0 — Composite primitive: DateRangePicker (Phase 1.7)
 
 Ships the composed date-range picker identified by the migration audit's
