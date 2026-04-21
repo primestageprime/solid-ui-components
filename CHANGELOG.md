@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.11.1 — ThreePanelLayout column placement fix
+
+CSS-only patch release.
+
+### Fixed
+
+- **Fix column placement when side panels are omitted.** Previously the
+  center/right panels could land in the wrong grid track when `leftPanel`
+  was absent: CSS grid auto-placement fills tracks in DOM order, so
+  omitting the left cell pushed `center` into the `0px` first track and
+  `right` into the `1fr` second track, producing overlap. Now
+  `.sui-three-panel__left` / `__center` / `__right` carry explicit
+  `grid-column: 1 / 2 / 3` so placement is role-based regardless of which
+  siblings are rendered. The mobile (≤900 px) block resets all three back
+  to `grid-column: 1` so the single-column stack is unaffected.
+
 ## v0.11.0 — Atomic primitive: ThreePanelLayout (Phase 1.8)
 
 Ships the top-bar + three-column (left / center / right) page scaffold
