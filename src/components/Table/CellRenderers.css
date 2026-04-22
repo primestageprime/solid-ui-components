@@ -302,6 +302,23 @@
   word-break: break-word;
 }
 
+/* Clamp mode — the text element carries inline styles for
+   `-webkit-line-clamp`. This class is a hook for consumers to override
+   glyph behavior (letter-spacing, kerning) without needing to target the
+   inline-styled element. Cursor signals the value is hover-revealable. */
+.cell-longtext__text--clamped {
+  cursor: help;
+}
+
+/* Tooltip reveal mode — when LongTextCell composes the Kobalte Tooltip,
+   the Tooltip trigger wraps the text. The `cell-longtext--tooltip` class
+   is applied to the trigger so tooltip-mode cells can be targeted
+   distinctly (e.g., to make the trigger fill the table cell width). */
+.cell-longtext.cell-longtext--tooltip {
+  display: inline-block;
+  max-width: 100%;
+}
+
 .cell-longtext__more,
 .cell-longtext__less {
   background: none;
