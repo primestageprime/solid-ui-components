@@ -313,6 +313,12 @@ Spacing does not vary by theme — only the typographic / decorative tokens do. 
 - **createSelectionStore / fromSignal** — Utilities to create or wrap selection state (`SelectionStore<Id>`). Use for: managing checkbox selection state, optionally backed by persistent storage.
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
+  - **LongTextCell** props:
+    - `maxLength?: number` (default `50`) — char-count truncation threshold; ignored when `clampLines` is set.
+    - `expandable?: boolean` (default `true`) — enables the inline "more..."/"less" toggle in `reveal="inline"` mode.
+    - `clampLines?: number` — CSS `-webkit-line-clamp` truncation. Full value is rendered; overflow is measured at runtime (`scrollHeight`/`scrollWidth` vs. client). Use when cell width is dynamic and char-count is too coarse.
+    - `reveal?: "inline" | "tooltip"` (default `"inline"`) — how the full value is revealed. `"inline"` shows "more..."/"less" buttons (existing behavior). `"tooltip"` composes the library's `Tooltip` (viewport-aware, auto-flips) and shows the full value on hover.
+    - `tooltipPlacement?: "top" | "bottom" | "left" | "right"` (default `"top"`) — preferred placement when `reveal="tooltip"`; Kobalte flips if the placement would overflow.
 
 ## Tabs
 - **Tabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `Tab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color` (`ColorVariant`). `Tab` interface supports optional `hint` (muted text after label, e.g., keyboard shortcut hints). Exports `TabStatus` type (`"warning" | "error"`). Use for: switching between views/panels.

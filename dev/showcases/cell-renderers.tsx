@@ -30,7 +30,23 @@ export const CellRendererShowcase: Component = () => {
           </div>
           <div>
             <LongTextCell value="This is a very long text value that should be truncated after fifty characters to keep the table compact and readable." />
-            <div class="text-meta">LongTextCell — truncated at 50 chars with "more..." toggle</div>
+            <div class="text-meta">LongTextCell — default: char-count (maxLength=50) with inline "more..." toggle</div>
+          </div>
+          <div style={{ "max-width": "320px" }}>
+            <LongTextCell
+              value="When clampLines is set, the cell uses CSS line-clamp and measures overflow at runtime. Width-dependent — shrink the browser to force truncation across multiple lines."
+              clampLines={2}
+              reveal="tooltip"
+            />
+            <div class="text-meta">LongTextCell — clampLines=2 + reveal="tooltip" — hover to see full value</div>
+          </div>
+          <div style={{ "max-width": "320px" }}>
+            <LongTextCell
+              value="Char-count truncation with tooltip reveal instead of inline button."
+              maxLength={40}
+              reveal="tooltip"
+            />
+            <div class="text-meta">LongTextCell — maxLength=40 + reveal="tooltip" — no "more..." button, hover to reveal</div>
           </div>
         </Stack>
       </div>

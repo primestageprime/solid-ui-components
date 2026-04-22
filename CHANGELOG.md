@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.13.0 — LongTextCell: clampLines + tooltip reveal
+
+Additive extension to `LongTextCell`. No breaking changes — consumers
+that pass only `maxLength` / `expandable` retain the exact current
+behavior (char-count truncation with inline "more..."/"less" toggle).
+
+### Added
+
+- **`clampLines?: number`** — CSS `-webkit-line-clamp` truncation. When
+  set, the full value is rendered and truncation is detected at runtime
+  by comparing `scrollHeight` / `scrollWidth` against client dimensions.
+  Overrides `maxLength`. Re-measures on window resize and when the value
+  or `clampLines` changes.
+- **`reveal?: "inline" | "tooltip"`** (default `"inline"`) — selects the
+  reveal mechanism for the full value when truncated. `"tooltip"`
+  composes the library's existing Kobalte-backed `Tooltip` (viewport-
+  aware placement, auto-flips when overflowing) and shows the full value
+  on hover instead of rendering an inline toggle button.
+- **`tooltipPlacement?: "top" | "bottom" | "left" | "right"`** (default
+  `"top"`) — preferred tooltip placement when `reveal="tooltip"`.
+
+### Why
+
+The downstream `StringRenderer` in amygdala-ui needed CSS line-clamp +
+viewport-aware hover tooltip, which the previous char-count-only
+`LongTextCell` couldn't express. With these additive props, downstream
+projects can retire their local `useSmartTooltip` / `TruncationContext`
+primitives and thin-wrap `LongTextCell` instead.
+
 ## v0.12.0 — `--sui-space-*` token scale
 
 Exposes a dedicated spacing-token scale on both built-in themes.
