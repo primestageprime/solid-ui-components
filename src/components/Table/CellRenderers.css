@@ -5,7 +5,14 @@
 /* Empty state */
 .cell-empty {
   color: var(--hud-text-muted, #4a6a80);
-  font-style: italic;
+  /* Consumers can override globally by setting --cell-empty-font-style
+     on an ancestor (e.g. a table wrapper). Default preserves italic. */
+  font-style: var(--cell-empty-font-style, italic);
+}
+
+/* Non-italic per-instance opt-out (DateTimeCell emptyVariant="plain"). */
+.cell-empty.cell-empty--plain {
+  font-style: normal;
 }
 
 /* ID Cell */

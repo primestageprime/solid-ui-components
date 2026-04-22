@@ -168,17 +168,81 @@ export const MoneyCell: Component<MoneyCellProps> = (props) => {
 };
 
 // ============================================
-// Date Format Helper
+// Date Format Helpers
 // ============================================
-function formatDatePattern(date: Date, pattern: string): string {
-  const pad = (n: number) => n.toString().padStart(2, "0");
+const pad2 = (n: number) => n.toString().padStart(2, "0");
+
+interface DateParts {
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+  minute: string;
+  second: string;
+}
+
+/** Host-local date parts using native Date getters. Preserves pre-TZ behavior. */
+function localDateParts(date: Date): DateParts {
+  return {
+    year: date.getFullYear().toString(),
+    month: pad2(date.getMonth() + 1),
+    day: pad2(date.getDate()),
+    hour: pad2(date.getHours()),
+    minute: pad2(date.getMinutes()),
+    second: pad2(date.getSeconds()),
+  };
+}
+
+/** Zoned date parts extracted via Intl.DateTimeFormat.formatToParts. */
+function zonedDateParts(date: Date, timeZone: string): DateParts {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(date);
+  const pick = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  // en-US 24h can emit "24" for midnight — normalize to "00" for stable output.
+  const hourRaw = pick("hour");
+  return {
+    year: pick("year"),
+    month: pick("month"),
+    day: pick("day"),
+    hour: hourRaw === "24" ? "00" : hourRaw,
+    minute: pick("minute"),
+    second: pick("second"),
+  };
+}
+
+function formatDatePatternFromParts(parts: DateParts, pattern: string): string {
   return pattern
-    .replace("YYYY", date.getFullYear().toString())
-    .replace("MM", pad(date.getMonth() + 1))
-    .replace("DD", pad(date.getDate()))
-    .replace("HH", pad(date.getHours()))
-    .replace("mm", pad(date.getMinutes()))
-    .replace("ss", pad(date.getSeconds()));
+    .replace("YYYY", parts.year)
+    .replace("MM", parts.month)
+    .replace("DD", parts.day)
+    .replace("HH", parts.hour)
+    .replace("mm", parts.minute)
+    .replace("ss", parts.second);
+}
+
+function formatDatePattern(date: Date, pattern: string, timeZone?: string): string {
+  const parts = timeZone ? zonedDateParts(date, timeZone) : localDateParts(date);
+  return formatDatePatternFromParts(parts, pattern);
+}
+
+/** Extract the short time-zone abbreviation (e.g. "PDT") via Intl.DateTimeFormat. */
+function zoneAbbreviation(date: Date, timeZone: string | undefined, locale: string): string {
+  const fmt = new Intl.DateTimeFormat(locale, {
+    ...(timeZone ? { timeZone } : {}),
+    timeZoneName: "short",
+  });
+  const parts = fmt.formatToParts(date);
+  return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
 }
 
 // ============================================
@@ -234,6 +298,26 @@ export interface DateTimeCellProps extends CellRendererProps<string | Date | nul
   format?: "iso" | string;
   showSeconds?: boolean;
   locale?: string;
+  /**
+   * IANA time-zone identifier (e.g. "America/Los_Angeles"). When set, the date is
+   * formatted in that zone; when unset (default) the host system's local zone is
+   * used — identical behavior to pre-0.12 versions.
+   */
+  timeZone?: string;
+  /**
+   * When true, append a short time-zone abbreviation (e.g. " (PDT)") to the
+   * formatted output. Uses `Intl.DateTimeFormat({ timeZoneName: "short" })`.
+   * Honors `timeZone` when provided. Default: `false` (no suffix — pre-0.12 behavior).
+   */
+  showZoneAbbreviation?: boolean;
+  /**
+   * Empty-state variant.
+   * - `"default"` (default): italic em-dash, preserves pre-0.12 appearance.
+   * - `"plain"`: non-italic em-dash — matches downstream `DateRenderer` styling.
+   * Advanced consumers can also override `--cell-empty-font-style` on a wrapper
+   * element to restyle the italic default globally.
+   */
+  emptyVariant?: "default" | "plain";
 }
 
 export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
@@ -249,6 +333,12 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
     return format === "iso" || format.includes("YYYY") || format.includes("MM") || format.includes("DD");
   };
 
+  const suffix = (date: Date) => {
+    if (!props.showZoneAbbreviation) return "";
+    const abbr = zoneAbbreviation(date, props.timeZone, props.locale || "en-US");
+    return abbr ? ` (${abbr})` : "";
+  };
+
   const formatted = () => {
     const date = getDate();
     if (!date) return null;
@@ -258,12 +348,12 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
     // Handle ISO format (default)
     if (format === "iso") {
       const pattern = props.showSeconds !== false ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD HH:mm";
-      return formatDatePattern(date, pattern);
+      return formatDatePattern(date, pattern, props.timeZone) + suffix(date);
     }
 
     // Handle custom pattern strings
     if (format.includes("YYYY") || format.includes("MM") || format.includes("DD")) {
-      return formatDatePattern(date, format);
+      return formatDatePattern(date, format, props.timeZone) + suffix(date);
     }
 
     // Use Intl format (legacy behavior for named formats)
@@ -275,15 +365,21 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
       hour: "numeric",
       minute: "2-digit",
       ...(props.showSeconds && { second: "2-digit" }),
+      ...(props.timeZone && { timeZone: props.timeZone }),
     };
 
-    return new Intl.DateTimeFormat(locale, options).format(date);
+    return new Intl.DateTimeFormat(locale, options).format(date) + suffix(date);
   };
 
   const dateStr = () => {
     const date = getDate();
     if (!date) return null;
-    return new Intl.DateTimeFormat(props.locale || "en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
+    return new Intl.DateTimeFormat(props.locale || "en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      ...(props.timeZone && { timeZone: props.timeZone }),
+    }).format(date);
   };
 
   const timeStr = () => {
@@ -293,11 +389,15 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
       hour: "numeric",
       minute: "2-digit",
       ...(props.showSeconds && { second: "2-digit" }),
-    }).format(date);
+      ...(props.timeZone && { timeZone: props.timeZone }),
+    }).format(date) + suffix(date);
   };
 
+  const emptyClass = () =>
+    props.emptyVariant === "plain" ? "cell-empty cell-empty--plain" : "cell-empty";
+
   return (
-    <Show when={getDate() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show when={getDate() != null} fallback={<span class={emptyClass()}>—</span>}>
       <Show
         when={useCustomFormat()}
         fallback={
