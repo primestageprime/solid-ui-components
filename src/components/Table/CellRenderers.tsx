@@ -4,7 +4,7 @@
 // Typed cell renderers for tables: dates, numbers,
 // status, tags, durations, styled factories.
 // ============================================
-import { Component, Show, createSignal, createEffect, onMount, onCleanup, JSX } from "solid-js";
+import { Component, Show, createSignal, createEffect, on, onMount, onCleanup, JSX } from "solid-js";
 import { Tooltip } from "../Tooltip";
 import "./CellRenderers.css";
 
@@ -638,14 +638,17 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
     onCleanup(() => window.removeEventListener("resize", onResize));
   });
 
-  createEffect(() => {
-    // Re-measure when value or clampLines change. Defer to the next frame so
-    // layout reflects the new text/styles.
-    props.value;
-    props.clampLines;
-    if (!isClampMode()) return;
-    queueMicrotask(measureOverflow);
-  });
+  createEffect(
+    on(
+      () => [props.value, props.clampLines] as const,
+      () => {
+        // Re-measure when value or clampLines change. Defer to the next frame
+        // so layout reflects the new text/styles.
+        if (!isClampMode()) return;
+        queueMicrotask(measureOverflow);
+      },
+    ),
+  );
 
   const clampStyle = (): JSX.CSSProperties | undefined => {
     if (!isClampMode()) return undefined;
