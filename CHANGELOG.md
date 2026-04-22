@@ -1,5 +1,62 @@
 # Changelog
 
+## v0.14.0 — DateTimeCell: time-zone, zone-abbrev suffix, plain empty variant
+
+Three additive, opt-in capabilities on `DateTimeCell`. Zero breaking changes —
+every existing call site renders byte-identical output because all new props
+default to pre-0.14 behavior (host-local zone, no suffix, italic empty).
+
+### Added
+
+- **`timeZone?: string`** on `DateTimeCell` — IANA zone identifier
+  (e.g. `"America/Los_Angeles"`). When set, the date is formatted in that zone
+  via `Intl.DateTimeFormat({ timeZone }).formatToParts(...)`; when unset the
+  renderer continues to use the host system's local zone via native `Date`
+  getters (identical to pre-0.14 output). No Luxon dependency added.
+- **`showZoneAbbreviation?: boolean`** on `DateTimeCell` — when `true`, appends
+  a ` (PDT)`-style suffix to the formatted string, derived from
+  `Intl.DateTimeFormat({ timeZone, timeZoneName: "short" })` using
+  `formatToParts` to cleanly extract the abbreviation. Honors `timeZone` when
+  provided, otherwise uses host-local zone. Default `false`. Chosen over a new
+  format token because the boolean composes orthogonally with the existing
+  `format` / `showSeconds` / `locale` API and matches `showSeconds`'s naming.
+- **`emptyVariant?: "default" | "plain"`** on `DateTimeCell` — `"default"`
+  (unchanged) renders the existing italic `—`; `"plain"` renders a non-italic
+  `—` for downstream themes that prefer upright empty cells. Implemented as a
+  new `.cell-empty--plain` class that flips `font-style: normal`.
+- **CSS hook `--cell-empty-font-style`** on `.cell-empty` — the italic default
+  is now `font-style: var(--cell-empty-font-style, italic)`, so an ancestor
+  (table wrapper, theme root) can set `--cell-empty-font-style: normal` and
+  restyle every empty-cell fallback globally without per-component props.
+
+### Why this shape
+
+Downstream `amygdala-ui` has a `DateRenderer` that formats ISO timestamps in
+an IANA zone as `yyyy-MM-dd HH:mm:ss (ZZZZ)` (Luxon-backed) with a
+non-italic empty fallback. Before 0.14 it could not wrap `DateTimeCell`
+without losing zone handling, the zone abbreviation, or visual parity on the
+empty state. After 0.14 the wrapper collapses to:
+
+```tsx
+<DateTimeCell
+  value={props.timestamp}
+  timeZone={props.timezone}
+  showZoneAbbreviation
+  emptyVariant="plain"
+/>
+```
+
+and the Luxon dependency can drop out of that renderer.
+
+### Behavior for existing consumers
+
+None. All new props are optional and default to the pre-0.14 code path:
+- `timeZone` unset → `Date` getters → host-local output (identical).
+- `showZoneAbbreviation` unset → no suffix appended (identical).
+- `emptyVariant` unset → class `cell-empty` only → italic fallback (identical).
+- `.cell-empty` default `font-style` resolves to `italic` when
+  `--cell-empty-font-style` is not set (identical).
+
 ## v0.13.0 — LongTextCell: clampLines + tooltip reveal
 
 Additive extension to `LongTextCell`. No breaking changes — consumers

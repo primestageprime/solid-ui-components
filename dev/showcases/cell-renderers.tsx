@@ -101,7 +101,31 @@ export const CellRendererShowcase: Component = () => {
           </div>
           <div>
             <DateTimeCell value="2026-02-13T08:30:00Z" />
-            <div class="text-meta">DateTimeCell — ISO format (YYYY-MM-DD HH:mm:ss), monospace</div>
+            <div class="text-meta">DateTimeCell — ISO format (YYYY-MM-DD HH:mm:ss), monospace, host-local zone</div>
+          </div>
+          <div>
+            <DateTimeCell
+              value="2026-02-13T08:30:00Z"
+              timeZone="America/Los_Angeles"
+              showZoneAbbreviation
+            />
+            <div class="text-meta">DateTimeCell — with `timeZone="America/Los_Angeles"` + `showZoneAbbreviation` → appends "(PST)"</div>
+          </div>
+          <div>
+            <DateTimeCell
+              value="2026-02-13T08:30:00Z"
+              timeZone="Europe/London"
+              showZoneAbbreviation
+            />
+            <div class="text-meta">DateTimeCell — with `timeZone="Europe/London"` + `showZoneAbbreviation` → appends "(GMT)"</div>
+          </div>
+          <div>
+            <DateTimeCell value={null} />
+            <div class="text-meta">DateTimeCell — empty (default italic em-dash)</div>
+          </div>
+          <div>
+            <DateTimeCell value={null} emptyVariant="plain" />
+            <div class="text-meta">DateTimeCell — empty with `emptyVariant="plain"` (non-italic em-dash)</div>
           </div>
           <div>
             <MinuteDateTimeCell value="2026-02-13T08:30:00Z" />
