@@ -1,5 +1,83 @@
 # Changelog
 
+## v0.12.0 — `--sui-space-*` token scale
+
+Exposes a dedicated spacing-token scale on both built-in themes.
+Non-breaking — only adds new custom properties; no existing tokens were
+renamed, removed, or changed. No upstream components were refactored to
+adopt the tokens in this release (consumers and a future upstream
+refactor sprint will migrate separately).
+
+### Added
+
+- **`--sui-space-*` scale** in `src/themes/default.css`,
+  `src/themes/hud.css`, and `src/styles/global.css`. Eleven stops on a
+  4px base grid with explicit half-steps at `0-5` (2px), `1-5` (6px),
+  and `2-5` (10px). Token names follow Tailwind-style numeric suffixes
+  so each integer step = 4px. Full scale:
+
+  | Token | px |
+  |-------|-----|
+  | `--sui-space-0` | `0` |
+  | `--sui-space-px` | `1px` |
+  | `--sui-space-0-5` | `2px` |
+  | `--sui-space-1` | `4px` |
+  | `--sui-space-1-5` | `6px` |
+  | `--sui-space-2` | `8px` |
+  | `--sui-space-2-5` | `10px` |
+  | `--sui-space-3` | `12px` |
+  | `--sui-space-4` | `16px` |
+  | `--sui-space-5` | `20px` |
+  | `--sui-space-6` | `24px` |
+
+- **`COMPONENTS.md` → Theming → Spacing Scale** table documenting
+  typical use per stop.
+
+### Rationale / data
+
+Scale sized from a histogram of `padding|margin|gap|inset|top|right|bottom|left`
+px literals across a downstream consumer repo (`amygdala-ui`,
+`sui-migration-staging` branch — 175 files, CSS + inline JSX combined).
+Top-9 values cover ~95% of occurrences:
+
+| Rank | Value | Count | Maps to |
+|------|-------|-------|---------|
+| 1 | 8px | 181 | `--sui-space-2` |
+| 2 | 4px | 130 | `--sui-space-1` |
+| 3 | 12px | 97 | `--sui-space-3` |
+| 4 | 6px | 82 | `--sui-space-1-5` |
+| 5 | 16px | 77 | `--sui-space-4` |
+| 6 | 2px | 50 | `--sui-space-0-5` |
+| 7 | 10px | 38 | `--sui-space-2-5` |
+| 8 | 24px | 34 | `--sui-space-6` |
+| 9 | 20px | 32 | `--sui-space-5` |
+
+### Omitted stops (and why)
+
+- **No `--sui-space-7` / `32px`.** Only 1 occurrence in the sampled
+  consumer. Callers needing it can round up to `--sui-space-6` or
+  pass a literal; re-introduce if data changes.
+- **No `48px` / `64px` jumbo stops.** Not seen in consumer data.
+  Upstream adds them when a real page-gutter need arises — no
+  speculative stops.
+- **`7px` (11 occ.) and `14px` (7 occ.) not encoded.** Off-grid
+  and infrequent; callers should round to `--sui-space-2` (8) or
+  `--sui-space-4` (16). Flagged as rounding targets rather than
+  adding `1-75` / `3-5` stops.
+- **`1px` and `2px` in `border:` / `border-*:` properties.** Not
+  counted as spacing — they remain literal per convention.
+  `--sui-space-px` and `--sui-space-0-5` are for spacing-property
+  use (e.g. `margin: 1px`, `top: 2px`).
+
+### Known divergences from a pure 4px grid
+
+`--sui-space-1-5` (6px) and `--sui-space-2-5` (10px) are explicit
+half-steps. They exist because the consumer distribution showed
+these values used heavily (82 + 38 occurrences) and rounding would
+force a visible design shift. A future sprint may deprecate them
+in favour of a strict 4px grid once downstream callers are
+audited component-by-component.
+
 ## v0.11.1 — ThreePanelLayout column placement fix
 
 CSS-only patch release.
