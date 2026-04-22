@@ -19,6 +19,26 @@ import "solid-ui-components/themes/hud.css";
 
 To create a custom theme, define `--sui-*` variables in a CSS file and import it instead. See the built-in themes for the full list of available tokens.
 
+### Spacing Scale
+
+Both built-in themes expose an identical `--sui-space-*` scale for `padding`, `margin`, `gap`, `inset`, and positional offsets. The scale is a 4px base grid with explicit half-steps for off-grid values (6px, 10px) that recur often in real-world UI code.
+
+| Token | Value | Typical use |
+|-------|-------|-------------|
+| `--sui-space-0` | `0` | Reset / no-space |
+| `--sui-space-px` | `1px` | Hairline; prefer for borders/rules |
+| `--sui-space-0-5` | `2px` | Tight dividers, sub-pixel rhythm |
+| `--sui-space-1` | `4px` | Icon-to-label, chip inner padding |
+| `--sui-space-1-5` | `6px` | Off-grid compact spacing |
+| `--sui-space-2` | `8px` | Default small gap |
+| `--sui-space-2-5` | `10px` | Off-grid medium spacing |
+| `--sui-space-3` | `12px` | Form-control inner padding, row gap |
+| `--sui-space-4` | `16px` | Section gutter, card padding |
+| `--sui-space-5` | `20px` | Loose row spacing |
+| `--sui-space-6` | `24px` | Page gutter, large panel padding |
+
+Spacing does not vary by theme — only the typographic / decorative tokens do. Use literal `px` for border widths (`1px`, `2px`) and `var(--sui-clip-*)` for clip-path inset distances.
+
 **Shared types** exported from the library root:
 
 - `ColorVariant` — `"default" | "primary" | "danger" | "warning" | "success"`

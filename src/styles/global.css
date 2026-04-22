@@ -79,6 +79,23 @@
   --sui-clip-lg: 16px;
   --sui-clip-xl: 24px;
 
+  /* Spacing Scale
+     4px base grid with explicit half-steps (2-5, 1-5) for off-grid values
+     (6px, 10px) that recur heavily in consumer code. Use for padding,
+     margin, gap, inset, and positional offsets. Border widths should use
+     their own literal values. */
+  --sui-space-0: 0;
+  --sui-space-px: 1px;
+  --sui-space-0-5: 2px;
+  --sui-space-1: 4px;
+  --sui-space-1-5: 6px;
+  --sui-space-2: 8px;
+  --sui-space-2-5: 10px;
+  --sui-space-3: 12px;
+  --sui-space-4: 16px;
+  --sui-space-5: 20px;
+  --sui-space-6: 24px;
+
   /* Typography */
   --sui-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --sui-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
