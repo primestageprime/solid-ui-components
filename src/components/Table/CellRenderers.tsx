@@ -193,7 +193,17 @@ function localDateParts(date: Date): DateParts {
   };
 }
 
-/** Zoned date parts extracted via Intl.DateTimeFormat.formatToParts. */
+/**
+ * Zoned date parts extracted via Intl.DateTimeFormat.formatToParts.
+ *
+ * Locale is pinned to "en-US" because we only consume the integer part values
+ * and re-assemble them via the user's pattern template (e.g. "YYYY-MM-DD").
+ * Using the consumer's locale here would leak locale-specific digit shapes
+ * (Arabic-Indic, Devanagari, etc.) into strings that the pattern consumer
+ * expects to be Western Arabic digits. The user-supplied `locale` is applied
+ * where it actually matters: in `zoneAbbreviation()` and the Intl-named-format
+ * path inside `DateTimeCell`.
+ */
 function zonedDateParts(date: Date, timeZone: string): DateParts {
   const fmt = new Intl.DateTimeFormat("en-US", {
     timeZone,
