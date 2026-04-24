@@ -30,7 +30,23 @@ export const CellRendererShowcase: Component = () => {
           </div>
           <div>
             <LongTextCell value="This is a very long text value that should be truncated after fifty characters to keep the table compact and readable." />
-            <div class="text-meta">LongTextCell — truncated at 50 chars with "more..." toggle</div>
+            <div class="text-meta">LongTextCell — default: char-count (maxLength=50) with inline "more..." toggle</div>
+          </div>
+          <div style={{ "max-width": "320px" }}>
+            <LongTextCell
+              value="When clampLines is set, the cell uses CSS line-clamp and measures overflow at runtime. Width-dependent — shrink the browser to force truncation across multiple lines."
+              clampLines={2}
+              reveal="tooltip"
+            />
+            <div class="text-meta">LongTextCell — clampLines=2 + reveal="tooltip" — hover to see full value</div>
+          </div>
+          <div style={{ "max-width": "320px" }}>
+            <LongTextCell
+              value="Char-count truncation with tooltip reveal instead of inline button."
+              maxLength={40}
+              reveal="tooltip"
+            />
+            <div class="text-meta">LongTextCell — maxLength=40 + reveal="tooltip" — no "more..." button, hover to reveal</div>
           </div>
         </Stack>
       </div>
@@ -85,7 +101,31 @@ export const CellRendererShowcase: Component = () => {
           </div>
           <div>
             <DateTimeCell value="2026-02-13T08:30:00Z" />
-            <div class="text-meta">DateTimeCell — ISO format (YYYY-MM-DD HH:mm:ss), monospace</div>
+            <div class="text-meta">DateTimeCell — ISO format (YYYY-MM-DD HH:mm:ss), monospace, host-local zone</div>
+          </div>
+          <div>
+            <DateTimeCell
+              value="2026-02-13T08:30:00Z"
+              timeZone="America/Los_Angeles"
+              showZoneAbbreviation
+            />
+            <div class="text-meta">DateTimeCell — with `timeZone="America/Los_Angeles"` + `showZoneAbbreviation` → appends "(PST)"</div>
+          </div>
+          <div>
+            <DateTimeCell
+              value="2026-02-13T08:30:00Z"
+              timeZone="Europe/London"
+              showZoneAbbreviation
+            />
+            <div class="text-meta">DateTimeCell — with `timeZone="Europe/London"` + `showZoneAbbreviation` → appends "(GMT)"</div>
+          </div>
+          <div>
+            <DateTimeCell value={null} />
+            <div class="text-meta">DateTimeCell — empty (default italic em-dash)</div>
+          </div>
+          <div>
+            <DateTimeCell value={null} emptyVariant="plain" />
+            <div class="text-meta">DateTimeCell — empty with `emptyVariant="plain"` (non-italic em-dash)</div>
           </div>
           <div>
             <MinuteDateTimeCell value="2026-02-13T08:30:00Z" />

@@ -19,6 +19,26 @@ import "solid-ui-components/themes/hud.css";
 
 To create a custom theme, define `--sui-*` variables in a CSS file and import it instead. See the built-in themes for the full list of available tokens.
 
+### Spacing Scale
+
+Both built-in themes expose an identical `--sui-space-*` scale for `padding`, `margin`, `gap`, `inset`, and positional offsets. The scale is a 4px base grid with explicit half-steps for off-grid values (6px, 10px) that recur often in real-world UI code.
+
+| Token | Value | Typical use |
+|-------|-------|-------------|
+| `--sui-space-0` | `0` | Reset / no-space |
+| `--sui-space-px` | `1px` | Hairline; prefer for borders/rules |
+| `--sui-space-0-5` | `2px` | Tight dividers, sub-pixel rhythm |
+| `--sui-space-1` | `4px` | Icon-to-label, chip inner padding |
+| `--sui-space-1-5` | `6px` | Off-grid compact spacing |
+| `--sui-space-2` | `8px` | Default small gap |
+| `--sui-space-2-5` | `10px` | Off-grid medium spacing |
+| `--sui-space-3` | `12px` | Form-control inner padding, row gap |
+| `--sui-space-4` | `16px` | Section gutter, card padding |
+| `--sui-space-5` | `20px` | Loose row spacing |
+| `--sui-space-6` | `24px` | Page gutter, large panel padding |
+
+Spacing does not vary by theme — only the typographic / decorative tokens do. Use literal `px` for border widths (`1px`, `2px`) and `var(--sui-clip-*)` for clip-path inset distances.
+
 **Shared types** exported from the library root:
 
 - `ColorVariant` — `"default" | "primary" | "danger" | "warning" | "success"`
@@ -30,8 +50,18 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 
 ## Button
-- **Button** — Multi-variant button with loading spinner. Key props: `variant` (`default`|`primary`|`danger`|`ghost`), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
-- **PrimaryButton / DangerButton / GhostButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props.
+- **Button** — Multi-variant button with loading spinner. Key props: `variant` (9 values, see below), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
+  - Variants:
+    - `default` — neutral action; elevated background, bordered
+    - `primary` — filled accent; the main call-to-action
+    - `secondary` — neutral/supporting filled action (grey palette); pair with `primary`
+    - `danger` — destructive action; red-themed, outlined
+    - `warning` — amber-informational action (NOT destructive); distinct from `danger` in both hue (amber vs red) and intent (attention/caution vs destruction)
+    - `ghost` — transparent until hover; for low-emphasis chrome actions
+    - `outlined` — transparent fill with accent border + text; mid-emphasis
+    - `text` — link-like; no border, no fill, accent text only
+    - `icon-only` — 1.4rem square, accent-colored glyph, no border or fill; pair with an icon child
+- **PrimaryButton / SecondaryButton / DangerButton / WarningButton / GhostButton / OutlinedButton / TextButton / IconOnlyButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. Same pattern should be applied to Cell and Layout curried variants when they're first consumed downstream (see TODO.md).
 
 ## ButtonGroup
 - **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
@@ -47,6 +77,32 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **CellTable** — `<table>` wrapper with optional `<thead>`. Key props: `header`. Use for: wrapping Cell-based rows.
 - **CellRow** — `<tr>` wrapper with border and highlight options. Key props: `border`, `highlight`. Use for: rows in CellTable.
 - Curried variants exported: `KVTable`, `BorderRow`, `DataTerm`, `DataTermMuted`, `DataValue`, `DataValueHighlight`, `DataValueSuccess`, `DataValuePrimary`, `DataValueMuted`, `DataHeader`, `DataHeaderRight`, `DataHeaderCenter`. Use for: key-value data tables without wiring alignment/weight manually.
+
+## Combobox
+- **Combobox** — Unified single- and multi-combobox built on `@kobalte/core/combobox`. The `multiple?` literal narrows `value`/`onChange`: `false`/absent → `ComboboxOption | null`; `true` → `ComboboxOption[]`. Key props: `options` (`Accessor<ComboboxOption[]>`), `value`, `onChange`, `placeholder`, `disabled`, `id`, `onInputChange`, `onCreate` (fires on Enter when input doesn't match an existing option — parent appends to `options`), plus (multi-only) `onRemove`, `showChips` (default `true`). Any other kobalte `ComboboxRootProps` field (e.g., `placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `defaultFilter`) is forwarded via spread. Exported types: `ComboboxProps`, `ComboboxOption`, `SingleComboboxProps`, `MultiComboboxProps`. Uses `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-border-bright`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-danger`, `--sui-danger-rgb`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: searchable selects, tag editors, freeform "pick-or-create" inputs.
+  - API divergence from downstream: single-site `onCreateNew` is renamed to `onCreate` (aligned with the multi-site contract).
+  - Example:
+    ```tsx
+    import { Combobox, type ComboboxOption } from "solid-ui-components";
+
+    // Single with create-on-Enter
+    <Combobox
+      options={countries}
+      value={country}
+      onChange={setCountry}
+      onCreate={(label) => addCountry({ value: slug(label), label })}
+    />
+
+    // Multi with chips
+    <Combobox
+      multiple
+      options={tags}
+      value={selectedTags}
+      onChange={setSelectedTags}
+      onCreate={(label) => addTag({ value: slug(label), label })}
+      onRemove={(opt) => console.log("removed", opt)}
+    />
+    ```
 
 ## DataDisplay
 - **DateTimeRange** — Formats ISO start/end timestamps into a readable range string. Key props: `start`, `end`, `mode` (`date`|`datetime`). Use for: displaying time periods.
@@ -71,6 +127,47 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **SigFig** — Inline numeric display with significant figures. Key props: `value`, `figures`, `fallback`. Use for: scientific precision display.
 - **Units** — Muted inline units suffix. Use for: appending unit text after values.
 - **Badge** — Backwards-compatible wrapper around StatusBadge. Key props: `variant` (`default`|`high`|`success`|`warning`|`error`). Use for: inline badges within data lists.
+
+## DateRangePicker
+- **DateRangePicker** — Composite (Depth 2). Popover-anchored date-range picker built on `@kobalte/core/popover`. Composes the upstream `Button` for presets; internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under the component directory and are NOT re-exported (zero-config call site). Date math is vanilla `Date` + `Intl.DateTimeFormat` — no Luxon / date-fns dependency; locale-aware month and short-date formatting comes from the browser's built-in i18n. Key props: `value` (`Accessor<DateRange>`), `onChange` (`(range: DateRange) => void`), `presets?` (`DateRangePreset[]` — caller-supplied, no defaults; omit to suppress the preset row), `maxRangeDays?` (disables days beyond the cap once an anchor is selected and clamps preset/second-click selections to the same bound; non-positive values log a console error and are dropped), `placeholder?`, `class?` (appended to the default `sui-drp__trigger` class — caller styles layer on top of the default trigger styling rather than replacing it), `timeZone?` (IANA TZ identifier, e.g. `"America/Los_Angeles"`, `"UTC"` — pins the trigger label, month header, calendar-day highlighting, and committed time-of-day selections to this TZ; omit for browser-local). Exported types: `DateRangePickerProps`, `DateRange`, `DateRangePreset`. Uses `--sui-bg-primary`, `--sui-bg-elevated`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: time-range filters, alarm-investigation timespan controls, reporting period selection.
+  - Formatter contract: the component formats the trigger label ("Apr 13 – Apr 20, 2026") and month header ("April 2026") itself via `Intl.DateTimeFormat` using the browser's default locale. No `formatDate` / `parseDate` props are required from callers. Timezone handling: set `timeZone` to pin the picker to a specific IANA TZ; omit for browser-local. Pinning prevents off-by-one mismatches in apps that render the rest of their timestamps in a non-local TZ (e.g. operational dashboards fixed to Pacific or UTC).
+  - Selection model: first click sets the pending start, second click commits `[start, end]` via `onChange`. Presets select `[now - days, now]`. When the optional "Set time" toggle is enabled, committed ranges apply the configured `HH:mm` to both ends.
+  - Example:
+    ```tsx
+    import { DateRangePicker, type DateRange, type DateRangePreset } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const PRESETS: DateRangePreset[] = [
+      { label: "24h", days: 1 },
+      { label: "7d",  days: 7 },
+      { label: "30d", days: 30 },
+    ];
+
+    const now = new Date();
+    const [range, setRange] = createSignal<DateRange>({
+      start: new Date(now.getTime() - 14 * 86_400_000),
+      end: now,
+    });
+
+    <DateRangePicker
+      value={range}
+      onChange={setRange}
+      presets={PRESETS}
+      maxRangeDays={30}
+    />
+
+    // Pin to a specific TZ (display + committed times resolved in LA)
+    <DateRangePicker
+      value={range}
+      onChange={setRange}
+      presets={PRESETS}
+      timeZone="America/Los_Angeles"
+    />
+    ```
+  - Divergences from the downstream driving sites (intentional):
+    - Internal sub-components are private, not exported (downstream has them as separate `CalendarGrid` / `CalendarHeader` / `PresetButtons` / `TimeInputs` files inside the feature folder; upstream treats them as implementation details).
+    - Downstream uses Luxon for weekday/month formatting and the `MMM d`/`MMMM yyyy` trigger label; upstream uses vanilla `Date` arithmetic plus `Intl.DateTimeFormat`. Behavior and layout match; the library surface does not add Luxon as a dependency.
+    - Downstream uses SCSS CSS modules (`dateRangePicker.module.scss`); upstream uses a single plain CSS file (`DateRangePicker.css`) with BEM-ish `.sui-drp__*` class names and `--sui-*` tokens.
 
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
@@ -98,12 +195,32 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 
 ## Inputs
 - **ThemedInput** — Styled text input with optional label. Key props: `label`, plus all native `<input>` attributes. Use for: themed form text inputs.
+- **ThemedNumberInput** — Themed numeric field built on `@kobalte/core/number-field` with stacked increment/decrement triggers. Key props: `value` (`Accessor<number | undefined>`), `onChange` (`(value: number | undefined) => void`), `name`, `label`, `description`, `errorMessage`, `min`, `max`, `step` (default `1`). Friendly names `min`/`max` map to kobalte's `minValue`/`maxValue`; any other `NumberFieldRootProps` (e.g. `disabled`, `required`, `format`, `formatOptions`, `changeOnWheel`) is forwarded via spread. When `errorMessage` is set, the field renders in invalid state and suppresses the description. Kobalte emits `NaN` on clear — normalized to `undefined` before `onChange`. Uses `--sui-bg-secondary`, `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-danger`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: numeric form fields (RPM, counts, thresholds, bounded parameters).
+  - Example:
+    ```tsx
+    import { ThemedNumberInput } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [rpm, setRpm] = createSignal<number | undefined>(undefined);
+
+    <ThemedNumberInput
+      name="rpm"
+      label="Engine RPM"
+      description="Target steady-state RPM."
+      value={rpm}
+      onChange={setRpm}
+      min={0}
+      max={10000}
+      step={50}
+    />
+    ```
 - **ThemedTextarea** — Styled textarea with optional label. Key props: `label`, plus all native `<textarea>` attributes. Use for: themed form textareas.
 
 ## Layout
 - **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg`|`xl`), `align`, `justify`. Use for: vertical stacking of elements.
 - **Row** — Flex-row container. Key props: `gap`, `align`, `justify`, `wrap`. Use for: horizontal arrangement of elements.
 - **Box** — Flex child with grow/shrink control. Key props: `grow`, `shrink`. Use for: controlling flex item sizing.
+- **ResizableContainer** — Container with draggable edge handles for manual resize. Key props: `directions` (array of `"top"`|`"right"`|`"bottom"`|`"left"`, default `["right", "bottom"]`), `minWidth`/`maxWidth`/`initialWidth`, `minHeight`/`maxHeight`/`initialHeight`, `onResize` (called with `{ width, height }` during drag), `gridMode` (skip inline width/height when parent grid controls sizing), `externalWidth` (accessor that syncs internal width from an external source). Exports `ResizeDirection` and `ResizeDimensions` types. Use for: side panels, resizable columns, draggable split views. Uses `--sui-accent-rgb` for handle hover color. Note: the `onResize` callback intentionally uses the `{ width, height }` object shape rather than positional `(width, height)` arguments — this is the upstream-canonical signature; downstream callers using the legacy positional form must adapt.
 - Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
 
 ## List
@@ -162,6 +279,24 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 ## Section
 - **Section** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `variant` (`ColorVariant` — sets accent color), `corners` (`CornerStyle` — visual corner treatment; replaces old `"bordered"`/`"decorated"` variant values), `fill`, `showHeader`, `headerAction`, `collapsible`, `collapsed`, `onToggleCollapse`, `defaultExpanded`. Has `createSection` factory. Use for: major page sections.
 
+## Select
+- **Select** — Unified single- and multi-select built on `@kobalte/core/select`. The `multiple?` literal narrows `value`/`onChange`: `false`/absent → `SelectOption | null`; `true` → `SelectOption[]`. Key props: `options` (`Accessor<SelectOption[]>`), `value`, `onChange`, `label`, `description`, `placeholder`, `id`. Any other kobalte `SelectRootProps` field (e.g. `placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `disabled`) is forwarded via spread. Single-mode uses `disallowEmptySelection={false}`; multi-mode renders a comma-joined preview plus an inline clear button in the trigger. Exported types: `SelectProps`, `SelectOption`, `SingleSelectProps`, `MultiSelectProps`. Uses `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-border-bright`, `--sui-accent`, `--sui-accent-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: priority pickers, status filters, tag selectors, any single- or multi-select form field.
+  - Example:
+    ```tsx
+    import { Select, type SelectOption } from "solid-ui-components";
+
+    const options: SelectOption[] = [
+      { value: "low", label: "Low" },
+      { value: "high", label: "High" },
+    ];
+
+    // Single
+    <Select label="Priority" options={() => options} value={priority} onChange={setPriority} />
+
+    // Multi
+    <Select multiple label="Statuses" options={() => options} value={statuses} onChange={setStatuses} />
+    ```
+
 ## Selector
 - **SidebarSelector** — Sidebar card list with selection content area (generic). Key props: `items`, `selectedId`, `onSelect`, `renderCard`, `renderSelection`, `sidebarWidth`, `maxHeight`, `label`. Use for: master-detail selection patterns, sidebar navigation with preview pane.
 
@@ -178,6 +313,13 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **createSelectionStore / fromSignal** — Utilities to create or wrap selection state (`SelectionStore<Id>`). Use for: managing checkbox selection state, optionally backed by persistent storage.
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
+  - **LongTextCell** props:
+    - `maxLength?: number` (default `50`) — char-count truncation threshold; ignored when `clampLines` is set.
+    - `expandable?: boolean` (default `true`) — enables the inline "more..."/"less" toggle in `reveal="inline"` mode.
+    - `clampLines?: number` — CSS `-webkit-line-clamp` truncation. Full value is rendered; overflow is measured at runtime (`scrollHeight`/`scrollWidth` vs. client). Use when cell width is dynamic and char-count is too coarse.
+    - `reveal?: "inline" | "tooltip"` (default `"inline"`) — how the full value is revealed. `"inline"` shows "more..."/"less" buttons (existing behavior). `"tooltip"` composes the library's `Tooltip` (viewport-aware, auto-flips) and shows the full value on hover.
+    - `tooltipPlacement?: "top" | "bottom" | "left" | "right"` (default `"top"`) — preferred placement when `reveal="tooltip"`; Kobalte flips if the placement would overflow.
+  - `DateTimeCell` extras (additive, optional): `timeZone` (IANA, e.g. `"America/Los_Angeles"` — formats in that zone instead of host-local), `showZoneAbbreviation` (boolean — appends `(PDT)`-style suffix via `Intl.DateTimeFormat({ timeZoneName: "short" })`), `emptyVariant` (`"default"` italic em-dash, `"plain"` non-italic em-dash). CSS hook `--cell-empty-font-style` also lets ancestors globally restyle the empty italic default.
 
 ## Tabs
 - **Tabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `Tab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color` (`ColorVariant`). `Tab` interface supports optional `hint` (muted text after label, e.g., keyboard shortcut hints). Exports `TabStatus` type (`"warning" | "error"`). Use for: switching between views/panels.
@@ -200,8 +342,168 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
 
+## ThreePanelLayout
+- **ThreePanelLayout** — Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `"100%"` — any valid CSS length, e.g. `"100vh"` or `"calc(100vh - var(--app-header-height, 64px))"`; upstream intentionally stays decoupled from app-chrome tokens), `fullHeight?` (backwards-compatible alias mapping to `height="100%"` — `height` wins if both are passed), `leftPanelWidth?` (default `"220px"`), `rightPanelWidth?` (default `"240px"`), `class?`. Omitted side-panel slots collapse their grid column to `0` so the center expands fully. Mobile collapse: the content grid switches to a single column at `max-width: 900px`, side panels drop their border and cap at `200px` max-height (matches the downstream `$mobile-width`). Uses `--sui-bg-primary`, `--sui-text-primary`, `--sui-border` theme tokens; spacing is hardcoded (8 / 12 / 16 px) because the library does not yet define `--sui-space-*` tokens. Use for: multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.
+  - Decision — `height` over app-coupled `headerOffset`: upstream cannot know the host app's header height, so the library exposes a single `height` prop the caller controls explicitly. `fullHeight` stays as a convenience alias for `"100%"` so existing call sites migrate without an API rewrite. For "viewport minus app header" callers pass `height="calc(100vh - var(--app-header-height, 64px))"` (or similar) from the host app.
+  - Example:
+    ```tsx
+    import { ThreePanelLayout } from "solid-ui-components";
+
+    <ThreePanelLayout
+      topBar={<BreadcrumbBar />}
+      leftPanel={<AssetList />}
+      centerPanel={<AlarmExplanation />}
+      rightPanel={<ContextPanel />}
+    />
+
+    // Viewport-minus-app-header, with wider right pane
+    <ThreePanelLayout
+      height="calc(100vh - var(--app-header-height, 64px))"
+      rightPanelWidth="320px"
+      topBar={<TopBar />}
+      leftPanel={<AssetList />}
+      centerPanel={<Content />}
+      rightPanel={<WideContext />}
+    />
+
+    // Center only (no side panels / no top bar)
+    <ThreePanelLayout centerPanel={<Content />} />
+    ```
+
+## Toast
+- **Toast** — Kobalte-backed toast built on `@kobalte/core/toast`. Key props: `toastId` (`number`, injected by `toaster.show`), `title` (required), `description?` (`string | JSX.Element`), `variant?` (`info`|`success`|`warning`|`error`, default `info`), `actions?` (array of `ToastAction { label, onClick, variant? }`), `duration?` (ms; falls back to kobalte default), `persistent?` (suppress auto-dismiss + progress bar). Any other `ToastRootProps` field (`priority`, swipe handlers, escape-key, etc.) is forwarded to `Toast.Root`. Exported types: `ToastProps`, `ToastAction`, `ToastVariant`, `ShowToastInput`, `ToastHandle`. Uses `--sui-bg-elevated`, `--sui-bg-secondary`, `--sui-bg-tertiary`, `--sui-border`, `--sui-border-bright`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-success`, `--sui-success-rgb`, `--sui-warning`, `--sui-warning-rgb`, `--sui-danger`, `--sui-danger-rgb`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: imperative notifications (save confirmations, error messages, prompts with actions, session warnings).
+- **ToastRegion** / **ToastList** — Curried atomics that wrap kobalte's `Toast.Region` / `Toast.List` with baked-in viewport styling. Mount once near the app root inside a `Portal`. Exported types: `ToastRegionCurriedProps`, `ToastListCurriedProps`.
+- **showToast(input)** — Imperative helper. Returns `{ id: number, dismiss: () => void }`. Accepts the same shape as `ToastProps` minus `toastId`.
+- **toaster** — Re-export of kobalte's raw `toaster` for `update` / `clear` / `promise` use cases beyond `showToast`. For sub-components like `Toast.Root` / `Toast.Title` / `Toast.Description` directly, import from `@kobalte/core/toast` (already an installed peer).
+  - Example:
+    ```tsx
+    import { Portal } from "solid-js/web";
+    import {
+      showToast,
+      toaster,
+      ToastList,
+      ToastRegion,
+    } from "solid-ui-components";
+
+    // 1. Mount the region once (near app root):
+    <Portal>
+      <ToastRegion limit={10}>
+        <ToastList />
+      </ToastRegion>
+    </Portal>
+
+    // 2. Fire toasts imperatively:
+    const handle = showToast({
+      title: "Unsaved changes",
+      description: "Your work will be lost if you leave this page.",
+      variant: "warning",
+      actions: [
+        { label: "Save",    variant: "primary",   onClick: save    },
+        { label: "Discard", variant: "secondary", onClick: discard },
+      ],
+    });
+
+    // 3. Dismiss by handle or by id:
+    handle.dismiss();
+    toaster.clear();
+    ```
+
 ## Toggle
 - **Toggle** — Checkbox toggle switch with label positioning and accent color. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), `variant` (`default`|`minimal`), `color` (`ColorVariant`), plus all native checkbox attributes. Note: `power` and `circuit` variants have been removed. Use for: boolean on/off controls.
+
+## Tooltip
+- **Tooltip** — Hover/focus-activated tooltip built on `@kobalte/core/tooltip`. Renders an accessible floating panel with arrow and fade animation. Key props: `content` (`string | JSX.Element` or an accessor returning either — re-evaluated per open), `children` (the trigger), `class` (appended to the Kobalte trigger; pass `"sui-tooltip__trigger--cell"` for the dense-table "cell" semantics), `openDelay` (default `100`; `1000` matches the downstream `TooltipCell` pattern), `closeDelay` (default `100`), plus any `TooltipRootProps` field (`placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `disabled`, `triggerOnFocusOnly`, `forceMount`, etc.) which is forwarded to `Kobalte.Tooltip.Root`. Exported types: `TooltipProps`, `TooltipContent`. Uses `--sui-border`, `--sui-bg-secondary`, `--sui-text-primary`, `--sui-radius-sm`, `--sui-border-focus` theme tokens. Use for: field hints, truncated-cell full-text reveals, keyboard-shortcut legends, anything hover-activated. No separate `TooltipCell` is shipped — inline `<Tooltip openDelay={1000} class="sui-tooltip__trigger--cell">` instead.
+  - Example:
+    ```tsx
+    import { Tooltip } from "solid-ui-components";
+
+    <Tooltip content="Deletes the row. Cannot be undone.">
+      <DangerButton>Delete</DangerButton>
+    </Tooltip>
+
+    // Reactive content via accessor:
+    <Tooltip content={() => `Count: ${count()}`}>
+      <GhostButton>Hover</GhostButton>
+    </Tooltip>
+
+    // Cell semantics (matches the legacy TooltipCell):
+    <Tooltip content={row.fullText} openDelay={1000} class="sui-tooltip__trigger--cell">
+      <span>{row.truncatedText}</span>
+    </Tooltip>
+    ```
+  - Divergence from initial audit sketch: `class` is used instead of `className` (upstream convention); `openDelay`/`closeDelay` are not separately declared on `TooltipProps` because Kobalte's `TooltipRootProps` already includes them — `mergeProps` injects the 100 ms defaults before the passthrough spread.
+
+## Renderers
+
+The renderers family is a set of small, composable components for displaying field-style data: primitives with labels, before/after diffs, and OHLC candlesticks. They share a `--sui-*` token-driven label/value grid and render zero-config for common cases; host code can opt into a `renderValue` dispatcher hook when a domain needs custom types (status badges, epoch-millis dates, etc.).
+
+- **ValueRenderer** — Atomic (Depth 1). Labeled label/value layout with a pluggable value dispatcher. Key props: `label?`, `value` (`unknown`), `renderValue?` (`(v: unknown) => JSX.Element | undefined` — host override; returning `undefined` falls through to the default dispatcher), `numberPrecision?` (default `2`), `class?`. Default dispatch handles `string`, `number`, `boolean`, `null`/`undefined`, arrays, plain objects, and pre-rendered JSX elements (`$$typeof` sentinel) — everything else falls through to `String(v)`. Objects render as a key/value entry list and recurse through the same `renderValue` pipeline so overrides apply at every nesting level. No component imports; owns `ValueRenderer.css`. Uses `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-font-family` tokens. Use for: generic field display, object dumps, anywhere you previously wrote `<span>{label}:</span><span>{value}</span>`.
+  - Example:
+    ```tsx
+    import { ValueRenderer } from "solid-ui-components";
+
+    // Zero-config primitives
+    <ValueRenderer label="Count" value={1234.5678} />
+    <ValueRenderer label="Active" value={true} />
+    <ValueRenderer label="Missing" value={null} />
+
+    // Objects — recurse through the default dispatcher
+    <ValueRenderer
+      label="Context"
+      value={{ temperature: 45.2, active: true, name: "Engine #3" }}
+    />
+
+    // Custom dispatch — host injects a domain renderer; return undefined to
+    // defer to the default dispatcher.
+    <ValueRenderer
+      label="Status"
+      value="ALARM"
+      renderValue={(v) => (isStatus(v) ? <StatusBadge status={v} /> : undefined)}
+    />
+    ```
+
+- **ChangeRenderer** — Depth 2 (Composite; composes `ValueRenderer` twice). Before/after pair layout with a directional arrow. Key props: `label?`, `before` (`unknown`), `after` (`unknown`), `renderValue?` (shared override applied to both sides), `numberPrecision?`, `arrow?` (`JSX.Element`; default `"→"`), `class?`. Dispatches each side through `ValueRenderer` so any override stays consistent across the pair. Owns `ChangeRenderer.css`. Uses the same `--sui-*` token set as `ValueRenderer`, plus the arrow styling. Use for: single-field diffs, alarm before/after displays, config change rows.
+  - Example:
+    ```tsx
+    import { ChangeRenderer } from "solid-ui-components";
+
+    <ChangeRenderer label="Count" before={12} after={15} />
+    <ChangeRenderer
+      label="Context"
+      before={{ temp: 45, active: true }}
+      after={{ temp: 50, active: true }}
+    />
+    <ChangeRenderer
+      label="Status"
+      before="NOMINAL"
+      after="ALARM"
+      renderValue={(v) => (isStatus(v) ? <StatusBadge status={v} /> : undefined)}
+    />
+    ```
+  - Divergence from initial audit sketch (documented, intentional): the upstream `ChangeRenderer` does not replicate downstream `ChangeObjectRenderer`'s per-key aligned grid with added/removed/changed/unchanged highlighting. Objects on each side render through `ValueRenderer`'s default entry list — the key-level diff remains a domain concern. Host code that needs that behavior can keep it as a domain component wrapping `ValueRenderer` or two `ChangeRenderer`s, following the audit's "absorb what fits, leave domain behavior behind" principle.
+
+- **CandlestickRenderer** — Atomic (Depth 1). OHLC box visualization with open/close flanks, high/low stacked markers, and a mean value inside the box. Key props: `label?`, `candlestick` (`Candlestick | null | undefined` where `Candlestick = { open, close, high, low, mean, openAt?, closeAt? }`), `getBoxColor?` (`(c: Candlestick) => string`; default colors bullish candles green and bearish red via `--sui-success` / `--sui-danger`), `precision?` (default `2`), `class?`. Null/undefined candlestick renders an em-dash. No component imports; owns `CandlestickRenderer.css`. Uses `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-success`, `--sui-danger`, `--sui-warning`, `--sui-radius-sm`, `--sui-font-family` tokens. Use for: price/metric candles, bucket-aggregated statistics (where min/max/avg + open/close make sense). Exported types: `CandlestickRendererProps`, `Candlestick`.
+  - To show OHLC details on hover, wrap the component in `Tooltip` and supply your own date/duration formatting — this library's Candlestick is visualization-only.
+  - Divergence from downstream: the upstream component does not embed a hover tooltip (the downstream `CandlestickRenderer` uses `useSmartTooltip` with full OHLC breakdown). Callers that need the tooltip wrap the base in the library's `Tooltip` component and supply their own content.
+  - Example:
+    ```tsx
+    import { CandlestickRenderer } from "solid-ui-components";
+
+    <CandlestickRenderer
+      label="Price"
+      candlestick={{ open: 100, close: 105, high: 107, low: 99, mean: 103 }}
+    />
+
+    // Custom color (e.g., doji-aware)
+    <CandlestickRenderer
+      candlestick={cs}
+      getBoxColor={(c) =>
+        Math.abs(c.close - c.open) / (c.high - c.low || 1) < 0.03
+          ? "var(--sui-warning)"
+          : c.close >= c.open ? "var(--sui-success)" : "var(--sui-danger)"
+      }
+    />
+    ```
 
 ## VesselCallHeader
 - **VesselCallHeader** — Vessel name + time range + duration + badge display. Key props: `vesselName`, `connectedAt`, `disconnectedAt`, `assetId`, `badge`, `action`, `href`. Use for: vessel call detail page headers, vessel call list item titles.

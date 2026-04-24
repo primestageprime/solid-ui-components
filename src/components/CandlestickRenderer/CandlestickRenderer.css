@@ -1,0 +1,97 @@
+/* ============================================
+   CandlestickRenderer — Atomic (Depth 1)
+   OHLC box visualization. Uses --sui-* tokens from the active theme.
+   ============================================ */
+
+.sui-candlestick {
+  display: block;
+  min-width: 0;
+  font-family: var(--sui-font-family);
+  color: var(--sui-text-primary);
+  font-size: 0.9375rem;
+}
+
+.sui-candlestick--with-label {
+  display: grid;
+  grid-template-columns: minmax(80px, max-content) 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.sui-candlestick__label {
+  color: var(--sui-text-secondary);
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.sui-candlestick__value-container {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sui-candlestick__empty {
+  color: var(--sui-text-muted);
+}
+
+.sui-candlestick__viz {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  padding: 18px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-candlestick__high,
+.sui-candlestick__low {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: var(--sui-text-primary);
+  white-space: nowrap;
+}
+
+.sui-candlestick__high {
+  top: 0;
+}
+
+.sui-candlestick__low {
+  bottom: 0;
+}
+
+.sui-candlestick__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sui-candlestick__open,
+.sui-candlestick__close {
+  font-size: 0.75rem;
+  color: var(--sui-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sui-candlestick__box {
+  position: relative;
+  min-width: 60px;
+  height: 40px;
+  border: 2px solid var(--sui-success);
+  border-radius: var(--sui-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.sui-candlestick__mean {
+  font-size: 0.75rem;
+  color: var(--sui-warning);
+  white-space: nowrap;
+}

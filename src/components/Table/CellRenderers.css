@@ -5,7 +5,14 @@
 /* Empty state */
 .cell-empty {
   color: var(--hud-text-muted, #4a6a80);
-  font-style: italic;
+  /* Consumers can override globally by setting --cell-empty-font-style
+     on an ancestor (e.g. a table wrapper). Default preserves italic. */
+  font-style: var(--cell-empty-font-style, italic);
+}
+
+/* Non-italic per-instance opt-out (DateTimeCell emptyVariant="plain"). */
+.cell-empty.cell-empty--plain {
+  font-style: normal;
 }
 
 /* ID Cell */
@@ -300,6 +307,23 @@
 
 .cell-longtext__text {
   word-break: break-word;
+}
+
+/* Clamp mode — the text element carries inline styles for
+   `-webkit-line-clamp`. This class is a hook for consumers to override
+   glyph behavior (letter-spacing, kerning) without needing to target the
+   inline-styled element. Cursor signals the value is hover-revealable. */
+.cell-longtext__text--clamped {
+  cursor: help;
+}
+
+/* Tooltip reveal mode — when LongTextCell composes the Kobalte Tooltip,
+   the Tooltip trigger wraps the text. The `cell-longtext--tooltip` class
+   is applied to the trigger so tooltip-mode cells can be targeted
+   distinctly (e.g., to make the trigger fill the table cell width). */
+.cell-longtext.cell-longtext--tooltip {
+  display: inline-block;
+  max-width: 100%;
 }
 
 .cell-longtext__more,

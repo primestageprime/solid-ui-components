@@ -1,7 +1,8 @@
 import { createSignal, Component } from "solid-js";
 import { Button } from "../../src/components/Button";
 import {
-  PrimaryButton, DangerButton, GhostButton,
+  PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,
+  OutlinedButton, TextButton, IconOnlyButton,
   SmallPrimaryButton, SmallDangerButton, SmallGhostButton,
   LargePrimaryButton,
 } from "../../src/components/Button";
@@ -24,8 +25,16 @@ export const ButtonShowcase: Component = () => {
         <div class="example-row">
           <Button>Default</Button>
           <Button variant="primary">Primary</Button>
+          <Button variant="secondary">Secondary</Button>
           <Button variant="danger">Danger</Button>
+          <Button variant="warning">Warning</Button>
           <Button variant="ghost">Ghost</Button>
+          <Button variant="outlined">Outlined</Button>
+          <Button variant="text">Text</Button>
+          <Button variant="icon-only" aria-label="close">x</Button>
+        </div>
+        <div class="text-meta">
+          Note: `warning` is amber-informational (attention/caution), distinct from `danger` which is red-destructive.
         </div>
       </div>
 
@@ -52,8 +61,13 @@ export const ButtonShowcase: Component = () => {
         <h3>Curried Variants</h3>
         <div class="example-row" style={{ "align-items": "center" }}>
           <PrimaryButton>PrimaryButton</PrimaryButton>
+          <SecondaryButton>SecondaryButton</SecondaryButton>
           <DangerButton>DangerButton</DangerButton>
+          <WarningButton>WarningButton</WarningButton>
           <GhostButton>GhostButton</GhostButton>
+          <OutlinedButton>OutlinedButton</OutlinedButton>
+          <TextButton>TextButton</TextButton>
+          <IconOnlyButton aria-label="close">x</IconOnlyButton>
         </div>
         <div class="text-meta">Default size — variant pre-set</div>
 

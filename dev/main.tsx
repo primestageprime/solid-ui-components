@@ -8,7 +8,9 @@ import { ThemeSwitcher } from "./theme-switcher";
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
 import { ButtonShowcase } from "./showcases/button";
+import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
+import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
@@ -29,18 +31,27 @@ import { MathFormulaShowcase } from "./showcases/math-formula";
 import { NavItemShowcase } from "./showcases/nav-item";
 import { ProgressBarShowcase } from "./showcases/progress-bar";
 import { SectionShowcase } from "./showcases/section";
+import { SelectShowcase } from "./showcases/select";
 import { SidebarSelectorShowcase } from "./showcases/sidebar-selector";
 import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
+import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
+import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
+import { ToastShowcase } from "./showcases/toast";
+import { TooltipShowcase } from "./showcases/tooltip";
+import { ValueRendererShowcase } from "./showcases/value-renderer";
 
 // Layout
+import { ResizableContainerShowcase } from "./showcases/resizable-container";
 import { RowShowcase } from "./showcases/row";
 import { StackShowcase } from "./showcases/stack";
 import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
+import { ChangeRendererShowcase } from "./showcases/change-renderer";
+import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
@@ -78,7 +89,9 @@ const nav: TabGroup[] = [
       { id: "base-table", label: "BaseTable", component: BaseTableShowcase },
       { id: "button", label: "Button", component: ButtonShowcase },
       { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase },
+      { id: "candlestick-renderer", label: "CandlestickRenderer", component: CandlestickRendererShowcase },
       { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase },
+      { id: "combobox", label: "Combobox", component: ComboboxShowcase },
       { id: "dag-chart", label: "DagChart", component: DagChartShowcase },
       { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase },
       { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase },
@@ -96,17 +109,24 @@ const nav: TabGroup[] = [
       { id: "progress-bar", label: "ProgressBar", component: ProgressBarShowcase },
       { id: "section", label: "Section", component: SectionShowcase },
       { id: "hud-section", label: "Section (Accent)", component: AccentSectionShowcase },
+      { id: "select", label: "Select", component: SelectShowcase },
       { id: "sidebar-selector", label: "SidebarSelector", component: SidebarSelectorShowcase },
       { id: "stats-table", label: "StatsTable", component: StatsTableShowcase },
       { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase },
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
+      { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
+      { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase },
+      { id: "toast", label: "Toast", component: ToastShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
+      { id: "tooltip", label: "Tooltip", component: TooltipShowcase },
+      { id: "value-renderer", label: "ValueRenderer", component: ValueRendererShowcase },
     ],
   },
   {
     label: "Layout",
     children: [
+      { id: "resizable-container", label: "ResizableContainer", component: ResizableContainerShowcase },
       { id: "row", label: "Row", component: RowShowcase },
       { id: "stack", label: "Stack", component: StackShowcase },
       { id: "surface", label: "Surface", component: SurfaceShowcase },
@@ -116,7 +136,9 @@ const nav: TabGroup[] = [
     label: "Depth 2",
     children: [
       { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase },
+      { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase },
       { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase },
+      { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase },
       { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase },
       { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase },
       { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase },

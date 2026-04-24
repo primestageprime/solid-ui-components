@@ -1,0 +1,107 @@
+/* ============================================
+   ThreePanelLayout — Structural
+   --------------------------------------------
+   Top-bar + three-column (left / center / right) layout.
+   - Color/border tokens come from the active theme
+     (--sui-bg-primary, --sui-text-primary, --sui-border).
+   - Spacing values are hardcoded (8 / 12 / 16 px) to match the
+     downstream driving site's $gap-small/$gap-medium/$gap-large
+     and $padding-small/$padding-medium scales; the library has
+     no --sui-space-* tokens yet.
+   - The grid template columns are injected via the
+     --sui-three-panel-grid-columns CSS custom property that the
+     component writes on the root element.
+   ============================================ */
+
+.sui-three-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
+  overflow: hidden;
+  /* `height` is set inline via the `height` / `fullHeight` props. */
+}
+
+.sui-three-panel__top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 40px;
+  border-bottom: 1px solid var(--sui-border);
+  flex-shrink: 0;
+}
+
+.sui-three-panel__content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--sui-three-panel-grid-columns, 220px 1fr 240px);
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Explicit grid-column assignments per slot.
+   Without these, CSS grid auto-placement fills tracks in DOM order,
+   so omitting a side panel pushes the remaining cells into the wrong
+   tracks (e.g. no-leftPanel → center lands in the 0px track 1 and
+   right steals the 1fr track 2). Anchoring each named slot to its
+   track keeps placement role-based regardless of which siblings are
+   present. Reset in the mobile block below where the grid collapses
+   to a single column. */
+.sui-three-panel__left {
+  grid-column: 1;
+  overflow-y: auto;
+  border-right: 1px solid var(--sui-border);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sui-three-panel__center {
+  grid-column: 2;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.sui-three-panel__right {
+  grid-column: 3;
+  overflow-y: auto;
+  border-left: 1px solid var(--sui-border);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Mobile collapse — single column, side panels capped and borderless.
+   The 900px breakpoint matches the downstream $mobile-width. No
+   --sui-breakpoint-* tokens exist in the library yet, so the value is
+   hardcoded here; revisit once the library introduces a breakpoint
+   scale. */
+@media (max-width: 900px) {
+  .sui-three-panel__content {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  /* Reset explicit column assignments — at this breakpoint the grid
+     has a single 1fr track and each slot stacks in DOM order. */
+  .sui-three-panel__left,
+  .sui-three-panel__center,
+  .sui-three-panel__right {
+    grid-column: 1;
+  }
+
+  .sui-three-panel__left,
+  .sui-three-panel__right {
+    border: none;
+    max-height: 200px;
+  }
+}
