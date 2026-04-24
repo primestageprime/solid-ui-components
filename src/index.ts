@@ -66,3 +66,7 @@ export { Tabs as HUDTabs } from "./components/Tabs";
 export { ButtonGroup as HUDButtonGroup } from "./components/ButtonGroup";
 export { List as HUDList, ListItem as HUDListItem } from "./components/List";
 export { createPanel as createHUDPanel } from "./components/Panel";
+export * from "./components/WorkerCard";
+export * from "./components/CompletionTimeline";
+export * from "./components/ThroughputChart";
+export * from "./components/RingChart";

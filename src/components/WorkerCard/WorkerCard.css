@@ -1,0 +1,138 @@
+.worker-card {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  border: 1px solid var(--sui-text-muted, #4a6a80);
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--sui-bg-secondary, rgba(13,26,42,0.8));
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.worker-card--complete {
+  border-color: var(--sui-success, #00ff88);
+  background: rgba(0,255,136,0.04);
+}
+
+.worker-card--overdue {
+  border-color: var(--sui-error, #ff3366);
+  background: rgba(255,51,102,0.04);
+}
+
+.worker-card--claimed,
+.worker-card--extracting {
+  border-color: var(--sui-accent, #00d4ff);
+}
+
+.worker-card--writing {
+  border-color: var(--sui-success, #00ff88);
+}
+
+/* Row 1: Identity */
+.worker-card__identity {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.worker-card__name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.worker-card__badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.worker-card__timer {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Row 2: History */
+.worker-card__history {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--sui-text-muted, #4a6a80);
+  margin-top: 4px;
+}
+
+/* Row 3: Plan (animated) */
+.worker-card__plan {
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.4s ease;
+}
+
+.worker-card__plan--visible {
+  max-height: 30px;
+  opacity: 1;
+  margin-top: 6px;
+}
+
+.worker-card__plan--hidden {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+.worker-card__plan-inner {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--sui-text-secondary, #7aa8c0);
+}
+
+/* Row 4: Progress (animated) */
+.worker-card__progress {
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.4s ease;
+}
+
+.worker-card__progress--visible {
+  max-height: 40px;
+  opacity: 1;
+  margin-top: 6px;
+}
+
+.worker-card__progress--hidden {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+.worker-card__bar-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.worker-card__bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s linear, background 0.3s ease;
+}
+
+.worker-card__bar-fill--extracting {
+  background-image: repeating-linear-gradient(
+    -45deg, transparent, transparent 8px,
+    rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px
+  );
+  background-size: 32px 32px;
+  animation: worker-card-stripe 1s linear infinite;
+}
+
+.worker-card__rows {
+  font-size: 10px;
+  text-align: right;
+  margin-top: 2px;
+}
+
+@keyframes worker-card-stripe {
+  0% { background-position: 0 0; }
+  100% { background-position: 32px 0; }
+}
