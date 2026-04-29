@@ -1,0 +1,19 @@
+.sui-relative-time {
+  font-family: var(--sui-font-family, inherit);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--sui-text-secondary, #a0a8b8);
+}
+
+.sui-relative-time--fresh {
+  color: var(--sui-text-secondary, #a0a8b8);
+}
+
+.sui-relative-time--stale {
+  color: var(--sui-warning, #ffab00);
+}
+
+.sui-relative-time--errored {
+  color: var(--sui-danger, #ff5252);
+  font-weight: 600;
+}
