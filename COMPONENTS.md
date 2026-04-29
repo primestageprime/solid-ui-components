@@ -294,6 +294,22 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
 
+## TagInput
+- **TagInput** — Atomic (Depth 1). Chip row + autocomplete text input for tag editing. Owns `TagInput.css`, no component imports. Key props: `tags` (`string[]`), `suggestions` (`string[]`), `onAdd` (`(tag: string) => void`), `onRemove` (`(tag: string) => void`), `placeholder?`, `autofocus?`. Commits the typed value on Enter / Tab / `,`; backspace on an empty input removes the rightmost chip. Suggestions are filtered case-insensitively by prefix and de-duplicated against existing tags (capped at 8). Exported types: `TagInputProps`. Use for: spark/statement tag editors, freeform label inputs, anywhere a chip-row + typeahead pattern is needed.
+  - Example:
+    ```tsx
+    import { TagInput } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [tags, setTags] = createSignal<string[]>(["benchmark"]);
+    <TagInput
+      tags={tags()}
+      suggestions={["benchmark", "dside-ui", "infra"]}
+      onAdd={(t) => setTags([...tags(), t])}
+      onRemove={(t) => setTags(tags().filter((x) => x !== t))}
+    />
+    ```
+
 ## Tabs
 - **Tabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `Tab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color` (`ColorVariant`). `Tab` interface supports optional `hint` (muted text after label, e.g., keyboard shortcut hints). Exports `TabStatus` type (`"warning" | "error"`). Use for: switching between views/panels.
 
@@ -314,6 +330,29 @@ To create a custom theme, define `--sui-*` variables in a CSS file and import it
   - **FlexLabel** — Label that grows to fill available space. Use for: label + value rows.
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
+
+## RelativeTime
+- **RelativeTime** — Atomic (Depth 1). Renders a relative time string ("just now", "5m ago", "2h ago", "3d ago") with optional staleness color thresholds. Auto-updates via a shared 30s tick signal so all instances on the page refresh in lockstep (the timer is lazy: it only runs while at least one component is mounted). Falls back to a localized absolute date (`Apr 28, 2026`) when the value is older than 30 days. Owns `RelativeTime.css`, no component imports. Key props: `value` (`Date | number | bigint` — Date instance, epoch ms, or SpacetimeDB Timestamp microseconds-as-bigint), `staleAfterSec?` (renders in warning color past this age), `errorAfterSec?` (renders in danger color past this age, overrides stale), `prefix?` (e.g. `"claimed "` → `"claimed 5m ago"`), `mode?` (`"ago"` default, or `"bare"` for `"5m"` without suffix), `updateIntervalMs?` (default `30000`; pass `0` for one-shot render). Renders a `<span>` with a `title` attribute set to the ISO timestamp for hover-reveal. Also exports the pure helper `formatRelativeDuration(deltaSec, mode?)` for cases where the caller already has the delta. Exported types: `RelativeTimeProps`, `RelativeTimeValue`, `RelativeTimeStaleness`. Uses `--sui-text-secondary`, `--sui-warning`, `--sui-danger`, `--sui-font-family` theme tokens. Use for: heartbeat indicators (with stale/error thresholds), elapsed-time labels on active executions, timestamps on narrative-event/log feeds, "last updated N ago" footers — anywhere the absolute time is less interesting than the recency.
+  - Example:
+    ```tsx
+    import { RelativeTime } from "solid-ui-components";
+
+    // Basic: "5m ago"
+    <RelativeTime value={workEvent.at} />
+
+    // Heartbeat with staleness thresholds: warning past 15min, danger past 30min
+    <RelativeTime
+      value={lastEventAt}
+      staleAfterSec={15 * 60}
+      errorAfterSec={30 * 60}
+    />
+
+    // SpacetimeDB Timestamp (microseconds bigint) with a prefix
+    <RelativeTime value={ts.__timestamp_micros_since_unix_epoch__} prefix="claimed " />
+
+    // Bare mode for compact contexts ("5m", no " ago")
+    <RelativeTime value={claimedAt} mode="bare" />
+    ```
 
 ## ThreePanelLayout
 - **ThreePanelLayout** — Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `"100%"` — any valid CSS length, e.g. `"100vh"` or `"calc(100vh - var(--app-header-height, 64px))"`; upstream intentionally stays decoupled from app-chrome tokens), `fullHeight?` (backwards-compatible alias mapping to `height="100%"` — `height` wins if both are passed), `leftPanelWidth?` (default `"220px"`), `rightPanelWidth?` (default `"240px"`), `class?`. Omitted side-panel slots collapse their grid column to `0` so the center expands fully. Mobile collapse: the content grid switches to a single column at `max-width: 900px`, side panels drop their border and cap at `200px` max-height (matches the downstream `$mobile-width`). Uses `--sui-bg-primary`, `--sui-text-primary`, `--sui-border` theme tokens; spacing is hardcoded (8 / 12 / 16 px) because the library does not yet define `--sui-space-*` tokens. Use for: multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.

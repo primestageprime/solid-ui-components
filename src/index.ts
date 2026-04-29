@@ -52,6 +52,7 @@ export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
 export * from "./components/ThreePanelLayout";
+export * from "./components/RelativeTime";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
