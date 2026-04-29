@@ -1,0 +1,124 @@
+.sui-linechart {
+  display: block;
+  overflow: visible;
+}
+
+.sui-linechart__axis {
+  stroke: var(--sui-border-primary, rgba(0, 168, 204, 0.3));
+  stroke-width: 1;
+}
+
+.sui-linechart__grid {
+  stroke: var(--sui-border-primary, rgba(0, 168, 204, 0.15));
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.sui-linechart__tick {
+  stroke: var(--sui-border-primary, rgba(0, 168, 204, 0.3));
+  stroke-width: 1;
+}
+
+/* ── Series strokes/fills — themed by ColorVariant ── */
+
+.sui-linechart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sui-linechart__dot {
+  stroke: none;
+}
+
+.sui-linechart__series--default .sui-linechart__line,
+.sui-linechart__series--default .sui-linechart__dot {
+  stroke: var(--sui-text-muted, rgba(128, 128, 128, 0.8));
+  fill: var(--sui-text-muted, rgba(128, 128, 128, 0.8));
+}
+
+.sui-linechart__series--primary .sui-linechart__line,
+.sui-linechart__series--primary .sui-linechart__dot {
+  stroke: var(--sui-color-primary, #00a8cc);
+  fill: var(--sui-color-primary, #00a8cc);
+}
+
+.sui-linechart__series--success .sui-linechart__line,
+.sui-linechart__series--success .sui-linechart__dot {
+  stroke: var(--sui-color-success, #22c55e);
+  fill: var(--sui-color-success, #22c55e);
+}
+
+.sui-linechart__series--warning .sui-linechart__line,
+.sui-linechart__series--warning .sui-linechart__dot {
+  stroke: var(--sui-color-warning, #f59e0b);
+  fill: var(--sui-color-warning, #f59e0b);
+}
+
+.sui-linechart__series--danger .sui-linechart__line,
+.sui-linechart__series--danger .sui-linechart__dot {
+  stroke: var(--sui-color-danger, #ef4444);
+  fill: var(--sui-color-danger, #ef4444);
+}
+
+/* ── Labels ── */
+
+.sui-linechart__label-x,
+.sui-linechart__label-y,
+.sui-linechart__axis-label {
+  font-size: 11px;
+  fill: var(--sui-text-muted, rgba(128, 128, 128, 0.8));
+  font-family: inherit;
+}
+
+.sui-linechart__axis-label {
+  font-weight: 600;
+}
+
+.sui-linechart__empty {
+  font-size: 12px;
+  fill: var(--sui-text-muted, rgba(128, 128, 128, 0.7));
+  font-family: inherit;
+}
+
+/* ── Legend ── */
+
+.sui-linechart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--sui-text-muted, rgba(128, 128, 128, 0.9));
+}
+
+.sui-linechart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sui-linechart-legend__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.sui-linechart-legend__swatch--default {
+  background: var(--sui-text-muted, rgba(128, 128, 128, 0.8));
+}
+.sui-linechart-legend__swatch--primary {
+  background: var(--sui-color-primary, #00a8cc);
+}
+.sui-linechart-legend__swatch--success {
+  background: var(--sui-color-success, #22c55e);
+}
+.sui-linechart-legend__swatch--warning {
+  background: var(--sui-color-warning, #f59e0b);
+}
+.sui-linechart-legend__swatch--danger {
+  background: var(--sui-color-danger, #ef4444);
+}

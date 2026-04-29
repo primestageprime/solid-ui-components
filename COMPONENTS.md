@@ -400,6 +400,21 @@ State derivation:
 ## BurndownChart
 - **BurndownChart** — SVG burndown bar chart with dual-axis stacked bars and trendline. Key props: `bars` (array of `BurndownBar` with `planned_complete`, `planned_incomplete`, `unplanned_complete`, `unplanned_incomplete`), `onSegmentClick` (callback with `barIndex` and `BurndownSegmentKind`), `height`. Above zero: green (planned complete) on grey (planned incomplete). Below zero: orange (unplanned complete) on red (unplanned incomplete). Trendline projects remaining planned work to zero with "+Nd" annotation. Uses `--sui-*` CSS variables. Use for: sprint burndown tracking, planned vs actual visualization.
 
+## LineChart
+- **LineChart** — SVG multi-series line chart for time-series visualization. Key props: `series` (array of `LineChartSeries` with `label`, `points: {x, y}[]`, optional `color: ColorVariant`), `height` (default `120`), `yLabel`, `xLabel`, `showGrid` (default `true`), `showLegend` (default `true` when multiple series). Auto-scales X and Y to combined data extents; renders each series as a polyline with dots at every point; per-series stroke uses themed `--sui-color-*` tokens (`primary`/`success`/`warning`/`danger`/`default`). Renders a centered muted "No data" placeholder when `series` is empty or all series have zero points. Intentionally interaction-free — no hover tooltips, no click handlers. Use for: stub-grade dashboard sparklines, throughput/velocity over time, simple metric trends.
+
+```tsx
+<LineChart
+  height={140}
+  yLabel="Throughput"
+  xLabel="Day"
+  series={[
+    { label: "Planned",  color: "primary", points: [{x:1,y:8},{x:2,y:6},{x:3,y:5},{x:4,y:3}] },
+    { label: "Actual",   color: "success", points: [{x:1,y:8},{x:2,y:7},{x:3,y:5},{x:4,y:4}] },
+  ]}
+/>
+```
+
 ## Progress
 - **StackedProgressBar** — Multi-segment progress bar. Key props: `segments` (array of `{percentage, color}`), `direction` (`horizontal`|`vertical`), `label`, `background`. Use for: multi-category progress visualization, stacked bar charts.
 
