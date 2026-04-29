@@ -36,6 +36,7 @@ export * from "./components/DataList";
 export * from "./components/MathFormula";
 export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
+export * from "./components/LineChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
 export * from "./components/DragDrop";
