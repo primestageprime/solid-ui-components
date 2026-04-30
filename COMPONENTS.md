@@ -116,6 +116,30 @@ State derivation:
     </Row>
     ```
 
+## ConversationTree
+- **ConversationTree** — Depth 3. Multi-participant message thread, optionally tree-structured via `replyToId`. Composes `Stack` + `Row` + `TextLabel` + `TextSublabel` + `Duration`. Deterministic per-participant color (HSL hash from `id`, override with `Participant.color`); fallback initials avatar (override with `avatarUrl`); consecutive same-author messages within `groupWithinMs` (default 5min) fold into a single header+body block; day-change or gap > `absoluteAfterMs` (default 1h) inserts a labeled divider ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM"); per-bubble full timestamp on hover via native `title`. Threaded replies indent (`threaded`, default true) with a left rail colored by the replying author. Key props: `participants` (`Participant[]`), `messages` (`ConversationMessage[]` with `id`, `participantId`, `text`, `timestamp`, optional `replyToId`), `groupWithinMs`, `absoluteAfterMs`, `threaded`, `now` (reference for relative time, default `Date.now()`), `onMessageClick`. Use for: code review threads, ops incident timelines, multi-actor decision logs, team status posts.
+  - Example:
+    ```tsx
+    import { ConversationTree, Participant, ConversationMessage } from "solid-ui-components";
+
+    const participants: Participant[] = [
+      { id: "peter",  name: "Peter Stradinger" },
+      { id: "alex",   name: "Alex Chen" },
+      { id: "morgan", name: "Morgan Reyes", color: "#e0a14a" }, // explicit color
+    ];
+
+    const messages: ConversationMessage[] = [
+      { id: "1", participantId: "peter",  timestamp: Date.now() - 3 * 3600_000,
+        text: "Should we ship the new heatstream rollup before the demo?" },
+      { id: "2", participantId: "alex",   timestamp: Date.now() - 2.9 * 3600_000,
+        text: "I'd hold — the partial-status edge case isn't covered.", replyToId: "1" },
+      { id: "3", participantId: "morgan", timestamp: Date.now() - 2.8 * 3600_000,
+        text: "Agreed. Demo path doesn't hit it but support will.",     replyToId: "2" },
+    ];
+
+    <ConversationTree participants={participants} messages={messages} />
+    ```
+
 ## Button
 - **Button** — Multi-variant button with loading spinner. Key props: `variant` (9 values, see below), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
   - Variants:

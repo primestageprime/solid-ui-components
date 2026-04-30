@@ -29,22 +29,26 @@
 }
 
 /* Variants */
-.sui-heartbeat--connected .sui-heartbeat__line,
-.sui-heartbeat--connected .sui-heartbeat__head {
+.sui-heartbeat--connected .sui-heartbeat__line {
   stroke: var(--sui-success, #2a6);
+}
+.sui-heartbeat--connected .sui-heartbeat__head {
   fill: var(--sui-success, #2a6);
 }
 
-.sui-heartbeat--disconnected .sui-heartbeat__line,
-.sui-heartbeat--disconnected .sui-heartbeat__head {
+.sui-heartbeat--disconnected .sui-heartbeat__line {
   stroke: var(--sui-text-muted, #4a4a4a);
+  opacity: 0.7;
+}
+.sui-heartbeat--disconnected .sui-heartbeat__head {
   fill: var(--sui-text-muted, #4a4a4a);
   opacity: 0.7;
 }
 
-.sui-heartbeat--error .sui-heartbeat__line,
-.sui-heartbeat--error .sui-heartbeat__head {
+.sui-heartbeat--error .sui-heartbeat__line {
   stroke: var(--sui-danger, #ff0040);
+}
+.sui-heartbeat--error .sui-heartbeat__head {
   fill: var(--sui-danger, #ff0040);
 }
 

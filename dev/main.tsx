@@ -65,6 +65,7 @@ import { VesselCardShowcase } from "./showcases/vessel-card";
 
 // Depth 3
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
+import { ConversationTreeShowcase } from "./showcases/conversation-tree";
 import { DataListShowcase } from "./showcases/data-list";
 import { EngineDataSectionShowcase } from "./showcases/engine-data-section";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
@@ -155,6 +156,7 @@ const nav: TabGroup[] = [
     label: "Depth 3",
     children: [
       { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase },
+      { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase },
       { id: "data-list", label: "DataList", component: DataListShowcase },
       { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase },
       { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase },

@@ -10,6 +10,7 @@ export * from "./components/StatusLight";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
+export * from "./components/ConversationTree";
 export * from "./components/Cell";
 export * from "./components/Button";
 export * from "./components/Card";

@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.16.0 — ConversationTree; showcase polish
+
+### Added
+
+- **`ConversationTree`** (Depth 3) — Multi-participant message thread, optionally
+  tree-structured via `replyToId`. Composes `Stack` + `Row` + `TextLabel` +
+  `TextSublabel` + `Duration`. Features:
+  - Deterministic per-participant color from `id` (muted cool palette: HSL
+    185–260, S 32–45%, L 60–67%); override via `Participant.color`.
+  - Initials avatar fallback (override with `Participant.avatarUrl`).
+  - Consecutive same-author messages within `groupWithinMs` (default 5min)
+    fold into one header+body block.
+  - Day-change or gap > `absoluteAfterMs` (default 1h) inserts a labeled
+    divider ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM").
+  - Per-bubble full timestamp on hover.
+  - `currentUserId` flips alignment for the viewer's messages (avatar on the
+    right, bubbles right-aligned, stronger fill).
+  - Body width capped at 80% of the conversation container; bubbles size to
+    content within that cap.
+  - `clampLines` (default 5) collapses long messages behind a `(more…)`
+    toggle; `maxLines` (default 20) caps the expanded height with internal
+    scroll for very long messages.
+
+### Changed
+
+- `ConnectionStatus` and `ConversationTree` showcases adopt the existing
+  Depth 2/3 two-column layout convention: composed examples on the left,
+  "Composed from" panel listing source atoms grouped by family on the right.
+
 ## v0.15.0 — ConnectionStatus family
 
 New three-layer component family for service liveness indicators:
