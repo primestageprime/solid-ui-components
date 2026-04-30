@@ -6,6 +6,7 @@ export * from "./components/Layout";
 export * from "./components/Text";
 export * from "./components/Surface";
 export * from "./components/Badge";
+export * from "./components/StatusLight";
 export * from "./components/Cell";
 export * from "./components/Button";
 export * from "./components/Card";

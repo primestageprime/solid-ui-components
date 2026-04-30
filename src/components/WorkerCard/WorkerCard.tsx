@@ -46,6 +46,9 @@ export interface WorkerCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
 
   /** Column count of the table being extracted */
   columnCount?: number;
+  /** Optional label for the current in-flight job (e.g. "batch #34"). Rendered
+   *  next to the jobsCompleted summary in the history row. */
+  currentJob?: string;
 }
 
 function formatTime(s: number): string {
@@ -83,7 +86,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
     "slotId", "status", "now", "startedAt", "extractStartedAt",
     "jobsCompleted", "avgRatePerSec", "estimatedS", "elapsedS", "overdue",
     "rows", "pkStart", "pkEnd", "batchSize", "totalRecords", "columnCount",
-    "class", "children",
+    "currentJob", "class", "children",
   ]);
 
   const isActive = () => local.status === "extracting" || local.status === "writing";
@@ -145,6 +148,9 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
       {/* Row 2: History */}
       <div class="worker-card__history">
         <span>{local.jobsCompleted} jobs done</span>
+        <Show when={local.currentJob}>
+          <span style={{ color: CYAN }}>· {local.currentJob}</span>
+        </Show>
         <Show when={local.avgRatePerSec > 0}>
           <span style={{ color: DIM }}>{fmtNum(local.avgRatePerSec)} rec/s avg</span>
         </Show>
