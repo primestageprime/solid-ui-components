@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.15.0 — ConnectionStatus family
+
+New three-layer component family for service liveness indicators:
+
+### Added
+
+- **`HeartbeatSparkline`** (Atomic, Depth 1) — Pure SVG rectangular sparkline
+  for "% of timeout consumed" over time. No timers, no business logic. Variants:
+  `connected` (green), `disconnected` (grey), `error` (red, blinks). Caller-fed
+  `samples: number[]` of values 0..1.
+- **`LiveHeartbeatTrace`** (Composed, Depth 2) — Adds the tick timer + sample
+  buffer + state derivation on top of `HeartbeatSparkline`. Caller passes
+  `lastHeartbeatAt` + `timeoutMs` (+ optional `errorAt`); component derives
+  state and pushes samples each tick.
+- **`ConnectionStatus`** (Composed, Depth 3) — Stacked indicator: name label
+  on top, sparkline (or `StatusLight` dot) beneath. No time-since readout —
+  reassuring when healthy. Use for dispatcher / worker liveness rows.
+- Re-exported `Button`, `Stack`, `Row`, `Box`, `Text`, `Panel`, `Section`,
+  `Surface` base components from their respective `index.ts` files (previously
+  only the `createX` factories were exposed; consumer code referencing the
+  base components now type-checks).
+- `dev/` showcase: filter input above the sidebar nav for fast component
+  lookup; new `connection-status` showcase under Depth 3.
+
+### Fixed
+
+- Dev showcase entry imports for `Button`, `Stack`, `Text`, `Panel` no longer
+  fail to resolve at the package boundary.
+
 ## v0.14.0 — DateTimeCell: time-zone, zone-abbrev suffix, plain empty variant
 
 Three additive, opt-in capabilities on `DateTimeCell`. Zero breaking changes —

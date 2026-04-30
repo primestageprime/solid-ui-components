@@ -1,0 +1,13 @@
+.sui-connection-status {
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.sui-connection-status__name {
+  white-space: nowrap;
+}
+
+.sui-connection-status__age {
+  white-space: nowrap;
+  opacity: 0.75;
+}

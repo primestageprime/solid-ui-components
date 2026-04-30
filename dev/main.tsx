@@ -64,6 +64,7 @@ import { SelectableTableShowcase } from "./showcases/selectable-table";
 import { VesselCardShowcase } from "./showcases/vessel-card";
 
 // Depth 3
+import { ConnectionStatusShowcase } from "./showcases/connection-status";
 import { DataListShowcase } from "./showcases/data-list";
 import { EngineDataSectionShowcase } from "./showcases/engine-data-section";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
@@ -153,6 +154,7 @@ const nav: TabGroup[] = [
   {
     label: "Depth 3",
     children: [
+      { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase },
       { id: "data-list", label: "DataList", component: DataListShowcase },
       { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase },
       { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase },
@@ -204,6 +206,22 @@ const App: Component = () => {
   const [activeTab, setActiveTab] = createSignal(initialId);
   const openDefaults = Object.fromEntries(nav.map((g) => [g.label, true]));
   const [openGroups, setOpenGroups] = createSignal<Record<string, boolean>>(openDefaults);
+  const [filter, setFilter] = createSignal("");
+
+  const filteredNav = () => {
+    const q = filter().trim().toLowerCase();
+    if (!q) return nav;
+    return nav
+      .map((g) => ({
+        ...g,
+        children: g.children.filter(
+          (c) => c.label.toLowerCase().includes(q) || g.label.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((g) => g.children.length > 0);
+  };
+
+  const isGroupOpen = (label: string) => (filter().trim() ? true : openGroups()[label]);
 
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -242,14 +260,23 @@ const App: Component = () => {
           <p>SolidJS Component Library</p>
           <ThemeSwitcher />
         </div>
-        <For each={nav}>
+        <div class="showcase__filter">
+          <input
+            type="search"
+            class="showcase__filter-input"
+            placeholder="Filter components…"
+            value={filter()}
+            onInput={(e) => setFilter(e.currentTarget.value)}
+          />
+        </div>
+        <For each={filteredNav()}>
           {(group) => (
             <div class="nav-group">
               <button class="nav-group__toggle" onClick={() => toggleGroup(group.label)}>
-                <span class={`nav-group__chevron ${openGroups()[group.label] ? "nav-group__chevron--open" : ""}`}>&#9654;</span>
+                <span class={`nav-group__chevron ${isGroupOpen(group.label) ? "nav-group__chevron--open" : ""}`}>&#9654;</span>
                 {group.label}
               </button>
-              <Show when={openGroups()[group.label]}>
+              <Show when={isGroupOpen(group.label)}>
                 <div class="nav-group__items">
                   <For each={group.children}>
                     {(item) => (

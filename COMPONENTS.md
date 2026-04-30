@@ -50,6 +50,72 @@ Spacing does not vary by theme — only the typographic / decorative tokens do. 
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 - **StatusLight** — Atomic. Small colored indicator dot (LED-style) with optional keepalive pulse animation. Key props: `variant` (`success`|`warning`|`danger`|`info`|`idle`), `size` (`sm`|`md`|`lg`), `pulse` (animates a slow expanding halo — use when the source is actively reporting), `label` (optional inline text rendered to the right). Honors `prefers-reduced-motion`. Uses `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-info`, `--sui-text-muted`. Use for: dispatcher liveness, connection state, daemon keepalive, sensor health.
 
+## ConnectionStatus
+A three-layer family for showing service liveness as a sparkline that tracks how stale a heartbeat is. Designed to be reassuring, not distracting: a healthy service draws a flat low line; an idle service sawtooths to a peak then resets; an errored service blinks red; an off service flat-lines at the top. Caller passes `lastHeartbeatAt` (the most recent heartbeat) and `timeoutMs` (when stale → disconnected). Each tick, the sparkline plots `(now - lastHeartbeatAt) / timeoutMs` clamped 0..1.
+
+State derivation:
+- `errorAt >= lastHeartbeatAt` (or no heartbeat yet) → **error** (red, blinks)
+- `lastHeartbeatAt == null` → **disconnected/off** (grey, flat top)
+- `now - lastHeartbeatAt >= timeoutMs` → **disconnected** (grey, flat top)
+- otherwise → **connected** (green, line trending toward 0)
+
+- **HeartbeatSparkline** — Atomic (Depth 1). Pure SVG rectangular sparkline. No timers, no business logic — caller feeds samples. Owns CSS. Key props: `state` (`connected`|`disconnected`|`error`), `samples` (number[] of 0..1, oldest first), `width` (default 48), `height` (default 12), `capacity` (window size, default 60), `pulse` (glow trailing dot). Honors `prefers-reduced-motion`. Uses `--sui-success`, `--sui-danger`, `--sui-text-muted`, `--sui-surface-sunken`, `--sui-border`. Use for: any "% of budget over time" sparkline (rate-limit headroom, queue depth, heartbeat freshness).
+  - Example:
+    ```tsx
+    import { HeartbeatSparkline } from "solid-ui-components";
+    // Caller-managed samples — each value is fraction-of-timeout consumed.
+    <HeartbeatSparkline state="connected" samples={[0.05, 0.1, 0.05, 0.1]} width={120} height={16} />
+    ```
+
+- **LiveHeartbeatTrace** — Composed (Depth 2). Wraps `HeartbeatSparkline` with the timer + sample buffer + state derivation. Pushes a fresh sample on each tick, derives connection state from `lastHeartbeatAt` / `timeoutMs` / `errorAt`. Key props: `lastHeartbeatAt` (`number | Date | null`), `timeoutMs` (number), `errorAt` (optional), `tickMs` (default 1000), `capacity` (default 60), `width`, `height`, `pulseWhenConnected` (default true), `forceState` (escape hatch for fixtures/showcases). Use for: dropping a live heartbeat trace into a dense table cell or compact row without the surrounding label.
+  - Example:
+    ```tsx
+    import { LiveHeartbeatTrace } from "solid-ui-components";
+    import { createSignal, onMount, onCleanup } from "solid-js";
+
+    const [beat, setBeat] = createSignal(Date.now());
+    onMount(() => {
+      const id = setInterval(() => setBeat(Date.now()), 1000);
+      onCleanup(() => clearInterval(id));
+    });
+
+    <LiveHeartbeatTrace lastHeartbeatAt={beat()} timeoutMs={5000} width={120} height={16} />
+    ```
+
+- **ConnectionStatus** — Composed (Depth 3). Stacked indicator: name label on top, sparkline (or `StatusLight` dot in compact mode) beneath. No time-since text — just the trace, so a healthy service is reassuring rather than distracting. Composes `LiveHeartbeatTrace` + `StatusLight` + `TextLabel` + `Stack`. Key props: `name` (string), `lastHeartbeatAt`, `timeoutMs`, `errorAt`, `showSparkline` (default true; false → `StatusLight` dot), `sparklineWidth` (default 96), `sparklineHeight` (default 14), `tickMs` (default 1000). Use for: dispatcher / worker / service liveness rows in dashboards and HUDs.
+  - Example:
+    ```tsx
+    import { ConnectionStatus } from "solid-ui-components";
+    import { Row } from "solid-ui-components";
+    import { createSignal, onMount, onCleanup } from "solid-js";
+
+    const [healthy, setHealthy] = createSignal(Date.now());
+    const [idle, setIdle] = createSignal(Date.now());
+    const [problemBeat, setProblemBeat] = createSignal(Date.now());
+    const [problemErr, setProblemErr] = createSignal(Date.now());
+
+    onMount(() => {
+      // Healthy worker: heartbeat every 1s, timeout 5s → stays low.
+      const a = setInterval(() => setHealthy(Date.now()), 1000);
+      // Idle: heartbeat every 3s, timeout 4s → sawtooths up to ~75% then resets.
+      const b = setInterval(() => setIdle(Date.now()), 3000);
+      // Problem: still beating, but errorAt is fresher than lastHeartbeatAt → blinks red.
+      const c = setInterval(() => {
+        const t = Date.now();
+        setProblemBeat(t);
+        setProblemErr(t + 1);
+      }, 1000);
+      onCleanup(() => { clearInterval(a); clearInterval(b); clearInterval(c); });
+    });
+
+    <Row gap="xl" align="start" wrap>
+      <ConnectionStatus name="worker-bee" lastHeartbeatAt={healthy()} timeoutMs={5000} />
+      <ConnectionStatus name="idle"       lastHeartbeatAt={idle()}    timeoutMs={4000} />
+      <ConnectionStatus name="problem"    lastHeartbeatAt={problemBeat()} errorAt={problemErr()} timeoutMs={5000} />
+      <ConnectionStatus name="off"        lastHeartbeatAt={null}      timeoutMs={5000} />
+    </Row>
+    ```
+
 ## Button
 - **Button** — Multi-variant button with loading spinner. Key props: `variant` (9 values, see below), `size` (`sm`|`md`|`lg`), `loading`, `active`. Use for: all clickable actions. Disables automatically when loading. The `active` prop applies a selected/pressed visual state (useful in ButtonGroup toggle patterns).
   - Variants:

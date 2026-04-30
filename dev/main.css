@@ -34,6 +34,32 @@
   color: var(--jtf-text-muted);
 }
 
+.showcase__filter {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--jtf-border);
+}
+
+.showcase__filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--jtf-text);
+  background: var(--jtf-surface, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--jtf-border);
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.showcase__filter-input::placeholder {
+  color: var(--jtf-text-muted);
+}
+
+.showcase__filter-input:focus {
+  border-color: var(--jtf-accent, var(--jtf-text));
+}
+
 /* ── Nav Groups ────────────────────────────────────────── */
 
 .nav-group {

@@ -1,0 +1,81 @@
+.sui-heartbeat {
+  display: inline-block;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.sui-heartbeat__svg {
+  display: block;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sui-heartbeat__bg {
+  fill: var(--sui-surface-sunken, rgba(255, 255, 255, 0.04));
+  stroke: var(--sui-border, rgba(255, 255, 255, 0.1));
+  stroke-width: 1;
+}
+
+.sui-heartbeat__line {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sui-heartbeat__head {
+  r: 1.5;
+}
+
+/* Variants */
+.sui-heartbeat--connected .sui-heartbeat__line,
+.sui-heartbeat--connected .sui-heartbeat__head {
+  stroke: var(--sui-success, #2a6);
+  fill: var(--sui-success, #2a6);
+}
+
+.sui-heartbeat--disconnected .sui-heartbeat__line,
+.sui-heartbeat--disconnected .sui-heartbeat__head {
+  stroke: var(--sui-text-muted, #4a4a4a);
+  fill: var(--sui-text-muted, #4a4a4a);
+  opacity: 0.7;
+}
+
+.sui-heartbeat--error .sui-heartbeat__line,
+.sui-heartbeat--error .sui-heartbeat__head {
+  stroke: var(--sui-danger, #ff0040);
+  fill: var(--sui-danger, #ff0040);
+}
+
+.sui-heartbeat--error .sui-heartbeat__bg {
+  fill: var(--sui-danger, #ff0040);
+  animation: sui-heartbeat-error-blink 0.9s steps(2, jump-none) infinite;
+}
+
+@keyframes sui-heartbeat-error-blink {
+  0%, 100% { fill-opacity: 0.35; }
+  50%      { fill-opacity: 0.05; }
+}
+
+/* Pulse — subtle glow on the trailing dot */
+.sui-heartbeat--pulse .sui-heartbeat__head {
+  animation: sui-heartbeat-pulse 1.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes sui-heartbeat-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-heartbeat--pulse .sui-heartbeat__head,
+  .sui-heartbeat--error .sui-heartbeat__bg {
+    animation: none;
+  }
+}
