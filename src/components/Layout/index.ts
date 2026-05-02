@@ -8,6 +8,10 @@ export { ProportionalStack, ProportionalItem } from "./ProportionalStack";
 export type { ProportionalStackProps, ProportionalItemProps } from "./ProportionalStack";
 export { AppShell, AppHeader, AppMain } from "./AppShell";
 export type { AppShellProps, AppHeaderProps, AppMainProps } from "./AppShell";
+export { AppNavLink } from "./AppNavLink";
+export type { AppNavLinkProps } from "./AppNavLink";
+export { SidebarPanel } from "./SidebarPanel";
+export type { SidebarPanelProps } from "./SidebarPanel";
 // Re-export every curried variant so adding a new one in variants.ts is
 // automatically public — explicit lists drift and quietly hide additions.
 export * from "./variants";

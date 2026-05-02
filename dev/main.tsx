@@ -43,6 +43,17 @@ import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
 import { DurationShowcase } from "./showcases/duration";
 import { StatusLightShowcase } from "./showcases/status-light";
+import { DropdownShowcase } from "./showcases/dropdown";
+import { PopoverMenuShowcase } from "./showcases/popover-menu";
+import { ProgressCheckShowcase } from "./showcases/progress-check";
+import { SprintSelectorShowcase } from "./showcases/sprint-selector";
+import { TagInputShowcase } from "./showcases/tag-input";
+import { WorkerCardShowcase } from "./showcases/worker-card";
+import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
+import { RingChartShowcase } from "./showcases/ring-chart";
+import { ThroughputChartShowcase } from "./showcases/throughput-chart";
+import { BurndownChartShowcase } from "./showcases/burndown-chart";
+import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
@@ -126,10 +137,21 @@ const nav: TabGroup[] = [
       { id: "text", label: "Text", component: TextShowcase },
       { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
       { id: "app-shell", label: "AppShell", component: AppShellShowcase },
+      { id: "burndown-chart", label: "BurndownChart", component: BurndownChartShowcase },
+      { id: "completion-timeline", label: "CompletionTimeline", component: CompletionTimelineShowcase },
+      { id: "dropdown", label: "Dropdown", component: DropdownShowcase },
       { id: "duration", label: "Duration", component: DurationShowcase },
+      { id: "popover-menu", label: "PopoverMenu", component: PopoverMenuShowcase },
+      { id: "progress-check", label: "ProgressCheck", component: ProgressCheckShowcase },
+      { id: "quadrant-grid", label: "QuadrantGrid", component: QuadrantGridShowcase },
+      { id: "ring-chart", label: "RingChart", component: RingChartShowcase },
+      { id: "sprint-selector", label: "SprintSelector", component: SprintSelectorShowcase },
       { id: "status-light", label: "StatusLight", component: StatusLightShowcase },
+      { id: "tag-input", label: "TagInput", component: TagInputShowcase },
+      { id: "throughput-chart", label: "ThroughputChart", component: ThroughputChartShowcase },
       { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase },
       { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase },
+      { id: "worker-card", label: "WorkerCard", component: WorkerCardShowcase },
       { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase },
       { id: "toast", label: "Toast", component: ToastShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },

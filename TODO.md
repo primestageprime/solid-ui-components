@@ -7,20 +7,11 @@
 ### Showcases missing for these components
 
 Add a `dev/showcases/<name>.tsx` and register in `dev/main.tsx`:
-- `BurndownChart` (will be auto-covered once migrated to `Chart` family — see Chart-monolith migration)
-- `RingChart`
-- `ThroughputChart`
-- `CompletionTimeline`
-- `Cell` (currently only via `cell-renderers.tsx`)
-- `Dropdown`
-- `Duration`
-- `PopoverMenu`
-- `ProgressCheck`
-- `SprintSelector`
-- `StatusLight` (currently only inline in `connection-status.tsx`)
-- `TagInput`
-- `WorkerCard`
-- `DragDrop` / `QuadrantGrid`
+- `Cell` (currently only via `cell-renderers.tsx` — low priority since the showcase covers the public surface)
+
+Done in v0.18.0 / v0.19.0: BurndownChart, CompletionTimeline, Dropdown,
+Duration, PopoverMenu, ProgressCheck, QuadrantGrid, RingChart,
+SprintSelector, StatusLight, TagInput, ThroughputChart, WorkerCard.
 
 
 ### Type-annotate remaining curried variant exports (TS2742 portability)

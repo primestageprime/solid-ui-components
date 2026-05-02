@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.19.0 — More shell primitives + showcase coverage sweep
+
+### Added
+
+- **`AppNavLink`** (`Layout/AppNavLink.tsx`) — button-based top-bar nav link
+  with an active state. Pair with `AppHeader`. Use over the `<a>`-based
+  `NavLink` when the consumer dispatches navigation through a router
+  callback rather than `<a href>`.
+- **`SidebarPanel`** (`Layout/SidebarPanel.tsx`) — flexible-width sidebar
+  with edge delineation + internal scroll. The non-mock counterpart to
+  `DelineatedSidebar` (which is pinned at 400px for drafting). Takes
+  `width` (default 280) and `side` (`"left"` | `"right"`).
+- 11 new showcases that close the gap from `TODO.md`: `BurndownChart`,
+  `CompletionTimeline`, `Dropdown`, `PopoverMenu`, `ProgressCheck`,
+  `QuadrantGrid`, `RingChart`, `SprintSelector`, `TagInput`,
+  `ThroughputChart`, `WorkerCard`.
+- Tests for `AppNavLink` and `SidebarPanel`. 50 tests pass across 10 files.
+
 ## v0.18.0 — Shell primitives extracted from dside
 
 Pulled recurring layout/UI patterns from the `dside-ui` consumer into the
