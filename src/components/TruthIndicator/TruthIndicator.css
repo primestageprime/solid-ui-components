@@ -1,0 +1,40 @@
+.sui-truth {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.sui-truth__svg {
+  display: block;
+}
+
+.sui-truth--true {
+  color: var(--sui-success, #2a6);
+}
+
+.sui-truth--false {
+  color: var(--sui-danger, #ff0040);
+}
+
+.sui-truth--interactive {
+  cursor: pointer;
+  border-radius: 999px;
+  transition: background-color 0.12s ease;
+}
+
+.sui-truth--interactive:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sui-truth--interactive:focus-visible {
+  outline: 2px solid var(--sui-accent, #4ea1ff);
+  outline-offset: 2px;
+}
+
+/* Padding for interactive hit target — preserves visual size of the icon. */
+.sui-truth--interactive.sui-truth--sm { padding: 4px; }
+.sui-truth--interactive.sui-truth--md { padding: 5px; }
+.sui-truth--interactive.sui-truth--lg { padding: 6px; }

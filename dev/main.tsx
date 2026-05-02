@@ -4,6 +4,7 @@ import { createSignal, For, Show, Component, onMount, onCleanup } from "solid-js
 import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
+import { Sandbox } from "./sandbox";
 
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
@@ -37,6 +38,8 @@ import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
+import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
+import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
@@ -50,6 +53,7 @@ import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
+import { ChartShowcase } from "./showcases/chart";
 import { ChangeRendererShowcase } from "./showcases/change-renderer";
 import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
@@ -118,6 +122,8 @@ const nav: TabGroup[] = [
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
       { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
+      { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase },
+      { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase },
       { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase },
       { id: "toast", label: "Toast", component: ToastShowcase },
       { id: "toggle", label: "Toggle", component: ToggleShowcase },
@@ -138,6 +144,7 @@ const nav: TabGroup[] = [
     label: "Depth 2",
     children: [
       { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase },
+      { id: "chart", label: "Chart", component: ChartShowcase },
       { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase },
       { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase },
       { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase },
@@ -307,4 +314,14 @@ const App: Component = () => {
   );
 };
 
-render(() => <App />, document.getElementById("root")!);
+const Root: Component = () => {
+  const [route, setRoute] = createSignal(location.hash);
+  onMount(() => {
+    const onHash = () => setRoute(location.hash);
+    window.addEventListener("hashchange", onHash);
+    onCleanup(() => window.removeEventListener("hashchange", onHash));
+  });
+  return <Show when={route().startsWith("#/sandbox")} fallback={<App />}><Sandbox /></Show>;
+};
+
+render(() => <Root />, document.getElementById("root")!);

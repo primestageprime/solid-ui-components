@@ -1,7 +1,8 @@
 export * from "./types";
 export * from "./BaseTable";
 export * from "./GroupedTable";
-export * from "./QuickFilter";
+export { FilterableTable } from "./FilterableTable";
+export type { FilterableTableProps } from "./FilterableTable";
 export * from "./SelectableTable";
 export * from "./createSelectionStore";
 export * from "./CellRenderers";

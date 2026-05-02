@@ -2,6 +2,13 @@
   font-size: 0.85rem;
   line-height: 1.4;
   color: var(--sui-text-primary, inherit);
+  /* Fill available width up to a reasonable cap.
+     Math: bubble max = 80ch; body width = 80% of container; for self bubbles
+     to overlap other bubbles, container ≥ 80ch / 0.8 = 100ch. Cap at ~110ch
+     which keeps full-width bubbles + ~20% breathing room without sprawling
+     on wide displays. */
+  width: 100%;
+  max-width: 110ch;
 }
 
 .sui-conversation__divider {
@@ -97,7 +104,8 @@
   word-break: break-word;
   overflow-wrap: anywhere;
   width: fit-content;
-  max-width: 100%;
+  /* Bubbles wrap before exceeding 80 visible characters. */
+  max-width: min(80ch, 100%);
 }
 
 .sui-conversation__bubble + .sui-conversation__bubble {

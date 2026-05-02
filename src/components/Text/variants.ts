@@ -18,6 +18,19 @@ export const EndSublabel = createText({ variant: "sublabel", style: { "text-alig
 // Flex-filling label — title text that grows to fill available space
 export const FlexLabel = createText({ variant: "label", style: { flex: "1" } });
 
+// Single-line title that ellipsizes when it overflows. Use inside cards/rows
+// where the title can be longer than the slot. Requires a flex parent.
+export const EllipsizedTitle = createText({
+  variant: "label",
+  style: {
+    flex: "1",
+    "min-width": "0",
+    "white-space": "nowrap",
+    overflow: "hidden",
+    "text-overflow": "ellipsis",
+  },
+});
+
 // Nowrap text — inline formatted values that must not break
 export const NowrapBody = createText({ variant: "body", as: "span", style: { "white-space": "nowrap" } });
 

@@ -5,6 +5,8 @@
 // ============================================
 import { createContext, useContext, createSignal, createEffect, on, ParentComponent, Component, JSX, Accessor } from "solid-js";
 import katex from "katex";
+import "katex/dist/katex.min.css";
+import "./MathFormula.css";
 
 // ============================================
 // Formula Highlight Context

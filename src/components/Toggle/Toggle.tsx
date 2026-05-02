@@ -5,7 +5,7 @@
 // Updated: absorbs HUDToggle features (variant, color).
 // Dropped: power and circuit variants.
 // ============================================
-import { Component, JSX, splitProps, createUniqueId } from "solid-js";
+import { Component, JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Toggle.css";
 
@@ -69,3 +69,10 @@ export const Toggle: Component<ToggleProps> = (props) => {
     </div>
   );
 };
+
+export type ToggleOverrides = Pick<ToggleProps, "size" | "variant" | "color" | "labelPosition">;
+export type ToggleDataProps = Omit<ToggleProps, keyof ToggleOverrides>;
+
+export function createToggle(defaults: Partial<ToggleProps>): Component<ToggleDataProps> {
+  return (props) => <Toggle {...mergeProps(defaults, props)} />;
+}

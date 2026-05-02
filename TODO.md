@@ -4,6 +4,25 @@
 
 ## TODO
 
+### Showcases missing for these components
+
+Add a `dev/showcases/<name>.tsx` and register in `dev/main.tsx`:
+- `BurndownChart` (will be auto-covered once migrated to `Chart` family — see Chart-monolith migration)
+- `RingChart`
+- `ThroughputChart`
+- `CompletionTimeline`
+- `Cell` (currently only via `cell-renderers.tsx`)
+- `Dropdown`
+- `Duration`
+- `PopoverMenu`
+- `ProgressCheck`
+- `SprintSelector`
+- `StatusLight` (currently only inline in `connection-status.tsx`)
+- `TagInput`
+- `WorkerCard`
+- `DragDrop` / `QuadrantGrid`
+
+
 ### Type-annotate remaining curried variant exports (TS2742 portability)
 
 Button variants (`src/components/Button/variants.ts`) carry explicit `Component<ButtonDataProps>` annotations as of v0.3.1 — without them, `vite-plugin-dts` inlines solid-js type paths through pnpm's ephemeral github-dep build-store temp directory (TS2742 "inferred type cannot be named…"), which strips the declarations from the shipped `.d.ts` and surfaces as TS2305 downstream. Apply the same annotation pattern when a downstream first imports from:

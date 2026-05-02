@@ -1,33 +1,148 @@
 # Changelog
 
-## v0.16.0 — ConversationTree; showcase polish
+## v0.17.0 — Audit pass: tests, conventions, monolith → Chart-family
+
+Repo-wide cleanup pass driven by an analysis review. No public API changes
+beyond two compatible renames.
 
 ### Added
 
-- **`ConversationTree`** (Depth 3) — Multi-participant message thread, optionally
-  tree-structured via `replyToId`. Composes `Stack` + `Row` + `TextLabel` +
-  `TextSublabel` + `Duration`. Features:
-  - Deterministic per-participant color from `id` (muted cool palette: HSL
-    185–260, S 32–45%, L 60–67%); override via `Participant.color`.
-  - Initials avatar fallback (override with `Participant.avatarUrl`).
-  - Consecutive same-author messages within `groupWithinMs` (default 5min)
-    fold into one header+body block.
-  - Day-change or gap > `absoluteAfterMs` (default 1h) inserts a labeled
-    divider ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM").
-  - Per-bubble full timestamp on hover.
-  - `currentUserId` flips alignment for the viewer's messages (avatar on the
-    right, bubbles right-aligned, stronger fill).
-  - Body width capped at 80% of the conversation container; bubbles size to
-    content within that cap.
-  - `clampLines` (default 5) collapses long messages behind a `(more…)`
-    toggle; `maxLines` (default 20) caps the expanded height with internal
-    scroll for very long messages.
+- **Vitest baseline** — `vitest` + `jsdom` + `@solidjs/testing-library`
+  wired up. 34 smoke tests across Button, Text, Layout (incl.
+  ProportionalStack/Item), Surface, Toggle, TruthIndicator, QuickFilter.
+  Scripts: `npm test`, `npm run test:watch`.
+- `scripts/audit-inline-styles.mjs` + `npm run audit:styles` — surfaces
+  inline `style={…}` repeats; recurring fragments are candidates for new
+  curried variants.
+- `README.md` — index pointing at each existing doc (COMPONENTS,
+  STYLE_GUIDE, AGENT_GUIDE, DESIGN_LANGUAGE, CHANGELOG, TODO).
+- Showcases for `TruthIndicator` and the generic `QuickFilter` atom.
+- Showcase-coverage gap list captured in `TODO.md` (14 components).
+
+### Changed — internal-only refactors (public API preserved)
+
+- **`ThroughputChart`**, **`CompletionTimeline`**, **`BurndownChart`** now
+  internally compose the `Chart` family (`<Chart>` + `<Grid>` + axes +
+  `<LineSeries>` / `<AreaSeries>` / `<BarSeries>` / `<ReferenceLine>` +
+  `<Crosshair>` + `<ChartTooltip>`). All three keep their pre-v0.17 prop
+  surfaces — drop-in.
+- **Sticky header by default** for `BaseTable` (carried over from v0.16).
+- **Index re-exports normalized**: `Surface`, `Text`, and `Layout` now
+  use `export * from "./variants"` instead of manually-listed variant
+  names — adding a new variant in `variants.ts` is automatically public,
+  no drift.
+- **Duration**: switched to a named export (default re-export retained
+  for back-compat; remove in next major).
+- **MathFormula**: katex stylesheet side-effect import moved out of
+  `MathFormula/index.ts` and into `MathFormula.tsx` so consumers that
+  only touch the library root no longer ship KaTeX's CSS.
+- Dev theme injection consolidated into a shared `dev/load-theme.ts`
+  helper; `ThemeSwitcher` and `Sandbox` both call it.
+- `Table/QuickFilter.tsx` file renamed to `Table/FilterableTable.tsx`
+  to match the v0.16 export rename.
+
+### Repo / build
+
+- Settled on **npm**; removed `pnpm-lock.yaml`; added `packageManager`
+  and `engines` fields to `package.json`.
+- Documented the folder-naming convention in `STYLE_GUIDE.md` (singleton
+  vs category folders) and flagged the four legacy mismatches
+  (`Badge`/`Card`/`DragDrop`/`Selector`) for next-major rename.
+
+## v0.16.0 — Sandbox harness; new atoms; chart family; vocabulary
+
+A larger release than usual — the project picked up a mock-drafting harness
+and a small vocabulary doc, plus several new components and a generic chart
+family. The high-level theme: composability over monoliths.
+
+### Added — components
+
+- **`ConversationTree`** (Depth 3) — Multi-participant message thread,
+  optionally threaded via `replyToId`. Deterministic muted cool-palette
+  per-author color (HSL 185–260, S 32–45%, L 60–67%); initials avatar
+  fallback. Consecutive same-author messages within `groupWithinMs` (default
+  5min) fold into one block; day change or gap > `absoluteAfterMs` (default
+  1h) inserts a labeled divider. Per-bubble full timestamp on hover.
+  `currentUserId` flips alignment for the viewer's messages with stronger
+  fill. Bubble cap 80ch; body 80% width with right-side bubbles overlapping
+  the left. `clampLines` (default 5) collapses long messages behind
+  `(more…)`; `maxLines` (default 20) caps the expanded height with internal
+  scroll.
+- **`HeartbeatSparkline`** (Depth 1) — Pure-SVG rectangular sparkline of
+  `% of timeout consumed`. Variants `connected` (green), `disconnected`
+  (grey), `error` (red, blinks). Caller-fed samples (0..1).
+- **`LiveHeartbeatTrace`** (Depth 2) — Adds the tick timer + sample buffer
+  + state derivation on top of `HeartbeatSparkline`.
+- **`ConnectionStatus`** (Depth 3) — Stacked indicator: name on top,
+  sparkline (or `StatusLight` dot) beneath. Reassuring when healthy — no
+  time-since text.
+- **`TruthIndicator`** (Depth 1) — Boolean indicator: green check for true,
+  red prohibition (circle + slash) for false. `value`, `size` (sm/md/lg),
+  optional `onClick` makes it a button.
+- **`QuickFilter`** (Atomic, Depth 1, top-level) — Generic filter input
+  over a list with a render-prop child. Tokenized AND-matching across
+  whitespace-split tokens. Composes with list/table/tree.
+- **`Chart` family** (Depth 2) — Slot-style composable chart:
+  `<Chart>` + `<Grid>` + `<XAxis>` + `<YAxis>` + `<LineSeries>` +
+  `<AreaSeries>` + `<PointSeries>` + `<BarSeries>` (stacked +/-) +
+  `<ReferenceLine>` + `<Crosshair>` + `<ChartTooltip>` + `useChart()` +
+  `linearScale` + `domainOf`. Reactive against any signals (`xDomain`,
+  `yDomain`, `data`).
+- **`ProportionalStack`** + **`ProportionalItem`** (primitives) — Flex
+  container that always uses available space and splits among children by
+  `weight`; oversized children scroll inside their slot.
+
+### Added — curried variants
+
+- Layout: `DelineatedSidebar`, `PageCanvas`, `ScrollPanel`.
+- Text: `EllipsizedTitle`, `HintText`, `ScoreValue`, `MultiplierLabel`,
+  `FormulaVar`.
+- Toggle: `TruthToggle` and a new `createToggle()` factory.
+
+### Added — dev / docs
+
+- `dev/sandbox.tsx` — ephemeral page-mockup harness routed at
+  `#/sandbox/<step-id>`. Steps live in source for HMR; an "+ add scratch
+  step" button appends in-memory scratch steps. Default content is a
+  `MockBaseline` (PageCanvas → DelineatedSidebar + ContentStack/SimplePanel)
+  with parameterized empty-state hints. Five seed steps demonstrate the
+  drafting vocabulary.
+- `DESIGN_LANGUAGE.md` — vocabulary glossary mapping shorthand phrases
+  ("the baseline", "shrink-wrapped delineated sidebar", "quickfilter",
+  "detail area", "proportional stack") to their structural definitions and
+  the curried variants that implement them.
+- `dev/main.css` Sandbox harness styling (black chrome, `#333` mock frame,
+  grid + step list + scratch-step add button).
+- Sidebar filter input on the showcase nav.
 
 ### Changed
 
-- `ConnectionStatus` and `ConversationTree` showcases adopt the existing
-  Depth 2/3 two-column layout convention: composed examples on the left,
-  "Composed from" panel listing source atoms grouped by family on the right.
+- `BaseTable` ships with **sticky header on by default** — table headers
+  must never scroll off-screen. Opt out via `stickyHeader={false}`. The
+  table wrapper's `overflow: hidden` is reset to `visible` when sticky is
+  on so an outer scroll container (e.g. `ScrollPanel`) becomes the sticky
+  reference.
+- `Table/QuickFilter` (the table-bound Depth-2 wrapper) renamed to
+  `FilterableTable` — frees the `QuickFilter` name for the new generic
+  atom. File path also renamed: `Table/QuickFilter.tsx` →
+  `Table/FilterableTable.tsx`.
+- `HeartbeatSparkline` polyline no longer fills (variant fill was
+  accidentally inheriting onto the line; now applies only to the trailing
+  head dot).
+- `Button`, `Stack`, `Row`, `Box`, `Text`, `Panel`, `Section`, `Surface`
+  base components now re-exported from their respective `index.ts` files
+  alongside the `createX` factories.
+- `ConnectionStatus` and `ConversationTree` showcases use the standard
+  Depth 2/3 two-column "composed from" layout.
+- `Duration` switched from default export to named export (default still
+  re-exported for back-compat; drop in next major).
+- `MathFormula` no longer ships KaTeX's stylesheet to consumers that don't
+  import it (side-effect imports moved into the component file).
+
+### Repo / build
+
+- Settled on npm; removed `pnpm-lock.yaml`; added `packageManager` and
+  `engines` fields.
 
 ## v0.15.0 — ConnectionStatus family
 

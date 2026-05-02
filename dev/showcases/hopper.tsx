@@ -15,7 +15,7 @@ import { HeatmapMulti, HeatmapMultiRow } from "../../src/components/Heatmap";
 import {
   BaseTable,
   TableColumn,
-  QuickFilter,
+  FilterableTable as QuickFilter,
   SelectableTable,
   createSelectionStore,
   IdCell,

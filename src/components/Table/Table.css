@@ -36,10 +36,23 @@
   background: linear-gradient(180deg, var(--hud-bg-elevated, #142535), var(--hud-bg-panel, #0d1a2a));
 }
 
+/* Sticky header requires the wrapper not to clip — `overflow: hidden` on an
+   ancestor traps sticky positioning. When sticky-header is on, the sticky
+   <thead> should follow the *outer* scroll container (e.g. ScrollPanel). */
+.hud-table--sticky-header {
+  overflow: visible;
+}
+
 .hud-table--sticky-header .hud-table__head {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/* Ensure the head paints opaquely so rows don't bleed through underneath. */
+.hud-table--sticky-header .hud-table__head,
+.hud-table--sticky-header .hud-table__header-cell {
+  background: var(--hud-bg-elevated, #142535);
 }
 
 .hud-table__header-cell {

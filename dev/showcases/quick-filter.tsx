@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { QuickFilter } from "../../src/components/Table";
+import { FilterableTable as QuickFilter } from "../../src/components/Table";
 
 const sampleData = [
   { id: 1, name: "Fuel Oil", category: "Fuel", volume: 1250.5, unit: "L" },

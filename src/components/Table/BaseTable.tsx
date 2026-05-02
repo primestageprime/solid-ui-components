@@ -129,7 +129,10 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
   const classes = () => {
     const classList = ["hud-table"];
     if (local.fill) classList.push("hud-table--fill");
-    if (local.stickyHeader) classList.push("hud-table--sticky-header");
+    // Sticky header is the default — table headers must never scroll off-screen.
+    // Pass `stickyHeader={false}` explicitly to opt out (e.g., when the table
+    // is short and the header doubles as a section title).
+    if (local.stickyHeader !== false) classList.push("hud-table--sticky-header");
     if (local.striped) classList.push("hud-table--striped");
     if (local.hoverable) classList.push("hud-table--hoverable");
     if (local.compact) classList.push("hud-table--compact");

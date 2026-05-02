@@ -14,7 +14,7 @@ export interface DurationProps {
  * - 1m-60m: "4m 8s"
  * - > 60m: "2h 13m"
  */
-export default function Duration(props: DurationProps) {
+export function Duration(props: DurationProps) {
   const formatted = () => {
     const ms = props.ms;
     if (ms == null) return "--";
@@ -31,3 +31,6 @@ export default function Duration(props: DurationProps) {
 
   return <span>{formatted()}</span>;
 }
+
+// Back-compat default export — drop in next major.
+export default Duration;

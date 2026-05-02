@@ -1,5 +1,5 @@
 // ============================================
-// QuickFilter — Depth 2 (zero CSS)
+// FilterableTable — Depth 2 (zero CSS)
 // Composes BaseTable (Atomic/Depth 1).
 // Filter input + table passthrough.
 // ============================================
@@ -7,7 +7,7 @@ import { JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { BaseTable } from "./BaseTable";
 import { BaseTableProps } from "./types";
 
-export interface QuickFilterProps<T> extends BaseTableProps<T> {
+export interface FilterableTableProps<T> extends BaseTableProps<T> {
   /** Placeholder text for the filter input */
   filterPlaceholder?: string;
 }
@@ -53,7 +53,7 @@ function getRowSearchText<T extends Record<string, any>>(row: T): string {
     .join(" ");
 }
 
-export function QuickFilter<T extends Record<string, any>>(props: QuickFilterProps<T>) {
+export function FilterableTable<T extends Record<string, any>>(props: FilterableTableProps<T>) {
   const [local, tableProps] = splitProps(props, ["filterPlaceholder"]);
   const [filter, setFilter] = createSignal("");
 

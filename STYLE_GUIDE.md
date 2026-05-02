@@ -1,5 +1,16 @@
 # Component Architecture Style Guide
 
+## Folder naming
+
+A component folder name should match either:
+
+1. The single component it exports (`Button/Button.tsx`, `ConversationTree/ConversationTree.tsx`), or
+2. A category that holds 2+ related components (`Layout/Stack.tsx,Row.tsx,Box.tsx`, `Table/BaseTable.tsx,GroupedTable.tsx,FilterableTable.tsx`).
+
+**Anti-pattern:** a category folder with one component (e.g. `Badge/StatusBadge.tsx`, `Card/VesselCard.tsx`, `DragDrop/QuadrantGrid.tsx`, `Selector/SidebarSelector.tsx`). These predate the convention and will be renamed in the next major. Don't introduce new ones — either use the singleton convention (folder = component name) or move siblings into the category.
+
+The folder name doesn't show up in consumer imports (everything routes through the package root), so the cleanup is internal cosmetics.
+
 ## Layer Definitions
 
 ### Atomic Components
