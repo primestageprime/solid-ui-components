@@ -1,0 +1,19 @@
+.sui-sticky-group-header {
+  position: sticky;
+  z-index: 1;
+  background: var(--sui-bg-deep, var(--jtf-bg-primary, #1a1a2e));
+  border-bottom: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sui-section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sui-text-muted, #888);
+  opacity: 0.85;
+}

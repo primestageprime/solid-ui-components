@@ -26,6 +26,7 @@ export * from "./components/Toggle";
 export * from "./components/Progress";
 export * from "./components/ProgressCard";
 export * from "./components/Heatmap";
+export * from "./components/HeatStack";
 export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";

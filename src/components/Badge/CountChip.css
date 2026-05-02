@@ -1,0 +1,28 @@
+.sui-count-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sui-count-chip__count {
+  font-weight: 500;
+}
+
+.sui-count-chip__label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sui-count-chip--active {
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.05));
+  color: var(--sui-text-primary, inherit);
+}

@@ -77,3 +77,39 @@
 .proportional-item--scroll {
   overflow: auto;
 }
+
+/* AppShell — full-viewport vertical column. Header doesn't shrink; main fills. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  background: var(--sui-bg-deep, var(--jtf-bg-primary, transparent));
+  color: var(--sui-text-primary, inherit);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+}
+.app-header--sm { padding: 8px 12px; }
+.app-header--md { padding: 12px 20px; }
+.app-header--lg { padding: 16px 24px; }
+.app-header--inline {
+  border-top: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-main--padded {
+  padding: 16px 20px;
+}

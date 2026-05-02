@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.18.0 — Shell primitives extracted from dside
+
+Pulled recurring layout/UI patterns from the `dside-ui` consumer into the
+library so the consumer can drop ~80 inline-style fragments and several
+hand-rolled mini-components.
+
+### Added
+
+- **`AppShell`** + **`AppHeader`** + **`AppMain`** (`Layout/AppShell.tsx`) —
+  full-viewport vertical column with non-shrinking header and flexing main.
+  `AppHeader` has `size` (sm/md/lg padding) + `inline` mode for sub-bars
+  inside the main area. Replaces hand-written `display: flex; flex-direction:
+  column; height: 100vh` shells.
+- **`CountChip`** (`Badge/CountChip.tsx`) — `<count> <LABEL>` pill that
+  emphasizes itself when count > 0 and dims when zero. Replaces inline
+  `inline-flex; padding 2px 8px; border 1px solid …` chips.
+- **`StickyGroupHeader`** + **`SectionLabel`** (`Section/`) — sticky-positioned
+  group divider for scrolling lists, plus the uppercased dimmed label
+  typography that goes inside it. Replaces inline sticky styling for
+  status-grouped sidebars.
+- Showcases for `AppShell`/`AppHeader`/`CountChip`/`StickyGroupHeader`/
+  `SectionLabel`, plus quick-win showcases for `Duration` and `StatusLight`
+  (previously only mentioned inline elsewhere).
+- Smoke tests for all new components — 45 tests across 10 files.
+
+### Fixed
+
+- `HeatStack` was missing from `src/index.ts` even though every other
+  Heat\* component was exported. Now wired up.
+
 ## v0.17.0 — Audit pass: tests, conventions, monolith → Chart-family
 
 Repo-wide cleanup pass driven by an analysis review. No public API changes

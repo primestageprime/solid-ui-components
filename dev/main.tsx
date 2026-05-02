@@ -40,6 +40,9 @@ import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
+import { AppShellShowcase } from "./showcases/app-shell";
+import { DurationShowcase } from "./showcases/duration";
+import { StatusLightShowcase } from "./showcases/status-light";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
@@ -122,6 +125,9 @@ const nav: TabGroup[] = [
       { id: "hud-tabs", label: "Tabs", component: TabsShowcase },
       { id: "text", label: "Text", component: TextShowcase },
       { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase },
+      { id: "app-shell", label: "AppShell", component: AppShellShowcase },
+      { id: "duration", label: "Duration", component: DurationShowcase },
+      { id: "status-light", label: "StatusLight", component: StatusLightShowcase },
       { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase },
       { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase },
       { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase },
