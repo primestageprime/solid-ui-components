@@ -101,6 +101,7 @@ import { HopperShowcase } from "./showcases/hopper";
 
 // Sandbox / design exploration
 import { PillVariantsShowcase } from "./showcases/pill-variants";
+import { DagTraversalSandboxShowcase } from "./showcases/dag-traversal-sandbox";
 
 type Item = { id: string; label: string; component: Component; tags: string[] };
 
@@ -192,6 +193,7 @@ const items: Item[] = [
   { id: "hopper", label: "All Components", component: HopperShowcase, tags: [] },
 
   { id: "pill-variants", label: "Pill Variants (sandbox)", component: PillVariantsShowcase, tags: [] },
+  { id: "dag-traversal-detail", label: "DAG Traversal · Detail (sandbox)", component: DagTraversalSandboxShowcase, tags: [] },
 ];
 
 const TAG_CATEGORIES: { label: string; tags: string[] }[] = [
