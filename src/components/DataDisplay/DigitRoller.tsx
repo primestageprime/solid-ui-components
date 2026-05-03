@@ -29,16 +29,27 @@ interface ColumnDef {
   char: string; // for static chars like "."
 }
 
-function buildDigitSequence(from: number, to: number): number[] {
+type Direction = "up" | "down";
+
+/**
+ * Build an odometer-style mod-10 path from `from` to `to` in the given direction.
+ *  - direction "up": from, (from+1)%10, …, to. Always rolls forward through 0→9→0.
+ *  - direction "down": from, (from-1+10)%10, …, to. Always rolls backward.
+ *
+ * The overall number's direction (computed from the parsed value) is passed to
+ * every column so cross-decade columns (e.g. units 9→0 when the whole number
+ * goes 19→20) roll in the same direction as the rest.
+ */
+function buildOdometerPath(from: number, to: number, direction: Direction): number[] {
   if (from === to) return [from];
-  const digits: number[] = [];
-  if (from < to) {
-    for (let i = from; i <= to; i++) digits.push(i);
-  } else {
-    // Roll down: e.g. 7→2 goes 7,6,5,4,3,2
-    for (let i = from; i >= to; i--) digits.push(i);
+  const path: number[] = [from];
+  let cur = from;
+  // Safety cap at 10 steps — a single column can't take more than that.
+  for (let i = 0; i < 10 && cur !== to; i++) {
+    cur = direction === "up" ? (cur + 1) % 10 : (cur - 1 + 10) % 10;
+    path.push(cur);
   }
-  return digits;
+  return path;
 }
 
 function alignOnDecimal(a: string, b: string): [string, string] {
@@ -101,6 +112,18 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
     local.animate === true &&
     local.previousValue != null &&
     local.previousValue !== local.value;
+
+  /**
+   * Overall direction is derived from the whole-number comparison so every
+   * column rolls the same way. Without this, units 9→0 (when the number
+   * goes 19→20) would be treated as a decrease and roll the wrong direction.
+   */
+  const overallDirection = (): Direction => {
+    const prev = parseFloat(local.previousValue ?? local.value);
+    const curr = parseFloat(local.value);
+    if (Number.isNaN(prev) || Number.isNaN(curr)) return "up";
+    return curr >= prev ? "up" : "down";
+  };
 
   const columns = () => {
     if (shouldAnimate()) {
@@ -168,9 +191,18 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
             fallback={<span class="digit-roller__static">{col.char}</span>}
           >
             {(() => {
-              const seq = buildDigitSequence(col.from, col.to);
+              // For overall-up direction: strip is the odometer path top-to-bottom,
+              //   strip translates UP (0 → -end em) — new digit enters from below.
+              // For overall-down direction: strip is the REVERSED path so "from" sits
+              //   at the bottom, strip translates DOWN (-end → 0 em) — new digit
+              //   enters from above. This gives the natural odometer feel.
+              const dir = overallDirection();
+              const path = buildOdometerPath(col.from, col.to, dir);
+              const seq = dir === "up" ? path : [...path].reverse();
               const isAnimating = () => shouldAnimate() && col.from !== col.to;
-              const targetOffset = seq.length - 1;
+              const endOffset = seq.length - 1;
+              const initialOffset = dir === "up" ? 0 : endOffset;
+              const targetOffset = dir === "up" ? endOffset : 0;
 
               const digitIndex = () => {
                 let count = 0;
@@ -182,8 +214,8 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
               };
 
               const translateY = () => {
-                if (!isAnimating()) return "0em";
-                if (!started()) return "0em";
+                if (!isAnimating()) return `-${initialOffset}em`;
+                if (!started()) return `-${initialOffset}em`;
                 return `-${targetOffset}em`;
               };
 
