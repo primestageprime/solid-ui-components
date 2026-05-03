@@ -8,7 +8,7 @@
 /* ── Sidebar ───────────────────────────────────────────── */
 
 .showcase__sidebar {
-  width: 200px;
+  width: 260px;
   flex-shrink: 0;
   border-right: 1px solid var(--jtf-border);
   background: var(--jtf-bg-secondary);
@@ -58,6 +58,92 @@
 
 .showcase__filter-input:focus {
   border-color: var(--jtf-accent, var(--jtf-text));
+}
+
+/* ── Tag pills ─────────────────────────────────────────── */
+
+.showcase__tags {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--jtf-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tag-category__label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--jtf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.tag-category__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag-pill {
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--jtf-border);
+  border-radius: 999px;
+  color: var(--jtf-text-secondary);
+  font-family: var(--jtf-font-family);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1.4;
+}
+
+.tag-pill:hover {
+  color: var(--jtf-text);
+  border-color: var(--jtf-text-secondary);
+}
+
+.tag-pill--active {
+  background: var(--jtf-primary, #00a8cc);
+  border-color: var(--jtf-primary, #00a8cc);
+  color: #fff;
+}
+
+.tag-pill--active:hover {
+  color: #fff;
+  border-color: var(--jtf-primary, #00a8cc);
+}
+
+.tag-clear {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--jtf-text-muted);
+  font-family: var(--jtf-font-family);
+  font-size: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.tag-clear:hover {
+  color: var(--jtf-text);
+}
+
+.nav-group__toggle--static {
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 16px;
+}
+
+.nav-group__count {
+  font-size: 9px;
+  color: var(--jtf-text-muted);
+  font-weight: 600;
 }
 
 /* ── Sandbox ───────────────────────────────────────────── */

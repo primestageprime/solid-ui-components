@@ -1,63 +1,69 @@
-import { Component } from "solid-js";
+import { Component, Show } from "solid-js";
 import { DagChart } from "../../src/components/DagChart";
-import type { DagNode, DagEdge } from "../../src/components/DagChart";
+import type { DAGNode, DAGEdge, NodeRenderState } from "../../src/components/DagChart";
 
-const nodes: DagNode[] = [
+type TaskNode = {
+  label: string;
+  status: "success" | "warning" | "default";
+  sublabel?: string;
+  estimate?: string;
+  description?: string;
+};
+
+const nodes: DAGNode<TaskNode>[] = [
   {
     id: "design",
-    label: "Design API schema",
-    status: "success",
-    sublabel: "leslie",
-    estimate: "1h",
-    description: "Define REST endpoints and request/response types for the task management API. Includes pagination, filtering, and error response schemas.",
-    tags: ["api", "design"],
-    files: ["src/api/schema.ts", "src/types.ts"],
+    data: {
+      label: "Design API schema",
+      status: "success",
+      sublabel: "leslie",
+      estimate: "1h",
+      description: "Define REST endpoints and request/response types.",
+    },
   },
   {
     id: "ui",
-    label: "Build form UI",
-    status: "warning",
-    sublabel: "athena",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=athena",
-    estimate: "2h",
-    description: "Create the task input form with client-side validation, error states, and loading indicators. Wire up submit handler to call the API client. Includes accessible labels, ARIA attributes, and keyboard navigation support for all form fields.",
-    tags: ["ui"],
-    files: ["src/components/TaskForm.tsx", "src/components/TaskForm.css"],
+    data: {
+      label: "Build form UI",
+      status: "warning",
+      sublabel: "athena",
+      estimate: "2h",
+      description: "Create the task input form with validation and loading states.",
+    },
   },
   {
     id: "backend",
-    label: "Implement reducers",
-    status: "warning",
-    sublabel: "jenn",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=jenn",
-    estimate: "3h",
-    description: "CRUD reducers for the tasks table including create, update status, assign worker, and soft-delete. Add input validation and proper error codes for each reducer.",
-    tags: ["db", "rust"],
-    files: ["src/lib.rs", "src/reducers/task.rs", "src/schema.rs"],
+    data: {
+      label: "Implement reducers",
+      status: "warning",
+      sublabel: "jenn",
+      estimate: "3h",
+      description: "CRUD reducers: create, update status, assign worker, soft-delete.",
+    },
   },
   {
     id: "wire",
-    label: "Wire UI to SpacetimeDB",
-    status: "default",
-    sublabel: "athena",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=athena",
-    estimate: "1h 30m",
-    description: "Connect form component to live SpacetimeDB subscriptions. Handle optimistic updates and reconnection.",
-    tags: ["ui", "db"],
-    files: ["src/lib/stdb-store.ts"],
+    data: {
+      label: "Wire UI to SpacetimeDB",
+      status: "default",
+      sublabel: "athena",
+      estimate: "1h 30m",
+      description: "Connect form to live subscriptions; handle optimistic updates.",
+    },
   },
   {
     id: "qa",
-    label: "QA verification",
-    status: "default",
-    sublabel: "hannelore",
-    estimate: "30m",
-    description: "End-to-end smoke test covering create, update, and delete flows across the full stack.",
-    tags: ["qa"],
+    data: {
+      label: "QA verification",
+      status: "default",
+      sublabel: "hannelore",
+      estimate: "30m",
+      description: "End-to-end smoke test across the full stack.",
+    },
   },
 ];
 
-const edges: DagEdge[] = [
+const edges: DAGEdge[] = [
   { source: "design", target: "ui" },
   { source: "design", target: "backend" },
   { source: "ui", target: "wire" },
@@ -65,47 +71,147 @@ const edges: DagEdge[] = [
   { source: "wire", target: "qa" },
 ];
 
-const minimalNodes: DagNode[] = [
-  { id: "a", label: "Step A", status: "success" },
-  { id: "b", label: "Step B", status: "warning" },
-  { id: "c", label: "Step C", status: "default" },
+const minimalNodes: DAGNode<TaskNode>[] = [
+  { id: "a", data: { label: "Step A", status: "success" } },
+  { id: "b", data: { label: "Step B", status: "warning" } },
+  { id: "c", data: { label: "Step C", status: "default" } },
 ];
 
-const minimalEdges: DagEdge[] = [
+const minimalEdges: DAGEdge[] = [
   { source: "a", target: "b" },
   { source: "b", target: "c" },
 ];
+
+const STATUS_COLORS: Record<TaskNode["status"], string> = {
+  success: "#3ecf8e",
+  warning: "#f5a524",
+  default: "#6b7a90",
+};
+
+const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
+  if (state.kind === "collapsed") {
+    return (
+      <div
+        style={{
+          display: "flex",
+          "align-items": "center",
+          "justify-content": "center",
+          width: "100%",
+          height: "100%",
+          "border-radius": "8px",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px dashed rgba(255,255,255,0.2)",
+          color: "rgba(255,255,255,0.7)",
+          "font-size": "12px",
+        }}
+      >
+        +{state.collapsedCount} more
+      </div>
+    );
+  }
+
+  const isFocused = state.kind === "focused";
+  const isAdjacent = state.kind === "adjacent";
+  return (
+    <div
+      style={{
+        display: "flex",
+        "flex-direction": "column",
+        gap: "4px",
+        width: "100%",
+        height: "100%",
+        padding: "8px 10px",
+        "border-radius": "8px",
+        background: isFocused ? "rgba(62,207,142,0.18)" : "rgba(255,255,255,0.05)",
+        border: `1px solid ${
+          isFocused
+            ? STATUS_COLORS[node.data.status]
+            : isAdjacent
+              ? "rgba(255,255,255,0.35)"
+              : "rgba(255,255,255,0.15)"
+        }`,
+        color: "var(--sui-text, #e6ecf5)",
+        "font-size": "12px",
+        "box-sizing": "border-box",
+      }}
+    >
+      <div style={{ display: "flex", "align-items": "center", gap: "6px" }}>
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            "border-radius": "50%",
+            background: STATUS_COLORS[node.data.status],
+            "flex-shrink": "0",
+          }}
+        />
+        <span style={{ "font-weight": "600", "font-size": "13px" }}>
+          {node.data.label}
+        </span>
+      </div>
+      <Show when={node.data.sublabel || node.data.estimate}>
+        <div style={{ display: "flex", gap: "8px", color: "rgba(255,255,255,0.55)", "font-size": "11px" }}>
+          <Show when={node.data.sublabel}>
+            <span>{node.data.sublabel}</span>
+          </Show>
+          <Show when={node.data.estimate}>
+            <span>· {node.data.estimate}</span>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  );
+};
 
 export const DagChartShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>DagChart — Atomic (Depth 1)</h2>
-      <p class="text-meta">Owns CSS (DagChart.css), no component imports. SVG directed acyclic graph using dagre layout. Click "(more…)" on nodes with long descriptions to expand.</p>
+      <p class="text-meta">
+        Generic DAG visualizer. Consumer supplies <code>renderNode</code>; supports
+        pan/zoom, focus-driven collapse, and horizontal/vertical layout.
+      </p>
 
       <div class="example-group">
-        <h3>Full-featured (TB direction)</h3>
-        <p class="text-meta">Nodes with label, estimate, 3-line description (expandable), avatar, sublabel, tags, and files.</p>
-        <DagChart
-          nodes={nodes}
-          edges={edges}
-          direction="TB"
-          onNodeClick={(id) => console.log("clicked", id)}
-        />
+        <h3>Vertical layout</h3>
+        <p class="text-meta">5-node task graph rendered top-to-bottom.</p>
+        <div style={{ height: "420px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+          <DagChart
+            nodes={nodes}
+            edges={edges}
+            direction="vertical"
+            renderNode={renderTaskNode}
+            nodeSize={() => [200, 56]}
+            onNodeClick={(id) => console.log("clicked", id)}
+          />
+        </div>
       </div>
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
-        <h3>Full-featured (LR direction)</h3>
-        <DagChart
-          nodes={nodes}
-          edges={edges}
-          direction="LR"
-          onNodeClick={(id) => console.log("clicked", id)}
-        />
+        <h3>Horizontal layout</h3>
+        <div style={{ height: "320px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+          <DagChart
+            nodes={nodes}
+            edges={edges}
+            direction="horizontal"
+            renderNode={renderTaskNode}
+            nodeSize={() => [200, 56]}
+            onNodeClick={(id) => console.log("clicked", id)}
+          />
+        </div>
       </div>
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Minimal (label + status only)</h3>
-        <DagChart nodes={minimalNodes} edges={minimalEdges} direction="TB" />
+        <div style={{ height: "260px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+          <DagChart
+            nodes={minimalNodes}
+            edges={minimalEdges}
+            direction="vertical"
+            renderNode={renderTaskNode}
+            nodeSize={() => [160, 44]}
+          />
+        </div>
       </div>
     </div>
   );
