@@ -85,7 +85,17 @@
   gap: 4px;
 }
 
-/* TagPill component owns its own visuals (inline styles in dev/tag-pill.tsx). */
+/* TagPill — most styles inline in dev/tag-pill.tsx; badges hover-only. */
+.sui-tag-pill__badge {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  pointer-events: none;
+}
+
+.sui-tag-pill:hover .sui-tag-pill__badge,
+.sui-tag-pill:focus-within .sui-tag-pill__badge {
+  opacity: 1;
+}
 
 .tag-clear {
   align-self: flex-start;
