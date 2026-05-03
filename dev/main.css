@@ -85,35 +85,7 @@
   gap: 4px;
 }
 
-.tag-pill {
-  padding: 2px 8px;
-  background: transparent;
-  border: 1px solid var(--jtf-border);
-  border-radius: 999px;
-  color: var(--jtf-text-secondary);
-  font-family: var(--jtf-font-family);
-  font-size: 10px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.12s ease;
-  line-height: 1.4;
-}
-
-.tag-pill:hover {
-  color: var(--jtf-text);
-  border-color: var(--jtf-text-secondary);
-}
-
-.tag-pill--active {
-  background: var(--jtf-primary, #00a8cc);
-  border-color: var(--jtf-primary, #00a8cc);
-  color: #fff;
-}
-
-.tag-pill--active:hover {
-  color: #fff;
-  border-color: var(--jtf-primary, #00a8cc);
-}
+/* TagPill component owns its own visuals (inline styles in dev/tag-pill.tsx). */
 
 .tag-clear {
   align-self: flex-start;

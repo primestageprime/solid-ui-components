@@ -5,6 +5,7 @@ import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Sandbox } from "./sandbox";
+import { TagPill, type PillStats } from "./tag-pill";
 
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
@@ -98,6 +99,9 @@ import { ResultPanelShowcase } from "./showcases/result-panel";
 // Hopper
 import { HopperShowcase } from "./showcases/hopper";
 
+// Sandbox / design exploration
+import { PillVariantsShowcase } from "./showcases/pill-variants";
+
 type Item = { id: string; label: string; component: Component; tags: string[] };
 
 const items: Item[] = [
@@ -186,6 +190,8 @@ const items: Item[] = [
   { id: "result-panel", label: "ResultPanel", component: ResultPanelShowcase, tags: ["depth:4", "container", "math", "data"] },
 
   { id: "hopper", label: "All Components", component: HopperShowcase, tags: [] },
+
+  { id: "pill-variants", label: "Pill Variants (sandbox)", component: PillVariantsShowcase, tags: [] },
 ];
 
 const TAG_CATEGORIES: { label: string; tags: string[] }[] = [
@@ -198,6 +204,8 @@ const TAG_CATEGORIES: { label: string; tags: string[] }[] = [
 ];
 
 const itemById = new Map(items.map((i) => [i.id, i]));
+
+const TOTAL_ITEMS = items.length;
 
 type Route = { id: string | null; tags: Set<string>; query: string };
 
@@ -253,14 +261,6 @@ const App: Component = () => {
     if (pushHash) syncHash();
   };
 
-  const tagsByCategory = createMemo(() => {
-    const sel = selectedTags();
-    return TAG_CATEGORIES.map((cat) => ({
-      label: cat.label,
-      tags: cat.tags.map((tag) => ({ tag, selected: sel.has(tag) })),
-    }));
-  });
-
   // Filter items: AND across categories, OR within. Text query AND on top.
   const matches = (item: Item, tags: Set<string>, q: string): boolean => {
     if (q && !item.label.toLowerCase().includes(q.toLowerCase())) return false;
@@ -279,6 +279,24 @@ const App: Component = () => {
     const q = query();
     return items.filter((i) => matches(i, tags, q));
   });
+
+  const currentSetIds = createMemo(() => new Set(filteredItems().map((i) => i.id)));
+
+  const computeStatsFor = (tag: string): PillStats => {
+    const sel = selectedTags();
+    const q = query();
+    const active = sel.has(tag);
+    const next = new Set(sel);
+    if (active) next.delete(tag);
+    else next.add(tag);
+    const newSet = new Set(items.filter((i) => matches(i, next, q)).map((i) => i.id));
+    const cur = currentSetIds();
+    let added = 0;
+    let removed = 0;
+    for (const id of newSet) if (!cur.has(id)) added++;
+    for (const id of cur) if (!newSet.has(id)) removed++;
+    return { active, currentCount: cur.size, newCount: newSet.size, added, removed };
+  };
 
   // Group filtered items by depth (depth:N or "Other" for untagged)
   const groupedItems = createMemo(() => {
@@ -331,20 +349,19 @@ const App: Component = () => {
         </div>
 
         <div class="showcase__tags">
-          <For each={tagsByCategory()}>
+          <For each={TAG_CATEGORIES}>
             {(cat) => (
               <div class="tag-category">
                 <div class="tag-category__label">{cat.label}</div>
                 <div class="tag-category__pills">
                   <For each={cat.tags}>
-                    {({ tag, selected }) => (
-                      <button
-                        type="button"
-                        class={`tag-pill ${selected ? "tag-pill--active" : ""}`}
-                        onClick={() => toggleTag(tag)}
-                      >
-                        {tag.replace(/^depth:/, "d")}
-                      </button>
+                    {(tag) => (
+                      <TagPill
+                        tag={tag}
+                        stats={computeStatsFor(tag)}
+                        onToggle={() => toggleTag(tag)}
+                        totalItems={TOTAL_ITEMS}
+                      />
                     )}
                   </For>
                 </div>
