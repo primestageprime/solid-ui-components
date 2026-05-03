@@ -55,9 +55,26 @@ const SNAKE_PER_ROW = 4;
 
 const INITIAL_PLAN_COUNT = 50;
 const MIN_STROKE = 1.5;
-const MAX_STROKE = 11;
-const EDGE_PULSE_MS = 800;
+const MAX_STROKE = 6;       // ~half the previous peak
+const EDGE_PULSE_MS = 1400; // slower so the elastic ring is readable
 const NUMBER_DURATION_MS = 500;
+
+/**
+ * Elastic burst envelope. 0 at t=0, snaps to ~1 by t≈0.1, then a damped
+ * cosine ringing decays back through zero with progressively smaller
+ * positive bumps. Visual: hose stretches, snaps back, stretches a smaller
+ * amount, snaps back, etc.
+ */
+function elasticBurst(t: number): number {
+  if (t <= 0 || t >= 1) return 0;
+  if (t < 0.1) return t / 0.1;
+  const u = (t - 0.1) / 0.9;
+  const decay = Math.exp(-3 * u);
+  const wave = Math.cos(u * Math.PI * 3);
+  // Negative half-cycles clip to zero — they represent "back to rest"
+  // moments between rebounds, which reads as a clear elastic ring.
+  return Math.max(0, decay * wave);
+}
 
 const QTY_OPTIONS = [1, 3, 5, 10];
 
@@ -252,7 +269,7 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
     if (elapsed >= EDGE_PULSE_MS) return MIN_STROKE;
     const t = elapsed / EDGE_PULSE_MS;
     const intensity = Math.min(1, p.size / 10);
-    return MIN_STROKE + (MAX_STROKE - MIN_STROKE) * Math.sin(t * Math.PI) * (0.5 + 0.5 * intensity);
+    return MIN_STROKE + (MAX_STROKE - MIN_STROKE) * elasticBurst(t) * (0.6 + 0.4 * intensity);
   };
   const isEdgePulsing = (key: string) => {
     tickNow();
