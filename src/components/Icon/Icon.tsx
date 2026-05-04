@@ -14,6 +14,7 @@ export const ICON_GROUPS = {
   time: ["clock", "hourglass"] as const,
   actions: ["plus", "minus", "close", "search", "filter", "refresh"] as const,
   ui: ["spinner", "menu", "settings", "external-link"] as const,
+  auth: ["log-out", "log-in"] as const,
   cache: ["cache-minutes", "cache-hours", "cache-stats", "cache-coverage", "cache-calc"] as const,
 } as const;
 
@@ -50,6 +51,9 @@ export type IconName =
   | "menu"
   | "settings"
   | "external-link"
+  // Auth
+  | "log-out"
+  | "log-in"
   // Cache
   | "cache-minutes"
   | "cache-hours"
@@ -220,6 +224,22 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> = 
   "external-link": {
     outline: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     solid: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  },
+
+  // === AUTH ICONS ===
+  // Door frame open on the right + arrow exiting rightward.
+  "log-out": {
+    outline: `<path d="M9 3H4a1 1 0 00-1 1v8a1 1 0 001 1h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M7 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    solid: `<path d="M9 3H4a1 1 0 00-1 1v8a1 1 0 001 1h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M7 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  },
+  // Door frame open on the left + arrow entering rightward.
+  "log-in": {
+    outline: `<path d="M7 3h5a1 1 0 011 1v8a1 1 0 01-1 1H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    solid: `<path d="M7 3h5a1 1 0 011 1v8a1 1 0 01-1 1H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   },
 
   // === CACHE ICONS ===

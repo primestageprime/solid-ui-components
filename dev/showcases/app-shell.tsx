@@ -3,6 +3,8 @@ import { AppShell, AppHeader, AppMain, Row, Stack } from "../../src/components/L
 import { CountChip } from "../../src/components/Badge";
 import { StickyGroupHeader, SectionLabel } from "../../src/components/Section";
 import { TextLabel, TextSublabel, MutedBody } from "../../src/components/Text";
+import { Button } from "../../src/components/Button";
+import { Icon } from "../../src/components/Icon";
 
 const FAKE_GROUPS = [
   { tag: "AwaitingHuman", count: 3 },
@@ -33,7 +35,9 @@ export const AppShellShowcase: Component = () => (
               <span class="text-meta">Focus</span>
               <span class="text-meta">Review</span>
             </Row>
-            <button>Sign out</button>
+            <Button variant="icon-only" aria-label="Sign out" title="Sign out">
+              <Icon name="log-out" />
+            </Button>
           </AppHeader>
           <AppHeader inline size="sm">
             <Row gap="xs" wrap>
