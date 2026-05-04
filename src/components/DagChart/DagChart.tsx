@@ -191,10 +191,15 @@ export function DagChart<T>(props: DAGProps<T>) {
     ),
   );
 
-  // Attach wheel handler imperatively with { passive: false } so preventDefault works
+  const interactive = () => props.interactive !== false;
+  const arrows = () => props.arrows !== false;
+
+  // Attach wheel handler imperatively with { passive: false } so preventDefault works.
+  // Skipped when interactive=false — the chart becomes fit-to-view and static.
   onMount(() => {
     const svg = svgRef;
     if (!svg) return;
+    if (!interactive()) return;
     const handler = onWheel as EventListener;
     svg.addEventListener("wheel", handler, { passive: false });
     onCleanup(() => svg.removeEventListener("wheel", handler));
@@ -231,14 +236,35 @@ export function DagChart<T>(props: DAGProps<T>) {
       <svg
         ref={svgRef}
         class="sui-dag"
-        onPointerDown={pointerHandlers.onPointerDown}
-        onPointerMove={pointerHandlers.onPointerMove}
-        onPointerUp={pointerHandlers.onPointerUp}
+        onPointerDown={interactive() ? pointerHandlers.onPointerDown : undefined}
+        onPointerMove={interactive() ? pointerHandlers.onPointerMove : undefined}
+        onPointerUp={interactive() ? pointerHandlers.onPointerUp : undefined}
       >
+        <defs>
+          {/* Arrowhead marker shared by every edge. `currentColor` defers
+              to the edge stroke (set in CSS) so theming flows naturally. */}
+          <marker
+            id="sui-dag-arrow"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path d="M0,0 L10,5 L0,10 z" class="sui-dag__arrow" />
+          </marker>
+        </defs>
         <g transform={transformString()}>
           {/* Edges */}
           <For each={edgePaths()}>
-            {(edge) => <path class="sui-dag__edge" d={edge.d} />}
+            {(edge) => (
+              <path
+                class="sui-dag__edge"
+                d={edge.d}
+                marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
+              />
+            )}
           </For>
 
           {/* Nodes */}

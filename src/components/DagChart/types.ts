@@ -24,6 +24,18 @@ export type DAGProps<T = unknown> = {
   direction?: "horizontal" | "vertical";
   onNodeClick?: (nodeId: string) => void;
   focusedNodeId?: string;
+  /**
+   * Render arrowheads at the end of each edge. Defaults to `true` —
+   * a DAG is directed and most consumers want the direction visible.
+   * Set `false` for an undirected look.
+   */
+  arrows?: boolean;
+  /**
+   * Enable pan (drag) and zoom (wheel) on the SVG. Defaults to `true`.
+   * Set `false` for static diagrams (e.g. embedded specs / read-only
+   * status displays) where the chart should fit-to-view and stay put.
+   */
+  interactive?: boolean;
 };
 
 /** Internal: positioned node after layout + collapse. */

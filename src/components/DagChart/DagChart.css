@@ -12,6 +12,11 @@
   fill: none;
 }
 
+.sui-dag__arrow {
+  fill: var(--sui-border, #334155);
+  stroke: none;
+}
+
 .sui-dag__node-wrapper {
   cursor: pointer;
 }
