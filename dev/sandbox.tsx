@@ -16,6 +16,7 @@ import { QuickFilter } from "../src/components/QuickFilter";
 import { BaseTable } from "../src/components/Table";
 import { ConversationTree, ConversationMessage } from "../src/components/ConversationTree";
 import { StatusBadge } from "../src/components/Badge";
+import { StackedProgressBar } from "../src/components/Progress";
 
 // ---- MockBaseline ----------------------------------------------------------
 // The "baseline" every mock step starts from: thematic PageCanvas wrapping a
@@ -494,7 +495,739 @@ const SEED_STEPS: SandboxStep[] = [
       );
     },
   },
+  {
+    id: "100-table",
+    label: "100-table",
+    hint: "100 stmts · table view",
+    render: () => <Hundred100TableStep />,
+  },
 ];
+
+// ---- 100-statements stub + table step --------------------------------------
+
+interface TaggedStatement {
+  id: string;
+  description: string;
+  status: "Drafted" | "Proposed" | "InProgress" | "AwaitingReview" | "Closed";
+  truth: "True" | "False" | "Unknown";
+  tags: string[];
+}
+
+// Cross-cutting test data: clients and projects are independent dimensions —
+// the same project name can appear under multiple clients and vice versa
+// (think shared internal tools like AMYGDALA or JTF that several clients
+// adopt). Every tagged statement also carries FEATURE:SOLID-UI-COMPONENTS
+// because every project consumes the design system; many statements *also*
+// touch a specific sub-feature (DAG-CHART, AUTH, etc.), so a row can have
+// multiple FEATURE tags.
+const HUNDRED_CLIENTS = [
+  "STAX", "PRIMESTAGE", "NETSUITE", "ASAP", "JOYJA", "ATLAS",
+] as const;
+
+const HUNDRED_PROJECTS = [
+  "AMYGDALA", "JTF", "PEARLA", "DSIDE", "FACTORY", "RHINO", "WELLAPPOINT",
+] as const;
+
+const SHARED_FEATURE = "SOLID-UI-COMPONENTS";
+
+const HUNDRED_SUB_FEATURES = [
+  "DAG-CHART", "AUTH", "BILLING", "IMPORT", "EXPORT", "DASHBOARD", "METRICS",
+  "SCHEMA", "MIGRATION", "REPORTING", "WEBHOOKS", "API", "ONBOARDING",
+  "PERFORMANCE", "OBSERVABILITY", "SETTINGS", "SEARCH", "NOTIFICATIONS",
+];
+
+const HUNDRED_TAGGED_DESCRIPTIONS = [
+  "Add tooltip on $FEATURE node hover",
+  "Fix race condition in $FEATURE save handler",
+  "Refactor $FEATURE column resolution to share with backend",
+  "Tighten error message when $FEATURE upload fails mid-stream",
+  "Document the $FEATURE state machine in the architecture doc",
+  "Investigate $FEATURE slow path on cold cache",
+  "Add per-row loading skeleton to $FEATURE list",
+  "Improve empty-state copy on $FEATURE",
+  "Add keyboard shortcuts to $FEATURE",
+  "Wire $FEATURE up to the new audit-log table",
+  "Migrate $FEATURE to the v2 endpoint",
+  "Reduce $FEATURE bundle size by lazy-loading",
+  "Surface validation errors inline on $FEATURE",
+  "Add CSV export to $FEATURE",
+  "Backfill $FEATURE history for legacy tenants",
+];
+
+const HUNDRED_GENERIC_DESCRIPTIONS = [
+  "Set up new laptop",
+  "Investigate flaky CI test in shared/utils",
+  "Pick a new password manager",
+  "Schedule dentist appointment",
+  "Research alternatives to current bug tracker",
+  "Reply to recruiter email",
+  "Update Slack profile photo",
+  "Write retro notes for last sprint",
+  "File expense report for travel",
+  "Renew SSL certificate",
+  "Clear out old Docker images on dev box",
+  "Fix typo in README",
+  "Audit npm dependencies for high-severity advisories",
+  "Triage backlog of unassigned issues",
+  "Tag v0.x release in git",
+  "Review PR from intern",
+  "Deflake the integration test suite",
+  "Write a migration script for the new schema",
+  "Test the deploy on staging",
+  "Document onboarding for the new hire",
+];
+
+const STATUSES: TaggedStatement["status"][] = [
+  "Drafted", "Proposed", "InProgress", "AwaitingReview", "Closed",
+];
+const TRUTHS: TaggedStatement["truth"][] = ["Unknown", "True", "False"];
+
+const generate100Statements = (): TaggedStatement[] => {
+  let s = 73;
+  const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(rand() * arr.length)];
+  const out: TaggedStatement[] = [];
+  // 60 tagged — independent client × project so values cross-cut.
+  for (let i = 0; i < 60; i++) {
+    const client = pick(HUNDRED_CLIENTS);
+    const project = pick(HUNDRED_PROJECTS);
+    const subFeature = pick(HUNDRED_SUB_FEATURES);
+    const tmpl = pick(HUNDRED_TAGGED_DESCRIPTIONS);
+    // Every tagged row carries the shared SOLID-UI-COMPONENTS feature; ~60%
+    // of them also touch a specific sub-feature, so FEATURE is multi-valued
+    // on those rows.
+    const features = [SHARED_FEATURE];
+    if (rand() < 0.6) features.push(subFeature);
+    out.push({
+      id: `s-${i + 1}`,
+      description: tmpl.replace("$FEATURE", subFeature.toLowerCase().replace(/-/g, " ")),
+      status: pick(STATUSES),
+      truth: pick(TRUTHS),
+      tags: [
+        `CLIENT:${client}`,
+        `PROJECT:${project}`,
+        ...features.map((f) => `FEATURE:${f}`),
+      ],
+    });
+  }
+  // 40 untagged / generic
+  for (let i = 60; i < 100; i++) {
+    out.push({
+      id: `s-${i + 1}`,
+      description: pick(HUNDRED_GENERIC_DESCRIPTIONS),
+      status: pick(STATUSES),
+      truth: pick(TRUTHS),
+      tags: [],
+    });
+  }
+  // Shuffle so tagged + untagged interleave deterministically.
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  // Reassign sequential ids after shuffle so the # column is monotonic.
+  return out.map((row, i) => ({ ...row, id: `s-${i + 1}` }));
+};
+
+// ---- 100-statements pivot tree -------------------------------------------
+
+type PivotDim = "CLIENT" | "PROJECT" | "FEATURE";
+const PIVOT_DIMS: PivotDim[] = ["CLIENT", "PROJECT", "FEATURE"];
+
+// Returns ALL values for a given dimension on a row. FEATURE is multi-valued
+// on ~60% of tagged rows (every tagged row has SOLID-UI-COMPONENTS, plus
+// often a specific sub-feature). CLIENT and PROJECT are single-valued today
+// but the API is symmetric so both pivot directions work.
+const tagValues = (s: TaggedStatement, dim: PivotDim): string[] => {
+  const prefix = `${dim}:`;
+  return s.tags.filter((x) => x.startsWith(prefix)).map((x) => x.slice(prefix.length));
+};
+
+// Convenience for the rare caller that wants only the first value.
+const tagValue = (s: TaggedStatement, dim: PivotDim): string | null =>
+  tagValues(s, dim)[0] ?? null;
+
+interface PivotBucket {
+  key: string;
+  total: number;
+  truth: { True: number; False: number; Unknown: number };
+  tasks: { todo: number; doing: number; done: number };
+  children: PivotBucket[];
+}
+
+// Map workflow statuses → coarse task bucket.
+//   todo  : not picked up yet
+//   doing : actively being worked / under review
+//   done  : closed / shipped
+const taskBucket = (status: TaggedStatement["status"]): "todo" | "doing" | "done" => {
+  switch (status) {
+    case "Drafted":
+    case "Proposed":
+      return "todo";
+    case "InProgress":
+    case "AwaitingReview":
+      return "doing";
+    case "Closed":
+      return "done";
+  }
+};
+
+const tallyTasks = (rows: TaggedStatement[]): PivotBucket["tasks"] => {
+  const t = { todo: 0, doing: 0, done: 0 };
+  for (const r of rows) t[taskBucket(r.status)] += 1;
+  return t;
+};
+
+// Bucket rows by outer × inner dimension. Multi-valued tags (e.g. a row
+// with both FEATURE:SOLID-UI-COMPONENTS and FEATURE:DAG-CHART) contribute
+// to *every* matching bucket — counts can therefore exceed total row count
+// when one or both axes is multi-valued.
+const bucketByDims = (
+  rows: TaggedStatement[],
+  outer: PivotDim,
+  inner: PivotDim,
+): PivotBucket[] => {
+  const outerMap = new Map<string, TaggedStatement[]>();
+  for (const r of rows) {
+    for (const ov of tagValues(r, outer)) {
+      if (!outerMap.has(ov)) outerMap.set(ov, []);
+      outerMap.get(ov)!.push(r);
+    }
+  }
+  const out: PivotBucket[] = [];
+  for (const [ok, group] of outerMap) {
+    const innerMap = new Map<string, TaggedStatement[]>();
+    for (const r of group) {
+      const ivs = tagValues(r, inner);
+      if (ivs.length === 0) {
+        const arr = innerMap.get("—") ?? [];
+        arr.push(r);
+        innerMap.set("—", arr);
+      } else {
+        for (const iv of ivs) {
+          const arr = innerMap.get(iv) ?? [];
+          arr.push(r);
+          innerMap.set(iv, arr);
+        }
+      }
+    }
+    const children: PivotBucket[] = [];
+    for (const [ik, sub] of innerMap) {
+      children.push({
+        key: ik,
+        total: sub.length,
+        truth: {
+          True: sub.filter((r) => r.truth === "True").length,
+          False: sub.filter((r) => r.truth === "False").length,
+          Unknown: sub.filter((r) => r.truth === "Unknown").length,
+        },
+        tasks: tallyTasks(sub),
+        children: [],
+      });
+    }
+    children.sort((a, b) => b.total - a.total);
+    // Container task counts = sum of children. (When the inner axis is
+    // multi-valued — e.g. FEATURE — a row can land in multiple children, so
+    // summing children would over-count. Instead, tally the outer group
+    // directly so containers stay honest.)
+    out.push({
+      key: ok,
+      total: group.length,
+      truth: {
+        True: group.filter((r) => r.truth === "True").length,
+        False: group.filter((r) => r.truth === "False").length,
+        Unknown: group.filter((r) => r.truth === "Unknown").length,
+      },
+      tasks: tallyTasks(group),
+      children,
+    });
+  }
+  out.sort((a, b) => b.total - a.total);
+  return out;
+};
+
+const TruthBar: Component<{ truth: PivotBucket["truth"]; total: number }> = (p) => {
+  const segments = () => {
+    const t = p.total || 1;
+    return [
+      { percentage: (p.truth.True / t) * 100, color: "var(--sui-success, #2a6)" },
+      { percentage: (p.truth.False / t) * 100, color: "var(--sui-danger, #c33)" },
+      { percentage: (p.truth.Unknown / t) * 100, color: "var(--sui-text-muted, #888)" },
+    ];
+  };
+  const tip = () =>
+    `True: ${p.truth.True} · False: ${p.truth.False} · Unknown: ${p.truth.Unknown}`;
+  return (
+    <div title={tip()} style={{ height: "6px", width: "100%" }}>
+      <StackedProgressBar segments={segments()} />
+    </div>
+  );
+};
+
+const TaskBar: Component<{ tasks: PivotBucket["tasks"] }> = (p) => {
+  const total = () => p.tasks.todo + p.tasks.doing + p.tasks.done || 1;
+  const segments = () => {
+    const t = total();
+    return [
+      { percentage: (p.tasks.done / t) * 100, color: "var(--sui-success, #2a6)" },
+      { percentage: (p.tasks.doing / t) * 100, color: "var(--sui-info, #4ea1ff)" },
+      { percentage: (p.tasks.todo / t) * 100, color: "var(--sui-text-muted, #555)" },
+    ];
+  };
+  const tip = () =>
+    `done: ${p.tasks.done} · doing: ${p.tasks.doing} · todo: ${p.tasks.todo}`;
+  return (
+    <div title={tip()} style={{ height: "6px", width: "100%" }}>
+      <StackedProgressBar segments={segments()} />
+    </div>
+  );
+};
+
+// Compact "done/doing/todo" counts as text. Used in the outer title row
+// where a bar would compete with the truth bar visually.
+const TaskCounts: Component<{ tasks: PivotBucket["tasks"] }> = (p) => (
+  <span
+    style={{
+      "font-size": "10px",
+      "font-family": "var(--sui-mono, monospace)",
+      display: "inline-flex",
+      gap: "4px",
+    }}
+    title={`done: ${p.tasks.done} · doing: ${p.tasks.doing} · todo: ${p.tasks.todo}`}
+  >
+    <span style={{ color: "var(--sui-success, #2a6)" }}>✓{p.tasks.done}</span>
+    <span style={{ color: "var(--sui-info, #4ea1ff)" }}>•{p.tasks.doing}</span>
+    <span style={{ color: "var(--sui-text-muted, #888)" }}>○{p.tasks.todo}</span>
+  </span>
+);
+
+interface PivotSelection {
+  outerKey: string;
+  innerKey: string | null; // null = the whole outer bucket (or the untagged group)
+  scope: "tagged" | "untagged";
+}
+
+const PivotTreemap: Component<{
+  rows: TaggedStatement[];
+  outer: PivotDim;
+  inner: PivotDim;
+  untaggedCount: number;
+  selection: PivotSelection | null;
+  onSelect: (sel: PivotSelection | null) => void;
+}> = (p) => {
+  const buckets = () => bucketByDims(p.rows, p.outer, p.inner);
+
+  const isLeafSelected = (ok: string, ik: string) =>
+    p.selection?.scope === "tagged" &&
+    p.selection.outerKey === ok &&
+    p.selection.innerKey === ik;
+
+  const isOuterSelected = (ok: string) =>
+    p.selection?.scope === "tagged" &&
+    p.selection.outerKey === ok &&
+    p.selection.innerKey === null;
+
+  const isUntaggedSelected = () => p.selection?.scope === "untagged";
+
+  const toggleLeaf = (ok: string, ik: string) => {
+    if (isLeafSelected(ok, ik)) p.onSelect(null);
+    else p.onSelect({ outerKey: ok, innerKey: ik, scope: "tagged" });
+  };
+  const toggleOuter = (ok: string) => {
+    if (isOuterSelected(ok)) p.onSelect(null);
+    else p.onSelect({ outerKey: ok, innerKey: null, scope: "tagged" });
+  };
+  const toggleUntagged = () => {
+    if (isUntaggedSelected()) p.onSelect(null);
+    else p.onSelect({ outerKey: "", innerKey: null, scope: "untagged" });
+  };
+
+  return (
+    <ProportionalStack
+      direction="row"
+      gap="sm"
+      style={{
+        // Outer boxes stretch to the tallest sibling. Cap so a long tail of
+        // inner cells doesn't push the table off-screen — overflow scrolls
+        // inside the box instead of bleeding out.
+        height: "auto",
+        "min-height": "180px",
+        "max-height": "320px",
+        "align-items": "stretch",
+      }}
+    >
+      <For each={buckets()}>
+        {(b) => (
+          <ProportionalItem
+            weight={b.total}
+            scrollWhenSmall={false}
+            style={{
+              border: `1px solid ${
+                isOuterSelected(b.key)
+                  ? "var(--sui-accent, #4ea1ff)"
+                  : "var(--sui-border, rgba(255,255,255,0.12))"
+              }`,
+              "border-radius": "4px",
+              padding: "8px",
+              gap: "6px",
+              "min-width": "0",
+              background: "var(--sui-bg-elevated, rgba(255,255,255,0.04))",
+            }}
+          >
+            <div
+              onClick={(e) => {
+                // Click the title row to filter on the whole outer bucket.
+                e.stopPropagation();
+                toggleOuter(b.key);
+              }}
+              style={{
+                display: "flex",
+                "align-items": "baseline",
+                "justify-content": "space-between",
+                gap: "8px",
+                "min-width": 0,
+                cursor: "pointer",
+                "user-select": "none",
+              }}
+              title={`Click to filter table to ${p.outer}=${b.key}`}
+            >
+              <span style={{ "font-size": "11px", "font-weight": 600, "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis" }}>
+                {b.key}
+              </span>
+              <span style={{ display: "inline-flex", "align-items": "baseline", gap: "6px", "font-size": "10px", color: "var(--sui-text-muted, #888)" }}>
+                <span>· {b.total}</span>
+                <TaskCounts tasks={b.tasks} />
+              </span>
+            </div>
+            <div
+              style={{
+                flex: "1 1 auto",
+                "min-height": 0,
+                display: "flex",
+                gap: "4px",
+                "flex-wrap": "wrap",
+                "align-content": "flex-start",
+                "overflow-y": "auto",
+              }}
+            >
+              <For each={b.children}>
+                {(c) => (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLeaf(b.key, c.key);
+                    }}
+                    title={`Click to filter table to ${p.outer}=${b.key}, ${p.inner}=${c.key}`}
+                    style={{
+                      flex: `${c.total} 1 60px`,
+                      "min-width": "60px",
+                      padding: "4px 6px",
+                      border: `1px solid ${
+                        isLeafSelected(b.key, c.key)
+                          ? "var(--sui-accent, #4ea1ff)"
+                          : "var(--sui-border, rgba(255,255,255,0.12))"
+                      }`,
+                      "border-radius": "3px",
+                      background: isLeafSelected(b.key, c.key)
+                        ? "var(--sui-bg-elevated, rgba(78,161,255,0.12))"
+                        : "var(--sui-bg-deep, rgba(0,0,0,0.2))",
+                      display: "flex",
+                      "flex-direction": "column",
+                      gap: "4px",
+                      "min-height": "0",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      "user-select": "none",
+                    }}
+                  >
+                    <div style={{ display: "flex", "justify-content": "space-between", "font-size": "10px", "min-width": 0, gap: "4px" }}>
+                      <span style={{ "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis", "font-weight": 500 }}>
+                        {c.key}
+                      </span>
+                      <span style={{ color: "var(--sui-text-muted, #888)" }}>{c.total}</span>
+                    </div>
+                    <TruthBar truth={c.truth} total={c.total} />
+                    <TaskBar tasks={c.tasks} />
+                  </div>
+                )}
+              </For>
+            </div>
+          </ProportionalItem>
+        )}
+      </For>
+      <Show when={p.untaggedCount > 0}>
+        <ProportionalItem
+          weight={p.untaggedCount}
+          scrollWhenSmall={false}
+          style={{
+            border: `1px dashed ${
+              isUntaggedSelected()
+                ? "var(--sui-accent, #4ea1ff)"
+                : "var(--sui-border, rgba(255,255,255,0.12))"
+            }`,
+            "border-radius": "4px",
+            padding: "8px",
+            "min-width": "0",
+            opacity: isUntaggedSelected() ? 1 : 0.6,
+            display: "flex",
+            "flex-direction": "column",
+            "justify-content": "center",
+            "align-items": "center",
+            "text-align": "center",
+            cursor: "pointer",
+            "user-select": "none",
+          }}
+          onClick={() => toggleUntagged()}
+          title="Click to filter table to untagged rows"
+        >
+          <div style={{ "font-size": "11px", "font-weight": 600 }}>untagged</div>
+          <div style={{ "font-size": "10px", color: "var(--sui-text-muted, #888)" }}>{p.untaggedCount} rows</div>
+        </ProportionalItem>
+      </Show>
+    </ProportionalStack>
+  );
+};
+
+// Drag-to-reorder pills. The order signal is a permutation of PIVOT_DIMS:
+// position 0 = outer dimension, position 1 = inner dimension, position 2 =
+// unused (greyed out). Drag any pill onto another to swap their slots.
+const PivotPills: Component<{
+  order: PivotDim[];
+  setOrder: (next: PivotDim[]) => void;
+}> = (p) => {
+  const [dragFrom, setDragFrom] = createSignal<number | null>(null);
+  const [dragOver, setDragOver] = createSignal<number | null>(null);
+
+  const onDrop = (toIdx: number) => {
+    const from = dragFrom();
+    setDragFrom(null);
+    setDragOver(null);
+    if (from == null || from === toIdx) return;
+    const next = p.order.slice();
+    [next[from], next[toIdx]] = [next[toIdx], next[from]];
+    p.setOrder(next);
+  };
+
+  const slotLabel = (idx: number) =>
+    idx === 0 ? "outer" : idx === 1 ? "inner" : "unused";
+
+  const pillStyle = (idx: number, isDragOver: boolean) => {
+    const active = idx < 2;
+    return {
+      display: "inline-flex",
+      "align-items": "center",
+      gap: "6px",
+      padding: "4px 10px",
+      "border-radius": "999px",
+      "font-size": "12px",
+      "font-weight": 500,
+      cursor: "grab",
+      "user-select": "none" as const,
+      border: `1px solid ${
+        isDragOver
+          ? "var(--sui-accent, #4ea1ff)"
+          : active
+          ? "var(--sui-border-strong, rgba(255,255,255,0.3))"
+          : "var(--sui-border, rgba(255,255,255,0.12))"
+      }`,
+      background: isDragOver
+        ? "var(--sui-bg-elevated, rgba(255,255,255,0.08))"
+        : active
+        ? "var(--sui-bg-elevated, rgba(255,255,255,0.04))"
+        : "transparent",
+      color: active
+        ? "var(--sui-text-primary, inherit)"
+        : "var(--sui-text-muted, #888)",
+      opacity: active ? 1 : 0.55,
+    };
+  };
+
+  return (
+    <ClusterRow gap="sm" style={{ "font-size": "12px", "flex-wrap": "wrap" }}>
+      <span style={{ color: "var(--sui-text-muted, #888)" }}>
+        drag to reorder:
+      </span>
+      <For each={p.order}>
+        {(dim, idx) => (
+          <div
+            style={{
+              display: "flex",
+              "flex-direction": "column",
+              "align-items": "center",
+              gap: "2px",
+            }}
+          >
+            <span
+              style={{
+                "font-size": "9px",
+                "text-transform": "uppercase",
+                "letter-spacing": "0.06em",
+                color:
+                  idx() < 2
+                    ? "var(--sui-text-muted, #888)"
+                    : "var(--sui-text-muted, #888)",
+                opacity: idx() < 2 ? 0.85 : 0.55,
+              }}
+            >
+              {slotLabel(idx())}
+              {idx() === 0 ? " ›" : ""}
+            </span>
+            <span
+              draggable={true}
+              onDragStart={(e) => {
+                setDragFrom(idx());
+                e.dataTransfer?.setData("text/plain", String(idx()));
+                if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                setDragOver(idx());
+              }}
+              onDragLeave={() => {
+                if (dragOver() === idx()) setDragOver(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                onDrop(idx());
+              }}
+              onDragEnd={() => {
+                setDragFrom(null);
+                setDragOver(null);
+              }}
+              style={pillStyle(idx(), dragOver() === idx() && dragFrom() !== idx())}
+              title="drag to swap with another pill"
+            >
+              <span style={{ opacity: 0.5, "font-size": "10px" }}>⋮⋮</span>
+              {dim}
+            </span>
+          </div>
+        )}
+      </For>
+    </ClusterRow>
+  );
+};
+
+const Hundred100TableStep: Component = () => {
+  const data = generate100Statements();
+  const [pivotOrder, setPivotOrder] = createSignal<PivotDim[]>([
+    "CLIENT",
+    "PROJECT",
+    "FEATURE",
+  ]);
+  const outer = () => pivotOrder()[0];
+  const inner = () => pivotOrder()[1];
+  const untaggedCount = data.filter((r) => r.tags.length === 0).length;
+
+  const [selection, setSelection] = createSignal<PivotSelection | null>(null);
+
+  const setOrderAndClear = (next: PivotDim[]) => {
+    setPivotOrder(next);
+    setSelection(null);
+  };
+
+  const filteredData = () => {
+    const sel = selection();
+    if (!sel) return data;
+    if (sel.scope === "untagged") return data.filter((r) => r.tags.length === 0);
+    return data.filter((r) => {
+      if (!tagValues(r, outer()).includes(sel.outerKey)) return false;
+      if (sel.innerKey !== null && !tagValues(r, inner()).includes(sel.innerKey)) return false;
+      return true;
+    });
+  };
+
+  const filterLabel = () => {
+    const sel = selection();
+    if (!sel) return null;
+    if (sel.scope === "untagged") return "untagged";
+    if (sel.innerKey === null) return `${outer()}=${sel.outerKey}`;
+    return `${outer()}=${sel.outerKey} · ${inner()}=${sel.innerKey}`;
+  };
+  const columns = [
+    { id: "id",          header: "#",           accessor: "id" as const,          width: "60px" },
+    { id: "truth",       header: "Truth",       accessor: "truth" as const,       sortable: true, width: "80px" },
+    { id: "status",      header: "Status",      accessor: "status" as const,      sortable: true, width: "120px" },
+    { id: "description", header: "Description", accessor: "description" as const, sortable: true },
+    {
+      id: "tags",
+      header: "Tags",
+      accessor: (row: TaggedStatement) => row.tags.join(" · "),
+      sortable: false,
+    },
+  ];
+  return (
+    <MockBaseline
+      sidebar={
+        <TightStack style={{ width: "100%", "min-width": "0" }}>
+          <TextLabel>100 statements</TextLabel>
+          <MutedBody>60 tagged · 40 generic</MutedBody>
+        </TightStack>
+      }
+      detail={
+        <SpacedStack style={{ padding: "16px 20px", height: "100%", "min-height": "0" }}>
+          <TightStack>
+            <PageTitle style={{ margin: "0", "font-size": "1.25rem" }}>Statements</PageTitle>
+            <TextSublabel>{data.length} total · {data.length - untaggedCount} tagged · {untaggedCount} untagged</TextSublabel>
+          </TightStack>
+
+          <NarrowStack>
+            <PivotPills order={pivotOrder()} setOrder={setOrderAndClear} />
+            <PivotTreemap
+              rows={data}
+              outer={outer()}
+              inner={inner()}
+              untaggedCount={untaggedCount}
+              selection={selection()}
+              onSelect={setSelection}
+            />
+          </NarrowStack>
+
+          <Show when={selection()}>
+            <ClusterRow gap="sm" style={{ "font-size": "12px" }}>
+              <span style={{ color: "var(--sui-text-muted, #888)" }}>filtered:</span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  "align-items": "center",
+                  gap: "6px",
+                  padding: "2px 8px",
+                  "border-radius": "999px",
+                  background: "var(--sui-bg-elevated, rgba(78,161,255,0.12))",
+                  border: "1px solid var(--sui-accent, #4ea1ff)",
+                  color: "var(--sui-text-primary, inherit)",
+                }}
+              >
+                {filterLabel()}
+                <button
+                  onClick={() => setSelection(null)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "inherit",
+                    cursor: "pointer",
+                    "font-size": "12px",
+                    padding: "0 0 0 2px",
+                  }}
+                  title="clear filter"
+                >
+                  ×
+                </button>
+              </span>
+              <span style={{ color: "var(--sui-text-muted, #888)" }}>
+                · {filteredData().length} of {data.length}
+              </span>
+            </ClusterRow>
+          </Show>
+
+          <ScrollPanel style={{ "max-height": "calc(100vh - 460px)" }}>
+            <BaseTable data={filteredData()} columns={columns} striped hoverable />
+          </ScrollPanel>
+        </SpacedStack>
+      }
+    />
+  );
+};
 
 // ---- root ------------------------------------------------------------------
 
