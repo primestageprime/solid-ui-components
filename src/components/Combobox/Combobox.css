@@ -165,6 +165,17 @@
   max-width: 100%;
 }
 
+/* Highlighted (deletion-armed) chip — shown when the user has pressed
+   Backspace on an empty input and the next Backspace would delete the
+   chip. Strong outline + danger-tinted background telegraph the
+   pending destructive action. */
+.sui-combobox__chip--highlighted {
+  background: rgba(var(--sui-danger-rgb, 255, 51, 102), 0.18);
+  border-color: var(--sui-danger, #ff3366);
+  box-shadow: 0 0 0 2px rgba(var(--sui-danger-rgb, 255, 51, 102), 0.35);
+  color: var(--sui-text-primary, #e0f4ff);
+}
+
 .sui-combobox__chip-label {
   overflow: hidden;
   text-overflow: ellipsis;
