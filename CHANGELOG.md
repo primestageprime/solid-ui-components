@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.19.1 — Combobox: two-step backspace highlight-then-delete
+
+### Fixed
+
+- **`Combobox` (multi-mode)** — hitting Backspace on an empty input
+  immediately deleted the last selected chip with no visual cue, so
+  users trying to clear search text often lost a selection. New
+  behavior matches Gmail's "to:" field and GitHub's label picker:
+  1. Backspace on non-empty input → standard text deletion (no chip change)
+  2. Backspace on empty input → highlight the last chip with a danger-tinted
+     focus ring (no delete yet)
+  3. Backspace again on empty input → delete the highlighted chip
+  4. Escape or any printable key → clears the highlight (no delete)
+
+### Implementation notes
+
+- Disables Kobalte's built-in `removeOnBackspace` on the multi-mode root
+  and owns the entire backspace contract in our wrapper.
+- The state machine is extracted as a pure function (`backspace.ts`,
+  `computeBackspaceAction`) and unit-tested without Solid rendering.
+- Single-mode behavior is unchanged.
+
 ## v0.19.0 — More shell primitives + showcase coverage sweep
 
 ### Added

@@ -19,6 +19,7 @@ import {
   splitProps,
 } from "solid-js";
 import { Icon } from "../Icon/Icon";
+import { computeBackspaceAction } from "./backspace";
 import "./Combobox.css";
 
 /** Standard option shape. `value` is a string (common combobox convention). */
@@ -276,11 +277,31 @@ const renderMulti = (
   const [prevValue, setPrevValue] = createSignal<ComboboxOption[]>(
     local.value?.() ?? [],
   );
+  // Two-step backspace deletion: stores the `value` of the chip currently
+  // armed for deletion. `null` means no chip is highlighted.
+  const [highlightedChipValue, setHighlightedChipValue] = createSignal<
+    string | null
+  >(null);
 
   createEffect(() => setPrevValue(local.value?.() ?? []));
 
+  // Defensive: if the highlighted chip is no longer present in the value
+  // array (removed via "X" button, "Clear all", or external mutation),
+  // drop the highlight so a stale value can't haunt later keypresses.
+  createEffect(() => {
+    const current = highlightedChipValue();
+    if (current === null) return;
+    const stillPresent = (local.value?.() ?? []).some(
+      (opt) => opt.value === current,
+    );
+    if (!stillPresent) setHighlightedChipValue(null);
+  });
+
   const updateInput = (text: string) => {
     setInputValue(text);
+    // Any keystroke into the input clears the deletion-armed state — a
+    // user who's typing isn't trying to delete a chip.
+    if (text !== "") setHighlightedChipValue(null);
     local.onInputChange?.(text);
   };
 
@@ -296,6 +317,51 @@ const renderMulti = (
   const handleKeyDown = (
     e: KeyboardEvent & { currentTarget: HTMLInputElement },
   ) => {
+    // Handle two-step backspace deletion before falling through to the
+    // create-on-Enter branch. Kobalte's built-in `removeOnBackspace` is
+    // disabled on the root (see `removeOnBackspace={false}` below) so
+    // we own the entire backspace contract here. Logic lives in
+    // `computeBackspaceAction` (pure, unit-tested).
+    if (e.key === "Backspace") {
+      const action = computeBackspaceAction({
+        inputValue: e.currentTarget.value,
+        selected: local.value?.() ?? [],
+        armedValue: highlightedChipValue(),
+      });
+      switch (action.kind) {
+        case "passthrough":
+          // Two passthrough sources: non-empty input (browser deletes a
+          // char) and empty input with no chips (nothing to do). In both
+          // cases, defensively clear any stale armed value so it can't
+          // haunt later keypresses.
+          if (highlightedChipValue() !== null) setHighlightedChipValue(null);
+          return;
+        case "arm":
+          e.preventDefault();
+          setHighlightedChipValue(action.value);
+          return;
+        case "delete":
+          e.preventDefault();
+          setHighlightedChipValue(null);
+          handleChange(action.next);
+          return;
+      }
+    }
+
+    // Escape unhighlights any armed chip; let Kobalte still handle its
+    // own Escape behavior (close dropdown / reset input) — don't
+    // preventDefault here.
+    if (e.key === "Escape") {
+      setHighlightedChipValue(null);
+      return;
+    }
+
+    // Any other printable key disarms the highlight — typing means the
+    // user moved on from "about to delete a chip".
+    if (e.key.length === 1 && highlightedChipValue() !== null) {
+      setHighlightedChipValue(null);
+    }
+
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
@@ -311,10 +377,16 @@ const renderMulti = (
     setInputValue("");
   };
 
+  const chipClass = (option: ComboboxOption): string =>
+    highlightedChipValue() === option.value
+      ? "sui-combobox__chip sui-combobox__chip--highlighted"
+      : "sui-combobox__chip";
+
   return (
     <KobalteCombobox<ComboboxOption>
       {...(rest as Record<string, unknown>)}
       multiple
+      removeOnBackspace={false}
       class="sui-combobox sui-combobox--multi"
       options={local.options()}
       value={local.value?.() ?? []}
@@ -362,7 +434,12 @@ const renderMulti = (
                   <For each={state.selectedOptions()}>
                     {(option) => (
                       <span
-                        class="sui-combobox__chip"
+                        class={chipClass(option)}
+                        aria-current={
+                          highlightedChipValue() === option.value
+                            ? "true"
+                            : undefined
+                        }
                         onPointerDown={(e) => e.stopPropagation()}
                       >
                         <span class="sui-combobox__chip-label">
