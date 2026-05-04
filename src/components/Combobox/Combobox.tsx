@@ -330,7 +330,10 @@ const renderMulti = (
       });
       switch (action.kind) {
         case "passthrough":
-          // Non-empty input → keep highlight clean (don't strand state).
+          // Two passthrough sources: non-empty input (browser deletes a
+          // char) and empty input with no chips (nothing to do). In both
+          // cases, defensively clear any stale armed value so it can't
+          // haunt later keypresses.
           if (highlightedChipValue() !== null) setHighlightedChipValue(null);
           return;
         case "arm":
