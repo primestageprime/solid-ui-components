@@ -18,6 +18,12 @@ import { ConversationTree, ConversationMessage } from "../src/components/Convers
 import { StatusBadge } from "../src/components/Badge";
 import { StackedProgressBar } from "../src/components/Progress";
 import { SlotFillBar } from "../src/components/SlotFillBar";
+import {
+  PivotTreemap,
+  PivotPills,
+  type PivotAccessors,
+  type PivotSelection,
+} from "../src/components/PivotTreemap";
 
 // ---- MockBaseline ----------------------------------------------------------
 // The "baseline" every mock step starts from: thematic PageCanvas wrapping a
@@ -514,6 +520,12 @@ const SEED_STEPS: SandboxStep[] = [
     hint: "products × feature areas",
     render: () => <ByFeatureStep />,
   },
+  {
+    id: "elements-grid",
+    label: "elements-grid",
+    hint: "area × focus, above/below the line",
+    render: () => <ElementsGridStep />,
+  },
 ];
 
 // ---- by-feature step -------------------------------------------------------
@@ -556,6 +568,16 @@ interface FeatureCell {
   total: number;
   truth: { True: number; False: number; Unknown: number };
 }
+
+const tagValues = (r: TaggedStatement, key: string): string[] => {
+  const prefix = `${key}:`;
+  return r.tags
+    .filter((t) => t.startsWith(prefix))
+    .map((t) => t.slice(prefix.length));
+};
+
+const tagValue = (r: TaggedStatement, key: string): string | undefined =>
+  tagValues(r, key)[0];
 
 const ByFeatureStep: Component = () => {
   const data = generate100Statements();
@@ -663,134 +685,246 @@ const ByFeatureStep: Component = () => {
             </For>
           </ClusterRow>
 
-          <Show
-            when={productsForClient().length > 0}
-            fallback={<MutedBody>no projects under this client</MutedBody>}
-          >
-            <div
-              style={{
-                display: "grid",
-                "grid-template-columns": `60px repeat(${productsForClient().length}, minmax(160px, 1fr))`,
-                gap: "8px",
-                "align-items": "stretch",
-                "max-width": "100%",
-              }}
-            >
-              {/* corner spacer */}
-              <div />
-              {/* product column headers */}
-              <For each={productsForClient()}>
-                {(p) => (
-                  <div
-                    style={{
-                      "font-size": "11px",
-                      "font-weight": 600,
-                      "text-transform": "uppercase",
-                      "letter-spacing": "0.06em",
-                      color: "var(--sui-text-primary, inherit)",
-                      "padding-bottom": "4px",
-                      "border-bottom": "1px solid var(--sui-border, rgba(255,255,255,0.18))",
-                    }}
-                  >
-                    {p}
-                  </div>
-                )}
-              </For>
+          {/* Empty 4×2 grid scaffold — we'll grow the new component into
+              this incrementally. Placeholder cells are intentionally bare
+              so the geometry is visible while the contents are designed.
+              Between cells: 1px white separators horizontally (between rows)
+              and vertically (between columns). The separators are real grid
+              tracks (not borders) so they're a single continuous line. */}
+          {(() => {
+            const cell = () => (
+              <div
+                style={{
+                  border: "1px dashed var(--sui-border, rgba(255,255,255,0.18))",
+                  "border-radius": "4px",
+                  background: "var(--sui-bg-elevated, rgba(255,255,255,0.03))",
+                }}
+              />
+            );
+            const vsep = () => (
+              <div style={{ width: "1px", background: "#fff" }} />
+            );
+            const renderRow = () => (
+              <>
+                {cell()}
+                {vsep()}
+                {cell()}
+                {vsep()}
+                {cell()}
+                {vsep()}
+                {cell()}
+              </>
+            );
+            return (
+              <div
+                style={{
+                  display: "grid",
+                  // 4 content columns separated by 3 × 1px separator tracks
+                  "grid-template-columns": "1fr 1px 1fr 1px 1fr 1px 1fr",
+                  // 2 content rows separated by 1 × 1px separator track
+                  "grid-template-rows":
+                    "minmax(120px, 1fr) auto minmax(120px, 1fr)",
+                  gap: "8px",
+                  "max-width": "100%",
+                  flex: "1 1 auto",
+                  "min-height": "0",
+                }}
+              >
+                {/* row 1 — 4 cells with vertical separators between */}
+                {renderRow()}
+                {/* horizontal separator spanning the full row */}
+                <div
+                  style={{
+                    "grid-column": "1 / -1",
+                    height: "1px",
+                    background: "#fff",
+                  }}
+                />
+                {/* row 2 — 4 cells with vertical separators between */}
+                {renderRow()}
+              </div>
+            );
+          })()}
+        </SpacedStack>
+      }
+    />
+  );
+};
 
-              <For each={FEATURE_AREAS}>
-                {(area) => (
-                  <>
-                    {/* row header */}
+// ---- elements-grid step ----------------------------------------------------
+// Independent prototype of the area × focus pivot. Each item lives in one
+// area, attaches to a focus within that area, and sits either above the line
+// (a solution) or below the line (a need).
+
+type ElementArea = "earth" | "air" | "fire" | "water";
+
+interface ElementItem {
+  id: string;
+  area: ElementArea;
+  focus: string;
+  position: "above" | "below";
+  label: string;
+}
+
+const ELEMENT_AREA_ORDER: ElementArea[] = ["earth", "air", "fire", "water"];
+
+const ELEMENT_ITEMS: ElementItem[] = [
+  { id: "1",  area: "earth", focus: "dog",    position: "below", label: "Accumulate Wealth" },
+  { id: "2",  area: "earth", focus: "dog",    position: "above", label: "Found Industry" },
+  { id: "3",  area: "earth", focus: "pig",    position: "below", label: "Wallow in Mud" },
+  { id: "4",  area: "earth", focus: "pig",    position: "above", label: "Build Sty" },
+  { id: "5",  area: "air",   focus: "bird",   position: "below", label: "Find Updraft" },
+  { id: "6",  area: "air",   focus: "bird",   position: "above", label: "Soar on Thermals" },
+  { id: "7",  area: "fire",  focus: "dragon", position: "above", label: "Breathe Flame" },
+  { id: "8",  area: "water", focus: "snake",  position: "below", label: "Bask in Sun" },
+  { id: "9",  area: "water", focus: "snake",  position: "above", label: "Tan on Rock" },
+  { id: "10", area: "water", focus: "fish",   position: "below", label: "Bask in Water" },
+];
+
+const ElementsGridStep: Component = () => {
+  const layout = createMemo(() => {
+    // area -> focus -> { above, below }
+    const byArea = new Map<ElementArea, Map<string, { above: ElementItem[]; below: ElementItem[] }>>();
+    for (const a of ELEMENT_AREA_ORDER) byArea.set(a, new Map());
+    for (const it of ELEMENT_ITEMS) {
+      const focusMap = byArea.get(it.area)!;
+      let slot = focusMap.get(it.focus);
+      if (!slot) {
+        slot = { above: [], below: [] };
+        focusMap.set(it.focus, slot);
+      }
+      slot[it.position].push(it);
+    }
+
+    const subCols: { area: ElementArea; focus: string; slot: { above: ElementItem[]; below: ElementItem[] } }[] = [];
+    const areaSpans: { area: ElementArea; span: number; startCol: number }[] = [];
+    let col = 1;
+    for (const area of ELEMENT_AREA_ORDER) {
+      const focusMap = byArea.get(area)!;
+      if (focusMap.size === 0) continue;
+      areaSpans.push({ area, span: focusMap.size, startCol: col });
+      for (const [focus, slot] of focusMap) {
+        subCols.push({ area, focus, slot });
+        col++;
+      }
+    }
+    return { subCols, areaSpans, totalCols: col - 1 };
+  });
+
+  const Cell: Component<{ items: ElementItem[] }> = (p) => (
+    <div
+      style={{
+        padding: "12px",
+        background: "rgba(255,255,255,0.04)",
+        "border-radius": "6px",
+        "min-height": "80px",
+        display: "flex",
+        "flex-direction": "column",
+        gap: "4px",
+      }}
+    >
+      <Show
+        when={p.items.length > 0}
+        fallback={
+          <span style={{ color: "rgba(255,255,255,0.2)", "font-style": "italic", "font-size": "12px" }}>
+            —
+          </span>
+        }
+      >
+        <For each={p.items}>
+          {(it) => (
+            <div style={{ "font-size": "13px", "line-height": "1.4" }}>{it.label}</div>
+          )}
+        </For>
+      </Show>
+    </div>
+  );
+
+  return (
+    <MockBaseline
+      sidebar={
+        <LgRegion>
+          <TextLabel>elements</TextLabel>
+          <HintText>area × focus, above/below the line</HintText>
+        </LgRegion>
+      }
+      detail={
+        <SpacedStack>
+          <PageTitle>Elements grid</PageTitle>
+          <MutedBody>
+            10 items across 4 areas (earth · air · fire · water). Each sub-column is
+            a focus within its area; above-the-line solutions sit on top, below-the-line
+            needs at the bottom, with the focus label between them.
+          </MutedBody>
+          {(() => {
+            const L = layout();
+            return (
+              <div
+                style={{
+                  display: "grid",
+                  "grid-template-columns": `repeat(${L.totalCols}, minmax(140px, 1fr))`,
+                  "grid-template-rows": "auto minmax(120px, 1fr) auto minmax(120px, 1fr)",
+                  "row-gap": "8px",
+                  "column-gap": "8px",
+                }}
+              >
+                <For each={L.areaSpans}>
+                  {(a) => (
                     <div
                       style={{
+                        "grid-row": "1",
+                        "grid-column": `${a.startCol} / span ${a.span}`,
+                        padding: "6px 12px",
+                        "text-transform": "uppercase",
+                        "letter-spacing": "0.08em",
                         "font-size": "11px",
-                        "font-weight": 600,
-                        color: "var(--sui-text-muted, #888)",
-                        "padding-top": "8px",
+                        "font-weight": "600",
+                        color: "rgba(255,255,255,0.55)",
+                        "border-bottom": "1px solid rgba(255,255,255,0.15)",
                       }}
                     >
-                      {area}
+                      {a.area}
                     </div>
-                    {/* cells across all products */}
-                    <For each={productsForClient()}>
-                      {(product) => {
-                        const cells = cellFor(product, area);
-                        return (
-                          <div
-                            style={{
-                              "min-height": "60px",
-                              padding: "6px 8px",
-                              border: "1px solid var(--sui-border, rgba(255,255,255,0.12))",
-                              "border-radius": "4px",
-                              background: "var(--sui-bg-elevated, rgba(255,255,255,0.04))",
-                              display: "flex",
-                              "flex-direction": "column",
-                              gap: "4px",
-                            }}
-                            title={`${product} · ${area} · ${totalForArea(product, area)} statements`}
-                          >
-                            <Show
-                              when={cells.length > 0}
-                              fallback={
-                                <span
-                                  style={{
-                                    "font-size": "10px",
-                                    color: "var(--sui-text-muted, #888)",
-                                    "font-style": "italic",
-                                    "align-self": "center",
-                                    margin: "auto",
-                                  }}
-                                >
-                                  —
-                                </span>
-                              }
-                            >
-                              <For each={cells}>
-                                {(c) => (
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      "justify-content": "space-between",
-                                      "align-items": "center",
-                                      gap: "8px",
-                                      padding: "2px 6px",
-                                      "border-radius": "3px",
-                                      background: "var(--sui-bg-deep, rgba(0,0,0,0.2))",
-                                      "font-size": "11px",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        "white-space": "nowrap",
-                                        overflow: "hidden",
-                                        "text-overflow": "ellipsis",
-                                        "min-width": "0",
-                                      }}
-                                    >
-                                      {c.feature}
-                                    </span>
-                                    <span
-                                      style={{
-                                        color: "var(--sui-text-muted, #888)",
-                                        "font-family": "var(--sui-mono, monospace)",
-                                        "font-size": "10px",
-                                      }}
-                                    >
-                                      {c.total}
-                                    </span>
-                                  </div>
-                                )}
-                              </For>
-                            </Show>
-                          </div>
-                        );
+                  )}
+                </For>
+                <For each={L.subCols}>
+                  {(sc, i) => (
+                    <div style={{ "grid-row": "2", "grid-column": `${i() + 1}` }}>
+                      <Cell items={sc.slot.above} />
+                    </div>
+                  )}
+                </For>
+                <For each={L.subCols}>
+                  {(sc, i) => (
+                    <div
+                      style={{
+                        "grid-row": "3",
+                        "grid-column": `${i() + 1}`,
+                        padding: "6px 12px",
+                        "text-align": "center",
+                        "font-size": "12px",
+                        "font-weight": "600",
+                        "text-transform": "uppercase",
+                        "letter-spacing": "0.06em",
+                        color: "rgba(255,255,255,0.75)",
+                        "border-top": "1px solid rgba(255,255,255,0.15)",
+                        "border-bottom": "1px solid rgba(255,255,255,0.15)",
                       }}
-                    </For>
-                  </>
-                )}
-              </For>
-            </div>
-          </Show>
+                    >
+                      {sc.focus}
+                    </div>
+                  )}
+                </For>
+                <For each={L.subCols}>
+                  {(sc, i) => (
+                    <div style={{ "grid-row": "4", "grid-column": `${i() + 1}` }}>
+                      <Cell items={sc.slot.below} />
+                    </div>
+                  )}
+                </For>
+              </div>
+            );
+          })()}
         </SpacedStack>
       }
     />
@@ -1204,510 +1338,30 @@ const generate100Statements = (): TaggedStatement[] => {
 };
 
 // ---- 100-statements pivot tree -------------------------------------------
+//
+// Generic pivot machinery (PivotTreemap, PivotPills, bucketByDims) lives in
+// the library. The bits below are consumer-side: a Dim union, an accessors
+// adapter that pulls "DIM:VALUE"-style values off TaggedStatement.tags, and
+// a metrics adapter mapping workflow status onto done/doing predicates.
 
 type PivotDim = "CLIENT" | "PROJECT" | "FEATURE";
-const PIVOT_DIMS: PivotDim[] = ["CLIENT", "PROJECT", "FEATURE"];
+const PIVOT_DIMS: readonly PivotDim[] = ["CLIENT", "PROJECT", "FEATURE"] as const;
 
-// Returns ALL values for a given dimension on a row. FEATURE is multi-valued
-// on ~60% of tagged rows (every tagged row has SOLID-UI-COMPONENTS, plus
-// often a specific sub-feature). CLIENT and PROJECT are single-valued today
-// but the API is symmetric so both pivot directions work.
-const tagValues = (s: TaggedStatement, dim: PivotDim): string[] => {
-  const prefix = `${dim}:`;
-  return s.tags.filter((x) => x.startsWith(prefix)).map((x) => x.slice(prefix.length));
+const tagAccessors: PivotAccessors<TaggedStatement, PivotDim> = {
+  dims: PIVOT_DIMS,
+  values: (row, dim) => {
+    const prefix = `${dim}:`;
+    return row.tags
+      .filter((t) => t.startsWith(prefix))
+      .map((t) => t.slice(prefix.length));
+  },
 };
 
-// Convenience for the rare caller that wants only the first value.
-const tagValue = (s: TaggedStatement, dim: PivotDim): string | null =>
-  tagValues(s, dim)[0] ?? null;
-
-interface PivotBucket {
-  key: string;
-  total: number;
-  truth: { True: number; False: number; Unknown: number };
-  tasks: { todo: number; doing: number; done: number };
-  children: PivotBucket[];
-}
-
-// Map workflow statuses → coarse task bucket.
-//   todo  : not picked up yet
-//   doing : actively being worked / under review
-//   done  : closed / shipped
-const taskBucket = (status: TaggedStatement["status"]): "todo" | "doing" | "done" => {
-  switch (status) {
-    case "Drafted":
-    case "Proposed":
-      return "todo";
-    case "InProgress":
-    case "AwaitingReview":
-      return "doing";
-    case "Closed":
-      return "done";
-  }
-};
-
-const tallyTasks = (rows: TaggedStatement[]): PivotBucket["tasks"] => {
-  const t = { todo: 0, doing: 0, done: 0 };
-  for (const r of rows) t[taskBucket(r.status)] += 1;
-  return t;
-};
-
-// Bucket rows by outer × inner dimension. Multi-valued tags (e.g. a row
-// with both FEATURE:SOLID-UI-COMPONENTS and FEATURE:DAG-CHART) contribute
-// to *every* matching bucket — counts can therefore exceed total row count
-// when one or both axes is multi-valued.
-const bucketByDims = (
-  rows: TaggedStatement[],
-  outer: PivotDim,
-  inner: PivotDim,
-): PivotBucket[] => {
-  const outerMap = new Map<string, TaggedStatement[]>();
-  for (const r of rows) {
-    for (const ov of tagValues(r, outer)) {
-      if (!outerMap.has(ov)) outerMap.set(ov, []);
-      outerMap.get(ov)!.push(r);
-    }
-  }
-  const out: PivotBucket[] = [];
-  for (const [ok, group] of outerMap) {
-    const innerMap = new Map<string, TaggedStatement[]>();
-    for (const r of group) {
-      const ivs = tagValues(r, inner);
-      if (ivs.length === 0) {
-        const arr = innerMap.get("—") ?? [];
-        arr.push(r);
-        innerMap.set("—", arr);
-      } else {
-        for (const iv of ivs) {
-          const arr = innerMap.get(iv) ?? [];
-          arr.push(r);
-          innerMap.set(iv, arr);
-        }
-      }
-    }
-    const children: PivotBucket[] = [];
-    for (const [ik, sub] of innerMap) {
-      children.push({
-        key: ik,
-        total: sub.length,
-        truth: {
-          True: sub.filter((r) => r.truth === "True").length,
-          False: sub.filter((r) => r.truth === "False").length,
-          Unknown: sub.filter((r) => r.truth === "Unknown").length,
-        },
-        tasks: tallyTasks(sub),
-        children: [],
-      });
-    }
-    children.sort((a, b) => b.total - a.total);
-    // Container task counts = sum of children. (When the inner axis is
-    // multi-valued — e.g. FEATURE — a row can land in multiple children, so
-    // summing children would over-count. Instead, tally the outer group
-    // directly so containers stay honest.)
-    out.push({
-      key: ok,
-      total: group.length,
-      truth: {
-        True: group.filter((r) => r.truth === "True").length,
-        False: group.filter((r) => r.truth === "False").length,
-        Unknown: group.filter((r) => r.truth === "Unknown").length,
-      },
-      tasks: tallyTasks(group),
-      children,
-    });
-  }
-  out.sort((a, b) => b.total - a.total);
-  return out;
-};
-
-const TruthBar: Component<{ truth: PivotBucket["truth"]; total: number }> = (p) => {
-  const segments = () => {
-    const t = p.total || 1;
-    return [
-      { percentage: (p.truth.True / t) * 100, color: "var(--sui-success, #2a6)" },
-      { percentage: (p.truth.False / t) * 100, color: "var(--sui-danger, #c33)" },
-      { percentage: (p.truth.Unknown / t) * 100, color: "var(--sui-text-muted, #888)" },
-    ];
-  };
-  const tip = () =>
-    `True: ${p.truth.True} · False: ${p.truth.False} · Unknown: ${p.truth.Unknown}`;
-  return (
-    <div title={tip()} style={{ height: "6px", width: "100%" }}>
-      <StackedProgressBar segments={segments()} />
-    </div>
-  );
-};
-
-const TaskBar: Component<{ tasks: PivotBucket["tasks"] }> = (p) => {
-  const total = () => p.tasks.todo + p.tasks.doing + p.tasks.done || 1;
-  const segments = () => {
-    const t = total();
-    return [
-      { percentage: (p.tasks.done / t) * 100, color: "var(--sui-success, #2a6)" },
-      { percentage: (p.tasks.doing / t) * 100, color: "var(--sui-info, #4ea1ff)" },
-      { percentage: (p.tasks.todo / t) * 100, color: "var(--sui-text-muted, #555)" },
-    ];
-  };
-  const tip = () =>
-    `done: ${p.tasks.done} · doing: ${p.tasks.doing} · todo: ${p.tasks.todo}`;
-  return (
-    <div title={tip()} style={{ height: "6px", width: "100%" }}>
-      <StackedProgressBar segments={segments()} />
-    </div>
-  );
-};
-
-// Compact "done/doing/todo" counts as text. Used in the outer title row
-// where a bar would compete with the truth bar visually.
-const TaskCounts: Component<{ tasks: PivotBucket["tasks"] }> = (p) => (
-  <span
-    style={{
-      "font-size": "10px",
-      "font-family": "var(--sui-mono, monospace)",
-      display: "inline-flex",
-      gap: "4px",
-    }}
-    title={`done: ${p.tasks.done} · doing: ${p.tasks.doing} · todo: ${p.tasks.todo}`}
-  >
-    <span style={{ color: "var(--sui-success, #2a6)" }}>✓{p.tasks.done}</span>
-    <span style={{ color: "var(--sui-info, #4ea1ff)" }}>•{p.tasks.doing}</span>
-    <span style={{ color: "var(--sui-text-muted, #888)" }}>○{p.tasks.todo}</span>
-  </span>
-);
-
-interface PivotSelection {
-  outerKey: string;
-  innerKey: string | null; // null = the whole outer bucket (or the untagged group)
-  scope: "tagged" | "untagged";
-}
-
-const PivotTreemap: Component<{
-  rows: TaggedStatement[];
-  outer: PivotDim;
-  inner: PivotDim;
-  untaggedCount: number;
-  selection: PivotSelection | null;
-  onSelect: (sel: PivotSelection | null) => void;
-}> = (p) => {
-  const buckets = () => bucketByDims(p.rows, p.outer, p.inner);
-
-  const isLeafSelected = (ok: string, ik: string) =>
-    p.selection?.scope === "tagged" &&
-    p.selection.outerKey === ok &&
-    p.selection.innerKey === ik;
-
-  const isOuterSelected = (ok: string) =>
-    p.selection?.scope === "tagged" &&
-    p.selection.outerKey === ok &&
-    p.selection.innerKey === null;
-
-  const isUntaggedSelected = () => p.selection?.scope === "untagged";
-
-  const toggleLeaf = (ok: string, ik: string) => {
-    if (isLeafSelected(ok, ik)) p.onSelect(null);
-    else p.onSelect({ outerKey: ok, innerKey: ik, scope: "tagged" });
-  };
-  const toggleOuter = (ok: string) => {
-    if (isOuterSelected(ok)) p.onSelect(null);
-    else p.onSelect({ outerKey: ok, innerKey: null, scope: "tagged" });
-  };
-  const toggleUntagged = () => {
-    if (isUntaggedSelected()) p.onSelect(null);
-    else p.onSelect({ outerKey: "", innerKey: null, scope: "untagged" });
-  };
-
-  return (
-    <ProportionalStack
-      direction="row"
-      gap="sm"
-      style={{
-        // Outer boxes stretch to the tallest sibling. Cap so a long tail of
-        // inner cells doesn't push the table off-screen — overflow scrolls
-        // inside the box instead of bleeding out.
-        height: "auto",
-        "min-height": "180px",
-        "max-height": "320px",
-        "align-items": "stretch",
-      }}
-    >
-      <For each={buckets()}>
-        {(b) => (
-          <ProportionalItem
-            weight={b.total}
-            scrollWhenSmall={false}
-            style={{
-              border: `1px solid ${
-                isOuterSelected(b.key)
-                  ? "var(--sui-accent, #4ea1ff)"
-                  : "var(--sui-border, rgba(255,255,255,0.12))"
-              }`,
-              "border-radius": "4px",
-              padding: "8px",
-              gap: "6px",
-              "min-width": "0",
-              background: "var(--sui-bg-elevated, rgba(255,255,255,0.04))",
-            }}
-          >
-            <div
-              onClick={(e) => {
-                // Click the title row to filter on the whole outer bucket.
-                e.stopPropagation();
-                toggleOuter(b.key);
-              }}
-              style={{
-                display: "flex",
-                "align-items": "baseline",
-                "justify-content": "space-between",
-                gap: "8px",
-                "min-width": 0,
-                cursor: "pointer",
-                "user-select": "none",
-              }}
-              title={`Click to filter table to ${p.outer}=${b.key}`}
-            >
-              <span style={{ "font-size": "11px", "font-weight": 600, "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis" }}>
-                {b.key}
-              </span>
-              <span
-                style={{ display: "inline-flex", "align-items": "baseline", gap: "6px", "font-size": "10px", color: "var(--sui-text-muted, #888)" }}
-                title={`direct tally: ${b.tasks.done} done · ${b.tasks.doing} doing · ${b.tasks.todo} todo`}
-              >
-                <span>· {b.total}</span>
-              </span>
-            </div>
-            {(() => {
-              let slots = 0;
-              let done = 0;
-              for (const c of b.children) {
-                slots += c.total;
-                done += c.tasks.done;
-              }
-              return (
-                <div style={{ width: "100%" }}>
-                  <SlotFillBar
-                    slots={slots}
-                    done={done}
-                    active={null}
-                    height={4}
-                    maxWidth={null}
-                    label={`${done}/${slots} done (sum of children)`}
-                  />
-                </div>
-              );
-            })()}
-            <div
-              style={{
-                flex: "1 1 auto",
-                "min-height": 0,
-                display: "flex",
-                gap: "4px",
-                "flex-wrap": "wrap",
-                "align-content": "flex-start",
-                "overflow-y": "auto",
-              }}
-            >
-              <For each={b.children}>
-                {(c) => (
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLeaf(b.key, c.key);
-                    }}
-                    title={`Click to filter table to ${p.outer}=${b.key}, ${p.inner}=${c.key}`}
-                    style={{
-                      flex: `${c.total} 1 60px`,
-                      "min-width": "60px",
-                      padding: "4px 6px",
-                      border: `1px solid ${
-                        isLeafSelected(b.key, c.key)
-                          ? "var(--sui-accent, #4ea1ff)"
-                          : "var(--sui-border, rgba(255,255,255,0.12))"
-                      }`,
-                      "border-radius": "3px",
-                      background: isLeafSelected(b.key, c.key)
-                        ? "var(--sui-bg-elevated, rgba(78,161,255,0.12))"
-                        : "var(--sui-bg-deep, rgba(0,0,0,0.2))",
-                      display: "flex",
-                      "flex-direction": "column",
-                      gap: "4px",
-                      "min-height": "0",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      "user-select": "none",
-                    }}
-                  >
-                    <div style={{ display: "flex", "justify-content": "space-between", "font-size": "10px", "min-width": 0, gap: "4px" }}>
-                      <span style={{ "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis", "font-weight": 500 }}>
-                        {c.key}
-                      </span>
-                      <span style={{ color: "var(--sui-text-muted, #888)" }}>{c.total}</span>
-                    </div>
-                    <SlotFillBar
-                      slots={c.total}
-                      done={c.tasks.done}
-                      active={null}
-                      height={6}
-                      maxWidth={null}
-                      label={`${c.tasks.done}/${c.total} done · ${c.tasks.doing} doing · ${c.tasks.todo} todo`}
-                    />
-                  </div>
-                )}
-              </For>
-            </div>
-          </ProportionalItem>
-        )}
-      </For>
-      <Show when={p.untaggedCount > 0}>
-        <ProportionalItem
-          weight={p.untaggedCount}
-          scrollWhenSmall={false}
-          style={{
-            border: `1px dashed ${
-              isUntaggedSelected()
-                ? "var(--sui-accent, #4ea1ff)"
-                : "var(--sui-border, rgba(255,255,255,0.12))"
-            }`,
-            "border-radius": "4px",
-            padding: "8px",
-            "min-width": "0",
-            opacity: isUntaggedSelected() ? 1 : 0.6,
-            display: "flex",
-            "flex-direction": "column",
-            "justify-content": "center",
-            "align-items": "center",
-            "text-align": "center",
-            cursor: "pointer",
-            "user-select": "none",
-          }}
-          onClick={() => toggleUntagged()}
-          title="Click to filter table to untagged rows"
-        >
-          <div style={{ "font-size": "11px", "font-weight": 600 }}>untagged</div>
-          <div style={{ "font-size": "10px", color: "var(--sui-text-muted, #888)" }}>{p.untaggedCount} rows</div>
-        </ProportionalItem>
-      </Show>
-    </ProportionalStack>
-  );
-};
-
-// Drag-to-reorder pills. The order signal is a permutation of PIVOT_DIMS:
-// position 0 = outer dimension, position 1 = inner dimension, position 2 =
-// unused (greyed out). Drag any pill onto another to swap their slots.
-const PivotPills: Component<{
-  order: PivotDim[];
-  setOrder: (next: PivotDim[]) => void;
-}> = (p) => {
-  const [dragFrom, setDragFrom] = createSignal<number | null>(null);
-  const [dragOver, setDragOver] = createSignal<number | null>(null);
-
-  const onDrop = (toIdx: number) => {
-    const from = dragFrom();
-    setDragFrom(null);
-    setDragOver(null);
-    if (from == null || from === toIdx) return;
-    const next = p.order.slice();
-    [next[from], next[toIdx]] = [next[toIdx], next[from]];
-    p.setOrder(next);
-  };
-
-  const slotLabel = (idx: number) =>
-    idx === 0 ? "outer" : idx === 1 ? "inner" : "unused";
-
-  const pillStyle = (idx: number, isDragOver: boolean) => {
-    const active = idx < 2;
-    return {
-      display: "inline-flex",
-      "align-items": "center",
-      gap: "6px",
-      padding: "4px 10px",
-      "border-radius": "999px",
-      "font-size": "12px",
-      "font-weight": 500,
-      cursor: "grab",
-      "user-select": "none" as const,
-      border: `1px solid ${
-        isDragOver
-          ? "var(--sui-accent, #4ea1ff)"
-          : active
-          ? "var(--sui-border-strong, rgba(255,255,255,0.3))"
-          : "var(--sui-border, rgba(255,255,255,0.12))"
-      }`,
-      background: isDragOver
-        ? "var(--sui-bg-elevated, rgba(255,255,255,0.08))"
-        : active
-        ? "var(--sui-bg-elevated, rgba(255,255,255,0.04))"
-        : "transparent",
-      color: active
-        ? "var(--sui-text-primary, inherit)"
-        : "var(--sui-text-muted, #888)",
-      opacity: active ? 1 : 0.55,
-    };
-  };
-
-  return (
-    <ClusterRow gap="sm" style={{ "font-size": "12px", "flex-wrap": "wrap" }}>
-      <span style={{ color: "var(--sui-text-muted, #888)" }}>
-        drag to reorder:
-      </span>
-      <For each={p.order}>
-        {(dim, idx) => (
-          <div
-            style={{
-              display: "flex",
-              "flex-direction": "column",
-              "align-items": "center",
-              gap: "2px",
-            }}
-          >
-            <span
-              style={{
-                "font-size": "9px",
-                "text-transform": "uppercase",
-                "letter-spacing": "0.06em",
-                color:
-                  idx() < 2
-                    ? "var(--sui-text-muted, #888)"
-                    : "var(--sui-text-muted, #888)",
-                opacity: idx() < 2 ? 0.85 : 0.55,
-              }}
-            >
-              {slotLabel(idx())}
-              {idx() === 0 ? " ›" : ""}
-            </span>
-            <span
-              draggable={true}
-              onDragStart={(e) => {
-                setDragFrom(idx());
-                e.dataTransfer?.setData("text/plain", String(idx()));
-                if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-                setDragOver(idx());
-              }}
-              onDragLeave={() => {
-                if (dragOver() === idx()) setDragOver(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                onDrop(idx());
-              }}
-              onDragEnd={() => {
-                setDragFrom(null);
-                setDragOver(null);
-              }}
-              style={pillStyle(idx(), dragOver() === idx() && dragFrom() !== idx())}
-              title="drag to swap with another pill"
-            >
-              <span style={{ opacity: 0.5, "font-size": "10px" }}>⋮⋮</span>
-              {dim}
-            </span>
-          </div>
-        )}
-      </For>
-    </ClusterRow>
-  );
+// Workflow status → done/doing predicates for the metrics-driven SlotFillBar.
+const tagMetrics = {
+  done: (r: TaggedStatement) => r.status === "Closed",
+  doing: (r: TaggedStatement) =>
+    r.status === "InProgress" || r.status === "AwaitingReview",
 };
 
 const Hundred100TableStep: Component = () => {
@@ -1733,8 +1387,8 @@ const Hundred100TableStep: Component = () => {
     if (!sel) return data;
     if (sel.scope === "untagged") return data.filter((r) => r.tags.length === 0);
     return data.filter((r) => {
-      if (!tagValues(r, outer()).includes(sel.outerKey)) return false;
-      if (sel.innerKey !== null && !tagValues(r, inner()).includes(sel.innerKey)) return false;
+      if (!tagAccessors.values(r, outer()).includes(sel.outerKey)) return false;
+      if (sel.innerKey !== null && !tagAccessors.values(r, inner()).includes(sel.innerKey)) return false;
       return true;
     });
   };
@@ -1779,6 +1433,8 @@ const Hundred100TableStep: Component = () => {
               rows={data}
               outer={outer()}
               inner={inner()}
+              accessors={tagAccessors}
+              metrics={tagMetrics}
               untaggedCount={untaggedCount}
               selection={selection()}
               onSelect={setSelection}
