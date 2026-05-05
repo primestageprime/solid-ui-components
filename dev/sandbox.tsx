@@ -1468,11 +1468,33 @@ const PivotTreemap: Component<{
               <span style={{ "font-size": "11px", "font-weight": 600, "white-space": "nowrap", overflow: "hidden", "text-overflow": "ellipsis" }}>
                 {b.key}
               </span>
-              <span style={{ display: "inline-flex", "align-items": "baseline", gap: "6px", "font-size": "10px", color: "var(--sui-text-muted, #888)" }}>
+              <span
+                style={{ display: "inline-flex", "align-items": "baseline", gap: "6px", "font-size": "10px", color: "var(--sui-text-muted, #888)" }}
+                title={`direct tally: ${b.tasks.done} done · ${b.tasks.doing} doing · ${b.tasks.todo} todo`}
+              >
                 <span>· {b.total}</span>
-                <TaskCounts tasks={b.tasks} />
               </span>
             </div>
+            {(() => {
+              let slots = 0;
+              let done = 0;
+              for (const c of b.children) {
+                slots += c.total;
+                done += c.tasks.done;
+              }
+              return (
+                <div style={{ width: "100%" }}>
+                  <SlotFillBar
+                    slots={slots}
+                    done={done}
+                    active={null}
+                    height={4}
+                    maxWidth={null}
+                    label={`${done}/${slots} done (sum of children)`}
+                  />
+                </div>
+              );
+            })()}
             <div
               style={{
                 flex: "1 1 auto",
@@ -1520,8 +1542,14 @@ const PivotTreemap: Component<{
                       </span>
                       <span style={{ color: "var(--sui-text-muted, #888)" }}>{c.total}</span>
                     </div>
-                    <TruthBar truth={c.truth} total={c.total} />
-                    <TaskBar tasks={c.tasks} />
+                    <SlotFillBar
+                      slots={c.total}
+                      done={c.tasks.done}
+                      active={null}
+                      height={6}
+                      maxWidth={null}
+                      label={`${c.tasks.done}/${c.total} done · ${c.tasks.doing} doing · ${c.tasks.todo} todo`}
+                    />
                   </div>
                 )}
               </For>
