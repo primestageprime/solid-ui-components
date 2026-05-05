@@ -80,3 +80,5 @@ export * from "./components/WorkerCard";
 export * from "./components/CompletionTimeline";
 export * from "./components/ThroughputChart";
 export * from "./components/RingChart";
+export * from "./components/PivotTreemap";
+export * from "./components/ProductGrid";

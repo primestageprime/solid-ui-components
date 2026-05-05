@@ -1,5 +1,44 @@
 # Changelog
 
+## v0.21.0 — ProductGrid
+
+Promoted `ProductGrid` (Composed, Depth 2) into the library, extracted from
+the sandbox `elements-grid` step. It lays items out as an (area × focus)
+pivot with two zones split by a focus label band: above-the-line solutions
+on top (work tracked through todo → doing → done) and below-the-line needs
+underneath (auto-met when every solution they reference is fully done).
+Composes `StackedProgressBar` for both per-card and per-focus aggregate
+status bars.
+
+Major lines (white) separate areas and rows; minor lines (toned-down)
+separate sub-columns within an area. Selection is bidirectional: clicking a
+need surfaces its solving solutions; clicking a solution surfaces every need
+that depends on it; clicking a focus highlights its whole sub-column. The
+component supports both controlled and uncontrolled selection, and accepts
+an optional `work` map so consumers can animate the counts externally.
+
+### Added
+
+- **`ProductGrid`** (`ProductGrid/ProductGrid.tsx`) — props:
+  - `items` — `ProductGridItem[]` (`id`, `area`, `focus`,
+    `position: "above" | "below"`, `shortName`, `description`, optional
+    `work`, optional `solvedBy`)
+  - `areaOrder` — left-to-right ordering of areas (empty areas are dropped)
+  - `work?` — `Record<id, { todo, doing, done }>`; overrides each item's
+    static `work` field (used by consumers driving an animation tick)
+  - `selection?` / `onSelectionChange?` — controlled selection of either an
+    item or a focus column; omit both for internal-only state
+  - `class?`, `style?`
+- `isSolutionSatisfied(work?)` helper exported alongside the component.
+- Showcase at `#/product-grid` with two datasets (elements / statements
+  derived from the 100-statement vocabulary), a tab to switch between
+  them, an animated work store advancing one unit per tick, and a
+  selection-driven items table beneath the grid.
+
+### Changed
+
+- `dev/sandbox.tsx`: removed the now-promoted `elements-grid` step.
+
 ## v0.20.0 — SlotFillBar
 
 Promoted `SlotFillBar` (Atomic, Depth 1) into the library, extracted from the

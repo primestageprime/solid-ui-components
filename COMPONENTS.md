@@ -379,6 +379,25 @@ State derivation:
     <SlotFillBar slots={10} done={3} active={{ index: 3, phase: "doing" }} />
     ```
 
+## ProductGrid
+- **ProductGrid** — Composed (Depth 2). Composes `StackedProgressBar`. (Area × focus) pivot grid where every item lives in one area, attaches to a focus within that area, and sits either above the line (a solution, work tracked through `todo → doing → done`) or below the line (a need, auto-met when every solution it references in `solvedBy` is fully done). Renders area headers spanning their sub-columns, a focus-label band sandwiched between two thin status bars (above-aggregate work · below-aggregate met-vs-unmet), and dashed cell stacks anchored toward the label band so above cards push down and below cards push up. Major lines (white, `--sui-border-bright`) separate areas and rows; minor lines (toned-down, `--sui-border`) separate sub-columns within an area; area-boundary verticals are 3px wide while inter-focus verticals are 1px. Selection is bidirectional and either controlled or uncontrolled: clicking a need surfaces its solving solutions, clicking a solution surfaces every need that depends on it, and clicking a focus highlights its whole sub-column. Owns `ProductGrid.css`. Key props: `items` (`ProductGridItem[]` — `id`, `area`, `focus`, `position`, `shortName` ≤ 3 words, `description`, optional `work`, optional `solvedBy`), `areaOrder` (left-to-right area ordering; empty areas drop out), `work?` (`Record<id, { todo, doing, done }>` overriding each item's static `work`; pass a SolidJS store for animation), `selection?` (`{ kind: "item", id } | { kind: "focus", area, focus } | null`), `onSelectionChange?`, `class?`, `style?`. Also exports `isSolutionSatisfied(work?)` for consumers that need the same met-check logic. Uses `--sui-border`, `--sui-border-bright`, `--sui-bg-elevated`, `--sui-success`, `--sui-info`, `--sui-text-muted`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-accent` tokens. Use for: product-strategy roadmaps, OKR boards (objectives below the line, key results above), capability/coverage maps where you want to read at a glance whether the underlying work satisfies the stated needs.
+  - Example:
+    ```tsx
+    import { ProductGrid } from "solid-ui-components";
+
+    <ProductGrid
+      areaOrder={["AMYGDALA", "JTF", "RHINO"]}
+      items={[
+        { id: "a1", area: "AMYGDALA", focus: "DAG-CHART", position: "above",
+          shortName: "Hover Tooltip", description: "Add tooltip on dag chart node hover.",
+          work: { todo: 0, doing: 0, done: 5 } },
+        { id: "b1", area: "AMYGDALA", focus: "DAG-CHART", position: "below",
+          shortName: "Friendly Hover", description: "Hovering reveals identity in <100ms.",
+          solvedBy: ["a1"] },
+      ]}
+    />
+    ```
+
 ## Section
 - **Section** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `variant` (`ColorVariant` — sets accent color), `corners` (`CornerStyle` — visual corner treatment; replaces old `"bordered"`/`"decorated"` variant values), `fill`, `showHeader`, `headerAction`, `collapsible`, `collapsed`, `onToggleCollapse`, `defaultExpanded`. Has `createSection` factory. Use for: major page sections.
 
