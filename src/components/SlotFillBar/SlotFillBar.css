@@ -1,0 +1,30 @@
+.sui-slot-fill-bar {
+  position: relative;
+  width: 100%;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sui-slot-fill-bar__static {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.sui-slot-fill-bar__overlay {
+  position: absolute;
+  inset: 0;
+  /* `transition` and `clip-path` are set inline per-instance so the
+     direction-aware colour transition works. The `will-change` hint
+     here keeps the compositor warm. */
+  will-change: clip-path, background-color;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-slot-fill-bar__static,
+  .sui-slot-fill-bar__overlay {
+    transition: none !important;
+  }
+}

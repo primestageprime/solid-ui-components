@@ -43,6 +43,7 @@ import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
 import { DurationShowcase } from "./showcases/duration";
+import { SlotFillBarShowcase } from "./showcases/slot-fill-bar";
 import { StatusLightShowcase } from "./showcases/status-light";
 import { DropdownShowcase } from "./showcases/dropdown";
 import { PopoverMenuShowcase } from "./showcases/popover-menu";
@@ -147,6 +148,7 @@ const items: Item[] = [
   { id: "quadrant-grid", label: "QuadrantGrid", component: QuadrantGridShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "ring-chart", label: "RingChart", component: RingChartShowcase, tags: ["depth:1", "chart", "data"] },
   { id: "sprint-selector", label: "SprintSelector", component: SprintSelectorShowcase, tags: ["depth:1", "form", "time"] },
+  { id: "slot-fill-bar", label: "SlotFillBar", component: SlotFillBarShowcase, tags: ["depth:1", "indicator", "chart"] },
   { id: "status-light", label: "StatusLight", component: StatusLightShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "tag-input", label: "TagInput", component: TagInputShowcase, tags: ["depth:1", "form"] },
   { id: "throughput-chart", label: "ThroughputChart", component: ThroughputChartShowcase, tags: ["depth:2", "chart", "time", "data"] },

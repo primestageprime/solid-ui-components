@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.20.0 — SlotFillBar
+
+Promoted `SlotFillBar` (Atomic, Depth 1) into the library, extracted from the
+sandbox queue-animation step. It's a fill-from-left progress bar for an
+ordered queue of equal-sized work slots that move through
+`todo → doing → done`, with two distinct transition modes baked in:
+**slide** for `todo → doing` (clip-path inset interpolated, colour snaps so
+the slide reads as one solid wave) and **fade** for `doing → done` (overlay
+background-colour transitions in place while the static fill grows by one
+slot to absorb it). Honours `prefers-reduced-motion`.
+
+### Added
+
+- **`SlotFillBar`** (`SlotFillBar/SlotFillBar.tsx`) — props:
+  - `slots` — total slot count
+  - `done` — fully-completed slot count (drives the static fill)
+  - `active` — `{ index, phase: "doing" | "done" } | null`
+  - `height` (default 24), `maxWidth` (default 400, `null` to remove)
+  - `todoColor` / `doingColor` / `doneColor` — CSS colour overrides
+  - `label` — accessibility / hover title; defaults to `"<done>/<slots> done"`
+- Showcase at `#/slot-fill-bar` with static, doing, and an animated
+  example that walks a single fake task through the 20 phase-transitions
+  of a 10-slot queue (1s tick).
+- 7 SlotFillBar tests.
+
+### Changed
+
+- `dev/sandbox.tsx`: removed the now-unused `TransitionBar` and
+  `TaskTransitionAnimation` helpers (single-task transition prototype
+  superseded by `SlotFillBar`).
+
 ## v0.19.1 — Combobox: two-step backspace highlight-then-delete
 
 ### Fixed

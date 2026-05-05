@@ -5,7 +5,7 @@
 // /#/sandbox/<step-id>. Steps are kept in source so HMR + the editor are the
 // whole authoring experience — they reset on reload by design.
 // ============================================
-import { Component, createSignal, For, JSX, onCleanup, onMount, Show } from "solid-js";
+import { Component, createEffect, createMemo, createSignal, For, JSX, onCleanup, onMount, Show } from "solid-js";
 import { loadTheme } from "./load-theme";
 import { FlexRow, LgRegion, ContentStack, DelineatedSidebar, PageCanvas, TightStack, ClusterRow, SpacedStack, NarrowStack, ScrollPanel, ProportionalStack, ProportionalItem } from "../src/components/Layout";
 import { HintText, EllipsizedTitle, PageTitle, TextSublabel, MutedBody, TextLabel } from "../src/components/Text";
@@ -17,6 +17,7 @@ import { BaseTable } from "../src/components/Table";
 import { ConversationTree, ConversationMessage } from "../src/components/ConversationTree";
 import { StatusBadge } from "../src/components/Badge";
 import { StackedProgressBar } from "../src/components/Progress";
+import { SlotFillBar } from "../src/components/SlotFillBar";
 
 // ---- MockBaseline ----------------------------------------------------------
 // The "baseline" every mock step starts from: thematic PageCanvas wrapping a
@@ -501,7 +502,580 @@ const SEED_STEPS: SandboxStep[] = [
     hint: "100 stmts · table view",
     render: () => <Hundred100TableStep />,
   },
+  {
+    id: "completion-bars",
+    label: "completion-bars",
+    hint: "5 variants",
+    render: () => <CompletionBarsStep />,
+  },
+  {
+    id: "by-feature",
+    label: "by-feature",
+    hint: "products × feature areas",
+    render: () => <ByFeatureStep />,
+  },
 ];
+
+// ---- by-feature step -------------------------------------------------------
+// For a chosen client, lay out a grid: rows = feature area (UI / BG / API),
+// columns = product. Each cell shows the features in that area for that
+// product, plus their statement counts. Demonstrates the "above the line"
+// product/feature pivot the user sketched.
+
+type FeatureArea = "UI" | "BG" | "API";
+
+const FEATURE_AREA: Record<string, FeatureArea> = {
+  // UI surface
+  "DAG-CHART": "UI",
+  "DASHBOARD": "UI",
+  "UI": "UI",
+  "ONBOARDING": "UI",
+  "SEARCH": "UI",
+  "NOTIFICATIONS": "UI",
+  "SETTINGS": "UI",
+  // Backend / data plane
+  "METRICS": "BG",
+  "MIGRATION": "BG",
+  "OBSERVABILITY": "BG",
+  "PERFORMANCE": "BG",
+  "REPORTING": "BG",
+  "SCHEMA": "BG",
+  "WEBHOOKS": "BG",
+  // API / integration
+  "API": "API",
+  "AUTH": "API",
+  "BILLING": "API",
+  "EXPORT": "API",
+  "IMPORT": "API",
+  "SOLID-UI-COMPONENTS": "UI",
+};
+const FEATURE_AREAS: FeatureArea[] = ["UI", "BG", "API"];
+
+interface FeatureCell {
+  feature: string;
+  total: number;
+  truth: { True: number; False: number; Unknown: number };
+}
+
+const ByFeatureStep: Component = () => {
+  const data = generate100Statements();
+
+  // CLIENT ↔ PROJECT pairs that actually appear in the data, plus their
+  // ordering: prefer the most-statements client first.
+  const clientOrder = createMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of data) {
+      const c = tagValue(r, "CLIENT");
+      if (!c) continue;
+      counts.set(c, (counts.get(c) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
+  });
+
+  const [client, setClient] = createSignal<string>("");
+
+  // Initialize selection on first render.
+  createEffect(() => {
+    if (!client() && clientOrder().length > 0) setClient(clientOrder()[0]);
+  });
+
+  const productsForClient = createMemo(() => {
+    const c = client();
+    if (!c) return [] as string[];
+    const set = new Set<string>();
+    for (const r of data) {
+      if (tagValue(r, "CLIENT") !== c) continue;
+      for (const p of tagValues(r, "PROJECT")) set.add(p);
+    }
+    // Order alphabetically for stable column placement.
+    return [...set].sort();
+  });
+
+  const cellFor = (product: string, area: FeatureArea): FeatureCell[] => {
+    const c = client();
+    const rows = data.filter(
+      (r) => tagValue(r, "CLIENT") === c && tagValues(r, "PROJECT").includes(product),
+    );
+    const map = new Map<string, FeatureCell>();
+    for (const r of rows) {
+      for (const f of tagValues(r, "FEATURE")) {
+        if (FEATURE_AREA[f] !== area) continue;
+        if (!map.has(f)) {
+          map.set(f, { feature: f, total: 0, truth: { True: 0, False: 0, Unknown: 0 } });
+        }
+        const cell = map.get(f)!;
+        cell.total += 1;
+        cell.truth[r.truth] += 1;
+      }
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  };
+
+  const totalForArea = (product: string, area: FeatureArea) =>
+    cellFor(product, area).reduce((n, c) => n + c.total, 0);
+
+  return (
+    <MockBaseline
+      sidebar={
+        <TightStack style={{ width: "100%", "min-width": "0" }}>
+          <TextLabel>By feature</TextLabel>
+          <MutedBody>products × feature areas</MutedBody>
+        </TightStack>
+      }
+      detail={
+        <SpacedStack style={{ padding: "20px 24px", height: "100%", "min-height": "0" }}>
+          <TightStack>
+            <PageTitle style={{ margin: "0", "font-size": "1.25rem" }}>Statements by feature</PageTitle>
+            <TextSublabel>
+              Pick a client. Rows = feature area (UI / BG / API). Columns = product.
+              Each cell lists the features touched in that area, with statement counts.
+            </TextSublabel>
+          </TightStack>
+
+          <ClusterRow gap="xs" style={{ "flex-wrap": "wrap" }}>
+            <For each={clientOrder()}>
+              {(c) => (
+                <button
+                  onClick={() => setClient(c)}
+                  style={{
+                    padding: "4px 10px",
+                    "border-radius": "999px",
+                    border: `1px solid ${
+                      client() === c
+                        ? "var(--sui-accent, #4ea1ff)"
+                        : "var(--sui-border, rgba(255,255,255,0.18))"
+                    }`,
+                    background:
+                      client() === c
+                        ? "var(--sui-bg-elevated, rgba(78,161,255,0.15))"
+                        : "transparent",
+                    color:
+                      client() === c
+                        ? "var(--sui-text-primary, inherit)"
+                        : "var(--sui-text-muted, #888)",
+                    "font-size": "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {c}
+                </button>
+              )}
+            </For>
+          </ClusterRow>
+
+          <Show
+            when={productsForClient().length > 0}
+            fallback={<MutedBody>no projects under this client</MutedBody>}
+          >
+            <div
+              style={{
+                display: "grid",
+                "grid-template-columns": `60px repeat(${productsForClient().length}, minmax(160px, 1fr))`,
+                gap: "8px",
+                "align-items": "stretch",
+                "max-width": "100%",
+              }}
+            >
+              {/* corner spacer */}
+              <div />
+              {/* product column headers */}
+              <For each={productsForClient()}>
+                {(p) => (
+                  <div
+                    style={{
+                      "font-size": "11px",
+                      "font-weight": 600,
+                      "text-transform": "uppercase",
+                      "letter-spacing": "0.06em",
+                      color: "var(--sui-text-primary, inherit)",
+                      "padding-bottom": "4px",
+                      "border-bottom": "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+                    }}
+                  >
+                    {p}
+                  </div>
+                )}
+              </For>
+
+              <For each={FEATURE_AREAS}>
+                {(area) => (
+                  <>
+                    {/* row header */}
+                    <div
+                      style={{
+                        "font-size": "11px",
+                        "font-weight": 600,
+                        color: "var(--sui-text-muted, #888)",
+                        "padding-top": "8px",
+                      }}
+                    >
+                      {area}
+                    </div>
+                    {/* cells across all products */}
+                    <For each={productsForClient()}>
+                      {(product) => {
+                        const cells = cellFor(product, area);
+                        return (
+                          <div
+                            style={{
+                              "min-height": "60px",
+                              padding: "6px 8px",
+                              border: "1px solid var(--sui-border, rgba(255,255,255,0.12))",
+                              "border-radius": "4px",
+                              background: "var(--sui-bg-elevated, rgba(255,255,255,0.04))",
+                              display: "flex",
+                              "flex-direction": "column",
+                              gap: "4px",
+                            }}
+                            title={`${product} · ${area} · ${totalForArea(product, area)} statements`}
+                          >
+                            <Show
+                              when={cells.length > 0}
+                              fallback={
+                                <span
+                                  style={{
+                                    "font-size": "10px",
+                                    color: "var(--sui-text-muted, #888)",
+                                    "font-style": "italic",
+                                    "align-self": "center",
+                                    margin: "auto",
+                                  }}
+                                >
+                                  —
+                                </span>
+                              }
+                            >
+                              <For each={cells}>
+                                {(c) => (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      "justify-content": "space-between",
+                                      "align-items": "center",
+                                      gap: "8px",
+                                      padding: "2px 6px",
+                                      "border-radius": "3px",
+                                      background: "var(--sui-bg-deep, rgba(0,0,0,0.2))",
+                                      "font-size": "11px",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        "white-space": "nowrap",
+                                        overflow: "hidden",
+                                        "text-overflow": "ellipsis",
+                                        "min-width": "0",
+                                      }}
+                                    >
+                                      {c.feature}
+                                    </span>
+                                    <span
+                                      style={{
+                                        color: "var(--sui-text-muted, #888)",
+                                        "font-family": "var(--sui-mono, monospace)",
+                                        "font-size": "10px",
+                                      }}
+                                    >
+                                      {c.total}
+                                    </span>
+                                  </div>
+                                )}
+                              </For>
+                            </Show>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </>
+                )}
+              </For>
+            </div>
+          </Show>
+        </SpacedStack>
+      }
+    />
+  );
+};
+
+// ---- completion-bars step --------------------------------------------------
+
+interface CompletionVariant {
+  label: string;
+  hint: string;
+  todo: number;
+  doing: number;
+  done: number;
+}
+
+const COMPLETION_VARIANTS: CompletionVariant[] = [
+  { label: "nothing complete", hint: "5 todo · 0 doing · 0 done",   todo: 5, doing: 0, done: 0 },
+  { label: "just started",     hint: "4 todo · 1 doing · 0 done",   todo: 4, doing: 1, done: 0 },
+  { label: "mid-flight",       hint: "2 todo · 1 doing · 2 done",   todo: 2, doing: 1, done: 2 },
+  { label: "almost done",      hint: "0 todo · 1 doing · 4 done",   todo: 0, doing: 1, done: 4 },
+  { label: "everything done",  hint: "0 todo · 0 doing · 5 done",   todo: 0, doing: 0, done: 5 },
+];
+
+const CompletionBar: Component<{ v: CompletionVariant; height?: number }> = (p) => {
+  const total = () => p.v.todo + p.v.doing + p.v.done || 1;
+  const segments = () => {
+    const t = total();
+    return [
+      { percentage: (p.v.done / t) * 100,  color: "var(--sui-success, #2a6)",    label: String(p.v.done) },
+      { percentage: (p.v.doing / t) * 100, color: "var(--sui-info, #4ea1ff)",    label: String(p.v.doing) },
+      { percentage: (p.v.todo / t) * 100,  color: "var(--sui-text-muted, #555)", label: String(p.v.todo) },
+    ];
+  };
+  return (
+    <div
+      title={`done: ${p.v.done} · doing: ${p.v.doing} · todo: ${p.v.todo}`}
+      style={{ width: "100%", height: `${p.height ?? 10}px` }}
+    >
+      <StackedProgressBar
+        segments={segments()}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </div>
+  );
+};
+
+// Ratio-bar variant of CompletionBar: uses CSS grid with `<count>fr` per
+// segment instead of percentage-based absolute positioning, so the segment
+// widths are exactly the ratio of their counts. The bar itself is capped at
+// 400px (4px per percent at 100%) and otherwise fills its container.
+const RatioCompletionBar: Component<{ v: CompletionVariant; height?: number }> = (p) => {
+  const total = () => p.v.todo + p.v.doing + p.v.done || 1;
+  // grid-template-columns string: "<done>fr <doing>fr <todo>fr". Zero-count
+  // tracks collapse cleanly because 0fr → 0 width.
+  const cols = () => `${p.v.done}fr ${p.v.doing}fr ${p.v.todo}fr`;
+  const seg = (count: number, color: string) => (
+    <div
+      style={{
+        background: color,
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "center",
+        overflow: "hidden",
+        "container-type": "inline-size",
+      }}
+    >
+      <Show when={count > 0}>
+        <span class="stacked-progress-bar__segment-label">{count}</span>
+      </Show>
+    </div>
+  );
+  return (
+    <div
+      title={`done: ${p.v.done} · doing: ${p.v.doing} · todo: ${p.v.todo}`}
+      style={{
+        width: "100%",
+        "max-width": "400px",
+        height: `${p.height ?? 18}px`,
+        display: "grid",
+        "grid-template-columns": cols(),
+        "border-radius": "2px",
+        overflow: "hidden",
+        background: "var(--stacked-bar-bg, rgba(0, 168, 204, 0.15))",
+      }}
+    >
+      {seg(p.v.done, "var(--sui-success, #2a6)")}
+      {seg(p.v.doing, "var(--sui-info, #4ea1ff)")}
+      {seg(p.v.todo, "var(--sui-text-muted, #555)")}
+    </div>
+  );
+};
+
+const SAMPLE_VARIANT: CompletionVariant = COMPLETION_VARIANTS[2]; // mid-flight: 2/1/2
+
+// Queue of 10 tasks progressing strictly one at a time. Each task is its own
+// chip in a row; a single transition fires each tick (1s), advancing the
+// in-flight task forward. Chip colors transition smoothly via CSS so the
+// step appears as a wave moving through the queue.
+
+type TaskState = "todo" | "doing" | "done";
+
+const QUEUE_LENGTH = 10;
+const QUEUE_TICK_MS = 1000;
+
+const QueueAnimation: Component = () => {
+  const [tasks, setTasks] = createSignal<TaskState[]>(
+    Array.from({ length: QUEUE_LENGTH }, () => "todo" as TaskState),
+  );
+  // The bar wants explicit "in-flight" info to keep its overlay anchored:
+  //   activeIdx — which task slot the overlay is on
+  //   activePhase — 'doing' (blue) | 'done' (green) | 'idle' (transparent)
+  // This is derived from the same step counter as `tasks` but exposed
+  // separately so the bar can fade-in-place on doing→done.
+  const [activeIdx, setActiveIdx] = createSignal<number | null>(null);
+  const [activePhase, setActivePhase] = createSignal<"doing" | "done" | "idle">("idle");
+  const [done, setDone] = createSignal(false);
+  let timer: number | undefined;
+  let step = 0;
+
+  const start = () => {
+    if (timer !== undefined) window.clearTimeout(timer);
+    step = 0;
+    setDone(false);
+    setActiveIdx(null);
+    setActivePhase("idle");
+    setTasks(Array.from({ length: QUEUE_LENGTH }, () => "todo"));
+    const tick = () => {
+      step += 1;
+      if (step > QUEUE_LENGTH * 2) {
+        timer = undefined;
+        setDone(true);
+        setActivePhase("idle");
+        return;
+      }
+      const idx = Math.floor((step - 1) / 2);
+      const isOdd = step % 2 === 1;
+      const newState: TaskState = isOdd ? "doing" : "done";
+      setTasks((prev) => {
+        const next = prev.slice();
+        next[idx] = newState;
+        return next;
+      });
+      setActiveIdx(idx);
+      setActivePhase(isOdd ? "doing" : "done");
+      timer = window.setTimeout(tick, QUEUE_TICK_MS);
+    };
+    timer = window.setTimeout(tick, QUEUE_TICK_MS);
+  };
+
+  onMount(start);
+  onCleanup(() => {
+    if (timer !== undefined) window.clearTimeout(timer);
+  });
+
+  const counts = () => {
+    const t = tasks();
+    return {
+      todo: t.filter((x) => x === "todo").length,
+      doing: t.filter((x) => x === "doing").length,
+      done: t.filter((x) => x === "done").length,
+    };
+  };
+
+  const bgFor = (s: TaskState): string =>
+    s === "done"
+      ? "var(--sui-success, #2a6)"
+      : s === "doing"
+      ? "var(--sui-info, #4ea1ff)"
+      : "var(--sui-text-muted, #555)";
+
+  return (
+    <TightStack>
+      <ClusterRow style={{ "justify-content": "space-between" }}>
+        <TextLabel>
+          {counts().done}/{QUEUE_LENGTH} done
+          {counts().doing > 0 ? ` · 1 in flight` : done() ? " · ✓" : ""}
+        </TextLabel>
+        <Show when={done()}>
+          <button
+            onClick={start}
+            style={{
+              padding: "2px 10px",
+              "border-radius": "999px",
+              border: "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+              background: "transparent",
+              color: "var(--sui-text-muted, #888)",
+              cursor: "pointer",
+              "font-size": "11px",
+            }}
+          >
+            ↻ replay
+          </button>
+        </Show>
+      </ClusterRow>
+      <SlotFillBar
+        slots={QUEUE_LENGTH}
+        done={counts().done}
+        active={
+          activePhase() === "idle" || activeIdx() === null
+            ? null
+            : { index: activeIdx()!, phase: activePhase() as "doing" | "done" }
+        }
+      />
+    </TightStack>
+  );
+};
+
+
+const CONTAINER_SIZES: { label: string; width: number }[] = [
+  { label: "container 50px (cramped)",   width: 50 },
+  { label: "container 400px (at the cap)", width: 400 },
+  { label: "container 1000px (capped at 400)", width: 1000 },
+];
+
+const CompletionBarsStep: Component = () => (
+  <MockBaseline
+    sidebar={
+      <TightStack style={{ width: "100%", "min-width": "0" }}>
+        <TextLabel>Completion bars</TextLabel>
+        <MutedBody>5 variants + 3 container sizes</MutedBody>
+      </TightStack>
+    }
+    detail={
+      <SpacedStack style={{ padding: "20px 24px", height: "100%", "min-height": "0" }}>
+        <TightStack>
+          <PageTitle style={{ margin: "0", "font-size": "1.25rem" }}>Completion bars</PageTitle>
+          <TextSublabel>
+            Done <span style={{ color: "var(--sui-success, #2a6)" }}>■</span>
+            {"  "}Doing <span style={{ color: "var(--sui-info, #4ea1ff)" }}>■</span>
+            {"  "}Todo <span style={{ color: "var(--sui-text-muted, #888)" }}>■</span>
+          </TextSublabel>
+        </TightStack>
+
+        <NarrowStack gap="md" style={{ "max-width": "640px" }}>
+          <For each={COMPLETION_VARIANTS}>
+            {(v) => (
+              <TightStack>
+                <TextLabel>{v.label}</TextLabel>
+                <CompletionBar v={v} height={18} />
+              </TightStack>
+            )}
+          </For>
+        </NarrowStack>
+
+        <TightStack style={{ "margin-top": "24px" }}>
+          <PageTitle style={{ margin: "0", "font-size": "1.05rem" }}>Container width responsiveness</PageTitle>
+          <TextSublabel>
+            Same data ({SAMPLE_VARIANT.done}/{SAMPLE_VARIANT.doing}/{SAMPLE_VARIANT.todo}). Bar caps at 400px (4px per percent); below that it fills its container. Segment widths are
+            grid-fr ratios of their counts.
+          </TextSublabel>
+        </TightStack>
+
+        <NarrowStack gap="md">
+          <For each={CONTAINER_SIZES}>
+            {(c) => (
+              <TightStack>
+                <TextLabel>{c.label}</TextLabel>
+                <div
+                  style={{
+                    width: `${c.width}px`,
+                    border: "1px dashed var(--sui-border, rgba(255,255,255,0.18))",
+                    padding: "4px",
+                  }}
+                >
+                  <RatioCompletionBar v={SAMPLE_VARIANT} height={18} />
+                </div>
+              </TightStack>
+            )}
+          </For>
+        </NarrowStack>
+
+        <TightStack style={{ "margin-top": "24px" }}>
+          <PageTitle style={{ margin: "0", "font-size": "1.05rem" }}>Queue of 10 tasks</PageTitle>
+          <TextSublabel>
+            Strictly serial: one task at a time goes todo → doing → done. Each
+            transition every 1s; total run ~20s.
+          </TextSublabel>
+        </TightStack>
+
+        <QueueAnimation />
+      </SpacedStack>
+    }
+  />
+);
 
 // ---- 100-statements stub + table step --------------------------------------
 

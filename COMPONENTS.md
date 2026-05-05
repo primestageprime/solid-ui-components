@@ -367,6 +367,18 @@ State derivation:
 - **createWorkflowProgressCard** — Factory that derives step statuses from `currentStep` + `status`. Returns a component with props: `title`, `subtitle`, `currentStep`, `status` (`fetching`|`caching`|`completed`|`error`), `message`. Use for: automated workflow progress tracking.
 - **CacheProgressCard** — Pre-built 5-step cache workflow progress card (Minutes, Hours, Stats, Coverage, Calcs). Use for: data caching pipeline status.
 
+## SlotFillBar
+- **SlotFillBar** — Atomic (Depth 1). Fill-from-left progress bar for an ordered queue / pipeline of equal-sized work slots that move through `todo → doing → done`. Owns its CSS, no component imports. Distinguished from `StackedProgressBar` by its two-transition design: a `todo → doing` transition SLIDES the active overlay (clip-path inset interpolated; colour snaps to the doing tone so the slide reads as one solid wave); a `doing → done` transition FADES the overlay's background colour in place to the done tone, while the static fill grows by one slot's width to absorb it. `transform: scaleX` on the static layer + `clip-path: inset` on the overlay are both compositor-friendly and keep the animation off the layout thread. Honours `prefers-reduced-motion: reduce`. Key props: `slots` (total slot count), `done` (number of fully-done slots), `active` (`{ index, phase: "doing" | "done" } | null`), `height` (default 24), `maxWidth` (default 400, pass `null` to remove the cap), `todoColor` / `doingColor` / `doneColor` (CSS colour overrides), `label` (a11y / hover title; defaults to `"<done>/<slots> done"`). Use for: a queue of work units progressing one at a time (build steps, batch import slots, retry attempts, prompt-cache warm-up phases) — anywhere the audience benefits from seeing both the cumulative completion *and* the in-flight slot's phase change without scanning a separate status pill.
+  - Example:
+    ```tsx
+    import { SlotFillBar } from "solid-ui-components";
+
+    // Queue of 10 work units, 3 already done, slot 4 is now actively being
+    // processed (still in "doing"). The overlay sits clipped to slot 4 in
+    // the doing colour; the static fill spans slots 1–3 in the done colour.
+    <SlotFillBar slots={10} done={3} active={{ index: 3, phase: "doing" }} />
+    ```
+
 ## Section
 - **Section** — Collapsible section with title, subtitle, corner decorations, and header action slot. Key props: `title`, `subtitle`, `variant` (`ColorVariant` — sets accent color), `corners` (`CornerStyle` — visual corner treatment; replaces old `"bordered"`/`"decorated"` variant values), `fill`, `showHeader`, `headerAction`, `collapsible`, `collapsed`, `onToggleCollapse`, `defaultExpanded`. Has `createSection` factory. Use for: major page sections.
 
