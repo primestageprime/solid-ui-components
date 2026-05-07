@@ -160,8 +160,13 @@ export function DagChart<T>(props: DAGProps<T>) {
         : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
 
       const label = labelByPair.get(`${edge.source}|${edge.target}`);
-      // Midpoint along the polyline for label placement.
-      const mid = points[Math.floor(points.length / 2)] ?? points[0];
+      // Midpoint along the polyline for label placement. Fall back to the
+      // straight midpoint between source and target rects if the polyline
+      // is somehow empty (defensive — happens when layout returns no path).
+      const mid =
+        points.length > 0
+          ? points[Math.floor(points.length / 2)]
+          : { x: (sourceRect.x + targetRect.x) / 2, y: (sourceRect.y + targetRect.y) / 2 };
       return [{ d: buildEdgePath(points, sourceRect, targetRect), label, midX: mid.x, midY: mid.y }];
     });
   });
