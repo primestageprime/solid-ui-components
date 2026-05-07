@@ -5,8 +5,15 @@
 // Responsive multi-select: renders as a horizontal button bar when the
 // container is wide enough to fit all options, otherwise collapses to a
 // dropdown popover with checkboxes. Same component, same data model
-// either way. Empty `selected` means "all" — the bar shows a leading
-// "All" chip that clears selection.
+// either way.
+//
+// Selection semantics: empty `selected` is treated as "all" — every
+// chip renders inactive and the data layer applies no filter. There is
+// no separate "all" chip. Clicking an inactive chip when nothing is
+// selected focuses on just that one (replaces selection); clicking
+// another inactive chip while some are already selected adds it;
+// clicking an active chip toggles it off, possibly returning to the
+// empty-as-all state.
 // ============================================
 import {
   Component,
@@ -28,10 +35,13 @@ export interface MultiSelectFilterProps {
   /** Short label rendered to the left of the control. */
   label?: string;
   options: readonly MultiSelectOption[];
-  /** Selected values. Empty array means "all". */
+  /** Selected values. Empty array means "all" (no filter). */
   selected: readonly string[];
   onChange: (next: string[]) => void;
-  /** Label for the "all" / clear chip. Default "all". */
+  /**
+   * Text shown in the dropdown trigger when nothing is selected
+   * (i.e. all are implicitly active). Default "all".
+   */
   allLabel?: string;
   /**
    * Pixel budget per option used to estimate whether the bar fits.
@@ -53,8 +63,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   // Width budget required for full button bar mode.
   const requiredWidth = createMemo(() => {
     const labelBudget = props.label ? 70 : 0;
-    const allChip = 56;
-    return labelBudget + allChip + props.options.length * optionWidth();
+    return labelBudget + props.options.length * optionWidth();
   });
 
   const mode = createMemo<"bar" | "menu">(() =>
@@ -83,16 +92,20 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
 
   const isSelected = (v: string) => props.selected.includes(v);
 
-  const toggle = (v: string) => {
+  // Click semantics:
+  // - Click inactive chip with empty selection → focus to just that one.
+  // - Click inactive chip with non-empty selection → add it.
+  // - Click active chip → remove it (may go back to empty = all).
+  const onChipClick = (v: string) => {
     const cur = props.selected;
     if (cur.includes(v)) {
       props.onChange(cur.filter((x) => x !== v));
+    } else if (cur.length === 0) {
+      props.onChange([v]);
     } else {
       props.onChange([...cur, v]);
     }
   };
-
-  const clear = () => props.onChange([]);
 
   const summary = createMemo(() => {
     if (props.selected.length === 0) return props.allLabel ?? "all";
@@ -124,21 +137,6 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
             </button>
             <Show when={menuOpen()}>
               <div class="sui-msf__menu" ref={menuRef} role="listbox">
-                <button
-                  type="button"
-                  class={`sui-msf__menu-item${
-                    props.selected.length === 0 ? " sui-msf__menu-item--active" : ""
-                  }`}
-                  onClick={() => {
-                    clear();
-                    setMenuOpen(false);
-                  }}
-                >
-                  <span class="sui-msf__check">
-                    {props.selected.length === 0 ? "✓" : ""}
-                  </span>
-                  <span>{props.allLabel ?? "all"}</span>
-                </button>
                 <For each={props.options}>
                   {(opt) => (
                     <button
@@ -146,7 +144,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
                       class={`sui-msf__menu-item${
                         isSelected(opt.value) ? " sui-msf__menu-item--active" : ""
                       }`}
-                      onClick={() => toggle(opt.value)}
+                      onClick={() => onChipClick(opt.value)}
                     >
                       <span class="sui-msf__check">
                         {isSelected(opt.value) ? "✓" : ""}
@@ -161,15 +159,6 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
         }
       >
         <div class="sui-msf__bar" role="group">
-          <button
-            type="button"
-            class={`sui-msf__chip${
-              props.selected.length === 0 ? " sui-msf__chip--active" : ""
-            }`}
-            onClick={clear}
-          >
-            {props.allLabel ?? "all"}
-          </button>
           <For each={props.options}>
             {(opt) => (
               <button
@@ -177,7 +166,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
                 class={`sui-msf__chip${
                   isSelected(opt.value) ? " sui-msf__chip--active" : ""
                 }`}
-                onClick={() => toggle(opt.value)}
+                onClick={() => onChipClick(opt.value)}
                 aria-pressed={isSelected(opt.value)}
               >
                 {labelOf(opt)}
@@ -189,3 +178,4 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
     </div>
   );
 };
+
