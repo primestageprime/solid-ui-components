@@ -24,3 +24,17 @@
 .sui-dag__node-wrapper:hover {
   filter: brightness(1.15);
 }
+
+.sui-dag__edge-label-bg {
+  fill: var(--sui-bg-elevated, #1a1a1a);
+  stroke: var(--sui-border, #334155);
+  stroke-width: 1;
+}
+
+.sui-dag__edge-label {
+  fill: var(--sui-text-primary, #ddd);
+  font-size: 11px;
+  font-family: var(--sui-mono, ui-monospace, monospace);
+  pointer-events: none;
+  user-select: none;
+}

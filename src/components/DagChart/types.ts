@@ -8,6 +8,13 @@ export type DAGNode<T = unknown> = {
 export type DAGEdge = {
   source: string;
   target: string;
+  /**
+   * Optional label rendered as small text at the edge midpoint.
+   * Useful for counters (e.g. "↶ 3" on backward edges to show how
+   * many times the transition has fired) or short hints. Empty
+   * string and undefined are treated the same: no label drawn.
+   */
+  label?: string;
 };
 
 export type NodeRenderState =

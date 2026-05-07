@@ -1,4 +1,4 @@
-import { createMemo, createEffect, createSignal, on, For, onMount, onCleanup } from "solid-js";
+import { createMemo, createEffect, createSignal, on, For, Show, onMount, onCleanup } from "solid-js";
 import type { DAGProps, PositionedNode } from "./types";
 import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
@@ -141,6 +141,12 @@ export function DagChart<T>(props: DAGProps<T>) {
   const edgePaths = createMemo(() => {
     const pos = positions();
     const fullEdges = fullLayout().edges;
+    // Build a label lookup by (source, target) so we can recover labels from
+    // the original DAGEdge[] (collapsed().visibleEdges may strip them).
+    const labelByPair = new Map<string, string>();
+    for (const e of props.edges) {
+      if (e.label) labelByPair.set(`${e.source}|${e.target}`, e.label);
+    }
     return collapsed().visibleEdges.flatMap((edge) => {
       const sourceRect = pos.get(edge.source);
       const targetRect = pos.get(edge.target);
@@ -153,7 +159,10 @@ export function DagChart<T>(props: DAGProps<T>) {
         ? fullEdge.points
         : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
 
-      return [{ d: buildEdgePath(points, sourceRect, targetRect) }];
+      const label = labelByPair.get(`${edge.source}|${edge.target}`);
+      // Midpoint along the polyline for label placement.
+      const mid = points[Math.floor(points.length / 2)] ?? points[0];
+      return [{ d: buildEdgePath(points, sourceRect, targetRect), label, midX: mid.x, midY: mid.y }];
     });
   });
 
@@ -259,11 +268,28 @@ export function DagChart<T>(props: DAGProps<T>) {
           {/* Edges */}
           <For each={edgePaths()}>
             {(edge) => (
-              <path
-                class="sui-dag__edge"
-                d={edge.d}
-                marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
-              />
+              <>
+                <path
+                  class="sui-dag__edge"
+                  d={edge.d}
+                  marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
+                />
+                <Show when={edge.label}>
+                  <g class="sui-dag__edge-label-wrap" transform={`translate(${edge.midX}, ${edge.midY})`}>
+                    <rect
+                      class="sui-dag__edge-label-bg"
+                      x={-(edge.label!.length * 3.5 + 6)}
+                      y={-9}
+                      width={edge.label!.length * 7 + 12}
+                      height={18}
+                      rx={9}
+                    />
+                    <text class="sui-dag__edge-label" text-anchor="middle" dominant-baseline="middle">
+                      {edge.label}
+                    </text>
+                  </g>
+                </Show>
+              </>
             )}
           </For>
 
