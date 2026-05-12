@@ -268,6 +268,21 @@ State derivation:
 - **EmptyState** — Centered placeholder with icon and message. Key props: `variant` (`default`|`muted`|`accent`), `size` (`sm`|`md`|`lg`), `message`, `icon`. Use for: empty lists, no-data states, loading placeholders.
 - **InlineChartErrorOverlay** — Absolute-positioned overlay for chart error states. Key props: `title`, `subtitle`. Use for: overlaying error messages on chart areas.
 
+## Legend
+- **Legend** — Atomic (Depth 1). Data-driven row (or column) of color-swatch + label pairs. Domain-agnostic: caller supplies any `{ color, label }` list; the swatch's background is the only place caller-supplied color is applied (inline on the swatch element). All layout/spacing/typography lives in the component's CSS. Key props: `items` (`LegendItem[]`, required), `orientation` (`horizontal`|`vertical`, default `horizontal` — horizontal wraps on overflow), `swatchSize` (number → px, or any CSS length; default 12px via `--sui-legend-swatch-size`), `class` (appended). Exported types: `LegendProps`, `LegendItem`. Uses `--sui-border`, `--sui-text-secondary`, `--sui-font-family`. Use for: explaining a color encoding in a chart, heatmap, dot-chart, or any other visualisation (chart series, category tiers, severity buckets, etc.).
+  - Example:
+    ```tsx
+    import { Legend } from "solid-ui-components";
+
+    <Legend
+      items={[
+        { color: "#3b82f6", label: "Revenue" },
+        { color: "#10b981", label: "Profit" },
+        { color: "#f59e0b", label: "Costs" },
+      ]}
+    />
+    ```
+
 ## Heatmap
 - **Heatmap** — Grid of status-colored cells (full/partial/missing/empty) with row and column labels. Key props: `rows` (array of `HeatmapRow`), `columnLabels`, `variant` (`default`|`compact`|`sparkline`), `showLegend`, `showTooltips`, `onCellClick`. Use for: data completeness grids, coverage matrices.
 - **HeatmapMulti** — Multi-category heatmap where each cell contains stacked status bars per category. Key props: `rows` (array of `HeatmapMultiRow`), `categoryLabels`, `columnLabels`, `variant` (`default`|`compact`|`sparkline`|`expanded`), `showLegend`, `onCellClick`. Use for: multi-dimension data completeness (e.g., vessel call coverage by data type).
