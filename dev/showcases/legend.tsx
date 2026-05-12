@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, For, createSignal } from "solid-js";
 import { Legend, type LegendItem } from "../../src/components/Legend";
 import { SpacedStack, TightStack } from "../../src/components/Layout";
 import { TextSublabel, MutedBody } from "../../src/components/Text";
@@ -39,6 +39,60 @@ const MANY_ITEMS: LegendItem[] = [
   { color: "#06b6d4", label: "Navigation" },
   { color: "#a855f7", label: "Communications" },
 ];
+
+const InteractiveLegendExample: Component = () => {
+  const [hovered, setHovered] = createSignal<string | null>(null);
+  return (
+    <TightStack>
+      <TextSublabel>
+        Two-way binding: hover the Legend OR the colored boxes — both sides
+        highlight the matching item via a shared <code>hovered</code> signal,
+        wired through <code>highlightedLabel</code> and{" "}
+        <code>onItemHover</code>.
+      </TextSublabel>
+      <Legend
+        items={CHART_SERIES}
+        highlightedLabel={hovered()}
+        onItemHover={setHovered}
+      />
+      <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
+        <For each={CHART_SERIES}>
+          {(item) => (
+            <div
+              onMouseEnter={() => setHovered(item.label)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                width: "64px",
+                height: "48px",
+                "border-radius": "4px",
+                "background-color": item.color,
+                outline:
+                  hovered() === item.label
+                    ? "2px solid rgba(255,255,255,0.85)"
+                    : "1px solid rgba(255,255,255,0.15)",
+                "outline-offset": "2px",
+                filter: hovered() === item.label ? "brightness(1.2)" : "none",
+                display: "flex",
+                "align-items": "center",
+                "justify-content": "center",
+                color: "white",
+                "font-size": "11px",
+                "font-weight": "600",
+                cursor: "default",
+                "text-shadow": "0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            >
+              {item.label}
+            </div>
+          )}
+        </For>
+      </div>
+      <MutedBody>
+        Currently hovered: <code>{hovered() ?? "(none)"}</code>
+      </MutedBody>
+    </TightStack>
+  );
+};
 
 export const LegendShowcase: Component = () => (
   <div class="component-section">
@@ -96,6 +150,11 @@ export const LegendShowcase: Component = () => (
           <Legend items={MANY_ITEMS} />
         </div>
       </SpacedStack>
+    </div>
+
+    <div class="example-group">
+      <h3>Interactive — two-way hover binding</h3>
+      <InteractiveLegendExample />
     </div>
 
     <div class="example-group">

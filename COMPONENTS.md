@@ -269,7 +269,7 @@ State derivation:
 - **InlineChartErrorOverlay** — Absolute-positioned overlay for chart error states. Key props: `title`, `subtitle`. Use for: overlaying error messages on chart areas.
 
 ## Legend
-- **Legend** — Atomic (Depth 1). Data-driven row (or column) of color-swatch + label pairs. Domain-agnostic: caller supplies any `{ color, label }` list; the swatch's background is the only place caller-supplied color is applied (inline on the swatch element). All layout/spacing/typography lives in the component's CSS. Key props: `items` (`LegendItem[]`, required), `orientation` (`horizontal`|`vertical`, default `horizontal` — horizontal wraps on overflow), `swatchSize` (number → px, or any CSS length; default 12px via `--sui-legend-swatch-size`), `class` (appended). Exported types: `LegendProps`, `LegendItem`. Uses `--sui-border`, `--sui-text-secondary`, `--sui-font-family`. Use for: explaining a color encoding in a chart, heatmap, dot-chart, or any other visualisation (chart series, category tiers, severity buckets, etc.).
+- **Legend** — Atomic (Depth 1). Data-driven row (or column) of color-swatch + label pairs. Domain-agnostic: caller supplies any `{ color, label }` list; the swatch's background is the only place caller-supplied color is applied (inline on the swatch element). All layout/spacing/typography lives in the component's CSS. Key props: `items` (`LegendItem[]`, required), `orientation` (`horizontal`|`vertical`, default `horizontal` — horizontal wraps on overflow), `swatchSize` (number → px, or any CSS length; default 12px via `--sui-legend-swatch-size`), `class` (appended), `highlightedLabel` (controlled highlight — string matched against `item.label`, or `null`), `onItemHover` (`(label: string | null) => void` — fires once with label on enter, once with `null` on leave). Highlight matches by `label`, so items must have unique labels for highlight binding to behave sensibly. Highlighted item gets an outline + brightness bump via `.sui-legend__item--highlighted` (outline-based, no layout shift); override the outline color with `--sui-legend-highlight-outline`. Exported types: `LegendProps`, `LegendItem`. Uses `--sui-border`, `--sui-text-secondary`, `--sui-font-family`, `--sui-legend-highlight-outline`. Use for: explaining a color encoding in a chart, heatmap, dot-chart, or any other visualisation (chart series, category tiers, severity buckets, etc.) — and for two-way hover linking between the legend and a paired visual.
   - Example:
     ```tsx
     import { Legend } from "solid-ui-components";
@@ -281,6 +281,17 @@ State derivation:
         { color: "#f59e0b", label: "Costs" },
       ]}
     />
+    ```
+  - Two-way hover binding:
+    ```tsx
+    const [hovered, setHovered] = createSignal<string | null>(null);
+    <Legend
+      items={items}
+      highlightedLabel={hovered()}
+      onItemHover={setHovered}
+    />
+    // a paired chart can also call setHovered(label)/setHovered(null)
+    // and read hovered() to highlight its own corresponding element
     ```
 
 ## Heatmap

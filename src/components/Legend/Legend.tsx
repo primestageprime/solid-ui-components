@@ -36,6 +36,18 @@ export interface LegendProps
   swatchSize?: number | string;
   /** Optional class appended to the wrapper for caller-side overrides. */
   class?: string;
+  /**
+   * Controlled highlight — when set, the item whose `label` matches gets
+   * a visible outline + brightness bump. Pass `null`/`undefined` for no
+   * highlight. Items must have unique labels for this to behave sensibly.
+   */
+  highlightedLabel?: string | null;
+  /**
+   * Fires once with the item's `label` on `mouseenter` and once with
+   * `null` on `mouseleave`. Use together with `highlightedLabel` to drive
+   * two-way hover binding between Legend and a paired visual.
+   */
+  onItemHover?: (label: string | null) => void;
 }
 
 const toSizeValue = (size: number | string): string =>
@@ -52,6 +64,8 @@ export const Legend: Component<LegendProps> = (rawProps) => {
     "swatchSize",
     "class",
     "style",
+    "highlightedLabel",
+    "onItemHover",
   ]);
 
   const wrapperClass = (): string =>
@@ -79,7 +93,16 @@ export const Legend: Component<LegendProps> = (rawProps) => {
     >
       <For each={local.items}>
         {(item) => (
-          <div class="sui-legend__item" role="listitem">
+          <div
+            class="sui-legend__item"
+            classList={{
+              "sui-legend__item--highlighted":
+                local.highlightedLabel === item.label,
+            }}
+            role="listitem"
+            onMouseEnter={() => local.onItemHover?.(item.label)}
+            onMouseLeave={() => local.onItemHover?.(null)}
+          >
             <span
               class="sui-legend__swatch"
               style={{ "background-color": item.color }}
