@@ -9,6 +9,7 @@ export * from "./components/Badge";
 export * from "./components/SlotFillBar";
 export * from "./components/Legend";
 export * from "./components/StatusLight";
+export * from "./components/Dot";
 export * from "./components/TruthIndicator";
 export * from "./components/QuickFilter";
 export * from "./components/MultiSelectFilter";

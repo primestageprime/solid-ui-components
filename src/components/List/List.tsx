@@ -3,7 +3,7 @@
 // Owns CSS (List.css), no component imports.
 // Status/menu list with dividers, icons, status dots.
 // ============================================
-import { Component, splitProps, Show, JSX } from "solid-js";
+import { Component, splitProps, Show, JSX, mergeProps } from "solid-js";
 import "./List.css";
 
 export interface ListProps extends JSX.HTMLAttributes<HTMLUListElement> {
@@ -13,6 +13,12 @@ export interface ListProps extends JSX.HTMLAttributes<HTMLUListElement> {
   dividers?: boolean;
   /** Compact spacing */
   compact?: boolean;
+  /**
+   * Make the list fill its flex parent and scroll internally on overflow.
+   * Sets `flex: 1; min-height: 0; overflow-y: auto;` so the list lives
+   * inside a height-constrained column without pushing siblings.
+   */
+  scroll?: boolean;
 }
 
 export interface ListItemProps extends JSX.HTMLAttributes<HTMLLIElement> {
@@ -33,6 +39,7 @@ export const List: Component<ListProps> = (props) => {
     "variant",
     "dividers",
     "compact",
+    "scroll",
     "class",
     "children",
   ]);
@@ -42,6 +49,7 @@ export const List: Component<ListProps> = (props) => {
     if (local.variant) classList.push(`sui-list--${local.variant}`);
     if (local.dividers) classList.push("sui-list--dividers");
     if (local.compact) classList.push("sui-list--compact");
+    if (local.scroll) classList.push("sui-list--scroll");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -52,6 +60,26 @@ export const List: Component<ListProps> = (props) => {
     </ul>
   );
 };
+
+/** Props that are layout overrides — locked at variant-definition time. */
+export type ListOverrides = Pick<ListProps, "variant" | "dividers" | "compact" | "scroll">;
+
+/** Props that remain available to consumers of a curried List variant. */
+export type ListDataProps = Omit<ListProps, keyof ListOverrides>;
+
+export function createList(
+  defaults: Partial<Omit<ListProps, "children">>,
+): Component<ListDataProps> {
+  return (props) => <List {...mergeProps(defaults, props)} />;
+}
+
+/**
+ * ScrollList — curried `List` that fills its flex parent and scrolls
+ * internally on overflow. Use inside a height-constrained flex column
+ * (e.g. a panel with `display: flex; flex-direction: column`) when the
+ * list may grow beyond the available space.
+ */
+export const ScrollList: Component<ListDataProps> = createList({ scroll: true });
 
 export const ListItem: Component<ListItemProps> = (props) => {
   const [local, others] = splitProps(props, [

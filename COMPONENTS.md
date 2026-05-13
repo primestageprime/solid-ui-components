@@ -263,6 +263,16 @@ State derivation:
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
 
+## Dot
+- **Dot** — Atomic (Depth 0). Generic colored indicator dot — caller supplies any CSS color via the `color` prop (hex, rgb, `var(--…)`, named color). Domain-agnostic, no variants. Use when `StatusLight`'s fixed variant set doesn't fit — e.g., severity palettes mapped to arbitrary hex colors from a caller-supplied scheme, chart-series legends rendered alongside other labels, etc. Key props: `color` (required CSS color string), `size` (number → px, or any CSS length; default `8px`). Renders an `aria-hidden` `<span>` with `border-radius: 50%`, `flex-shrink: 0`, `display: inline-block`. Owns `Dot.css`.
+  - Example:
+    ```tsx
+    import { Dot } from "solid-ui-components";
+
+    <Dot color="#f59e0b" />
+    <Dot color="var(--sui-danger)" size={10} />
+    ```
+
 ## Feedback
 - **AlertBox** — Status-colored alert with title, description, and action slot. Key props: `variant` (`info`|`warning`|`success`|`danger`), `title`, `description`, `action`. Use for: warnings, errors, success messages, info banners.
 - **EmptyState** — Centered placeholder with icon and message. Key props: `variant` (`default`|`muted`|`accent`), `size` (`sm`|`md`|`lg`), `message`, `icon`. Use for: empty lists, no-data states, loading placeholders.
@@ -341,8 +351,9 @@ State derivation:
 - Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
 
 ## List
-- **List** — Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`. Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists.
+- **List** — Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`, `scroll` (fills its flex parent and scrolls internally on overflow: `flex: 1; min-height: 0; overflow-y: auto`). Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists. Has `createList` factory for curried variants.
 - **ListItem** — List item with status indicators and interactive states. Key props: `status` (`active`|`inactive`|`warning`|`error`|`success`), `icon`, `secondary`, `interactive`, `selected`. Use for: items within List.
+- **ScrollList** — Curried `List` with `scroll: true` baked in. Drop into a height-constrained flex column (e.g. a panel with `display: flex; flex-direction: column`) to get a list that fills the remaining height and scrolls internally instead of pushing siblings. Use for: filter-result lists in a sidebar, log-style streams in a fixed-height panel, any vertical list that may overflow its container.
 
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.

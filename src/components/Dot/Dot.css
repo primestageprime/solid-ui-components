@@ -1,0 +1,11 @@
+/* ============================================
+   Dot — Structural
+   Background color is set inline by the component
+   from the required `color` prop.
+   ============================================ */
+.sui-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  vertical-align: middle;
+}

@@ -7,6 +7,12 @@
   padding: 0;
 }
 
+.sui-list--scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .sui-list--compact .sui-list-item {
   padding: 6px 0;
 }
