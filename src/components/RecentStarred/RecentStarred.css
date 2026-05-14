@@ -1,0 +1,84 @@
+/* Tokens for the StarToggle + RecentStarredSidebar. Override in your
+ * theme to retint without forking the components. */
+:root {
+  --sui-star-fill:           #ffd060;
+  --sui-star-empty:          #4a6080;
+  --sui-star-hover:          #ffe49a;
+  --sui-star-size:           18px;
+
+  --sui-recent-bg:           #0d1a2a;
+  --sui-recent-border:       #1a2a3a;
+  --sui-recent-section-fg:   #6a8aa0;
+  --sui-recent-item-fg:      #c0d0e0;
+  --sui-recent-item-hover:   #122035;
+  --sui-recent-item-radius:  4px;
+  --sui-recent-empty-fg:     #4a6080;
+}
+
+.sui-star-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sui-star-size);
+  height: var(--sui-star-size);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--sui-star-empty);
+  transition: color 120ms ease, transform 80ms ease;
+}
+.sui-star-toggle:hover { color: var(--sui-star-hover); transform: scale(1.08); }
+.sui-star-toggle[data-starred="true"] { color: var(--sui-star-fill); }
+.sui-star-toggle svg { width: 100%; height: 100%; }
+
+.sui-recent-starred {
+  display: flex; flex-direction: column;
+  gap: 12px;
+  background: var(--sui-recent-bg);
+  border: 1px solid var(--sui-recent-border);
+  border-radius: 6px;
+  padding: 10px 8px;
+  font: 12px -apple-system, sans-serif;
+  color: var(--sui-recent-item-fg);
+  min-height: 0;
+}
+.sui-recent-starred__section {
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.sui-recent-starred__header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sui-recent-section-fg);
+  font-weight: 600;
+  padding: 0 6px 4px;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.sui-recent-starred__list {
+  display: flex; flex-direction: column;
+  list-style: none; margin: 0; padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+}
+.sui-recent-starred__item {
+  display: block; width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 5px 6px;
+  border-radius: var(--sui-recent-item-radius);
+  cursor: pointer;
+  color: var(--sui-recent-item-fg);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sui-recent-starred__item:hover { background: var(--sui-recent-item-hover); }
+.sui-recent-starred__empty {
+  color: var(--sui-recent-empty-fg);
+  font-style: italic;
+  padding: 4px 6px;
+}
