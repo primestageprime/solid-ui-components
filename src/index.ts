@@ -18,6 +18,7 @@ export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
 export * from "./components/Chart";
+export * from "./components/Alarm";
 export * from "./components/Cell";
 export * from "./components/Button";
 export * from "./components/Card";
