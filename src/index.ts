@@ -87,3 +87,6 @@ export * from "./components/ThroughputChart";
 export * from "./components/RingChart";
 // export * from "./components/PivotTreemap"; // local-link build workaround: dir not committed
 export * from "./components/ProductGrid";
+
+// Hooks
+export * from "./hooks";

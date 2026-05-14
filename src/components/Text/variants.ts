@@ -63,6 +63,12 @@ export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
 export const SuccessTitle = createText({ variant: "title", color: "#00ff88" });
 export const DangerTitle = createText({ variant: "title", color: "#ff0040" });
 
+// Status-colored small value readouts — for compact in-cell numeric values
+// where color carries compliance state. Sized down from the default value
+// variant so they sit comfortably inside table rows / cards.
+export const TextValueSuccessSm = createText({ variant: "value", color: "#00ff88", style: { "font-size": "0.85rem" } });
+export const TextValueDangerSm = createText({ variant: "value", color: "#ff0040", style: { "font-size": "0.85rem" } });
+
 // ── Dashboard / game text roles ──
 
 /** Large score readout — 3rem, tight line-height */
