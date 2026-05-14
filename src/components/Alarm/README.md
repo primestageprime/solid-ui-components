@@ -144,8 +144,15 @@ of them in your theme to retint:
 | `--sui-alarm-zone-stripe-fill` | `#ff4040` | Stripe ground and line color |
 | `--sui-alarm-zone-stripe-bg-opacity` | `0.30` | Stripe-ground opacity |
 | `--sui-alarm-zone-stripe-line-opacity` | `0.55` | Stripe-line opacity |
-| `--sui-alarm-zone-stripe-line-width` | `3` | Stripe-line width |
-| `--sui-alarm-zone-stripe-spacing` | `10` | Stripe spacing (pattern px) |
+
+Stripe **geometry** (tile spacing, stroke width) is driven by numeric
+props on `<AlarmStripeDefs>` rather than CSS vars, because SVG geometry
+attributes don't resolve `var(...)`:
+
+| Prop | Default | Description |
+|---|---|---|
+| `spacing` | `10` | Pattern tile size (user-space px) — controls diagonal-line spacing |
+| `strokeWidth` | `3` | Stripe-line width (user-space px) |
 | `--sui-alarm-count-fill` | `#ffd0d0` | Count-badge text color |
 | `--sui-alarm-count-font` | `"JetBrains Mono", monospace` | Count-badge font |
 | `--sui-alarm-count-size` | `11px` | Count-badge font size |

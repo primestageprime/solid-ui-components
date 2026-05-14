@@ -9,8 +9,9 @@
   --sui-alarm-zone-stripe-fill: #ff4040;
   --sui-alarm-zone-stripe-bg-opacity:   0.30;
   --sui-alarm-zone-stripe-line-opacity: 0.55;
-  --sui-alarm-zone-stripe-line-width:   3;
-  --sui-alarm-zone-stripe-spacing:      10;   /* px in pattern coords */
+  /* Stripe geometry (spacing, line width) is set numerically via
+   * `AlarmStripeDefs` props — SVG geometry attributes don't resolve
+   * `var(...)`, so a CSS var here would collapse the pattern tile. */
 
   --sui-alarm-count-fill:       #ffd0d0;
   --sui-alarm-count-font:       "JetBrains Mono", monospace;
