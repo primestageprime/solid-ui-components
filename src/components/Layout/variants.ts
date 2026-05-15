@@ -1,40 +1,51 @@
 // ============================================
 // Layout Curried Variants — Depth 1 (zero CSS)
 // Pre-configured Stack, Row, Box via factories.
+//
+// Exports carry explicit `Component<…DataProps>` annotations to keep
+// `vite-plugin-dts` from inlining solid-js type paths through pnpm's
+// github-dep build store (TS2742 "inferred type cannot be named without
+// a reference to …"). Without the annotation the generated `.d.ts` can
+// end up with references to pnpm's ephemeral temp paths, which then
+// strip the declarations entirely and surface as TS2305 downstream.
 // ============================================
 import { createStack } from "./Stack";
 import { createRow } from "./Row";
 import { createBox } from "./Box";
+import type { StackDataProps } from "./Stack";
+import type { RowDataProps } from "./Row";
+import type { BoxDataProps } from "./Box";
+import type { Component } from "solid-js";
 
 // Stack variants — named by gap
-export const TightStack = createStack({ gap: "xs" });
-export const NarrowStack = createStack({ gap: "sm" });
-export const SpacedStack = createStack({ gap: "md" });
+export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
+export const NarrowStack: Component<StackDataProps> = createStack({ gap: "sm" });
+export const SpacedStack: Component<StackDataProps> = createStack({ gap: "md" });
 
 // Stack variants — named by role / page layout
 export const PageStack = createStack({ gap: "sm", style: { padding: "24px", "max-width": "1000px" } });
-export const ContentStack = createStack({ gap: "xs", style: { flex: "1", "min-width": "0" } });
-export const CenteredStack = createStack({ align: "center", justify: "center", gap: "sm" });
+export const ContentStack: Component<StackDataProps> = createStack({ gap: "xs", style: { flex: "1", "min-width": "0" } });
+export const CenteredStack: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm" });
 
 // Empty regions — centered stacks with size-specific padding and min-height
-export const SmRegion = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "16px 12px", "min-height": "60px", "text-align": "center" } });
-export const MdRegion = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "32px 16px", "min-height": "120px", "text-align": "center" } });
-export const LgRegion = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "48px 24px", "min-height": "200px", "text-align": "center" } });
+export const SmRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "16px 12px", "min-height": "60px", "text-align": "center" } });
+export const MdRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "32px 16px", "min-height": "120px", "text-align": "center" } });
+export const LgRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "48px 24px", "min-height": "200px", "text-align": "center" } });
 
 // Row variants — named by layout behavior
-export const SpreadRow = createRow({ align: "center", justify: "between", gap: "md" });
-export const ClusterRow = createRow({ align: "center", gap: "sm" });
-export const TightClusterRow = createRow({ gap: "xs", align: "center" });
-export const TopClusterRow = createRow({ gap: "sm", align: "start" });
-export const TagRow = createRow({ gap: "xs", wrap: true, align: "center" });
-export const WrapRow = createRow({ gap: "xs", wrap: true });
-export const SpacedClusterRow = createRow({ gap: "md", align: "center" });
-export const FlexRow = createRow({});
+export const SpreadRow: Component<RowDataProps> = createRow({ align: "center", justify: "between", gap: "md" });
+export const ClusterRow: Component<RowDataProps> = createRow({ align: "center", gap: "sm" });
+export const TightClusterRow: Component<RowDataProps> = createRow({ gap: "xs", align: "center" });
+export const TopClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "start" });
+export const TagRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true, align: "center" });
+export const WrapRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true });
+export const SpacedClusterRow: Component<RowDataProps> = createRow({ gap: "md", align: "center" });
+export const FlexRow: Component<RowDataProps> = createRow({});
 
 // Box variants — named by flex-child behavior
-export const ActionSlot = createBox({ shrink: false });
-export const FadedBox = createBox({ style: { opacity: "0.5" } });
-export const ConstrainedBox = createBox({ style: { "max-width": "400px" } });
+export const ActionSlot: Component<BoxDataProps> = createBox({ shrink: false });
+export const FadedBox: Component<BoxDataProps> = createBox({ style: { opacity: "0.5" } });
+export const ConstrainedBox: Component<BoxDataProps> = createBox({ style: { "max-width": "400px" } });
 
 // ScrollPanel — curried Box for a height-bounded, bordered, scrolling region.
 // Use to drop a long table/list/log into a detail area without letting it push
