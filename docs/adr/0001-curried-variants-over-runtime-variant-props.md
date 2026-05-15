@@ -1,0 +1,7 @@
+# Curried Variants over runtime variant props
+
+Most SolidJS / React component libraries express visual configuration via runtime prop values (`<Button variant="primary" size="lg">`). We instead require every visual configuration to be a named **Curried Variant** produced at definition time by a **Factory** (`PrimaryButton = createButton({ variant: "primary", size: "lg" })`). Consumer Apps import the named component; **Override Props** are stripped from the curried component's public type so TypeScript blocks inline visual overrides.
+
+We chose this because (a) it forces a single source of truth per visual configuration — the same look can't drift across Consumer Apps via inline copies, (b) it makes **Adoption** auditable: any inline override is a TypeScript error, not a code-review judgement call, and (c) it gives AI agents an unambiguous rule (per `AGENT_GUIDE.md` #1) — "if no Curried Variant exists, create one" — instead of letting them invent ad-hoc styling.
+
+The accepted cost is combinatorial growth of named exports in `variants.ts` files (currently ~40+ across `Button`, `Surface`, `Layout`, `HUD`, `Section`, `Table`, `Cell`). We treat that growth as a *feature* — each export documents an approved visual configuration. Reversing this decision would require reintroducing override props across all five Consumer Apps and grepping out their inline call-sites, so it should be considered load-bearing.
