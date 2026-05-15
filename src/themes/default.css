@@ -420,6 +420,19 @@ body {
   color: var(--sui-accent);
 }
 
+/* Toggled state for icon-only buttons. See hud.css for rationale. */
+.sui-btn--icon-only[aria-pressed="true"]:not(:disabled) {
+  color: var(--sui-btn-icon-pressed-color, var(--sui-warning));
+}
+
+.sui-btn--icon-only[aria-pressed="true"]:hover:not(:disabled) {
+  background: rgba(
+    var(--sui-btn-icon-pressed-rgb, var(--sui-warning-rgb)),
+    0.1
+  );
+  color: var(--sui-btn-icon-pressed-color, var(--sui-warning));
+}
+
 .sui-btn--sm {
   font-size: 12px;
 }

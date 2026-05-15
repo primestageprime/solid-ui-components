@@ -1,0 +1,82 @@
+/* GroupBracket — thin right-edge bracket cue marking contiguous runs of
+ * related list items. Geometry is fully driven by CSS variables so
+ * consumers can tune gutter width / stroke / stub length / badge top
+ * without overriding component code. Colors are caller-supplied via
+ * inline `--sui-group-bracket-color` and `--sui-group-bracket-badge-fill`
+ * — every other style lives here. */
+
+.sui-group-bracket {
+  --sui-group-bracket-gutter: 36px;
+  --sui-group-bracket-spine-offset: 14px;
+  --sui-group-bracket-stroke: 2px;
+  --sui-group-bracket-stub: 8px;
+  /* y of the badge centre. Default targets the primary line in a
+   * typical ListItem (icon + children) row; adjust per-instance when
+   * the row's primary content sits elsewhere. */
+  --sui-group-bracket-badge-top: 18px;
+  /* Default falls back to current text colour; consumers normally pass
+   * an explicit `color` prop derived from a per-group palette. */
+  --sui-group-bracket-color: currentColor;
+  /* Opaque base painted under the (typically translucent) badge fill,
+   * so the spine / top stub don't read through the badge. Defaults to
+   * the panel/page background. */
+  --sui-group-bracket-badge-bg: var(--sui-bg-primary, #0a1420);
+
+  position: relative;
+  width: var(--sui-group-bracket-gutter);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.sui-group-bracket__spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--sui-group-bracket-spine-offset);
+  width: var(--sui-group-bracket-stroke);
+  background: var(--sui-group-bracket-color);
+}
+
+.sui-group-bracket__stub {
+  position: absolute;
+  right: calc(
+    var(--sui-group-bracket-spine-offset) + var(--sui-group-bracket-stroke)
+  );
+  width: var(--sui-group-bracket-stub);
+  height: var(--sui-group-bracket-stroke);
+  background: var(--sui-group-bracket-color);
+}
+
+.sui-group-bracket__stub--top {
+  top: 0;
+}
+
+.sui-group-bracket__stub--bottom {
+  bottom: 0;
+}
+
+.sui-group-bracket__badge {
+  position: absolute;
+  top: var(--sui-group-bracket-badge-top);
+  right: calc(
+    var(--sui-group-bracket-spine-offset) +
+      var(--sui-group-bracket-stroke) / 2
+  );
+  transform: translate(50%, -50%);
+  padding: 1px 6px;
+  border-radius: 9px;
+  border: 1px solid var(--sui-group-bracket-color);
+  /* Stacked: opaque base UNDER translucent tint, so the spine + top
+   * stub the badge sits over are hidden regardless of fill alpha. */
+  background:
+    linear-gradient(
+      var(--sui-group-bracket-badge-fill, transparent),
+      var(--sui-group-bracket-badge-fill, transparent)
+    ),
+    var(--sui-group-bracket-badge-bg);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--sui-text-primary, #fff);
+  line-height: 1;
+  white-space: nowrap;
+}
