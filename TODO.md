@@ -14,70 +14,42 @@ Duration, PopoverMenu, ProgressCheck, QuadrantGrid, RingChart,
 SprintSelector, StatusLight, TagInput, ThroughputChart, WorkerCard.
 
 
+### Follow-ups from the 2026-05-15 migration sweep
+
+Surfaced while wrapping up the parallel jtf-ui adoption pass. None block, but each one made an agent reach for an inline override.
+
+- [ ] **Document `SurfaceDataProps` strips overrides** in COMPONENTS.md — passing `padding` / `radius` / `bg` / `borderColor` to a curried `WarningSurface` / `SuccessSurface` (etc.) errors with TS2322. Either widen the data-prop type or add a one-liner to the entry telling callers to trust the curry's defaults.
+- [ ] **`SpreadCenterRow` curried variant** — `SpreadRow` strips `align` from `RowDataProps`, so the durability route fell back to raw `<Row align="center" justify="between">`. Either add a curried variant that bakes `align: "center"` in, or relax `RowDataProps` to allow `align` overrides for header rows.
+- [ ] **`ComplianceThresholdTable.powerSources[].label` widening** — currently typed `string`, which blocks `NumberWithUnits` adoption inside the label (vessel-detail Nox/Rog still use `.toFixed(0)` for the kW label). Widening to `JSX.Element | string` would unblock it.
+- [ ] **ISO-date locale shift in `routes/index.tsx`** — the cached vessel-call table used to render `connected_at` via `toISOString()` (UTC); now uses `<DateCell value={...} format="iso" />` which formats in local time. Cells near midnight UTC may shift one day. If preserving UTC matters, swap to a custom format string with explicit timezone.
+
 ### Type-annotate remaining curried variant exports (TS2742 portability)
 
-Button variants (`src/components/Button/variants.ts`) carry explicit `Component<ButtonDataProps>` annotations as of v0.3.1 — without them, `vite-plugin-dts` inlines solid-js type paths through pnpm's ephemeral github-dep build-store temp directory (TS2742 "inferred type cannot be named…"), which strips the declarations from the shipped `.d.ts` and surfaces as TS2305 downstream. Apply the same annotation pattern when a downstream first imports from:
+Button variants (`src/components/Button/variants.ts`) carry explicit `Component<ButtonDataProps>` annotations as of v0.3.1 — without them, `vite-plugin-dts` inlines solid-js type paths through pnpm's ephemeral github-dep build-store temp directory (TS2742 "inferred type cannot be named…"), which strips the declarations from the shipped `.d.ts` and surfaces as TS2305 downstream. Same fix applied:
 
-- [ ] **Cell curried variants** (`src/components/Cell/variants.ts`) — `KVTable`, `BorderRow`, `DataTerm`, `DataTermMuted`, `DataValue`, `DataValueHighlight`, `DataValueSuccess`, `DataValuePrimary`, `DataValueMuted`, `DataHeader`, `DataHeaderRight`, `DataHeaderCenter`. Annotate with `Component<CellDataProps>` / `Component<CellTableDataProps>` / `Component<CellRowDataProps>` as appropriate.
-- [ ] **Layout curried variants** (`src/components/Layout/variants.ts`) — `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `ClusterRow`, `TightClusterRow`, `TopClusterRow`, `TagRow`, `WrapRow`, `SpacedClusterRow`, `FlexRow`, `ActionSlot`, `FadedBox`, `ConstrainedBox`. Annotate with `Component<StackDataProps>` / `Component<RowDataProps>` / `Component<BoxDataProps>` as appropriate.
+- [x] **Cell curried variants** (`src/components/Cell/variants.ts`) — KVTable, BorderRow, and 10× `createCell()` exports annotated. Commit `3152ef7`.
+- [x] **Layout curried variants** (`src/components/Layout/variants.ts`) — 19 Stack/Row/Box variants annotated. Commit `0c1dba4`.
 
-These are latent — not emitting TS2305 today because no downstream imports them — but will re-surface the same build-store bug the first time they are. Fixing them proactively also avoids a per-consumer debugging cycle.
+### Component Adoption in jtf-ui (completed 2026-05-15)
 
-### Component Adoption in jtf-ui
+Replaced bespoke inline markup in `jtf-ui/src/` with solid-ui-components via a parallel multi-agent sweep. Most files were already migrated by an upstream `e60f49f` ("Adopt solid-ui-components across jtf-ui: replace bespoke markup in 16 files") pass; the agents finished the remaining seams.
 
-Replace bespoke inline markup in `jtf-ui/src/` with solid-ui-components. Tasks are organized by file for parallel execution. Each task is independent — no cross-task dependencies.
+Per-file outcome:
 
-**Rules:**
-- Import from `solid-ui-components` (never direct paths)
-- Preserve all existing behavior — visual parity, no functional changes
-- Run `npx tsc --noEmit` after each file to catch regressions
-- Commit per-task so changes are reviewable
-
-#### Violations & Unresolved Tables (2 files, ~300 lines)
-
-- [ ] **violations.tsx** — Replace `<table class="data-table">` (L76-134) with BaseTable + column definitions using DateCell, MetricValueCell, StringCell. Replace bespoke empty state (L64-68) with EmptyState variant="no-data". Replace header `<div style={{ display: flex }}>` (L49-56) with SpreadRow.
-- [ ] **unresolved.tsx** — Same table pattern as violations (L88-146) → BaseTable. Replace bespoke "All Clear" empty state (L62-82) with EmptyState variant="empty" + custom icon. Replace warning info box (L148-159) with AlertBox variant="warning". Replace header flex (L34-50) with SpreadRow.
-
-#### ApprovalSection Overhaul (1 file, 290 lines)
-
-- [ ] **ApprovalSection.tsx** — Replace HUDModal+manual footer buttons (L201-244) with HUDConfirmationModal (onConfirm/onClose/loading). Replace raw `<textarea>` (L269-284) with ThemedTextarea. Replace 4 inline `<button>` elements (L129, L178, L211, L226) with Button/GhostButton/PrimaryButton variants. Replace pending-approval banner (L112-143) with WarningSurface + SpreadRow + TextLabel. Replace approved banner (L146-194) with SuccessSurface. Replace error box (L248-257) with AlertBox variant="danger".
-
-#### Summary Cards → MetricCard (1 file, 139 lines)
-
-- [ ] **StatisticsSummary.tsx** — Replace 3 identical inline summary cards (L62-102: "Missing Metrics", "Total Violations", "Assets w/ Violations") with MetricCard component using color props (warning/danger/success based on value). Replace outer `<div style={{ display: flex, flex-direction: column }}>` (L51) with NarrowStack. Replace grid container (L61) with Row or CSS grid class.
-
-#### Small Table Components → BaseTable (3 files, ~260 lines)
-
-- [ ] **MinMaxTable.tsx** — Replace hand-rolled `<table class="data-table">` (L14-57) with BaseTable. Define columns for metric, type (MIN/MAX with color), value (FloatCell), timestamp (DateTimeCell). Keeps DataTableContainer wrapper.
-- [ ] **HourlyDataTable.tsx** — Replace hand-rolled table (L53-78) with BaseTable. Dynamic columns from minute-level pivot data. Use FloatCell for numeric values.
-- [ ] **HourLevelDataTable.tsx** — Replace hand-rolled table (L35-87) with BaseTable. Use FloatCell/IntCell for metrics, DateTimeCell for timestamps.
-
-#### PowerLogPanel Inputs & Buttons (1 file, 721 lines)
-
-- [ ] **PowerLogPanel.tsx** — Replace raw `<button>` elements (L605, L640, L655) with PrimaryButton/DangerButton/GhostButton. Replace hand-rolled data tables (L371-428 engine selector table, L513-550 records table, L679-730 confirmation table) with BaseTable where feasible (some are editable — may need to keep raw inputs inside cells). Replace manual `.toFixed()` calls (L399, L495, L554, L706) with FloatCell in table contexts. Note: editable input cells may stay raw — focus on display tables and buttons.
-
-#### NoxWidgets & RogWidgets Number Formatting (2 files, ~660 lines)
-
-- [ ] **NoxWidgets.tsx** — Replace `toFixed()`/`toPrecision()` calls in hand-rolled tables (L308-350 correction factors table, L393-448 raw data table) with BaseTable + FloatCell. Replace manual number formatting in DTable entries (L74, L89, L92, L95, L98) with NumberWithUnits where displaying value+unit pairs. Leave MathFormula/FormulaVarRow usage as-is (already adopted).
-- [ ] **RogWidgets.tsx** — Replace `.toFixed()`/`.toPrecision()` (L59, L93) with FloatCell or NumberWithUnits in DTable entries. Small file, quick win.
-
-#### Main Grid Page Buttons & Layout (1 file, 1385 lines)
-
-- [ ] **routes/index.tsx** — Replace inline toggle switches (L908-974: forceRecache/forceRawPull toggles built with raw divs) with HUDToggle component. Replace raw filter `<button>` elements (L1265-1293) with Button variant="ghost" with active state styling. Replace bespoke error/retry box (L1008-1032) with AlertBox variant="danger" + action slot. Replace hand-rolled vessel call table (L1296-1330) columns that use manual formatting with CellRenderer equivalents (DateCell, StatusBadge). Replace inline flex containers in header area with SpreadRow/ClusterRow.
-
-#### Detail Page Layout & Numbers (1 file, 1177 lines)
-
-- [ ] **routes/detail/[id]/index.tsx** — Replace manual `.toFixed()` / `.toLocaleString()` calls (L163, L183, L189, L195, L201, L207, L213, L509, L512, L520, L523, L526, L529) with NumberWithUnits or FloatCell in DTable entries. Replace inline summary card patterns with MetricCard where applicable. Replace hand-rolled overview table (L485-540) with BaseTable.
-
-#### Report Pages (2 files, ~1880 lines)
-
-- [ ] **routes/reports/fortnight/[id].tsx** — Replace hand-rolled report tables with BaseTable where data is tabular. Replace raw `<button>` (L735) with Button. Replace `<input>` (L538) with ThemedInput. Replace `.toFixed()`/`.toPrecision()`/`.toLocaleString()` (L837, L929, L937, L939, L492) with FloatCell/NumberWithUnits. Replace inline flex containers (L435, L609, L809, L977, L1047) with Stack/Row variants. Large file — focus on highest-impact tables and buttons first.
-- [ ] **routes/reports/durability.tsx** — Replace raw `<button>` elements (L283, L288, L301, L306) with Button variants. Replace `<input>` (L325) with ThemedInput. Replace inline flex containers with Stack/Row.
-
-#### Calculation Deep-Dive Pages (2 files, ~1590 lines)
-
-- [ ] **routes/detail/[id]/nox.tsx** — Replace hand-rolled data tables (L618-675) with BaseTable + FloatCell. Replace `.toFixed()` calls (L637-689, L758-760) with NumberWithUnits in DTable contexts. Replace inline flex layout containers (L571-587, L802-808) with SpreadRow/NarrowStack.
-- [ ] **routes/detail/[id]/rog.tsx** — Replace hand-rolled tables (L551-584 correction factors, L618-657 raw data) with BaseTable + FloatCell. Replace `.toFixed()` calls (L568, L575, L582, L665-667) with NumberWithUnits. Replace inline flex containers (L504-520, L700-706) with SpreadRow/NarrowStack.
+- [x] **violations.tsx** — file removed from the branch; entry retired.
+- [x] **unresolved.tsx** — already migrated (e60f49f); BaseTable + EmptyState + AlertBox + SpreadRow in place.
+- [x] **ApprovalSection.tsx** — warning/success banners swapped to `WarningSurface` / `SuccessSurface` + `SpreadRow` (`af1401b`). HUDConfirmationModal / ThemedTextarea / AlertBox / Button variants were already in place upstream.
+- [x] **StatisticsSummary.tsx** — remaining inline grid container replaced with `Row gap="md" wrap` + `Box grow` (`251c320`). NarrowStack + 3× MetricCard were already in place upstream.
+- [x] **MinMaxTable.tsx**, **HourlyDataTable.tsx**, **HourLevelDataTable.tsx** — already on BaseTable + DataTableContainer + FloatCell/IntCell/MinuteDateTimeCell upstream (e60f49f). No-op.
+- [x] **PowerLogPanel.tsx** — already on BaseTable + PrimaryButton + FloatCell-via-`withCellStyle` upstream. Editable hourly-entry input table left raw by design. No-op.
+- [x] **NoxWidgets.tsx** — 3 remaining `.toFixed()` / `kW` / `%` spots converted to `NumberWithUnits` (`076b154`).
+- [x] **RogWidgets.tsx** — file removed from the branch; entry retired.
+- [x] **routes/index.tsx** — header → `SpreadRow` + `ClusterRow`; filter buttons → `Button variant="ghost" size="sm" active={…}`; vessel-call table columns → `DateCell` + `StatusBadge` (`6d4a8ae`). HUDToggle + AlertBox already done upstream. See the follow-up note about UTC → local date shift.
+- [x] **routes/detail/[id]/index.tsx** — file moved to `src/components/fortnight/vessel-detail/VesselCallOverview.tsx`; migrated there (`3bde59d`).
+- [x] **routes/detail/[id]/nox.tsx** — file moved to `src/components/fortnight/vessel-detail/VesselCallNoxDetail.tsx`; already migrated upstream.
+- [x] **routes/detail/[id]/rog.tsx** — file moved to `src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx`; already migrated upstream.
+- [x] **routes/reports/fortnight/[id].tsx** + **components/fortnight/FortnightReportBody.tsx** — `MetricInput` swapped to `ThemedInput` (load-bearing density overrides flagged inline); compliance-card grid → `Row gap="md" wrap`; hand-rolled `ComplianceDot` swapped to library `Dot` (`98139eb` + `7a05b8e`). Editable per-metric `MissingData` grid intentionally left raw — `BaseTable` cell renderers are read-only.
+- [x] **routes/reports/durability.tsx** — header + loading flex containers → `Row` (`c6aa2d2`). Buttons + ThemedInput already done upstream.
 
 ### Existing Components to Curry (completed)
 
