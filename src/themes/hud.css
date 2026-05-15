@@ -456,6 +456,23 @@ body {
   color: var(--sui-accent);
 }
 
+/* Toggled state for icon-only buttons. Caller signals "on" via
+ * `aria-pressed="true"` (standard ARIA for toggle buttons). The pressed
+ * colour defaults to `--sui-warning` (matches the typical "favourited"
+ * gold), overridable per-call site via `--sui-btn-icon-pressed-color` /
+ * `--sui-btn-icon-pressed-rgb`. */
+.sui-btn--icon-only[aria-pressed="true"]:not(:disabled) {
+  color: var(--sui-btn-icon-pressed-color, var(--sui-warning));
+}
+
+.sui-btn--icon-only[aria-pressed="true"]:hover:not(:disabled) {
+  background: rgba(
+    var(--sui-btn-icon-pressed-rgb, var(--sui-warning-rgb)),
+    0.12
+  );
+  color: var(--sui-btn-icon-pressed-color, var(--sui-warning));
+}
+
 .sui-btn--sm {
   font-size: 11px;
 }

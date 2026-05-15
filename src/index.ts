@@ -19,6 +19,7 @@ export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
 export * from "./components/Chart";
 export * from "./components/Alarm";
+export * from "./components/GroupBracket";
 export * from "./components/RecentStarred";
 export * from "./components/Cell";
 export * from "./components/Button";
