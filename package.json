@@ -49,16 +49,13 @@
   },
   "peerDependencies": {
     "d3-scale": "^4.0.0",
-    "d3-shape": "^3.0.0",
     "katex": "^0.16.0",
     "solid-js": "^1.9.0"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
-    "@types/d3-shape": "^3.1.6",
     "d3-scale": "^4.0.2",
-    "d3-shape": "^3.2.0",
     "jsdom": "^26.1.0",
     "solid-js": "^1.9.10",
     "typescript": "^5.7.0",
