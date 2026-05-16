@@ -17,6 +17,7 @@ import { DagChartShowcase } from "./showcases/dag-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
 import { DividerShowcase } from "./showcases/divider";
+import { DotchartShowcase } from "./showcases/dotchart";
 import { HeatmapShowcase } from "./showcases/heatmap";
 import { HeatStreamShowcase } from "./showcases/heatstream";
 import { ButtonGroupShowcase } from "./showcases/hud-button-group";
@@ -172,6 +173,7 @@ const items: Item[] = [
 
   { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase, tags: ["depth:2", "feedback"] },
   { id: "chart", label: "Chart", component: ChartShowcase, tags: ["depth:2", "chart", "data"] },
+  { id: "dotchart", label: "DotChart (composition smoke)", component: DotchartShowcase, tags: ["depth:2", "chart", "time", "data"] },
   { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase, tags: ["depth:2", "data", "indicator"] },
   { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase, tags: ["depth:2", "feedback"] },
   { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:2", "form", "time"] },
