@@ -10,5 +10,8 @@ export type Id = string;
 /** Pointer-click handler. Item + native PointerEvent. */
 export type ClickHandler<T> = (item: T, event: PointerEvent) => void;
 
+/** Pointer double-click handler. Native dblclick is a MouseEvent, not PointerEvent. */
+export type DblClickHandler<T> = (item: T, event: MouseEvent) => void;
+
 /** Pointer-hover handler. Item or null (on pointer-leave) + native PointerEvent. */
 export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;

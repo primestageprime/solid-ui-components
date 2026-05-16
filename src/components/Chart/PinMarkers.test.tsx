@@ -53,6 +53,37 @@ describe("PinMarkers — callbacks", () => {
   });
 });
 
+describe("PinMarkers — renderPin escape hatch", () => {
+  it("invokes renderPin with pin + render context including selection state", () => {
+    const [sel, setSel] = createSignal<Id | null>(null);
+    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const calls: Array<{ id: Id; selected: boolean; cx: number; cy: number }> = [];
+    const { container } = wrapper(() => (
+      <PinMarkers
+        data={[pin]}
+        selectedId={sel()}
+        renderPin={(p, rctx) => {
+          calls.push({ id: p.id, selected: rctx.selected, cx: rctx.cx, cy: rctx.cy });
+          return <text class="ghost-pin-test-sentinel" x={rctx.cx} y={rctx.cy}>X</text>;
+        }}
+      />
+    ));
+    // Sentinel rendered (escape hatch path active).
+    expect(container.querySelector(".ghost-pin-test-sentinel")).toBeTruthy();
+    // Initial render captured selected=false; cx/cy are numeric.
+    expect(calls.length).toBeGreaterThan(0);
+    const first = calls[0];
+    expect(first.id).toBe("a");
+    expect(first.selected).toBe(false);
+    expect(typeof first.cx).toBe("number");
+    expect(typeof first.cy).toBe("number");
+    // Selection change re-invokes render fn with selected=true.
+    setSel("a");
+    const last = calls[calls.length - 1];
+    expect(last.selected).toBe(true);
+  });
+});
+
 describe("PinMarkers — curried variants", () => {
   it("WarningPinMarkers attaches the warning class", () => {
     const pin: Pin = { id: "a", x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };
