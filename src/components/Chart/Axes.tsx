@@ -1,6 +1,7 @@
 // Chart slots: XAxis, YAxis — tick lines + labels at scale ticks.
 import { Component, For } from "solid-js";
 import { useChart } from "./context";
+import type { Scale } from "./scales";
 
 export interface AxisProps {
   tickCount?: number;
@@ -17,10 +18,20 @@ const defaultFormat = (v: number): string => {
   return String(Math.round(v * 100) / 100);
 };
 
+const isTimeScale = (
+  s: Scale,
+): s is Scale & { tickFormat: (count?: number) => (v: number) => string } =>
+  typeof (s as { tickFormat?: unknown }).tickFormat === "function";
+
 export const XAxis: Component<AxisProps> = (props) => {
   const ctx = useChart();
   const tickCount = () => props.tickCount ?? 5;
-  const fmt = () => props.tickFormat ?? defaultFormat;
+  const fmt = () => {
+    if (props.tickFormat) return props.tickFormat;
+    const scale = ctx.xScale();
+    if (isTimeScale(scale)) return scale.tickFormat(tickCount());
+    return defaultFormat;
+  };
 
   return (
     <g class="sui-chart__axis sui-chart__axis--x" transform={`translate(0, ${ctx.innerHeight()})`}>

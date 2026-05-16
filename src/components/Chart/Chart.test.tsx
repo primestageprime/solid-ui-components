@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { Chart } from "./Chart";
+import { XAxis } from "./Axes";
 import { useChart } from "./context";
 import type { Component } from "solid-js";
 
@@ -67,5 +68,20 @@ describe("Chart", () => {
     const svg = container.querySelector("svg")!;
     fireEvent.pointerMove(svg, { clientX: 100, clientY: 50 });
     expect(captured!.hoverX()).not.toBeNull();
+  });
+});
+
+describe("XAxis time-aware formatting", () => {
+  it("uses scale.tickFormat() when scale is a TimeScale", () => {
+    const t0 = new Date(2026, 0, 1);
+    const t1 = new Date(2026, 0, 2);
+    const { container } = render(() => (
+      <Chart width={400} height={100} xDomain={[t0, t1]} yDomain={[0, 100]}>
+        <XAxis tickCount={3} />
+      </Chart>
+    ));
+    const labels = Array.from(container.querySelectorAll(".sui-chart__axis-label"));
+    const anyTimeFormatted = labels.some((el) => /[:a-zA-Z/]/.test(el.textContent ?? ""));
+    expect(anyTimeFormatted).toBe(true);
   });
 });
