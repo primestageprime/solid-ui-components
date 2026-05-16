@@ -10,12 +10,11 @@ import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
 import type { Id, ClickHandler, DblClickHandler } from "./slot-types";
 
-export interface Pin<TDomain = unknown> {
+export interface Pin {
   id: Id;
   x: number;
   y?: number;
   descriptor: Descriptor;
-  data?: TDomain;
 }
 
 export interface PinMarkersRenderContext {

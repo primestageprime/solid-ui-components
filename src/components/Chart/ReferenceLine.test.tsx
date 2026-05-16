@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Chart, ReferenceLine } from "./index";
+import type { ReferenceLineProps } from "./Series";
 
 describe("ReferenceLine — orientation API", () => {
   it("orientation='horizontal' draws a horizontal line at the Y value", () => {
@@ -42,5 +43,20 @@ describe("ReferenceLine — orientation API", () => {
       </Chart>
     ));
     expect(container.querySelector(".sui-chart__ref line")).toBeTruthy();
+  });
+});
+
+describe("ReferenceLine — type-level enforcement", () => {
+  it("rejects empty props at compile time", () => {
+    // @ts-expect-error — props must include one of orientation+value, x, or y
+    const _empty: ReferenceLineProps = {};
+    // @ts-expect-error — orientation without value is incomplete
+    const _partial: ReferenceLineProps = { orientation: "horizontal" };
+    // Valid forms compile:
+    const _new: ReferenceLineProps = { orientation: "horizontal", value: 50 };
+    const _legacyX: ReferenceLineProps = { x: 5 };
+    const _legacyY: ReferenceLineProps = { y: 50 };
+    void _empty; void _partial; void _new; void _legacyX; void _legacyY;
+    expect(true).toBe(true);
   });
 });

@@ -245,15 +245,7 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 }
 
 // ---- ReferenceLine ----
-export interface ReferenceLineProps {
-  /** Preferred API: orientation + value. */
-  orientation?: "horizontal" | "vertical";
-  /** Value in the matching scale's data domain. Accepts Date when the chart has a time domain. */
-  value?: number | Date;
-  /** Legacy API: horizontal at this Y. Mutually exclusive with `x` and `orientation`. */
-  y?: number;
-  /** Legacy API: vertical at this X. */
-  x?: number;
+export interface ReferenceLineStyleProps {
   stroke?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
@@ -262,10 +254,41 @@ export interface ReferenceLineProps {
   color?: string;
 }
 
+export type ReferenceLineProps =
+  | (ReferenceLineStyleProps & {
+      /** Preferred API: orientation + value (accepts Date when chart has time domain). */
+      orientation: "horizontal" | "vertical";
+      value: number | Date;
+      x?: never;
+      y?: never;
+    })
+  | (ReferenceLineStyleProps & {
+      /** @deprecated Legacy API — use orientation="vertical" + value. */
+      x: number;
+      orientation?: never;
+      value?: never;
+      y?: never;
+    })
+  | (ReferenceLineStyleProps & {
+      /** @deprecated Legacy API — use orientation="horizontal" + value. */
+      y: number;
+      orientation?: never;
+      value?: never;
+      x?: never;
+    });
+
 const toScaleValue = (v: number | Date): number =>
   v instanceof Date ? v.getTime() : v;
 
-export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
+type ReferenceLineInternal = ReferenceLineStyleProps & {
+  orientation?: "horizontal" | "vertical";
+  value?: number | Date;
+  x?: number;
+  y?: number;
+};
+
+export const ReferenceLine: Component<ReferenceLineProps> = (rawProps) => {
+  const props = rawProps as ReferenceLineInternal;
   const ctx = useChart();
   const resolved = () => {
     if (props.orientation && props.value != null) {
