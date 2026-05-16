@@ -246,53 +246,78 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 
 // ---- ReferenceLine ----
 export interface ReferenceLineProps {
-  /** Horizontal line at this Y data value. Mutually exclusive with `x`. */
+  /** Preferred API: orientation + value. */
+  orientation?: "horizontal" | "vertical";
+  /** Value in the matching scale's data domain. Accepts Date when the chart has a time domain. */
+  value?: number | Date;
+  /** Legacy API: horizontal at this Y. Mutually exclusive with `x` and `orientation`. */
   y?: number;
-  /** Vertical line at this X data value. */
+  /** Legacy API: vertical at this X. */
   x?: number;
   stroke?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
   label?: string;
+  /** Color override; takes precedence over `stroke`. Defaults via CSS class. */
+  color?: string;
 }
+
+const toScaleValue = (v: number | Date): number =>
+  v instanceof Date ? v.getTime() : v;
 
 export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
   const ctx = useChart();
+  const resolved = () => {
+    if (props.orientation && props.value != null) {
+      return { orientation: props.orientation, value: toScaleValue(props.value) };
+    }
+    if (props.x != null) return { orientation: "vertical" as const, value: props.x };
+    if (props.y != null) return { orientation: "horizontal" as const, value: props.y };
+    return null;
+  };
+  const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
+
   return (
     <g class="sui-chart__ref">
-      <Show when={props.y != null}>
-        <line
-          x1={0}
-          x2={ctx.innerWidth()}
-          y1={ctx.yScale()(props.y!)}
-          y2={ctx.yScale()(props.y!)}
-          stroke={props.stroke ?? "currentColor"}
-          stroke-width={props.strokeWidth ?? 1}
-          stroke-dasharray={props.strokeDasharray ?? "4 4"}
-          opacity={0.6}
-        />
-        <Show when={props.label}>
-          <text
-            class="sui-chart__ref-label"
-            x={ctx.innerWidth() - 4}
-            y={ctx.yScale()(props.y!) - 4}
-            text-anchor="end"
-          >
-            {props.label}
-          </text>
-        </Show>
-      </Show>
-      <Show when={props.x != null}>
-        <line
-          y1={0}
-          y2={ctx.innerHeight()}
-          x1={ctx.xScale()(props.x!)}
-          x2={ctx.xScale()(props.x!)}
-          stroke={props.stroke ?? "currentColor"}
-          stroke-width={props.strokeWidth ?? 1}
-          stroke-dasharray={props.strokeDasharray ?? "4 4"}
-          opacity={0.6}
-        />
+      <Show when={resolved()}>
+        {(r) => (
+          <>
+            <Show when={r().orientation === "horizontal"}>
+              <line
+                x1={0}
+                x2={ctx.innerWidth()}
+                y1={ctx.yScale()(r().value)}
+                y2={ctx.yScale()(r().value)}
+                stroke={strokeColor()}
+                stroke-width={props.strokeWidth ?? 1}
+                stroke-dasharray={props.strokeDasharray ?? "4 4"}
+                opacity={0.6}
+              />
+              <Show when={props.label}>
+                <text
+                  class="sui-chart__ref-label"
+                  x={ctx.innerWidth() - 4}
+                  y={ctx.yScale()(r().value) - 4}
+                  text-anchor="end"
+                >
+                  {props.label}
+                </text>
+              </Show>
+            </Show>
+            <Show when={r().orientation === "vertical"}>
+              <line
+                y1={0}
+                y2={ctx.innerHeight()}
+                x1={ctx.xScale()(r().value)}
+                x2={ctx.xScale()(r().value)}
+                stroke={strokeColor()}
+                stroke-width={props.strokeWidth ?? 1}
+                stroke-dasharray={props.strokeDasharray ?? "4 4"}
+                opacity={0.6}
+              />
+            </Show>
+          </>
+        )}
       </Show>
     </g>
   );
