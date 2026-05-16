@@ -28,6 +28,12 @@ const PIN_PATH =
   "M0,-7 C-4,-7 -4,-3 0,2 C4,-3 4,-7 0,-7 Z M-1.5,-5 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0";
 const BUILTIN_VIEWBOX: [number, number] = [16, 16];
 
+/** Narrows a Shape to its custom-path variant, or undefined for built-in tags. */
+const asCustomShape = (
+  shape: Shape,
+): { path: string; viewBox?: [number, number] } | undefined =>
+  typeof shape === "object" ? shape : undefined;
+
 interface ShapeGlyphProps {
   descriptor: Descriptor;
   cx: number;
@@ -83,20 +89,17 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           fillRule="evenodd"
         />
       </Show>
-      <Show when={typeof props.descriptor.shape === "object"}>
-        {(() => {
-          const custom = props.descriptor.shape as { path: string; viewBox?: [number, number] };
-          return (
-            <PathScaled
-              path={custom.path}
-              viewBox={custom.viewBox ?? BUILTIN_VIEWBOX}
-              size={size()}
-              color={props.descriptor.color}
-              stroke={stroke()}
-              strokeWidth={strokeWidth()}
-            />
-          );
-        })()}
+      <Show when={asCustomShape(props.descriptor.shape)}>
+        {(custom) => (
+          <PathScaled
+            path={custom().path}
+            viewBox={custom().viewBox ?? BUILTIN_VIEWBOX}
+            size={size()}
+            color={props.descriptor.color}
+            stroke={stroke()}
+            strokeWidth={strokeWidth()}
+          />
+        )}
       </Show>
     </g>
   );
