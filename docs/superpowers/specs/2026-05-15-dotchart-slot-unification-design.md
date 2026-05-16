@@ -27,16 +27,27 @@ Add **`d3-scale`** and **`d3-shape`** as peer deps. Pure math and path-builder l
 
 Slots are declarative Solid components that read `useChart()` for shared state (scales, hoverX, etc.) and return JSX. **No refs cross slot boundaries.** Refs are allowed *inside a slot* only when the browser forces them: measurement (`getBBox`, `getBoundingClientRect`), focus management, canvas/WebGL escape hatch, or an animation lib that drives elements directly. Cross-slot coordination → context + signals.
 
+**Pointer/gesture ownership:** `<Chart>` (the root) attaches a single pointer listener on the SVG and dispatches state via context signals (`hoverX`, `dragRange`). Interactive slots like `DragRangeSelect` are config-only: they consume context signals and emit callbacks; they don't attach their own listeners. This keeps gesture conflicts (`DragRangeSelect` vs `Crosshair` etc.) resolved in one place.
+
 ### D4. Domain decoupling
 
 **Descriptor-in-data** is the default pattern. Consumer maps domain → visual descriptor at the call site; the slot is a pure renderer of descriptors.
 
-SUI ships a closed shape enum:
+SUI ships a small closed shape enum, plus a path-string escape for custom geometry. Only shapes amygdala actually uses ship in v1 (YAGNI; expand when a second consumer asks):
 
 ```ts
-type Shape = 'circle' | 'triangle' | 'square' | 'diamond' | 'chevron' | 'pin' | { path: string };
-type Descriptor = { color: string; shape: Shape; size?: number };
+type Shape =
+  | 'circle'
+  | 'chevron'
+  | 'pin'
+  | { path: string; viewBox?: [number, number] }; // viewBox defaults to [16, 16]; path is anchored at center
+type Descriptor = { color: string; shape: Shape; size?: number /* px, defaults per slot */ };
 ```
+
+Shape rendering rules:
+- Anchor = geometric center of the shape's bounding box.
+- `size` = nominal pixel dimension (max of width/height). Slots apply sensible defaults.
+- Custom paths are drawn inside `viewBox` and uniformly scaled to `size`.
 
 Render-prop (`renderPin`, `renderBar`, …) exists as an **escape hatch** for cases the descriptor can't express. Same pattern SUI's `DagChart` already uses (`renderNode`).
 
@@ -45,6 +56,8 @@ All colors flow through SUI CSS vars (`--sui-accent`, `--sui-warning`, etc.). No
 ### D5. Reactivity model
 
 Slot props are **plain values**, not `Accessor<T>` wrappers. Solid props are reactive automatically; the existing SUI Chart family uses this style. Consumer writes `xDomain={range()}`, not `xDomain={() => range()}`.
+
+(Caveat: the small set of *context* signals exposed by `ChartContext` — `hoverX`, `dragRange` — are typed as `Accessor<T>` because Solid context holds reactive references read by many consumers. This is D7, not a contradiction of D5: props are plain, context is reactive.)
 
 ### D6. Time scale
 
@@ -61,7 +74,18 @@ Selection/hover IDs stay as per-slot props (avoid context bloat).
 
 ### D8. Curried variants (ADR 0001)
 
-New slots get curried variants alongside the standard export, consistent with the recent Cell/Layout sweep.
+Every new slot ships a curried variant alongside the standard export, consistent with the recent Cell/Layout sweep. Pattern (mirrors `Cell.curried.ts`):
+
+```ts
+// PinMarkers.tsx — standard export
+export function PinMarkers<TPin>(props: PinMarkersProps<TPin>): JSX.Element { … }
+
+// PinMarkers.curried.ts — curried export (note explicit Component<…> annotation
+// so dts emit keeps generic surface; see ADR 0001 + commit 3152ef7)
+export const pinMarkers: <TPin>(opts: PinMarkersOpts<TPin>) => Component<…> = …;
+```
+
+Every slot file has a `.curried.ts` sibling. Slot index re-exports both.
 
 ## v1 Slot Inventory
 
@@ -71,11 +95,12 @@ New slots get curried variants alongside the standard export, consistent with th
 | `TimelineBar` | NEW | `utils/timeline.ts` |
 | `PinMarkers` | NEW | `utils/indicators.ts` (pin part) |
 | `GhostPin` | NEW | `utils/indicators.ts` (ghost part) |
-| `EdgeHighlight` | NEW | `utils/indicators.ts` (edge part) |
 | `DragRangeSelect` | NEW | inline drag logic |
 | `CurrentValueIndicator` | NEW | `utils/dataPoints.ts` (current value part) |
-| `ReferenceLine` | EXTEND existing | `utils/referenceLines.ts` parity check |
+| `ReferenceLine` | EXTEND existing | `utils/referenceLines.ts` parity check; `orientation="vertical"` now subsumes amygdala's edge-highlight |
 | `Crosshair` | EXTEND if needed | `utils/indicators.ts` (hover line parity) |
+
+`EdgeHighlight` is **not a separate slot** — it's a `<ReferenceLine orientation="vertical" value={edgeT} color="var(--sui-warning)">` invocation. Subsumption noted by reviewer; saves a slot.
 
 **Deferred (vNext or later):** `OverlayPoints`, `CorrelationBand` (needs `AUTO_CORRELATE_OFFSET_MS` decoupling), `ChevronSeries` (subsumed by `Shape` enum value).
 
@@ -94,14 +119,19 @@ src/components/Chart/
   Series.tsx                   (no change in v1)
   Tooltip.tsx                  (no change)
   Crosshair.tsx                (extend if parity gap found)
-  ReferenceLine.tsx            (split from Series.tsx if size warrants)
+  ReferenceLine.tsx            (split from Series.tsx; extend to cover vertical-edge use)
   HighlightSegments.tsx        NEW
+  HighlightSegments.curried.ts NEW
   TimelineBar.tsx              NEW
+  TimelineBar.curried.ts       NEW
   PinMarkers.tsx               NEW
+  PinMarkers.curried.ts        NEW
   GhostPin.tsx                 NEW
-  EdgeHighlight.tsx            NEW
+  GhostPin.curried.ts          NEW
   DragRangeSelect.tsx          NEW
+  DragRangeSelect.curried.ts   NEW
   CurrentValueIndicator.tsx    NEW
+  CurrentValueIndicator.curried.ts NEW
   index.ts                     (export additions)
 ```
 
@@ -109,60 +139,77 @@ src/components/Chart/
 
 ### Slot API sketch
 
+Types (canonical; sketched in TS for clarity — final types live in the slot files):
+
+```ts
+type Id = string;
+type ClickHandler<T> = (item: T, event: PointerEvent) => void;
+
+type HighlightSegment = { id: Id; start: number; end: number; color: string; label?: string; opacity?: number };
+type TimelineBarDatum = { id: Id; start: number; end: number; lane: string; color: string; state?: string };
+type Pin<TDomain = unknown> = { id: Id; x: number; y?: number; descriptor: Descriptor; data?: TDomain };
+type CurrentValue = { x: number; y: number; label?: string };
+```
+
+Each slot is generic on its domain type (`PinMarkers<TPin>`, `TimelineBar<TBar>`, `HighlightSegments<TSeg>`) so callback args carry the consumer's domain type through. Pattern mirrors SUI `DagChart`'s `renderNode<TNode>`.
+
 ```tsx
 <Chart width={W} height={H} xDomain={[t0, t1]} yDomain={[0, 100]}>
   <XAxis />
   <YAxis />
   <Grid />
 
-  <HighlightSegments
-    data={segments}              // { id, start, end, color, label?, opacity? }
-    selectedIds={selectedSet}
-    onClick={seg => …}
-    onHover={seg => …}
+  <HighlightSegments<HighlightSegment>
+    data={segments}
+    selectedIds={selectedSet}                // ReadonlySet<Id>
+    onClick={(seg, event) => …}
+    onHover={(seg /* | null */, event) => …} // null on hover-out
   />
 
-  <TimelineBar
-    data={bars}                  // { id, start, end, lane, color, state? }
-    lanes={['scheduled', 'detected']}
-    selectedId={…}
-    hoveredId={…}
-    onBarClick={bar => …}
+  <TimelineBar<TimelineBarDatum>
+    data={bars}
+    lanes={['scheduled', 'detected']}        // optional; if omitted, inferred from data lane field in encounter order
+                                              // ordering = top-to-bottom; equal-height by default
+    selectedId={…}                            // Id | null
+    hoveredId={…}                             // Id | null
+    onBarClick={(bar, event) => …}
   />
 
-  <PinMarkers
-    data={pins}                  // { id, x, descriptor: Descriptor }
-    selectedId={…}
-    onClick={pin => …}
-    onDelete={pin => …}
-    renderPin={…}                // escape hatch
+  <PinMarkers<Pin>
+    data={pins}                              // y is optional; defaults to top edge of plot area
+    selectedId={…}                            // Id | null
+    onClick={(pin, event) => …}
+    onDelete={(pin, event) => …}
+    renderPin={…}                             // optional escape hatch — (pin, ctx) => JSX.Element
   />
 
-  <GhostPin
-    descriptor={ghostShape}      // null → hidden
-    visible={annotationMode}
-  />
-
-  <EdgeHighlight time={edgeT} color="var(--sui-warning)" />
+  <GhostPin descriptor={ghostShape /* Descriptor | null; null = hidden */} />
 
   <DragRangeSelect
-    onRange={(start, end) => …}
+    onRange={(start, end) => …}              // numbers in xDomain units
     minPixelDelta={5}
   />
 
-  <CurrentValueIndicator point={{ x, y, label? }} />
+  <CurrentValueIndicator point={current /* CurrentValue | null */} />
 
   <ReferenceLine
-    orientation="horizontal"
-    value={threshold}
+    orientation="horizontal"                  // | "vertical"
+    value={threshold}                         // number; if Chart has time scale, accepts Date too
     label="threshold"
     dashed
+    color="var(--sui-border)"
   />
 
   <Crosshair />
   <Tooltip>{…}</Tooltip>
 </Chart>
 ```
+
+Conventions:
+- All callbacks: `(item, event: PointerEvent) => void`. No `boolean` return for cancellation in v1 (YAGNI).
+- All `selectedId`/`hoveredId` props are nullable (`Id | null`).
+- All `*Ids` collection props are `ReadonlySet<Id>`.
+- All `point` / `descriptor` props that can be absent are typed `T | null` (not `T | undefined`) — explicit nullability for reactive prop ergonomics.
 
 ### Data flow
 
@@ -184,6 +231,29 @@ All colors via SUI CSS vars. Slot color props accept `string` (literal or `var(-
 | Alarm timeline types | Slot props accept generic shapes (`{ id, start, end, lane, color, state? }`). |
 | `AUTO_CORRELATE_OFFSET_MS` | N/A — correlation feature deferred. Future `CorrelationBand` slot takes it as a prop. |
 | Hard-coded colors (`IN_BOUNDS_COLOR`, pin RGB) | Replaced with CSS vars or slot props. |
+
+## Implementation phasing
+
+The spec is one design but two implementation slices, to keep PRs scoped and reviewable:
+
+**Phase 1 — Chart core foundation**
+- `Chart.tsx` widening `xDomain` types + scale dispatch (D6)
+- `scales.ts` adding `scaleTime` wrapper via `d3-scale` (D2, D6)
+- `context.ts` adding `dragRange` / `setDragRange` (D7)
+- `shapes.ts` (NEW) — descriptor → SVG element/path table
+- New ADR + CONTEXT.md glossary updates
+- `Axes.tsx` time-aware tick formatting
+
+**Phase 2 — Slot batch**
+- All new slot files + curried siblings + tests
+- Index exports
+- `ReferenceLine` extension for vertical orientation (subsumes amygdala edge highlight)
+
+Phase 2 depends on Phase 1; can be one PR or split further if individual slots warrant.
+
+## SSR / hydration
+
+All chart slots are **client-side only**. `getBBox` / `getBoundingClientRect` (pin labels, tooltip clamping) are client-only APIs. If consumer mounts charts in SSR, they must gate behind a client check (`isServer` guard or `<ClientOnly>` wrapper from the consumer's framework). No SSR fallback shipped in v1; document in component JSDoc.
 
 ## Testing
 
