@@ -68,6 +68,27 @@ describe("GhostPin — reactivity", () => {
   });
 });
 
+describe("GhostPin — pointer-events", () => {
+  it("wrapper has pointer-events='none' to avoid intercepting real pin clicks", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const desc: Descriptor = { color: "#fff", shape: "pin" };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <GhostPin descriptor={desc} />
+      </Chart>
+    ));
+    setHover!(5);
+    const wrapper = container.querySelector(".sui-chart__ghost-pin")!;
+    expect(wrapper.getAttribute("pointer-events")).toBe("none");
+  });
+});
+
 describe("GhostPin — curried variants", () => {
   it("WarningGhostPin attaches the warning class when visible", () => {
     let setHover: ((x: number | null) => void) | null = null;

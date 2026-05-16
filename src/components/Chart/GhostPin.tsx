@@ -37,6 +37,7 @@ export const GhostPin: Component<GhostPinProps> = (props) => {
         class={`sui-chart__ghost-pin${merged.class ? " " + merged.class : ""}`}
         opacity={merged.opacity}
         aria-hidden="true"
+        pointer-events="none"
       >
         <ShapeGlyph
           descriptor={merged.descriptor!}
