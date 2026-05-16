@@ -22,6 +22,9 @@ export interface ChartContextValue {
   /** Hover x-position in DATA domain, or null when not hovering. */
   hoverX: Accessor<number | null>;
   setHoverX: (x: number | null) => void;
+  /** Currently-active drag selection in DATA-domain units, or null when no drag. */
+  dragRange: Accessor<{ start: number; end: number } | null>;
+  setDragRange: (range: { start: number; end: number } | null) => void;
 }
 
 export const ChartContext = createContext<ChartContextValue>();
