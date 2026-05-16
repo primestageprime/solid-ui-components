@@ -72,6 +72,16 @@ _Avoid_: Extraction, port.
 The workflow IN a Consumer App of replacing bespoke inline markup WITH library imports. The mirror of Migration. Tracked per-Consumer-App (e.g. the 2026-05-15 `jtf-ui` sweep).
 _Avoid_: Integration, rollout.
 
+### Charts
+
+**Slot (chart)**:
+A declarative Solid child of `<Chart>` that reads chart context (via `useChart()`) and renders JSX into the chart's SVG. Slots do not own DOM refs that cross their own boundary; cross-slot coordination uses context + signals. The single pointer listener lives on `<Chart>`'s SVG root; interactive slots are config-only consumers of `hoverX` / `dragRange`.
+_Avoid_: Layer, child, plugin.
+
+**Descriptor (visual)**:
+A closed data object (`{ color: string, shape: Shape, size?: number }`) the consumer produces per datum. The chart slot's render contract is `Descriptor → JSX`. `Shape` is a closed enum (`'circle' | 'chevron' | 'pin' | { path; viewBox? }`); custom paths anchor at geometric center and scale uniformly to `size`.
+_Avoid_: Style, render spec.
+
 ## Relationships
 
 - A **Composite** is composed of **Primitives** and/or lower-depth **Composites** — never the reverse.
