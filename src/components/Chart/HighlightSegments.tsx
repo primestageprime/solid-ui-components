@@ -5,10 +5,7 @@
 // ============================================
 import { Component, For, mergeProps } from "solid-js";
 import { useChart } from "./context";
-
-export type Id = string;
-export type ClickHandler<T> = (item: T, event: PointerEvent) => void;
-export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;
+import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
 export interface HighlightSegment {
   id: Id;

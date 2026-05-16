@@ -3,8 +3,9 @@ import { render, fireEvent } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { Chart } from "./Chart";
-import { HighlightSegments, type HighlightSegment, type Id } from "./HighlightSegments";
+import { HighlightSegments, type HighlightSegment } from "./HighlightSegments";
 import { AccentHighlightSegments } from "./HighlightSegments.variants";
+import type { Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
   render(() => (
