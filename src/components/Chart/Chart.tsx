@@ -33,11 +33,28 @@ export interface ChartProps {
 
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
 
-const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] =>
-  d[0] instanceof Date && d[1] instanceof Date;
+const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] => {
+  const a = d[0] instanceof Date;
+  const b = d[1] instanceof Date;
+  if (a !== b) {
+    throw new Error(
+      `Chart.xDomain: mixed types not allowed (got ${typeof d[0]}, ${typeof d[1]})`,
+    );
+  }
+  return a && b;
+};
 
 export const Chart: Component<ChartProps> = (props) => {
-  const [local, others] = splitProps(props, [
+  // NB: `onPointer*` are listed so that any pass-through handlers from a consumer
+  // are routed to `local` (and discarded) — never spread onto the <svg> via
+  // `others`, where they would clobber Chart's own listeners (spec D3).
+  // We widen via intersection so the keys are valid for `splitProps` even though
+  // they are intentionally absent from the public `ChartProps` surface.
+  type PointerPassthrough = Pick<
+    JSX.SvgSVGAttributes<SVGSVGElement>,
+    "onPointerMove" | "onPointerDown" | "onPointerUp" | "onPointerLeave"
+  >;
+  const [local, others] = splitProps(props as ChartProps & PointerPassthrough, [
     "width",
     "height",
     "xDomain",
@@ -47,6 +64,10 @@ export const Chart: Component<ChartProps> = (props) => {
     "class",
     "style",
     "children",
+    "onPointerMove",
+    "onPointerDown",
+    "onPointerUp",
+    "onPointerLeave",
   ]);
 
   const margin = createMemo<Margin>(() => ({ ...DEFAULT_MARGIN, ...(local.margin ?? {}) }));

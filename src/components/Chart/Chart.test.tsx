@@ -54,6 +54,15 @@ describe("Chart", () => {
     expect(captured!.dragRange()).toBeNull();
   });
 
+  it("throws on mixed-type xDomain", () => {
+    expect(() =>
+      render(() => (
+        // @ts-expect-error — testing the runtime guard
+        <Chart width={200} height={100} xDomain={[0, new Date(2026, 0, 1)]} yDomain={[0, 100]} />
+      )),
+    ).toThrow(/mixed types/);
+  });
+
   it("pointermove inside the plot area updates hoverX", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {

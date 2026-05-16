@@ -48,4 +48,33 @@ describe("scaleTime", () => {
     expect(typeof s.invert).toBe("function");
     expect(typeof s.ticks).toBe("function");
   });
+
+  it("scaleTime handles zero-length domain without dividing by zero", () => {
+    const t = new Date(2026, 0, 1);
+    const s = scaleTime([t, t], [0, 100]);
+    // Should not throw; range endpoint behavior matches d3 (everything maps to range[0] or range[1])
+    expect(Number.isFinite(s(t.getTime()))).toBe(true);
+  });
+
+  it("scaleTime handles reversed domain", () => {
+    const t0 = new Date(2026, 0, 1).getTime();
+    const t1 = new Date(2026, 0, 2).getTime();
+    const s = scaleTime([new Date(t1), new Date(t0)], [0, 100]);
+    // Reversed domain → invert direction. Just assert it doesn't throw + produces finite values.
+    expect(Number.isFinite(s(t0))).toBe(true);
+    expect(Number.isFinite(s(t1))).toBe(true);
+  });
+});
+
+describe("linearScale degenerate domains", () => {
+  it("linearScale handles zero-length domain without dividing by zero", () => {
+    const s = linearScale([5, 5], [0, 100]);
+    expect(Number.isFinite(s(5))).toBe(true);
+  });
+
+  it("linearScale handles reversed domain", () => {
+    const s = linearScale([10, 0], [0, 100]);
+    expect(Number.isFinite(s(0))).toBe(true);
+    expect(Number.isFinite(s(10))).toBe(true);
+  });
 });
