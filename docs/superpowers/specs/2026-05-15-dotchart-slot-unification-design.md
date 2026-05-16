@@ -29,6 +29,8 @@ Slots are declarative Solid components that read `useChart()` for shared state (
 
 **Pointer/gesture ownership:** `<Chart>` (the root) attaches a single pointer listener on the SVG and dispatches state via context signals (`hoverX`, `dragRange`). Interactive slots like `DragRangeSelect` are config-only: they consume context signals and emit callbacks; they don't attach their own listeners. This keeps gesture conflicts (`DragRangeSelect` vs `Crosshair` etc.) resolved in one place.
 
+**Note:** the existing `Chart.tsx` currently uses `MouseEvent` (`onMouseMove`/`onMouseLeave`). The unified root listener migrates to `PointerEvent` (`onPointerMove`/`onPointerLeave`/`onPointerDown`/`onPointerUp`) so touch and pen input are first-class. Existing handlers on `Crosshair` / `Tooltip` adjust accordingly (back-compat ripple, contained inside the chart family).
+
 ### D4. Domain decoupling
 
 **Descriptor-in-data** is the default pattern. Consumer maps domain → visual descriptor at the call site; the slot is a pure renderer of descriptors.
@@ -74,18 +76,12 @@ Selection/hover IDs stay as per-slot props (avoid context bloat).
 
 ### D8. Curried variants (ADR 0001)
 
-Every new slot ships a curried variant alongside the standard export, consistent with the recent Cell/Layout sweep. Pattern (mirrors `Cell.curried.ts`):
+Every new slot ships a curried variant alongside its standard export, consistent with the live repo convention. The actual pattern (per ADR 0001 + commits 3152ef7, 0c1dba4 — Cell/Layout sweep) is:
 
-```ts
-// PinMarkers.tsx — standard export
-export function PinMarkers<TPin>(props: PinMarkersProps<TPin>): JSX.Element { … }
+- **Filename:** `variants.ts` co-located with the slot (NOT `Xxx.curried.ts`).
+- **Shape:** a `createXxx(defaults)` factory returning a `Component<XxxDataProps>`-annotated curried export. The explicit `Component<…>` annotation is required so `vite-plugin-dts` keeps the generic surface in emitted `.d.ts`.
 
-// PinMarkers.curried.ts — curried export (note explicit Component<…> annotation
-// so dts emit keeps generic surface; see ADR 0001 + commit 3152ef7)
-export const pinMarkers: <TPin>(opts: PinMarkersOpts<TPin>) => Component<…> = …;
-```
-
-Every slot file has a `.curried.ts` sibling. Slot index re-exports both.
+Authoritative code-level template lives in the implementation plan (`docs/superpowers/plans/2026-05-15-dotchart-slot-unification.md`) under the curried-variant section, mirroring the existing `Cell` / `Layout` files. Slot index re-exports both the standard component and the variants factory.
 
 ## v1 Slot Inventory
 
@@ -119,19 +115,19 @@ src/components/Chart/
   Series.tsx                   (no change in v1)
   Tooltip.tsx                  (no change)
   Crosshair.tsx                (extend if parity gap found)
-  ReferenceLine.tsx            (split from Series.tsx; extend to cover vertical-edge use)
+  Series.tsx                   (extend in place: ReferenceLine gains orientation="vertical")
   HighlightSegments.tsx        NEW
-  HighlightSegments.curried.ts NEW
+  HighlightSegments.variants.ts NEW
   TimelineBar.tsx              NEW
-  TimelineBar.curried.ts       NEW
+  TimelineBar.variants.ts      NEW
   PinMarkers.tsx               NEW
-  PinMarkers.curried.ts        NEW
+  PinMarkers.variants.ts       NEW
   GhostPin.tsx                 NEW
-  GhostPin.curried.ts          NEW
+  GhostPin.variants.ts         NEW
   DragRangeSelect.tsx          NEW
-  DragRangeSelect.curried.ts   NEW
+  DragRangeSelect.variants.ts  NEW
   CurrentValueIndicator.tsx    NEW
-  CurrentValueIndicator.curried.ts NEW
+  CurrentValueIndicator.variants.ts NEW
   index.ts                     (export additions)
 ```
 
