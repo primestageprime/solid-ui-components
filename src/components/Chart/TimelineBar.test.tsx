@@ -32,6 +32,16 @@ describe("TimelineBar — render", () => {
     const rects = Array.from(container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"));
     expect(rects[0].getAttribute("y")).not.toBe(rects[1].getAttribute("y"));
   });
+
+  it("skips bars whose lane is missing from explicit lanes prop", () => {
+    const bars: TimelineBarDatum[] = [
+      { id: "a", start: 1, end: 3, lane: "ghost", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
+    ));
+    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(0);
+  });
 });
 
 describe("TimelineBar — reactivity", () => {

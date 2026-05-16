@@ -98,6 +98,32 @@ describe("DragRangeSelect — callbacks", () => {
   });
 });
 
+describe("DragRangeSelect — spec D3 invariant", () => {
+  it("rendered band attaches NO pointer listeners (per spec D3)", () => {
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setDrag = ctx.setDragRange;
+      return null;
+    };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <DragRangeSelect onRange={() => {}} />
+      </Chart>
+    ));
+    setDrag!({ start: 2, end: 5 });
+    const band = container.querySelector(".sui-chart__drag-range") as SVGRectElement;
+    // Solid renders onPointer* as `pointer-events` listeners on the element via the DOM API,
+    // not as HTML attributes — so check pointer-events="none" is honored AND that no
+    // attribute looks like a pointer handler.
+    expect(band.getAttribute("pointer-events")).toBe("none");
+    // Spot-check inline attrs:
+    const attrs = Array.from(band.attributes).map((a) => a.name);
+    expect(attrs.some((n) => /^onpointer/i.test(n))).toBe(false);
+  });
+});
+
 describe("DragRangeSelect — curried variants", () => {
   it("CommitOnReleaseDragRangeSelect uses lower opacity", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;

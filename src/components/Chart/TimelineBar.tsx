@@ -4,9 +4,20 @@
 // equal heights. If `lanes` prop is omitted, lanes are inferred from data
 // in first-encounter order. Consumer maps domain → TimelineBarDatum.
 // ============================================
-import { Component, For, createMemo, mergeProps } from "solid-js";
+import { Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, Id } from "./slot-types";
+
+// Module-level dedupe set for unknown-lane warnings. Pure tracking — keeps the
+// warn-once invariant across all TimelineBar instances without coupling to
+// component lifecycle.
+const warnedLanes = new Set<string>();
+const warnUnknownLane = (lane: string): void => {
+  if (warnedLanes.has(lane)) return;
+  warnedLanes.add(lane);
+  // eslint-disable-next-line no-console
+  console.warn(`TimelineBar: bar references unknown lane "${lane}" — bar skipped`);
+};
 
 export interface TimelineBarDatum {
   id: Id;
@@ -68,20 +79,25 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
           const isSelected = () => merged.selectedId === bar.id;
           const isHovered = () => merged.hoveredId === bar.id;
           return (
-            <rect
-              class="sui-chart__timeline-bar"
-              data-id={bar.id}
-              data-state={bar.state}
-              data-selected={isSelected() ? "true" : undefined}
-              data-hovered={isHovered() ? "true" : undefined}
-              x={Math.min(x1(), x2())}
-              y={yTop()}
-              width={Math.abs(x2() - x1())}
-              height={laneHeight() * merged.barHeight}
-              fill={bar.color}
-              onPointerDown={(e) => merged.onBarClick?.(bar, e)}
-              style={{ cursor: merged.onBarClick ? "pointer" : undefined }}
-            />
+            <Show
+              when={laneIdx() >= 0}
+              fallback={(warnUnknownLane(bar.lane), null)}
+            >
+              <rect
+                class="sui-chart__timeline-bar"
+                data-id={bar.id}
+                data-state={bar.state}
+                data-selected={isSelected() ? "true" : undefined}
+                data-hovered={isHovered() ? "true" : undefined}
+                x={Math.min(x1(), x2())}
+                y={yTop()}
+                width={Math.abs(x2() - x1())}
+                height={laneHeight() * merged.barHeight}
+                fill={bar.color}
+                onPointerDown={(e) => merged.onBarClick?.(bar, e)}
+                style={{ cursor: merged.onBarClick ? "pointer" : undefined }}
+              />
+            </Show>
           );
         }}
       </For>

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ShapeGlyph, type Descriptor, type Shape } from "./shapes";
@@ -60,6 +60,15 @@ describe("ShapeGlyph", () => {
     setShape({ path: "M-4,-4 L4,-4 L4,4 L-4,4 Z", viewBox: [8, 8] });
     expect(container.querySelector("circle")).toBeFalsy();
     expect(container.querySelector("path")).toBeTruthy();
+  });
+
+  it("warns and renders nothing for an unknown string shape", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { container } = renderSvg({ color: "#fff", shape: "square" as unknown as Shape });
+    expect(container.querySelector("circle")).toBeNull();
+    expect(container.querySelector("path")).toBeNull();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it("reactively updates path data when custom shape swaps to a different custom shape", () => {

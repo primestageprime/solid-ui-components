@@ -34,6 +34,24 @@ const asCustomShape = (
 ): { path: string; viewBox?: [number, number] } | undefined =>
   typeof shape === "object" ? shape : undefined;
 
+/** True when `s` is one of the four supported Shape variants. */
+const isKnownShape = (s: unknown): boolean =>
+  s === "circle" ||
+  s === "chevron" ||
+  s === "pin" ||
+  (typeof s === "object" && s !== null && typeof (s as { path?: unknown }).path === "string");
+
+// Module-level dedupe set for unknown-shape warnings. Keeps warn-once invariant
+// across all ShapeGlyph instances without coupling to component lifecycle.
+const warnedShapes = new Set<string>();
+const warnUnknownShape = (s: unknown): void => {
+  const key = typeof s === "string" ? s : JSON.stringify(s);
+  if (warnedShapes.has(key)) return;
+  warnedShapes.add(key);
+  // eslint-disable-next-line no-console
+  console.warn(`ShapeGlyph: unknown shape ${key} — rendering nothing`);
+};
+
 interface ShapeGlyphProps {
   descriptor: Descriptor;
   cx: number;
@@ -100,6 +118,12 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
             strokeWidth={strokeWidth()}
           />
         )}
+      </Show>
+      <Show when={!isKnownShape(props.descriptor.shape)}>
+        {(() => {
+          warnUnknownShape(props.descriptor.shape);
+          return null;
+        })()}
       </Show>
     </g>
   );
