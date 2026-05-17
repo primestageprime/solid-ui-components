@@ -8,7 +8,7 @@
 import { Component, For, JSX, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
-import type { Id, ClickHandler, DblClickHandler } from "./slot-types";
+import type { Id, ClickHandler, DblClickHandler, HoverHandler } from "./slot-types";
 
 export interface Pin {
   id: Id;
@@ -30,6 +30,7 @@ export interface PinMarkersProps<TPin extends Pin = Pin> {
   size?: number;
   onClick?: ClickHandler<TPin>;
   onDelete?: DblClickHandler<TPin>;
+  onHover?: HoverHandler<TPin>;
   /** Escape hatch — full render control per pin. Receives (pin, renderCtx). */
   renderPin?: (pin: TPin, renderCtx: PinMarkersRenderContext) => JSX.Element;
   class?: string;
@@ -60,6 +61,8 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
               data-selected={selected() ? "true" : undefined}
               onPointerDown={(e) => merged.onClick?.(pin, e)}
               onDblClick={(e) => merged.onDelete?.(pin, e)}
+              onPointerEnter={(e) => merged.onHover?.(pin, e)}
+              onPointerLeave={(e) => merged.onHover?.(null, e)}
               style={{ cursor: merged.onClick ? "pointer" : undefined }}
             >
               <Show

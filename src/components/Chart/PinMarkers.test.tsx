@@ -51,6 +51,18 @@ describe("PinMarkers — callbacks", () => {
     fireEvent.dblClick(container.querySelector(".sui-chart__pin-marker")!);
     expect(calls).toEqual([pin]);
   });
+
+  it("onHover fires with pin on pointerenter and null on pointerleave", () => {
+    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const calls: Array<Pin | null> = [];
+    const { container } = wrapper(() => (
+      <PinMarkers data={[pin]} onHover={(p) => calls.push(p)} />
+    ));
+    const marker = container.querySelector(".sui-chart__pin-marker")!;
+    fireEvent.pointerEnter(marker);
+    fireEvent.pointerLeave(marker);
+    expect(calls).toEqual([pin, null]);
+  });
 });
 
 describe("PinMarkers — renderPin escape hatch", () => {
