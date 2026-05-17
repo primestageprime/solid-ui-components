@@ -62,6 +62,10 @@ export { GhostPin, createGhostPin } from "./GhostPin";
 export type { GhostPinProps, GhostPinDataProps } from "./GhostPin";
 export * from "./GhostPin.variants";
 
+export { GhostArc, createGhostArc } from "./GhostArc";
+export type { GhostArcProps, GhostArcDataProps, ArcPoint } from "./GhostArc";
+export * from "./GhostArc.variants";
+
 export { DragRangeSelect, createDragRangeSelect } from "./DragRangeSelect";
 export type {
   DragRangeSelectProps,
