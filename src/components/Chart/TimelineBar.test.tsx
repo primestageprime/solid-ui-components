@@ -179,10 +179,11 @@ describe("TimelineBar — bandHeight + bandY", () => {
     ));
     const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
     const y = parseFloat(rect.getAttribute("y")!);
-    // innerHeight = 84; bandTop = 84 + 4 = 88; lane 0 yTop = 88 + (20 - 12)/2 = 92.
+    // innerHeight = 84; bandTop = 84 + 0 = 84 (flush with axis line);
+    // lane 0 yTop = 84 + (20 - 12)/2 = 88.
     // Strip sits BELOW the inner plot area (y > INNER_HEIGHT).
     expect(y).toBeGreaterThan(INNER_HEIGHT);
-    expect(y).toBeCloseTo(92, 1);
+    expect(y).toBeCloseTo(88, 1);
   });
 
   it("bandY='margin-bottom' uses axisStripClipPathUrl (clips horizontally to plot, vertically to margin)", () => {

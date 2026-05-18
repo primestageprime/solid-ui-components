@@ -17,6 +17,15 @@ export interface AxisProps {
    * the axis and the labels. No effect on YAxis.
    */
   labelOffset?: number;
+  /**
+   * Vertical pixel offset for XAxis tick marks. Default 0 — ticks render
+   * from `y=0` to `y=4` relative to the axis baseline. Increase to push tick
+   * marks DOWN so they emerge below a strip occupying the top of the axis
+   * region (e.g. a TimelineBar with `bandY="margin-bottom"` flush against
+   * the axis line). Independent of `labelOffset` — adjust both when ticks
+   * move so labels still clear them. No effect on YAxis.
+   */
+  tickOffset?: number;
 }
 
 const defaultFormat = (v: number): string => {
@@ -48,7 +57,11 @@ export const XAxis: Component<AxisProps> = (props) => {
       <For each={props.tickValues ?? ctx.xScale().ticks(tickCount())}>
         {(t) => (
           <g transform={`translate(${ctx.xScale()(t)}, 0)`}>
-            <line class="sui-chart__axis-tick" y1={0} y2={4} />
+            <line
+              class="sui-chart__axis-tick"
+              y1={props.tickOffset ?? 0}
+              y2={(props.tickOffset ?? 0) + 4}
+            />
             <text class="sui-chart__axis-label" y={props.labelOffset ?? 16} text-anchor="middle">
               {fmt()(t)}
             </text>

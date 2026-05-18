@@ -159,6 +159,19 @@ describe("XAxis labelOffset", () => {
     const labels = container.querySelectorAll(".sui-chart__axis-label");
     expect(labels[0]?.getAttribute("y")).toBe("16");
   });
+
+  it("XAxis tickOffset pushes tick marks down without moving the axis line", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis tickOffset={14} />
+      </Chart>
+    ));
+    const ticks = container.querySelectorAll(".sui-chart__axis-tick");
+    expect(ticks.length).toBeGreaterThan(0);
+    // First tick mark should start at y=14 (the tickOffset)
+    expect(ticks[0]?.getAttribute("y1")).toBe("14");
+    expect(ticks[0]?.getAttribute("y2")).toBe("18");
+  });
 });
 
 describe("Chart — axis-strip clip-path", () => {

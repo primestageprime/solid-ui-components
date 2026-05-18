@@ -53,9 +53,10 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    * - "top" — anchor at top of inner plot area (y = 0).
    * - "bottom" — anchor at bottom of inner plot area (y = innerHeight - bandHeight).
    * - "margin-bottom" — render BELOW the x-axis in the chart's bottom margin
-   *   (y = innerHeight + 4). The group OPTS OUT of the plot-area clip-path
-   *   so the strip can render outside the inner plot region. Consumer must
-   *   ensure `margin.bottom` accommodates the axis ticks/labels + `bandHeight`.
+   *   (y = innerHeight, flush with the axis line). The group OPTS OUT of the
+   *   plot-area clip-path so the strip can render outside the inner plot
+   *   region. Consumer must ensure `margin.bottom` accommodates the axis
+   *   ticks/labels + `bandHeight`. For an explicit gap, use `bandY={number}`.
    * - number — absolute pixel y inside the chart's inner-coordinate frame.
    */
   bandY?: number | "top" | "bottom" | "margin-bottom";
@@ -91,10 +92,11 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
     return out;
   });
 
-  // Gap (px) between the x-axis and a "margin-bottom" anchored strip. The
-  // axis ticks extend ~4px below `innerHeight`, so 4px puts the band just
-  // past the ticks. Tweak via consumer-set margin.bottom rather than here.
-  const MARGIN_BOTTOM_GAP = 4;
+  // Gap (px) between the x-axis and a "margin-bottom" anchored strip. Zero by
+  // default so the strip sits flush against the axis line (useful for strips
+  // that visually replace the axis line). Consumers who want a gap can pass
+  // `bandY={number}` with an explicit offset.
+  const MARGIN_BOTTOM_GAP = 0;
 
   // Band layout — when `bandHeight` is set, lanes share the band; otherwise
   // legacy behavior: lanes fill `innerHeight`.
