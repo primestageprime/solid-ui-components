@@ -86,6 +86,7 @@ export const Chart: Component<ChartProps> = (props) => {
 
   const [hoverX, setHoverX] = createSignal<number | null>(null);
   const [dragRange, setDragRange] = createSignal<{ start: number; end: number } | null>(null);
+  const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
@@ -135,6 +136,8 @@ export const Chart: Component<ChartProps> = (props) => {
     setHoverX,
     dragRange,
     setDragRange,
+    tooltipMount,
+    setTooltipMount,
   };
 
   return (
@@ -158,6 +161,10 @@ export const Chart: Component<ChartProps> = (props) => {
             {local.children}
           </g>
         </svg>
+        <div
+          ref={(el) => setTooltipMount(el)}
+          class="sui-chart__overlay"
+        />
       </div>
     </ChartContext.Provider>
   );

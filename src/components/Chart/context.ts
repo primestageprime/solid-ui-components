@@ -25,6 +25,9 @@ export interface ChartContextValue {
   /** Currently-active drag selection in DATA-domain units, or null when no drag. */
   dragRange: Accessor<{ start: number; end: number } | null>;
   setDragRange: (range: { start: number; end: number } | null) => void;
+  /** Mount node for portal-style overlays (e.g. ChartTooltip). Set by Chart root. */
+  tooltipMount: Accessor<HTMLElement | null>;
+  setTooltipMount: (el: HTMLElement | null) => void;
 }
 
 export const ChartContext = createContext<ChartContextValue>();

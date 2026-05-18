@@ -1,5 +1,10 @@
 // Chart slot: Tooltip — HTML overlay anchored to the hovered X.
+// Rendered via Solid <Portal> into Chart's overlay div, NOT into the SVG —
+// HTML inside <svg><g> has zero layout (needs <foreignObject>), so the tooltip
+// would be invisible. The overlay div is a position:absolute sibling of the SVG
+// inside .sui-chart, so absolute coords (left/top) resolve against the chart.
 import { JSX, Show, createMemo } from "solid-js";
+import { Portal } from "solid-js/web";
 import { useChart } from "./context";
 
 export interface ChartTooltipProps<T> {
@@ -42,15 +47,17 @@ export function ChartTooltip<T>(props: ChartTooltipProps<T>) {
         const px = () => ctx.xScale()(props.x(pt().p)) + ctx.margin().left + offset().x;
         const py = () => ctx.margin().top + offset().y;
         return (
-          <div
-            class="sui-chart__tooltip"
-            style={{
-              left: `${px()}px`,
-              top: `${py()}px`,
-            }}
-          >
-            {props.children(pt().p, pt().hx)}
-          </div>
+          <Portal mount={ctx.tooltipMount() ?? undefined}>
+            <div
+              class="sui-chart__tooltip"
+              style={{
+                left: `${px()}px`,
+                top: `${py()}px`,
+              }}
+            >
+              {props.children(pt().p, pt().hx)}
+            </div>
+          </Portal>
         );
       }}
     </Show>

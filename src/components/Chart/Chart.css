@@ -10,6 +10,16 @@
   overflow: visible;
 }
 
+/* Overlay — sibling of <svg> inside .sui-chart. Hosts portal-rendered
+   HTML overlays (e.g. ChartTooltip) since HTML inside <svg><g> has no
+   layout box. position: absolute makes this element the positioning
+   context for its absolutely-positioned tooltip children. */
+.sui-chart__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 /* Grid */
 .sui-chart__grid-line {
   stroke: var(--sui-border, rgba(255, 255, 255, 0.08));
