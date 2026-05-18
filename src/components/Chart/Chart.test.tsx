@@ -92,8 +92,12 @@ describe("Chart — plot-area clip-path", () => {
     const rect = clipPath!.querySelector("rect");
     expect(rect).toBeTruthy();
     // innerWidth = 200 - 36 - 8 = 156; innerHeight = 100 - 8 - 28 = 64.
+    // Plot clip is vertically inflated by 12px each side so edge-centered
+    // glyphs (e.g., chevrons at the domain min/max) render fully.
+    expect(parseFloat(rect!.getAttribute("x")!)).toBeCloseTo(0, 1);
+    expect(parseFloat(rect!.getAttribute("y")!)).toBeCloseTo(-12, 1);
     expect(parseFloat(rect!.getAttribute("width")!)).toBeCloseTo(156, 1);
-    expect(parseFloat(rect!.getAttribute("height")!)).toBeCloseTo(64, 1);
+    expect(parseFloat(rect!.getAttribute("height")!)).toBeCloseTo(64 + 24, 1);
   });
 
   it("PointSeries wraps points in a clip-path group", () => {

@@ -34,6 +34,11 @@ export interface ChartProps {
 
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
 
+// Vertical inflation for the plot-area clipPath so glyphs centered at the
+// top/bottom edges (e.g., chevrons at y=domainMax or y=domainMin) render fully.
+// 12 = DEFAULT_GLYPH_SIZE / 2 + 6 (chevron half-size + small buffer).
+const PLOT_CLIP_INFLATE_Y = 12;
+
 const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] => {
   const a = d[0] instanceof Date;
   const b = d[1] instanceof Date;
@@ -168,7 +173,12 @@ export const Chart: Component<ChartProps> = (props) => {
         >
           <defs>
             <clipPath id={clipId}>
-              <rect x={0} y={0} width={innerWidth()} height={innerHeight()} />
+              <rect
+                x={0}
+                y={-PLOT_CLIP_INFLATE_Y}
+                width={innerWidth()}
+                height={innerHeight() + PLOT_CLIP_INFLATE_Y * 2}
+              />
             </clipPath>
             {/*
               Axis-strip clip: spans the full inner-plot width but lives in
