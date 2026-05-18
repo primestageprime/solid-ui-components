@@ -43,6 +43,13 @@ export type DAGProps<T = unknown> = {
    * status displays) where the chart should fit-to-view and stay put.
    */
   interactive?: boolean;
+  /**
+   * Optional handler for edge deletion. When provided, edges render a wider
+   * transparent hit area and show a small × badge at the midpoint on hover;
+   * clicking the badge (or anywhere along the edge) calls
+   * `onEdgeClick(source, target)`. Omit to keep edges purely decorative.
+   */
+  onEdgeClick?: (source: string, target: string) => void;
 };
 
 /** Internal: positioned node after layout + collapse. */

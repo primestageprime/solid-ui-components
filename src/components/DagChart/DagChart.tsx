@@ -29,45 +29,89 @@ function clipToRectBoundary(from: Point, to: Point, rect: Rect): Point {
   return { x: from.x + dx * scale, y: from.y + dy * scale };
 }
 
-/** Convert points into a smooth SVG path, clipping endpoints to node boundaries. */
-function buildEdgePath(
+/**
+ * Clip the endpoints of a polyline to the source/target node boundaries.
+ * Returns the clipped points (a new array). If clipping would make the
+ * polyline degenerate (zero-length), falls back to the un-clipped input.
+ */
+function clipPolyline(
   points: Point[],
   sourceRect: Rect | undefined,
   targetRect: Rect | undefined,
-): string {
-  if (points.length < 2) return "";
-
+): Point[] {
+  if (points.length < 2) return points.map((p) => ({ ...p }));
   const pts = points.map((p) => ({ ...p }));
 
-  // Clip start: from source center outward toward the next waypoint
   if (sourceRect) {
     const center = { x: sourceRect.x, y: sourceRect.y };
     pts[0] = clipToRectBoundary(center, pts[1], sourceRect);
   }
-
-  // Clip end: from target center outward toward the previous waypoint
   if (targetRect) {
     const center = { x: targetRect.x, y: targetRect.y };
     pts[pts.length - 1] = clipToRectBoundary(center, pts[pts.length - 2], targetRect);
   }
 
+  // Degenerate-polyline guard: if the clipped start and end coincide (or
+  // nearly so) for a 2-point edge, fall back to un-clipped points so the
+  // arrowhead has somewhere to point and the midpoint doesn't collapse.
   const start = pts[0];
   const end = pts[pts.length - 1];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  if (pts.length === 2 && dx * dx + dy * dy < 1) {
+    return points.map((p) => ({ ...p }));
+  }
+  return pts;
+}
 
-  if (pts.length === 2) {
+/** Convert a (clipped) polyline into a smooth SVG path. */
+function buildEdgePath(points: Point[]): string {
+  if (points.length < 2) return "";
+  const start = points[0];
+  const end = points[points.length - 1];
+
+  if (points.length === 2) {
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   }
 
   let d = `M ${start.x} ${start.y}`;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const ctrl = pts[i];
-    const next = pts[i + 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const ctrl = points[i];
+    const next = points[i + 1];
     const mx = (ctrl.x + next.x) / 2;
     const my = (ctrl.y + next.y) / 2;
     d += ` Q ${ctrl.x} ${ctrl.y} ${mx} ${my}`;
   }
   d += ` L ${end.x} ${end.y}`;
   return d;
+}
+
+/** Midpoint along a polyline by arc length — used for label/badge placement. */
+function polylineMidpoint(points: Point[]): Point {
+  if (points.length === 0) return { x: 0, y: 0 };
+  if (points.length === 1) return { ...points[0] };
+  let total = 0;
+  const segLens: number[] = [];
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].x - points[i - 1].x;
+    const dy = points[i].y - points[i - 1].y;
+    const l = Math.sqrt(dx * dx + dy * dy);
+    segLens.push(l);
+    total += l;
+  }
+  if (total === 0) return { ...points[0] };
+  const half = total / 2;
+  let acc = 0;
+  for (let i = 0; i < segLens.length; i++) {
+    if (acc + segLens[i] >= half) {
+      const t = (half - acc) / segLens[i];
+      const a = points[i];
+      const b = points[i + 1];
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    }
+    acc += segLens[i];
+  }
+  return { ...points[points.length - 1] };
 }
 
 export function DagChart<T>(props: DAGProps<T>) {
@@ -155,19 +199,24 @@ export function DagChart<T>(props: DAGProps<T>) {
       const fullEdge = fullEdges.find(
         (e) => e.sourceId === edge.source && e.targetId === edge.target,
       );
-      const points = fullEdge
+      const rawPoints = fullEdge
         ? fullEdge.points
         : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
 
+      // Clip the polyline to the node boundaries so the midpoint (used for
+      // both labels and the delete badge) lives in the free space between
+      // nodes — otherwise short edges put it inside the target node.
+      const clipped = clipPolyline(rawPoints, sourceRect, targetRect);
       const label = labelByPair.get(`${edge.source}|${edge.target}`);
-      // Midpoint along the polyline for label placement. Fall back to the
-      // straight midpoint between source and target rects if the polyline
-      // is somehow empty (defensive — happens when layout returns no path).
-      const mid =
-        points.length > 0
-          ? points[Math.floor(points.length / 2)]
-          : { x: (sourceRect.x + targetRect.x) / 2, y: (sourceRect.y + targetRect.y) / 2 };
-      return [{ d: buildEdgePath(points, sourceRect, targetRect), label, midX: mid.x, midY: mid.y }];
+      const mid = polylineMidpoint(clipped);
+      return [{
+        d: buildEdgePath(clipped),
+        label,
+        midX: mid.x,
+        midY: mid.y,
+        source: edge.source,
+        target: edge.target,
+      }];
     });
   });
 
@@ -245,6 +294,8 @@ export function DagChart<T>(props: DAGProps<T>) {
     props.onNodeClick?.(nodeId);
   };
 
+  const [hoveredEdge, setHoveredEdge] = createSignal<string | null>(null);
+
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
       <svg
@@ -272,30 +323,49 @@ export function DagChart<T>(props: DAGProps<T>) {
         <g transform={transformString()}>
           {/* Edges */}
           <For each={edgePaths()}>
-            {(edge) => (
-              <>
-                <path
-                  class="sui-dag__edge"
-                  d={edge.d}
-                  marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
-                />
-                <Show when={edge.label}>
-                  <g class="sui-dag__edge-label-wrap" transform={`translate(${edge.midX}, ${edge.midY})`}>
-                    <rect
-                      class="sui-dag__edge-label-bg"
-                      x={-(edge.label!.length * 3.5 + 6)}
-                      y={-9}
-                      width={edge.label!.length * 7 + 12}
-                      height={18}
-                      rx={9}
+            {(edge) => {
+              const edgeKey = `${edge.source}|${edge.target}`;
+              const deletable = () => !!props.onEdgeClick;
+              return (
+                <>
+                  <Show when={deletable()}>
+                    <path
+                      class="sui-dag__edge-hitarea"
+                      d={edge.d}
+                      stroke="transparent"
+                      stroke-width="14"
+                      fill="none"
+                      onPointerEnter={() => setHoveredEdge(edgeKey)}
+                      onPointerLeave={() =>
+                        setHoveredEdge((h) => (h === edgeKey ? null : h))
+                      }
+                      onClick={() => props.onEdgeClick?.(edge.source, edge.target)}
                     />
-                    <text class="sui-dag__edge-label" text-anchor="middle" dominant-baseline="middle">
-                      {edge.label}
-                    </text>
-                  </g>
-                </Show>
-              </>
-            )}
+                  </Show>
+                  <path
+                    class="sui-dag__edge"
+                    d={edge.d}
+                    marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
+                    style={{ "pointer-events": "none" }}
+                  />
+                  <Show when={edge.label}>
+                    <g class="sui-dag__edge-label-wrap" transform={`translate(${edge.midX}, ${edge.midY})`}>
+                      <rect
+                        class="sui-dag__edge-label-bg"
+                        x={-(edge.label!.length * 3.5 + 6)}
+                        y={-9}
+                        width={edge.label!.length * 7 + 12}
+                        height={18}
+                        rx={9}
+                      />
+                      <text class="sui-dag__edge-label" text-anchor="middle" dominant-baseline="middle">
+                        {edge.label}
+                      </text>
+                    </g>
+                  </Show>
+                </>
+              );
+            }}
           </For>
 
           {/* Nodes */}
@@ -317,6 +387,43 @@ export function DagChart<T>(props: DAGProps<T>) {
                 </div>
               </foreignObject>
             )}
+          </For>
+
+          {/* Edge delete badges — drawn LAST so they paint above nodes,
+              and rendered unconditionally (opacity-gated) so the hover
+              hitbox never disappears mid-cursor-move. */}
+          <For each={edgePaths()}>
+            {(edge) => {
+              const edgeKey = `${edge.source}|${edge.target}`;
+              return (
+                <Show when={!!props.onEdgeClick}>
+                  <g
+                    class="sui-dag__edge-delete"
+                    transform={`translate(${edge.midX}, ${edge.midY})`}
+                    pointer-events="all"
+                    onPointerEnter={() => setHoveredEdge(edgeKey)}
+                    onPointerLeave={() =>
+                      setHoveredEdge((h) => (h === edgeKey ? null : h))
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.onEdgeClick?.(edge.source, edge.target);
+                    }}
+                    style={{
+                      cursor: "pointer",
+                      opacity: hoveredEdge() === edgeKey ? 1 : 0,
+                      transition: "opacity 0.1s ease",
+                    }}
+                  >
+                    {/* Invisible larger hit circle so the badge always has a
+                        clickable area even when its visual opacity is 0. */}
+                    <circle r={12} fill="transparent" />
+                    <circle r={9} stroke-width={1.5} />
+                    <text text-anchor="middle" dominant-baseline="central">×</text>
+                  </g>
+                </Show>
+              );
+            }}
           </For>
         </g>
       </svg>

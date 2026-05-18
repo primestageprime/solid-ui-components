@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.24.2
+
+DagChart: edge endpoints now clipped to node borders (fixes short-edge midpoint sitting inside nodes); edge delete × button now correctly clickable (pointer-events fix)
+
+## 0.24.1
+
+DagChart: edge delete × badge always rendered (opacity-gated) and z-ordered above nodes — fixes click race and short-edge invisibility
+
+## 0.24.0
+
+DagChart: optional `onEdgeClick(source, target)` with hover delete badge on edges.
+
 ## v0.21.0 — ProductGrid
 
 Promoted `ProductGrid` (Composed, Depth 2) into the library, extracted from

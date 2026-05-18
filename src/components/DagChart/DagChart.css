@@ -38,3 +38,18 @@
   pointer-events: none;
   user-select: none;
 }
+
+.sui-dag__edge-hitarea {
+  cursor: pointer;
+}
+
+.sui-dag__edge-delete circle {
+  fill: var(--sui-bg-deep, #001018);
+  stroke: var(--sui-accent, #00d4ff);
+}
+
+.sui-dag__edge-delete text {
+  fill: var(--sui-accent, #00d4ff);
+  font-size: 11px;
+  user-select: none;
+}
