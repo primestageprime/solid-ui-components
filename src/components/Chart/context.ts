@@ -35,6 +35,15 @@ export interface ChartContextValue {
    * skip clipping so they can render at or just past the inner-plot edge.
    */
   clipPathUrl: Accessor<string>;
+  /**
+   * `url(#<id>)` reference for the bottom-margin clipPath defined by the
+   * Chart root. Covers `x ∈ [0, innerWidth]`, `y ∈ [innerHeight, innerHeight
+   * + margin.bottom]` in plot-local coords — i.e. the strip just below the
+   * x-axis. Use for slots that render BELOW the axis (e.g. a timeline strip
+   * anchored via `bandY="margin-bottom"`) so they stay horizontally clipped
+   * to the plot area while extending vertically into the bottom margin.
+   */
+  axisStripClipPathUrl: Accessor<string>;
 }
 
 export const ChartContext = createContext<ChartContextValue>();

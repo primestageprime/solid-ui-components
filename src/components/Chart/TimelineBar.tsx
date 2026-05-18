@@ -116,15 +116,19 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   };
   const laneHeight = () => bandTotalHeight() / Math.max(1, lanes().length);
 
-  // "margin-bottom" anchors render OUTSIDE the inner plot area (below the
-  // x-axis), so they must opt out of the plot-area clip-path. All other
-  // anchors stay inside the clip region.
-  const shouldClip = () => merged.bandY !== "margin-bottom";
+  // "margin-bottom" anchors render BELOW the x-axis in the bottom margin —
+  // they use the axis-strip clip (full innerWidth, bottom-margin height) so
+  // they stay horizontally clipped to the plot area while spanning vertically
+  // into the margin. All other anchors use the plot-area clip.
+  const activeClipPathUrl = () =>
+    merged.bandY === "margin-bottom"
+      ? ctx.axisStripClipPathUrl()
+      : ctx.clipPathUrl();
 
   return (
     <g
       class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
-      clip-path={shouldClip() ? ctx.clipPathUrl() : undefined}
+      clip-path={activeClipPathUrl()}
     >
       <For each={merged.data}>
         {(bar) => {

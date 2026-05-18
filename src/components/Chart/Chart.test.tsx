@@ -137,3 +137,68 @@ describe("XAxis time-aware formatting", () => {
     expect(anyTimeFormatted).toBe(true);
   });
 });
+
+describe("XAxis labelOffset", () => {
+  it("XAxis labelOffset prop pushes tick labels down", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis labelOffset={28} />
+      </Chart>
+    ));
+    const labels = container.querySelectorAll(".sui-chart__axis-label");
+    // Every label sits at the custom labelOffset.
+    expect(labels[0]?.getAttribute("y")).toBe("28");
+  });
+
+  it("XAxis label y defaults to 16 when labelOffset is omitted (back-compat)", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis />
+      </Chart>
+    ));
+    const labels = container.querySelectorAll(".sui-chart__axis-label");
+    expect(labels[0]?.getAttribute("y")).toBe("16");
+  });
+});
+
+describe("Chart — axis-strip clip-path", () => {
+  it("renders a second clipPath for the bottom-margin strip", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]} />
+    ));
+    const clipPaths = container.querySelectorAll("svg > defs > clipPath");
+    expect(clipPaths.length).toBe(2);
+    const stripClip = Array.from(clipPaths).find((el) =>
+      /^sui-chart-axis-strip-clip-/.test(el.getAttribute("id") ?? ""),
+    );
+    expect(stripClip).toBeTruthy();
+    const rect = stripClip!.querySelector("rect")!;
+    // innerWidth = 200 - 36 - 8 = 156; innerHeight = 100 - 8 - 28 = 64;
+    // margin.bottom = 28.
+    expect(parseFloat(rect.getAttribute("x")!)).toBeCloseTo(0, 1);
+    expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(64, 1);
+    expect(parseFloat(rect.getAttribute("width")!)).toBeCloseTo(156, 1);
+    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(28, 1);
+  });
+
+  it("exposes a stable axisStripClipPathUrl via context that matches the defs id", () => {
+    let captured: ReturnType<typeof useChart> | null = null;
+    const Probe: Component = () => {
+      captured = useChart();
+      return null;
+    };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+      </Chart>
+    ));
+    const stripClip = Array.from(
+      container.querySelectorAll("svg > defs > clipPath"),
+    ).find((el) =>
+      /^sui-chart-axis-strip-clip-/.test(el.getAttribute("id") ?? ""),
+    )!;
+    expect(captured!.axisStripClipPathUrl()).toBe(
+      `url(#${stripClip.getAttribute("id")})`,
+    );
+  });
+});

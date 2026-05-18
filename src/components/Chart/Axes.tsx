@@ -10,6 +10,13 @@ export interface AxisProps {
   tickFormat?: (value: number) => string;
   /** Hide the baseline. Default false. */
   hideLine?: boolean;
+  /**
+   * Vertical pixel offset for XAxis tick labels (the `y` of each label
+   * `<text>`). Default 16. Increase to push labels further below the axis
+   * line — useful when a slot (e.g. a timeline strip) needs to sit between
+   * the axis and the labels. No effect on YAxis.
+   */
+  labelOffset?: number;
 }
 
 const defaultFormat = (v: number): string => {
@@ -42,7 +49,7 @@ export const XAxis: Component<AxisProps> = (props) => {
         {(t) => (
           <g transform={`translate(${ctx.xScale()(t)}, 0)`}>
             <line class="sui-chart__axis-tick" y1={0} y2={4} />
-            <text class="sui-chart__axis-label" y={16} text-anchor="middle">
+            <text class="sui-chart__axis-label" y={props.labelOffset ?? 16} text-anchor="middle">
               {fmt()(t)}
             </text>
           </g>

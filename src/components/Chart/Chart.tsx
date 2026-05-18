@@ -89,9 +89,11 @@ export const Chart: Component<ChartProps> = (props) => {
   const [dragRange, setDragRange] = createSignal<{ start: number; end: number } | null>(null);
   const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
-  // Per-instance clipPath id — stable across renders, unique across charts.
+  // Per-instance clipPath ids — stable across renders, unique across charts.
   const clipId = `sui-chart-clip-${createUniqueId()}`;
   const clipPathUrl = createMemo(() => `url(#${clipId})`);
+  const axisStripClipId = `sui-chart-axis-strip-clip-${createUniqueId()}`;
+  const axisStripClipPathUrl = createMemo(() => `url(#${axisStripClipId})`);
 
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
@@ -144,6 +146,7 @@ export const Chart: Component<ChartProps> = (props) => {
     tooltipMount,
     setTooltipMount,
     clipPathUrl,
+    axisStripClipPathUrl,
   };
 
   return (
@@ -166,6 +169,20 @@ export const Chart: Component<ChartProps> = (props) => {
           <defs>
             <clipPath id={clipId}>
               <rect x={0} y={0} width={innerWidth()} height={innerHeight()} />
+            </clipPath>
+            {/*
+              Axis-strip clip: spans the full inner-plot width but lives in
+              the bottom-margin region. Rect coords are in plot-local space
+              because the consuming `<g>` lives inside the same
+              `<g transform="translate(margin)">` wrapper.
+            */}
+            <clipPath id={axisStripClipId}>
+              <rect
+                x={0}
+                y={innerHeight()}
+                width={innerWidth()}
+                height={margin().bottom}
+              />
             </clipPath>
           </defs>
           <g transform={`translate(${margin().left}, ${margin().top})`}>

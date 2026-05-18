@@ -185,14 +185,18 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(y).toBeCloseTo(92, 1);
   });
 
-  it("bandY='margin-bottom' does NOT apply clip-path to the timeline group", () => {
+  it("bandY='margin-bottom' uses axisStripClipPathUrl (clips horizontally to plot, vertically to margin)", () => {
     const bars: TimelineBarDatum[] = [
       { id: "a", start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} bandHeight={20} bandY="margin-bottom" />
+      <TimelineBar data={bars} bandHeight={12} bandY="margin-bottom" />
     ));
     const g = container.querySelector(".sui-chart__timeline");
-    expect(g?.getAttribute("clip-path")).toBeFalsy();
+    const clipAttr = g?.getAttribute("clip-path");
+    expect(clipAttr).toBeTruthy();
+    expect(clipAttr).toMatch(/^url\(#/);
+    // Distinct id namespace from the plot-area clip.
+    expect(clipAttr).toMatch(/^url\(#sui-chart-axis-strip-clip-/);
   });
 });
