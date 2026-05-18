@@ -56,16 +56,18 @@ export function LineSeries<T>(props: LineSeriesProps<T>) {
     ),
   );
   return (
-    <path
-      class={`sui-chart__line${props.class ? " " + props.class : ""}`}
-      d={d()}
-      stroke={props.stroke}
-      stroke-width={props.strokeWidth ?? 2}
-      stroke-dasharray={props.strokeDasharray}
-      fill="none"
-      stroke-linejoin="round"
-      stroke-linecap="round"
-    />
+    <g clip-path={ctx.clipPathUrl()}>
+      <path
+        class={`sui-chart__line${props.class ? " " + props.class : ""}`}
+        d={d()}
+        stroke={props.stroke}
+        stroke-width={props.strokeWidth ?? 2}
+        stroke-dasharray={props.strokeDasharray}
+        fill="none"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      />
+    </g>
   );
 }
 
@@ -101,13 +103,15 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
     return `${top} L${xs(last).toFixed(2)},${baseY.toFixed(2)} L${xs(first).toFixed(2)},${baseY.toFixed(2)} Z`;
   });
   return (
-    <path
-      class={`sui-chart__area${props.class ? " " + props.class : ""}`}
-      d={d()}
-      fill={props.fill}
-      fill-opacity={props.fillOpacity ?? 0.18}
-      stroke="none"
-    />
+    <g clip-path={ctx.clipPathUrl()}>
+      <path
+        class={`sui-chart__area${props.class ? " " + props.class : ""}`}
+        d={d()}
+        fill={props.fill}
+        fill-opacity={props.fillOpacity ?? 0.18}
+        stroke="none"
+      />
+    </g>
   );
 }
 
@@ -128,7 +132,7 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
   const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
   const stroke = (d: T) => (typeof props.stroke === "function" ? props.stroke(d) : props.stroke);
   return (
-    <g class="sui-chart__points">
+    <g class="sui-chart__points" clip-path={ctx.clipPathUrl()}>
       <For each={props.data}>
         {(d) => {
           const xv = props.x(d);
@@ -187,7 +191,10 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
   const bandWidth = () => props.bandWidth ?? 0.65;
   const baseline = () => props.baseline ?? 0;
   return (
-    <g class={`sui-chart__bars${props.class ? " " + props.class : ""}`}>
+    <g
+      class={`sui-chart__bars${props.class ? " " + props.class : ""}`}
+      clip-path={ctx.clipPathUrl()}
+    >
       <For each={props.data}>
         {(d, i) => {
           const xs = ctx.xScale();

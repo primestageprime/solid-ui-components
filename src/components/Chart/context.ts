@@ -28,6 +28,13 @@ export interface ChartContextValue {
   /** Mount node for portal-style overlays (e.g. ChartTooltip). Set by Chart root. */
   tooltipMount: Accessor<HTMLElement | null>;
   setTooltipMount: (el: HTMLElement | null) => void;
+  /**
+   * `url(#<id>)` reference for the plot-area clipPath defined by the Chart
+   * root. Data slots opt-in by wrapping their rendered content in
+   * `<g clip-path={ctx.clipPathUrl()}>`. Axes/labels/ReferenceLine intentionally
+   * skip clipping so they can render at or just past the inner-plot edge.
+   */
+  clipPathUrl: Accessor<string>;
 }
 
 export const ChartContext = createContext<ChartContextValue>();

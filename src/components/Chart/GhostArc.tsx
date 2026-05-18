@@ -76,17 +76,19 @@ export const GhostArc: Component<GhostArcProps> = (props) => {
           return `M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`;
         };
         return (
-          <path
-            class={`sui-chart__ghost-arc${merged.class ? " " + merged.class : ""}`}
-            d={d()}
-            fill="none"
-            stroke={merged.color}
-            stroke-width={merged.strokeWidth}
-            stroke-dasharray={merged.strokeDasharray}
-            opacity={merged.opacity}
-            pointer-events="none"
-            aria-hidden="true"
-          />
+          <g clip-path={ctx.clipPathUrl()}>
+            <path
+              class={`sui-chart__ghost-arc${merged.class ? " " + merged.class : ""}`}
+              d={d()}
+              fill="none"
+              stroke={merged.color}
+              stroke-width={merged.strokeWidth}
+              stroke-dasharray={merged.strokeDasharray}
+              opacity={merged.opacity}
+              pointer-events="none"
+              aria-hidden="true"
+            />
+          </g>
         );
       })()}
     </Show>

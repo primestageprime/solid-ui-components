@@ -74,6 +74,16 @@ describe("HighlightSegments — callbacks", () => {
   });
 });
 
+describe("HighlightSegments — clip-path", () => {
+  it("wraps rects in a group with clip-path set to ctx.clipPathUrl()", () => {
+    const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
+    const { container } = wrapper(() => <HighlightSegments data={[seg]} />);
+    const group = container.querySelector(".sui-chart__highlight-segments");
+    expect(group).toBeTruthy();
+    expect(group!.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-clip-/);
+  });
+});
+
 describe("HighlightSegments — curried variants", () => {
   it("AccentHighlightSegments bakes fillOpacity 0.22", () => {
     const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };

@@ -66,16 +66,18 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
         const x = () => Math.min(xs()(r().start), xs()(r().end));
         const w = () => Math.abs(xs()(r().end) - xs()(r().start));
         return (
-          <rect
-            class={`sui-chart__drag-range${merged.class ? " " + merged.class : ""}`}
-            x={x()}
-            y={0}
-            width={w()}
-            height={ctx.innerHeight()}
-            fill={merged.fill}
-            fill-opacity={merged.fillOpacity}
-            pointer-events="none"
-          />
+          <g clip-path={ctx.clipPathUrl()}>
+            <rect
+              class={`sui-chart__drag-range${merged.class ? " " + merged.class : ""}`}
+              x={x()}
+              y={0}
+              width={w()}
+              height={ctx.innerHeight()}
+              fill={merged.fill}
+              fill-opacity={merged.fillOpacity}
+              pointer-events="none"
+            />
+          </g>
         );
       }}
     </Show>

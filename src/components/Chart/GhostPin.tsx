@@ -38,6 +38,7 @@ export const GhostPin: Component<GhostPinProps> = (props) => {
         opacity={merged.opacity}
         aria-hidden="true"
         pointer-events="none"
+        clip-path={ctx.clipPathUrl()}
       >
         <ShapeGlyph
           descriptor={merged.descriptor!}

@@ -36,12 +36,28 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
   hoveredId?: Id | null;
   /** Bar height as fraction of lane height. Default 0.6. */
   barHeight?: number;
+  /**
+   * Total vertical extent for the timeline strip in PIXELS. When set, lanes
+   * share `bandHeight / lanes.length` instead of filling the full plot area.
+   * Use this to render a thin strip near an axis. Default `undefined` (lanes
+   * fill `innerHeight`).
+   */
+  bandHeight?: number;
+  /**
+   * Vertical anchor (top of band) when `bandHeight` is set. Accepts an
+   * absolute pixel value, or the shorthands "top" / "bottom". When
+   * `bandHeight` is set and `bandY` is undefined, defaults to "bottom"
+   * (the most common "timeline strip pinned to x-axis" layout).
+   */
+  bandY?: number | "top" | "bottom";
   onBarClick?: ClickHandler<T>;
   class?: string;
 }
 
 export interface TimelineBarOverrides {
   barHeight?: number;
+  bandHeight?: number;
+  bandY?: number | "top" | "bottom";
   class?: string;
 }
 export type TimelineBarDataProps<T extends TimelineBarDatum = TimelineBarDatum> =
@@ -66,16 +82,33 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
     return out;
   });
 
-  const laneHeight = () => ctx.innerHeight() / Math.max(1, lanes().length);
+  // Band layout — when `bandHeight` is set, lanes share the band; otherwise
+  // legacy behavior: lanes fill `innerHeight`.
+  const bandTotalHeight = () =>
+    merged.bandHeight != null ? merged.bandHeight : ctx.innerHeight();
+  const bandTop = (): number => {
+    if (merged.bandHeight == null) return 0;
+    const anchor = merged.bandY ?? "bottom";
+    if (anchor === "top") return 0;
+    if (anchor === "bottom") return ctx.innerHeight() - merged.bandHeight;
+    return anchor;
+  };
+  const laneHeight = () => bandTotalHeight() / Math.max(1, lanes().length);
 
   return (
-    <g class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}>
+    <g
+      class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
+      clip-path={ctx.clipPathUrl()}
+    >
       <For each={merged.data}>
         {(bar) => {
           const laneIdx = () => lanes().indexOf(bar.lane);
           const x1 = () => ctx.xScale()(bar.start);
           const x2 = () => ctx.xScale()(bar.end);
-          const yTop = () => laneIdx() * laneHeight() + (laneHeight() * (1 - merged.barHeight)) / 2;
+          const yTop = () =>
+            bandTop() +
+            laneIdx() * laneHeight() +
+            (laneHeight() * (1 - merged.barHeight)) / 2;
           const isSelected = () => merged.selectedId === bar.id;
           const isHovered = () => merged.hoveredId === bar.id;
           return (

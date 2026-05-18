@@ -42,7 +42,10 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
   const merged = mergeProps({ fillOpacity: 0.18 }, props);
 
   return (
-    <g class={`sui-chart__highlight-segments${merged.class ? " " + merged.class : ""}`}>
+    <g
+      class={`sui-chart__highlight-segments${merged.class ? " " + merged.class : ""}`}
+      clip-path={ctx.clipPathUrl()}
+    >
       <For each={merged.data}>
         {(seg) => {
           const x1 = () => ctx.xScale()(seg.start);

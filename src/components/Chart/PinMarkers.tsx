@@ -48,7 +48,10 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
   const merged = mergeProps({ size: 12 }, props);
 
   return (
-    <g class={`sui-chart__pin-markers${merged.class ? " " + merged.class : ""}`}>
+    <g
+      class={`sui-chart__pin-markers${merged.class ? " " + merged.class : ""}`}
+      clip-path={ctx.clipPathUrl()}
+    >
       <For each={merged.data}>
         {(pin) => {
           const cx = () => ctx.xScale()(pin.x);

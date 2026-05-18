@@ -9,6 +9,7 @@ import {
   JSX,
   createMemo,
   createSignal,
+  createUniqueId,
   splitProps,
 } from "solid-js";
 import { ChartContext, ChartContextValue, Margin } from "./context";
@@ -88,6 +89,10 @@ export const Chart: Component<ChartProps> = (props) => {
   const [dragRange, setDragRange] = createSignal<{ start: number; end: number } | null>(null);
   const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
+  // Per-instance clipPath id — stable across renders, unique across charts.
+  const clipId = `sui-chart-clip-${createUniqueId()}`;
+  const clipPathUrl = createMemo(() => `url(#${clipId})`);
+
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
 
@@ -138,6 +143,7 @@ export const Chart: Component<ChartProps> = (props) => {
     setDragRange,
     tooltipMount,
     setTooltipMount,
+    clipPathUrl,
   };
 
   return (
@@ -157,6 +163,11 @@ export const Chart: Component<ChartProps> = (props) => {
           onPointerLeave={onPointerLeave}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={innerWidth()} height={innerHeight()} />
+            </clipPath>
+          </defs>
           <g transform={`translate(${margin().left}, ${margin().top})`}>
             {local.children}
           </g>
