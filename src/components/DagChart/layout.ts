@@ -1,4 +1,4 @@
-import { graphStratify, sugiyama } from "d3-dag";
+import { graphStratify, sugiyama, layeringLongestPath } from "d3-dag";
 import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
 
 export type LayoutResult = {
@@ -47,6 +47,7 @@ export function computeLayout<T>(
   }
 
   const layout = sugiyama()
+    .layering(layeringLongestPath())
     .nodeSize((dagNode: { data: { id: string } }) => {
       const [w, h] = sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
       return direction === "horizontal" ? [h, w] : [w, h];

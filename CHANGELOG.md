@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.3
+
+DagChart: switch to layeringLongestPath so source nodes (no incoming edges) always sit at the leftmost column
+
 ## 0.24.2
 
 DagChart: edge endpoints now clipped to node borders (fixes short-edge midpoint sitting inside nodes); edge delete × button now correctly clickable (pointer-events fix)
