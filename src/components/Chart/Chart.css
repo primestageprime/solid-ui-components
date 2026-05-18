@@ -70,6 +70,26 @@
   stroke-width: 2;
 }
 
+/* Highlight segments — :hover bumps alpha + adds a thin stroke. */
+.sui-chart__highlight-segment {
+  transition: opacity 120ms ease, stroke-width 120ms ease;
+}
+.sui-chart__highlight-segment:hover {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+}
+
+/* Timeline bars — same affordance, slightly thinner stroke. */
+.sui-chart__timeline-bar {
+  transition: opacity 120ms ease, stroke-width 120ms ease;
+}
+.sui-chart__timeline-bar:hover {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1;
+}
+
 /* Tooltip */
 .sui-chart__tooltip {
   position: absolute;

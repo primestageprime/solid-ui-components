@@ -5,7 +5,7 @@
 // selection + click/delete callbacks. `renderPin` is an escape hatch
 // when the descriptor cannot express what the consumer needs.
 // ============================================
-import { Component, For, JSX, Show, mergeProps } from "solid-js";
+import { Component, For, JSX, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
 import type { Id, ClickHandler, DblClickHandler, HoverHandler } from "./slot-types";
@@ -33,6 +33,13 @@ export interface PinMarkersProps<TPin extends Pin = Pin> {
   onHover?: HoverHandler<TPin>;
   /** Escape hatch — full render control per pin. Receives (pin, renderCtx). */
   renderPin?: (pin: TPin, renderCtx: PinMarkersRenderContext) => JSX.Element;
+  /**
+   * When true and `ctx.hoverX()` is non-null, the pin whose `x` is closest
+   * to hoverX renders with `size * emphasisScale`. Default false.
+   */
+  emphasizeNearestX?: boolean;
+  /** Size multiplier applied to the emphasized pin. Default 1.6. */
+  emphasisScale?: number;
   class?: string;
 }
 
@@ -46,6 +53,18 @@ export type PinMarkersDataProps<TPin extends Pin = Pin> =
 export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>) {
   const ctx = useChart();
   const merged = mergeProps({ size: 12 }, props);
+  const nearestIdx = createMemo(() => {
+    if (!merged.emphasizeNearestX) return -1;
+    const hx = ctx.hoverX();
+    if (hx == null) return -1;
+    return merged.data.reduce<{ idx: number; dist: number }>(
+      (best, pin, i) => {
+        const dist = Math.abs(pin.x - hx);
+        return dist < best.dist ? { idx: i, dist } : best;
+      },
+      { idx: -1, dist: Infinity },
+    ).idx;
+  });
 
   return (
     <g
@@ -53,15 +72,21 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
       clip-path={ctx.clipPathUrl()}
     >
       <For each={merged.data}>
-        {(pin) => {
+        {(pin, i) => {
           const cx = () => ctx.xScale()(pin.x);
           const cy = () => (pin.y != null ? ctx.yScale()(pin.y) : 0);
           const selected = () => merged.selectedId === pin.id;
+          const isEmphasized = () => i() === nearestIdx();
+          const glyphSize = () => {
+            const base = pin.descriptor.size ?? merged.size;
+            return isEmphasized() ? base * (merged.emphasisScale ?? 1.6) : base;
+          };
           return (
             <g
               class="sui-chart__pin-marker"
               data-id={pin.id}
               data-selected={selected() ? "true" : undefined}
+              data-emphasized={isEmphasized() ? "true" : undefined}
               onPointerDown={(e) => merged.onClick?.(pin, e)}
               onDblClick={(e) => merged.onDelete?.(pin, e)}
               onPointerEnter={(e) => merged.onHover?.(pin, e)}
@@ -75,7 +100,7 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
                     descriptor={pin.descriptor}
                     cx={cx()}
                     cy={cy()}
-                    size={pin.descriptor.size ?? merged.size}
+                    size={glyphSize()}
                   />
                 }
               >

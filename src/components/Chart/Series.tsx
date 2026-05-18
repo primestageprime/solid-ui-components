@@ -124,28 +124,52 @@ export interface PointSeriesProps<T> extends SeriesBase<T> {
   strokeWidth?: number;
   /** Tooltip / aria title per point. */
   title?: (d: T) => string;
+  /**
+   * When true and `ctx.hoverX()` is non-null, the datum whose x is closest
+   * to hoverX is rendered with `radius * emphasisScale`. Default false.
+   */
+  emphasizeNearestX?: boolean;
+  /** Radius multiplier applied to the emphasized point. Default 2. */
+  emphasisScale?: number;
 }
 
 export function PointSeries<T>(props: PointSeriesProps<T>) {
   const ctx = useChart();
-  const radius = (d: T) => (typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3);
+  const baseRadius = (d: T) =>
+    typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3;
   const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
   const stroke = (d: T) => (typeof props.stroke === "function" ? props.stroke(d) : props.stroke);
+  const nearestIdx = createMemo(() => {
+    if (!props.emphasizeNearestX) return -1;
+    const hx = ctx.hoverX();
+    if (hx == null) return -1;
+    return props.data.reduce<{ idx: number; dist: number }>(
+      (best, d, i) => {
+        const dist = Math.abs(props.x(d) - hx);
+        return dist < best.dist ? { idx: i, dist } : best;
+      },
+      { idx: -1, dist: Infinity },
+    ).idx;
+  });
   return (
     <g class="sui-chart__points" clip-path={ctx.clipPathUrl()}>
       <For each={props.data}>
-        {(d) => {
+        {(d, i) => {
           const xv = props.x(d);
           const yv = props.y(d);
           if ((props.skipMissing ?? true) && (Number.isNaN(xv) || Number.isNaN(yv))) return null;
+          const isEmphasized = () => i() === nearestIdx();
+          const r = () =>
+            isEmphasized() ? baseRadius(d) * (props.emphasisScale ?? 2) : baseRadius(d);
           return (
             <circle
               cx={ctx.xScale()(xv)}
               cy={ctx.yScale()(yv)}
-              r={radius(d)}
+              r={r()}
               fill={fill(d)}
               stroke={stroke(d)}
               stroke-width={props.strokeWidth}
+              data-emphasized={isEmphasized() ? "true" : undefined}
             >
               <Show when={props.title}>
                 <title>{props.title!(d)}</title>

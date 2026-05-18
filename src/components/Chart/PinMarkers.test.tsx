@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { createSignal, type JSX } from "solid-js";
+import { createSignal, type Component, type JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { PinMarkers, type Pin } from "./PinMarkers";
 import { WarningPinMarkers } from "./PinMarkers.variants";
+import { useChart } from "./context";
 import type { Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
@@ -93,6 +94,50 @@ describe("PinMarkers — renderPin escape hatch", () => {
     setSel("a");
     const last = calls[calls.length - 1];
     expect(last.selected).toBe(true);
+  });
+});
+
+describe("PinMarkers — emphasizeNearestX", () => {
+  const pins: Pin[] = [
+    { id: "a", x: 1, descriptor: { color: "#fff", shape: "pin" } },
+    { id: "b", x: 5, descriptor: { color: "#fff", shape: "pin" } },
+    { id: "c", x: 9, descriptor: { color: "#fff", shape: "pin" } },
+  ];
+
+  it("does not emphasize when hoverX is null", () => {
+    const { container } = wrapper(() => (
+      <PinMarkers data={pins} emphasizeNearestX />
+    ));
+    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(0);
+  });
+
+  it("flags exactly one pin as emphasized when hoverX is set", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <PinMarkers data={pins} emphasizeNearestX />
+      </Chart>
+    ));
+    // hoverX=4 → pin "b" at x=5 is nearest.
+    setHover!(4);
+    const flagged = container.querySelectorAll<SVGGElement>(
+      '.sui-chart__pin-marker[data-emphasized="true"]',
+    );
+    expect(flagged.length).toBe(1);
+    expect(flagged[0].getAttribute("data-id")).toBe("b");
+    // hoverX=9.4 → pin "c" at x=9 is nearest.
+    setHover!(9.4);
+    const flagged2 = container.querySelectorAll<SVGGElement>(
+      '.sui-chart__pin-marker[data-emphasized="true"]',
+    );
+    expect(flagged2.length).toBe(1);
+    expect(flagged2[0].getAttribute("data-id")).toBe("c");
   });
 });
 
