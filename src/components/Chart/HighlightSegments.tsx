@@ -2,10 +2,24 @@
 // HighlightSegments — Chart slot (Depth 2).
 // Renders rectangular highlight bands across an x-range. Consumer maps
 // domain → `HighlightSegment` records; the slot is a pure renderer.
+// Optional `lanes` prop enables vertical lane-stacking (mirrors TimelineBar).
 // ============================================
-import { Component, For, mergeProps } from "solid-js";
+import { Component, For, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
+
+// Module-level dedupe set for unknown-lane warnings. Pure tracking — keeps the
+// warn-once invariant across all HighlightSegments instances without coupling
+// to component lifecycle. Same pattern as TimelineBar.
+const warnedLanes = new Set<string>();
+const warnUnknownLane = (lane: string): void => {
+  if (warnedLanes.has(lane)) return;
+  warnedLanes.add(lane);
+  // eslint-disable-next-line no-console
+  console.warn(
+    `HighlightSegments: segment references unknown lane "${lane}" — segment skipped`,
+  );
+};
 
 export interface HighlightSegment {
   id: Id;
@@ -14,10 +28,18 @@ export interface HighlightSegment {
   color: string;
   label?: string;
   opacity?: number;
+  /** Optional lane key for vertical stacking. Used when parent passes `lanes` prop. */
+  lane?: string;
 }
 
 export interface HighlightSegmentsProps<T extends HighlightSegment = HighlightSegment> {
   data: readonly T[];
+  /**
+   * Lane order (top-to-bottom) for vertical stacking. If omitted, segments
+   * render full-height (back-compat). Segments referencing a lane NOT in this
+   * list are skipped with a one-time console warning.
+   */
+  lanes?: readonly string[];
   /** IDs currently selected (highlighted with extra emphasis). */
   selectedIds?: ReadonlySet<Id>;
   /** Default opacity for unselected segments. Default 0.18. */
@@ -51,22 +73,43 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
           const x1 = () => ctx.xScale()(seg.start);
           const x2 = () => ctx.xScale()(seg.end);
           const isSelected = () => merged.selectedIds?.has(seg.id) ?? false;
+          // Lane-aware vertical placement.
+          // - lanes undefined → full-height (back-compat).
+          // - lanes set, seg.lane undefined → full-height (treat as "spans all lanes").
+          // - lanes set, seg.lane IN lanes → that lane's band.
+          // - lanes set, seg.lane NOT in lanes → skip + warn.
+          const laneIdx = (): number => {
+            if (!merged.lanes || !seg.lane) return -1;
+            return merged.lanes.indexOf(seg.lane);
+          };
+          const laneCount = () => merged.lanes?.length ?? 1;
+          const laneHeight = () => ctx.innerHeight() / Math.max(1, laneCount());
+          const isLaned = () => laneIdx() >= 0;
+          const isUnknownLane = () =>
+            merged.lanes != null && seg.lane != null && laneIdx() < 0;
+          const y = () => (isLaned() ? laneIdx() * laneHeight() : 0);
+          const h = () => (isLaned() ? laneHeight() : ctx.innerHeight());
           return (
-            <rect
-              class="sui-chart__highlight-segment"
-              data-id={seg.id}
-              data-selected={isSelected() ? "true" : undefined}
-              x={Math.min(x1(), x2())}
-              y={0}
-              width={Math.abs(x2() - x1())}
-              height={ctx.innerHeight()}
-              fill={seg.color}
-              opacity={seg.opacity ?? (isSelected() ? Math.min(1, merged.fillOpacity * 2.5) : merged.fillOpacity)}
-              onPointerDown={(e) => merged.onClick?.(seg, e)}
-              onPointerEnter={(e) => merged.onHover?.(seg, e)}
-              onPointerLeave={(e) => merged.onHover?.(null, e)}
-              style={{ cursor: merged.onClick ? "pointer" : undefined }}
-            />
+            <Show
+              when={!isUnknownLane()}
+              fallback={(warnUnknownLane(seg.lane!), null)}
+            >
+              <rect
+                class="sui-chart__highlight-segment"
+                data-id={seg.id}
+                data-selected={isSelected() ? "true" : undefined}
+                x={Math.min(x1(), x2())}
+                y={y()}
+                width={Math.abs(x2() - x1())}
+                height={h()}
+                fill={seg.color}
+                opacity={seg.opacity ?? (isSelected() ? Math.min(1, merged.fillOpacity * 2.5) : merged.fillOpacity)}
+                onPointerDown={(e) => merged.onClick?.(seg, e)}
+                onPointerEnter={(e) => merged.onHover?.(seg, e)}
+                onPointerLeave={(e) => merged.onHover?.(null, e)}
+                style={{ cursor: merged.onClick ? "pointer" : undefined }}
+              />
+            </Show>
           );
         }}
       </For>

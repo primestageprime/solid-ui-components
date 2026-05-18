@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
@@ -81,6 +81,55 @@ describe("HighlightSegments — clip-path", () => {
     const group = container.querySelector(".sui-chart__highlight-segments");
     expect(group).toBeTruthy();
     expect(group!.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-clip-/);
+  });
+});
+
+describe("HighlightSegments — lanes", () => {
+  it("renders full-height when lanes is omitted (back-compat)", () => {
+    const segs: HighlightSegment[] = [
+      { id: "a", start: 1, end: 3, color: "#fff" },
+    ];
+    const { container } = wrapper(() => <HighlightSegments data={segs} />);
+    const rect = container.querySelector(".sui-chart__highlight-segment")!;
+    expect(rect.getAttribute("y")).toBe("0");
+    expect(parseFloat(rect.getAttribute("height")!)).toBeGreaterThan(40);
+  });
+
+  it("lanes prop stacks segments vertically by lane", () => {
+    const segs: HighlightSegment[] = [
+      { id: "a", start: 1, end: 3, color: "#fff", lane: "topAlarm" },
+      { id: "b", start: 5, end: 7, color: "#fff", lane: "bottomAlarm" },
+    ];
+    const { container } = wrapper(() => (
+      <HighlightSegments data={segs} lanes={["topAlarm", "bottomAlarm"]} />
+    ));
+    const rects = Array.from(
+      container.querySelectorAll<SVGRectElement>(".sui-chart__highlight-segment"),
+    );
+    expect(rects.length).toBe(2);
+    const [r1, r2] = rects;
+    // Top lane should have lower y than bottom lane
+    expect(parseFloat(r1.getAttribute("y")!)).toBeLessThan(
+      parseFloat(r2.getAttribute("y")!),
+    );
+    // Heights should be roughly equal (each lane = innerHeight / 2)
+    expect(parseFloat(r1.getAttribute("height")!)).toBeCloseTo(
+      parseFloat(r2.getAttribute("height")!),
+      1,
+    );
+  });
+
+  it("skips segments with unknown lane (warns once)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const segs: HighlightSegment[] = [
+      { id: "a", start: 1, end: 3, color: "#fff", lane: "ghost" },
+    ];
+    const { container } = wrapper(() => (
+      <HighlightSegments data={segs} lanes={["other"]} />
+    ));
+    expect(container.querySelectorAll(".sui-chart__highlight-segment").length).toBe(0);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
 
