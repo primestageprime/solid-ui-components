@@ -21,6 +21,14 @@ describe("ShapeGlyph", () => {
     expect(container.querySelector("path")).toBeTruthy();
   });
 
+  it("renders a <path> for shape='chevron-down' (apex at bottom)", () => {
+    const { container } = renderSvg({ color: "var(--sui-warning)", shape: "chevron-down" });
+    const path = container.querySelector("path")!;
+    expect(path).toBeTruthy();
+    // Path data should contain the chevron-down signature (apex at +y, base at -y)
+    expect(path.getAttribute("d")).toContain("L0,4");
+  });
+
   it("renders a <path> for shape='pin'", () => {
     const { container } = renderSvg({ color: "var(--sui-warning)", shape: "pin" });
     expect(container.querySelector("path")).toBeTruthy();
