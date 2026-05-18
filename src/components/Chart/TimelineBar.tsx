@@ -45,11 +45,20 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
   bandHeight?: number;
   /**
    * Vertical anchor (top of band) when `bandHeight` is set. Accepts an
-   * absolute pixel value, or the shorthands "top" / "bottom". When
-   * `bandHeight` is set and `bandY` is undefined, defaults to "bottom"
-   * (the most common "timeline strip pinned to x-axis" layout).
+   * absolute pixel value, or the shorthands "top" / "bottom" /
+   * "margin-bottom". When `bandHeight` is set and `bandY` is undefined,
+   * defaults to "bottom" (the most common "timeline strip pinned to x-axis"
+   * layout).
+   *
+   * - "top" — anchor at top of inner plot area (y = 0).
+   * - "bottom" — anchor at bottom of inner plot area (y = innerHeight - bandHeight).
+   * - "margin-bottom" — render BELOW the x-axis in the chart's bottom margin
+   *   (y = innerHeight + 4). The group OPTS OUT of the plot-area clip-path
+   *   so the strip can render outside the inner plot region. Consumer must
+   *   ensure `margin.bottom` accommodates the axis ticks/labels + `bandHeight`.
+   * - number — absolute pixel y inside the chart's inner-coordinate frame.
    */
-  bandY?: number | "top" | "bottom";
+  bandY?: number | "top" | "bottom" | "margin-bottom";
   onBarClick?: ClickHandler<T>;
   class?: string;
 }
@@ -57,7 +66,7 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
 export interface TimelineBarOverrides {
   barHeight?: number;
   bandHeight?: number;
-  bandY?: number | "top" | "bottom";
+  bandY?: number | "top" | "bottom" | "margin-bottom";
   class?: string;
 }
 export type TimelineBarDataProps<T extends TimelineBarDatum = TimelineBarDatum> =
@@ -82,6 +91,11 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
     return out;
   });
 
+  // Gap (px) between the x-axis and a "margin-bottom" anchored strip. The
+  // axis ticks extend ~4px below `innerHeight`, so 4px puts the band just
+  // past the ticks. Tweak via consumer-set margin.bottom rather than here.
+  const MARGIN_BOTTOM_GAP = 4;
+
   // Band layout — when `bandHeight` is set, lanes share the band; otherwise
   // legacy behavior: lanes fill `innerHeight`.
   const bandTotalHeight = () =>
@@ -89,16 +103,28 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   const bandTop = (): number => {
     if (merged.bandHeight == null) return 0;
     const anchor = merged.bandY ?? "bottom";
-    if (anchor === "top") return 0;
-    if (anchor === "bottom") return ctx.innerHeight() - merged.bandHeight;
-    return anchor;
+    switch (anchor) {
+      case "top":
+        return 0;
+      case "bottom":
+        return ctx.innerHeight() - merged.bandHeight;
+      case "margin-bottom":
+        return ctx.innerHeight() + MARGIN_BOTTOM_GAP;
+      default:
+        return anchor;
+    }
   };
   const laneHeight = () => bandTotalHeight() / Math.max(1, lanes().length);
+
+  // "margin-bottom" anchors render OUTSIDE the inner plot area (below the
+  // x-axis), so they must opt out of the plot-area clip-path. All other
+  // anchors stay inside the clip region.
+  const shouldClip = () => merged.bandY !== "margin-bottom";
 
   return (
     <g
       class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
-      clip-path={ctx.clipPathUrl()}
+      clip-path={shouldClip() ? ctx.clipPathUrl() : undefined}
     >
       <For each={merged.data}>
         {(bar) => {

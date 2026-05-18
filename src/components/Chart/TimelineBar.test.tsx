@@ -169,4 +169,30 @@ describe("TimelineBar — bandHeight + bandY", () => {
     // bandTop = 10; lane 0 yTop = 10 + (30 - 18)/2 = 16.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(16, 1);
   });
+
+  it("bandY='margin-bottom' renders bars below innerHeight (in bottom margin)", () => {
+    const bars: TimelineBarDatum[] = [
+      { id: "a", start: 1, end: 3, lane: "x", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} bandHeight={20} bandY="margin-bottom" />
+    ));
+    const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
+    const y = parseFloat(rect.getAttribute("y")!);
+    // innerHeight = 84; bandTop = 84 + 4 = 88; lane 0 yTop = 88 + (20 - 12)/2 = 92.
+    // Strip sits BELOW the inner plot area (y > INNER_HEIGHT).
+    expect(y).toBeGreaterThan(INNER_HEIGHT);
+    expect(y).toBeCloseTo(92, 1);
+  });
+
+  it("bandY='margin-bottom' does NOT apply clip-path to the timeline group", () => {
+    const bars: TimelineBarDatum[] = [
+      { id: "a", start: 1, end: 3, lane: "x", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} bandHeight={20} bandY="margin-bottom" />
+    ));
+    const g = container.querySelector(".sui-chart__timeline");
+    expect(g?.getAttribute("clip-path")).toBeFalsy();
+  });
 });
