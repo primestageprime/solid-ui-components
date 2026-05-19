@@ -304,10 +304,28 @@ export interface ReferenceLineStyleProps {
   color?: string;
 }
 
+/**
+ * ReferenceLine props.
+ *
+ * Two mutually-exclusive shapes (discriminated by `orientation`):
+ *
+ * 1. **Preferred** — `{ orientation, value }`. `value` is REQUIRED whenever
+ *    `orientation` is set (vertical reads from x scale, horizontal from y).
+ *    Accepts `number | Date` (Date when the chart has a time domain).
+ * 2. **Legacy (deprecated)** — `{ x }` or `{ y }`. Kept for back-compat;
+ *    prefer the orientation form.
+ *
+ * **Precedence:** the union types make the two shapes mutually exclusive at
+ * compile time — TypeScript will reject mixing `orientation` with `x`/`y`.
+ * The runtime resolver matches the same contract: if `orientation` + `value`
+ * are both present, that path wins; otherwise `x` → vertical, then `y` →
+ * horizontal. A bare `orientation` without `value` is a type error.
+ */
 export type ReferenceLineProps =
   | (ReferenceLineStyleProps & {
       /** Preferred API: orientation + value (accepts Date when chart has time domain). */
       orientation: "horizontal" | "vertical";
+      /** Required when `orientation` is set. Read on x scale (vertical) or y scale (horizontal). */
       value: number | Date;
       x?: never;
       y?: never;
