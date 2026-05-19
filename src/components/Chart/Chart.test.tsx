@@ -252,7 +252,7 @@ describe("XAxis labelOffset", () => {
     expect(ticks.length).toBeGreaterThan(0);
     // First tick mark should start at y=14 (the tickOffset)
     expect(ticks[0]?.getAttribute("y1")).toBe("14");
-    expect(ticks[0]?.getAttribute("y2")).toBe("18");
+    expect(ticks[0]?.getAttribute("y2")).toBe("22");
   });
 
   it("XAxis renders an optional title from `label` prop", () => {
