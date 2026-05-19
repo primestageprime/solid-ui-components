@@ -40,8 +40,8 @@
   shape-rendering: crispEdges;
 }
 .sui-chart__axis-tick {
-  stroke: var(--sui-border-strong, rgba(255, 255, 255, 0.18));
-  stroke-width: 1;
+  stroke: var(--sui-chart-tick-color, #c0c0c0);
+  stroke-width: 1.5;
 }
 /* Visible chart title — rendered as an HTML `<div>` ABOVE the SVG so it
    does not consume plot-area pixels. `color` (not `fill`) since this is
