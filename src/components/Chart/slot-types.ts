@@ -4,8 +4,18 @@
 // own slot file. New slots import from here, not from peer slots.
 // ============================================
 
-/** Stable identifier for a slot datum (segment, bar, pin, etc.). */
-export type Id = string;
+/**
+ * Stable identifier for a slot datum (segment, bar, pin, etc.).
+ *
+ * Branded so a plain `string` cannot be silently mixed with an `Id` at a
+ * boundary (e.g. passing `bar.lane` where an `Id` is required). The brand is
+ * a phantom type — erased at runtime; mint with `slotId(...)` at the
+ * boundary where consumer data enters the slot.
+ */
+export type Id = string & { readonly __brand: "SlotId" };
+
+/** Mint a runtime `Id` from a plain string. Same input → same id. */
+export const slotId = (s: string): Id => s as Id;
 
 /** Pointer-click handler. Item + native PointerEvent. */
 export type ClickHandler<T> = (item: T, event: PointerEvent) => void;
@@ -26,8 +36,8 @@ export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;
 // And its variants module curries that into named `Component<XDataProps>`
 // consts (ADR 0001).
 //
-// Considered (task #33): extracting `createSlot<TProps, TDataProps>` once
-// the 3rd slot landed. Re-assessed with 6 slots: NOT WORTH EXTRACTING.
+// Considered during the 3-slot landing (extract `createSlot<TProps,
+// TDataProps>`); re-evaluated at 6 slots: NOT WORTH EXTRACTING.
 //   1. The factory is 3 lines per slot — at the YAGNI threshold.
 //   2. Extraction does NOT eliminate the per-slot factory: TS can't infer
 //      a generic-constrained helper through a higher-order generic relay

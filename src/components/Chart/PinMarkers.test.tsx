@@ -5,7 +5,7 @@ import { Chart } from "./Chart";
 import { PinMarkers, type Pin } from "./PinMarkers";
 import { WarningPinMarkers } from "./PinMarkers.variants";
 import { useChart } from "./context";
-import type { Id } from "./slot-types";
+import { slotId, type Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
   render(() => (
@@ -17,8 +17,8 @@ const wrapper = (slot: () => JSX.Element) =>
 describe("PinMarkers — render", () => {
   it("renders one glyph group per pin", () => {
     const pins: Pin[] = [
-      { id: "a", x: 2, descriptor: { color: "var(--sui-warning)", shape: "pin" } },
-      { id: "b", x: 5, descriptor: { color: "var(--sui-accent)", shape: "circle" } },
+      { id: slotId("a"), x: 2, descriptor: { color: "var(--sui-warning)", shape: "pin" } },
+      { id: slotId("b"), x: 5, descriptor: { color: "var(--sui-accent)", shape: "circle" } },
     ];
     const { container } = wrapper(() => <PinMarkers data={pins} />);
     expect(container.querySelectorAll(".sui-chart__pin-marker").length).toBe(2);
@@ -28,17 +28,17 @@ describe("PinMarkers — render", () => {
 describe("PinMarkers — reactivity", () => {
   it("toggling selectedId flips data-selected on the matched pin", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const pins: Pin[] = [{ id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } }];
+    const pins: Pin[] = [{ id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } }];
     const { container } = wrapper(() => <PinMarkers data={pins} selectedId={sel()} />);
     expect(container.querySelector(".sui-chart__pin-marker")!.getAttribute("data-selected")).toBeNull();
-    setSel("a");
+    setSel(slotId("a"));
     expect(container.querySelector(".sui-chart__pin-marker")!.getAttribute("data-selected")).toBe("true");
   });
 });
 
 describe("PinMarkers — callbacks", () => {
   it("onClick fires on pointerdown with pin + event", () => {
-    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
     const calls: Pin[] = [];
     const { container } = wrapper(() => <PinMarkers data={[pin]} onClick={(p) => calls.push(p)} />);
     fireEvent.pointerDown(container.querySelector(".sui-chart__pin-marker")!);
@@ -46,7 +46,7 @@ describe("PinMarkers — callbacks", () => {
   });
 
   it("onDelete fires on dblclick", () => {
-    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
     const calls: Pin[] = [];
     const { container } = wrapper(() => <PinMarkers data={[pin]} onDelete={(p) => calls.push(p)} />);
     fireEvent.dblClick(container.querySelector(".sui-chart__pin-marker")!);
@@ -54,7 +54,7 @@ describe("PinMarkers — callbacks", () => {
   });
 
   it("onHover fires with pin on pointerenter and null on pointerleave", () => {
-    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
     const calls: Array<Pin | null> = [];
     const { container } = wrapper(() => (
       <PinMarkers data={[pin]} onHover={(p) => calls.push(p)} />
@@ -69,7 +69,7 @@ describe("PinMarkers — callbacks", () => {
 describe("PinMarkers — renderPin escape hatch", () => {
   it("invokes renderPin with pin + render context including selection state", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const pin: Pin = { id: "a", x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
     const calls: Array<{ id: Id; selected: boolean; cx: number; cy: number }> = [];
     const { container } = wrapper(() => (
       <PinMarkers
@@ -91,7 +91,7 @@ describe("PinMarkers — renderPin escape hatch", () => {
     expect(typeof first.cx).toBe("number");
     expect(typeof first.cy).toBe("number");
     // Selection change re-invokes render fn with selected=true.
-    setSel("a");
+    setSel(slotId("a"));
     const last = calls[calls.length - 1];
     expect(last.selected).toBe(true);
   });
@@ -99,9 +99,9 @@ describe("PinMarkers — renderPin escape hatch", () => {
 
 describe("PinMarkers — emphasizeNearestX", () => {
   const pins: Pin[] = [
-    { id: "a", x: 1, descriptor: { color: "#fff", shape: "pin" } },
-    { id: "b", x: 5, descriptor: { color: "#fff", shape: "pin" } },
-    { id: "c", x: 9, descriptor: { color: "#fff", shape: "pin" } },
+    { id: slotId("a"), x: 1, descriptor: { color: "#fff", shape: "pin" } },
+    { id: slotId("b"), x: 5, descriptor: { color: "#fff", shape: "pin" } },
+    { id: slotId("c"), x: 9, descriptor: { color: "#fff", shape: "pin" } },
   ];
 
   it("does not emphasize when hoverX is null", () => {
@@ -143,7 +143,7 @@ describe("PinMarkers — emphasizeNearestX", () => {
 
 describe("PinMarkers — curried variants", () => {
   it("WarningPinMarkers attaches the warning class", () => {
-    const pin: Pin = { id: "a", x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };
     const { container } = wrapper(() => <WarningPinMarkers data={[pin]} />);
     expect(container.querySelector(".sui-chart__pin-markers--warning")).toBeTruthy();
   });

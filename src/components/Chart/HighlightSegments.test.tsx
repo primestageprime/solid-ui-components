@@ -5,7 +5,7 @@ import type { JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { HighlightSegments, type HighlightSegment } from "./HighlightSegments";
 import { AccentHighlightSegments } from "./HighlightSegments.variants";
-import type { Id } from "./slot-types";
+import { slotId, type Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
   render(() => (
@@ -17,8 +17,8 @@ const wrapper = (slot: () => JSX.Element) =>
 describe("HighlightSegments — render", () => {
   it("renders one rect per segment", () => {
     const segs: HighlightSegment[] = [
-      { id: "a", start: 1, end: 3, color: "var(--sui-accent)" },
-      { id: "b", start: 5, end: 8, color: "var(--sui-warning)" },
+      { id: slotId("a"), start: 1, end: 3, color: "var(--sui-accent)" },
+      { id: slotId("b"), start: 5, end: 8, color: "var(--sui-warning)" },
     ];
     const { container } = wrapper(() => <HighlightSegments data={segs} />);
     expect(container.querySelectorAll(".sui-chart__highlight-segment").length).toBe(2);
@@ -28,23 +28,23 @@ describe("HighlightSegments — render", () => {
 describe("HighlightSegments — reactivity", () => {
   it("appending a segment adds a new rect", async () => {
     const [segs, setSegs] = createSignal<HighlightSegment[]>([
-      { id: "a", start: 1, end: 3, color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, color: "#fff" },
     ]);
     const { container } = wrapper(() => <HighlightSegments data={segs()} />);
     expect(container.querySelectorAll(".sui-chart__highlight-segment").length).toBe(1);
-    setSegs([...segs(), { id: "b", start: 4, end: 6, color: "#fff" }]);
+    setSegs([...segs(), { id: slotId("b"), start: 4, end: 6, color: "#fff" }]);
     expect(container.querySelectorAll(".sui-chart__highlight-segment").length).toBe(2);
   });
 
   it("toggling selectedIds flips data-selected attribute", () => {
     const [sel, setSel] = createSignal<ReadonlySet<Id>>(new Set());
-    const segs: HighlightSegment[] = [{ id: "a", start: 1, end: 3, color: "#fff" }];
+    const segs: HighlightSegment[] = [{ id: slotId("a"), start: 1, end: 3, color: "#fff" }];
     const { container } = wrapper(() => (
       <HighlightSegments data={segs} selectedIds={sel()} />
     ));
     let rect = container.querySelector(".sui-chart__highlight-segment")!;
     expect(rect.getAttribute("data-selected")).toBeNull();
-    setSel(new Set(["a"]));
+    setSel(new Set([slotId("a")]));
     rect = container.querySelector(".sui-chart__highlight-segment")!;
     expect(rect.getAttribute("data-selected")).toBe("true");
   });
@@ -52,7 +52,7 @@ describe("HighlightSegments — reactivity", () => {
 
 describe("HighlightSegments — callbacks", () => {
   it("onClick fires with domain item + event", () => {
-    const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
+    const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
     const calls: HighlightSegment[] = [];
     const { container } = wrapper(() => (
       <HighlightSegments data={[seg]} onClick={(s) => calls.push(s)} />
@@ -62,7 +62,7 @@ describe("HighlightSegments — callbacks", () => {
   });
 
   it("onHover receives null on pointer-leave", () => {
-    const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
+    const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
     const calls: (HighlightSegment | null)[] = [];
     const { container } = wrapper(() => (
       <HighlightSegments data={[seg]} onHover={(s) => calls.push(s)} />
@@ -76,7 +76,7 @@ describe("HighlightSegments — callbacks", () => {
 
 describe("HighlightSegments — clip-path", () => {
   it("wraps rects in a group with clip-path set to ctx.clipPathUrl()", () => {
-    const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
+    const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
     const { container } = wrapper(() => <HighlightSegments data={[seg]} />);
     const group = container.querySelector(".sui-chart__highlight-segments");
     expect(group).toBeTruthy();
@@ -85,9 +85,9 @@ describe("HighlightSegments — clip-path", () => {
 });
 
 describe("HighlightSegments — lanes", () => {
-  it("renders full-height when lanes is omitted (back-compat)", () => {
+  it("renders full-height when lanes is omitted", () => {
     const segs: HighlightSegment[] = [
-      { id: "a", start: 1, end: 3, color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, color: "#fff" },
     ];
     const { container } = wrapper(() => <HighlightSegments data={segs} />);
     const rect = container.querySelector(".sui-chart__highlight-segment")!;
@@ -97,8 +97,8 @@ describe("HighlightSegments — lanes", () => {
 
   it("lanes prop stacks segments vertically by lane", () => {
     const segs: HighlightSegment[] = [
-      { id: "a", start: 1, end: 3, color: "#fff", lane: "topAlarm" },
-      { id: "b", start: 5, end: 7, color: "#fff", lane: "bottomAlarm" },
+      { id: slotId("a"), start: 1, end: 3, color: "#fff", lane: "topAlarm" },
+      { id: slotId("b"), start: 5, end: 7, color: "#fff", lane: "bottomAlarm" },
     ];
     const { container } = wrapper(() => (
       <HighlightSegments data={segs} lanes={["topAlarm", "bottomAlarm"]} />
@@ -122,7 +122,7 @@ describe("HighlightSegments — lanes", () => {
   it("skips segments with unknown lane (warns once)", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const segs: HighlightSegment[] = [
-      { id: "a", start: 1, end: 3, color: "#fff", lane: "ghost" },
+      { id: slotId("a"), start: 1, end: 3, color: "#fff", lane: "ghost" },
     ];
     const { container } = wrapper(() => (
       <HighlightSegments data={segs} lanes={["other"]} />
@@ -136,9 +136,9 @@ describe("HighlightSegments — lanes", () => {
 describe("HighlightSegments — selected opacity", () => {
   it("applies SELECTED_OPACITY_MULTIPLIER to selected segments", () => {
     // Base fillOpacity 0.2 × multiplier 2.5 → 0.5 on the selected rect.
-    const segs: HighlightSegment[] = [{ id: "a", start: 1, end: 3, color: "#fff" }];
+    const segs: HighlightSegment[] = [{ id: slotId("a"), start: 1, end: 3, color: "#fff" }];
     const { container } = wrapper(() => (
-      <HighlightSegments data={segs} fillOpacity={0.2} selectedIds={new Set(["a"])} />
+      <HighlightSegments data={segs} fillOpacity={0.2} selectedIds={new Set([slotId("a")])} />
     ));
     const rect = container.querySelector<SVGRectElement>(
       '.sui-chart__highlight-segment[data-selected="true"]',
@@ -151,11 +151,11 @@ describe("HighlightSegments — selected opacity", () => {
 describe("HighlightSegments — emphasizedIds", () => {
   it("emphasizedIds applies data-emphasized to matching segments", () => {
     const segs: HighlightSegment[] = [
-      { id: "a", start: 1, end: 3, color: "#fff" },
-      { id: "b", start: 5, end: 7, color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, color: "#fff" },
+      { id: slotId("b"), start: 5, end: 7, color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <HighlightSegments data={segs} emphasizedIds={new Set(["a"])} />
+      <HighlightSegments data={segs} emphasizedIds={new Set([slotId("a")])} />
     ));
     const rects = container.querySelectorAll<SVGRectElement>(".sui-chart__highlight-segment");
     expect(rects[0]?.getAttribute("data-emphasized")).toBe("true");
@@ -163,12 +163,12 @@ describe("HighlightSegments — emphasizedIds", () => {
   });
 
   it("emphasizedIds is independent of selectedIds (both can apply)", () => {
-    const segs: HighlightSegment[] = [{ id: "a", start: 1, end: 3, color: "#fff" }];
+    const segs: HighlightSegment[] = [{ id: slotId("a"), start: 1, end: 3, color: "#fff" }];
     const { container } = wrapper(() => (
       <HighlightSegments
         data={segs}
-        selectedIds={new Set(["a"])}
-        emphasizedIds={new Set(["a"])}
+        selectedIds={new Set([slotId("a")])}
+        emphasizedIds={new Set([slotId("a")])}
       />
     ));
     const rect = container.querySelector<SVGRectElement>(".sui-chart__highlight-segment");
@@ -179,7 +179,7 @@ describe("HighlightSegments — emphasizedIds", () => {
 
 describe("HighlightSegments — curried variants", () => {
   it("AccentHighlightSegments bakes fillOpacity 0.22", () => {
-    const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
+    const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
     const { container } = wrapper(() => <AccentHighlightSegments data={[seg]} />);
     const rect = container.querySelector(".sui-chart__highlight-segment")!;
     expect(parseFloat(rect.getAttribute("opacity")!)).toBeCloseTo(0.22, 2);

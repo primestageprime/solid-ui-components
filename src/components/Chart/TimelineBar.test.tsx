@@ -4,7 +4,7 @@ import { createSignal, type JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { TimelineBar, type TimelineBarDatum } from "./TimelineBar";
 import { DenseTimelineBar, SparseTimelineBar } from "./TimelineBar.variants";
-import type { Id } from "./slot-types";
+import { slotId, type Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
   render(() => (
@@ -16,8 +16,8 @@ const wrapper = (slot: () => JSX.Element) =>
 describe("TimelineBar — render", () => {
   it("renders one rect per datum", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 0, end: 2, lane: "scheduled", color: "var(--sui-accent)" },
-      { id: "b", start: 3, end: 5, lane: "detected", color: "var(--sui-warning)" },
+      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "var(--sui-accent)" },
+      { id: slotId("b"), start: 3, end: 5, lane: "detected", color: "var(--sui-warning)" },
     ];
     const { container } = wrapper(() => <TimelineBar data={bars} />);
     expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
@@ -25,8 +25,8 @@ describe("TimelineBar — render", () => {
 
   it("places each lane at a distinct y position", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 0, end: 2, lane: "scheduled", color: "#fff" },
-      { id: "b", start: 0, end: 2, lane: "detected", color: "#fff" },
+      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
+      { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
     ];
     const { container } = wrapper(() => <TimelineBar data={bars} lanes={["scheduled", "detected"]} />);
     const rects = Array.from(container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"));
@@ -35,7 +35,7 @@ describe("TimelineBar — render", () => {
 
   it("skips bars whose lane is missing from explicit lanes prop", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 1, end: 3, lane: "ghost", color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, lane: "ghost", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
@@ -52,8 +52,8 @@ describe("TimelineBar — render", () => {
     const bars: TimelineBarDatum[] = [
       // Use a lane name unique to this test so the module-level dedupe set
       // from earlier tests doesn't swallow our warning.
-      { id: "a", start: 1, end: 3, lane: "phantom-zone-1", color: "#fff" },
-      { id: "b", start: 4, end: 6, lane: "phantom-zone-1", color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, lane: "phantom-zone-1", color: "#fff" },
+      { id: slotId("b"), start: 4, end: 6, lane: "phantom-zone-1", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
@@ -74,17 +74,17 @@ describe("TimelineBar — render", () => {
 describe("TimelineBar — reactivity", () => {
   it("toggling selectedId updates data-selected", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <TimelineBar data={[bar]} selectedId={sel()} />);
     expect(container.querySelector(".sui-chart__timeline-bar")!.getAttribute("data-selected")).toBeNull();
-    setSel("a");
+    setSel(slotId("a"));
     expect(container.querySelector(".sui-chart__timeline-bar")!.getAttribute("data-selected")).toBe("true");
   });
 });
 
 describe("TimelineBar — callbacks", () => {
   it("onBarClick fires with domain item + event", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const calls: TimelineBarDatum[] = [];
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} onBarClick={(b) => calls.push(b)} />
@@ -94,7 +94,7 @@ describe("TimelineBar — callbacks", () => {
   });
 
   it("onBarHover fires with bar on pointerenter and null on pointerleave", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const calls: Array<TimelineBarDatum | null> = [];
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} onBarHover={(b) => calls.push(b)} />
@@ -108,7 +108,7 @@ describe("TimelineBar — callbacks", () => {
 
 describe("TimelineBar — curried variants", () => {
   it("DenseTimelineBar renders bars at 90% lane height", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <DenseTimelineBar data={[bar]} />);
     const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
     expect(parseFloat(rect.getAttribute("height")!)).toBeGreaterThan(60);
@@ -119,8 +119,8 @@ describe("TimelineBar — curried variants", () => {
     // bars must occupy strictly less vertical area than Dense's. If anyone
     // later swaps the baked `barHeight` defaults this test catches it.
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 0, end: 2, lane: "scheduled", color: "#fff" },
-      { id: "b", start: 3, end: 5, lane: "detected", color: "#fff" },
+      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
+      { id: slotId("b"), start: 3, end: 5, lane: "detected", color: "#fff" },
     ];
     const lanes = ["scheduled", "detected"] as const;
     const totalRectArea = (root: ParentNode): number =>
@@ -144,7 +144,7 @@ describe("TimelineBar — curried variants", () => {
 
 describe("TimelineBar — clip-path", () => {
   it("wraps bars in a group with clip-path set to ctx.clipPathUrl()", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <TimelineBar data={[bar]} />);
     const group = container.querySelector(".sui-chart__timeline");
     expect(group).toBeTruthy();
@@ -159,8 +159,8 @@ describe("TimelineBar — bandHeight + bandY", () => {
 
   it("default behavior unchanged when bandHeight is undefined", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 0, end: 2, lane: "scheduled", color: "#fff" },
-      { id: "b", start: 0, end: 2, lane: "detected", color: "#fff" },
+      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
+      { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} barHeight={0.6} />
@@ -178,8 +178,8 @@ describe("TimelineBar — bandHeight + bandY", () => {
 
   it("bandHeight=40 + bandY='bottom' places bars in the bottom 40px strip", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 0, end: 2, lane: "scheduled", color: "#fff" },
-      { id: "b", start: 0, end: 2, lane: "detected", color: "#fff" },
+      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
+      { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar
@@ -209,7 +209,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
   });
 
   it("bandHeight=40 defaults bandY to 'bottom' when bandY is omitted", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 0, end: 2, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <TimelineBar data={[bar]} bandHeight={40} />);
     const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
     // 1 lane → laneHeight = 40; band top = 84 - 40 = 44; yTop = 44 + (40 - 24)/2 = 52.
@@ -217,7 +217,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
   });
 
   it("bandHeight=40 + bandY='top' places bars in the top 40px strip", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 0, end: 2, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} bandHeight={40} bandY="top" />
     ));
@@ -227,7 +227,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
   });
 
   it("bandHeight=30 + bandY=10 (numeric) places bars at the given pixel anchor", () => {
-    const bar: TimelineBarDatum = { id: "a", start: 0, end: 2, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} bandHeight={30} bandY={10} />
     ));
@@ -238,7 +238,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
 
   it("bandY='margin-bottom' renders bars below innerHeight (in bottom margin)", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 1, end: 3, lane: "x", color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} bandHeight={20} bandY="margin-bottom" />
@@ -254,7 +254,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
 
   it("bandY='margin-bottom' uses axisStripClipPathUrl (clips horizontally to plot, vertically to margin)", () => {
     const bars: TimelineBarDatum[] = [
-      { id: "a", start: 1, end: 3, lane: "x", color: "#fff" },
+      { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} bandHeight={12} bandY="margin-bottom" />

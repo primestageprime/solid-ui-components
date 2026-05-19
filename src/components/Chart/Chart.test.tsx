@@ -5,6 +5,7 @@ import { XAxis, YAxis } from "./Axes";
 import { PointSeries } from "./Series";
 import { PinMarkers, type Pin } from "./PinMarkers";
 import { useChart } from "./context";
+import { slotId } from "./slot-types";
 import type { Component } from "solid-js";
 
 describe("Chart", () => {
@@ -213,7 +214,7 @@ describe("Chart — global nearest emphasis coordinator", () => {
       return null;
     };
     const pins: Pin[] = [
-      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+      { id: slotId("p"), x: 8, descriptor: { color: "#fff", shape: "pin" } },
     ];
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
@@ -250,7 +251,7 @@ describe("Chart — global nearest emphasis coordinator", () => {
       return null;
     };
     const pins: Pin[] = [
-      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+      { id: slotId("p"), x: 8, descriptor: { color: "#fff", shape: "pin" } },
     ];
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
@@ -298,7 +299,7 @@ describe("Chart — global nearest emphasis coordinator", () => {
       return null;
     };
     const pins: Pin[] = [
-      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+      { id: slotId("p"), x: 8, descriptor: { color: "#fff", shape: "pin" } },
     ];
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>

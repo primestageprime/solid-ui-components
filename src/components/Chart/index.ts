@@ -23,6 +23,7 @@ export { linearScale, scaleTime, domainOf } from "./scales";
 export type { Scale, TimeScale } from "./scales";
 
 // Shared slot pointer types.
+export { slotId } from "./slot-types";
 export type { Id, ClickHandler, HoverHandler, DblClickHandler } from "./slot-types";
 
 // Shape primitives.
