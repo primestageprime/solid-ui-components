@@ -75,6 +75,17 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    * label element is rendered.
    */
   label?: string;
+  /**
+   * Stroke color for each segment rect. Defaults to a card-bg-matching
+   * dark token so adjacent segments (same lane, different colors) and
+   * vertically-adjacent strips (different lanes, same color) read as
+   * separate slabs even when their fills touch.
+   *
+   * Pass `"none"` to disable the stroke entirely.
+   */
+  segmentStroke?: string;
+  /** Stroke width in px. Default 1. */
+  segmentStrokeWidth?: number;
   onBarClick?: ClickHandler<T>;
   onBarHover?: HoverHandler<T>;
   class?: string;
@@ -84,6 +95,8 @@ export interface TimelineBarOverrides {
   barHeight?: number;
   bandHeight?: number;
   bandY?: BandYAnchor;
+  segmentStroke?: string;
+  segmentStrokeWidth?: number;
   class?: string;
 }
 export type TimelineBarDataProps<T extends TimelineBarDatum = TimelineBarDatum> =
@@ -93,7 +106,18 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   props: TimelineBarProps<T>,
 ) {
   const ctx = useChart();
-  const merged = mergeProps({ barHeight: 0.6 }, props);
+  const merged = mergeProps(
+    {
+      barHeight: 0.6,
+      // Token-only — apps own the fallback in CSS via `:root`. Matching the
+      // chart card background gives adjacent segments (same lane, different
+      // fills) AND vertically-adjacent strips (same fill across lanes) a
+      // visible separator.
+      segmentStroke: "var(--sui-chart-card-bg)",
+      segmentStrokeWidth: 1,
+    },
+    props,
+  );
 
   const lanes = createMemo<readonly string[]>(() => {
     if (merged.lanes) return merged.lanes;
@@ -179,6 +203,8 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                   width={Math.abs(x2() - x1())}
                   height={laneHeight() * merged.barHeight}
                   fill={bar.color}
+                  stroke={merged.segmentStroke}
+                  stroke-width={merged.segmentStrokeWidth}
                   onPointerDown={(e) => merged.onBarClick?.(bar, e)}
                   onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
                   onPointerLeave={(e) => merged.onBarHover?.(null, e)}

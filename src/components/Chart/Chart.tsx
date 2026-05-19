@@ -23,13 +23,11 @@ export interface ChartProps {
   xDomain: [number, number] | [Date, Date];
   /** Data domain on Y. */
   yDomain: [number, number];
-  /** Plot-area inset. Default: { top: 8, right: 8, bottom: 28, left: 36 }.
-   *  When `title` is set and `margin.top` is NOT explicitly provided, top is
-   *  auto-bumped to 28px so the rendered title fits above the plot area. */
+  /** Plot-area inset. Default: { top: 8, right: 8, bottom: 28, left: 36 }. */
   margin?: Partial<Margin>;
-  /** Optional title. Rendered as visible SVG text centered above the plot
-   *  AND set as the SVG `<title>` for screen readers. When provided, top
-   *  margin auto-bumps to 28px (unless caller specified `margin.top`). */
+  /** Optional title. Rendered as an HTML `<div>` ABOVE the SVG (so it
+   *  doesn't eat plot pixels) and ALSO surfaced as the SVG `<title>` for
+   *  screen readers. */
   title?: string;
   class?: string;
   style?: JSX.CSSProperties | string;
@@ -37,12 +35,6 @@ export interface ChartProps {
 }
 
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
-/** Top inset reserved for the visible chart title when `props.title` is set
- *  and the consumer hasn't explicitly overridden `margin.top`. */
-const TITLE_TOP_MARGIN = 28;
-/** Baseline y-coordinate for the title `<text>` element (inside the SVG,
- *  in the top-margin band — i.e., above the translated plot group). */
-const TITLE_BASELINE_Y = 20;
 
 // Vertical inflation for the plot-area clipPath so glyphs centered at the
 // top/bottom edges (e.g. chevrons at y=domainMax) render fully. Half-glyph
@@ -86,21 +78,13 @@ export const Chart: Component<ChartProps> = (props) => {
     "onPointerLeave",
   ]);
 
-  // Auto-bump top margin when a title is set AND the consumer hasn't
-  // explicitly specified `margin.top`. Explicit override always wins so a
-  // consumer who wants a larger header band (icons, sub-title, etc.) can
-  // set `margin={{ top: 48, ... }}` without us trampling it.
-  const margin = createMemo<Margin>(() => {
-    const userMargin = local.margin ?? {};
-    const hasTitle = (local.title ?? "").length > 0;
-    const topOverride =
-      userMargin.top !== undefined
-        ? userMargin.top
-        : hasTitle
-          ? TITLE_TOP_MARGIN
-          : DEFAULT_MARGIN.top;
-    return { ...DEFAULT_MARGIN, ...userMargin, top: topOverride };
-  });
+  // Title lives in an HTML `<div>` ABOVE the SVG (see render below), so it
+  // no longer steals SVG margin space — `margin.top` defaults straight to
+  // `DEFAULT_MARGIN.top` regardless of whether a title is set.
+  const margin = createMemo<Margin>(() => ({
+    ...DEFAULT_MARGIN,
+    ...(local.margin ?? {}),
+  }));
   const width = createMemo(() => local.width);
   const height = createMemo(() => local.height);
   const innerWidth = createMemo(() => Math.max(0, width() - margin().left - margin().right));
@@ -236,6 +220,12 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div class={`sui-chart${local.class ? " " + local.class : ""}`} style={local.style as JSX.CSSProperties}>
+        {/* Visible chart title — rendered as HTML ABOVE the SVG so it
+            doesn't consume SVG margin space. Centered, muted-text color,
+            independent of the SVG coordinate system. */}
+        <Show when={local.title}>
+          <div class="sui-chart__title">{local.title}</div>
+        </Show>
         <svg
           ref={svgEl}
           class="sui-chart__svg"
@@ -250,19 +240,11 @@ export const Chart: Component<ChartProps> = (props) => {
           onPointerLeave={onPointerLeave}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
+          {/* a11y title — read by screen readers; mirrors the HTML title
+              above so AT users get the same label whether or not the SVG
+              is in the accessibility tree. */}
           <Show when={local.title}>
-            {/* a11y title — read by screen readers via aria-labelledby
-                in addition to aria-label above. */}
             <title>{local.title}</title>
-            {/* Visible chart title — centered in the top-margin band. */}
-            <text
-              class="sui-chart__title"
-              x={width() / 2}
-              y={TITLE_BASELINE_Y}
-              text-anchor="middle"
-            >
-              {local.title}
-            </text>
           </Show>
           <defs>
             <clipPath id={clipId}>

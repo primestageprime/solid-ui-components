@@ -84,7 +84,7 @@ describe("Chart", () => {
 });
 
 describe("Chart — visible title", () => {
-  it("renders a visible <text class='sui-chart__title'> when title is set", () => {
+  it("renders a visible HTML <div class='sui-chart__title'> SIBLING of the svg when title is set", () => {
     const { container } = render(() => (
       <Chart
         width={200}
@@ -96,10 +96,27 @@ describe("Chart — visible title", () => {
     ));
     const titleEl = container.querySelector(".sui-chart__title");
     expect(titleEl).toBeTruthy();
+    // HTML element (not SVG text) — lives outside the <svg>.
+    expect(titleEl!.tagName.toLowerCase()).toBe("div");
     expect(titleEl!.textContent).toBe("MSI_F2");
-    // Centered horizontally; baseline above the plot area.
-    expect(titleEl!.getAttribute("text-anchor")).toBe("middle");
-    expect(parseFloat(titleEl!.getAttribute("x")!)).toBeCloseTo(100, 1);
+    // Sibling of svg, child of .sui-chart wrapper.
+    expect(titleEl!.parentElement?.classList.contains("sui-chart")).toBe(true);
+    expect(titleEl!.nextElementSibling?.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("surfaces the title as the SVG <title> aria element for screen readers", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        title="MSI_F2"
+      />
+    ));
+    const ariaTitle = container.querySelector("svg > title");
+    expect(ariaTitle).toBeTruthy();
+    expect(ariaTitle!.textContent).toBe("MSI_F2");
   });
 
   it("omits the visible title element when title prop is absent", () => {
@@ -109,9 +126,9 @@ describe("Chart — visible title", () => {
     expect(container.querySelector(".sui-chart__title")).toBeNull();
   });
 
-  it("auto-bumps margin.top to 28 when title is set (so the title fits)", () => {
-    // innerHeight = height(100) - margin.top(28 auto-bumped) - margin.bottom(28) = 44
-    // Plot clip-rect height = innerHeight + 24 = 68.
+  it("does NOT bump margin.top when title is set (HTML title lives above the SVG)", () => {
+    // innerHeight = height(100) - margin.top(8 default) - margin.bottom(28) = 64
+    // Plot clip-rect height = innerHeight + 24 = 88.
     const { container } = render(() => (
       <Chart
         width={200}
@@ -122,7 +139,7 @@ describe("Chart — visible title", () => {
       />
     ));
     const rect = container.querySelector("svg > defs > clipPath rect")!;
-    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(68, 1);
+    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(88, 1);
   });
 
   it("respects an explicit margin.top override even when title is set", () => {

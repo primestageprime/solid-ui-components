@@ -89,10 +89,20 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
 
   const isWinner = () => ctx.emphasis.winnerId() === slotId;
 
+  // Pins are decorative when the consumer hasn't wired ANY pointer handler
+  // (the chevron use-case in DotChart, for example, is a pure bounds
+  // indicator). Letting decorative pins capture pointer events steals
+  // `:hover` / `data-hovered` from the highlight rects beneath when the
+  // cursor crosses a chevron at an alarm edge. So: pointer-events on only
+  // when at least one handler is provided.
+  const interactive = (): boolean =>
+    merged.onClick != null || merged.onDelete != null || merged.onHover != null;
+
   return (
     <g
       class={`sui-chart__pin-markers${merged.class ? " " + merged.class : ""}`}
       clip-path={ctx.clip.plotPathUrl()}
+      style={{ "pointer-events": interactive() ? undefined : "none" }}
     >
       <For each={merged.data}>
         {(pin, i) => {
