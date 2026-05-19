@@ -52,7 +52,7 @@
    (which may be a warmer hue used by surfaces, tables, etc.). */
 .sui-chart__axis-label,
 .sui-chart__axis-title {
-  fill: var(--sui-chart-tick-color, #8a8a8a);
+  fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.7rem;
 }
 
@@ -75,7 +75,7 @@
 
 /* Reference */
 .sui-chart__ref-label {
-  fill: var(--sui-chart-tick-color, #8a8a8a);
+  fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.65rem;
 }
 
