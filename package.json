@@ -9,8 +9,6 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "solid": "./dist/server.js",
-      "browser": "./dist/index.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
@@ -24,9 +22,7 @@
   ],
   "scripts": {
     "dev": "vite --port 6006",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "SUI_BUILD_TARGET=client vite build --mode production",
-    "build:server": "SUI_BUILD_TARGET=server vite build --mode production --ssr src/index.ts",
+    "build": "SUI_BUILD_TARGET=client vite build --mode production",
     "watch": "vite build --mode production --watch",
     "preview": "vite preview",
     "prepare": "npm run build",
