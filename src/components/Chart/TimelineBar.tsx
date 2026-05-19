@@ -115,7 +115,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   const merged = mergeProps(
     {
       barHeight: 0.6,
-      segmentStroke: "var(--sui-chart-timeline-separator, rgba(255, 255, 255, 0.85))",
+      segmentStroke: "var(--sui-border-strong, rgba(255, 255, 255, 0.18))",
       segmentStrokeWidth: 1,
     },
     props,
