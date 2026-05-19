@@ -4,6 +4,7 @@
 import {
   Component,
   JSX,
+  Show,
   createMemo,
   createSignal,
   createUniqueId,
@@ -22,9 +23,13 @@ export interface ChartProps {
   xDomain: [number, number] | [Date, Date];
   /** Data domain on Y. */
   yDomain: [number, number];
-  /** Plot-area inset. Default: { top: 8, right: 8, bottom: 28, left: 36 }. */
+  /** Plot-area inset. Default: { top: 8, right: 8, bottom: 28, left: 36 }.
+   *  When `title` is set and `margin.top` is NOT explicitly provided, top is
+   *  auto-bumped to 28px so the rendered title fits above the plot area. */
   margin?: Partial<Margin>;
-  /** Optional accessible title. */
+  /** Optional title. Rendered as visible SVG text centered above the plot
+   *  AND set as the SVG `<title>` for screen readers. When provided, top
+   *  margin auto-bumps to 28px (unless caller specified `margin.top`). */
   title?: string;
   class?: string;
   style?: JSX.CSSProperties | string;
@@ -32,6 +37,12 @@ export interface ChartProps {
 }
 
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
+/** Top inset reserved for the visible chart title when `props.title` is set
+ *  and the consumer hasn't explicitly overridden `margin.top`. */
+const TITLE_TOP_MARGIN = 28;
+/** Baseline y-coordinate for the title `<text>` element (inside the SVG,
+ *  in the top-margin band — i.e., above the translated plot group). */
+const TITLE_BASELINE_Y = 20;
 
 // Vertical inflation for the plot-area clipPath so glyphs centered at the
 // top/bottom edges (e.g. chevrons at y=domainMax) render fully. Half-glyph
@@ -75,7 +86,21 @@ export const Chart: Component<ChartProps> = (props) => {
     "onPointerLeave",
   ]);
 
-  const margin = createMemo<Margin>(() => ({ ...DEFAULT_MARGIN, ...(local.margin ?? {}) }));
+  // Auto-bump top margin when a title is set AND the consumer hasn't
+  // explicitly specified `margin.top`. Explicit override always wins so a
+  // consumer who wants a larger header band (icons, sub-title, etc.) can
+  // set `margin={{ top: 48, ... }}` without us trampling it.
+  const margin = createMemo<Margin>(() => {
+    const userMargin = local.margin ?? {};
+    const hasTitle = (local.title ?? "").length > 0;
+    const topOverride =
+      userMargin.top !== undefined
+        ? userMargin.top
+        : hasTitle
+          ? TITLE_TOP_MARGIN
+          : DEFAULT_MARGIN.top;
+    return { ...DEFAULT_MARGIN, ...userMargin, top: topOverride };
+  });
   const width = createMemo(() => local.width);
   const height = createMemo(() => local.height);
   const innerWidth = createMemo(() => Math.max(0, width() - margin().left - margin().right));
@@ -225,6 +250,20 @@ export const Chart: Component<ChartProps> = (props) => {
           onPointerLeave={onPointerLeave}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
+          <Show when={local.title}>
+            {/* a11y title — read by screen readers via aria-labelledby
+                in addition to aria-label above. */}
+            <title>{local.title}</title>
+            {/* Visible chart title — centered in the top-margin band. */}
+            <text
+              class="sui-chart__title"
+              x={width() / 2}
+              y={TITLE_BASELINE_Y}
+              text-anchor="middle"
+            >
+              {local.title}
+            </text>
+          </Show>
           <defs>
             <clipPath id={clipId}>
               <rect

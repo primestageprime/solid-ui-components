@@ -83,6 +83,65 @@ describe("Chart", () => {
   });
 });
 
+describe("Chart — visible title", () => {
+  it("renders a visible <text class='sui-chart__title'> when title is set", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        title="MSI_F2"
+      />
+    ));
+    const titleEl = container.querySelector(".sui-chart__title");
+    expect(titleEl).toBeTruthy();
+    expect(titleEl!.textContent).toBe("MSI_F2");
+    // Centered horizontally; baseline above the plot area.
+    expect(titleEl!.getAttribute("text-anchor")).toBe("middle");
+    expect(parseFloat(titleEl!.getAttribute("x")!)).toBeCloseTo(100, 1);
+  });
+
+  it("omits the visible title element when title prop is absent", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]} />
+    ));
+    expect(container.querySelector(".sui-chart__title")).toBeNull();
+  });
+
+  it("auto-bumps margin.top to 28 when title is set (so the title fits)", () => {
+    // innerHeight = height(100) - margin.top(28 auto-bumped) - margin.bottom(28) = 44
+    // Plot clip-rect height = innerHeight + 24 = 68.
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        title="MSI_F2"
+      />
+    ));
+    const rect = container.querySelector("svg > defs > clipPath rect")!;
+    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(68, 1);
+  });
+
+  it("respects an explicit margin.top override even when title is set", () => {
+    // Caller asked for top=4. innerHeight = 100 - 4 - 28 = 68; clip-rect height = 92.
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        title="MSI_F2"
+        margin={{ top: 4 }}
+      />
+    ));
+    const rect = container.querySelector("svg > defs > clipPath rect")!;
+    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(92, 1);
+  });
+});
+
 describe("Chart — plot-area clip-path", () => {
   it("renders a <defs><clipPath> with a plot-area-sized rect", () => {
     const { container } = render(() => (

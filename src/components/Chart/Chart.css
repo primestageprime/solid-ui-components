@@ -39,8 +39,20 @@
   stroke: var(--sui-border-strong, rgba(255, 255, 255, 0.18));
   stroke-width: 1;
 }
-.sui-chart__axis-label {
-  fill: var(--sui-text-muted, #888);
+/* Visible chart title — rendered centered in the top-margin band when
+   `<Chart title="...">` is provided. */
+.sui-chart__title {
+  fill: var(--sui-chart-title-color, #dfdfdf);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Tick + axis-title labels — chart-scoped so consumers can tint chart
+   text muted-cool-gray independently of the broader app's --sui-text-muted
+   (which may be a warmer hue used by surfaces, tables, etc.). */
+.sui-chart__axis-label,
+.sui-chart__axis-title {
+  fill: var(--sui-chart-tick-color, #8a8a8a);
   font-size: 0.7rem;
 }
 
@@ -63,7 +75,7 @@
 
 /* Reference */
 .sui-chart__ref-label {
-  fill: var(--sui-text-muted, #888);
+  fill: var(--sui-chart-tick-color, #8a8a8a);
   font-size: 0.65rem;
 }
 
