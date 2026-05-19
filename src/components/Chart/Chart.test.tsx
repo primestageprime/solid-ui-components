@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { Chart } from "./Chart";
-import { XAxis } from "./Axes";
+import { XAxis, YAxis } from "./Axes";
 import { PointSeries } from "./Series";
 import { PinMarkers, type Pin } from "./PinMarkers";
 import { useChart } from "./context";
@@ -176,6 +176,28 @@ describe("XAxis labelOffset", () => {
     // First tick mark should start at y=14 (the tickOffset)
     expect(ticks[0]?.getAttribute("y1")).toBe("14");
     expect(ticks[0]?.getAttribute("y2")).toBe("18");
+  });
+
+  it("XAxis renders an optional title from `label` prop", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis label="Time" />
+      </Chart>
+    ));
+    const title = container.querySelector(".sui-chart__axis-title");
+    expect(title).toBeTruthy();
+    expect(title!.textContent).toBe("Time");
+  });
+
+  it("YAxis renders an optional title from `label` prop", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <YAxis label="Temperature" />
+      </Chart>
+    ));
+    const title = container.querySelector(".sui-chart__axis-title--y");
+    expect(title).toBeTruthy();
+    expect(title!.textContent).toBe("Temperature");
   });
 });
 

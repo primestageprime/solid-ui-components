@@ -1,5 +1,5 @@
 // Chart slots: XAxis, YAxis — tick lines + labels at scale ticks.
-import { Component, For } from "solid-js";
+import { Component, For, Show } from "solid-js";
 import { useChart } from "./context";
 import type { Scale } from "./scales";
 
@@ -10,6 +10,12 @@ export interface AxisProps {
   tickFormat?: (value: number) => string;
   /** Hide the baseline. Default false. */
   hideLine?: boolean;
+  /**
+   * Optional axis title rendered centered along the axis. For XAxis it sits
+   * below the tick labels; for YAxis it sits to the left of the y-tick
+   * labels, rotated 90deg counter-clockwise.
+   */
+  label?: string;
   /**
    * Vertical pixel offset for XAxis tick labels (the `y` of each label
    * `<text>`). Default 16. Increase to push labels further below the axis
@@ -68,6 +74,18 @@ export const XAxis: Component<AxisProps> = (props) => {
           </g>
         )}
       </For>
+      <Show when={props.label}>
+        {(label) => (
+          <text
+            class="sui-chart__axis-title"
+            x={ctx.innerWidth() / 2}
+            y={(props.labelOffset ?? 16) + 18}
+            text-anchor="middle"
+          >
+            {label()}
+          </text>
+        )}
+      </Show>
     </g>
   );
 };
@@ -92,6 +110,17 @@ export const YAxis: Component<AxisProps> = (props) => {
           </g>
         )}
       </For>
+      <Show when={props.label}>
+        {(label) => (
+          <text
+            class="sui-chart__axis-title sui-chart__axis-title--y"
+            transform={`rotate(-90) translate(${-ctx.innerHeight() / 2}, ${-(28 + (props.labelOffset ?? 0))})`}
+            text-anchor="middle"
+          >
+            {label()}
+          </text>
+        )}
+      </Show>
     </g>
   );
 };
