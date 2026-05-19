@@ -143,7 +143,7 @@ describe("TimelineBar — curried variants", () => {
 });
 
 describe("TimelineBar — clip-path", () => {
-  it("wraps bars in a group with clip-path set to ctx.clipPathUrl()", () => {
+  it("wraps bars in a group with clip-path set to ctx.clip.plotPathUrl()", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <TimelineBar data={[bar]} />);
     const group = container.querySelector(".sui-chart__timeline");

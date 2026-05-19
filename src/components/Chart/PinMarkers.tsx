@@ -13,7 +13,7 @@ import {
 } from "solid-js";
 import { useChart } from "./context";
 import { DEFAULT_GLYPH_SIZE, ShapeGlyph, type Descriptor } from "./shapes";
-import type { Id, ClickHandler, DblClickHandler, HoverHandler } from "./slot-types";
+import { slotId as brandSlotId, type Id, type ClickHandler, type DblClickHandler, type HoverHandler } from "./slot-types";
 
 export interface Pin {
   id: Id;
@@ -57,7 +57,7 @@ export type PinMarkersDataProps<TPin extends Pin = Pin> =
 
 export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>) {
   const ctx = useChart();
-  const slotId = createUniqueId();
+  const slotId = brandSlotId(createUniqueId());
   const merged = mergeProps({ size: DEFAULT_GLYPH_SIZE }, props);
   // Nearest pin + its distance to hoverX (DATA-domain units). `null` when
   // emphasis is disabled, no hover, no data, or no valid candidate.
@@ -80,19 +80,19 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
   createEffect(() => {
     const n = nearest();
     if (n == null) {
-      ctx.clearEmphasisCandidate(slotId);
+      ctx.emphasis.clear(slotId);
     } else {
-      ctx.reportEmphasisCandidate(slotId, n.dist);
+      ctx.emphasis.report(slotId, n.dist);
     }
   });
-  onCleanup(() => ctx.clearEmphasisCandidate(slotId));
+  onCleanup(() => ctx.emphasis.clear(slotId));
 
-  const isWinner = () => ctx.emphasisWinnerSlotId() === slotId;
+  const isWinner = () => ctx.emphasis.winnerId() === slotId;
 
   return (
     <g
       class={`sui-chart__pin-markers${merged.class ? " " + merged.class : ""}`}
-      clip-path={ctx.clipPathUrl()}
+      clip-path={ctx.clip.plotPathUrl()}
     >
       <For each={merged.data}>
         {(pin, i) => {

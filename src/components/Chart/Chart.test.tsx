@@ -25,7 +25,7 @@ describe("Chart", () => {
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
-  it("exposes dragRange via context, initially null", () => {
+  it("exposes drag.range via context, initially null", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {
       captured = useChart();
@@ -37,10 +37,10 @@ describe("Chart", () => {
       </Chart>
     ));
     expect(captured).not.toBeNull();
-    expect(captured!.dragRange()).toBeNull();
+    expect(captured!.drag.range()).toBeNull();
   });
 
-  it("setDragRange mutates the context signal", () => {
+  it("drag.setRange mutates the context signal", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {
       captured = useChart();
@@ -51,10 +51,10 @@ describe("Chart", () => {
         <Probe />
       </Chart>
     ));
-    captured!.setDragRange({ start: 1, end: 4 });
-    expect(captured!.dragRange()).toEqual({ start: 1, end: 4 });
-    captured!.setDragRange(null);
-    expect(captured!.dragRange()).toBeNull();
+    captured!.drag.setRange({ start: 1, end: 4 });
+    expect(captured!.drag.range()).toEqual({ start: 1, end: 4 });
+    captured!.drag.setRange(null);
+    expect(captured!.drag.range()).toBeNull();
   });
 
   it("throws on mixed-type xDomain", () => {
@@ -113,7 +113,7 @@ describe("Chart — plot-area clip-path", () => {
     expect(group!.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-clip-/);
   });
 
-  it("exposes a stable clipPathUrl via context that matches the defs id", () => {
+  it("exposes a stable clip.plotPathUrl via context that matches the defs id", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {
       captured = useChart();
@@ -125,7 +125,7 @@ describe("Chart — plot-area clip-path", () => {
       </Chart>
     ));
     const id = container.querySelector("svg > defs > clipPath")!.getAttribute("id")!;
-    expect(captured!.clipPathUrl()).toBe(`url(#${id})`);
+    expect(captured!.clip.plotPathUrl()).toBe(`url(#${id})`);
   });
 });
 
@@ -386,7 +386,7 @@ describe("Chart — global nearest emphasis coordinator", () => {
     ).toBe(0);
   });
 
-  it("exposes emphasisWinnerSlotId via context (null when no candidates)", () => {
+  it("exposes emphasis.winnerId via context (null when no candidates)", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {
       captured = useChart();
@@ -397,14 +397,16 @@ describe("Chart — global nearest emphasis coordinator", () => {
         <Probe />
       </Chart>
     ));
-    expect(captured!.emphasisWinnerSlotId()).toBeNull();
-    captured!.reportEmphasisCandidate("slot-a", 5);
-    captured!.reportEmphasisCandidate("slot-b", 2);
-    expect(captured!.emphasisWinnerSlotId()).toBe("slot-b");
-    captured!.clearEmphasisCandidate("slot-b");
-    expect(captured!.emphasisWinnerSlotId()).toBe("slot-a");
-    captured!.clearEmphasisCandidate("slot-a");
-    expect(captured!.emphasisWinnerSlotId()).toBeNull();
+    const a = slotId("slot-a");
+    const b = slotId("slot-b");
+    expect(captured!.emphasis.winnerId()).toBeNull();
+    captured!.emphasis.report(a, 5);
+    captured!.emphasis.report(b, 2);
+    expect(captured!.emphasis.winnerId()).toBe(b);
+    captured!.emphasis.clear(b);
+    expect(captured!.emphasis.winnerId()).toBe(a);
+    captured!.emphasis.clear(a);
+    expect(captured!.emphasis.winnerId()).toBeNull();
   });
 });
 
@@ -428,7 +430,7 @@ describe("Chart — axis-strip clip-path", () => {
     expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(28, 1);
   });
 
-  it("exposes a stable axisStripClipPathUrl via context that matches the defs id", () => {
+  it("exposes a stable clip.axisStripPathUrl via context that matches the defs id", () => {
     let captured: ReturnType<typeof useChart> | null = null;
     const Probe: Component = () => {
       captured = useChart();
@@ -444,7 +446,7 @@ describe("Chart — axis-strip clip-path", () => {
     ).find((el) =>
       /^sui-chart-axis-strip-clip-/.test(el.getAttribute("id") ?? ""),
     )!;
-    expect(captured!.axisStripClipPathUrl()).toBe(
+    expect(captured!.clip.axisStripPathUrl()).toBe(
       `url(#${stripClip.getAttribute("id")})`,
     );
   });

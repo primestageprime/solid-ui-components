@@ -47,7 +47,7 @@ export function ChartTooltip<T>(props: ChartTooltipProps<T>) {
         const px = () => ctx.xScale()(props.x(pt().p)) + ctx.margin().left + offset().x;
         const py = () => ctx.margin().top + offset().y;
         return (
-          <Portal mount={ctx.tooltipMount() ?? undefined}>
+          <Portal mount={ctx.overlay.tooltipMount() ?? undefined}>
             <div
               class="sui-chart__tooltip"
               style={{

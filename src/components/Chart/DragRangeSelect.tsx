@@ -1,8 +1,9 @@
-// Config-only consumer of context.dragRange — the root <Chart> owns the
+// Config-only consumer of context.drag.range — the root <Chart> owns the
 // pointer listener, so this slot deliberately attaches none of its own
 // (would clobber dispatch).
 import { Component, Show, createEffect, mergeProps } from "solid-js";
 import { useChart } from "./context";
+import type { DragRange } from "./context";
 
 export interface DragRangeSelectProps {
   /** Fires when the user finishes a drag whose pixel span exceeds `minPixelDelta`. */
@@ -33,21 +34,21 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
     props,
   );
 
-  let lastCommitted: { start: number; end: number } | null = null;
+  let lastCommitted: DragRange | null = null;
 
-  // Live preview: fires on every dragRange change while the pointer is held.
+  // Live preview: fires on every drag.range change while the pointer is held.
   // The visual band (below) renders from the same live signal.
   createEffect(() => {
-    const range = ctx.dragRange();
+    const range = ctx.drag.range();
     if (range == null) return;
     merged.onRangePreview?.(range.start, range.end);
   });
 
   // Commit: fires ONLY when a drag completes (pointerup). The Chart root
-  // pulses `committedDragRange` once per drag; the `lastCommitted` guard
+  // pulses `drag.committed` once per drag; the `lastCommitted` guard
   // dedupes if downstream reactivity re-runs the effect with the same value.
   createEffect(() => {
-    const committed = ctx.committedDragRange();
+    const committed = ctx.drag.committed();
     if (committed == null) return;
     const xs = ctx.xScale();
     const pxDelta = Math.abs(xs(committed.end) - xs(committed.start));
@@ -64,13 +65,13 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
   });
 
   return (
-    <Show when={ctx.dragRange()}>
+    <Show when={ctx.drag.range()}>
       {(r) => {
         const xs = () => ctx.xScale();
         const x = () => Math.min(xs()(r().start), xs()(r().end));
         const w = () => Math.abs(xs()(r().end) - xs()(r().start));
         return (
-          <g clip-path={ctx.clipPathUrl()}>
+          <g clip-path={ctx.clip.plotPathUrl()}>
             <rect
               class={`sui-chart__drag-range${merged.class ? " " + merged.class : ""}`}
               x={x()}

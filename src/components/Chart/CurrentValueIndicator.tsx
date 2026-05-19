@@ -39,7 +39,7 @@ export const CurrentValueIndicator: Component<CurrentValueIndicatorProps> = (pro
       {(p) => (
         <g
           class={`sui-chart__current-value${merged.class ? " " + merged.class : ""}`}
-          clip-path={ctx.clipPathUrl()}
+          clip-path={ctx.clip.plotPathUrl()}
         >
           <circle
             cx={ctx.xScale()(p().x)}

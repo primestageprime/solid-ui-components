@@ -121,8 +121,8 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   // into the margin. All other anchors use the plot-area clip.
   const activeClipPathUrl = () =>
     merged.bandY === "margin-bottom"
-      ? ctx.axisStripClipPathUrl()
-      : ctx.clipPathUrl();
+      ? ctx.clip.axisStripPathUrl()
+      : ctx.clip.plotPathUrl();
 
   return (
     <g

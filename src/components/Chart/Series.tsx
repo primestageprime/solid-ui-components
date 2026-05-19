@@ -1,5 +1,6 @@
 import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
+import { slotId as brandSlotId } from "./slot-types";
 
 interface SeriesBase<T> {
   data: readonly T[];
@@ -55,7 +56,7 @@ export function LineSeries<T>(props: LineSeriesProps<T>) {
     ),
   );
   return (
-    <g clip-path={ctx.clipPathUrl()}>
+    <g clip-path={ctx.clip.plotPathUrl()}>
       <path
         class={`sui-chart__line${props.class ? " " + props.class : ""}`}
         d={d()}
@@ -102,7 +103,7 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
     return `${top} L${xs(last).toFixed(2)},${baseY.toFixed(2)} L${xs(first).toFixed(2)},${baseY.toFixed(2)} Z`;
   });
   return (
-    <g clip-path={ctx.clipPathUrl()}>
+    <g clip-path={ctx.clip.plotPathUrl()}>
       <path
         class={`sui-chart__area${props.class ? " " + props.class : ""}`}
         d={d()}
@@ -134,7 +135,7 @@ export interface PointSeriesProps<T> extends SeriesBase<T> {
 
 export function PointSeries<T>(props: PointSeriesProps<T>) {
   const ctx = useChart();
-  const slotId = createUniqueId();
+  const slotId = brandSlotId(createUniqueId());
   const baseRadius = (d: T) =>
     typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3;
   const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
@@ -161,16 +162,16 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
   createEffect(() => {
     const n = nearest();
     if (n == null) {
-      ctx.clearEmphasisCandidate(slotId);
+      ctx.emphasis.clear(slotId);
     } else {
-      ctx.reportEmphasisCandidate(slotId, n.dist);
+      ctx.emphasis.report(slotId, n.dist);
     }
   });
-  onCleanup(() => ctx.clearEmphasisCandidate(slotId));
+  onCleanup(() => ctx.emphasis.clear(slotId));
 
-  const isWinner = () => ctx.emphasisWinnerSlotId() === slotId;
+  const isWinner = () => ctx.emphasis.winnerId() === slotId;
   return (
-    <g class="sui-chart__points" clip-path={ctx.clipPathUrl()}>
+    <g class="sui-chart__points" clip-path={ctx.clip.plotPathUrl()}>
       <For each={props.data}>
         {(d, i) => {
           const xv = props.x(d);
@@ -235,7 +236,7 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
   return (
     <g
       class={`sui-chart__bars${props.class ? " " + props.class : ""}`}
-      clip-path={ctx.clipPathUrl()}
+      clip-path={ctx.clip.plotPathUrl()}
     >
       <For each={props.data}>
         {(d, i) => {

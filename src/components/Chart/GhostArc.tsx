@@ -71,7 +71,7 @@ export const GhostArc: Component<GhostArcProps> = (props) => {
           return `M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`;
         };
         return (
-          <g clip-path={ctx.clipPathUrl()}>
+          <g clip-path={ctx.clip.plotPathUrl()}>
             <path
               class={`sui-chart__ghost-arc${merged.class ? " " + merged.class : ""}`}
               d={d()}

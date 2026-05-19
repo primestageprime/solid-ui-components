@@ -78,7 +78,7 @@ describe("HighlightSegments — callbacks", () => {
 });
 
 describe("HighlightSegments — clip-path", () => {
-  it("wraps rects in a group with clip-path set to ctx.clipPathUrl()", () => {
+  it("wraps rects in a group with clip-path set to ctx.clip.plotPathUrl()", () => {
     const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
     const { container } = wrapper(() => <HighlightSegments data={[seg]} />);
     const group = container.querySelector(".sui-chart__highlight-segments");

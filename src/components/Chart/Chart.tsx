@@ -9,9 +9,10 @@ import {
   createUniqueId,
   splitProps,
 } from "solid-js";
-import { ChartContext, ChartContextValue, Margin } from "./context";
+import { ChartContext, ChartContextValue, DragRange, Margin } from "./context";
 import { linearScale, scaleTime, Scale } from "./scales";
 import { DEFAULT_GLYPH_SIZE } from "./shapes";
+import type { Id } from "./slot-types";
 import "./Chart.css";
 
 export interface ChartProps {
@@ -89,10 +90,8 @@ export const Chart: Component<ChartProps> = (props) => {
   const yScale = createMemo<Scale>(() => linearScale(local.yDomain, [innerHeight(), 0]));
 
   const [hoverX, setHoverX] = createSignal<number | null>(null);
-  const [dragRange, setDragRange] = createSignal<{ start: number; end: number } | null>(null);
-  const [committedDragRange, setCommittedDragRange] = createSignal<
-    { start: number; end: number } | null
-  >(null);
+  const [dragRange, setDragRange] = createSignal<DragRange | null>(null);
+  const [committedDragRange, setCommittedDragRange] = createSignal<DragRange | null>(null);
   const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
   // ---- Global "nearest emphasis" coordinator ----
@@ -101,10 +100,10 @@ export const Chart: Component<ChartProps> = (props) => {
   // reporter (insertion order in the Map). Map signal uses immutable updates
   // so the createMemo below tracks correctly.
   const [emphasisCandidates, setEmphasisCandidates] = createSignal<
-    Map<string, number>
+    Map<Id, number>
   >(new Map());
 
-  const reportEmphasisCandidate = (slotId: string, distance: number): void => {
+  const reportEmphasisCandidate = (slotId: Id, distance: number): void => {
     setEmphasisCandidates((prev) => {
       if (prev.get(slotId) === distance) return prev;
       const next = new Map(prev);
@@ -112,7 +111,7 @@ export const Chart: Component<ChartProps> = (props) => {
       return next;
     });
   };
-  const clearEmphasisCandidate = (slotId: string): void => {
+  const clearEmphasisCandidate = (slotId: Id): void => {
     setEmphasisCandidates((prev) => {
       if (!prev.has(slotId)) return prev;
       const next = new Map(prev);
@@ -120,9 +119,9 @@ export const Chart: Component<ChartProps> = (props) => {
       return next;
     });
   };
-  const emphasisWinnerSlotId = createMemo<string | null>(() =>
+  const emphasisWinnerSlotId = createMemo<Id | null>(() =>
     Array.from(emphasisCandidates().entries()).reduce<{
-      id: string | null;
+      id: Id | null;
       dist: number;
     }>(
       (best, [id, dist]) => (dist < best.dist ? { id, dist } : best),
@@ -188,17 +187,25 @@ export const Chart: Component<ChartProps> = (props) => {
     yScale,
     hoverX,
     setHoverX,
-    dragRange,
-    setDragRange,
-    committedDragRange,
-    setCommittedDragRange,
-    tooltipMount,
-    setTooltipMount,
-    clipPathUrl,
-    axisStripClipPathUrl,
-    reportEmphasisCandidate,
-    clearEmphasisCandidate,
-    emphasisWinnerSlotId,
+    drag: {
+      range: dragRange,
+      setRange: setDragRange,
+      committed: committedDragRange,
+      setCommitted: setCommittedDragRange,
+    },
+    emphasis: {
+      report: reportEmphasisCandidate,
+      clear: clearEmphasisCandidate,
+      winnerId: emphasisWinnerSlotId,
+    },
+    clip: {
+      plotPathUrl: clipPathUrl,
+      axisStripPathUrl: axisStripClipPathUrl,
+    },
+    overlay: {
+      tooltipMount,
+      setTooltipMount,
+    },
   };
 
   return (

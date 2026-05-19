@@ -7,7 +7,7 @@ import { CommitOnReleaseDragRangeSelect } from "./DragRangeSelect.variants";
 import { useChart } from "./context";
 
 describe("DragRangeSelect — render", () => {
-  it("renders no band when dragRange is null", () => {
+  it("renders no band when drag.range is null", () => {
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
         <DragRangeSelect onRange={() => {}} />
@@ -16,11 +16,11 @@ describe("DragRangeSelect — render", () => {
     expect(container.querySelector(".sui-chart__drag-range")).toBeNull();
   });
 
-  it("renders a band reflecting context.dragRange", () => {
+  it("renders a band reflecting context.drag.range", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setDrag = ctx.drag.setRange;
       return null;
     };
     const { container } = render(() => (
@@ -35,11 +35,11 @@ describe("DragRangeSelect — render", () => {
 });
 
 describe("DragRangeSelect — reactivity", () => {
-  it("band width updates when dragRange.end moves", () => {
+  it("band width updates when drag.range.end moves", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setDrag = ctx.drag.setRange;
       return null;
     };
     const { container } = render(() => (
@@ -63,7 +63,7 @@ describe("DragRangeSelect — callbacks", () => {
       | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setCommit = ctx.setCommittedDragRange;
+      setCommit = ctx.drag.setCommitted;
       return null;
     };
     const calls: Array<[number, number]> = [];
@@ -81,7 +81,7 @@ describe("DragRangeSelect — callbacks", () => {
     expect(calls).toEqual([[10, 30]]);
   });
 
-  it("onRange does NOT fire during live drag; only when committedDragRange is set", () => {
+  it("onRange does NOT fire during live drag; only when drag.committed is set", () => {
     let setDrag:
       | ((r: { start: number; end: number } | null) => void)
       | null = null;
@@ -90,8 +90,8 @@ describe("DragRangeSelect — callbacks", () => {
       | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
-      setCommit = ctx.setCommittedDragRange;
+      setDrag = ctx.drag.setRange;
+      setCommit = ctx.drag.setCommitted;
       return null;
     };
     const calls: Array<[number, number]> = [];
@@ -111,11 +111,11 @@ describe("DragRangeSelect — callbacks", () => {
     expect(calls).toEqual([[10, 50]]);
   });
 
-  it("onRangePreview fires for every dragRange update", () => {
+  it("onRangePreview fires for every drag.range update", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setDrag = ctx.drag.setRange;
       return null;
     };
     const previews: Array<[number, number]> = [];
@@ -137,7 +137,7 @@ describe("DragRangeSelect — spec D3 invariant", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setDrag = ctx.drag.setRange;
       return null;
     };
     const { container } = render(() => (
@@ -172,12 +172,12 @@ describe("DragRangeSelect — curried variants", () => {
       | null = null;
     const ProbeDefault: Component = () => {
       const ctx = useChart();
-      setCommitDefault = ctx.setCommittedDragRange;
+      setCommitDefault = ctx.drag.setCommitted;
       return null;
     };
     const ProbeCommit: Component = () => {
       const ctx = useChart();
-      setCommitCommit = ctx.setCommittedDragRange;
+      setCommitCommit = ctx.drag.setCommitted;
       return null;
     };
     const defaultCalls: Array<[number, number]> = [];
@@ -207,7 +207,7 @@ describe("DragRangeSelect — curried variants", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setDrag = ctx.drag.setRange;
       return null;
     };
     const { container } = render(() => (
