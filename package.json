@@ -9,9 +9,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "worker": "./dist/server.js",
-      "deno": "./dist/server.js",
-      "node": "./dist/server.js",
+      "solid": "./dist/server.js",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
