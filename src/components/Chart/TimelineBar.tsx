@@ -76,6 +76,12 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    */
   label?: string;
   /**
+   * Rotate the strip's label text -45° (bottom-left → top-right). The label
+   * anchors its end at the strip's left edge so it reads ascending toward
+   * the strip. Default false.
+   */
+  rotateLabel?: boolean;
+  /**
    * Stroke color for each segment rect. Defaults to a card-bg-matching
    * dark token so adjacent segments (same lane, different colors) and
    * vertically-adjacent strips (different lanes, same color) read as
@@ -215,14 +221,23 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
           the left margin without being clipped. `dominant-baseline="central"`
           vertically centers the glyph regardless of font; `text-anchor="end"`
           right-aligns against the strip's start (x = 0 in plot-local
-          coords). Pointer events disabled — label is decorative. */}
+          coords). Pointer events disabled — label is decorative.
+
+          When `rotateLabel` is true the text is rotated -45° about its
+          end-anchor at (-8, labelY) so it reads ascending toward the strip;
+          the rotated baseline still meets the strip's left edge. */}
       <Show when={merged.label}>
         <text
           class="sui-chart__timeline-bar-label"
-          x={-8}
-          y={labelY()}
+          x={merged.rotateLabel ? undefined : -8}
+          y={merged.rotateLabel ? undefined : labelY()}
           text-anchor="end"
           dominant-baseline="central"
+          transform={
+            merged.rotateLabel
+              ? `translate(-8, ${labelY()}) rotate(-45)`
+              : undefined
+          }
           style={{ "pointer-events": "none" }}
         >
           {merged.label}

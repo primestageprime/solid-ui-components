@@ -31,6 +31,12 @@ export interface AxisProps {
    * move so labels still clear them. No effect on YAxis.
    */
   tickOffset?: number;
+  /**
+   * Rotate x-axis tick labels -45° (bottom-left → top-right). Prevents
+   * collision when labels are long (e.g. dates). Y-axis ignores this prop.
+   * Default false.
+   */
+  rotateLabels?: boolean;
 }
 
 const defaultFormat = (v: number): string => {
@@ -67,7 +73,16 @@ export const XAxis: Component<AxisProps> = (props) => {
               y1={props.tickOffset ?? 0}
               y2={(props.tickOffset ?? 0) + 4}
             />
-            <text class="sui-chart__axis-label" y={props.labelOffset ?? 16} text-anchor="middle">
+            <text
+              class="sui-chart__axis-label"
+              text-anchor={props.rotateLabels ? "end" : "middle"}
+              transform={
+                props.rotateLabels
+                  ? `translate(0, ${props.labelOffset ?? 16}) rotate(-45)`
+                  : undefined
+              }
+              y={props.rotateLabels ? undefined : (props.labelOffset ?? 16)}
+            >
               {fmt()(t)}
             </text>
           </g>
