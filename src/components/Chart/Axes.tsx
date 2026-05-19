@@ -71,7 +71,7 @@ export const XAxis: Component<AxisProps> = (props) => {
             <line
               class="sui-chart__axis-tick"
               y1={props.tickOffset ?? 0}
-              y2={(props.tickOffset ?? 0) + 4}
+              y2={(props.tickOffset ?? 0) + 8}
             />
             <text
               class="sui-chart__axis-label"
