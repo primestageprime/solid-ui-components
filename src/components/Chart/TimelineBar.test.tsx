@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { createSignal, type JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { TimelineBar, type TimelineBarDatum } from "./TimelineBar";
-import { DenseTimelineBar } from "./TimelineBar.variants";
+import { DenseTimelineBar, SparseTimelineBar } from "./TimelineBar.variants";
 import type { Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
@@ -41,6 +41,33 @@ describe("TimelineBar — render", () => {
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
     ));
     expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(0);
+  });
+
+  it("unknown-lane drop is silent + warns once (mirrors HighlightSegments posture)", () => {
+    // Locks the warn-once invariant: an unknown lane skips the rect AND
+    // emits exactly one console.warn — even if the same unknown lane
+    // appears multiple times in the same render (the module-level dedupe
+    // set in TimelineBar.tsx tracks lanes across instances).
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bars: TimelineBarDatum[] = [
+      // Use a lane name unique to this test so the module-level dedupe set
+      // from earlier tests doesn't swallow our warning.
+      { id: "a", start: 1, end: 3, lane: "phantom-zone-1", color: "#fff" },
+      { id: "b", start: 4, end: 6, lane: "phantom-zone-1", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
+    ));
+    // Bars silently dropped.
+    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(0);
+    // Warned at least once for the unknown lane.
+    expect(warn).toHaveBeenCalled();
+    const matchingCalls = warn.mock.calls.filter((args) =>
+      typeof args[0] === "string" && args[0].includes("phantom-zone-1"),
+    );
+    // Warn-once: only one warning emitted regardless of how many bars use the lane.
+    expect(matchingCalls.length).toBe(1);
+    warn.mockRestore();
   });
 });
 
@@ -85,6 +112,33 @@ describe("TimelineBar — curried variants", () => {
     const { container } = wrapper(() => <DenseTimelineBar data={[bar]} />);
     const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
     expect(parseFloat(rect.getAttribute("height")!)).toBeGreaterThan(60);
+  });
+
+  it("SparseTimelineBar produces lower visual density than DenseTimelineBar (identical input)", () => {
+    // Locks variant differentiation: given the same data, Sparse's rendered
+    // bars must occupy strictly less vertical area than Dense's. If anyone
+    // later swaps the baked `barHeight` defaults this test catches it.
+    const bars: TimelineBarDatum[] = [
+      { id: "a", start: 0, end: 2, lane: "scheduled", color: "#fff" },
+      { id: "b", start: 3, end: 5, lane: "detected", color: "#fff" },
+    ];
+    const lanes = ["scheduled", "detected"] as const;
+    const totalRectArea = (root: ParentNode): number =>
+      Array.from(root.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"))
+        .map((r) => parseFloat(r.getAttribute("height")!) * parseFloat(r.getAttribute("width")!))
+        .reduce((sum, a) => sum + a, 0);
+
+    const denseRender = wrapper(() => <DenseTimelineBar data={bars} lanes={lanes} />);
+    const sparseRender = wrapper(() => <SparseTimelineBar data={bars} lanes={lanes} />);
+
+    const denseArea = totalRectArea(denseRender.container);
+    const sparseArea = totalRectArea(sparseRender.container);
+
+    // Same count (input is identical).
+    expect(denseRender.container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
+    expect(sparseRender.container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
+    // Sparse < Dense (visual density: 0.4 vs 0.9 of lane height).
+    expect(sparseArea).toBeLessThan(denseArea);
   });
 });
 
