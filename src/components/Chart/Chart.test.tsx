@@ -3,6 +3,7 @@ import { render, fireEvent } from "@solidjs/testing-library";
 import { Chart } from "./Chart";
 import { XAxis } from "./Axes";
 import { PointSeries } from "./Series";
+import { PinMarkers, type Pin } from "./PinMarkers";
 import { useChart } from "./context";
 import type { Component } from "solid-js";
 
@@ -175,6 +176,150 @@ describe("XAxis labelOffset", () => {
     // First tick mark should start at y=14 (the tickOffset)
     expect(ticks[0]?.getAttribute("y1")).toBe("14");
     expect(ticks[0]?.getAttribute("y2")).toBe("18");
+  });
+});
+
+describe("Chart — global nearest emphasis coordinator", () => {
+  it("only one slot wins across the chart when multiple participate", () => {
+    // PointSeries data: x=0 (far from hoverX=8)
+    // PinMarkers data:  x=8 (matches hoverX exactly)
+    // Expected: only the pin gets data-emphasized; the point does not.
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const pins: Pin[] = [
+      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+    ];
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <PointSeries
+          data={[{ x: 0, y: 10 }]}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          radius={3}
+          emphasizeNearestX
+        />
+        <PinMarkers data={pins} emphasizeNearestX />
+      </Chart>
+    ));
+    setHover!(8);
+    // Only the pin (closer to hoverX) is emphasized.
+    const emphasizedCircles = container.querySelectorAll(
+      '.sui-chart__points circle[data-emphasized="true"]',
+    );
+    const emphasizedPins = container.querySelectorAll(
+      '.sui-chart__pin-marker[data-emphasized="true"]',
+    );
+    expect(emphasizedCircles.length).toBe(0);
+    expect(emphasizedPins.length).toBe(1);
+    expect(emphasizedPins[0].getAttribute("data-id")).toBe("p");
+  });
+
+  it("flipping distances reverses the winner", () => {
+    // PointSeries datum at x=2; PinMarkers pin at x=8. hoverX=3 → point wins.
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const pins: Pin[] = [
+      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+    ];
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <PointSeries
+          data={[{ x: 2, y: 10 }]}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          radius={3}
+          emphasizeNearestX
+        />
+        <PinMarkers data={pins} emphasizeNearestX />
+      </Chart>
+    ));
+    setHover!(3);
+    expect(
+      container.querySelectorAll(
+        '.sui-chart__points circle[data-emphasized="true"]',
+      ).length,
+    ).toBe(1);
+    expect(
+      container.querySelectorAll(
+        '.sui-chart__pin-marker[data-emphasized="true"]',
+      ).length,
+    ).toBe(0);
+    // hoverX=7 → pin (at x=8) wins.
+    setHover!(7);
+    expect(
+      container.querySelectorAll(
+        '.sui-chart__points circle[data-emphasized="true"]',
+      ).length,
+    ).toBe(0);
+    expect(
+      container.querySelectorAll(
+        '.sui-chart__pin-marker[data-emphasized="true"]',
+      ).length,
+    ).toBe(1);
+  });
+
+  it("clearing hoverX withdraws all candidates so no slot is emphasized", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const pins: Pin[] = [
+      { id: "p", x: 8, descriptor: { color: "#fff", shape: "pin" } },
+    ];
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <PointSeries
+          data={[{ x: 0, y: 10 }]}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          radius={3}
+          emphasizeNearestX
+        />
+        <PinMarkers data={pins} emphasizeNearestX />
+      </Chart>
+    ));
+    setHover!(5);
+    expect(
+      container.querySelectorAll('[data-emphasized="true"]').length,
+    ).toBe(1);
+    setHover!(null);
+    expect(
+      container.querySelectorAll('[data-emphasized="true"]').length,
+    ).toBe(0);
+  });
+
+  it("exposes emphasisWinnerSlotId via context (null when no candidates)", () => {
+    let captured: ReturnType<typeof useChart> | null = null;
+    const Probe: Component = () => {
+      captured = useChart();
+      return null;
+    };
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+      </Chart>
+    ));
+    expect(captured!.emphasisWinnerSlotId()).toBeNull();
+    captured!.reportEmphasisCandidate("slot-a", 5);
+    captured!.reportEmphasisCandidate("slot-b", 2);
+    expect(captured!.emphasisWinnerSlotId()).toBe("slot-b");
+    captured!.clearEmphasisCandidate("slot-b");
+    expect(captured!.emphasisWinnerSlotId()).toBe("slot-a");
+    captured!.clearEmphasisCandidate("slot-a");
+    expect(captured!.emphasisWinnerSlotId()).toBeNull();
   });
 });
 

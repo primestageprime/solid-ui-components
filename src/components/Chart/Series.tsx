@@ -1,5 +1,5 @@
 // Chart slots: LineSeries, AreaSeries, PointSeries, ReferenceLine.
-import { Component, For, Show, createMemo } from "solid-js";
+import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
 
 interface SeriesBase<T> {
@@ -135,22 +135,41 @@ export interface PointSeriesProps<T> extends SeriesBase<T> {
 
 export function PointSeries<T>(props: PointSeriesProps<T>) {
   const ctx = useChart();
+  const slotId = createUniqueId();
   const baseRadius = (d: T) =>
     typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3;
   const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
   const stroke = (d: T) => (typeof props.stroke === "function" ? props.stroke(d) : props.stroke);
-  const nearestIdx = createMemo(() => {
-    if (!props.emphasizeNearestX) return -1;
+  // Nearest datum + its distance to hoverX (DATA-domain units). `null` when
+  // emphasis is disabled, no hover, no data, or the nearest is invalid.
+  const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
+    if (!props.emphasizeNearestX) return null;
     const hx = ctx.hoverX();
-    if (hx == null) return -1;
-    return props.data.reduce<{ idx: number; dist: number }>(
-      (best, d, i) => {
+    if (hx == null) return null;
+    const best = props.data.reduce<{ idx: number; dist: number }>(
+      (acc, d, i) => {
         const dist = Math.abs(props.x(d) - hx);
-        return dist < best.dist ? { idx: i, dist } : best;
+        return dist < acc.dist ? { idx: i, dist } : acc;
       },
       { idx: -1, dist: Infinity },
-    ).idx;
+    );
+    return best.idx < 0 ? null : best;
   });
+  const nearestIdx = createMemo(() => nearest()?.idx ?? -1);
+
+  // Report this slot's candidate distance to the chart-level coordinator.
+  // The coordinator picks ONE winner across all participating slots.
+  createEffect(() => {
+    const n = nearest();
+    if (n == null) {
+      ctx.clearEmphasisCandidate(slotId);
+    } else {
+      ctx.reportEmphasisCandidate(slotId, n.dist);
+    }
+  });
+  onCleanup(() => ctx.clearEmphasisCandidate(slotId));
+
+  const isWinner = () => ctx.emphasisWinnerSlotId() === slotId;
   return (
     <g class="sui-chart__points" clip-path={ctx.clipPathUrl()}>
       <For each={props.data}>
@@ -158,7 +177,7 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
           const xv = props.x(d);
           const yv = props.y(d);
           if ((props.skipMissing ?? true) && (Number.isNaN(xv) || Number.isNaN(yv))) return null;
-          const isEmphasized = () => i() === nearestIdx();
+          const isEmphasized = () => isWinner() && i() === nearestIdx();
           const r = () =>
             isEmphasized() ? baseRadius(d) * (props.emphasisScale ?? 2) : baseRadius(d);
           return (

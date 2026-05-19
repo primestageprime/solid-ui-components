@@ -53,6 +53,20 @@ export interface ChartContextValue {
    * to the plot area while extending vertically into the bottom margin.
    */
   axisStripClipPathUrl: Accessor<string>;
+  /**
+   * Chart-wide "nearest emphasis" coordinator. Slots that participate in
+   * `emphasizeNearestX` report their currently-nearest candidate's distance
+   * to `hoverX` (in DATA-domain units) via `reportEmphasisCandidate`. The
+   * coordinator picks the single global minimum and exposes its `slotId`
+   * via `emphasisWinnerSlotId`. Slots gate their visual emphasis on the
+   * winner equality so only ONE slot in the chart emphasizes at a time.
+   *
+   * Slots withdraw via `clearEmphasisCandidate` when `emphasizeNearestX` is
+   * off, `hoverX` is null, the slot has no data, or the slot unmounts.
+   */
+  reportEmphasisCandidate: (slotId: string, distance: number) => void;
+  clearEmphasisCandidate: (slotId: string) => void;
+  emphasisWinnerSlotId: Accessor<string | null>;
 }
 
 export const ChartContext = createContext<ChartContextValue>();

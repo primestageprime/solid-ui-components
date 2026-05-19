@@ -97,6 +97,41 @@ export const Chart: Component<ChartProps> = (props) => {
   >(null);
   const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
+  // ---- Global "nearest emphasis" coordinator ----
+  // Slots report their nearest-candidate distance (DATA-domain units). The
+  // coordinator derives the single winning slotId; ties are broken by first
+  // reporter (insertion order in the Map). Map signal uses immutable updates
+  // so the createMemo below tracks correctly.
+  const [emphasisCandidates, setEmphasisCandidates] = createSignal<
+    Map<string, number>
+  >(new Map());
+
+  const reportEmphasisCandidate = (slotId: string, distance: number): void => {
+    setEmphasisCandidates((prev) => {
+      if (prev.get(slotId) === distance) return prev;
+      const next = new Map(prev);
+      next.set(slotId, distance);
+      return next;
+    });
+  };
+  const clearEmphasisCandidate = (slotId: string): void => {
+    setEmphasisCandidates((prev) => {
+      if (!prev.has(slotId)) return prev;
+      const next = new Map(prev);
+      next.delete(slotId);
+      return next;
+    });
+  };
+  const emphasisWinnerSlotId = createMemo<string | null>(() =>
+    Array.from(emphasisCandidates().entries()).reduce<{
+      id: string | null;
+      dist: number;
+    }>(
+      (best, [id, dist]) => (dist < best.dist ? { id, dist } : best),
+      { id: null, dist: Infinity },
+    ).id,
+  );
+
   // Per-instance clipPath ids — stable across renders, unique across charts.
   const clipId = `sui-chart-clip-${createUniqueId()}`;
   const clipPathUrl = createMemo(() => `url(#${clipId})`);
@@ -163,6 +198,9 @@ export const Chart: Component<ChartProps> = (props) => {
     setTooltipMount,
     clipPathUrl,
     axisStripClipPathUrl,
+    reportEmphasisCandidate,
+    clearEmphasisCandidate,
+    emphasisWinnerSlotId,
   };
 
   return (

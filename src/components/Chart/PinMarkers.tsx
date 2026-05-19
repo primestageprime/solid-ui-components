@@ -5,7 +5,17 @@
 // selection + click/delete callbacks. `renderPin` is an escape hatch
 // when the descriptor cannot express what the consumer needs.
 // ============================================
-import { Component, For, JSX, Show, createMemo, mergeProps } from "solid-js";
+import {
+  Component,
+  For,
+  JSX,
+  Show,
+  createEffect,
+  createMemo,
+  createUniqueId,
+  mergeProps,
+  onCleanup,
+} from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
 import type { Id, ClickHandler, DblClickHandler, HoverHandler } from "./slot-types";
@@ -52,19 +62,37 @@ export type PinMarkersDataProps<TPin extends Pin = Pin> =
 
 export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>) {
   const ctx = useChart();
+  const slotId = createUniqueId();
   const merged = mergeProps({ size: 12 }, props);
-  const nearestIdx = createMemo(() => {
-    if (!merged.emphasizeNearestX) return -1;
+  // Nearest pin + its distance to hoverX (DATA-domain units). `null` when
+  // emphasis is disabled, no hover, no data, or no valid candidate.
+  const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
+    if (!merged.emphasizeNearestX) return null;
     const hx = ctx.hoverX();
-    if (hx == null) return -1;
-    return merged.data.reduce<{ idx: number; dist: number }>(
-      (best, pin, i) => {
+    if (hx == null) return null;
+    const best = merged.data.reduce<{ idx: number; dist: number }>(
+      (acc, pin, i) => {
         const dist = Math.abs(pin.x - hx);
-        return dist < best.dist ? { idx: i, dist } : best;
+        return dist < acc.dist ? { idx: i, dist } : acc;
       },
       { idx: -1, dist: Infinity },
-    ).idx;
+    );
+    return best.idx < 0 ? null : best;
   });
+  const nearestIdx = createMemo(() => nearest()?.idx ?? -1);
+
+  // Participate in the chart-level "nearest emphasis" coordinator.
+  createEffect(() => {
+    const n = nearest();
+    if (n == null) {
+      ctx.clearEmphasisCandidate(slotId);
+    } else {
+      ctx.reportEmphasisCandidate(slotId, n.dist);
+    }
+  });
+  onCleanup(() => ctx.clearEmphasisCandidate(slotId));
+
+  const isWinner = () => ctx.emphasisWinnerSlotId() === slotId;
 
   return (
     <g
@@ -76,7 +104,7 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
           const cx = () => ctx.xScale()(pin.x);
           const cy = () => (pin.y != null ? ctx.yScale()(pin.y) : 0);
           const selected = () => merged.selectedId === pin.id;
-          const isEmphasized = () => i() === nearestIdx();
+          const isEmphasized = () => isWinner() && i() === nearestIdx();
           const glyphSize = () => {
             const base = pin.descriptor.size ?? merged.size;
             return isEmphasized() ? base * (merged.emphasisScale ?? 1.6) : base;
