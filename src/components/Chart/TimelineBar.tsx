@@ -109,11 +109,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   const merged = mergeProps(
     {
       barHeight: 0.6,
-      // Token-only — apps own the fallback in CSS via `:root`. Matching the
-      // chart card background gives adjacent segments (same lane, different
-      // fills) AND vertically-adjacent strips (same fill across lanes) a
-      // visible separator.
-      segmentStroke: "var(--sui-chart-card-bg)",
+      segmentStroke: "var(--sui-chart-timeline-separator, rgba(255, 255, 255, 0.85))",
       segmentStrokeWidth: 1,
     },
     props,
