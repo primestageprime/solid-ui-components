@@ -53,6 +53,21 @@ describe("CurrentValueIndicator — reactivity", () => {
   });
 });
 
+describe("CurrentValueIndicator — labelOffset", () => {
+  it("shifts the label x/y by the configured offset", () => {
+    const point: CurrentValue = { x: 5, y: 50, label: "now" };
+    const { container } = wrapper(() => (
+      <CurrentValueIndicator point={point} labelOffset={{ x: 20, y: -12 }} />
+    ));
+    const circle = container.querySelector("circle")!;
+    const text = container.querySelector(".sui-chart__current-value-label")!;
+    const cx = parseFloat(circle.getAttribute("cx")!);
+    const cy = parseFloat(circle.getAttribute("cy")!);
+    expect(parseFloat(text.getAttribute("x")!)).toBeCloseTo(cx + 20, 5);
+    expect(parseFloat(text.getAttribute("y")!)).toBeCloseTo(cy - 12, 5);
+  });
+});
+
 describe("CurrentValueIndicator — curried variants", () => {
   it("AccentCurrentValueIndicator uses accent color + radius 5", () => {
     const point: CurrentValue = { x: 5, y: 50 };
