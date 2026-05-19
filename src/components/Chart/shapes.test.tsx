@@ -25,8 +25,19 @@ describe("ShapeGlyph", () => {
     const { container } = renderSvg({ color: "var(--sui-warning)", shape: "chevron-down" });
     const path = container.querySelector("path")!;
     expect(path).toBeTruthy();
-    // Path data should contain the chevron-down signature (apex at +y, base at -y)
-    expect(path.getAttribute("d")).toContain("L0,4");
+    // Filled triangle pointing down: apex at +y (bottom), base at -y (top).
+    expect(path.getAttribute("d")).toContain("L0,6");
+  });
+
+  it("renders chevron + chevron-down as filled triangles (fill = descriptor.color)", () => {
+    const up = renderSvg({ color: "var(--sui-accent)", shape: "chevron" });
+    const upPath = up.container.querySelector("path")!;
+    expect(upPath.getAttribute("fill")).toBe("var(--sui-accent)");
+    expect(upPath.getAttribute("d")).toContain("L0,-6");
+
+    const down = renderSvg({ color: "var(--sui-warning)", shape: "chevron-down" });
+    const downPath = down.container.querySelector("path")!;
+    expect(downPath.getAttribute("fill")).toBe("var(--sui-warning)");
   });
 
   it("renders a <path> for shape='pin'", () => {

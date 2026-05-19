@@ -24,9 +24,10 @@ export const DEFAULT_GLYPH_SIZE = 12;
 
 // Built-in path strings, centered on (0,0) within a 16x16 viewBox.
 // Path data is anchored at geometric center per spec D4.
-const CHEVRON_PATH = "M-6,3 L0,-4 L6,3";
-// Apex at bottom: visual "v"
-const CHEVRON_DOWN_PATH = "M-6,-3 L0,4 L6,-3";
+// Filled triangle pointing up (▲): base at bottom (+y), apex at top (-y).
+const CHEVRON_PATH = "M-6,4 L6,4 L0,-6 Z";
+// Filled triangle pointing down (▼): base at top (-y), apex at bottom (+y).
+const CHEVRON_DOWN_PATH = "M-6,-4 L6,-4 L0,6 Z";
 const PIN_PATH =
   "M0,-7 C-4,-7 -4,-3 0,2 C4,-3 4,-7 0,-7 Z M-1.5,-5 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0";
 const BUILTIN_VIEWBOX: [number, number] = [16, 16];
@@ -97,7 +98,6 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           color={props.descriptor.color}
           stroke={stroke()}
           strokeWidth={strokeWidth()}
-          fillRule="none"
         />
       </Show>
       <Show when={props.descriptor.shape === "chevron-down"}>
@@ -108,7 +108,6 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           color={props.descriptor.color}
           stroke={stroke()}
           strokeWidth={strokeWidth()}
-          fillRule="none"
         />
       </Show>
       <Show when={props.descriptor.shape === "pin"}>
