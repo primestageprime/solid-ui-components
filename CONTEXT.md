@@ -79,7 +79,7 @@ A declarative Solid child of `<Chart>` that reads chart context (via `useChart()
 _Avoid_: Layer, child, plugin.
 
 **Descriptor (visual)**:
-A closed data object (`{ color: string, shape: Shape, size?: number }`) the consumer produces per datum. The chart slot's render contract is `Descriptor → JSX`. `Shape` is a closed enum (`'circle' | 'chevron' | 'pin' | { path; viewBox? }`); custom paths anchor at geometric center and scale uniformly to `size`.
+A closed data object (`{ color: string, shape: Shape, size?: number }`) the consumer produces per datum. The chart slot's render contract is `Descriptor → JSX`. `Shape` is a closed enum (`'circle' | 'chevron' | 'chevron-down' | 'pin' | { path; viewBox? }`); custom paths anchor at geometric center and scale uniformly to `size`.
 _Avoid_: Style, render spec.
 
 ## Relationships
