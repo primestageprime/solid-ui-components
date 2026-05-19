@@ -10,11 +10,18 @@
   stroke: var(--sui-border, #334155);
   stroke-width: 1.5;
   fill: none;
+  color: var(--sui-border, #334155);
 }
 
 .sui-dag__arrow {
-  fill: var(--sui-border, #334155);
+  fill: currentColor;
   stroke: none;
+}
+
+.sui-dag__edge--highlighted {
+  stroke: var(--sui-accent, #00d4ff);
+  stroke-width: 2.5;
+  color: var(--sui-accent, #00d4ff);
 }
 
 .sui-dag__node-wrapper {

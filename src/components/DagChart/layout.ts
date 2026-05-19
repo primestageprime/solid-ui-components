@@ -1,5 +1,39 @@
-import { graphStratify, sugiyama, layeringLongestPath } from "d3-dag";
+import { graphStratify, sugiyama } from "d3-dag";
 import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
+
+/**
+ * Custom layering that places every source node (no incoming edges) at layer 0
+ * and assigns every other node the longest path distance from any root.
+ *
+ * The built-in `layeringLongestPath` (and `layeringSimplex`) minimise total
+ * layout height by pushing roots forward when their only descendants sit deep
+ * in the graph — that means a root with a short outgoing path can end up in
+ * the middle (or rightmost) column instead of flush against the left edge,
+ * which is rarely what callers want for a DAG view.
+ */
+function layeringSourcesFirst(
+  graph: { topological(): Iterable<{ y: number; parents(): Iterable<unknown> }> },
+  sep: (a: unknown, b: unknown) => number,
+): number {
+  let max = 0;
+  for (const node of graph.topological()) {
+    const parents = [...node.parents()] as { y: number }[];
+    let y: number;
+    if (parents.length === 0) {
+      y = sep(undefined, node);
+    } else {
+      y = 0;
+      for (const p of parents) {
+        const candidate = p.y + sep(p, node);
+        if (candidate > y) y = candidate;
+      }
+    }
+    node.y = y;
+    const bottom = y + sep(node, undefined);
+    if (bottom > max) max = bottom;
+  }
+  return max;
+}
 
 export type LayoutResult = {
   positions: ReadonlyMap<string, { x: number; y: number; width: number; height: number }>;
@@ -47,7 +81,8 @@ export function computeLayout<T>(
   }
 
   const layout = sugiyama()
-    .layering(layeringLongestPath())
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .layering(layeringSourcesFirst as any)
     .nodeSize((dagNode: { data: { id: string } }) => {
       const [w, h] = sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
       return direction === "horizontal" ? [h, w] : [w, h];

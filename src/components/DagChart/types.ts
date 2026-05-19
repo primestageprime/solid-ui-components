@@ -50,6 +50,11 @@ export type DAGProps<T = unknown> = {
    * `onEdgeClick(source, target)`. Omit to keep edges purely decorative.
    */
   onEdgeClick?: (source: string, target: string) => void;
+  /**
+   * Set of edges to highlight. Each entry is the string `${source}|${target}`.
+   * Highlighted edges receive the `sui-dag__edge--highlighted` CSS class.
+   */
+  highlightedEdges?: ReadonlySet<string>;
 };
 
 /** Internal: positioned node after layout + collapse. */

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.24.5
+
+DagChart: fix layering direction so source nodes (no incoming edges) sit at the leftmost column in horizontal layouts
+
+## 0.24.4
+
+DagChart: highlightedEdges prop applies sui-dag__edge--highlighted class for per-edge emphasis
+
 ## 0.24.3
 
 DagChart: switch to layeringLongestPath so source nodes (no incoming edges) always sit at the leftmost column

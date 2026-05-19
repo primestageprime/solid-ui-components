@@ -343,7 +343,9 @@ export function DagChart<T>(props: DAGProps<T>) {
                     />
                   </Show>
                   <path
-                    class="sui-dag__edge"
+                    class={`sui-dag__edge${
+                      props.highlightedEdges?.has(edgeKey) ? " sui-dag__edge--highlighted" : ""
+                    }`}
                     d={edge.d}
                     marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
                     style={{ "pointer-events": "none" }}
