@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { createSignal } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import type { JSX } from "solid-js";
 import { Chart } from "./Chart";
+import { useChart, type ChartContextValue } from "./context";
 import { HighlightSegments, type HighlightSegment } from "./HighlightSegments";
 import {
   AccentHighlightSegments,
@@ -177,6 +178,62 @@ describe("HighlightSegments — emphasizedIds", () => {
     const rect = container.querySelector<SVGRectElement>(".sui-chart__highlight-segment");
     expect(rect?.getAttribute("data-selected")).toBe("true");
     expect(rect?.getAttribute("data-emphasized")).toBe("true");
+  });
+});
+
+describe("HighlightSegments — hoverX-driven data-hovered", () => {
+  // Probe component grabs the chart context so the test can drive
+  // setHoverX directly — sidesteps jsdom's incomplete pointer-event
+  // dispatch through the chart's SVG and keeps the assertion focused
+  // on the memo → attribute wiring.
+  const Probe: Component<{ onCtx: (ctx: ChartContextValue) => void }> = (p) => {
+    p.onCtx(useChart());
+    return null;
+  };
+
+  it("sets data-hovered=\"true\" on the rect whose [start,end] contains hoverX", () => {
+    const segs: HighlightSegment[] = [
+      { id: slotId("a"), start: 1, end: 3, color: "#fff" },
+      { id: slotId("b"), start: 5, end: 7, color: "#fff" },
+    ];
+    let ctx: ChartContextValue | null = null;
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe onCtx={(c) => (ctx = c)} />
+        <HighlightSegments data={segs} />
+      </Chart>
+    ));
+    ctx!.setHoverX(2); // inside seg "a"
+    const rects = container.querySelectorAll<SVGRectElement>(
+      ".sui-chart__highlight-segment",
+    );
+    expect(rects[0]?.getAttribute("data-hovered")).toBe("true");
+    expect(rects[1]?.getAttribute("data-hovered")).toBeNull();
+  });
+
+  it("clears data-hovered when hoverX is null or outside all segments", () => {
+    const segs: HighlightSegment[] = [
+      { id: slotId("a"), start: 1, end: 3, color: "#fff" },
+      { id: slotId("b"), start: 5, end: 7, color: "#fff" },
+    ];
+    let ctx: ChartContextValue | null = null;
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe onCtx={(c) => (ctx = c)} />
+        <HighlightSegments data={segs} />
+      </Chart>
+    ));
+    ctx!.setHoverX(4); // between the two segments
+    let hovered = container.querySelectorAll(
+      '.sui-chart__highlight-segment[data-hovered="true"]',
+    );
+    expect(hovered.length).toBe(0);
+
+    ctx!.setHoverX(null);
+    hovered = container.querySelectorAll(
+      '.sui-chart__highlight-segment[data-hovered="true"]',
+    );
+    expect(hovered.length).toBe(0);
   });
 });
 

@@ -101,6 +101,16 @@
   stroke: var(--sui-text, #e8eef7);
   stroke-width: 1.5;
 }
+/* Attribute-driven hover — robust against sibling slots (PointSeries dots,
+   crosshair dot/guide, PinMarkers chevrons) capturing pointer events. The
+   chart root tracks `hoverX` continuously regardless of which child rect
+   the cursor is technically "over"; HighlightSegments mirrors that into
+   `data-hovered` so the visual state never flickers during in-segment moves. */
+.sui-chart__highlight-segment[data-hovered="true"] {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+}
 .sui-chart__highlight-segment[data-emphasized="true"] {
   opacity: 1;
   stroke: var(--sui-text, #e8eef7);

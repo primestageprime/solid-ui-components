@@ -1,6 +1,6 @@
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
-import { Component, For, Show, mergeProps } from "solid-js";
+import { Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
@@ -73,6 +73,18 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
   const ctx = useChart();
   const merged = mergeProps({ fillOpacity: 0.18 }, props);
 
+  // Visual-hover signal driven by chart-root `ctx.hoverX()` rather than
+  // per-rect DOM pointer events. Sibling slots (PointSeries dots, crosshair
+  // dot/guide, PinMarkers chevrons) intermittently capture pointer events
+  // and trigger spurious `pointerleave` on the segment rect; deriving hover
+  // from the already-tracked data-domain cursor position is immune to that.
+  const hoveredId = createMemo<Id | null>(() => {
+    const hx = ctx.hoverX();
+    if (hx === null) return null;
+    const found = merged.data.find((s) => hx >= s.start && hx <= s.end);
+    return found ? found.id : null;
+  });
+
   return (
     <g
       class={`sui-chart__highlight-segments${merged.class ? " " + merged.class : ""}`}
@@ -110,6 +122,7 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
                 data-id={seg.id}
                 data-selected={isSelected() ? "true" : undefined}
                 data-emphasized={isEmphasized() ? "true" : undefined}
+                data-hovered={hoveredId() === seg.id ? "true" : undefined}
                 x={Math.min(x1(), x2())}
                 y={y()}
                 width={Math.abs(x2() - x1())}
