@@ -1,10 +1,4 @@
-// ============================================
-// GhostPin — Chart slot (Depth 2).
-// Renders a single semi-transparent glyph anchored at the current
-// hoverX (data domain). Used as a "where will my next pin land?" cue.
-// `descriptor=null` hides the ghost; the slot is otherwise purely
-// reactive to context's hoverX signal.
-// ============================================
+// Anchored to context.hoverX; `descriptor=null` hides the ghost.
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";

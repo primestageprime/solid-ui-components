@@ -1,8 +1,4 @@
-// ============================================
-// CurrentValueIndicator — Chart slot (Depth 2).
-// Renders a dot (and optional label) at a single "current value" point.
-// The slot is pure: no internal state; consumer controls the point.
-// ============================================
+// Pure slot — no internal state; consumer controls the point.
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 

@@ -81,8 +81,8 @@ export interface TimeScale extends Scale {
  * scaleTime — wraps d3-scale's scaleTime so the returned function matches our `Scale`
  * surface: takes a number (epoch ms), returns a pixel; `invert(px)` returns epoch ms;
  * `domain`/`range`/`ticks`/`tickFormat` are uniform. Domain endpoints are accepted as
- * `Date` instances (per spec D6) and converted to epoch ms internally so downstream
- * scale consumers stay number-typed.
+ * `Date` instances and converted to epoch ms internally so downstream scale
+ * consumers stay number-typed.
  */
 export const scaleTime = (
   domain: readonly [Date, Date],

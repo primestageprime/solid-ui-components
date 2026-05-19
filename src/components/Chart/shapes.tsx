@@ -1,9 +1,5 @@
-// ============================================
-// Chart shapes — closed Shape enum + Descriptor type + ShapeGlyph renderer.
-// Per spec D4: anchor = geometric center, size = nominal pixel dimension
-// (max of width/height). Custom paths are drawn inside `viewBox` and
-// uniformly scaled to `size`. Default size = 12px (per-slot override).
-// ============================================
+// Glyph convention: anchor = geometric center, size = max(width, height).
+// Custom paths sit inside `viewBox` and are uniformly scaled to `size`.
 import { Component, Show } from "solid-js";
 
 export type Shape =
@@ -23,7 +19,6 @@ export interface Descriptor {
 export const DEFAULT_GLYPH_SIZE = 12;
 
 // Built-in path strings, centered on (0,0) within a 16x16 viewBox.
-// Path data is anchored at geometric center per spec D4.
 // Filled triangle pointing up (▲): base at bottom (+y), apex at top (-y).
 const CHEVRON_PATH = "M-6,4 L6,4 L0,-6 Z";
 // Filled triangle pointing down (▼): base at top (-y), apex at bottom (+y).

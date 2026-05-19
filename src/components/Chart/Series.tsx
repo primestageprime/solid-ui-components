@@ -1,4 +1,3 @@
-// Chart slots: LineSeries, AreaSeries, PointSeries, ReferenceLine.
 import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
 

@@ -1,9 +1,6 @@
-// ============================================
-// Chart — Composed root (Depth 2).
-// Provides scales + viewport context to slot children. Owns the single
-// pointer listener on its <svg> and dispatches hoverX + dragRange via
-// context signals per spec D3.
-// ============================================
+// Chart — composed root. Owns the single pointer listener on its <svg>
+// (so per-slot listeners would clobber dispatch); slots read scales +
+// pointer state via context.
 import {
   Component,
   JSX,
@@ -14,6 +11,7 @@ import {
 } from "solid-js";
 import { ChartContext, ChartContextValue, Margin } from "./context";
 import { linearScale, scaleTime, Scale } from "./scales";
+import { DEFAULT_GLYPH_SIZE } from "./shapes";
 import "./Chart.css";
 
 export interface ChartProps {
@@ -35,9 +33,9 @@ export interface ChartProps {
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
 
 // Vertical inflation for the plot-area clipPath so glyphs centered at the
-// top/bottom edges (e.g., chevrons at y=domainMax or y=domainMin) render fully.
-// 12 = DEFAULT_GLYPH_SIZE / 2 + 6 (chevron half-size + small buffer).
-const PLOT_CLIP_INFLATE_Y = 12;
+// top/bottom edges (e.g. chevrons at y=domainMax) render fully. Half-glyph
+// plus a 6px buffer.
+const PLOT_CLIP_INFLATE_Y = DEFAULT_GLYPH_SIZE / 2 + 6;
 
 const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] => {
   const a = d[0] instanceof Date;
@@ -53,7 +51,7 @@ const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] => {
 export const Chart: Component<ChartProps> = (props) => {
   // NB: `onPointer*` are listed so that any pass-through handlers from a consumer
   // are routed to `local` (and discarded) — never spread onto the <svg> via
-  // `others`, where they would clobber Chart's own listeners (spec D3).
+  // `others`, where they would clobber Chart's own listeners.
   // We widen via intersection so the keys are valid for `splitProps` even though
   // they are intentionally absent from the public `ChartProps` surface.
   type PointerPassthrough = Pick<

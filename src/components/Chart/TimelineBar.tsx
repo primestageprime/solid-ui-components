@@ -1,9 +1,5 @@
-// ============================================
-// TimelineBar — Chart slot (Depth 2).
-// Renders horizontal bars in lanes. Lanes are stacked top-to-bottom with
-// equal heights. If `lanes` prop is omitted, lanes are inferred from data
-// in first-encounter order. Consumer maps domain → TimelineBarDatum.
-// ============================================
+// Lanes are inferred from data in first-encounter order when `lanes` is
+// omitted (otherwise the caller-supplied order wins, top-to-bottom).
 import { Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
@@ -99,8 +95,8 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   // `bandY={number}` with an explicit offset.
   const MARGIN_BOTTOM_GAP = 0;
 
-  // Band layout — when `bandHeight` is set, lanes share the band; otherwise
-  // legacy behavior: lanes fill `innerHeight`.
+  // Band layout — when `bandHeight` is set, lanes share the band;
+  // otherwise lanes fill `innerHeight`.
   const bandTotalHeight = () =>
     merged.bandHeight != null ? merged.bandHeight : ctx.innerHeight();
   const bandTop = (): number => {

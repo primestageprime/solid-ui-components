@@ -1,10 +1,5 @@
-// ============================================
-// GhostArc — Chart slot (Depth 2).
-// Renders a quadratic Bezier curve between two data-domain points. Used
-// as a "preview connection" (e.g. selected pin → candidate edge). Both
-// points hide the arc if either is null. Defaults to pointer-events=none
-// so the arc never intercepts clicks on slots beneath it.
-// ============================================
+// Defaults to pointer-events=none so the arc never intercepts clicks on
+// slots beneath it (a preview connection must not block its targets).
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 

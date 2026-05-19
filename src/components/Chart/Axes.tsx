@@ -1,4 +1,3 @@
-// Chart slots: XAxis, YAxis — tick lines + labels at scale ticks.
 import { Component, For, Show } from "solid-js";
 import { useChart } from "./context";
 import type { Scale } from "./scales";

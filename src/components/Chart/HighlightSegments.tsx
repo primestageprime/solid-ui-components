@@ -1,9 +1,5 @@
-// ============================================
-// HighlightSegments — Chart slot (Depth 2).
-// Renders rectangular highlight bands across an x-range. Consumer maps
-// domain → `HighlightSegment` records; the slot is a pure renderer.
-// Optional `lanes` prop enables vertical lane-stacking (mirrors TimelineBar).
-// ============================================
+// Optional `lanes` prop enables vertical lane-stacking; omitting it
+// renders full-height bands (mirrors TimelineBar).
 import { Component, For, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
@@ -42,9 +38,9 @@ export interface HighlightSegment {
 export interface HighlightSegmentsProps<T extends HighlightSegment = HighlightSegment> {
   data: readonly T[];
   /**
-   * Lane order (top-to-bottom) for vertical stacking. If omitted, segments
-   * render full-height (back-compat). Segments referencing a lane NOT in this
-   * list are skipped with a one-time console warning.
+   * Lane order (top-to-bottom) for vertical stacking. Omitting renders
+   * full-height bands. Segments referencing a lane NOT in this list are
+   * skipped with a one-time console warning.
    */
   lanes?: readonly string[];
   /** IDs currently selected (highlighted with extra emphasis). */
@@ -89,8 +85,8 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
           const isSelected = () => merged.selectedIds?.has(seg.id) ?? false;
           const isEmphasized = () => merged.emphasizedIds?.has(seg.id) ?? false;
           // Lane-aware vertical placement.
-          // - lanes undefined → full-height (back-compat).
-          // - lanes set, seg.lane undefined → full-height (treat as "spans all lanes").
+          // - lanes undefined → full-height.
+          // - lanes set, seg.lane undefined → full-height (spans all lanes).
           // - lanes set, seg.lane IN lanes → that lane's band.
           // - lanes set, seg.lane NOT in lanes → skip + warn.
           const laneIdx = (): number => {

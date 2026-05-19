@@ -1,10 +1,6 @@
-// ============================================
-// DragRangeSelect — Chart slot (Depth 2).
-// Config-only consumer of context.dragRange (per spec D3 — the root
-// <Chart> owns the pointer listener). Renders a visual band over the
-// active drag range and fires `onRange` callbacks. Does NOT attach
-// pointer listeners of its own.
-// ============================================
+// Config-only consumer of context.dragRange — the root <Chart> owns the
+// pointer listener, so this slot deliberately attaches none of its own
+// (would clobber dispatch).
 import { Component, Show, createEffect, mergeProps } from "solid-js";
 import { useChart } from "./context";
 

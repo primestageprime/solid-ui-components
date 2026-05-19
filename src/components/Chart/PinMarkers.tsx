@@ -1,10 +1,5 @@
-// ============================================
-// PinMarkers — Chart slot (Depth 2).
-// Renders a descriptor-anchored glyph per pin. `y` is optional; defaults
-// to the top edge of the plot area (y=0 in pixel space). Supports
-// selection + click/delete callbacks. `renderPin` is an escape hatch
-// when the descriptor cannot express what the consumer needs.
-// ============================================
+// `renderPin` is an escape hatch when the descriptor cannot express what
+// the consumer needs (otherwise the slot renders one ShapeGlyph per pin).
 import {
   Component,
   For,
@@ -17,7 +12,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { useChart } from "./context";
-import { ShapeGlyph, type Descriptor } from "./shapes";
+import { DEFAULT_GLYPH_SIZE, ShapeGlyph, type Descriptor } from "./shapes";
 import type { Id, ClickHandler, DblClickHandler, HoverHandler } from "./slot-types";
 
 export interface Pin {
@@ -36,7 +31,7 @@ export interface PinMarkersRenderContext {
 export interface PinMarkersProps<TPin extends Pin = Pin> {
   data: readonly TPin[];
   selectedId?: Id | null;
-  /** Default glyph size in px. Default 12 (matches DEFAULT_GLYPH_SIZE in shapes.ts). */
+  /** Default glyph size in px. Default `DEFAULT_GLYPH_SIZE` from shapes.ts. */
   size?: number;
   onClick?: ClickHandler<TPin>;
   onDelete?: DblClickHandler<TPin>;
@@ -63,7 +58,7 @@ export type PinMarkersDataProps<TPin extends Pin = Pin> =
 export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>) {
   const ctx = useChart();
   const slotId = createUniqueId();
-  const merged = mergeProps({ size: 12 }, props);
+  const merged = mergeProps({ size: DEFAULT_GLYPH_SIZE }, props);
   // Nearest pin + its distance to hoverX (DATA-domain units). `null` when
   // emphasis is disabled, no hover, no data, or no valid candidate.
   const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
