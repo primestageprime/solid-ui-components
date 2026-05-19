@@ -142,6 +142,29 @@ describe("TimelineBar — curried variants", () => {
   });
 });
 
+describe("TimelineBar — label", () => {
+  it("renders a label text element when `label` is set", () => {
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom" }} label="Scheduled" />
+    ));
+    const labels = container.querySelectorAll(".sui-chart__timeline-bar-label");
+    expect(labels.length).toBe(1);
+    expect(labels[0].textContent).toBe("Scheduled");
+    // Right-aligns against the strip's left edge, sits just inside the margin.
+    expect(labels[0].getAttribute("text-anchor")).toBe("end");
+    expect(parseFloat(labels[0].getAttribute("x")!)).toBeLessThan(0);
+  });
+
+  it("omits the label element entirely when `label` is not set", () => {
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom" }} />
+    ));
+    expect(container.querySelectorAll(".sui-chart__timeline-bar-label").length).toBe(0);
+  });
+});
+
 describe("TimelineBar — clip-path", () => {
   it("wraps bars in a group with clip-path set to ctx.clip.plotPathUrl()", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };

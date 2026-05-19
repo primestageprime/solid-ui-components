@@ -127,6 +127,14 @@
   stroke-width: 1;
 }
 
+/* Timeline-strip labels — rendered in the chart's left margin, right-aligned
+   against the strip's start. Same tick-color palette as axis labels so labels
+   read as chart chrome rather than data. */
+.sui-chart__timeline-bar-label {
+  fill: var(--sui-chart-tick-color, #c0c0c0);
+  font-size: 0.7rem;
+}
+
 /* Tooltip */
 .sui-chart__tooltip {
   position: absolute;

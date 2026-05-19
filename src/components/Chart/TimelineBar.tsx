@@ -67,6 +67,14 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    * x-axis" layout).
    */
   bandY?: BandYAnchor;
+  /**
+   * Optional label rendered to the LEFT of the strip, inside the chart's
+   * left margin. Vertically centered with the band; `text-anchor="end"`
+   * so the label right-aligns against the strip's start. Consumers should
+   * ensure `margin.left` accommodates the label width. When omitted, no
+   * label element is rendered.
+   */
+  label?: string;
   onBarClick?: ClickHandler<T>;
   onBarHover?: HoverHandler<T>;
   class?: string;
@@ -134,48 +142,71 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
       : ctx.clip.plotPathUrl();
   };
 
+  // Label y is the vertical center of the band — independent of the
+  // per-lane offsets, so the label sits alongside the strip as a whole.
+  const labelY = (): number => bandTop() + bandTotalHeight() / 2;
+
   return (
-    <g
-      class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
-      clip-path={activeClipPathUrl()}
-    >
-      <For each={merged.data}>
-        {(bar) => {
-          const laneIdx = () => lanes().indexOf(bar.lane);
-          const x1 = () => ctx.xScale()(bar.start);
-          const x2 = () => ctx.xScale()(bar.end);
-          const yTop = () =>
-            bandTop() +
-            laneIdx() * laneHeight() +
-            (laneHeight() * (1 - merged.barHeight)) / 2;
-          const isSelected = () => merged.selectedId === bar.id;
-          const isHovered = () => merged.hoveredId === bar.id;
-          return (
-            <Show
-              when={laneIdx() >= 0}
-              fallback={(warnUnknownLane(bar.lane), null)}
-            >
-              <rect
-                class="sui-chart__timeline-bar"
-                data-id={bar.id}
-                data-state={bar.state}
-                data-selected={isSelected() ? "true" : undefined}
-                data-hovered={isHovered() ? "true" : undefined}
-                x={Math.min(x1(), x2())}
-                y={yTop()}
-                width={Math.abs(x2() - x1())}
-                height={laneHeight() * merged.barHeight}
-                fill={bar.color}
-                onPointerDown={(e) => merged.onBarClick?.(bar, e)}
-                onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
-                onPointerLeave={(e) => merged.onBarHover?.(null, e)}
-                style={{ cursor: (merged.onBarClick || merged.onBarHover) ? "pointer" : undefined }}
-              />
-            </Show>
-          );
-        }}
-      </For>
-    </g>
+    <>
+      <g
+        class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
+        clip-path={activeClipPathUrl()}
+      >
+        <For each={merged.data}>
+          {(bar) => {
+            const laneIdx = () => lanes().indexOf(bar.lane);
+            const x1 = () => ctx.xScale()(bar.start);
+            const x2 = () => ctx.xScale()(bar.end);
+            const yTop = () =>
+              bandTop() +
+              laneIdx() * laneHeight() +
+              (laneHeight() * (1 - merged.barHeight)) / 2;
+            const isSelected = () => merged.selectedId === bar.id;
+            const isHovered = () => merged.hoveredId === bar.id;
+            return (
+              <Show
+                when={laneIdx() >= 0}
+                fallback={(warnUnknownLane(bar.lane), null)}
+              >
+                <rect
+                  class="sui-chart__timeline-bar"
+                  data-id={bar.id}
+                  data-state={bar.state}
+                  data-selected={isSelected() ? "true" : undefined}
+                  data-hovered={isHovered() ? "true" : undefined}
+                  x={Math.min(x1(), x2())}
+                  y={yTop()}
+                  width={Math.abs(x2() - x1())}
+                  height={laneHeight() * merged.barHeight}
+                  fill={bar.color}
+                  onPointerDown={(e) => merged.onBarClick?.(bar, e)}
+                  onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
+                  onPointerLeave={(e) => merged.onBarHover?.(null, e)}
+                  style={{ cursor: (merged.onBarClick || merged.onBarHover) ? "pointer" : undefined }}
+                />
+              </Show>
+            );
+          }}
+        </For>
+      </g>
+      {/* Label sits OUTSIDE the clipped strip group so it can render in
+          the left margin without being clipped. `dominant-baseline="central"`
+          vertically centers the glyph regardless of font; `text-anchor="end"`
+          right-aligns against the strip's start (x = 0 in plot-local
+          coords). Pointer events disabled — label is decorative. */}
+      <Show when={merged.label}>
+        <text
+          class="sui-chart__timeline-bar-label"
+          x={-8}
+          y={labelY()}
+          text-anchor="end"
+          dominant-baseline="central"
+          style={{ "pointer-events": "none" }}
+        >
+          {merged.label}
+        </text>
+      </Show>
+    </>
   );
 }
 
