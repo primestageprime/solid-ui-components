@@ -42,6 +42,13 @@ export interface HighlightSegmentsProps<T extends HighlightSegment = HighlightSe
   lanes?: readonly string[];
   /** IDs currently selected (highlighted with extra emphasis). */
   selectedIds?: ReadonlySet<Id>;
+  /**
+   * IDs externally driven into the same visual state as CSS `:hover`
+   * (brighter opacity + stroke outline). Independent of `selectedIds` —
+   * both can apply simultaneously. Use this to mirror hover from a
+   * sibling panel (e.g. alarm-list ↔ chart sync).
+   */
+  emphasizedIds?: ReadonlySet<Id>;
   /** Default opacity for unselected segments. Default 0.18. */
   fillOpacity?: number;
   /** Pointer events. */
@@ -73,6 +80,7 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
           const x1 = () => ctx.xScale()(seg.start);
           const x2 = () => ctx.xScale()(seg.end);
           const isSelected = () => merged.selectedIds?.has(seg.id) ?? false;
+          const isEmphasized = () => merged.emphasizedIds?.has(seg.id) ?? false;
           // Lane-aware vertical placement.
           // - lanes undefined → full-height (back-compat).
           // - lanes set, seg.lane undefined → full-height (treat as "spans all lanes").
@@ -98,6 +106,7 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
                 class="sui-chart__highlight-segment"
                 data-id={seg.id}
                 data-selected={isSelected() ? "true" : undefined}
+                data-emphasized={isEmphasized() ? "true" : undefined}
                 x={Math.min(x1(), x2())}
                 y={y()}
                 width={Math.abs(x2() - x1())}

@@ -133,6 +133,35 @@ describe("HighlightSegments — lanes", () => {
   });
 });
 
+describe("HighlightSegments — emphasizedIds", () => {
+  it("emphasizedIds applies data-emphasized to matching segments", () => {
+    const segs: HighlightSegment[] = [
+      { id: "a", start: 1, end: 3, color: "#fff" },
+      { id: "b", start: 5, end: 7, color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <HighlightSegments data={segs} emphasizedIds={new Set(["a"])} />
+    ));
+    const rects = container.querySelectorAll<SVGRectElement>(".sui-chart__highlight-segment");
+    expect(rects[0]?.getAttribute("data-emphasized")).toBe("true");
+    expect(rects[1]?.getAttribute("data-emphasized")).toBeNull();
+  });
+
+  it("emphasizedIds is independent of selectedIds (both can apply)", () => {
+    const segs: HighlightSegment[] = [{ id: "a", start: 1, end: 3, color: "#fff" }];
+    const { container } = wrapper(() => (
+      <HighlightSegments
+        data={segs}
+        selectedIds={new Set(["a"])}
+        emphasizedIds={new Set(["a"])}
+      />
+    ));
+    const rect = container.querySelector<SVGRectElement>(".sui-chart__highlight-segment");
+    expect(rect?.getAttribute("data-selected")).toBe("true");
+    expect(rect?.getAttribute("data-emphasized")).toBe("true");
+  });
+});
+
 describe("HighlightSegments — curried variants", () => {
   it("AccentHighlightSegments bakes fillOpacity 0.22", () => {
     const seg: HighlightSegment = { id: "a", start: 1, end: 3, color: "#fff" };
