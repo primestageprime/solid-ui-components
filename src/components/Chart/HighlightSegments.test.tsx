@@ -133,6 +133,21 @@ describe("HighlightSegments — lanes", () => {
   });
 });
 
+describe("HighlightSegments — selected opacity", () => {
+  it("applies SELECTED_OPACITY_MULTIPLIER to selected segments", () => {
+    // Base fillOpacity 0.2 × multiplier 2.5 → 0.5 on the selected rect.
+    const segs: HighlightSegment[] = [{ id: "a", start: 1, end: 3, color: "#fff" }];
+    const { container } = wrapper(() => (
+      <HighlightSegments data={segs} fillOpacity={0.2} selectedIds={new Set(["a"])} />
+    ));
+    const rect = container.querySelector<SVGRectElement>(
+      '.sui-chart__highlight-segment[data-selected="true"]',
+    )!;
+    expect(rect).toBeTruthy();
+    expect(parseFloat(rect.getAttribute("opacity")!)).toBeCloseTo(0.5, 5);
+  });
+});
+
 describe("HighlightSegments — emphasizedIds", () => {
   it("emphasizedIds applies data-emphasized to matching segments", () => {
     const segs: HighlightSegment[] = [

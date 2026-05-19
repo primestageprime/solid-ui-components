@@ -8,6 +8,13 @@ import { Component, For, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
+/**
+ * Opacity multiplier applied to selected segments. The base `fillOpacity` is
+ * scaled by this factor (capped at 1) so selection visibly pops against the
+ * unselected band. Tuned at 2.5 for the default 0.18 base (→ 0.45).
+ */
+const SELECTED_OPACITY_MULTIPLIER = 2.5;
+
 // Module-level dedupe set for unknown-lane warnings. Pure tracking — keeps the
 // warn-once invariant across all HighlightSegments instances without coupling
 // to component lifecycle. Same pattern as TimelineBar.
@@ -112,7 +119,12 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
                 width={Math.abs(x2() - x1())}
                 height={h()}
                 fill={seg.color}
-                opacity={seg.opacity ?? (isSelected() ? Math.min(1, merged.fillOpacity * 2.5) : merged.fillOpacity)}
+                opacity={
+                  seg.opacity ??
+                  (isSelected()
+                    ? Math.min(1, merged.fillOpacity * SELECTED_OPACITY_MULTIPLIER)
+                    : merged.fillOpacity)
+                }
                 onPointerDown={(e) => merged.onClick?.(seg, e)}
                 onPointerEnter={(e) => merged.onHover?.(seg, e)}
                 onPointerLeave={(e) => merged.onHover?.(null, e)}
