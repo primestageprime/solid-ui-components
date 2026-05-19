@@ -82,6 +82,15 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    */
   rotateLabel?: boolean;
   /**
+   * Vertical anchor for the label relative to the strip band:
+   *   `"center"` (default) — at band center.
+   *   `"top"` — at the band's top edge.
+   *   `"bottom"` — at the band's bottom edge.
+   * Use top/bottom on vertically-snug stacked strips so rotated labels
+   * don't collide on the diagonal.
+   */
+  labelAlign?: "top" | "center" | "bottom";
+  /**
    * Stroke color for each segment rect. Defaults to a card-bg-matching
    * dark token so adjacent segments (same lane, different colors) and
    * vertically-adjacent strips (different lanes, same color) read as
@@ -168,9 +177,16 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
       : ctx.clip.plotPathUrl();
   };
 
-  // Label y is the vertical center of the band — independent of the
-  // per-lane offsets, so the label sits alongside the strip as a whole.
-  const labelY = (): number => bandTop() + bandTotalHeight() / 2;
+  // Label y depends on `labelAlign`. Default "center" → vertical middle of
+  // band. "top" → strip's top edge; "bottom" → bottom edge. Use top/bottom
+  // to spread rotated labels across vertically-snug stacked strips so they
+  // don't collide on the diagonal.
+  const labelY = (): number => {
+    const align = merged.labelAlign ?? "center";
+    if (align === "top") return bandTop();
+    if (align === "bottom") return bandTop() + bandTotalHeight();
+    return bandTop() + bandTotalHeight() / 2;
+  };
 
   return (
     <>
