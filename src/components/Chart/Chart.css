@@ -20,9 +20,11 @@
   pointer-events: none;
 }
 
-/* Grid */
+/* Grid — distinct from `--sui-border` so consumers can mute the in-plot
+   chrome (the reference design wants grid lines almost-invisible) without
+   bleeding into the chart card / table / button border palette. */
 .sui-chart__grid-line {
-  stroke: var(--sui-border, rgba(255, 255, 255, 0.08));
+  stroke: var(--sui-chart-grid, rgba(255, 255, 255, 0.06));
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
