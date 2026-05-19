@@ -3,7 +3,7 @@ import { render, fireEvent } from "@solidjs/testing-library";
 import { createSignal, type Component, type JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { PinMarkers, type Pin } from "./PinMarkers";
-import { WarningPinMarkers } from "./PinMarkers.variants";
+import { CompactPinMarkers, WarningPinMarkers } from "./PinMarkers.variants";
 import { useChart } from "./context";
 import { slotId, type Id } from "./slot-types";
 
@@ -146,5 +146,23 @@ describe("PinMarkers — curried variants", () => {
     const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };
     const { container } = wrapper(() => <WarningPinMarkers data={[pin]} />);
     expect(container.querySelector(".sui-chart__pin-markers--warning")).toBeTruthy();
+  });
+
+  it("Warning renders a larger glyph than Compact for identical input", () => {
+    // Locks variant differentiation: same data must produce a larger glyph
+    // under Warning (size=16) than under Compact (size=8). Uses a circle
+    // shape so size flows directly to the rendered radius — independent of
+    // path scaling. If anyone later swaps the baked `size` defaults this
+    // test catches it.
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "circle" } };
+    const radiusOf = (root: ParentNode): number =>
+      parseFloat(
+        root
+          .querySelector(".sui-chart__pin-marker circle")!
+          .getAttribute("r")!,
+      );
+    const warning = wrapper(() => <WarningPinMarkers data={[pin]} />);
+    const compact = wrapper(() => <CompactPinMarkers data={[pin]} />);
+    expect(radiusOf(warning.container)).toBeGreaterThan(radiusOf(compact.container));
   });
 });

@@ -4,7 +4,10 @@ import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { Chart } from "./Chart";
 import { HighlightSegments, type HighlightSegment } from "./HighlightSegments";
-import { AccentHighlightSegments } from "./HighlightSegments.variants";
+import {
+  AccentHighlightSegments,
+  FaintHighlightSegments,
+} from "./HighlightSegments.variants";
 import { slotId, type Id } from "./slot-types";
 
 const wrapper = (slot: () => JSX.Element) =>
@@ -183,5 +186,19 @@ describe("HighlightSegments — curried variants", () => {
     const { container } = wrapper(() => <AccentHighlightSegments data={[seg]} />);
     const rect = container.querySelector(".sui-chart__highlight-segment")!;
     expect(parseFloat(rect.getAttribute("opacity")!)).toBeCloseTo(0.22, 2);
+  });
+
+  it("Accent renders higher opacity than Faint for identical input", () => {
+    // Locks variant differentiation: same data must produce a strictly
+    // brighter rendering under Accent than under Faint. If anyone later
+    // swaps the baked `fillOpacity` defaults this test catches it.
+    const seg: HighlightSegment = { id: slotId("a"), start: 1, end: 3, color: "#fff" };
+    const opacityOf = (root: ParentNode): number =>
+      parseFloat(
+        root.querySelector(".sui-chart__highlight-segment")!.getAttribute("opacity")!,
+      );
+    const faint = wrapper(() => <FaintHighlightSegments data={[seg]} />);
+    const accent = wrapper(() => <AccentHighlightSegments data={[seg]} />);
+    expect(opacityOf(accent.container)).toBeGreaterThan(opacityOf(faint.container));
   });
 });

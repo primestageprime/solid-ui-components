@@ -159,6 +159,50 @@ describe("DragRangeSelect — spec D3 invariant", () => {
 });
 
 describe("DragRangeSelect — curried variants", () => {
+  it("CommitOnReleaseDragRangeSelect suppresses onRange that the default DragRangeSelect would fire", () => {
+    // Locks variant differentiation: a commit whose pixel span exceeds the
+    // default minPixelDelta (5) but is BELOW CommitOnRelease's (15) must
+    // fire under the default and stay silent under CommitOnRelease. If
+    // anyone later swaps the baked threshold this test catches it.
+    let setCommitDefault:
+      | ((r: { start: number; end: number } | null) => void)
+      | null = null;
+    let setCommitCommit:
+      | ((r: { start: number; end: number } | null) => void)
+      | null = null;
+    const ProbeDefault: Component = () => {
+      const ctx = useChart();
+      setCommitDefault = ctx.setCommittedDragRange;
+      return null;
+    };
+    const ProbeCommit: Component = () => {
+      const ctx = useChart();
+      setCommitCommit = ctx.setCommittedDragRange;
+      return null;
+    };
+    const defaultCalls: Array<[number, number]> = [];
+    const commitCalls: Array<[number, number]> = [];
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
+        <ProbeDefault />
+        <DragRangeSelect onRange={(a, b) => defaultCalls.push([a, b])} />
+      </Chart>
+    ));
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
+        <ProbeCommit />
+        <CommitOnReleaseDragRangeSelect onRange={(a, b) => commitCalls.push([a, b])} />
+      </Chart>
+    ));
+    // xDomain=[0,100], width=200 → 2px per data-unit. A 10→16 commit = 12px.
+    // > default minPixelDelta (5) → fires.
+    // < CommitOnRelease minPixelDelta (15) → silent.
+    setCommitDefault!({ start: 10, end: 16 });
+    setCommitCommit!({ start: 10, end: 16 });
+    expect(defaultCalls).toEqual([[10, 16]]);
+    expect(commitCalls).toEqual([]);
+  });
+
   it("CommitOnReleaseDragRangeSelect uses lower opacity", () => {
     let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
     const Probe: Component = () => {

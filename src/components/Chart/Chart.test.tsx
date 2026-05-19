@@ -202,6 +202,68 @@ describe("XAxis labelOffset", () => {
   });
 });
 
+describe("XAxis / YAxis hideLine", () => {
+  it("XAxis renders its baseline by default", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__axis--x .sui-chart__axis-line"),
+    ).toBeTruthy();
+  });
+
+  it("XAxis hides its baseline when hideLine is true", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis hideLine />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__axis--x .sui-chart__axis-line"),
+    ).toBeNull();
+  });
+
+  it("YAxis renders its baseline by default", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <YAxis />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__axis--y .sui-chart__axis-line"),
+    ).toBeTruthy();
+  });
+
+  it("YAxis hides its baseline when hideLine is true", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <YAxis hideLine />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__axis--y .sui-chart__axis-line"),
+    ).toBeNull();
+  });
+});
+
+describe("Axes — no self-clip", () => {
+  it("axis groups do NOT set a clip-path (docs: axes are not clipped to the plot area)", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis />
+        <YAxis />
+      </Chart>
+    ));
+    const axes = Array.from(container.querySelectorAll(".sui-chart__axis"));
+    expect(axes.length).toBeGreaterThan(0);
+    axes.forEach((g) => {
+      expect(g.getAttribute("clip-path")).toBeNull();
+    });
+  });
+});
+
 describe("Chart — global nearest emphasis coordinator", () => {
   it("only one slot wins across the chart when multiple participate", () => {
     // PointSeries data: x=0 (far from hoverX=8)
