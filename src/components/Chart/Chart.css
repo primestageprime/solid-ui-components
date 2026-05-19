@@ -50,6 +50,14 @@
 .sui-chart__area {
   fill: var(--sui-accent, #4ea1ff);
 }
+/* Data-point dots are pure visualization: emphasis is computed by the
+   chart-root pointer listener (no per-dot handlers). Disabling pointer
+   events lets hover pass through to highlight segments / timeline bars
+   underneath, so an alarm rect doesn't lose :hover when the cursor
+   crosses a dot inside it. */
+.sui-chart__points {
+  pointer-events: none;
+}
 
 /* Reference */
 .sui-chart__ref-label {
