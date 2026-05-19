@@ -114,7 +114,7 @@ export function ThroughputChart(props: ThroughputChartProps) {
         <YAxis tickCount={4} tickFormat={fmtNum} />
         <XAxis tickValues={hourTicks()} tickFormat={fmtTime} />
         <AreaSeries data={points()} x={(p) => p.timestamp} y={(p) => p.rowsPerMinute} fillOpacity={0.08} />
-        {avg() > 0 && <ReferenceLine y={avg()} label="avg" strokeDasharray="4 4" />}
+        {avg() > 0 && <ReferenceLine orientation="horizontal" value={avg()} label="avg" strokeDasharray="4 4" />}
         <LineSeries data={points()} x={(p) => p.timestamp} y={(p) => p.rowsPerMinute} strokeWidth={2} />
         <Crosshair series={[{ data: points(), x: (p) => p.timestamp, y: (p) => p.rowsPerMinute }]} />
         <ChartTooltip data={points()} x={(p) => p.timestamp}>

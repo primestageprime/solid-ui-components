@@ -307,108 +307,61 @@ export interface ReferenceLineStyleProps {
 /**
  * ReferenceLine props.
  *
- * Two mutually-exclusive shapes (discriminated by `orientation`):
- *
- * 1. **Preferred** — `{ orientation, value }`. `value` is REQUIRED whenever
- *    `orientation` is set (vertical reads from x scale, horizontal from y).
- *    Accepts `number | Date` (Date when the chart has a time domain).
- * 2. **Legacy (deprecated)** — `{ x }` or `{ y }`. Kept for back-compat;
- *    prefer the orientation form.
- *
- * **Precedence:** the union types make the two shapes mutually exclusive at
- * compile time — TypeScript will reject mixing `orientation` with `x`/`y`.
- * The runtime resolver matches the same contract: if `orientation` + `value`
- * are both present, that path wins; otherwise `x` → vertical, then `y` →
- * horizontal. A bare `orientation` without `value` is a type error.
+ * Caller passes `{ orientation, value }`. `value` is read on the x scale
+ * when orientation="vertical" and on the y scale when orientation="horizontal".
+ * Accepts `number | Date` (Date when the chart has a time domain).
  */
-export type ReferenceLineProps =
-  | (ReferenceLineStyleProps & {
-      /** Preferred API: orientation + value (accepts Date when chart has time domain). */
-      orientation: "horizontal" | "vertical";
-      /** Required when `orientation` is set. Read on x scale (vertical) or y scale (horizontal). */
-      value: number | Date;
-      x?: never;
-      y?: never;
-    })
-  | (ReferenceLineStyleProps & {
-      /** @deprecated Legacy API — use orientation="vertical" + value. */
-      x: number;
-      orientation?: never;
-      value?: never;
-      y?: never;
-    })
-  | (ReferenceLineStyleProps & {
-      /** @deprecated Legacy API — use orientation="horizontal" + value. */
-      y: number;
-      orientation?: never;
-      value?: never;
-      x?: never;
-    });
+export type ReferenceLineProps = ReferenceLineStyleProps & {
+  orientation: "horizontal" | "vertical";
+  value: number | Date;
+};
 
 const toScaleValue = (v: number | Date): number =>
   v instanceof Date ? v.getTime() : v;
 
-type ReferenceLineInternal = ReferenceLineStyleProps & {
-  orientation?: "horizontal" | "vertical";
-  value?: number | Date;
-  x?: number;
-  y?: number;
-};
-
-export const ReferenceLine: Component<ReferenceLineProps> = (rawProps) => {
-  const props = rawProps as ReferenceLineInternal;
+export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
   const ctx = useChart();
-  const resolved = () => {
-    if (props.orientation && props.value != null) {
-      return { orientation: props.orientation, value: toScaleValue(props.value) };
-    }
-    if (props.x != null) return { orientation: "vertical" as const, value: props.x };
-    if (props.y != null) return { orientation: "horizontal" as const, value: props.y };
-    return null;
-  };
+  const resolved = createMemo(() => ({
+    orientation: props.orientation,
+    value: toScaleValue(props.value),
+  }));
   const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
 
   return (
     <g class="sui-chart__ref">
-      <Show when={resolved()}>
-        {(r) => (
-          <>
-            <Show when={r().orientation === "horizontal"}>
-              <line
-                x1={0}
-                x2={ctx.innerWidth()}
-                y1={ctx.yScale()(r().value)}
-                y2={ctx.yScale()(r().value)}
-                stroke={strokeColor()}
-                stroke-width={props.strokeWidth ?? 1}
-                stroke-dasharray={props.strokeDasharray ?? "4 4"}
-                opacity={0.6}
-              />
-              <Show when={props.label}>
-                <text
-                  class="sui-chart__ref-label"
-                  x={ctx.innerWidth() - 4}
-                  y={ctx.yScale()(r().value) - 4}
-                  text-anchor="end"
-                >
-                  {props.label}
-                </text>
-              </Show>
-            </Show>
-            <Show when={r().orientation === "vertical"}>
-              <line
-                y1={0}
-                y2={ctx.innerHeight()}
-                x1={ctx.xScale()(r().value)}
-                x2={ctx.xScale()(r().value)}
-                stroke={strokeColor()}
-                stroke-width={props.strokeWidth ?? 1}
-                stroke-dasharray={props.strokeDasharray ?? "4 4"}
-                opacity={0.6}
-              />
-            </Show>
-          </>
-        )}
+      <Show when={resolved().orientation === "horizontal"}>
+        <line
+          x1={0}
+          x2={ctx.innerWidth()}
+          y1={ctx.yScale()(resolved().value)}
+          y2={ctx.yScale()(resolved().value)}
+          stroke={strokeColor()}
+          stroke-width={props.strokeWidth ?? 1}
+          stroke-dasharray={props.strokeDasharray ?? "4 4"}
+          opacity={0.6}
+        />
+        <Show when={props.label}>
+          <text
+            class="sui-chart__ref-label"
+            x={ctx.innerWidth() - 4}
+            y={ctx.yScale()(resolved().value) - 4}
+            text-anchor="end"
+          >
+            {props.label}
+          </text>
+        </Show>
+      </Show>
+      <Show when={resolved().orientation === "vertical"}>
+        <line
+          y1={0}
+          y2={ctx.innerHeight()}
+          x1={ctx.xScale()(resolved().value)}
+          x2={ctx.xScale()(resolved().value)}
+          stroke={strokeColor()}
+          stroke-width={props.strokeWidth ?? 1}
+          stroke-dasharray={props.strokeDasharray ?? "4 4"}
+          opacity={0.6}
+        />
       </Show>
     </g>
   );

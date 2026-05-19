@@ -36,27 +36,21 @@ describe("ReferenceLine — orientation API", () => {
     expect(container.querySelector(".sui-chart__ref line")).toBeTruthy();
   });
 
-  it("legacy x/y props still work (back-compat)", () => {
-    const { container } = render(() => (
-      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
-        <ReferenceLine x={3} />
-      </Chart>
-    ));
-    expect(container.querySelector(".sui-chart__ref line")).toBeTruthy();
-  });
 });
 
 describe("ReferenceLine — type-level enforcement", () => {
-  it("rejects empty props at compile time", () => {
-    // @ts-expect-error — props must include one of orientation+value, x, or y
+  it("rejects incomplete props at compile time", () => {
+    // @ts-expect-error — props must include orientation + value
     const _empty: ReferenceLineProps = {};
     // @ts-expect-error — orientation without value is incomplete
     const _partial: ReferenceLineProps = { orientation: "horizontal" };
-    // Valid forms compile:
-    const _new: ReferenceLineProps = { orientation: "horizontal", value: 50 };
+    // @ts-expect-error — legacy `x` shape no longer accepted
     const _legacyX: ReferenceLineProps = { x: 5 };
+    // @ts-expect-error — legacy `y` shape no longer accepted
     const _legacyY: ReferenceLineProps = { y: 50 };
-    void _empty; void _partial; void _new; void _legacyX; void _legacyY;
+    // Valid form compiles:
+    const _ok: ReferenceLineProps = { orientation: "horizontal", value: 50 };
+    void _empty; void _partial; void _legacyX; void _legacyY; void _ok;
     expect(true).toBe(true);
   });
 });
