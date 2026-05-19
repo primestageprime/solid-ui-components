@@ -78,7 +78,9 @@ export const XAxis: Component<AxisProps> = (props) => {
               text-anchor={props.rotateLabels ? "end" : "middle"}
               transform={
                 props.rotateLabels
-                  ? `translate(0, ${props.labelOffset ?? 16}) rotate(-45)`
+                  ? // x-shift = capHeight * sin(45°) ≈ 6px for 0.7rem font.
+                    // Puts the rotated text's top corner directly under the tick.
+                    `translate(6, ${props.labelOffset ?? 16}) rotate(-45)`
                   : undefined
               }
               y={props.rotateLabels ? undefined : (props.labelOffset ?? 16)}
