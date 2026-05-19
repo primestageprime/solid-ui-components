@@ -176,7 +176,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(parseFloat(rects[0].getAttribute("y")!)).toBeLessThan(INNER_HEIGHT / 2);
   });
 
-  it("bandHeight=40 + bandY='bottom' places bars in the bottom 40px strip", () => {
+  it("bandHeight=40 + bandY={anchor:'bottom'} places bars in the bottom 40px strip", () => {
     const bars: TimelineBarDatum[] = [
       { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
       { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
@@ -186,7 +186,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
         data={bars}
         lanes={["scheduled", "detected"]}
         bandHeight={40}
-        bandY="bottom"
+        bandY={{ anchor: "bottom" }}
         barHeight={0.6}
       />
     ));
@@ -208,7 +208,7 @@ describe("TimelineBar — bandHeight + bandY", () => {
     });
   });
 
-  it("bandHeight=40 defaults bandY to 'bottom' when bandY is omitted", () => {
+  it("bandHeight=40 defaults bandY to { anchor: 'bottom' } when bandY is omitted", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => <TimelineBar data={[bar]} bandHeight={40} />);
     const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
@@ -216,32 +216,32 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(52, 1);
   });
 
-  it("bandHeight=40 + bandY='top' places bars in the top 40px strip", () => {
+  it("bandHeight=40 + bandY={anchor:'top'} places bars in the top 40px strip", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => (
-      <TimelineBar data={[bar]} bandHeight={40} bandY="top" />
+      <TimelineBar data={[bar]} bandHeight={40} bandY={{ anchor: "top" }} />
     ));
     const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
     // bandTop = 0; lane 0 yTop = (40 - 24)/2 = 8.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(8, 1);
   });
 
-  it("bandHeight=30 + bandY=10 (numeric) places bars at the given pixel anchor", () => {
+  it("bandHeight=30 + bandY={y:10} places bars at the given pixel anchor", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
     const { container } = wrapper(() => (
-      <TimelineBar data={[bar]} bandHeight={30} bandY={10} />
+      <TimelineBar data={[bar]} bandHeight={30} bandY={{ y: 10 }} />
     ));
     const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
     // bandTop = 10; lane 0 yTop = 10 + (30 - 18)/2 = 16.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(16, 1);
   });
 
-  it("bandY='margin-bottom' renders bars below innerHeight (in bottom margin)", () => {
+  it("bandY={anchor:'margin-bottom'} renders bars below innerHeight (in bottom margin)", () => {
     const bars: TimelineBarDatum[] = [
       { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} bandHeight={20} bandY="margin-bottom" />
+      <TimelineBar data={bars} bandHeight={20} bandY={{ anchor: "margin-bottom" }} />
     ));
     const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
     const y = parseFloat(rect.getAttribute("y")!);
@@ -252,12 +252,12 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(y).toBeCloseTo(88, 1);
   });
 
-  it("bandY='margin-bottom' uses axisStripClipPathUrl (clips horizontally to plot, vertically to margin)", () => {
+  it("bandY={anchor:'margin-bottom'} uses ctx.clip.axisStripPathUrl (clips horizontally to plot, vertically to margin)", () => {
     const bars: TimelineBarDatum[] = [
       { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} bandHeight={12} bandY="margin-bottom" />
+      <TimelineBar data={bars} bandHeight={12} bandY={{ anchor: "margin-bottom" }} />
     ));
     const g = container.querySelector(".sui-chart__timeline");
     const clipAttr = g?.getAttribute("clip-path");
@@ -265,5 +265,17 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(clipAttr).toMatch(/^url\(#/);
     // Distinct id namespace from the plot-area clip.
     expect(clipAttr).toMatch(/^url\(#sui-chart-axis-strip-clip-/);
+  });
+
+  it("bandY={anchor:'margin-bottom', gapPx} honors the gap below the x-axis", () => {
+    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom", gapPx: 6 }} />
+    ));
+    const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
+    // innerHeight=84, gapPx=6 → bandTop=90. laneHeight=12, barHeight=0.6*12=7.2,
+    // yTop = 90 + (12 - 7.2)/2 = 90 + 2.4 = 92.4.
+    expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(92.4, 1);
+    expect(parseFloat(rect.getAttribute("y")!)).toBeGreaterThan(INNER_HEIGHT);
   });
 });

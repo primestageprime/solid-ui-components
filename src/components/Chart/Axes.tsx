@@ -26,8 +26,8 @@ export interface AxisProps {
    * Vertical pixel offset for XAxis tick marks. Default 0 — ticks render
    * from `y=0` to `y=4` relative to the axis baseline. Increase to push tick
    * marks DOWN so they emerge below a strip occupying the top of the axis
-   * region (e.g. a TimelineBar with `bandY="margin-bottom"` flush against
-   * the axis line). Independent of `labelOffset` — adjust both when ticks
+   * region (e.g. a TimelineBar with `bandY={{ anchor: "margin-bottom" }}`
+   * flush against the axis line). Independent of `labelOffset` — adjust both when ticks
    * move so labels still clear them. No effect on YAxis.
    */
   tickOffset?: number;
