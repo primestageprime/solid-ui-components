@@ -129,6 +129,16 @@
   stroke-width: 1.5;
 }
 
+/* Timeline strip track — full-width background outline so empty regions
+   (no segment data) still show the strip's extent. Same subtle stroke as
+   the axis line. */
+.sui-chart__timeline-track {
+  fill: none;
+  stroke: var(--sui-border-strong, rgba(255, 255, 255, 0.18));
+  stroke-width: 1;
+  pointer-events: none;
+}
+
 /* Timeline bars — same affordance, slightly thinner stroke. */
 .sui-chart__timeline-bar {
   transition: opacity 120ms ease, stroke-width 120ms ease;

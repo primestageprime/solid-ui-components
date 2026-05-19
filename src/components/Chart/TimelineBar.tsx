@@ -178,6 +178,15 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
         class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
         clip-path={activeClipPathUrl()}
       >
+        <Show when={merged.bandHeight != null}>
+          <rect
+            class="sui-chart__timeline-track"
+            x={0}
+            y={bandTop()}
+            width={ctx.innerWidth()}
+            height={bandTotalHeight()}
+          />
+        </Show>
         <For each={merged.data}>
           {(bar) => {
             const laneIdx = () => lanes().indexOf(bar.lane);
