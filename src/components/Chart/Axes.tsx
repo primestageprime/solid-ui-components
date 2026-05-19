@@ -99,7 +99,7 @@ export const XAxis: Component<AxisProps> = (props) => {
             // hardcoded +18 clearance designed for horizontal labels collides
             // with the bottom of long diagonal labels. +32 keeps the title
             // clear of typical date/time labels up to ~60px wide.
-            y={(props.labelOffset ?? 16) + (props.rotateLabels ? 32 : 18)}
+            y={(props.labelOffset ?? 16) + (props.rotateLabels ? 44 : 18)}
             text-anchor="middle"
           >
             {label()}
