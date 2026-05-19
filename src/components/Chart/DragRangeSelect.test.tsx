@@ -57,11 +57,13 @@ describe("DragRangeSelect — reactivity", () => {
 });
 
 describe("DragRangeSelect — callbacks", () => {
-  it("onRange fires only when minPixelDelta is exceeded", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+  it("onRange fires only when minPixelDelta is exceeded (commit semantics)", () => {
+    let setCommit:
+      | ((r: { start: number; end: number } | null) => void)
+      | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
-      setDrag = ctx.setDragRange;
+      setCommit = ctx.setCommittedDragRange;
       return null;
     };
     const calls: Array<[number, number]> = [];
@@ -71,10 +73,42 @@ describe("DragRangeSelect — callbacks", () => {
         <DragRangeSelect minPixelDelta={10} onRange={(a, b) => calls.push([a, b])} />
       </Chart>
     ));
-    setDrag!({ start: 10, end: 12 });
+    // A commit below the pixel threshold does NOT fire onRange.
+    setCommit!({ start: 10, end: 12 });
     expect(calls.length).toBe(0);
-    setDrag!({ start: 10, end: 30 });
+    // A commit above the threshold fires once.
+    setCommit!({ start: 10, end: 30 });
     expect(calls).toEqual([[10, 30]]);
+  });
+
+  it("onRange does NOT fire during live drag; only when committedDragRange is set", () => {
+    let setDrag:
+      | ((r: { start: number; end: number } | null) => void)
+      | null = null;
+    let setCommit:
+      | ((r: { start: number; end: number } | null) => void)
+      | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setDrag = ctx.setDragRange;
+      setCommit = ctx.setCommittedDragRange;
+      return null;
+    };
+    const calls: Array<[number, number]> = [];
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
+        <Probe />
+        <DragRangeSelect minPixelDelta={5} onRange={(a, b) => calls.push([a, b])} />
+      </Chart>
+    ));
+    // Simulating live pointer-move updates — onRange must stay silent.
+    setDrag!({ start: 10, end: 30 });
+    setDrag!({ start: 10, end: 40 });
+    setDrag!({ start: 10, end: 50 });
+    expect(calls.length).toBe(0);
+    // Pointerup triggers the commit; onRange fires exactly once.
+    setCommit!({ start: 10, end: 50 });
+    expect(calls).toEqual([[10, 50]]);
   });
 
   it("onRangePreview fires for every dragRange update", () => {

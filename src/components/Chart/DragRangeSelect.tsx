@@ -39,24 +39,32 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
 
   let lastCommitted: { start: number; end: number } | null = null;
 
+  // Live preview: fires on every dragRange change while the pointer is held.
+  // The visual band (below) renders from the same live signal.
   createEffect(() => {
     const range = ctx.dragRange();
     if (range == null) return;
-    const xs = ctx.xScale();
-    const pxDelta = Math.abs(xs(range.end) - xs(range.start));
-
     merged.onRangePreview?.(range.start, range.end);
+  });
 
-    if (pxDelta >= merged.minPixelDelta) {
-      if (
-        lastCommitted === null ||
-        lastCommitted.start !== range.start ||
-        lastCommitted.end !== range.end
-      ) {
-        lastCommitted = { start: range.start, end: range.end };
-        merged.onRange?.(range.start, range.end);
-      }
+  // Commit: fires ONLY when a drag completes (pointerup). The Chart root
+  // pulses `committedDragRange` once per drag; the `lastCommitted` guard
+  // dedupes if downstream reactivity re-runs the effect with the same value.
+  createEffect(() => {
+    const committed = ctx.committedDragRange();
+    if (committed == null) return;
+    const xs = ctx.xScale();
+    const pxDelta = Math.abs(xs(committed.end) - xs(committed.start));
+    if (pxDelta < merged.minPixelDelta) return;
+    if (
+      lastCommitted !== null &&
+      lastCommitted.start === committed.start &&
+      lastCommitted.end === committed.end
+    ) {
+      return;
     }
+    lastCommitted = { start: committed.start, end: committed.end };
+    merged.onRange?.(committed.start, committed.end);
   });
 
   return (

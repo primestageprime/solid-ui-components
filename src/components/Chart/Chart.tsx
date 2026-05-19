@@ -92,6 +92,9 @@ export const Chart: Component<ChartProps> = (props) => {
 
   const [hoverX, setHoverX] = createSignal<number | null>(null);
   const [dragRange, setDragRange] = createSignal<{ start: number; end: number } | null>(null);
+  const [committedDragRange, setCommittedDragRange] = createSignal<
+    { start: number; end: number } | null
+  >(null);
   const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
 
   // Per-instance clipPath ids — stable across renders, unique across charts.
@@ -126,8 +129,14 @@ export const Chart: Component<ChartProps> = (props) => {
     if (x == null) return;
     dragAnchor = x;
     setDragRange({ start: x, end: x });
+    // Clear any previous commit so the next pointerup is observably a new event.
+    setCommittedDragRange(null);
   };
   const onPointerUp = () => {
+    if (dragAnchor != null) {
+      const range = dragRange();
+      if (range != null) setCommittedDragRange(range);
+    }
     dragAnchor = null;
     // Leave the latest dragRange in place; consumers clear it via setDragRange(null).
   };
@@ -148,6 +157,8 @@ export const Chart: Component<ChartProps> = (props) => {
     setHoverX,
     dragRange,
     setDragRange,
+    committedDragRange,
+    setCommittedDragRange,
     tooltipMount,
     setTooltipMount,
     clipPathUrl,

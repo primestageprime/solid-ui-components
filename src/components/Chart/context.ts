@@ -25,6 +25,15 @@ export interface ChartContextValue {
   /** Currently-active drag selection in DATA-domain units, or null when no drag. */
   dragRange: Accessor<{ start: number; end: number } | null>;
   setDragRange: (range: { start: number; end: number } | null) => void;
+  /**
+   * Pulses on pointerup at the end of a drag. Distinct from `dragRange` —
+   * `dragRange` updates continuously while the pointer is held; this signal
+   * is set ONCE per completed drag and stays until the consumer (or the next
+   * drag start) clears it. Slots like `DragRangeSelect` listen to this to
+   * fire commit-only callbacks (`onRange`) without echoing every move.
+   */
+  committedDragRange: Accessor<{ start: number; end: number } | null>;
+  setCommittedDragRange: (range: { start: number; end: number } | null) => void;
   /** Mount node for portal-style overlays (e.g. ChartTooltip). Set by Chart root. */
   tooltipMount: Accessor<HTMLElement | null>;
   setTooltipMount: (el: HTMLElement | null) => void;
