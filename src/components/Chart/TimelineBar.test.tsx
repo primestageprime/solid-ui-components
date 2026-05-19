@@ -65,6 +65,18 @@ describe("TimelineBar — callbacks", () => {
     fireEvent.pointerDown(container.querySelector(".sui-chart__timeline-bar")!);
     expect(calls).toEqual([bar]);
   });
+
+  it("onBarHover fires with bar on pointerenter and null on pointerleave", () => {
+    const bar: TimelineBarDatum = { id: "a", start: 1, end: 3, lane: "x", color: "#fff" };
+    const calls: Array<TimelineBarDatum | null> = [];
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} onBarHover={(b) => calls.push(b)} />
+    ));
+    const rect = container.querySelector(".sui-chart__timeline-bar")!;
+    fireEvent.pointerEnter(rect);
+    fireEvent.pointerLeave(rect);
+    expect(calls).toEqual([bar, null]);
+  });
 });
 
 describe("TimelineBar — curried variants", () => {

@@ -6,7 +6,7 @@
 // ============================================
 import { Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
-import type { ClickHandler, Id } from "./slot-types";
+import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
 // Module-level dedupe set for unknown-lane warnings. Pure tracking — keeps the
 // warn-once invariant across all TimelineBar instances without coupling to
@@ -61,6 +61,7 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
    */
   bandY?: number | "top" | "bottom" | "margin-bottom";
   onBarClick?: ClickHandler<T>;
+  onBarHover?: HoverHandler<T>;
   class?: string;
 }
 
@@ -160,7 +161,9 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                 height={laneHeight() * merged.barHeight}
                 fill={bar.color}
                 onPointerDown={(e) => merged.onBarClick?.(bar, e)}
-                style={{ cursor: merged.onBarClick ? "pointer" : undefined }}
+                onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
+                onPointerLeave={(e) => merged.onBarHover?.(null, e)}
+                style={{ cursor: (merged.onBarClick || merged.onBarHover) ? "pointer" : undefined }}
               />
             </Show>
           );
