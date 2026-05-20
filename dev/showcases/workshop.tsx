@@ -318,11 +318,11 @@ export const WorkshopShowcase: Component = () => {
         </div>
 
         <div class="workshop-grid__cell">
-          <SubsectionTitle>8 · multi-dep subtree (8 left · 5 right)</SubsectionTitle>
+          <SubsectionTitle>8 · multi-dep subtree — variable width (8 left · 5 right)</SubsectionTitle>
           <JsonPanel value={MULTI_DEPS} heightLines={10} />
         </div>
         <div class="workshop-grid__cell">
-          <StubChart graph={MULTI_DEPS} width="360px" />
+          <StubChart graph={MULTI_DEPS} minWidth="360px" />
         </div>
       </div>
     </div>
