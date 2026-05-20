@@ -14,6 +14,7 @@ import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
+import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
 import { DividerShowcase } from "./showcases/divider";
@@ -118,6 +119,7 @@ const items: Item[] = [
   { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase, tags: ["depth:1", "data"] },
   { id: "combobox", label: "Combobox", component: ComboboxShowcase, tags: ["depth:1", "form"] },
   { id: "dag-chart", label: "DagChart", component: DagChartShowcase, tags: ["depth:1", "chart", "data"] },
+  { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:1", "chart", "data"] },
   { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase, tags: ["depth:1", "table", "data", "container"] },
   { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase, tags: ["depth:1", "indicator", "data"] },
   { id: "divider", label: "Divider", component: DividerShowcase, tags: ["depth:1", "layout"] },
