@@ -21,6 +21,13 @@ export type DagSvgNodeProps<T> = {
    * removing it from the DOM. Click events are also suppressed.
    */
   leaving?: boolean;
+  /**
+   * Horizontal distance (in pixels) the node should slide to during its
+   * leave animation. Positive = slide right, negative = slide left.
+   * Surfaced as the CSS custom property `--sui-leave-x` on the inner div
+   * so a `transform: translateX(var(--sui-leave-x))` rule animates it.
+   */
+  leavingOffsetX?: number;
 };
 
 /**
@@ -41,7 +48,14 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => !props.leaving && props.onClick?.(props.node.id)}
         data-leaving={props.leaving ? "true" : undefined}
-        style={{ width: "100%", height: "100%", cursor: props.leaving ? "default" : "pointer" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          cursor: props.leaving ? "default" : "pointer",
+          ...(props.leavingOffsetX !== undefined
+            ? { "--sui-leave-x": `${props.leavingOffsetX}px` }
+            : {}),
+        }}
       >
         {props.renderNode(props.node, props.state)}
       </div>

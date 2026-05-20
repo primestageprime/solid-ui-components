@@ -31,6 +31,27 @@
   filter: brightness(1.15);
 }
 
+/* Leave animation: nodes that just stopped being visible (because the
+   container shrunk past their depth ring) slide toward the chart center
+   and fade out before the chart drops them from the DOM. The slide
+   distance + sign comes from the inline CSS variable --sui-leave-x set
+   by DagSvgNode when `leavingOffsetX` is provided. */
+@keyframes sui-swimlane-node-leave {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(var(--sui-leave-x, 0));
+    opacity: 0;
+  }
+}
+
+.sui-swimlane__node-wrapper > div[data-leaving="true"] {
+  animation: sui-swimlane-node-leave 220ms ease-in forwards;
+  pointer-events: none;
+}
+
 .sui-swimlane__boundary-badge {
   fill: var(--sui-bg-elevated, #1a1a1a);
   stroke: var(--sui-border, #334155);

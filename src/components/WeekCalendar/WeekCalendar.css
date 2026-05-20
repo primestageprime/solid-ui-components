@@ -32,7 +32,7 @@
   /* Give the first hour mark room so it isn't clipped by the header
      border (gutter marks use translateY(-50%) and would otherwise sit
      half-above the gutter). */
-  padding-top: 16px;
+  padding-top: 0;
 }
 
 .sui-week-calendar__gutter-mark {
@@ -40,16 +40,16 @@
   right: 6px;
   font-size: 10px;
   color: var(--sui-text-muted);
-  /* Sit the label fully ABOVE the hour line (instead of centered on it)
-     so it never bleeds into the block area of the column to its right. */
-  transform: translateY(-100%);
+  /* Sit the label fully BELOW the hour line so the top of the label
+     doesn't push above the previous row / column header. */
+  transform: translateY(0);
 }
 
 .sui-week-calendar__column {
   position: relative;
   border-right: 1px solid var(--sui-border);
   /* Match the gutter so blocks line up with the hour marks. */
-  padding-top: 16px;
+  padding-top: 0;
 }
 
 .sui-week-calendar__hour-line {

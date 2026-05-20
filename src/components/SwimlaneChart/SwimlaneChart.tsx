@@ -164,6 +164,35 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     return out;
   });
 
+  // Animation layer: track items that just disappeared and keep rendering
+  // them with `leaving=true` for one animation cycle before removing them
+  // from the DOM. Lets the consumer's CSS shrink them out gracefully.
+  const NODE_LEAVE_MS = 220;
+  const [leavingItems, setLeavingItems] = createSignal<Item[]>([]);
+
+  createEffect(
+    on(items, (current, prev) => {
+      if (!prev) return;
+      const currentIds = new Set(current.map((i) => i.id));
+      const newlyLeft = prev.filter((p) => !currentIds.has(p.id));
+      if (newlyLeft.length === 0) return;
+      // Drop any items in the leaving set that have re-appeared in the
+      // current visible set, then append the new ones.
+      setLeavingItems((prevLeaving) => {
+        const stillLeaving = prevLeaving.filter((p) => !currentIds.has(p.id));
+        const stillLeavingIds = new Set(stillLeaving.map((p) => p.id));
+        const fresh = newlyLeft.filter((n) => !stillLeavingIds.has(n.id));
+        return [...stillLeaving, ...fresh];
+      });
+      const removedIds = new Set(newlyLeft.map((n) => n.id));
+      setTimeout(() => {
+        setLeavingItems((prevLeaving) =>
+          prevLeaving.filter((p) => !removedIds.has(p.id)),
+        );
+      }, NODE_LEAVE_MS);
+    }),
+  );
+
   const edgeViews = createMemo(() => {
     const positions = layout().positions;
     return layout().edges.flatMap((e) => {
@@ -391,7 +420,9 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
             )}
           </For>
 
-          {/* Nodes (real only — summaries become boundary badges) */}
+          {/* Nodes (real only — summaries become boundary badges).
+              Leaving items keep their last position while their CSS
+              animation shrinks them out. */}
           <For each={items()}>
             {(item) => (
               <DagSvgNode
@@ -404,6 +435,31 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                 wrapperClass="sui-swimlane__node-wrapper"
                 onClick={handleNodeClick}
                 renderNode={props.renderNode}
+              />
+            )}
+          </For>
+          <For each={leavingItems()}>
+            {(item) => (
+              <DagSvgNode
+                node={item.node}
+                state={item.state}
+                x={item.x}
+                y={item.y}
+                width={item.width}
+                height={item.height}
+                wrapperClass="sui-swimlane__node-wrapper"
+                renderNode={props.renderNode}
+                leaving
+                /* Slide toward chart center: left-side nodes slide right,
+                   right-side nodes slide left. Distance scales with node
+                   width so the motion reads cleanly at any size. */
+                leavingOffsetX={
+                  item.x < 0
+                    ? item.width * 0.7
+                    : item.x > 0
+                      ? -item.width * 0.7
+                      : 0
+                }
               />
             )}
           </For>
