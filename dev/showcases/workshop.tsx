@@ -173,13 +173,14 @@ const renderStubNode = (node: DAGNode<StubData>, state: { kind: string; collapse
 const StubChart: Component<{
   graph: StubGraph;
   width?: string;
+  minWidth?: string;
   maxDepth?: number;
 }> = (props) => (
   <div
     style={{
       width: props.width ?? "100%",
       height: `${10 * 1.4}em`,
-      "min-width": "320px",
+      "min-width": props.minWidth ?? "320px",
       border: "1px dashed rgba(255,255,255,0.12)",
       "border-radius": "4px",
       "box-sizing": "border-box",
@@ -251,6 +252,14 @@ export const WorkshopShowcase: Component = () => {
         </div>
         <div class="workshop-grid__cell">
           <StubChart graph={TWO_LAYERS} width="1200px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>7 · 2 layers — variable width (resize the browser)</SubsectionTitle>
+          <JsonPanel value={TWO_LAYERS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={TWO_LAYERS} minWidth="360px" />
         </div>
       </div>
     </div>
