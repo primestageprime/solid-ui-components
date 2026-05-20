@@ -1,6 +1,9 @@
 import { Component, createSignal, Show } from "solid-js";
 import { SwimlaneChart } from "../../src/components/SwimlaneChart";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../../src/components/DagChart";
+import { Surface } from "../../src/components/Surface";
+import { Stack } from "../../src/components/Layout";
+import { TextLabel, MutedBody, EllipsizedTitle } from "../../src/components/Text";
 
 type Card = {
   label: string;
@@ -10,79 +13,52 @@ type Card = {
 
 const COL_NAME = ["TODO", "DOING", "DONE"] as const;
 
-const COL_COLOR: Record<0 | 1 | 2, { border: string; bg: string; text: string }> = {
-  0: { border: "rgba(255,255,255,0.18)", bg: "rgba(255,255,255,0.04)", text: "rgba(255,255,255,0.6)" },
-  1: { border: "var(--sui-accent, #00d4ff)", bg: "rgba(0,212,255,0.10)", text: "var(--sui-accent, #00d4ff)" },
-  2: { border: "rgba(95,179,124,0.5)", bg: "rgba(95,179,124,0.10)", text: "rgba(95,179,124,0.9)" },
+// Color hints used to tint a node Surface by its column. Reads as CSS-var
+// fallbacks so the component still themes correctly across light/dark.
+const COL_TINT: Record<0 | 1 | 2, { bg: string; border: string }> = {
+  0: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" },
+  1: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
+  2: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" },
 };
 
 const renderCard = (node: DAGNode<Card>, state: NodeRenderState) => {
   if (state.kind === "collapsed") {
     return (
-      <div
+      <Surface
+        padding="sm"
+        radius="sm"
+        bg="rgba(255,255,255,0.03)"
+        borderColor="rgba(255,255,255,0.25)"
         style={{
           width: "100%",
           height: "100%",
-          "box-sizing": "border-box",
-          padding: "4px 8px",
-          "border-radius": "6px",
-          border: "1px dashed rgba(255,255,255,0.25)",
-          background: "rgba(255,255,255,0.03)",
-          color: "rgba(255,255,255,0.55)",
           display: "flex",
           "align-items": "center",
           "justify-content": "center",
-          "font-size": "11px",
+          "border-style": "dashed",
         }}
       >
-        +{state.collapsedCount} more
-      </div>
+        <MutedBody>+{state.collapsedCount} more</MutedBody>
+      </Surface>
     );
   }
-  const c = COL_COLOR[node.data.col];
+  const tint = COL_TINT[node.data.col];
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        "box-sizing": "border-box",
-        padding: "6px 10px",
-        "border-radius": "8px",
-        border: `1px solid ${c.border}`,
-        background: c.bg,
-        color: "var(--sui-text, #e6ecf5)",
-        display: "flex",
-        "flex-direction": "column",
-        gap: "2px",
-        "font-size": "12px",
-      }}
+    <Surface
+      padding="sm"
+      radius="sm"
+      bg={tint.bg}
+      borderColor={tint.border}
+      style={{ width: "100%", height: "100%" }}
     >
-      <div
-        style={{
-          "font-size": "9px",
-          "letter-spacing": "0.08em",
-          "text-transform": "uppercase",
-          color: c.text,
-        }}
-      >
-        {COL_NAME[node.data.col]}
-      </div>
-      <div
-        style={{
-          "font-size": "12px",
-          overflow: "hidden",
-          "text-overflow": "ellipsis",
-          "white-space": "nowrap",
-        }}
-      >
-        {node.data.label}
-      </div>
-      <Show when={node.data.owner}>
-        <div style={{ "font-size": "10px", color: "rgba(255,255,255,0.45)" }}>
-          {node.data.owner}
-        </div>
-      </Show>
-    </div>
+      <Stack gap="xs">
+        <TextLabel>{COL_NAME[node.data.col]}</TextLabel>
+        <EllipsizedTitle>{node.data.label}</EllipsizedTitle>
+        <Show when={node.data.owner}>
+          <MutedBody>{node.data.owner}</MutedBody>
+        </Show>
+      </Stack>
+    </Surface>
   );
 };
 
@@ -149,11 +125,11 @@ export const SwimlaneChartShowcase: Component = () => {
       <h2>SwimlaneChart — Composed (Depth 2)</h2>
       <p class="text-meta">
         Builds on DagChart's pan/zoom and shared DAG types. DAG visualizer
-        where status determines the column. DOING is pinned to
-        the viewport's horizontal center. Nodes beyond <code>maxDepth</code>{" "}
-        graph-hops from any DOING node collapse into "+N" summary stubs. Edges
-        are independent of status — backward (DONE → TODO) and skip-lane
-        (TODO → DONE) edges are first-class.
+        where status determines the column. DOING is pinned to the viewport's
+        horizontal center. Nodes beyond <code>maxDepth</code> graph-hops from
+        any DOING node collapse into "+N" summary stubs. Edges are independent
+        of status — backward (DONE → TODO) and skip-lane (TODO → DONE) edges
+        are first-class.
       </p>
 
       <div class="example-group">
