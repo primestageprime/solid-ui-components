@@ -69,3 +69,36 @@ describe("computeSwimlaneLayout — Y coordinates", () => {
     expect(result.edges[0].points).toHaveLength(2);
   });
 });
+
+describe("computeSwimlaneLayout — barycentric ordering", () => {
+  it("reorders so connected nodes end up close in Y (crossing reduction)", () => {
+    // Initial input order: TODO=[a,b], DONE=[y,x]
+    // Edges: a->x, b->y. After barycentric sweep, x's neighbor a is at higher
+    // Y (first in TODO), so x should come BEFORE y in DONE column.
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 0 } },
+      { id: "b", data: { status: 0 } },
+      { id: "y", data: { status: 2 } },
+      { id: "x", data: { status: 2 } },
+    ];
+    const edges: DAGEdge[] = [
+      { source: "a", target: "x" },
+      { source: "b", target: "y" },
+    ];
+    const result = computeSwimlaneLayout(nodes, edges, defaults);
+    expect(result.positions.get("x")!.y).toBeLessThan(
+      result.positions.get("y")!.y,
+    );
+  });
+
+  it("handles backward edges (DONE -> TODO) without error", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "done1", data: { status: 2 } },
+      { id: "todo1", data: { status: 0 } },
+    ];
+    const edges: DAGEdge[] = [{ source: "done1", target: "todo1" }];
+    expect(() => computeSwimlaneLayout(nodes, edges, defaults)).not.toThrow();
+    const result = computeSwimlaneLayout(nodes, edges, defaults);
+    expect(result.edges).toHaveLength(1);
+  });
+});
