@@ -102,3 +102,74 @@ describe("computeSwimlaneLayout — barycentric ordering", () => {
     expect(result.edges).toHaveLength(1);
   });
 });
+
+describe("computeSwimlaneLayout — falloff and collapse", () => {
+  it("when DOING is empty, shows all nodes regardless of maxDepth", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 0 } },
+      { id: "b", data: { status: 2 } },
+    ];
+    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
+    expect(result.positions.has("a")).toBe(true);
+    expect(result.positions.has("b")).toBe(true);
+    expect(result.summaries).toEqual([]);
+  });
+
+  it("hides nodes farther than maxDepth from any DOING node", () => {
+    // chain a(TODO) - b(TODO) - c(DOING) - d(DONE) - e(DONE)
+    // maxDepth=1: only b, c, d visible. a (dist 2) and e (dist 2) collapsed.
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 0 } },
+      { id: "b", data: { status: 0 } },
+      { id: "c", data: { status: 1 } },
+      { id: "d", data: { status: 2 } },
+      { id: "e", data: { status: 2 } },
+    ];
+    const edges: DAGEdge[] = [
+      { source: "a", target: "b" },
+      { source: "b", target: "c" },
+      { source: "c", target: "d" },
+      { source: "d", target: "e" },
+    ];
+    const result = computeSwimlaneLayout(nodes, edges, { ...defaults, maxDepth: 1 });
+    expect(result.positions.has("b")).toBe(true);
+    expect(result.positions.has("c")).toBe(true);
+    expect(result.positions.has("d")).toBe(true);
+    expect(result.positions.has("a")).toBe(false);
+    expect(result.positions.has("e")).toBe(false);
+    const summaryDescriptors = result.summaries.map((s) => ({
+      anchor: s.anchorId,
+      col: s.column,
+      count: s.collapsedCount,
+    }));
+    expect(summaryDescriptors).toEqual(
+      expect.arrayContaining([
+        { anchor: "b", col: 0, count: 1 },
+        { anchor: "d", col: 2, count: 1 },
+      ]),
+    );
+  });
+
+  it("groups multiple hidden nodes sharing an anchor and column into ONE summary", () => {
+    // b(DOING) -- a1,a2 (TODO depth 1, visible)
+    // a1 -- x1 (TODO depth 2, hidden, anchor=a1)
+    // a2 -- x2 (TODO depth 2, hidden, anchor=a2)
+    // Result: 2 summaries, both in column 0, each with count 1
+    const nodes: DAGNode<Item>[] = [
+      { id: "b", data: { status: 1 } },
+      { id: "a1", data: { status: 0 } },
+      { id: "a2", data: { status: 0 } },
+      { id: "x1", data: { status: 0 } },
+      { id: "x2", data: { status: 0 } },
+    ];
+    const edges: DAGEdge[] = [
+      { source: "a1", target: "b" },
+      { source: "a2", target: "b" },
+      { source: "x1", target: "a1" },
+      { source: "x2", target: "a2" },
+    ];
+    const result = computeSwimlaneLayout(nodes, edges, { ...defaults, maxDepth: 1 });
+    expect(result.summaries).toHaveLength(2);
+    expect(result.summaries.every((s) => s.column === 0 && s.collapsedCount === 1)).toBe(true);
+  });
+});
