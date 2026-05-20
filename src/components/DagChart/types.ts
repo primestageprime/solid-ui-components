@@ -65,6 +65,24 @@ export type DAGProps<T = unknown> = {
    * Highlighted edges receive the `sui-dag__edge--highlighted` CSS class.
    */
   highlightedEdges?: ReadonlySet<string>;
+  /**
+   * Layout mode. "sugiyama" (default) uses topological layering via d3-dag.
+   * "swimlane" arranges nodes into three fixed columns by status, with the
+   * DOING column pinned to the viewport's horizontal center.
+   */
+  mode?: "sugiyama" | "swimlane";
+  /**
+   * Required when `mode === "swimlane"`. Returns the column for a node:
+   * 0 (TODO / left), 1 (DOING / center), 2 (DONE / right).
+   */
+  swimlaneFor?: (node: DAGNode<T>) => 0 | 1 | 2;
+  /**
+   * Maximum undirected graph distance from any DOING node for a node to
+   * remain visible. Nodes beyond this distance collapse into summary
+   * stubs attached to their nearest visible neighbor. Default: 2.
+   * Only applies when `mode === "swimlane"`.
+   */
+  swimlaneMaxDepth?: number;
 };
 
 /** Internal: positioned node after layout + collapse. */
