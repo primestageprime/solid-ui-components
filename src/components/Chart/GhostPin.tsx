@@ -2,21 +2,14 @@
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
+import type { AnnotationLane } from "./slot-types";
 
 /**
- * Where in the chart the ghost glyph renders vertically:
- *
- * - `"plot-data"` (default): glyph y resolves through the y-scale when `y`
- *   is provided, otherwise renders at plot-top (y=0). Clipped to the plot
- *   path. Matches the back-compat behavior.
- * - `"plot-top"` (alias of `"plot-data"`): kept for explicit call-sites.
- * - `"annotation"`: glyph renders in the dedicated annotation lane carved
- *   out of the top margin (requires `<Chart annotationLaneHeight={N}>` to
- *   be > 0). `props.y` is ignored; cy is the vertical center of the lane
- *   (`-annotationLaneHeight / 2`). Clipped to the annotation-lane path so
- *   the glyph stays horizontally bounded to the plot.
+ * Where in the chart the ghost glyph renders vertically. See
+ * {@link AnnotationLane} for the variant semantics. In `"plot-data"` mode
+ * with no `y`, the ghost renders at plot-top (y=0).
  */
-export type GhostPinLane = "plot-data" | "plot-top" | "annotation";
+export type GhostPinLane = AnnotationLane;
 
 export interface GhostPinProps {
   /** Descriptor for the ghost glyph, or null to hide. */
@@ -47,14 +40,16 @@ export const GhostPin: Component<GhostPinProps> = (props) => {
   );
   const isAnnotationLane = () => merged.lane === "annotation";
   // Vertical center of the annotation lane in plot-local coords. Falls
-  // back to 0 (plot-top) when the chart isn't hosting a lane — keeps the
-  // glyph visible rather than rendering off-canvas.
+  // back to 0 when the chart isn't hosting a lane — keeps the glyph
+  // visible rather than rendering off-canvas.
   const annotationCy = () => {
     const h = ctx.annotationLaneHeight();
     return h > 0 ? -h / 2 : 0;
   };
   const clipPath = () =>
-    isAnnotationLane() ? ctx.clip.annotationLanePathUrl() : ctx.clip.plotPathUrl();
+    isAnnotationLane() && ctx.annotationLaneHeight() > 0
+      ? ctx.clip.annotationLanePathUrl()
+      : ctx.clip.plotPathUrl();
   const cy = () => {
     if (isAnnotationLane()) return annotationCy();
     return merged.y != null ? ctx.yScale()(merged.y) : 0;

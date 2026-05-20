@@ -92,9 +92,9 @@ export const Chart: Component<ChartProps> = (props) => {
     "onPointerLeave",
   ]);
 
-  // Title lives in an HTML `<div>` ABOVE the SVG (see render below), so it
-  // no longer steals SVG margin space — `margin.top` defaults straight to
-  // `DEFAULT_MARGIN.top` regardless of whether a title is set.
+  // Title lives in an HTML `<div>` ABOVE the SVG (see render below), so
+  // `margin.top` defaults straight to `DEFAULT_MARGIN.top` regardless of
+  // whether a title is set.
   const margin = createMemo<Margin>(() => ({
     ...DEFAULT_MARGIN,
     ...(local.margin ?? {}),
@@ -241,9 +241,6 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div class={`sui-chart${local.class ? " " + local.class : ""}`} style={local.style as JSX.CSSProperties}>
-        {/* Visible chart title — rendered as HTML ABOVE the SVG so it
-            doesn't consume SVG margin space. Centered, muted-text color,
-            independent of the SVG coordinate system. */}
         <Show when={local.title}>
           <div class="sui-chart__title">{local.title}</div>
         </Show>
@@ -253,17 +250,15 @@ export const Chart: Component<ChartProps> = (props) => {
           width={width()}
           height={height()}
           viewBox={`0 0 ${width()} ${height()}`}
-          role="img"
+          role={local.title ? "img" : undefined}
           aria-label={local.title}
+          aria-hidden={local.title ? undefined : "true"}
           onPointerMove={onPointerMove}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerLeave}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
-          {/* a11y title — read by screen readers; mirrors the HTML title
-              above so AT users get the same label whether or not the SVG
-              is in the accessibility tree. */}
           <Show when={local.title}>
             <title>{local.title}</title>
           </Show>

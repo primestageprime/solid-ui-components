@@ -26,6 +26,19 @@ export type DblClickHandler<T> = (item: T, event: MouseEvent) => void;
 /** Pointer-hover handler. Item or null (on pointer-leave) + native PointerEvent. */
 export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;
 
+/**
+ * Cross-slot vertical placement vocabulary for annotation-capable slots
+ * (PinMarkers, GhostPin, etc.).
+ *
+ * - `"plot-data"` — glyph y resolves through the y-scale (slot-specific
+ *   fallback when the datum has no `y`). Clipped to the plot path.
+ * - `"annotation"` — glyph renders in the dedicated annotation lane carved
+ *   out of the top margin (requires `<Chart annotationLaneHeight={N}>`
+ *   to be > 0). Each datum's `y` is ignored; cy is the vertical center
+ *   of the lane. Clipped to the annotation-lane path.
+ */
+export type AnnotationLane = "plot-data" | "annotation";
+
 // ============================================
 // Slot factory pattern — NOT extracted (deliberate).
 //
@@ -36,8 +49,7 @@ export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;
 // And its variants module curries that into named `Component<XDataProps>`
 // consts (ADR 0001).
 //
-// Considered during the 3-slot landing (extract `createSlot<TProps,
-// TDataProps>`); re-evaluated at 6 slots: NOT WORTH EXTRACTING.
+// Conclusion: NOT WORTH EXTRACTING.
 //   1. The factory is 3 lines per slot — at the YAGNI threshold.
 //   2. Extraction does NOT eliminate the per-slot factory: TS can't infer
 //      a generic-constrained helper through a higher-order generic relay
@@ -47,6 +59,6 @@ export type HoverHandler<T> = (item: T | null, event: PointerEvent) => void;
 //      per ADR 0001) are already at minimum surface area.
 //   4. Inlining preserves a one-screen mental model — readers see how a
 //      slot is composed without jumping to a shared factory module.
-// Reconsider if a 7th/8th slot lands AND introduces a new shared concern
+// Reconsider only if a future slot introduces a new shared concern
 // beyond "merge defaults + relay generic".
 // ============================================

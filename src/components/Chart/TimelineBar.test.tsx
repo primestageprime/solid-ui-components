@@ -165,6 +165,136 @@ describe("TimelineBar — label", () => {
   });
 });
 
+describe("TimelineBar — rotateLabel + labelAlign", () => {
+  // Geometry (height=120, default margin top=8 bottom=28 → innerHeight=84).
+  // bandY={anchor:'top'} + bandHeight=40 → bandTop=0, total band=40.
+  // labelAlign positions:
+  //   - "top"    → y = bandTop = 0
+  //   - "center" → y = bandTop + bandHeight/2 = 20
+  //   - "bottom" → y = bandTop + bandHeight    = 40
+  const bar: TimelineBarDatum = {
+    id: slotId("a"),
+    start: 1,
+    end: 3,
+    lane: "x",
+    color: "#fff",
+  };
+
+  it("labelAlign='top' places non-rotated label at band top edge", () => {
+    const { container } = wrapper(() => (
+      <TimelineBar
+        data={[bar]}
+        bandHeight={40}
+        bandY={{ anchor: "top" }}
+        label="L"
+        labelAlign="top"
+      />
+    ));
+    const label = container.querySelector(".sui-chart__timeline-bar-label")!;
+    expect(parseFloat(label.getAttribute("y")!)).toBeCloseTo(0, 1);
+    expect(label.getAttribute("transform")).toBeNull();
+  });
+
+  it("labelAlign='center' (default) places non-rotated label at band center", () => {
+    const { container } = wrapper(() => (
+      <TimelineBar
+        data={[bar]}
+        bandHeight={40}
+        bandY={{ anchor: "top" }}
+        label="L"
+      />
+    ));
+    const label = container.querySelector(".sui-chart__timeline-bar-label")!;
+    expect(parseFloat(label.getAttribute("y")!)).toBeCloseTo(20, 1);
+  });
+
+  it("labelAlign='bottom' places non-rotated label at band bottom edge", () => {
+    const { container } = wrapper(() => (
+      <TimelineBar
+        data={[bar]}
+        bandHeight={40}
+        bandY={{ anchor: "top" }}
+        label="L"
+        labelAlign="bottom"
+      />
+    ));
+    const label = container.querySelector(".sui-chart__timeline-bar-label")!;
+    expect(parseFloat(label.getAttribute("y")!)).toBeCloseTo(40, 1);
+  });
+
+  it("rotateLabel=true drops the `y` attribute and emits a translate(-8, labelY) rotate(-45) transform", () => {
+    const { container } = wrapper(() => (
+      <TimelineBar
+        data={[bar]}
+        bandHeight={40}
+        bandY={{ anchor: "top" }}
+        label="L"
+        labelAlign="center"
+        rotateLabel
+      />
+    ));
+    const label = container.querySelector(".sui-chart__timeline-bar-label")!;
+    expect(label.getAttribute("y")).toBeNull();
+    expect(label.getAttribute("x")).toBeNull();
+    expect(label.getAttribute("transform")).toBe(
+      "translate(-8, 20) rotate(-45)",
+    );
+  });
+
+  it("rotateLabel transform carries the labelAlign y for top/center/bottom", () => {
+    const renderWith = (align: "top" | "center" | "bottom") =>
+      wrapper(() => (
+        <TimelineBar
+          data={[bar]}
+          bandHeight={40}
+          bandY={{ anchor: "top" }}
+          label="L"
+          labelAlign={align}
+          rotateLabel
+        />
+      ));
+    expect(
+      renderWith("top")
+        .container.querySelector(".sui-chart__timeline-bar-label")!
+        .getAttribute("transform"),
+    ).toBe("translate(-8, 0) rotate(-45)");
+    expect(
+      renderWith("center")
+        .container.querySelector(".sui-chart__timeline-bar-label")!
+        .getAttribute("transform"),
+    ).toBe("translate(-8, 20) rotate(-45)");
+    expect(
+      renderWith("bottom")
+        .container.querySelector(".sui-chart__timeline-bar-label")!
+        .getAttribute("transform"),
+    ).toBe("translate(-8, 40) rotate(-45)");
+  });
+});
+
+describe("TimelineBar — segmentStroke", () => {
+  const bar: TimelineBarDatum = {
+    id: slotId("a"),
+    start: 1,
+    end: 3,
+    lane: "x",
+    color: "#fff",
+  };
+
+  it("defaults to the --sui-border-strong token", () => {
+    const { container } = wrapper(() => <TimelineBar data={[bar]} />);
+    const rect = container.querySelector(".sui-chart__timeline-bar")!;
+    expect(rect.getAttribute("stroke")).toMatch(/--sui-border-strong/);
+  });
+
+  it("override applies a custom stroke color", () => {
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} segmentStroke="#ff00ff" />
+    ));
+    const rect = container.querySelector(".sui-chart__timeline-bar")!;
+    expect(rect.getAttribute("stroke")).toBe("#ff00ff");
+  });
+});
+
 describe("TimelineBar — clip-path", () => {
   it("wraps bars in a group with clip-path set to ctx.clip.plotPathUrl()", () => {
     const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };

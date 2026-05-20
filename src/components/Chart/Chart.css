@@ -43,9 +43,6 @@
   stroke: var(--sui-chart-tick-color, #c0c0c0);
   stroke-width: 1.5;
 }
-/* Visible chart title — rendered as an HTML `<div>` ABOVE the SVG so it
-   does not consume plot-area pixels. `color` (not `fill`) since this is
-   HTML, not SVG text. */
 .sui-chart__title {
   color: var(--sui-chart-title-color, #dfdfdf);
   font-size: 0.95rem;

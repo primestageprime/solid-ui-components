@@ -278,6 +278,45 @@ describe("XAxis labelOffset", () => {
   });
 });
 
+describe("XAxis rotateLabels", () => {
+  it("flips text-anchor to 'end' when rotateLabels is true", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis rotateLabels />
+      </Chart>
+    ));
+    const labels = container.querySelectorAll(".sui-chart__axis-label");
+    expect(labels.length).toBeGreaterThan(0);
+    labels.forEach((el) => {
+      expect(el.getAttribute("text-anchor")).toBe("end");
+    });
+  });
+
+  it("applies a translate(6, labelOffset) rotate(-45) transform when rotateLabels is true", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis rotateLabels />
+      </Chart>
+    ));
+    const labels = container.querySelectorAll(".sui-chart__axis-label");
+    expect(labels[0]?.getAttribute("transform")).toBe(
+      "translate(6, 16) rotate(-45)",
+    );
+  });
+
+  it("axis-title y = labelOffset + 44 (not 18) under rotateLabels", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <XAxis label="Time" rotateLabels labelOffset={20} />
+      </Chart>
+    ));
+    const title = container.querySelector(".sui-chart__axis-title");
+    expect(title).toBeTruthy();
+    // labelOffset (20) + 44 = 64 — clears long diagonal labels.
+    expect(parseFloat(title!.getAttribute("y")!)).toBeCloseTo(64, 1);
+  });
+});
+
 describe("XAxis / YAxis hideLine", () => {
   it("XAxis renders its baseline by default", () => {
     const { container } = render(() => (

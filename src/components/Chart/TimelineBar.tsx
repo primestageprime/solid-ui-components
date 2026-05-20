@@ -4,9 +4,6 @@ import { Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
-// Module-level dedupe set for unknown-lane warnings. Pure tracking — keeps the
-// warn-once invariant across all TimelineBar instances without coupling to
-// component lifecycle.
 const warnedLanes = new Set<string>();
 const warnUnknownLane = (lane: string): void => {
   if (warnedLanes.has(lane)) return;
@@ -143,12 +140,8 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
     return out;
   });
 
-  // Default anchor — flush with the x-axis from above. Captured once so the
-  // discriminated-union switch below has a total signature.
   const resolvedBandY = (): BandYAnchor => merged.bandY ?? { anchor: "bottom" };
 
-  // Band layout — when `bandHeight` is set, lanes share the band;
-  // otherwise lanes fill `innerHeight`.
   const bandTotalHeight = () =>
     merged.bandHeight != null ? merged.bandHeight : ctx.innerHeight();
   const bandTop = (): number => {
@@ -177,10 +170,6 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
       : ctx.clip.plotPathUrl();
   };
 
-  // Label y depends on `labelAlign`. Default "center" → vertical middle of
-  // band. "top" → strip's top edge; "bottom" → bottom edge. Use top/bottom
-  // to spread rotated labels across vertically-snug stacked strips so they
-  // don't collide on the diagonal.
   const labelY = (): number => {
     const align = merged.labelAlign ?? "center";
     if (align === "top") return bandTop();

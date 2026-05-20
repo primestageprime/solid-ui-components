@@ -13,7 +13,14 @@ import {
 } from "solid-js";
 import { useChart } from "./context";
 import { DEFAULT_GLYPH_SIZE, ShapeGlyph, type Descriptor } from "./shapes";
-import { slotId as brandSlotId, type Id, type ClickHandler, type DblClickHandler, type HoverHandler } from "./slot-types";
+import {
+  slotId as brandSlotId,
+  type AnnotationLane,
+  type Id,
+  type ClickHandler,
+  type DblClickHandler,
+  type HoverHandler,
+} from "./slot-types";
 
 export interface Pin {
   id: Id;
@@ -29,21 +36,12 @@ export interface PinMarkersRenderContext {
 }
 
 /**
- * Where in the chart the pin glyphs render vertically:
- *
- * - `"plot-data"` (default): each pin's `y` resolves through the y-scale.
- *   Missing `y` falls back to plot-top (y=0). Clipped to the plot path.
- * - `"plot-top"` (alias for the legacy default behavior — same as
- *   `"plot-data"`, kept for explicit call-sites): pin y resolves through
- *   the y-scale; consumers that always omit `y` get rendered at plot-top.
- *   Clipped to the plot path.
- * - `"annotation"`: pins render in the dedicated annotation lane carved
- *   out of the top margin (requires `<Chart annotationLaneHeight={N}>`
- *   to be > 0). Each pin's `y` is ignored; cy is the vertical center of
- *   the lane (`-annotationLaneHeight / 2`). Clipped to the annotation-
- *   lane path so glyphs stay horizontally bounded to the plot.
+ * Where in the chart the pin glyphs render vertically. See
+ * {@link AnnotationLane} for the variant semantics. For PinMarkers
+ * specifically, the `"plot-data"` fallback for a pin with no `y` is
+ * the plot top (y=0).
  */
-export type PinMarkersLane = "plot-data" | "plot-top" | "annotation";
+export type PinMarkersLane = AnnotationLane;
 
 export interface PinMarkersProps<TPin extends Pin = Pin> {
   data: readonly TPin[];
@@ -96,14 +94,16 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
   const isAnnotationLane = () => merged.lane === "annotation";
   // Vertical center of the annotation lane in plot-local coords (negative
   // because the lane lives ABOVE y=0). Falls back to 0 if the chart isn't
-  // hosting a lane — keeps the visual identical to plot-top in that case
-  // rather than rendering off-canvas.
+  // hosting a lane — degrades to the plot-top fallback rather than
+  // rendering off-canvas.
   const annotationCy = () => {
     const h = ctx.annotationLaneHeight();
     return h > 0 ? -h / 2 : 0;
   };
   const clipPath = () =>
-    isAnnotationLane() ? ctx.clip.annotationLanePathUrl() : ctx.clip.plotPathUrl();
+    isAnnotationLane() && ctx.annotationLaneHeight() > 0
+      ? ctx.clip.annotationLanePathUrl()
+      : ctx.clip.plotPathUrl();
   // Nearest pin + its distance to hoverX (DATA-domain units). `null` when
   // emphasis is disabled, no hover, no data, or no valid candidate.
   const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
@@ -134,12 +134,9 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
 
   const isWinner = () => ctx.emphasis.winnerId() === slotId;
 
-  // Pins are decorative when the consumer hasn't wired ANY pointer handler
-  // (the chevron use-case in DotChart, for example, is a pure bounds
-  // indicator). Letting decorative pins capture pointer events steals
-  // `:hover` / `data-hovered` from the highlight rects beneath when the
-  // cursor crosses a chevron at an alarm edge. So: pointer-events on only
-  // when at least one handler is provided.
+  // Decorative pins (no pointer handlers wired) must not capture pointer
+  // events — otherwise they steal `:hover` / `data-hovered` from siblings
+  // beneath. Enable pointer-events only when at least one handler is set.
   const interactive = (): boolean =>
     merged.onClick != null || merged.onDelete != null || merged.onHover != null;
 
@@ -154,8 +151,8 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
         {(pin, i) => {
           const cx = () => ctx.xScale()(pin.x);
           // Annotation-lane pins ignore `pin.y` entirely — they live in
-          // the reserved band above the plot. Plot-lane pins keep the
-          // existing y-scale + plot-top fallback behavior.
+          // the reserved band above the plot. Plot-lane pins resolve `y`
+          // through the y-scale, falling back to y=0 when omitted.
           const cy = () => {
             if (isAnnotationLane()) return annotationCy();
             return pin.y != null ? ctx.yScale()(pin.y) : 0;

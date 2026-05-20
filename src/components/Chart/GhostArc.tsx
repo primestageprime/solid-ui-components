@@ -1,20 +1,5 @@
-// Defaults to pointer-events=none so the arc never intercepts clicks on
-// slots beneath it (a preview connection must not block its targets).
-//
-// `anchor` selects how the arc's y-coords are interpreted:
-//   - "data" (default): both endpoints' `y` are read in data domain — the
-//     arc arches through the plot region. Clipped by the plot path so the
-//     curve never escapes the inner box.
-//   - "above": both endpoints' `y` are IGNORED — the arc lives in the
-//     chart's ANNOTATION LANE (top-margin band) when one is configured
-//     (`<Chart annotationLaneHeight={N}>`). Endpoints sit at the vertical
-//     center of the lane and the apex floats near the lane's top edge,
-//     so the curve stays out of the data area entirely. When no lane is
-//     configured the legacy behavior holds: endpoints anchor at y=0 and
-//     the apex arches up into the top margin. Clipped to the annotation-
-//     lane path (in lane mode) so the curve is horizontally bounded to
-//     the plot but free to occupy the full lane vertically; when no lane
-//     is configured the arc is unclipped so the apex can sit above y=0.
+// pointer-events=none so the arc (a preview-only affordance) never
+// intercepts clicks intended for the slots beneath it.
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 
