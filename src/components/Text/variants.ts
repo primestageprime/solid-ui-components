@@ -54,8 +54,11 @@ export const MonoDump = createText({
 // Inline units — inherits font-size from parent, muted color, left margin
 export const InlineUnits = createText({ variant: "sublabel", style: { "font-size": "inherit", "margin-left": "4px" } });
 
-// Semantic heading — top-level page title, renders as <h1>
+// Semantic headings — h1/h2/h3, all use the `title` variant for typography
+// and let the consumer pick the right semantic level for their document tree.
 export const PageTitle = createText({ variant: "title", as: "h1" });
+export const SectionTitle = createText({ variant: "title", as: "h2" });
+export const SubsectionTitle = createText({ variant: "title", as: "h3" });
 
 // Status-colored titles
 export const InfoTitle = createText({ variant: "title", color: "#00d4ff" });

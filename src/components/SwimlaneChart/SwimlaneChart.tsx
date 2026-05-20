@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
-import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../DagChart/svg";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge, orthogonalStepPath } from "../DagChart/svg";
 import { computeSwimlaneLayout } from "./layout";
 import "./SwimlaneChart.css";
 
@@ -42,14 +42,6 @@ export type SwimlaneChartProps<T> = {
 };
 
 const DEFAULT_SIZE: [number, number] = [180, 60];
-
-function edgePath(sx: number, sy: number, tx: number, ty: number): string {
-  // Horizontal-biased cubic bezier: control points 40% of dx along the source/target.
-  const dx = tx - sx;
-  const cx1 = sx + dx * 0.4;
-  const cx2 = tx - dx * 0.4;
-  return `M ${sx} ${sy} C ${cx1} ${sy}, ${cx2} ${ty}, ${tx} ${ty}`;
-}
 
 export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   let svgRef: SVGSVGElement | undefined;
@@ -130,8 +122,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (!s || !t) return [];
       const isSummary =
         e.sourceId.startsWith("__collapsed_") || e.targetId.startsWith("__collapsed_");
+      // Path goes target -> source so the arrowhead (marker-end) lands at
+      // the source = dependency. Reads as "this dependent is waiting on that
+      // dependency." Routed orthogonally through the column gap, with
+      // endpoints clipped to node rect edges.
       return [{
-        d: edgePath(s.x, s.y, t.x, t.y),
+        d: orthogonalStepPath(t, s),
         isSummary,
         key: `${e.sourceId}|${e.targetId}`,
       }];

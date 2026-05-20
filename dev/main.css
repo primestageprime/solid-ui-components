@@ -34,6 +34,47 @@
   color: var(--jtf-text-muted);
 }
 
+.workshop-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  align-items: start;
+}
+
+.workshop-grid__cell {
+  padding: 16px 0;
+  border-top: 1px solid var(--sui-accent, #00d4ff);
+}
+
+/* No top border on the first row (cells 1 and 2). */
+.workshop-grid > .workshop-grid__cell:nth-child(-n + 2) {
+  border-top: none;
+  padding-top: 0;
+}
+
+.json-panel {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--jtf-surface, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--jtf-border);
+  border-radius: 4px;
+  color: var(--jtf-text, #e6ecf5);
+  overflow: auto;
+  white-space: pre;
+  -webkit-user-select: text;
+  user-select: text;
+  box-sizing: content-box;
+}
+.json-panel .json-key    { color: #79c0ff; }
+.json-panel .json-string { color: #a5d6ff; }
+.json-panel .json-number { color: #ffa657; }
+.json-panel .json-bool   { color: #ff7b72; }
+.json-panel .json-null   { color: #ff7b72; }
+.json-panel .json-punct  { color: rgba(230, 236, 245, 0.55); }
+
 .workshop-link {
   display: block;
   width: calc(100% - 24px);
@@ -913,6 +954,12 @@
   padding: 32px;
   max-width: 1000px;
   overflow-y: auto;
+}
+
+/* Workshop opts out of the 1000px content cap so its right column can
+   use the actual remaining viewport width. */
+.showcase__content:has(.component-section--full) {
+  max-width: none;
 }
 
 /* ── Shared showcase classes ───────────────────────────── */
