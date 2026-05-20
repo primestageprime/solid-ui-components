@@ -120,7 +120,7 @@ export function BurndownChart(props: BurndownChartProps) {
           tickFormat={(v) => props.bars[Math.round(v)]?.label ?? ""}
         />
       )}
-      <ReferenceLine y={0} stroke="currentColor" strokeDasharray="" />
+      <ReferenceLine orientation="horizontal" value={0} stroke="currentColor" strokeDasharray="" />
       <BarSeries
         data={props.bars}
         x={(_b, i) => i}

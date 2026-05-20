@@ -16,8 +16,6 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "worker": "./dist/server.js",
-      "deno": "./dist/server.js",
       "node": "./dist/server.js",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
@@ -55,12 +53,15 @@
     "node": ">=18"
   },
   "peerDependencies": {
+    "d3-scale": "^4.0.0",
     "katex": "^0.16.0",
     "solid-js": "^1.9.0"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
-    "jsdom": "^29.1.1",
+    "@types/d3-scale": "^4.0.8",
+    "d3-scale": "^4.0.2",
+    "jsdom": "^26.1.0",
     "solid-js": "^1.9.10",
     "typescript": "^5.7.0",
     "vite": "^6.0.0",

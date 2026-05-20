@@ -1,6 +1,6 @@
-// Chart slots: XAxis, YAxis — tick lines + labels at scale ticks.
-import { Component, For } from "solid-js";
+import { Component, For, Show } from "solid-js";
 import { useChart } from "./context";
+import type { Scale } from "./scales";
 
 export interface AxisProps {
   tickCount?: number;
@@ -9,6 +9,34 @@ export interface AxisProps {
   tickFormat?: (value: number) => string;
   /** Hide the baseline. Default false. */
   hideLine?: boolean;
+  /**
+   * Optional axis title rendered centered along the axis. For XAxis it sits
+   * below the tick labels; for YAxis it sits to the left of the y-tick
+   * labels, rotated 90deg counter-clockwise.
+   */
+  label?: string;
+  /**
+   * Vertical pixel offset for XAxis tick labels (the `y` of each label
+   * `<text>`). Default 16. Increase to push labels further below the axis
+   * line — useful when a slot (e.g. a timeline strip) needs to sit between
+   * the axis and the labels. No effect on YAxis.
+   */
+  labelOffset?: number;
+  /**
+   * Vertical pixel offset for XAxis tick marks. Default 0 — ticks render
+   * from `y=0` to `y=4` relative to the axis baseline. Increase to push tick
+   * marks DOWN so they emerge below a strip occupying the top of the axis
+   * region (e.g. a TimelineBar with `bandY={{ anchor: "margin-bottom" }}`
+   * flush against the axis line). Independent of `labelOffset` — adjust both when ticks
+   * move so labels still clear them. No effect on YAxis.
+   */
+  tickOffset?: number;
+  /**
+   * Rotate x-axis tick labels -45° (bottom-left → top-right). Prevents
+   * collision when labels are long (e.g. dates). Y-axis ignores this prop.
+   * Default false.
+   */
+  rotateLabels?: boolean;
 }
 
 const defaultFormat = (v: number): string => {
@@ -17,10 +45,20 @@ const defaultFormat = (v: number): string => {
   return String(Math.round(v * 100) / 100);
 };
 
+const isTimeScale = (
+  s: Scale,
+): s is Scale & { tickFormat: (count?: number) => (v: number) => string } =>
+  typeof (s as { tickFormat?: unknown }).tickFormat === "function";
+
 export const XAxis: Component<AxisProps> = (props) => {
   const ctx = useChart();
   const tickCount = () => props.tickCount ?? 5;
-  const fmt = () => props.tickFormat ?? defaultFormat;
+  const fmt = () => {
+    if (props.tickFormat) return props.tickFormat;
+    const scale = ctx.xScale();
+    if (isTimeScale(scale)) return scale.tickFormat(tickCount());
+    return defaultFormat;
+  };
 
   return (
     <g class="sui-chart__axis sui-chart__axis--x" transform={`translate(0, ${ctx.innerHeight()})`}>
@@ -30,13 +68,44 @@ export const XAxis: Component<AxisProps> = (props) => {
       <For each={props.tickValues ?? ctx.xScale().ticks(tickCount())}>
         {(t) => (
           <g transform={`translate(${ctx.xScale()(t)}, 0)`}>
-            <line class="sui-chart__axis-tick" y1={0} y2={4} />
-            <text class="sui-chart__axis-label" y={16} text-anchor="middle">
+            <line
+              class="sui-chart__axis-tick"
+              y1={props.tickOffset ?? 0}
+              y2={(props.tickOffset ?? 0) + 4}
+            />
+            <text
+              class="sui-chart__axis-label"
+              text-anchor={props.rotateLabels ? "end" : "middle"}
+              transform={
+                props.rotateLabels
+                  ? // x-shift = capHeight * sin(45°) ≈ 6px for 0.7rem font.
+                    // Puts the rotated text's top corner directly under the tick.
+                    `translate(6, ${props.labelOffset ?? 16}) rotate(-45)`
+                  : undefined
+              }
+              y={props.rotateLabels ? undefined : (props.labelOffset ?? 16)}
+            >
               {fmt()(t)}
             </text>
           </g>
         )}
       </For>
+      <Show when={props.label}>
+        {(label) => (
+          <text
+            class="sui-chart__axis-title"
+            x={ctx.innerWidth() / 2}
+            // Rotated labels drop ~half-their-width below the anchor; the
+            // hardcoded +18 clearance designed for horizontal labels collides
+            // with the bottom of long diagonal labels. +44 keeps the title
+            // clear of typical date/time labels up to ~60px wide.
+            y={(props.labelOffset ?? 16) + (props.rotateLabels ? 44 : 18)}
+            text-anchor="middle"
+          >
+            {label()}
+          </text>
+        )}
+      </Show>
     </g>
   );
 };
@@ -61,6 +130,17 @@ export const YAxis: Component<AxisProps> = (props) => {
           </g>
         )}
       </For>
+      <Show when={props.label}>
+        {(label) => (
+          <text
+            class="sui-chart__axis-title sui-chart__axis-title--y"
+            transform={`rotate(-90) translate(${-ctx.innerHeight() / 2}, ${-(28 + (props.labelOffset ?? 0))})`}
+            text-anchor="middle"
+          >
+            {label()}
+          </text>
+        )}
+      </Show>
     </g>
   );
 };

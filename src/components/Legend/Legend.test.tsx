@@ -29,8 +29,8 @@ describe("Legend", () => {
   it("applies the item color as inline background-color on the swatch", () => {
     const { container } = render(() => <Legend items={SERIES_ITEMS} />);
     const swatches = container.querySelectorAll(".sui-legend__swatch");
-    expect(styleOf(swatches[0]!)).toMatch(/background-color:\s*#3b82f6/i);
-    expect(styleOf(swatches[2]!)).toMatch(/background-color:\s*#f59e0b/i);
+    expect(styleOf(swatches[0]!)).toMatch(/background-color:\s*(?:#3b82f6|rgb\(59,\s*130,\s*246\))/i);
+    expect(styleOf(swatches[2]!)).toMatch(/background-color:\s*(?:#f59e0b|rgb\(245,\s*158,\s*11\))/i);
   });
 
   it("defaults to horizontal orientation", () => {

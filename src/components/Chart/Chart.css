@@ -10,11 +10,27 @@
   overflow: visible;
 }
 
-/* Grid */
+/* Overlay — sibling of <svg> inside .sui-chart. Hosts portal-rendered
+   HTML overlays (e.g. ChartTooltip) since HTML inside <svg><g> has no
+   layout box. position: absolute makes this element the positioning
+   context for its absolutely-positioned tooltip children. */
+.sui-chart__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Grid — distinct from `--sui-border` so consumers can mute the in-plot
+   chrome (the reference design wants grid lines almost-invisible) without
+   bleeding into the chart card / table / button border palette.
+   `pointer-events: none` is critical — without it the line nodes
+   intercept the cursor and short-circuit data-hovered on the highlight
+   rects beneath when grid spacing aligns with alarm band edges. */
 .sui-chart__grid-line {
-  stroke: var(--sui-border, rgba(255, 255, 255, 0.08));
+  stroke: var(--sui-chart-grid, rgba(255, 255, 255, 0.06));
   stroke-width: 1;
   shape-rendering: crispEdges;
+  pointer-events: none;
 }
 
 /* Axes */
@@ -24,11 +40,23 @@
   shape-rendering: crispEdges;
 }
 .sui-chart__axis-tick {
-  stroke: var(--sui-border-strong, rgba(255, 255, 255, 0.18));
-  stroke-width: 1;
+  stroke: var(--sui-chart-tick-color, #c0c0c0);
+  stroke-width: 1.5;
 }
-.sui-chart__axis-label {
-  fill: var(--sui-text-muted, #888);
+.sui-chart__title {
+  color: var(--sui-chart-title-color, #dfdfdf);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 4px 0 6px;
+}
+
+/* Tick + axis-title labels — chart-scoped so consumers can tint chart
+   text muted-cool-gray independently of the broader app's --sui-text-muted
+   (which may be a warmer hue used by surfaces, tables, etc.). */
+.sui-chart__axis-label,
+.sui-chart__axis-title {
+  fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.7rem;
 }
 
@@ -40,24 +68,105 @@
 .sui-chart__area {
   fill: var(--sui-accent, #4ea1ff);
 }
+/* Data-point dots are pure visualization: emphasis is computed by the
+   chart-root pointer listener (no per-dot handlers). Disabling pointer
+   events lets hover pass through to highlight segments / timeline bars
+   underneath, so an alarm rect doesn't lose :hover when the cursor
+   crosses a dot inside it. */
+.sui-chart__points {
+  pointer-events: none;
+}
 
 /* Reference */
 .sui-chart__ref-label {
-  fill: var(--sui-text-muted, #888);
+  fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.65rem;
 }
 
-/* Crosshair */
+/* Crosshair — purely decorative; cursor must pass through to siblings
+   below (HighlightSegments, TimelineBar) so their `:hover` / data-hovered
+   states fire without interruption when the cursor crosses the guide or
+   the per-series dot. */
 .sui-chart__crosshair-guide {
   stroke: var(--sui-text-muted, #888);
   stroke-width: 1;
   stroke-dasharray: 2 3;
   opacity: 0.5;
+  pointer-events: none;
 }
 .sui-chart__crosshair-dot {
   fill: var(--sui-bg, #111);
   stroke: var(--sui-accent, #4ea1ff);
   stroke-width: 2;
+  pointer-events: none;
+}
+
+/* Highlight segments — :hover bumps alpha + adds a thin stroke. */
+.sui-chart__highlight-segment {
+  transition: opacity 120ms ease, stroke-width 120ms ease;
+}
+.sui-chart__highlight-segment:hover {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+}
+/* Attribute-driven hover — robust against sibling slots (PointSeries dots,
+   crosshair dot/guide, PinMarkers chevrons) capturing pointer events. The
+   chart root tracks `hoverX` continuously regardless of which child rect
+   the cursor is technically "over"; HighlightSegments mirrors that into
+   `data-hovered` so the visual state never flickers during in-segment moves. */
+.sui-chart__highlight-segment[data-hovered="true"] {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+}
+.sui-chart__highlight-segment[data-emphasized="true"] {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+}
+
+/* Pin markers — attribute-driven emphasis for sibling-slot hover sync.
+   Mirrors HighlightSegments[data-emphasized] so a hovered alarm edge
+   visibly lights up every pin pointing at it (and vice versa). Uses a
+   subtle scale-up around the glyph center; the glyph itself is wrapped
+   in a translate(cx, cy), so transform-origin: center keeps the
+   emphasis growing AROUND the pin, not from the corner of its bbox. */
+.sui-chart__pin-marker {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+.sui-chart__pin-marker[data-emphasized="true"] {
+  transform: scale(1.4);
+}
+
+/* Timeline strip track — full-width background outline so empty regions
+   (no segment data) still show the strip's extent. Same subtle stroke as
+   the axis line. */
+.sui-chart__timeline-track {
+  fill: none;
+  stroke: var(--sui-border-strong, rgba(255, 255, 255, 0.18));
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+/* Timeline bars — same affordance, slightly thinner stroke. */
+.sui-chart__timeline-bar {
+  transition: opacity 120ms ease, stroke-width 120ms ease;
+}
+.sui-chart__timeline-bar:hover {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1;
+}
+
+/* Timeline-strip labels — rendered in the chart's left margin, right-aligned
+   against the strip's start. Same tick-color palette as axis labels so labels
+   read as chart chrome rather than data. */
+.sui-chart__timeline-bar-label {
+  fill: var(--sui-chart-tick-color, #c0c0c0);
+  font-size: 0.7rem;
 }
 
 /* Tooltip */

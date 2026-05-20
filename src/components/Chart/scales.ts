@@ -2,6 +2,8 @@
 // Chart scales — pure data → pixel mapping. No SolidJS, no DOM.
 // ============================================
 
+import { scaleTime as d3ScaleTime } from "d3-scale";
+
 export interface Scale {
   (value: number): number;
   invert: (px: number) => number;
@@ -67,4 +69,36 @@ export const domainOf = <T>(
   }
   const span = hi - lo;
   return [lo - span * pad, hi + span * pad];
+};
+
+/** TimeScale extends Scale with a tickFormat helper for time-aware axis labels. */
+export interface TimeScale extends Scale {
+  /** Returns a formatter for tick values (epoch ms numbers). Defaults to d3's locale-aware format. */
+  tickFormat: (count?: number, specifier?: string) => (v: number) => string;
+}
+
+/**
+ * scaleTime — wraps d3-scale's scaleTime so the returned function matches our `Scale`
+ * surface: takes a number (epoch ms), returns a pixel; `invert(px)` returns epoch ms;
+ * `domain`/`range`/`ticks`/`tickFormat` are uniform. Domain endpoints are accepted as
+ * `Date` instances and converted to epoch ms internally so downstream scale
+ * consumers stay number-typed.
+ */
+export const scaleTime = (
+  domain: readonly [Date, Date],
+  range: readonly [number, number],
+): TimeScale => {
+  const d3 = d3ScaleTime().domain([domain[0], domain[1]]).range([range[0], range[1]]);
+  const d0 = domain[0].getTime();
+  const d1 = domain[1].getTime();
+  const fn = ((v: number) => d3(new Date(v))) as TimeScale;
+  fn.invert = (px: number) => d3.invert(px).getTime();
+  fn.domain = [d0, d1] as const;
+  fn.range = [range[0], range[1]] as const;
+  fn.ticks = (count = 5) => d3.ticks(count).map((t) => t.getTime());
+  fn.tickFormat = (count = 5, specifier?: string) => {
+    const f = d3.tickFormat(count, specifier as string | undefined);
+    return (v: number) => f(new Date(v));
+  };
+  return fn;
 };

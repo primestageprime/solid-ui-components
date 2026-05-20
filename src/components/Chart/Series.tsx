@@ -1,6 +1,6 @@
-// Chart slots: LineSeries, AreaSeries, PointSeries, ReferenceLine.
-import { Component, For, Show, createMemo } from "solid-js";
+import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
+import { slotId as brandSlotId } from "./slot-types";
 
 interface SeriesBase<T> {
   data: readonly T[];
@@ -56,16 +56,18 @@ export function LineSeries<T>(props: LineSeriesProps<T>) {
     ),
   );
   return (
-    <path
-      class={`sui-chart__line${props.class ? " " + props.class : ""}`}
-      d={d()}
-      stroke={props.stroke}
-      stroke-width={props.strokeWidth ?? 2}
-      stroke-dasharray={props.strokeDasharray}
-      fill="none"
-      stroke-linejoin="round"
-      stroke-linecap="round"
-    />
+    <g clip-path={ctx.clip.plotPathUrl()}>
+      <path
+        class={`sui-chart__line${props.class ? " " + props.class : ""}`}
+        d={d()}
+        stroke={props.stroke}
+        stroke-width={props.strokeWidth ?? 2}
+        stroke-dasharray={props.strokeDasharray}
+        fill="none"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      />
+    </g>
   );
 }
 
@@ -101,13 +103,15 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
     return `${top} L${xs(last).toFixed(2)},${baseY.toFixed(2)} L${xs(first).toFixed(2)},${baseY.toFixed(2)} Z`;
   });
   return (
-    <path
-      class={`sui-chart__area${props.class ? " " + props.class : ""}`}
-      d={d()}
-      fill={props.fill}
-      fill-opacity={props.fillOpacity ?? 0.18}
-      stroke="none"
-    />
+    <g clip-path={ctx.clip.plotPathUrl()}>
+      <path
+        class={`sui-chart__area${props.class ? " " + props.class : ""}`}
+        d={d()}
+        fill={props.fill}
+        fill-opacity={props.fillOpacity ?? 0.18}
+        stroke="none"
+      />
+    </g>
   );
 }
 
@@ -120,28 +124,71 @@ export interface PointSeriesProps<T> extends SeriesBase<T> {
   strokeWidth?: number;
   /** Tooltip / aria title per point. */
   title?: (d: T) => string;
+  /**
+   * When true and `ctx.hoverX()` is non-null, the datum whose x is closest
+   * to hoverX is rendered with `radius * emphasisScale`. Default false.
+   */
+  emphasizeNearestX?: boolean;
+  /** Radius multiplier applied to the emphasized point. Default 2. */
+  emphasisScale?: number;
 }
 
 export function PointSeries<T>(props: PointSeriesProps<T>) {
   const ctx = useChart();
-  const radius = (d: T) => (typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3);
+  const slotId = brandSlotId(createUniqueId());
+  const baseRadius = (d: T) =>
+    typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3;
   const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
   const stroke = (d: T) => (typeof props.stroke === "function" ? props.stroke(d) : props.stroke);
+  // Nearest datum + its distance to hoverX (DATA-domain units). `null` when
+  // emphasis is disabled, no hover, no data, or the nearest is invalid.
+  const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
+    if (!props.emphasizeNearestX) return null;
+    const hx = ctx.hoverX();
+    if (hx == null) return null;
+    const best = props.data.reduce<{ idx: number; dist: number }>(
+      (acc, d, i) => {
+        const dist = Math.abs(props.x(d) - hx);
+        return dist < acc.dist ? { idx: i, dist } : acc;
+      },
+      { idx: -1, dist: Infinity },
+    );
+    return best.idx < 0 ? null : best;
+  });
+  const nearestIdx = createMemo(() => nearest()?.idx ?? -1);
+
+  // Report this slot's candidate distance to the chart-level coordinator.
+  // The coordinator picks ONE winner across all participating slots.
+  createEffect(() => {
+    const n = nearest();
+    if (n == null) {
+      ctx.emphasis.clear(slotId);
+    } else {
+      ctx.emphasis.report(slotId, n.dist);
+    }
+  });
+  onCleanup(() => ctx.emphasis.clear(slotId));
+
+  const isWinner = () => ctx.emphasis.winnerId() === slotId;
   return (
-    <g class="sui-chart__points">
+    <g class="sui-chart__points" clip-path={ctx.clip.plotPathUrl()}>
       <For each={props.data}>
-        {(d) => {
+        {(d, i) => {
           const xv = props.x(d);
           const yv = props.y(d);
           if ((props.skipMissing ?? true) && (Number.isNaN(xv) || Number.isNaN(yv))) return null;
+          const isEmphasized = () => isWinner() && i() === nearestIdx();
+          const r = () =>
+            isEmphasized() ? baseRadius(d) * (props.emphasisScale ?? 2) : baseRadius(d);
           return (
             <circle
               cx={ctx.xScale()(xv)}
               cy={ctx.yScale()(yv)}
-              r={radius(d)}
+              r={r()}
               fill={fill(d)}
               stroke={stroke(d)}
               stroke-width={props.strokeWidth}
+              data-emphasized={isEmphasized() ? "true" : undefined}
             >
               <Show when={props.title}>
                 <title>{props.title!(d)}</title>
@@ -187,7 +234,10 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
   const bandWidth = () => props.bandWidth ?? 0.65;
   const baseline = () => props.baseline ?? 0;
   return (
-    <g class={`sui-chart__bars${props.class ? " " + props.class : ""}`}>
+    <g
+      class={`sui-chart__bars${props.class ? " " + props.class : ""}`}
+      clip-path={ctx.clip.plotPathUrl()}
+    >
       <For each={props.data}>
         {(d, i) => {
           const xs = ctx.xScale();
@@ -245,28 +295,47 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 }
 
 // ---- ReferenceLine ----
-export interface ReferenceLineProps {
-  /** Horizontal line at this Y data value. Mutually exclusive with `x`. */
-  y?: number;
-  /** Vertical line at this X data value. */
-  x?: number;
+export interface ReferenceLineStyleProps {
   stroke?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
   label?: string;
+  /** Color override; takes precedence over `stroke`. Defaults via CSS class. */
+  color?: string;
 }
+
+/**
+ * ReferenceLine props.
+ *
+ * Caller passes `{ orientation, value }`. `value` is read on the x scale
+ * when orientation="vertical" and on the y scale when orientation="horizontal".
+ * Accepts `number | Date` (Date when the chart has a time domain).
+ */
+export type ReferenceLineProps = ReferenceLineStyleProps & {
+  orientation: "horizontal" | "vertical";
+  value: number | Date;
+};
+
+const toScaleValue = (v: number | Date): number =>
+  v instanceof Date ? v.getTime() : v;
 
 export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
   const ctx = useChart();
+  const resolved = createMemo(() => ({
+    orientation: props.orientation,
+    value: toScaleValue(props.value),
+  }));
+  const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
+
   return (
     <g class="sui-chart__ref">
-      <Show when={props.y != null}>
+      <Show when={resolved().orientation === "horizontal"}>
         <line
           x1={0}
           x2={ctx.innerWidth()}
-          y1={ctx.yScale()(props.y!)}
-          y2={ctx.yScale()(props.y!)}
-          stroke={props.stroke ?? "currentColor"}
+          y1={ctx.yScale()(resolved().value)}
+          y2={ctx.yScale()(resolved().value)}
+          stroke={strokeColor()}
           stroke-width={props.strokeWidth ?? 1}
           stroke-dasharray={props.strokeDasharray ?? "4 4"}
           opacity={0.6}
@@ -275,20 +344,20 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
           <text
             class="sui-chart__ref-label"
             x={ctx.innerWidth() - 4}
-            y={ctx.yScale()(props.y!) - 4}
+            y={ctx.yScale()(resolved().value) - 4}
             text-anchor="end"
           >
             {props.label}
           </text>
         </Show>
       </Show>
-      <Show when={props.x != null}>
+      <Show when={resolved().orientation === "vertical"}>
         <line
           y1={0}
           y2={ctx.innerHeight()}
-          x1={ctx.xScale()(props.x!)}
-          x2={ctx.xScale()(props.x!)}
-          stroke={props.stroke ?? "currentColor"}
+          x1={ctx.xScale()(resolved().value)}
+          x2={ctx.xScale()(resolved().value)}
+          stroke={strokeColor()}
           stroke-width={props.strokeWidth ?? 1}
           stroke-dasharray={props.strokeDasharray ?? "4 4"}
           opacity={0.6}
