@@ -15,6 +15,12 @@ export type DagSvgNodeProps<T> = {
   onClick?: (id: string) => void;
   /** Consumer-provided render callback for the node body. */
   renderNode: (node: DAGNode<T>, state: NodeRenderState) => JSX.Element;
+  /**
+   * When true, sets `data-leaving="true"` on the inner div. Consumers
+   * style this with a CSS animation to shrink/fade the node out before
+   * removing it from the DOM. Click events are also suppressed.
+   */
+  leaving?: boolean;
 };
 
 /**
@@ -33,8 +39,9 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
     >
       <div
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => props.onClick?.(props.node.id)}
-        style={{ width: "100%", height: "100%", cursor: "pointer" }}
+        onClick={() => !props.leaving && props.onClick?.(props.node.id)}
+        data-leaving={props.leaving ? "true" : undefined}
+        style={{ width: "100%", height: "100%", cursor: props.leaving ? "default" : "pointer" }}
       >
         {props.renderNode(props.node, props.state)}
       </div>
