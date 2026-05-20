@@ -89,6 +89,112 @@ describe("GhostPin — pointer-events", () => {
   });
 });
 
+describe("GhostPin — lane", () => {
+  // ShapeGlyph positions via `<g transform="translate(cx, cy)">` so we
+  // parse the y component out of the transform string.
+  const cyFromTransform = (el: Element): number => {
+    const m = el
+      .getAttribute("transform")!
+      .match(/translate\(\s*[\d.-]+\s*,\s*(-?[\d.]+)\s*\)/);
+    return Number(m![1]);
+  };
+
+  it("lane='annotation' uses the annotation-lane clip-path", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const desc: Descriptor = { color: "#fff", shape: "pin" };
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <Probe />
+        <GhostPin descriptor={desc} lane="annotation" />
+      </Chart>
+    ));
+    setHover!(5);
+    const group = container.querySelector(".sui-chart__ghost-pin")!;
+    expect(group.getAttribute("data-lane")).toBe("annotation");
+    expect(group.getAttribute("clip-path")).toMatch(
+      /^url\(#sui-chart-annotation-lane-clip-/,
+    );
+  });
+
+  it("lane='annotation' centers glyph at -annotationLaneHeight/2 (ignores y)", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const desc: Descriptor = { color: "#fff", shape: "circle" };
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <Probe />
+        <GhostPin descriptor={desc} lane="annotation" y={50} />
+      </Chart>
+    ));
+    setHover!(5);
+    const glyph = container.querySelector(".sui-chart__ghost-pin > g")!;
+    // -32 / 2 = -16
+    expect(cyFromTransform(glyph)).toBeCloseTo(-16, 1);
+  });
+
+  it("lane='annotation' falls back to cy=0 when chart has no lane configured", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const desc: Descriptor = { color: "#fff", shape: "circle" };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <GhostPin descriptor={desc} lane="annotation" />
+      </Chart>
+    ));
+    setHover!(5);
+    const glyph = container.querySelector(".sui-chart__ghost-pin > g")!;
+    expect(cyFromTransform(glyph)).toBeCloseTo(0, 1);
+  });
+
+  it("lane='plot-data' (default) uses the plot clip-path", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const desc: Descriptor = { color: "#fff", shape: "pin" };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <GhostPin descriptor={desc} />
+      </Chart>
+    ));
+    setHover!(5);
+    const group = container.querySelector(".sui-chart__ghost-pin")!;
+    expect(group.getAttribute("data-lane")).toBe("plot-data");
+    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-clip-/);
+  });
+});
+
 describe("GhostPin — curried variants", () => {
   it("WarningGhostPin attaches the warning class when visible", () => {
     let setHover: ((x: number | null) => void) | null = null;
