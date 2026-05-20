@@ -36,7 +36,10 @@
 
 .workshop-grid {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* minmax(0, 1fr) so the right track can shrink below its widest cell's
+     content (otherwise rows with fixed-width charts pin the track wide,
+     which would freeze the variable-width row's container). */
+  grid-template-columns: max-content minmax(0, 1fr);
   column-gap: 16px;
   align-items: start;
 }

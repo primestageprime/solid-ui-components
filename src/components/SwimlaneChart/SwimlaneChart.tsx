@@ -194,27 +194,41 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   const STUB_LENGTH = 28;
   const BADGE_RADIUS = 11;
 
+  // Aggregate summaries by (anchor, side) so each visible anchor gets at
+  // most one badge per side, and the count reflects the entire collapsed
+  // subtree on that side — not just the closest ring of hidden nodes.
   const boundaryBadges = createMemo(() => {
     const positions = layout().positions;
     const edges = layout().edges;
     const gap = effectiveColumnGap();
-    return layout().summaries.flatMap((s) => {
+
+    type Aggregated = { anchorId: string; dir: -1 | 1; count: number };
+    const grouped = new Map<string, Aggregated>();
+
+    for (const s of layout().summaries) {
       const anchorPos = positions.get(s.anchorId);
-      if (!anchorPos) return [];
-      // Derive anchor's column index from its x: cols are at -gap, 0, +gap.
-      const anchorCol = Math.round(anchorPos.x / gap) + 1;
+      if (!anchorPos) continue;
+      // Anchor's col index from its center x.
+      const anchorCol = gap > 0 ? Math.round(anchorPos.x / gap) : 0;
       let dir: -1 | 1;
       if (s.column < anchorCol) dir = -1;
       else if (s.column > anchorCol) dir = 1;
       else {
-        // Intra-column: read direction from the synthetic edge between
-        // anchor and summary. Summary as source = predecessor (left);
-        // summary as target = successor (right).
         const edge = edges.find(
           (e) => e.sourceId === s.id || e.targetId === s.id,
         );
         dir = edge && edge.targetId === s.anchorId ? -1 : 1;
       }
+      const key = `${s.anchorId}|${dir}`;
+      const existing = grouped.get(key);
+      if (existing) existing.count += s.collapsedCount;
+      else grouped.set(key, { anchorId: s.anchorId, dir, count: s.collapsedCount });
+    }
+
+    return Array.from(grouped.entries()).flatMap(([key, g]) => {
+      const anchorPos = positions.get(g.anchorId);
+      if (!anchorPos) return [];
+      const dir = g.dir;
       const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
       // Both sides flow left -> right (dep-flow direction). The line ends
       // at the badge's *inner* edge so the arrowhead is always visible
@@ -235,11 +249,11 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           ? arrowStart - BADGE_RADIUS
           : arrowEnd + BADGE_RADIUS;
       return [{
-        key: s.id,
+        key,
         d: `M ${arrowStart} ${anchorPos.y} L ${arrowEnd} ${anchorPos.y}`,
         badgeX,
         badgeY: anchorPos.y,
-        count: s.collapsedCount,
+        count: g.count,
       }];
     });
   });
