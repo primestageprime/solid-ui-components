@@ -104,6 +104,61 @@ const TWO_LAYERS: StubGraph = {
   ],
 };
 
+// Multi-dep graph designed so the left subtree totals 8 nodes and the
+// right subtree totals 5. Several nodes have 2+ deps; the tree branches
+// and re-converges through `active`.
+//
+//   col -3        col -2          col -1        col 0      col +1   col +2     col +3
+//   cf1 ─┬─→ cm1 ─┬─→ c1 ─┐
+//        └─→ cm2 ─┤        ├──→ active ──→ t1 ─┬─→ tn1 ─┐
+//   cf2 ─┬─→ cm2 ─┘        │                   │        ├──→ tf1
+//        └─→ cm3 ─┬─→ c2 ──┘                ─→ t2 ─┬→ tn1│
+//                 └─→ c3 ──┘                       └→ tn2┘
+const MULTI_DEPS: StubGraph = {
+  nodes: [
+    // Left subtree (8 nodes total)
+    { id: "cf1", data: { label: "Far A", col: -3 } },
+    { id: "cf2", data: { label: "Far B", col: -3 } },
+    { id: "cm1", data: { label: "Mid A", col: -2 } },
+    { id: "cm2", data: { label: "Mid B (deps on Far A+B)", col: -2 } },
+    { id: "cm3", data: { label: "Mid C", col: -2 } },
+    { id: "c1", data: { label: "Near A (deps on Mid A+B)", col: -1 } },
+    { id: "c2", data: { label: "Near B (deps on Mid B+C)", col: -1 } },
+    { id: "c3", data: { label: "Near C", col: -1 } },
+    // Center
+    { id: "active", data: { label: "In progress", col: 0 } },
+    // Right subtree (5 nodes total)
+    { id: "t1", data: { label: "Up next A", col: 1 } },
+    { id: "t2", data: { label: "Up next B", col: 1 } },
+    { id: "tn1", data: { label: "Then (deps on A+B)", col: 2 } },
+    { id: "tn2", data: { label: "Then alt", col: 2 } },
+    { id: "tf1", data: { label: "Final (deps on Then A+B)", col: 3 } },
+  ],
+  edges: [
+    // Left subtree
+    { source: "cf1", target: "cm1" },
+    { source: "cf1", target: "cm2" },
+    { source: "cf2", target: "cm2" },
+    { source: "cf2", target: "cm3" },
+    { source: "cm1", target: "c1" },
+    { source: "cm2", target: "c1" },
+    { source: "cm2", target: "c2" },
+    { source: "cm3", target: "c2" },
+    { source: "cm3", target: "c3" },
+    { source: "c1", target: "active" },
+    { source: "c2", target: "active" },
+    { source: "c3", target: "active" },
+    // Right subtree
+    { source: "active", target: "t1" },
+    { source: "active", target: "t2" },
+    { source: "t1", target: "tn1" },
+    { source: "t2", target: "tn1" },
+    { source: "t2", target: "tn2" },
+    { source: "tn1", target: "tf1" },
+    { source: "tn2", target: "tf1" },
+  ],
+};
+
 // 5 nodes mapped to lanes by dependency depth:
 //   A, B (col -1) — independents on the left
 //   C, D (col  0) — C depends on A; D depends on A + B
@@ -260,6 +315,14 @@ export const WorkshopShowcase: Component = () => {
         </div>
         <div class="workshop-grid__cell">
           <StubChart graph={TWO_LAYERS} minWidth="360px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>8 · multi-dep subtree (8 left · 5 right)</SubsectionTitle>
+          <JsonPanel value={MULTI_DEPS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={MULTI_DEPS} width="360px" />
         </div>
       </div>
     </div>
