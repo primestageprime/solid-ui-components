@@ -141,6 +141,55 @@ describe("PinMarkers — emphasizeNearestX", () => {
   });
 });
 
+describe("PinMarkers — emphasizedIds", () => {
+  it("flips data-emphasized on matching pins", () => {
+    const pins: Pin[] = [
+      { id: slotId("a"), x: 2, descriptor: { color: "#fff", shape: "pin" } },
+      { id: slotId("b"), x: 5, descriptor: { color: "#fff", shape: "pin" } },
+    ];
+    const { container } = wrapper(() => (
+      <PinMarkers data={pins} emphasizedIds={new Set([slotId("a")])} />
+    ));
+    const markers = container.querySelectorAll<SVGGElement>(".sui-chart__pin-marker");
+    expect(markers[0]?.getAttribute("data-emphasized")).toBe("true");
+    expect(markers[1]?.getAttribute("data-emphasized")).toBeNull();
+  });
+
+  it("emphasizedIds is independent of selectedId (both can apply)", () => {
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const { container } = wrapper(() => (
+      <PinMarkers
+        data={[pin]}
+        selectedId={slotId("a")}
+        emphasizedIds={new Set([slotId("a")])}
+      />
+    ));
+    const marker = container.querySelector(".sui-chart__pin-marker")!;
+    expect(marker.getAttribute("data-selected")).toBe("true");
+    expect(marker.getAttribute("data-emphasized")).toBe("true");
+  });
+
+  it("does NOT scale the glyph (external emphasis is attribute-only)", () => {
+    // External emphasis must mirror HighlightSegments: flip the data
+    // attribute, leave geometry alone. Only `emphasizeNearestX` is
+    // allowed to grow the glyph.
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "circle", size: 10 },
+    };
+    const baseline = wrapper(() => <PinMarkers data={[pin]} />);
+    const emphasized = wrapper(() => (
+      <PinMarkers data={[pin]} emphasizedIds={new Set([slotId("a")])} />
+    ));
+    const radius = (root: ParentNode): number =>
+      parseFloat(
+        root.querySelector(".sui-chart__pin-marker circle")!.getAttribute("r")!,
+      );
+    expect(radius(emphasized.container)).toBeCloseTo(radius(baseline.container), 5);
+  });
+});
+
 describe("PinMarkers — lane prop", () => {
   it("defaults to plot-data lane: group uses plot clip-path", () => {
     const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };

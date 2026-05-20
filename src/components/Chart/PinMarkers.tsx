@@ -48,6 +48,15 @@ export type PinMarkersLane = "plot-data" | "plot-top" | "annotation";
 export interface PinMarkersProps<TPin extends Pin = Pin> {
   data: readonly TPin[];
   selectedId?: Id | null;
+  /**
+   * IDs externally driven into the same visual state as CSS `:hover`
+   * (raised emphasis flag). Independent of `selectedId` and the internal
+   * `emphasizeNearestX` channel — all three can apply simultaneously,
+   * and the `data-emphasized` attribute lights up if ANY of them flags
+   * the pin. Use this to mirror hover from a sibling slot (e.g. when an
+   * alarm edge is hovered, emphasize every pin that points at it).
+   */
+  emphasizedIds?: ReadonlySet<Id>;
   /** Default glyph size in px. Default `DEFAULT_GLYPH_SIZE` from shapes.ts. */
   size?: number;
   /**
@@ -152,10 +161,19 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
             return pin.y != null ? ctx.yScale()(pin.y) : 0;
           };
           const selected = () => merged.selectedId === pin.id;
-          const isEmphasized = () => isWinner() && i() === nearestIdx();
+          // Nearest-X winner: drives glyph size scaling (the per-chart
+          // "magnify the closest pin" affordance).
+          const isNearestEmphasized = () => isWinner() && i() === nearestIdx();
+          // External emphasis: sibling-slot hover sync. Flips
+          // `data-emphasized` but does NOT scale the glyph — same contract
+          // as HighlightSegments.emphasizedIds.
+          const isExternallyEmphasized = () =>
+            merged.emphasizedIds?.has(pin.id) ?? false;
+          const isEmphasized = () =>
+            isNearestEmphasized() || isExternallyEmphasized();
           const glyphSize = () => {
             const base = pin.descriptor.size ?? merged.size;
-            return isEmphasized() ? base * (merged.emphasisScale ?? 1.6) : base;
+            return isNearestEmphasized() ? base * (merged.emphasisScale ?? 1.6) : base;
           };
           return (
             <g
