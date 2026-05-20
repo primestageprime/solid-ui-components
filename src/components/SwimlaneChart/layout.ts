@@ -1,5 +1,5 @@
-import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
-import type { LayoutResult } from "./layout";
+import type { DAGNode, DAGEdge, LayoutEdge } from "../DagChart/types";
+import type { LayoutResult } from "../DagChart/layout";
 
 export type SwimlaneOptions<T> = {
   swimlaneFor: (node: DAGNode<T>) => 0 | 1 | 2;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { computeSwimlaneLayout } from "./swimlane-layout";
-import type { DAGNode, DAGEdge } from "./types";
+import { computeSwimlaneLayout } from "./layout";
+import type { DAGNode, DAGEdge } from "../DagChart/types";
 
 type Item = { status: 0 | 1 | 2 };
 
