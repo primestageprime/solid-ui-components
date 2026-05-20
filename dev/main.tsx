@@ -108,10 +108,14 @@ import { HopperShowcase } from "./showcases/hopper";
 import { PillVariantsShowcase } from "./showcases/pill-variants";
 import { DagTraversalSandboxShowcase } from "./showcases/dag-traversal-sandbox";
 import { DagTraversalBulkSandboxShowcase } from "./showcases/dag-traversal-bulk-sandbox";
+import { WorkshopShowcase } from "./showcases/workshop";
 
 type Item = { id: string; label: string; component: Component; tags: string[] };
 
 const items: Item[] = [
+  // Workshop: standalone entry, surfaced via the dedicated sidebar link.
+  // Tagged "workshop" so the depth-grouped list filters it out.
+  { id: "workshop", label: "Workshop", component: WorkshopShowcase, tags: ["workshop"] },
   { id: "base-table", label: "BaseTable", component: BaseTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "button", label: "Button", component: ButtonShowcase, tags: ["depth:1", "form"] },
   { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase, tags: ["depth:1", "form"] },
@@ -312,9 +316,11 @@ const App: Component = () => {
     return { active, currentCount: cur.size, newCount: newSet.size, added, removed };
   };
 
-  // Group filtered items by depth (depth:N or "Other" for untagged)
+  // Group filtered items by depth (depth:N or "Other" for untagged).
+  // Items tagged "workshop" are surfaced via the dedicated sidebar link,
+  // not in the depth-grouped list.
   const groupedItems = createMemo(() => {
-    const filtered = filteredItems();
+    const filtered = filteredItems().filter((i) => !i.tags.includes("workshop"));
     const groups: { label: string; items: Item[] }[] = [
       { label: "Depth 0 (primitive)", items: [] },
       { label: "Depth 1", items: [] },
@@ -361,6 +367,15 @@ const App: Component = () => {
           <p>SolidJS Component Library</p>
           <ThemeSwitcher />
         </div>
+
+        <button
+          type="button"
+          class={`workshop-link ${activeId() === "workshop" ? "workshop-link--active" : ""}`}
+          onClick={() => navigate("workshop")}
+          title="Live focus area for whatever's being worked on"
+        >
+          Workshop
+        </button>
 
         <div class="showcase__tags">
           <For each={TAG_CATEGORIES}>

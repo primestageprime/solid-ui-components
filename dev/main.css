@@ -34,6 +34,34 @@
   color: var(--jtf-text-muted);
 }
 
+.workshop-link {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 10px 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  color: var(--jtf-text);
+  background: var(--jtf-surface, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--jtf-border);
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workshop-link:hover {
+  background: var(--jtf-surface-elevated, rgba(255, 255, 255, 0.05));
+  border-color: var(--jtf-accent, var(--jtf-text));
+}
+
+.workshop-link--active {
+  background: rgba(0, 212, 255, 0.12);
+  border-color: var(--sui-accent, #00d4ff);
+  color: var(--sui-accent, #00d4ff);
+}
+
 .showcase__filter {
   padding: 10px 12px;
   border-bottom: 1px solid var(--jtf-border);
