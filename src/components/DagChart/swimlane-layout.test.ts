@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeSwimlaneLayout } from "./swimlane-layout";
-import type { DAGNode } from "./types";
+import type { DAGNode, DAGEdge } from "./types";
 
 type Item = { status: 0 | 1 | 2 };
 
@@ -25,5 +25,47 @@ describe("computeSwimlaneLayout — column bucketing", () => {
     const result = computeSwimlaneLayout([], [], defaults);
     expect(result.positions.size).toBe(0);
     expect(result.edges).toEqual([]);
+  });
+});
+
+describe("computeSwimlaneLayout — Y coordinates", () => {
+  it("stacks nodes in same column vertically, centered as a group around y=0", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 1 } },
+      { id: "b", data: { status: 1 } },
+      { id: "c", data: { status: 1 } },
+    ];
+    const result = computeSwimlaneLayout(nodes, [], defaults);
+    const ys = ["a", "b", "c"].map((id) => result.positions.get(id)!.y).sort((x, y) => x - y);
+    expect(ys).toEqual([-80, 0, 80]);
+  });
+
+  it("centers a single node at y=0", () => {
+    const nodes: DAGNode<Item>[] = [{ id: "a", data: { status: 0 } }];
+    const result = computeSwimlaneLayout(nodes, [], defaults);
+    expect(result.positions.get("a")!.y).toBe(0);
+  });
+
+  it("preserves input order for Y stacking when no edges exist", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "first", data: { status: 0 } },
+      { id: "second", data: { status: 0 } },
+    ];
+    const result = computeSwimlaneLayout(nodes, [], defaults);
+    expect(result.positions.get("first")!.y).toBeLessThan(
+      result.positions.get("second")!.y,
+    );
+  });
+
+  it("emits LayoutEdge polylines for valid edges", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 0 } },
+      { id: "b", data: { status: 2 } },
+    ];
+    const edges: DAGEdge[] = [{ source: "a", target: "b" }];
+    const result = computeSwimlaneLayout(nodes, edges, defaults);
+    expect(result.edges).toHaveLength(1);
+    expect(result.edges[0]).toMatchObject({ sourceId: "a", targetId: "b" });
+    expect(result.edges[0].points).toHaveLength(2);
   });
 });
