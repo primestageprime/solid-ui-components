@@ -62,10 +62,19 @@ export interface ChartEmphasisContext {
  *   Use for slots that render BELOW the axis (e.g. a timeline strip anchored
  *   via `bandY.anchor === "margin-bottom"`) so they stay horizontally clipped
  *   to the plot area while extending vertically into the bottom margin.
+ * - `annotationLanePathUrl` — top-margin annotation lane clip covering
+ *   `x ∈ [0, innerWidth]`, `y ∈ [-annotationLaneHeight, 0]` in plot-local
+ *   coords. Active only when `<Chart annotationLaneHeight={N}>` is set
+ *   (otherwise the rect collapses to zero height). Slots that opt into
+ *   annotation-lane rendering (PinMarkers `lane="annotation"`, GhostArc
+ *   `anchor="above"`) use this clip so their content stays horizontally
+ *   pinned to the plot area while living in the reserved band ABOVE the
+ *   plot, never overlapping the data dots.
  */
 export interface ChartClipContext {
   plotPathUrl: Accessor<string>;
   axisStripPathUrl: Accessor<string>;
+  annotationLanePathUrl: Accessor<string>;
 }
 
 /** Portal-style overlay mounts owned by the Chart root. */
@@ -82,6 +91,15 @@ export interface ChartContextValue {
   margin: Accessor<Margin>;
   innerWidth: Accessor<number>;
   innerHeight: Accessor<number>;
+  /**
+   * Height (px) of the annotation lane reserved at the TOP of the plot,
+   * inside the top-margin region. Lives in y ∈ [-annotationLaneHeight, 0]
+   * in plot-local coords. Zero when the chart isn't hosting an annotation
+   * lane (default). Slots that opt into the lane (PinMarkers
+   * `lane="annotation"`, GhostArc `anchor="above"`) read this to position
+   * themselves inside the band.
+   */
+  annotationLaneHeight: Accessor<number>;
   xScale: Accessor<Scale>;
   yScale: Accessor<Scale>;
 

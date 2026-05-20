@@ -130,6 +130,64 @@ describe("GhostArc — anchor mode", () => {
   });
 });
 
+describe("GhostArc — annotation-lane integration", () => {
+  it("anchor='above' + annotationLaneHeight → endpoints sit at -laneHeight/2", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={120}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <GhostArc anchor="above" from={{ x: 2, y: 10 }} to={{ x: 8, y: 90 }} />
+      </Chart>
+    ));
+    const d = container.querySelector(".sui-chart__ghost-arc")!.getAttribute("d")!;
+    // "M ax ay ..." — ay should be -16 (lane center).
+    const m = d.match(/^M\s+[\d.-]+\s+(-?[\d.]+)\s+Q\s+[\d.-]+\s+(-?[\d.]+)\s+[\d.-]+\s+(-?[\d.]+)$/);
+    expect(m).not.toBeNull();
+    expect(Number(m![1])).toBeCloseTo(-16, 1);
+    // End-y also clamped to lane center.
+    expect(Number(m![3])).toBeCloseTo(-16, 1);
+    // Apex y is clamped within the lane (>= -lane + 4 = -28).
+    expect(Number(m![2])).toBeGreaterThanOrEqual(-28);
+    // Apex is above the endpoints (smaller y in SVG space).
+    expect(Number(m![2])).toBeLessThan(-16);
+  });
+
+  it("anchor='above' + annotationLaneHeight → group clipped to annotation lane", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={120}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <GhostArc anchor="above" from={{ x: 2, y: 10 }} to={{ x: 8, y: 90 }} />
+      </Chart>
+    ));
+    const group = container
+      .querySelector(".sui-chart__ghost-arc")!
+      .parentElement!;
+    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-annotation-lane-clip-/);
+  });
+
+  it("anchor='above' without a lane still uses the legacy y=0 anchor", () => {
+    // Back-compat: charts that haven't opted into an annotation lane keep
+    // the original "above" behaviour (endpoints at y=0, apex above, no clip).
+    const { container } = wrapper(() => (
+      <GhostArc anchor="above" from={{ x: 1, y: 0 }} to={{ x: 9, y: 0 }} />
+    ));
+    const path = container.querySelector(".sui-chart__ghost-arc")!;
+    expect(path.getAttribute("d")).toMatch(/^M\s+[\d.-]+\s+0\s+Q/);
+    expect(path.parentElement!.hasAttribute("clip-path")).toBe(false);
+  });
+});
+
 describe("GhostArc — curried variants", () => {
   it("WarningGhostArc uses warning color", () => {
     const { container } = wrapper(() => (

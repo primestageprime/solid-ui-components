@@ -141,6 +141,84 @@ describe("PinMarkers — emphasizeNearestX", () => {
   });
 });
 
+describe("PinMarkers — lane prop", () => {
+  it("defaults to plot-data lane: group uses plot clip-path", () => {
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const { container } = wrapper(() => <PinMarkers data={[pin]} />);
+    const group = container.querySelector(".sui-chart__pin-markers")!;
+    expect(group.getAttribute("data-lane")).toBe("plot-data");
+    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-clip-/);
+  });
+
+  it("lane='annotation' uses the annotation-lane clip-path", () => {
+    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <PinMarkers data={[pin]} lane="annotation" />
+      </Chart>
+    ));
+    const group = container.querySelector(".sui-chart__pin-markers")!;
+    expect(group.getAttribute("data-lane")).toBe("annotation");
+    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-annotation-lane-clip-/);
+  });
+
+  // ShapeGlyph positions via `<g transform="translate(cx, cy)">` so we
+  // parse the y component out of the transform string.
+  const cyFromTransform = (el: Element): number => {
+    const m = el
+      .getAttribute("transform")!
+      .match(/translate\(\s*[\d.-]+\s*,\s*(-?[\d.]+)\s*\)/);
+    return Number(m![1]);
+  };
+
+  it("lane='annotation' centers glyph at -annotationLaneHeight/2 (ignores pin.y)", () => {
+    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <PinMarkers data={[pin]} lane="annotation" />
+      </Chart>
+    ));
+    const glyph = container.querySelector(".sui-chart__pin-marker > g")!;
+    // -32 / 2 = -16
+    expect(cyFromTransform(glyph)).toBeCloseTo(-16, 1);
+  });
+
+  it("lane='annotation' falls back to cy=0 when chart has no lane configured", () => {
+    // When a consumer asks for annotation lane but the Chart didn't reserve
+    // one, glyphs collapse to y=0 (plot-top) — safe degrade, no off-canvas.
+    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const { container } = wrapper(() => (
+      <PinMarkers data={[pin]} lane="annotation" />
+    ));
+    const glyph = container.querySelector(".sui-chart__pin-marker > g")!;
+    expect(cyFromTransform(glyph)).toBeCloseTo(0, 1);
+  });
+
+  it("default (plot-data) lane still resolves pin.y through the y-scale", () => {
+    // Baseline sanity check that the new prop didn't break the existing
+    // y-scale path. innerHeight = 100 - 8 - 28 = 64; y-scale linear over
+    // [64, 0]. y=50 with domain [0,100] → 64 * (1 - 50/100) = 32.
+    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const { container } = wrapper(() => <PinMarkers data={[pin]} />);
+    const glyph = container.querySelector(".sui-chart__pin-marker > g")!;
+    expect(cyFromTransform(glyph)).toBeCloseTo(32, 1);
+  });
+});
+
 describe("PinMarkers — curried variants", () => {
   it("WarningPinMarkers attaches the warning class", () => {
     const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };

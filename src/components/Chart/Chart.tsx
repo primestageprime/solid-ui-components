@@ -25,6 +25,19 @@ export interface ChartProps {
   yDomain: [number, number];
   /** Plot-area inset. Default: { top: 8, right: 8, bottom: 28, left: 36 }. */
   margin?: Partial<Margin>;
+  /**
+   * Height (px) of a reserved annotation lane that sits in the TOP margin,
+   * directly ABOVE the plot area. When > 0, slots like `<PinMarkers
+   * lane="annotation">` and `<GhostArc anchor="above">` render into the
+   * band (y ∈ [-annotationLaneHeight, 0] in plot-local coords) instead of
+   * colliding with data inside the plot.
+   *
+   * The lane lives INSIDE the existing top margin — the caller is
+   * responsible for sizing `margin.top` to leave room (typically
+   * `margin.top >= annotationLaneHeight + a few px breathing room`). The
+   * lane does NOT shrink `innerHeight`. Default 0 (lane disabled).
+   */
+  annotationLaneHeight?: number;
   /** Optional title. Rendered as an HTML `<div>` ABOVE the SVG (so it
    *  doesn't eat plot pixels) and ALSO surfaced as the SVG `<title>` for
    *  screen readers. */
@@ -68,6 +81,7 @@ export const Chart: Component<ChartProps> = (props) => {
     "xDomain",
     "yDomain",
     "margin",
+    "annotationLaneHeight",
     "title",
     "class",
     "style",
@@ -89,6 +103,9 @@ export const Chart: Component<ChartProps> = (props) => {
   const height = createMemo(() => local.height);
   const innerWidth = createMemo(() => Math.max(0, width() - margin().left - margin().right));
   const innerHeight = createMemo(() => Math.max(0, height() - margin().top - margin().bottom));
+  const annotationLaneHeight = createMemo(() =>
+    Math.max(0, local.annotationLaneHeight ?? 0),
+  );
 
   const xScale = createMemo<Scale>(() => {
     const d = local.xDomain;
@@ -143,6 +160,8 @@ export const Chart: Component<ChartProps> = (props) => {
   const clipPathUrl = createMemo(() => `url(#${clipId})`);
   const axisStripClipId = `sui-chart-axis-strip-clip-${createUniqueId()}`;
   const axisStripClipPathUrl = createMemo(() => `url(#${axisStripClipId})`);
+  const annotationLaneClipId = `sui-chart-annotation-lane-clip-${createUniqueId()}`;
+  const annotationLanePathUrl = createMemo(() => `url(#${annotationLaneClipId})`);
 
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
@@ -192,6 +211,7 @@ export const Chart: Component<ChartProps> = (props) => {
     margin,
     innerWidth,
     innerHeight,
+    annotationLaneHeight,
     xScale,
     yScale,
     hoverX,
@@ -210,6 +230,7 @@ export const Chart: Component<ChartProps> = (props) => {
     clip: {
       plotPathUrl: clipPathUrl,
       axisStripPathUrl: axisStripClipPathUrl,
+      annotationLanePathUrl,
     },
     overlay: {
       tooltipMount,
@@ -267,6 +288,21 @@ export const Chart: Component<ChartProps> = (props) => {
                 y={innerHeight()}
                 width={innerWidth()}
                 height={margin().bottom}
+              />
+            </clipPath>
+            {/*
+              Annotation-lane clip: x spans the full inner-plot width, y
+              spans `[-annotationLaneHeight, 0]` in plot-local coords —
+              i.e. the band carved out of the top margin, directly above
+              the plot area. Collapses to zero height when the chart is
+              not hosting an annotation lane.
+            */}
+            <clipPath id={annotationLaneClipId}>
+              <rect
+                x={0}
+                y={-annotationLaneHeight()}
+                width={innerWidth()}
+                height={annotationLaneHeight()}
               />
             </clipPath>
           </defs>

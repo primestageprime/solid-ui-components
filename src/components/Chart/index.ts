@@ -53,6 +53,7 @@ export * from "./TimelineBar.variants";
 export { PinMarkers, createPinMarkers } from "./PinMarkers";
 export type {
   Pin,
+  PinMarkersLane,
   PinMarkersProps,
   PinMarkersDataProps,
   PinMarkersRenderContext,

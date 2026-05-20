@@ -5,12 +5,16 @@
 //   - "data" (default): both endpoints' `y` are read in data domain — the
 //     arc arches through the plot region. Clipped by the plot path so the
 //     curve never escapes the inner box.
-//   - "above": both endpoints' `y` are IGNORED — the arc anchors at y=0
-//     (top of inner plot) at each timestamp and arches UP into the top
-//     margin. NOT clipped to the plot path so the apex can sit above the
-//     plot. Use when the arc represents a temporal relationship rather
-//     than a value-space relationship (e.g. "pin A caused edge B" arching
-//     in the chart's top margin).
+//   - "above": both endpoints' `y` are IGNORED — the arc lives in the
+//     chart's ANNOTATION LANE (top-margin band) when one is configured
+//     (`<Chart annotationLaneHeight={N}>`). Endpoints sit at the vertical
+//     center of the lane and the apex floats near the lane's top edge,
+//     so the curve stays out of the data area entirely. When no lane is
+//     configured the legacy behavior holds: endpoints anchor at y=0 and
+//     the apex arches up into the top margin. Clipped to the annotation-
+//     lane path (in lane mode) so the curve is horizontally bounded to
+//     the plot but free to occupy the full lane vertically; when no lane
+//     is configured the arc is unclipped so the apex can sit above y=0.
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 
@@ -34,9 +38,11 @@ export interface GhostArcProps {
    * Where to anchor the arc vertically.
    *   - `"data"` (default) — endpoints use their `y` in data domain,
    *     curve arches inside the plot, clipped to the plot path.
-   *   - `"above"` — endpoints sit at the top of the inner plot
-   *     (y=0 in plot-local coords), curve arches UP into the top
-   *     margin; not clipped so the apex is visible.
+   *   - `"above"` — endpoints + apex live in the chart's annotation lane
+   *     when one is configured (see `<Chart annotationLaneHeight>`);
+   *     otherwise endpoints sit at y=0 with the apex arching up into
+   *     the top margin unclipped. Either way the arc stays out of the
+   *     plot-data region.
    */
   anchor?: GhostArcAnchor;
   /** Stroke color. Default 'var(--sui-accent)'. */
@@ -85,26 +91,56 @@ export const GhostArc: Component<GhostArcProps> = (props) => {
         const f = merged.from!;
         const t = merged.to!;
         const isAbove = () => merged.anchor === "above";
+        // When the chart hosts an annotation lane and we're in "above"
+        // mode, anchor the endpoints at the vertical center of the lane.
+        // No lane configured → fall back to y=0 (legacy "above" behavior:
+        // endpoints sit at the top of the plot and the apex floats up
+        // into the top margin).
+        const laneEndpointY = () => {
+          const h = ctx.annotationLaneHeight();
+          return h > 0 ? -h / 2 : 0;
+        };
         const x1 = () => ctx.xScale()(toScalar(f.x));
         const x2 = () => ctx.xScale()(toScalar(t.x));
-        // "above" pins both endpoints to y=0 in plot-local coords (top of
-        // inner plot). "data" reads each endpoint's `y` through the y-scale.
-        const y1 = () => (isAbove() ? 0 : ctx.yScale()(f.y));
-        const y2 = () => (isAbove() ? 0 : ctx.yScale()(t.y));
+        const y1 = () => (isAbove() ? laneEndpointY() : ctx.yScale()(f.y));
+        const y2 = () => (isAbove() ? laneEndpointY() : ctx.yScale()(t.y));
+        // Bezier apex (control point) y. Inside an annotation lane the
+        // apex is clamped near the TOP of the lane so the arc lifts off
+        // the endpoints without escaping the band. Without a lane (or
+        // in "data" mode) the legacy curvature-based lift applies.
+        const apexY = (ay: number, by: number, dx: number) => {
+          const lift = Math.abs(dx) * merged.curvature;
+          if (isAbove()) {
+            const h = ctx.annotationLaneHeight();
+            if (h > 0) {
+              // Lane top sits at y = -h. Apex floats 4px below the top
+              // edge so the arc has visible breathing room; never above
+              // the lane.
+              return Math.max(-h + 4, Math.min(ay, by) - lift);
+            }
+          }
+          return Math.min(ay, by) - lift;
+        };
         const d = () => {
           const ax = x1();
           const ay = y1();
           const bx = x2();
           const by = y2();
           const mx = (ax + bx) / 2;
-          // Lift the midpoint above (smaller y in SVG space) by curvature * |dx|.
-          // In "above" mode this lifts the apex UP into the top margin.
-          const my = Math.min(ay, by) - Math.abs(bx - ax) * merged.curvature;
+          const my = apexY(ay, by, bx - ax);
           return `M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`;
         };
-        // "above" mode intentionally bypasses the plot clip so the arc's
-        // apex (which sits ABOVE y=0) is visible in the top margin.
-        const clip = () => (isAbove() ? undefined : ctx.clip.plotPathUrl());
+        // "above" + annotation lane → clip to the lane so the arc is
+        // horizontally bounded to the plot but free to occupy the full
+        // band vertically.
+        // "above" + no lane → unclipped (legacy: apex above y=0 visible).
+        // "data" → clipped to the plot.
+        const clip = () => {
+          if (!isAbove()) return ctx.clip.plotPathUrl();
+          return ctx.annotationLaneHeight() > 0
+            ? ctx.clip.annotationLanePathUrl()
+            : undefined;
+        };
         return (
           <g clip-path={clip()}>
             <path

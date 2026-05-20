@@ -487,12 +487,15 @@ describe("Chart — global nearest emphasis coordinator", () => {
 });
 
 describe("Chart — axis-strip clip-path", () => {
-  it("renders a second clipPath for the bottom-margin strip", () => {
+  it("renders a clipPath for the bottom-margin strip", () => {
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]} />
     ));
     const clipPaths = container.querySelectorAll("svg > defs > clipPath");
-    expect(clipPaths.length).toBe(2);
+    // plot + axis-strip + annotation-lane = 3 (lane collapses to 0 height
+    // when annotationLaneHeight is unset, but the clipPath element is
+    // always emitted for context stability).
+    expect(clipPaths.length).toBe(3);
     const stripClip = Array.from(clipPaths).find((el) =>
       /^sui-chart-axis-strip-clip-/.test(el.getAttribute("id") ?? ""),
     );
@@ -524,6 +527,96 @@ describe("Chart — axis-strip clip-path", () => {
     )!;
     expect(captured!.clip.axisStripPathUrl()).toBe(
       `url(#${stripClip.getAttribute("id")})`,
+    );
+  });
+});
+
+describe("Chart — annotation lane", () => {
+  it("annotationLaneHeight context defaults to 0 when prop is omitted", () => {
+    let captured: ReturnType<typeof useChart> | null = null;
+    const Probe: Component = () => {
+      captured = useChart();
+      return null;
+    };
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+      </Chart>
+    ));
+    expect(captured!.annotationLaneHeight()).toBe(0);
+  });
+
+  it("annotationLaneHeight context returns the configured value", () => {
+    let captured: ReturnType<typeof useChart> | null = null;
+    const Probe: Component = () => {
+      captured = useChart();
+      return null;
+    };
+    render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <Probe />
+      </Chart>
+    ));
+    expect(captured!.annotationLaneHeight()).toBe(32);
+  });
+
+  it("annotation-lane clipPath rect lives in negative-y above y=0", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      />
+    ));
+    const laneClip = Array.from(
+      container.querySelectorAll("svg > defs > clipPath"),
+    ).find((el) =>
+      /^sui-chart-annotation-lane-clip-/.test(el.getAttribute("id") ?? ""),
+    );
+    expect(laneClip).toBeTruthy();
+    const rect = laneClip!.querySelector("rect")!;
+    expect(parseFloat(rect.getAttribute("x")!)).toBeCloseTo(0, 1);
+    expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(-32, 1);
+    // innerWidth = 200 - 36 - 8 = 156
+    expect(parseFloat(rect.getAttribute("width")!)).toBeCloseTo(156, 1);
+    expect(parseFloat(rect.getAttribute("height")!)).toBeCloseTo(32, 1);
+  });
+
+  it("exposes clip.annotationLanePathUrl via context that matches the defs id", () => {
+    let captured: ReturnType<typeof useChart> | null = null;
+    const Probe: Component = () => {
+      captured = useChart();
+      return null;
+    };
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        annotationLaneHeight={32}
+        margin={{ top: 40 }}
+      >
+        <Probe />
+      </Chart>
+    ));
+    const laneClip = Array.from(
+      container.querySelectorAll("svg > defs > clipPath"),
+    ).find((el) =>
+      /^sui-chart-annotation-lane-clip-/.test(el.getAttribute("id") ?? ""),
+    )!;
+    expect(captured!.clip.annotationLanePathUrl()).toBe(
+      `url(#${laneClip.getAttribute("id")})`,
     );
   });
 });
