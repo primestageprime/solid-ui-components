@@ -129,6 +129,21 @@
   stroke-width: 1.5;
 }
 
+/* Pin markers — attribute-driven emphasis for sibling-slot hover sync.
+   Mirrors HighlightSegments[data-emphasized] so a hovered alarm edge
+   visibly lights up every pin pointing at it (and vice versa). Uses a
+   subtle scale-up around the glyph center; the glyph itself is wrapped
+   in a translate(cx, cy), so transform-origin: center keeps the
+   emphasis growing AROUND the pin, not from the corner of its bbox. */
+.sui-chart__pin-marker {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+.sui-chart__pin-marker[data-emphasized="true"] {
+  transform: scale(1.4);
+}
+
 /* Timeline strip track — full-width background outline so empty regions
    (no segment data) still show the strip's extent. Same subtle stroke as
    the axis line. */
