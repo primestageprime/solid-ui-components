@@ -4,5 +4,5 @@ export { DagSvgNode } from "./DagSvgNode";
 export type { DagSvgNodeProps } from "./DagSvgNode";
 export { DagSvgEdge } from "./DagSvgEdge";
 export type { DagSvgEdgeProps } from "./DagSvgEdge";
-export { orthogonalStepPath } from "./edge-routing";
+export { orthogonalStepPath, bezierThroughChannelPath } from "./edge-routing";
 export type { EdgeRect } from "./edge-routing";

@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
-import { DagArrowMarker, DagSvgNode, DagSvgEdge, orthogonalStepPath } from "../DagChart/svg";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge, bezierThroughChannelPath } from "../DagChart/svg";
 import { computeSwimlaneLayout } from "./layout";
 import "./SwimlaneChart.css";
 
@@ -122,12 +122,13 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (!s || !t) return [];
       const isSummary =
         e.sourceId.startsWith("__collapsed_") || e.targetId.startsWith("__collapsed_");
-      // Path goes target -> source so the arrowhead (marker-end) lands at
-      // the source = dependency. Reads as "this dependent is waiting on that
-      // dependency." Routed orthogonally through the column gap, with
-      // endpoints clipped to node rect edges.
+      // Path follows the edge's data direction (source -> target) so the
+      // arrowhead (marker-end) lands at the target = dependent. With
+      // independents on the left and dependents on the right, this reads
+      // as "dependency flow." Cubic bezier with controls in the
+      // inter-column channel, endpoints clipped to node rect edges.
       return [{
-        d: orthogonalStepPath(t, s),
+        d: bezierThroughChannelPath(s, t),
         isSummary,
         key: `${e.sourceId}|${e.targetId}`,
       }];

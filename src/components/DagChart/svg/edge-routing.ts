@@ -20,6 +20,34 @@ const CORNER_RADIUS = 6;
 const SAME_COL_OFFSET = 28;
 
 /**
+ * Cubic bezier path from `from` to `to`, with control points anchored in
+ * the vertical channel midway between the two columns. The curve leaves
+ * each node horizontally (anchor on the inner edge) and bows into the
+ * channel — the same empty space the orthogonal router uses, so the
+ * curve stays clear of in-column siblings. Same-column edges arc around
+ * the right side via a similar pair of controls.
+ */
+export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
+  const dx = to.x - from.x;
+
+  // Same column: arc around the right side of both nodes.
+  if (Math.abs(dx) < 1) {
+    const fromAnchorX = from.x + from.width / 2;
+    const toAnchorX = to.x + to.width / 2;
+    const channelX = Math.max(fromAnchorX, toAnchorX) + SAME_COL_OFFSET;
+    return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
+  }
+
+  // Different columns: anchor on inner side, controls in the channel.
+  const goingRight = dx > 0;
+  const fromAnchorX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const toAnchorX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
+  const channelX = (fromAnchorX + toAnchorX) / 2;
+
+  return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
+}
+
+/**
  * SVG path `d` string for an orthogonal step edge from `from` to `to`.
  * - Endpoints anchor to the node rect edges, not centers.
  * - Different-column edges route through a vertical channel midway between

@@ -71,9 +71,9 @@ const SINGLE_NODE: StubGraph = {
 
 const LINEAR_THREE: StubGraph = {
   nodes: [
-    { id: "a", data: { label: "First", col: 2 } },
+    { id: "a", data: { label: "First", col: 0 } },
     { id: "b", data: { label: "Middle", col: 1 } },
-    { id: "c", data: { label: "Last", col: 0 } },
+    { id: "c", data: { label: "Last", col: 2 } },
   ],
   edges: [
     { source: "a", target: "b" },
@@ -81,17 +81,18 @@ const LINEAR_THREE: StubGraph = {
   ],
 };
 
-// 5 nodes mapped to lanes by dependency direction:
-//   A, B (DONE) — independents that drive everything else
-//   C, D (DOING) — C depends on A; D depends on A + B
-//   E (TODO)    — depends on both dependents (C + D)
+// 5 nodes mapped to lanes by dependency depth:
+//   A, B (col 0) — independents on the left
+//   C, D (col 1) — C depends on A; D depends on A + B
+//   E   (col 2) — depends on both dependents (C + D)
+// Dependency relationships flow left -> right.
 const FIVE_DIAMOND: StubGraph = {
   nodes: [
-    { id: "a", data: { label: "Independent A", col: 2 } },
-    { id: "b", data: { label: "Independent B", col: 2 } },
+    { id: "a", data: { label: "Independent A", col: 0 } },
+    { id: "b", data: { label: "Independent B", col: 0 } },
     { id: "c", data: { label: "Depends on A", col: 1 } },
     { id: "d", data: { label: "Depends on A + B", col: 1 } },
-    { id: "e", data: { label: "Depends on C + D", col: 0 } },
+    { id: "e", data: { label: "Depends on C + D", col: 2 } },
   ],
   edges: [
     { source: "a", target: "c" },
