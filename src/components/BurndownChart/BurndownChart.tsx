@@ -34,6 +34,12 @@ export interface BurndownChartProps {
   onSegmentClick?: (barIndex: number, segment: BurndownSegmentKind) => void;
   /** Default 300. */
   height?: number;
+  /**
+   * Visual density. `"xs"` strips axes/labels/legend and shrinks the bars for
+   * inline card use (~180×60 footprint). `"sm"` is a slightly tighter
+   * default. Backward-compatible default = `"md"`.
+   */
+  size?: "xs" | "sm" | "md";
 }
 
 const COLOR = {
@@ -44,7 +50,10 @@ const COLOR = {
 };
 
 export function BurndownChart(props: BurndownChartProps) {
-  const height = () => props.height ?? 300;
+  const size = () => props.size ?? "md";
+  const xs = () => size() === "xs";
+  const height = () =>
+    props.height ?? (xs() ? 60 : size() === "sm" ? 180 : 300);
 
   const yDomain = createMemo<[number, number]>(() => {
     const above = Math.max(
@@ -85,22 +94,37 @@ export function BurndownChart(props: BurndownChartProps) {
 
   const tickValues = createMemo(() => props.bars.map((_, i) => i));
 
+  const width = () =>
+    xs()
+      ? Math.max(120, props.bars.length * 16 + 24)
+      : Math.max(400, props.bars.length * 64 + 100);
+
+  const margin = () =>
+    xs()
+      ? { top: 2, right: 4, bottom: 2, left: 4 }
+      : { top: 16, right: 32, bottom: 32, left: 44 };
+
   return (
     <Chart
-      width={Math.max(400, props.bars.length * 64 + 100)}
+      width={width()}
       height={height()}
       xDomain={xDomain()}
       yDomain={yDomain()}
-      margin={{ top: 16, right: 32, bottom: 32, left: 44 }}
+      margin={margin()}
     >
-      <Grid />
-      <YAxis tickCount={6} />
-      <XAxis tickValues={tickValues()} tickFormat={(v) => props.bars[Math.round(v)]?.label ?? ""} />
+      {!xs() && <Grid />}
+      {!xs() && <YAxis tickCount={6} />}
+      {!xs() && (
+        <XAxis
+          tickValues={tickValues()}
+          tickFormat={(v) => props.bars[Math.round(v)]?.label ?? ""}
+        />
+      )}
       <ReferenceLine orientation="horizontal" value={0} stroke="currentColor" strokeDasharray="" />
       <BarSeries
         data={props.bars}
         x={(_b, i) => i}
-        bandWidth={0.65}
+        bandWidth={xs() ? 0.85 : 0.65}
         segments={(b) => [
           { value: b.planned_incomplete, fill: COLOR.pi, key: "planned_incomplete" },
           { value: b.planned_complete, fill: COLOR.pc, key: "planned_complete" },

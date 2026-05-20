@@ -15,8 +15,8 @@ export interface ToggleProps extends Omit<JSX.InputHTMLAttributes<HTMLInputEleme
   size?: ToggleSize;
   label?: string;
   labelPosition?: "left" | "right";
-  /** Toggle style variant — "default" or "minimal" */
-  variant?: "default" | "minimal";
+  /** Toggle style variant — "default", "minimal", or "thematic" pill-switch */
+  variant?: "default" | "minimal" | "thematic";
   /** Accent color when checked */
   color?: ColorVariant;
 }
@@ -40,6 +40,7 @@ export const Toggle: Component<ToggleProps> = (props) => {
     classList.push(`sui-toggle--${local.size || "md"}`);
     if (local.labelPosition === "left") classList.push("sui-toggle--label-left");
     if (local.variant === "minimal") classList.push("sui-toggle--minimal");
+    if (local.variant === "thematic") classList.push("sui-toggle--thematic");
     if (local.color && local.color !== "default") classList.push(`sui-toggle--${local.color}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");

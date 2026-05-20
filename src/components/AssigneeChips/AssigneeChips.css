@@ -1,0 +1,31 @@
+/* ============================================
+   AssigneeChips — Structural
+   ============================================ */
+.sui-assignee-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.sui-assignee-chip {
+  border-radius: 999px;
+  background: var(--sui-accent, #00d4ff);
+  color: #001018;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.sui-assignee-chip--sm {
+  font-size: 9px;
+  padding: 0 5px;
+  min-height: 12px;
+}
+
+.sui-assignee-chip--md {
+  font-size: 10px;
+  padding: 1px 6px;
+  min-height: 14px;
+}

@@ -28,6 +28,16 @@ export type DAGProps<T = unknown> = {
   edges: DAGEdge[];
   renderNode: (node: DAGNode<T>, state: NodeRenderState) => JSX.Element;
   nodeSize?: (node: DAGNode<T>) => [width: number, height: number];
+  /**
+   * Optional per-node rank hint. Returning a number pins that node to a
+   * specific layer position (lower rank = earlier layer; 0 = leftmost in
+   * horizontal / topmost in vertical). Same-rank nodes are forced to share a
+   * layer. Unranked nodes (`undefined`) are placed freely by the layout
+   * optimiser. Useful for kanban-style DAGs that want fixed columns
+   * (e.g. DONE / DOING / TODO) regardless of dep depth. Internally wired to
+   * d3-dag's `layeringSimplex().rank().group()`.
+   */
+  nodeRank?: (node: DAGNode<T>) => number | undefined;
   direction?: "horizontal" | "vertical";
   onNodeClick?: (nodeId: string) => void;
   focusedNodeId?: string;
@@ -43,6 +53,18 @@ export type DAGProps<T = unknown> = {
    * status displays) where the chart should fit-to-view and stay put.
    */
   interactive?: boolean;
+  /**
+   * Optional handler for edge deletion. When provided, edges render a wider
+   * transparent hit area and show a small × badge at the midpoint on hover;
+   * clicking the badge (or anywhere along the edge) calls
+   * `onEdgeClick(source, target)`. Omit to keep edges purely decorative.
+   */
+  onEdgeClick?: (source: string, target: string) => void;
+  /**
+   * Set of edges to highlight. Each entry is the string `${source}|${target}`.
+   * Highlighted edges receive the `sui-dag__edge--highlighted` CSS class.
+   */
+  highlightedEdges?: ReadonlySet<string>;
 };
 
 /** Internal: positioned node after layout + collapse. */

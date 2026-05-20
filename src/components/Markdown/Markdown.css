@@ -1,0 +1,86 @@
+/* ============================================
+   Markdown Component — Structural
+   ============================================ */
+.sui-markdown {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sui-text-primary, inherit);
+  max-width: 80ch;
+}
+
+.sui-markdown h1,
+.sui-markdown h2,
+.sui-markdown h3 {
+  color: var(--sui-text-primary, inherit);
+  margin: 0.8em 0 0.4em 0;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.sui-markdown h1 { font-size: 1.5em; }
+.sui-markdown h2 { font-size: 1.25em; }
+.sui-markdown h3 { font-size: 1.1em; }
+
+.sui-markdown p {
+  margin: 0 0 0.8em 0;
+}
+
+.sui-markdown ul {
+  margin: 0 0 0.8em 0;
+  padding-left: 1.4em;
+}
+
+.sui-markdown li {
+  margin: 0.15em 0;
+}
+
+.sui-markdown code {
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.06));
+  color: var(--sui-text-primary, inherit);
+}
+
+.sui-markdown strong { font-weight: 700; }
+.sui-markdown em { font-style: italic; }
+
+/* ============================================
+   MarkdownEditor — Composed
+   ============================================ */
+.sui-markdown-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  min-height: 200px;
+}
+
+.sui-markdown-editor__textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: var(--sui-bg-deep, rgba(0, 0, 0, 0.4));
+  color: var(--sui-text-primary, inherit);
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.sui-markdown-editor__textarea:focus {
+  outline: none;
+  border-color: var(--sui-accent, #00d4ff);
+}
+
+.sui-markdown-editor__preview {
+  padding: 10px 12px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: var(--sui-bg-deep, rgba(0, 0, 0, 0.2));
+  overflow-y: auto;
+}

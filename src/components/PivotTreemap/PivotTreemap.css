@@ -1,0 +1,207 @@
+/* ============================================
+   PivotTreemap — Composed (Depth 2). Composes ProportionalStack +
+   SlotFillBar. BEM-ish class names.
+   ============================================ */
+
+.sui-pivot-treemap {
+  height: auto;
+  min-height: 180px;
+  max-height: 320px;
+  align-items: stretch;
+}
+
+.sui-pivot-treemap__outer {
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  padding: 8px;
+  gap: 6px;
+  /* Ensure category labels keep ~15ch before truncating — names like
+     "PROFESSIONAL SERVICES" shouldn't get squeezed. */
+  min-width: 15ch;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+}
+
+.sui-pivot-treemap__outer--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+}
+
+.sui-pivot-treemap__outer-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-pivot-treemap__outer-key {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sui-pivot-treemap__outer-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--sui-text-muted, #888);
+}
+
+.sui-pivot-treemap__outer-bar {
+  width: 100%;
+}
+
+.sui-pivot-treemap__leaves {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  overflow-y: auto;
+}
+
+.sui-pivot-treemap__leaf {
+  /* `flex` per-leaf weight is set inline (data-driven). All other styles
+     come from this class. */
+  min-width: 15ch;
+  padding: 4px 6px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 3px;
+  background: var(--sui-bg-deep, rgba(0, 0, 0, 0.2));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-pivot-treemap__leaf--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: var(--sui-bg-elevated, rgba(78, 161, 255, 0.12));
+}
+
+.sui-pivot-treemap__leaf-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  min-width: 0;
+  gap: 4px;
+}
+
+.sui-pivot-treemap__leaf-key {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.sui-pivot-treemap__leaf-count {
+  color: var(--sui-text-muted, #888);
+}
+
+.sui-pivot-treemap__untagged {
+  border: 1px dashed var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 15ch;
+  max-width: 20ch;
+  opacity: 0.6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-pivot-treemap__untagged--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+  opacity: 1;
+}
+
+.sui-pivot-treemap__untagged-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sui-pivot-treemap__untagged-count {
+  font-size: 10px;
+  color: var(--sui-text-muted, #888);
+}
+
+/* ============================================
+   PivotPills — Atomic (Depth 1). Drag-to-reorder pills.
+   ============================================ */
+
+.sui-pivot-pills {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.sui-pivot-pills__hint {
+  color: var(--sui-text-muted, #888);
+}
+
+.sui-pivot-pills__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sui-pivot-pills__slot-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sui-text-muted, #888);
+  opacity: 0.55;
+}
+
+.sui-pivot-pills__slot--active .sui-pivot-pills__slot-label {
+  opacity: 0.85;
+}
+
+.sui-pivot-pills__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  opacity: 0.55;
+}
+
+.sui-pivot-pills__pill--active {
+  border-color: var(--sui-border-strong, rgba(255, 255, 255, 0.3));
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+  color: var(--sui-text-primary, inherit);
+  opacity: 1;
+}
+
+.sui-pivot-pills__pill--drag-over {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.08));
+}
+
+.sui-pivot-pills__grip {
+  opacity: 0.5;
+  font-size: 10px;
+}

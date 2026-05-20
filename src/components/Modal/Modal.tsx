@@ -18,10 +18,12 @@ export interface ModalProps {
   /** Accent color variant */
   variant?: ColorVariant;
   /** Modal size */
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "fullscreen";
   /** Show close button */
   showClose?: boolean;
   children?: JSX.Element;
+  /** Custom header slot — overrides title/subtitle layout when provided. */
+  header?: JSX.Element;
   /** Footer content */
   footer?: JSX.Element;
 }
@@ -64,16 +66,23 @@ export const Modal: Component<ModalProps> = (props) => {
       <Portal>
         <div class="sui-modal-overlay" onClick={handleOverlayClick}>
           <div class={modalClasses()} role="dialog" aria-modal="true">
-            <Show when={props.title || props.showClose !== false}>
+            <Show when={props.header || props.title || props.showClose !== false}>
               <div class="sui-modal__header">
-                <div class="sui-modal__title-group">
-                  <Show when={props.title}>
-                    <h2 class="sui-modal__title">{props.title}</h2>
-                  </Show>
-                  <Show when={props.subtitle}>
-                    <p class="sui-modal__subtitle">{props.subtitle}</p>
-                  </Show>
-                </div>
+                <Show
+                  when={props.header}
+                  fallback={
+                    <div class="sui-modal__title-group">
+                      <Show when={props.title}>
+                        <h2 class="sui-modal__title">{props.title}</h2>
+                      </Show>
+                      <Show when={props.subtitle}>
+                        <p class="sui-modal__subtitle">{props.subtitle}</p>
+                      </Show>
+                    </div>
+                  }
+                >
+                  <div class="sui-modal__header-slot">{props.header}</div>
+                </Show>
                 <Show when={props.showClose !== false}>
                   <button
                     class="sui-modal__close"

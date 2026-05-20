@@ -54,6 +54,7 @@ export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
+export * from "./components/SwimlaneChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";
@@ -69,6 +70,12 @@ export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
 export * from "./components/ThreePanelLayout";
+export * from "./components/Markdown";
+export * from "./components/Kbd";
+export * from "./components/CollapsiblePanel";
+export * from "./components/WeekCalendar";
+export * from "./components/ActionRow";
+export * from "./components/AssigneeChips";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

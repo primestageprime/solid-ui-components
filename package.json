@@ -1,7 +1,14 @@
 {
-  "name": "solid-ui-components",
-  "version": "0.23.0",
+  "name": "@primestageprime/solid-ui-components",
+  "version": "0.27.0",
   "description": "SolidJS UI Components Library",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/primestageprime/solid-ui-components.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

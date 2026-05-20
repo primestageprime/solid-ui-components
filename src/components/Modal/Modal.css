@@ -25,6 +25,12 @@
 .sui-modal--md { width: 520px; }
 .sui-modal--lg { width: 720px; }
 .sui-modal--xl { width: 960px; }
+.sui-modal--fullscreen {
+  width: 90vw;
+  height: 90vh;
+  max-width: 1400px;
+  max-height: 100vh;
+}
 
 /* Modal header */
 .sui-modal__header {
@@ -38,6 +44,13 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.sui-modal__header-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .sui-modal__title {

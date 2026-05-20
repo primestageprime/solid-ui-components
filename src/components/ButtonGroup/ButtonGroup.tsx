@@ -13,6 +13,12 @@ export interface ButtonGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
   gap?: "none" | "sm" | "md" | "lg";
   /** Border around group */
   bordered?: boolean;
+  /**
+   * Tone hint surfaced as a `sui-btn-group--tone-*` modifier class.
+   * Consumers can use it to scope tone styling; mirrors the Button
+   * tone matrix.
+   */
+  tone?: "accent" | "outline" | "muted";
 }
 
 export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
@@ -20,6 +26,7 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
     "orientation",
     "gap",
     "bordered",
+    "tone",
     "class",
     "children",
   ]);
@@ -29,6 +36,7 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
     if (local.orientation === "vertical") classList.push("sui-btn-group--vertical");
     classList.push(`sui-btn-group--gap-${local.gap || "md"}`);
     if (local.bordered) classList.push("sui-btn-group--bordered");
+    if (local.tone) classList.push(`sui-btn-group--tone-${local.tone}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

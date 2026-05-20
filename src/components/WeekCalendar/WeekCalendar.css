@@ -1,0 +1,68 @@
+/* ============================================
+   WeekCalendar — Structural
+   ============================================ */
+.sui-week-calendar {
+  display: grid;
+  border: 1px solid var(--sui-border);
+  border-radius: 6px;
+  overflow: hidden;
+  color: var(--sui-text-primary);
+}
+
+.sui-week-calendar__corner,
+.sui-week-calendar__day-header {
+  border-bottom: 1px solid var(--sui-border);
+  border-right: 1px solid var(--sui-border);
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
+}
+
+.sui-week-calendar__day-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sui-text-muted);
+}
+
+.sui-week-calendar__gutter {
+  position: relative;
+  border-right: 1px solid var(--sui-border);
+}
+
+.sui-week-calendar__gutter-mark {
+  position: absolute;
+  right: 6px;
+  font-size: 10px;
+  color: var(--sui-text-muted);
+  transform: translateY(-50%);
+}
+
+.sui-week-calendar__column {
+  position: relative;
+  border-right: 1px solid var(--sui-border);
+}
+
+.sui-week-calendar__hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--sui-border);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.sui-week-calendar__block {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.sui-week-calendar__block--highlight {
+  box-shadow: 0 0 0 2px var(--sui-accent, #00d4ff),
+    0 0 18px 2px rgba(0, 212, 255, 0.45);
+  border-radius: 4px;
+}
