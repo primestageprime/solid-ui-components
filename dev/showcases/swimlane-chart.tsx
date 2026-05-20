@@ -146,9 +146,10 @@ export const SwimlaneChartShowcase: Component = () => {
   const [maxDepth, setMaxDepth] = createSignal(2);
   return (
     <div class="component-section">
-      <h2>SwimlaneChart — Atomic (Depth 1)</h2>
+      <h2>SwimlaneChart — Composed (Depth 2)</h2>
       <p class="text-meta">
-        DAG visualizer where status determines the column. DOING is pinned to
+        Builds on DagChart's pan/zoom and shared DAG types. DAG visualizer
+        where status determines the column. DOING is pinned to
         the viewport's horizontal center. Nodes beyond <code>maxDepth</code>{" "}
         graph-hops from any DOING node collapse into "+N" summary stubs. Edges
         are independent of status — backward (DONE → TODO) and skip-lane

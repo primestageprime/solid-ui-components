@@ -119,7 +119,7 @@ const items: Item[] = [
   { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase, tags: ["depth:1", "data"] },
   { id: "combobox", label: "Combobox", component: ComboboxShowcase, tags: ["depth:1", "form"] },
   { id: "dag-chart", label: "DagChart", component: DagChartShowcase, tags: ["depth:1", "chart", "data"] },
-  { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:1", "chart", "data"] },
+  { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase, tags: ["depth:1", "table", "data", "container"] },
   { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase, tags: ["depth:1", "indicator", "data"] },
   { id: "divider", label: "Divider", component: DividerShowcase, tags: ["depth:1", "layout"] },
