@@ -35,6 +35,12 @@ export interface BurndownChartProps {
   /** Default 300. */
   height?: number;
   /**
+   * Explicit chart width. When omitted, the chart auto-sizes based on
+   * bar count (min 400, ~64px per bar). Pass an explicit width to make
+   * the chart fill its container — e.g. via a ResizeObserver.
+   */
+  width?: number;
+  /**
    * Visual density. `"xs"` strips axes/labels/legend and shrinks the bars for
    * inline card use (~180×60 footprint). `"sm"` is a slightly tighter
    * default. Backward-compatible default = `"md"`.
@@ -94,10 +100,12 @@ export function BurndownChart(props: BurndownChartProps) {
 
   const tickValues = createMemo(() => props.bars.map((_, i) => i));
 
-  const width = () =>
-    xs()
+  const width = () => {
+    if (typeof props.width === "number") return props.width;
+    return xs()
       ? Math.max(120, props.bars.length * 16 + 24)
       : Math.max(400, props.bars.length * 64 + 100);
+  };
 
   const margin = () =>
     xs()

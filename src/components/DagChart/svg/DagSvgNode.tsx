@@ -28,6 +28,16 @@ export type DagSvgNodeProps<T> = {
    * so a `transform: translateX(var(--sui-leave-x))` rule animates it.
    */
   leavingOffsetX?: number;
+  /**
+   * When true, sets `data-entering="true"` on the inner div. Counterpart
+   * to `leaving` — consumers animate the node sliding/fading in.
+   */
+  entering?: boolean;
+  /**
+   * Horizontal distance (in pixels) the node should slide FROM during
+   * its enter animation. Surfaced as `--sui-enter-x` on the inner div.
+   */
+  enteringOffsetX?: number;
 };
 
 /**
@@ -48,12 +58,16 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => !props.leaving && props.onClick?.(props.node.id)}
         data-leaving={props.leaving ? "true" : undefined}
+        data-entering={props.entering ? "true" : undefined}
         style={{
           width: "100%",
           height: "100%",
           cursor: props.leaving ? "default" : "pointer",
           ...(props.leavingOffsetX !== undefined
             ? { "--sui-leave-x": `${props.leavingOffsetX}px` }
+            : {}),
+          ...(props.enteringOffsetX !== undefined
+            ? { "--sui-enter-x": `${props.enteringOffsetX}px` }
             : {}),
         }}
       >

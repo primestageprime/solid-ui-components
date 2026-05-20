@@ -164,32 +164,58 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     return out;
   });
 
-  // Animation layer: track items that just disappeared and keep rendering
-  // them with `leaving=true` for one animation cycle before removing them
-  // from the DOM. Lets the consumer's CSS shrink them out gracefully.
+  // Animation layer: items that just disappeared keep rendering with
+  // `leaving=true` for one animation cycle before being dropped from the
+  // DOM; items that just appeared render with `entering=true` so their
+  // CSS animation runs from "outside" into place.
   const NODE_LEAVE_MS = 220;
+  const NODE_ENTER_MS = 220;
   const [leavingItems, setLeavingItems] = createSignal<Item[]>([]);
+  const [enteringIds, setEnteringIds] = createSignal<Set<string>>(new Set());
 
   createEffect(
     on(items, (current, prev) => {
       if (!prev) return;
       const currentIds = new Set(current.map((i) => i.id));
+      const prevIds = new Set(prev.map((i) => i.id));
+
+      // Leavers: in prev but not in current.
       const newlyLeft = prev.filter((p) => !currentIds.has(p.id));
-      if (newlyLeft.length === 0) return;
-      // Drop any items in the leaving set that have re-appeared in the
-      // current visible set, then append the new ones.
-      setLeavingItems((prevLeaving) => {
-        const stillLeaving = prevLeaving.filter((p) => !currentIds.has(p.id));
-        const stillLeavingIds = new Set(stillLeaving.map((p) => p.id));
-        const fresh = newlyLeft.filter((n) => !stillLeavingIds.has(n.id));
-        return [...stillLeaving, ...fresh];
-      });
-      const removedIds = new Set(newlyLeft.map((n) => n.id));
-      setTimeout(() => {
-        setLeavingItems((prevLeaving) =>
-          prevLeaving.filter((p) => !removedIds.has(p.id)),
-        );
-      }, NODE_LEAVE_MS);
+      if (newlyLeft.length > 0) {
+        setLeavingItems((prevLeaving) => {
+          const stillLeaving = prevLeaving.filter((p) => !currentIds.has(p.id));
+          const stillLeavingIds = new Set(stillLeaving.map((p) => p.id));
+          const fresh = newlyLeft.filter((n) => !stillLeavingIds.has(n.id));
+          return [...stillLeaving, ...fresh];
+        });
+        const removedIds = new Set(newlyLeft.map((n) => n.id));
+        setTimeout(() => {
+          setLeavingItems((prevLeaving) =>
+            prevLeaving.filter((p) => !removedIds.has(p.id)),
+          );
+        }, NODE_LEAVE_MS);
+      }
+
+      // Enterers: in current but not in prev. Skip if the item is also
+      // currently in the leaving set (it's re-appearing — let it just
+      // slide back without a hard re-enter).
+      const newlyEntered = current
+        .filter((c) => !prevIds.has(c.id))
+        .map((c) => c.id);
+      if (newlyEntered.length > 0) {
+        setEnteringIds((existing) => {
+          const next = new Set(existing);
+          for (const id of newlyEntered) next.add(id);
+          return next;
+        });
+        setTimeout(() => {
+          setEnteringIds((existing) => {
+            const next = new Set(existing);
+            for (const id of newlyEntered) next.delete(id);
+            return next;
+          });
+        }, NODE_ENTER_MS);
+      }
     }),
   );
 
@@ -421,22 +447,41 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           </For>
 
           {/* Nodes (real only — summaries become boundary badges).
-              Leaving items keep their last position while their CSS
-              animation shrinks them out. */}
+              Newly-appeared items slide in from outside; leaving items
+              keep their last position while sliding out. */}
           <For each={items()}>
-            {(item) => (
-              <DagSvgNode
-                node={item.node}
-                state={item.state}
-                x={item.x}
-                y={item.y}
-                width={item.width}
-                height={item.height}
-                wrapperClass="sui-swimlane__node-wrapper"
-                onClick={handleNodeClick}
-                renderNode={props.renderNode}
-              />
-            )}
+            {(item) => {
+              const entering = () => enteringIds().has(item.id);
+              /* Enter slide: each node starts just past the chart's
+                 left or right edge (in DOM pixels) and slides into its
+                 final position. The pan-zoom transform centers DOING
+                 (x=0) at the container midpoint, so a node at chart-x = X
+                 currently sits at viewport-x = cw/2 + X. To start at
+                 viewport-x = -buffer (left edge) we need translateX =
+                 -(cw/2 + X + buffer). Right side is the mirror. */
+              const EDGE_BUFFER = 20;
+              const cw = containerWidth();
+              const enterOffsetX = item.x < 0
+                ? -(cw / 2 + item.x + EDGE_BUFFER)
+                : item.x > 0
+                  ? cw / 2 - item.x + EDGE_BUFFER
+                  : 0;
+              return (
+                <DagSvgNode
+                  node={item.node}
+                  state={item.state}
+                  x={item.x}
+                  y={item.y}
+                  width={item.width}
+                  height={item.height}
+                  wrapperClass="sui-swimlane__node-wrapper"
+                  onClick={handleNodeClick}
+                  renderNode={props.renderNode}
+                  entering={entering()}
+                  enteringOffsetX={enterOffsetX}
+                />
+              );
+            }}
           </For>
           <For each={leavingItems()}>
             {(item) => (

@@ -52,6 +52,25 @@
   pointer-events: none;
 }
 
+/* Enter animation: a newly-visible node (because the container grew past
+   its depth ring's threshold) slides in from outside. Left-side nodes
+   start with a negative --sui-enter-x and slide right into place; right
+   side starts positive. */
+@keyframes sui-swimlane-node-enter {
+  from {
+    transform: translateX(var(--sui-enter-x, 0));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sui-swimlane__node-wrapper > div[data-entering="true"] {
+  animation: sui-swimlane-node-enter 220ms ease-out forwards;
+}
+
 .sui-swimlane__boundary-badge {
   fill: var(--sui-bg-elevated, #1a1a1a);
   stroke: var(--sui-border, #334155);
