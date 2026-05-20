@@ -17,8 +17,12 @@ import "./SwimlaneChart.css";
 export type SwimlaneChartProps<T> = {
   nodes: DAGNode<T>[];
   edges: DAGEdge[];
-  /** Returns the column for a node: 0 (TODO), 1 (DOING), 2 (DONE). */
-  swimlaneFor: (node: DAGNode<T>) => 0 | 1 | 2;
+  /**
+   * Returns the column for a node — any signed integer. The chart picks
+   * the center automatically (median of the col range). Passing 0/1/2
+   * still works for legacy 3-lane kanban (center = 1).
+   */
+  swimlaneFor: (node: DAGNode<T>) => number;
   /**
    * Render callback. Receives the node and its render state.
    * For summary nodes the state is `{ kind: "collapsed", collapsedCount }`
@@ -50,18 +54,76 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [containerHeight, setContainerHeight] = createSignal(0);
 
-  const { transformString, centerOnPoint, pointerHandlers, onWheel } = createPanZoom();
+  const { transformString, centerOnPoint, fitToView, pointerHandlers, onWheel } = createPanZoom();
 
   const nodeSize = (node: DAGNode<T>): [number, number] =>
     props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
+
+  // Responsive sizing constants. Arrows compress until they hit the
+  // minimum visible length, then we start collapsing outer-ring nodes
+  // into summary stubs via maxDepth reduction.
+  const MIN_ARROW_PX = 50;
+  const H_PADDING_PX = 32;
+  const DEPTH_STEP_PX = 100; // each ring of collapse buys ~100px
+
+  const widestNodeWidth = createMemo(() => {
+    let max = 0;
+    for (const n of props.nodes) {
+      const [w] = nodeSize(n);
+      if (w > max) max = w;
+    }
+    return max || DEFAULT_SIZE[0];
+  });
+
+  // Width required to display `2*depth + 1` columns (i.e., depth rings on
+  // each side of center) at minimum arrow length. Boundary badges sit
+  // outside that — accounted for via BADGE_EXTENT.
+  const BADGE_EXTENT = 50; // STUB_LENGTH (28) + 2*BADGE_RADIUS (22)
+  const widthForDepth = (depth: number) => {
+    const nw = widestNodeWidth();
+    const cols = 2 * depth + 1;
+    // cols columns + (cols-1) arrows + 2 boundary badges (only when outer
+    // ring is collapsed, i.e., when depth < userMaxDepth) + padding
+    return cols * nw + (cols - 1) * MIN_ARROW_PX + 2 * BADGE_EXTENT + 2 * H_PADDING_PX;
+  };
+
+  // Largest depth that fits in the container, capped at userMaxDepth.
+  // Discrete: step down by 1 until we fit (or hit 0).
+  const effectiveMaxDepth = createMemo(() => {
+    const userMax = props.maxDepth ?? 2;
+    const cw = containerWidth();
+    if (cw === 0) return userMax;
+    for (let d = userMax; d > 0; d--) {
+      if (cw >= widthForDepth(d)) return d;
+    }
+    return 0;
+  });
+
+  const effectiveColumnGap = createMemo(() => {
+    const cw = containerWidth();
+    const nw = widestNodeWidth();
+    const userDefault = props.columnGap ?? 260;
+    if (cw === 0) return userDefault;
+    const depth = effectiveMaxDepth();
+    const minGap = nw + MIN_ARROW_PX;
+    const cols = 2 * depth + 1;
+    if (cols <= 1) return minGap;
+    // Center-to-center gap that uses the available horizontal space.
+    //   cw = (cols-1)*gap + nw + 2*BADGE_EXTENT + 2*padding
+    //   gap = (cw - nw - 2*BADGE_EXTENT - 2*padding) / (cols-1)
+    const fittable = (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (cols - 1);
+    return Math.max(minGap, Math.min(fittable, userDefault));
+  });
+  // Retained for forward compat; not used in the new discrete algorithm.
+  void DEPTH_STEP_PX;
 
   const layout = createMemo(() => {
     try {
       return computeSwimlaneLayout(props.nodes, props.edges, {
         swimlaneFor: props.swimlaneFor,
         nodeSize,
-        maxDepth: props.maxDepth ?? 2,
-        columnGap: props.columnGap ?? 260,
+        maxDepth: effectiveMaxDepth(),
+        columnGap: effectiveColumnGap(),
         rowGap: props.rowGap ?? 80,
       });
     } catch (err) {
@@ -97,20 +159,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         state: { kind: "normal" },
       });
     }
-    for (const s of layout().summaries) {
-      const pos = positions.get(s.id);
-      if (!pos) continue;
-      const syntheticNode: DAGNode<T> = { id: s.id, data: {} as T };
-      out.push({
-        id: s.id,
-        node: syntheticNode,
-        x: pos.x,
-        y: pos.y,
-        width: pos.width,
-        height: pos.height,
-        state: { kind: "collapsed", collapsedCount: s.collapsedCount },
-      });
-    }
+    // Summaries are NOT rendered as node boxes — they become boundary
+    // badges on the arrows. See boundaryBadges() below.
     return out;
   });
 
@@ -120,41 +170,120 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       const s = positions.get(e.sourceId);
       const t = positions.get(e.targetId);
       if (!s || !t) return [];
-      const isSummary =
-        e.sourceId.startsWith("__collapsed_") || e.targetId.startsWith("__collapsed_");
+      // Skip synthetic edges to/from collapsed-summary placeholders —
+      // those render as boundary badges, not full arrows.
+      if (
+        e.sourceId.startsWith("__collapsed_") ||
+        e.targetId.startsWith("__collapsed_")
+      ) {
+        return [];
+      }
       // Path follows the edge's data direction (source -> target) so the
-      // arrowhead (marker-end) lands at the target = dependent. With
-      // independents on the left and dependents on the right, this reads
-      // as "dependency flow." Cubic bezier with controls in the
-      // inter-column channel, endpoints clipped to node rect edges.
+      // arrowhead (marker-end) lands at the target = dependent.
       return [{
         d: bezierThroughChannelPath(s, t),
-        isSummary,
+        isSummary: false,
         key: `${e.sourceId}|${e.targetId}`,
       }];
     });
   });
 
-  // Y-center of the union of positioned node rectangles (for vertical centering).
-  const viewBoundsCenterY = createMemo(() => {
+  // Boundary badges: one short stub + count circle per summary group.
+  // Replaces the previous "summary node" boxes. Position is the outer
+  // edge of the visible anchor in the direction of the collapsed nodes.
+  const STUB_LENGTH = 28;
+  const BADGE_RADIUS = 11;
+
+  const boundaryBadges = createMemo(() => {
     const positions = layout().positions;
-    if (positions.size === 0) return 0;
-    let minY = Infinity;
-    let maxY = -Infinity;
+    const edges = layout().edges;
+    const gap = effectiveColumnGap();
+    return layout().summaries.flatMap((s) => {
+      const anchorPos = positions.get(s.anchorId);
+      if (!anchorPos) return [];
+      // Derive anchor's column index from its x: cols are at -gap, 0, +gap.
+      const anchorCol = Math.round(anchorPos.x / gap) + 1;
+      let dir: -1 | 1;
+      if (s.column < anchorCol) dir = -1;
+      else if (s.column > anchorCol) dir = 1;
+      else {
+        // Intra-column: read direction from the synthetic edge between
+        // anchor and summary. Summary as source = predecessor (left);
+        // summary as target = successor (right).
+        const edge = edges.find(
+          (e) => e.sourceId === s.id || e.targetId === s.id,
+        );
+        dir = edge && edge.targetId === s.anchorId ? -1 : 1;
+      }
+      const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
+      // Both sides flow left -> right (dep-flow direction). The line ends
+      // at the badge's *inner* edge so the arrowhead is always visible
+      // next to the badge, never hidden underneath it. The badge then sits
+      // outside the arrowhead.
+      //   Left:  [N]──→ DOING   (arrowhead at DOING's left edge, badge further left)
+      //   Right: DOING ──→[N]   (arrowhead at badge's left edge, badge further right)
+      const arrowStart =
+        dir === -1
+          ? anchorOuterX - STUB_LENGTH
+          : anchorOuterX;
+      const arrowEnd =
+        dir === -1
+          ? anchorOuterX
+          : anchorOuterX + STUB_LENGTH;
+      const badgeX =
+        dir === -1
+          ? arrowStart - BADGE_RADIUS
+          : arrowEnd + BADGE_RADIUS;
+      return [{
+        key: s.id,
+        d: `M ${arrowStart} ${anchorPos.y} L ${arrowEnd} ${anchorPos.y}`,
+        badgeX,
+        badgeY: anchorPos.y,
+        count: s.collapsedCount,
+      }];
+    });
+  });
+
+  // Bounding box of all positioned content (real nodes + boundary badges).
+  const viewBounds = createMemo(() => {
+    const positions = layout().positions;
+    if (positions.size === 0) {
+      return { minX: 0, maxX: 0, minY: 0, maxY: 0, centerX: 0, centerY: 0, width: 0, height: 0 };
+    }
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const p of positions.values()) {
+      minX = Math.min(minX, p.x - p.width / 2);
+      maxX = Math.max(maxX, p.x + p.width / 2);
       minY = Math.min(minY, p.y - p.height / 2);
       maxY = Math.max(maxY, p.y + p.height / 2);
     }
-    return (minY + maxY) / 2;
+    for (const b of boundaryBadges()) {
+      minX = Math.min(minX, b.badgeX - BADGE_RADIUS);
+      maxX = Math.max(maxX, b.badgeX + BADGE_RADIUS);
+      minY = Math.min(minY, b.badgeY - BADGE_RADIUS);
+      maxY = Math.max(maxY, b.badgeY + BADGE_RADIUS);
+    }
+    return {
+      minX, maxX, minY, maxY,
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
   });
 
-  // Pin DOING (x=0) to the viewport horizontal center, vertically center on bounds.
+  // Always pin DOING (x=0) to the viewport horizontal center at scale 1.
+  // Node sizes are bounded below by their natural dimensions — we never
+  // scale the chart down to fit a too-narrow container; instead the chart
+  // overflows the container (clipped by CSS overflow:hidden), or the user
+  // pans interactively.
+  void fitToView;
   createEffect(
     on(
-      () => [viewBoundsCenterY(), containerWidth(), containerHeight()] as const,
-      ([cy, cw, ch]) => {
+      () => [viewBounds(), containerWidth(), containerHeight()] as const,
+      ([bounds, cw, ch]) => {
         if (cw === 0 || ch === 0) return;
-        centerOnPoint(0, cy, cw, ch);
+        centerOnPoint(0, bounds.centerY, cw, ch);
       },
     ),
   );
@@ -219,7 +348,36 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
             )}
           </For>
 
-          {/* Nodes (real + summaries) */}
+          {/* Boundary badges — short stub arrows + count circles at the
+              outer edge of anchors that have collapsed neighbors. */}
+          <For each={boundaryBadges()}>
+            {(b) => (
+              <g class="sui-swimlane__boundary">
+                <path
+                  class="sui-swimlane__edge"
+                  d={b.d}
+                  marker-end={arrows() ? "url(#sui-swimlane-arrow)" : undefined}
+                />
+                <circle
+                  class="sui-swimlane__boundary-badge"
+                  cx={b.badgeX}
+                  cy={b.badgeY}
+                  r={BADGE_RADIUS}
+                />
+                <text
+                  class="sui-swimlane__boundary-badge-text"
+                  x={b.badgeX}
+                  y={b.badgeY}
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {b.count}
+                </text>
+              </g>
+            )}
+          </For>
+
+          {/* Nodes (real only — summaries become boundary badges) */}
           <For each={items()}>
             {(item) => (
               <DagSvgNode

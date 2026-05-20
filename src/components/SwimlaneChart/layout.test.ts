@@ -4,7 +4,9 @@ import type { DAGNode, DAGEdge } from "../DagChart/types";
 
 type Item = { status: 0 | 1 | 2 };
 
-const swimlaneFor = (n: DAGNode<Item>) => n.data.status;
+// Map legacy status (0=todo,1=doing,2=done) → centered col (-1, 0, +1)
+// so col=0 is always the chart's center under the new convention.
+const swimlaneFor = (n: DAGNode<Item>) => n.data.status - 1;
 const nodeSize = () => [180, 60] as [number, number];
 const defaults = { swimlaneFor, nodeSize, maxDepth: 2, columnGap: 260, rowGap: 80 };
 
@@ -115,15 +117,18 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
     expect(result.summaries).toEqual([]);
   });
 
-  it("hides nodes farther than maxDepth from any DOING node", () => {
-    // chain a(TODO) - b(TODO) - c(DOING) - d(DONE) - e(DONE)
-    // maxDepth=1: only b, c, d visible. a (dist 2) and e (dist 2) collapsed.
-    const nodes: DAGNode<Item>[] = [
-      { id: "a", data: { status: 0 } },
-      { id: "b", data: { status: 0 } },
-      { id: "c", data: { status: 1 } },
-      { id: "d", data: { status: 2 } },
-      { id: "e", data: { status: 2 } },
+  it("hides nodes whose |col - center| > maxDepth", () => {
+    // chain at cols -2,-1,0,+1,+2. With maxDepth=1, only cols within
+    // distance 1 of center (col 0) stay visible. Cols -2 and +2 collapse.
+    type Pos = { col: number };
+    const sw = (n: DAGNode<Pos>) => n.data.col;
+    const opts = { ...defaults, swimlaneFor: sw, maxDepth: 1 };
+    const nodes: DAGNode<Pos>[] = [
+      { id: "a", data: { col: -2 } },
+      { id: "b", data: { col: -1 } },
+      { id: "c", data: { col: 0 } },
+      { id: "d", data: { col: 1 } },
+      { id: "e", data: { col: 2 } },
     ];
     const edges: DAGEdge[] = [
       { source: "a", target: "b" },
@@ -131,7 +136,7 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
       { source: "c", target: "d" },
       { source: "d", target: "e" },
     ];
-    const result = computeSwimlaneLayout(nodes, edges, { ...defaults, maxDepth: 1 });
+    const result = computeSwimlaneLayout(nodes, edges, opts);
     expect(result.positions.has("b")).toBe(true);
     expect(result.positions.has("c")).toBe(true);
     expect(result.positions.has("d")).toBe(true);
@@ -144,23 +149,25 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
     }));
     expect(summaryDescriptors).toEqual(
       expect.arrayContaining([
-        { anchor: "b", col: 0, count: 1 },
+        { anchor: "b", col: -2, count: 1 },
         { anchor: "d", col: 2, count: 1 },
       ]),
     );
   });
 
   it("groups multiple hidden nodes sharing an anchor and column into ONE summary", () => {
-    // b(DOING) -- a1,a2 (TODO depth 1, visible)
-    // a1 -- x1 (TODO depth 2, hidden, anchor=a1)
-    // a2 -- x2 (TODO depth 2, hidden, anchor=a2)
-    // Result: 2 summaries, both in column 0, each with count 1
-    const nodes: DAGNode<Item>[] = [
-      { id: "b", data: { status: 1 } },
-      { id: "a1", data: { status: 0 } },
-      { id: "a2", data: { status: 0 } },
-      { id: "x1", data: { status: 0 } },
-      { id: "x2", data: { status: 0 } },
+    // center=0 (DOING). a1, a2 at col -1 (visible). x1, x2 at col -2
+    // (hidden, anchored on a1 and a2 respectively). Two summaries on the
+    // left, each count=1.
+    type Pos = { col: number };
+    const sw = (n: DAGNode<Pos>) => n.data.col;
+    const opts = { ...defaults, swimlaneFor: sw, maxDepth: 1 };
+    const nodes: DAGNode<Pos>[] = [
+      { id: "b", data: { col: 0 } },
+      { id: "a1", data: { col: -1 } },
+      { id: "a2", data: { col: -1 } },
+      { id: "x1", data: { col: -2 } },
+      { id: "x2", data: { col: -2 } },
     ];
     const edges: DAGEdge[] = [
       { source: "a1", target: "b" },
@@ -168,8 +175,8 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
       { source: "x1", target: "a1" },
       { source: "x2", target: "a2" },
     ];
-    const result = computeSwimlaneLayout(nodes, edges, { ...defaults, maxDepth: 1 });
+    const result = computeSwimlaneLayout(nodes, edges, opts);
     expect(result.summaries).toHaveLength(2);
-    expect(result.summaries.every((s) => s.column === 0 && s.collapsedCount === 1)).toBe(true);
+    expect(result.summaries.every((s) => s.column === -2 && s.collapsedCount === 1)).toBe(true);
   });
 });

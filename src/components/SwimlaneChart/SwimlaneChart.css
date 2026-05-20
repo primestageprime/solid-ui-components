@@ -30,3 +30,17 @@
 .sui-swimlane__node-wrapper:hover {
   filter: brightness(1.15);
 }
+
+.sui-swimlane__boundary-badge {
+  fill: var(--sui-bg-elevated, #1a1a1a);
+  stroke: var(--sui-border, #334155);
+  stroke-width: 1.5;
+}
+
+.sui-swimlane__boundary-badge-text {
+  fill: var(--sui-text, #e6ecf5);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  pointer-events: none;
+}

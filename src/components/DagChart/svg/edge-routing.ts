@@ -20,22 +20,26 @@ const CORNER_RADIUS = 6;
 const SAME_COL_OFFSET = 28;
 
 /**
- * Cubic bezier path from `from` to `to`, with control points anchored in
- * the vertical channel midway between the two columns. The curve leaves
- * each node horizontally (anchor on the inner edge) and bows into the
- * channel — the same empty space the orthogonal router uses, so the
- * curve stays clear of in-column siblings. Same-column edges arc around
- * the right side via a similar pair of controls.
+ * Cubic bezier path from `from` to `to` for different-column edges, with
+ * control points anchored in the vertical channel midway between the two
+ * columns. The curve leaves each node horizontally (anchor on the inner
+ * edge) and bows into the channel — the empty space between columns —
+ * so the curve stays clear of in-column siblings. For same-column edges
+ * (stacked nodes), draws a direct vertical line between the top/bottom
+ * edges; no side wrap-around.
  */
 export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
   const dx = to.x - from.x;
 
-  // Same column: arc around the right side of both nodes.
+  // Same column: vertical connection between stacked nodes — anchors are
+  // on the top/bottom edges, control points pulled slightly along the y
+  // axis so the curve stays tangent at the entry/exit points and doesn't
+  // visually flatten. No side wrap-around.
   if (Math.abs(dx) < 1) {
-    const fromAnchorX = from.x + from.width / 2;
-    const toAnchorX = to.x + to.width / 2;
-    const channelX = Math.max(fromAnchorX, toAnchorX) + SAME_COL_OFFSET;
-    return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
+    const goingDown = to.y > from.y;
+    const fromAnchorY = goingDown ? from.y + from.height / 2 : from.y - from.height / 2;
+    const toAnchorY = goingDown ? to.y - to.height / 2 : to.y + to.height / 2;
+    return `M ${from.x} ${fromAnchorY} L ${to.x} ${toAnchorY}`;
   }
 
   // Different columns: anchor on inner side, controls in the channel.
