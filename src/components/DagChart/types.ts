@@ -28,6 +28,16 @@ export type DAGProps<T = unknown> = {
   edges: DAGEdge[];
   renderNode: (node: DAGNode<T>, state: NodeRenderState) => JSX.Element;
   nodeSize?: (node: DAGNode<T>) => [width: number, height: number];
+  /**
+   * Optional per-node rank hint. Returning a number pins that node to a
+   * specific layer position (lower rank = earlier layer; 0 = leftmost in
+   * horizontal / topmost in vertical). Same-rank nodes are forced to share a
+   * layer. Unranked nodes (`undefined`) are placed freely by the layout
+   * optimiser. Useful for kanban-style DAGs that want fixed columns
+   * (e.g. DONE / DOING / TODO) regardless of dep depth. Internally wired to
+   * d3-dag's `layeringSimplex().rank().group()`.
+   */
+  nodeRank?: (node: DAGNode<T>) => number | undefined;
   direction?: "horizontal" | "vertical";
   onNodeClick?: (nodeId: string) => void;
   focusedNodeId?: string;

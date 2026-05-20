@@ -1,0 +1,27 @@
+/* ============================================
+   Kbd Component — Structural
+   ============================================ */
+.sui-kbd {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.95em;
+  line-height: 1;
+  padding: 2px 6px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.18));
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.06));
+  color: var(--sui-text-primary, inherit);
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.sui-kbd__letter {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.sui-kbd__rest {
+  /* inherits */
+}

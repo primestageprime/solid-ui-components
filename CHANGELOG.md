@@ -1,5 +1,79 @@
 # Changelog
 
+## 0.26.0
+
+Wave 2 composites/extensions drop: promotes patterns hand-rolled in
+dside-ui (Plan/Focus/Retro modes) so other apps can reuse them.
+
+### Added
+
+- **`CollapsiblePanel`** (composed) — `<CollapsiblePanel side label
+  persistKey? defaultCollapsed?>{children}</CollapsiblePanel>`. Renders an
+  `<aside>` with a thin collapse chevron when expanded, and a ~24px
+  vertical strip with a rotated label + expand chevron when collapsed.
+  Mirrors collapse state to `localStorage` when `persistKey` is set.
+  Includes `createCollapsiblePanel(defaults)` factory.
+- **`WeekCalendar`** (composed) — `<WeekCalendar days startHour endHour
+  pxPerHour? blocks renderBlock highlight? />`. Pure layout primitive:
+  time gutter on the left, day columns each with absolute-positioned
+  block slots. Time strings parse with the dside "1-8 means PM"
+  convention via the exported `parseWeekCalendarTime` helper. Optional
+  `highlight` adds a cyan glow on the matching slot. Includes
+  `createWeekCalendar(defaults)` factory.
+- **`ActionRow`** (composed) — `<ActionRow tone? leading? trailing?
+  actions?>{children}</ActionRow>`. Hover-revealed action bar
+  (visibility-toggled so layout doesn't shift); `tone` drives border +
+  background accent (e.g. red for `danger`, cyan for `accent`). Action
+  buttons accept their own `tone: "accent" | "muted" | "outline"`.
+  Includes `createActionRow(defaults)` factory.
+- **`AssigneeChips`** (atomic, promoted) — `<AssigneeChips ids
+  resolveName size? />`. Filled cyan pill per id; `resolveName`
+  resolver replaces the hard-coded `SAMPLE_TEAM` lookup used in the
+  dside-ui original. Includes `createAssigneeChips(defaults)`.
+
+### Changed
+
+- **`BurndownChart`** gains `size?: "xs" | "sm" | "md"` (default `"md"`,
+  backward-compatible). `"xs"` strips Grid / X-axis / Y-axis and shrinks
+  the chart footprint to ~180×60 for inline card use.
+- **`Button`** gains a first-class `tone?: "accent" | "outline" |
+  "muted"` prop orthogonal to `variant`, mirroring the trio used by
+  several inline button factories in dside-ui (`triageBtnStyle`,
+  `standupBtn`, `focusBtn`, `carryoverBtn`, `planWeekBtnStyle`).
+  Implemented as `sui-btn--tone-*` modifier classes; no existing
+  variant/size styles change.
+- **`ButtonGroup`** gains a matching `tone?` prop surfaced as
+  `sui-btn-group--tone-*` for consumers that want to scope tone styles.
+
+## 0.25.0
+
+Wave 1 atoms drop: extracts patterns hand-rolled in dside-ui so other apps can
+reuse them without re-implementing.
+
+### Added
+
+- **`Markdown`** (atomic) — `<Markdown source={string} />`. Renders h1–h3,
+  unordered lists, **bold**, *italic*, `code`, and paragraph breaks via a
+  small inline parser (no runtime dependency). Exports `renderMarkdownHtml`
+  helper and `createMarkdown(defaults)` factory.
+- **`MarkdownEditor`** (composed) — `<MarkdownEditor value onChange rows? />`.
+  50/50 split textarea + live `<Markdown>` preview. `createMarkdownEditor`
+  factory.
+- **`Kbd`** (atomic) — keyboard hint chip. Two modes:
+  - `<Kbd letter="C" rest="onfirm" />` renders an underlined letter followed
+    by the rest of the word (for hotkey hints).
+  - `<Kbd>Esc</Kbd>` renders literal children inside a styled `<kbd>`.
+  - `createKbd(defaults)` factory.
+
+### Changed
+
+- **`Modal`** gains `size="fullscreen"` (90vw × 90vh, max 1400px wide,
+  100vh tall) and a new `header?: JSX.Element` slot for custom header
+  content. Existing `title`/`subtitle`/`size` usages remain valid.
+- **`Toggle`** gains `variant="thematic"` — pill-switch design with cyan
+  accent fill, sliding thumb, uppercase label, and soft glow when on.
+  Default and minimal variants unchanged.
+
 ## 0.24.5
 
 DagChart: fix layering direction so source nodes (no incoming edges) sit at the leftmost column in horizontal layouts

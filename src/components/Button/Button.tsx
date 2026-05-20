@@ -22,6 +22,12 @@ export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>
   loading?: boolean;
   /** Active/selected state (absorbed from HUDButton) */
   active?: boolean;
+  /**
+   * Lightweight tone matrix (orthogonal to `variant`) — useful for the
+   * common "filled accent / outlined accent / muted" trio used by
+   * many dside-ui inline button factories.
+   */
+  tone?: "accent" | "outline" | "muted";
 }
 
 export const Button: Component<ButtonProps> = (props) => {
@@ -30,6 +36,7 @@ export const Button: Component<ButtonProps> = (props) => {
     "size",
     "loading",
     "active",
+    "tone",
     "class",
     "children",
     "disabled",
@@ -39,6 +46,7 @@ export const Button: Component<ButtonProps> = (props) => {
     const classList = ["sui-btn"];
     if (local.variant) classList.push(`sui-btn--${local.variant}`);
     if (local.size) classList.push(`sui-btn--${local.size}`);
+    if (local.tone) classList.push(`sui-btn--tone-${local.tone}`);
     if (local.loading) classList.push("sui-btn--loading");
     if (local.active) classList.push("sui-btn--active");
     if (local.class) classList.push(local.class);

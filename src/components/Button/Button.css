@@ -25,6 +25,25 @@
   padding: 12px 24px;
 }
 
+/* Tone matrix — orthogonal to variant. Mirrors the accent/outline/muted
+   trio used by the inline button factories in dside-ui. */
+.sui-btn--tone-accent {
+  border: 1px solid var(--sui-accent, #00d4ff);
+  background: var(--sui-accent, #00d4ff);
+  color: #001018;
+  font-weight: 500;
+}
+.sui-btn--tone-outline {
+  border: 1px solid var(--sui-accent, #00d4ff);
+  background: transparent;
+  color: var(--sui-accent, #00d4ff);
+}
+.sui-btn--tone-muted {
+  border: 1px solid var(--sui-border);
+  background: transparent;
+  color: var(--sui-text-muted);
+}
+
 /* Loading state */
 .sui-btn__spinner {
   width: 14px;

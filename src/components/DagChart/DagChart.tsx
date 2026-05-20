@@ -131,7 +131,7 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const fullLayout = createMemo(() => {
     try {
-      return computeLayout(props.nodes, props.edges, direction(), props.nodeSize);
+      return computeLayout(props.nodes, props.edges, direction(), props.nodeSize, props.nodeRank);
     } catch (err) {
       console.error("[DagChart] fullLayout memo failed:", err);
       return EMPTY;
