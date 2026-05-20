@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../DagChart/svg";
 import { computeSwimlaneLayout } from "./layout";
 import "./SwimlaneChart.css";
 
@@ -205,29 +206,18 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         onPointerUp={interactive() ? pointerHandlers.onPointerUp : undefined}
       >
         <defs>
-          <marker
-            id="sui-swimlane-arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M0,0 L10,5 L0,10 z" class="sui-swimlane__arrow" />
-          </marker>
+          <DagArrowMarker id="sui-swimlane-arrow" pathClass="sui-swimlane__arrow" />
         </defs>
         <g transform={transformString()}>
           {/* Edges */}
           <For each={edgeViews()}>
             {(edge) => (
-              <path
+              <DagSvgEdge
                 class={`sui-swimlane__edge${
                   edge.isSummary ? " sui-swimlane__edge--summary" : ""
                 }`}
                 d={edge.d}
-                marker-end={arrows() ? "url(#sui-swimlane-arrow)" : undefined}
-                style={{ "pointer-events": "none" }}
+                arrowMarkerId={arrows() ? "sui-swimlane-arrow" : undefined}
               />
             )}
           </For>
@@ -235,21 +225,17 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           {/* Nodes (real + summaries) */}
           <For each={items()}>
             {(item) => (
-              <foreignObject
-                x={item.x - item.width / 2}
-                y={item.y - item.height / 2}
+              <DagSvgNode
+                node={item.node}
+                state={item.state}
+                x={item.x}
+                y={item.y}
                 width={item.width}
                 height={item.height}
-                class="sui-swimlane__node-wrapper"
-              >
-                <div
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => handleNodeClick(item.id)}
-                  style={{ width: "100%", height: "100%", cursor: "pointer" }}
-                >
-                  {props.renderNode(item.node, item.state)}
-                </div>
-              </foreignObject>
+                wrapperClass="sui-swimlane__node-wrapper"
+                onClick={handleNodeClick}
+                renderNode={props.renderNode}
+              />
             )}
           </For>
         </g>

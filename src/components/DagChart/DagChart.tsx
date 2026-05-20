@@ -3,6 +3,7 @@ import type { DAGProps, PositionedNode } from "./types";
 import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
 import { createPanZoom } from "./pan-zoom";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "./svg";
 import "./DagChart.css";
 
 const RESPONSIVE_BREAKPOINT = 640;
@@ -308,17 +309,7 @@ export function DagChart<T>(props: DAGProps<T>) {
         <defs>
           {/* Arrowhead marker shared by every edge. `currentColor` defers
               to the edge stroke (set in CSS) so theming flows naturally. */}
-          <marker
-            id="sui-dag-arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M0,0 L10,5 L0,10 z" class="sui-dag__arrow" />
-          </marker>
+          <DagArrowMarker id="sui-dag-arrow" pathClass="sui-dag__arrow" />
         </defs>
         <g transform={transformString()}>
           {/* Edges */}
@@ -342,13 +333,12 @@ export function DagChart<T>(props: DAGProps<T>) {
                       onClick={() => props.onEdgeClick?.(edge.source, edge.target)}
                     />
                   </Show>
-                  <path
+                  <DagSvgEdge
                     class={`sui-dag__edge${
                       props.highlightedEdges?.has(edgeKey) ? " sui-dag__edge--highlighted" : ""
                     }`}
                     d={edge.d}
-                    marker-end={arrows() ? "url(#sui-dag-arrow)" : undefined}
-                    style={{ "pointer-events": "none" }}
+                    arrowMarkerId={arrows() ? "sui-dag-arrow" : undefined}
                   />
                   <Show when={edge.label}>
                     <g class="sui-dag__edge-label-wrap" transform={`translate(${edge.midX}, ${edge.midY})`}>
@@ -373,21 +363,17 @@ export function DagChart<T>(props: DAGProps<T>) {
           {/* Nodes */}
           <For each={positionedNodes()}>
             {(positioned) => (
-              <foreignObject
-                x={positioned.x - positioned.width / 2}
-                y={positioned.y - positioned.height / 2}
+              <DagSvgNode
+                node={positioned.node}
+                state={positioned.state}
+                x={positioned.x}
+                y={positioned.y}
                 width={positioned.width}
                 height={positioned.height}
-                class="sui-dag__node-wrapper"
-              >
-                <div
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => handleNodeClick(positioned.node.id)}
-                  style={{ width: "100%", height: "100%", cursor: "pointer" }}
-                >
-                  {props.renderNode(positioned.node, positioned.state)}
-                </div>
-              </foreignObject>
+                wrapperClass="sui-dag__node-wrapper"
+                onClick={handleNodeClick}
+                renderNode={props.renderNode}
+              />
             )}
           </For>
 
