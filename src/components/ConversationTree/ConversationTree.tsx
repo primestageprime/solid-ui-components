@@ -1,27 +1,31 @@
 // ============================================
 // ConversationTree — Pure Composite (Depth 3+).
-// Composes MessageBubble + ParticipantAvatar + LabeledDivider + Duration +
-// Layout/Text Curried Variants. Owns zero CSS — conversation-level dynamic
-// styling (per-participant tints, thread indent, self-vs-other alignment)
-// is expressed via inline styles on the JSX it composes.
+// Composes ThreadGroup + ParticipantAvatar +
+// ParticipantNameLabel + ParticipantTimeLabel +
+// LabeledDivider + Duration + MessageBubble +
+// Layout Curried Variants (ConversationStack).
 //
-// Renders a multi-participant conversation as a (optionally threaded) tree.
-// Groups consecutive messages from the same author. Shows efficient time
-// readouts: absolute when the gap is large or the day changes, otherwise
-// relative; full timestamp via tooltip on hover.
+// Owns zero CSS and zero inline `style={}` — all
+// visual styling lives in Primitives / Curried
+// Variants. The Composite expresses only the
+// tree-building + grouping + composition.
+//
+// Renders a multi-participant conversation as a
+// (optionally threaded) tree. Groups consecutive
+// messages from the same author. Shows efficient
+// time readouts: absolute when the gap is large
+// or the day changes, otherwise relative; full
+// timestamp via tooltip on hover.
 // ============================================
-import { Component, For, JSX, Show, createMemo } from "solid-js";
-import {
-  NarrowStack,
-  TightStack,
-  TopClusterRow,
-  WrappedClusterRow,
-} from "../Layout";
-import { TextLabel, TextSublabel } from "../Text";
+import { Component, For, Show, createMemo } from "solid-js";
+import { ConversationStack } from "../Layout";
 import { Duration } from "../Duration";
 import { MessageBubble } from "../MessageBubble";
 import { ParticipantAvatar } from "../ParticipantAvatar";
+import { ParticipantNameLabel } from "../ParticipantNameLabel";
+import { ParticipantTimeLabel } from "../ParticipantTimeLabel";
 import { LabeledDivider } from "../LabeledDivider";
+import { ThreadGroup } from "../ThreadGroup";
 
 export interface Participant {
   id: string;
@@ -208,60 +212,6 @@ const flattenWithGrouping = (
   return items;
 };
 
-// ── styling helpers — conversation-level dynamic layout only ──
-// Composites may inline styles for per-instance dynamic values; no class CSS
-// owned by this file.
-
-const CONVERSATION_STYLE: JSX.CSSProperties = {
-  "font-size": "0.85rem",
-  "line-height": "1.4",
-  color: "var(--sui-text-primary, inherit)",
-  /* Fill available width up to a reasonable cap.
-     Math: bubble max = 80ch; body width = 80% of container; for self bubbles
-     to overlap other bubbles, container >= 80ch / 0.8 = 100ch. Cap at ~110ch
-     which keeps full-width bubbles + ~20% breathing room without sprawling
-     on wide displays. */
-  width: "100%",
-  "max-width": "110ch",
-};
-
-const groupStyle = (
-  depth: number,
-  color: string,
-  threaded: boolean,
-): JSX.CSSProperties => ({
-  "border-left": "2px solid transparent",
-  "border-left-color": depth > 0 ? color : "transparent",
-  "padding-top": "2px",
-  "padding-bottom": "2px",
-  "padding-left": `${threaded ? depth * 24 : 0}px`,
-  transition: "padding-left 120ms ease",
-});
-
-const rowStyle = (isSelf: boolean): JSX.CSSProperties => ({
-  width: "100%",
-  "flex-direction": isSelf ? "row-reverse" : "row",
-});
-
-const bodyStyle = (isSelf: boolean): JSX.CSSProperties => ({
-  flex: "1",
-  "min-width": "0",
-  /* Body fills available width up to the bubble cap; bubbles inside size
-     to content. 80% lets a `self` bubble overlap an `other` bubble — the
-     visual signature of the layout. */
-  "max-width": "80%",
-  "align-items": isSelf ? "flex-end" : undefined,
-});
-
-const headerStyle = (isSelf: boolean): JSX.CSSProperties => ({
-  "row-gap": "0",
-  "flex-direction": isSelf ? "row-reverse" : "row",
-});
-
-const bubblesStyle = (isSelf: boolean): JSX.CSSProperties => ({
-  "align-items": isSelf ? "flex-end" : undefined,
-});
-
 const bubbleBg = (color: string, isSelf: boolean): string =>
   isSelf
     ? `color-mix(in srgb, ${color} 70%, #0a1525 30%)`
@@ -298,7 +248,7 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
   );
 
   return (
-    <NarrowStack style={CONVERSATION_STYLE}>
+    <ConversationStack>
       <For each={items()}>
         {(item) => (
           <Show
@@ -311,67 +261,57 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
               const color = colorById().get(participant.id)!;
               const isSelf = props.currentUserId === participant.id;
               return (
-                <div style={groupStyle(item.depth ?? 0, color, threaded())}>
-                  <TopClusterRow style={rowStyle(isSelf)}>
+                <ThreadGroup
+                  depth={item.depth ?? 0}
+                  color={color}
+                  variant={isSelf ? "self" : "other"}
+                  threaded={threaded()}
+                  avatar={
                     <ParticipantAvatar
                       initials={initialsOf(participant.name)}
                       imageSrc={participant.avatarUrl}
                       color={color}
                       size="md"
                     />
-                    <TightStack style={bodyStyle(isSelf)}>
-                      <WrappedClusterRow style={headerStyle(isSelf)}>
-                        <TextLabel
-                          style={{
-                            "font-weight": "600",
-                            "font-size": "0.78rem",
-                            "white-space": "nowrap",
-                            color,
-                          }}
+                  }
+                  header={
+                    <>
+                      <ParticipantNameLabel color={color}>
+                        {participant.name}
+                      </ParticipantNameLabel>
+                      <ParticipantTimeLabel title={formatFull(item.startMs!)}>
+                        <Duration ms={Math.max(0, now() - item.startMs!)} />
+                        {" ago"}
+                      </ParticipantTimeLabel>
+                    </>
+                  }
+                  bubbles={
+                    <For each={item.msgs!}>
+                      {(m) => (
+                        <MessageBubble
+                          variant={isSelf ? "self" : "other"}
+                          bg={bubbleBg(color, isSelf)}
+                          textColor={bubbleTextColor(isSelf)}
+                          title={formatFull(toMs(m.timestamp))}
+                          onClick={
+                            props.onMessageClick
+                              ? () => props.onMessageClick!(m.id)
+                              : undefined
+                          }
+                          clampLines={props.clampLines ?? 5}
+                          maxLines={props.maxLines ?? 20}
                         >
-                          {participant.name}
-                        </TextLabel>
-                        <TextSublabel
-                          style={{
-                            "font-size": "0.7rem",
-                            opacity: "0.7",
-                            cursor: "default",
-                          }}
-                          title={formatFull(item.startMs!)}
-                        >
-                          <Duration ms={Math.max(0, now() - item.startMs!)} />
-                          {" ago"}
-                        </TextSublabel>
-                      </WrappedClusterRow>
-                      <TightStack style={bubblesStyle(isSelf)}>
-                        <For each={item.msgs!}>
-                          {(m) => (
-                            <MessageBubble
-                              variant={isSelf ? "self" : "other"}
-                              bg={bubbleBg(color, isSelf)}
-                              textColor={bubbleTextColor(isSelf)}
-                              title={formatFull(toMs(m.timestamp))}
-                              onClick={
-                                props.onMessageClick
-                                  ? () => props.onMessageClick!(m.id)
-                                  : undefined
-                              }
-                              clampLines={props.clampLines ?? 5}
-                              maxLines={props.maxLines ?? 20}
-                            >
-                              {m.text}
-                            </MessageBubble>
-                          )}
-                        </For>
-                      </TightStack>
-                    </TightStack>
-                  </TopClusterRow>
-                </div>
+                          {m.text}
+                        </MessageBubble>
+                      )}
+                    </For>
+                  }
+                />
               );
             })()}
           </Show>
         )}
       </For>
-    </NarrowStack>
+    </ConversationStack>
   );
 };

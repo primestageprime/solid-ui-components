@@ -1,0 +1,11 @@
+/* ============================================
+ * ParticipantTimeLabel — the relative-time
+ * caption beside the author name on a message
+ * group. Small, faded, non-selectable cursor.
+ * ============================================ */
+
+.sui-participant-time-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  cursor: default;
+}
