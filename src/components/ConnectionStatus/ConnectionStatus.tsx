@@ -1,16 +1,20 @@
 // ============================================
 // ConnectionStatus — Composed (Depth 3)
-// Composes LiveHeartbeatTrace (Depth 2) + StatusLight (Depth 1) +
-// Text variants (Depth 1) + Stack layout (Depth 1).
+// Pure Composite: owns zero CSS, composes only curried variants
+// (and one lower-depth Composite, LiveHeartbeatTrace).
+//   - SmallTightStack (Layout curried variant) — outer column
+//   - NowrapLabel    (Text curried variant)   — service name
+//   - SmallStatusLight (StatusLight curried variant) — compact fallback dot
+//   - LiveHeartbeatTrace (Depth 2)            — sparkline
 // Stacked indicator: label on top, sparkline beneath.
 // Reassuring when healthy: no time-since text, just the trace.
 // ============================================
 import { Component, Show } from "solid-js";
 import { LiveHeartbeatTrace } from "../LiveHeartbeatTrace";
-import { StatusLight, StatusLightVariant } from "../StatusLight";
-import { Stack } from "../Layout";
-import { TextLabel } from "../Text";
-import "./ConnectionStatus.css";
+import type { StatusLightVariant } from "../StatusLight";
+import { SmallStatusLight } from "../StatusLight/variants";
+import { SmallTightStack } from "../Layout/variants";
+import { NowrapLabel } from "../Text/variants";
 
 export interface ConnectionStatusProps {
   /** Service / source name (e.g. "peter-laptop"). */
@@ -53,14 +57,13 @@ export const ConnectionStatus: Component<ConnectionStatusProps> = (props) => {
   const tickMs = () => props.tickMs ?? 1000;
 
   return (
-    <Stack class="sui-connection-status" gap="xs" align="start">
-      <TextLabel class="sui-connection-status__name">{props.name}</TextLabel>
+    <SmallTightStack>
+      <NowrapLabel>{props.name}</NowrapLabel>
 
       <Show
         when={showSpark()}
         fallback={
-          <StatusLight
-            size="sm"
+          <SmallStatusLight
             pulse={
               stateToLight(props.lastHeartbeatAt, props.timeoutMs, props.errorAt) === "success"
             }
@@ -77,6 +80,6 @@ export const ConnectionStatus: Component<ConnectionStatusProps> = (props) => {
           height={props.sparklineHeight ?? 14}
         />
       </Show>
-    </Stack>
+    </SmallTightStack>
   );
 };

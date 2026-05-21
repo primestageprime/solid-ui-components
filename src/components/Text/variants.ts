@@ -34,6 +34,18 @@ export const EllipsizedTitle = createText({
 // Nowrap text — inline formatted values that must not break
 export const NowrapBody = createText({ variant: "body", as: "span", style: { "white-space": "nowrap" } });
 
+// Nowrap label — single-line `label` variant for tight indicator rows
+// (e.g. service name above a status trace) where wrapping would break layout.
+export const NowrapLabel = createText({ variant: "label", as: "span", style: { "white-space": "nowrap" } });
+
+// Faded nowrap sublabel — for inline secondary metadata (e.g. "age" / time-since
+// readouts) that should stay on one line and recede visually.
+export const FadedNowrapSublabel = createText({
+  variant: "sublabel",
+  as: "span",
+  style: { "white-space": "nowrap", opacity: "0.75" },
+});
+
 // Color-shifted body text
 export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
 export const AccentBody = createText({ variant: "body", color: "var(--hud-accent, #00d4ff)" });

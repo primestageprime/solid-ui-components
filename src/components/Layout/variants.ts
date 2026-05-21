@@ -22,6 +22,15 @@ export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
 export const NarrowStack: Component<StackDataProps> = createStack({ gap: "sm" });
 export const SpacedStack: Component<StackDataProps> = createStack({ gap: "md" });
 
+// Small, tight, start-aligned column — for dense indicator rows (e.g.
+// label-on-top / status-trace-beneath). Smaller font and tighter line-height
+// than the default body text so it sits comfortably in a packed dashboard.
+export const SmallTightStack: Component<StackDataProps> = createStack({
+  gap: "xs",
+  align: "start",
+  style: { "font-size": "0.8rem", "line-height": "1.2" },
+});
+
 // Stack variants — named by role / page layout
 export const PageStack = createStack({ gap: "sm", style: { padding: "24px", "max-width": "1000px" } });
 export const ContentStack: Component<StackDataProps> = createStack({ gap: "xs", style: { flex: "1", "min-width": "0" } });

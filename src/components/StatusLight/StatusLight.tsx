@@ -2,8 +2,9 @@
 // StatusLight — Atomic (Depth 1)
 // Owns CSS (StatusLight.css), no component imports.
 // Small colored indicator dot, optionally pulsing for liveness/keepalive.
+// Factory: createStatusLight().
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./StatusLight.css";
 
 export type StatusLightVariant =
@@ -62,3 +63,21 @@ export const StatusLight: Component<StatusLightProps> = (props) => {
     </span>
   );
 };
+
+/** Props that are visual overrides — locked at variant-definition time. */
+export type StatusLightOverrides = Pick<StatusLightProps, "size">;
+
+/** Props that remain available to consumers of a curried StatusLight variant.
+ *
+ * `variant` and `pulse` stay public because they typically reflect runtime
+ * state (e.g. derived from a connection's health on each render) rather than
+ * a fixed visual choice. Curry only `size` (and any inline styling) at
+ * variant-definition time.
+ */
+export type StatusLightDataProps = Omit<StatusLightProps, keyof StatusLightOverrides>;
+
+export function createStatusLight(
+  defaults: Partial<Omit<StatusLightProps, "children">>,
+): Component<StatusLightDataProps> {
+  return (props) => <StatusLight {...mergeProps(defaults, props)} />;
+}
