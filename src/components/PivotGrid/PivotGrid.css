@@ -1,0 +1,96 @@
+.sui-pivot-grid {
+  overflow: auto;
+  background: var(--sui-bg-primary, #0d0d0d);
+  color: var(--sui-text-primary, #fff);
+}
+
+.sui-pivot-grid__table {
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: auto;
+  min-width: 0;
+  width: max-content;
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-pivot-grid__corner,
+.sui-pivot-grid__col-header,
+.sui-pivot-grid__row-header {
+  background: var(--sui-bg-secondary, #1a1a1a);
+  text-align: left;
+  padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
+  border-bottom: 1px solid var(--sui-border, #2a2a2a);
+  border-right: 1px solid var(--sui-border, #2a2a2a);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.sui-pivot-grid__col-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sui-pivot-grid__row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sui-pivot-grid__corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.sui-pivot-grid__cell {
+  padding: 0;
+  border-bottom: 1px solid var(--sui-border, #2a2a2a);
+  border-right: 1px solid var(--sui-border, #2a2a2a);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.sui-pivot-grid__cell-link,
+.sui-pivot-grid__cell-button {
+  display: block;
+  width: 100%;
+  padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: right;
+  background: transparent;
+  border: 0;
+  font: inherit;
+}
+
+.sui-pivot-grid__cell-link:hover,
+.sui-pivot-grid__cell-button:hover {
+  background-color: var(--sui-bg-hover, rgba(255, 255, 255, 0.04));
+}
+
+.sui-pivot-grid__cell-link:focus-visible,
+.sui-pivot-grid__cell-button:focus-visible {
+  outline: 2px solid var(--sui-accent, #4a9eff);
+  outline-offset: -2px;
+}
+
+/* When the cell has no interactive wrapper, plain text gets the same padding */
+.sui-pivot-grid__cell:not(:has(.sui-pivot-grid__cell-link)):not(:has(.sui-pivot-grid__cell-button)) {
+  padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
+}
+
+/* Compact variant — 6/8 padding instead of 8/12 */
+.sui-pivot-grid--compact .sui-pivot-grid__corner,
+.sui-pivot-grid--compact .sui-pivot-grid__col-header,
+.sui-pivot-grid--compact .sui-pivot-grid__row-header,
+.sui-pivot-grid--compact .sui-pivot-grid__cell-link,
+.sui-pivot-grid--compact .sui-pivot-grid__cell-button,
+.sui-pivot-grid--compact .sui-pivot-grid__cell:not(:has(.sui-pivot-grid__cell-link)):not(:has(.sui-pivot-grid__cell-button)) {
+  padding: var(--sui-space-1, 6px) var(--sui-space-2, 8px);
+}
