@@ -32,7 +32,7 @@
   /* Give the first hour mark room so it isn't clipped by the header
      border (gutter marks use translateY(-50%) and would otherwise sit
      half-above the gutter). */
-  padding-top: 0;
+  padding-top: 8px;
 }
 
 .sui-week-calendar__gutter-mark {
@@ -50,7 +50,7 @@
   position: relative;
   border-right: 1px solid var(--sui-border);
   /* Match the gutter so blocks line up with the hour marks. */
-  padding-top: 0;
+  padding-top: 8px;
 }
 
 .sui-week-calendar__hour-line {
