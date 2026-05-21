@@ -1,0 +1,28 @@
+/* ============================================
+ * LabeledDivider — a horizontal rule with a
+ * centered label. Lines on either side via
+ * ::before/::after pseudo-elements.
+ * ============================================ */
+
+.sui-labeled-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+}
+
+.sui-labeled-divider::before,
+.sui-labeled-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--sui-border, rgba(255, 255, 255, 0.1));
+}
+
+.sui-labeled-divider__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sui-text-muted, #888);
+  white-space: nowrap;
+}

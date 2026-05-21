@@ -1,0 +1,81 @@
+/* ============================================
+ * MessageBubble — owns chat-bubble visuals.
+ * Background, padding, max-width, line clamping,
+ * the (more…) toggle, and the self/other variant
+ * adjustments live entirely here.
+ * ============================================ */
+
+.sui-message-bubble {
+  background: var(--sui-surface-sunken, rgba(255, 255, 255, 0.04));
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  width: fit-content;
+  /* Bubbles wrap before exceeding 80 visible characters. */
+  max-width: min(80ch, 100%);
+}
+
+.sui-message-bubble + .sui-message-bubble {
+  /* Tighten stacked bubbles within the same author group. */
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+}
+
+.sui-message-bubble--self {
+  /* `self` keeps full corner radius on the leading edge — only the trailing
+     stacked sibling tightens (see selector below). */
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.sui-message-bubble--self + .sui-message-bubble--self {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 2px;
+}
+
+.sui-message-bubble__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--sui-message-bubble-clamp, 5);
+  line-clamp: var(--sui-message-bubble-clamp, 5);
+  overflow: hidden;
+}
+
+.sui-message-bubble__text--expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  /* Cap expanded height; scroll internally beyond it. */
+  max-height: calc(var(--sui-message-bubble-max, 20) * 1.4em);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sui-message-bubble__text--expanded::-webkit-scrollbar {
+  width: 6px;
+}
+.sui-message-bubble__text--expanded::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+
+.sui-message-bubble__more {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.72rem;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.sui-message-bubble__more:hover {
+  opacity: 1;
+}
