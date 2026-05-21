@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel, MULTI_DEPS } from "./swimlane-chart";
-import { SwimlaneChart } from "../../src/components/SwimlaneChart";
+import { LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface";
 import { Stack } from "../../src/components/Layout";
@@ -234,20 +234,14 @@ const AnimatedDag: Component = () => {
           "box-sizing": "border-box",
         }}
       >
-        <SwimlaneChart
+        {/* LinearFlowSwimlaneChart is the curried variant that bakes in
+            the depth/collapse/center defaults this row needs (per ADR-0001).
+            Consumer only passes data + render callback. */}
+        <LinearFlowSwimlaneChart
           nodes={animatedNodes()}
           edges={LINEAR_CHAIN.edges}
           swimlaneFor={(n) => n.data.col}
           renderNode={renderAnimNode}
-          nodeSize={() => [160, 56]}
-          /* maxDepth=3 covers the full topology (cf at -3, tf at +3) but
-             responsiveCollapse=true lets the chart show fewer rings when
-             the container is narrow. Wide container → all 7 cols + no
-             summaries. Narrow → depth shrinks, outer rings collapse into
-             per-anchor badges. DOING (col 0) always stays at center. */
-          maxDepth={3}
-          responsiveCollapse={true}
-          interactive={false}
         />
       </div>
     </div>
@@ -263,22 +257,29 @@ const AnimatedDag: Component = () => {
  *   - Loops every 4s so it's easy to inspect.
  */
 const CompressDemo: Component = () => {
-  // The CSS compress loop is 4s. We bump the badge count every cycle so
-  // the box appears to "deliver" a new node into the badge each pulse.
-  // The roll fires right when the box is fully behind the circle (the
-  // 45-55% hold window), so the new digit appears as the box vanishes.
-  const [count, setCount] = createSignal(3);
-  const [prevCount, setPrevCount] = createSignal(2);
+  // The CSS loop is 4s. At t=0 the left box is FULL and the right box
+  // is COMPRESSED (just emerged from the right badge). At t=2s the
+  // left has collapsed into its badge and the right has grown to full.
+  // Counts roll in opposite directions: left badge gains a node (count
+  // up) each cycle, right badge loses one (count down) — mirroring the
+  // real chart where a leaving node is absorbed on one side while an
+  // entering node emerges on the other.
+  const [leftCount, setLeftCount] = createSignal(3);
+  const [leftPrev, setLeftPrev] = createSignal(2);
+  const [rightCount, setRightCount] = createSignal(5);
+  const [rightPrev, setRightPrev] = createSignal(6);
   const LOOP_MS = 4000;
-  const ROLL_OFFSET_MS = LOOP_MS * 0.5; // peak of compression
+  const ROLL_OFFSET_MS = LOOP_MS * 0.5; // peak of compression (left side)
 
   let intervalId: ReturnType<typeof setInterval> | undefined;
   let kickoff: ReturnType<typeof setTimeout> | undefined;
   onMount(() => {
     kickoff = setTimeout(() => {
       const bump = () => {
-        setPrevCount(count());
-        setCount((c) => c + 1);
+        setLeftPrev(leftCount());
+        setLeftCount((c) => c + 1);
+        setRightPrev(rightCount());
+        setRightCount((c) => Math.max(0, c - 1));
       };
       bump();
       intervalId = setInterval(bump, LOOP_MS);
@@ -292,15 +293,28 @@ const CompressDemo: Component = () => {
   return (
     <div class="compress-demo">
       <div class="compress-demo__track">
-        {/* Box first in DOM → badge paints on top (no z-index needed). */}
-        <div class="compress-demo__box">
-          <div class="compress-demo__box-label">DOING</div>
-          <div class="compress-demo__box-title">In progress</div>
+        {/* Boxes first in DOM → badges paint on top (no z-index needed). */}
+        <div class="compress-demo__box compress-demo__box--left">
+          <div class="compress-demo__box-label">LEAVING</div>
+          <div class="compress-demo__box-title">absorbed left</div>
         </div>
-        <div class="compress-demo__badge">
+        <div class="compress-demo__box compress-demo__box--right">
+          <div class="compress-demo__box-label">ENTERING</div>
+          <div class="compress-demo__box-title">emerges right</div>
+        </div>
+        <div class="compress-demo__badge compress-demo__badge--left">
           <DigitRoller
-            value={String(count())}
-            previousValue={String(prevCount())}
+            value={String(leftCount())}
+            previousValue={String(leftPrev())}
+            animate
+            duration={400}
+            stagger={60}
+          />
+        </div>
+        <div class="compress-demo__badge compress-demo__badge--right">
+          <DigitRoller
+            value={String(rightCount())}
+            previousValue={String(rightPrev())}
             animate
             duration={400}
             stagger={60}
@@ -308,7 +322,7 @@ const CompressDemo: Component = () => {
         </div>
       </div>
       <p class="compress-demo__caption">
-        rect → circle (4s loop) · count rolls each cycle as the box vanishes
+        left absorbs (count↑) · right emerges (count↓) · 4s mirrored loop
       </p>
     </div>
   );

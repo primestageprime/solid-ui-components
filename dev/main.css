@@ -69,7 +69,9 @@
 
 .compress-demo__track {
   position: relative;
-  width: 320px;
+  /* Two boxes (~180px each) + a center gap so the LEFT and RIGHT
+     animations have room to play side-by-side without overlapping. */
+  width: 500px;
   height: 80px;
   display: flex;
   align-items: center;
@@ -77,7 +79,6 @@
 
 .compress-demo__box {
   position: absolute;
-  left: 0;
   width: 180px;
   height: 56px;
   padding: 8px 12px;
@@ -90,10 +91,24 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  /* Shrink toward the LEFT edge so the rect appears to be "sucked into"
-     the badge sitting just to its left. */
+}
+
+/* Left box: starts FULL, compresses into the left badge at the 50%
+   mark, then re-emerges. Shrinks toward its LEFT edge so the rect
+   appears to be sucked into the badge. */
+.compress-demo__box--left {
+  left: 36px; /* leaves room for the badge at x=0 */
   transform-origin: left center;
-  animation: compress-demo-box 4s linear infinite;
+  animation: compress-demo-box-left 4s linear infinite;
+}
+
+/* Right box: time-mirror of left. Starts COMPRESSED at the right
+   badge, expands to full at the 50% mark, then re-compresses.
+   Shrinks toward its RIGHT edge. */
+.compress-demo__box--right {
+  right: 36px;
+  transform-origin: right center;
+  animation: compress-demo-box-right 4s linear infinite;
 }
 .compress-demo__box-label {
   font-size: 9px;
@@ -113,7 +128,6 @@
 
 .compress-demo__badge {
   position: absolute;
-  left: -36px; /* 14px past the box's left edge + 22 radius */
   width: 22px;
   height: 22px;
   background: var(--sui-bg-elevated, #1a1a1a);
@@ -127,7 +141,13 @@
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   color: var(--sui-text, #e6ecf5);
   /* Badge stays visible across the whole loop — it represents the
-     persistent collapsed-count summary that the box morphs into. */
+     persistent collapsed-count summary that boxes morph into/out of. */
+}
+.compress-demo__badge--left {
+  left: 0;
+}
+.compress-demo__badge--right {
+  right: 0;
 }
 
 .compress-demo__caption {
@@ -137,12 +157,9 @@
   margin: 0;
 }
 
-/* Box: one continuous breath. As it shrinks it ALSO translates left so
-   the dwindling rectangle slides UNDER the badge (badge is later in
-   DOM order, so it paints on top). The translation ends at -36px,
-   which is the badge's left offset — at full compression the box's
-   center has landed at the badge's center. */
-@keyframes compress-demo-box {
+/* Left box: full → compressed-at-left-badge → full. The translation
+   ends at -36px which puts the box's left edge at the badge's center. */
+@keyframes compress-demo-box-left {
   0% {
     transform: translateX(0) scale(1, 1) skewX(0deg);
     border-radius: 8px;
@@ -167,6 +184,38 @@
     transform: translateX(0) scale(1, 1) skewX(0deg);
     border-radius: 8px;
     opacity: 1;
+  }
+}
+
+/* Right box: time-mirror — STARTS compressed at the right badge,
+   grows to full at 50%, then re-compresses. So at any instant one
+   box is moving opposite the other: left absorbs while right emerges,
+   then left re-emerges while right absorbs. */
+@keyframes compress-demo-box-right {
+  0% {
+    transform: translateX(36px) scale(0.12, 0.4) skewX(20deg);
+    border-radius: 50%;
+    opacity: 0;
+  }
+  25% {
+    transform: translateX(15px) scale(0.4, 0.7) skewX(10deg);
+    border-radius: 24px;
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateX(0) scale(1, 1) skewX(0deg);
+    border-radius: 8px;
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(15px) scale(0.4, 0.7) skewX(10deg);
+    border-radius: 24px;
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(36px) scale(0.12, 0.4) skewX(20deg);
+    border-radius: 50%;
+    opacity: 0;
   }
 }
 

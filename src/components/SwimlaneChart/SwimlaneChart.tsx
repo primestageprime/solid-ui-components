@@ -2,6 +2,7 @@ import {
   createMemo,
   createEffect,
   createSignal,
+  mergeProps,
   on,
   For,
   onMount,
@@ -571,4 +572,32 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       </svg>
     </div>
   );
+}
+
+/** Props that are visual/layout overrides — locked at variant-definition time.
+ *  A curried variant freezes these so every consumer-app instance renders the
+ *  same way, while still exposing data + behavior props (nodes, edges, etc.). */
+export type SwimlaneChartOverrides =
+  | "maxDepth"
+  | "columnGap"
+  | "rowGap"
+  | "nodeSize"
+  | "arrows"
+  | "interactive"
+  | "centerCol"
+  | "responsiveCollapse";
+
+/** Props that remain available to consumers of a curried SwimlaneChart variant. */
+export type SwimlaneChartDataProps<T> = Omit<SwimlaneChartProps<T>, SwimlaneChartOverrides>;
+
+/**
+ * Curried-variant factory for SwimlaneChart. Bakes layout/visual defaults
+ * into a named component (per ADR-0001). Consumers import the named variant
+ * (e.g. `LinearFlowSwimlaneChart`) and pass only data + render callbacks —
+ * the variant's visual configuration cannot drift across consumer apps.
+ */
+export function createSwimlaneChart<T>(
+  defaults: Partial<Pick<SwimlaneChartProps<T>, SwimlaneChartOverrides>>,
+): (props: SwimlaneChartDataProps<T>) => JSX.Element {
+  return (props) => <SwimlaneChart {...mergeProps(defaults, props) as SwimlaneChartProps<T>} />;
 }
