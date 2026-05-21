@@ -54,6 +54,10 @@ export type StatusFlowChartProps = {
   /** Minimum horizontal gap reserved for an arrow between two adjacent
    *  node centers — used by SwimlaneChart to budget the column gap. */
   minArrowWidth: number;
+  /** Vertical gap (center-to-center) between nodes that stack inside the
+   *  same column. Default 80 to match SwimlaneChart; pass a smaller
+   *  value (e.g. nodeHeight + 8) to fit more stacked nodes per col. */
+  rowGap?: number;
   /** Width-driven visible-column breakpoints. Largest matching minWidth
    *  wins. `visibleCols` should be odd (1, 3, 5, …) so the chart stays
    *  symmetric around the center column. */
@@ -254,87 +258,54 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // node itself. SwimlaneChart's internal column-gap calc may shrink
   // this further on narrow viewports.
   const columnGap = createMemo(() => props.nodeWidth + props.minArrowWidth);
+  const rowGap = createMemo(() => props.rowGap ?? 80);
 
-  // Has a non-terminal parent? Then the chart container acts as a
-  // visual "lane" for the (single) parent group — outline it.
-  const hasActiveLane = createMemo(() => {
-    const { collapsedParents, childrenByParent } = resolved();
-    for (const pid of childrenByParent.keys()) {
-      if (!collapsedParents.has(pid)) return true;
-    }
-    return false;
-  });
+  const renderChart = (): JSX.Element => (
+    <div class="sui-statusflow__chart">
+      <SwimlaneChart
+        nodes={swimlaneNodes()}
+        edges={swimlaneEdges()}
+        swimlaneFor={(n) => cols().get(n.id)?.col ?? 0}
+        renderNode={renderInner}
+        nodeSize={() => [props.nodeWidth, props.nodeHeight]}
+        maxDepth={maxDepth()}
+        columnGap={columnGap()}
+        rowGap={rowGap()}
+        responsiveCollapse={false}
+        interactive={false}
+        arrows={true}
+        onNodeClick={props.onNodeClick}
+      />
+    </div>
+  );
 
   return (
-    <div
-      ref={containerRef}
-      class="sui-statusflow"
-      data-lane-active={hasActiveLane() ? "" : undefined}
-    >
-      {parent() && (
-        <div class="sui-statusflow__parent-header">
-          <div
-            class="sui-statusflow__parent-slot"
-            style={{
-              width: `${props.nodeWidth}px`,
-              height: `${props.nodeHeight}px`,
-              // Track the parent's status column: TODO → +1 (right of
-              // center), DOING → 0 (center), DONE → -1 (left). Same
-              // convention the children follow. Animates smoothly so
-              // the parent slides between columns when its effective
-              // status changes.
-              transform: `translateX(${parentCol() * columnGap()}px)`,
-              transition: "transform 0.55s ease-out",
-            }}
-          >
-            {renderInnerForData(parent()!)}
+    <div ref={containerRef} class="sui-statusflow">
+      {parent() ? (
+        <div class="sui-statusflow__lane-box">
+          <div class="sui-statusflow__parent-header">
+            <div
+              class="sui-statusflow__parent-slot"
+              style={{
+                width: `${props.nodeWidth}px`,
+                height: `${props.nodeHeight}px`,
+                // Track the parent's status column: TODO → +1 (right of
+                // center), DOING → 0 (center), DONE → -1 (left). Same
+                // convention the children follow. Animates smoothly so
+                // the parent slides between columns when its effective
+                // status changes.
+                transform: `translateX(${parentCol() * columnGap()}px)`,
+                transition: "transform 0.55s ease-out",
+              }}
+            >
+              {renderInnerForData(parent()!)}
+            </div>
           </div>
+          {renderChart()}
         </div>
+      ) : (
+        renderChart()
       )}
-      {parent() && chartChildren().length > 0 && (
-        <svg
-          class="sui-statusflow__brace"
-          width="100%"
-          height="14"
-          viewBox="0 0 1000 14"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {/* `{` rotated so peak points UP toward parent. The two ends
-              are vertical line segments hanging DOWN (the "edges" of
-              the brace) so the arms point at the children below. */}
-          <path
-            d="M 0 14
-               L 0 8
-               C 0 4, 4 4, 10 4
-               L 488 4
-               C 495 4, 495 0, 500 0
-               C 505 0, 505 4, 512 4
-               L 990 4
-               C 996 4, 1000 4, 1000 8
-               L 1000 14"
-            fill="none"
-            stroke="var(--sui-border-bright, rgba(255,255,255,0.45))"
-            stroke-width="1.5"
-            vector-effect="non-scaling-stroke"
-          />
-        </svg>
-      )}
-      <div class="sui-statusflow__chart">
-        <SwimlaneChart
-          nodes={swimlaneNodes()}
-          edges={swimlaneEdges()}
-          swimlaneFor={(n) => cols().get(n.id)?.col ?? 0}
-          renderNode={renderInner}
-          nodeSize={() => [props.nodeWidth, props.nodeHeight]}
-          maxDepth={maxDepth()}
-          columnGap={columnGap()}
-          responsiveCollapse={false}
-          interactive={false}
-          arrows={true}
-          onNodeClick={props.onNodeClick}
-        />
-      </div>
     </div>
   );
 };

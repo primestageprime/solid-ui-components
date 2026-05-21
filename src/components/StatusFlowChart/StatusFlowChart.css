@@ -9,17 +9,23 @@
   flex-direction: column;
 }
 
-/* Lane outline: when a parent has visible (non-collapsed) children, the
-   container outlines a dashed "lane" that wraps the parent header,
-   the curly-brace scope indicator, and the children chart. */
-.sui-statusflow[data-lane-active] {
-  border: 1px dashed var(--sui-border-bright, rgba(0, 212, 255, 0.4));
+/* Lane box wraps the parent header AND the chart in a subtly lighter
+   surface so they read as a single grouped lane. Only rendered when
+   there IS a parent — standalone chains (chores) render bare. */
+.sui-statusflow__lane-box {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 8px;
   border-radius: 8px;
-  padding: 4px;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.1));
 }
 
 /* Parent header: a single fixed-size node slot, horizontally centered
-   above the children. Zero bottom margin so the brace sits flush. */
+   above the children. */
 .sui-statusflow__parent-header {
   display: flex;
   justify-content: center;
@@ -28,14 +34,6 @@
 }
 .sui-statusflow__parent-slot {
   position: relative;
-}
-
-/* Curly brace: zero margin so the parent→children gap equals exactly
-   the brace's own height (22px). The brace IS the gap. */
-.sui-statusflow__brace {
-  display: block;
-  flex-shrink: 0;
-  margin: 0;
 }
 
 /* Chart slot grows to fill remaining height. */
