@@ -39,7 +39,7 @@ Default contents = the [shrink-wrapped delineated sidebar](#shrink-wrapped-delin
 }
 ```
 
-Override either slot to put real content in:
+Override either region to put real content in:
 
 ```tsx
 render: () => (
@@ -60,7 +60,7 @@ render: () => (
 )
 ```
 
-If you only want to override the empty-state text on a slot without changing its structure, use the string props instead:
+If you only want to override the empty-state text on a region without changing its structure, use the string props instead:
 
 ```tsx
 <MockBaseline
@@ -173,7 +173,7 @@ Matching: query is lowercased, split on whitespace, and every token must appear 
 </QuickFilter>
 ```
 
-**In the sandbox baseline:** drop a `QuickFilter` directly into `MockBaseline`'s `sidebar` slot — it provides both the input and the filtered list, no separate slot wiring needed:
+**In the sandbox baseline:** drop a `QuickFilter` directly into `MockBaseline`'s `sidebar` region — it provides both the input and the filtered list, no separate region wiring needed:
 
 ```tsx
 <MockBaseline
@@ -204,7 +204,7 @@ Common section structure:
 [Section: ...]
 ```
 
-**Slot:** the detail area lives in `MockBaseline`'s `detail` prop. When nothing is chosen, the slot shows `detailEmpty` text in a centered `LgRegion`.
+**Region:** the detail area lives in `MockBaseline`'s `detail` prop. When nothing is chosen, the region shows `detailEmpty` text in a centered `LgRegion`.
 
 ```tsx
 <MockBaseline
@@ -221,7 +221,7 @@ Composed from curried atoms: `SpacedStack` (overall column) → `TightStack` (id
 
 ## proportional stack
 
-A column or row that **always uses all available space** in its parent and splits it among its children by a per-child **weight**. When children's total content fits, weights still apply — leftover is shared by weight, sections don't sprawl beyond their share. When content overflows a section's share, that section scrolls **inside** its slot rather than pushing the page.
+A column or row that **always uses all available space** in its parent and splits it among its children by a per-child **weight**. When children's total content fits, weights still apply — leftover is shared by weight, sections don't sprawl beyond their share. When content overflows a section's share, that section scrolls **inside** its share rather than pushing the page.
 
 **Components:** `ProportionalStack` (container) + `ProportionalItem` (weighted child) — primitives in `Layout/`.
 
@@ -256,4 +256,4 @@ The flex math: `flex: <weight> 1 0`. Basis 0 means weights determine share regar
 </ProportionalStack>
 ```
 
-**Use for:** any container whose children need to share a fixed slot (a detail area, a dashboard column, a multi-pane layout) without one section pushing the page or starving another.
+**Use for:** any container whose children need to share a fixed space (a detail area, a dashboard column, a multi-pane layout) without one section pushing the page or starving another.
