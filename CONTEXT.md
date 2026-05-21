@@ -7,7 +7,7 @@ PrimeStage's SolidJS component library. Defines the architectural vocabulary use
 ### Component layers
 
 **Primitive**:
-A Depth-1 component that owns its own CSS file and never imports another Primitive. Splits into two subkinds: **Atomic** and **Layout**.
+A Depth-1 component that owns its own CSS file and never imports another Primitive *component*. (Data and type imports from another Primitive's directory — e.g. `ICON_PATHS`, type re-exports, render helpers — don't count: the rule is about composition, not module boundaries.) Splits into two subkinds: **Atomic** and **Layout**.
 _Avoid_: Atom, base component, leaf.
 
 **Atomic**:

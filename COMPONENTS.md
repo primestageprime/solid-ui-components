@@ -395,7 +395,7 @@ State derivation:
 - **SpaciousPanel** — Large size.
 
 ## PopoverMenu
-- **PopoverMenu** — Trigger button with positioned action dropdown. Key props: `trigger` (JSX content for the trigger button), `items` (array of `PopoverMenuItem` with `id`, `label`, optional `icon`), `onSelect` (callback with item `id`), `align` (`left`|`right`), `size` (`sm`|`md`). Internals: GhostButton trigger with chevron-down caret, List with `variant="menu"` for items. Closes on click-outside and Escape. Use for: action menus, user menus, context menus.
+- **PopoverMenu** — Atomic Primitive (Depth 1). Trigger button with positioned action dropdown. Key props: `trigger` (JSX content for the trigger button), `items` (array of `PopoverMenuItem` with `id`, `label`, optional `icon`), `onSelect` (callback with item `id`), `align` (`left`|`right`), `size` (`sm`|`md`). Internals: native `<button class="sui-popover-menu__trigger">` with inline chevron SVG (via `ICON_PATHS` data import) and `<ul class="sui-popover-menu__panel">` of `<li role="menuitem">` items — no library component imports. Closes on click-outside and Escape; items support `Enter`/`Space` keyboard activation. Use for: action menus, user menus, context menus.
 - **RightPopoverMenu** — Right-aligned, small trigger. Use for: header action menus.
 
 ## ProgressCheck
