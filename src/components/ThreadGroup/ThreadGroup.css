@@ -1,0 +1,77 @@
+/* ============================================
+ * ThreadGroup — one author-grouped block in a
+ * conversation. Owns the depth-based left
+ * border + padding, the avatar/body row layout,
+ * the header (name + timestamp) layout, and the
+ * self-vs-other axis reversal + alignment.
+ *
+ * Per-instance dynamic values (depth-pixel
+ * padding, accent color) are applied via inline
+ * style INSIDE the Primitive — which is the
+ * allowed place for data-driven inline style.
+ * ============================================ */
+
+.sui-thread-group {
+  border-left: 2px solid transparent;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  transition: padding-left 120ms ease;
+}
+
+/* Row: avatar + body. `align-items: start` mirrors the original
+   TopClusterRow contract; flex-direction is flipped for the self variant
+   so the avatar sits on the trailing edge. */
+.sui-thread-group__row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--sui-space-2, 8px);
+  width: 100%;
+}
+
+.sui-thread-group--self .sui-thread-group__row {
+  flex-direction: row-reverse;
+}
+
+/* Body fills available width up to the bubble cap; bubbles inside size
+   to content. 80% lets a `self` bubble overlap an `other` bubble — the
+   visual signature of the layout. */
+.sui-thread-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-1, 4px);
+  flex: 1;
+  min-width: 0;
+  max-width: 80%;
+}
+
+.sui-thread-group--self .sui-thread-group__body {
+  align-items: flex-end;
+}
+
+/* Header row: participant name + relative timestamp. Wraps onto a
+   second line on narrow widths without a tall row-gap. Mirrors the
+   WrappedClusterRow contract. */
+.sui-thread-group__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sui-space-2, 8px);
+  row-gap: 0;
+}
+
+.sui-thread-group--self .sui-thread-group__header {
+  flex-direction: row-reverse;
+}
+
+/* Bubble stack — vertical, tight. */
+.sui-thread-group__bubbles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-1, 4px);
+}
+
+.sui-thread-group--self .sui-thread-group__bubbles {
+  align-items: flex-end;
+}

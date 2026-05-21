@@ -22,6 +22,22 @@ export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
 export const NarrowStack: Component<StackDataProps> = createStack({ gap: "sm" });
 export const SpacedStack: Component<StackDataProps> = createStack({ gap: "md" });
 
+// Conversation root — capped reading width and conversation-typography for a
+// multi-participant chat tree. Width math: bubble max = 80ch, body width = 80%
+// of container; for `self` bubbles to overlap `other` bubbles, container needs
+// >= 80ch / 0.8 = 100ch. Cap at ~110ch — full-width bubbles + ~20% breathing
+// room without sprawling on wide displays.
+export const ConversationStack: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: {
+    "font-size": "0.85rem",
+    "line-height": "1.4",
+    color: "var(--sui-text-primary, inherit)",
+    width: "100%",
+    "max-width": "110ch",
+  },
+});
+
 // Small, tight, start-aligned column — for dense indicator rows (e.g.
 // label-on-top / status-trace-beneath). Smaller font and tighter line-height
 // than the default body text so it sits comfortably in a packed dashboard.

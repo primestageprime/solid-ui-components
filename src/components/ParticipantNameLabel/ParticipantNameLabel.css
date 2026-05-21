@@ -1,0 +1,13 @@
+/* ============================================
+ * ParticipantNameLabel — the per-message-group
+ * author name. Owns weight / size / nowrap
+ * typography. Per-participant color is data
+ * (passed in via a prop) and applied inline
+ * inside the Primitive.
+ * ============================================ */
+
+.sui-participant-name-label {
+  font-weight: 600;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
