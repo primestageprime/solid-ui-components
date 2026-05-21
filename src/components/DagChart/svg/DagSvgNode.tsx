@@ -73,7 +73,12 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
               }
             : {}),
           ...(props.enteringOffsetX !== undefined
-            ? { "--sui-enter-x": `${props.enteringOffsetX}px` }
+            ? {
+                "--sui-enter-x": `${props.enteringOffsetX}px`,
+                // Sign drives transform-origin & skew in the enter
+                // keyframes: -1 = growing out of left badge, +1 = right.
+                "--sui-enter-dir": props.enteringOffsetX < 0 ? "-1" : "1",
+              }
             : {}),
         }}
       >

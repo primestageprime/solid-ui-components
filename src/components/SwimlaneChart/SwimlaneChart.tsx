@@ -200,7 +200,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // DOM; items that just appeared render with `entering=true` so their
   // CSS animation runs from "outside" into place.
   const NODE_LEAVE_MS = 360; // matches the compress keyframe in CSS
-  const NODE_ENTER_MS = 220;
+  const NODE_ENTER_MS = 360; // mirror of leave — same duration so the two
+                              // animations run in sync (one node compresses
+                              // into its badge while another grows out of
+                              // the opposite-side badge).
   const [leavingItems, setLeavingItems] = createSignal<Item[]>([]);
   const [enteringIds, setEnteringIds] = createSignal<Set<string>>(new Set());
 
@@ -504,16 +507,16 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           <For each={itemsStore}>
             {(item) => {
               const entering = () => enteringIds().has(item.id);
-              /* Enter slide direction = FROM the center direction TOWARD
-                 the final position. Left-side nodes (final x < 0) start
-                 to the right of their final position (positive offset)
-                 and slide leftward into place. Right-side nodes mirror.
-                 Matches the leave offset's direction so enter and leave
-                 trace the same path in opposite time. */
+              /* Enter is the time-mirror of leave: the node grows out
+                 of the boundary badge on its OWN side. Left-side
+                 enterers (item.x < 0) start at the left badge — outer
+                 edge offset by -(STUB_LENGTH + BADGE_RADIUS). Right
+                 side mirrors. Magnitude matches the leave reach so the
+                 two animations trace the same path in opposite time. */
               const enterOffsetX = item.x < 0
-                ? item.width * 0.7
+                ? -(STUB_LENGTH + BADGE_RADIUS)
                 : item.x > 0
-                  ? -item.width * 0.7
+                  ? STUB_LENGTH + BADGE_RADIUS
                   : 0;
               return (
                 <DagSvgNode

@@ -82,23 +82,42 @@
   pointer-events: none;
 }
 
-/* Enter animation: a newly-visible node (because the container grew past
-   its depth ring's threshold) slides in from outside. Left-side nodes
-   start with a negative --sui-enter-x and slide right into place; right
-   side starts positive. */
+/* Enter animation: the time-mirror of leave. The node grows out of its
+   own-side boundary badge — starts as a compressed circle silhouette at
+   the badge, then expands back to full rect at its final position. Runs
+   in lockstep with a leaver on the opposite side, so one node appears
+   to be "born" from one badge while another is "absorbed" into the
+   other. --sui-enter-dir (set by DagSvgNode from the sign of
+   --sui-enter-x) flips transform-origin and skew direction. */
 @keyframes sui-swimlane-node-enter {
-  from {
-    transform: translateX(var(--sui-enter-x, 0));
+  0% {
+    transform:
+      translateX(var(--sui-enter-x, 0px))
+      scale(0.12, 0.4)
+      skewX(calc(var(--sui-enter-dir, 1) * 20deg));
+    border-radius: 50%;
     opacity: 0;
   }
-  to {
-    transform: translateX(0);
+  50% {
+    transform:
+      translateX(calc(var(--sui-enter-x, 0px) * 0.5))
+      scale(0.4, 0.7)
+      skewX(calc(var(--sui-enter-dir, 1) * 10deg));
+    border-radius: 24px;
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(0) scale(1, 1) skewX(0);
+    border-radius: 8px;
     opacity: 1;
   }
 }
 
 .sui-swimlane__node-wrapper > div[data-entering="true"] {
-  animation: sui-swimlane-node-enter 220ms ease-out forwards;
+  /* Origin = the side the node is growing OUT of (where its badge sits).
+     Formula 50% + dir*50% maps -1 → 0% (left edge) and +1 → 100% (right). */
+  transform-origin: calc(50% + var(--sui-enter-dir, 1) * 50%) center;
+  animation: sui-swimlane-node-enter 360ms linear forwards;
 }
 
 .sui-swimlane__boundary-badge {
