@@ -36,10 +36,11 @@
 
 .workshop-grid {
   display: grid;
-  /* minmax(0, 1fr) so the right track can shrink below its widest cell's
-     content (otherwise rows with fixed-width charts pin the track wide,
-     which would freeze the variable-width row's container). */
-  grid-template-columns: max-content minmax(0, 1fr);
+  /* Left column fixed at 300px (titles + JSON panels). Right column
+     uses minmax(0, 1fr) so it can shrink below its widest cell's
+     content — otherwise rows with fixed-width charts would freeze the
+     variable-width rows. */
+  grid-template-columns: 300px minmax(0, 1fr);
   column-gap: 16px;
   align-items: start;
 }
@@ -54,6 +55,121 @@
   border-top: none;
   padding-top: 0;
 }
+
+/* Compress-to-badge animation preview */
+.compress-demo {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.compress-demo__track {
+  position: relative;
+  width: 320px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.compress-demo__box {
+  position: absolute;
+  left: 0;
+  width: 180px;
+  height: 56px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  background: rgba(0, 212, 255, 0.10);
+  border: 1px solid var(--sui-accent, #00d4ff);
+  border-radius: 8px;
+  color: var(--sui-text, #e6ecf5);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Shrink toward the LEFT edge so the rect appears to be "sucked into"
+     the badge sitting just to its left. */
+  transform-origin: left center;
+  animation: compress-demo-box 4s linear infinite;
+}
+.compress-demo__box-label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sui-accent, #00d4ff);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.compress-demo__box-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compress-demo__badge {
+  position: absolute;
+  left: -36px; /* 14px past the box's left edge + 22 radius */
+  width: 22px;
+  height: 22px;
+  background: var(--sui-bg-elevated, #1a1a1a);
+  border: 1.5px solid var(--sui-border, #334155);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--sui-text, #e6ecf5);
+  /* Badge stays visible across the whole loop — it represents the
+     persistent collapsed-count summary that the box morphs into. */
+}
+
+.compress-demo__caption {
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+/* Box: one continuous breath. As it shrinks it ALSO translates left so
+   the dwindling rectangle slides UNDER the badge (badge is later in
+   DOM order, so it paints on top). The translation ends at -36px,
+   which is the badge's left offset — at full compression the box's
+   center has landed at the badge's center. */
+@keyframes compress-demo-box {
+  0% {
+    transform: translateX(0) scale(1, 1) skewX(0deg);
+    border-radius: 8px;
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(-15px) scale(0.4, 0.7) skewX(-10deg);
+    border-radius: 24px;
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateX(-36px) scale(0.12, 0.4) skewX(-20deg);
+    border-radius: 50%;
+    opacity: 0;
+  }
+  75% {
+    transform: translateX(-15px) scale(0.4, 0.7) skewX(-10deg);
+    border-radius: 24px;
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(0) scale(1, 1) skewX(0deg);
+    border-radius: 8px;
+    opacity: 1;
+  }
+}
+
 
 .json-panel {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;

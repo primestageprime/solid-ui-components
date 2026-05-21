@@ -11,6 +11,10 @@
   stroke-width: 1.5;
   fill: none;
   color: var(--sui-border, #334155);
+  /* Animate the path's `d` so an edge's endpoints follow their nodes
+     as those nodes slide between columns. Browsers that don't support
+     transitioning `d` (older Firefox) will snap as before. */
+  transition: d 0.55s ease-out;
 }
 
 .sui-swimlane__edge--summary {
@@ -35,24 +39,36 @@
   filter: brightness(1.15);
 }
 
-/* Leave animation: nodes that just stopped being visible (because the
-   container shrunk past their depth ring) slide toward the chart center
-   and fade out before the chart drops them from the DOM. The slide
-   distance + sign comes from the inline CSS variable --sui-leave-x set
-   by DagSvgNode when `leavingOffsetX` is provided. */
+/* Leave animation: when a node would be pushed past the visible edge,
+   it compresses into a circle silhouette and slides toward where its
+   boundary badge sits — rect "extrudes" into the badge. The slide
+   distance + sign comes from --sui-leave-x set by DagSvgNode. */
 @keyframes sui-swimlane-node-leave {
-  from {
-    transform: translateX(0);
+  0% {
+    transform: translateX(0) scale(1, 1) skewX(0);
+    border-radius: 8px;
     opacity: 1;
   }
-  to {
-    transform: translateX(var(--sui-leave-x, 0));
+  50% {
+    transform: translateX(calc(var(--sui-leave-x, 0) * 0.5)) scale(0.4, 0.7) skewX(-10deg);
+    border-radius: 24px;
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(var(--sui-leave-x, 0)) scale(0.12, 0.4) skewX(-20deg);
+    border-radius: 50%;
     opacity: 0;
   }
 }
 
 .sui-swimlane__node-wrapper > div[data-leaving="true"] {
-  animation: sui-swimlane-node-leave 220ms ease-in forwards;
+  /* Anchor the scale to the side facing the badge so the rect appears
+     to be sucked into the circle rather than collapsing in place. The
+     sign of --sui-leave-x flips this automatically — but the keyframe
+     also leans the skew in the right direction (negative for leftward
+     leaves; mirror via separate keyframe if you want right-side too). */
+  transform-origin: left center;
+  animation: sui-swimlane-node-leave 360ms linear forwards;
   pointer-events: none;
 }
 
@@ -79,6 +95,7 @@
   fill: var(--sui-bg-elevated, #1a1a1a);
   stroke: var(--sui-border, #334155);
   stroke-width: 1.5;
+  transition: cx 0.55s ease-out, cy 0.55s ease-out;
 }
 
 .sui-swimlane__boundary-badge-text {
@@ -87,4 +104,5 @@
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   pointer-events: none;
+  transition: x 0.55s ease-out, y 0.55s ease-out;
 }

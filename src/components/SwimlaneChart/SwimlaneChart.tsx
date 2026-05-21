@@ -88,31 +88,18 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     return max || DEFAULT_SIZE[0];
   });
 
-  // Width required to display `depth` ordinal rings on each side of
-  // center, where a "ring" is one occupied column. Layout uses compact
-  // positioning (empty cols don't reserve space), so the width budget
-  // counts only the actual occupied cols within the depth window.
+  // Width required to display `depth` rings on each side of center.
+  // DOING is anchored to the viewport center; layout positions nodes by
+  // col VALUE (not by index into occupied cols), so the chart always
+  // reserves symmetric space — `depth` gaps on each side, plus a node
+  // and a badge slot at each outer edge, plus padding. This is purely
+  // a function of `depth` and the fixed node width — no data lookup.
   const BADGE_EXTENT = 50; // STUB_LENGTH (28) + 2*BADGE_RADIUS (22)
-
-  const occupiedColsForDepth = (depth: number): number => {
-    const center = props.centerCol ?? 0;
-    // Distinct cols actually used by the data, sorted asc.
-    const colsSet = new Set<number>();
-    for (const n of props.nodes) colsSet.add(props.swimlaneFor(n));
-    const sorted = Array.from(colsSet).sort((a, b) => a - b);
-    const centerIdx = sorted.indexOf(center);
-    const effCenterIdx = centerIdx >= 0 ? centerIdx : sorted.filter((c) => c < center).length;
-    let count = 0;
-    for (let i = 0; i < sorted.length; i++) {
-      if (Math.abs(i - effCenterIdx) <= depth) count++;
-    }
-    return count || 1;
-  };
 
   const widthForDepth = (depth: number) => {
     const nw = widestNodeWidth();
-    const cols = occupiedColsForDepth(depth);
-    return cols * nw + (cols - 1) * MIN_ARROW_PX + 2 * BADGE_EXTENT + 2 * H_PADDING_PX;
+    const minGap = nw + MIN_ARROW_PX;
+    return 2 * depth * minGap + nw + 2 * BADGE_EXTENT + 2 * H_PADDING_PX;
   };
 
   // Largest depth that fits in the container, capped at userMaxDepth.
@@ -138,9 +125,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     if (cw === 0) return userDefault;
     const depth = effectiveMaxDepth();
     const minGap = nw + MIN_ARROW_PX;
-    const cols = occupiedColsForDepth(depth);
-    if (cols <= 1) return minGap;
-    const fittable = (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (cols - 1);
+    if (depth <= 0) return minGap;
+    // Symmetric layout: 2*depth gaps span from outer-left node center
+    // to outer-right node center. The remaining width pays for one
+    // full node (the outer node's far half on each side adds to one
+    // node width total) plus badge slots and padding.
+    const fittable = (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (2 * depth);
     return Math.max(minGap, Math.min(fittable, userDefault));
   });
   // Retained for forward compat; not used in the new discrete algorithm.
@@ -209,7 +199,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // `leaving=true` for one animation cycle before being dropped from the
   // DOM; items that just appeared render with `entering=true` so their
   // CSS animation runs from "outside" into place.
-  const NODE_LEAVE_MS = 220;
+  const NODE_LEAVE_MS = 360; // matches the compress keyframe in CSS
   const NODE_ENTER_MS = 220;
   const [leavingItems, setLeavingItems] = createSignal<Item[]>([]);
   const [enteringIds, setEnteringIds] = createSignal<Set<string>>(new Set());
@@ -284,6 +274,14 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     });
   });
 
+  // Mirror edgeViews into a keyed store so each <path> keeps its DOM
+  // identity across re-renders and CSS transitions on `d` can fire.
+  type EdgeView = { d: string; isSummary: boolean; key: string };
+  const [edgesStore, setEdgesStore] = createStore<EdgeView[]>([]);
+  createEffect(() => {
+    setEdgesStore(reconcile(edgeViews(), { key: "key" }));
+  });
+
   // Boundary badges: one short stub + count circle per summary group.
   // Replaces the previous "summary node" boxes. Position is the outer
   // edge of the visible anchor in the direction of the collapsed nodes.
@@ -354,6 +352,15 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     });
   });
 
+  // Keyed-store mirror so badge SVG elements (path, circle, text) retain
+  // their identity and can CSS-transition their attribute values when
+  // the simulation advances.
+  type BoundaryBadge = { key: string; d: string; badgeX: number; badgeY: number; count: number };
+  const [badgesStore, setBadgesStore] = createStore<BoundaryBadge[]>([]);
+  createEffect(() => {
+    setBadgesStore(reconcile(boundaryBadges(), { key: "key" }));
+  });
+
   // Bounding box of all positioned content (real nodes + boundary badges).
   const viewBounds = createMemo(() => {
     const positions = layout().positions;
@@ -393,6 +400,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       () => [viewBounds(), containerWidth(), containerHeight()] as const,
       ([bounds, cw, ch]) => {
         if (cw === 0 || ch === 0) return;
+        // Anchor DOING (col 0, x=0) to the viewport center. Off-screen
+        // overflow is handled by effectiveMaxDepth(): when the container
+        // shrinks, outer-ring nodes collapse into boundary badges before
+        // they'd ever reach the viewport edge.
         centerOnPoint(0, bounds.centerY, cw, ch);
       },
     ),
@@ -446,7 +457,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         </defs>
         <g transform={transformString()}>
           {/* Edges */}
-          <For each={edgeViews()}>
+          <For each={edgesStore}>
             {(edge) => (
               <DagSvgEdge
                 class={`sui-swimlane__edge${
@@ -460,7 +471,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
 
           {/* Boundary badges — short stub arrows + count circles at the
               outer edge of anchors that have collapsed neighbors. */}
-          <For each={boundaryBadges()}>
+          <For each={badgesStore}>
             {(b) => (
               <g class="sui-swimlane__boundary">
                 <path

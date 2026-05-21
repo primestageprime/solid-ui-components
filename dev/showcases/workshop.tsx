@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, onCleanup } from "solid-js";
+import { Component, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel, MULTI_DEPS } from "./swimlane-chart";
 import { SwimlaneChart } from "../../src/components/SwimlaneChart";
@@ -6,30 +6,34 @@ import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface";
 import { Stack } from "../../src/components/Layout";
 import { TextLabel, EllipsizedTitle } from "../../src/components/Text";
+import { DigitRoller } from "../../src/components/DataDisplay";
 
 type Status = "todo" | "doing" | "done";
 
-// Topological order: a node always appears after all its dependencies,
-// so the simulation advances through this list left-to-right.
-const TOPO_ORDER = [
-  "cf1", "cf2",
-  "cm1", "cm2", "cm3",
-  "c1", "c2", "c3",
-  "active",
-  "t1", "t2",
-  "tn1", "tn2",
-  "tf1",
-];
+// Linear 8-node chain: n1 → n2 → … → n8. Topology cols span -3..+4 so
+// the chain has 7 "depth rings" of work on either side of DOING.
+const LINEAR_CHAIN = {
+  nodes: Array.from({ length: 8 }, (_, i) => ({
+    id: `n${i + 1}`,
+    data: { label: `Step ${i + 1}`, col: i - 3 },
+  })),
+  edges: Array.from({ length: 7 }, (_, i) => ({
+    source: `n${i + 1}`,
+    target: `n${i + 2}`,
+  })),
+};
+
+const TOPO_ORDER = LINEAR_CHAIN.nodes.map((n) => n.id);
 
 const DEPS_BY_NODE: Record<string, string[]> = {};
-for (const e of MULTI_DEPS.edges) {
+for (const e of LINEAR_CHAIN.edges) {
   (DEPS_BY_NODE[e.target] ??= []).push(e.source);
 }
 
 const TICK_MS = 3000;
 
 const allTodo = (): Record<string, Status> =>
-  Object.fromEntries(MULTI_DEPS.nodes.map((n) => [n.id, "todo" as Status]));
+  Object.fromEntries(LINEAR_CHAIN.nodes.map((n) => [n.id, "todo" as Status]));
 
 const allDepsDone = (
   id: string,
@@ -122,6 +126,13 @@ const computeNext = (
   return next;
 };
 
+// First-row rules (linear 8-node chain):
+//   1. Use the compressed view: nodes that don't fit collapse into the
+//      summary circle badges on the side they overflowed to.
+//   2. DOING stays in the center (col 0) at all times.
+//   3. No node ever extends past the edge of the available space —
+//      `effectiveMaxDepth` must always pick a depth whose total width
+//      fits within `containerWidth`.
 const AnimatedDag: Component = () => {
   // History of states allows Prev to step back through frames already
   // visited. Advancing past the history's end computes a new frame.
@@ -161,25 +172,21 @@ const AnimatedDag: Component = () => {
     onCleanup(() => clearInterval(timer));
   });
 
-  // Col mapping combines status + topology:
-  //   - status === "doing"     → col 0 (center reserved for DOING)
-  //   - status === "done"      → min(-1, topoCol) (left side, topo-aware)
-  //   - status === "todo"      → max(+1, topoCol) (right side, topo-aware)
-  // Nodes at topology col 0 (active) flip to -1 / +1 instead of 0 when
-  // not doing, so the center stays exclusively for DOING.
-  const statusToCol = (status: Status, topoCol: number): number => {
-    if (status === "doing") return 0;
-    if (status === "done") return Math.min(-1, topoCol);
-    return Math.max(1, topoCol);
-  };
-
+  // Col mapping: every node's column is its topo distance from the
+  // current DOING node. DOING → 0, prior nodes get negative cols in
+  // strict order (done → done → done from left to right of center),
+  // upcoming nodes get positive cols. This guarantees a node always
+  // sits to the left of its dependent, which a status-then-topo
+  // mapping can break when adjacent nodes share a status.
   const animatedNodes = (): DAGNode<AnimNode>[] => {
     const s = statuses();
-    return MULTI_DEPS.nodes.map((n) => ({
+    const doingIdx = TOPO_ORDER.findIndex((id) => s[id] === "doing");
+    const center = doingIdx >= 0 ? doingIdx : 0;
+    return LINEAR_CHAIN.nodes.map((n, i) => ({
       id: n.id,
       data: {
         label: n.data.label,
-        col: statusToCol(s[n.id], n.data.col),
+        col: i - center,
         status: s[n.id],
       },
     }));
@@ -229,7 +236,7 @@ const AnimatedDag: Component = () => {
       >
         <SwimlaneChart
           nodes={animatedNodes()}
-          edges={MULTI_DEPS.edges}
+          edges={LINEAR_CHAIN.edges}
           swimlaneFor={(n) => n.data.col}
           renderNode={renderAnimNode}
           nodeSize={() => [160, 56]}
@@ -247,6 +254,66 @@ const AnimatedDag: Component = () => {
   );
 };
 
+/**
+ * Standalone CSS-keyframe demo of the "compress into badge" effect.
+ *   - The rectangle shrinks toward its right edge (transform-origin),
+ *     vertically compresses, skews slightly, and slides left.
+ *   - border-radius animates from 8px (rect) to 50% (circle).
+ *   - The badge circle fades in as the rectangle fades out.
+ *   - Loops every 4s so it's easy to inspect.
+ */
+const CompressDemo: Component = () => {
+  // The CSS compress loop is 4s. We bump the badge count every cycle so
+  // the box appears to "deliver" a new node into the badge each pulse.
+  // The roll fires right when the box is fully behind the circle (the
+  // 45-55% hold window), so the new digit appears as the box vanishes.
+  const [count, setCount] = createSignal(3);
+  const [prevCount, setPrevCount] = createSignal(2);
+  const LOOP_MS = 4000;
+  const ROLL_OFFSET_MS = LOOP_MS * 0.5; // peak of compression
+
+  let intervalId: ReturnType<typeof setInterval> | undefined;
+  let kickoff: ReturnType<typeof setTimeout> | undefined;
+  onMount(() => {
+    kickoff = setTimeout(() => {
+      const bump = () => {
+        setPrevCount(count());
+        setCount((c) => c + 1);
+      };
+      bump();
+      intervalId = setInterval(bump, LOOP_MS);
+    }, ROLL_OFFSET_MS);
+  });
+  onCleanup(() => {
+    if (kickoff) clearTimeout(kickoff);
+    if (intervalId) clearInterval(intervalId);
+  });
+
+  return (
+    <div class="compress-demo">
+      <div class="compress-demo__track">
+        {/* Box first in DOM → badge paints on top (no z-index needed). */}
+        <div class="compress-demo__box">
+          <div class="compress-demo__box-label">DOING</div>
+          <div class="compress-demo__box-title">In progress</div>
+        </div>
+        <div class="compress-demo__badge">
+          <DigitRoller
+            value={String(count())}
+            previousValue={String(prevCount())}
+            animate
+            duration={400}
+            stagger={60}
+          />
+        </div>
+      </div>
+      <p class="compress-demo__caption">
+        rect → circle (4s loop) · count rolls each cycle as the box vanishes
+      </p>
+    </div>
+  );
+};
+
 export const WorkshopShowcase: Component = () => {
   return (
     <div class="component-section component-section--full">
@@ -258,6 +325,18 @@ export const WorkshopShowcase: Component = () => {
         </div>
         <div class="workshop-grid__cell">
           <AnimatedDag />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>compress preview — rect morphs into badge circle</SubsectionTitle>
+          <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)" }}>
+            Animation a node would play if pushed past the visible edge:
+            shrinks toward where its boundary badge sits, skewing slightly
+            so it reads as "extruded into the circle".
+          </p>
+        </div>
+        <div class="workshop-grid__cell">
+          <CompressDemo />
         </div>
       </div>
     </div>
