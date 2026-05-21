@@ -3,7 +3,7 @@ import type { DAGProps, PositionedNode } from "./types";
 import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
 import { createPanZoom } from "./pan-zoom";
-import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "./svg";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import "./DagChart.css";
 
 const RESPONSIVE_BREAKPOINT = 640;
