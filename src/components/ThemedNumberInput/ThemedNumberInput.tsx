@@ -1,7 +1,8 @@
 // ============================================
 // ThemedNumberInput — Atomic (Depth 1)
-// Owns CSS (ThemedNumberInput.css), composes Icon (Depth 1 sibling) for
-// increment/decrement triggers. Kobalte-backed (@kobalte/core/number-field).
+// Owns CSS (ThemedNumberInput.css), no library component imports (wraps Kobalte primitive).
+// Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
+// Kobalte-backed (@kobalte/core/number-field).
 //
 // Zero-config default render: <ThemedNumberInput name="qty" /> produces an
 // unbounded field with step=1. All other `NumberFieldRootProps` (e.g.
@@ -18,7 +19,7 @@ import {
   Show,
   splitProps,
 } from "solid-js";
-import { Icon } from "../Icon/Icon";
+import { ICON_PATHS } from "../Icon/Icon";
 import "./ThemedNumberInput.css";
 
 /** Props owned by `ThemedNumberInput`; everything else is kobalte passthrough. */
@@ -133,13 +134,13 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
             aria-label="Increment"
             class="sui-number-input__trigger sui-number-input__trigger--increment"
           >
-            <Icon name="chevron-up" size="xs" />
+            <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-up"].outline} />
           </KobalteNumberField.IncrementTrigger>
           <KobalteNumberField.DecrementTrigger
             aria-label="Decrement"
             class="sui-number-input__trigger sui-number-input__trigger--decrement"
           >
-            <Icon name="chevron-down" size="xs" />
+            <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
           </KobalteNumberField.DecrementTrigger>
         </div>
       </div>

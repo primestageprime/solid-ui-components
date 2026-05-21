@@ -1,6 +1,7 @@
 // ============================================
 // Combobox — Atomic (Depth 1)
-// Owns CSS (Combobox.css), only Icon (sibling Depth 1) imported.
+// Owns CSS (Combobox.css), no library component imports (wraps Kobalte primitive).
+// Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
 // Unified single- and multi-combobox built on `@kobalte/core/combobox`.
 //
 // `multiple=false` (default) → single-combobox with clear button and
@@ -18,7 +19,7 @@ import {
   Show,
   splitProps,
 } from "solid-js";
-import { Icon } from "../Icon/Icon";
+import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import "./Combobox.css";
 
@@ -200,7 +201,7 @@ const renderSingle = (
             </KobalteCombobox.ItemLabel>
           </span>
           <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <Icon name="check" size="sm" />
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
       )}
@@ -226,7 +227,7 @@ const renderSingle = (
                 aria-label="Clear selection"
                 onClick={handleClear}
               >
-                <Icon name="close" size="xs" />
+                <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
               </button>
             </Show>
             <KobalteCombobox.Trigger
@@ -234,7 +235,7 @@ const renderSingle = (
               disabled={local.disabled}
             >
               <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
-                <Icon name="chevron-down" size="sm" />
+                <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
               </KobalteCombobox.Icon>
             </KobalteCombobox.Trigger>
           </>
@@ -403,7 +404,7 @@ const renderMulti = (
             </KobalteCombobox.ItemLabel>
           </span>
           <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <Icon name="check" size="sm" />
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
       )}
@@ -451,7 +452,7 @@ const renderMulti = (
                           aria-label={`Remove ${option.label}`}
                           onClick={() => state.remove(option)}
                         >
-                          <Icon name="close" size="xs" />
+                          <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
                         </button>
                       </span>
                     )}
@@ -473,7 +474,7 @@ const renderMulti = (
                 disabled={local.disabled}
               >
                 <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
-                  <Icon name="chevron-down" size="sm" />
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
                 </KobalteCombobox.Icon>
               </KobalteCombobox.Trigger>
             </div>

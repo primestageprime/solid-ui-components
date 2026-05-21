@@ -1,6 +1,7 @@
 // ============================================
 // Select — Atomic (Depth 1)
-// Owns CSS (Select.css), no component imports beyond Icon (Depth 1 sibling).
+// Owns CSS (Select.css), no library component imports (wraps Kobalte primitive).
+// Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
 // Unified single- and multi-select built on `@kobalte/core/select`.
 //
 // `multiple=false` (default) → single-select, `value: Option | null`.
@@ -17,7 +18,7 @@ import {
   Show,
   splitProps,
 } from "solid-js";
-import { Icon } from "../Icon/Icon";
+import { ICON_PATHS } from "../Icon/Icon";
 import "./Select.css";
 
 /** Standard option shape. `value` is intentionally `unknown` — callers narrow. */
@@ -113,7 +114,7 @@ export const Select: Component<SelectProps> = (props) => {
             {itemProps.item.textValue}
           </KobalteSelect.ItemLabel>
           <KobalteSelect.ItemIndicator class="sui-select__item-indicator">
-            <Icon name="check" size="sm" />
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
           </KobalteSelect.ItemIndicator>
         </KobalteSelect.Item>
       )}
@@ -131,7 +132,7 @@ export const Select: Component<SelectProps> = (props) => {
           {(state) => renderValue(state, placeholder(), local.multiple === true)}
         </KobalteSelect.Value>
         <KobalteSelect.Icon class="sui-select__icon">
-          <Icon name="chevron-down" size="sm" />
+          <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
         </KobalteSelect.Icon>
       </KobalteSelect.Trigger>
       <Show when={local.description}>
@@ -181,7 +182,7 @@ const renderValue = (
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => state.clear()}
       >
-        <Icon name="close" size="xs" />
+        <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
       </button>
     </>
   );
