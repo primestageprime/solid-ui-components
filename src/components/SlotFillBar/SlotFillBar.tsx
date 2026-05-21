@@ -122,7 +122,7 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
     return c.join(" ");
   };
 
-  const wrapperStyle = (): JSX.CSSProperties => {
+  const wrapperStyle = (): JSX.CSSProperties | string => {
     const base: JSX.CSSProperties = {
       height: `${local.height}px`,
       background: local.todoColor,
