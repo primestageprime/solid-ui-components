@@ -51,6 +51,8 @@ export interface PivotGridProps<RowKey extends string, ColKey extends string, Ce
   onCellClick?: (row: RowKey, col: ColKey, cell: Cell | null) => void;
   /** Optional: continuous heat 0..1 → translucent background. Return `null` to skip. */
   getCellHeat?: (cell: Cell, row: RowKey, col: ColKey) => number | null;
+  /** Optional: shape the 0..1 heat value before alpha mapping. Default `Math.sqrt` (perceptual). Pass `(v) => v` for linear. */
+  heatRamp?: (v: number) => number;
   /** Optional: hue for heat ramp. Default `var(--sui-pivot-heat-rgb, 248, 113, 113)`. */
   heatRgb?: string;
   /** Corner cell (top-left) label. Default `""`. */
@@ -93,7 +95,11 @@ Why both? `cellHref` is the right call for cross-route navigation (alarms-grid �
 
 ### D5. Heat coloring
 
-Built-in via `getCellHeat`. Returns `number | null` in `[0, 1]`. The component does the alpha math (`0.1..0.6` linear ramp, matching the alarms-grid implementation at `AlarmsGridShell.tsx:204-216`) and applies `background-color: rgba(<heatRgb>, alpha)`. Default `heatRgb` is exposed via `--sui-pivot-heat-rgb` (defaults to `248, 113, 113` — the danger red the alarms grid already uses).
+Built-in via `getCellHeat`. Returns `number | null` in `[0, 1]`. The component applies `background-color: rgba(<heatRgb>, alpha)` where `alpha` comes from running the raw value through a ramp curve, then mapping the result into the `[0.1, 0.6]` alpha range.
+
+**Default ramp: perceptual (sqrt).** Most pivots have a long-tailed magnitude distribution (one outlier asset, many small contributors); linear would wash out the bottom 80% of the data. Sqrt compresses high-magnitude cells and makes mid-range cells distinguishable. Consumers that want linear (e.g. alarms-grid wanting pixel parity with the pre-migration look) pass `heatRamp={(v) => v}`.
+
+**Prop:** `heatRamp?: (v: number) => number` — defaults to `Math.sqrt`. The caller's `getCellHeat` returns the raw 0..1 ratio (across the whole grid), the ramp shapes it, the component does the final `[0.1, 0.6]` alpha mapping. Default `heatRgb` is exposed via `--sui-pivot-heat-rgb` (defaults to `248, 113, 113` — the danger red the alarms grid already uses).
 
 Why not compose `Heatmap`? `Heatmap` is status-enum-based (`full`/`partial`/`missing`), not continuous. The two visual languages are different — Heatmap reads as a completeness map, PivotGrid reads as a magnitude pivot. Sharing a component would over-couple them. Caller computes the 0..1 scale once (across the whole grid) and passes a pure `getCellHeat`.
 
@@ -116,7 +122,7 @@ The domain-specific `AlarmsPivotGrid` (with the alarm cell formatter, /alarms/ex
 2. That file wraps `LinkPivotGrid` and supplies: `cell` lookup over `cells()`, `cellHref` via `buildExploreHref`, `getCellHeat` driven by the existing `heatScale()` memo, `renderCell` returning the existing formatted text, `cellTitle` carrying the missing-op-time message.
 3. Delete the inline `<table>`/`<thead>`/`<tbody>` block (lines 670-832 in `AlarmsGridShell.tsx`); the JSX collapses to `<AlarmsPivotGrid rows={alarmTypes()} columns={assets()} … />`.
 4. The header chrome (date picker, MultiSelectFilter, sort dropdowns, display-mode toggle) stays in `AlarmsGridShell` — only the grid body migrates.
-5. Visual regression: pixel-compare the alarms-grid screenshot before/after on the dev route. Heat-color alpha and cell padding must be identical (the alpha math in D5 is copied from the current implementation precisely so this holds).
+5. Visual regression: pixel-compare the alarms-grid screenshot before/after on the dev route. To preserve the current linear-ramp look, the alarms migration passes `heatRamp={(v) => v}` — this overrides PivotGrid's new sqrt default and keeps the alpha math identical. Cell padding must also be identical.
 
 ### D9. Out of scope (v1)
 
@@ -127,8 +133,8 @@ The domain-specific `AlarmsPivotGrid` (with the alarm cell formatter, /alarms/ex
 - **Cell selection / multi-select.** Not part of v1 — would require a selection store like `SelectableTable`'s. Add if a consumer needs it.
 - **Frozen non-header columns** (e.g. "freeze the first 2 data columns"). Single sticky-left header column only.
 
-## Open questions for randall
+## Open questions for randall — RESOLVED 2026-05-21
 
-1. **Heat ramp curve.** Linear `[0.1, 0.6]` mirrors the alarms-grid today. Should the SUI default be linear, or do we want a perceptual (e.g. sqrt) ramp as the default and let the alarms case opt back to linear?
-2. **`cellHref` returning `undefined`.** When the function returns `undefined` for a specific cell, do we render the cell as non-interactive (current draft) or fall through to `onCellClick`? Current draft says non-interactive — simpler mental model, but may surprise.
-3. **Atomic extraction.** If `BaseTable` ever grows a left-sticky-column variant, do we extract a shared `StickyTable` atomic underneath both, or keep them as parallel base components? Recommend defer — premature DRY today.
+1. **Heat ramp curve.** ✅ **Sqrt by default**, with a `heatRamp` prop for callers that want linear (or other curves). The alarms-grid migration passes `heatRamp={(v) => v}` to preserve pixel parity with the pre-migration look. See D5 + D2 for the prop signature.
+2. **`cellHref` returning `undefined`.** ✅ **Render non-interactive.** The cell becomes plain `<td>` content with no focus ring. Consumers wanting per-cell interactivity choice should use only `onCellClick` and branch internally.
+3. **Atomic extraction.** ✅ **Defer.** PivotGrid and BaseTable stay parallel base components. Revisit when BaseTable actually grows a left-sticky variant.
