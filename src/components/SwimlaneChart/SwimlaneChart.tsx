@@ -87,15 +87,30 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     return max || DEFAULT_SIZE[0];
   });
 
-  // Width required to display `2*depth + 1` columns (i.e., depth rings on
-  // each side of center) at minimum arrow length. Boundary badges sit
-  // outside that — accounted for via BADGE_EXTENT.
+  // Width required to display `depth` ordinal rings on each side of
+  // center, where a "ring" is one occupied column. Layout uses compact
+  // positioning (empty cols don't reserve space), so the width budget
+  // counts only the actual occupied cols within the depth window.
   const BADGE_EXTENT = 50; // STUB_LENGTH (28) + 2*BADGE_RADIUS (22)
+
+  const occupiedColsForDepth = (depth: number): number => {
+    const center = props.centerCol ?? 0;
+    // Distinct cols actually used by the data, sorted asc.
+    const colsSet = new Set<number>();
+    for (const n of props.nodes) colsSet.add(props.swimlaneFor(n));
+    const sorted = Array.from(colsSet).sort((a, b) => a - b);
+    const centerIdx = sorted.indexOf(center);
+    const effCenterIdx = centerIdx >= 0 ? centerIdx : sorted.filter((c) => c < center).length;
+    let count = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      if (Math.abs(i - effCenterIdx) <= depth) count++;
+    }
+    return count || 1;
+  };
+
   const widthForDepth = (depth: number) => {
     const nw = widestNodeWidth();
-    const cols = 2 * depth + 1;
-    // cols columns + (cols-1) arrows + 2 boundary badges (only when outer
-    // ring is collapsed, i.e., when depth < userMaxDepth) + padding
+    const cols = occupiedColsForDepth(depth);
     return cols * nw + (cols - 1) * MIN_ARROW_PX + 2 * BADGE_EXTENT + 2 * H_PADDING_PX;
   };
 
@@ -122,11 +137,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     if (cw === 0) return userDefault;
     const depth = effectiveMaxDepth();
     const minGap = nw + MIN_ARROW_PX;
-    const cols = 2 * depth + 1;
+    const cols = occupiedColsForDepth(depth);
     if (cols <= 1) return minGap;
-    // Center-to-center gap that uses the available horizontal space.
-    //   cw = (cols-1)*gap + nw + 2*BADGE_EXTENT + 2*padding
-    //   gap = (cw - nw - 2*BADGE_EXTENT - 2*padding) / (cols-1)
     const fittable = (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (cols - 1);
     return Math.max(minGap, Math.min(fittable, userDefault));
   });

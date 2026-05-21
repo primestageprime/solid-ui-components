@@ -74,7 +74,25 @@ export function computeSwimlaneLayout<T>(
   const minCol = uniqueCols[0];
   const maxCol = uniqueCols[uniqueCols.length - 1];
   const centerCol = opts.centerCol ?? 0;
-  const xForCol = (col: number) => (col - centerCol) * opts.columnGap;
+  // Compact positioning: place each occupied col at consecutive ordinal
+  // positions (skipping empty cols between them). This way a single
+  // far-out col doesn't reserve horizontal space for the empty cols it
+  // jumps over — important for fitting more depth in a narrow viewport
+  // without dropping the outer ring into a badge.
+  const centerOrdinal = uniqueCols.indexOf(centerCol);
+  const effectiveCenterOrdinal =
+    centerOrdinal >= 0
+      ? centerOrdinal
+      : // Center col not in data: insert it conceptually at the right
+        // sorted position so distances on either side stay correct.
+        uniqueCols.filter((c) => c < centerCol).length;
+  const ordinalFor = (col: number): number => {
+    const idx = uniqueCols.indexOf(col);
+    if (idx >= 0) return idx - effectiveCenterOrdinal;
+    // Off-graph col (shouldn't normally happen): fall back to natural distance.
+    return col - centerCol;
+  };
+  const xForCol = (col: number) => ordinalFor(col) * opts.columnGap;
 
   const centerNodeIds = nodesByCol.get(centerCol) ?? [];
 
@@ -88,14 +106,15 @@ export function computeSwimlaneLayout<T>(
     }
   }
 
-  // 3. Falloff: |col - centerCol| > maxDepth -> hidden.
-  // (Col-distance, not graph-distance — fits the depth-spread layout where
-  // outer columns are deeper rings.)
+  // 3. Falloff: |ordinal(col)| > maxDepth -> hidden.
+  // Ordinal distance matches the compact visual positioning above — i.e.
+  // empty cols between the center and an outer col don't count as a
+  // "ring", so an isolated far-out col can stay visible at modest depth.
   const isVisible = (id: string): boolean => {
     if (centerNodeIds.length === 0) return true;
     const c = colOf.get(id);
     if (c === undefined) return true;
-    return Math.abs(c - centerCol) <= opts.maxDepth;
+    return Math.abs(ordinalFor(c)) <= opts.maxDepth;
   };
 
   // 4. Anchor BFS: for each hidden node, find the nearest visible

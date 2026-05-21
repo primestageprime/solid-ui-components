@@ -137,9 +137,13 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
               </For>
               <For each={dayBlocks()}>
                 {(b) => {
+                  // Reactive: pxPerHour changes when the consumer scales the
+                  // calendar (e.g. via a ResizeObserver). Reading props
+                  // inside the accessor keeps top/height in sync.
                   const start = parseWeekCalendarTime(b.startAt);
-                  const top = (start - props.startHour) * props.pxPerHour;
-                  const height = b.durationInHrs * props.pxPerHour;
+                  const top = () =>
+                    (start - props.startHour) * props.pxPerHour;
+                  const height = () => b.durationInHrs * props.pxPerHour;
                   const isHighlight = () => {
                     const h = props.highlight;
                     return !!h && h.day === b.day && h.startAt === b.startAt;
@@ -155,8 +159,8 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
                     <div
                       class={cls()}
                       style={{
-                        top: `${top}px`,
-                        height: `${height}px`,
+                        top: `${top()}px`,
+                        height: `${height()}px`,
                       }}
                     >
                       {props.renderBlock(b)}
