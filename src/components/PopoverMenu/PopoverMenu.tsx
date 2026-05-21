@@ -1,14 +1,12 @@
 // ============================================
-// PopoverMenu — Composite (Depth 2)
-// Imports: Button, Icon, List, ListItem.
+// PopoverMenu — Atomic Primitive (Depth 1)
+// Owns CSS (PopoverMenu.css), no component imports beyond external libs.
+// Only data/type imports from sibling Primitives (ICON_PATHS, IconName).
 // Trigger button with positioned action menu.
 // ============================================
-import { Component, For, Show, JSX, createSignal, onCleanup, mergeProps } from "solid-js";
-import { Dynamic } from "solid-js/web";
-import { GhostButton, SmallGhostButton } from "../Button";
-import { Icon } from "../Icon";
-import type { IconName } from "../Icon";
-import { List, ListItem } from "../List";
+import { For, Show, JSX, createSignal, onCleanup, mergeProps } from "solid-js";
+import { ICON_PATHS } from "../Icon/Icon";
+import type { IconName } from "../Icon/Icon";
 import "./PopoverMenu.css";
 
 export interface PopoverMenuItem<Id extends string = string> {
@@ -29,6 +27,30 @@ export interface PopoverMenuProps<Id extends string = string> {
   /** Trigger button size */
   size?: "sm" | "md";
 }
+
+/** Pixel size matching the matching Icon size class. */
+const ICON_SIZE_PX: Record<"xs" | "sm" | "md" | "lg" | "xl", number> = {
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 20,
+  xl: 24,
+};
+
+/** Inline an outline SVG glyph from ICON_PATHS — replaces <Icon> for Primitive purity. */
+const InlineIcon = (props: { name: IconName; size: "xs" | "sm" | "md" | "lg" | "xl" }) => {
+  const px = () => ICON_SIZE_PX[props.size];
+  return (
+    <svg
+      width={px()}
+      height={px()}
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      innerHTML={ICON_PATHS[props.name].outline}
+    />
+  );
+};
 
 export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<Id>) => {
   const merged = mergeProps({ align: "right" as const, size: "md" as const }, props);
@@ -86,32 +108,46 @@ export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<
     return classes.join(" ");
   };
 
+  const triggerClass = () =>
+    `sui-popover-menu__trigger sui-popover-menu__trigger--${merged.size}`;
+
   return (
     <div class={containerClass()} ref={containerRef}>
-      <Dynamic component={merged.size === "sm" ? SmallGhostButton : GhostButton} onClick={toggle}>
-        <span class="sui-popover-menu__trigger">
+      <button type="button" class={triggerClass()} onClick={toggle}>
+        <span class="sui-popover-menu__trigger-content">
           {merged.trigger}
           <span class="sui-popover-menu__caret">
-            <Icon name="chevron-down" size="xs" />
+            <InlineIcon name="chevron-down" size="xs" />
           </span>
         </span>
-      </Dynamic>
+      </button>
 
       <Show when={open()}>
-        <div class="sui-popover-menu__panel">
-          <List variant="menu" compact>
-            <For each={merged.items}>
-              {(item) => (
-                <ListItem interactive onClick={() => select(item.id)}>
-                  <Show when={item.icon}>
-                    <Icon name={item.icon!} size="sm" />
-                  </Show>
-                  {item.label}
-                </ListItem>
-              )}
-            </For>
-          </List>
-        </div>
+        <ul class="sui-popover-menu__panel">
+          <For each={merged.items}>
+            {(item) => (
+              <li
+                class="sui-popover-menu__item"
+                role="menuitem"
+                tabIndex={0}
+                onClick={() => select(item.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    select(item.id);
+                  }
+                }}
+              >
+                <Show when={item.icon}>
+                  <span class="sui-popover-menu__item-icon">
+                    <InlineIcon name={item.icon!} size="sm" />
+                  </span>
+                </Show>
+                <span class="sui-popover-menu__item-label">{item.label}</span>
+              </li>
+            )}
+          </For>
+        </ul>
       </Show>
     </div>
   );

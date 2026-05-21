@@ -1,19 +1,62 @@
 /* ============================================
-   PopoverMenu — Structural
-   Trigger + positioned dropdown menu.
+   PopoverMenu — Atomic Primitive (Depth 1)
+   Self-contained: trigger button + positioned dropdown.
+   Does not depend on classes from other components.
    ============================================ */
 .sui-popover-menu {
   position: relative;
   display: inline-block;
 }
 
+/* ---- Trigger button ---- */
 .sui-popover-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-md, 4px);
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.sui-popover-menu__trigger--sm {
+  padding: 6px 12px;
+  gap: 6px;
+}
+
+.sui-popover-menu__trigger:hover:not(:disabled) {
+  background: rgba(var(--sui-accent-rgb), 0.08);
+  border-color: transparent;
+  color: var(--sui-accent);
+}
+
+.sui-popover-menu__trigger:focus-visible {
+  outline: none;
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 0 2px rgba(var(--sui-accent-rgb), 0.25);
+}
+
+.sui-popover-menu__trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sui-popover-menu__trigger-content {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
 .sui-popover-menu__caret {
+  display: inline-flex;
+  align-items: center;
   transition: transform 0.15s ease;
 }
 
@@ -21,16 +64,18 @@
   transform: rotate(180deg);
 }
 
-/* Menu panel */
+/* ---- Menu panel ---- */
 .sui-popover-menu__panel {
   position: absolute;
   top: calc(100% + 4px);
   min-width: 140px;
   z-index: 100;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
   background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
-  border-radius: 4px;
-  padding: 4px 0;
+  border-radius: var(--sui-radius-md, 4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -40,4 +85,35 @@
 
 .sui-popover-menu--align-left .sui-popover-menu__panel {
   left: 0;
+}
+
+/* ---- Menu items ---- */
+.sui-popover-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  color: var(--sui-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sui-popover-menu__item:hover,
+.sui-popover-menu__item:focus-visible {
+  background: rgba(var(--sui-accent-rgb), 0.08);
+  color: var(--sui-accent);
+  outline: none;
+}
+
+.sui-popover-menu__item-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sui-accent);
+}
+
+.sui-popover-menu__item-label {
+  flex: 1;
+  min-width: 0;
 }
