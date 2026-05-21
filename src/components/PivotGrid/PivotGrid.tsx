@@ -16,9 +16,21 @@ export interface PivotGridProps<
   colLabel: (col: ColKey) => string;
   /** Cell value lookup. Return `null` for "no data" (rendered via `emptyCell`). */
   cell: (row: RowKey, col: ColKey) => Cell | null;
-  /** Render the cell payload to JSX. Caller owns formatting. */
+  /**
+   * Render the cell payload to JSX. Caller owns formatting.
+   *
+   * Accessibility: for ambiguous glyphs like `✓` or blank flag-matrix
+   * cells, embed accessible text (e.g. `<span aria-label="enabled">✓</span>`)
+   * — the grid passes the rendered JSX directly into the cell wrapper
+   * and does not synthesize an aria-label.
+   */
   renderCell: (cell: Cell, row: RowKey, col: ColKey) => JSX.Element;
-  /** Optional: navigate on click. If present, the cell wraps in an `<a>`. */
+  /**
+   * Optional: navigate on click. If present, the cell wraps in an `<a>`.
+   * Solid Router intercepts in-app `<a>` hrefs automatically. For
+   * external URLs, return a string that includes `target` / `rel` via
+   * the consumer's own wrapper component — the grid does not set them.
+   */
   cellHref?: (row: RowKey, col: ColKey, cell: Cell | null) => string | undefined;
   /** Optional: imperative click handler. Ignored when `cellHref` returns a string. */
   onCellClick?: (row: RowKey, col: ColKey, cell: Cell | null) => void;

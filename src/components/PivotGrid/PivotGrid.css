@@ -80,7 +80,11 @@
   outline-offset: -2px;
 }
 
-/* When the cell has no interactive wrapper, plain text gets the same padding */
+/* When the cell has no interactive wrapper, plain text gets the same
+   padding. INVARIANT: any new interactive wrapper class introduced for
+   cells (e.g. `.sui-pivot-grid__cell-checkbox`) must be added to the
+   `:not(:has(...))` chain here AND in the compact variant below, or
+   plain cells will lose their padding. */
 .sui-pivot-grid__cell:not(:has(.sui-pivot-grid__cell-link)):not(:has(.sui-pivot-grid__cell-button)) {
   padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
 }
