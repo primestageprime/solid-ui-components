@@ -1,0 +1,54 @@
+/* ============================================
+   ProductGridCard — Primitive (Depth 1). Owns its CSS, imports no components.
+   A small selectable card with optional `selected` / `met` state and a slot
+   for a progress bar. State is driven by data-* attributes set conditionally
+   on the root element (`data-selected`, `data-met`). `selected` wins over
+   `met` when both apply.
+   ============================================ */
+
+.sui-product-grid-card {
+  border: 1px dashed var(--sui-border, rgba(255, 255, 255, 0.18));
+  border-radius: 4px;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.03));
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  min-width: 0;
+  max-width: 100%;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+
+.sui-product-grid-card[data-met] {
+  border-style: solid;
+  border-color: var(--sui-success, #2a6);
+  background: color-mix(in srgb, var(--sui-success, #2a6) 18%, transparent);
+  color: var(--sui-success, #2a6);
+}
+
+/* `selected` wins over `met`: keep this rule AFTER the [data-met] rule so it
+   overrides border/background/color when both attributes are present. */
+.sui-product-grid-card[data-selected] {
+  border-style: solid;
+  border-color: var(--sui-accent, #4ea1ff);
+  background: color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent);
+  color: inherit;
+}
+
+.sui-product-grid-card__bar {
+  width: 100%;
+  height: 10px;
+}
+
+/* Make the bar slot's single child fill the bar slot, so consumers don't need
+   inline `width: 100%; height: 100%` on their progress-bar element. */
+.sui-product-grid-card__bar > * {
+  width: 100%;
+  height: 100%;
+}
