@@ -534,14 +534,19 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           </For>
           <For each={leavingItems()}>
             {(item) => {
-              /* Leave slide TOWARD center: left-side nodes (x < 0)
-                 slide right (positive offset); right-side nodes slide
-                 left. Same direction as the enter slide, so leave is
-                 just enter played in reverse. */
+              /* Leave slide TOWARD the boundary badge. After this
+                 tick, the new outer-visible anchor slides INTO the
+                 leaving node's old slot, and the badge sits just
+                 outside that slot — STUB_LENGTH + BADGE_RADIUS past
+                 the anchor's outer edge. So the leaver only needs to
+                 translate its outer edge by that much to land on the
+                 badge. Combined with transform-origin: outer-edge,
+                 the rect collapses straight into the badge. */
+              const reach = STUB_LENGTH + BADGE_RADIUS;
               const leaveOffsetX = item.x < 0
-                ? item.width * 0.7
+                ? -reach
                 : item.x > 0
-                  ? -item.width * 0.7
+                  ? reach
                   : 0;
               return (
                 <DagSvgNode

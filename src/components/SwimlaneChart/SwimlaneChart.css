@@ -33,6 +33,11 @@
      chart to keep DOING centered), animate the move instead of snapping.
      SVG attribute transitions work in modern browsers. */
   transition: x 0.55s ease-out, y 0.55s ease-out;
+  /* foreignObject clips to its width/height by default, so a leaving
+     node's compress-and-slide animation would be cut off at the box
+     edge. Let the inner div spill out so the full shrink + translation
+     is visible. */
+  overflow: visible;
 }
 
 .sui-swimlane__node-wrapper:hover {
@@ -50,12 +55,18 @@
     opacity: 1;
   }
   50% {
-    transform: translateX(calc(var(--sui-leave-x, 0) * 0.5)) scale(0.4, 0.7) skewX(-10deg);
+    transform:
+      translateX(calc(var(--sui-leave-x, 0px) * 0.5))
+      scale(0.4, 0.7)
+      skewX(calc(var(--sui-leave-dir, -1) * 10deg));
     border-radius: 24px;
     opacity: 0.7;
   }
   100% {
-    transform: translateX(var(--sui-leave-x, 0)) scale(0.12, 0.4) skewX(-20deg);
+    transform:
+      translateX(var(--sui-leave-x, 0px))
+      scale(0.12, 0.4)
+      skewX(calc(var(--sui-leave-dir, -1) * 20deg));
     border-radius: 50%;
     opacity: 0;
   }
@@ -63,11 +74,10 @@
 
 .sui-swimlane__node-wrapper > div[data-leaving="true"] {
   /* Anchor the scale to the side facing the badge so the rect appears
-     to be sucked into the circle rather than collapsing in place. The
-     sign of --sui-leave-x flips this automatically — but the keyframe
-     also leans the skew in the right direction (negative for leftward
-     leaves; mirror via separate keyframe if you want right-side too). */
-  transform-origin: left center;
+     to be sucked into the circle. --sui-leave-dir is -1 for leftward
+     leaves (origin = left edge, 0%) and +1 for rightward (origin =
+     right edge, 100%). Formula 50% + dir*50% maps -1 → 0% and +1 → 100%. */
+  transform-origin: calc(50% + var(--sui-leave-dir, -1) * 50%) center;
   animation: sui-swimlane-node-leave 360ms linear forwards;
   pointer-events: none;
 }

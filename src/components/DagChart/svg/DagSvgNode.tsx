@@ -53,6 +53,7 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
       width={props.width}
       height={props.height}
       class={props.wrapperClass}
+      overflow="visible"
     >
       <div
         onPointerDown={(e) => e.stopPropagation()}
@@ -64,7 +65,12 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
           height: "100%",
           cursor: props.leaving ? "default" : "pointer",
           ...(props.leavingOffsetX !== undefined
-            ? { "--sui-leave-x": `${props.leavingOffsetX}px` }
+            ? {
+                "--sui-leave-x": `${props.leavingOffsetX}px`,
+                // Direction sign drives transform-origin & skew in the
+                // leave keyframes: -1 = pulling left, +1 = pulling right.
+                "--sui-leave-dir": props.leavingOffsetX < 0 ? "-1" : "1",
+              }
             : {}),
           ...(props.enteringOffsetX !== undefined
             ? { "--sui-enter-x": `${props.enteringOffsetX}px` }
