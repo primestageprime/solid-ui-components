@@ -1,0 +1,105 @@
+/* ============================================
+   Treemap — Atomic Primitive (Depth 1).
+   Owns the outer-column × inner-leaf grid layout. BEM-ish class names.
+   ============================================ */
+
+.sui-treemap {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  gap: 8px;
+  height: auto;
+  min-height: 180px;
+  max-height: 320px;
+  align-items: stretch;
+}
+
+.sui-treemap__outer {
+  /* `flex` is set inline (weight-driven). All other styles come from this
+     class. */
+  display: flex;
+  flex-direction: column;
+  min-width: 15ch;
+  min-height: 0;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+}
+
+.sui-treemap__outer--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+}
+
+.sui-treemap__outer-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-treemap__outer-toolbar {
+  width: 100%;
+}
+
+.sui-treemap__inner-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  overflow-y: auto;
+}
+
+.sui-treemap__inner {
+  /* `flex` per-inner-cell weight is set inline (data-driven). All other
+     styles come from this class. */
+  min-width: 15ch;
+  padding: 4px 6px;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 3px;
+  background: var(--sui-bg-deep, rgba(0, 0, 0, 0.2));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-treemap__inner--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: var(--sui-bg-elevated, rgba(78, 161, 255, 0.12));
+}
+
+.sui-treemap__sidebar {
+  /* `flex` is set inline (weight-driven). */
+  border: 1px dashed var(--sui-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 15ch;
+  max-width: 20ch;
+  opacity: 0.6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sui-treemap__sidebar--selected {
+  border-color: var(--sui-accent, #4ea1ff);
+  opacity: 1;
+}
