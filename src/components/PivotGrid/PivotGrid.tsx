@@ -90,6 +90,10 @@ export function PivotGrid<
                 </th>
                 <For each={props.columns}>
                   {(col) => {
+                    // Memoized so `props.cell(row, col)` runs exactly once per
+                    // cell render — heat math, href, title, and renderCell all
+                    // see the same snapshot, and consumers can put logging or
+                    // expensive lookups in `cell` without surprise multiplicity.
                     const cellValue = createMemo<Cell | null>(() =>
                       props.cell(row, col),
                     );
