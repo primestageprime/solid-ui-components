@@ -25,6 +25,10 @@
 
 .sui-swimlane__node-wrapper {
   cursor: pointer;
+  /* When a node's col or row changes (e.g. an animation shifts the whole
+     chart to keep DOING centered), animate the move instead of snapping.
+     SVG attribute transitions work in modern browsers. */
+  transition: x 0.55s ease-out, y 0.55s ease-out;
 }
 
 .sui-swimlane__node-wrapper:hover {

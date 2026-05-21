@@ -1,27 +1,185 @@
-import { Component, createSignal, Show } from "solid-js";
+import { Component, For, JSX } from "solid-js";
 import { SwimlaneChart } from "../../src/components/SwimlaneChart";
-import type { DAGNode, DAGEdge, NodeRenderState } from "../../src/components/DagChart";
+import type { DAGNode } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface";
 import { Stack } from "../../src/components/Layout";
-import { TextLabel, MutedBody, EllipsizedTitle } from "../../src/components/Text";
+import {
+  TextLabel,
+  EllipsizedTitle,
+  SectionTitle,
+  SubsectionTitle,
+} from "../../src/components/Text";
 
-type Card = {
-  label: string;
-  col: 0 | 1 | 2;
-  owner?: string;
+// ─── JSON syntax highlighter ──────────────────────────────────────────────
+const JSON_TOKEN = /("(?:\\.|[^"\\])*"\s*:|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}\[\],])/;
+
+function highlightJson(json: string): JSX.Element {
+  const parts = json.split(JSON_TOKEN);
+  return (
+    <For each={parts}>
+      {(part, i) => {
+        if (i() % 2 === 0) return <>{part}</>;
+        if (part.endsWith(":")) return <span class="json-key">{part}</span>;
+        if (part.startsWith('"')) return <span class="json-string">{part}</span>;
+        if (part === "true" || part === "false")
+          return <span class="json-bool">{part}</span>;
+        if (part === "null") return <span class="json-null">{part}</span>;
+        if (/^-?\d/.test(part)) return <span class="json-number">{part}</span>;
+        return <span class="json-punct">{part}</span>;
+      }}
+    </For>
+  );
+}
+
+// ─── JsonPanel component ──────────────────────────────────────────────────
+type JsonPanelProps = {
+  value: unknown;
+  widthCh?: number;
+  heightLines?: number;
 };
 
-const COL_NAME = ["TODO", "DOING", "DONE"] as const;
-
-// Color hints used to tint a node Surface by its column. Reads as CSS-var
-// fallbacks so the component still themes correctly across light/dark.
-const COL_TINT: Record<0 | 1 | 2, { bg: string; border: string }> = {
-  0: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" },
-  1: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
-  2: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" },
+export const JsonPanel: Component<JsonPanelProps> = (props) => {
+  const widthCh = () => props.widthCh ?? 40;
+  const heightLines = () => props.heightLines ?? 20;
+  const formatted = () => JSON.stringify(props.value, null, 2);
+  return (
+    <pre
+      class="json-panel"
+      style={{
+        width: `${widthCh()}ch`,
+        height: `${heightLines() * 1.4}em`,
+      }}
+    >
+      {highlightJson(formatted())}
+    </pre>
+  );
 };
 
-const renderCard = (node: DAGNode<Card>, state: NodeRenderState) => {
+// ─── Stub data ────────────────────────────────────────────────────────────
+// Node data carries a signed `col` so SwimlaneChart positions it relative
+// to center. 0 = DOING/center; negative = completed (left, dependency
+// side); positive = todo (right, dependent side).
+export type StubData = { label: string; col: number };
+export type StubGraph = {
+  nodes: DAGNode<StubData>[];
+  edges: { source: string; target: string }[];
+};
+
+export const SINGLE_NODE: StubGraph = {
+  nodes: [{ id: "a", data: { label: "Solo node", col: 0 } }],
+  edges: [],
+};
+
+export const LINEAR_THREE: StubGraph = {
+  nodes: [
+    { id: "a", data: { label: "First", col: -1 } },
+    { id: "b", data: { label: "Middle", col: 0 } },
+    { id: "c", data: { label: "Last", col: 1 } },
+  ],
+  edges: [
+    { source: "a", target: "b" },
+    { source: "b", target: "c" },
+  ],
+};
+
+// 5 nodes mapped to lanes by dependency depth:
+//   A, B (col -1) — independents on the left
+//   C, D (col  0) — C depends on A; D depends on A + B
+//   E   (col +1) — depends on both dependents (C + D)
+export const FIVE_DIAMOND: StubGraph = {
+  nodes: [
+    { id: "a", data: { label: "Independent A", col: -1 } },
+    { id: "b", data: { label: "Independent B", col: -1 } },
+    { id: "c", data: { label: "Depends on A", col: 0 } },
+    { id: "d", data: { label: "Depends on A + B", col: 0 } },
+    { id: "e", data: { label: "Depends on C + D", col: 1 } },
+  ],
+  edges: [
+    { source: "a", target: "c" },
+    { source: "a", target: "d" },
+    { source: "b", target: "d" },
+    { source: "c", target: "e" },
+    { source: "d", target: "e" },
+  ],
+};
+
+// Two layers on each side, each in its OWN column.
+export const TWO_LAYERS: StubGraph = {
+  nodes: [
+    { id: "c_far", data: { label: "Completed (layer 2)", col: -2 } },
+    { id: "c_near", data: { label: "Completed (layer 1)", col: -1 } },
+    { id: "active", data: { label: "In progress", col: 0 } },
+    { id: "t_near", data: { label: "Todo (layer 1)", col: 1 } },
+    { id: "t_far", data: { label: "Todo (layer 2)", col: 2 } },
+  ],
+  edges: [
+    { source: "c_far", target: "c_near" },
+    { source: "c_near", target: "active" },
+    { source: "active", target: "t_near" },
+    { source: "t_near", target: "t_far" },
+  ],
+};
+
+// Multi-dep graph designed so the left subtree totals 8 nodes and the
+// right subtree totals 5. Several nodes have 2+ deps; the tree branches
+// and re-converges through `active`.
+export const MULTI_DEPS: StubGraph = {
+  nodes: [
+    // Left subtree (8 nodes)
+    { id: "cf1", data: { label: "Far A", col: -3 } },
+    { id: "cf2", data: { label: "Far B", col: -3 } },
+    { id: "cm1", data: { label: "Mid A", col: -2 } },
+    { id: "cm2", data: { label: "Mid B (deps on Far A+B)", col: -2 } },
+    { id: "cm3", data: { label: "Mid C", col: -2 } },
+    { id: "c1", data: { label: "Near A (deps on Mid A+B)", col: -1 } },
+    { id: "c2", data: { label: "Near B (deps on Mid B+C)", col: -1 } },
+    { id: "c3", data: { label: "Near C", col: -1 } },
+    // Center
+    { id: "active", data: { label: "In progress", col: 0 } },
+    // Right subtree (5 nodes)
+    { id: "t1", data: { label: "Up next A", col: 1 } },
+    { id: "t2", data: { label: "Up next B", col: 1 } },
+    { id: "tn1", data: { label: "Then (deps on A+B)", col: 2 } },
+    { id: "tn2", data: { label: "Then alt", col: 2 } },
+    { id: "tf1", data: { label: "Final (deps on Then A+B)", col: 3 } },
+  ],
+  edges: [
+    { source: "cf1", target: "cm1" },
+    { source: "cf1", target: "cm2" },
+    { source: "cf2", target: "cm2" },
+    { source: "cf2", target: "cm3" },
+    { source: "cm1", target: "c1" },
+    { source: "cm2", target: "c1" },
+    { source: "cm2", target: "c2" },
+    { source: "cm3", target: "c2" },
+    { source: "cm3", target: "c3" },
+    { source: "c1", target: "active" },
+    { source: "c2", target: "active" },
+    { source: "c3", target: "active" },
+    { source: "active", target: "t1" },
+    { source: "active", target: "t2" },
+    { source: "t1", target: "tn1" },
+    { source: "t2", target: "tn1" },
+    { source: "t2", target: "tn2" },
+    { source: "tn1", target: "tf1" },
+    { source: "tn2", target: "tf1" },
+  ],
+};
+
+// ─── Node renderer ────────────────────────────────────────────────────────
+const colLabel = (col: number): string =>
+  col < 0 ? "COMPLETED" : col > 0 ? "TODO" : "DOING";
+
+const colTint = (col: number): { bg: string; border: string } => {
+  if (col < 0) return { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" };
+  if (col > 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" };
+  return { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" };
+};
+
+export const renderStubNode = (
+  node: DAGNode<StubData>,
+  state: { kind: string; collapsedCount?: number },
+) => {
   if (state.kind === "collapsed") {
     return (
       <Surface
@@ -38,11 +196,11 @@ const renderCard = (node: DAGNode<Card>, state: NodeRenderState) => {
           "border-style": "dashed",
         }}
       >
-        <MutedBody>+{state.collapsedCount} more</MutedBody>
+        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}…)
       </Surface>
     );
   }
-  const tint = COL_TINT[node.data.col];
+  const tint = colTint(node.data.col);
   return (
     <Surface
       padding="sm"
@@ -52,167 +210,121 @@ const renderCard = (node: DAGNode<Card>, state: NodeRenderState) => {
       style={{ width: "100%", height: "100%" }}
     >
       <Stack gap="xs">
-        <TextLabel>{COL_NAME[node.data.col]}</TextLabel>
+        <TextLabel>{colLabel(node.data.col)}</TextLabel>
         <EllipsizedTitle>{node.data.label}</EllipsizedTitle>
-        <Show when={node.data.owner}>
-          <MutedBody>{node.data.owner}</MutedBody>
-        </Show>
       </Stack>
     </Surface>
   );
 };
 
-// ─── Example 1: kanban-style chain, 3 layers each side ───────────────────
-const chainNodes: DAGNode<Card>[] = [
-  { id: "n3a", data: { col: 2, label: "Spec signed off", owner: "leslie" } },
-  { id: "n3b", data: { col: 2, label: "Vendor selected", owner: "jane" } },
-  { id: "n2a", data: { col: 2, label: "API contract drafted", owner: "leslie" } },
-  { id: "n2b", data: { col: 2, label: "Hardware ordered", owner: "jane" } },
-  { id: "n1a", data: { col: 2, label: "Endpoints implemented", owner: "jenn" } },
-  { id: "n1b", data: { col: 2, label: "Hardware on site", owner: "jane" } },
-  { id: "d1", data: { col: 1, label: "Integration testing", owner: "hannelore" } },
-  { id: "d2", data: { col: 1, label: "Calibration run", owner: "veronica" } },
-  { id: "t1a", data: { col: 0, label: "Staging rollout", owner: "jenn" } },
-  { id: "t1b", data: { col: 0, label: "Pilot deployment", owner: "athena" } },
-  { id: "t2a", data: { col: 0, label: "Production rollout", owner: "athena" } },
-  { id: "t2b", data: { col: 0, label: "Full fleet deployment", owner: "athena" } },
-  { id: "t3a", data: { col: 0, label: "Post-launch review", owner: "leslie" } },
-  { id: "t3b", data: { col: 0, label: "Sunset legacy system", owner: "jane" } },
-];
+// ─── StubChart: a fixed-size or flexible-width SwimlaneChart wrapper ──────
+export const StubChart: Component<{
+  graph: StubGraph;
+  width?: string;
+  minWidth?: string;
+  maxDepth?: number;
+}> = (props) => (
+  <div
+    style={{
+      width: props.width ?? "100%",
+      height: `${10 * 1.4}em`,
+      "min-width": props.minWidth ?? "320px",
+      border: "1px dashed rgba(255,255,255,0.12)",
+      "border-radius": "4px",
+      "box-sizing": "border-box",
+    }}
+  >
+    <SwimlaneChart
+      nodes={props.graph.nodes}
+      edges={props.graph.edges}
+      swimlaneFor={(n) => n.data.col}
+      renderNode={renderStubNode}
+      nodeSize={() => [160, 56]}
+      maxDepth={props.maxDepth ?? 3}
+      interactive={false}
+    />
+  </div>
+);
 
-const chainEdges: DAGEdge[] = [
-  { source: "n3a", target: "n2a" },
-  { source: "n3b", target: "n2b" },
-  { source: "n2a", target: "n1a" },
-  { source: "n2b", target: "n1b" },
-  { source: "n1a", target: "d1" },
-  { source: "n1b", target: "d2" },
-  { source: "d1", target: "t1a" },
-  { source: "d2", target: "t1b" },
-  { source: "t1a", target: "t2a" },
-  { source: "t1b", target: "t2b" },
-  { source: "t2a", target: "t3a" },
-  { source: "t2b", target: "t3b" },
-];
-
-// ─── Example 2: backward edge (DONE → TODO) ───────────────────────────────
-const backwardNodes: DAGNode<Card>[] = [
-  { id: "done", data: { col: 2, label: "Spike: prove concept" } },
-  { id: "doing", data: { col: 1, label: "Implement v1" } },
-  { id: "todo", data: { col: 0, label: "Revisit spike findings" } },
-];
-const backwardEdges: DAGEdge[] = [
-  { source: "done", target: "doing" },
-  { source: "done", target: "todo" }, // backward edge across all columns
-  { source: "doing", target: "todo" },
-];
-
-// ─── Example 3: empty DOING column (no falloff anchor) ────────────────────
-const noAnchorNodes: DAGNode<Card>[] = [
-  { id: "a", data: { col: 2, label: "Done thing A" } },
-  { id: "b", data: { col: 2, label: "Done thing B" } },
-  { id: "c", data: { col: 0, label: "Future thing C" } },
-];
-const noAnchorEdges: DAGEdge[] = [
-  { source: "a", target: "c" },
-  { source: "b", target: "c" },
-];
-
+// ─── Showcase: eight scenarios ────────────────────────────────────────────
 export const SwimlaneChartShowcase: Component = () => {
-  const [maxDepth, setMaxDepth] = createSignal(2);
   return (
-    <div class="component-section">
-      <h2>SwimlaneChart — Composed (Depth 2)</h2>
+    <div class="component-section component-section--full">
+      <SectionTitle>SwimlaneChart — Composed (Depth 2)</SectionTitle>
       <p class="text-meta">
-        Builds on DagChart's pan/zoom and shared DAG types. DAG visualizer
-        where status determines the column. DOING is pinned to the viewport's
-        horizontal center. Nodes beyond <code>maxDepth</code> graph-hops from
-        any DOING node collapse into "+N" summary stubs. Edges are independent
-        of status — backward (DONE → TODO) and skip-lane (TODO → DONE) edges
-        are first-class.
+        DAG visualizer where each node's signed{" "}
+        <code>col</code> determines its column relative to center
+        (0 = DOING). Edges are independent of status — backward and
+        skip-lane edges are first-class. The chart picks how many depth
+        rings to show based on container width; nodes beyond the
+        threshold collapse into boundary badges (per-side count).
+        Nodes slide in/out toward center when the depth ring boundary
+        crosses them.
       </p>
 
-      <div class="example-group">
-        <h3>Kanban with 3 layers of dependency on each side</h3>
-        <p class="text-meta">
-          Two parallel chains of 7 nodes each, anchored on DOING (d1, d2). Try
-          changing <code>maxDepth</code> to see falloff: 2 hides the depth-3
-          tier; 3 reveals everything; 1 hides the depth-2+ tier.
-        </p>
-        <div style={{ display: "flex", gap: "8px", "align-items": "center", "margin-bottom": "8px" }}>
-          <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.6)" }}>
-            maxDepth:
-          </span>
-          {[1, 2, 3].map((d) => (
-            <button
-              type="button"
-              onClick={() => setMaxDepth(d)}
-              style={{
-                padding: "4px 10px",
-                "border-radius": "4px",
-                border:
-                  maxDepth() === d
-                    ? "1px solid var(--sui-accent, #00d4ff)"
-                    : "1px solid rgba(255,255,255,0.15)",
-                background:
-                  maxDepth() === d ? "rgba(0,212,255,0.15)" : "transparent",
-                color: "var(--sui-text, #e6ecf5)",
-                "font-size": "11px",
-                cursor: "pointer",
-              }}
-            >
-              {d}
-            </button>
-          ))}
+      <div class="workshop-grid">
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>1 · 1 node</SubsectionTitle>
+          <JsonPanel value={SINGLE_NODE} heightLines={10} />
         </div>
-        <div style={{ height: "560px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
-          <SwimlaneChart
-            nodes={chainNodes}
-            edges={chainEdges}
-            swimlaneFor={(n) => n.data.col}
-            renderNode={renderCard}
-            nodeSize={() => [220, 64]}
-            maxDepth={maxDepth()}
-            onNodeClick={(id) => console.log("clicked", id)}
-          />
+        <div class="workshop-grid__cell">
+          <StubChart graph={SINGLE_NODE} />
         </div>
-      </div>
 
-      <div class="example-group" style={{ "margin-top": "32px" }}>
-        <h3>Backward edge (DONE → TODO)</h3>
-        <p class="text-meta">
-          Edges are determined by dependency, not by status flow. An edge
-          going from a DONE node back to a TODO node curves naturally — no
-          layout breakage.
-        </p>
-        <div style={{ height: "260px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
-          <SwimlaneChart
-            nodes={backwardNodes}
-            edges={backwardEdges}
-            swimlaneFor={(n) => n.data.col}
-            renderNode={renderCard}
-            nodeSize={() => [200, 56]}
-          />
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>2 · 3 nodes (linear)</SubsectionTitle>
+          <JsonPanel value={LINEAR_THREE} heightLines={10} />
         </div>
-      </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={LINEAR_THREE} />
+        </div>
 
-      <div class="example-group" style={{ "margin-top": "32px" }}>
-        <h3>No DOING column — falloff disabled</h3>
-        <p class="text-meta">
-          When zero nodes are in the DOING column, there is no anchor for the
-          BFS falloff. Every node stays visible regardless of <code>maxDepth</code>.
-          The empty DOING slot is still reserved so the remaining columns stay
-          framed.
-        </p>
-        <div style={{ height: "260px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
-          <SwimlaneChart
-            nodes={noAnchorNodes}
-            edges={noAnchorEdges}
-            swimlaneFor={(n) => n.data.col}
-            renderNode={renderCard}
-            nodeSize={() => [200, 56]}
-            maxDepth={0}
-          />
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>3 · 5 nodes (diamond)</SubsectionTitle>
+          <JsonPanel value={FIVE_DIAMOND} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={FIVE_DIAMOND} width="760px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>4 · 2 layers — narrow (1 visible)</SubsectionTitle>
+          <JsonPanel value={TWO_LAYERS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={TWO_LAYERS} width="360px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>5 · 2 layers — medium (3 visible)</SubsectionTitle>
+          <JsonPanel value={TWO_LAYERS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={TWO_LAYERS} width="820px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>6 · 2 layers — wide (all 5 visible)</SubsectionTitle>
+          <JsonPanel value={TWO_LAYERS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={TWO_LAYERS} width="1200px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>7 · 2 layers — variable width (resize the browser)</SubsectionTitle>
+          <JsonPanel value={TWO_LAYERS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={TWO_LAYERS} minWidth="360px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>8 · multi-dep subtree — variable width (8 left · 5 right)</SubsectionTitle>
+          <JsonPanel value={MULTI_DEPS} heightLines={10} />
+        </div>
+        <div class="workshop-grid__cell">
+          <StubChart graph={MULTI_DEPS} minWidth="360px" />
         </div>
       </div>
     </div>

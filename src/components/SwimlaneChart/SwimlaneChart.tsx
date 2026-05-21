@@ -452,19 +452,16 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           <For each={items()}>
             {(item) => {
               const entering = () => enteringIds().has(item.id);
-              /* Enter slide: each node starts just past the chart's
-                 left or right edge (in DOM pixels) and slides into its
-                 final position. The pan-zoom transform centers DOING
-                 (x=0) at the container midpoint, so a node at chart-x = X
-                 currently sits at viewport-x = cw/2 + X. To start at
-                 viewport-x = -buffer (left edge) we need translateX =
-                 -(cw/2 + X + buffer). Right side is the mirror. */
-              const EDGE_BUFFER = 20;
-              const cw = containerWidth();
+              /* Enter slide direction = FROM the center direction TOWARD
+                 the final position. Left-side nodes (final x < 0) start
+                 to the right of their final position (positive offset)
+                 and slide leftward into place. Right-side nodes mirror.
+                 Matches the leave offset's direction so enter and leave
+                 trace the same path in opposite time. */
               const enterOffsetX = item.x < 0
-                ? -(cw / 2 + item.x + EDGE_BUFFER)
+                ? item.width * 0.7
                 : item.x > 0
-                  ? cw / 2 - item.x + EDGE_BUFFER
+                  ? -item.width * 0.7
                   : 0;
               return (
                 <DagSvgNode
@@ -484,29 +481,31 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
             }}
           </For>
           <For each={leavingItems()}>
-            {(item) => (
-              <DagSvgNode
-                node={item.node}
-                state={item.state}
-                x={item.x}
-                y={item.y}
-                width={item.width}
-                height={item.height}
-                wrapperClass="sui-swimlane__node-wrapper"
-                renderNode={props.renderNode}
-                leaving
-                /* Slide toward chart center: left-side nodes slide right,
-                   right-side nodes slide left. Distance scales with node
-                   width so the motion reads cleanly at any size. */
-                leavingOffsetX={
-                  item.x < 0
-                    ? item.width * 0.7
-                    : item.x > 0
-                      ? -item.width * 0.7
-                      : 0
-                }
-              />
-            )}
+            {(item) => {
+              /* Leave slide TOWARD center: left-side nodes (x < 0)
+                 slide right (positive offset); right-side nodes slide
+                 left. Same direction as the enter slide, so leave is
+                 just enter played in reverse. */
+              const leaveOffsetX = item.x < 0
+                ? item.width * 0.7
+                : item.x > 0
+                  ? -item.width * 0.7
+                  : 0;
+              return (
+                <DagSvgNode
+                  node={item.node}
+                  state={item.state}
+                  x={item.x}
+                  y={item.y}
+                  width={item.width}
+                  height={item.height}
+                  wrapperClass="sui-swimlane__node-wrapper"
+                  renderNode={props.renderNode}
+                  leaving
+                  leavingOffsetX={leaveOffsetX}
+                />
+              );
+            }}
           </For>
         </g>
       </svg>
