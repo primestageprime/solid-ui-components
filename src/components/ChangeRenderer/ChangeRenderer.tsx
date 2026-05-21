@@ -1,15 +1,15 @@
 // ============================================
-// ChangeRenderer — Depth 2 (Composite)
-// Composes `ValueRenderer` (Depth 1) for the before/after sides.
-// Owns CSS (ChangeRenderer.css).
+// ChangeRenderer — Pure Composite (Depth 2)
+// Composes DiffPair (Depth 1) + two ValueRenderer (Depth 1) instances.
+// Owns no CSS — all layout coordination lives in DiffPair.
 //
 // Before/after pair display with a directional arrow. Both sides dispatch
 // through `ValueRenderer`, so any `renderValue` override applies to both
 // sides and honors nested object rendering consistently.
 // ============================================
-import { type Component, type JSX, Show } from "solid-js";
+import { type Component, type JSX } from "solid-js";
 import { ValueRenderer, type RenderValueFn } from "../ValueRenderer";
-import "./ChangeRenderer.css";
+import { DiffPair } from "../DiffPair";
 
 export interface ChangeRendererProps {
   /** Optional label; renders `{label}: {before} → {after}` when supplied. */
@@ -28,11 +28,10 @@ export interface ChangeRendererProps {
   class?: string;
 }
 
-const DEFAULT_ARROW = "\u2192"; // →
-
 /**
  * `ChangeRenderer` — before/after pair display composed from two
- * `ValueRenderer` instances (one per side) plus a directional arrow.
+ * `ValueRenderer` instances (one per side) plus a `DiffPair` for the
+ * labeled-grid + flex-pair layout.
  *
  * @example
  *   // Simple primitive change
@@ -55,43 +54,24 @@ const DEFAULT_ARROW = "\u2192"; // →
  *     }
  *   />
  */
-export const ChangeRenderer: Component<ChangeRendererProps> = (props) => {
-  const containerClass = () =>
-    ["sui-change", props.class].filter(Boolean).join(" ");
-
-  const arrow = () => props.arrow ?? DEFAULT_ARROW;
-
-  const pair = (
-    <div class="sui-change__pair">
-      <div class="sui-change__side sui-change__side--before">
-        <ValueRenderer
-          value={props.before}
-          renderValue={props.renderValue}
-          numberPrecision={props.numberPrecision}
-        />
-      </div>
-      <span class="sui-change__arrow" aria-hidden="true">
-        {arrow()}
-      </span>
-      <div class="sui-change__side sui-change__side--after">
-        <ValueRenderer
-          value={props.after}
-          renderValue={props.renderValue}
-          numberPrecision={props.numberPrecision}
-        />
-      </div>
-    </div>
-  );
-
-  return (
-    <Show
-      when={props.label}
-      fallback={<div class={containerClass()}>{pair}</div>}
-    >
-      <div class={`${containerClass()} sui-change--with-label`}>
-        <span class="sui-change__label">{props.label}:</span>
-        {pair}
-      </div>
-    </Show>
-  );
-};
+export const ChangeRenderer: Component<ChangeRendererProps> = (props) => (
+  <DiffPair
+    label={props.label}
+    class={props.class}
+    arrow={props.arrow}
+    before={
+      <ValueRenderer
+        value={props.before}
+        renderValue={props.renderValue}
+        numberPrecision={props.numberPrecision}
+      />
+    }
+    after={
+      <ValueRenderer
+        value={props.after}
+        renderValue={props.renderValue}
+        numberPrecision={props.numberPrecision}
+      />
+    }
+  />
+);
