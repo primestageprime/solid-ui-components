@@ -15,6 +15,13 @@ export type SwimlaneOptions<T> = {
   maxDepth: number;
   columnGap: number;
   rowGap: number;
+  /**
+   * Which column should sit at the chart's horizontal center (x=0). When
+   * omitted, defaults to 0. Set this to a non-zero value to "follow" a
+   * different column without rewriting the node data — the falloff anchor
+   * AND the horizontal positioning both shift together.
+   */
+  centerCol?: number;
 };
 
 export type SwimlaneSummary = {
@@ -60,13 +67,13 @@ export function computeSwimlaneLayout<T>(
     sizeFor.set(node.id, opts.nodeSize(node));
   }
 
-  // Center column is always 0. Consumers put their "DOING" / focus
-  // nodes at col=0; negative cols appear to the left, positive to the
-  // right. Predictable and avoids ambiguous medians on asymmetric ranges.
+  // Center column defaults to 0; can be overridden by opts.centerCol so
+  // a consumer can "follow" a different column (e.g. wherever the DOING
+  // nodes currently sit) without rewriting node data.
   const uniqueCols = Array.from(nodesByCol.keys()).sort((a, b) => a - b);
   const minCol = uniqueCols[0];
   const maxCol = uniqueCols[uniqueCols.length - 1];
-  const centerCol = 0;
+  const centerCol = opts.centerCol ?? 0;
   const xForCol = (col: number) => (col - centerCol) * opts.columnGap;
 
   const centerNodeIds = nodesByCol.get(centerCol) ?? [];

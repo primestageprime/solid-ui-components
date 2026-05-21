@@ -31,15 +31,22 @@ const SAME_COL_OFFSET = 28;
 export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
   const dx = to.x - from.x;
 
-  // Same column: vertical connection between stacked nodes — anchors are
-  // on the top/bottom edges, control points pulled slightly along the y
-  // axis so the curve stays tangent at the entry/exit points and doesn't
-  // visually flatten. No side wrap-around.
+  // Same column: route via a vertical channel on the side of the column
+  // CLOSER TO THE CHART CENTER, so the curve bows out past any cards
+  // stacked between source and target without crossing them. For TODO
+  // columns (x > 0), the channel sits to the LEFT of the column; for
+  // DONE columns (x < 0), it sits to the RIGHT.
   if (Math.abs(dx) < 1) {
-    const goingDown = to.y > from.y;
-    const fromAnchorY = goingDown ? from.y + from.height / 2 : from.y - from.height / 2;
-    const toAnchorY = goingDown ? to.y - to.height / 2 : to.y + to.height / 2;
-    return `M ${from.x} ${fromAnchorY} L ${to.x} ${toAnchorY}`;
+    const channelOnLeft = from.x >= 0;
+    const fromAnchorX = channelOnLeft
+      ? from.x - from.width / 2
+      : from.x + from.width / 2;
+    const toAnchorX = channelOnLeft
+      ? to.x - to.width / 2
+      : to.x + to.width / 2;
+    const channelDelta = channelOnLeft ? -SAME_COL_OFFSET : SAME_COL_OFFSET;
+    const channelX = fromAnchorX + channelDelta;
+    return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
   }
 
   // Different columns: anchor on inner side, controls in the channel.

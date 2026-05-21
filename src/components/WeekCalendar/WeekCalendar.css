@@ -40,9 +40,10 @@
   right: 6px;
   font-size: 10px;
   color: var(--sui-text-muted);
-  /* Sit the label fully BELOW the hour line so the top of the label
-     doesn't push above the previous row / column header. */
-  transform: translateY(0);
+  /* Center label vertically on its hour line — the canonical calendar
+     placement. The label lives in the gutter; the block lives in the
+     next column, so the two never physically overlap. */
+  transform: translateY(-50%);
 }
 
 .sui-week-calendar__column {

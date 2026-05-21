@@ -43,6 +43,18 @@ export type SwimlaneChartProps<T> = {
   arrows?: boolean;
   /** Enable pan/zoom interaction. Default true. */
   interactive?: boolean;
+  /**
+   * Which logical column should sit at the chart's horizontal center.
+   * Default 0. Pass a moving value (e.g. follow the DOING column) to
+   * have the chart slide its content under a static viewport.
+   */
+  centerCol?: number;
+  /**
+   * When false, ignore the container-width-driven depth reduction and
+   * always render at `maxDepth`. Use this when you want a stable visible
+   * set across status / col changes (e.g. an animated chain demo).
+   */
+  responsiveCollapse?: boolean;
 };
 
 const DEFAULT_SIZE: [number, number] = [180, 60];
@@ -91,6 +103,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // Discrete: step down by 1 until we fit (or hit 0).
   const effectiveMaxDepth = createMemo(() => {
     const userMax = props.maxDepth ?? 2;
+    // Consumers can opt out of the container-width-driven collapse;
+    // useful for animations where stable visibility matters more than
+    // fitting every node onscreen.
+    if (props.responsiveCollapse === false) return userMax;
     const cw = containerWidth();
     if (cw === 0) return userMax;
     for (let d = userMax; d > 0; d--) {
@@ -125,10 +141,11 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         maxDepth: effectiveMaxDepth(),
         columnGap: effectiveColumnGap(),
         rowGap: props.rowGap ?? 80,
+        centerCol: props.centerCol ?? 0,
       });
     } catch (err) {
       console.error("[SwimlaneChart] layout failed:", err);
-      return { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0, summaries: [] };
+      return { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0, summaries: [], centerCol: props.centerCol ?? 0 };
     }
   });
 
