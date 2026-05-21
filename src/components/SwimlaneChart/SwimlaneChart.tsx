@@ -1,3 +1,12 @@
+/**
+ * SwimlaneChart — Atomic Primitive (Depth 1).
+ *
+ * Owns its own CSS (`SwimlaneChart.css`) and consumes shared SVG render
+ * utilities from `src/internal/dag-svg` — a utility module, not a
+ * Primitive. The type-only imports and `createPanZoom` helper from
+ * `../DagChart` are data/type imports, permitted by the Primitive rule
+ * (which forbids cross-Primitive *component* imports, not data/types).
+ */
 import {
   createMemo,
   createEffect,
@@ -12,7 +21,12 @@ import {
 import { createStore, reconcile } from "solid-js/store";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
-import { DagArrowMarker, DagSvgNode, DagSvgEdge, bezierThroughChannelPath } from "../DagChart/svg";
+import {
+  DagArrowMarker,
+  DagSvgNode,
+  DagSvgEdge,
+  bezierThroughChannelPath,
+} from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
 import "./SwimlaneChart.css";
 

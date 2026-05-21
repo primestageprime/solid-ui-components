@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import type { DAGNode, NodeRenderState } from "../types";
+import type { DAGNode, NodeRenderState } from "../../components/DagChart/types";
 
 export type DagSvgNodeProps<T> = {
   node: DAGNode<T>;
