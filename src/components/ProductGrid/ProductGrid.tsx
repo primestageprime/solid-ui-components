@@ -1,5 +1,7 @@
 // ============================================
-// ProductGrid — Composed (Depth 2). Composes StackedProgressBar.
+// ProductGrid — Pure Composite (Depth 2).
+// Composes AreaFocusGrid + StackedProgressBar.
+//
 // (Area × focus) pivot grid. Above-the-line items are solutions whose
 // progress is tracked as todo/doing/done; below-the-line items are needs
 // satisfied when every solution they reference (`solvedBy`) is fully done.
@@ -11,7 +13,11 @@
 // ============================================
 import { Component, createMemo, createSignal, For, JSX, Show } from "solid-js";
 import { StackedProgressBar } from "../Progress";
-import "./ProductGrid.css";
+import {
+  AreaFocusGrid,
+  type AreaFocusCellKey,
+  type AreaFocusGridArea,
+} from "../AreaFocusGrid";
 
 export interface ProductGridWorkCounts {
   todo: number;
@@ -80,6 +86,54 @@ const workSegments = (w: ProductGridWorkCounts) => {
   ];
 };
 
+// ----- inline-style helpers (no CSS file: Pure Composite) -------------------
+// All colors come from --sui-* Tokens; hex fallbacks match the original
+// ProductGrid.css palette.
+
+const CARD_BASE_STYLE: JSX.CSSProperties = {
+  border: "1px dashed var(--sui-border, rgba(255, 255, 255, 0.18))",
+  "border-radius": "4px",
+  background: "var(--sui-bg-elevated, rgba(255, 255, 255, 0.03))",
+  padding: "8px 12px",
+  "font-size": "13px",
+  "line-height": "1.4",
+  "text-align": "center",
+  "min-width": "0",
+  "max-width": "100%",
+  cursor: "pointer",
+  "user-select": "none",
+  display: "flex",
+  "flex-direction": "column",
+  "align-items": "center",
+  gap: "6px",
+  color: "inherit",
+};
+
+const CARD_MET_STYLE: JSX.CSSProperties = {
+  "border-style": "solid",
+  "border-color": "var(--sui-success, #2a6)",
+  background: "color-mix(in srgb, var(--sui-success, #2a6) 18%, transparent)",
+  color: "var(--sui-success, #2a6)",
+};
+
+const CARD_SELECTED_STYLE: JSX.CSSProperties = {
+  "border-style": "solid",
+  "border-color": "var(--sui-accent, #4ea1ff)",
+  background: "color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent)",
+  color: "inherit",
+};
+
+const CARD_BAR_STYLE: JSX.CSSProperties = { width: "100%", height: "10px" };
+
+const FOCUS_BASE_STYLE: JSX.CSSProperties = { cursor: "pointer", "user-select": "none" };
+
+const FOCUS_SELECTED_STYLE: JSX.CSSProperties = {
+  color: "var(--sui-accent, #4ea1ff)",
+  background: "color-mix(in srgb, var(--sui-accent, #4ea1ff) 14%, transparent)",
+};
+
+const FOCUS_BAR_STYLE: JSX.CSSProperties = { height: "6px" };
+
 export const ProductGrid: Component<ProductGridProps> = (props) => {
   // ----- selection (controlled or uncontrolled) ------------------------------
   const [internalSel, setInternalSel] = createSignal<ProductGridSelection>(null);
@@ -147,15 +201,14 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     return ids;
   });
 
-  // ----- layout -------------------------------------------------------------
-  // For each area, group items by focus. Compute the column ordering of
-  // sub-columns and where each area starts/spans, plus the grid-column
-  // indices for both kinds of separator tracks.
-  const layout = createMemo(() => {
-    const byArea = new Map<
-      string,
-      Map<string, { above: ProductGridItem[]; below: ProductGridItem[] }>
-    >();
+  // ----- (area × focus) bucketing into above/below items --------------------
+  // Group items so that for any (area, focus) we can list above-the-line and
+  // below-the-line cards. The AreaFocusGrid Primitive only needs the column
+  // structure (areas → focuses); per-cell content comes from these buckets.
+  type FocusBucket = { above: ProductGridItem[]; below: ProductGridItem[] };
+
+  const bucketedAreas = createMemo<readonly AreaFocusGridArea[]>(() => {
+    const byArea = new Map<string, Map<string, FocusBucket>>();
     for (const a of props.areaOrder) byArea.set(a, new Map());
     for (const it of props.items) {
       const focusMap = byArea.get(it.area);
@@ -167,58 +220,47 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
       }
       slot[it.position].push(it);
     }
-
-    const subCols: {
-      area: string;
-      focus: string;
-      slot: { above: ProductGridItem[]; below: ProductGridItem[] };
-    }[] = [];
-    const areaSpans: { area: string; startSubCol: number; span: number }[] = [];
-    let subColIdx = 1;
-    for (const area of props.areaOrder) {
+    return props.areaOrder.flatMap<AreaFocusGridArea>((area) => {
       const focusMap = byArea.get(area)!;
-      if (focusMap.size === 0) continue;
-      const startSubCol = subColIdx;
-      for (const [focus, slot] of focusMap) {
-        subCols.push({ area, focus, slot });
-        subColIdx++;
-      }
-      areaSpans.push({ area, startSubCol, span: subColIdx - startSubCol });
-    }
-    // Vsep grid-column indices that fall between two different areas.
-    const areaBoundaryCols: number[] = [];
-    for (let i = 0; i < areaSpans.length - 1; i++) {
-      const a = areaSpans[i];
-      const lastSubCol = a.startSubCol + a.span - 1;
-      areaBoundaryCols.push(2 * lastSubCol);
-    }
-    // Vsep grid-column indices between every sub-column.
-    const interSubColVseps: number[] = [];
-    for (let k = 1; k < subCols.length; k++) interSubColVseps.push(2 * k);
-    return { subCols, areaSpans, areaBoundaryCols, interSubColVseps };
+      if (focusMap.size === 0) return [];
+      return [{
+        id: area,
+        label: area,
+        focuses: Array.from(focusMap.keys()).map((focus) => ({
+          id: `${area}:${focus}`,
+          label: focus,
+        })),
+      }];
+    });
   });
 
-  // ----- subcomponents (closed over selection / metness) --------------------
-  const Card: Component<{ item: ProductGridItem }> = (p) => {
-    const met = () => p.item.position === "below" && isNeedMet(p.item);
-    const selected = () => selectedItemIds().has(p.item.id);
-    const className = () => {
-      const list = ["sui-product-grid__card"];
-      if (selected()) list.push("sui-product-grid__card--selected");
-      else if (met()) list.push("sui-product-grid__card--met");
-      return list.join(" ");
-    };
+  /** Look up the above/below items for one (area × focus) cell. */
+  const bucketFor = (key: AreaFocusCellKey): FocusBucket => {
+    const empty: FocusBucket = { above: [], below: [] };
+    const above = props.items.filter(
+      (it) => it.area === key.area.label && it.focus === key.focus.label && it.position === "above",
+    );
+    const below = props.items.filter(
+      (it) => it.area === key.area.label && it.focus === key.focus.label && it.position === "below",
+    );
+    return above.length === 0 && below.length === 0 ? empty : { above, below };
+  };
+
+  // ----- per-item card --------------------------------------------------------
+  const renderCard = (item: ProductGridItem): JSX.Element => {
+    const met = () => item.position === "below" && isNeedMet(item);
+    const selected = () => selectedItemIds().has(item.id);
+    const cardStyle = (): JSX.CSSProperties => ({
+      ...CARD_BASE_STYLE,
+      ...(selected() ? CARD_SELECTED_STYLE : met() ? CARD_MET_STYLE : {}),
+    });
     return (
-      <div
-        class={className()}
-        title={p.item.description}
-        onClick={() => toggleItem(p.item.id)}
-      >
-        <div>{p.item.shortName}</div>
-        <Show when={workOf(p.item.id)}>
+      <div style={cardStyle()} title={item.description} onClick={() => toggleItem(item.id)}>
+        <div>{item.shortName}</div>
+        <Show when={workOf(item.id)}>
           {(w) => (
             <div
-              class="sui-product-grid__card-bar"
+              style={CARD_BAR_STYLE}
               title={`done: ${w().done} · doing: ${w().doing} · todo: ${w().todo}`}
             >
               <StackedProgressBar
@@ -232,29 +274,15 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     );
   };
 
-  const CellStack: Component<{
-    items: ProductGridItem[];
-    anchor: "top" | "bottom";
-  }> = (p) => (
-    <div
-      class={`sui-product-grid__cell-stack sui-product-grid__cell-stack--anchor-${p.anchor}`}
-    >
-      <For each={p.items}>{(it) => <Card item={it} />}</For>
-    </div>
-  );
-
-  const FocusLabel: Component<{
-    area: string;
-    focus: string;
-    above: ProductGridItem[];
-    below: ProductGridItem[];
-  }> = (p) => {
+  // ----- focus-label band content --------------------------------------------
+  const renderFocusLabel = (key: AreaFocusCellKey): JSX.Element => {
+    const { above, below } = bucketFor(key);
     const sel = () => {
       const s = selection();
-      return !!s && s.kind === "focus" && s.area === p.area && s.focus === p.focus;
+      return !!s && s.kind === "focus" && s.area === key.area.label && s.focus === key.focus.label;
     };
     const aboveTotals = () =>
-      p.above.reduce(
+      above.reduce(
         (acc, it) => {
           const w = workOf(it.id);
           if (w) {
@@ -267,39 +295,43 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         { todo: 0, doing: 0, done: 0 },
       );
     const aboveSegmentsAccessor = () => workSegments(aboveTotals());
-    const metCount = () => p.below.filter((n) => isNeedMet(n)).length;
+    const metCount = () => below.filter((n) => isNeedMet(n)).length;
     const belowSegmentsAccessor = () => {
       const m = metCount();
-      const u = p.below.length - m;
-      const t = p.below.length || 1;
+      const u = below.length - m;
+      const t = below.length || 1;
       return [
         { percentage: (m / t) * 100, color: SEGMENT_COLORS.done },
         { percentage: (u / t) * 100, color: SEGMENT_COLORS.todo },
       ];
     };
-    const className = () =>
-      sel()
-        ? "sui-product-grid__focus sui-product-grid__focus--selected"
-        : "sui-product-grid__focus";
+    const wrapperStyle = (): JSX.CSSProperties => ({
+      ...FOCUS_BASE_STYLE,
+      ...(sel() ? FOCUS_SELECTED_STYLE : {}),
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      "flex-direction": "column",
+      "align-items": "stretch",
+      "justify-content": "center",
+      gap: "4px",
+    });
     return (
-      <div class={className()} onClick={() => toggleFocus(p.area, p.focus)}>
+      <div style={wrapperStyle()} onClick={() => toggleFocus(key.area.label, key.focus.label)}>
         <div
-          class="sui-product-grid__focus-bar"
+          style={FOCUS_BAR_STYLE}
           title={`above · done ${aboveTotals().done} · doing ${aboveTotals().doing} · todo ${aboveTotals().todo}`}
         >
-          <Show when={p.above.length > 0}>
+          <Show when={above.length > 0}>
             <StackedProgressBar
               segments={aboveSegmentsAccessor()}
               style={{ width: "100%", height: "100%" }}
             />
           </Show>
         </div>
-        <div>{p.focus}</div>
-        <div
-          class="sui-product-grid__focus-bar"
-          title={`below · met ${metCount()}/${p.below.length}`}
-        >
-          <Show when={p.below.length > 0}>
+        <div>{key.focus.label}</div>
+        <div style={FOCUS_BAR_STYLE} title={`below · met ${metCount()}/${below.length}`}>
+          <Show when={below.length > 0}>
             <StackedProgressBar
               segments={belowSegmentsAccessor()}
               style={{ width: "100%", height: "100%" }}
@@ -310,133 +342,24 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     );
   };
 
-  // ----- grid template ------------------------------------------------------
-  const gridStyle = (): JSX.CSSProperties => {
-    const L = layout();
-    const N = L.subCols.length;
-    const totalCols = Math.max(2 * N - 1, 1);
-    const areaBoundarySet = new Set(L.areaBoundaryCols);
-    const cols = Array.from({ length: totalCols }, (_, i) => {
-      const col = i + 1;
-      if (col % 2 === 1) return "minmax(120px, 1fr)";
-      return areaBoundarySet.has(col) ? "3px" : "1px";
-    }).join(" ");
-    return {
-      "grid-template-columns": cols,
-      // Rows: header | hsep | above | hsep | label | hsep | below
-      "grid-template-rows": "auto 1px minmax(80px, 1fr) 1px auto 1px minmax(80px, 1fr)",
-    };
-  };
+  // ----- cell-stack contents (Primitive owns the stack wrapper) --------------
+  const renderAboveCell = (key: AreaFocusCellKey): JSX.Element => (
+    <For each={bucketFor(key).above}>{(it) => renderCard(it)}</For>
+  );
 
-  const className = () =>
-    props.class ? `sui-product-grid ${props.class}` : "sui-product-grid";
+  const renderBelowCell = (key: AreaFocusCellKey): JSX.Element => (
+    <For each={bucketFor(key).below}>{(it) => renderCard(it)}</For>
+  );
 
   return (
-    <div class={className()} style={{ ...gridStyle(), ...(typeof props.style === "object" ? props.style : {}) }}>
-      {(() => {
-        const L = layout();
-        const areaBoundarySet = new Set(L.areaBoundaryCols);
-        const sepClass = (col: number) =>
-          areaBoundarySet.has(col)
-            ? "sui-product-grid__sep--major"
-            : "sui-product-grid__sep--minor";
-        return (
-          <>
-            {/* Row 1 — area headers (each spans its sub-cols + interior vseps). */}
-            <For each={L.areaSpans}>
-              {(a) => {
-                const startCol = 2 * a.startSubCol - 1;
-                const colSpan = 2 * a.span - 1;
-                return (
-                  <div
-                    class="sui-product-grid__area-header"
-                    style={{ "grid-row": "1", "grid-column": `${startCol} / span ${colSpan}` }}
-                  >
-                    {a.area}
-                  </div>
-                );
-              }}
-            </For>
-            {/* Vseps between areas in the header row (always major). */}
-            <For each={L.areaBoundaryCols}>
-              {(col) => (
-                <div
-                  class="sui-product-grid__sep--major"
-                  style={{ "grid-row": "1", "grid-column": `${col}` }}
-                />
-              )}
-            </For>
-            {/* Row 2 — full-width major hsep under headers. */}
-            <div
-              class="sui-product-grid__sep--major"
-              style={{ "grid-row": "2", "grid-column": "1 / -1" }}
-            />
-            {/* Row 3 — above-the-line cells + vseps. */}
-            <For each={L.subCols}>
-              {(sc, i) => (
-                <div style={{ "grid-row": "3", "grid-column": `${2 * (i() + 1) - 1}` }}>
-                  <CellStack items={sc.slot.above} anchor="bottom" />
-                </div>
-              )}
-            </For>
-            <For each={L.interSubColVseps}>
-              {(col) => (
-                <div
-                  class={sepClass(col)}
-                  style={{ "grid-row": "3", "grid-column": `${col}` }}
-                />
-              )}
-            </For>
-            {/* Row 4 — full-width major hsep above the label band. */}
-            <div
-              class="sui-product-grid__sep--major"
-              style={{ "grid-row": "4", "grid-column": "1 / -1" }}
-            />
-            {/* Row 5 — focus labels with sandwiched status bars. */}
-            <For each={L.subCols}>
-              {(sc, i) => (
-                <div style={{ "grid-row": "5", "grid-column": `${2 * (i() + 1) - 1}` }}>
-                  <FocusLabel
-                    area={sc.area}
-                    focus={sc.focus}
-                    above={sc.slot.above}
-                    below={sc.slot.below}
-                  />
-                </div>
-              )}
-            </For>
-            <For each={L.interSubColVseps}>
-              {(col) => (
-                <div
-                  class={sepClass(col)}
-                  style={{ "grid-row": "5", "grid-column": `${col}` }}
-                />
-              )}
-            </For>
-            {/* Row 6 — full-width major hsep below the label band. */}
-            <div
-              class="sui-product-grid__sep--major"
-              style={{ "grid-row": "6", "grid-column": "1 / -1" }}
-            />
-            {/* Row 7 — below-the-line cells + vseps. */}
-            <For each={L.subCols}>
-              {(sc, i) => (
-                <div style={{ "grid-row": "7", "grid-column": `${2 * (i() + 1) - 1}` }}>
-                  <CellStack items={sc.slot.below} anchor="top" />
-                </div>
-              )}
-            </For>
-            <For each={L.interSubColVseps}>
-              {(col) => (
-                <div
-                  class={sepClass(col)}
-                  style={{ "grid-row": "7", "grid-column": `${col}` }}
-                />
-              )}
-            </For>
-          </>
-        );
-      })()}
-    </div>
+    <AreaFocusGrid
+      areas={bucketedAreas()}
+      renderAreaHeader={(a) => a.label}
+      renderFocusLabel={renderFocusLabel}
+      renderAboveCell={renderAboveCell}
+      renderBelowCell={renderBelowCell}
+      class={props.class}
+      style={props.style}
+    />
   );
 };
