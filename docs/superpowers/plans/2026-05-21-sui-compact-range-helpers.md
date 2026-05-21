@@ -8,9 +8,9 @@
 
 Both ship as standalone exports (called in JSX text positions). The existing `Duration` component is preserved for back-compat; consumers that want the new grammar use the standalone helper.
 
-**Architecture:** Pure functions, no I/O, no SolidJS reactivity. Use Luxon (already a SUI dependency for the DateRangePicker).
+**Architecture:** Pure functions, no I/O, no SolidJS reactivity. Vanilla `Date` + `Intl.DateTimeFormat` only — matches the existing `DateRangePicker` decision (`src/components/DateRangePicker/DateRangePicker.tsx:8` documents "no Luxon / date-fns"). Hand-assemble the rendered string via `formatToParts` to keep a comma-free `"May 13 11:35"` shape that doesn't drift across locales.
 
-**Tech Stack:** TypeScript, Luxon, Vitest.
+**Tech Stack:** TypeScript, Vitest. No date-library dependency.
 
 **Working directory:** `/Users/aarnold/gits/primestage/solid-ui-components`.
 
@@ -29,12 +29,13 @@ git status
 ```
 Expected: clean. Latest commit should be `3cbdfdb` or later.
 
-- [ ] **Step 0.2: Confirm Luxon is a direct dep**
+- [ ] **Step 0.2: Confirm SUI uses vanilla `Date` + `Intl.DateTimeFormat` (no date-lib dependency)**
 
 ```bash
-grep -n '"luxon"' package.json
+grep -n 'luxon\|date-fns' package.json
+grep -n 'Intl\.DateTimeFormat\|no Luxon' src/components/DateRangePicker/DateRangePicker.tsx
 ```
-Expected: at least one match under `dependencies` or `peerDependencies`.
+Expected: no match for `luxon` or `date-fns` in `package.json`; one or more matches in `DateRangePicker.tsx` documenting the no-date-lib decision. The new helpers must follow this convention — do NOT add a date library.
 
 - [ ] **Step 0.3: Baseline test pass**
 
@@ -61,7 +62,6 @@ The tests mirror amygdala-ui's `src/lib/utils/formatDuration.test.ts` so the beh
 - [ ] **Step 1.1: Write the test file**
 
 ```ts
-import { DateTime } from "luxon";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   formatCompactDuration,
@@ -107,22 +107,23 @@ describe("formatCompactRange", () => {
   });
 
   it("strips date from end when start and end share the same day", () => {
-    const start = DateTime.local(2026, 5, 13, 11, 35).toJSDate();
-    const end = DateTime.local(2026, 5, 13, 12, 5).toJSDate();
+    // Note: `Date` constructor month is 0-indexed (4 = May).
+    const start = new Date(2026, 4, 13, 11, 35);
+    const end = new Date(2026, 4, 13, 12, 5);
     expect(formatCompactRange(start, end)).toBe("May 13 11:35 → 12:05 · 30m");
   });
 
   it("strips month from end when start and end share the same month", () => {
-    const start = DateTime.local(2026, 5, 13, 11, 35).toJSDate();
-    const end = DateTime.local(2026, 5, 14, 12, 5).toJSDate();
+    const start = new Date(2026, 4, 13, 11, 35);
+    const end = new Date(2026, 4, 14, 12, 5);
     expect(formatCompactRange(start, end)).toBe(
       "May 13 11:35 → 14 12:05 · 1d 30m",
     );
   });
 
   it("shows full date on both sides when start and end are in different months", () => {
-    const start = DateTime.local(2026, 5, 13, 11, 35).toJSDate();
-    const end = DateTime.local(2026, 6, 2, 12, 5).toJSDate();
+    const start = new Date(2026, 4, 13, 11, 35);
+    const end = new Date(2026, 5, 2, 12, 5);
     expect(formatCompactRange(start, end)).toBe(
       "May 13 11:35 → Jun 02 12:05 · 20d 30m",
     );
@@ -130,8 +131,8 @@ describe("formatCompactRange", () => {
 
   it("renders 'ongoing' and computes duration vs. now when end is null", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(DateTime.local(2026, 5, 13, 12, 5).toJSDate());
-    const start = DateTime.local(2026, 5, 13, 11, 35).toJSDate();
+    vi.setSystemTime(new Date(2026, 4, 13, 12, 5));
+    const start = new Date(2026, 4, 13, 11, 35);
     expect(formatCompactRange(start, null)).toBe(
       "May 13 11:35 → ongoing · 30m",
     );
@@ -155,17 +156,65 @@ Expected: FAIL — `"formatCompactDuration" is not exported from "./formatCompac
 
 - [ ] **Step 2.1: Write the implementation**
 
+Public surface: `formatCompactDuration(ms)`, `formatCompactRange(start, end)`, `formatStartTimestamp(date)`. The Luxon-specific `COMPACT_RANGE_START_FORMAT` constant is dropped — `formatStartTimestamp` is the replacement export for callers that need to render adjacent timestamps in the same shape.
+
 ```ts
-import { DateTime } from "luxon";
+/**
+ * Shared Intl.DateTimeFormat that emits the four parts we need:
+ * short month name, 2-digit day, 24-hour clock hour, 2-digit minute.
+ * We hand-assemble the rendered string via `formatToParts` to keep a
+ * comma-free `"May 13 11:35"` layout that doesn't drift across locales
+ * or runtimes (the default `format()` output inserts a comma in en-US).
+ */
+const DATETIME_PARTS_FMT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const pick = (
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): string => parts.find((p) => p.type === type)?.value ?? "";
+
+const normalizeHour = (h: string): string => (h === "24" ? "00" : h);
+
+const sameDay = (a: Date, b: Date): boolean =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+const sameMonth = (a: Date, b: Date): boolean =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 
 /**
- * Locale-stable Luxon format codes for `formatCompactRange`. Re-exported
- * so callers that mix custom JSX with `formatCompactRange` output can
- * keep timestamp formatting consistent.
+ * Format a single timestamp as `"MMM dd HH:mm"` in local time
+ * (e.g. `"May 13 11:35"`). Exported so callers that mix custom JSX
+ * with `formatCompactRange` output can keep adjacent timestamps in
+ * the same shape.
  */
-export const COMPACT_RANGE_START_FORMAT = "LLL dd HH:mm";
-const SAME_MONTH_END_FORMAT = "dd HH:mm";
-const SAME_DAY_END_FORMAT = "HH:mm";
+export const formatStartTimestamp = (d: Date): string => {
+  const parts = DATETIME_PARTS_FMT.formatToParts(d);
+  const month = pick(parts, "month");
+  const day = pick(parts, "day");
+  const hour = normalizeHour(pick(parts, "hour"));
+  const minute = pick(parts, "minute");
+  return `${month} ${day} ${hour}:${minute}`;
+};
+
+const formatEndTimestamp = (start: Date, end: Date): string => {
+  const parts = DATETIME_PARTS_FMT.formatToParts(end);
+  const month = pick(parts, "month");
+  const day = pick(parts, "day");
+  const hour = normalizeHour(pick(parts, "hour"));
+  const minute = pick(parts, "minute");
+
+  if (sameDay(start, end)) return `${hour}:${minute}`;
+  if (sameMonth(start, end)) return `${day} ${hour}:${minute}`;
+  return `${month} ${day} ${hour}:${minute}`;
+};
 
 /**
  * Format a duration as a compact, deterministic string. Unlike the
@@ -203,12 +252,6 @@ export const formatCompactDuration = (ms: number): string => {
   return `${days}d`;
 };
 
-const pickEndFormat = (start: DateTime, end: DateTime): string => {
-  if (start.hasSame(end, "day")) return SAME_DAY_END_FORMAT;
-  if (start.hasSame(end, "month")) return SAME_MONTH_END_FORMAT;
-  return COMPACT_RANGE_START_FORMAT;
-};
-
 /**
  * Format a date range compactly, keeping start and end but stripping
  * fields from the end side that the start side already conveys.
@@ -224,17 +267,14 @@ export const formatCompactRange = (
   start: Date,
   end: Date | null,
 ): string => {
-  const s = DateTime.fromJSDate(start);
-  const startLabel = s.toFormat(COMPACT_RANGE_START_FORMAT);
+  const startLabel = formatStartTimestamp(start);
 
   if (end === null) {
     const durationMs = Date.now() - start.getTime();
     return `${startLabel} → ongoing · ${formatCompactDuration(durationMs)}`;
   }
 
-  const e = DateTime.fromJSDate(end);
-  const endLabel = e.toFormat(pickEndFormat(s, e));
-
+  const endLabel = formatEndTimestamp(start, end);
   const durationMs = end.getTime() - start.getTime();
   return `${startLabel} → ${endLabel} · ${formatCompactDuration(durationMs)}`;
 };
@@ -275,9 +315,9 @@ Replace with:
 export { Duration } from "./Duration";
 export type { DurationProps } from "./Duration";
 export {
-  COMPACT_RANGE_START_FORMAT,
   formatCompactDuration,
   formatCompactRange,
+  formatStartTimestamp,
 } from "./formatCompactRange";
 ```
 
@@ -344,7 +384,7 @@ grep -n '^## Duration\|^### Duration\|^- \*\*Duration\*\*' COMPONENTS.md
 Add the following near the Duration entry (insert after the existing Duration description; preserve the file's existing heading hierarchy):
 
 ```markdown
-- **formatCompactDuration(ms)** / **formatCompactRange(start, end)** — Standalone helpers exported from `solid-ui-components/Duration`. `formatCompactDuration` renders deterministic compact duration strings (`Ns` / `Nm` / `Nh Mm` / `Nd Mh` / `Nd Mm`), no wall-clock fallback. `formatCompactRange(start, end)` keeps both timestamps but strips redundant date fields from the end side (same-day: `May 13 11:35 → 12:05 · 30m`; same-month: `May 13 11:35 → 14 12:05 · 1d 30m`; different-month: full both sides), appends the duration, and supports `end === null` for ongoing periods. Re-exports `COMPACT_RANGE_START_FORMAT` (`"LLL dd HH:mm"`) for callers that need to format adjacent timestamps consistently. Use for: alarm-period labels, history lists, "zoomed to" indicators.
+- **formatCompactDuration(ms)** / **formatCompactRange(start, end)** / **formatStartTimestamp(date)** — Pure-function string helpers exported from `solid-ui-components/Duration`. Vanilla `Date` + `Intl.DateTimeFormat` (no Luxon, matching the DateRangePicker convention). `formatCompactDuration` renders deterministic compact duration strings (`Ns` / `Nm` / `Nh Mm` / `Nd Mh` / `Nd Mm`), no wall-clock fallback. `formatCompactRange(start, end)` keeps both timestamps but strips redundant date fields from the end side (same-day, same-month, different-month branches), appends the duration, and supports `end === null` for ongoing periods. `formatStartTimestamp(date)` exposes the `"MMM dd HH:mm"` shape for callers that need to format adjacent timestamps consistently. Use for: alarm-period labels, history lists, "zoomed to" indicators.
 ```
 
 If the file uses a different bullet style or heading depth, match it.
@@ -379,10 +419,11 @@ Expected: all tests pass; build clean.
 git push -u origin HEAD
 gh pr create --title "feat(Duration): add formatCompactRange + formatCompactDuration" --body "$(cat <<'EOF'
 ## Summary
-- New `formatCompactDuration(ms)` and `formatCompactRange(start, end)` standalone exports under `solid-ui-components/Duration`
+- New `formatCompactDuration(ms)`, `formatCompactRange(start, end)`, and `formatStartTimestamp(date)` standalone exports under `solid-ui-components/Duration`
+- Vanilla `Date` + `Intl.DateTimeFormat` only — matches the existing `DateRangePicker` "no Luxon / date-fns" decision; no new runtime dependency
 - `formatCompactDuration` provides a deterministic compact grammar (`Ns` / `Nm` / `Nh Mm` / `Nd Mh` / `Nd Mm`) — no wall-clock fallback past 7d, keeps the smaller unit when the next-larger is zero
 - `formatCompactRange(start, end)` keeps both timestamps but strips redundant end-side date fields and appends the compact duration. `end === null` renders the ongoing sentinel
-- `COMPACT_RANGE_START_FORMAT` re-exported for callers that need to format adjacent timestamps consistently
+- `formatStartTimestamp(date)` exposes the `"MMM dd HH:mm"` shape for callers that mix custom JSX with `formatCompactRange` output
 - 11 unit tests (7 duration, 4 range) lock the grammar
 - The existing `Duration` component is unchanged; consumers that want the new grammar opt in via the standalone helpers
 
@@ -401,7 +442,7 @@ EOF
 
 ## Acceptance criteria
 
-- [ ] `formatCompactRange` + `formatCompactDuration` + `COMPACT_RANGE_START_FORMAT` exported from `solid-ui-components/Duration` and re-exported from the top-level barrel
+- [ ] `formatCompactRange` + `formatCompactDuration` + `formatStartTimestamp` exported from `solid-ui-components/Duration` and re-exported from the top-level barrel
 - [ ] 11 tests pass (7 duration + 4 range)
 - [ ] `npm run build` clean (client + server)
 - [ ] `COMPONENTS.md` documents the new exports
