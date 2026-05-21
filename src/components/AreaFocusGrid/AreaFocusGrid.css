@@ -1,0 +1,66 @@
+/* ============================================
+   AreaFocusGrid — Primitive (Depth 1). Owns its CSS, imports no components.
+   Lays out a (area × focus) pivot with above-the-line cell stacks on top,
+   a focus-label band in the middle, and below-the-line cell stacks at the
+   bottom. Major lines (white) separate areas and rows; minor lines
+   (toned down) separate sub-columns within an area. BEM-ish class names.
+   ============================================ */
+
+.sui-area-focus-grid {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sui-area-focus-grid__sep--major {
+  background: var(--sui-border-bright, #fff);
+}
+
+.sui-area-focus-grid__sep--minor {
+  background: var(--sui-border, rgba(255, 255, 255, 0.18));
+}
+
+.sui-area-focus-grid__area-header {
+  padding: 6px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sui-text-secondary, rgba(255, 255, 255, 0.65));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sui-area-focus-grid__focus {
+  padding: 6px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sui-text-primary, rgba(255, 255, 255, 0.85));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sui-area-focus-grid__cell-stack {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+}
+
+.sui-area-focus-grid__cell-stack--anchor-bottom {
+  justify-content: flex-end;
+}
+
+.sui-area-focus-grid__cell-stack--anchor-top {
+  justify-content: flex-start;
+}
