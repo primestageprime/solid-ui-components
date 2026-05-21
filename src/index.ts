@@ -66,6 +66,7 @@ export * from "./components/Combobox";
 export * from "./components/ThemedNumberInput";
 export * from "./components/Toast";
 export * from "./components/ValueRenderer";
+export * from "./components/DiffPair";
 export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
