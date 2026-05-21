@@ -8,6 +8,7 @@ import {
   onCleanup,
   type JSX,
 } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
 import { DagArrowMarker, DagSvgNode, DagSvgEdge, bezierThroughChannelPath } from "../DagChart/svg";
@@ -191,6 +192,17 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     // Summaries are NOT rendered as node boxes — they become boundary
     // badges on the arrows. See boundaryBadges() below.
     return out;
+  });
+
+  // `items` recomputes brand-new Item objects on every layout change,
+  // which would force <For> to remount every foreignObject — defeating
+  // any CSS transition on x / y. We mirror items() into a keyed store
+  // so each id has a STABLE reference across renders; reconcile only
+  // mutates the properties that actually changed, and the SVG element
+  // can interpolate between its old and new attribute values.
+  const [itemsStore, setItemsStore] = createStore<Item[]>([]);
+  createEffect(() => {
+    setItemsStore(reconcile(items(), { key: "id" }));
   });
 
   // Animation layer: items that just disappeared keep rendering with
@@ -478,7 +490,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           {/* Nodes (real only — summaries become boundary badges).
               Newly-appeared items slide in from outside; leaving items
               keep their last position while sliding out. */}
-          <For each={items()}>
+          <For each={itemsStore}>
             {(item) => {
               const entering = () => enteringIds().has(item.id);
               /* Enter slide direction = FROM the center direction TOWARD

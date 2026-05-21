@@ -65,7 +65,12 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
   );
 
   const totalHours = () => props.endHour - props.startHour;
-  const calHeight = () => totalHours() * props.pxPerHour;
+  // Top inset (px) reserved inside the gutter/column so the first hour-mark
+  // label — which uses translateY(-50%) — doesn't bleed above the column's
+  // border-box. Padding-top doesn't help here because absolute children are
+  // positioned relative to the padding box, not the content box.
+  const TOP_INSET = 8;
+  const calHeight = () => totalHours() * props.pxPerHour + TOP_INSET;
   const hourMarks = () => {
     const marks: number[] = [];
     for (let h = props.startHour; h <= props.endHour; h += 1) marks.push(h);
@@ -108,7 +113,7 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
             <div
               class="sui-week-calendar__gutter-mark"
               style={{
-                top: `${(h - props.startHour) * props.pxPerHour}px`,
+                top: `${(h - props.startHour) * props.pxPerHour + TOP_INSET}px`,
               }}
             >
               {fmtHour(h)}
@@ -130,7 +135,7 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
                   <div
                     class="sui-week-calendar__hour-line"
                     style={{
-                      top: `${(h - props.startHour) * props.pxPerHour}px`,
+                      top: `${(h - props.startHour) * props.pxPerHour + TOP_INSET}px`,
                     }}
                   />
                 )}
@@ -142,7 +147,7 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
                   // inside the accessor keeps top/height in sync.
                   const start = parseWeekCalendarTime(b.startAt);
                   const top = () =>
-                    (start - props.startHour) * props.pxPerHour;
+                    (start - props.startHour) * props.pxPerHour + TOP_INSET;
                   const height = () => b.durationInHrs * props.pxPerHour;
                   const isHighlight = () => {
                     const h = props.highlight;
