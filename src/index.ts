@@ -41,6 +41,7 @@ export * from "./components/HeatStack";
 export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";
+export * from "./components/PivotGrid";
 export * from "./components/Section";
 export * from "./components/Panel";
 export * from "./components/Divider";

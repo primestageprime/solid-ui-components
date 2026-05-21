@@ -88,7 +88,7 @@ describe("topoSortAlpha", () => {
 // ─── computeColFor: linear chain (deps) ──────────────────────────────────
 
 describe("computeColFor — linear chain", () => {
-  it("initial all-TODO: next-up at col +1, rest spread right", () => {
+  it("initial all-TODO: c1 at +1, ranked ascending by depth (no stacking — each chain step is its own depth)", () => {
     const r = colsFor(linearChain({}));
     expect(r.c1).toBe(1);
     expect(r.c2).toBe(2);
@@ -97,26 +97,31 @@ describe("computeColFor — linear chain", () => {
     expect(r.p).toBe(1); // parent is TODO (effective) → col +1
   });
 
-  it("c5 DOING: chain spreads -4..+3 around the doing anchor", () => {
+  it("c5 DOING: DONE ranks left, DOING centered, TODO ranks right", () => {
     const r = colsFor(
       linearChain({
         c1: "DONE", c2: "DONE", c3: "DONE", c4: "DONE",
         c5: "DOING",
       }),
     );
+    // DONE depths [0,1,2,3] sorted desc → [3,2,1,0]
+    expect(r.c4).toBe(-1); // depth 3 → rank 1
+    expect(r.c3).toBe(-2);
+    expect(r.c2).toBe(-3);
     expect(r.c1).toBe(-4);
-    expect(r.c4).toBe(-1);
     expect(r.c5).toBe(0);
+    // TODO depths [5,6,7] sorted asc → [5,6,7]
     expect(r.c6).toBe(1);
+    expect(r.c7).toBe(2);
     expect(r.c8).toBe(3);
     expect(r.p).toBe(0); // parent DOING (any child DOING)
   });
 });
 
-// ─── computeColFor: broom (frame 19 case) ────────────────────────────────
+// ─── computeColFor: broom (siblings stack at same depth) ─────────────────
 
 describe("computeColFor — broom", () => {
-  it("b8 DOING, b1..b7 DONE: b7→-1, b6→-2, b5..b1 spread further left", () => {
+  it("b8 DOING, b1..b7 DONE: DONE ranks by depth, siblings stack", () => {
     const r = colsFor(
       broom({
         b1: "DONE", b2: "DONE", b3: "DONE",
@@ -125,35 +130,40 @@ describe("computeColFor — broom", () => {
       }),
     );
     expect(r.b8).toBe(0);
-    expect(r.b7).toBe(-1);
-    expect(r.b6).toBe(-2);
-    expect(r.b5).toBe(-3); // ends up in -S badge
-    expect(r.b4).toBe(-4);
+    // DONE unique depths [0,1,2,3,4] sorted desc → [4,3,2,1,0]
+    expect(r.b7).toBe(-1); // depth 4 → rank 1
+    expect(r.b6).toBe(-2); // depth 3 → rank 2
+    expect(r.b5).toBe(-3); // depth 2 → rank 3 (-S)
+    expect(r.b4).toBe(-4); // depth 1 → rank 4 (-S)
+    // Three roots at depth 0 STACK at the same col (rank 5).
+    expect(r.b1).toBe(-5);
+    expect(r.b2).toBe(-5);
     expect(r.b3).toBe(-5);
-    expect(r.b2).toBe(-6);
-    expect(r.b1).toBe(-7);
   });
 
-  it("initial all-TODO: linear order spreads right of center", () => {
+  it("initial all-TODO: siblings stack at depth 0", () => {
     const r = colsFor(broom({}));
-    expect(r.b1).toBe(1);
-    expect(r.b2).toBe(2);
-    expect(r.b3).toBe(3);
-    expect(r.b4).toBe(4);
-    expect(r.b8).toBe(8);
+    // TODO unique depths [0,1,2,3,4] sorted asc.
+    expect(r.b1).toBe(1); // depth 0 → rank 1, stacked with b2, b3
+    expect(r.b2).toBe(1);
+    expect(r.b3).toBe(1);
+    expect(r.b4).toBe(2); // depth 1 → rank 2
+    expect(r.b5).toBe(3); // depth 2
+    expect(r.b6).toBe(4); // depth 3
+    expect(r.b7).toBe(5); // depth 4
+    expect(r.b8).toBe(5); // depth 4 → stacked with b7
   });
 
-  it("siblings DOING simultaneously: anchor = min DOING idx", () => {
-    // b1, b2, b3 all DOING. anchor = idx(b1) = 0. So b1 at col 0,
-    // b2 at +1, b3 at +2 — they spread, not stack (linear-order rule
-    // for dep datasets).
+  it("siblings DOING simultaneously all stack at col 0", () => {
     const r = colsFor(
       broom({ b1: "DOING", b2: "DOING", b3: "DOING" }),
     );
     expect(r.b1).toBe(0);
-    expect(r.b2).toBe(1);
-    expect(r.b3).toBe(2);
-    expect(r.b4).toBe(3);
+    expect(r.b2).toBe(0);
+    expect(r.b3).toBe(0);
+    // TODO siblings further out keep their depth rank.
+    expect(r.b4).toBe(1);
+    expect(r.b5).toBe(2);
   });
 });
 

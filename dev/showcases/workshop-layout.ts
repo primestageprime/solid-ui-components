@@ -47,22 +47,46 @@ export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
   return result;
 }
 
+/** Compute each leaf's topological depth via memoized recursion. */
+function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
+  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const cache = new Map<string, number>();
+  const visit = (id: string): number => {
+    const hit = cache.get(id);
+    if (hit !== undefined) return hit;
+    const n = byId.get(id);
+    if (!n) return 0;
+    const deps = (n.dependsOn ?? []).filter((d) => byId.has(d));
+    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
+    cache.set(id, d);
+    return d;
+  };
+  for (const l of leaves) visit(l.id);
+  return cache;
+}
+
 /**
  * Compute the column for a single node within `nodes`.
  *
- * Rules:
- *  - **Parents** (any node referenced as `parentId` by another node):
- *    status-based col (DONE → -1, DOING → 0, TODO → +1), using
- *    effective status from `effectiveStatusFor`.
- *  - **Datasets with NO dependsOn anywhere** (e.g. chores): leaves use
- *    status-based col with vertical stacking.
- *  - **Datasets WITH any deps** (linear chain, broom): leaves use
- *    linear-order col. Linear order = topo sort with alpha tiebreaker.
- *    col = idx − anchorIdx, where anchorIdx = min DOING idx (or −1 when
- *    no leaf is DOING so the first leaf lands at col +1).
+ * Rules (uniform — same logic handles linear chain, broom, and chores):
+ *  - **Parents** use status-based col (DONE → -1, DOING → 0, TODO → +1)
+ *    via effective status from `effectiveStatusFor`.
+ *  - **Leaves**: col depends on STATUS and (depth, status) ranking among
+ *    siblings:
+ *      - `status === DOING` → col **0** (always; multiple DOING stack).
+ *      - `status === DONE` → cols **-1, -2, …** assigned by rank of the
+ *        leaf's topo DEPTH among DONE leaves, **sorted descending**
+ *        (higher depth → col closer to center).
+ *      - `status === TODO` → cols **+1, +2, …** assigned by rank of the
+ *        leaf's topo depth among TODO leaves, sorted ascending (lower
+ *        depth → col closer to center).
  *
- * `effectiveStatusFor` lets the caller plug in StatusFlowChart's parent
- * auto-flip rule without us having to import it here.
+ * Same (depth, status) → same col → siblings STACK vertically. Different
+ * (depth, status) → different cols → no two dependent nodes ever share
+ * a col, because deps imply a depth difference.
+ *
+ * Falls through cleanly for chores (no deps): every leaf is at depth 0,
+ * so all DONE chores stack at col -1, all DOING at col 0, etc.
  */
 export function computeColFor(
   n: StatusFlowNode,
@@ -77,27 +101,21 @@ export function computeColFor(
     return STATUS_TO_COL[eff] ?? 0;
   }
 
+  if (n.status === "DOING") return 0;
+
   const leaves =
     parentIds.size > 0 ? nodes.filter((node) => node.parentId) : nodes;
-  const hasAnyDeps = leaves.some((l) => l.dependsOn && l.dependsOn.length > 0);
+  const depths = topoDepths(leaves);
+  const myDepth = depths.get(n.id) ?? 0;
 
-  if (!hasAnyDeps) {
-    // Independent tasks (chores) — pure status-based col.
-    return STATUS_TO_COL[n.status] ?? 0;
-  }
+  const sameStatus = leaves.filter((l) => l.status === n.status);
+  const uniqueDepths = Array.from(
+    new Set(sameStatus.map((l) => depths.get(l.id) ?? 0)),
+  );
+  uniqueDepths.sort((a, b) => (n.status === "DONE" ? b - a : a - b));
+  const rank = uniqueDepths.indexOf(myDepth) + 1; // 1-indexed
 
-  // Linear-order col: topo sort with alpha tiebreaker, anchored on
-  // the first DOING leaf. With no DOING, anchor = −1 so the very
-  // first leaf lands at col +1 (the "next-up" position).
-  const order = topoSortAlpha(leaves);
-  const idxOf = new Map(order.map((id, i) => [id, i]));
-  const myIdx = idxOf.get(n.id) ?? 0;
-  const doingIdxs = leaves
-    .filter((l) => l.status === "DOING")
-    .map((l) => idxOf.get(l.id) ?? -1)
-    .filter((i) => i >= 0);
-  const anchorIdx = doingIdxs.length > 0 ? Math.min(...doingIdxs) : -1;
-  return myIdx - anchorIdx;
+  return n.status === "DONE" ? -rank : rank;
 }
 
 /**
