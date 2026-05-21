@@ -1,6 +1,8 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { describe, expect, it, vi } from "vitest";
 import { PivotGrid } from "./PivotGrid";
+import { HeatPivotGrid } from "./HeatPivotGrid";
+import { LinkPivotGrid } from "./LinkPivotGrid";
 
 type RowId = "rA" | "rB";
 type ColId = "cA" | "cB";
@@ -226,5 +228,25 @@ describe("PivotGrid layout modifiers", () => {
     const wrapper = container.firstElementChild;
     expect(wrapper?.className).toMatch(/sui-pivot-grid/);
     expect(wrapper?.className).toMatch(/my-grid/);
+  });
+});
+
+describe("HeatPivotGrid (curried variant)", () => {
+  it("forwards props to PivotGrid and renders with heat applied", () => {
+    const { container } = render(() => (
+      <HeatPivotGrid {...baseProps} getCellHeat={() => 1.0} />
+    ));
+    expect(container.querySelector("table")).toBeTruthy();
+    const td = container.querySelector("tbody td");
+    expect(td?.getAttribute("style") ?? "").toMatch(/background-color/);
+  });
+});
+
+describe("LinkPivotGrid (curried variant)", () => {
+  it("forwards props to PivotGrid and renders cells as links", () => {
+    const { container } = render(() => (
+      <LinkPivotGrid {...baseProps} cellHref={() => "/x"} />
+    ));
+    expect(container.querySelectorAll("tbody td a").length).toBe(4);
   });
 });
