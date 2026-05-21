@@ -154,7 +154,7 @@ describe("PivotTreemap", () => {
         onSelect={onSelect}
       />
     ));
-    const leaf = container.querySelector(".sui-pivot-treemap__leaf")!;
+    const leaf = container.querySelector(".sui-treemap__inner")!;
     fireEvent.click(leaf);
     expect(onSelect).toHaveBeenCalledTimes(1);
     const arg = onSelect.mock.calls[0][0];
@@ -174,7 +174,7 @@ describe("PivotTreemap", () => {
       />
     ));
     expect(
-      noUntagged.querySelector(".sui-pivot-treemap__untagged"),
+      noUntagged.querySelector(".sui-treemap__sidebar"),
     ).toBeNull();
 
     const { container: withUntagged } = render(() => (
@@ -186,7 +186,7 @@ describe("PivotTreemap", () => {
         untaggedCount={5}
       />
     ));
-    const sidebar = withUntagged.querySelector(".sui-pivot-treemap__untagged");
+    const sidebar = withUntagged.querySelector(".sui-treemap__sidebar");
     expect(sidebar).not.toBeNull();
     expect(sidebar!.textContent).toContain("5");
   });

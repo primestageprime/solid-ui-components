@@ -5,7 +5,7 @@
 // pill onto another to swap their slot positions.
 // ============================================
 import { Component, createSignal, For } from "solid-js";
-import "./PivotTreemap.css";
+import "./PivotPills.css";
 
 export interface PivotPillsProps<Dim extends string> {
   /** Current ordering — a permutation of the dim universe. */

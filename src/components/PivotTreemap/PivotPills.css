@@ -1,0 +1,68 @@
+/* ============================================
+   PivotPills — Atomic (Depth 1). Drag-to-reorder pills.
+   ============================================ */
+
+.sui-pivot-pills {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.sui-pivot-pills__hint {
+  color: var(--sui-text-muted, #888);
+}
+
+.sui-pivot-pills__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sui-pivot-pills__slot-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sui-text-muted, #888);
+  opacity: 0.55;
+}
+
+.sui-pivot-pills__slot--active .sui-pivot-pills__slot-label {
+  opacity: 0.85;
+}
+
+.sui-pivot-pills__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  opacity: 0.55;
+}
+
+.sui-pivot-pills__pill--active {
+  border-color: var(--sui-border-strong, rgba(255, 255, 255, 0.3));
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+  color: var(--sui-text-primary, inherit);
+  opacity: 1;
+}
+
+.sui-pivot-pills__pill--drag-over {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.08));
+}
+
+.sui-pivot-pills__grip {
+  opacity: 0.5;
+  font-size: 10px;
+}

@@ -1,8 +1,12 @@
 // ============================================
-// PivotTreemap — Composed (Depth 2).
-// Outer columns × inner leaves treemap. Composes ProportionalStack +
-// SlotFillBar. Generic over a row type T and a string-tagged Dim union;
-// caller hands in `accessors` describing how rows expose dimension values.
+// PivotTreemap — Pure Composite (Depth 2).
+// Composes Treemap + SlotFillBar (via render callback). Owns zero CSS —
+// the outer/inner cell grid layout lives in the Treemap Primitive; the
+// progress bar styling lives in SlotFillBar. This file is wiring only:
+// bucket the rows, supply render callbacks, lift selection to the caller.
+//
+// Generic over a row type T and a string-tagged Dim union; caller hands in
+// `accessors` describing how rows expose dimension values.
 //
 // Multi-valued tag honesty: if `accessors.values(row, dim)` returns more
 // than one value, the row contributes to multiple buckets — so summed
@@ -12,11 +16,10 @@
 // Selection lifts to the caller via `selection` + `onSelect`. Filtering
 // the underlying table from a selection stays in the consumer.
 // ============================================
-import { Component, For, Show } from "solid-js";
-import { ProportionalStack, ProportionalItem } from "../Layout";
+import { Component, Show } from "solid-js";
 import { SlotFillBar } from "../SlotFillBar";
+import { Treemap, TreemapSidebar } from "../Treemap";
 import { bucketByDims, PivotAccessors, PivotBucket, PivotMetrics } from "./bucketByDims";
-import "./PivotTreemap.css";
 
 export interface PivotSelection {
   outerKey: string;
@@ -39,24 +42,56 @@ export interface PivotTreemapProps<T, Dim extends string> {
   onSelect?: (sel: PivotSelection | null) => void;
 }
 
+/** Bucket carrying its weight as a `weight` alias of `total` so it satisfies
+ *  the Treemap Primitive's `TreemapCellData` contract without mutating the
+ *  original bucket shape. */
+interface WeightedBucket extends PivotBucket {
+  weight: number;
+  children: WeightedBucket[];
+}
+
+const toWeighted = (b: PivotBucket): WeightedBucket => ({
+  ...b,
+  weight: b.total,
+  children: b.children.map(toWeighted),
+});
+
+/** Sum child metrics for the outer SlotFillBar. We use child sums (not the
+ *  parent's tally) so the bar visually reflects the children below; that
+ *  can over-count when an axis is multi-valued, which is honest. `doing`
+ *  is kept for the hover label even though SlotFillBar doesn't render it
+ *  directly (it derives the in-flight slot from the `active` prop, which
+ *  PivotTreemap doesn't drive). */
+const outerSlots = (
+  b: PivotBucket,
+): { slots: number; done: number; doing: number } =>
+  b.children.reduce(
+    (acc, c) => ({
+      slots: acc.slots + c.total,
+      done: acc.done + (c.metrics?.done ?? 0),
+      doing: acc.doing + (c.metrics?.doing ?? 0),
+    }),
+    { slots: 0, done: 0, doing: 0 },
+  );
+
 export function PivotTreemap<T, Dim extends string>(
   p: PivotTreemapProps<T, Dim>,
 ): ReturnType<Component> {
   const buckets = () =>
-    bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics);
+    bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics).map(toWeighted);
   const untagged = () => p.untaggedCount ?? 0;
 
-  const isLeafSelected = (ok: string, ik: string) =>
+  const isLeafSelected = (ok: string, ik: string): boolean =>
     p.selection?.scope === "tagged" &&
     p.selection.outerKey === ok &&
     p.selection.innerKey === ik;
 
-  const isOuterSelected = (ok: string) =>
+  const isOuterSelected = (ok: string): boolean =>
     p.selection?.scope === "tagged" &&
     p.selection.outerKey === ok &&
     p.selection.innerKey === null;
 
-  const isUntaggedSelected = () => p.selection?.scope === "untagged";
+  const isUntaggedSelected = (): boolean => p.selection?.scope === "untagged";
 
   const select = (sel: PivotSelection | null) => {
     p.onSelect?.(sel);
@@ -74,24 +109,10 @@ export function PivotTreemap<T, Dim extends string>(
     else select({ outerKey: "", innerKey: null, scope: "untagged" });
   };
 
-  // Sum child metrics for the outer SlotFillBar. We use child sums (not the
-  // parent's tally) so the bar visually reflects the children below; that
-  // can over-count when an axis is multi-valued, which is honest.
-  const outerSlots = (b: PivotBucket) => {
-    let slots = 0;
-    let done = 0;
-    let doing = 0;
-    for (const c of b.children) {
-      slots += c.total;
-      if (c.metrics) {
-        done += c.metrics.done;
-        doing += c.metrics.doing;
-      }
-    }
-    return { slots, done, doing };
-  };
-
-  const untaggedWeight = () => {
+  // Sidebar weight tracks the median bucket size so the "untagged" column
+  // never dominates or vanishes. Lifted out of render-callback territory
+  // because it depends on the full bucket list.
+  const untaggedWeight = (): number => {
     const totals = buckets()
       .map((b) => b.total)
       .sort((a, b) => a - b);
@@ -99,92 +120,135 @@ export function PivotTreemap<T, Dim extends string>(
     return Math.min(untagged(), Math.max(1, median));
   };
 
+  const sidebar = (): TreemapSidebar | undefined =>
+    untagged() > 0
+      ? {
+          weight: untaggedWeight(),
+          selected: isUntaggedSelected(),
+          onClick: () => toggleUntagged(),
+          title: "Click to filter to untagged rows",
+          content: (
+            <>
+              <div
+                class="sui-pivot-treemap__untagged-label"
+                style={{ "font-size": "11px", "font-weight": 600 }}
+              >
+                untagged
+              </div>
+              <div
+                class="sui-pivot-treemap__untagged-count"
+                style={{
+                  "font-size": "10px",
+                  color: "var(--sui-text-muted, #888)",
+                }}
+              >
+                {untagged()} rows
+              </div>
+            </>
+          ),
+        }
+      : undefined;
+
   return (
-    <ProportionalStack direction="row" gap="sm" class="sui-pivot-treemap">
-      <For each={buckets()}>
-        {(b) => (
-          <ProportionalItem
-            weight={b.total}
-            scrollWhenSmall={false}
-            class={`sui-pivot-treemap__outer${isOuterSelected(b.key) ? " sui-pivot-treemap__outer--selected" : ""}`}
+    <Treemap<WeightedBucket, WeightedBucket>
+      class="sui-pivot-treemap"
+      cells={buckets()}
+      isOuterSelected={(c) => isOuterSelected(c.key)}
+      isInnerSelected={(c, i) => isLeafSelected(c.key, i.key)}
+      onOuterClick={(c) => toggleOuter(c.key)}
+      onInnerClick={(c, i) => toggleLeaf(c.key, i.key)}
+      outerTitle={(c) => `Click to filter to ${p.outer}=${c.key}`}
+      innerTitle={(c, i) =>
+        `Click to filter to ${p.outer}=${c.key}, ${p.inner}=${i.key}`
+      }
+      renderOuterHeader={(c) => (
+        <>
+          <span
+            class="sui-pivot-treemap__outer-key"
+            style={{
+              "font-size": "11px",
+              "font-weight": 600,
+              "white-space": "nowrap",
+              overflow: "hidden",
+              "text-overflow": "ellipsis",
+            }}
           >
-            <div
-              class="sui-pivot-treemap__outer-title"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleOuter(b.key);
+            {c.key}
+          </span>
+          <span
+            class="sui-pivot-treemap__outer-meta"
+            style={{
+              display: "inline-flex",
+              "align-items": "baseline",
+              gap: "6px",
+              "font-size": "10px",
+              color: "var(--sui-text-muted, #888)",
+            }}
+          >
+            <span>· {c.total}</span>
+          </span>
+        </>
+      )}
+      renderOuterToolbar={
+        p.metrics
+          ? (c) => {
+              const s = outerSlots(c);
+              return (
+                <SlotFillBar
+                  slots={s.slots}
+                  done={s.done}
+                  active={null}
+                  height={4}
+                  maxWidth={null}
+                  label={`${s.done}/${s.slots} done · ${s.doing} in progress (sum of children)`}
+                />
+              );
+            }
+          : undefined
+      }
+      renderInnerContent={(_c, i) => (
+        <>
+          <div
+            class="sui-pivot-treemap__leaf-title"
+            style={{
+              display: "flex",
+              "justify-content": "space-between",
+              "font-size": "10px",
+              "min-width": 0,
+              gap: "4px",
+            }}
+          >
+            <span
+              class="sui-pivot-treemap__leaf-key"
+              style={{
+                "white-space": "nowrap",
+                overflow: "hidden",
+                "text-overflow": "ellipsis",
+                "font-weight": 500,
               }}
-              title={`Click to filter to ${p.outer}=${b.key}`}
             >
-              <span class="sui-pivot-treemap__outer-key">{b.key}</span>
-              <span class="sui-pivot-treemap__outer-meta">
-                <span>· {b.total}</span>
-              </span>
-            </div>
-            <Show when={p.metrics}>
-              {(() => {
-                const s = outerSlots(b);
-                return (
-                  <div class="sui-pivot-treemap__outer-bar">
-                    <SlotFillBar
-                      slots={s.slots}
-                      done={s.done}
-                      doing={s.doing}
-                      active={null}
-                      height={4}
-                      maxWidth={null}
-                      label={`${s.done}/${s.slots} done · ${s.doing} in progress (sum of children)`}
-                    />
-                  </div>
-                );
-              })()}
-            </Show>
-            <div class="sui-pivot-treemap__leaves">
-              <For each={b.children}>
-                {(c) => (
-                  <div
-                    class={`sui-pivot-treemap__leaf${isLeafSelected(b.key, c.key) ? " sui-pivot-treemap__leaf--selected" : ""}`}
-                    style={{ flex: `${c.total} 1 15ch` }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLeaf(b.key, c.key);
-                    }}
-                    title={`Click to filter to ${p.outer}=${b.key}, ${p.inner}=${c.key}`}
-                  >
-                    <div class="sui-pivot-treemap__leaf-title">
-                      <span class="sui-pivot-treemap__leaf-key">{c.key}</span>
-                      <span class="sui-pivot-treemap__leaf-count">{c.total}</span>
-                    </div>
-                    <Show when={p.metrics && c.metrics}>
-                      <SlotFillBar
-                        slots={c.total}
-                        done={c.metrics!.done}
-                        doing={c.metrics!.doing}
-                        active={null}
-                        height={6}
-                        maxWidth={null}
-                        label={`${c.metrics!.done}/${c.total} done · ${c.metrics!.doing} doing`}
-                      />
-                    </Show>
-                  </div>
-                )}
-              </For>
-            </div>
-          </ProportionalItem>
-        )}
-      </For>
-      <Show when={untagged() > 0}>
-        <ProportionalItem
-          weight={untaggedWeight()}
-          scrollWhenSmall={false}
-          class={`sui-pivot-treemap__untagged${isUntaggedSelected() ? " sui-pivot-treemap__untagged--selected" : ""}`}
-          onClick={() => toggleUntagged()}
-          title="Click to filter to untagged rows"
-        >
-          <div class="sui-pivot-treemap__untagged-label">untagged</div>
-          <div class="sui-pivot-treemap__untagged-count">{untagged()} rows</div>
-        </ProportionalItem>
-      </Show>
-    </ProportionalStack>
+              {i.key}
+            </span>
+            <span
+              class="sui-pivot-treemap__leaf-count"
+              style={{ color: "var(--sui-text-muted, #888)" }}
+            >
+              {i.total}
+            </span>
+          </div>
+          <Show when={p.metrics && i.metrics}>
+            <SlotFillBar
+              slots={i.total}
+              done={i.metrics!.done}
+              active={null}
+              height={6}
+              maxWidth={null}
+              label={`${i.metrics!.done}/${i.total} done · ${i.metrics!.doing} doing`}
+            />
+          </Show>
+        </>
+      )}
+      sidebar={sidebar()}
+    />
   );
 }
