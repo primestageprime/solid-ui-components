@@ -9,6 +9,11 @@ import {
   type StatusFlowColumn,
   type StatusFlowBreakpoint,
 } from "../../src/components/StatusFlowChart";
+import {
+  computeColFor as computeColForHelper,
+  computeChartHeight as computeChartHeightHelper,
+  labelForCol as labelForColHelper,
+} from "./workshop-layout";
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface";
 import { Stack } from "../../src/components/Layout";
@@ -403,54 +408,64 @@ const advanceChildren = (
   return next;
 };
 
-// Status-to-column map (matches STATUS_COLUMNS indexed off DOING).
-const STATUS_TO_COL: Record<string, number> = { DONE: -1, DOING: 0, TODO: 1 };
+// ─── Shared layout constants ────────────────────────────────────────────
+// Single source of truth for sizing. Both row 2 and row 3 read from
+// these, and the lane-box CSS `gap` value matches PARENT_CHART_GAP_PX.
 
-// Compute each leaf's topological depth via memoized recursion.
-// Roots (no deps) are depth 0; every other node is `1 + max(dep depth)`.
-const topoDepths = (leaves: StatusFlowNode[]): Map<string, number> => {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
-  const depth = new Map<string, number>();
-  const visit = (id: string): number => {
-    const cached = depth.get(id);
-    if (cached !== undefined) return cached;
-    const node = byId.get(id);
-    if (!node) return 0;
-    const deps = (node.dependsOn ?? []).filter((d) => byId.has(d));
-    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
-    depth.set(id, d);
-    return d;
-  };
-  for (const n of leaves) visit(n.id);
-  return depth;
+const NODE_WIDTH_PX = 160;
+const NODE_HEIGHT_PX = 56;
+const ROW_GAP_PX = 64;
+const PARENT_HEADER_PX = 56;
+// 4px top + 4px bottom on the lane box's padding.
+const LANE_BOX_PADDING_PX = 8;
+// 1px top + 1px bottom border on the lane box. With box-sizing:
+// border-box, the border eats into the inside height — we add it back
+// here so the chart row gets its full nodeHeight and doesn't clip.
+const LANE_BOX_BORDER_PX = 2;
+// Vertical breathing room between the parent header and the chart row,
+// matching the `gap` declared on `.sui-statusflow__lane-box`. ~1rem.
+const PARENT_CHART_GAP_PX = 16;
+const VISIBLE_HALF = 2; // matches visibleCols=5 cap in STATUS_BREAKPOINTS
+
+// Bridge into workshop-layout.ts so the workshop and the unit tests
+// share a single source of truth. computeColFor needs effective parent
+// statuses (parent auto-flips when children are uniform), which we
+// resolve via StatusFlowChart's helper.
+const computeColFor = (n: StatusFlowNode, nodes: StatusFlowNode[]): number => {
+  const effective = resolveParentStatuses(nodes, "DOING");
+  return computeColForHelper(n, nodes, (id) => effective.get(id));
 };
 
-// Unified col rule:
-//   - Parents use status-based col (DONE=-1, DOING=0, TODO=+1, with
-//     effective status auto-derived from children).
-//   - Every other node uses topological depth from the dep graph:
-//       col = depth(node) − anchorDepth
-//     where anchorDepth = min depth of any DOING leaf (or −1 when no
-//     leaf is DOING, so the next-up row lands at col +1).
-//   - Siblings (same depth, no dep between them) naturally share a col
-//     and stack vertically. A node and its dependent have different
-//     depths, so they always land in different cols.
-const computeColFor = (n: StatusFlowNode, nodes: StatusFlowNode[]): number => {
+// Auto-size helper used by every row's ChartBox. Pure fn → unit-tested
+// via workshop-layout.test.ts. Reads the shared layout constants so
+// every demo stays in sync.
+const computeRowChartHeight = (nodes: StatusFlowNode[]): number => {
   const parentIds = new Set<string>();
-  for (const node of nodes) if (node.parentId) parentIds.add(node.parentId);
-  if (parentIds.has(n.id)) {
-    const effective = resolveParentStatuses(nodes, "DOING").get(n.id) ?? n.status;
-    return STATUS_TO_COL[effective] ?? 0;
+  for (const n of nodes) if (n.parentId) parentIds.add(n.parentId);
+  const effective = resolveParentStatuses(nodes, "DOING");
+  const collapsedParents = new Set<string>();
+  for (const pid of parentIds) {
+    if (effective.get(pid) === "DONE") collapsedParents.add(pid);
   }
-  const leaves = parentIds.size > 0
-    ? nodes.filter((node) => node.parentId)
-    : nodes;
-  const depth = topoDepths(leaves);
-  const doingDepths = leaves
-    .filter((x) => x.status === "DOING")
-    .map((x) => depth.get(x.id) ?? 0);
-  const anchorDepth = doingDepths.length > 0 ? Math.min(...doingDepths) : -1;
-  return (depth.get(n.id) ?? 0) - anchorDepth;
+  const visibleLeaves = nodes.filter(
+    (n) =>
+      !parentIds.has(n.id) &&
+      !(n.parentId && collapsedParents.has(n.parentId)),
+  );
+  return computeChartHeightHelper(
+    visibleLeaves,
+    (n) => computeColFor(n, nodes),
+    {
+      nodeHeight: NODE_HEIGHT_PX,
+      rowGap: ROW_GAP_PX,
+      parentHeader: PARENT_HEADER_PX,
+      padding: LANE_BOX_PADDING_PX,
+      visibleHalfWindow: VISIBLE_HALF,
+      parentChartGap: PARENT_CHART_GAP_PX,
+      borderTotal: LANE_BOX_BORDER_PX,
+    },
+    parentIds.size > 0,
+  );
 };
 
 const ParentChildrenRow: Component = () => {
@@ -529,14 +544,8 @@ const ParentChildrenRow: Component = () => {
     "background": "rgba(255,255,255,0.04)",
   };
   // visibleCols cap = 5 (per STATUS_BREAKPOINTS) → maxDepth = 2.
-  // Cols beyond ±2 fall into the side-summary badge ("-S" / "+S").
   const TABLE_MAX_DEPTH = 2;
-  const labelForCol = (col: number): string => {
-    if (col < -TABLE_MAX_DEPTH) return "-S";
-    if (col > TABLE_MAX_DEPTH) return "+S";
-    if (col === 0) return "0";
-    return col > 0 ? `+${col}` : `${col}`;
-  };
+  const labelForCol = (col: number) => labelForColHelper(col, TABLE_MAX_DEPTH);
   const colStyleFor = (col: number) => ({
     ...cellStyle,
     "text-align": "right" as const,
@@ -611,9 +620,13 @@ const ParentChildrenRow: Component = () => {
           <div
             style={{
               width: "100%",
-              height: "180px",
+              // Auto-size to current content (parent header + chart row +
+              // padding). Halves the previously hardcoded 180px gap on
+              // single-row states.
+              height: `${computeRowChartHeight(current())}px`,
               "min-width": "360px",
               "box-sizing": "border-box",
+              transition: "height 0.45s ease-out",
             }}
           >
             <StatusFlowChart
@@ -621,9 +634,10 @@ const ParentChildrenRow: Component = () => {
               columns={STATUS_COLUMNS}
               centerStatus="DOING"
               terminalStatus="DONE"
-              nodeWidth={160}
-              nodeHeight={56}
+              nodeWidth={NODE_WIDTH_PX}
+              nodeHeight={NODE_HEIGHT_PX}
               minArrowWidth={50}
+              rowGap={ROW_GAP_PX}
               breakpoints={STATUS_BREAKPOINTS}
               colFor={(n) => computeColFor(n, current())}
             />
@@ -738,12 +752,7 @@ const TwoParentsRow: Component = () => {
   } as const;
 
   const TABLE_MAX_DEPTH = 2;
-  const labelForCol = (col: number): string => {
-    if (col < -TABLE_MAX_DEPTH) return "-S";
-    if (col > TABLE_MAX_DEPTH) return "+S";
-    if (col === 0) return "0";
-    return col > 0 ? `+${col}` : `${col}`;
-  };
+  const labelForCol = (col: number) => labelForColHelper(col, TABLE_MAX_DEPTH);
 
   const tableStyle = {
     width: "100%",
@@ -791,46 +800,11 @@ const TwoParentsRow: Component = () => {
     }));
   };
 
-  // Derive ChartBox height from the current per-col stack heights so the
-  // box grows when many tasks share a status (broom in mid-progress) and
-  // shrinks when most have collapsed or moved on. Smooth CSS transition
-  // animates the resize.
-  const NODE_HEIGHT = 56;
-  const NODE_WIDTH = 160;
-  const ROW_GAP = 64;
-  const PARENT_HEADER = 56;
-  // Lane box wraps parent+chart with 8px padding on all sides when a
-  // parent is present. No padding when there's no parent (bare chart).
-  const LANE_BOX_PADDING = 16;
-  const PADDING = 16;
-  const VISIBLE_HALF = 2; // matches visibleCols=5 cap
-
-  const computeChartHeight = (nodes: StatusFlowNode[]): number => {
-    const parentIds = new Set<string>();
-    for (const n of nodes) if (n.parentId) parentIds.add(n.parentId);
-    const hasParent = parentIds.size > 0;
-    // Count visible (non-collapsed) non-parent nodes per col.
-    const byCol = new Map<number, number>();
-    for (const n of nodes) {
-      if (parentIds.has(n.id)) continue;
-      const col = computeColFor(n, nodes);
-      if (Math.abs(col) > VISIBLE_HALF) continue;
-      byCol.set(col, (byCol.get(col) ?? 0) + 1);
-    }
-    const maxStack = Math.max(1, ...byCol.values());
-    const chartContent = (maxStack - 1) * ROW_GAP + NODE_HEIGHT;
-    const hasVisibleChildren = byCol.size > 0;
-    let total = chartContent + PADDING;
-    if (hasParent) total += PARENT_HEADER + LANE_BOX_PADDING;
-    void hasVisibleChildren;
-    return total;
-  };
-
   const ChartBox: Component<{ nodes: StatusFlowNode[] }> = (p) => (
     <div
       style={{
         width: "100%",
-        height: `${computeChartHeight(p.nodes)}px`,
+        height: `${computeRowChartHeight(p.nodes)}px`,
         "min-width": "360px",
         "box-sizing": "border-box",
         transition: "height 0.45s ease-out",
@@ -841,10 +815,10 @@ const TwoParentsRow: Component = () => {
         columns={STATUS_COLUMNS}
         centerStatus="DOING"
         terminalStatus="DONE"
-        nodeWidth={NODE_WIDTH}
-        nodeHeight={NODE_HEIGHT}
+        nodeWidth={NODE_WIDTH_PX}
+        nodeHeight={NODE_HEIGHT_PX}
         minArrowWidth={50}
-        rowGap={ROW_GAP}
+        rowGap={ROW_GAP_PX}
         breakpoints={STATUS_BREAKPOINTS}
         colFor={(n) => computeColFor(n, p.nodes)}
       />

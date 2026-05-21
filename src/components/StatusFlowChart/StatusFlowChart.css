@@ -18,7 +18,11 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 8px;
+  /* 4px top/bottom for box breathing room, 16px between the parent
+     header and the children row inside (`gap` only applies between
+     direct children, not at the edges). */
+  padding: 4px 8px;
+  gap: 16px;
   border-radius: 8px;
   background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.1));
