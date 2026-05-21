@@ -19,7 +19,7 @@ A Primitive whose job is to arrange children via flex (no rendered content of it
 _Avoid_: Container, wrapper.
 
 **Composite**:
-A Depth-2-or-higher component. Owns zero CSS; composes only curried variants of Primitives (or lower-depth Composites).
+A Depth-2-or-higher component. Owns zero CSS files AND zero inline `style={}` except `style={props.style}` passthrough; composes only curried variants of Primitives (or lower-depth Composites). All visual styling lives in Primitives — Composites express structure and pass Data Props.
 _Avoid_: Compound, complex component.
 
 **Depth**:
@@ -129,3 +129,7 @@ _Avoid_: Style, render spec.
 - **"variant"** — overloaded between a runtime prop value (e.g. `<Button variant="primary">`) and a **Curried Variant** (a definition-time named component). Resolved: the noun "Variant" in this codebase always means the latter; runtime-prop usage is referred to as a "variant prop value" in prose.
 - **"migration" in `TODO.md`** — the file's top header reads "Visual Component Migration" but its checklist mixes **Migration** (extracting into the library) with **Adoption** (replacing inline markup in a Consumer App). Resolved: the two are distinct workflows; future TODO sections should label each accordingly.
 - **"slot"** — unqualified "slot" in this codebase means the chart **Slot** (a context-aware Solid child of `<Chart>`). The `sidebar` / `detail` JSX props on `MockBaseline` are *regions*, not slots — that wording is reserved for the chart concept to avoid confusion.
+- **"inline style on Composites"** — Composites own zero CSS *files* AND zero inline `style={}`. The only exception is `style={props.style}` passthrough (forwarding the consumer's `style` prop). Three failure modes the rule addresses:
+  - **Static styling inlined as a shortcut** (e.g. `<Foo style={{ "font-weight": 600, padding: "8px" }}>`) — must be a **Curried Variant**.
+  - **Stateful visual units** (e.g. `<div style={cardStyle()}>` where the style is derived from `selected`/`met` flags) — must be a new **Primitive** with `data-*` attributes and CSS selectors keyed on those attributes.
+  - **Truly dynamic per-instance values** (e.g. a `color` derived from data) — flow as a **Data Prop** to a Primitive that owns the styling rule. Inline `style={}` for a data-driven attribute is fine *inside* a Primitive (the Primitive owns the rule); it is not fine *on* a Composite.
