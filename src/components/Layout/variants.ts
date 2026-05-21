@@ -51,6 +51,11 @@ export const WrapRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: tru
 export const SpacedClusterRow: Component<RowDataProps> = createRow({ gap: "md", align: "center" });
 export const FlexRow: Component<RowDataProps> = createRow({});
 
+// Wrapping center-aligned cluster — for header rows where a name + timestamp
+// pair must collapse onto a second line on narrow widths without forcing a
+// large vertical row-gap.
+export const WrappedClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "center", wrap: true });
+
 // Box variants — named by flex-child behavior
 export const ActionSlot: Component<BoxDataProps> = createBox({ shrink: false });
 export const FadedBox: Component<BoxDataProps> = createBox({ style: { opacity: "0.5" } });

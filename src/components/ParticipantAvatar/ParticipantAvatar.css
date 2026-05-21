@@ -1,0 +1,44 @@
+/* ============================================
+ * ParticipantAvatar — circular avatar with
+ * initials or image. Owns sizing, typography,
+ * and the image-fallback background.
+ * ============================================ */
+
+.sui-participant-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-transform: uppercase;
+  user-select: none;
+  line-height: 1;
+}
+
+.sui-participant-avatar--img {
+  object-fit: cover;
+  background: var(--sui-surface-sunken, #222);
+}
+
+/* Size variants — width/height + matching font-size so initials read clean
+   at every scale. Defaults align with the 4px spacing scale (--sui-space-*). */
+.sui-participant-avatar--sm {
+  width: 20px;
+  height: 20px;
+  font-size: 0.6rem;
+}
+
+.sui-participant-avatar--md {
+  width: 24px;
+  height: 24px;
+  font-size: 0.65rem;
+}
+
+.sui-participant-avatar--lg {
+  width: 36px;
+  height: 36px;
+  font-size: 0.85rem;
+}

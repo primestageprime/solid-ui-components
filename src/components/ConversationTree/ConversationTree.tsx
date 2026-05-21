@@ -1,16 +1,27 @@
 // ============================================
-// ConversationTree — Composed (Depth 3)
-// Composes Stack + Row + TextLabel + TextSublabel + Duration + Tooltip.
+// ConversationTree — Pure Composite (Depth 3+).
+// Composes MessageBubble + ParticipantAvatar + LabeledDivider + Duration +
+// Layout/Text Curried Variants. Owns zero CSS — conversation-level dynamic
+// styling (per-participant tints, thread indent, self-vs-other alignment)
+// is expressed via inline styles on the JSX it composes.
+//
 // Renders a multi-participant conversation as a (optionally threaded) tree.
 // Groups consecutive messages from the same author. Shows efficient time
 // readouts: absolute when the gap is large or the day changes, otherwise
 // relative; full timestamp via tooltip on hover.
 // ============================================
-import { Component, For, Show, createMemo, createSignal, onMount, JSX } from "solid-js";
-import { Stack, Row } from "../Layout";
+import { Component, For, JSX, Show, createMemo } from "solid-js";
+import {
+  NarrowStack,
+  TightStack,
+  TopClusterRow,
+  WrappedClusterRow,
+} from "../Layout";
 import { TextLabel, TextSublabel } from "../Text";
 import { Duration } from "../Duration";
-import "./ConversationTree.css";
+import { MessageBubble } from "../MessageBubble";
+import { ParticipantAvatar } from "../ParticipantAvatar";
+import { LabeledDivider } from "../LabeledDivider";
 
 export interface Participant {
   id: string;
@@ -64,7 +75,7 @@ const colorForId = (id: string): string => {
   return `hsl(${hue} ${sat}% ${light}%)`;
 };
 
-const initials = (name: string): string =>
+const initialsOf = (name: string): string =>
   name
     .split(/\s+/)
     .filter(Boolean)
@@ -197,113 +208,67 @@ const flattenWithGrouping = (
   return items;
 };
 
-interface MessageBubbleProps {
-  text: string;
-  background: string;
-  textColor?: string;
-  title: string;
-  onClick?: () => void;
-  /** Max lines before showing (more…). */
-  clampLines: number;
-  /** Max lines when expanded — beyond this, the bubble scrolls internally. */
-  maxLines: number;
-}
+// ── styling helpers — conversation-level dynamic layout only ──
+// Composites may inline styles for per-instance dynamic values; no class CSS
+// owned by this file.
 
-const MessageBubble: Component<MessageBubbleProps> = (props) => {
-  const [expanded, setExpanded] = createSignal(false);
-  const [overflowing, setOverflowing] = createSignal(false);
-  let textRef: HTMLDivElement | undefined;
-
-  const measure = () => {
-    if (!textRef) return;
-    if (expanded()) return; // don't overwrite while user is reading
-    const next = textRef.scrollHeight - textRef.clientHeight > 1;
-    if (next !== overflowing()) setOverflowing(next);
-  };
-
-  onMount(() => {
-    // Measure across two frames + a settle pass — fonts/layout can be late.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(measure);
-    });
-    setTimeout(measure, 50);
-    if (typeof ResizeObserver !== "undefined" && textRef) {
-      const ro = new ResizeObserver(measure);
-      ro.observe(textRef);
-    }
-  });
-
-  return (
-    <div
-      class="sui-conversation__bubble"
-      style={{
-        "background-color": props.background,
-        color: props.textColor,
-        cursor: props.onClick ? "pointer" : undefined,
-      }}
-      title={props.title}
-      onClick={props.onClick}
-    >
-      <div
-        ref={textRef}
-        class={`sui-conversation__text${expanded() ? " sui-conversation__text--expanded" : ""}`}
-        style={{
-          "--sui-conversation-clamp": String(props.clampLines),
-          "--sui-conversation-max": String(props.maxLines),
-        } as JSX.CSSProperties}
-      >
-        {props.text}
-      </div>
-      <Show when={overflowing()}>
-        <button
-          type="button"
-          class="sui-conversation__more"
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpanded((v) => !v);
-          }}
-        >
-          {expanded() ? "(less)" : "(more…)"}
-        </button>
-      </Show>
-    </div>
-  );
+const CONVERSATION_STYLE: JSX.CSSProperties = {
+  "font-size": "0.85rem",
+  "line-height": "1.4",
+  color: "var(--sui-text-primary, inherit)",
+  /* Fill available width up to a reasonable cap.
+     Math: bubble max = 80ch; body width = 80% of container; for self bubbles
+     to overlap other bubbles, container >= 80ch / 0.8 = 100ch. Cap at ~110ch
+     which keeps full-width bubbles + ~20% breathing room without sprawling
+     on wide displays. */
+  width: "100%",
+  "max-width": "110ch",
 };
 
-interface AvatarProps {
-  participant: Participant;
-  color: string;
-  size?: number;
-}
-const ParticipantAvatar: Component<AvatarProps> = (props) => {
-  const size = () => props.size ?? 24;
-  return (
-    <Show
-      when={props.participant.avatarUrl}
-      fallback={
-        <span
-          class="sui-conversation__avatar"
-          style={{
-            width: `${size()}px`,
-            height: `${size()}px`,
-            "background-color": props.color,
-          }}
-          aria-hidden="true"
-        >
-          {initials(props.participant.name)}
-        </span>
-      }
-    >
-      <img
-        class="sui-conversation__avatar sui-conversation__avatar--img"
-        src={props.participant.avatarUrl!}
-        alt=""
-        width={size()}
-        height={size()}
-      />
-    </Show>
-  );
-};
+const groupStyle = (
+  depth: number,
+  color: string,
+  threaded: boolean,
+): JSX.CSSProperties => ({
+  "border-left": "2px solid transparent",
+  "border-left-color": depth > 0 ? color : "transparent",
+  "padding-top": "2px",
+  "padding-bottom": "2px",
+  "padding-left": `${threaded ? depth * 24 : 0}px`,
+  transition: "padding-left 120ms ease",
+});
+
+const rowStyle = (isSelf: boolean): JSX.CSSProperties => ({
+  width: "100%",
+  "flex-direction": isSelf ? "row-reverse" : "row",
+});
+
+const bodyStyle = (isSelf: boolean): JSX.CSSProperties => ({
+  flex: "1",
+  "min-width": "0",
+  /* Body fills available width up to the bubble cap; bubbles inside size
+     to content. 80% lets a `self` bubble overlap an `other` bubble — the
+     visual signature of the layout. */
+  "max-width": "80%",
+  "align-items": isSelf ? "flex-end" : undefined,
+});
+
+const headerStyle = (isSelf: boolean): JSX.CSSProperties => ({
+  "row-gap": "0",
+  "flex-direction": isSelf ? "row-reverse" : "row",
+});
+
+const bubblesStyle = (isSelf: boolean): JSX.CSSProperties => ({
+  "align-items": isSelf ? "flex-end" : undefined,
+});
+
+const bubbleBg = (color: string, isSelf: boolean): string =>
+  isSelf
+    ? `color-mix(in srgb, ${color} 70%, #0a1525 30%)`
+    : `color-mix(in srgb, ${color} 12%, transparent)`;
+
+const bubbleTextColor = (isSelf: boolean): string | undefined =>
+  isSelf ? "#f4f8ff" : undefined;
 
 export const ConversationTree: Component<ConversationTreeProps> = (props) => {
   const groupWithinMs = () => props.groupWithinMs ?? 5 * 60_000;
@@ -333,61 +298,58 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
   );
 
   return (
-    <Stack class="sui-conversation" gap="sm">
+    <NarrowStack style={CONVERSATION_STYLE}>
       <For each={items()}>
         {(item) => (
           <Show
             when={item.kind === "group"}
-            fallback={
-              <div class="sui-conversation__divider" aria-label={item.dividerLabel}>
-                <span class="sui-conversation__divider-label">{item.dividerLabel}</span>
-              </div>
-            }
+            fallback={<LabeledDivider label={item.dividerLabel} />}
           >
             {(() => {
               const participant = participantById().get(item.participantId!);
               if (!participant) return null;
               const color = colorById().get(participant.id)!;
-              const indent = threaded() ? (item.depth ?? 0) * 24 : 0;
               const isSelf = props.currentUserId === participant.id;
-              const groupClass = `sui-conversation__group${isSelf ? " sui-conversation__group--self" : ""}`;
               return (
-                <div
-                  class={groupClass}
-                  style={{
-                    "padding-left": `${indent}px`,
-                    "border-left-color": (item.depth ?? 0) > 0 ? color : "transparent",
-                  }}
-                >
-                  <Row gap="sm" align="start" class="sui-conversation__row">
-                    <ParticipantAvatar participant={participant} color={color} />
-                    <Stack gap="xs" class="sui-conversation__body">
-                      <Row gap="sm" align="baseline" class="sui-conversation__header">
+                <div style={groupStyle(item.depth ?? 0, color, threaded())}>
+                  <TopClusterRow style={rowStyle(isSelf)}>
+                    <ParticipantAvatar
+                      initials={initialsOf(participant.name)}
+                      imageSrc={participant.avatarUrl}
+                      color={color}
+                      size="md"
+                    />
+                    <TightStack style={bodyStyle(isSelf)}>
+                      <WrappedClusterRow style={headerStyle(isSelf)}>
                         <TextLabel
-                          class="sui-conversation__name"
-                          style={{ color }}
+                          style={{
+                            "font-weight": "600",
+                            "font-size": "0.78rem",
+                            "white-space": "nowrap",
+                            color,
+                          }}
                         >
                           {participant.name}
                         </TextLabel>
                         <TextSublabel
-                          class="sui-conversation__time"
+                          style={{
+                            "font-size": "0.7rem",
+                            opacity: "0.7",
+                            cursor: "default",
+                          }}
                           title={formatFull(item.startMs!)}
                         >
                           <Duration ms={Math.max(0, now() - item.startMs!)} />
                           {" ago"}
                         </TextSublabel>
-                      </Row>
-                      <Stack gap="xs" class="sui-conversation__bubbles">
+                      </WrappedClusterRow>
+                      <TightStack style={bubblesStyle(isSelf)}>
                         <For each={item.msgs!}>
                           {(m) => (
                             <MessageBubble
-                              text={m.text}
-                              background={
-                                isSelf
-                                  ? `color-mix(in srgb, ${color} 70%, #0a1525 30%)`
-                                  : `color-mix(in srgb, ${color} 12%, transparent)`
-                              }
-                              textColor={isSelf ? "#f4f8ff" : undefined}
+                              variant={isSelf ? "self" : "other"}
+                              bg={bubbleBg(color, isSelf)}
+                              textColor={bubbleTextColor(isSelf)}
                               title={formatFull(toMs(m.timestamp))}
                               onClick={
                                 props.onMessageClick
@@ -396,18 +358,20 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
                               }
                               clampLines={props.clampLines ?? 5}
                               maxLines={props.maxLines ?? 20}
-                            />
+                            >
+                              {m.text}
+                            </MessageBubble>
                           )}
                         </For>
-                      </Stack>
-                    </Stack>
-                  </Row>
+                      </TightStack>
+                    </TightStack>
+                  </TopClusterRow>
                 </div>
               );
             })()}
           </Show>
         )}
       </For>
-    </Stack>
+    </NarrowStack>
   );
 };
