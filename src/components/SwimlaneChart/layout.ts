@@ -80,15 +80,20 @@ export function computeSwimlaneLayout<T>(
   // jumps over — important for fitting more depth in a narrow viewport
   // without dropping the outer ring into a badge.
   const centerOrdinal = uniqueCols.indexOf(centerCol);
-  const effectiveCenterOrdinal =
-    centerOrdinal >= 0
-      ? centerOrdinal
-      : // Center col not in data: insert it conceptually at the right
-        // sorted position so distances on either side stay correct.
-        uniqueCols.filter((c) => c < centerCol).length;
+  // Number of unique cols strictly below centerCol (used when centerCol
+  // is NOT present in the data — we insert a "virtual" slot for it so
+  // cols above the center don't collapse onto the center.
+  const colsBelowCenter = uniqueCols.filter((c) => c < centerCol).length;
   const ordinalFor = (col: number): number => {
     const idx = uniqueCols.indexOf(col);
-    if (idx >= 0) return idx - effectiveCenterOrdinal;
+    if (idx >= 0) {
+      if (centerOrdinal >= 0) return idx - centerOrdinal;
+      // centerCol not in data: insert a virtual slot at position
+      // `colsBelowCenter`. Cols below it keep their negative ordinals
+      // (idx - colsBelowCenter, all negative), cols at-or-above shift
+      // by +1 to account for the reserved center slot.
+      return idx < colsBelowCenter ? idx - colsBelowCenter : idx + 1 - colsBelowCenter;
+    }
     // Off-graph col (shouldn't normally happen): fall back to natural distance.
     return col - centerCol;
   };
