@@ -1,6 +1,6 @@
 // ============================================
-// ProductGrid — Pure Composite (Depth 2).
-// Composes AreaFocusGrid + StackedProgressBar.
+// ProductGrid — Pure Composite (Depth ≥ 2).
+// Composes AreaFocusGrid + ProductGridCard + FocusLabelBand + StackedProgressBar.
 //
 // (Area × focus) pivot grid. Above-the-line items are solutions whose
 // progress is tracked as todo/doing/done; below-the-line items are needs
@@ -10,6 +10,10 @@
 // animation (just pass a fresh `work` map each tick). Selection is
 // optionally controlled — pass `selection`/`onSelectionChange` to lift it
 // into your store, or omit both for internal-only state.
+//
+// As a Pure Composite this file owns ZERO CSS and ZERO inline `style={}` —
+// the only `style=` is the consumer pass-through on the root AreaFocusGrid.
+// All visual treatment lives in the Primitives' own CSS files.
 // ============================================
 import { Component, createMemo, createSignal, For, JSX, Show } from "solid-js";
 import { StackedProgressBar } from "../Progress";
@@ -18,6 +22,8 @@ import {
   type AreaFocusCellKey,
   type AreaFocusGridArea,
 } from "../AreaFocusGrid";
+import { ProductGridCard } from "../ProductGridCard";
+import { FocusLabelBand } from "../FocusLabelBand";
 
 export interface ProductGridWorkCounts {
   todo: number;
@@ -85,54 +91,6 @@ const workSegments = (w: ProductGridWorkCounts) => {
     { percentage: (w.todo / total) * 100,  color: SEGMENT_COLORS.todo,  label: String(w.todo) },
   ];
 };
-
-// ----- inline-style helpers (no CSS file: Pure Composite) -------------------
-// All colors come from --sui-* Tokens; hex fallbacks match the original
-// ProductGrid.css palette.
-
-const CARD_BASE_STYLE: JSX.CSSProperties = {
-  border: "1px dashed var(--sui-border, rgba(255, 255, 255, 0.18))",
-  "border-radius": "4px",
-  background: "var(--sui-bg-elevated, rgba(255, 255, 255, 0.03))",
-  padding: "8px 12px",
-  "font-size": "13px",
-  "line-height": "1.4",
-  "text-align": "center",
-  "min-width": "0",
-  "max-width": "100%",
-  cursor: "pointer",
-  "user-select": "none",
-  display: "flex",
-  "flex-direction": "column",
-  "align-items": "center",
-  gap: "6px",
-  color: "inherit",
-};
-
-const CARD_MET_STYLE: JSX.CSSProperties = {
-  "border-style": "solid",
-  "border-color": "var(--sui-success, #2a6)",
-  background: "color-mix(in srgb, var(--sui-success, #2a6) 18%, transparent)",
-  color: "var(--sui-success, #2a6)",
-};
-
-const CARD_SELECTED_STYLE: JSX.CSSProperties = {
-  "border-style": "solid",
-  "border-color": "var(--sui-accent, #4ea1ff)",
-  background: "color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent)",
-  color: "inherit",
-};
-
-const CARD_BAR_STYLE: JSX.CSSProperties = { width: "100%", height: "10px" };
-
-const FOCUS_BASE_STYLE: JSX.CSSProperties = { cursor: "pointer", "user-select": "none" };
-
-const FOCUS_SELECTED_STYLE: JSX.CSSProperties = {
-  color: "var(--sui-accent, #4ea1ff)",
-  background: "color-mix(in srgb, var(--sui-accent, #4ea1ff) 14%, transparent)",
-};
-
-const FOCUS_BAR_STYLE: JSX.CSSProperties = { height: "6px" };
 
 export const ProductGrid: Component<ProductGridProps> = (props) => {
   // ----- selection (controlled or uncontrolled) ------------------------------
@@ -250,27 +208,28 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const renderCard = (item: ProductGridItem): JSX.Element => {
     const met = () => item.position === "below" && isNeedMet(item);
     const selected = () => selectedItemIds().has(item.id);
-    const cardStyle = (): JSX.CSSProperties => ({
-      ...CARD_BASE_STYLE,
-      ...(selected() ? CARD_SELECTED_STYLE : met() ? CARD_MET_STYLE : {}),
-    });
+    const w = () => workOf(item.id);
+    const barTitle = () => {
+      const counts = w();
+      return counts
+        ? `done: ${counts.done} · doing: ${counts.doing} · todo: ${counts.todo}`
+        : undefined;
+    };
     return (
-      <div style={cardStyle()} title={item.description} onClick={() => toggleItem(item.id)}>
-        <div>{item.shortName}</div>
-        <Show when={workOf(item.id)}>
-          {(w) => (
-            <div
-              style={CARD_BAR_STYLE}
-              title={`done: ${w().done} · doing: ${w().doing} · todo: ${w().todo}`}
-            >
-              <StackedProgressBar
-                segments={workSegments(w())}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </div>
-          )}
-        </Show>
-      </div>
+      <ProductGridCard
+        selected={selected()}
+        met={met()}
+        title={item.description}
+        onClick={() => toggleItem(item.id)}
+        barTitle={barTitle()}
+        bar={
+          <Show when={w()}>
+            {(counts) => <StackedProgressBar segments={workSegments(counts())} />}
+          </Show>
+        }
+      >
+        {item.shortName}
+      </ProductGridCard>
     );
   };
 
@@ -305,40 +264,28 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         { percentage: (u / t) * 100, color: SEGMENT_COLORS.todo },
       ];
     };
-    const wrapperStyle = (): JSX.CSSProperties => ({
-      ...FOCUS_BASE_STYLE,
-      ...(sel() ? FOCUS_SELECTED_STYLE : {}),
-      width: "100%",
-      height: "100%",
-      display: "flex",
-      "flex-direction": "column",
-      "align-items": "stretch",
-      "justify-content": "center",
-      gap: "4px",
-    });
+    const aboveBarTitle = () =>
+      `above · done ${aboveTotals().done} · doing ${aboveTotals().doing} · todo ${aboveTotals().todo}`;
+    const belowBarTitle = () => `below · met ${metCount()}/${below.length}`;
     return (
-      <div style={wrapperStyle()} onClick={() => toggleFocus(key.area.label, key.focus.label)}>
-        <div
-          style={FOCUS_BAR_STYLE}
-          title={`above · done ${aboveTotals().done} · doing ${aboveTotals().doing} · todo ${aboveTotals().todo}`}
-        >
+      <FocusLabelBand
+        selected={sel()}
+        onClick={() => toggleFocus(key.area.label, key.focus.label)}
+        aboveBarTitle={aboveBarTitle()}
+        belowBarTitle={belowBarTitle()}
+        aboveBar={
           <Show when={above.length > 0}>
-            <StackedProgressBar
-              segments={aboveSegmentsAccessor()}
-              style={{ width: "100%", height: "100%" }}
-            />
+            <StackedProgressBar segments={aboveSegmentsAccessor()} />
           </Show>
-        </div>
-        <div>{key.focus.label}</div>
-        <div style={FOCUS_BAR_STYLE} title={`below · met ${metCount()}/${below.length}`}>
+        }
+        belowBar={
           <Show when={below.length > 0}>
-            <StackedProgressBar
-              segments={belowSegmentsAccessor()}
-              style={{ width: "100%", height: "100%" }}
-            />
+            <StackedProgressBar segments={belowSegmentsAccessor()} />
           </Show>
-        </div>
-      </div>
+        }
+      >
+        {key.focus.label}
+      </FocusLabelBand>
     );
   };
 

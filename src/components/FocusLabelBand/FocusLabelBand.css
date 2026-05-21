@@ -1,0 +1,38 @@
+/* ============================================
+   FocusLabelBand — Primitive (Depth 1). Owns its CSS, imports no components.
+   The focus-label cell inside a (area × focus) grid. Stacks an optional
+   above-progress bar, the focus label, and an optional below-progress bar.
+   `selected` state is driven by a `data-selected` attribute on the root.
+   ============================================ */
+
+.sui-focus-label-band {
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sui-focus-label-band[data-selected] {
+  color: var(--sui-accent, #4ea1ff);
+  background: color-mix(in srgb, var(--sui-accent, #4ea1ff) 14%, transparent);
+}
+
+.sui-focus-label-band__bar {
+  height: 6px;
+}
+
+/* Make the bar slot's single child fill the bar slot, so consumers don't need
+   inline `width: 100%; height: 100%` on their progress-bar element. */
+.sui-focus-label-band__bar > * {
+  width: 100%;
+  height: 100%;
+}
+
+.sui-focus-label-band__label {
+  display: block;
+}

@@ -1,0 +1,83 @@
+// ============================================
+// ProductGridCard — Primitive (Depth 1). Atomic.
+// Owns CSS (ProductGridCard.css), imports no other components.
+//
+// A small selectable card used inside ProductGrid's cell stacks. Renders a
+// label area (`children`) and an optional progress-bar slot (`bar`). The
+// `selected` / `met` state is exposed as `data-selected` / `data-met`
+// attributes so CSS owns the visual treatment; `selected` wins over `met`
+// when both apply (per CSS rule order).
+//
+// Factory: createProductGridCard().
+// ============================================
+import { Component, JSX, mergeProps, Show, splitProps } from "solid-js";
+import "./ProductGridCard.css";
+
+export interface ProductGridCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+  /** Highlights the card with the accent palette. Wins over `met`. */
+  selected?: boolean;
+  /** Marks the card as satisfied (e.g. a need whose solutions are all done). */
+  met?: boolean;
+  /** Native tooltip text. */
+  title?: string;
+  /** Click handler for the whole card. */
+  onClick?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>;
+  /** Optional progress-bar slot rendered below the label. Sized to the
+   *  bar wrapper by CSS — consumers don't need inline width/height. */
+  bar?: JSX.Element;
+  /** Optional tooltip text for the bar slot only. */
+  barTitle?: string;
+  /** Card label content (typically the item's short name). */
+  children?: JSX.Element;
+}
+
+export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
+  const [local, others] = splitProps(props, [
+    "selected",
+    "met",
+    "title",
+    "onClick",
+    "bar",
+    "barTitle",
+    "children",
+    "class",
+  ]);
+
+  const rootClass = () =>
+    local.class ? `sui-product-grid-card ${local.class}` : "sui-product-grid-card";
+
+  return (
+    <div
+      class={rootClass()}
+      title={local.title}
+      onClick={local.onClick}
+      data-selected={local.selected ? "" : undefined}
+      data-met={local.met ? "" : undefined}
+      {...others}
+    >
+      <div>{local.children}</div>
+      <Show when={local.bar}>
+        <div class="sui-product-grid-card__bar" title={local.barTitle}>
+          {local.bar}
+        </div>
+      </Show>
+    </div>
+  );
+};
+
+/** Override props — visual knobs locked in at Factory-call time. */
+export type ProductGridCardOverrides = Pick<ProductGridCardProps, "class">;
+
+/** Data props — what a Curried Variant publicly exposes. */
+export type ProductGridCardDataProps = Omit<ProductGridCardProps, keyof ProductGridCardOverrides>;
+
+/**
+ * Factory: returns a ProductGridCard pre-configured with override defaults.
+ * The returned Component exposes only Data props (selected/met/title/onClick/
+ * bar/barTitle/children + native div HTML attributes).
+ */
+export function createProductGridCard(
+  defaults: Partial<Omit<ProductGridCardProps, "children" | "bar">>,
+): Component<ProductGridCardDataProps> {
+  return (props) => <ProductGridCard {...mergeProps(defaults, props)} />;
+}
