@@ -75,25 +75,25 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> = 
   check: {
     outline: `<path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M5 8L7 10.5L11 5.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+            <path d="M5 8L7 10.5L11 5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   },
   error: {
     outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
               <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round"/>`,
+            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round"/>`,
   },
   warning: {
     outline: `<path d="M8 2L14.5 13H1.5L8 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
               <path d="M8 6V9M8 11V11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
     solid: `<path d="M8 1L15 14H1L8 1Z" fill="currentColor"/>
-            <path d="M8 6V9M8 11V11.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round"/>`,
+            <path d="M8 6V9M8 11V11.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round"/>`,
   },
   info: {
     outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
               <path d="M8 7V11M8 5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M8 7V11M8 5V5.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round"/>`,
+            <path d="M8 7V11M8 5V5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round"/>`,
   },
 
   // === NAVIGATION ICONS ===
@@ -162,35 +162,35 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> = 
     outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
               <path d="M8 4.5V8L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M8 4.5V8L10.5 10.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+            <path d="M8 4.5V8L10.5 10.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
   },
   hourglass: {
     outline: `<path d="M4 2h8v3l-2 3 2 3v3H4v-3l2-3-2-3V2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>`,
     solid: `<path d="M4 1h8v4l-2.5 3L12 11v4H4v-4l2.5-3L4 5V1z" fill="currentColor"/>
-            <path d="M6 3v1.5L8 7l2-2.5V3H6zm0 10h4v-1.5L8 9l-2 2.5V13z" fill="var(--jtf-bg-primary, #1a1a2e)"/>`,
+            <path d="M6 3v1.5L8 7l2-2.5V3H6zm0 10h4v-1.5L8 9l-2 2.5V13z" fill="var(--sui-bg-primary)"/>`,
   },
 
   // === ACTION ICONS ===
   plus: {
     outline: `<path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M8 4.5V11.5M4.5 8H11.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+            <path d="M8 4.5V11.5M4.5 8H11.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
   },
   minus: {
     outline: `<path d="M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M4.5 8H11.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+            <path d="M4.5 8H11.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
   },
   close: {
     outline: `<path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
     solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--jtf-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
   },
   search: {
     outline: `<circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
               <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
     solid: `<circle cx="7" cy="7" r="5" fill="currentColor"/>
-            <circle cx="7" cy="7" r="3" fill="var(--jtf-bg-primary, #1a1a2e)"/>
+            <circle cx="7" cy="7" r="3" fill="var(--sui-bg-primary)"/>
             <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
   },
   filter: {
