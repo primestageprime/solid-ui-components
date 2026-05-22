@@ -1,5 +1,5 @@
 // ============================================
-// ConversationTree — Pure Composite (Depth 3+).
+// ConversationTree — Pure Composite (Depth 2).
 // Composes ThreadGroup + ParticipantAvatar +
 // ParticipantNameLabel + ParticipantTimeLabel +
 // LabeledDivider + Duration + MessageBubble +

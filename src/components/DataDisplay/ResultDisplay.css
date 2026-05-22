@@ -1,43 +1,58 @@
-.result-display__header {
+/* ============================================
+   ResultDisplay — Atomic Primitive (Depth 1)
+   Header (label + sublabel) over a value+units row with optional
+   badge slot. Data-driven `valueColor` flows as an inline style on
+   the value span — allowed inside a Primitive per CONTEXT.md.
+   ============================================ */
+
+.sui-result-display__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.result-display__label {
+.sui-result-display__label {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, var(--jtf-text-primary));
 }
 
-.result-display__sublabel {
+.sui-result-display__sublabel {
   color: var(--text-muted, var(--jtf-text-muted));
   font-size: 0.75rem;
 }
 
-.result-display__row {
+.sui-result-display__row {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.result-display__value {
+.sui-result-display__value {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary, var(--jtf-text-primary));
 }
 
-.result-display__units {
-  color: var(--text-secondary, var(--jtf-text-secondary));
-  font-size: 0.9rem;
+.sui-result-display__value--with-units {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
 }
 
-/* Formula result highlighting — used by createFormulaResult */
+.sui-result-display__value-units {
+  margin-left: 4px;
+  font-size: 0.9rem;
+  font-weight: normal;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  color: var(--text-secondary, var(--jtf-text-secondary));
+}
 
-.formula-result {
+/* Hover-target affordance — opt-in via the `highlightable` prop. Used
+   by hover-coordinated callers (e.g. FormulaDecomposition's formula
+   variables that link to a result row). */
+.sui-result-display--highlightable {
   cursor: pointer;
   transition: background 0.15s ease;
   border-radius: 6px;
@@ -45,11 +60,11 @@
   margin: -8px -12px;
 }
 
-.formula-result--highlight {
+.sui-result-display--highlighted {
   background: rgba(0, 255, 136, 0.15);
 }
 
-.formula-result--highlight .result-display__value,
-.formula-result--highlight .result-display__units {
-  color: #00ff88 !important;
+.sui-result-display--highlighted .sui-result-display__value,
+.sui-result-display--highlighted .sui-result-display__value-units {
+  color: #00ff88;
 }

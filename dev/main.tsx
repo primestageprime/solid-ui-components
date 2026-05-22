@@ -82,6 +82,7 @@ import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
 import { NumberWithUnitsShowcase } from "./showcases/number-with-units";
+import { PivotTreemapShowcase } from "./showcases/pivot-treemap";
 import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
@@ -159,6 +160,7 @@ const items: Item[] = [
   { id: "sprint-selector", label: "SprintSelector", component: SprintSelectorShowcase, tags: ["depth:1", "form", "time"] },
   { id: "slot-fill-bar", label: "SlotFillBar", component: SlotFillBarShowcase, tags: ["depth:1", "indicator", "chart"] },
   { id: "product-grid", label: "ProductGrid", component: ProductGridShowcase, tags: ["depth:2", "data", "chart"] },
+  { id: "pivot-treemap", label: "PivotTreemap", component: PivotTreemapShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "legend", label: "Legend", component: LegendShowcase, tags: ["depth:1", "indicator", "chart"] },
   { id: "status-light", label: "StatusLight", component: StatusLightShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "tag-input", label: "TagInput", component: TagInputShowcase, tags: ["depth:1", "form"] },
@@ -182,7 +184,7 @@ const items: Item[] = [
   { id: "dotchart", label: "DotChart (composition smoke)", component: DotchartShowcase, tags: ["depth:2", "chart", "time", "data"] },
   { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase, tags: ["depth:2", "data", "indicator"] },
   { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase, tags: ["depth:2", "feedback"] },
-  { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:2", "form", "time"] },
+  { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:1", "form", "time"] },
   { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase, tags: ["depth:2", "time"] },
   { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase, tags: ["depth:2", "feedback"] },
   { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase, tags: ["depth:2", "chart", "time", "data"] },
@@ -194,16 +196,16 @@ const items: Item[] = [
   { id: "vessel-card", label: "VesselCard", component: VesselCardShowcase, tags: ["depth:2", "container", "data"] },
 
   { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:3", "indicator", "status"] },
-  { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:3", "list", "chat"] },
+  { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },
   { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:3", "list", "data"] },
-  { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:3", "container", "data"] },
+  { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:1", "container", "data"] },
   { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase, tags: ["depth:3", "container", "data"] },
-  { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:4", "container", "math"] },
-  { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:4", "form", "math"] },
-  { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:3", "container", "indicator", "data"] },
-  { id: "result-display", label: "ResultDisplay", component: ResultDisplayShowcase, tags: ["depth:3", "math", "data"] },
+  { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:3", "container", "math"] },
+  { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:3", "form", "math"] },
+  { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:1", "container", "indicator", "data"] },
+  { id: "result-display", label: "ResultDisplay", component: ResultDisplayShowcase, tags: ["depth:1", "math", "data"] },
 
-  { id: "result-panel", label: "ResultPanel", component: ResultPanelShowcase, tags: ["depth:4", "container", "math", "data"] },
+  { id: "result-panel", label: "ResultPanel", component: ResultPanelShowcase, tags: ["depth:2", "container", "math", "data"] },
 
   { id: "hopper", label: "All Components", component: HopperShowcase, tags: [] },
 

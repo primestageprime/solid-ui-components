@@ -58,12 +58,13 @@ export const DateRangePickerShowcase: Component = () => {
             text-transform: uppercase;
           }`}
       </style>
-      <h2>DateRangePicker — Composite (Depth 2)</h2>
+      <h2>DateRangePicker — Atomic Primitive (Depth 1)</h2>
       <p class="text-meta">
-        Owns CSS (DateRangePicker.css). Composes the upstream `Button` (Atomic)
-        and `@kobalte/core/popover`. Internal `CalendarGrid`, `CalendarHeader`,
-        `PresetButtons`, `TimeInputs` live as private files under the component
-        directory and are NOT re-exported. Date math uses vanilla `Date` +
+        Owns CSS (DateRangePicker.css). Wraps `@kobalte/core/popover` (matches
+        the Combobox/Select/Tooltip/Toast/ThemedNumberInput Kobalte-wrapping
+        pattern). Internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`,
+        `TimeInputs` live as private files under the component directory and
+        are NOT re-exported. Date math uses vanilla `Date` +
         `Intl.DateTimeFormat` — no Luxon / date-fns dependency.
       </p>
 

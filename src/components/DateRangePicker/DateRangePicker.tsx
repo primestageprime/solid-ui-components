@@ -1,9 +1,11 @@
 // ============================================
-// DateRangePicker — Composite (Depth 2).
-// Composes the upstream `Button` (Atomic) and `@kobalte/core/popover`.
-// Internal sub-components (CalendarGrid, CalendarHeader, PresetButtons,
-// TimeInputs) live in sibling files but are NOT re-exported from the library
-// root — the composite is the only public API.
+// DateRangePicker — Atomic Primitive (Depth 1).
+// Owns `DateRangePicker.css`; wraps `@kobalte/core/popover` (same shape as
+// Combobox/Select/Tooltip/Toast/ThemedNumberInput — see CONTEXT.md's
+// "Kobalte-wrapping Primitive" pattern). Internal sub-components
+// (CalendarGrid, CalendarHeader, PresetButtons, TimeInputs) live in
+// sibling files but are NOT re-exported from the library root — the
+// Primitive is the only public API, and it has no sibling-component imports.
 //
 // Date math is vanilla `Date` + `Intl.DateTimeFormat`: no Luxon/date-fns
 // dependency, no bundle cost beyond the browser's built-in i18n.

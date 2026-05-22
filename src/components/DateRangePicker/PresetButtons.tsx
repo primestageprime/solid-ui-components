@@ -1,9 +1,11 @@
 // ============================================
 // DateRangePicker/PresetButtons — Internal (not exported from library root).
-// Composes the upstream Button (small, outlined) for each preset.
+// Native <button> chips styled by the parent Primitive's own CSS
+// (`.sui-drp__preset-btn`). Intentionally does NOT import the library's
+// `Button` — keeps DateRangePicker a leaf Primitive with no sibling-component
+// imports, matching the Combobox/Select/Tooltip Kobalte-wrapping pattern.
 // ============================================
 import { type Component, For, Show } from "solid-js";
-import { Button } from "../Button/Button";
 import type { DateRangePreset } from "./types";
 
 export interface PresetButtonsProps {
@@ -16,14 +18,13 @@ export const PresetButtons: Component<PresetButtonsProps> = (props) => (
     <div class="sui-drp__presets">
       <For each={props.presets}>
         {(preset) => (
-          <Button
-            variant="outlined"
-            size="sm"
+          <button
+            type="button"
             class="sui-drp__preset-btn"
             onClick={() => props.onSelect(preset)}
           >
             {preset.label}
-          </Button>
+          </button>
         )}
       </For>
     </div>

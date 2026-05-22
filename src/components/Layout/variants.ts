@@ -59,6 +59,9 @@ export const LgRegion: Component<StackDataProps> = createStack({ align: "center"
 
 // Row variants — named by layout behavior
 export const SpreadRow: Component<RowDataProps> = createRow({ align: "center", justify: "between", gap: "md" });
+/** Tight spread row — 4px gap, baseline-aligned key+count rows for compact
+ *  data displays (pivot cells, legend rows, chip groupings). */
+export const TightSpreadRow: Component<RowDataProps> = createRow({ align: "baseline", justify: "between", gap: "xs" });
 export const ClusterRow: Component<RowDataProps> = createRow({ align: "center", gap: "sm" });
 export const TightClusterRow: Component<RowDataProps> = createRow({ gap: "xs", align: "center" });
 export const TopClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "start" });

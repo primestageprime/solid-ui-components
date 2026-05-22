@@ -1,0 +1,29 @@
+/* ============================================
+   NumberWithUnits — Atomic Primitive (Depth 1)
+   Monospace value paired with a faded units label, baseline-aligned
+   on a single line. All visuals resolve from `--sui-*` theme tokens
+   where they exist; falls back to the same hardcoded values the Text
+   primitive uses for its `value` / `units` variants so the rendered
+   typography matches when NumberWithUnits sits beside Text-styled
+   content.
+   ============================================ */
+
+.sui-num-with-units {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.sui-num-with-units__value {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sui-num-with-units__units {
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--text-secondary);
+}

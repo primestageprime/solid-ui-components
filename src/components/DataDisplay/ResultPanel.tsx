@@ -1,8 +1,8 @@
 // ============================================
-// ResultPanel — Depth 4 (zero CSS)
-// Composes ResultDisplay (Depth 3, contains
-// NumberWithUnits/Depth 2) + FormulaProvider
-// (from MathFormula/Atomic).
+// ResultPanel — Composite (Depth 2, zero CSS).
+// Composes ResultDisplay (Atomic Primitive, Depth 1) +
+// FormulaProvider (from MathFormula, Atomic) + NarrowStack
+// (Layout Curried Variant).
 // ============================================
 import { JSX, splitProps, Show } from "solid-js";
 import { FormulaProvider } from "../MathFormula/MathFormula";
