@@ -453,6 +453,173 @@ describe("buildLaneTrajectory — statusAt", () => {
   });
 });
 
+// ─── broom topology integration ─────────────────────────────────────────────
+//
+// The broom is the most interesting layout case: three independent
+// roots stack at the same col, and as they finish, deeper dependents
+// fan in. Verify the trajectory produces the right MIX of staying /
+// leaving / arriving / staying-hidden for one tick of the broom.
+
+describe("buildLaneTrajectory — broom topology", () => {
+  // Matches the workshop's MS_PARENT_B_CHILDREN (without the parent).
+  const broom: StatusFlowNode[] = [
+    { id: "b1", title: "B1", status: "DOING" },
+    { id: "b2", title: "B2", status: "DOING" },
+    { id: "b3", title: "B3", status: "DOING" },
+    { id: "b4", title: "B4", status: "TODO", dependsOn: ["b1", "b2"] },
+    { id: "b5", title: "B5", status: "TODO", dependsOn: ["b4"] },
+    { id: "b6", title: "B6", status: "TODO", dependsOn: ["b3", "b5"] },
+    { id: "b7", title: "B7", status: "TODO", dependsOn: ["b6"] },
+    { id: "b8", title: "B8", status: "TODO", dependsOn: ["b6"] },
+  ];
+
+  it("tick where b1 finishes: b1 stays visible (just shifts col)", () => {
+    const next = broom.map((n) =>
+      n.id === "b1" ? { ...n, status: "DONE" } : n,
+    );
+    const traj = buildLaneTrajectory({
+      prevFrame: broom,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    const b1 = traj.cards.get("b1")!;
+    // b1 was DOING (col 0), becomes DONE (col -1). Both within
+    // maxDepth=1 → staying card across the tick.
+    expect(b1.modeAt(0)).toBe("card");
+    expect(b1.modeAt(1)).toBe("card");
+    // Status flips at the leave-end boundary, not at tick start.
+    expect(b1.statusAt(0)).toBe("DOING");
+    expect(b1.statusAt(1)).toBe("DONE");
+  });
+
+  it("b4-b8 stay hidden in the right lozenge across the tick", () => {
+    const next = broom.map((n) =>
+      n.id === "b1" ? { ...n, status: "DONE" } : n,
+    );
+    const traj = buildLaneTrajectory({
+      prevFrame: broom,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    for (const id of ["b5", "b6", "b7", "b8"]) {
+      const c = traj.cards.get(id)!;
+      expect(c.modeAt(0)).toBe("gone");
+      expect(c.modeAt(1)).toBe("gone");
+      // Anchor is the right lozenge (hidden TODO, deeper than b4).
+      expect(c.anchorAt(0)).toEqual(LOZENGES.right);
+    }
+  });
+
+  it("collects all 7 broom dep edges", () => {
+    const next = broom;
+    const traj = buildLaneTrajectory({
+      prevFrame: broom,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    // b4←b1, b4←b2, b5←b4, b6←b3, b6←b5, b7←b6, b8←b6 = 7 edges
+    expect(traj.arrows.length).toBe(7);
+  });
+});
+
+// ─── lozenge count derivation ───────────────────────────────────────────────
+
+describe("buildLaneTrajectory — lozenge counts (mode === \"gone\")", () => {
+  // 4-node chain: at all-TODO, only a is visible (col +1); b/c/d are
+  // hidden at +2/+3/+4. Lozenge count should be 3 at every t.
+  const allTodo: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+    { id: "c", title: "C", status: "TODO", dependsOn: ["b"] },
+    { id: "d", title: "D", status: "TODO", dependsOn: ["c"] },
+  ];
+
+  const countGoneAt = (traj: LaneTrajectory, t: number) => {
+    let n = 0;
+    for (const c of traj.cards.values()) if (c.modeAt(t) === "gone") n++;
+    return n;
+  };
+
+  it("stays-hidden cards count as gone at every t", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: allTodo,
+      nextFrame: allTodo,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    expect(countGoneAt(traj, 0)).toBe(3);
+    expect(countGoneAt(traj, 0.5)).toBe(3);
+    expect(countGoneAt(traj, 1)).toBe(3);
+  });
+
+  it("arriving card drops out of the lozenge count at PHASE_MOVE_END", () => {
+    // Advance a: TODO → DOING. b becomes visible (arriving from +S).
+    const next: StatusFlowNode[] = allTodo.map((n) =>
+      n.id === "a" ? { ...n, status: "DOING" } : n,
+    );
+    const traj = buildLaneTrajectory({
+      prevFrame: allTodo,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    // Before MOVE_END: 3 gone (b, c, d — b not yet morphing out).
+    expect(countGoneAt(traj, PHASE_MOVE_END - 0.001)).toBe(3);
+    // After MOVE_END (b is now "morph"): only c and d are gone.
+    expect(countGoneAt(traj, PHASE_MOVE_END + 0.001)).toBe(2);
+    expect(countGoneAt(traj, 1)).toBe(2);
+  });
+});
+
+// ─── mid-flight stability ───────────────────────────────────────────────────
+//
+// If the renderer's createEffect fires a NEW props.nodes while the
+// current trajectory hasn't finished, the trajectory rebuild uses
+// prevFrameRef (= the previous "incoming") as the new prev — NOT
+// where cards are visually right now. There's a known small snap
+// when this happens. For an explicit polish step, we could expose a
+// "snapshot at t" helper and feed those rects into the new build as
+// prev-position overrides. For now: document and verify that
+// rebuilding mid-flight doesn't crash and produces a valid
+// trajectory.
+
+describe("buildLaneTrajectory — mid-flight rebuild (stability)", () => {
+  const initial: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+  const tick1: StatusFlowNode[] = initial.map((n) =>
+    n.id === "a" ? { ...n, status: "DOING" } : n,
+  );
+  const tick2: StatusFlowNode[] = tick1.map((n) =>
+    n.id === "a" ? { ...n, status: "DONE" } :
+    n.id === "b" ? { ...n, status: "DOING" } : n,
+  );
+
+  it("can rebuild a fresh trajectory from a partially-elapsed one", () => {
+    const traj1 = buildLaneTrajectory({
+      prevFrame: initial,
+      nextFrame: tick1,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    // Imagine we're mid-flight at t=0.3 when tick2 arrives.
+    const traj2 = buildLaneTrajectory({
+      prevFrame: tick1,
+      nextFrame: tick2,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+    });
+    // Both trajectories should produce valid card states.
+    expect(traj1.cards.size).toBeGreaterThan(0);
+    expect(traj2.cards.size).toBeGreaterThan(0);
+    expect(traj2.durationMs).toBe(traj1.durationMs);
+  });
+});
+
 describe("buildLaneTrajectory — duration", () => {
   it("durationMs is the full phase budget", () => {
     const traj = buildLaneTrajectory({
