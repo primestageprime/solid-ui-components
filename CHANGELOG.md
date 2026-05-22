@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.35.0
+
 ### Added
 
 - **Bronze theme** — a light, serif (Lora), friendly variant. Lora is used for prose; Inter for utility text (buttons, badges, subtitles, list metadata). Warm bone background, rust accent.
@@ -12,6 +14,10 @@
 
 - `default.css` is now **tokens-only**. Consumers using `loadTheme()` (the documented JS API) are unaffected. Consumers loading `@primestageprime/solid-ui-components/themes/default.css` directly by URL will see component CSS go missing — they must also load `@primestageprime/solid-ui-components/themes/_baseline.css` (or move to the JS API). See `src/themes/README.md` for details.
 - The dev `ThemeSwitcher` is now a dropdown sourced from the manifest rather than a 2-state toggle.
+
+### Dev / internal
+
+- **DotChart showcase** rebuilt as a reference for the amygdala-ui dotchart pattern: two stacked `<TimelineBar>` strips anchored in the chart's bottom margin (`bandY={{ anchor: "margin-bottom" }}`) so they sit along the bottom of the x-axis, with tick marks pushed below the strips via `XAxis.tickOffset` / `labelOffset`. Includes a data-check panel (hover any bar to pop dashed reference lines at its `start`/`end` and highlight its row in a tabular dump of `id`, `lane`, formatted clock + offset times, duration, and raw epoch ms). Dev-only — no library exports changed.
 
 ### Breaking changes
 
