@@ -54,7 +54,7 @@
   inset: 0;
   border-radius: 50%;
   background: transparent;
-  border: 2px solid #444;
+  border: 2px solid var(--sui-border);
 }
 
 .jtf-progress-card__step--completed .jtf-progress-card__step-circle-bg {
@@ -114,7 +114,7 @@
 
 /* Arrow connector */
 .jtf-progress-card__connector {
-  color: #444;
+  color: var(--sui-border);
   font-size: 12px;
   line-height: 1;
   flex-shrink: 0;

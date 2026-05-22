@@ -24,7 +24,7 @@
 .async-progress__bar-track {
   height: 6px;
   border-radius: 3px;
-  background: rgba(0, 168, 204, 0.15);
+  background: rgba(var(--sui-accent-rgb), 0.15);
   overflow: hidden;
 }
 

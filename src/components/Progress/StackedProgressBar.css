@@ -2,7 +2,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 2px;
-  background: var(--stacked-bar-bg, rgba(0, 168, 204, 0.15));
+  background: var(--stacked-bar-bg, rgba(var(--sui-accent-rgb), 0.15));
   display: flex;
   align-items: center;
   justify-content: center;
