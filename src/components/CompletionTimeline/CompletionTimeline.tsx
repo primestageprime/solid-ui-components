@@ -120,10 +120,10 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
           padding: "0 8px 4px",
         }}
       >
-        <span style={{ color: "var(--sui-info, #00d4ff)", "font-weight": "600" }}>
+        <span style={{ color: "var(--sui-accent)", "font-weight": "600" }}>
           Completion Timeline
         </span>
-        <span style={{ color: "var(--sui-text-muted, #7aa8c0)" }}>
+        <span style={{ color: "var(--sui-text-muted)" }}>
           {buckets().reduce((s, b) => s + b.count, 0)} completions in window
         </span>
       </div>
@@ -147,7 +147,7 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
           data={buckets()}
           x={(_b, i) => i}
           value={(b) => b.count}
-          fill="var(--sui-info, #00d4ff)"
+          fill="var(--sui-accent)"
           bandWidth={0.7}
         />
         <ChartTooltip

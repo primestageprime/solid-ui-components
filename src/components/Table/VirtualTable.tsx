@@ -123,7 +123,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
               <tr>
                 <td
                   colspan={local.columns.length}
-                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted, #4a6a80)" }}
+                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted)" }}
                 >
                   {local.emptyMessage ?? "No data"}
                 </td>

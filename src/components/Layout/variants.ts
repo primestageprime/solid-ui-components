@@ -87,7 +87,7 @@ export const ScrollPanel = createBox({
   style: {
     "max-height": "320px",
     overflow: "auto",
-    border: "1px solid var(--sui-border, rgba(255, 255, 255, 0.08))",
+    border: "1px solid var(--sui-border)",
     "border-radius": "4px",
   },
 });
@@ -118,7 +118,7 @@ export const DelineatedSidebar = createStack({
     "min-width": "400px",
     "max-width": "400px",
     "align-self": "stretch",
-    "border-right": "1px solid var(--sui-border, rgba(255, 255, 255, 0.12))",
+    "border-right": "1px solid var(--sui-border)",
     padding: "12px",
     "box-sizing": "border-box",
     "overflow-y": "auto",

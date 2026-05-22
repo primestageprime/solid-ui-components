@@ -7,7 +7,7 @@
 
 .themed-input-label {
   display: block;
-  color: var(--sui-text-secondary, #aaa);
+  color: var(--sui-text-secondary);
   font-size: 0.875rem;
   margin-bottom: 8px;
 }
@@ -19,7 +19,7 @@
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
   border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
   border-radius: var(--sui-radius-sm, 6px);
-  color: var(--sui-text-primary, #ddd);
+  color: var(--sui-text-primary);
   font-family: var(--sui-font-family, system-ui, sans-serif);
   font-size: 0.875rem;
   transition: border-color 0.15s ease;
@@ -35,12 +35,12 @@
 .themed-input:focus,
 .themed-textarea:focus {
   outline: none;
-  border-color: var(--sui-border-focus, var(--sui-accent, #00d4ff));
+  border-color: var(--sui-border-focus, var(--sui-accent));
 }
 
 .themed-input::placeholder,
 .themed-textarea::placeholder {
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
 }
 
 .themed-textarea {

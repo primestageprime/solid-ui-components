@@ -49,7 +49,7 @@ export interface SlotFillBarProps extends JSX.HTMLAttributes<HTMLDivElement> {
    *  Default 400. Pass `null` to remove the cap. */
   maxWidth?: number | null;
   /** CSS color used for the unfinished/todo region (the bar's background).
-   *  Default: `var(--sui-text-muted, #555)`. */
+   *  Default: `var(--sui-text-muted)`. */
   todoColor?: string;
   /** CSS color of the active slot while in `doing` phase. Default the info
    *  accent. */
@@ -67,8 +67,8 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
     {
       height: 24,
       maxWidth: 400 as number | null,
-      todoColor: "var(--sui-text-muted, #555)",
-      doingColor: "var(--sui-info, #4ea1ff)",
+      todoColor: "var(--sui-text-muted)",
+      doingColor: "var(--sui-accent)",
       doneColor: "var(--sui-success, #2a6)",
     },
     rawProps,

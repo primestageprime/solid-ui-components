@@ -71,7 +71,7 @@
 }
 
 .sui-week-calendar__block--highlight {
-  box-shadow: 0 0 0 2px var(--sui-accent, #00d4ff),
+  box-shadow: 0 0 0 2px var(--sui-accent),
     0 0 18px 2px rgba(0, 212, 255, 0.45);
   border-radius: 4px;
 }

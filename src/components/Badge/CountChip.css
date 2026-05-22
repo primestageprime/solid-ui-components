@@ -3,10 +3,10 @@
   align-items: baseline;
   gap: 6px;
   padding: 2px 8px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   background: transparent;
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
@@ -23,6 +23,6 @@
 }
 
 .sui-count-chip--active {
-  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.05));
+  background: var(--sui-bg-elevated);
   color: var(--sui-text-primary, inherit);
 }

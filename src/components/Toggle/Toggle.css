@@ -115,9 +115,9 @@
   gap: 8px;
   padding: 2px 8px 2px 4px;
   border-radius: 999px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.18));
+  border: 1px solid var(--sui-border);
   background: transparent;
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -131,7 +131,7 @@
   width: 22px;
   height: 12px;
   border-radius: 999px;
-  background: var(--sui-border, rgba(255, 255, 255, 0.18));
+  background: var(--sui-border);
   flex-shrink: 0;
   transition: background 0.15s ease;
 }
@@ -160,13 +160,13 @@
 }
 
 .sui-toggle--thematic:has(.sui-toggle__input:checked) {
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
   background: rgba(0, 212, 255, 0.12);
-  color: var(--sui-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 .sui-toggle--thematic:has(.sui-toggle__input:checked) .sui-toggle__track {
-  background: var(--sui-accent, #00d4ff);
+  background: var(--sui-accent);
 }
 
 .sui-toggle--thematic .sui-toggle__label {

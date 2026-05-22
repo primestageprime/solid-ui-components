@@ -28,15 +28,15 @@
 /* Tone matrix — orthogonal to variant. Mirrors the accent/outline/muted
    trio used by the inline button factories in dside-ui. */
 .sui-btn--tone-accent {
-  border: 1px solid var(--sui-accent, #00d4ff);
-  background: var(--sui-accent, #00d4ff);
+  border: 1px solid var(--sui-accent);
+  background: var(--sui-accent);
   color: #001018;
   font-weight: 500;
 }
 .sui-btn--tone-outline {
-  border: 1px solid var(--sui-accent, #00d4ff);
+  border: 1px solid var(--sui-accent);
   background: transparent;
-  color: var(--sui-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 .sui-btn--tone-muted {
   border: 1px solid var(--sui-border);

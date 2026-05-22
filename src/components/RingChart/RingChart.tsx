@@ -91,7 +91,7 @@ export function RingChart(props: RingChartProps) {
         <div
           style={{
             ...monoStyle,
-            color: "var(--sui-text-primary, #e0f4ff)",
+            color: "var(--sui-text-primary)",
             "font-size": `${Math.max(10, Math.min(size() / 5, (size() * 0.7) / Math.max(1, props.label.length) * 1.6))}px`,
             "font-weight": "700",
             "line-height": "1.1",
@@ -102,7 +102,7 @@ export function RingChart(props: RingChartProps) {
         <Show when={props.sublabel}>
           <div
             style={{
-              color: "var(--sui-text-secondary, #7aa8c0)",
+              color: "var(--sui-text-secondary)",
               "font-size": `${Math.max(9, size() / 10)}px`,
               "text-transform": "uppercase",
               "letter-spacing": "0.05em",

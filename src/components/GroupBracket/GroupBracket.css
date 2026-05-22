@@ -20,7 +20,7 @@
   /* Opaque base painted under the (typically translucent) badge fill,
    * so the spine / top stub don't read through the badge. Defaults to
    * the panel/page background. */
-  --sui-group-bracket-badge-bg: var(--sui-bg-primary, #0a1420);
+  --sui-group-bracket-badge-bg: var(--sui-bg-primary);
 
   position: relative;
   width: var(--sui-group-bracket-gutter);
@@ -76,7 +76,7 @@
     var(--sui-group-bracket-badge-bg);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
-  color: var(--sui-text-primary, #fff);
+  color: var(--sui-text-primary);
   line-height: 1;
   white-space: nowrap;
 }

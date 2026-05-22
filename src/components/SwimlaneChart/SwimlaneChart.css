@@ -7,10 +7,10 @@
 }
 
 .sui-swimlane__edge {
-  stroke: var(--sui-border, #334155);
+  stroke: var(--sui-border);
   stroke-width: 1.5;
   fill: none;
-  color: var(--sui-border, #334155);
+  color: var(--sui-border);
   /* Animate the path's `d` so an edge's endpoints follow their nodes
      as those nodes slide between columns. Browsers that don't support
      transitioning `d` (older Firefox) will snap as before. */
@@ -121,8 +121,8 @@
 }
 
 .sui-swimlane__boundary-badge {
-  fill: var(--sui-bg-elevated, #1a1a1a);
-  stroke: var(--sui-border, #334155);
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-border);
   stroke-width: 1.5;
   transition: cx 0.55s ease-out, cy 0.55s ease-out;
 }

@@ -43,9 +43,9 @@
 }
 
 .cell-tag--default {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--sui-bg-elevated);
   color: var(--hud-text, #e0f4ff);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--sui-border-bright);
 }
 
 .cell-tag--primary {

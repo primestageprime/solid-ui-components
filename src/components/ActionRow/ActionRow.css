@@ -14,12 +14,12 @@
 }
 
 .sui-action-row--danger {
-  border-color: var(--sui-danger, #ef4444);
+  border-color: var(--sui-danger);
   background: rgba(239, 68, 68, 0.08);
 }
 
 .sui-action-row--accent {
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
   background: rgba(0, 212, 255, 0.08);
 }
 
@@ -66,14 +66,14 @@
   cursor: pointer;
 }
 .sui-action-row__btn--accent {
-  border-color: var(--sui-accent, #00d4ff);
-  background: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
+  background: var(--sui-accent);
   color: #001018;
 }
 .sui-action-row__btn--outline {
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
   background: transparent;
-  color: var(--sui-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 .sui-action-row__btn--muted {
   border-color: var(--sui-border);

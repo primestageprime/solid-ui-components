@@ -152,7 +152,7 @@ export function BurndownChart(props: BurndownChartProps) {
             ]}
             x={(d) => d.x}
             y={(d) => d.y}
-            stroke="var(--sui-text-muted, #9bb)"
+            stroke="var(--sui-text-muted)"
             strokeWidth={1.5}
           />
           {trend()!.projDays !== null && (
@@ -163,7 +163,7 @@ export function BurndownChart(props: BurndownChartProps) {
               ]}
               x={(d) => d.x}
               y={(d) => d.y}
-              stroke="var(--sui-text-muted, #9bb)"
+              stroke="var(--sui-text-muted)"
               strokeDasharray="4 4"
             />
           )}
