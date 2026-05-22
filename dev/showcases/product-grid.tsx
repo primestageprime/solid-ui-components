@@ -201,7 +201,7 @@ export const ProductGridShowcase: Component = () => {
                   "border-radius": "999px",
                   border: active()
                     ? "1px solid var(--sui-accent, #4ea1ff)"
-                    : "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+                    : "1px solid var(--sui-border)",
                   background: active()
                     ? "color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent)"
                     : "transparent",
@@ -229,7 +229,7 @@ export const ProductGridShowcase: Component = () => {
         <FlexRow gap="md" align="center">
           <TextLabel>
             items{" "}
-            <span style={{ color: "rgba(255,255,255,0.45)" }}>
+            <span style={{ color: "var(--sui-text-muted)" }}>
               {tableRows().length} of {dataset().items.length}
             </span>
           </TextLabel>
@@ -239,7 +239,7 @@ export const ProductGridShowcase: Component = () => {
               style={{
                 "font-size": "12px",
                 padding: "3px 10px",
-                border: "1px solid var(--sui-border, rgba(255,255,255,0.2))",
+                border: "1px solid var(--sui-border)",
                 background: "transparent",
                 color: "var(--sui-text-muted, #888)",
                 "border-radius": "10px",

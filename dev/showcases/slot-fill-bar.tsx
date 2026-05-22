@@ -62,7 +62,7 @@ const AnimatedExample: Component = () => {
             style={{
               padding: "2px 10px",
               "border-radius": "999px",
-              border: "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+              border: "1px solid var(--sui-border)",
               background: "transparent",
               color: "var(--sui-text-muted, #888)",
               cursor: "pointer",

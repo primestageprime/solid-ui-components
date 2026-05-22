@@ -175,7 +175,7 @@ export const PillVariantsShowcase: Component = () => {
           "margin-top": "16px",
           "margin-bottom": "20px",
           padding: "10px 14px",
-          background: "var(--jtf-bg-secondary, rgba(255,255,255,0.03))",
+          background: "var(--sui-bg-secondary)",
           border: "1px solid var(--jtf-border)",
           "border-radius": "6px",
         }}

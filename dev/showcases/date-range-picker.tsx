@@ -20,7 +20,7 @@ const daysAgo = (days: number): Date => new Date(Date.now() - days * DAY_MS);
 const debugBlock = {
   "margin-top": "8px",
   padding: "8px 12px",
-  background: "rgba(255, 255, 255, 0.04)",
+  background: "var(--sui-bg-secondary)",
   "border-radius": "4px",
   "font-size": "12px",
   color: "var(--sui-text-secondary, #7aa8c0)",
@@ -52,7 +52,7 @@ export const DateRangePickerShowcase: Component = () => {
     <div class="component-section">
       <style>
         {`.sui-drp-demo-custom-trigger {
-            border-color: var(--sui-accent, #00d4ff) !important;
+            border-color: var(--sui-accent) !important;
             border-width: 2px;
             letter-spacing: 0.08em;
             text-transform: uppercase;

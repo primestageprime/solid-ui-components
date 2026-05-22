@@ -177,7 +177,7 @@ export const DagChartShowcase: Component = () => {
       <div class="example-group">
         <h3>Vertical layout</h3>
         <p class="text-meta">5-node task graph rendered top-to-bottom.</p>
-        <div style={{ height: "420px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "420px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -191,7 +191,7 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Horizontal layout</h3>
-        <div style={{ height: "320px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "320px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -205,7 +205,7 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Minimal (label + status only)</h3>
-        <div style={{ height: "260px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "260px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={minimalNodes}
             edges={minimalEdges}

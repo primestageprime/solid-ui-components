@@ -68,8 +68,8 @@ const InteractiveLegendExample: Component = () => {
                 "background-color": item.color,
                 outline:
                   hovered() === item.label
-                    ? "2px solid rgba(255,255,255,0.85)"
-                    : "1px solid rgba(255,255,255,0.15)",
+                    ? "2px solid var(--sui-text-primary)"
+                    : "1px solid var(--sui-border-bright)",
                 "outline-offset": "2px",
                 filter: hovered() === item.label ? "brightness(1.2)" : "none",
                 display: "flex",
@@ -146,7 +146,7 @@ export const LegendShowcase: Component = () => (
           Horizontal orientation uses <code>flex-wrap</code>, so long legends
           break onto multiple rows in narrow containers.
         </TextSublabel>
-        <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border, rgba(255,255,255,0.15))", padding: "8px" }}>
+        <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
           <Legend items={MANY_ITEMS} />
         </div>
       </SpacedStack>

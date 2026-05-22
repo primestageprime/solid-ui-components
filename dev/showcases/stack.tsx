@@ -41,7 +41,7 @@ export const StackShowcase: Component = () => {
           {(["start", "center", "end", "stretch"] as const).map((align) => (
             <div>
               <Text variant="sublabel">{align}</Text>
-              <Stack gap="sm" align={align} style={{ "margin-top": "8px", width: "160px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+              <Stack gap="sm" align={align} style={{ "margin-top": "8px", width: "160px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
                 <DemoBox label="Short" />
                 <DemoBox label="Medium item" />
                 <DemoBox label="A" />
@@ -84,7 +84,7 @@ export const StackShowcase: Component = () => {
           <div>
             <Text variant="sublabel">ContentStack</Text>
             <div class="text-meta">gap: "xs", flex: 1</div>
-            <ContentStack style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+            <ContentStack style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
               <DemoBox label="A" />
               <DemoBox label="B" />
             </ContentStack>
@@ -92,7 +92,7 @@ export const StackShowcase: Component = () => {
           <div>
             <Text variant="sublabel">CenteredStack</Text>
             <div class="text-meta">align/justify: center, gap: "sm"</div>
-            <CenteredStack style={{ "margin-top": "8px", height: "120px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+            <CenteredStack style={{ "margin-top": "8px", height: "120px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
               <DemoBox label="Centered" />
             </CenteredStack>
           </div>
@@ -106,21 +106,21 @@ export const StackShowcase: Component = () => {
           <div>
             <Text variant="sublabel">SmRegion</Text>
             <div class="text-meta">padding: 16px 12px, min-height: 60px</div>
-            <SmRegion style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+            <SmRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
               <Text variant="body">Small region</Text>
             </SmRegion>
           </div>
           <div>
             <Text variant="sublabel">MdRegion</Text>
             <div class="text-meta">padding: 32px 16px, min-height: 120px</div>
-            <MdRegion style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+            <MdRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
               <Text variant="body">Medium region</Text>
             </MdRegion>
           </div>
           <div>
             <Text variant="sublabel">LgRegion</Text>
             <div class="text-meta">padding: 48px 24px, min-height: 200px</div>
-            <LgRegion style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+            <LgRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
               <Text variant="body">Large region</Text>
             </LgRegion>
           </div>
