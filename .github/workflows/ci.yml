@@ -1,0 +1,56 @@
+name: CI
+
+# Three parallel pass/fail gates for every PR (and a backstop on direct
+# pushes to main). Conventions — Node version, action versions, install
+# command, timeout — match `publish.yml` so the two workflows can be
+# maintained in lockstep.
+#
+# Each job gets its own status check so branch-protection rules can
+# require them individually (`test`, `typecheck`, `build`) and a failure
+# in one doesn't mask the others.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      # `tsconfig.json` has `noEmit: true`, so this is a pure type-check
+      # pass. Vite's build only transpiles — it doesn't type-check — so
+      # this job is genuinely separate signal from the build job.
+      - run: npx tsc --noEmit
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      # Builds both `build:client` and `build:server` per package.json.
+      # Catches errors that compile cleanly but fail to bundle (circular
+      # module-level imports, unresolved aliases, etc.).
+      - run: npm run build
