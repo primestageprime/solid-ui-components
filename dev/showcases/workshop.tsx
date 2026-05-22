@@ -2,6 +2,7 @@ import { Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel } from "./swimlane-chart";
 import { RouterDemoGrid } from "./router-demo";
+import { AnimationExperimentsRow } from "./animation-experiments";
 import {
   StatusFlowChart,
   resolveParentStatuses,
@@ -1348,12 +1349,16 @@ const RouterDemoRow: Component = () => {
 export const WorkshopShowcase: Component = () => {
   return (
     <div class="component-section component-section--full">
-      <SectionTitle>Workshop</SectionTitle>
+      <SectionTitle>Workshop — animation experiments</SectionTitle>
+      <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0 16px" }}>
+        Incremental experiments building toward a polished animation
+        system. Each experiment isolates one effect and we name it so
+        we can refer to it (CSS vs Motion One A/B comparisons land
+        here too).
+      </p>
       <div class="workshop-grid">
-        <RouterDemoRow />
-        <ParentChildrenRow />
+        <AnimationExperimentsRow />
         <TwoParentsRow />
-        <FrameExplorerRow />
       </div>
     </div>
   );
