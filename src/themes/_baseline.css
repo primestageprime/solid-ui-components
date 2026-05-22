@@ -1,0 +1,12 @@
+/* ============================================
+   SUI Baseline — shared component visual treatment
+   ============================================
+   Loaded once on app boot via dev/load-theme.ts.
+   Rules are written purely against --sui-* tokens.
+   Theme CSS loads after this file and may override
+   any rule by re-declaring the same selector.
+
+   This file is intentionally empty until the
+   component CSS extraction from default.css lands.
+   See docs/superpowers/plans/2026-05-22-bronze-theme-implementation.md.
+   ============================================ */
