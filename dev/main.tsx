@@ -182,7 +182,7 @@ const items: Item[] = [
   { id: "dotchart", label: "DotChart (composition smoke)", component: DotchartShowcase, tags: ["depth:2", "chart", "time", "data"] },
   { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase, tags: ["depth:2", "data", "indicator"] },
   { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase, tags: ["depth:2", "feedback"] },
-  { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:2", "form", "time"] },
+  { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:1", "form", "time"] },
   { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase, tags: ["depth:2", "time"] },
   { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase, tags: ["depth:2", "feedback"] },
   { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase, tags: ["depth:2", "chart", "time", "data"] },

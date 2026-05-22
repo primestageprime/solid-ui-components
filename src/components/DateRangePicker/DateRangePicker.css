@@ -1,8 +1,9 @@
 /* ============================================
-   DateRangePicker — Composite (Depth 2)
-   Single stylesheet shared across the composed root + private
-   sub-components (calendar grid, header, presets, time inputs).
-   All visuals resolve from `--sui-*` theme tokens.
+   DateRangePicker — Atomic Primitive (Depth 1)
+   Wraps `@kobalte/core/popover`. Single stylesheet owned by the
+   Primitive, shared across its private sub-components (calendar
+   grid, header, presets, time inputs). All visuals resolve from
+   `--sui-*` theme tokens.
    ============================================ */
 
 /* ---- Trigger button ---- */
@@ -61,9 +62,30 @@
 }
 
 .sui-drp__preset-btn {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--sui-accent, #00d4ff);
+  border-radius: var(--sui-radius-md, 4px);
+  color: var(--sui-accent, #00d4ff);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
   line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.sui-drp__preset-btn:hover {
+  background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.1);
+}
+
+.sui-drp__preset-btn:focus-visible {
+  outline: 2px solid var(--sui-border-focus, #00d4ff);
+  outline-offset: 2px;
 }
 
 /* ---- Calendar header ---- */

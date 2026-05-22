@@ -26,6 +26,10 @@ _Avoid_: Compound, complex component.
 The composition level of a component. A Primitive is Depth 1. Any component is `1 + max(depth of its children)`. Modules that export multiple components inherit the highest exported depth.
 _Avoid_: Level, tier.
 
+**Kobalte-wrapping Primitive**:
+A Primitive whose implementation wraps a headless third-party primitive (today: `@kobalte/core/*` — `Combobox`, `Select`, `Tooltip`, `Toast`, `NumberField`, `Popover`) plus theme CSS. Such a wrapper is an **Atomic Primitive** even though it composes a "component" from another library: the third-party primitive is treated as the same kind of external dependency that the DOM is, not as a library Primitive subject to the no-sibling-imports rule. The wrapper must still own its own CSS file and must not import any sibling library Primitive. Private helpers inside the wrapper's directory (e.g. `DateRangePicker/CalendarGrid.tsx`) are allowed and do not count as Composite-style composition — they are implementation details of the single Primitive that the directory exports.
+_Avoid_: Composite (incorrect — the third-party primitive is a dependency, not a library Primitive).
+
 ### Variants
 
 **Factory**:
