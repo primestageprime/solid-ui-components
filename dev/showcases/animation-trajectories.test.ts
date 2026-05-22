@@ -460,16 +460,17 @@ describe("buildLaneTrajectory — statusAt", () => {
 // fan in. Verify the trajectory produces the right MIX of staying /
 // leaving / arriving / staying-hidden for one tick of the broom.
 
-describe("buildLaneTrajectory — anchor moves uniformly across slurp window", () => {
-  // Regression test for the "node slurps first, arrow snaps later"
-  // bug. With slurpLeadingAnchor (the previous implementation), the
-  // double-easing parked the anchor at the card's far edge by ~23%
-  // of the slurp window — the arrow tip stopped moving very early
-  // while the morph shape continued to fill in.
+describe("buildLaneTrajectory — anchor progresses with the morph", () => {
+  // The arrow anchor uses the SAME ease curve as the morph shape so
+  // the arrow tip and the box visually progress together. Invariants:
   //
-  // With the new lerpRect-based anchor, the anchor traverses the
-  // distance loz → card at a CONSTANT rate, so equal local-t deltas
-  // produce equal anchor-x deltas.
+  //   1. Monotonic — anchor.x moves away from loz toward card as t
+  //      advances through the slurp window.
+  //   2. Front-loaded — most of the distance is covered in the first
+  //      half of the window (because ease(t)=1-(1-t)^3 is steep early
+  //      and shallow late, matching the morph shape's ease).
+  //   3. Endpoints — anchor is at loz at t=PHASE_MOVE_END and at
+  //      card at t=1.
   const prev: StatusFlowNode[] = [
     { id: "a", title: "A", status: "TODO" },
     { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
@@ -478,34 +479,48 @@ describe("buildLaneTrajectory — anchor moves uniformly across slurp window", (
     { id: "a", title: "A", status: "DOING" },
     { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
   ];
+  const tAt = (local: number) =>
+    PHASE_MOVE_END + (1 - PHASE_MOVE_END) * local;
 
-  it("arriving card anchor moves at constant rate (no early snap)", () => {
+  it("arriving card anchor moves monotonically toward the card", () => {
     const traj = buildLaneTrajectory({
       prevFrame: prev, nextFrame: next,
       layoutParams: PARAMS, lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
-    const tAt = (local: number) =>
-      PHASE_MOVE_END + (1 - PHASE_MOVE_END) * local;
+    const xs = [0.1, 0.3, 0.5, 0.7, 0.9].map((l) => b.anchorAt(tAt(l)).x);
+    // Strictly monotonic (arriving from the right lozenge, x decreases
+    // as anchor moves from right loz toward card on the left).
+    for (let i = 1; i < xs.length; i++) {
+      expect(xs[i]).toBeLessThan(xs[i - 1]);
+    }
+  });
 
-    const x0 = b.anchorAt(tAt(0.1)).x;
-    const x1 = b.anchorAt(tAt(0.3)).x;
-    const x2 = b.anchorAt(tAt(0.5)).x;
-    const x3 = b.anchorAt(tAt(0.7)).x;
-    const x4 = b.anchorAt(tAt(0.9)).x;
+  it("arriving card anchor uses front-loaded ease (more progress early)", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const x0 = b.anchorAt(tAt(0)).x;
+    const x1 = b.anchorAt(tAt(1)).x;
+    const span = Math.abs(x1 - x0);
+    // At local=0.5, anchor should be MORE than 50% of the way there
+    // because of the front-loaded ease (cubic ease(0.5) = 0.875).
+    const xHalf = b.anchorAt(tAt(0.5)).x;
+    const progressHalf = Math.abs(xHalf - x0) / span;
+    expect(progressHalf).toBeGreaterThan(0.5);
+    expect(progressHalf).toBeLessThan(1);
+  });
 
-    // Equal local-t deltas should produce roughly equal x deltas.
-    // (Linear lerp means dx is constant per d(local-t).)
-    const d01 = x1 - x0;
-    const d12 = x2 - x1;
-    const d23 = x3 - x2;
-    const d34 = x4 - x3;
-    // All four deltas should be within ε of each other (linear).
-    const deltas = [d01, d12, d23, d34];
-    const max = Math.max(...deltas);
-    const min = Math.min(...deltas);
-    // With linear lerp, max-min should be 0 modulo float jitter.
-    expect(Math.abs(max - min)).toBeLessThan(1e-6);
+  it("anchor settles at card.rect at t=1", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    expect(b.anchorAt(1)).toEqual(nextSnap);
   });
 });
 

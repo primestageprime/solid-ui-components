@@ -347,16 +347,17 @@ function buildLeavingTrajectory(
       const local = t / PHASE_LEAVE_END;
       return slurpRectMorph(prevRect, loz, side, 1 - ease(local));
     },
-    // Arrow anchor: a rect that smoothly interpolates from the card's
-    // rest rect at t=0 to the lozenge rect at t=PHASE_LEAVE_END. The
-    // router clips arrows to this rect's edge, so the arrow tip moves
-    // continuously throughout the entire slurp window — no "snap
-    // partway through" from the leading-edge anchor's double-easing.
+    // Arrow anchor: a rect that interpolates from the card's rest
+    // rect → the lozenge rect across the slurp-in window. We use the
+    // SAME ease curve as the morph shape so the arrow tip and the
+    // box visually progress together — without ease the anchor was
+    // linear while the shape was front-loaded, and the box appeared
+    // to "slurp first and the arrow caught up after."
     anchorAt: (t) => {
       if (t <= 0) return prevRect;
       if (t >= PHASE_LEAVE_END) return loz;
       const local = t / PHASE_LEAVE_END;
-      return lerpRect(prevRect, loz, local);
+      return lerpRect(prevRect, loz, ease(local));
     },
     // Leaving cards are visible only during their morph — keep their
     // prev status throughout.
@@ -393,17 +394,17 @@ function buildArrivingTrajectory(
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
       return slurpRectMorph(nextRect, loz, side, ease(local));
     },
-    // Arrow anchor: a rect that smoothly interpolates from the
-    // lozenge at t=PHASE_MOVE_END to the card's rest rect at t=1.
-    // The router clips arrows to this rect's edge, so the arrow tip
-    // moves continuously throughout the entire slurp window — no
-    // "snap to card position partway through" from the leading-edge
-    // anchor's double-easing.
+    // Arrow anchor: a rect that interpolates from the lozenge → the
+    // card's rest rect across the slurp-out window. Uses the SAME
+    // ease curve as the morph shape so the arrow tip and the box
+    // visually progress together — without ease the anchor was
+    // linear while the shape was front-loaded, and the box appeared
+    // to "slurp out first and the arrow caught up after."
     anchorAt: (t) => {
       if (t < PHASE_MOVE_END) return loz;
       if (t >= 1 - 1e-9) return nextRect;
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
-      return lerpRect(loz, nextRect, local);
+      return lerpRect(loz, nextRect, ease(local));
     },
     // Arriving cards are only visible during the slurp-out and after;
     // they wear their NEW status the whole time.
