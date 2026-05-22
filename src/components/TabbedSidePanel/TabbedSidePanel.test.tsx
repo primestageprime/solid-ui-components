@@ -163,9 +163,11 @@ describe("TabbedSidePanel — side positioning", () => {
       />
     ));
     const children = Array.from(container.firstElementChild!.children);
-    // First child is the Tabs strip, then the content body.
+    // First child is the Tabs strip, then the PaddedBody wrapper containing the content.
     expect(children[0].getAttribute("role")).toBe("tablist");
-    expect(children[children.length - 1].getAttribute("data-testid")).toBe("a-body");
+    const lastChild = children[children.length - 1];
+    expect(lastChild.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(lastChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
   });
 
   it("side='left' renders content before strip (DOM order)", () => {
@@ -180,7 +182,10 @@ describe("TabbedSidePanel — side positioning", () => {
       />
     ));
     const children = Array.from(container.firstElementChild!.children);
-    expect(children[0].getAttribute("data-testid")).toBe("a-body");
+    // First child is the PaddedBody wrapper; the testid is inside it.
+    const firstChild = children[0];
+    expect(firstChild.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(firstChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
     expect(children[children.length - 1].getAttribute("role")).toBe("tablist");
   });
 
@@ -255,5 +260,69 @@ describe("Named variants", () => {
       />
     ));
     expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+  });
+});
+
+describe("TabbedSidePanel — contentPadding", () => {
+  it("default contentPadding is 'sm' and wraps content in a padded container (side='right' → padding-left)", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    ));
+    const body = getByTestId("a-body");
+    const wrapper = body.parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(wrapper.getAttribute("data-sui-content-side")).toBe("right");
+  });
+
+  it("contentPadding='none' produces a wrapper with data-sui-content-padding='none'", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        contentPadding="none"
+      />
+    ));
+    const body = getByTestId("a-body");
+    const wrapper = body.parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("none");
+  });
+
+  it("contentPadding='md' is forwarded to the wrapper data attribute", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        contentPadding="md"
+      />
+    ));
+    const wrapper = getByTestId("a-body").parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("md");
+  });
+
+  it("side='left' flips the padded edge (data-sui-content-side='left')", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        side="left"
+      />
+    ));
+    const wrapper = getByTestId("a-body").parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-side")).toBe("left");
   });
 });
