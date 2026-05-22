@@ -36,8 +36,8 @@
 }
 
 .status-badge--info {
-  background: rgba(var(--sui-accent-rgb), 0.2);
-  color: var(--status-full);
+  background: rgba(var(--sui-accent-rgb), 0.18);
+  color: var(--sui-accent);
   border: 1px solid rgba(var(--sui-accent-rgb), 0.4);
 }
 

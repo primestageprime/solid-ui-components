@@ -90,6 +90,12 @@ body {
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
   --status-missing: #ff0040;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
+     reference labels). Cool blue-gray reads as quiet HUD chrome against the
+     deep-navy backgrounds. */
+  --sui-chart-tick-color: #4a6a80;
 }
 
 /* ============================================

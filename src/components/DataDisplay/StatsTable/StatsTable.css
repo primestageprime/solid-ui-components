@@ -42,15 +42,15 @@
 
 /* Row variants */
 .stats-table__row--highlight {
-  background: rgba(0, 255, 136, 0.05);
+  background: rgba(var(--sui-success-rgb), 0.05);
 }
 
 .stats-table__row--warning {
-  background: rgba(255, 204, 0, 0.05);
+  background: rgba(var(--sui-warning-rgb), 0.05);
 }
 
 .stats-table__row--danger {
-  background: rgba(255, 0, 64, 0.05);
+  background: rgba(var(--sui-danger-rgb), 0.05);
 }
 
 .stats-table__cell {

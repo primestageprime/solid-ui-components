@@ -22,7 +22,7 @@
 /* KaTeX base styling for dark theme */
 .math-formula .katex {
   font-size: 1.1em;
-  color: var(--text-secondary, #b0d4e8);
+  color: var(--sui-text-secondary);
   background: transparent;
 }
 
@@ -45,19 +45,19 @@
 /* Operators (+, -, ×, etc) */
 .math-formula .katex .mbin,
 .math-formula .katex .mrel {
-  color: var(--text-muted, #7aa8c0);
+  color: var(--sui-text-muted);
 }
 
 /* Parentheses and brackets */
 .math-formula .katex .mopen,
 .math-formula .katex .mclose {
-  color: var(--text-secondary, #b0d4e8);
+  color: var(--sui-text-secondary);
 }
 
 /* Fraction line */
 .math-formula .katex .frac-line {
-  border-color: var(--text-muted, #7aa8c0);
-  background: var(--text-muted, #7aa8c0);
+  border-color: var(--sui-text-muted);
+  background: var(--sui-text-muted);
 }
 
 /* ============================================

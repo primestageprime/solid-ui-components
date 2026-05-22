@@ -61,6 +61,8 @@ const REQUIRED_TOKENS: readonly string[] = [
   "--status-partial",
   "--status-sparse",
   "--status-missing",
+  // Chart chrome (in-plot axis/tick/label colour, distinct from --sui-text-muted)
+  "--sui-chart-tick-color",
 ];
 
 // Themes to validate. Update as themes are added (Task 6 adds "bronze.css").
@@ -70,6 +72,7 @@ const THEME_FILES: readonly string[] = [
   "default.css",
   "hud.css",
   "bronze.css",
+  "bronze-dark.css",
 ];
 
 // ESM-safe equivalent of CJS `__dirname`. We resolve via fileURLToPath rather

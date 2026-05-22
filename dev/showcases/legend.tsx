@@ -14,7 +14,7 @@ const CHART_SERIES: LegendItem[] = [
 
 // Generic category encoding — fleet / portfolio / product line groupings.
 const CATEGORY_BUCKETS: LegendItem[] = [
-  { color: "var(--sui-info, #4ea1ff)", label: "Tier 1" },
+  { color: "var(--sui-accent)", label: "Tier 1" },
   { color: "var(--sui-success, #2a6)", label: "Tier 2" },
   { color: "var(--sui-warning, #d4a017)", label: "Tier 3" },
 ];
