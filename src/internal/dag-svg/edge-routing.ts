@@ -18,6 +18,106 @@ const CORNER_RADIUS = 6;
 /** When source and target share a column, how far past the column right
  * edge to route the detour channel. */
 const SAME_COL_OFFSET = 28;
+/** Vertical clearance the obstacle-dodging router leaves between the
+ *  routed curve and the top/bottom edge of any node it's detouring around. */
+const OBSTACLE_MARGIN = 14;
+
+export type ObstacleRect = EdgeRect & { id: string };
+
+/**
+ * Returns true if the straight segment from (ax, ay) to (bx, by) intersects
+ * the axis-aligned rect `r`, expanded by `pad` on every side.
+ */
+function segmentIntersectsRect(
+  ax: number, ay: number,
+  bx: number, by: number,
+  r: EdgeRect,
+  pad: number,
+): boolean {
+  const rxL = r.x - r.width / 2 - pad;
+  const rxR = r.x + r.width / 2 + pad;
+  const ryT = r.y - r.height / 2 - pad;
+  const ryB = r.y + r.height / 2 + pad;
+  // X-range overlap check first — fast reject.
+  const xMin = Math.min(ax, bx);
+  const xMax = Math.max(ax, bx);
+  if (xMax < rxL || xMin > rxR) return false;
+  // Sample y on the line at x = rxL and x = rxR; if either is inside the
+  // rect's y band, we cross it. Endpoints clipped to the segment's x range.
+  if (Math.abs(bx - ax) < 1e-6) {
+    return ay >= ryT && ay <= ryB && ax >= rxL && ax <= rxR;
+  }
+  const yAt = (x: number) => ay + ((x - ax) / (bx - ax)) * (by - ay);
+  const xL = Math.max(rxL, xMin);
+  const xR = Math.min(rxR, xMax);
+  const yL = yAt(xL);
+  const yR = yAt(xR);
+  const lo = Math.min(yL, yR);
+  const hi = Math.max(yL, yR);
+  return hi >= ryT && lo <= ryB;
+}
+
+/**
+ * Same shape as `bezierThroughChannelPath`, but detours around any obstacle
+ * rect whose bbox the straight source→target segment would cross. The
+ * detour pulls the curve's control points to a horizontal corridor above
+ * (or below) the obstacle, chosen on the side the source already sits.
+ *
+ * Limitations: handles one blocking obstacle cleanly. With multiple
+ * obstacles, the router picks the one nearest the source and detours
+ * around it; the resulting curve may still graze a second obstacle. Good
+ * enough for the broom topologies we see today.
+ */
+export function bezierAvoidingObstacles(
+  from: EdgeRect,
+  to: EdgeRect,
+  obstacles: ObstacleRect[],
+): string {
+  const dx = to.x - from.x;
+  if (Math.abs(dx) < 1) {
+    return bezierThroughChannelPath(from, to);
+  }
+
+  const goingRight = dx > 0;
+  const fromX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const toX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
+
+  // Find obstacles whose bbox the straight line would cross. Sort by
+  // distance from source so we detour around the nearest one first.
+  const blockers = obstacles
+    .filter((o) => segmentIntersectsRect(fromX, from.y, toX, to.y, o, 2))
+    .sort((a, b) => Math.abs(a.x - fromX) - Math.abs(b.x - fromX));
+
+  if (blockers.length === 0) {
+    return bezierThroughChannelPath(from, to);
+  }
+
+  // Single-obstacle detour as ONE continuous cubic. Both control points
+  // are pinned to a corridor y, with x-positions just past the obstacle's
+  // left/right edges. A cubic with both controls at the same y reaches
+  // an apex roughly 75% of the way from the endpoints toward the control
+  // y, so we overshoot the corridor by ~30% to leave clearance over the
+  // obstacle's nearest edge.
+  const o = blockers[0];
+  const above = from.y <= o.y;
+  const obsEdgeY = above ? o.y - o.height / 2 : o.y + o.height / 2;
+  // Overshoot factor so the cubic apex clears the obstacle by OBSTACLE_MARGIN.
+  // Derivation: apex_y ≈ 0.125·(from.y + to.y) + 0.75·corridorY, so to
+  // achieve apex_y == obsEdgeY ± margin we need corridorY pulled ~1.33×
+  // further than the desired clearance.
+  const desiredClearance = OBSTACLE_MARGIN;
+  const corridorY = above
+    ? obsEdgeY - desiredClearance * 1.6
+    : obsEdgeY + desiredClearance * 1.6;
+  const goingLeftToRight = toX >= fromX;
+  const c1x = goingLeftToRight
+    ? o.x - o.width / 2 - OBSTACLE_MARGIN
+    : o.x + o.width / 2 + OBSTACLE_MARGIN;
+  const c2x = goingLeftToRight
+    ? o.x + o.width / 2 + OBSTACLE_MARGIN
+    : o.x - o.width / 2 - OBSTACLE_MARGIN;
+  return `M ${fromX} ${from.y} C ${c1x} ${corridorY}, ${c2x} ${corridorY}, ${toX} ${to.y}`;
+}
 
 /**
  * Cubic bezier path from `from` to `to` for different-column edges, with

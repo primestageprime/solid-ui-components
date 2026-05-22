@@ -1,7 +1,6 @@
-import { Component, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel } from "./swimlane-chart";
-import { LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
 import {
   StatusFlowChart,
   resolveParentStatuses,
@@ -15,326 +14,13 @@ import {
   computeChartHeight as computeChartHeightHelper,
   labelForCol as labelForColHelper,
 } from "./workshop-layout";
-import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
-import { Surface } from "../../src/components/Surface";
-import { Stack } from "../../src/components/Layout";
-import { TextLabel, EllipsizedTitle } from "../../src/components/Text";
-
-type Status = "todo" | "doing" | "done";
 
 const TICK_MS = 3000;
 
 // ─── Datasets ────────────────────────────────────────────────────────────
-// Topology shapes that demonstrate how the swimlane chart handles various
-// dep-graph structures: linear chain, fan-out, disjoint pairs, fan-in,
-// and isolated nodes. Col is assigned dynamically from graph distance to
-// the current DOING node (see makeRunner), so no static col metadata.
-
-type Dataset = {
-  label: string;
-  description: string;
-  nodes: { id: string; data: { label: string } }[];
-  edges: { source: string; target: string }[];
-};
-
-// Linear 8-node chain: n1 → n2 → … → n8.
-const LINEAR_CHAIN: Dataset = {
-  label: "linear chain (8)",
-  description: "n1 → n2 → … → n8 — one DOING at a time, slides through.",
-  nodes: Array.from({ length: 8 }, (_, i) => ({
-    id: `n${i + 1}`,
-    data: { label: `Step ${i + 1}` },
-  })),
-  edges: Array.from({ length: 7 }, (_, i) => ({
-    source: `n${i + 1}`,
-    target: `n${i + 2}`,
-  })),
-};
-
-// ─── Runner: per-dataset topo helpers + col assignment ───────────────────
-
-type Runner = {
-  topo: string[];
-  initialStatuses: () => Record<string, Status>;
-  computeNext: (prev: Record<string, Status>) => Record<string, Status>;
-  /** Map of id → col, computed from graph distance to the current DOING. */
-  colByStatus: (s: Record<string, Status>) => Record<string, number>;
-};
-
-const makeRunner = (dataset: Dataset): Runner => {
-  // Kahn's topological sort.
-  const inDeg = new Map<string, number>();
-  const succ = new Map<string, string[]>();
-  const pred = new Map<string, string[]>();
-  for (const n of dataset.nodes) {
-    inDeg.set(n.id, 0);
-    succ.set(n.id, []);
-    pred.set(n.id, []);
-  }
-  for (const e of dataset.edges) {
-    inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
-    succ.get(e.source)!.push(e.target);
-    pred.get(e.target)!.push(e.source);
-  }
-  const topo: string[] = [];
-  const queue = dataset.nodes.filter((n) => inDeg.get(n.id) === 0).map((n) => n.id);
-  const inDegMut = new Map(inDeg);
-  while (queue.length > 0) {
-    const id = queue.shift()!;
-    topo.push(id);
-    for (const s of succ.get(id) ?? []) {
-      const d = (inDegMut.get(s) ?? 0) - 1;
-      inDegMut.set(s, d);
-      if (d === 0) queue.push(s);
-    }
-  }
-
-  const deps: Record<string, string[]> = {};
-  for (const e of dataset.edges) (deps[e.target] ??= []).push(e.source);
-
-  const allTodo = (): Record<string, Status> =>
-    Object.fromEntries(dataset.nodes.map((n) => [n.id, "todo" as Status]));
-
-  const allDepsDone = (id: string, s: Record<string, Status>): boolean =>
-    (deps[id] ?? []).every((d) => s[d] === "done");
-
-  const initialStatuses = (): Record<string, Status> => {
-    const out = allTodo();
-    for (const id of topo) {
-      if (out[id] === "todo" && allDepsDone(id, out)) out[id] = "doing";
-    }
-    return out;
-  };
-
-  const computeNext = (prev: Record<string, Status>): Record<string, Status> => {
-    const next = { ...prev };
-    const toFinish = topo.find((id) => next[id] === "doing");
-    if (toFinish) next[toFinish] = "done";
-    for (const id of topo) {
-      if (next[id] === "todo" && allDepsDone(id, next)) next[id] = "doing";
-    }
-    if (topo.every((id) => next[id] === "done")) return initialStatuses();
-    return next;
-  };
-
-  // Col = signed graph distance from the current DOING node:
-  //   - forward BFS along edges → positive cols (descendants / upcoming)
-  //   - backward BFS along edges → negative cols (ancestors / completed)
-  //   - nodes that can't be reached either way get a status-based fallback
-  //     so they still appear (DOING at col 0, DONE at -1, TODO at +1).
-  // This produces a sensible layout for any DAG shape: linear chains
-  // spread across cols; fan-out children stack at col +1; fan-in roots
-  // stack at col -1; disconnected nodes stack at status-bucketed cols.
-  const colByStatus = (s: Record<string, Status>): Record<string, number> => {
-    const doingId = topo.find((id) => s[id] === "doing");
-    const depth = new Map<string, number>();
-    if (doingId) {
-      depth.set(doingId, 0);
-      let frontier = [doingId];
-      while (frontier.length > 0) {
-        const next: string[] = [];
-        for (const id of frontier) {
-          for (const t of succ.get(id) ?? []) {
-            if (!depth.has(t)) { depth.set(t, depth.get(id)! + 1); next.push(t); }
-          }
-        }
-        frontier = next;
-      }
-      frontier = [doingId];
-      while (frontier.length > 0) {
-        const next: string[] = [];
-        for (const id of frontier) {
-          for (const t of pred.get(id) ?? []) {
-            if (!depth.has(t)) { depth.set(t, depth.get(id)! - 1); next.push(t); }
-          }
-        }
-        frontier = next;
-      }
-    }
-    for (const n of dataset.nodes) {
-      if (!depth.has(n.id)) {
-        const st = s[n.id];
-        depth.set(n.id, st === "done" ? -1 : st === "doing" ? 0 : 1);
-      }
-    }
-    return Object.fromEntries(depth);
-  };
-
-  return { topo, initialStatuses, computeNext, colByStatus };
-};
-
-// ─── Animation-aware node renderer ────────────────────────────────────────
-// `col` is computed per-tick from the current DOING node (see makeRunner).
-// `status` drives the visual color + label.
-type AnimNode = { label: string; col: number; status: Status };
-
-const STATUS_LABEL: Record<Status, string> = {
-  todo: "TODO",
-  doing: "DOING",
-  done: "COMPLETED",
-};
-const STATUS_TINT: Record<Status, { bg: string; border: string }> = {
-  todo: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" },
-  doing: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
-  done: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" },
-};
-
-const renderAnimNode = (node: DAGNode<AnimNode>, state: NodeRenderState) => {
-  if (state.kind === "collapsed") {
-    return (
-      <Surface
-        padding="sm"
-        radius="sm"
-        bg="rgba(255,255,255,0.03)"
-        borderColor="rgba(255,255,255,0.25)"
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          "border-style": "dashed",
-        }}
-      >
-        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}…)
-      </Surface>
-    );
-  }
-  const tint = STATUS_TINT[node.data.status];
-  return (
-    <Surface
-      padding="sm"
-      radius="sm"
-      bg={tint.bg}
-      borderColor={tint.border}
-      style={{ width: "100%", height: "100%" }}
-    >
-      <Stack gap="xs">
-        <TextLabel>{STATUS_LABEL[node.data.status]}</TextLabel>
-        <EllipsizedTitle>{node.data.label}</EllipsizedTitle>
-      </Stack>
-    </Surface>
-  );
-};
-
-// Workshop rules (shared by every row):
-//   1. Use the compressed view: nodes that don't fit collapse into the
-//      summary circle badges on the side they overflowed to.
-//   2. DOING stays in the center (col 0) at all times.
-//   3. No node ever extends past the edge of the available space —
-//      `effectiveMaxDepth` must always pick a depth whose total width
-//      fits within `containerWidth`.
-const AnimatedDag: Component<{ dataset: Dataset }> = (props) => {
-  // Each instance gets its own runner — the dataset is stable, so we
-  // compute helpers once per component lifetime.
-  const runner = makeRunner(props.dataset);
-
-  // History of states allows Prev to step back through frames already
-  // visited. Advancing past the history's end computes a new frame.
-  const [history, setHistory] = createSignal<Record<string, Status>[]>([
-    runner.initialStatuses(),
-  ]);
-  const [historyIdx, setHistoryIdx] = createSignal(0);
-  const [playing, setPlaying] = createSignal(false);
-
-  const statuses = () => history()[historyIdx()];
-  const setStatuses = (next: Record<string, Status>) => {
-    const idx = historyIdx();
-    setHistory((h) => [...h.slice(0, idx + 1), next]);
-    setHistoryIdx(idx + 1);
-  };
-
-  const advance = () => {
-    const idx = historyIdx();
-    const h = history();
-    if (idx + 1 < h.length) {
-      setHistoryIdx(idx + 1); // replay a future-of-cursor frame
-    } else {
-      setStatuses(runner.computeNext(h[idx]));
-    }
-  };
-
-  const goBack = () => {
-    const idx = historyIdx();
-    if (idx > 0) setHistoryIdx(idx - 1);
-  };
-
-  const togglePlay = () => setPlaying((p) => !p);
-
-  createEffect(() => {
-    if (!playing()) return;
-    const timer = setInterval(advance, TICK_MS);
-    onCleanup(() => clearInterval(timer));
-  });
-
-  const animatedNodes = (): DAGNode<AnimNode>[] => {
-    const s = statuses();
-    const cols = runner.colByStatus(s);
-    return props.dataset.nodes.map((n) => ({
-      id: n.id,
-      data: {
-        label: n.data.label,
-        col: cols[n.id] ?? 0,
-        status: s[n.id],
-      },
-    }));
-  };
-
-  const btnStyle = {
-    padding: "6px 14px",
-    "font-size": "12px",
-    "font-family": "inherit",
-    color: "var(--sui-text, #e6ecf5)",
-    background: "var(--sui-surface, rgba(0,0,0,0.2))",
-    border: "1px solid var(--sui-border, rgba(255,255,255,0.15))",
-    "border-radius": "4px",
-    cursor: "pointer",
-  } as const;
-
-  return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
-        <button
-          type="button"
-          style={btnStyle}
-          onClick={goBack}
-          disabled={historyIdx() === 0}
-        >
-          ← Prev
-        </button>
-        <button type="button" style={btnStyle} onClick={togglePlay}>
-          {playing() ? "⏸ Pause" : "▶ Play"}
-        </button>
-        <button type="button" style={btnStyle} onClick={advance}>
-          Next →
-        </button>
-        <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.5)" }}>
-          frame {historyIdx() + 1} / {history().length}
-        </span>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          height: "560px",
-          "min-width": "360px",
-          border: "1px dashed rgba(255,255,255,0.12)",
-          "border-radius": "4px",
-          "box-sizing": "border-box",
-        }}
-      >
-        {/* LinearFlowSwimlaneChart is the curried variant that bakes in
-            the depth/collapse/center defaults every row needs (per ADR-0001).
-            Consumer only passes data + render callback. */}
-        <LinearFlowSwimlaneChart
-          nodes={animatedNodes()}
-          edges={props.dataset.edges}
-          swimlaneFor={(n) => n.data.col}
-          renderNode={renderAnimNode}
-        />
-      </div>
-    </div>
-  );
-};
+// The animated linear-chain swimlane demo (formerly row 1) has been moved
+// to the SwimlaneChart showcase. Workshop rows below are
+// StatusFlowChart-focused.
 
 // ─── StatusFlowChart demo (row 2) ────────────────────────────────────────
 // Single parent + 8 children. Each tick advances one child through
@@ -921,25 +607,6 @@ const TwoParentsRow: Component = () => {
 // the state machine until it cycles back to the initial state. Each row
 // has a short ID (A0, A1, …; B0, B1, …) so we can reference them when
 // discussing visuals.
-
-const FRAME_LIMIT = 30; // safety cap; real cycles are well under this
-
-const generateFrames = (init: () => StatusFlowNode[]): StatusFlowNode[][] => {
-  const frames: StatusFlowNode[][] = [];
-  const seen = new Set<string>();
-  let curr = init();
-  while (frames.length < FRAME_LIMIT) {
-    const key = curr
-      .map((n) => `${n.id}:${n.status}`)
-      .sort()
-      .join(",");
-    if (seen.has(key)) break;
-    seen.add(key);
-    frames.push(curr);
-    curr = advanceChildren(curr, init);
-  }
-  return frames;
-};
 
 // Per-frame math: counts visible leaves per col, computes the same
 // numbers the chart's auto-sizer derives from container width. Pure —
@@ -1535,12 +1202,38 @@ const RulesPanel: Component = () => (
   </div>
 );
 
-const FrameExplorerRow: Component = () => {
-  const aFrames = generateFrames(initParentA);
-  const bFrames = generateFrames(initParentB);
-  const sFrames = generateFrames(initStandaloneChain);
-  const cFrames = generateFrames(initChores);
+// Hand-picked broom snapshots that exhibit "edge passes through unrelated
+// node" cases — used as anchors when iterating on edge routing.
+const makeBroomFrame = (statuses: Partial<Record<string, string>>): StatusFlowNode[] =>
+  initParentB().map((n) =>
+    n.parentId === "pB" || n.id !== "pB"
+      ? { ...n, status: statuses[n.id] ?? n.status }
+      : n,
+  );
 
+// 1. b3 (DOING, col 0) → b6 (TODO, col +2): line crosses b5 at col +1.
+const BROOM_CASE_1 = makeBroomFrame({
+  b1: "DONE", b2: "DONE", b3: "DOING", b4: "DOING",
+  b5: "TODO", b6: "TODO", b7: "TODO", b8: "TODO",
+});
+// 2. b3 (DONE, col -2) → b6 (TODO, col +2): line crosses b4 and b5.
+const BROOM_CASE_2 = makeBroomFrame({
+  b1: "DONE", b2: "DONE", b3: "DONE", b4: "DOING",
+  b5: "TODO", b6: "TODO", b7: "TODO", b8: "TODO",
+});
+// 3. Tail end of the broom: only b6, b7, b8 visible; b1..b5 collapse to −S.
+const BROOM_CASE_3 = makeBroomFrame({
+  b1: "DONE", b2: "DONE", b3: "DONE", b4: "DONE",
+  b5: "DONE", b6: "DONE", b7: "DONE", b8: "DOING",
+});
+
+const BROOM_CASES: { id: string; nodes: StatusFlowNode[]; note: string }[] = [
+  { id: "B1", nodes: BROOM_CASE_1, note: "b3 → b6 crosses b5" },
+  { id: "B2", nodes: BROOM_CASE_2, note: "b3 → b6 crosses b4 + b5" },
+  { id: "B3", nodes: BROOM_CASE_3, note: "tail end — clean routing" },
+];
+
+const FrameExplorerRow: Component = () => {
   // Track the actual DAG (chart) container width — not the whole row,
   // since the row also has the id column + state table + math panel.
   // All FrameRows share one flex layout so measuring the first chart's
@@ -1559,56 +1252,40 @@ const FrameExplorerRow: Component = () => {
   };
   onCleanup(() => ro?.disconnect());
 
-  const sectionHeader = (label: string, count: number) => (
-    <div
-      style={{
-        "font-size": "11px",
-        "letter-spacing": "0.06em",
-        "text-transform": "uppercase" as const,
-        color: "rgba(255,255,255,0.5)",
-        "margin": "16px 0 6px",
-      }}
-    >
-      {label} — {count} frames
-    </div>
-  );
-
   return (
     <>
       <div class="workshop-grid__cell">
-        <SubsectionTitle>Frame explorer</SubsectionTitle>
+        <SubsectionTitle>Frame explorer — edge routing cases</SubsectionTitle>
         <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-          Every interesting state from each example's lifecycle rendered
-          statically. Frame IDs (e.g. <code>A0</code>, <code>B3</code>)
-          let us point at a specific moment without scrubbing the timer.
+          Hand-picked broom snapshots that exercise edge routing. The first
+          two cases draw a line from a source node straight through an
+          unrelated visible node — these are the configurations to verify
+          when iterating on the orthogonal-routing detour.
         </p>
         <RulesPanel />
       </div>
       <div class="workshop-grid__cell">
         <BreakpointsPanel width={width()} />
-        {sectionHeader("Parent Task A (linear chain, 3 children)", aFrames.length)}
-        {aFrames.map((nodes, i) => (
-          <FrameRow
-            id={`A${i}`}
-            nodes={nodes}
-            width={width()}
-            chartRef={i === 0 ? attachFirstChart : undefined}
-          />
-        ))}
-
-        {sectionHeader("Parent Task B (broom, 8 children)", bFrames.length)}
-        {bFrames.map((nodes, i) => (
-          <FrameRow id={`B${i}`} nodes={nodes} width={width()} />
-        ))}
-
-        {sectionHeader("Standalone chain (4 tasks, no parent)", sFrames.length)}
-        {sFrames.map((nodes, i) => (
-          <FrameRow id={`S${i}`} nodes={nodes} width={width()} />
-        ))}
-
-        {sectionHeader("Chores (3 independent)", cFrames.length)}
-        {cFrames.map((nodes, i) => (
-          <FrameRow id={`C${i}`} nodes={nodes} width={width()} />
+        {BROOM_CASES.map((c, i) => (
+          <>
+            <div
+              style={{
+                "font-size": "11px",
+                "letter-spacing": "0.06em",
+                "text-transform": "uppercase" as const,
+                color: "rgba(255,255,255,0.5)",
+                margin: "16px 0 6px",
+              }}
+            >
+              {c.id} — {c.note}
+            </div>
+            <FrameRow
+              id={c.id}
+              nodes={c.nodes}
+              width={width()}
+              chartRef={i === 0 ? attachFirstChart : undefined}
+            />
+          </>
         ))}
       </div>
     </>
@@ -1620,17 +1297,6 @@ export const WorkshopShowcase: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Workshop</SectionTitle>
       <div class="workshop-grid">
-        <div class="workshop-grid__cell">
-          <SubsectionTitle>{LINEAR_CHAIN.label}</SubsectionTitle>
-          <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-            {LINEAR_CHAIN.description}
-          </p>
-          <JsonPanel value={LINEAR_CHAIN} heightLines={10} />
-        </div>
-        <div class="workshop-grid__cell">
-          <AnimatedDag dataset={LINEAR_CHAIN} />
-        </div>
-
         <ParentChildrenRow />
         <TwoParentsRow />
         <FrameExplorerRow />

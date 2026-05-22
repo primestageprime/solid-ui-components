@@ -25,7 +25,8 @@ import {
   DagArrowMarker,
   DagSvgNode,
   DagSvgEdge,
-  bezierThroughChannelPath,
+  bezierAvoidingObstacles,
+  type ObstacleRect,
 } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
 import "./SwimlaneChart.css";
@@ -270,6 +271,13 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
 
   const edgeViews = createMemo(() => {
     const positions = layout().positions;
+    // Build the obstacle list once per layout — every visible node is a
+    // potential obstacle for any edge that isn't anchored on it.
+    const allRects: ObstacleRect[] = [];
+    for (const [id, p] of positions) {
+      if (id.startsWith("__collapsed_")) continue;
+      allRects.push({ id, x: p.x, y: p.y, width: p.width, height: p.height });
+    }
     return layout().edges.flatMap((e) => {
       const s = positions.get(e.sourceId);
       const t = positions.get(e.targetId);
@@ -282,10 +290,13 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       ) {
         return [];
       }
+      const obstacles = allRects.filter(
+        (r) => r.id !== e.sourceId && r.id !== e.targetId,
+      );
       // Path follows the edge's data direction (source -> target) so the
       // arrowhead (marker-end) lands at the target = dependent.
       return [{
-        d: bezierThroughChannelPath(s, t),
+        d: bezierAvoidingObstacles(s, t, obstacles),
         isSummary: false,
         key: `${e.sourceId}|${e.targetId}`,
       }];

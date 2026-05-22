@@ -1,6 +1,6 @@
-import { Component, For, JSX } from "solid-js";
-import { SwimlaneChart } from "../../src/components/SwimlaneChart";
-import type { DAGNode } from "../../src/components/DagChart";
+import { Component, For, JSX, createEffect, createSignal, onCleanup } from "solid-js";
+import { SwimlaneChart, LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
+import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface";
 import { Stack } from "../../src/components/Layout";
 import {
@@ -246,6 +246,183 @@ export const StubChart: Component<{
   </div>
 );
 
+// ─── Animated linear chain (live demo) ───────────────────────────────────
+// Demonstrates SwimlaneChart's compress/expand animation: each tick a node
+// advances TODO → DOING → DONE; cols are computed from graph distance to
+// the current DOING node so nodes slide horizontally through the visible
+// window. When the window can't hold every node, the overflow side renders
+// a boundary summary badge.
+
+type AnimStatus = "todo" | "doing" | "done";
+
+const ANIM_CHAIN_NODES = Array.from({ length: 8 }, (_, i) => ({
+  id: `n${i + 1}`,
+  data: { label: `Step ${i + 1}` },
+}));
+const ANIM_CHAIN_EDGES = Array.from({ length: 7 }, (_, i) => ({
+  source: `n${i + 1}`,
+  target: `n${i + 2}`,
+}));
+
+const ANIM_STATUS_LABEL: Record<AnimStatus, string> = {
+  todo: "TODO",
+  doing: "DOING",
+  done: "COMPLETED",
+};
+const ANIM_STATUS_TINT: Record<AnimStatus, { bg: string; border: string }> = {
+  todo: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" },
+  doing: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
+  done: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" },
+};
+
+type AnimNodeData = { label: string; col: number; status: AnimStatus };
+
+const renderAnimNode = (
+  node: DAGNode<AnimNodeData>,
+  state: NodeRenderState,
+) => {
+  if (state.kind === "collapsed") {
+    return (
+      <Surface
+        padding="sm"
+        radius="sm"
+        bg="rgba(255,255,255,0.03)"
+        borderColor="rgba(255,255,255,0.25)"
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          "align-items": "center",
+          "justify-content": "center",
+          "border-style": "dashed",
+        }}
+      >
+        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}…)
+      </Surface>
+    );
+  }
+  const tint = ANIM_STATUS_TINT[node.data.status];
+  return (
+    <Surface
+      padding="sm"
+      radius="sm"
+      bg={tint.bg}
+      borderColor={tint.border}
+      style={{ width: "100%", height: "100%" }}
+    >
+      <Stack gap="xs">
+        <TextLabel>{ANIM_STATUS_LABEL[node.data.status]}</TextLabel>
+        <EllipsizedTitle>{node.data.label}</EllipsizedTitle>
+      </Stack>
+    </Surface>
+  );
+};
+
+const ANIM_TICK_MS = 3000;
+
+// Walks the chain TODO → DOING → DONE one node per tick, resets at the end.
+// Col is the signed graph distance from the current DOING node — descendants
+// get positive cols, ancestors get negative.
+const AnimatedChain: Component = () => {
+  const initStatuses = (): Record<string, AnimStatus> => {
+    const s: Record<string, AnimStatus> = {};
+    for (const n of ANIM_CHAIN_NODES) s[n.id] = "todo";
+    s.n1 = "doing";
+    return s;
+  };
+  const nextStatuses = (prev: Record<string, AnimStatus>): Record<string, AnimStatus> => {
+    const next = { ...prev };
+    const doingIdx = ANIM_CHAIN_NODES.findIndex((n) => next[n.id] === "doing");
+    if (doingIdx < 0) return initStatuses();
+    next[ANIM_CHAIN_NODES[doingIdx].id] = "done";
+    const nextId = ANIM_CHAIN_NODES[doingIdx + 1]?.id;
+    if (nextId) next[nextId] = "doing";
+    else return initStatuses();
+    return next;
+  };
+  const colByStatus = (s: Record<string, AnimStatus>): Record<string, number> => {
+    const doingIdx = ANIM_CHAIN_NODES.findIndex((n) => s[n.id] === "doing");
+    const cols: Record<string, number> = {};
+    for (let i = 0; i < ANIM_CHAIN_NODES.length; i++) {
+      cols[ANIM_CHAIN_NODES[i].id] = doingIdx >= 0 ? i - doingIdx : 0;
+    }
+    return cols;
+  };
+
+  const [history, setHistory] = createSignal<Record<string, AnimStatus>[]>([initStatuses()]);
+  const [idx, setIdx] = createSignal(0);
+  const [playing, setPlaying] = createSignal(false);
+  const current = () => history()[idx()];
+  const advance = () => {
+    const h = history();
+    const i = idx();
+    if (i + 1 < h.length) setIdx(i + 1);
+    else {
+      setHistory([...h, nextStatuses(h[i])]);
+      setIdx(i + 1);
+    }
+  };
+  const goBack = () => idx() > 0 && setIdx(idx() - 1);
+
+  createEffect(() => {
+    if (!playing()) return;
+    const t = setInterval(advance, ANIM_TICK_MS);
+    onCleanup(() => clearInterval(t));
+  });
+
+  const nodes = (): DAGNode<AnimNodeData>[] => {
+    const s = current();
+    const cols = colByStatus(s);
+    return ANIM_CHAIN_NODES.map((n) => ({
+      id: n.id,
+      data: { label: n.data.label, col: cols[n.id] ?? 0, status: s[n.id] },
+    }));
+  };
+
+  const btnStyle = {
+    padding: "6px 14px",
+    "font-size": "12px",
+    "font-family": "inherit",
+    color: "var(--sui-text, #e6ecf5)",
+    background: "var(--sui-surface, rgba(0,0,0,0.2))",
+    border: "1px solid var(--sui-border, rgba(255,255,255,0.15))",
+    "border-radius": "4px",
+    cursor: "pointer",
+  } as const;
+
+  return (
+    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+      <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+        <button type="button" style={btnStyle} onClick={goBack} disabled={idx() === 0}>← Prev</button>
+        <button type="button" style={btnStyle} onClick={() => setPlaying((p) => !p)}>
+          {playing() ? "⏸ Pause" : "▶ Play"}
+        </button>
+        <button type="button" style={btnStyle} onClick={advance}>Next →</button>
+        <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.5)" }}>
+          frame {idx() + 1} / {history().length}
+        </span>
+      </div>
+      <div
+        style={{
+          width: "100%",
+          height: "560px",
+          "min-width": "360px",
+          border: "1px dashed rgba(255,255,255,0.12)",
+          "border-radius": "4px",
+          "box-sizing": "border-box",
+        }}
+      >
+        <LinearFlowSwimlaneChart
+          nodes={nodes()}
+          edges={ANIM_CHAIN_EDGES}
+          swimlaneFor={(n) => n.data.col}
+          renderNode={renderAnimNode}
+        />
+      </div>
+    </div>
+  );
+};
+
 // ─── Showcase: eight scenarios ────────────────────────────────────────────
 export const SwimlaneChartShowcase: Component = () => {
   return (
@@ -325,6 +502,25 @@ export const SwimlaneChartShowcase: Component = () => {
         </div>
         <div class="workshop-grid__cell">
           <StubChart graph={MULTI_DEPS} minWidth="360px" />
+        </div>
+
+        <div class="workshop-grid__cell">
+          <SubsectionTitle>9 · animated linear chain (live)</SubsectionTitle>
+          <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+            8-node chain ticking through TODO → DOING → DONE. Col is the
+            signed graph distance from the current DOING node, so the
+            whole chain slides horizontally as work progresses. Resize
+            the window to see the depth ring compress: overflow nodes
+            collapse into per-side boundary badges. Uses{" "}
+            <code>LinearFlowSwimlaneChart</code> (the curried variant).
+          </p>
+          <JsonPanel
+            value={{ nodes: ANIM_CHAIN_NODES, edges: ANIM_CHAIN_EDGES }}
+            heightLines={10}
+          />
+        </div>
+        <div class="workshop-grid__cell">
+          <AnimatedChain />
         </div>
       </div>
     </div>
