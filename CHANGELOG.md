@@ -19,7 +19,7 @@
 
 | Old | New | Migration |
 |---|---|---|
-| `VesselCard`, `VesselCardProps` | `RemovableItemCard`, `RemovableItemCardProps` | Find/replace symbol names. Props unchanged. |
+| `VesselCard`, `VesselCardProps` | `RemovableItemCard`, `RemovableItemCardProps` | Find/replace symbol names. Props unchanged. No CSS-class changes — `RemovableItemCard` is zero-CSS and emits no own selectors. |
 | `VesselCallHeader`, `VesselCallHeaderProps` | `TitledTimeRangeHeader`, `TitledTimeRangeHeaderProps` | Find/replace symbol names *and* prop names — see below. |
 | `EngineDataSection`, `EngineDataSectionProps` | *(removed)* | Inline the pattern using existing Primitives — see below. |
 
@@ -28,8 +28,8 @@
 | Old prop | New prop |
 |---|---|
 | `vesselName` | `title` |
-| `connectedAt` | `startAt` |
-| `disconnectedAt` | `endAt` |
+| `connectedAt` | `start` |
+| `disconnectedAt` | `end` |
 | `assetId` | `assetLabel` |
 
 The CSS class prefix changed in lockstep: `sui-vessel-call-header*` → `sui-titled-time-range-header*`. Consumers that target these classes directly need to update their selectors. The `badge`, `action`, and `href` props are unchanged.
@@ -56,6 +56,8 @@ import { NarrowStack, TextTitle, TextBody, AlertBox, NumberWithUnits } from "@pr
   </Show>
 </NarrowStack>
 ```
+
+The inlined version drops the `EngineDataSection`'s own chrome — adjust spacing/typography wrappers at the call site if the visual result differs from the original.
 
 ## 0.26.0
 

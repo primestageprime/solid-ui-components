@@ -13,10 +13,10 @@ import "./TitledTimeRangeHeader.css";
 
 export interface TitledTimeRangeHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
   title: string;
-  startAt: string;
-  endAt?: string | null;
+  start: string;
+  end?: string | null;
   assetLabel?: string;
-  /** Optional badge to display after the title (e.g., "2 TRAINS") */
+  /** Optional badge to display after the title (e.g., "ACTIVE", "3 ITEMS") */
   badge?: JSX.Element;
   /** Optional action element on the right side */
   action?: JSX.Element;
@@ -46,8 +46,8 @@ function formatElapsed(startIso: string, endIso?: string | null): string {
 export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (props) => {
   const [local, others] = splitProps(props, [
     "title",
-    "startAt",
-    "endAt",
+    "start",
+    "end",
     "assetLabel",
     "badge",
     "action",
@@ -69,10 +69,10 @@ export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (pro
       </Show>
       <span class="sui-titled-time-range-header__separator">·</span>
       <span class="sui-titled-time-range-header__timestamp">
-        {formatDateTimeRange(local.startAt, local.endAt)}
+        {formatDateTimeRange(local.start, local.end)}
       </span>
       <span class="sui-titled-time-range-header__duration">
-        ({formatElapsed(local.startAt, local.endAt)})
+        ({formatElapsed(local.start, local.end)})
       </span>
       <Show when={local.assetLabel}>
         <span class="sui-titled-time-range-header__asset">{local.assetLabel}</span>

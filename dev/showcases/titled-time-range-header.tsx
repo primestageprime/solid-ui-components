@@ -12,24 +12,24 @@ export const TitledTimeRangeHeaderShowcase: Component = () => {
       <h3>Active session</h3>
       <TitledTimeRangeHeader
         title="Project Alpha"
-        startAt="2026-02-13T08:30:00Z"
-        endAt="2026-02-13T14:15:00Z"
+        start="2026-02-13T08:30:00Z"
+        end="2026-02-13T14:15:00Z"
         badge={<StatusBadge variant="info">ACTIVE</StatusBadge>}
         action={<Button variant="primary" size="sm">View</Button>}
       />
 
-      <h3 style={{ "margin-top": "24px" }}>Ongoing (no endAt)</h3>
+      <h3 style={{ "margin-top": "24px" }}>Ongoing (no end)</h3>
       <TitledTimeRangeHeader
         title="Project Beta"
-        startAt="2026-02-13T08:30:00Z"
+        start="2026-02-13T08:30:00Z"
         action={<Button variant="primary" size="sm">View</Button>}
       />
 
       <h3 style={{ "margin-top": "24px" }}>With asset label + link href</h3>
       <TitledTimeRangeHeader
         title="Project Gamma"
-        startAt="2026-02-10T12:00:00Z"
-        endAt="2026-02-13T18:30:00Z"
+        start="2026-02-10T12:00:00Z"
+        end="2026-02-13T18:30:00Z"
         assetLabel="AST-4421"
         href="#"
       />
