@@ -9,8 +9,8 @@ interface Depth3Props {
 export const ResultDisplayShowcase: Component<Depth3Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>ResultDisplay — Depth 3</h2>
-      <p class="text-meta">Owns CSS (ResultDisplay.css). Composes NumberWithUnits (Depth 2). Large value + units row with label, sublabel, badge.</p>
+      <h2>ResultDisplay — Atomic Primitive (Depth 1)</h2>
+      <p class="text-meta">Owns CSS (ResultDisplay.css); no library-component imports. Header (label + sublabel) over a value+units row with optional badge slot. Data-driven `valueColor` flows as inline style on the value span (allowed inside a Primitive).</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>

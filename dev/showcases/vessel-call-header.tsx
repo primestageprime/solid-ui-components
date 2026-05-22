@@ -10,8 +10,8 @@ interface Depth3Props {
 export const VesselCallHeaderShowcase: Component<Depth3Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>VesselCallHeader — Depth 3</h2>
-      <p class="text-meta">Owns CSS (VesselCallHeader.css). Composes DateTimeRange (Depth 2). Vessel name + time range + duration + badge.</p>
+      <h2>VesselCallHeader — Atomic Primitive (Depth 1)</h2>
+      <p class="text-meta">Owns CSS (VesselCallHeader.css); no library-component imports. The pure `formatDateTimeRange` helper supplies the date-range string. Title + optional badge + time range + duration + optional asset chip + optional action slot.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>

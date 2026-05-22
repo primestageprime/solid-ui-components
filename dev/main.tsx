@@ -198,12 +198,12 @@ const items: Item[] = [
   { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:3", "indicator", "status"] },
   { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },
   { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:3", "list", "data"] },
-  { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:3", "container", "data"] },
+  { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:1", "container", "data"] },
   { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase, tags: ["depth:3", "container", "data"] },
   { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:4", "container", "math"] },
   { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:4", "form", "math"] },
-  { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:3", "container", "indicator", "data"] },
-  { id: "result-display", label: "ResultDisplay", component: ResultDisplayShowcase, tags: ["depth:3", "math", "data"] },
+  { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:1", "container", "indicator", "data"] },
+  { id: "result-display", label: "ResultDisplay", component: ResultDisplayShowcase, tags: ["depth:1", "math", "data"] },
 
   { id: "result-panel", label: "ResultPanel", component: ResultPanelShowcase, tags: ["depth:4", "container", "math", "data"] },
 

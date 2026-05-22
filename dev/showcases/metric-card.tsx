@@ -9,8 +9,8 @@ interface Depth3Props {
 export const MetricCardShowcase: Component<Depth3Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>MetricCard — Depth 3</h2>
-      <p class="text-meta">Owns CSS (MetricCard.css). Composes NumberWithUnits (Depth 2). Labeled value card with status color variants.</p>
+      <h2>MetricCard — Atomic Primitive (Depth 1)</h2>
+      <p class="text-meta">Owns CSS (MetricCard.css); no library-component imports. Labeled value card with optional units and status color variants. When `units` is supplied the value uses the same monospace face as the sibling NumberWithUnits Primitive.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Color Variants</h3>

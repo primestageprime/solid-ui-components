@@ -1,7 +1,11 @@
 // ============================================
-// EngineDataSection — Depth 3 (zero CSS)
-// Composes AlertBox (Depth 2) + NumberWithUnits
-// (Depth 2). Heading + warning box + table slot.
+// EngineDataSection — Composite (Depth 3, zero CSS).
+// Composes AlertBox (Depth 2) + NumberWithUnits (Atomic
+// Primitive, Depth 1) + Layout/Text curried variants.
+// Heading + warning box + table slot.
+//
+// NOTE: name encodes a domain concept ("Engine"); flagged
+// for rename in the next library-wide naming pass.
 // ============================================
 import { JSX, splitProps, Show } from "solid-js";
 import { NumberWithUnits } from "../NumberWithUnits";
