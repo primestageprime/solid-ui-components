@@ -10,7 +10,16 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { Component, createSignal, createEffect, For, JSX, onMount, Show } from "solid-js";
+import { Component, createSignal, createEffect, For, JSX, Match, onMount, Show, Switch } from "solid-js";
+import {
+  buildLaneTrajectory,
+  type CardTrajectory,
+  type LaneTrajectory,
+  type LayoutParams as TrajLayoutParams,
+  type LozengeRects,
+  PHASE_LEAVE_END,
+  PHASE_MOVE_END,
+} from "./animation-trajectories";
 import { orthogonalAvoidingObstacles } from "../../src/internal/dag-svg";
 import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
 import { resolveParentStatuses } from "../../src/components/StatusFlowChart";
@@ -283,9 +292,6 @@ function TaskCard(props: {
       width={props.width}
       height={props.height}
       overflow="visible"
-      // Smooth transitions when reactive x/y change between layout
-      // recomputes (e.g. a child moves col as its status flips).
-      style={{ transition: "x 0.45s ease-out, y 0.45s ease-out" }}
     >
       <div
         xmlns="http://www.w3.org/1999/xhtml"
@@ -1342,6 +1348,62 @@ function MixedShapesLaneReactive(props: {
     height: colBottomY - colTopY,
   });
 
+  // ─── trajectory-driven card animation ────────────────────────────────
+  // Phase 1 adds the unified trajectory model: card position, mode,
+  // path, status are all functions of `currentT` ∈ [0, 1]. Cards
+  // render from the trajectory; arrows still use the legacy shadow
+  // state + edges() pipeline below (Phase 2 swaps them over).
+  const trajLayoutParams = (): TrajLayoutParams => ({
+    maxDepth: MS_MAX_DEPTH,
+    centerX,
+    parentRowCenterY,
+    childRowCenterY,
+    cardWidth: MS_CARD_W,
+    cardHeight: MS_CARD_H,
+    colCenterGap: MS_COL_CENTER_GAP,
+    rowGap: MS_ROW_GAP,
+  });
+  const lozengeRects = (): LozengeRects => ({
+    left: leftLozRect(),
+    right: rightLozRect(),
+  });
+  const [traj, setTraj] = createSignal<LaneTrajectory>(
+    buildLaneTrajectory({
+      prevFrame: props.nodes,
+      nextFrame: props.nodes,
+      layoutParams: trajLayoutParams(),
+      lozengeRects: lozengeRects(),
+    }),
+  );
+  // currentT starts at 1 (the trajectory is the identity — every card
+  // resting at its current rect — until the first state change).
+  const [currentT, setCurrentT] = createSignal(1);
+  let prevFrameRef = props.nodes;
+  let rafHandle: number | undefined;
+
+  createEffect(() => {
+    const incoming = props.nodes;
+    if (incoming === prevFrameRef) return;
+    const newTraj = buildLaneTrajectory({
+      prevFrame: prevFrameRef,
+      nextFrame: incoming,
+      layoutParams: trajLayoutParams(),
+      lozengeRects: lozengeRects(),
+    });
+    prevFrameRef = incoming;
+    setTraj(newTraj);
+    setCurrentT(0);
+    if (rafHandle !== undefined) cancelAnimationFrame(rafHandle);
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / newTraj.durationMs);
+      setCurrentT(t);
+      if (t < 1) rafHandle = requestAnimationFrame(tick);
+      else rafHandle = undefined;
+    };
+    rafHandle = requestAnimationFrame(tick);
+  });
+
   // Active slurp transitions for nodes crossing the visible-window
   // boundary this frame. Detected via createEffect comparing the
   // previous layout to the current one.
@@ -1621,63 +1683,61 @@ function MixedShapesLaneReactive(props: {
       {/* Slurp transition paths — one per node currently morphing
           between the lozenge and its rest position. Rendered BEFORE
           the cards so they sit beneath. */}
-      <For each={transitions()}>
-        {(tx) => <SlurpTransitionPath transition={tx} onComplete={onTxComplete} />}
-      </For>
-      {/* All TaskCards (parent + children). Iterating by STABLE id
-          keeps Solid's `<For>` reusing the same foreignObject DOM
-          element across ticks — without that, every state change
-          remounts every card and the CSS x/y transitions never fire.
-          Parents display their EFFECTIVE status (computed from
-          children) so a parent in the DOING column reads "DOING"
-          rather than the static initial "TODO". */}
-      <For each={shadowNodes().map((n) => n.id)}>
+      {/* Cards: trajectory-driven. modeAt(t) gates between TaskCard
+          (resting/moving), SVG path morph (slurp in/out), and gone.
+          Iterating by STABLE string id so Solid's <For> preserves
+          the foreignObject DOM element across ticks (keeps hover
+          state stable, etc.). */}
+      <For each={Array.from(traj().cards.keys())}>
         {(id) => {
-          const pos = () => layout().positions.find((p) => p.node.id === id);
-          const node = () => shadowNodes().find((n) => n.id === id);
-          const isParent = () => pos()?.isParent ?? false;
-          const task = () => {
+          const card = (): CardTrajectory | undefined => traj().cards.get(id);
+          const t = () => currentT();
+          const mode = () => card()?.modeAt(t()) ?? "gone";
+          const rect = () => card()?.rectAt(t()) ?? null;
+          const status = () => card()?.statusAt(t()) ?? "TODO";
+          const node = () => props.nodes.find((n) => n.id === id);
+          // TaskData for the card. statusAt(t) is the source of truth
+          // for status; we layer it over the node's title/owner.
+          const task = (): TaskData | null => {
             const n = node();
             if (!n) return null;
-            const base = nodeToTask(n);
-            if (!isParent()) return base;
-            const effective = resolveParentStatuses(shadowNodes(), "DOING");
-            const eff = effective.get(n.id) ?? n.status;
-            return { ...base, status: eff as ChildStatus };
+            return { ...nodeToTask(n), status: status() };
           };
+          const theme = () => statusTheme(status());
           return (
-            <Show
-              when={
-                pos()?.visible &&
-                task() &&
-                !inTransition(id) &&
-                !pendingArrivals().has(id)
-              }
-            >
-              {/* Read pos() / task() inline so reactive updates flow
-                  through cleanly — no captured stale references. */}
-              <TaskCard
-                x={pos()!.x! - MS_CARD_W / 2}
-                y={pos()!.y! - MS_CARD_H / 2}
-                width={MS_CARD_W}
-                height={MS_CARD_H}
-                visible={true}
-                task={task()!}
-                onHoverChange={(h) =>
-                  props.onCardHover?.(
-                    h
-                      ? {
-                          task: task()!,
-                          x: pos()!.x! - MS_CARD_W / 2,
-                          y: pos()!.y! - MS_CARD_H / 2,
-                          width: MS_CARD_W,
-                          height: MS_CARD_H,
-                        }
-                      : null,
-                  )
-                }
-              />
-            </Show>
+            <Switch>
+              <Match when={mode() === "card" && rect() && task()}>
+                <TaskCard
+                  x={rect()!.x - MS_CARD_W / 2}
+                  y={rect()!.y - MS_CARD_H / 2}
+                  width={MS_CARD_W}
+                  height={MS_CARD_H}
+                  visible={true}
+                  task={task()!}
+                  onHoverChange={(h) =>
+                    props.onCardHover?.(
+                      h
+                        ? {
+                            task: task()!,
+                            x: rect()!.x - MS_CARD_W / 2,
+                            y: rect()!.y - MS_CARD_H / 2,
+                            width: MS_CARD_W,
+                            height: MS_CARD_H,
+                          }
+                        : null,
+                    )
+                  }
+                />
+              </Match>
+              <Match when={mode() === "morph" && card()?.pathAt(t())}>
+                <path
+                  d={card()!.pathAt(t())!}
+                  fill={theme().fill}
+                  stroke={theme().stroke}
+                  stroke-width="1"
+                />
+              </Match>
+            </Switch>
           );
         }}
       </For>
