@@ -13,6 +13,7 @@
 import { Component, createSignal, createEffect, For, JSX, Match, onMount, Show, Switch } from "solid-js";
 import {
   buildLaneTrajectory,
+  dashednessAt,
   type CardTrajectory,
   type LaneTrajectory,
   type LayoutParams as TrajLayoutParams,
@@ -1512,46 +1513,6 @@ function MixedShapesLaneReactive(props: {
   const onTxComplete = (tx: MsLozengeTransition) =>
     setTransitions((prev) => prev.filter((t) => t !== tx));
 
-  // Edge data:
-  //   - visible → visible: SOLID accent edge
-  //   - visible → hidden:  DASHED edge to the matching lozenge
-  //     (hidden node is the DEPENDENT; lives in right lozenge)
-  //   - hidden → visible:  DASHED edge from the matching lozenge to
-  //     the visible target (hidden node is the PREREQUISITE; lives
-  //     in left lozenge since done-earlier sits on the left)
-  const edges = () => {
-    const positionById = new Map<string, LanePosition>(
-      layout().positions.map((p) => [p.node.id, p]),
-    );
-    const solidEdges: { from: LanePosition; to: LanePosition }[] = [];
-    const dashedToRight: Map<string, LanePosition> = new Map();
-    const dashedFromLeft: Map<string, LanePosition> = new Map();
-    for (const n of shadowNodes()) {
-      for (const depId of n.dependsOn ?? []) {
-        const src = positionById.get(depId);
-        const tgt = positionById.get(n.id);
-        if (!src || !tgt) continue;
-        if (src.visible && tgt.visible) {
-          solidEdges.push({ from: src, to: tgt });
-        } else if (src.visible && !tgt.visible) {
-          dashedToRight.set(src.node.id, src);
-        } else if (!src.visible && tgt.visible) {
-          dashedFromLeft.set(tgt.node.id, tgt);
-        }
-      }
-    }
-    return {
-      solid: solidEdges,
-      dashedToRight: Array.from(dashedToRight.values()),
-      dashedFromLeft: Array.from(dashedFromLeft.values()),
-    };
-  };
-
-  const allRects = () =>
-    layout()
-      .positions.filter((p) => p.visible)
-      .map((p) => ({ id: p.node.id, ...rectFor(p) }));
-
   return (
     <g>
       {/* Lane box */}
@@ -1614,71 +1575,56 @@ function MixedShapesLaneReactive(props: {
           {layout().rightLozengeCount}
         </text>
       </Show>
-      {/* Solid edges */}
-      <For each={edges().solid}>
-        {(e) => {
-          const obstacles = allRects().filter(
-            (r) => r.id !== e.from.node.id && r.id !== e.to.node.id,
-          );
+      {/* Arrows: ONE pipeline driven by trajectory anchors. Each
+          arrow's source/target are read live from the trajectory's
+          per-card anchor functions, so:
+            - solid card → solid card → endpoints track resting rects
+            - solid card → morphing card → target follows the slurp
+              leading edge, naturally shortening the arrow as the
+              card emerges (or lengthening as it disappears)
+            - card → gone card → endpoint is the lozenge inner edge
+          Dashedness is a function of both endpoints' current mode —
+          solid when both are "card", dashed otherwise. (Phase 3 will
+          smooth this into a continuous fade.) */}
+      <For each={traj().arrows}>
+        {(arrow) => {
+          const fromCard = (): CardTrajectory | undefined =>
+            traj().cards.get(arrow.fromId);
+          const toCard = (): CardTrajectory | undefined =>
+            traj().cards.get(arrow.toId);
+          const src = () => fromCard()?.anchorAt(currentT());
+          const tgt = () => toCard()?.anchorAt(currentT());
+          const dashed = () =>
+            dashednessAt(arrow, traj().cards, currentT()) > 0;
+          // Obstacles: every card currently in "card" mode EXCEPT the
+          // two endpoints. Cards mid-morph aren't proper obstacles
+          // (their geometry is changing); skip them.
+          const obstacles = () => {
+            const t = currentT();
+            const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
+            for (const [id, c] of traj().cards) {
+              if (id === arrow.fromId || id === arrow.toId) continue;
+              if (c.modeAt(t) !== "card") continue;
+              const r = c.rectAt(t);
+              if (!r) continue;
+              list.push({ id, ...r });
+            }
+            return list;
+          };
           return (
-            <path
-              d={orthogonalAvoidingObstacles(rectFor(e.from), rectFor(e.to), obstacles)}
-              fill="none"
-              stroke={accentStroke}
-              stroke-width="1.5"
-              marker-end="url(#ms-arrow-head)"
-              style={{ color: accentStroke, transition: "d 0.4s ease-out" }}
-            />
+            <Show when={src() && tgt()}>
+              <path
+                d={orthogonalAvoidingObstacles(src()!, tgt()!, obstacles())}
+                fill="none"
+                stroke={dashed() ? greyStroke : accentStroke}
+                stroke-width="1.5"
+                stroke-dasharray={dashed() ? "4 3" : undefined}
+                marker-end="url(#ms-arrow-head)"
+                style={{ color: dashed() ? greyStroke : accentStroke }}
+              />
+            </Show>
           );
         }}
-      </For>
-      {/* Dashed visible→hidden edges (route to the RIGHT lozenge —
-          source visible, dependent hidden as a deeper TODO). */}
-      <For each={edges().dashedToRight}>
-        {(p) => (
-          <path
-            d={orthogonalAvoidingObstacles(
-              rectFor(p),
-              {
-                x: rightLozengeX + LOZENGE_W / 2,
-                y: lozMidY,
-                width: LOZENGE_W,
-                height: colBottomY - colTopY,
-              },
-              allRects().filter((r) => r.id !== p.node.id),
-            )}
-            fill="none"
-            stroke={greyStroke}
-            stroke-width="1.5"
-            stroke-dasharray="4 3"
-            marker-end="url(#ms-arrow-head)"
-            style={{ color: greyStroke, transition: "d 0.4s ease-out" }}
-          />
-        )}
-      </For>
-      {/* Dashed hidden→visible edges (route FROM the LEFT lozenge —
-          prerequisite hidden as a deeper DONE, dependent visible). */}
-      <For each={edges().dashedFromLeft}>
-        {(p) => (
-          <path
-            d={orthogonalAvoidingObstacles(
-              {
-                x: leftLozengeX + LOZENGE_W / 2,
-                y: lozMidY,
-                width: LOZENGE_W,
-                height: colBottomY - colTopY,
-              },
-              rectFor(p),
-              allRects().filter((r) => r.id !== p.node.id),
-            )}
-            fill="none"
-            stroke={greyStroke}
-            stroke-width="1.5"
-            stroke-dasharray="4 3"
-            marker-end="url(#ms-arrow-head)"
-            style={{ color: greyStroke, transition: "d 0.4s ease-out" }}
-          />
-        )}
       </For>
       {/* Slurp transition paths — one per node currently morphing
           between the lozenge and its rest position. Rendered BEFORE
