@@ -352,6 +352,70 @@ describe("buildLaneTrajectory — arrows and dashedness", () => {
 
 // ─── duration ───────────────────────────────────────────────────────────────
 
+describe("buildLaneTrajectory — hiddennessAt + dashedness fade", () => {
+  // a TODO → DOING. b is the arriving card (hidden in prev, visible in next).
+  const prev: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+  const next: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DOING" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+
+  it("staying cards have hiddenness 0 always", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const a = traj.cards.get("a")!;
+    expect(a.hiddennessAt(0)).toBe(0);
+    expect(a.hiddennessAt(0.5)).toBe(0);
+    expect(a.hiddennessAt(1)).toBe(0);
+  });
+
+  it("arriving card hiddenness is 1 before the morph and 0 after", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    expect(b.hiddennessAt(0)).toBe(1);
+    expect(b.hiddennessAt(PHASE_MOVE_END - 0.001)).toBe(1);
+    expect(b.hiddennessAt(1)).toBe(0);
+  });
+
+  it("arriving card hiddenness decreases monotonically during slurp-out", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const tEarly = PHASE_MOVE_END + (1 - PHASE_MOVE_END) * 0.1;
+    const tMid = PHASE_MOVE_END + (1 - PHASE_MOVE_END) * 0.5;
+    const tLate = PHASE_MOVE_END + (1 - PHASE_MOVE_END) * 0.9;
+    expect(b.hiddennessAt(tEarly)).toBeGreaterThan(b.hiddennessAt(tMid));
+    expect(b.hiddennessAt(tMid)).toBeGreaterThan(b.hiddennessAt(tLate));
+  });
+
+  it("arrow dashedness fades smoothly as arriving target slurps out", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const arrow = traj.arrows[0]; // a → b
+    // Before the slurp-out window, b is hidden → dashed.
+    expect(dashednessAt(arrow, traj.cards, 0)).toBe(1);
+    // After it settles, both endpoints rest → solid.
+    expect(dashednessAt(arrow, traj.cards, 1)).toBe(0);
+    // Midway through the slurp-out, dashedness is strictly between.
+    const tMid = PHASE_MOVE_END + (1 - PHASE_MOVE_END) * 0.5;
+    const midDash = dashednessAt(arrow, traj.cards, tMid);
+    expect(midDash).toBeGreaterThan(0);
+    expect(midDash).toBeLessThan(1);
+  });
+});
+
 describe("buildLaneTrajectory — statusAt", () => {
   const prev: StatusFlowNode[] = [
     { id: "a", title: "A", status: "TODO" },

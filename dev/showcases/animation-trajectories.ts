@@ -297,6 +297,12 @@ export interface CardTrajectory {
    *  behaviour where the status update lands together with the col
    *  change. */
   statusAt: (t: number) => CardStatus;
+  /** "How much is this card inside a lozenge right now?" ∈ [0, 1].
+   *  0 = fully resting (card mode), 1 = fully gone, intermediate
+   *  during a slurp morph (tracks the morph's progress: arriving
+   *  cards 1 → 0, leaving cards 0 → 1). Arrows touching this card
+   *  use this value to compute their dashedness. */
+  hiddennessAt: (t: number) => number;
 }
 
 export interface ArrowTrajectory {
@@ -348,6 +354,7 @@ function buildStayingTrajectory(
     pathAt: () => null,
     anchorAt: rectAt,
     statusAt: stayingStatusAt(prevStatus, nextStatus),
+    hiddennessAt: () => 0,
   };
 }
 
@@ -380,6 +387,12 @@ function buildLeavingTrajectory(
     // Leaving cards are visible only during their morph — keep their
     // prev status throughout.
     statusAt: () => prevStatus,
+    // Leaving: 0 at start of morph (fully out), 1 after (fully gone).
+    hiddennessAt: (t) => {
+      if (t <= 0) return 0;
+      if (t >= PHASE_LEAVE_END) return 1;
+      return ease(t / PHASE_LEAVE_END);
+    },
   };
 }
 
@@ -415,6 +428,14 @@ function buildArrivingTrajectory(
     // Arriving cards are only visible during the slurp-out and after;
     // they wear their NEW status the whole time.
     statusAt: () => nextStatus,
+    // Arriving: 1 until the slurp-out window starts, then 1 → 0
+    // tracking the morph progress, 0 once at rest.
+    hiddennessAt: (t) => {
+      if (t < PHASE_MOVE_END) return 1;
+      if (t >= 1) return 0;
+      const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
+      return 1 - ease(local);
+    },
   };
 }
 
@@ -432,6 +453,7 @@ function buildHiddenTrajectory(
     pathAt: () => null,
     anchorAt: () => loz,
     statusAt: () => nextStatus,
+    hiddennessAt: () => 1,
   };
 }
 
@@ -553,11 +575,19 @@ export function buildLaneTrajectory(
 
 // ── arrow dashedness ────────────────────────────────────────────────────────
 //
-// An arrow is solid iff BOTH endpoints are currently in "card" mode
-// (visible and at rest). Anything else — slurping, gone — produces
-// dashed. The 0..1 return lets callers do a continuous fade if they
-// want; the discrete `dashedness > 0` check matches the renderer's
-// existing convention.
+// Dashedness ∈ [0, 1]: 0 = solid, 1 = fully dashed. Defined as the
+// maximum of the two endpoints' `hiddennessAt(t)` — an arrow is "as
+// hidden as its most-hidden endpoint." This produces the continuous
+// fade callers want:
+//
+//   - Both endpoints resting → both hiddenness 0 → dashedness 0 → solid
+//   - One endpoint slurping out (1 → 0) → arrow morphs dashed → solid
+//   - One endpoint slurping in  (0 → 1) → arrow morphs solid → dashed
+//   - Either endpoint fully gone → dashedness 1 → fully dashed
+//
+// Missing endpoint (shouldn't happen, but guard) is treated as fully
+// hidden so the arrow renders dashed rather than snapping to an
+// invalid solid state.
 
 export function dashednessAt(
   arrow: ArrowTrajectory,
@@ -567,6 +597,5 @@ export function dashednessAt(
   const from = cards.get(arrow.fromId);
   const to = cards.get(arrow.toId);
   if (!from || !to) return 1;
-  const both = from.modeAt(t) === "card" && to.modeAt(t) === "card";
-  return both ? 0 : 1;
+  return Math.max(from.hiddennessAt(t), to.hiddennessAt(t));
 }

@@ -1594,11 +1594,18 @@ function MixedShapesLaneReactive(props: {
             traj().cards.get(arrow.toId);
           const src = () => fromCard()?.anchorAt(currentT());
           const tgt = () => toCard()?.anchorAt(currentT());
-          const dashed = () =>
-            dashednessAt(arrow, traj().cards, currentT()) > 0;
-          // Obstacles: every card currently in "card" mode EXCEPT the
-          // two endpoints. Cards mid-morph aren't proper obstacles
-          // (their geometry is changing); skip them.
+          // Dashedness ∈ [0, 1] — max hiddenness of the two endpoints.
+          // We render this continuously: dash length stays at 4, gap
+          // length grows from 0 (solid) → 3 (fully dashed). Color
+          // crosses from accent → grey at the halfway mark.
+          const dashedness = () =>
+            dashednessAt(arrow, traj().cards, currentT());
+          const dashArray = () => {
+            const d = dashedness();
+            if (d <= 0.001) return undefined; // truly solid, no array
+            return `4 ${(d * 3).toFixed(2)}`;
+          };
+          const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
           const obstacles = () => {
             const t = currentT();
             const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
@@ -1616,11 +1623,11 @@ function MixedShapesLaneReactive(props: {
               <path
                 d={orthogonalAvoidingObstacles(src()!, tgt()!, obstacles())}
                 fill="none"
-                stroke={dashed() ? greyStroke : accentStroke}
+                stroke={stroke()}
                 stroke-width="1.5"
-                stroke-dasharray={dashed() ? "4 3" : undefined}
+                stroke-dasharray={dashArray()}
                 marker-end="url(#ms-arrow-head)"
-                style={{ color: dashed() ? greyStroke : accentStroke }}
+                style={{ color: stroke() }}
               />
             </Show>
           );
