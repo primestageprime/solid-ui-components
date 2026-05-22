@@ -35,7 +35,7 @@
 
 .jtf-heatmap__legend-label {
   font-size: 12px;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 /* Header */
@@ -52,7 +52,7 @@
 .jtf-heatmap__header-cell {
   width: 18px;
   font-size: 10px;
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
   text-align: center;
 }
 
@@ -72,7 +72,7 @@
   width: 80px;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
   padding-right: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -109,7 +109,7 @@
 }
 
 .jtf-heatmap__cell--empty {
-  background-color: var(--jtf-bg-tertiary);
+  background-color: var(--sui-bg-tertiary);
 }
 
 /* Compact variant */
@@ -171,7 +171,7 @@
   width: 80px;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
   padding-right: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -190,7 +190,7 @@
   width: 8px;
   height: 8px;
   padding: 0;
-  background-color: var(--jtf-bg-tertiary);
+  background-color: var(--sui-bg-tertiary);
   border-radius: 1px;
   transition: transform 0.1s ease;
   position: relative;
@@ -210,8 +210,8 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--jtf-bg-secondary);
-  border: 1px solid var(--jtf-border);
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   padding: 8px 10px;
   z-index: 1000;
@@ -231,7 +231,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid var(--jtf-border);
+  border-top: 6px solid var(--sui-border);
 }
 
 .jtf-heatmap-multi__tooltip-arrow-inner {
@@ -243,16 +243,16 @@
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid var(--jtf-bg-secondary);
+  border-top: 5px solid var(--sui-bg-secondary);
 }
 
 .jtf-heatmap-multi__tooltip-header {
-  color: var(--jtf-text-primary);
+  color: var(--sui-text-primary);
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 6px;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--jtf-border);
+  border-bottom: 1px solid var(--sui-border);
 }
 
 .jtf-heatmap-multi__tooltip-table {
@@ -261,7 +261,7 @@
 }
 
 .jtf-heatmap-multi__tooltip-label {
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
   padding-right: 12px;
   padding-top: 2px;
   padding-bottom: 2px;
@@ -286,7 +286,7 @@
 }
 
 .jtf-heatmap-multi__tooltip-value--empty {
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
 }
 
 .jtf-heatmap-multi__bar {
@@ -308,7 +308,7 @@
 }
 
 .jtf-heatmap-multi__bar--empty {
-  background-color: var(--jtf-border);
+  background-color: var(--sui-border);
   opacity: 0.3;
 }
 
@@ -332,7 +332,7 @@
   flex: 1;
   min-width: 0;
   font-size: 11px;
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
   text-align: center;
 }
 
