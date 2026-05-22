@@ -131,12 +131,15 @@ describe("PivotTreemap", () => {
         accessors={accessors}
       />
     ));
-    const outers = container.querySelectorAll(".sui-pivot-treemap__outer-key");
-    const outerKeys = Array.from(outers).map((el) => el.textContent);
+    // Outer header lays out the chip-label (the key) as its first child;
+    // inner cells wrap the chip-label + count in a TightSpreadRow.
+    const outerKeys = Array.from(
+      container.querySelectorAll(".sui-treemap__outer-header"),
+    ).map((el) => el.firstElementChild?.textContent);
     expect(outerKeys).toContain("A");
     expect(outerKeys).toContain("B");
     const leafKeys = Array.from(
-      container.querySelectorAll(".sui-pivot-treemap__leaf-key"),
+      container.querySelectorAll(".sui-treemap__inner .row > :first-child"),
     ).map((el) => el.textContent);
     expect(leafKeys).toContain("X");
     expect(leafKeys).toContain("Y");

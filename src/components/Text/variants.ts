@@ -50,6 +50,42 @@ export const FadedNowrapSublabel = createText({
 export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
 export const AccentBody = createText({ variant: "body", color: "var(--hud-accent, #00d4ff)" });
 
+// ── Compact data-display variants ──
+// Used for tight chip/pivot/legend/cell typography where 1rem `label` text
+// is too large. Pair `ChipLabel` (the key) with `CountText` (the trailing
+// count) inside a `TightSpreadRow`.
+
+/** Small bold key text (11px / 600) — pivot cell keys, legend swatch labels, chip titles. */
+export const ChipLabel = createText({
+  variant: "label",
+  as: "span",
+  style: { "font-size": "11px", "font-weight": "600", "line-height": "1.2" },
+});
+
+/** Single-line truncating `ChipLabel` — sized to fit any flex parent that
+ *  supplies a constrained width. */
+export const EllipsizedChipLabel = createText({
+  variant: "label",
+  as: "span",
+  style: {
+    "font-size": "11px",
+    "font-weight": "600",
+    "line-height": "1.2",
+    "min-width": "0",
+    overflow: "hidden",
+    "white-space": "nowrap",
+    "text-overflow": "ellipsis",
+  },
+});
+
+/** Small muted count/meta text (10px) — the trailing-count companion to
+ *  `ChipLabel`. */
+export const CountText = createText({
+  variant: "sublabel",
+  as: "span",
+  style: { "font-size": "10px", color: "var(--sui-text-muted, #888)" },
+});
+
 // Monospace value — for numeric readouts alongside units
 export const MonoValue = createText({
   variant: "value",

@@ -36,6 +36,7 @@
 .row--align-center { align-items: center; }
 .row--align-end { align-items: flex-end; }
 .row--align-stretch { align-items: stretch; }
+.row--align-baseline { align-items: baseline; }
 
 .row--justify-start { justify-content: flex-start; }
 .row--justify-center { justify-content: center; }

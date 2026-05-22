@@ -1,9 +1,12 @@
 // ============================================
 // PivotTreemap — Pure Composite (Depth 2).
-// Composes Treemap + SlotFillBar (via render callback). Owns zero CSS —
-// the outer/inner cell grid layout lives in the Treemap Primitive; the
-// progress bar styling lives in SlotFillBar. This file is wiring only:
-// bucket the rows, supply render callbacks, lift selection to the caller.
+// Composes Treemap + SlotFillBar + the compact Text/Layout Curried Variants
+// (`ChipLabel`, `EllipsizedChipLabel`, `CountText`, `TightSpreadRow`). Owns
+// zero CSS and zero inline `style={}` — typography for keys/counts lives in
+// the Text variants, the leaf row layout lives in the Layout variant, and
+// the outer cell grid + sidebar shells live in the Treemap Primitive. This
+// file is wiring only: bucket the rows, supply render callbacks, lift
+// selection to the caller.
 //
 // Generic over a row type T and a string-tagged Dim union; caller hands in
 // `accessors` describing how rows expose dimension values.
@@ -19,6 +22,12 @@
 import { Component, Show } from "solid-js";
 import { SlotFillBar } from "../SlotFillBar";
 import { Treemap, TreemapSidebar } from "../Treemap";
+import {
+  ChipLabel,
+  CountText,
+  EllipsizedChipLabel,
+} from "../Text/variants";
+import { TightSpreadRow } from "../Layout/variants";
 import { bucketByDims, PivotAccessors, PivotBucket, PivotMetrics } from "./bucketByDims";
 
 export interface PivotSelection {
@@ -129,21 +138,8 @@ export function PivotTreemap<T, Dim extends string>(
           title: "Click to filter to untagged rows",
           content: (
             <>
-              <div
-                class="sui-pivot-treemap__untagged-label"
-                style={{ "font-size": "11px", "font-weight": 600 }}
-              >
-                untagged
-              </div>
-              <div
-                class="sui-pivot-treemap__untagged-count"
-                style={{
-                  "font-size": "10px",
-                  color: "var(--sui-text-muted, #888)",
-                }}
-              >
-                {untagged()} rows
-              </div>
+              <ChipLabel>untagged</ChipLabel>
+              <CountText>{untagged()} rows</CountText>
             </>
           ),
         }
@@ -163,30 +159,8 @@ export function PivotTreemap<T, Dim extends string>(
       }
       renderOuterHeader={(c) => (
         <>
-          <span
-            class="sui-pivot-treemap__outer-key"
-            style={{
-              "font-size": "11px",
-              "font-weight": 600,
-              "white-space": "nowrap",
-              overflow: "hidden",
-              "text-overflow": "ellipsis",
-            }}
-          >
-            {c.key}
-          </span>
-          <span
-            class="sui-pivot-treemap__outer-meta"
-            style={{
-              display: "inline-flex",
-              "align-items": "baseline",
-              gap: "6px",
-              "font-size": "10px",
-              color: "var(--sui-text-muted, #888)",
-            }}
-          >
-            <span>· {c.total}</span>
-          </span>
+          <EllipsizedChipLabel>{c.key}</EllipsizedChipLabel>
+          <CountText>· {c.total}</CountText>
         </>
       )}
       renderOuterToolbar={
@@ -208,34 +182,10 @@ export function PivotTreemap<T, Dim extends string>(
       }
       renderInnerContent={(_c, i) => (
         <>
-          <div
-            class="sui-pivot-treemap__leaf-title"
-            style={{
-              display: "flex",
-              "justify-content": "space-between",
-              "font-size": "10px",
-              "min-width": 0,
-              gap: "4px",
-            }}
-          >
-            <span
-              class="sui-pivot-treemap__leaf-key"
-              style={{
-                "white-space": "nowrap",
-                overflow: "hidden",
-                "text-overflow": "ellipsis",
-                "font-weight": 500,
-              }}
-            >
-              {i.key}
-            </span>
-            <span
-              class="sui-pivot-treemap__leaf-count"
-              style={{ color: "var(--sui-text-muted, #888)" }}
-            >
-              {i.total}
-            </span>
-          </div>
+          <TightSpreadRow>
+            <EllipsizedChipLabel>{i.key}</EllipsizedChipLabel>
+            <CountText>{i.total}</CountText>
+          </TightSpreadRow>
           <Show when={p.metrics && i.metrics}>
             <SlotFillBar
               slots={i.total}
