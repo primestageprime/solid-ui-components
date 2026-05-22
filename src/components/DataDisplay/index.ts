@@ -1,5 +1,7 @@
 export { DateTimeRange } from "./DateTimeRange";
 export type { DateTimeRangeProps } from "./DateTimeRange";
+export { formatDateTimeRange } from "./formatDateTimeRange";
+export type { DateTimeRangeMode } from "./formatDateTimeRange";
 export { DigitRoller } from "./DigitRoller";
 export type { DigitRollerProps } from "./DigitRoller";
 export { MetricCard } from "./MetricCard";

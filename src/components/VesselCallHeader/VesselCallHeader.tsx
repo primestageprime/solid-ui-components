@@ -1,11 +1,19 @@
 // ============================================
-// VesselCallHeader — Depth 3
-// Owns CSS (VesselCallHeader.css).
-// Composes DateTimeRange (Depth 2).
-// Vessel name + time range + duration + badge.
+// VesselCallHeader — Atomic Primitive (Depth 1)
+// Owns CSS (VesselCallHeader.css), no library Primitive imports.
+// Title + optional badge + ISO date range + duration + optional asset
+// chip + optional action slot, optionally wrapped in a link. The pure
+// date-range formatter comes from `../DataDisplay/formatDateTimeRange`
+// — sharing the rule with the sibling `DateTimeRange` Composite
+// without forcing this Primitive to import a library component.
+//
+// NOTE: the component name encodes a maritime domain concept ("vessel
+// call"); the shape is generic (named-thing + time range + duration +
+// badge + action row). Flagged for rename when the next library-wide
+// naming pass batches the domain-bound names together.
 // ============================================
 import { Component, JSX, splitProps, Show } from "solid-js";
-import { DateTimeRange } from "../DataDisplay";
+import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
 import "./VesselCallHeader.css";
 
 export interface VesselCallHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -21,8 +29,10 @@ export interface VesselCallHeaderProps extends JSX.HTMLAttributes<HTMLDivElement
   href?: string;
 }
 
-/** Calculate duration between two timestamps */
-function formatDuration(startIso: string, endIso?: string | null): string {
+/** Calculate elapsed duration between two ISO timestamps as `Nh Mm`
+ *  (or `Nd Mh` past 24h). Returns an empty string when the inputs are
+ *  invalid; the caller wraps the result in parentheses regardless. */
+function formatElapsed(startIso: string, endIso?: string | null): string {
   const start = new Date(startIso);
   const end = endIso ? new Date(endIso) : new Date();
   const diffMs = end.getTime() - start.getTime();
@@ -50,47 +60,46 @@ export const VesselCallHeader: Component<VesselCallHeaderProps> = (props) => {
     "class",
   ]);
 
-  const classes = () => {
-    const classList = ["jtf-vessel-call-header"];
+  const rootClass = () => {
+    const classList = ["sui-vessel-call-header"];
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
 
   const mainContent = () => (
     <>
-      <h2 class="jtf-vessel-call-header__title">{local.vesselName}</h2>
+      <h2 class="sui-vessel-call-header__title">{local.vesselName}</h2>
       <Show when={local.badge}>
-        <span class="jtf-vessel-call-header__badge">{local.badge}</span>
+        <span class="sui-vessel-call-header__badge">{local.badge}</span>
       </Show>
-      <span class="jtf-vessel-call-header__separator">·</span>
-      <DateTimeRange
-        class="jtf-vessel-call-header__timestamp"
-        start={local.connectedAt}
-        end={local.disconnectedAt}
-      />
-      <span class="jtf-vessel-call-header__duration">
-        ({formatDuration(local.connectedAt, local.disconnectedAt)})
+      <span class="sui-vessel-call-header__separator">·</span>
+      <span class="sui-vessel-call-header__timestamp">
+        {formatDateTimeRange(local.connectedAt, local.disconnectedAt)}
+      </span>
+      <span class="sui-vessel-call-header__duration">
+        ({formatElapsed(local.connectedAt, local.disconnectedAt)})
       </span>
       <Show when={local.assetId}>
-        <span class="jtf-vessel-call-header__asset">
-          {local.assetId}
-        </span>
+        <span class="sui-vessel-call-header__asset">{local.assetId}</span>
       </Show>
     </>
   );
 
   return (
-    <div class={classes()} {...others}>
+    <div class={rootClass()} {...others}>
       <Show
         when={local.href}
-        fallback={<div class="jtf-vessel-call-header__main">{mainContent()}</div>}
+        fallback={<div class="sui-vessel-call-header__main">{mainContent()}</div>}
       >
-        <a href={local.href} class="jtf-vessel-call-header__main jtf-vessel-call-header__link">
+        <a
+          href={local.href}
+          class="sui-vessel-call-header__main sui-vessel-call-header__link"
+        >
           {mainContent()}
         </a>
       </Show>
       <Show when={local.action}>
-        <div class="jtf-vessel-call-header__action">{local.action}</div>
+        <div class="sui-vessel-call-header__action">{local.action}</div>
       </Show>
     </div>
   );
