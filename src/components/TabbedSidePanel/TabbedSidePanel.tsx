@@ -87,3 +87,9 @@ export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
     </Row>
   );
 };
+
+export function createTabbedSidePanel(
+  defaults: Partial<TabbedSidePanelOverrides>,
+): Component<TabbedSidePanelDataProps> {
+  return (props) => <TabbedSidePanel {...mergeProps(defaults, props)} />;
+}

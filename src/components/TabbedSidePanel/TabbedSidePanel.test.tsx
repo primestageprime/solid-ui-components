@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { TabbedSidePanel, type TabbedPanelTab } from "./TabbedSidePanel";
+import { TabbedSidePanel, createTabbedSidePanel, type TabbedPanelTab } from "./TabbedSidePanel";
+import { RightDetailTabbedPanel, LeftNavTabbedPanel } from "./variants";
 
 const TABS: TabbedPanelTab[] = [
   { id: "a", label: "Alpha", content: () => <div data-testid="a-body">A body</div> },
@@ -192,6 +193,65 @@ describe("TabbedSidePanel — side positioning", () => {
         isOpen={true}
         onOpenChange={() => {}}
         side="left"
+      />
+    ));
+    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+  });
+});
+
+describe("createTabbedSidePanel factory", () => {
+  it("applies the curried side default", () => {
+    const Left = createTabbedSidePanel({ side: "left" });
+    const { container } = render(() => (
+      <Left
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    ));
+    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+  });
+
+  it("applies the curried tabsVariant default", () => {
+    const Boxed = createTabbedSidePanel({ tabsVariant: "boxed" });
+    const { container } = render(() => (
+      <Boxed
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    ));
+    // The inner Tabs gets the boxed class.
+    expect(container.querySelector(".sui-tabs--boxed")).toBeTruthy();
+  });
+});
+
+describe("Named variants", () => {
+  it("RightDetailTabbedPanel applies side='right'", () => {
+    const { container } = render(() => (
+      <RightDetailTabbedPanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    ));
+    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--right/);
+  });
+
+  it("LeftNavTabbedPanel applies side='left'", () => {
+    const { container } = render(() => (
+      <LeftNavTabbedPanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
       />
     ));
     expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
