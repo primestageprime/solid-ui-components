@@ -39,10 +39,12 @@
   align-items: center;
 }
 
+/* Matches the typography the old composed NowrapBody (`.text--body`)
+   used: 0.875rem with --text-secondary color. */
 .sui-vessel-call-header__timestamp {
   font-family: monospace;
-  font-size: 0.8rem;
-  color: var(--text-primary, #e1e8ed);
+  font-size: 0.875rem;
+  color: var(--text-secondary, #8899a6);
   white-space: nowrap;
 }
 

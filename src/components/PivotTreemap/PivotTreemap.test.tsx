@@ -131,16 +131,17 @@ describe("PivotTreemap", () => {
         accessors={accessors}
       />
     ));
-    // Outer header lays out the chip-label (the key) as its first child;
-    // inner cells wrap the chip-label + count in a TightSpreadRow.
+    // The chip-label rendering EllipsizedChipLabel is the first <span> in
+    // each outer-header / inner-cell. Querying by tag rather than class
+    // keeps this stable through future renames of the Layout Row class.
     const outerKeys = Array.from(
       container.querySelectorAll(".sui-treemap__outer-header"),
-    ).map((el) => el.firstElementChild?.textContent);
+    ).map((el) => el.querySelector("span")?.textContent);
     expect(outerKeys).toContain("A");
     expect(outerKeys).toContain("B");
     const leafKeys = Array.from(
-      container.querySelectorAll(".sui-treemap__inner .row > :first-child"),
-    ).map((el) => el.textContent);
+      container.querySelectorAll(".sui-treemap__inner"),
+    ).map((el) => el.querySelector("span")?.textContent);
     expect(leafKeys).toContain("X");
     expect(leafKeys).toContain("Y");
   });

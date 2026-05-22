@@ -1,11 +1,14 @@
 // ============================================
-// FormulaDecomposition — Depth 3 (zero CSS)
-// Composes ResultDisplay (Depth 3) + DTable (Depth 2)
-// + MathFormula (Atomic) + StatusBadge (Atomic)
-// + Layout/Text curried variants.
+// FormulaDecomposition — factory module (zero CSS).
+// Exports factories (`createFormulaResult`, `createGivens`,
+// `createFormula`, `createFormulaPanel`) that return Composites
+// over: ResultDisplay (Atomic Primitive, Depth 1) + NumberWithUnits
+// (Atomic Primitive, Depth 1) + DTable (Composite, Depth 2) +
+// MathFormula (Atomic) + StatusBadge (Atomic) + Surface (Atomic) +
+// Layout/Text Curried Variants. Resulting Composites are Depth 2–3
+// depending on the deepest child each factory ends up composing.
 // ============================================
 import { Component, For, JSX } from "solid-js";
-import "./FormulaDecomposition.css";
 import { FormulaProvider, MathFormula, FormulaVarRow, useFormulaHighlight } from "../MathFormula/MathFormula";
 import { ResultDisplay } from "./ResultDisplay";
 import { NumberWithUnits } from "./NumberWithUnits";
@@ -96,7 +99,8 @@ export function createFormulaResult(config: FormulaConfig): Component<FormulaVal
             {compliant() ? "COMPLIANT" : "VIOLATION"}
           </StatusBadge>
         }
-        class={`formula-result ${isHighlighted() ? "formula-result--highlight" : ""}`}
+        highlightable
+        highlighted={isHighlighted()}
         onMouseEnter={() => ctx?.setHoveredVar("result")}
         onMouseLeave={() => ctx?.setHoveredVar(null)}
       />

@@ -29,9 +29,9 @@ export interface VesselCallHeaderProps extends JSX.HTMLAttributes<HTMLDivElement
   href?: string;
 }
 
-/** Calculate elapsed duration between two ISO timestamps as `Nh Mm`
- *  (or `Nd Mh` past 24h). Returns an empty string when the inputs are
- *  invalid; the caller wraps the result in parentheses regardless. */
+/** Elapsed duration between two ISO timestamps as `Nh Mm` (or `Nd Nh`
+ *  past 24h). Invalid inputs yield `NaNh NaNm` — validation is the
+ *  caller's job. */
 function formatElapsed(startIso: string, endIso?: string | null): string {
   const start = new Date(startIso);
   const end = endIso ? new Date(endIso) : new Date();

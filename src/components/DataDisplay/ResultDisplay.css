@@ -48,3 +48,23 @@
   font-family: var(--sui-font-family, system-ui, sans-serif);
   color: var(--text-secondary, var(--jtf-text-secondary));
 }
+
+/* Hover-target affordance — opt-in via the `highlightable` prop. Used
+   by hover-coordinated callers (e.g. FormulaDecomposition's formula
+   variables that link to a result row). */
+.sui-result-display--highlightable {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: -8px -12px;
+}
+
+.sui-result-display--highlighted {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.sui-result-display--highlighted .sui-result-display__value,
+.sui-result-display--highlighted .sui-result-display__value-units {
+  color: #00ff88;
+}

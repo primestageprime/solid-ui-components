@@ -1,10 +1,12 @@
 // ============================================
 // ResultDisplay — Atomic Primitive (Depth 1)
-// Owns CSS (ResultDisplay.css), no library Primitive imports.
-// Header (label + sublabel) over a value+units row with optional
-// badge slot and trailing children area. Data-driven `valueColor`
-// flows as inline style on the value span (allowed inside a
-// Primitive per CONTEXT.md — the Primitive owns the styling rule).
+// Header (label + sublabel) over a value+units row with optional badge
+// slot. Data-driven `valueColor` flows as inline style on the value span
+// — the Primitive owns the styling rule. The `highlightable`/`highlighted`
+// pair are the hover-target affordance that FormulaDecomposition used to
+// supply via a wrapping div: opting into `highlightable` adds the hover-
+// target chrome (cursor + padding + transition); `highlighted` paints the
+// active tint.
 // ============================================
 import { Component, JSX, Show, splitProps } from "solid-js";
 import "./ResultDisplay.css";
@@ -16,6 +18,12 @@ export interface ResultDisplayProps extends JSX.HTMLAttributes<HTMLDivElement> {
   sublabel?: string;
   badge?: JSX.Element;
   valueColor?: string;
+  /** Opt into the hover-target chrome (cursor / padding / transition).
+   *  Use when the ResultDisplay is part of a hover-coordinated set (e.g.
+   *  a formula-variable-linked result). */
+  highlightable?: boolean;
+  /** When true (and `highlightable`), paints the active highlight tint. */
+  highlighted?: boolean;
 }
 
 export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
@@ -26,11 +34,19 @@ export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
     "sublabel",
     "badge",
     "valueColor",
+    "highlightable",
+    "highlighted",
     "class",
     "children",
   ]);
 
-  const rootClass = () => local.class ?? undefined;
+  const rootClass = () => {
+    const classList = ["sui-result-display"];
+    if (local.highlightable) classList.push("sui-result-display--highlightable");
+    if (local.highlighted) classList.push("sui-result-display--highlighted");
+    if (local.class) classList.push(local.class);
+    return classList.join(" ");
+  };
 
   const valueClass = () =>
     local.units
