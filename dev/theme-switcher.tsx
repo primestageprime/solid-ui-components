@@ -1,13 +1,21 @@
 // dev/theme-switcher.tsx
 import { Component, createSignal, createEffect, For } from "solid-js";
-import { loadTheme, THEMES, type ThemeId } from "./load-theme";
-
-// Pick a sensible initial theme that matches existing default behavior.
-const INITIAL: ThemeId = "hud";
+import {
+  getPersistedTheme,
+  loadTheme,
+  persistTheme,
+  THEMES,
+  type ThemeId,
+} from "./load-theme";
 
 export const ThemeSwitcher: Component = () => {
-  const [theme, setTheme] = createSignal<ThemeId>(INITIAL);
-  createEffect(() => loadTheme(theme()));
+  const [theme, setTheme] = createSignal<ThemeId>(getPersistedTheme());
+
+  createEffect(() => {
+    const current = theme();
+    loadTheme(current);
+    persistTheme(current);
+  });
 
   return (
     <div class="theme-switcher">
