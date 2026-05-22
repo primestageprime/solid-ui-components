@@ -157,8 +157,8 @@
   display: none;
   min-width: 360px;
   padding: 8px;
-  background: var(--hud-bg-elevated, #0a1628);
-  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   pointer-events: none;

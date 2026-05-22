@@ -47,8 +47,8 @@ body {
   --sui-text-muted: #4a6a80;
 
   /* ---- Borders ---- */
-  --sui-border: rgba(0, 212, 255, 0.3);
-  --sui-border-bright: rgba(0, 212, 255, 0.6);
+  --sui-border: rgba(var(--sui-accent-rgb), 0.3);
+  --sui-border-bright: rgba(var(--sui-accent-rgb), 0.6);
   --sui-border-focus: #00d4ff;
 
   /* ---- Radii (0 for sharp HUD edges) ---- */

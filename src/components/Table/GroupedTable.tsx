@@ -339,8 +339,8 @@ export function GroupedTableDemo() {
   ];
 
   return (
-    <div style={{ padding: "20px", background: "var(--hud-bg-deep, #030810)" }}>
-      <h3 style={{ color: "var(--hud-accent, #00d4ff)", "margin-bottom": "16px" }}>
+    <div style={{ padding: "20px", background: "var(--sui-bg-deep)" }}>
+      <h3 style={{ color: "var(--sui-accent)", "margin-bottom": "16px" }}>
         Vessel Call Details (Rowspan Grouped)
       </h3>
       <GroupedTable

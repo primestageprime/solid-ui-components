@@ -48,7 +48,7 @@ export const FadedNowrapSublabel = createText({
 
 // Color-shifted body text
 export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
-export const AccentBody = createText({ variant: "body", color: "var(--hud-accent, #00d4ff)" });
+export const AccentBody = createText({ variant: "body", color: "var(--sui-accent)" });
 
 // ── Compact data-display variants ──
 // Used for tight chip/pivot/legend/cell typography where 1rem `label` text

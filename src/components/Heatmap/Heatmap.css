@@ -22,7 +22,7 @@
 }
 
 .jtf-heatmap__legend-color--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatmap__legend-color--partial {
@@ -97,7 +97,7 @@
 }
 
 .jtf-heatmap__cell--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatmap__cell--partial {
@@ -274,7 +274,7 @@
 }
 
 .jtf-heatmap-multi__tooltip-value--full {
-  color: #00d4ff;
+  color: var(--status-full);
 }
 
 .jtf-heatmap-multi__tooltip-value--partial {
@@ -296,7 +296,7 @@
 }
 
 .jtf-heatmap-multi__bar--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatmap-multi__bar--partial {

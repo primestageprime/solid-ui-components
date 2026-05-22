@@ -37,7 +37,7 @@
 
 .sui-sprint-selector__bar-group--selected .sui-sprint-selector__bar-container svg {
   border-color: var(--sui-accent);
-  box-shadow: 0 0 6px var(--sui-accent, rgba(0, 212, 255, 0.3));
+  box-shadow: 0 0 6px var(--sui-accent, rgba(var(--sui-accent-rgb), 0.3));
 }
 
 .sui-sprint-selector__label {

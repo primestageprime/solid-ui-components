@@ -16,7 +16,7 @@
   color: var(--jtf-text-muted);
   text-align: center;
   padding: 4px 6px;
-  border-bottom: 1px solid var(--hud-border, rgba(0, 212, 255, 0.15));
+  border-bottom: 1px solid var(--sui-border);
   white-space: nowrap;
 }
 
@@ -47,16 +47,16 @@
 
 .jtf-heatstream-grid--selectable .jtf-heatstream-grid__header:hover,
 .jtf-heatstream-grid--selectable .jtf-heatstream-grid__row-label:hover {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 .jtf-heatstream-grid__header--all-selected {
-  color: var(--hud-accent, #00d4ff) !important;
+  color: var(--sui-accent) !important;
   font-weight: 700;
 }
 
 .jtf-heatstream-grid__row-label--all-selected {
-  color: var(--hud-accent, #00d4ff) !important;
+  color: var(--sui-accent) !important;
   font-weight: 700;
 }
 

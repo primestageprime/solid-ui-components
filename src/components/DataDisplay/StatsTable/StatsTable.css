@@ -4,7 +4,7 @@
 }
 
 .stats-table__caption {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   margin: 0 0 15px 0;
   font-size: 1rem;
   font-weight: 600;
@@ -21,7 +21,7 @@
 }
 
 .stats-table__header-row {
-  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+  border-bottom: 1px solid rgba(var(--sui-accent-rgb), 0.3);
 }
 
 .stats-table__header-cell {
@@ -33,7 +33,7 @@
 }
 
 .stats-table__row {
-  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  border-bottom: 1px solid rgba(var(--sui-accent-rgb), 0.1);
 }
 
 .stats-table__row:last-child {

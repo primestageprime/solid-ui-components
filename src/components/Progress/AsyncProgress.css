@@ -12,12 +12,12 @@
 }
 
 .async-progress__label {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 .async-progress__timing {
   font-size: 0.75rem;
-  color: var(--hud-text-dim, #6a8a9a);
+  color: var(--sui-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -31,12 +31,12 @@
 .async-progress__bar-fill {
   height: 100%;
   border-radius: 3px;
-  background: var(--hud-accent, #00d4ff);
+  background: var(--sui-accent);
   transition: width 0.3s ease;
 }
 
 .async-progress__bar-fill--overrun {
-  background: var(--hud-warning, #ffcc00);
+  background: var(--sui-warning);
 }
 
 @keyframes async-progress-indeterminate {

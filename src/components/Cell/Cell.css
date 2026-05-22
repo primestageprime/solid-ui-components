@@ -23,11 +23,11 @@
    ============================================ */
 
 .cell-row--border {
-  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  border-bottom: 1px solid rgba(var(--sui-accent-rgb), 0.1);
 }
 
 .cell-row--header {
-  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+  border-bottom: 1px solid rgba(var(--sui-accent-rgb), 0.3);
 }
 
 .cell-row--highlight {

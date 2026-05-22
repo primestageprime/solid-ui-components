@@ -4,7 +4,7 @@
 
 /* Empty state */
 .cell-empty {
-  color: var(--hud-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
   /* Consumers can override globally by setting --cell-empty-font-style
      on an ancestor (e.g. a table wrapper). Default preserves italic. */
   font-style: var(--cell-empty-font-style, italic);
@@ -19,16 +19,16 @@
 .cell-id {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   padding: 2px 6px;
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.15);
+  background: rgba(var(--sui-accent-rgb), 0.05);
+  border: 1px solid rgba(var(--sui-accent-rgb), 0.15);
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 
 /* String Cell */
 .cell-string {
-  color: var(--hud-text, #e0f4ff);
+  color: var(--sui-text-primary);
 }
 
 /* Tag Cell */
@@ -44,34 +44,34 @@
 
 .cell-tag--default {
   background: var(--sui-bg-elevated);
-  color: var(--hud-text, #e0f4ff);
+  color: var(--sui-text-primary);
   border: 1px solid var(--sui-border-bright);
 }
 
 .cell-tag--primary {
-  background: rgba(0, 212, 255, 0.15);
-  color: var(--hud-accent, #00d4ff);
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-accent);
+  border: 1px solid rgba(var(--sui-accent-rgb), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-accent-rgb), 0.2);
 }
 
 .cell-tag--success {
   background: rgba(0, 255, 136, 0.15);
-  color: var(--hud-success, #00ff88);
+  color: var(--sui-success);
   border: 1px solid rgba(0, 255, 136, 0.3);
   box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
 }
 
 .cell-tag--warning {
   background: rgba(255, 170, 0, 0.15);
-  color: var(--hud-warning, #ffaa00);
+  color: var(--sui-warning);
   border: 1px solid rgba(255, 170, 0, 0.3);
   box-shadow: 0 0 8px rgba(255, 170, 0, 0.2);
 }
 
 .cell-tag--danger {
   background: rgba(255, 51, 102, 0.15);
-  color: var(--hud-danger, #ff3366);
+  color: var(--sui-danger);
   border: 1px solid rgba(255, 51, 102, 0.3);
   box-shadow: 0 0 8px rgba(255, 51, 102, 0.2);
 }
@@ -87,7 +87,7 @@
 .cell-money {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
-  color: var(--hud-success, #00ff88);
+  color: var(--sui-success);
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
 }
 
@@ -95,7 +95,7 @@
 .cell-date {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   white-space: nowrap;
 }
 
@@ -110,27 +110,27 @@
 }
 
 .cell-datetime__date {
-  color: var(--hud-text, #e0f4ff);
+  color: var(--sui-text-primary);
 }
 
 .cell-datetime__time {
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   font-size: 11px;
 }
 
 .cell-datetime--single {
   flex-direction: row;
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
 }
 
 /* Duration Cell */
 .cell-duration {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   padding: 2px 8px;
-  background: rgba(0, 212, 255, 0.08);
-  border-left: 2px solid var(--hud-accent, #00d4ff);
+  background: rgba(var(--sui-accent-rgb), 0.08);
+  border-left: 2px solid var(--sui-accent);
 }
 
 /* Status Cell */
@@ -151,61 +151,61 @@
 }
 
 .cell-status--active .cell-status__indicator {
-  background: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+  background: var(--sui-accent);
+  box-shadow: 0 0 8px var(--sui-accent);
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .cell-status--active .cell-status__label {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 .cell-status--success .cell-status__indicator {
-  background: var(--hud-success, #00ff88);
-  box-shadow: 0 0 8px var(--hud-success, #00ff88);
+  background: var(--sui-success);
+  box-shadow: 0 0 8px var(--sui-success);
 }
 
 .cell-status--success .cell-status__label {
-  color: var(--hud-success, #00ff88);
+  color: var(--sui-success);
 }
 
 .cell-status--warning .cell-status__indicator {
-  background: var(--hud-warning, #ffaa00);
-  box-shadow: 0 0 8px var(--hud-warning, #ffaa00);
+  background: var(--sui-warning);
+  box-shadow: 0 0 8px var(--sui-warning);
   animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
 .cell-status--warning .cell-status__label {
-  color: var(--hud-warning, #ffaa00);
+  color: var(--sui-warning);
 }
 
 .cell-status--error .cell-status__indicator {
-  background: var(--hud-danger, #ff3366);
-  box-shadow: 0 0 8px var(--hud-danger, #ff3366);
+  background: var(--sui-danger);
+  box-shadow: 0 0 8px var(--sui-danger);
   animation: pulse-glow 1s ease-in-out infinite;
 }
 
 .cell-status--error .cell-status__label {
-  color: var(--hud-danger, #ff3366);
+  color: var(--sui-danger);
 }
 
 .cell-status--pending .cell-status__indicator {
-  background: var(--hud-text-dim, #7aa8c0);
+  background: var(--sui-text-secondary);
   box-shadow: 0 0 6px rgba(122, 168, 192, 0.5);
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
 .cell-status--pending .cell-status__label {
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
 }
 
 .cell-status--inactive .cell-status__indicator {
-  background: var(--hud-text-muted, #4a6a80);
+  background: var(--sui-text-muted);
   box-shadow: none;
 }
 
 .cell-status--inactive .cell-status__label {
-  color: var(--hud-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
 }
 
 @keyframes pulse-glow {
@@ -232,8 +232,8 @@
 .cell-checkbox__indicator {
   width: 18px;
   height: 18px;
-  border: 1.5px solid var(--hud-border, rgba(0, 212, 255, 0.3));
-  background-color: var(--hud-bg-dark, #0a1420);
+  border: 1.5px solid var(--sui-border);
+  background-color: var(--sui-bg-primary);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -242,23 +242,23 @@
 }
 
 .cell-checkbox input:checked + .cell-checkbox__indicator {
-  background-color: var(--hud-accent, #00d4ff);
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 10px var(--hud-accent, #00d4ff);
+  background-color: var(--sui-accent);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 10px var(--sui-accent);
 }
 
 .cell-checkbox input:checked + .cell-checkbox__indicator::after {
   content: "";
   width: 5px;
   height: 9px;
-  border: solid var(--hud-bg-deep, #030810);
+  border: solid var(--sui-bg-deep);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) translateY(-1px);
 }
 
 .cell-checkbox:hover .cell-checkbox__indicator {
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 6px rgba(var(--sui-accent-rgb), 0.3);
 }
 
 .cell-checkbox input:disabled + .cell-checkbox__indicator {
@@ -301,7 +301,7 @@
 .cell-longtext {
   display: inline;
   font-size: 13px;
-  color: var(--hud-text, #e0f4ff);
+  color: var(--sui-text-primary);
   line-height: 1.4;
 }
 
@@ -334,7 +334,7 @@
   margin-left: 4px;
   font-size: 11px;
   font-family: inherit;
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   cursor: pointer;
   text-transform: lowercase;
   transition: all 0.15s ease;
@@ -343,5 +343,5 @@
 .cell-longtext__more:hover,
 .cell-longtext__less:hover {
   text-decoration: underline;
-  text-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+  text-shadow: 0 0 8px var(--sui-accent);
 }

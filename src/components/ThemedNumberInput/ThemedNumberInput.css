@@ -26,7 +26,7 @@
   align-items: stretch;
   width: 100%;
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 6px);
   transition: border-color 0.15s ease;
   box-sizing: border-box;
@@ -74,7 +74,7 @@
 .sui-number-input__triggers {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-left: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
 }
 
 .sui-number-input__trigger {
@@ -102,7 +102,7 @@
 }
 
 .sui-number-input__trigger--increment {
-  border-bottom: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-bottom: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
 }
 
 .sui-number-input__error {

@@ -1,5 +1,5 @@
 .surface {
-  border: 1px solid var(--surface-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--surface-border, rgba(var(--sui-accent-rgb), 0.3));
   background: var(--surface-bg, #0d1a2a);
 }
 
@@ -29,7 +29,7 @@
 }
 
 .surface--interactive:hover {
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 10px rgba(var(--sui-accent-rgb), 0.2);
   filter: brightness(1.3);
 }
 

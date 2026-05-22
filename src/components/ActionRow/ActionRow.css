@@ -20,7 +20,7 @@
 
 .sui-action-row--accent {
   border-color: var(--sui-accent);
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(var(--sui-accent-rgb), 0.08);
 }
 
 .sui-action-row__main {

@@ -10,7 +10,7 @@
 .sui-metric-card {
   display: inline-block;
   padding: 1rem;
-  background: rgba(0, 212, 255, 0.05);
+  background: rgba(var(--sui-accent-rgb), 0.05);
   border: 1px solid var(--border-color, var(--jtf-border));
   border-radius: 6px;
   text-align: center;

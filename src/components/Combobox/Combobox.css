@@ -19,7 +19,7 @@
   padding: 0 4px 0 10px;
   height: 32px;
   background: var(--sui-bg-elevated);
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
@@ -109,7 +109,7 @@
   gap: 6px;
   padding: 6px;
   background: var(--sui-bg-secondary, rgba(13, 26, 42, 0.8));
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
 }
 
@@ -130,7 +130,7 @@
 
 .sui-combobox__chips-clear {
   background: transparent;
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   color: var(--sui-text-secondary);
   padding: 2px 8px;
   font: inherit;
@@ -158,7 +158,7 @@
   gap: 4px;
   padding: 2px 4px 2px 8px;
   background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
   font-size: 12px;
   color: var(--sui-text-primary);
@@ -207,7 +207,7 @@
   min-width: var(--kb-combobox-anchor-width, 200px);
   max-width: min(calc(100vw - 32px), 480px);
   background: var(--sui-bg-primary);
-  border: 1px solid var(--sui-border-bright, rgba(0, 212, 255, 0.6));
+  border: 1px solid var(--sui-border-bright, rgba(var(--sui-accent-rgb), 0.6));
   border-radius: var(--sui-radius-sm, 0);
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),

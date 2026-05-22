@@ -1,5 +1,5 @@
 .jtf-progress-card {
-  background-color: rgba(0, 212, 255, 0.05);
+  background-color: rgba(var(--sui-accent-rgb), 0.05);
   border: 1px solid var(--jtf-border);
   border-radius: var(--jtf-radius-lg);
   padding: 12px;

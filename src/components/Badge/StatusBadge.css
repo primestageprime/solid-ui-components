@@ -36,9 +36,9 @@
 }
 
 .status-badge--info {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(var(--sui-accent-rgb), 0.2);
   color: #00d4ff;
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  border: 1px solid rgba(var(--sui-accent-rgb), 0.4);
 }
 
 /* Sizes */
