@@ -28,6 +28,7 @@ import { PageShowcase } from "./showcases/hud-page";
 import { PanelShowcase } from "./showcases/hud-panel";
 import { AccentSectionShowcase } from "./showcases/hud-section";
 import { TabsShowcase } from "./showcases/hud-tabs";
+import { TabbedSidePanelShowcase } from "./showcases/tabbed-side-panel";
 import { ToggleShowcase } from "./showcases/hud-toggle";
 import { IconShowcase } from "./showcases/icon";
 import { InputsShowcase } from "./showcases/inputs";
@@ -146,6 +147,7 @@ const items: Item[] = [
   { id: "stats-table", label: "StatsTable", component: StatsTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "hud-tabs", label: "Tabs", component: TabsShowcase, tags: ["depth:1", "navigation"] },
+  { id: "tabbed-side-panel", label: "TabbedSidePanel", component: TabbedSidePanelShowcase, tags: ["depth:2", "container", "navigation"] },
   { id: "text", label: "Text", component: TextShowcase, tags: ["depth:0", "text"] },
   { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase, tags: ["depth:1", "form"] },
   { id: "app-shell", label: "AppShell", component: AppShellShowcase, tags: ["depth:0", "layout", "navigation"] },
