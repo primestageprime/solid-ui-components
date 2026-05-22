@@ -10,7 +10,7 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { Component, createSignal, createEffect, For, JSX, Match, onMount, Show, Switch } from "solid-js";
+import { Component, createSignal, createEffect, For, JSX, Match, Show, Switch } from "solid-js";
 import {
   buildLaneTrajectory,
   dashednessAt,
@@ -18,16 +18,12 @@ import {
   type LaneTrajectory,
   type LayoutParams as TrajLayoutParams,
   type LozengeRects,
-  PHASE_LEAVE_END,
-  PHASE_MOVE_END,
+  MS_PHASE_TOTAL,
 } from "./animation-trajectories";
 import { orthogonalAvoidingObstacles } from "../../src/internal/dag-svg";
 import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
-import { resolveParentStatuses } from "../../src/components/StatusFlowChart";
 import {
-  computeColFor as computeColForLib,
   advanceChildren as advanceChildrenLib,
-  promoteReady,
   isAllDone,
 } from "./workshop-layout";
 
@@ -950,200 +946,6 @@ const MS_LOZENGE_GAP = 32;
 // maxDepth = 1 (parent col + dep depth 0 + dep depth 1). Tune to taste.
 const MS_MAX_DEPTH = 1;
 
-// Compute longest-path topo depth per child relative to independent
-// roots. Roots = depth 0; their direct dependents = 1; etc.
-function topoDepths(children: ChartChild[]): Map<string, number> {
-  const byId = new Map(children.map((c) => [c.id, c]));
-  const memo = new Map<string, number>();
-  const visit = (id: string): number => {
-    const hit = memo.get(id);
-    if (hit !== undefined) return hit;
-    const c = byId.get(id);
-    if (!c) return 0;
-    memo.set(id, 0); // cycle guard
-    const deps = (c.dependsOn ?? []).filter((d) => byId.has(d));
-    const d = deps.length === 0 ? 0 : 1 + Math.max(...deps.map(visit));
-    memo.set(id, d);
-    return d;
-  };
-  for (const c of children) visit(c.id);
-  return memo;
-}
-
-interface LanePosition {
-  node: StatusFlowNode;
-  col: number;
-  visible: boolean;
-  isParent: boolean;
-  /** Card center (only set when visible). */
-  x?: number;
-  y?: number;
-}
-
-interface LaneLayout {
-  positions: LanePosition[];
-  leftLozengeCount: number;
-  rightLozengeCount: number;
-  /** Tallest visible column among children (for sizing the child row). */
-  maxStack: number;
-  /** Vertical range used by visible children. */
-  childRowH: number;
-}
-
-/**
- * Compute per-node positions for one lane using the shared
- * `computeColFor` from `workshop-layout` so this SVG implementation
- * stays in lockstep with the existing StatusFlowChart-based demo.
- *
- * - Parent (if any) sits in its own row at the top of the lane.
- * - Children sit in the row below, positioned by signed col.
- * - Cards at |col| > maxDepth roll into the matching side lozenge.
- * - Multiple cards sharing the same col stack vertically.
- */
-function computeLaneLayout(
-  nodes: StatusFlowNode[],
-  maxDepth: number,
-  stageCenterX: number,
-  parentRowCenterY: number,
-  childRowCenterY: number,
-): LaneLayout {
-  const effective = resolveParentStatuses(nodes, "DOING");
-  const parentIds = new Set<string>();
-  for (const n of nodes) if (n.parentId) parentIds.add(n.parentId);
-  // Group child cols. Parent's col is computed but its row is the top.
-  const childByCol = new Map<number, StatusFlowNode[]>();
-  let leftLozengeCount = 0;
-  let rightLozengeCount = 0;
-  const cols = new Map<string, number>();
-
-  // First pass: count visibility, bucket visible children by col.
-  // Hidden children are pushed straight into `positions` with
-  // visible=false so callers (edge layout, transition detection)
-  // can still find them by id.
-  for (const n of nodes) {
-    const col = computeColForLib(n, nodes, (id) => effective.get(id));
-    cols.set(n.id, col);
-    const isParent = parentIds.has(n.id);
-    if (isParent) continue;
-    if (Math.abs(col) > maxDepth) {
-      if (col < 0) leftLozengeCount++;
-      else rightLozengeCount++;
-      continue;
-    }
-    if (!childByCol.has(col)) childByCol.set(col, []);
-    childByCol.get(col)!.push(n);
-  }
-
-  const colToX = (col: number) => stageCenterX + col * MS_COL_CENTER_GAP;
-  const positions: LanePosition[] = [];
-
-  // Children, stacked per col.
-  for (const [col, group] of childByCol) {
-    const totalH = group.length * MS_CARD_H + (group.length - 1) * MS_ROW_GAP;
-    const startY = childRowCenterY - totalH / 2 + MS_CARD_H / 2;
-    group.forEach((n, i) => {
-      positions.push({
-        node: n,
-        col,
-        visible: true,
-        isParent: false,
-        x: colToX(col),
-        y: startY + i * (MS_CARD_H + MS_ROW_GAP),
-      });
-    });
-  }
-  // Add hidden children to positions (visible=false) so callers can
-  // look them up by id when computing edges and detecting transitions.
-  for (const n of nodes) {
-    const col = cols.get(n.id) ?? 0;
-    const isParent = parentIds.has(n.id);
-    if (isParent) continue;
-    if (Math.abs(col) <= maxDepth) continue;
-    positions.push({
-      node: n,
-      col,
-      visible: false,
-      isParent: false,
-    });
-  }
-  // Parent (only one supported per lane).
-  for (const n of nodes) {
-    if (!parentIds.has(n.id)) continue;
-    const col = cols.get(n.id) ?? 0;
-    const visible = Math.abs(col) <= maxDepth;
-    positions.push({
-      node: n,
-      col,
-      visible,
-      isParent: true,
-      x: visible ? colToX(col) : undefined,
-      y: visible ? parentRowCenterY : undefined,
-    });
-  }
-
-  const maxStack = Math.max(1, ...Array.from(childByCol.values()).map((g) => g.length));
-  const childRowH = maxStack * MS_CARD_H + (maxStack - 1) * MS_ROW_GAP;
-  return { positions, leftLozengeCount, rightLozengeCount, maxStack, childRowH };
-}
-
-function rectFor(pos: LanePosition) {
-  return { x: pos.x!, y: pos.y!, width: MS_CARD_W, height: MS_CARD_H };
-}
-
-/**
- * Slurp morph between a full TaskCard rect and a lozenge slit, at
- * parameter `t` ∈ [0, 1]. t=0 → slit at the lozenge's inner edge;
- * t=1 → full card at its rest position.
- *
- * Same phased timing as `slurpOutGeometry` so the leading edge sweeps
- * out first and the trailing edge follows. `side` tells us which side
- * of the lozenge the card lives on so we can flip leading/trailing.
- */
-function slurpRectMorph(
-  card: { x: number; y: number; width: number; height: number },
-  loz: { x: number; y: number; width: number; height: number },
-  side: "left" | "right",
-  t: number,
-): string {
-  const SLIT_H = GENIE_SLIT_HEIGHT;
-  const cardLeft = card.x - card.width / 2;
-  const cardRight = card.x + card.width / 2;
-  const lozLeftEdge = loz.x - loz.width / 2;
-  const lozRightEdge = loz.x + loz.width / 2;
-  const lozNearEdgeX = side === "left" ? lozLeftEdge : lozRightEdge;
-  // Card's "far" edge — the one away from the lozenge — is the leading
-  // edge of the slurp shape. The near edge is the trailing edge.
-  const leadingFarX = side === "left" ? cardLeft : cardRight;
-
-  const leadingT = windowProgress(t, 0.0, 0.55);
-  const trailingHT = windowProgress(t, 0.4, 0.88);
-
-  const leadingX = lerp(lozNearEdgeX, leadingFarX, ease(leadingT));
-  const leadingH = lerp(SLIT_H, card.height, ease(leadingT));
-  const trailingH = lerp(SLIT_H, card.height, ease(trailingHT));
-  // Trailing X follows the leading edge once the width hits cardW
-  // (mirrors the slurpOutGeometry width-cap).
-  const trailingX = side === "left"
-    ? Math.min(lozNearEdgeX, leadingX + card.width)
-    : Math.max(lozNearEdgeX, leadingX - card.width);
-  // Y morphs from lozenge.cy → card.cy over most of t.
-  const yT = windowProgress(t, 0.0, 0.7);
-  const morphCy = lerp(loz.y, card.y, ease(yT));
-
-  const lTop = morphCy - leadingH / 2;
-  const lBot = morphCy + leadingH / 2;
-  const tTop = morphCy - trailingH / 2;
-  const tBot = morphCy + trailingH / 2;
-  const ctrlX = (leadingX + trailingX) / 2;
-  return [
-    `M ${trailingX} ${tTop}`,
-    `C ${ctrlX} ${tTop}, ${ctrlX} ${lTop}, ${leadingX} ${lTop}`,
-    `L ${leadingX} ${lBot}`,
-    `C ${ctrlX} ${lBot}, ${ctrlX} ${tBot}, ${trailingX} ${tBot}`,
-    "Z",
-  ].join(" ");
-}
-
 /**
  * Map a ChartChild + parent spec into a StatusFlowNode[] (the format
  * the shared layout helpers expect).
@@ -1194,79 +996,9 @@ function nodeToTask(n: StatusFlowNode): TaskData {
   };
 }
 
-// Each tick is animated in three phases so cards leaving / arriving
-// don't fight visible cards that are simply shifting columns:
-//
-//   [0 ────────── SLURP] leaving cards slurp INTO their lozenge
-//   [SLURP ── + MOVE]    visible cards shift to their new columns
-//   [SLURP+MOVE ─ +SLURP] arriving cards slurp OUT of their lozenge
-//
-// The state-machine tick rate is bumped to comfortably exceed this
-// entire sequence so the next tick doesn't trample an in-flight one.
-const MS_SLURP_MS = 600;
-const MS_MOVE_MS = 450;
-const MS_PHASE_TOTAL = MS_SLURP_MS + MS_MOVE_MS + MS_SLURP_MS; // 1650
-
-/** Per-transition delay before the morph rAF actually starts.
- *  Leaving ("in") cards run immediately; arriving ("out") cards wait
- *  until both the slurp-in phase AND the visible-card shift have
- *  finished. */
-const MS_DELAY_IN = 0;
-const MS_DELAY_OUT = MS_SLURP_MS + MS_MOVE_MS;
-
-interface MsLozengeTransition {
-  id: string;
-  kind: "in" | "out";
-  side: "left" | "right";
-  cardRect: { x: number; y: number; width: number; height: number };
-  lozRect: { x: number; y: number; width: number; height: number };
-  startTs: number;
-  status: ChildStatus;
-}
-
-function SlurpTransitionPath(props: {
-  transition: MsLozengeTransition;
-  onComplete: (tx: MsLozengeTransition) => void;
-}): JSX.Element {
-  let pathRef: SVGPathElement | undefined;
-  const theme = statusTheme(props.transition.status);
-  onMount(() => {
-    if (!pathRef) return;
-    const { cardRect, lozRect, side, kind, startTs } = props.transition;
-    const delay = kind === "in" ? MS_DELAY_IN : MS_DELAY_OUT;
-    const tick = (now: number) => {
-      const sinceStart = now - startTs;
-      if (sinceStart < delay) {
-        requestAnimationFrame(tick);
-        return;
-      }
-      const elapsed = sinceStart - delay;
-      const tNormalized = Math.min(1, elapsed / MS_SLURP_MS);
-      // morphT: 0 = at lozenge slit, 1 = at full card
-      const morphT = kind === "out" ? tNormalized : 1 - tNormalized;
-      pathRef!.setAttribute(
-        "d",
-        slurpRectMorph(cardRect, lozRect, side, morphT),
-      );
-      if (tNormalized < 1) requestAnimationFrame(tick);
-      else props.onComplete(props.transition);
-    };
-    requestAnimationFrame(tick);
-  });
-  // Initial d so the path doesn't flash at origin.
-  const { cardRect, lozRect, side, kind } = props.transition;
-  const initialMorphT = kind === "out" ? 0 : 1;
-  const initialD = slurpRectMorph(cardRect, lozRect, side, initialMorphT);
-  return (
-    <path
-      ref={(el) => (pathRef = el)}
-      d={initialD}
-      fill={theme.fill}
-      stroke={theme.stroke}
-      stroke-width="1"
-    />
-  );
-}
+// Animation timing (slurp + move + slurp totals MS_PHASE_TOTAL) lives
+// in `./animation-trajectories` so the trajectory math and the row
+// tick rate stay in lockstep — imported from the top.
 
 function MixedShapesLaneReactive(props: {
   spec: MixedLaneSpec;
@@ -1298,30 +1030,6 @@ function MixedShapesLaneReactive(props: {
   const childRowCenterY =
     props.laneY + MS_LANE_PAD + parentRowH + reservedChildRowH / 2;
 
-  // Shadow state: lags behind props.nodes during the multi-phase
-  // animation. When the row ticks (props.nodes changes), the lane
-  // (1) starts slurp-in transitions reading from the OLD shadow state,
-  // (2) after MS_SLURP_MS, applies the new state — visible cards then
-  // CSS-transition to their new positions,
-  // (3) after MS_SLURP_MS + MS_MOVE_MS, slurp-out runs for arriving
-  // cards (via the per-transition delay in SlurpTransitionPath).
-  const [shadowNodes, setShadowNodes] = createSignal(props.nodes);
-  // Cards that are "pending arrival" — they exist in shadowNodes as
-  // visible but their TaskCard is hidden until the slurp-out animation
-  // for them completes.
-  const [pendingArrivals, setPendingArrivals] = createSignal<Set<string>>(new Set());
-
-  // Reactive layout — based on shadow state (the visible truth on
-  // screen), not props.nodes (the row's truth which may be ahead).
-  const layout = () =>
-    computeLaneLayout(
-      shadowNodes(),
-      MS_MAX_DEPTH,
-      centerX,
-      parentRowCenterY,
-      childRowCenterY,
-    );
-
   const colTopY = childRowCenterY - reservedChildRowH / 2;
   const colBottomY = childRowCenterY + reservedChildRowH / 2;
   const lozMidY = childRowCenterY;
@@ -1349,11 +1057,12 @@ function MixedShapesLaneReactive(props: {
     height: colBottomY - colTopY,
   });
 
-  // ─── trajectory-driven card animation ────────────────────────────────
-  // Phase 1 adds the unified trajectory model: card position, mode,
-  // path, status are all functions of `currentT` ∈ [0, 1]. Cards
-  // render from the trajectory; arrows still use the legacy shadow
-  // state + edges() pipeline below (Phase 2 swaps them over).
+  // ─── trajectory-driven animation ─────────────────────────────────────
+  // Cards, arrows, and lozenge counts are ALL derived from a single
+  // LaneTrajectory + currentT ∈ [0, 1]. When props.nodes changes the
+  // trajectory rebuilds with (prev, next) and a rAF loop drives
+  // currentT from 0 → 1 over the trajectory's duration. Solid handles
+  // re-rendering on every t update.
   const trajLayoutParams = (): TrajLayoutParams => ({
     maxDepth: MS_MAX_DEPTH,
     centerX,
@@ -1405,113 +1114,21 @@ function MixedShapesLaneReactive(props: {
     rafHandle = requestAnimationFrame(tick);
   });
 
-  // Active slurp transitions for nodes crossing the visible-window
-  // boundary this frame. Detected via createEffect comparing the
-  // previous layout to the current one.
-  const [transitions, setTransitions] = createSignal<MsLozengeTransition[]>([]);
-  const inTransition = (id: string) =>
-    transitions().some((t) => t.id === id);
-
-  // Helper: derive (which lozenge, which side of lozenge the card sits
-  // on) from a signed col. col < 0 → LEFT lozenge, card on its right.
-  // col > 0 → RIGHT lozenge, card on its left.
-  const sideAndLoz = (col: number) =>
-    col < 0
-      ? { side: "right" as const, lozRect: leftLozRect() }
-      : { side: "left" as const, lozRect: rightLozRect() };
-
-  // When props.nodes changes (a row tick or step), sequence the
-  // transitions: slurp-in first → apply state (cards shift) → slurp-out.
-  createEffect(() => {
-    const incoming = props.nodes;
-    const current = shadowNodes();
-    if (incoming === current) return;
-
-    // Compute prev / next layouts so we know who is visible in each.
-    const prevLayout = computeLaneLayout(
-      current,
-      MS_MAX_DEPTH,
-      centerX,
-      parentRowCenterY,
-      childRowCenterY,
-    );
-    const nextLayout = computeLaneLayout(
-      incoming,
-      MS_MAX_DEPTH,
-      centerX,
-      parentRowCenterY,
-      childRowCenterY,
-    );
-    const prevVisible = new Map<string, LanePosition>();
-    for (const p of prevLayout.positions) if (p.visible) prevVisible.set(p.node.id, p);
-    const nextVisible = new Map<string, LanePosition>();
-    for (const p of nextLayout.positions) if (p.visible) nextVisible.set(p.node.id, p);
-
-    const newTx: MsLozengeTransition[] = [];
-    const startTs = performance.now();
-
-    // LEAVING — visible now, hidden in incoming. Slurp INTO lozenge.
-    for (const [id, oldP] of prevVisible) {
-      if (nextVisible.has(id)) continue;
-      const newP = nextLayout.positions.find((x) => x.node.id === id);
-      const { side, lozRect } = sideAndLoz(newP?.col ?? oldP.col);
-      const node = incoming.find((n) => n.id === id);
-      newTx.push({
-        id,
-        kind: "in",
-        side,
-        cardRect: { x: oldP.x!, y: oldP.y!, width: MS_CARD_W, height: MS_CARD_H },
-        lozRect,
-        startTs,
-        status: (node?.status as ChildStatus) ?? "TODO",
-      });
+  // Lozenge counts derive from the trajectory: a card "occupies" a
+  // lozenge when its current mode is "gone". The counts roll down /
+  // up automatically at phase boundaries (leavers count at LEAVE_END,
+  // arrivers stop counting at MOVE_END).
+  const lozengeCounts = () => {
+    const t = currentT();
+    let left = 0;
+    let right = 0;
+    for (const c of traj().cards.values()) {
+      if (c.modeAt(t) !== "gone") continue;
+      if (c.anchorAt(t).x < centerX) left++;
+      else right++;
     }
-    // ARRIVING — hidden now, visible in incoming. Slurp OUT of lozenge.
-    const arrivingIds = new Set<string>();
-    for (const [id, newP] of nextVisible) {
-      if (prevVisible.has(id)) continue;
-      arrivingIds.add(id);
-      const oldP = prevLayout.positions.find((x) => x.node.id === id);
-      const { side, lozRect } = sideAndLoz(oldP?.col ?? newP.col);
-      const node = incoming.find((n) => n.id === id);
-      newTx.push({
-        id,
-        kind: "out",
-        side,
-        cardRect: { x: newP.x!, y: newP.y!, width: MS_CARD_W, height: MS_CARD_H },
-        lozRect,
-        startTs,
-        status: (node?.status as ChildStatus) ?? "TODO",
-      });
-    }
-    if (newTx.length > 0) setTransitions((prev) => [...prev, ...newTx]);
-
-    // Mark arriving cards as pending so their TaskCards stay hidden
-    // until their slurp-out completes. They become visible after the
-    // full sequence (slurp-in + move + slurp-out).
-    if (arrivingIds.size > 0) {
-      setPendingArrivals((prev) => new Set([...prev, ...arrivingIds]));
-      setTimeout(
-        () =>
-          setPendingArrivals((prev) => {
-            const next = new Set(prev);
-            for (const id of arrivingIds) next.delete(id);
-            return next;
-          }),
-        MS_PHASE_TOTAL,
-      );
-    }
-
-    // Phase boundary: after MS_SLURP_MS, swap the shadow state to the
-    // incoming one. Visible cards' positions reactively update; they
-    // CSS-transition to their new column over MS_MOVE_MS. Cards that
-    // are pending-arrival remain hidden (their TaskCard is gated on
-    // !pendingArrivals.has(id)).
-    setTimeout(() => setShadowNodes(incoming), MS_SLURP_MS);
-  });
-
-  const onTxComplete = (tx: MsLozengeTransition) =>
-    setTransitions((prev) => prev.filter((t) => t !== tx));
+    return { left, right };
+  };
 
   return (
     <g>
@@ -1526,8 +1143,9 @@ function MixedShapesLaneReactive(props: {
         stroke="rgba(255,255,255,0.1)"
         stroke-width="1"
       />
-      {/* Left + right lozenges (one or both can be 0) */}
-      <Show when={layout().leftLozengeCount > 0}>
+      {/* Left + right lozenges. Counts come from the trajectory:
+          a card "occupies" a lozenge while its mode is "gone". */}
+      <Show when={lozengeCounts().left > 0}>
         <rect
           x={leftLozengeX}
           y={colTopY}
@@ -1548,10 +1166,10 @@ function MixedShapesLaneReactive(props: {
           font-size="9"
           font-family="ui-monospace, SFMono-Regular, monospace"
         >
-          {layout().leftLozengeCount}
+          {lozengeCounts().left}
         </text>
       </Show>
-      <Show when={layout().rightLozengeCount > 0}>
+      <Show when={lozengeCounts().right > 0}>
         <rect
           x={rightLozengeX}
           y={colTopY}
@@ -1572,7 +1190,7 @@ function MixedShapesLaneReactive(props: {
           font-size="9"
           font-family="ui-monospace, SFMono-Regular, monospace"
         >
-          {layout().rightLozengeCount}
+          {lozengeCounts().right}
         </text>
       </Show>
       {/* Arrows: ONE pipeline driven by trajectory anchors. Each
@@ -1583,9 +1201,8 @@ function MixedShapesLaneReactive(props: {
               leading edge, naturally shortening the arrow as the
               card emerges (or lengthening as it disappears)
             - card → gone card → endpoint is the lozenge inner edge
-          Dashedness is a function of both endpoints' current mode —
-          solid when both are "card", dashed otherwise. (Phase 3 will
-          smooth this into a continuous fade.) */}
+          Dashedness is a continuous fade — max hiddenness of the two
+          endpoints, mapped to a gap interpolation 0 → 3. */}
       <For each={traj().arrows}>
         {(arrow) => {
           const fromCard = (): CardTrajectory | undefined =>
@@ -1633,9 +1250,6 @@ function MixedShapesLaneReactive(props: {
           );
         }}
       </For>
-      {/* Slurp transition paths — one per node currently morphing
-          between the lozenge and its rest position. Rendered BEFORE
-          the cards so they sit beneath. */}
       {/* Cards: trajectory-driven. modeAt(t) gates between TaskCard
           (resting/moving), SVG path morph (slurp in/out), and gone.
           Iterating by STABLE string id so Solid's <For> preserves
