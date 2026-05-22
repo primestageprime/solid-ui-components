@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.36.0
+
 ### Added
 
 - **TabbedSidePanel**: new `contentPadding` prop (`"none" | "sm" | "md"`, default `"sm"`). Adds a small inboard gap between the vertical tab strip and the body so content no longer visually collides with the strip labels. **Default-changing visual bump** — every existing consumer gains ~8px of inboard padding on the body. Pass `contentPadding="none"` to preserve the previous flush behavior. Threaded through `RightDetailTabbedPanel` and `LeftNavTabbedPanel` curried variants.
