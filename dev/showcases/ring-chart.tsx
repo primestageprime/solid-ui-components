@@ -27,7 +27,7 @@ export const RingChartShowcase: Component = () => (
           sublabel="closed"
           segments={[
             { value: 3, color: "var(--sui-success, #2a6)" },
-            { value: 8, color: "var(--sui-info, #58a)" },
+            { value: 8, color: "var(--sui-accent)" },
             { value: 4, color: "var(--sui-warning, #b80)" },
             { value: 5, color: "var(--sui-border-bright, #2a2a3e)" },
           ]}

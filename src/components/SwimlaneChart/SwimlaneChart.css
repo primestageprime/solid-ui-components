@@ -7,10 +7,10 @@
 }
 
 .sui-swimlane__edge {
-  stroke: var(--sui-border);
+  stroke: var(--sui-border-bright);
   stroke-width: 1.5;
   fill: none;
-  color: var(--sui-border);
+  color: var(--sui-border-bright);
   /* Animate the path's `d` so an edge's endpoints follow their nodes
      as those nodes slide between columns. Browsers that don't support
      transitioning `d` (older Firefox) will snap as before. */

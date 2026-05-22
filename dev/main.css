@@ -198,7 +198,7 @@
   animation: dts-pulse-from 0.35s ease-out;
 }
 .dts-stage-group--current .dts-stage-rect {
-  fill: var(--sui-accent);
+  fill: rgba(var(--sui-accent-rgb), 0.22);
   stroke: var(--sui-accent);
   stroke-width: 2;
   filter: drop-shadow(0 0 10px rgba(var(--sui-accent-rgb), 0.55));
@@ -232,10 +232,11 @@
   font-family: var(--sui-font-family, system-ui);
   pointer-events: none;
 }
-/* Current stage paints solid accent — label flips to the elevated surface
-   color (white on Bronze, light on HUD) for legible contrast on-color. */
-.dts-stage-group--current .dts-stage-label { fill: var(--sui-bg-elevated); }
-.dts-stage-group--current .dts-stage-owner { fill: var(--sui-bg-elevated); opacity: 0.85; }
+/* Current stage paints a subtle accent tint (StatusBadge pattern) — labels
+   take the accent color directly so contrast tracks the theme in both
+   light Bronze and dark Bronze without flipping to a fixed surface color. */
+.dts-stage-group--current .dts-stage-label { fill: var(--sui-accent); }
+.dts-stage-group--current .dts-stage-owner { fill: var(--sui-accent); opacity: 0.85; }
 
 /* Rework badge */
 .dts-stage-rework {
