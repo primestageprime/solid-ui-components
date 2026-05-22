@@ -1,7 +1,8 @@
 // ============================================
 // Tabs — Atomic (Depth 1)
 // Owns CSS (Tabs.css), no component imports.
-// Tab bar with underline/boxed/pill variants.
+// Tab bar with horizontal or vertical orientation,
+// and underline/boxed/pill variants.
 // ============================================
 import { Component, For, JSX, Show } from "solid-js";
 import type { ColorVariant } from "../../types";
@@ -25,6 +26,8 @@ export interface TabsProps {
   onTabChange: (id: string) => void;
   /** Tab style variant */
   variant?: "default" | "underline" | "boxed" | "pill";
+  /** Orientation of the tab strip. Defaults to "horizontal". */
+  orientation?: "horizontal" | "vertical";
   /** Accent color */
   color?: ColorVariant;
 }
@@ -33,6 +36,7 @@ export const Tabs: Component<TabsProps> = (props) => {
   const classes = () => {
     const classList = ["sui-tabs"];
     classList.push(`sui-tabs--${props.variant || "default"}`);
+    if (props.orientation === "vertical") classList.push("sui-tabs--vertical");
     if (props.color) classList.push(`sui-tabs--${props.color}`);
     return classList.join(" ");
   };

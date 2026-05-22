@@ -51,6 +51,7 @@ export * from "./components/Divider";
 export * from "./components/Page";
 export * from "./components/Modal";
 export * from "./components/Tabs";
+export * from "./components/TabbedSidePanel";
 export * from "./components/ButtonGroup";
 export * from "./components/List";
 export * from "./components/PopoverMenu";

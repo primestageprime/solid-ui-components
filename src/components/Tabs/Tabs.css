@@ -62,3 +62,45 @@
   margin-left: 6px;
   flex-shrink: 0;
 }
+
+/* ============================================
+   Vertical orientation
+   ============================================ */
+.sui-tabs--vertical {
+  flex-direction: column;
+  gap: 0;
+}
+
+.sui-tabs--vertical .sui-tab {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 12px 8px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Default variant: indicator moves from bottom to the panel-inboard edge.
+   The composite always places the strip on the panel's outboard edge,
+   so the indicator on the strip's inboard edge is what reads as "selected". */
+.sui-tabs--vertical.sui-tabs--default .sui-tab--active::after {
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: -1px;
+  width: 2px;
+  height: auto;
+}
+
+/* Neutralize theme-layer horizontal borders in vertical mode and
+   replace with an inboard-edge active indicator for the underline variant. */
+.sui-tabs--vertical.sui-tabs--default {
+  border-bottom: 0;
+}
+
+.sui-tabs--vertical.sui-tabs--underline .sui-tab {
+  border-bottom: 0;
+}
+
+.sui-tabs--vertical.sui-tabs--underline .sui-tab--active {
+  border-right: 2px solid var(--sui-accent);
+}
