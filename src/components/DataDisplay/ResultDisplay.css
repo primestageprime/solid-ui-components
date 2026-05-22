@@ -61,10 +61,10 @@
 }
 
 .sui-result-display--highlighted {
-  background: rgba(0, 255, 136, 0.15);
+  background: rgba(var(--sui-success-rgb), 0.15);
 }
 
 .sui-result-display--highlighted .sui-result-display__value,
 .sui-result-display--highlighted .sui-result-display__value-units {
-  color: #00ff88;
+  color: var(--sui-success);
 }

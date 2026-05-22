@@ -22,27 +22,27 @@
 
 /* Color variants */
 .nav-link--warning {
-  color: #ffcc00;
+  color: var(--sui-warning);
 }
 
 .nav-link--warning.nav-link--active {
-  border-bottom-color: #ffcc00;
+  border-bottom-color: var(--sui-warning);
 }
 
 .nav-link--danger {
-  color: #ff0040;
+  color: var(--sui-danger);
 }
 
 .nav-link--danger.nav-link--active {
-  border-bottom-color: #ff0040;
+  border-bottom-color: var(--sui-danger);
 }
 
 .nav-link--success {
-  color: #00ff88;
+  color: var(--sui-success);
 }
 
 .nav-link--success.nav-link--active {
-  border-bottom-color: #00ff88;
+  border-bottom-color: var(--sui-success);
 }
 
 /* Badge */

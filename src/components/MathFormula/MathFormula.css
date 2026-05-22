@@ -65,11 +65,11 @@
    ============================================ */
 
 .formula-row-highlight {
-  background: rgba(0, 255, 136, 0.15) !important;
+  background: rgba(var(--sui-success-rgb), 0.15) !important;
 }
 
 .formula-row-highlight td {
-  color: #00ff88 !important;
+  color: var(--sui-success) !important;
 }
 
 .data-row[class*="formula-row"] {
@@ -89,12 +89,12 @@
 
 .math-formula .katex .formula-var:hover,
 .math-formula .katex .formula-var-highlight {
-  color: #00ff88 !important;
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+  color: var(--sui-success) !important;
+  text-shadow: 0 0 8px rgba(var(--sui-success-rgb), 0.5);
 }
 
 /* Make sure all children of the highlighted var also get the color */
 .math-formula .katex .formula-var-highlight *,
 .math-formula .katex .formula-var:hover * {
-  color: #00ff88 !important;
+  color: var(--sui-success) !important;
 }

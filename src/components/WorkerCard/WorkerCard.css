@@ -9,12 +9,12 @@
 
 .worker-card--complete {
   border-color: var(--sui-success);
-  background: rgba(0,255,136,0.04);
+  background: rgba(var(--sui-success-rgb), 0.04);
 }
 
 .worker-card--overdue {
-  border-color: var(--sui-error, #ff3366);
-  background: rgba(255,51,102,0.04);
+  border-color: var(--sui-danger);
+  background: rgba(var(--sui-danger-rgb), 0.04);
 }
 
 .worker-card--claimed,
