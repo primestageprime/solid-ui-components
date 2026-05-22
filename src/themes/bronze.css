@@ -1,0 +1,113 @@
+/* ============================================
+   Bronze Theme — Light, Serif, Friendly
+   ============================================
+   Lora for prose, Inter for utility text
+   (buttons, badges, eyebrows, metadata). Warm
+   bone backgrounds, deep warm ink, rust accent.
+   ============================================ */
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--sui-font-family);
+  background-color: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ---- Accent ---- */
+  --sui-accent:     #C96442;
+  --sui-accent-rgb: 201, 100, 66;
+  --sui-accent-dim: #A85234;
+
+  /* ---- Semantic ---- */
+  --sui-danger:      #A8443A;
+  --sui-danger-rgb:  168, 68, 58;
+  --sui-warning:     #C58A2C;
+  --sui-warning-rgb: 197, 138, 44;
+  --sui-success:     #5C7C5C;
+  --sui-success-rgb: 92, 124, 92;
+
+  /* ---- Backgrounds — bone family ---- */
+  --sui-bg-deep:      #EFEAE0;
+  --sui-bg-primary:   #F6F2EB;
+  --sui-bg-secondary: #FCFAF5;
+  --sui-bg-tertiary:  #F0E7D6;
+  --sui-bg-elevated:  #FFFFFF;
+
+  /* ---- Text ---- */
+  --sui-text-primary:   #2B1D14;
+  --sui-text-secondary: #8C7861;
+  --sui-text-muted:     #B8A78C;
+
+  /* ---- Borders ---- */
+  --sui-border:        #E5DCC9;
+  --sui-border-bright: #D9CDB4;
+  --sui-border-focus:  #C96442;
+
+  /* ---- Radii — subtle round ---- */
+  --sui-radius-sm: 4px;
+  --sui-radius-md: 6px;
+  --sui-radius-lg: 10px;
+
+  /* ---- Clip sizes ---- */
+  --sui-clip-sm:  8px;
+  --sui-clip-md: 12px;
+  --sui-clip-lg: 16px;
+  --sui-clip-xl: 24px;
+
+  /* ---- Spacing scale (identical across themes) ---- */
+  --sui-space-0: 0;
+  --sui-space-px: 1px;
+  --sui-space-0-5: 2px;
+  --sui-space-1: 4px;
+  --sui-space-1-5: 6px;
+  --sui-space-2: 8px;
+  --sui-space-2-5: 10px;
+  --sui-space-3: 12px;
+  --sui-space-4: 16px;
+  --sui-space-5: 20px;
+  --sui-space-6: 24px;
+
+  /* ---- Typography ---- */
+  --sui-font-family:  "Lora", Georgia, "Times New Roman", serif;
+  --sui-font-utility: "Inter", system-ui, -apple-system, sans-serif;
+  --sui-font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---- Chart status colors — warm mapping ---- */
+  --status-full:    #5C7C5C;
+  --status-partial: #C58A2C;
+  --status-sparse:  #C96442;
+  --status-missing: #A8443A;
+}
+
+/* ============================================
+   Component overrides — only where pure tokens
+   are insufficient (light-bg-aware shadows,
+   palette-specific neutral button)
+   ============================================ */
+
+/* Solid neutral. Uses an inlined warm-dark tone because var(--sui-text-secondary)
+   on white sits at 4.22:1 — just below WCAG AA. #6B5C48 is between text-secondary
+   and text-primary in lightness; ~5.8:1 on white. */
+.sui-btn--secondary {
+  background: #6B5C48;
+  border-color: #6B5C48;
+  color: var(--sui-bg-elevated);
+}
+.sui-btn--secondary:hover:not(:disabled) {
+  background: var(--sui-text-primary);
+  border-color: var(--sui-text-primary);
+  color: var(--sui-bg-elevated);
+}
+
+/* Panel glows: default.css uses rgba(0,0,0,0.2..0.3) which is
+   too heavy on bone bg. Soften with warm-ink-tinted alphas. */
+.sui-panel--glow-subtle  { box-shadow: 0 1px 3px  rgba(43, 29, 20, 0.06); }
+.sui-panel--glow-medium  { box-shadow: 0 2px 8px  rgba(43, 29, 20, 0.10); }
+.sui-panel--glow-strong  { box-shadow: 0 4px 16px rgba(43, 29, 20, 0.14); }

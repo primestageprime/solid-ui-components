@@ -69,6 +69,7 @@ const REQUIRED_TOKENS: readonly string[] = [
 const THEME_FILES: readonly string[] = [
   "default.css",
   "hud.css",
+  "bronze.css",
 ];
 
 // ESM-safe equivalent of CJS `__dirname`. We resolve via fileURLToPath rather
