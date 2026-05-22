@@ -15,7 +15,7 @@ export const ToggleShowcase: Component = () => {
         <h3>Basic Toggle</h3>
         <div class="example-column">
           <Toggle checked={enabled1()} onChange={() => setEnabled1(!enabled1())} />
-          <span style={{ color: "var(--jtf-text-secondary)" }}>
+          <span style={{ color: "var(--sui-text-secondary)" }}>
             State: {enabled1() ? "ON" : "OFF"}
           </span>
         </div>

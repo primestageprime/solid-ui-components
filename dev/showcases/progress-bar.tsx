@@ -16,9 +16,9 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 20, color: "rgba(255, 0, 64, 0.7)" },
             ]}
             label={5}
-            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
         </div>
         <div style={{ display: "flex", gap: "8px", "align-items": "center", "margin-top": "8px" }}>
           <StackedProgressBar
@@ -27,9 +27,9 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 0, color: "rgba(255, 0, 64, 0.7)" },
             ]}
             label={0}
-            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--jtf-text-muted)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--sui-text-muted)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 40, color: "rgba(255, 0, 64, 0.7)" },
             ]}
             label={7}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
           <StackedProgressBar
             direction="vertical"
@@ -52,7 +52,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 10, color: "rgba(255, 0, 64, 0.7)" },
             ]}
             label={3}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
         </div>
       </div>

@@ -75,7 +75,7 @@ const InteractiveLegendExample: Component = () => {
                 display: "flex",
                 "align-items": "center",
                 "justify-content": "center",
-                color: "white",
+                color: "var(--sui-text-primary)",
                 "font-size": "11px",
                 "font-weight": "600",
                 cursor: "default",

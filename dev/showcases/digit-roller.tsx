@@ -22,14 +22,14 @@ export const DigitRollerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Animated Transition</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Vertical digit rolling animation for transitioning between numeric values.
         </p>
         <div style={{ display: "flex", "align-items": "center", gap: "20px" }}>
           <span style={{
             "font-size": "1.5rem",
             "font-weight": "600",
-            color: "var(--jtf-text-primary)",
+            color: "var(--sui-text-primary)",
             "font-variant-numeric": "tabular-nums",
           }}>
             <DigitRoller
@@ -39,7 +39,7 @@ export const DigitRollerShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span style={{ color: "var(--jtf-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
           <button class="demo-btn" onClick={triggerRoll}>
             Roll to {rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA()}
           </button>
@@ -48,14 +48,14 @@ export const DigitRollerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Static (no animation)</h3>
-        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--jtf-text-primary)" }}>
+        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
           <DigitRoller value="0.1250" />
         </div>
       </div>
 
       <div class="example-group">
         <h3>Tabular digits</h3>
-        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "#00d4ff" }}>
+        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-accent)" }}>
           <DigitRoller value="42.00" />
         </div>
       </div>

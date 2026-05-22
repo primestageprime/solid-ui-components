@@ -21,7 +21,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             subtitle="Summary of key metrics"
             headerAction={<Button size="sm">Export</Button>}
           >
-            <p style={{ margin: "0", color: "var(--jtf-text-secondary)", "font-size": "0.875rem" }}>
+            <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
               Section content goes here.
             </p>
           </Section>
@@ -30,7 +30,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
           <Stack gap="md">
             <div>
               <CollapsibleSection title="CollapsibleSection" subtitle="Click header to collapse">
-                <p style={{ margin: "0", color: "var(--jtf-text-secondary)", "font-size": "0.875rem" }}>
+                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
                   Bordered section with collapse support, default expanded.
                 </p>
               </CollapsibleSection>
@@ -38,7 +38,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div>
               <DecoratedSection title="DecoratedSection">
-                <p style={{ margin: "0", color: "var(--jtf-text-secondary)", "font-size": "0.875rem" }}>
+                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
                   Decorated section with corner brackets, fills parent.
                 </p>
               </DecoratedSection>
@@ -46,7 +46,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div>
               <BorderedSection title="BorderedSection">
-                <p style={{ margin: "0", color: "var(--jtf-text-secondary)", "font-size": "0.875rem" }}>
+                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
                   Simple bordered container.
                 </p>
               </BorderedSection>
@@ -68,7 +68,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Sublabel</div>
-            <p style={{ margin: "0", "font-size": "0.75rem", color: "var(--jtf-text-muted)" }}>Summary of key metrics</p>
+            <p style={{ margin: "0", "font-size": "0.75rem", color: "var(--sui-text-muted)" }}>Summary of key metrics</p>
           </div>
           <div
             class="depth2-atom depth2-atom--link"

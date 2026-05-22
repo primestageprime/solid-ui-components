@@ -30,20 +30,20 @@ export const SidebarSelectorShowcase: Component = () => {
             onSelect={(item) => setSelected(item.id)}
             renderCard={(data, isSelected) => (
               <div>
-                <div style={{ "font-weight": isSelected ? "bold" : "normal", color: "var(--hud-accent)" }}>{data.title}</div>
-                <div style={{ "font-size": "11px", color: "var(--hud-text-dim)", "margin-top": "2px" }}>{data.status}</div>
+                <div style={{ "font-weight": isSelected ? "bold" : "normal", color: "var(--sui-accent)" }}>{data.title}</div>
+                <div style={{ "font-size": "11px", color: "var(--sui-text-secondary)", "margin-top": "2px" }}>{data.status}</div>
               </div>
             )}
             renderSelection={(data) => (
               <div style={{ padding: "16px" }}>
                 {data ? (
                   <>
-                    <h4 style={{ color: "var(--hud-accent)", margin: "0 0 8px" }}>{data.title}</h4>
-                    <p style={{ color: "var(--hud-text-dim)", margin: 0 }}>{data.description}</p>
+                    <h4 style={{ color: "var(--sui-accent)", margin: "0 0 8px" }}>{data.title}</h4>
+                    <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>{data.description}</p>
                     <p style={{ color: data.status === "Online" ? "#00ff88" : data.status === "Offline" ? "#ff0040" : "#ffcc00", "margin-top": "8px" }}>{data.status}</p>
                   </>
                 ) : (
-                  <span style={{ color: "var(--hud-text-dim)" }}>Select an item</span>
+                  <span style={{ color: "var(--sui-text-secondary)" }}>Select an item</span>
                 )}
               </div>
             )}
