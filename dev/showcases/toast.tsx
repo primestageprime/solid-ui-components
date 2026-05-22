@@ -136,7 +136,7 @@ export const ToastShowcase: Component = () => {
       <div class="example-group">
         <h3>Variants (show programmatically)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Each button calls `showToast({ variant, title, description })`.
+          Each button calls <code>{`showToast({ variant, title, description })`}</code>.
         </div>
         <Row gap="sm" wrap="wrap">
           <PrimaryButton onClick={showInfo}>Info</PrimaryButton>

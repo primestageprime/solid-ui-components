@@ -25,7 +25,7 @@ export const MathFormulaShowcase: Component = () => {
           </div>
           <div>
             <div class="text-meta">Inline mode (displayMode: false)</div>
-            <p style={{ color: "var(--text-secondary)" }}>
+            <p style={{ color: "var(--sui-text-secondary)" }}>
               The result is <MathFormula latex={"x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"} displayMode={false} style={{ display: "inline-block" }} /> for all values.
             </p>
           </div>

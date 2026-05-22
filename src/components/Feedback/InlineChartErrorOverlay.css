@@ -13,7 +13,7 @@
 
 .inline-chart-error-overlay__content {
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 .inline-chart-error-overlay__title {
