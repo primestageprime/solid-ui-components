@@ -18,3 +18,5 @@ export {
   bezierAvoidingObstacles,
 } from "./edge-routing";
 export type { EdgeRect, ObstacleRect } from "./edge-routing";
+export { orthogonalAvoidingObstacles } from "./orthogonal-routing";
+export type { OrthogonalRouteOptions } from "./orthogonal-routing";

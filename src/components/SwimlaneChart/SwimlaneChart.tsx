@@ -26,6 +26,7 @@ import {
   DagSvgNode,
   DagSvgEdge,
   bezierAvoidingObstacles,
+  orthogonalAvoidingObstacles,
   type ObstacleRect,
 } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
@@ -72,6 +73,14 @@ export type SwimlaneChartProps<T> = {
    * set across status / col changes (e.g. an animated chain demo).
    */
   responsiveCollapse?: boolean;
+  /**
+   * Edge routing style. Default `"orthogonal"` — strict right-angle
+   * routing with 3-segment Z paths (5-segment U over obstacles), hard
+   * 90° corners, cardinal-direction arrowheads, and per-edge ports so
+   * parallel connections fan instead of stacking. `"bezier"` keeps the
+   * smooth-curve variant for callers who prefer it.
+   */
+  routingStyle?: "bezier" | "orthogonal";
 };
 
 const DEFAULT_SIZE: [number, number] = [180, 60];
@@ -286,9 +295,9 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (p.x > rightMaxX) rightMaxX = p.x;
     }
     // Second pass: collect every visible node sharing that outermost x,
-    // and average their y so the badge sits vertically centered against
-    // the whole stacked column — not just the topmost node in iteration
-    // order.
+    // and compute (avgY, topY, bottomY). The pill badge sits at the avg
+    // center; topY/bottomY define the pill's vertical span so it reads
+    // as "this badge collects the hidden neighbors of these nodes."
     const collect = (targetX: number) => {
       const matches: { id: string; x: number; y: number; width: number; height: number }[] = [];
       for (const [id, p] of positions) {
@@ -297,16 +306,20 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       }
       if (matches.length === 0) return undefined;
       const avgY = matches.reduce((s, m) => s + m.y, 0) / matches.length;
-      // Use the first match for x/width — every match in a column shares them.
+      const topY = Math.min(...matches.map((m) => m.y - m.height / 2));
+      const bottomY = Math.max(...matches.map((m) => m.y + m.height / 2));
       const ref = matches[0];
-      return { ref, y: avgY };
+      return { ref, y: avgY, topY, bottomY };
     };
-    const out: { left?: { x: number; y: number; anchorId: string }; right?: { x: number; y: number; anchorId: string } } = {};
+    type Side = { x: number; y: number; topY: number; bottomY: number; anchorId: string };
+    const out: { left?: Side; right?: Side } = {};
     const left = leftMinX < Infinity ? collect(leftMinX) : undefined;
     if (left) {
       out.left = {
         x: left.ref.x - left.ref.width / 2 - STUB_LENGTH - BADGE_RADIUS,
         y: left.y,
+        topY: left.topY,
+        bottomY: left.bottomY,
         anchorId: left.ref.id,
       };
     }
@@ -315,10 +328,64 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       out.right = {
         x: right.ref.x + right.ref.width / 2 + STUB_LENGTH + BADGE_RADIUS,
         y: right.y,
+        topY: right.topY,
+        bottomY: right.bottomY,
         anchorId: right.ref.id,
       };
     }
     return out;
+  });
+
+  // Per-edge port assignment for orthogonal routing. For each visible
+  // node, in/out edges get distinct y positions spread evenly along the
+  // node's vertical extent so parallel connections fan instead of
+  // stacking at the same anchor. Built once per layout pass.
+  const portAssignments = createMemo(() => {
+    const positions = layout().positions;
+    // Ordered: edges with smaller (source.y) or (target.y) get earlier ports
+    // so visually the fan reads top-to-bottom.
+    const incoming = new Map<string, { edgeKey: string; otherY: number }[]>();
+    const outgoing = new Map<string, { edgeKey: string; otherY: number }[]>();
+    for (const e of layout().edges) {
+      if (e.synthetic) continue;
+      const key = `${e.sourceId}|${e.targetId}`;
+      const s = positions.get(e.sourceId);
+      const t = positions.get(e.targetId);
+      if (s && positions.has(e.targetId)) {
+        const arr = outgoing.get(e.sourceId) ?? [];
+        arr.push({ edgeKey: key, otherY: t!.y });
+        outgoing.set(e.sourceId, arr);
+      }
+      if (t && positions.has(e.sourceId)) {
+        const arr = incoming.get(e.targetId) ?? [];
+        arr.push({ edgeKey: key, otherY: s!.y });
+        incoming.set(e.targetId, arr);
+      }
+    }
+    const portY = new Map<string, { from: number; to: number }>();
+    const assign = (
+      side: "in" | "out",
+      list: Map<string, { edgeKey: string; otherY: number }[]>,
+    ) => {
+      for (const [nodeId, edges] of list) {
+        const p = positions.get(nodeId);
+        if (!p) continue;
+        edges.sort((a, b) => a.otherY - b.otherY);
+        const n = edges.length;
+        const top = p.y - p.height / 2;
+        const h = p.height;
+        edges.forEach((e, i) => {
+          const y = top + (h * (i + 1)) / (n + 1);
+          const cur = portY.get(e.edgeKey) ?? { from: p.y, to: p.y };
+          if (side === "out") cur.from = y;
+          else cur.to = y;
+          portY.set(e.edgeKey, cur);
+        });
+      }
+    };
+    assign("out", outgoing);
+    assign("in", incoming);
+    return portY;
   });
 
   const edgeViews = createMemo(() => {
@@ -328,6 +395,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       layout().summaries.map((s) => [s.id, s] as const),
     );
     const badges = sideBadgePositions();
+    const isOrthogonal = (props.routingStyle ?? "orthogonal") === "orthogonal";
+    const ports = portAssignments();
     // Build the obstacle list once per layout — every visible node is a
     // potential obstacle for any edge that isn't anchored on it.
     const allRects: ObstacleRect[] = [];
@@ -335,6 +404,44 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (id.startsWith("__collapsed_")) continue;
       allRects.push({ id, x: p.x, y: p.y, width: p.width, height: p.height });
     }
+    const routeEdge = (
+      from: { x: number; y: number; width: number; height: number },
+      to: { x: number; y: number; width: number; height: number },
+      obstacles: ObstacleRect[],
+      edgeKey: string,
+    ): string => {
+      if (isOrthogonal) {
+        const p = ports.get(edgeKey);
+        return orthogonalAvoidingObstacles(from, to, obstacles, {
+          fromPortY: p?.from,
+          toPortY: p?.to,
+        });
+      }
+      return bezierAvoidingObstacles(from, to, obstacles);
+    };
+    /** Variant that takes explicit port overrides — used for badge edges
+     *  where the pill side wants its port-y anchored to the connected
+     *  visible node, not to the badge's vertical center. */
+    const routeEdgeWithPorts = (
+      from: { x: number; y: number; width: number; height: number },
+      to: { x: number; y: number; width: number; height: number },
+      obstacles: ObstacleRect[],
+      edgeKey: string,
+      fromPortY: number | undefined,
+      toPortY: number | undefined,
+    ): string => {
+      if (isOrthogonal) {
+        const p = ports.get(edgeKey);
+        return orthogonalAvoidingObstacles(from, to, obstacles, {
+          fromPortY: fromPortY ?? p?.from,
+          toPortY: toPortY ?? p?.to,
+        });
+      }
+      // Bezier doesn't take port overrides — adjust the from/to y instead.
+      const f = fromPortY !== undefined ? { ...from, y: fromPortY } : from;
+      const t = toPortY !== undefined ? { ...to, y: toPortY } : to;
+      return bezierAvoidingObstacles(f, t, obstacles);
+    };
     const all = layout().edges.flatMap((e) => {
       // Skip synthetic anchor→summary edges — the boundary-badge memo
       // renders those independently as the side stub. Only real data
@@ -356,12 +463,24 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           : sum.column < centerColVal ? badges.left
           : undefined;
         if (!side) return [];
-        const synthSource = { x: side.x, y: side.y, width: BADGE_RADIUS * 2, height: BADGE_RADIUS * 2 };
+        // Pill badge spans (side.topY..side.bottomY). For port-y on the
+        // badge side, anchor at the target's y so the dashed line emerges
+        // from the pill at the same row it lands on the visible node.
+        const pillHeight = side.bottomY - side.topY;
+        const pillMidY = (side.topY + side.bottomY) / 2;
+        const synthSource = { x: side.x, y: pillMidY, width: BADGE_RADIUS * 2, height: pillHeight };
         const obstacles = allRects.filter((r) => r.id !== e.targetId);
+        const key = `${e.sourceId}|${e.targetId}`;
+        // Both endpoints anchor at the visible node's row y. Bypassing
+        // port-assignment on both sides keeps the corridor on the
+        // correct side (above vs below the obstacle) instead of flipping
+        // because port spreading offset one end.
+        const rowY = t.y;
+        const fromPortY = Math.max(side.topY + 4, Math.min(side.bottomY - 4, rowY));
         return [{
-          d: bezierAvoidingObstacles(synthSource, t, obstacles),
+          d: routeEdgeWithPorts(synthSource, t, obstacles, key, fromPortY, rowY),
           isSummary: true,
-          key: `${e.sourceId}|${e.targetId}`,
+          key,
         }];
       }
       // Hidden → hidden: both endpoints inside the same (or different)
@@ -393,12 +512,19 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         if (!side) return [];
         // Synthetic target rect matching the badge geometry so the
         // router treats it like any other endpoint.
-        const t = { x: side.x, y: side.y, width: BADGE_RADIUS * 2, height: BADGE_RADIUS * 2 };
+        const pillHeight = side.bottomY - side.topY;
+        const pillMidY = (side.topY + side.bottomY) / 2;
+        const t = { x: side.x, y: pillMidY, width: BADGE_RADIUS * 2, height: pillHeight };
         const obstacles = allRects.filter((r) => r.id !== e.sourceId);
+        const key = `${e.sourceId}|${e.targetId}`;
+        // Anchor both ports at the visible source's row y so corridor-
+        // side selection stays in sync with the actual visual layout.
+        const rowY = s.y;
+        const toPortY = Math.max(side.topY + 4, Math.min(side.bottomY - 4, rowY));
         return [{
-          d: bezierAvoidingObstacles(s, t, obstacles),
+          d: routeEdgeWithPorts(s, t, obstacles, key, rowY, toPortY),
           isSummary: true,
-          key: `${e.sourceId}|${e.targetId}`,
+          key,
         }];
       }
 
@@ -409,10 +535,11 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       );
       // Path follows the edge's data direction (source -> target) so the
       // arrowhead (marker-end) lands at the target = dependent.
+      const key = `${e.sourceId}|${e.targetId}`;
       return [{
-        d: bezierAvoidingObstacles(s, t, obstacles),
+        d: routeEdge(s, t, obstacles, key),
         isSummary: false,
-        key: `${e.sourceId}|${e.targetId}`,
+        key,
       }];
     });
     // Dedup paths by key — the layout emits both the rewritten real
@@ -504,34 +631,21 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (!anchorPos) return [];
       const dir = g.dir;
       const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
-      // Stub + badge sit vertically centered against the outermost
-      // column (averaged y across every visible node sharing that x),
-      // not just the topmost node's y.
-      const sideY =
-        dir === -1 ? sidePos.left?.y ?? anchorPos.y : sidePos.right?.y ?? anchorPos.y;
-      // Both sides flow left -> right (dep-flow direction). The line ends
-      // at the badge's *inner* edge so the arrowhead is always visible
-      // next to the badge, never hidden underneath it. The badge then sits
-      // outside the arrowhead.
-      //   Left:  [N]──→ DOING   (arrowhead at DOING's left edge, badge further left)
-      //   Right: DOING ──→[N]   (arrowhead at badge's left edge, badge further right)
-      const arrowStart =
-        dir === -1
-          ? anchorOuterX - STUB_LENGTH
-          : anchorOuterX;
-      const arrowEnd =
-        dir === -1
-          ? anchorOuterX
-          : anchorOuterX + STUB_LENGTH;
+      const sideInfo = dir === -1 ? sidePos.left : sidePos.right;
+      const sideY = sideInfo?.y ?? anchorPos.y;
+      const pillTopY = sideInfo?.topY ?? sideY - BADGE_RADIUS;
+      const pillBottomY = sideInfo?.bottomY ?? sideY + BADGE_RADIUS;
       const badgeX =
         dir === -1
-          ? arrowStart - BADGE_RADIUS
-          : arrowEnd + BADGE_RADIUS;
+          ? anchorOuterX - STUB_LENGTH - BADGE_RADIUS
+          : anchorOuterX + STUB_LENGTH + BADGE_RADIUS;
       return [{
         key: g.key,
-        d: `M ${arrowStart} ${sideY} L ${arrowEnd} ${sideY}`,
+        d: "",
         badgeX,
         badgeY: sideY,
+        pillTopY,
+        pillBottomY,
         count: g.count,
       }];
     });
@@ -540,13 +654,26 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // Keyed-store mirror so badge SVG elements (path, circle, text) retain
   // their identity and can CSS-transition their attribute values when
   // the simulation advances.
-  type BoundaryBadge = { key: string; d: string; badgeX: number; badgeY: number; count: number };
+  type BoundaryBadge = {
+    key: string;
+    d: string;
+    badgeX: number;
+    badgeY: number;
+    pillTopY: number;
+    pillBottomY: number;
+    count: number;
+  };
   const [badgesStore, setBadgesStore] = createStore<BoundaryBadge[]>([]);
   createEffect(() => {
     setBadgesStore(reconcile(boundaryBadges(), { key: "key" }));
   });
 
   // Bounding box of all positioned content (real nodes + boundary badges).
+  // Extra vertical padding inside the SVG view box so corridor edges
+  // routed above the topmost row (or below the bottommost row) don't
+  // get clipped at the chart's top/bottom edge. Matches the
+  // orthogonal router's OBSTACLE_MARGIN (~32) plus a few px of slack.
+  const EDGE_GUTTER = 40;
   const viewBounds = createMemo(() => {
     const positions = layout().positions;
     if (positions.size === 0) {
@@ -562,9 +689,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     for (const b of boundaryBadges()) {
       minX = Math.min(minX, b.badgeX - BADGE_RADIUS);
       maxX = Math.max(maxX, b.badgeX + BADGE_RADIUS);
-      minY = Math.min(minY, b.badgeY - BADGE_RADIUS);
-      maxY = Math.max(maxY, b.badgeY + BADGE_RADIUS);
+      minY = Math.min(minY, b.pillTopY);
+      maxY = Math.max(maxY, b.pillBottomY);
     }
+    // Extend vertically so corridor routes above/below have room.
+    minY -= EDGE_GUTTER;
+    maxY += EDGE_GUTTER;
     return {
       minX, maxX, minY, maxY,
       centerX: (minX + maxX) / 2,
@@ -654,23 +784,28 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
             )}
           </For>
 
-          {/* Boundary badges — count circles at the outer edge of the
-              outermost visible column. Connecting lines to/from hidden
-              nodes are drawn by edgeViews (one dashed path per real
-              dep edge between a visible node and a hidden one). */}
+          {/* Boundary badges — vertical pills at the outer edge of the
+              outermost visible column. The pill spans the column's
+              vertical range so dashed connecting lines to/from hidden
+              nodes can anchor at each visible neighbor's row instead
+              of stacking at the column's avg-y. Count text sits at
+              the pill's midpoint. */}
           <For each={badgesStore}>
             {(b) => (
               <g class="sui-swimlane__boundary">
-                <circle
+                <rect
                   class="sui-swimlane__boundary-badge"
-                  cx={b.badgeX}
-                  cy={b.badgeY}
-                  r={BADGE_RADIUS}
+                  x={b.badgeX - BADGE_RADIUS}
+                  y={b.pillTopY}
+                  width={BADGE_RADIUS * 2}
+                  height={Math.max(BADGE_RADIUS * 2, b.pillBottomY - b.pillTopY)}
+                  rx={BADGE_RADIUS}
+                  ry={BADGE_RADIUS}
                 />
                 <text
                   class="sui-swimlane__boundary-badge-text"
                   x={b.badgeX}
-                  y={b.badgeY}
+                  y={(b.pillTopY + b.pillBottomY) / 2}
                   text-anchor="middle"
                   dominant-baseline="central"
                 >

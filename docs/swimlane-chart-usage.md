@@ -155,8 +155,10 @@ If multiple nodes share both the same status-bucket AND the same depth, they **s
 Things the chart handles for you, with no configuration:
 
 - Choosing how many columns to show based on container width.
-- Collapsing overflow columns into "+N" summary badges.
-- Routing arrows around unrelated nodes so they don't draw through them.
+- Collapsing overflow columns into vertical-pill summary badges.
+- Routing arrows around unrelated nodes so they don't draw through
+  them (orthogonal right-angle routing by default — pass
+  `routingStyle="bezier"` if you prefer smooth curves).
 - Stacking siblings at the same column position.
 - Vertical centering of summary badges against the outermost visible column.
 - Animating layout changes when you mutate the input over time.

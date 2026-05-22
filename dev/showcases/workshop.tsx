@@ -1,6 +1,7 @@
 import { Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel } from "./swimlane-chart";
+import { RouterDemoGrid } from "./router-demo";
 import {
   StatusFlowChart,
   resolveParentStatuses,
@@ -36,11 +37,15 @@ const NODE_WIDTH_PX = 160;
 const NODE_HEIGHT_PX = 56;
 const ROW_GAP_PX = 64;
 const PARENT_HEADER_PX = 56;
-// 4px top + 4px bottom on the lane box's padding.
-const LANE_BOX_PADDING_PX = 8;
+// Total vertical padding inside the lane box (2rem top + 2rem bottom
+// = 64px). The height formula adds this once because it represents the
+// COMBINED top+bottom padding the chart row sits between. CSS in
+// StatusFlowChart.css uses `padding: 2rem 8px` to deliver the per-side
+// halves.
+const LANE_BOX_PADDING_PX = 64;
 // Minimum horizontal gap reserved for an arrow between two adjacent
 // node centers. ColumnGap = nodeWidth + minArrowWidth.
-const MIN_ARROW_WIDTH_PX = 50;
+const MIN_ARROW_WIDTH_PX = 80;
 const COLUMN_GAP_PX = NODE_WIDTH_PX + MIN_ARROW_WIDTH_PX;
 // Summary-dot dimensions: STUB_LENGTH (28) is the length of the stub
 // arrow that connects the outermost visible node to the badge; the
@@ -184,6 +189,8 @@ const computeRowChartHeight = (nodes: StatusFlowNode[]): number => {
       visibleHalfWindow: VISIBLE_HALF,
       parentChartGap: PARENT_CHART_GAP_PX,
       borderTotal: LANE_BOX_BORDER_PX,
+      // SwimlaneChart's EDGE_GUTTER constant is 40 per side → 80 total.
+      edgeGutterTotal: 80,
     },
     parentIds.size > 0,
   );
@@ -421,7 +428,7 @@ const initChores = (): StatusFlowNode[] => [
   { id: "ch3", title: "Chore 3", status: "TODO" },
 ];
 
-const TwoParentsRow: Component = () => {
+const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rprops) => {
   const [histA, setHistA] = createSignal<StatusFlowNode[][]>([initParentA()]);
   const [histB, setHistB] = createSignal<StatusFlowNode[][]>([initParentB()]);
   const [histS, setHistS] = createSignal<StatusFlowNode[][]>([initStandaloneChain()]);
@@ -542,6 +549,7 @@ const TwoParentsRow: Component = () => {
         rowGap={ROW_GAP_PX}
         breakpoints={STATUS_BREAKPOINTS}
         colFor={(n) => computeColFor(n, p.nodes)}
+        routingStyle={rprops.routingStyle}
       />
     </div>
   );
@@ -966,6 +974,8 @@ const FrameRow: Component<{
    *  with the FrameExplorerRow's ResizeObserver. All FrameRows share
    *  the same flex layout, so one measurement applies to all. */
   chartRef?: (el: HTMLDivElement) => void;
+  /** Edge routing style. Default `"bezier"`. */
+  routingStyle?: "bezier" | "orthogonal";
 }> = (p) => {
   const effective = resolveParentStatuses(p.nodes, "DOING");
   // maxDepth comes from the chart's runtime width via the same pipe
@@ -1069,6 +1079,7 @@ const FrameRow: Component<{
             rowGap={ROW_GAP_PX}
             breakpoints={STATUS_BREAKPOINTS}
             colFor={(n) => computeColFor(n, p.nodes)}
+            routingStyle={p.routingStyle}
           />
         </div>
         <ColLabelStrip nodes={p.nodes} width={p.width} />
@@ -1243,7 +1254,10 @@ const initDense7x3 = (): StatusFlowNode[] => {
     out.push({ id: `d3${lane}`, title: `D3${lane}`, status: "DONE", parentId: "pX", dependsOn: [`d2${lane}`] });
     out.push({ id: `m${lane}`,  title: `M${lane}`,  status: "DOING", parentId: "pX", dependsOn: [`d3${lane}`] });
     out.push({ id: `t1${lane}`, title: `T1${lane}`, status: "TODO", parentId: "pX", dependsOn: [`m${lane}`] });
-    out.push({ id: `t2${lane}`, title: `T2${lane}`, status: "TODO", parentId: "pX", dependsOn: [`t1${lane}`] });
+    // T2a has an extra dep on Ma (skips T1a horizontally) so the edge
+    // has to dodge T1a — exercises the obstacle-avoidance router.
+    const t2Deps = lane === "a" ? [`t1${lane}`, `m${lane}`] : [`t1${lane}`];
+    out.push({ id: `t2${lane}`, title: `T2${lane}`, status: "TODO", parentId: "pX", dependsOn: t2Deps });
     out.push({ id: `t3${lane}`, title: `T3${lane}`, status: "TODO", parentId: "pX", dependsOn: [`t2${lane}`] });
   }
   return out;
@@ -1270,28 +1284,62 @@ const FrameExplorerRow: Component = () => {
   };
   onCleanup(() => ro?.disconnect());
 
+  const labelStyle = {
+    "font-size": "11px",
+    "letter-spacing": "0.06em",
+    "text-transform": "uppercase" as const,
+    color: "rgba(255,255,255,0.55)",
+    "margin": "16px 0 6px",
+    "font-family": "ui-monospace, SFMono-Regular, monospace",
+  };
+
   return (
     <>
       <div class="workshop-grid__cell">
-        <SubsectionTitle>Frame explorer — Parent B (first 9 frames)</SubsectionTitle>
+        <SubsectionTitle>Frame explorer — B0 (dense 7×3)</SubsectionTitle>
         <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-          The first 9 frames of the Parent B broom state machine —
-          walked from the initial state with the same advance rule the
-          live row uses. Useful for verifying edge routing across the
-          full lifecycle without scrubbing the timer.
+          Dense 7-column × 3-row test frame. Three parallel dep chains
+          with a cross-edge (Ma → T2a) so the router has to dodge T1a.
+          Uses the new default orthogonal routing.
         </p>
         <RulesPanel />
       </div>
       <div class="workshop-grid__cell">
         <BreakpointsPanel width={width()} />
-        {BROOM_FRAMES.map((nodes, i) => (
-          <FrameRow
-            id={`B${i}`}
-            nodes={nodes}
-            width={width()}
-            chartRef={i === 0 ? attachFirstChart : undefined}
-          />
-        ))}
+        <FrameRow
+          id="B0"
+          nodes={BROOM_FRAMES[0]}
+          width={width()}
+          chartRef={attachFirstChart}
+        />
+      </div>
+    </>
+  );
+};
+
+const RouterDemoRow: Component = () => {
+  const labelStyle = {
+    "font-size": "11px",
+    "letter-spacing": "0.06em",
+    "text-transform": "uppercase" as const,
+    color: "rgba(255,255,255,0.55)",
+    "margin": "16px 0 6px",
+    "font-family": "ui-monospace, SFMono-Regular, monospace",
+  };
+  return (
+    <>
+      <div class="workshop-grid__cell">
+        <SubsectionTitle>Router demo — isolated 9-case grid</SubsectionTitle>
+        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+          Isolated edge router with no SwimlaneChart, no port
+          assignment, no badges. Source rect fixed, target rect at
+          each of 8 surrounding positions plus a center case that
+          places an obstacle between them. Lives at the top so it's
+          fast to reload while iterating on routing logic.
+        </p>
+      </div>
+      <div class="workshop-grid__cell">
+        <RouterDemoGrid style="orthogonal" />
       </div>
     </>
   );
@@ -1302,6 +1350,7 @@ export const WorkshopShowcase: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Workshop</SectionTitle>
       <div class="workshop-grid">
+        <RouterDemoRow />
         <ParentChildrenRow />
         <TwoParentsRow />
         <FrameExplorerRow />

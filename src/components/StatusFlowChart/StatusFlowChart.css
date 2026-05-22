@@ -18,10 +18,10 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  /* 4px top/bottom for box breathing room, 16px between the parent
-     header and the children row inside (`gap` only applies between
-     direct children, not at the edges). */
-  padding: 4px 8px;
+  /* 2rem top/bottom (32px) for vertical gutter around the outside of
+     the chart — gives corridor routes room to fly above the top row
+     and below the bottom row. 8px horizontal. */
+  padding: 2rem 8px;
   gap: 16px;
   border-radius: 8px;
   background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));

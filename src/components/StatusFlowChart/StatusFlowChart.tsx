@@ -73,6 +73,8 @@ export type StatusFlowChartProps = {
    */
   colFor?: (node: StatusFlowNode) => number | undefined;
   onNodeClick?: (id: string) => void;
+  /** Pass through to SwimlaneChart. Default `"bezier"`. */
+  routingStyle?: "bezier" | "orthogonal";
 };
 
 type EnrichedNode = StatusFlowNode & {
@@ -274,6 +276,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
         responsiveCollapse={false}
         interactive={false}
         arrows={true}
+        routingStyle={props.routingStyle}
         onNodeClick={props.onNodeClick}
       />
     </div>

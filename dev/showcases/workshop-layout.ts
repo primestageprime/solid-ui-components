@@ -160,6 +160,11 @@ export function computeChartHeight(
      *  the inside height — add it back here so the chart area gets its
      *  full nodeHeight and doesn't clip 1px off each side. */
     borderTotal?: number;
+    /** Extra vertical room SwimlaneChart reserves above the topmost
+     *  row and below the bottommost row (combined top+bottom) so that
+     *  corridor-routed edges above/below the visible nodes don't get
+     *  clipped at the SVG view-box edge. */
+    edgeGutterTotal?: number;
   },
   hasParent: boolean,
 ): number {
@@ -179,5 +184,6 @@ export function computeChartHeight(
   if (hasParent) total += cfg.parentHeader;
   if (hasParent && hasVisibleChildren) total += cfg.parentChartGap ?? 0;
   if (hasParent) total += cfg.borderTotal ?? 0;
+  if (hasVisibleChildren) total += cfg.edgeGutterTotal ?? 0;
   return total;
 }
