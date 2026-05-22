@@ -109,7 +109,7 @@ export const SectionTitle = createText({ variant: "title", as: "h2" });
 export const SubsectionTitle = createText({ variant: "title", as: "h3" });
 
 // Status-colored titles
-export const InfoTitle = createText({ variant: "title", color: "#00d4ff" });
+export const InfoTitle = createText({ variant: "title", color: "var(--sui-accent)" });
 export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
 export const SuccessTitle = createText({ variant: "title", color: "#00ff88" });
 export const DangerTitle = createText({ variant: "title", color: "#ff0040" });
@@ -126,7 +126,7 @@ export const TextValueDangerSm = createText({ variant: "value", color: "#ff0040"
 export const ScoreValue = createText({ variant: "value", as: "div", style: { "font-size": "3rem", "line-height": "1" } });
 
 /** Multiplier readout — primary-colored, medium size */
-export const MultiplierLabel = createText({ variant: "value", color: "var(--sui-color-primary, #00d4ff)", style: { "font-size": "1.25rem" } });
+export const MultiplierLabel = createText({ variant: "value", color: "var(--sui-accent)", style: { "font-size": "1.25rem" } });
 
 /** Monospace formula variable */
 export const FormulaVar = createText({ variant: "value", style: { "font-family": "ui-monospace, monospace", "font-size": "1rem" } });

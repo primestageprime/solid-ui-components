@@ -24,7 +24,7 @@
 }
 
 .jtf-heatstack__legend-color--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstack__legend-color--partial {
@@ -114,7 +114,7 @@
 }
 
 .jtf-heatstack__cell--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstack__cell--partial {

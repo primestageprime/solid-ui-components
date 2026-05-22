@@ -24,7 +24,7 @@
 }
 
 .jtf-heatstream__legend-color--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstream__legend-color--partial {
@@ -117,7 +117,7 @@
 }
 
 .jtf-heatstream__cell--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstream__cell--partial {

@@ -643,7 +643,7 @@ export const MetricValueCell: Component<MetricValueCellProps> = (props) => {
   const color = () => {
     if (props.compliant == null) return undefined;
     return props.compliant
-      ? (props.compliantColor ?? "#00d4ff")
+      ? (props.compliantColor ?? "var(--sui-accent)")
       : (props.violationColor ?? "#ff0040");
   };
 
