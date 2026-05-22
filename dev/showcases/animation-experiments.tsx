@@ -145,23 +145,102 @@ function geometryToPath(g: {
   ].join(" ");
 }
 
-// ─── shared task card ──────────────────────────────────────────────────────
-// Standard 4-line task card (owner · status / title × 2 / est · actual)
-// with a hover popover for the full title. Lives inside SVG via
-// foreignObject so the surrounding slurp morph can show/hide it.
-const TASK_OWNER = "athena";
-const TASK_STATUS = "TODO";
-const TASK_TITLE =
-  "Migrate the legacy authentication middleware to the new session-token storage system per the Q3 compliance review";
-const TASK_EST = "2h";
-const TASK_ACTUAL = "—";
-// TODO-themed colors (grey). When the slurp panels show a node
-// "emerging" from a summary, the new node is a hidden TODO that's
-// becoming visible — so all of the visual treatment (path silhouette,
-// card border, status pill, dep arrow) stays in the TODO grey palette.
-const TODO_STROKE = "rgba(255,255,255,0.45)";
-const TODO_FILL = "rgba(255,255,255,0.04)";
-const TODO_TEXT = "rgba(255,255,255,0.7)";
+// ─── task data + theming ───────────────────────────────────────────────────
+//
+// Sample task graph drawn from the children's song "There's a hole in the
+// bucket" — a real-feeling cyclic dependency chain that mirrors the shape
+// of a SwimlaneDAG dataset. Each panel below renders ONE of these as the
+// emerging / source node so the animations exercise varied titles and
+// owners rather than the same placeholder.
+//
+//   fix-bucket ←── mend-hole ←── cut-straw ←── sharpen-axe ←── wet-stone ←── fetch-water
+//                                                                          (cycles back)
+interface TaskData {
+  id: string;
+  owner: string;
+  status: "TODO" | "DOING" | "DONE";
+  title: string;
+  est: string;
+  actual: string;
+}
+
+const TASKS: Record<string, TaskData> = {
+  fixBucket: {
+    id: "fix-bucket",
+    owner: "henry",
+    status: "DOING",
+    title: "Fix the hole in the bucket — water keeps leaking out before we can use it",
+    est: "2h",
+    actual: "1h 12m",
+  },
+  mendHole: {
+    id: "mend-hole",
+    owner: "henry",
+    status: "TODO",
+    title: "Mend the hole in the bucket with straw — dear Liza said straw should hold",
+    est: "45m",
+    actual: "—",
+  },
+  cutStraw: {
+    id: "cut-straw",
+    owner: "henry",
+    status: "TODO",
+    title: "Cut the straw down to the right length with the axe before we can mend",
+    est: "20m",
+    actual: "—",
+  },
+  sharpenAxe: {
+    id: "sharpen-axe",
+    owner: "henry",
+    status: "TODO",
+    title: "Sharpen the dull axe with the stone — the blade is too blunt to cut",
+    est: "15m",
+    actual: "—",
+  },
+  wetStone: {
+    id: "wet-stone",
+    owner: "henry",
+    status: "TODO",
+    title: "Wet the stone with water from the well so it can sharpen the axe",
+    est: "5m",
+    actual: "—",
+  },
+  fetchWater: {
+    id: "fetch-water",
+    owner: "liza",
+    status: "TODO",
+    title: "Fetch some water from the well in the bucket… wait, the bucket has a hole",
+    est: "10m",
+    actual: "—",
+  },
+};
+
+// Status-keyed palette so cards (and source labels) look right whether
+// rendered for a DOING/TODO/DONE node. Tracks the SwimlaneChart's
+// existing convention: TODO grey, DOING cyan, DONE green.
+function statusTheme(status: TaskData["status"]) {
+  switch (status) {
+    case "DOING":
+      return {
+        stroke: "var(--sui-accent, #00d4ff)",
+        fill: "rgba(0,212,255,0.10)",
+        text: "var(--sui-accent, #00d4ff)",
+      };
+    case "DONE":
+      return {
+        stroke: "rgba(95,179,124,0.6)",
+        fill: "rgba(95,179,124,0.10)",
+        text: "rgba(95,179,124,0.85)",
+      };
+    case "TODO":
+    default:
+      return {
+        stroke: "rgba(255,255,255,0.45)",
+        fill: "rgba(255,255,255,0.04)",
+        text: "rgba(255,255,255,0.7)",
+      };
+  }
+}
 
 const CARD_FADE_MS = 300;
 
@@ -171,8 +250,10 @@ function TaskCard(props: {
   width: number;
   height: number;
   visible: boolean;
+  task: TaskData;
 }): JSX.Element {
   const [hovered, setHovered] = createSignal(false);
+  const theme = () => statusTheme(props.task.status);
   return (
     <foreignObject
       x={props.x}
@@ -193,6 +274,9 @@ function TaskCard(props: {
           "box-sizing": "border-box",
           display: "flex",
           "flex-direction": "column",
+          background: theme().fill,
+          border: `1px solid ${theme().stroke}`,
+          "border-radius": "6px",
           "font-family": "ui-monospace, SFMono-Regular, monospace",
           color: "var(--sui-text, #e6ecf5)",
           cursor: props.visible ? "pointer" : "default",
@@ -211,15 +295,15 @@ function TaskCard(props: {
             "line-height": "14px",
           }}
         >
-          <span>{TASK_OWNER}</span>
+          <span>{props.task.owner}</span>
           <span
             style={{
               "font-weight": 600,
               "letter-spacing": "0.06em",
-              color: TODO_TEXT,
+              color: theme().text,
             }}
           >
-            {TASK_STATUS}
+            {props.task.status}
           </span>
         </div>
         <div
@@ -234,7 +318,7 @@ function TaskCard(props: {
             overflow: "hidden",
           }}
         >
-          {TASK_TITLE}
+          {props.task.title}
         </div>
         <div
           style={{
@@ -246,8 +330,8 @@ function TaskCard(props: {
             "line-height": "14px",
           }}
         >
-          <span>est {TASK_EST}</span>
-          <span style={{ color: TODO_TEXT }}>{TASK_ACTUAL}</span>
+          <span>est {props.task.est}</span>
+          <span style={{ color: theme().text }}>{props.task.actual}</span>
         </div>
         <Show when={hovered()}>
           <div
@@ -269,7 +353,12 @@ function TaskCard(props: {
               "white-space": "normal",
             }}
           >
-            {TASK_TITLE}
+            <div style={{ "font-weight": 600, "margin-bottom": "2px" }}>
+              {props.task.title}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.55)" }}>
+              {props.task.owner} · {props.task.status} · est {props.task.est} · {props.task.actual}
+            </div>
           </div>
         </Show>
       </div>
@@ -283,6 +372,8 @@ interface SlurpStageProps {
   direction: "ltr" | "rtl";
   /** "out" emerges from the lozenge; "in" retreats into it. */
   phase: "out" | "in";
+  /** Task content rendered in the card at rest. */
+  task: TaskData;
 }
 
 function pathForFrame(t: number, props: SlurpStageProps): string {
@@ -366,6 +457,7 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
           width={NODE_W}
           height={NODE_H}
           visible={showCard()}
+          task={props.task}
         />
       </svg>
       <div style={buttonRowStyle}>
@@ -395,7 +487,12 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
             };
             if (props.phase === "out") {
               setShowCard(false);
-              runMorph(() => setShowCard(true));
+              runMorph(() => {
+                setShowCard(true);
+                // Hide the path silhouette so its border doesn't
+                // double-up with the card's own border at rest.
+                pathRef!.style.visibility = "hidden";
+              });
             } else {
               setShowCard(false); // triggers CSS fade-out
               setTimeout(() => {
@@ -429,12 +526,14 @@ const SLURP_DURATION_MS = 900;
 //      arrow appears to "drag" the new node into view.
 // At rest the arrow connects source.right → new.left at the same gap a
 // regular SwimlaneChart edge would.
-const DEP_STAGE_W = 440;
-const DEP_STAGE_H = 110;
+// Source and emerging share NODE_W/CARD geometry — they're the same
+// kind of task, just one's already in the chart and the other is
+// fulfilling its dependency.
+const DEP_STAGE_W = 520;
+const DEP_STAGE_H = 130;
 const DEP_SOURCE_X = 20;
-const DEP_SOURCE_W = 96;
-const DEP_SOURCE_H = 60;
-const DEP_LOZENGE_X = DEP_STAGE_W - LOZENGE_X - LOZENGE_W; // mirror of LTR
+const DEP_SOURCE_W = NODE_W;
+const DEP_SOURCE_H = 84;
 const DEP_NODE_REST_LEFT_X = DEP_SOURCE_X + DEP_SOURCE_W + 60; // arrow run
 const DEP_NODE_REST_RIGHT_X = DEP_NODE_REST_LEFT_X + NODE_W;
 // Dedicated height for the dep card so we can fit 4 lines of content
@@ -442,6 +541,24 @@ const DEP_NODE_REST_RIGHT_X = DEP_NODE_REST_LEFT_X + NODE_W;
 // geometry still anchors to NODE_H for the lozenge slit math; we let
 // the card body grow taller around it.
 const DEP_NODE_H = 84;
+// "Container" (chart viewport) dimensions. Initially the viewport is
+// too narrow to fit the new node — source sits at the left, lozenge
+// presses up against it on the right, dashed arrow between. Play
+// widens the container; once it crosses DEP_CONTAINER_THRESHOLD the
+// slurp-out kicks off.
+const DEP_CONTAINER_X = 10;
+const DEP_CONTAINER_Y = 10;
+const DEP_CONTAINER_INNER_PAD = 10;
+const DEP_CONTAINER_FULL_W = DEP_STAGE_W - DEP_CONTAINER_X - 10;
+const DEP_CONTAINER_NARROW_W =
+  DEP_SOURCE_W + 60 + LOZENGE_W + DEP_CONTAINER_INNER_PAD * 2;
+// Once the container is wide enough that the new node fits between
+// source and lozenge (with rest gaps on both sides), slurp can begin.
+const DEP_CONTAINER_THRESHOLD =
+  DEP_SOURCE_W + 60 + NODE_W + 32 + LOZENGE_W + DEP_CONTAINER_INNER_PAD * 2;
+const DEP_WIDEN_DURATION_MS = 700;
+const lozengeXFor = (containerW: number) =>
+  DEP_CONTAINER_X + containerW - DEP_CONTAINER_INNER_PAD - LOZENGE_W;
 
 // Reuse slurp-out geometry, but anchored to THIS stage's lozenge / rest
 // positions and mirrored RTL so the new node extrudes leftward.
@@ -452,7 +569,9 @@ function slurpDepGeometry(t: number): {
   trailingH: number;
 } {
   const clamp = Math.max(0, Math.min(1, t));
-  const lozengeLeftX = DEP_LOZENGE_X;
+  // Slurp runs AFTER the container widens to full, so the lozenge sits
+  // at its full-width rest position.
+  const lozengeLeftX = lozengeXFor(DEP_CONTAINER_FULL_W);
   // For RTL: leading edge starts at lozenge's left edge and moves further LEFT.
   const leadingX0 = lozengeLeftX;
   const leadingX1 = DEP_NODE_REST_LEFT_X;
@@ -470,25 +589,30 @@ function slurpDepGeometry(t: number): {
   void trailingX1;
 }
 
-const DEP_FULL_TITLE =
-  "Migrate the legacy authentication middleware to the new session-token storage system per the Q3 compliance review";
+// Sequencing: the lozenge comes to rest, then we wait DEP_SETTLE_MS
+// of "not moving" before the slurp kicks off — just a tick to confirm
+// the resize has stopped.
+const DEP_SETTLE_MS = 50;
 
 const SlurpDep: Component = () => {
   let pathRef: SVGPathElement | undefined;
   let arrowRef: SVGLineElement | undefined;
   let raf: number | undefined;
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
   const [showCard, setShowCard] = createSignal(false);
-  const [hovered, setHovered] = createSignal(false);
+  // Container width drives the lozenge's x position. Starts narrow
+  // (no room for the new node) and widens on play. Slurp begins once
+  // the container clears the threshold = source + arrow run + node +
+  // gap + lozenge.
+  const [containerWidth, setContainerWidth] = createSignal(DEP_CONTAINER_NARROW_W);
+  const lozengeX = () => lozengeXFor(containerWidth());
   const sourceRightX = DEP_SOURCE_X + DEP_SOURCE_W;
   const cy = DEP_STAGE_H / 2;
-  const play = () => {
+
+  const runSlurp = () => {
     if (!pathRef || !arrowRef) return;
     pathRef.style.visibility = "visible";
-    // Arrow stays visible and GREY throughout. The dashes "fill in" by
-    // animating the GAP value from 3 → 0 — the browser interpolates
-    // stroke-dasharray natively so the dashes appear to close up into
-    // a solid line. Final state is left as "4 0" (solid) via
-    // fill: forwards; reset restores "4 3".
+    // The dashes "fill in" via WAAPI: tween dasharray gap 3 → 0.
     arrowRef.animate(
       [{ strokeDasharray: "4 3" }, { strokeDasharray: "4 0" }],
       { duration: 280, easing: "ease-out", fill: "forwards" },
@@ -505,26 +629,82 @@ const SlurpDep: Component = () => {
       } else {
         raf = undefined;
         setShowCard(true);
+        // Hide the path silhouette so its border doesn't double-up
+        // with the card's own border at rest.
+        pathRef!.style.visibility = "hidden";
       }
     };
     raf = requestAnimationFrame(tick);
+  };
+
+  const runWiden = () => {
+    // Animate container width from narrow → full, then settle for a
+    // full second before triggering slurp. The lozenge slides outward
+    // with the container's right edge while the dashed arrow stretches
+    // to follow.
+    const startW = DEP_CONTAINER_NARROW_W;
+    const endW = DEP_CONTAINER_FULL_W;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / DEP_WIDEN_DURATION_MS);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const w = lerp(startW, endW, eased);
+      setContainerWidth(w);
+      if (arrowRef) arrowRef.setAttribute("x2", String(lozengeXFor(w)));
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        raf = undefined;
+        // Lozenge is at rest. Wait DEP_SETTLE_MS of "not moving"
+        // before kicking off slurp — gives the eye time to register
+        // the new available space before the node fills it.
+        settleTimer = setTimeout(() => {
+          settleTimer = undefined;
+          runSlurp();
+        }, DEP_SETTLE_MS);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+  };
+
+  const play = () => {
+    if (!pathRef || !arrowRef) return;
+    // Stop any in-flight rAF or settle timer from a previous play.
+    if (raf !== undefined) {
+      cancelAnimationFrame(raf);
+      raf = undefined;
+    }
+    if (settleTimer !== undefined) {
+      clearTimeout(settleTimer);
+      settleTimer = undefined;
+    }
+    setContainerWidth(DEP_CONTAINER_NARROW_W);
+    setShowCard(false);
+    pathRef.setAttribute("d", geometryToPath(slurpDepGeometry(0)));
+    pathRef.style.visibility = "hidden";
+    arrowRef.getAnimations().forEach((a) => a.cancel());
+    arrowRef.setAttribute("stroke-dasharray", "4 3");
+    arrowRef.setAttribute("x2", String(lozengeXFor(DEP_CONTAINER_NARROW_W)));
+    runWiden();
   };
   const reset = () => {
     if (raf !== undefined) {
       cancelAnimationFrame(raf);
       raf = undefined;
     }
+    if (settleTimer !== undefined) {
+      clearTimeout(settleTimer);
+      settleTimer = undefined;
+    }
     setShowCard(false);
-    setHovered(false);
+    setContainerWidth(DEP_CONTAINER_NARROW_W);
     if (pathRef) {
       pathRef.setAttribute("d", geometryToPath(slurpDepGeometry(0)));
       pathRef.style.visibility = "hidden";
     }
     if (arrowRef) {
-      // Cancel any in-flight WAAPI dasharray animation so our reset
-      // values stick — otherwise the persisted "4 0" wins.
       arrowRef.getAnimations().forEach((a) => a.cancel());
-      arrowRef.setAttribute("x2", String(DEP_LOZENGE_X));
+      arrowRef.setAttribute("x2", String(lozengeXFor(DEP_CONTAINER_NARROW_W)));
       arrowRef.setAttribute("stroke-dasharray", "4 3");
       arrowRef.setAttribute("stroke", "rgba(255,255,255,0.45)");
       arrowRef.setAttribute("color", "rgba(255,255,255,0.45)");
@@ -556,31 +736,31 @@ const SlurpDep: Component = () => {
             <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
           </marker>
         </defs>
-        {/* existing source node — already in the chart */}
+        {/* Chart container box — starts too narrow to fit a new node,
+            then widens on play. The lozenge rides its right edge. */}
         <rect
+          x={DEP_CONTAINER_X}
+          y={DEP_CONTAINER_Y}
+          width={containerWidth()}
+          height={DEP_STAGE_H - DEP_CONTAINER_Y * 2}
+          rx={6}
+          fill="none"
+          stroke="rgba(255,255,255,0.12)"
+          stroke-width="1"
+          stroke-dasharray="3 3"
+        />
+        {/* Existing source node — already in the chart, always visible. */}
+        <TaskCard
           x={DEP_SOURCE_X}
           y={cy - DEP_SOURCE_H / 2}
           width={DEP_SOURCE_W}
           height={DEP_SOURCE_H}
-          rx={6}
-          fill="rgba(95,179,124,0.10)"
-          stroke="rgba(95,179,124,0.6)"
-          stroke-width="1"
+          visible={true}
+          task={TASKS.fixBucket}
         />
-        <text
-          x={DEP_SOURCE_X + DEP_SOURCE_W / 2}
-          y={cy}
-          text-anchor="middle"
-          dominant-baseline="central"
-          fill="rgba(255,255,255,0.85)"
-          font-size="11"
-          font-family="ui-monospace, SFMono-Regular, monospace"
-        >
-          source
-        </text>
-        {/* lozenge on the right */}
+        {/* lozenge — anchored to the container's right edge. */}
         <rect
-          x={DEP_LOZENGE_X}
+          x={lozengeX()}
           y={cy - LOZENGE_H / 2}
           width={LOZENGE_W}
           height={LOZENGE_H}
@@ -590,7 +770,7 @@ const SlurpDep: Component = () => {
           stroke-width="1"
         />
         <text
-          x={DEP_LOZENGE_X + LOZENGE_W / 2}
+          x={lozengeX() + LOZENGE_W / 2}
           y={cy}
           text-anchor="middle"
           dominant-baseline="central"
@@ -617,7 +797,7 @@ const SlurpDep: Component = () => {
           ref={(el) => (arrowRef = el)}
           x1={sourceRightX}
           y1={cy}
-          x2={DEP_LOZENGE_X}
+          x2={lozengeX()}
           y2={cy}
           stroke="rgba(255,255,255,0.45)"
           color="rgba(255,255,255,0.45)"
@@ -625,109 +805,16 @@ const SlurpDep: Component = () => {
           stroke-dasharray="4 3"
           marker-end="url(#dep-arrow-head)"
         />
-        {/* 4-line task card. Revealed once the slurp morph settles —
-            during the morph the path silhouette is empty. overflow="visible"
-            lets the hover popover spill outside the rest bbox. */}
-        <foreignObject
+        {/* 4-line task card — shared TaskCard so we get the same
+            opacity-fade in/out behavior as the other slurp panels. */}
+        <TaskCard
           x={DEP_NODE_REST_LEFT_X}
           y={cy - DEP_NODE_H / 2}
           width={NODE_W}
           height={DEP_NODE_H}
-          overflow="visible"
-          style={{ visibility: showCard() ? "visible" : "hidden" }}
-        >
-          <div
-            xmlns="http://www.w3.org/1999/xhtml"
-            class="dep-card-host"
-            onPointerEnter={() => setHovered(true)}
-            onPointerLeave={() => setHovered(false)}
-            style={{
-              position: "relative",
-              width: `${NODE_W}px`,
-              height: `${DEP_NODE_H}px`,
-              padding: "6px 10px",
-              "box-sizing": "border-box",
-              display: "flex",
-              "flex-direction": "column",
-              "font-family": "ui-monospace, SFMono-Regular, monospace",
-              color: "var(--sui-text, #e6ecf5)",
-              cursor: "pointer",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                "justify-content": "space-between",
-                "align-items": "baseline",
-                "font-size": "10px",
-                color: "rgba(255,255,255,0.55)",
-                "line-height": "14px",
-              }}
-            >
-              <span>athena</span>
-              <span
-                style={{
-                  "font-weight": 600,
-                  "letter-spacing": "0.06em",
-                  color: "var(--sui-accent, #00d4ff)",
-                }}
-              >
-                DOING
-              </span>
-            </div>
-            <div
-              style={{
-                "font-size": "11px",
-                "font-weight": 600,
-                "line-height": "14px",
-                height: "28px",
-                display: "-webkit-box",
-                "-webkit-line-clamp": "2",
-                "-webkit-box-orient": "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {DEP_FULL_TITLE}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                "justify-content": "space-between",
-                "align-items": "baseline",
-                "font-size": "10px",
-                color: "rgba(255,255,255,0.55)",
-                "line-height": "14px",
-              }}
-            >
-              <span>est 2h</span>
-              <span style={{ color: "var(--sui-accent, #00d4ff)" }}>1h 45m</span>
-            </div>
-            {/* hover popover with the full title */}
-            <Show when={hovered()}>
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "calc(100% + 6px)",
-                  left: "0",
-                  width: "260px",
-                  padding: "8px 10px",
-                  background: "var(--sui-bg-deep, #0c141c)",
-                  border: "1px solid var(--sui-border, rgba(255,255,255,0.18))",
-                  "border-radius": "4px",
-                  "font-size": "11px",
-                  "line-height": "1.4",
-                  color: "var(--sui-text, #e6ecf5)",
-                  "box-shadow": "0 4px 12px rgba(0,0,0,0.4)",
-                  "pointer-events": "none",
-                  "z-index": 10,
-                  "white-space": "normal",
-                }}
-              >
-                {DEP_FULL_TITLE}
-              </div>
-            </Show>
-          </div>
-        </foreignObject>
+          visible={showCard()}
+          task={TASKS.mendHole}
+        />
       </svg>
       <div style={buttonRowStyle}>
         <button type="button" style={buttonStyle} onClick={play}>
@@ -741,10 +828,18 @@ const SlurpDep: Component = () => {
   );
 };
 
-const SlurpOutLtr: Component = () => <SlurpStage direction="ltr" phase="out" />;
-const SlurpOutRtl: Component = () => <SlurpStage direction="rtl" phase="out" />;
-const SlurpInLtr: Component = () => <SlurpStage direction="ltr" phase="in" />;
-const SlurpInRtl: Component = () => <SlurpStage direction="rtl" phase="in" />;
+const SlurpOutLtr: Component = () => (
+  <SlurpStage direction="ltr" phase="out" task={TASKS.mendHole} />
+);
+const SlurpOutRtl: Component = () => (
+  <SlurpStage direction="rtl" phase="out" task={TASKS.cutStraw} />
+);
+const SlurpInLtr: Component = () => (
+  <SlurpStage direction="ltr" phase="in" task={TASKS.sharpenAxe} />
+);
+const SlurpInRtl: Component = () => (
+  <SlurpStage direction="rtl" phase="in" task={TASKS.wetStone} />
+);
 
 // ─── shared styles ──────────────────────────────────────────────────────────
 const demoBoxStyle = {
