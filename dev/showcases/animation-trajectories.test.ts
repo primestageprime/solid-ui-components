@@ -489,11 +489,26 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
     });
     const b = traj.cards.get("b")!;
     const xs = [0.1, 0.3, 0.5, 0.7, 0.9].map((l) => b.anchorAt(tAt(l)).x);
-    // Strictly monotonic (arriving from the right lozenge, x decreases
-    // as anchor moves from right loz toward card on the left).
+    // Non-increasing: anchor moves left (toward the card) and then
+    // stays there once it reaches the card. With the morph-synced
+    // ease, the anchor "completes" by local≈0.5 and parks there for
+    // the rest of the window.
     for (let i = 1; i < xs.length; i++) {
-      expect(xs[i]).toBeLessThan(xs[i - 1]);
+      expect(xs[i]).toBeLessThanOrEqual(xs[i - 1]);
     }
+  });
+
+  it("arriving card anchor reaches the card by local≈0.5 (synced to morph)", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    // ease(0.507) ≈ 0.88, so by local=0.507 the morph trailing edge
+    // is fully ramped AND the anchor's morphCompletion hits 1.
+    expect(b.anchorAt(tAt(0.55)).x).toBe(nextSnap.x);
+    expect(b.anchorAt(tAt(0.9)).x).toBe(nextSnap.x);
   });
 
   it("arriving card anchor uses front-loaded ease (more progress early)", () => {
