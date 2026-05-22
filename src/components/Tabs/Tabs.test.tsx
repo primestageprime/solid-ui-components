@@ -36,4 +36,11 @@ describe("Tabs orientation", () => {
     expect(cls).toMatch(/sui-tabs--vertical/);
     expect(cls).toMatch(/sui-tabs--boxed/);
   });
+
+  it("does not apply vertical class when orientation='horizontal'", () => {
+    const { container } = render(() => (
+      <Tabs tabs={TABS} activeTab="a" onTabChange={() => {}} orientation="horizontal" />
+    ));
+    expect(container.firstElementChild!.className).not.toMatch(/sui-tabs--vertical/);
+  });
 });
