@@ -460,6 +460,55 @@ describe("buildLaneTrajectory — statusAt", () => {
 // fan in. Verify the trajectory produces the right MIX of staying /
 // leaving / arriving / staying-hidden for one tick of the broom.
 
+describe("buildLaneTrajectory — anchor moves uniformly across slurp window", () => {
+  // Regression test for the "node slurps first, arrow snaps later"
+  // bug. With slurpLeadingAnchor (the previous implementation), the
+  // double-easing parked the anchor at the card's far edge by ~23%
+  // of the slurp window — the arrow tip stopped moving very early
+  // while the morph shape continued to fill in.
+  //
+  // With the new lerpRect-based anchor, the anchor traverses the
+  // distance loz → card at a CONSTANT rate, so equal local-t deltas
+  // produce equal anchor-x deltas.
+  const prev: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+  const next: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DOING" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+
+  it("arriving card anchor moves at constant rate (no early snap)", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const tAt = (local: number) =>
+      PHASE_MOVE_END + (1 - PHASE_MOVE_END) * local;
+
+    const x0 = b.anchorAt(tAt(0.1)).x;
+    const x1 = b.anchorAt(tAt(0.3)).x;
+    const x2 = b.anchorAt(tAt(0.5)).x;
+    const x3 = b.anchorAt(tAt(0.7)).x;
+    const x4 = b.anchorAt(tAt(0.9)).x;
+
+    // Equal local-t deltas should produce roughly equal x deltas.
+    // (Linear lerp means dx is constant per d(local-t).)
+    const d01 = x1 - x0;
+    const d12 = x2 - x1;
+    const d23 = x3 - x2;
+    const d34 = x4 - x3;
+    // All four deltas should be within ε of each other (linear).
+    const deltas = [d01, d12, d23, d34];
+    const max = Math.max(...deltas);
+    const min = Math.min(...deltas);
+    // With linear lerp, max-min should be 0 modulo float jitter.
+    expect(Math.abs(max - min)).toBeLessThan(1e-6);
+  });
+});
+
 describe("buildLaneTrajectory — hidden→hidden arrow suppression", () => {
   // 5-deep chain: only `a` is visible (col +1); b/c/d/e hidden in +S.
   // Edges b→c, c→d, d→e all have BOTH endpoints in the lozenge.

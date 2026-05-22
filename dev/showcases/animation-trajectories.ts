@@ -130,35 +130,6 @@ export function slurpRectMorph(
   ].join(" ");
 }
 
-/**
- * The point on the morph at parameter `t` where arrows should attach.
- * It's the leading-edge midline: x = leadingX, y = morphCy. As `t` runs
- * from 0 → 1 this anchor sweeps from the lozenge's inner edge out to
- * the card's far edge.
- *
- * Returned as a tiny Rect (a slit at the leading edge) so the same
- * `orthogonalAvoidingObstacles` routing function the renderer uses can
- * accept it without special-casing point endpoints.
- */
-export function slurpLeadingAnchor(
-  card: Rect,
-  loz: Rect,
-  side: "left" | "right",
-  t: number,
-): Rect {
-  const cardLeft = card.x - card.width / 2;
-  const cardRight = card.x + card.width / 2;
-  const lozLeftEdge = loz.x - loz.width / 2;
-  const lozRightEdge = loz.x + loz.width / 2;
-  const lozNearEdgeX = side === "left" ? lozLeftEdge : lozRightEdge;
-  const leadingFarX = side === "left" ? cardLeft : cardRight;
-  const leadingT = windowProgress(t, 0.0, 0.55);
-  const leadingX = lerp(lozNearEdgeX, leadingFarX, ease(leadingT));
-  const yT = windowProgress(t, 0.0, 0.7);
-  const morphCy = lerp(loz.y, card.y, ease(yT));
-  return { x: leadingX, y: morphCy, width: 0, height: SLURP_SLIT_H };
-}
-
 // ─── layout & frame snapshot ────────────────────────────────────────────────
 //
 // A "frame snapshot" is the per-node geometry for ONE moment in time,
@@ -376,13 +347,16 @@ function buildLeavingTrajectory(
       const local = t / PHASE_LEAVE_END;
       return slurpRectMorph(prevRect, loz, side, 1 - ease(local));
     },
+    // Arrow anchor: a rect that smoothly interpolates from the card's
+    // rest rect at t=0 to the lozenge rect at t=PHASE_LEAVE_END. The
+    // router clips arrows to this rect's edge, so the arrow tip moves
+    // continuously throughout the entire slurp window — no "snap
+    // partway through" from the leading-edge anchor's double-easing.
     anchorAt: (t) => {
-      if (t <= PHASE_LEAVE_END) {
-        const local = t / PHASE_LEAVE_END;
-        return slurpLeadingAnchor(prevRect, loz, side, 1 - ease(local));
-      }
-      // After it's gone, arrows anchor at the lozenge.
-      return loz;
+      if (t <= 0) return prevRect;
+      if (t >= PHASE_LEAVE_END) return loz;
+      const local = t / PHASE_LEAVE_END;
+      return lerpRect(prevRect, loz, local);
     },
     // Leaving cards are visible only during their morph — keep their
     // prev status throughout.
@@ -419,11 +393,17 @@ function buildArrivingTrajectory(
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
       return slurpRectMorph(nextRect, loz, side, ease(local));
     },
+    // Arrow anchor: a rect that smoothly interpolates from the
+    // lozenge at t=PHASE_MOVE_END to the card's rest rect at t=1.
+    // The router clips arrows to this rect's edge, so the arrow tip
+    // moves continuously throughout the entire slurp window — no
+    // "snap to card position partway through" from the leading-edge
+    // anchor's double-easing.
     anchorAt: (t) => {
       if (t < PHASE_MOVE_END) return loz;
       if (t >= 1 - 1e-9) return nextRect;
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
-      return slurpLeadingAnchor(nextRect, loz, side, ease(local));
+      return lerpRect(loz, nextRect, local);
     },
     // Arriving cards are only visible during the slurp-out and after;
     // they wear their NEW status the whole time.
