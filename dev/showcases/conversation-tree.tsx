@@ -64,7 +64,7 @@ const treeMessages: ConversationMessage[] = [
 export const ConversationTreeShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ConversationTree — Depth 3</h2>
+      <h2>ConversationTree — Pure Composite (Depth 2)</h2>
       <p class="text-meta">
         Multi-participant message thread with optional reply nesting. Groups
         consecutive same-author messages, inserts day/gap dividers, shows full

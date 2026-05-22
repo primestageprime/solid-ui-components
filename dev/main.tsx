@@ -196,7 +196,7 @@ const items: Item[] = [
   { id: "vessel-card", label: "VesselCard", component: VesselCardShowcase, tags: ["depth:2", "container", "data"] },
 
   { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:3", "indicator", "status"] },
-  { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:3", "list", "chat"] },
+  { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },
   { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:3", "list", "data"] },
   { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:3", "container", "data"] },
   { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase, tags: ["depth:3", "container", "data"] },
