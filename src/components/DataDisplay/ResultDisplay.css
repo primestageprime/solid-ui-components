@@ -16,11 +16,11 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary, var(--jtf-text-primary));
+  color: var(--sui-text-primary);
 }
 
 .sui-result-display__sublabel {
-  color: var(--text-muted, var(--jtf-text-muted));
+  color: var(--sui-text-muted);
   font-size: 0.75rem;
 }
 
@@ -34,7 +34,7 @@
 .sui-result-display__value {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary, var(--jtf-text-primary));
+  color: var(--sui-text-primary);
 }
 
 .sui-result-display__value--with-units {
@@ -46,7 +46,7 @@
   font-size: 0.9rem;
   font-weight: normal;
   font-family: var(--sui-font-family, system-ui, sans-serif);
-  color: var(--text-secondary, var(--jtf-text-secondary));
+  color: var(--sui-text-secondary);
 }
 
 /* Hover-target affordance — opt-in via the `highlightable` prop. Used

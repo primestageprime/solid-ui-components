@@ -23,9 +23,9 @@ export const DataTableContainerShowcase: Component = () => {
               <table style={{ width: "100%", "border-collapse": "collapse" }}>
                 <thead class="sticky-table-header">
                   <tr>
-                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>ID</th>
-                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>Vessel</th>
-                    <th style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--border-color)" }}>Value</th>
+                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>ID</th>
+                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Vessel</th>
+                    <th style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--sui-border)" }}>Value</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -50,8 +50,8 @@ export const DataTableContainerShowcase: Component = () => {
                 <table style={{ width: "100%", "border-collapse": "collapse" }}>
                   <thead class="sticky-table-header">
                     <tr>
-                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>ID</th>
-                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>Vessel</th>
+                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>ID</th>
+                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Vessel</th>
                     </tr>
                   </thead>
                   <tbody>
