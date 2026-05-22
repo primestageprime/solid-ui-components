@@ -150,11 +150,18 @@ function geometryToPath(g: {
 // with a hover popover for the full title. Lives inside SVG via
 // foreignObject so the surrounding slurp morph can show/hide it.
 const TASK_OWNER = "athena";
-const TASK_STATUS = "DOING";
+const TASK_STATUS = "TODO";
 const TASK_TITLE =
   "Migrate the legacy authentication middleware to the new session-token storage system per the Q3 compliance review";
 const TASK_EST = "2h";
-const TASK_ACTUAL = "1h 45m";
+const TASK_ACTUAL = "—";
+// TODO-themed colors (grey). When the slurp panels show a node
+// "emerging" from a summary, the new node is a hidden TODO that's
+// becoming visible — so all of the visual treatment (path silhouette,
+// card border, status pill, dep arrow) stays in the TODO grey palette.
+const TODO_STROKE = "rgba(255,255,255,0.45)";
+const TODO_FILL = "rgba(255,255,255,0.04)";
+const TODO_TEXT = "rgba(255,255,255,0.7)";
 
 const CARD_FADE_MS = 300;
 
@@ -209,7 +216,7 @@ function TaskCard(props: {
             style={{
               "font-weight": 600,
               "letter-spacing": "0.06em",
-              color: "var(--sui-accent, #00d4ff)",
+              color: TODO_TEXT,
             }}
           >
             {TASK_STATUS}
@@ -240,7 +247,7 @@ function TaskCard(props: {
           }}
         >
           <span>est {TASK_EST}</span>
-          <span style={{ color: "var(--sui-accent, #00d4ff)" }}>{TASK_ACTUAL}</span>
+          <span style={{ color: TODO_TEXT }}>{TASK_ACTUAL}</span>
         </div>
         <Show when={hovered()}>
           <div
@@ -348,8 +355,8 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
         <path
           ref={(el) => (pathRef = el)}
           d={pathForFrame(startT, props)}
-          fill="rgba(0,212,255,0.10)"
-          stroke="var(--sui-accent, #00d4ff)"
+          fill="rgba(255,255,255,0.04)"
+          stroke="rgba(255,255,255,0.45)"
           stroke-width="1"
           style={{ visibility: props.phase === "out" ? "hidden" : "visible" }}
         />
@@ -477,21 +484,26 @@ const SlurpDep: Component = () => {
   const play = () => {
     if (!pathRef || !arrowRef) return;
     pathRef.style.visibility = "visible";
-    arrowRef.style.visibility = "visible";
+    // Arrow stays visible and GREY throughout. The dashes "fill in" by
+    // animating the GAP value from 3 → 0 — the browser interpolates
+    // stroke-dasharray natively so the dashes appear to close up into
+    // a solid line. Final state is left as "4 0" (solid) via
+    // fill: forwards; reset restores "4 3".
+    arrowRef.animate(
+      [{ strokeDasharray: "4 3" }, { strokeDasharray: "4 0" }],
+      { duration: 280, easing: "ease-out", fill: "forwards" },
+    );
     setShowCard(false);
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / SLURP_DURATION_MS);
       const g = slurpDepGeometry(t);
       pathRef!.setAttribute("d", geometryToPath(g));
-      // Arrow's end x lands exactly at the new node's leading (left)
-      // edge so the marker tip touches the border without crossing it.
       arrowRef!.setAttribute("x2", String(g.leadingX));
       if (t < 1) {
         raf = requestAnimationFrame(tick);
       } else {
         raf = undefined;
-        // Reveal the card content once the morph settles.
         setShowCard(true);
       }
     };
@@ -509,8 +521,13 @@ const SlurpDep: Component = () => {
       pathRef.style.visibility = "hidden";
     }
     if (arrowRef) {
-      arrowRef.setAttribute("x2", String(sourceRightX));
-      arrowRef.style.visibility = "hidden";
+      // Cancel any in-flight WAAPI dasharray animation so our reset
+      // values stick — otherwise the persisted "4 0" wins.
+      arrowRef.getAnimations().forEach((a) => a.cancel());
+      arrowRef.setAttribute("x2", String(DEP_LOZENGE_X));
+      arrowRef.setAttribute("stroke-dasharray", "4 3");
+      arrowRef.setAttribute("stroke", "rgba(255,255,255,0.45)");
+      arrowRef.setAttribute("color", "rgba(255,255,255,0.45)");
     }
   };
   return (
@@ -533,7 +550,10 @@ const SlurpDep: Component = () => {
             markerHeight="7"
             orient="auto-start-reverse"
           >
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--sui-accent, #00d4ff)" />
+            {/* currentColor → matches the line's color so grey/dashed
+                 dep arrows get grey heads, accent solid arrows get
+                 accent heads. */}
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
           </marker>
         </defs>
         {/* existing source node — already in the chart */}
@@ -584,23 +604,26 @@ const SlurpDep: Component = () => {
         <path
           ref={(el) => (pathRef = el)}
           d={geometryToPath(slurpDepGeometry(0))}
-          fill="rgba(0,212,255,0.10)"
-          stroke="var(--sui-accent, #00d4ff)"
+          fill="rgba(255,255,255,0.04)"
+          stroke="rgba(255,255,255,0.45)"
           stroke-width="1"
           style={{ visibility: "hidden" }}
         />
-        {/* dep arrow — start fixed at source's right edge; end tracks
-            the new node's leading edge over time. Hidden until play. */}
+        {/* Dep arrow. Initial state: GREY dashed line pointing at the
+            +S lozenge — source has a dep on a hidden TODO. On play the
+            line switches to solid + accent (the target is now DOING)
+            and its x2 tracks the new node's leading edge. */}
         <line
           ref={(el) => (arrowRef = el)}
           x1={sourceRightX}
           y1={cy}
-          x2={sourceRightX}
+          x2={DEP_LOZENGE_X}
           y2={cy}
-          stroke="var(--sui-accent, #00d4ff)"
+          stroke="rgba(255,255,255,0.45)"
+          color="rgba(255,255,255,0.45)"
           stroke-width="1.5"
+          stroke-dasharray="4 3"
           marker-end="url(#dep-arrow-head)"
-          style={{ visibility: "hidden" }}
         />
         {/* 4-line task card. Revealed once the slurp morph settles —
             during the morph the path silhouette is empty. overflow="visible"
