@@ -10,7 +10,7 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { Component, For, JSX } from "solid-js";
+import { Component, createSignal, For, JSX, Show } from "solid-js";
 
 interface Experiment {
   /** Short slug, used in the heading and as a stable id. */
@@ -33,13 +33,15 @@ interface Experiment {
 // lozenge — its trailing edge anchors INSIDE the lozenge at all times until
 // the very last beat when it slides to its final offset position.
 const STAGE_W = 320;
-const STAGE_H = 100;
+const STAGE_H = 110;
 const LOZENGE_X = 20; // left x of lozenge
 const LOZENGE_W = 16;
 const LOZENGE_H = 60;
 const LOZENGE_CY = STAGE_H / 2;
 const NODE_W = 140;
-const NODE_H = 60;
+// Bumped so the shared 4-line TaskCard fits inside the path's rest
+// silhouette (line1 + 2-line title + line4 + padding = 68 min).
+const NODE_H = 84;
 const NODE_FINAL_LEFT_X = LOZENGE_X + LOZENGE_W + 32; // gap between lozenge and node at rest
 const NODE_REST_TRAILING_HEIGHT = NODE_H; // settled height of the trailing edge
 
@@ -143,17 +145,137 @@ function geometryToPath(g: {
   ].join(" ");
 }
 
+// ─── shared task card ──────────────────────────────────────────────────────
+// Standard 4-line task card (owner · status / title × 2 / est · actual)
+// with a hover popover for the full title. Lives inside SVG via
+// foreignObject so the surrounding slurp morph can show/hide it.
+const TASK_OWNER = "athena";
+const TASK_STATUS = "DOING";
+const TASK_TITLE =
+  "Migrate the legacy authentication middleware to the new session-token storage system per the Q3 compliance review";
+const TASK_EST = "2h";
+const TASK_ACTUAL = "1h 45m";
+
+const CARD_FADE_MS = 300;
+
+function TaskCard(props: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+}): JSX.Element {
+  const [hovered, setHovered] = createSignal(false);
+  return (
+    <foreignObject
+      x={props.x}
+      y={props.y}
+      width={props.width}
+      height={props.height}
+      overflow="visible"
+    >
+      <div
+        xmlns="http://www.w3.org/1999/xhtml"
+        onPointerEnter={() => props.visible && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        style={{
+          position: "relative",
+          width: `${props.width}px`,
+          height: `${props.height}px`,
+          padding: "6px 10px",
+          "box-sizing": "border-box",
+          display: "flex",
+          "flex-direction": "column",
+          "font-family": "ui-monospace, SFMono-Regular, monospace",
+          color: "var(--sui-text, #e6ecf5)",
+          cursor: props.visible ? "pointer" : "default",
+          opacity: props.visible ? 1 : 0,
+          "pointer-events": props.visible ? "auto" : "none",
+          transition: `opacity ${CARD_FADE_MS}ms ease-out`,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "baseline",
+            "font-size": "10px",
+            color: "rgba(255,255,255,0.55)",
+            "line-height": "14px",
+          }}
+        >
+          <span>{TASK_OWNER}</span>
+          <span
+            style={{
+              "font-weight": 600,
+              "letter-spacing": "0.06em",
+              color: "var(--sui-accent, #00d4ff)",
+            }}
+          >
+            {TASK_STATUS}
+          </span>
+        </div>
+        <div
+          style={{
+            "font-size": "11px",
+            "font-weight": 600,
+            "line-height": "14px",
+            height: "28px",
+            display: "-webkit-box",
+            "-webkit-line-clamp": "2",
+            "-webkit-box-orient": "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {TASK_TITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "baseline",
+            "font-size": "10px",
+            color: "rgba(255,255,255,0.55)",
+            "line-height": "14px",
+          }}
+        >
+          <span>est {TASK_EST}</span>
+          <span style={{ color: "var(--sui-accent, #00d4ff)" }}>{TASK_ACTUAL}</span>
+        </div>
+        <Show when={hovered()}>
+          <div
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 6px)",
+              left: "0",
+              width: "260px",
+              padding: "8px 10px",
+              background: "var(--sui-bg-deep, #0c141c)",
+              border: "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+              "border-radius": "4px",
+              "font-size": "11px",
+              "line-height": "1.4",
+              color: "var(--sui-text, #e6ecf5)",
+              "box-shadow": "0 4px 12px rgba(0,0,0,0.4)",
+              "pointer-events": "none",
+              "z-index": 10,
+              "white-space": "normal",
+            }}
+          >
+            {TASK_TITLE}
+          </div>
+        </Show>
+      </div>
+    </foreignObject>
+  );
+}
+
 // ─── shared genie-stage scaffold ────────────────────────────────────────────
 interface SlurpStageProps {
   /** "ltr" puts the lozenge on the LEFT; "rtl" mirrors to the right. */
   direction: "ltr" | "rtl";
   /** "out" emerges from the lozenge; "in" retreats into it. */
   phase: "out" | "in";
-  onPlay: (
-    path: SVGPathElement,
-    geom: (t: number) => ReturnType<typeof slurpOutGeometry>,
-    rafSetter: (id: number | undefined) => void,
-  ) => void;
 }
 
 function pathForFrame(t: number, props: SlurpStageProps): string {
@@ -163,19 +285,31 @@ function pathForFrame(t: number, props: SlurpStageProps): string {
 }
 
 function SlurpStage(props: SlurpStageProps): JSX.Element {
+  // implementation begins; overflow on the SVG is set below so the
+  // TaskCard's hover popover can render outside the stage bbox.
   let pathRef: SVGPathElement | undefined;
   let raf: number | undefined;
   const lozengeX = props.direction === "ltr" ? LOZENGE_X : STAGE_W - LOZENGE_X - LOZENGE_W;
-  const startT = props.phase === "out" ? 0 : 1; // initial visible state
+  // Pre-animation state is always t=0.
+  const startT = 0;
+  // Slurp-out starts with no card (the node hasn't arrived). Slurp-in
+  // starts with the card visible (the node is sitting at rest).
+  const [showCard, setShowCard] = createSignal(props.phase === "in");
   const geom = (t: number) => {
     const base = props.phase === "out" ? slurpOutGeometry(t) : slurpInGeometry(t);
     return props.direction === "ltr" ? base : mirrorGeometry(base);
   };
+  // Where the TaskCard sits at rest, in stage coordinates.
+  const cardX = props.direction === "ltr"
+    ? NODE_FINAL_LEFT_X
+    : STAGE_W - NODE_FINAL_LEFT_X - NODE_W;
+  const cardY = LOZENGE_CY - NODE_H / 2;
   const reset = () => {
     if (raf !== undefined) {
       cancelAnimationFrame(raf);
       raf = undefined;
     }
+    setShowCard(props.phase === "in");
     if (!pathRef) return;
     pathRef.setAttribute("d", pathForFrame(startT, props));
     pathRef.style.visibility = props.phase === "out" ? "hidden" : "visible";
@@ -186,7 +320,9 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
         width={STAGE_W}
         height={STAGE_H}
         viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
-        style={{ display: "block", margin: "0 auto" }}
+        // overflow:visible so the TaskCard's hover popover (positioned
+        // above the card) renders outside the SVG's bbox.
+        style={{ display: "block", margin: "0 auto", overflow: "visible" }}
       >
         <rect
           x={lozengeX}
@@ -217,14 +353,51 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
           stroke-width="1"
           style={{ visibility: props.phase === "out" ? "hidden" : "visible" }}
         />
+        <TaskCard
+          x={cardX}
+          y={cardY}
+          width={NODE_W}
+          height={NODE_H}
+          visible={showCard()}
+        />
       </svg>
       <div style={buttonRowStyle}>
         <button
           type="button"
           style={buttonStyle}
-          onClick={() =>
-            pathRef && props.onPlay(pathRef, geom, (id) => (raf = id))
-          }
+          onClick={() => {
+            if (!pathRef) return;
+            // Sequence:
+            //   slurp-out: morph path → at t=1, fade card IN.
+            //   slurp-in : fade card OUT (CARD_FADE_MS) → then morph
+            //              path → at t=1, hide path.
+            const runMorph = (onDone: () => void) => {
+              pathRef!.style.visibility = "visible";
+              const start = performance.now();
+              const tick = (now: number) => {
+                const t = Math.min(1, (now - start) / SLURP_DURATION_MS);
+                pathRef!.setAttribute("d", geometryToPath(geom(t)));
+                if (t < 1) {
+                  raf = requestAnimationFrame(tick);
+                } else {
+                  raf = undefined;
+                  onDone();
+                }
+              };
+              raf = requestAnimationFrame(tick);
+            };
+            if (props.phase === "out") {
+              setShowCard(false);
+              runMorph(() => setShowCard(true));
+            } else {
+              setShowCard(false); // triggers CSS fade-out
+              setTimeout(() => {
+                runMorph(() => {
+                  pathRef!.style.visibility = "hidden";
+                });
+              }, CARD_FADE_MS);
+            }
+          }}
         >
           ▶ play
         </button>
@@ -238,34 +411,6 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
 
 const SLURP_DURATION_MS = 900;
 
-// Shared rAF driver — same easing for all four slurp variants. The
-// `geom(t)` closure already knows direction + phase. `setRaf` lets the
-// caller (SlurpStage) keep a handle so reset can cancel an in-flight tick.
-function runSlurp(
-  path: SVGPathElement,
-  geom: (t: number) => ReturnType<typeof slurpOutGeometry>,
-  phase: "out" | "in",
-  setRaf: (id: number | undefined) => void,
-): void {
-  path.style.visibility = "visible";
-  const start = performance.now();
-  const tick = (now: number) => {
-    const t = Math.min(1, (now - start) / SLURP_DURATION_MS);
-    path.setAttribute("d", geometryToPath(geom(t)));
-    if (t < 1) {
-      setRaf(requestAnimationFrame(tick));
-    } else {
-      setRaf(undefined);
-      if (phase === "in") {
-        // slurp-in lands at t=1 = fully-retracted slit. Hide so only
-        // the lozenge remains.
-        path.style.visibility = "hidden";
-      }
-    }
-  };
-  setRaf(requestAnimationFrame(tick));
-}
-
 // ─── slurp-with-dep: arrow tracks the leading edge of a fulfilling node ─────
 //
 // An existing source node sits on the left with a dangling dependency on
@@ -278,13 +423,18 @@ function runSlurp(
 // At rest the arrow connects source.right → new.left at the same gap a
 // regular SwimlaneChart edge would.
 const DEP_STAGE_W = 440;
-const DEP_STAGE_H = 100;
+const DEP_STAGE_H = 110;
 const DEP_SOURCE_X = 20;
 const DEP_SOURCE_W = 96;
 const DEP_SOURCE_H = 60;
 const DEP_LOZENGE_X = DEP_STAGE_W - LOZENGE_X - LOZENGE_W; // mirror of LTR
 const DEP_NODE_REST_LEFT_X = DEP_SOURCE_X + DEP_SOURCE_W + 60; // arrow run
 const DEP_NODE_REST_RIGHT_X = DEP_NODE_REST_LEFT_X + NODE_W;
+// Dedicated height for the dep card so we can fit 4 lines of content
+// (14px each + 6px top/bottom padding = 68px min). The slurp-out
+// geometry still anchors to NODE_H for the lozenge slit math; we let
+// the card body grow taller around it.
+const DEP_NODE_H = 84;
 
 // Reuse slurp-out geometry, but anchored to THIS stage's lozenge / rest
 // positions and mirrored RTL so the new node extrudes leftward.
@@ -302,40 +452,47 @@ function slurpDepGeometry(t: number): {
   const trailingX0 = lozengeLeftX;
   const trailingX1 = DEP_NODE_REST_RIGHT_X;
   const leadingX = lerp(leadingX0, leadingX1, ease(windowProgress(clamp, 0.0, 0.55)));
-  // Width-cap: keep |trailingX − leadingX| ≤ NODE_W. Going RTL the
-  // trailing edge stays >= leadingX + NODE_W until the leading edge
-  // is far enough left.
+  // Width-cap: keep |trailingX − leadingX| ≤ NODE_W.
   const trailingX = Math.min(trailingX0, leadingX + NODE_W);
   return {
     leadingX,
-    leadingH: lerp(GENIE_SLIT_HEIGHT, NODE_H, ease(windowProgress(clamp, 0.0, 0.55))),
+    leadingH: lerp(GENIE_SLIT_HEIGHT, DEP_NODE_H, ease(windowProgress(clamp, 0.0, 0.55))),
     trailingX,
-    trailingH: lerp(GENIE_SLIT_HEIGHT, NODE_H, ease(windowProgress(clamp, 0.4, 0.88))),
+    trailingH: lerp(GENIE_SLIT_HEIGHT, DEP_NODE_H, ease(windowProgress(clamp, 0.4, 0.88))),
   };
   void trailingX1;
 }
+
+const DEP_FULL_TITLE =
+  "Migrate the legacy authentication middleware to the new session-token storage system per the Q3 compliance review";
 
 const SlurpDep: Component = () => {
   let pathRef: SVGPathElement | undefined;
   let arrowRef: SVGLineElement | undefined;
   let raf: number | undefined;
+  const [showCard, setShowCard] = createSignal(false);
+  const [hovered, setHovered] = createSignal(false);
   const sourceRightX = DEP_SOURCE_X + DEP_SOURCE_W;
   const cy = DEP_STAGE_H / 2;
   const play = () => {
     if (!pathRef || !arrowRef) return;
     pathRef.style.visibility = "visible";
     arrowRef.style.visibility = "visible";
+    setShowCard(false);
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / SLURP_DURATION_MS);
       const g = slurpDepGeometry(t);
       pathRef!.setAttribute("d", geometryToPath(g));
-      const arrowEndX = g.leadingX + 6;
-      arrowRef!.setAttribute("x2", String(arrowEndX));
+      // Arrow's end x lands exactly at the new node's leading (left)
+      // edge so the marker tip touches the border without crossing it.
+      arrowRef!.setAttribute("x2", String(g.leadingX));
       if (t < 1) {
         raf = requestAnimationFrame(tick);
       } else {
         raf = undefined;
+        // Reveal the card content once the morph settles.
+        setShowCard(true);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -345,6 +502,8 @@ const SlurpDep: Component = () => {
       cancelAnimationFrame(raf);
       raf = undefined;
     }
+    setShowCard(false);
+    setHovered(false);
     if (pathRef) {
       pathRef.setAttribute("d", geometryToPath(slurpDepGeometry(0)));
       pathRef.style.visibility = "hidden";
@@ -360,7 +519,9 @@ const SlurpDep: Component = () => {
         width={DEP_STAGE_W}
         height={DEP_STAGE_H}
         viewBox={`0 0 ${DEP_STAGE_W} ${DEP_STAGE_H}`}
-        style={{ display: "block", margin: "0 auto" }}
+        // overflow:visible so the hover popover (positioned above the
+        // card) can render outside the SVG's bbox without being clipped.
+        style={{ display: "block", margin: "0 auto", overflow: "visible" }}
       >
         <defs>
           <marker
@@ -441,6 +602,109 @@ const SlurpDep: Component = () => {
           marker-end="url(#dep-arrow-head)"
           style={{ visibility: "hidden" }}
         />
+        {/* 4-line task card. Revealed once the slurp morph settles —
+            during the morph the path silhouette is empty. overflow="visible"
+            lets the hover popover spill outside the rest bbox. */}
+        <foreignObject
+          x={DEP_NODE_REST_LEFT_X}
+          y={cy - DEP_NODE_H / 2}
+          width={NODE_W}
+          height={DEP_NODE_H}
+          overflow="visible"
+          style={{ visibility: showCard() ? "visible" : "hidden" }}
+        >
+          <div
+            xmlns="http://www.w3.org/1999/xhtml"
+            class="dep-card-host"
+            onPointerEnter={() => setHovered(true)}
+            onPointerLeave={() => setHovered(false)}
+            style={{
+              position: "relative",
+              width: `${NODE_W}px`,
+              height: `${DEP_NODE_H}px`,
+              padding: "6px 10px",
+              "box-sizing": "border-box",
+              display: "flex",
+              "flex-direction": "column",
+              "font-family": "ui-monospace, SFMono-Regular, monospace",
+              color: "var(--sui-text, #e6ecf5)",
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                "justify-content": "space-between",
+                "align-items": "baseline",
+                "font-size": "10px",
+                color: "rgba(255,255,255,0.55)",
+                "line-height": "14px",
+              }}
+            >
+              <span>athena</span>
+              <span
+                style={{
+                  "font-weight": 600,
+                  "letter-spacing": "0.06em",
+                  color: "var(--sui-accent, #00d4ff)",
+                }}
+              >
+                DOING
+              </span>
+            </div>
+            <div
+              style={{
+                "font-size": "11px",
+                "font-weight": 600,
+                "line-height": "14px",
+                height: "28px",
+                display: "-webkit-box",
+                "-webkit-line-clamp": "2",
+                "-webkit-box-orient": "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {DEP_FULL_TITLE}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                "justify-content": "space-between",
+                "align-items": "baseline",
+                "font-size": "10px",
+                color: "rgba(255,255,255,0.55)",
+                "line-height": "14px",
+              }}
+            >
+              <span>est 2h</span>
+              <span style={{ color: "var(--sui-accent, #00d4ff)" }}>1h 45m</span>
+            </div>
+            {/* hover popover with the full title */}
+            <Show when={hovered()}>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "calc(100% + 6px)",
+                  left: "0",
+                  width: "260px",
+                  padding: "8px 10px",
+                  background: "var(--sui-bg-deep, #0c141c)",
+                  border: "1px solid var(--sui-border, rgba(255,255,255,0.18))",
+                  "border-radius": "4px",
+                  "font-size": "11px",
+                  "line-height": "1.4",
+                  color: "var(--sui-text, #e6ecf5)",
+                  "box-shadow": "0 4px 12px rgba(0,0,0,0.4)",
+                  "pointer-events": "none",
+                  "z-index": 10,
+                  "white-space": "normal",
+                }}
+              >
+                {DEP_FULL_TITLE}
+              </div>
+            </Show>
+          </div>
+        </foreignObject>
       </svg>
       <div style={buttonRowStyle}>
         <button type="button" style={buttonStyle} onClick={play}>
@@ -454,34 +718,10 @@ const SlurpDep: Component = () => {
   );
 };
 
-const SlurpOutLtr: Component = () => (
-  <SlurpStage
-    direction="ltr"
-    phase="out"
-    onPlay={(path, geom, setRaf) => runSlurp(path, geom, "out", setRaf)}
-  />
-);
-const SlurpOutRtl: Component = () => (
-  <SlurpStage
-    direction="rtl"
-    phase="out"
-    onPlay={(path, geom, setRaf) => runSlurp(path, geom, "out", setRaf)}
-  />
-);
-const SlurpInLtr: Component = () => (
-  <SlurpStage
-    direction="ltr"
-    phase="in"
-    onPlay={(path, geom, setRaf) => runSlurp(path, geom, "in", setRaf)}
-  />
-);
-const SlurpInRtl: Component = () => (
-  <SlurpStage
-    direction="rtl"
-    phase="in"
-    onPlay={(path, geom, setRaf) => runSlurp(path, geom, "in", setRaf)}
-  />
-);
+const SlurpOutLtr: Component = () => <SlurpStage direction="ltr" phase="out" />;
+const SlurpOutRtl: Component = () => <SlurpStage direction="rtl" phase="out" />;
+const SlurpInLtr: Component = () => <SlurpStage direction="ltr" phase="in" />;
+const SlurpInRtl: Component = () => <SlurpStage direction="rtl" phase="in" />;
 
 // ─── shared styles ──────────────────────────────────────────────────────────
 const demoBoxStyle = {
