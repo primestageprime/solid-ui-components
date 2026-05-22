@@ -82,6 +82,7 @@ import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
 import { NumberWithUnitsShowcase } from "./showcases/number-with-units";
+import { PivotTreemapShowcase } from "./showcases/pivot-treemap";
 import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
@@ -159,6 +160,7 @@ const items: Item[] = [
   { id: "sprint-selector", label: "SprintSelector", component: SprintSelectorShowcase, tags: ["depth:1", "form", "time"] },
   { id: "slot-fill-bar", label: "SlotFillBar", component: SlotFillBarShowcase, tags: ["depth:1", "indicator", "chart"] },
   { id: "product-grid", label: "ProductGrid", component: ProductGridShowcase, tags: ["depth:2", "data", "chart"] },
+  { id: "pivot-treemap", label: "PivotTreemap", component: PivotTreemapShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "legend", label: "Legend", component: LegendShowcase, tags: ["depth:1", "indicator", "chart"] },
   { id: "status-light", label: "StatusLight", component: StatusLightShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "tag-input", label: "TagInput", component: TagInputShowcase, tags: ["depth:1", "form"] },
