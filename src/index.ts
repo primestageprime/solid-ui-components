@@ -35,6 +35,7 @@ export * from "./components/Feedback";
 export * from "./components/Icon";
 export * from "./components/Inputs";
 export * from "./components/Navigation";
+export * from "./components/OverflowNav";
 export * from "./components/Toggle";
 export * from "./components/Progress";
 export * from "./components/ProgressCard";

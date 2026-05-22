@@ -387,6 +387,23 @@ State derivation:
 - **Link** — Minimal themed anchor wrapper. Use for: inline text links.
 - **NewTabLink** — Link that always opens in a new tab (`target="_blank"`). Use for: external links.
 
+## OverflowNav
+- **OverflowNav** — Pure Composite (Depth 2). Composes `Row` (Layout Primitive) + `NavLink` (Atomic Primitive) + `PopoverMenu` (Atomic Primitive). Owns zero CSS and zero inline `style={}` (other than the `style={props.style}` passthrough on the outer `Row`). Horizontal nav row that automatically collapses items that don't fit horizontally into a trailing kebab (⋮) `PopoverMenu`, re-evaluated on container resize via `ResizeObserver` (rAF-debounced). Items render as full `NavLink`s while they fit; spilled items render as menu entries inside the kebab popover and activate via their `onClick` (or `href` fallback). Measurement strategy: on mount and whenever `items` change, all items render inline for one frame so the component can snapshot each item's natural `offsetWidth`; on subsequent resizes the cached widths drive the trim. A ~48px budget is reserved for the kebab trigger so the boundary case ("fits without kebab" ↔ "fits with kebab") doesn't oscillate. Key props: `items` (`OverflowNavItem[]` — `id`, `label`, optional `href`, `active`, `color` (`accent`|`warning`|`danger`|`success`), `badge`, `onClick`), `gap` (`xs`|`sm`|`md`|`lg`|`xl`, default `"sm"`), `align` (default `"center"`), `class?`, `style?`. Exported types: `OverflowNavProps`, `OverflowNavItem`. Inherits theme styling from `NavLink` (`--sui-*` / theme tokens already wired through `nav-link*` classes) and from `PopoverMenu` (kebab trigger + dropdown panel). Use for: top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping.
+  - Example:
+    ```tsx
+    import { OverflowNav, type OverflowNavItem } from "solid-ui-components";
+
+    const items: OverflowNavItem[] = [
+      { id: "overview",  label: "Overview",  href: "/overview", active: true },
+      { id: "alarms",    label: "Alarms",    href: "/alarms", badge: 3, color: "warning" },
+      { id: "vessels",   label: "Vessels",   href: "/vessels" },
+      { id: "reports",   label: "Reports",   href: "/reports" },
+      { id: "settings",  label: "Settings",  href: "/settings" },
+    ];
+
+    <OverflowNav items={items} />
+    ```
+
 ## Page
 - **Page** — Full-page container with optional scanline and grid overlays. Key props: `scanLines`, `gridPattern`. Use for: top-level page wrapper. Scanline and grid effects are theme-dependent.
 
