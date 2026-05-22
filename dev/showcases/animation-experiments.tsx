@@ -1450,14 +1450,21 @@ function MixedShapesLaneReactive(props: {
   const onTxComplete = (tx: MsLozengeTransition) =>
     setTransitions((prev) => prev.filter((t) => t !== tx));
 
-  // Edge data: visible→visible solid, visible→hidden dashed.
+  // Edge data:
+  //   - visible → visible: SOLID accent edge
+  //   - visible → hidden:  DASHED edge to the matching lozenge
+  //     (hidden node is the DEPENDENT; lives in right lozenge)
+  //   - hidden → visible:  DASHED edge from the matching lozenge to
+  //     the visible target (hidden node is the PREREQUISITE; lives
+  //     in left lozenge since done-earlier sits on the left)
   const edges = () => {
     const positionById = new Map<string, LanePosition>(
       layout().positions.map((p) => [p.node.id, p]),
     );
     const solidEdges: { from: LanePosition; to: LanePosition }[] = [];
-    const dashedSources: Map<string, LanePosition> = new Map();
-    for (const n of props.nodes) {
+    const dashedToRight: Map<string, LanePosition> = new Map();
+    const dashedFromLeft: Map<string, LanePosition> = new Map();
+    for (const n of shadowNodes()) {
       for (const depId of n.dependsOn ?? []) {
         const src = positionById.get(depId);
         const tgt = positionById.get(n.id);
@@ -1465,11 +1472,17 @@ function MixedShapesLaneReactive(props: {
         if (src.visible && tgt.visible) {
           solidEdges.push({ from: src, to: tgt });
         } else if (src.visible && !tgt.visible) {
-          dashedSources.set(src.node.id, src);
+          dashedToRight.set(src.node.id, src);
+        } else if (!src.visible && tgt.visible) {
+          dashedFromLeft.set(tgt.node.id, tgt);
         }
       }
     }
-    return { solid: solidEdges, dashed: Array.from(dashedSources.values()) };
+    return {
+      solid: solidEdges,
+      dashedToRight: Array.from(dashedToRight.values()),
+      dashedFromLeft: Array.from(dashedFromLeft.values()),
+    };
   };
 
   const allRects = () =>
@@ -1557,8 +1570,9 @@ function MixedShapesLaneReactive(props: {
           );
         }}
       </For>
-      {/* Dashed visible→hidden edges (route to right lozenge by default) */}
-      <For each={edges().dashed}>
+      {/* Dashed visible→hidden edges (route to the RIGHT lozenge —
+          source visible, dependent hidden as a deeper TODO). */}
+      <For each={edges().dashedToRight}>
         {(p) => (
           <path
             d={orthogonalAvoidingObstacles(
@@ -1569,6 +1583,30 @@ function MixedShapesLaneReactive(props: {
                 width: LOZENGE_W,
                 height: colBottomY - colTopY,
               },
+              allRects().filter((r) => r.id !== p.node.id),
+            )}
+            fill="none"
+            stroke={greyStroke}
+            stroke-width="1.5"
+            stroke-dasharray="4 3"
+            marker-end="url(#ms-arrow-head)"
+            style={{ color: greyStroke, transition: "d 0.4s ease-out" }}
+          />
+        )}
+      </For>
+      {/* Dashed hidden→visible edges (route FROM the LEFT lozenge —
+          prerequisite hidden as a deeper DONE, dependent visible). */}
+      <For each={edges().dashedFromLeft}>
+        {(p) => (
+          <path
+            d={orthogonalAvoidingObstacles(
+              {
+                x: leftLozengeX + LOZENGE_W / 2,
+                y: lozMidY,
+                width: LOZENGE_W,
+                height: colBottomY - colTopY,
+              },
+              rectFor(p),
               allRects().filter((r) => r.id !== p.node.id),
             )}
             fill="none"
