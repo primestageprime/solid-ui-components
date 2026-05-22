@@ -1,22 +1,34 @@
-// Shared theme injection — used by both the showcase ThemeSwitcher and the
-// Sandbox. Inserts the requested theme's CSS as a single <style id="sui-theme">
-// element so it cascades over the structural component CSS.
-import hudCss from "../src/themes/hud.css?raw";
-import defaultCss from "../src/themes/default.css?raw";
+// dev/load-theme.ts
+// Shared theme injection. Two <style> tags:
+//   #sui-baseline — shared component CSS, injected once
+//   #sui-theme    — active theme tokens + overrides, swapped on change
+import baselineCss from "../src/themes/_baseline.css?raw";
+import { THEMES, type ThemeId } from "../src/themes/manifest";
 
-export type ThemeName = "hud" | "default";
+const BASELINE_TAG_ID = "sui-baseline";
+const THEME_TAG_ID = "sui-theme";
 
-const THEMES: Record<ThemeName, string> = { hud: hudCss, default: defaultCss };
-
-export const STYLE_TAG_ID = "sui-theme";
-
-/** Inject the named theme's CSS, creating the <style> tag if it doesn't exist. */
-export const loadTheme = (name: ThemeName): void => {
-  let el = document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null;
+const upsertStyleTag = (id: string, css: string): void => {
+  let el = document.getElementById(id) as HTMLStyleElement | null;
   if (!el) {
     el = document.createElement("style");
-    el.id = STYLE_TAG_ID;
+    el.id = id;
     document.head.appendChild(el);
   }
-  el.textContent = THEMES[name];
+  el.textContent = css;
 };
+
+/** Injects the baseline once. Idempotent — safe to call repeatedly. */
+export const loadBaseline = (): void => upsertStyleTag(BASELINE_TAG_ID, baselineCss);
+
+/** Ensures baseline is present, then swaps the active theme. */
+export const loadTheme = (id: ThemeId): void => {
+  loadBaseline();
+  upsertStyleTag(THEME_TAG_ID, THEMES[id].css);
+};
+
+export { THEMES };
+export type { ThemeId };
+
+// Back-compat alias for any callers still importing ThemeName.
+export type ThemeName = ThemeId;
