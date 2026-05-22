@@ -29,6 +29,3 @@ export const loadTheme = (id: ThemeId): void => {
 
 export { THEMES };
 export type { ThemeId };
-
-// Back-compat alias for any callers still importing ThemeName.
-export type ThemeName = ThemeId;
