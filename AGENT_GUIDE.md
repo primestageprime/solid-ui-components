@@ -170,6 +170,39 @@ import "solid-ui-components/themes/hud.css";       // sci-fi HUD style
 
 All `--sui-*` CSS custom properties come from the theme. Components reference these variables internally. Never hardcode colors — use theme variables or create a new variant with the appropriate semantic color.
 
+## Naming: shapes, not domains
+
+SUI is shared across **all** PrimeStage SolidJS apps. A component name that encodes a domain concept (maritime, engine, ops jargon, PM jargon) misrepresents the shape and discourages adoption from apps in other domains. **The library names *shapes*; consumer apps name *domain concepts*.**
+
+When adding or reviewing a component, surface a rename proposal for any domain-encoded name and prefer a shape-encoded alternative. Don't rename unilaterally — naming wants user input — but flag the smell prominently.
+
+Known offenders already renamed (as of v0.34.0):
+
+| Old | New |
+|---|---|
+| `VesselCard` | `RemovableItemCard` |
+| `VesselCallHeader` | `TitledTimeRangeHeader` |
+| `EngineDataSection` | *(removed; inline existing Primitives — see CHANGELOG)* |
+
+Pre-flagged candidates intentionally not yet renamed (raise during the next sweep, decide per-candidate):
+
+- **`Alarm*` family** (`AlarmBands`, `AlarmHotZones`, `AlarmStripeDefs`, `AlarmOverlay`) — stable Chart-monitoring surface; possibly `Threshold*` but weigh churn cost first.
+- **`WorkerCard`, `BurndownChart`, `SprintSelector`** — have domain-bound *props* too (`pkStart`/`pkEnd` etc.), so a name-only rename won't de-domain them. That's structural, not just naming.
+
+**Range-typed prop convention:** range-bearing props use `start` / `end` (per `DateTimeRange`, `Chart`, `CompletionTimeline`, `DateRangePicker`). Any new range-typed Primitive should follow suit. (Exception: `WeekCalendar`'s `startAt` is a `"H:MM"` time-of-day string, not an ISO timestamp — intentionally different.)
+
+## Workshop is iteration, not content
+
+`dev/showcases/workshop.tsx` (sidebar-linked, tagged `"workshop"` in `dev/main.tsx`) is an **ephemeral iteration environment** — a scratch surface where components are built before being promoted to a proper Showcase entry. It is *not* a content-type variant; whatever it currently demonstrates is incidental to the iteration stage.
+
+When you finish iterating on something in Workshop:
+
+1. Create a real Showcase entry under `dev/showcases/<component-name>.tsx`.
+2. Register it in `dev/main.tsx` with appropriate `tags` (depth, shape, domain).
+3. Rewrite or empty `workshop.tsx` for the next iteration.
+
+Don't treat the current `workshop.tsx` content as canonical — it gets replaced as work is promoted out.
+
 ## Summary
 
 | Situation | Action |
@@ -179,3 +212,5 @@ All `--sui-*` CSS custom properties come from the theme. Components reference th
 | No variant exists, need is app-specific | Create local variant using factory function |
 | Need to pass data/callbacks | Pass them as props to the curried variant |
 | Need to pass visual overrides | **STOP** — create a variant instead |
+| Adding a new component | Name it after the *shape*, not the domain |
+| Iterating on a new component | Build in Workshop, then promote to its own Showcase entry |
