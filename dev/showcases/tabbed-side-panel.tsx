@@ -3,6 +3,7 @@ import {
   TabbedSidePanel,
   RightDetailTabbedPanel,
   LeftNavTabbedPanel,
+  type ContentPaddingValue,
   type TabbedPanelTab,
 } from "../../src/components/TabbedSidePanel";
 
@@ -24,9 +25,14 @@ interface InstanceRenderProps {
   setActive: (id: string) => void;
   open: () => boolean;
   setOpen: (o: boolean) => void;
+  padding: () => ContentPaddingValue;
 }
 
-function Instance(props: { title: string; render: (p: InstanceRenderProps) => any }) {
+function Instance(props: {
+  title: string;
+  padding: () => ContentPaddingValue;
+  render: (p: InstanceRenderProps) => any;
+}) {
   const [active, setActive] = createSignal("details");
   const [open, setOpen] = createSignal(true);
   return (
@@ -45,13 +51,14 @@ function Instance(props: { title: string; render: (p: InstanceRenderProps) => an
           setActive,
           open,
           setOpen,
+          padding: props.padding,
         })}
       </div>
     </div>
   );
 }
 
-function FilteredInstance() {
+function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
   const [active, setActive] = createSignal("details");
   const [open, setOpen] = createSignal(true);
   const [showStatus, setShowStatus] = createSignal(true);
@@ -79,6 +86,7 @@ function FilteredInstance() {
           onTabChange={setActive}
           isOpen={open()}
           onOpenChange={setOpen}
+          contentPadding={props.padding()}
         />
       </div>
     </div>
@@ -86,6 +94,7 @@ function FilteredInstance() {
 }
 
 export const TabbedSidePanelShowcase: Component = () => {
+  const [padding, setPadding] = createSignal<ContentPaddingValue>("sm");
   return (
     <div class="component-section">
       <h2>TabbedSidePanel — Composite (Depth 2)</h2>
@@ -94,9 +103,21 @@ export const TabbedSidePanelShowcase: Component = () => {
         active tab's content renders inboard only when isOpen=true. Clicking the
         active tab toggles isOpen.
       </p>
+      <div style={{ padding: "12px 24px 0", display: "flex", gap: "12px", "align-items": "center", "font-size": "13px" }}>
+        <label>contentPadding:</label>
+        <select
+          value={padding()}
+          onChange={(e) => setPadding(e.currentTarget.value as ContentPaddingValue)}
+        >
+          <option value="none">none</option>
+          <option value="sm">sm (default)</option>
+          <option value="md">md</option>
+        </select>
+      </div>
       <div style={{ display: "flex", gap: "24px", padding: "24px", "flex-wrap": "wrap" }}>
         <Instance
           title="RightDetailTabbedPanel"
+          padding={padding}
           render={(p) => (
             <RightDetailTabbedPanel
               tabs={p.tabs}
@@ -104,11 +125,13 @@ export const TabbedSidePanelShowcase: Component = () => {
               onTabChange={p.setActive}
               isOpen={p.open()}
               onOpenChange={p.setOpen}
+              contentPadding={p.padding()}
             />
           )}
         />
         <Instance
           title="LeftNavTabbedPanel"
+          padding={padding}
           render={(p) => (
             <LeftNavTabbedPanel
               tabs={p.tabs}
@@ -116,11 +139,13 @@ export const TabbedSidePanelShowcase: Component = () => {
               onTabChange={p.setActive}
               isOpen={p.open()}
               onOpenChange={p.setOpen}
+              contentPadding={p.padding()}
             />
           )}
         />
         <Instance
           title="Bare TabbedSidePanel — tabsVariant='underline'"
+          padding={padding}
           render={(p) => (
             <TabbedSidePanel
               tabs={p.tabs}
@@ -129,10 +154,11 @@ export const TabbedSidePanelShowcase: Component = () => {
               isOpen={p.open()}
               onOpenChange={p.setOpen}
               tabsVariant="underline"
+              contentPadding={p.padding()}
             />
           )}
         />
-        <FilteredInstance />
+        <FilteredInstance padding={padding} />
       </div>
     </div>
   );
