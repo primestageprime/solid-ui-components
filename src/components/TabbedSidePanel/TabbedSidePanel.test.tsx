@@ -163,9 +163,11 @@ describe("TabbedSidePanel — side positioning", () => {
       />
     ));
     const children = Array.from(container.firstElementChild!.children);
-    // First child is the Tabs strip, then the content body.
+    // First child is the Tabs strip, then the PaddedBody wrapper containing the content.
     expect(children[0].getAttribute("role")).toBe("tablist");
-    expect(children[children.length - 1].getAttribute("data-testid")).toBe("a-body");
+    const lastChild = children[children.length - 1];
+    expect(lastChild.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(lastChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
   });
 
   it("side='left' renders content before strip (DOM order)", () => {
@@ -180,7 +182,10 @@ describe("TabbedSidePanel — side positioning", () => {
       />
     ));
     const children = Array.from(container.firstElementChild!.children);
-    expect(children[0].getAttribute("data-testid")).toBe("a-body");
+    // First child is the PaddedBody wrapper; the testid is inside it.
+    const firstChild = children[0];
+    expect(firstChild.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(firstChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
     expect(children[children.length - 1].getAttribute("role")).toBe("tablist");
   });
 

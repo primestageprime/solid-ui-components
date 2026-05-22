@@ -15,11 +15,21 @@ export type TabbedPanelTab = Tab & {
   content: () => JSX.Element;
 };
 
+export type ContentPaddingValue = "none" | "sm" | "md";
+
 export interface TabbedSidePanelProps {
   // Override Props (curried at variant-definition time)
   side?: "left" | "right";
   tabsVariant?: "default" | "underline" | "boxed" | "pill";
   color?: ColorVariant;
+  /**
+   * Inboard padding on the body container. Always padded on the edge that
+   * faces the tab strip ("padding-left" when side="right", "padding-right"
+   * when side="left"), so the body never visually collides with the strip.
+   * Default `"sm"` (~8px). Pass `"none"` for flush content (e.g. an embedded
+   * chart that should go edge-to-edge).
+   */
+  contentPadding?: ContentPaddingValue;
   // Data Props
   tabs: TabbedPanelTab[];
   activeTab: string;
@@ -32,15 +42,50 @@ export interface TabbedSidePanelProps {
 
 export type TabbedSidePanelOverrides = Pick<
   TabbedSidePanelProps,
-  "side" | "tabsVariant" | "color"
+  "side" | "tabsVariant" | "color" | "contentPadding"
 >;
 export type TabbedSidePanelDataProps = Omit<
   TabbedSidePanelProps,
   keyof TabbedSidePanelOverrides
 >;
 
+const PADDING_TOKEN: Record<ContentPaddingValue, string> = {
+  none: "0",
+  sm: "var(--sui-space-2)",
+  md: "var(--sui-space-3)",
+};
+
+const PaddedBody: Component<{
+  padding: ContentPaddingValue;
+  side: "left" | "right";
+  children: JSX.Element;
+}> = (props) => {
+  const style = (): JSX.CSSProperties => {
+    const value = PADDING_TOKEN[props.padding];
+    return props.side === "right"
+      ? { "padding-left": value }
+      : { "padding-right": value };
+  };
+  return (
+    <div
+      data-sui-content-padding={props.padding}
+      data-sui-content-side={props.side}
+      style={style()}
+    >
+      {props.children}
+    </div>
+  );
+};
+
 export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
-  const props = mergeProps({ side: "right" as const, tabsVariant: "default" as const }, rawProps);
+  const props = mergeProps(
+    {
+      side: "right" as const,
+      tabsVariant: "default" as const,
+      contentPadding: "sm" as ContentPaddingValue,
+    },
+    rawProps,
+  );
 
   const activeContent = createMemo(() => {
     const t = props.tabs.find((x) => x.id === props.activeTab);
@@ -67,7 +112,11 @@ export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
       <Show when={props.side === "left" && props.isOpen}>
         {(() => {
           const c = activeContent();
-          return c ? c() : null;
+          return c ? (
+            <PaddedBody padding={props.contentPadding} side={props.side}>
+              {c()}
+            </PaddedBody>
+          ) : null;
         })()}
       </Show>
       <Tabs
@@ -81,7 +130,11 @@ export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
       <Show when={props.side === "right" && props.isOpen}>
         {(() => {
           const c = activeContent();
-          return c ? c() : null;
+          return c ? (
+            <PaddedBody padding={props.contentPadding} side={props.side}>
+              {c()}
+            </PaddedBody>
+          ) : null;
         })()}
       </Show>
     </Row>

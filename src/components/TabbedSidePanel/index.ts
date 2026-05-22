@@ -4,5 +4,6 @@ export type {
   TabbedSidePanelOverrides,
   TabbedSidePanelDataProps,
   TabbedPanelTab,
+  ContentPaddingValue,
 } from "./TabbedSidePanel";
 export * from "./variants";
