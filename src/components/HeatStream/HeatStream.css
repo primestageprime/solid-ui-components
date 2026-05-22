@@ -129,7 +129,7 @@
 }
 
 .jtf-heatstream__cell--unknown {
-  background-color: #333;
+  background-color: var(--sui-bg-tertiary);
   outline: 1px solid rgba(var(--sui-accent-rgb), 0.25);
   outline-offset: -1px;
 }

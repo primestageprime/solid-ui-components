@@ -106,9 +106,9 @@
 }
 
 body {
-  font-family: var(--jtf-font-family);
-  background-color: var(--jtf-bg-primary);
-  color: var(--jtf-text-primary);
+  font-family: var(--sui-font-family);
+  background-color: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
   margin: 0;
   padding: 0;
 }
