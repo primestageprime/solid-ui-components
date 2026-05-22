@@ -75,8 +75,8 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
         "flex-direction": "column",
         gap: "4px",
         padding: "8px",
-        "background": "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        "background": "var(--sui-bg-secondary)",
+        border: "1px solid var(--sui-border)",
         "border-radius": "4px",
       }}
     >
@@ -84,16 +84,16 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
         style={{
           "font-family": "ui-monospace, SFMono-Regular, monospace",
           "font-size": "10px",
-          color: "rgba(255,255,255,0.55)",
+          color: "var(--sui-text-secondary)",
         }}
       >
-        <span style={{ color: "var(--sui-accent, #00d4ff)" }}>{p.c.id}</span> · {p.c.label}
+        <span style={{ color: "var(--sui-accent)" }}>{p.c.id}</span> · {p.c.label}
       </div>
       <svg
         width={CELL_W}
         height={CELL_H}
         viewBox={`0 0 ${CELL_W} ${CELL_H}`}
-        style={{ background: "rgba(0,0,0,0.15)", "border-radius": "2px" }}
+        style={{ background: "var(--sui-bg-elevated)", "border-radius": "2px" }}
       >
         <defs>
           <marker
@@ -105,7 +105,7 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
             markerHeight="7"
             orient="auto-start-reverse"
           >
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--sui-accent, #00d4ff)" />
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--sui-accent)" />
           </marker>
         </defs>
         {/* Obstacles first so they sit visually behind edges */}
@@ -116,8 +116,8 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
               y={o.y - NODE_H / 2}
               width={NODE_W}
               height={NODE_H}
-              fill="rgba(255,255,255,0.06)"
-              stroke="rgba(255,255,255,0.2)"
+              fill="var(--sui-bg-secondary)"
+              stroke="var(--sui-text-muted)"
               stroke-dasharray="3 2"
               rx={3}
             />
@@ -129,8 +129,8 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           y={p.c.from.y - NODE_H / 2}
           width={NODE_W}
           height={NODE_H}
-          fill="rgba(0,212,255,0.08)"
-          stroke="var(--sui-accent, #00d4ff)"
+          fill="rgba(var(--sui-accent-rgb), 0.08)"
+          stroke="var(--sui-accent)"
           rx={3}
         />
         <text
@@ -138,7 +138,7 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           y={p.c.from.y}
           text-anchor="middle"
           dominant-baseline="central"
-          fill="rgba(255,255,255,0.85)"
+          fill="var(--sui-text-primary)"
           font-size="10"
           font-family="ui-monospace"
         >
@@ -150,8 +150,8 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           y={p.c.to.y - NODE_H / 2}
           width={NODE_W}
           height={NODE_H}
-          fill="rgba(95,179,124,0.10)"
-          stroke="rgba(95,179,124,0.6)"
+          fill="rgba(var(--sui-success-rgb), 0.10)"
+          stroke="var(--sui-success)"
           rx={3}
         />
         <text
@@ -159,7 +159,7 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           y={p.c.to.y}
           text-anchor="middle"
           dominant-baseline="central"
-          fill="rgba(255,255,255,0.85)"
+          fill="var(--sui-text-primary)"
           font-size="10"
           font-family="ui-monospace"
         >
@@ -169,10 +169,10 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
         <path
           d={path()}
           fill="none"
-          stroke="var(--sui-accent, #00d4ff)"
+          stroke="var(--sui-accent)"
           stroke-width={1.5}
           marker-end={`url(#router-arrow-${p.c.id}-${p.style})`}
-          style={{ color: "var(--sui-accent, #00d4ff)" }}
+          style={{ color: "var(--sui-accent)" }}
         />
       </svg>
     </div>
