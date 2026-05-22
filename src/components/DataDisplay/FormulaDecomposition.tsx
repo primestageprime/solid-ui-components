@@ -93,7 +93,7 @@ export function createFormulaResult(config: FormulaConfig): Component<FormulaVal
         sublabel={`Threshold: ${config.threshold} ${config.resultUnits}`}
         value={resultStr()}
         units={config.resultUnits}
-        valueColor={compliant() ? undefined : "#ff0040"}
+        valueColor={compliant() ? undefined : "var(--sui-danger)"}
         badge={
           <StatusBadge variant={compliant() ? "compliant" : "violation"}>
             {compliant() ? "COMPLIANT" : "VIOLATION"}

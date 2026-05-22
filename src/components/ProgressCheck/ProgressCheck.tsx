@@ -32,7 +32,7 @@ export const ProgressCheck: Component<ProgressCheckProps> = (props) => {
     if (p >= 1) {
       // Complete — green circle with check
       return `<circle cx="8" cy="8" r="7" fill="var(--sui-success)"/>
-              <path d="M5 8L7 10.5L11 5.5" stroke="var(--sui-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+              <path d="M5 8L7 10.5L11 5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
     }
     // Partial — square with rising fill
     const fillHeight = Math.round(p * 12);
