@@ -1,5 +1,5 @@
 .nav-link {
-  color: var(--text-secondary, var(--jtf-text-secondary));
+  color: var(--sui-text-secondary);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 400;

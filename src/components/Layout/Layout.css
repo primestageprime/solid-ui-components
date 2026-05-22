@@ -85,7 +85,7 @@
   flex-direction: column;
   height: 100vh;
   min-height: 0;
-  background: var(--sui-bg-deep, var(--jtf-bg-primary, transparent));
+  background: var(--sui-bg-deep, var(--sui-bg-primary, transparent));
   color: var(--sui-text-primary, inherit);
 }
 

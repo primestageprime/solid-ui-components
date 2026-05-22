@@ -47,7 +47,7 @@ export const FadedNowrapSublabel = createText({
 });
 
 // Color-shifted body text
-export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
+export const MutedBody = createText({ variant: "body", color: "var(--sui-text-muted)" });
 export const AccentBody = createText({ variant: "body", color: "var(--sui-accent)" });
 
 // ── Compact data-display variants ──

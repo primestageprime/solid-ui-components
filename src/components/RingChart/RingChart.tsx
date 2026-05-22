@@ -57,8 +57,8 @@ export function RingChart(props: RingChartProps) {
           cy={cy()}
           r={radius()}
           fill="none"
-          stroke="rgba(255,255,255,0.05)"
           stroke-width={strokeWidth}
+          style={{ stroke: "var(--sui-border)" }}
         />
         <For each={arcs()}>
           {(arc) => (

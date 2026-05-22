@@ -89,7 +89,7 @@ export const TextShowcase: Component = () => {
           </div>
           <div>
             <AccentBody>Highlighted accent content</AccentBody>
-            <div class="text-meta">AccentBody — body + color: --hud-accent</div>
+            <div class="text-meta">AccentBody — body + color: --sui-accent</div>
           </div>
         </Stack>
       </div>

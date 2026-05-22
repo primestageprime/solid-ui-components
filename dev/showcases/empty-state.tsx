@@ -91,7 +91,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
               <div class="depth2-atom__label">AccentBody</div>
-              <div class="text-meta">body + color: --hud-accent</div>
+              <div class="text-meta">body + color: --sui-accent</div>
             </div>
           </div>
         </div>
