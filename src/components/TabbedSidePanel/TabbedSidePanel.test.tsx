@@ -257,3 +257,67 @@ describe("Named variants", () => {
     expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
   });
 });
+
+describe("TabbedSidePanel — contentPadding", () => {
+  it("default contentPadding is 'sm' and wraps content in a padded container (side='right' → padding-left)", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    ));
+    const body = getByTestId("a-body");
+    const wrapper = body.parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("sm");
+    expect(wrapper.getAttribute("data-sui-content-side")).toBe("right");
+  });
+
+  it("contentPadding='none' produces a wrapper with data-sui-content-padding='none'", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        contentPadding="none"
+      />
+    ));
+    const body = getByTestId("a-body");
+    const wrapper = body.parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("none");
+  });
+
+  it("contentPadding='md' is forwarded to the wrapper data attribute", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        contentPadding="md"
+      />
+    ));
+    const wrapper = getByTestId("a-body").parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-padding")).toBe("md");
+  });
+
+  it("side='left' flips the padded edge (data-sui-content-side='left')", () => {
+    const { getByTestId } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        side="left"
+      />
+    ));
+    const wrapper = getByTestId("a-body").parentElement!;
+    expect(wrapper.getAttribute("data-sui-content-side")).toBe("left");
+  });
+});
