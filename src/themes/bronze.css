@@ -84,6 +84,12 @@ body {
   --status-partial: #C58A2C;
   --status-sparse:  #C96442;
   --status-missing: #A8443A;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour, kept separate from `--sui-text-muted` so the
+     chart's in-plot chrome can read as warm-muted against the bone bg
+     without being tied to the broader surface/table muted hue. */
+  --sui-chart-tick-color: #8C7861;
 }
 
 /* ============================================

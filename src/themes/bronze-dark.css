@@ -86,4 +86,10 @@ body {
   --status-partial: #E0A040;
   --status-sparse:  #E07A4F;
   --status-missing: #D4584E;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour. Reuses --sui-text-muted (#8C7861) which on
+     dark walnut reads as quietly-warm chrome — the same hex Bronze light
+     uses for --sui-text-secondary, but in dark mode it lands as "muted". */
+  --sui-chart-tick-color: #8C7861;
 }

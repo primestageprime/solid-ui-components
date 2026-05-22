@@ -69,4 +69,10 @@
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
   --status-missing: #ff0040;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
+     reference labels). Held separate from --sui-text-muted so chart chrome
+     can be tinted independently from broader app muted text. */
+  --sui-chart-tick-color: #64748b;
 }
