@@ -86,7 +86,7 @@ import { PivotTreemapShowcase } from "./showcases/pivot-treemap";
 import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
-import { VesselCardShowcase } from "./showcases/vessel-card";
+import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
 
 // Depth 3
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
@@ -193,7 +193,7 @@ const items: Item[] = [
   { id: "progress-card", label: "ProgressCard", component: ProgressCardShowcase, tags: ["depth:2", "container", "indicator"] },
   { id: "quick-filter", label: "QuickFilter", component: QuickFilterShowcase, tags: ["depth:2", "form"] },
   { id: "selectable-table", label: "SelectableTable", component: SelectableTableShowcase, tags: ["depth:2", "table", "data", "form"] },
-  { id: "vessel-card", label: "VesselCard", component: VesselCardShowcase, tags: ["depth:2", "container", "data"] },
+  { id: "removable-item-card", label: "RemovableItemCard", component: RemovableItemCardShowcase, tags: ["depth:2", "container", "data"] },
 
   { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:3", "indicator", "status"] },
   { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },

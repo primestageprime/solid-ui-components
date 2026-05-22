@@ -72,7 +72,7 @@ const ITEMS: ItemMeta[] = [
   { id: "progress-card", tags: ["depth:2", "container", "indicator"] },
   { id: "quick-filter", tags: ["depth:2", "form"] },
   { id: "selectable-table", tags: ["depth:2", "table", "data", "form"] },
-  { id: "vessel-card", tags: ["depth:2", "container", "data"] },
+  { id: "removable-item-card", tags: ["depth:2", "container", "data"] },
   { id: "connection-status", tags: ["depth:3", "indicator", "status"] },
   { id: "conversation-tree", tags: ["depth:3", "list", "chat"] },
   { id: "data-list", tags: ["depth:3", "list", "data"] },

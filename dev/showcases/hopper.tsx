@@ -39,7 +39,7 @@ import { Tabs } from "../../src/components/Tabs";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
 import { List, ListItem } from "../../src/components/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
-import { VesselCard } from "../../src/components/Card";
+import { RemovableItemCard } from "../../src/components/Card";
 
 // ── HUD ──────────────────────────────────────────────────────────────
 
@@ -1359,12 +1359,12 @@ const SelectorShowcase: Component = () => {
 // ── Card ─────────────────────────────────────────────────────────────
 
 const CardShowcase: Component = () => {
-  const [activeId, setActiveId] = createSignal("vessel-2");
+  const [activeId, setActiveId] = createSignal("item-2");
 
-  const vessels = [
-    { id: "vessel-1", name: "Pacific Voyager", asset: "12-345", date: "2026-01-15" },
-    { id: "vessel-2", name: "Atlantic Runner", asset: "67-890", date: "2026-01-14" },
-    { id: "vessel-3", name: "Northern Star", asset: "11-222", date: "2026-01-13" },
+  const items = [
+    { id: "item-1", name: "Item Alpha", asset: "12-345", date: "2026-01-15" },
+    { id: "item-2", name: "Item Bravo", asset: "67-890", date: "2026-01-14" },
+    { id: "item-3", name: "Item Charlie", asset: "11-222", date: "2026-01-13" },
   ];
 
   return (
@@ -1372,15 +1372,15 @@ const CardShowcase: Component = () => {
       <h2>Card Components</h2>
 
       <div class="example-group">
-        <h3>VesselCard — States</h3>
+        <h3>RemovableItemCard — States</h3>
         <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Click a card to set it active. Cards support title, details slot, remove button, and children.
         </p>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <For each={vessels}>
+          <For each={items}>
             {(v) => (
               <div onClick={() => setActiveId(v.id)}>
-                <VesselCard
+                <RemovableItemCard
                   title={v.name}
                   active={activeId() === v.id}
                   onRemove={() => setActiveId("")}
@@ -1398,18 +1398,18 @@ const CardShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>VesselCard — Minimal</h3>
+        <h3>RemovableItemCard — Minimal</h3>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <VesselCard title="Title Only" />
-          <VesselCard title="With Remove" onRemove={() => {}} />
-          <VesselCard
+          <RemovableItemCard title="Title Only" />
+          <RemovableItemCard title="With Remove" onRemove={() => {}} />
+          <RemovableItemCard
             title="With Children"
             details={<span style={{ "font-size": "11px", color: "var(--jtf-text-muted)" }}>Detail text</span>}
           >
             <div style={{ "font-size": "11px", color: "var(--jtf-text-muted)", "border-top": "1px solid rgba(0,168,204,0.2)", "padding-top": "8px" }}>
               Footer content (heatmap, sparkline, etc.)
             </div>
-          </VesselCard>
+          </RemovableItemCard>
         </div>
       </div>
     </div>
