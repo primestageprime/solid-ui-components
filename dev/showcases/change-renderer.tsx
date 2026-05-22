@@ -21,7 +21,7 @@ const StatusPill: Component<{ label: string; color: string }> = (props) => (
 
 const STATUS_COLORS: Record<string, string> = {
   NOMINAL: "#10b981",
-  ALARM: "#ef4444",
+  ALARM: "var(--sui-danger)",
   WARNING: "#f59e0b",
   OFFLINE: "#6b7280",
 };

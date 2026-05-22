@@ -222,7 +222,7 @@ export const DagTraversalSandboxShowcase: Component = () => {
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5565" />
             </marker>
             <marker id="dts-arrow-fwd-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#00a8cc" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-accent)" />
             </marker>
             <marker id="dts-arrow-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#f5a524" />

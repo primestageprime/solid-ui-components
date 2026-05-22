@@ -173,7 +173,7 @@ const colLabel = (col: number): string =>
 const colTint = (col: number): { bg: string; border: string } => {
   if (col < 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }; // DONE → green
   if (col > 0) return { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }; // TODO → grey
-  return { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent)" }; // DOING → cyan
+  return { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" }; // DOING → cyan
 };
 
 export const renderStubNode = (
@@ -271,7 +271,7 @@ const ANIM_STATUS_LABEL: Record<AnimStatus, string> = {
 };
 const ANIM_STATUS_TINT: Record<AnimStatus, { bg: string; border: string }> = {
   todo: { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }, // grey
-  doing: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent)" },
+  doing: { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" },
   done: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }, // green
 };
 

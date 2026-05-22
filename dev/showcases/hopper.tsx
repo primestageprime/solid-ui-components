@@ -292,7 +292,7 @@ const HopperBadgesShowcase: Component = () => {
           <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
         </div>
         <div style={{ display: "flex", "align-items": "center", gap: "12px", "margin-top": "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "#ff0040" }}>
+          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-danger)" }}>
             4.821
           </span>
           <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
@@ -383,7 +383,7 @@ const FeedbackShowcase: Component = () => {
       <div class="example-group">
         <h3>With Custom Children</h3>
         <AlertBox variant="danger">
-          <div style={{ color: "#ff0040", "font-size": "0.875rem" }}>
+          <div style={{ color: "var(--sui-danger)", "font-size": "0.875rem" }}>
             Engine power data required. Using default engine power (1200 kW).
           </div>
         </AlertBox>
@@ -588,7 +588,7 @@ const DataDisplayShowcase: Component = () => {
             sublabel="Limit: 0.14 g/kWh"
             value="0.287"
             units="g/kWh"
-            valueColor="#ff0040"
+            valueColor="var(--sui-danger)"
             badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
           />
           <ResultDisplay
@@ -614,9 +614,9 @@ const DataDisplayShowcase: Component = () => {
             { header: "Avg NO₂ (ppm)", accessor: "avgNO2", align: "right" },
           ]}
           rows={[
-            { period: "Before Control", count: 142, avgNox: "18.34", noxColor: "#ff8800", avgNO: "12.81", avgNO2: "5.53" },
-            { period: "During Control", count: 89, avgNox: "3.21", noxColor: "#00ff88", avgNO: "2.14", avgNO2: "1.07" },
-            { period: "After Control", count: 56, avgNox: "16.92", noxColor: "#ff8800", avgNO: "11.44", avgNO2: "5.48" },
+            { period: "Before Control", count: 142, avgNox: "18.34", noxColor: "var(--sui-warning)", avgNO: "12.81", avgNO2: "5.53" },
+            { period: "During Control", count: 89, avgNox: "3.21", noxColor: "var(--sui-success)", avgNO: "2.14", avgNO2: "1.07" },
+            { period: "After Control", count: 56, avgNox: "16.92", noxColor: "var(--sui-warning)", avgNO: "11.44", avgNO2: "5.48" },
           ]}
           getRowClass={(row: any) => row.period === "During Control" ? "stats-table__row--highlight" : undefined}
         />
@@ -669,7 +669,7 @@ const DataDisplayShowcase: Component = () => {
             sublabel="Limit: 0.14 g/kWh"
             value="0.287"
             units="g/kWh"
-            valueColor="#ff0040"
+            valueColor="var(--sui-danger)"
             badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
             style={{ flex: "1", "min-width": "300px" }}
           >
@@ -974,7 +974,7 @@ const ProgressShowcase: Component = () => {
           <StackedProgressBar
             segments={[
               { percentage: 30, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 20, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={5}
             style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
@@ -985,7 +985,7 @@ const ProgressShowcase: Component = () => {
           <StackedProgressBar
             segments={[
               { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 0, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={0}
             style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--sui-text-muted)" }}
@@ -1004,7 +1004,7 @@ const ProgressShowcase: Component = () => {
             direction="vertical"
             segments={[
               { percentage: 25, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 40, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
             style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
@@ -1013,7 +1013,7 @@ const ProgressShowcase: Component = () => {
             direction="vertical"
             segments={[
               { percentage: 50, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 10, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
             style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}

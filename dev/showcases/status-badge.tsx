@@ -42,7 +42,7 @@ export const StatusBadgeShowcase: Component = () => {
           <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
         </div>
         <div style={{ display: "flex", "align-items": "center", gap: "12px", "margin-top": "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "#ff0040" }}>4.821</span>
+          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-danger)" }}>4.821</span>
           <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
           <StatusBadge variant="violation">VIOLATION</StatusBadge>
         </div>
