@@ -111,3 +111,28 @@ body {
 .sui-panel--glow-subtle  { box-shadow: 0 1px 3px  rgba(43, 29, 20, 0.06); }
 .sui-panel--glow-medium  { box-shadow: 0 2px 8px  rgba(43, 29, 20, 0.10); }
 .sui-panel--glow-strong  { box-shadow: 0 4px 16px rgba(43, 29, 20, 0.14); }
+
+/* DagChart nodes: baseline fills nodes with --sui-bg-elevated (white) and
+   strokes with --sui-border (faint tan), which on a bone background reads
+   as nearly-invisible white-on-bone. Strengthen the stroke + warm-tint the
+   drop-shadow so nodes have clear edges and lift on the page. */
+.sui-dag__node-bg {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-text-muted);
+  stroke-width: 1.25;
+  filter: drop-shadow(0 1px 3px rgba(43, 29, 20, 0.12));
+}
+.sui-dag__node--clickable:hover .sui-dag__node-bg {
+  stroke: var(--sui-accent);
+  filter: drop-shadow(0 2px 6px rgba(43, 29, 20, 0.18));
+}
+
+/* DagChart edges and arrows: baseline uses --sui-text-muted, which in
+   Bronze (#B8A78C) is faint against bone. Use --sui-text-secondary for a
+   slightly darker, more readable line/arrow. */
+.sui-dag__edge {
+  stroke: var(--sui-text-secondary);
+}
+.sui-dag__arrow {
+  fill: var(--sui-text-secondary);
+}
