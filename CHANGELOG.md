@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Bronze theme** — a light, serif (Lora), friendly variant. Lora is used for prose; Inter for utility text (buttons, badges, subtitles, list metadata). Warm bone background, rust accent.
+- **Theme architecture** — extracted shared component CSS into `_baseline.css`, loaded once on app boot. Per-theme CSS files now declare only tokens plus theme-specific overrides. A new `manifest.ts` registry is the single source of truth driving the loader, the dev switcher, and package exports.
+- New token `--sui-font-utility` for small-text components. Defaults to `--sui-font-family` via CSS var fallback, so existing themes need not declare it.
+
+### Changed
+
+- `default.css` is now **tokens-only**. Consumers using `loadTheme()` (the documented JS API) are unaffected. Consumers loading `@primestageprime/solid-ui-components/themes/default.css` directly by URL will see component CSS go missing — they must also load `@primestageprime/solid-ui-components/themes/_baseline.css` (or move to the JS API). See `src/themes/README.md` for details.
+- The dev `ThemeSwitcher` is now a dropdown sourced from the manifest rather than a 2-state toggle.
+
 ## 0.26.0
 
 Wave 2 composites/extensions drop: promotes patterns hand-rolled in
