@@ -1,10 +1,11 @@
 // ============================================
 // formatDateTimeRange — Pure function used by both `DateTimeRange`
 // (the Composite that renders the formatted string in `NowrapBody`)
-// and `VesselCallHeader` (an Atomic Primitive that renders the same
-// formatted string in its own timestamp span). Keeps the formatting
-// rules in one place without forcing VesselCallHeader to compose a
-// library Composite — Primitives cannot import library components.
+// and `TitledTimeRangeHeader` (an Atomic Primitive that renders the
+// same formatted string in its own timestamp span). Keeps the
+// formatting rules in one place without forcing TitledTimeRangeHeader
+// to compose a library Composite — Primitives cannot import library
+// components.
 // ============================================
 
 export type DateTimeRangeMode = "date" | "datetime";

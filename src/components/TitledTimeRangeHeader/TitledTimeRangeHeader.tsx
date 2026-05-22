@@ -1,27 +1,22 @@
 // ============================================
-// VesselCallHeader — Atomic Primitive (Depth 1)
-// Owns CSS (VesselCallHeader.css), no library Primitive imports.
+// TitledTimeRangeHeader — Atomic Primitive (Depth 1)
+// Owns CSS (TitledTimeRangeHeader.css), no library Primitive imports.
 // Title + optional badge + ISO date range + duration + optional asset
 // chip + optional action slot, optionally wrapped in a link. The pure
 // date-range formatter comes from `../DataDisplay/formatDateTimeRange`
 // — sharing the rule with the sibling `DateTimeRange` Composite
 // without forcing this Primitive to import a library component.
-//
-// NOTE: the component name encodes a maritime domain concept ("vessel
-// call"); the shape is generic (named-thing + time range + duration +
-// badge + action row). Flagged for rename when the next library-wide
-// naming pass batches the domain-bound names together.
 // ============================================
 import { Component, JSX, splitProps, Show } from "solid-js";
 import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
-import "./VesselCallHeader.css";
+import "./TitledTimeRangeHeader.css";
 
-export interface VesselCallHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  vesselName: string;
-  connectedAt: string;
-  disconnectedAt?: string | null;
-  assetId?: string;
-  /** Optional badge to display after the vessel name (e.g., "2 TRAINS") */
+export interface TitledTimeRangeHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
+  title: string;
+  startAt: string;
+  endAt?: string | null;
+  assetLabel?: string;
+  /** Optional badge to display after the title (e.g., "2 TRAINS") */
   badge?: JSX.Element;
   /** Optional action element on the right side */
   action?: JSX.Element;
@@ -48,12 +43,12 @@ function formatElapsed(startIso: string, endIso?: string | null): string {
   return `${hours}h ${minutes}m`;
 }
 
-export const VesselCallHeader: Component<VesselCallHeaderProps> = (props) => {
+export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (props) => {
   const [local, others] = splitProps(props, [
-    "vesselName",
-    "connectedAt",
-    "disconnectedAt",
-    "assetId",
+    "title",
+    "startAt",
+    "endAt",
+    "assetLabel",
     "badge",
     "action",
     "href",
@@ -61,26 +56,26 @@ export const VesselCallHeader: Component<VesselCallHeaderProps> = (props) => {
   ]);
 
   const rootClass = () => {
-    const classList = ["sui-vessel-call-header"];
+    const classList = ["sui-titled-time-range-header"];
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
 
   const mainContent = () => (
     <>
-      <h2 class="sui-vessel-call-header__title">{local.vesselName}</h2>
+      <h2 class="sui-titled-time-range-header__title">{local.title}</h2>
       <Show when={local.badge}>
-        <span class="sui-vessel-call-header__badge">{local.badge}</span>
+        <span class="sui-titled-time-range-header__badge">{local.badge}</span>
       </Show>
-      <span class="sui-vessel-call-header__separator">·</span>
-      <span class="sui-vessel-call-header__timestamp">
-        {formatDateTimeRange(local.connectedAt, local.disconnectedAt)}
+      <span class="sui-titled-time-range-header__separator">·</span>
+      <span class="sui-titled-time-range-header__timestamp">
+        {formatDateTimeRange(local.startAt, local.endAt)}
       </span>
-      <span class="sui-vessel-call-header__duration">
-        ({formatElapsed(local.connectedAt, local.disconnectedAt)})
+      <span class="sui-titled-time-range-header__duration">
+        ({formatElapsed(local.startAt, local.endAt)})
       </span>
-      <Show when={local.assetId}>
-        <span class="sui-vessel-call-header__asset">{local.assetId}</span>
+      <Show when={local.assetLabel}>
+        <span class="sui-titled-time-range-header__asset">{local.assetLabel}</span>
       </Show>
     </>
   );
@@ -89,17 +84,17 @@ export const VesselCallHeader: Component<VesselCallHeaderProps> = (props) => {
     <div class={rootClass()} {...others}>
       <Show
         when={local.href}
-        fallback={<div class="sui-vessel-call-header__main">{mainContent()}</div>}
+        fallback={<div class="sui-titled-time-range-header__main">{mainContent()}</div>}
       >
         <a
           href={local.href}
-          class="sui-vessel-call-header__main sui-vessel-call-header__link"
+          class="sui-titled-time-range-header__main sui-titled-time-range-header__link"
         >
           {mainContent()}
         </a>
       </Show>
       <Show when={local.action}>
-        <div class="sui-vessel-call-header__action">{local.action}</div>
+        <div class="sui-titled-time-range-header__action">{local.action}</div>
       </Show>
     </div>
   );
