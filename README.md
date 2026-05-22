@@ -1,7 +1,7 @@
 # solid-ui-components
 
 PrimeStage's SolidJS UI component library. Atomic + composed components,
-curried-variant pattern, dark themes (default + HUD).
+curried-variant pattern, themes (Default + HUD dark, Bronze light).
 
 ## Quick start
 
@@ -28,7 +28,7 @@ npm run audit:styles # Reports inline `style={…}` repeats — candidates for v
 ```
 src/components/        — public components, one folder per component
 src/components/Layout  — Stack/Row/Box primitives + curried variants
-src/themes/            — default.css, hud.css; loaded via dev/load-theme.ts
+src/themes/            — _baseline.css + per-theme tokens (default, hud, bronze); registered in manifest.ts
 dev/                   — local Vite app: showcase nav + #/sandbox harness
 dev/showcases/*.tsx    — one showcase per component
 dev/sandbox.tsx        — ephemeral page-mockup harness

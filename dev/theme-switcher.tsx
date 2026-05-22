@@ -1,16 +1,26 @@
-import { Component, createSignal, createEffect } from "solid-js";
-import { loadTheme, ThemeName } from "./load-theme";
+// dev/theme-switcher.tsx
+import { Component, createSignal, createEffect, For } from "solid-js";
+import { loadTheme, THEMES, type ThemeId } from "./load-theme";
+
+// Pick a sensible initial theme that matches existing default behavior.
+const INITIAL: ThemeId = "hud";
 
 export const ThemeSwitcher: Component = () => {
-  const [theme, setTheme] = createSignal<ThemeName>("hud");
+  const [theme, setTheme] = createSignal<ThemeId>(INITIAL);
   createEffect(() => loadTheme(theme()));
-  const toggle = () => setTheme((t) => (t === "hud" ? "default" : "hud"));
+
   return (
     <div class="theme-switcher">
       <span class="theme-switcher__label">Theme</span>
-      <button class="theme-switcher__btn" onClick={toggle}>
-        {theme()}
-      </button>
+      <select
+        class="theme-switcher__select"
+        value={theme()}
+        onChange={(e) => setTheme(e.currentTarget.value as ThemeId)}
+      >
+        <For each={Object.values(THEMES)}>
+          {(entry) => <option value={entry.id}>{entry.displayName}</option>}
+        </For>
+      </select>
     </div>
   );
 };
