@@ -62,3 +62,35 @@
   margin-left: 6px;
   flex-shrink: 0;
 }
+
+/* ============================================
+   Vertical orientation
+   ============================================ */
+.sui-tabs--vertical {
+  flex-direction: column;
+  gap: 0;
+}
+
+.sui-tabs--vertical .sui-tab {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 12px 8px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Default variant: indicator moves from bottom to the panel-inboard edge.
+   The composite always places the strip on the panel's outboard edge,
+   so the indicator on the strip's inboard edge is what reads as "selected". */
+.sui-tabs--vertical.sui-tabs--default .sui-tab--active::after {
+  bottom: auto;
+  top: 0;
+  left: auto;
+  right: -1px;
+  width: 2px;
+  height: auto;
+}
+
+/* Underline / boxed / pill variants: vertical layout uses the same border
+   semantics; CSS overrides are unnecessary because gap/padding tokens
+   inherit from the horizontal rules and read correctly stacked. */
