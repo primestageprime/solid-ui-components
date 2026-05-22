@@ -148,3 +148,52 @@ describe("TabbedSidePanel — behavior", () => {
     expect(getByTestId("b-body").textContent).toBe("B body");
   });
 });
+
+describe("TabbedSidePanel — side positioning", () => {
+  it("side='right' renders strip before content (DOM order)", () => {
+    const { container } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        side="right"
+      />
+    ));
+    const children = Array.from(container.firstElementChild!.children);
+    // First child is the Tabs strip, then the content body.
+    expect(children[0].getAttribute("role")).toBe("tablist");
+    expect(children[children.length - 1].getAttribute("data-testid")).toBe("a-body");
+  });
+
+  it("side='left' renders content before strip (DOM order)", () => {
+    const { container } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        side="left"
+      />
+    ));
+    const children = Array.from(container.firstElementChild!.children);
+    expect(children[0].getAttribute("data-testid")).toBe("a-body");
+    expect(children[children.length - 1].getAttribute("role")).toBe("tablist");
+  });
+
+  it("side='left' applies the left marker class", () => {
+    const { container } = render(() => (
+      <TabbedSidePanel
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        isOpen={true}
+        onOpenChange={() => {}}
+        side="left"
+      />
+    ));
+    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+  });
+});
