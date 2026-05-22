@@ -6,6 +6,9 @@ import {
   computeChartHeight,
   labelForCol,
   topoSortAlpha,
+  advanceChildren,
+  promoteReady,
+  isAllDone,
 } from "./workshop-layout";
 
 // Helper to wire effective-status into computeColFor for tests.
@@ -278,5 +281,75 @@ describe("computeChartHeight", () => {
     const h = computeChartHeight(leaves, colFor, cfg, false);
     // 2 cols visible (-1, 0), each stack of 1. maxStack=1. chartContent=56.
     expect(h).toBe(56 + 16);
+  });
+});
+
+describe("advanceChildren / promoteReady / isAllDone", () => {
+  type N = StatusFlowNode;
+  const chain = (): N[] => [
+    { id: "c1", title: "C1", status: "TODO" },
+    { id: "c2", title: "C2", status: "TODO", dependsOn: ["c1"] },
+    { id: "c3", title: "C3", status: "TODO", dependsOn: ["c2"] },
+  ];
+
+  it("promoteReady flips independent roots TODO → DOING", () => {
+    const start = chain();
+    const promoted = promoteReady(start);
+    expect(promoted.map((n) => n.status)).toEqual(["DOING", "TODO", "TODO"]);
+  });
+
+  it("advanceChildren finishes one DOING then cascades the next", () => {
+    let s = promoteReady(chain());
+    s = advanceChildren(s);
+    // c1 DONE, c2 promoted to DOING.
+    expect(s.map((n) => n.status)).toEqual(["DONE", "DOING", "TODO"]);
+    s = advanceChildren(s);
+    expect(s.map((n) => n.status)).toEqual(["DONE", "DONE", "DOING"]);
+    s = advanceChildren(s);
+    expect(s.map((n) => n.status)).toEqual(["DONE", "DONE", "DONE"]);
+  });
+
+  it("advanceChildren is a no-op when everything is DONE", () => {
+    const done: N[] = [
+      { id: "x1", title: "X1", status: "DONE" },
+      { id: "x2", title: "X2", status: "DONE" },
+    ];
+    expect(advanceChildren(done)).toEqual(done);
+  });
+
+  it("broom: alphabetically lowest DOING finishes first; ready promotes", () => {
+    const broom: N[] = [
+      { id: "b1", title: "B1", status: "DOING" },
+      { id: "b2", title: "B2", status: "DOING" },
+      { id: "b3", title: "B3", status: "DOING" },
+      { id: "b4", title: "B4", status: "TODO", dependsOn: ["b1", "b2"] },
+    ];
+    const s = advanceChildren(broom);
+    // b1 finishes; b4 still waits on b2.
+    expect(s.find((n) => n.id === "b1")?.status).toBe("DONE");
+    expect(s.find((n) => n.id === "b2")?.status).toBe("DOING");
+    expect(s.find((n) => n.id === "b4")?.status).toBe("TODO");
+    const s2 = advanceChildren(s);
+    // b2 finishes; b4 now ready → DOING.
+    expect(s2.find((n) => n.id === "b2")?.status).toBe("DONE");
+    expect(s2.find((n) => n.id === "b4")?.status).toBe("DOING");
+  });
+
+  it("isAllDone returns true only when every leaf is DONE", () => {
+    const mixed: N[] = [
+      { id: "a", title: "A", status: "DONE" },
+      { id: "b", title: "B", status: "DOING" },
+    ];
+    expect(isAllDone(mixed)).toBe(false);
+    expect(isAllDone(mixed.map((n) => ({ ...n, status: "DONE" })))).toBe(true);
+  });
+
+  it("ignores parent nodes when checking all-DONE", () => {
+    const withParent: N[] = [
+      { id: "p", title: "P", status: "TODO" },
+      { id: "c1", title: "C1", status: "DONE", parentId: "p" },
+      { id: "c2", title: "C2", status: "DONE", parentId: "p" },
+    ];
+    expect(isAllDone(withParent)).toBe(true);
   });
 });

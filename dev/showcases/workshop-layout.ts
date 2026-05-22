@@ -187,3 +187,69 @@ export function computeChartHeight(
   if (hasVisibleChildren) total += cfg.edgeGutterTotal ?? 0;
   return total;
 }
+
+/**
+ * Advance a status-flow state by one tick. Finishes one currently-DOING
+ * leaf (chosen alphabetically for stable ordering) and promotes any TODO
+ * leaves whose `dependsOn` set is now satisfied. Parent nodes (referenced
+ * by another node's `parentId`) are left untouched — their effective
+ * status is derived from their children at render time.
+ *
+ * Returns a NEW array — does not mutate `prev`.
+ *
+ * If every leaf is already DONE, returns the input unchanged. (Callers
+ * that want a cycle should detect this externally and re-init themselves;
+ * historically this helper called `init()` here, but stop-when-done is
+ * the more common UX so we now leave that decision to the caller.)
+ */
+export function advanceChildren(prev: StatusFlowNode[]): StatusFlowNode[] {
+  const parentIds = new Set<string>();
+  for (const n of prev) if (n.parentId) parentIds.add(n.parentId);
+  const isLeaf = (n: StatusFlowNode) => !parentIds.has(n.id);
+
+  if (prev.filter(isLeaf).every((n) => n.status === "DONE")) {
+    return prev;
+  }
+
+  const next = prev.map((n) => ({ ...n }));
+  const doing = next.filter((n) => isLeaf(n) && n.status === "DOING");
+  doing.sort((a, b) => a.id.localeCompare(b.id));
+  if (doing[0]) doing[0].status = "DONE";
+  for (const n of next) {
+    if (!isLeaf(n) || n.status !== "TODO") continue;
+    const ready = (n.dependsOn ?? []).every((d) =>
+      next.find((x) => x.id === d)?.status === "DONE",
+    );
+    if (ready) n.status = "DOING";
+  }
+  return next;
+}
+
+/**
+ * Promote every TODO leaf whose `dependsOn` set is satisfied to DOING.
+ * Used to derive the canonical "initial state" from an all-TODO graph:
+ * any independent root (no deps) becomes DOING immediately.
+ */
+export function promoteReady(prev: StatusFlowNode[]): StatusFlowNode[] {
+  const parentIds = new Set<string>();
+  for (const n of prev) if (n.parentId) parentIds.add(n.parentId);
+  const isLeaf = (n: StatusFlowNode) => !parentIds.has(n.id);
+  const next = prev.map((n) => ({ ...n }));
+  for (const n of next) {
+    if (!isLeaf(n) || n.status !== "TODO") continue;
+    const ready = (n.dependsOn ?? []).every((d) =>
+      next.find((x) => x.id === d)?.status === "DONE",
+    );
+    if (ready) n.status = "DOING";
+  }
+  return next;
+}
+
+/** Returns true when every leaf node has reached the DONE status. */
+export function isAllDone(state: StatusFlowNode[]): boolean {
+  const parentIds = new Set<string>();
+  for (const n of state) if (n.parentId) parentIds.add(n.parentId);
+  return state
+    .filter((n) => !parentIds.has(n.id))
+    .every((n) => n.status === "DONE");
+}
