@@ -1,5 +1,5 @@
 import { Component, createSignal } from "solid-js";
-import { VesselCard } from "../../src/components/Card";
+import { RemovableItemCard } from "../../src/components/Card";
 import { StatusBadge } from "../../src/components/Badge";
 import { Stack } from "../../src/components/Layout";
 import { TextBody, MutedBody } from "../../src/components/Text";
@@ -8,24 +8,24 @@ interface Depth2Props {
   onNavigate?: (id: string) => void;
 }
 
-export const VesselCardShowcase: Component<Depth2Props> = (props) => {
+export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
   const [removed, setRemoved] = createSignal<string[]>([]);
   const isRemoved = (id: string) => removed().includes(id);
   const remove = (id: string) => setRemoved((prev) => [...prev, id]);
 
   return (
     <div class="component-section">
-      <h2>VesselCard — Depth 2 (zero CSS)</h2>
+      <h2>RemovableItemCard — Depth 2 (zero CSS)</h2>
       <p class="text-meta">Composes Surface + Layout + Text (curried) + Button (Atomic). Interactive card with title, details, remove action.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Default</h3>
           <Stack gap="sm" style={{ "max-width": "280px" }}>
-            <VesselCard
-              title="PACIFIC VOYAGER"
+            <RemovableItemCard
+              title="ITEM ALPHA"
               details={
                 <>
-                  <MutedBody>A-1042</MutedBody>
+                  <MutedBody>ID-1042</MutedBody>
                   <MutedBody>2026-02-13</MutedBody>
                 </>
               }
@@ -34,13 +34,13 @@ export const VesselCardShowcase: Component<Depth2Props> = (props) => {
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Active + Remove</h3>
           <Stack gap="sm" style={{ "max-width": "280px" }}>
-            <VesselCard
-              title="ATLANTIC CARRIER"
+            <RemovableItemCard
+              title="ITEM BRAVO"
               active
               onRemove={() => alert("Removed!")}
               details={
                 <>
-                  <MutedBody>A-2087</MutedBody>
+                  <MutedBody>ID-2087</MutedBody>
                   <MutedBody>2026-02-14</MutedBody>
                 </>
               }
@@ -50,41 +50,41 @@ export const VesselCardShowcase: Component<Depth2Props> = (props) => {
           <h3 style={{ "margin-top": "24px" }}>Composed — Sidebar List</h3>
           <Stack gap="sm" style={{ "max-width": "280px" }}>
             {!isRemoved("v1") && (
-              <VesselCard
-                title="NORTHERN SPIRIT"
+              <RemovableItemCard
+                title="ITEM CHARLIE"
                 active
                 onRemove={() => remove("v1")}
                 details={
                   <>
-                    <MutedBody>A-3001</MutedBody>
+                    <MutedBody>ID-3001</MutedBody>
                     <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
                   </>
                 }
               >
                 <TextBody>3 metrics passing</TextBody>
-              </VesselCard>
+              </RemovableItemCard>
             )}
             {!isRemoved("v2") && (
-              <VesselCard
-                title="SOUTHERN CROSS"
+              <RemovableItemCard
+                title="ITEM DELTA"
                 onRemove={() => remove("v2")}
                 details={
                   <>
-                    <MutedBody>A-3002</MutedBody>
+                    <MutedBody>ID-3002</MutedBody>
                     <StatusBadge variant="violation">VIOLATION</StatusBadge>
                   </>
                 }
               >
                 <TextBody>2 metrics failing</TextBody>
-              </VesselCard>
+              </RemovableItemCard>
             )}
             {!isRemoved("v3") && (
-              <VesselCard
-                title="EASTERN WIND"
+              <RemovableItemCard
+                title="ITEM ECHO"
                 onRemove={() => remove("v3")}
                 details={
                   <>
-                    <MutedBody>A-3003</MutedBody>
+                    <MutedBody>ID-3003</MutedBody>
                     <StatusBadge variant="pending">PENDING</StatusBadge>
                   </>
                 }
@@ -105,7 +105,7 @@ export const VesselCardShowcase: Component<Depth2Props> = (props) => {
             <div class="depth2-atom-group__label">Text</div>
             <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
               <div class="depth2-atom__label">FlexLabel</div>
-              <div class="text-meta">vessel title, 600 weight, flex: 1</div>
+              <div class="text-meta">card title, 600 weight, flex: 1</div>
             </div>
             <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
               <div class="depth2-atom__label">MutedBody</div>

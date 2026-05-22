@@ -1,2 +1,2 @@
-export { VesselCard } from "./VesselCard";
-export type { VesselCardProps } from "./VesselCard";
+export { RemovableItemCard } from "./RemovableItemCard";
+export type { RemovableItemCardProps } from "./RemovableItemCard";

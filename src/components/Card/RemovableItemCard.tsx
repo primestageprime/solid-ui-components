@@ -1,5 +1,5 @@
 // ============================================
-// VesselCard — Depth 2 (zero CSS)
+// RemovableItemCard — Depth 2 (zero CSS)
 // Composes Surface (curried: InteractiveCard) +
 // Layout (curried: SpreadRow) + Text (curried:
 // FlexLabel) + Button (Atomic/Depth 1).
@@ -10,14 +10,14 @@ import { SpreadRow } from "../Layout/variants";
 import { FlexLabel } from "../Text/variants";
 import { Button } from "../Button/Button";
 
-export interface VesselCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface RemovableItemCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
   title: string;
   active?: boolean;
   onRemove?: () => void;
   details?: JSX.Element;
 }
 
-export const VesselCard: Component<VesselCardProps> = (props) => {
+export const RemovableItemCard: Component<RemovableItemCardProps> = (props) => {
   const [local, others] = splitProps(props, [
     "title",
     "active",

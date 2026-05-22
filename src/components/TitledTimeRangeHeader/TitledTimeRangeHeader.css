@@ -1,5 +1,5 @@
 /* ============================================
-   VesselCallHeader — Atomic Primitive (Depth 1)
+   TitledTimeRangeHeader — Atomic Primitive (Depth 1)
    Title + optional badge + ISO date range + duration + optional asset
    chip + optional action slot, optionally wrapped in a link. All
    typography + chrome lives here; the pure date-range formatter comes
@@ -7,7 +7,7 @@
    library-component imports.
    ============================================ */
 
-.sui-vessel-call-header {
+.sui-titled-time-range-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,7 +18,7 @@
   border-radius: 8px;
 }
 
-.sui-vessel-call-header__main {
+.sui-titled-time-range-header__main {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -26,7 +26,7 @@
   flex-wrap: wrap;
 }
 
-.sui-vessel-call-header__title {
+.sui-titled-time-range-header__title {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
@@ -34,32 +34,32 @@
   white-space: nowrap;
 }
 
-.sui-vessel-call-header__badge {
+.sui-titled-time-range-header__badge {
   display: inline-flex;
   align-items: center;
 }
 
 /* Matches the typography the old composed NowrapBody (`.text--body`)
    used: 0.875rem with --text-secondary color. */
-.sui-vessel-call-header__timestamp {
+.sui-titled-time-range-header__timestamp {
   font-family: monospace;
   font-size: 0.875rem;
   color: var(--text-secondary, #8899a6);
   white-space: nowrap;
 }
 
-.sui-vessel-call-header__separator {
+.sui-titled-time-range-header__separator {
   color: var(--text-muted, #657786);
 }
 
-.sui-vessel-call-header__duration {
+.sui-titled-time-range-header__duration {
   color: var(--hud-accent, #00d4ff);
   font-size: 0.875rem;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.sui-vessel-call-header__asset {
+.sui-titled-time-range-header__asset {
   padding: 2px 8px;
   background: rgba(0, 212, 255, 0.1);
   border: 1px solid rgba(0, 212, 255, 0.2);
@@ -70,20 +70,20 @@
   white-space: nowrap;
 }
 
-.sui-vessel-call-header__action {
+.sui-titled-time-range-header__action {
   flex-shrink: 0;
 }
 
-.sui-vessel-call-header__link {
+.sui-titled-time-range-header__link {
   text-decoration: none;
   color: inherit;
   transition: opacity 0.15s ease;
 }
 
-.sui-vessel-call-header__link:hover {
+.sui-titled-time-range-header__link:hover {
   opacity: 0.8;
 }
 
-.sui-vessel-call-header__link:hover .sui-vessel-call-header__title {
+.sui-titled-time-range-header__link:hover .sui-titled-time-range-header__title {
   text-decoration: underline;
 }

@@ -14,7 +14,5 @@ export { StatsTable } from "./StatsTable";
 export type { StatsTableProps, StatsColumn } from "./StatsTable";
 export { createFormulaResult, createGivens, createFormula, createFormulaPanel } from "./FormulaDecomposition";
 export type { VarDef, FormulaConfig } from "./FormulaDecomposition";
-export { EngineDataSection } from "./EngineDataSection/EngineDataSection";
-export type { EngineDataSectionProps } from "./EngineDataSection/EngineDataSection";
 export { NumberWithUnits } from "./NumberWithUnits";
 export type { NumberWithUnitsProps } from "./NumberWithUnits";

@@ -2,8 +2,8 @@
 // DateTimeRange — Composite (Depth 2).
 // Owns zero CSS. Composes the `NowrapBody` Text Curried Variant; the
 // pure formatter lives in `formatDateTimeRange.ts` so other Primitives
-// (e.g. `VesselCallHeader`) can reuse the rule without composing this
-// Composite.
+// (e.g. `TitledTimeRangeHeader`) can reuse the rule without composing
+// this Composite.
 // ============================================
 import { Component, JSX, splitProps } from "solid-js";
 import { NowrapBody } from "../Text";

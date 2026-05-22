@@ -4,7 +4,7 @@ import { DTable, DT, DD } from "../../src/components/DataList";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
 import { Button } from "../../src/components/Button";
 import { NavLink } from "../../src/components/Navigation";
-import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel, EngineDataSection } from "../../src/components/DataDisplay";
+import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel } from "../../src/components/DataDisplay";
 import { EmptyState, AlertBox } from "../../src/components/Feedback";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
@@ -39,7 +39,7 @@ import { Tabs } from "../../src/components/Tabs";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
 import { List, ListItem } from "../../src/components/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
-import { VesselCard } from "../../src/components/Card";
+import { RemovableItemCard } from "../../src/components/Card";
 
 // ── HUD ──────────────────────────────────────────────────────────────
 
@@ -704,55 +704,6 @@ const DataDisplayShowcase: Component = () => {
         </ResultPanel>
       </div>
 
-      <div class="example-group">
-        <h3>EngineDataSection — With Warning</h3>
-        <EngineDataSection
-          showWarning={true}
-          defaultKw={300}
-          auxEngineHref="#"
-        >
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style={{ padding: "8px" }}>90%</td><td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td></tr>
-              <tr><td style={{ padding: "8px" }}>95%</td><td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td></tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
-      </div>
-
-      <div class="example-group">
-        <h3>EngineDataSection — Without Warning</h3>
-        <EngineDataSection>
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Aux (450 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={{ padding: "8px" }}>90%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff", "font-weight": "700", "text-shadow": "0 0 8px currentColor" }}>2.274</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "8px" }}>95%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>1.760</td>
-              </tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
-      </div>
-
       <FormulaPanelDemo />
     </div>
   );
@@ -1359,12 +1310,12 @@ const SelectorShowcase: Component = () => {
 // ── Card ─────────────────────────────────────────────────────────────
 
 const CardShowcase: Component = () => {
-  const [activeId, setActiveId] = createSignal("vessel-2");
+  const [activeId, setActiveId] = createSignal("item-2");
 
-  const vessels = [
-    { id: "vessel-1", name: "Pacific Voyager", asset: "12-345", date: "2026-01-15" },
-    { id: "vessel-2", name: "Atlantic Runner", asset: "67-890", date: "2026-01-14" },
-    { id: "vessel-3", name: "Northern Star", asset: "11-222", date: "2026-01-13" },
+  const items = [
+    { id: "item-1", name: "Item Alpha", asset: "12-345", date: "2026-01-15" },
+    { id: "item-2", name: "Item Bravo", asset: "67-890", date: "2026-01-14" },
+    { id: "item-3", name: "Item Charlie", asset: "11-222", date: "2026-01-13" },
   ];
 
   return (
@@ -1372,15 +1323,15 @@ const CardShowcase: Component = () => {
       <h2>Card Components</h2>
 
       <div class="example-group">
-        <h3>VesselCard — States</h3>
+        <h3>RemovableItemCard — States</h3>
         <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Click a card to set it active. Cards support title, details slot, remove button, and children.
         </p>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <For each={vessels}>
+          <For each={items}>
             {(v) => (
               <div onClick={() => setActiveId(v.id)}>
-                <VesselCard
+                <RemovableItemCard
                   title={v.name}
                   active={activeId() === v.id}
                   onRemove={() => setActiveId("")}
@@ -1398,18 +1349,18 @@ const CardShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>VesselCard — Minimal</h3>
+        <h3>RemovableItemCard — Minimal</h3>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <VesselCard title="Title Only" />
-          <VesselCard title="With Remove" onRemove={() => {}} />
-          <VesselCard
+          <RemovableItemCard title="Title Only" />
+          <RemovableItemCard title="With Remove" onRemove={() => {}} />
+          <RemovableItemCard
             title="With Children"
             details={<span style={{ "font-size": "11px", color: "var(--jtf-text-muted)" }}>Detail text</span>}
           >
             <div style={{ "font-size": "11px", color: "var(--jtf-text-muted)", "border-top": "1px solid rgba(0,168,204,0.2)", "padding-top": "8px" }}>
               Footer content (heatmap, sparkline, etc.)
             </div>
-          </VesselCard>
+          </RemovableItemCard>
         </div>
       </div>
     </div>
