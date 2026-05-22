@@ -49,9 +49,9 @@ const periodColumns: StatsColumn<PeriodRow>[] = [
 ];
 
 const periodRows: PeriodRow[] = [
-  { period: "Before Control", count: 142, avgNox: 18.34, noxColor: "#ff8800", avgNO: 12.81, avgNO2: 5.53 },
-  { period: "During Control", count: 89, avgNox: 3.21, noxColor: "#00ff88", avgNO: 2.14, avgNO2: 1.07 },
-  { period: "After Control", count: 56, avgNox: 16.92, noxColor: "#ff8800", avgNO: 11.44, avgNO2: 5.48 },
+  { period: "Before Control", count: 142, avgNox: 18.34, noxColor: "var(--sui-warning)", avgNO: 12.81, avgNO2: 5.53 },
+  { period: "During Control", count: 89, avgNox: 3.21, noxColor: "var(--sui-success)", avgNO: 2.14, avgNO2: 1.07 },
+  { period: "After Control", count: 56, avgNox: 16.92, noxColor: "var(--sui-warning)", avgNO: 11.44, avgNO2: 5.48 },
 ];
 
 const statusColumns: StatsColumn<StatusRow>[] = [

@@ -32,15 +32,15 @@
 /* Variant colors */
 .sui-status-light__dot--success {
   background: var(--sui-success);
-  box-shadow: 0 0 0 0 rgba(42, 170, 102, 0.5);
+  box-shadow: 0 0 0 0 rgba(var(--sui-success-rgb), 0.5);
 }
 .sui-status-light__dot--warning {
   background: var(--sui-warning);
-  box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.5);
+  box-shadow: 0 0 0 0 rgba(var(--sui-warning-rgb), 0.5);
 }
 .sui-status-light__dot--danger {
   background: var(--sui-danger);
-  box-shadow: 0 0 0 0 rgba(255, 0, 64, 0.5);
+  box-shadow: 0 0 0 0 rgba(var(--sui-danger-rgb), 0.5);
 }
 .sui-status-light__dot--info {
   background: var(--sui-accent);

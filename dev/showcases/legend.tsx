@@ -6,10 +6,10 @@ import { TextSublabel, MutedBody } from "../../src/components/Text";
 // Chart series — the canonical "this color means this line" case. Generic
 // across any chart library that hands you a deterministic palette.
 const CHART_SERIES: LegendItem[] = [
-  { color: "#3b82f6", label: "Revenue" },
+  { color: "var(--sui-accent)", label: "Revenue" },
   { color: "#10b981", label: "Profit" },
   { color: "#f59e0b", label: "Costs" },
-  { color: "#ef4444", label: "Tax" },
+  { color: "var(--sui-danger)", label: "Tax" },
 ];
 
 // Generic category encoding — fleet / portfolio / product line groupings.
@@ -30,12 +30,12 @@ const ALARM_SEVERITY_EXAMPLE: LegendItem[] = [
 ];
 
 const MANY_ITEMS: LegendItem[] = [
-  { color: "#3b82f6", label: "Engine" },
+  { color: "var(--sui-accent)", label: "Engine" },
   { color: "#8b5cf6", label: "Pumps" },
   { color: "#ec4899", label: "Cooling" },
   { color: "#f59e0b", label: "Electrical" },
   { color: "#10b981", label: "Hydraulics" },
-  { color: "#ef4444", label: "Auxiliary" },
+  { color: "var(--sui-danger)", label: "Auxiliary" },
   { color: "#06b6d4", label: "Navigation" },
   { color: "#a855f7", label: "Communications" },
 ];

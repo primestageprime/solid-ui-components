@@ -168,7 +168,7 @@
 .dts-canvas {
   margin: 16px 0;
   padding: 16px;
-  background: var(--sui-bg-secondary, #0e1620);
+  background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
   border-radius: 8px;
 }
@@ -179,27 +179,29 @@
   display: block;
 }
 
-/* Stages */
+/* Stages — theme-aware: nodes paint as elevated surfaces on the canvas
+   (bg-secondary), so they read as light cards on Bronze and dark cards on
+   HUD without any extra work. */
 .dts-stage-rect {
-  fill: #1a2433;
-  stroke: #2a3949;
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-border);
   stroke-width: 1;
   transition: fill 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
 }
 .dts-stage-group--visited .dts-stage-rect {
-  fill: #182032;
-  stroke: #3a4a5e;
+  fill: var(--sui-bg-tertiary);
+  stroke: var(--sui-border);
 }
 .dts-stage-group--from .dts-stage-rect {
-  fill: rgba(245, 165, 36, 0.18);
-  stroke: rgba(245, 165, 36, 0.6);
+  fill: rgba(var(--sui-warning-rgb), 0.18);
+  stroke: rgba(var(--sui-warning-rgb), 0.6);
   animation: dts-pulse-from 0.35s ease-out;
 }
 .dts-stage-group--current .dts-stage-rect {
-  fill: rgba(0, 168, 204, 0.22);
-  stroke: #00a8cc;
+  fill: var(--sui-accent);
+  stroke: var(--sui-accent);
   stroke-width: 2;
-  filter: drop-shadow(0 0 10px rgba(0, 168, 204, 0.55));
+  filter: drop-shadow(0 0 10px rgba(var(--sui-accent-rgb), 0.55));
   animation: dts-pulse-current 0.6s ease-out;
 }
 
@@ -208,9 +210,9 @@
   100% { stroke-width: 1; }
 }
 @keyframes dts-pulse-current {
-  0%   { transform: scale(1.0);  filter: drop-shadow(0 0 0 rgba(0, 168, 204, 0)); }
-  40%  { transform: scale(1.06); filter: drop-shadow(0 0 16px rgba(0, 168, 204, 0.85)); }
-  100% { transform: scale(1.0);  filter: drop-shadow(0 0 10px rgba(0, 168, 204, 0.55)); }
+  0%   { transform: scale(1.0);  filter: drop-shadow(0 0 0 rgba(var(--sui-accent-rgb), 0)); }
+  40%  { transform: scale(1.06); filter: drop-shadow(0 0 16px rgba(var(--sui-accent-rgb), 0.85)); }
+  100% { transform: scale(1.0);  filter: drop-shadow(0 0 10px rgba(var(--sui-accent-rgb), 0.55)); }
 }
 .dts-stage-group--current .dts-stage-rect {
   transform-origin: 55px 25px;  /* center of node (NODE_W/2, NODE_H/2) */
@@ -218,28 +220,31 @@
 }
 
 .dts-stage-label {
-  fill: #e6ecf5;
+  fill: var(--sui-text-primary);
   font-weight: 600;
   font-size: 13px;
   font-family: var(--sui-font-family, system-ui);
   pointer-events: none;
 }
 .dts-stage-owner {
-  fill: #8a9bb0;
+  fill: var(--sui-text-muted);
   font-size: 10px;
   font-family: var(--sui-font-family, system-ui);
   pointer-events: none;
 }
-.dts-stage-group--current .dts-stage-label { fill: #ffffff; }
+/* Current stage paints solid accent — label flips to the elevated surface
+   color (white on Bronze, light on HUD) for legible contrast on-color. */
+.dts-stage-group--current .dts-stage-label { fill: var(--sui-bg-elevated); }
+.dts-stage-group--current .dts-stage-owner { fill: var(--sui-bg-elevated); opacity: 0.85; }
 
 /* Rework badge */
 .dts-stage-rework {
-  fill: #f5a524;
-  stroke: #0e1620;
+  fill: var(--sui-warning);
+  stroke: var(--sui-bg-secondary);
   stroke-width: 1.5;
 }
 .dts-stage-rework-text {
-  fill: #0e1620;
+  fill: var(--sui-bg-elevated);
   font-size: 10px;
   font-weight: 700;
   font-family: var(--sui-font-family, system-ui);
@@ -252,38 +257,38 @@
   transition: stroke 0.2s ease, stroke-width 0.2s ease;
 }
 .dts-edge--forward {
-  stroke: #4a5565;
+  stroke: var(--sui-text-secondary);
 }
 .dts-edge--backward {
-  stroke: #f5a524;
+  stroke: var(--sui-warning);
   stroke-dasharray: 5 4;
   opacity: 0.55;
 }
 .dts-edge--active.dts-edge--forward {
-  stroke: #00a8cc;
+  stroke: var(--sui-accent);
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 5px rgba(0, 168, 204, 0.7));
+  filter: drop-shadow(0 0 5px rgba(var(--sui-accent-rgb), 0.7));
 }
 .dts-edge--active.dts-edge--backward {
-  stroke: #f5a524;
+  stroke: var(--sui-warning);
   stroke-width: 2.5;
   opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(245, 165, 36, 0.7));
+  filter: drop-shadow(0 0 5px rgba(var(--sui-warning-rgb), 0.7));
 }
 
 /* Puck */
 .dts-puck-core {
-  fill: #ffffff;
+  fill: var(--sui-bg-elevated);
   pointer-events: none;
 }
 .dts-puck-glow {
-  fill: rgba(0, 168, 204, 0.4);
+  fill: rgba(var(--sui-accent-rgb), 0.4);
   pointer-events: none;
 }
-.dts-puck--forward .dts-puck-glow { fill: rgba(0, 168, 204, 0.45); }
-.dts-puck--backward .dts-puck-glow { fill: rgba(245, 165, 36, 0.45); }
-.dts-puck--forward .dts-puck-core { fill: #00a8cc; stroke: #ffffff; stroke-width: 1.5; }
-.dts-puck--backward .dts-puck-core { fill: #f5a524; stroke: #ffffff; stroke-width: 1.5; }
+.dts-puck--forward .dts-puck-glow { fill: rgba(var(--sui-accent-rgb), 0.45); }
+.dts-puck--backward .dts-puck-glow { fill: rgba(var(--sui-warning-rgb), 0.45); }
+.dts-puck--forward .dts-puck-core { fill: var(--sui-accent); stroke: var(--sui-bg-elevated); stroke-width: 1.5; }
+.dts-puck--backward .dts-puck-core { fill: var(--sui-warning); stroke: var(--sui-bg-elevated); stroke-width: 1.5; }
 
 /* Controls */
 .dts-controls {
@@ -354,20 +359,20 @@
   cursor: not-allowed;
 }
 .dts-btn--forward {
-  border-color: rgba(0, 168, 204, 0.5);
-  color: #b3e6f4;
+  border-color: rgba(var(--sui-accent-rgb), 0.5);
+  color: var(--sui-accent);
 }
 .dts-btn--forward:hover:not(:disabled) {
-  background: rgba(0, 168, 204, 0.15);
-  border-color: #00a8cc;
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  border-color: var(--sui-accent);
 }
 .dts-btn--backward {
-  border-color: rgba(245, 165, 36, 0.5);
-  color: #f5d390;
+  border-color: rgba(var(--sui-warning-rgb), 0.5);
+  color: var(--sui-warning);
 }
 .dts-btn--backward:hover:not(:disabled) {
-  background: rgba(245, 165, 36, 0.15);
-  border-color: #f5a524;
+  background: rgba(var(--sui-warning-rgb), 0.15);
+  border-color: var(--sui-warning);
 }
 .dts-btn--ghost {
   margin-left: auto;
@@ -422,15 +427,15 @@
   border-radius: 3px;
 }
 .dts-log-entry--forward {
-  background: rgba(0, 168, 204, 0.06);
+  background: rgba(var(--sui-accent-rgb), 0.06);
 }
 .dts-log-entry--backward {
-  background: rgba(245, 165, 36, 0.06);
+  background: rgba(var(--sui-warning-rgb), 0.06);
 }
 .dts-log-time { color: var(--sui-text-muted); }
 .dts-log-arrow { font-weight: 700; }
-.dts-log-entry--forward .dts-log-arrow { color: #00a8cc; }
-.dts-log-entry--backward .dts-log-arrow { color: #f5a524; }
+.dts-log-entry--forward .dts-log-arrow { color: var(--sui-accent); }
+.dts-log-entry--backward .dts-log-arrow { color: var(--sui-warning); }
 .dts-log-from, .dts-log-to { color: var(--sui-text-primary); }
 .dts-log-sep { color: var(--sui-text-muted); text-align: center; }
 .dts-log-label-text { color: var(--sui-text-muted); font-style: italic; text-align: right; }
@@ -482,9 +487,9 @@
 }
 .dtb-mode-btn--active,
 .dtb-qty-btn--active {
-  background: var(--sui-accent, #00a8cc);
-  border-color: var(--sui-accent, #00a8cc);
-  color: #fff;
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+  color: var(--sui-bg-elevated);
 }
 .dtb-autoplay-hint {
   margin-left: 4px;
@@ -502,7 +507,7 @@
 .dtb-canvas {
   margin: 0 0 16px;
   padding: 16px;
-  background: var(--sui-bg-secondary, #0e1620);
+  background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
   border-radius: 8px;
 }
@@ -512,7 +517,8 @@
   display: block;
 }
 
-/* Card — stacked: label / owner / count, shrink-wrapped */
+/* Card — stacked: label / owner / count, shrink-wrapped. Theme-aware so
+   Bronze renders bone cards on parchment, HUD renders dark cards on void. */
 .dtb-card {
   display: flex;
   flex-direction: column;
@@ -522,8 +528,8 @@
   width: 100%;
   height: 100%;
   padding: 4px 6px;
-  background: #1a2433;
-  border: 1px solid #2a3949;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
   border-radius: 8px;
   box-sizing: border-box;
   font-family: var(--sui-font-family, system-ui);
@@ -560,21 +566,21 @@
   transition: stroke 0.15s ease;
 }
 .dtb-edge--forward {
-  stroke: #4a5565;
+  stroke: var(--sui-text-secondary);
 }
 .dtb-edge--backward {
-  stroke: #f5a524;
+  stroke: var(--sui-warning);
   stroke-dasharray: 6 4;
   opacity: 0.55;
 }
 .dtb-edge--active.dtb-edge--forward {
-  stroke: #00a8cc;
-  filter: drop-shadow(0 0 6px rgba(0, 168, 204, 0.65));
+  stroke: var(--sui-accent);
+  filter: drop-shadow(0 0 6px rgba(var(--sui-accent-rgb), 0.65));
 }
 .dtb-edge--active.dtb-edge--backward {
-  stroke: #f5a524;
+  stroke: var(--sui-warning);
   opacity: 1;
-  filter: drop-shadow(0 0 6px rgba(245, 165, 36, 0.65));
+  filter: drop-shadow(0 0 6px rgba(var(--sui-warning-rgb), 0.65));
 }
 
 /* Transition buttons */
@@ -610,35 +616,35 @@
   cursor: not-allowed;
 }
 .dtb-btn--forward {
-  border-color: rgba(0, 168, 204, 0.4);
+  border-color: rgba(var(--sui-accent-rgb), 0.4);
 }
 .dtb-btn--forward:hover:not(:disabled) {
-  background: rgba(0, 168, 204, 0.13);
-  border-color: #00a8cc;
+  background: rgba(var(--sui-accent-rgb), 0.13);
+  border-color: var(--sui-accent);
 }
 .dtb-btn--backward {
-  border-color: rgba(245, 165, 36, 0.4);
+  border-color: rgba(var(--sui-warning-rgb), 0.4);
 }
 .dtb-btn--backward:hover:not(:disabled) {
-  background: rgba(245, 165, 36, 0.13);
-  border-color: #f5a524;
+  background: rgba(var(--sui-warning-rgb), 0.13);
+  border-color: var(--sui-warning);
 }
 .dtb-btn-from, .dtb-btn-to { font-weight: 600; color: var(--sui-text-primary); }
 .dtb-btn-arrow { font-size: 13px; opacity: 0.7; }
-.dtb-btn--forward .dtb-btn-arrow { color: #00a8cc; }
-.dtb-btn--backward .dtb-btn-arrow { color: #f5a524; }
+.dtb-btn--forward .dtb-btn-arrow { color: var(--sui-accent); }
+.dtb-btn--backward .dtb-btn-arrow { color: var(--sui-warning); }
 .dtb-btn-label { color: var(--sui-text-muted); font-style: italic; text-align: left; padding-left: 6px; }
 .dtb-btn-qty {
   font-feature-settings: "tnum";
   font-weight: 700;
   color: var(--sui-text-primary);
-  background: rgba(0, 168, 204, 0.18);
+  background: rgba(var(--sui-accent-rgb), 0.18);
   padding: 1px 6px;
   border-radius: 999px;
   font-size: 10px;
 }
 .dtb-btn--backward .dtb-btn-qty {
-  background: rgba(245, 165, 36, 0.18);
+  background: rgba(var(--sui-warning-rgb), 0.18);
 }
 
 .dtb-btn--ghost {
@@ -692,13 +698,13 @@
   font-family: ui-monospace, monospace;
   border-radius: 3px;
 }
-.dtb-log-entry--forward { background: rgba(0, 168, 204, 0.06); }
-.dtb-log-entry--backward { background: rgba(245, 165, 36, 0.06); }
+.dtb-log-entry--forward { background: rgba(var(--sui-accent-rgb), 0.06); }
+.dtb-log-entry--backward { background: rgba(var(--sui-warning-rgb), 0.06); }
 .dtb-log-time { color: var(--sui-text-muted); }
 .dtb-log-size { font-weight: 700; color: var(--sui-text-primary); font-feature-settings: "tnum"; }
 .dtb-log-arrow { font-weight: 700; }
-.dtb-log-entry--forward .dtb-log-arrow { color: #00a8cc; }
-.dtb-log-entry--backward .dtb-log-arrow { color: #f5a524; }
+.dtb-log-entry--forward .dtb-log-arrow { color: var(--sui-accent); }
+.dtb-log-entry--backward .dtb-log-arrow { color: var(--sui-warning); }
 .dtb-log-from, .dtb-log-to { color: var(--sui-text-primary); }
 .dtb-log-sep { color: var(--sui-text-muted); text-align: center; }
 .dtb-log-label-text { color: var(--sui-text-muted); font-style: italic; text-align: right; }

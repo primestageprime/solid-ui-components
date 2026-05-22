@@ -14,7 +14,7 @@ export const ResultPanelShowcase: Component = () => {
             sublabel="Limit: 2.8 g/kWh"
             value="1.42"
             units="g/kWh"
-            valueColor="#00ff88"
+            valueColor="var(--sui-success)"
           >
             <div style={{ padding: "12px", border: "1px solid var(--sui-border)", "border-radius": "4px", color: "var(--sui-text-secondary)", "font-size": "13px" }}>
               [Formula + variables table slot]

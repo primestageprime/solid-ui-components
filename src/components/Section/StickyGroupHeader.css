@@ -1,7 +1,7 @@
 .sui-sticky-group-header {
   position: sticky;
   z-index: 1;
-  background: var(--sui-bg-deep, var(--jtf-bg-primary, #1a1a2e));
+  background: var(--sui-bg-deep, var(--sui-bg-primary, #1a1a2e));
   border-bottom: 1px solid var(--sui-border);
   padding: 8px 12px;
   display: flex;

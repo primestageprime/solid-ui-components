@@ -28,7 +28,7 @@
 .hud-table__table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
 }
 
 /* Header */
@@ -194,7 +194,7 @@
 .hud-table-quickfilter__input {
   width: 20ch;
   padding: 6px 12px;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
   font-size: 13px;
   color: var(--sui-text-primary);
   background-color: var(--sui-bg-primary);
@@ -399,7 +399,7 @@
   margin-left: auto;
   padding: 4px 12px;
   font-size: 11px;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
   background: none;

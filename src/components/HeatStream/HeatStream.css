@@ -37,12 +37,12 @@
 
 .jtf-heatstream__legend-color--unknown {
   background-color: transparent;
-  border: 1px solid var(--jtf-text-muted);
+  border: 1px solid var(--sui-text-muted);
 }
 
 .jtf-heatstream__legend-label {
   font-size: 12px;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 /* Header row (item name labels across top) */
@@ -58,7 +58,7 @@
   min-width: 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -72,7 +72,7 @@
   padding-right: 6px;
   font-size: 10px;
   line-height: 1;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -129,7 +129,7 @@
 }
 
 .jtf-heatstream__cell--unknown {
-  background-color: #333;
+  background-color: var(--sui-bg-tertiary);
   outline: 1px solid rgba(var(--sui-accent-rgb), 0.25);
   outline-offset: -1px;
 }
@@ -178,7 +178,7 @@
 .jtf-heatstream__preview-heading {
   font-size: 10px;
   font-weight: 600;
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
   margin-bottom: 4px;
 }
 
@@ -200,7 +200,7 @@
   padding-right: 6px;
   font-size: 10px;
   line-height: 1;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -32,8 +32,8 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Color-Coded</h3>
           <Stack gap="sm">
-            <NumberWithUnits value={0.42} units="ppm" precision={2} color="#00ff88" />
-            <NumberWithUnits value={12.7} units="ppm" precision={1} color="#ff0040" />
+            <NumberWithUnits value={0.42} units="ppm" precision={2} color="var(--sui-success)" />
+            <NumberWithUnits value={12.7} units="ppm" precision={1} color="var(--sui-danger)" />
           </Stack>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Null Fallback</h3>

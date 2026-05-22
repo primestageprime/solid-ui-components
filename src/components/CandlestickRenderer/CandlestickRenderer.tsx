@@ -40,8 +40,8 @@ export interface CandlestickRendererProps {
 }
 
 const DEFAULT_PRECISION = 2;
-const BULLISH_COLOR = "var(--sui-success, #22c55e)";
-const BEARISH_COLOR = "var(--sui-danger, #ef4444)";
+const BULLISH_COLOR = "var(--sui-success)";
+const BEARISH_COLOR = "var(--sui-danger)";
 
 const defaultGetBoxColor = (c: Candlestick): string =>
   c.close >= c.open ? BULLISH_COLOR : BEARISH_COLOR;

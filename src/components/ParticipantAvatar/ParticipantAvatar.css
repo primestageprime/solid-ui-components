@@ -12,7 +12,7 @@
   flex-shrink: 0;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #fff;
+  color: var(--sui-text-primary);
   text-transform: uppercase;
   user-select: none;
   line-height: 1;

@@ -9,12 +9,12 @@
 
 .worker-card--complete {
   border-color: var(--sui-success);
-  background: rgba(0,255,136,0.04);
+  background: rgba(var(--sui-success-rgb), 0.04);
 }
 
 .worker-card--overdue {
-  border-color: var(--sui-error, #ff3366);
-  background: rgba(255,51,102,0.04);
+  border-color: var(--sui-danger);
+  background: rgba(var(--sui-danger-rgb), 0.04);
 }
 
 .worker-card--claimed,
@@ -107,7 +107,7 @@
 .worker-card__bar-track {
   height: 4px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.08);
+  background: var(--sui-border);
   overflow: hidden;
 }
 
@@ -120,7 +120,7 @@
 .worker-card__bar-fill--extracting {
   background-image: repeating-linear-gradient(
     -45deg, transparent, transparent 8px,
-    rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px
+    var(--sui-border) 8px, var(--sui-border) 16px
   );
   background-size: 32px 32px;
   animation: worker-card-stripe 1s linear infinite;

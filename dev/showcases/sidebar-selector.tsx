@@ -40,7 +40,7 @@ export const SidebarSelectorShowcase: Component = () => {
                   <>
                     <h4 style={{ color: "var(--sui-accent)", margin: "0 0 8px" }}>{data.title}</h4>
                     <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>{data.description}</p>
-                    <p style={{ color: data.status === "Online" ? "#00ff88" : data.status === "Offline" ? "#ff0040" : "#ffcc00", "margin-top": "8px" }}>{data.status}</p>
+                    <p style={{ color: data.status === "Online" ? "var(--sui-success)" : data.status === "Offline" ? "var(--sui-danger)" : "#ffcc00", "margin-top": "8px" }}>{data.status}</p>
                   </>
                 ) : (
                   <span style={{ color: "var(--sui-text-secondary)" }}>Select an item</span>

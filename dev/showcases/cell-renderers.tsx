@@ -9,7 +9,7 @@ import { Stack } from "../../src/components/Layout";
 
 const AccentFloat = withCellStyle(FloatCell, { color: "var(--sui-accent)", fontWeight: 600 });
 const SmallDate = withCellStyle(DateCell, { fontSize: "0.75rem" });
-const NoxCell = withValueColor(FloatCell, (v) => (v != null && v > 2.8) ? "#ff6b6b" : "#00ff88", { textAlign: "right" });
+const NoxCell = withValueColor(FloatCell, (v) => (v != null && v > 2.8) ? "var(--sui-danger)" : "var(--sui-success)", { textAlign: "right" });
 
 export const CellRendererShowcase: Component = () => {
   return (

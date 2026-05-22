@@ -47,7 +47,7 @@ export const FadedNowrapSublabel = createText({
 });
 
 // Color-shifted body text
-export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
+export const MutedBody = createText({ variant: "body", color: "var(--sui-text-muted)" });
 export const AccentBody = createText({ variant: "body", color: "var(--sui-accent)" });
 
 // ── Compact data-display variants ──
@@ -83,7 +83,7 @@ export const EllipsizedChipLabel = createText({
 export const CountText = createText({
   variant: "sublabel",
   as: "span",
-  style: { "font-size": "10px", color: "var(--sui-text-muted, #888)" },
+  style: { "font-size": "10px", color: "var(--sui-text-muted)" },
 });
 
 // Monospace value — for numeric readouts alongside units
@@ -111,14 +111,14 @@ export const SubsectionTitle = createText({ variant: "title", as: "h3" });
 // Status-colored titles
 export const InfoTitle = createText({ variant: "title", color: "var(--sui-accent)" });
 export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
-export const SuccessTitle = createText({ variant: "title", color: "#00ff88" });
-export const DangerTitle = createText({ variant: "title", color: "#ff0040" });
+export const SuccessTitle = createText({ variant: "title", color: "var(--sui-success)" });
+export const DangerTitle = createText({ variant: "title", color: "var(--sui-danger)" });
 
 // Status-colored small value readouts — for compact in-cell numeric values
 // where color carries compliance state. Sized down from the default value
 // variant so they sit comfortably inside table rows / cards.
-export const TextValueSuccessSm = createText({ variant: "value", color: "#00ff88", style: { "font-size": "0.85rem" } });
-export const TextValueDangerSm = createText({ variant: "value", color: "#ff0040", style: { "font-size": "0.85rem" } });
+export const TextValueSuccessSm = createText({ variant: "value", color: "var(--sui-success)", style: { "font-size": "0.85rem" } });
+export const TextValueDangerSm = createText({ variant: "value", color: "var(--sui-danger)", style: { "font-size": "0.85rem" } });
 
 // ── Dashboard / game text roles ──
 

@@ -34,9 +34,9 @@ const DEFAULT_ICONS = {
   active: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
            <path d="M8 2A6 6 0 0 1 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
   completed: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-              <path d="M5 8L7 10.5L11 5.5" stroke="var(--jtf-bg-primary, #0a0e17)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+              <path d="M5 8L7 10.5L11 5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   error: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
-          <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--jtf-bg-primary, #0a0e17)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+          <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
 };
 
 export const ProgressCard: Component<ProgressCardProps> = (props) => {

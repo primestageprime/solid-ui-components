@@ -102,11 +102,11 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
           <thead>
             <tr
               style={{
-                "border-bottom": "1px solid var(--sui-border, rgba(0,212,255,0.3))",
+                "border-bottom": "1px solid var(--sui-border)",
                 ...(local.stickyHeader !== false ? {
                   position: "sticky",
                   top: "0",
-                  background: "var(--sui-bg-primary, #0a1420)",
+                  background: "var(--sui-bg-primary)",
                   "z-index": "2",
                 } : {}),
               }}
@@ -148,12 +148,12 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                         "border-bottom": "1px solid rgba(74,106,128,0.15)",
                         cursor: local.onRowClick ? "pointer" : undefined,
                         ...(local.striped && virtualRow.index % 2 === 1
-                          ? { background: "rgba(0,212,255,0.02)" }
+                          ? { background: "rgba(var(--sui-accent-rgb), 0.02)" }
                           : {}),
                       }}
                       onClick={() => local.onRowClick?.(row(), virtualRow.index)}
-                      onMouseEnter={local.hoverable ? (e) => { e.currentTarget.style.background = "rgba(0,212,255,0.04)"; } : undefined}
-                      onMouseLeave={local.hoverable ? (e) => { e.currentTarget.style.background = local.striped && virtualRow.index % 2 === 1 ? "rgba(0,212,255,0.02)" : ""; } : undefined}
+                      onMouseEnter={local.hoverable ? (e) => { e.currentTarget.style.background = "rgba(var(--sui-accent-rgb), 0.04)"; } : undefined}
+                      onMouseLeave={local.hoverable ? (e) => { e.currentTarget.style.background = local.striped && virtualRow.index % 2 === 1 ? "rgba(var(--sui-accent-rgb), 0.02)" : ""; } : undefined}
                     >
                       <For each={local.columns}>
                         {(col) => (

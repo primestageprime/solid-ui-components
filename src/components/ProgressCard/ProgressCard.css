@@ -1,7 +1,7 @@
 .jtf-progress-card {
   background-color: rgba(var(--sui-accent-rgb), 0.05);
-  border: 1px solid var(--jtf-border);
-  border-radius: var(--jtf-radius-lg);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-lg);
   padding: 12px;
 }
 
@@ -15,13 +15,13 @@
 .jtf-progress-card__title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--jtf-text-primary);
+  color: var(--sui-text-primary);
 }
 
 .jtf-progress-card__subtitle {
   font-size: 12px;
   font-family: monospace;
-  color: var(--jtf-text-muted);
+  color: var(--sui-text-muted);
 }
 
 .jtf-progress-card__steps {
@@ -67,7 +67,7 @@
 }
 
 .jtf-progress-card__step--error .jtf-progress-card__step-circle-bg {
-  background: var(--jtf-danger);
+  background: var(--sui-danger);
   border: none;
 }
 
@@ -128,9 +128,9 @@
 .jtf-progress-card__message {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--jtf-border);
+  border-top: 1px solid var(--sui-border);
   font-size: 12px;
-  color: var(--jtf-text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 @keyframes jtf-progress-spin {

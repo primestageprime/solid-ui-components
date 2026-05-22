@@ -30,8 +30,8 @@ export const DataTermMuted: Component<CellProps> = createCell({ color: "var(--te
 // ── Value cells (data column) ────────────────────────────────────────
 
 export const DataValue: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--text-secondary, #b0d4e8)" });
-export const DataValueHighlight: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "#ff8800" });
-export const DataValueSuccess: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "#00ff88" });
+export const DataValueHighlight: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-warning)" });
+export const DataValueSuccess: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-success)" });
 export const DataValuePrimary: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--text-primary, #e0f4ff)" });
 export const DataValueMuted: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--text-muted, #7aa8c0)" });
 
