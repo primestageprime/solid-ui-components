@@ -1,11 +1,12 @@
 // ============================================
-// ResultDisplay — Depth 3
-// Owns CSS (ResultDisplay.css).
-// Composes NumberWithUnits (Depth 2).
-// Large value + units row with label, sublabel, badge.
+// ResultDisplay — Atomic Primitive (Depth 1)
+// Owns CSS (ResultDisplay.css), no library Primitive imports.
+// Header (label + sublabel) over a value+units row with optional
+// badge slot and trailing children area. Data-driven `valueColor`
+// flows as inline style on the value span (allowed inside a
+// Primitive per CONTEXT.md — the Primitive owns the styling rule).
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
-import { NumberWithUnits } from "./NumberWithUnits";
+import { Component, JSX, Show, splitProps } from "solid-js";
 import "./ResultDisplay.css";
 
 export interface ResultDisplayProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -29,35 +30,35 @@ export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
     "children",
   ]);
 
-  const classes = () => {
-    const classList = ["result-display"];
-    if (local.class) classList.push(local.class);
-    return classList.join(" ");
-  };
+  const rootClass = () => local.class ?? undefined;
+
+  const valueClass = () =>
+    local.units
+      ? "sui-result-display__value sui-result-display__value--with-units"
+      : "sui-result-display__value";
 
   return (
-    <div class={classes()} {...others}>
-      {(local.label || local.sublabel) && (
-        <div class="result-display__header">
-          {local.label && <h3 class="result-display__label">{local.label}</h3>}
-          {local.sublabel && <span class="result-display__sublabel">{local.sublabel}</span>}
+    <div class={rootClass()} {...others}>
+      <Show when={local.label || local.sublabel}>
+        <div class="sui-result-display__header">
+          <Show when={local.label}>
+            <h3 class="sui-result-display__label">{local.label}</h3>
+          </Show>
+          <Show when={local.sublabel}>
+            <span class="sui-result-display__sublabel">{local.sublabel}</span>
+          </Show>
         </div>
-      )}
-      <div class="result-display__row">
-        {local.units ? (
-          <NumberWithUnits
-            value={local.value as string | number}
-            units={local.units}
-            color={local.valueColor}
-          />
-        ) : (
-          <span
-            class="result-display__value"
-            style={local.valueColor ? { color: local.valueColor } : undefined}
-          >
-            {local.value}
-          </span>
-        )}
+      </Show>
+      <div class="sui-result-display__row">
+        <span
+          class={valueClass()}
+          style={local.valueColor ? { color: local.valueColor } : undefined}
+        >
+          {local.value}
+          <Show when={local.units}>
+            <span class="sui-result-display__value-units">{local.units}</span>
+          </Show>
+        </span>
         {local.badge}
       </div>
       {local.children}

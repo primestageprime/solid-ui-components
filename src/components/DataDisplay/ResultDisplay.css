@@ -1,55 +1,50 @@
-.result-display__header {
+/* ============================================
+   ResultDisplay — Atomic Primitive (Depth 1)
+   Header (label + sublabel) over a value+units row with optional
+   badge slot. Data-driven `valueColor` flows as an inline style on
+   the value span — allowed inside a Primitive per CONTEXT.md.
+   ============================================ */
+
+.sui-result-display__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.result-display__label {
+.sui-result-display__label {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, var(--jtf-text-primary));
 }
 
-.result-display__sublabel {
+.sui-result-display__sublabel {
   color: var(--text-muted, var(--jtf-text-muted));
   font-size: 0.75rem;
 }
 
-.result-display__row {
+.sui-result-display__row {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.result-display__value {
+.sui-result-display__value {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary, var(--jtf-text-primary));
 }
 
-.result-display__units {
-  color: var(--text-secondary, var(--jtf-text-secondary));
+.sui-result-display__value--with-units {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.sui-result-display__value-units {
+  margin-left: 4px;
   font-size: 0.9rem;
-}
-
-/* Formula result highlighting — used by createFormulaResult */
-
-.formula-result {
-  cursor: pointer;
-  transition: background 0.15s ease;
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin: -8px -12px;
-}
-
-.formula-result--highlight {
-  background: rgba(0, 255, 136, 0.15);
-}
-
-.formula-result--highlight .result-display__value,
-.formula-result--highlight .result-display__units {
-  color: #00ff88 !important;
+  font-weight: normal;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  color: var(--text-secondary, var(--jtf-text-secondary));
 }

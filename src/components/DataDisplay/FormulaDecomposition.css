@@ -1,0 +1,22 @@
+/* ============================================
+   FormulaDecomposition — styling for the `formula-result` wrapper
+   produced by `createFormulaResult`. Tints the wrapped `ResultDisplay`
+   value/units when the hovered-var context highlights this row.
+   ============================================ */
+
+.formula-result {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: -8px -12px;
+}
+
+.formula-result--highlight {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.formula-result--highlight .sui-result-display__value,
+.formula-result--highlight .sui-result-display__value-units {
+  color: #00ff88 !important;
+}

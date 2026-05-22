@@ -1,11 +1,14 @@
 // ============================================
-// NumberWithUnits — Depth 2 (zero CSS)
-// Composes Text (curried: MonoValue + TextUnits).
-// Monospace value paired with units label.
+// NumberWithUnits — Atomic Primitive (Depth 1)
+// Owns CSS (NumberWithUnits.css), no library Primitive imports.
+// Monospace value paired with a faded units label, baseline-aligned
+// on a single line. Data-driven `color` flows as an inline style on
+// the value span — allowed inside a Primitive per CONTEXT.md (the
+// Primitive owns the styling rule; this is the "truly dynamic
+// per-instance value" carve-out).
 // ============================================
 import { Component, splitProps } from "solid-js";
-import { Text } from "../Text/Text";
-import { TextUnits } from "../Text/variants";
+import "./NumberWithUnits.css";
 
 export interface NumberWithUnitsProps {
   value: number | string | null | undefined;
@@ -19,7 +22,7 @@ export const NumberWithUnits: Component<NumberWithUnitsProps> = (props) => {
 
   const formatted = () => {
     const v = local.value;
-    if (v == null) return "\u2014";
+    if (v == null) return "—";
     if (typeof v === "number") {
       return local.precision != null ? v.toFixed(local.precision) : String(v);
     }
@@ -27,9 +30,14 @@ export const NumberWithUnits: Component<NumberWithUnitsProps> = (props) => {
   };
 
   return (
-    <span style={{ display: "inline-flex", "align-items": "baseline", gap: "4px", "white-space": "nowrap" }}>
-      <Text variant="value" color={local.color} style={{ "font-family": '"JetBrains Mono", "Fira Code", monospace' }}>{formatted()}</Text>
-      <TextUnits>{local.units}</TextUnits>
+    <span class="sui-num-with-units">
+      <span
+        class="sui-num-with-units__value"
+        style={local.color ? { color: local.color } : undefined}
+      >
+        {formatted()}
+      </span>
+      <span class="sui-num-with-units__units">{local.units}</span>
     </span>
   );
 };

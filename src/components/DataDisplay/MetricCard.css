@@ -1,4 +1,13 @@
-.metric-card {
+/* ============================================
+   MetricCard — Atomic Primitive (Depth 1)
+   Labeled value card with uppercase muted label, large value, and
+   optional units. Color variants tint the value text only; chrome
+   stays neutral. When `units` is supplied the value renders in a
+   monospace face so numeric readouts line up consistently with the
+   sibling `NumberWithUnits` Primitive.
+   ============================================ */
+
+.sui-metric-card {
   display: inline-block;
   padding: 1rem;
   background: rgba(0, 212, 255, 0.05);
@@ -7,7 +16,7 @@
   text-align: center;
 }
 
-.metric-card__label {
+.sui-metric-card__label {
   color: var(--text-muted, var(--jtf-text-muted));
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -15,21 +24,33 @@
   margin-bottom: 0.25rem;
 }
 
-.metric-card__value {
+.sui-metric-card__value {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary, var(--jtf-text-primary));
 }
 
-/* Color variants */
-.metric-card--success .metric-card__value {
+.sui-metric-card__value--with-units {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.sui-metric-card__value-units {
+  margin-left: 4px;
+  font-size: 0.9rem;
+  font-weight: normal;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  color: var(--text-secondary, var(--jtf-text-secondary));
+}
+
+/* Color variants — tint the value text only. */
+.sui-metric-card--success .sui-metric-card__value {
   color: #00ff88;
 }
 
-.metric-card--warning .metric-card__value {
+.sui-metric-card--warning .sui-metric-card__value {
   color: #ff8800;
 }
 
-.metric-card--danger .metric-card__value {
+.sui-metric-card--danger .sui-metric-card__value {
   color: #ff0040;
 }

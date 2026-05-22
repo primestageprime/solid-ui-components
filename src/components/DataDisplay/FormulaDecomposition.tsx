@@ -5,6 +5,7 @@
 // + Layout/Text curried variants.
 // ============================================
 import { Component, For, JSX } from "solid-js";
+import "./FormulaDecomposition.css";
 import { FormulaProvider, MathFormula, FormulaVarRow, useFormulaHighlight } from "../MathFormula/MathFormula";
 import { ResultDisplay } from "./ResultDisplay";
 import { NumberWithUnits } from "./NumberWithUnits";
