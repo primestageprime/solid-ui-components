@@ -82,4 +82,10 @@ export type LayoutEdge = {
   sourceId: string;
   targetId: string;
   points: Array<{ x: number; y: number }>;
+  /**
+   * True for layout-only edges that were not in the input DAGEdges
+   * (e.g. SwimlaneChart's anchor→summary scaffolding). Consumers
+   * should skip these when rendering data-flow lines.
+   */
+  synthetic?: boolean;
 };

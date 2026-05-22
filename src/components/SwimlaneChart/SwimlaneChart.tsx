@@ -269,8 +269,65 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     }),
   );
 
+  // Side-aware badge positions. The boundary badge sits OUTSIDE the
+  // outermost visible node on its side at (anchorOuterX + dir·(STUB +
+  // BADGE_RADIUS)). edgeViews and boundaryBadges both read from here so
+  // a visible→hidden edge terminates exactly where the badge renders.
+  const STUB_LENGTH = 28;
+  const BADGE_RADIUS = 11;
+  const sideBadgePositions = createMemo(() => {
+    const positions = layout().positions;
+    // First pass: find the outermost x on each side.
+    let leftMinX = Infinity;
+    let rightMaxX = -Infinity;
+    for (const [id, p] of positions) {
+      if (id.startsWith("__collapsed_")) continue;
+      if (p.x < leftMinX) leftMinX = p.x;
+      if (p.x > rightMaxX) rightMaxX = p.x;
+    }
+    // Second pass: collect every visible node sharing that outermost x,
+    // and average their y so the badge sits vertically centered against
+    // the whole stacked column — not just the topmost node in iteration
+    // order.
+    const collect = (targetX: number) => {
+      const matches: { id: string; x: number; y: number; width: number; height: number }[] = [];
+      for (const [id, p] of positions) {
+        if (id.startsWith("__collapsed_")) continue;
+        if (Math.abs(p.x - targetX) < 0.5) matches.push({ id, ...p });
+      }
+      if (matches.length === 0) return undefined;
+      const avgY = matches.reduce((s, m) => s + m.y, 0) / matches.length;
+      // Use the first match for x/width — every match in a column shares them.
+      const ref = matches[0];
+      return { ref, y: avgY };
+    };
+    const out: { left?: { x: number; y: number; anchorId: string }; right?: { x: number; y: number; anchorId: string } } = {};
+    const left = leftMinX < Infinity ? collect(leftMinX) : undefined;
+    if (left) {
+      out.left = {
+        x: left.ref.x - left.ref.width / 2 - STUB_LENGTH - BADGE_RADIUS,
+        y: left.y,
+        anchorId: left.ref.id,
+      };
+    }
+    const right = rightMaxX > -Infinity ? collect(rightMaxX) : undefined;
+    if (right) {
+      out.right = {
+        x: right.ref.x + right.ref.width / 2 + STUB_LENGTH + BADGE_RADIUS,
+        y: right.y,
+        anchorId: right.ref.id,
+      };
+    }
+    return out;
+  });
+
   const edgeViews = createMemo(() => {
     const positions = layout().positions;
+    const centerColVal = props.centerCol ?? 0;
+    const summariesById = new Map(
+      layout().summaries.map((s) => [s.id, s] as const),
+    );
+    const badges = sideBadgePositions();
     // Build the obstacle list once per layout — every visible node is a
     // potential obstacle for any edge that isn't anchored on it.
     const allRects: ObstacleRect[] = [];
@@ -278,18 +335,75 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       if (id.startsWith("__collapsed_")) continue;
       allRects.push({ id, x: p.x, y: p.y, width: p.width, height: p.height });
     }
-    return layout().edges.flatMap((e) => {
-      const s = positions.get(e.sourceId);
-      const t = positions.get(e.targetId);
-      if (!s || !t) return [];
-      // Skip synthetic edges to/from collapsed-summary placeholders —
-      // those render as boundary badges, not full arrows.
+    const all = layout().edges.flatMap((e) => {
+      // Skip synthetic anchor→summary edges — the boundary-badge memo
+      // renders those independently as the side stub. Only real data
+      // edges should produce dashed lines to/from the badges.
+      if (e.synthetic) return [];
+
+      // Hidden → visible: the original source was a hidden node and
+      // its dependent is visible. Draw a dashed line from the side
+      // badge to the visible target's anchor.
       if (
-        e.sourceId.startsWith("__collapsed_") ||
+        e.sourceId.startsWith("__collapsed_") &&
+        !e.targetId.startsWith("__collapsed_")
+      ) {
+        const sum = summariesById.get(e.sourceId);
+        if (!sum) return [];
+        const t = positions.get(e.targetId);
+        if (!t) return [];
+        const side = sum.column > centerColVal ? badges.right
+          : sum.column < centerColVal ? badges.left
+          : undefined;
+        if (!side) return [];
+        const synthSource = { x: side.x, y: side.y, width: BADGE_RADIUS * 2, height: BADGE_RADIUS * 2 };
+        const obstacles = allRects.filter((r) => r.id !== e.targetId);
+        return [{
+          d: bezierAvoidingObstacles(synthSource, t, obstacles),
+          isSummary: true,
+          key: `${e.sourceId}|${e.targetId}`,
+        }];
+      }
+      // Hidden → hidden: both endpoints inside the same (or different)
+      // summary — render nothing; the summary badges already convey
+      // existence.
+      if (
+        e.sourceId.startsWith("__collapsed_") &&
         e.targetId.startsWith("__collapsed_")
       ) {
         return [];
       }
+      const s = positions.get(e.sourceId);
+      if (!s) return [];
+
+      // Visible → collapsed-summary: route to the side-badge position,
+      // not the layout's hidden-col placeholder. Summary side comes
+      // from the summary's `column` (relative to centerCol), so a
+      // hidden b6 on the right always lands at the right-side badge
+      // even if its layout-anchor is a node on the left.
+      // (Dedup happens after the flatMap — the layout emits a
+      // synthetic anchor→summary edge alongside the real rewritten
+      // edge, which would otherwise produce a duplicate path.)
+      if (e.targetId.startsWith("__collapsed_")) {
+        const sum = summariesById.get(e.targetId);
+        if (!sum) return [];
+        const side = sum.column > centerColVal ? badges.right
+          : sum.column < centerColVal ? badges.left
+          : undefined;
+        if (!side) return [];
+        // Synthetic target rect matching the badge geometry so the
+        // router treats it like any other endpoint.
+        const t = { x: side.x, y: side.y, width: BADGE_RADIUS * 2, height: BADGE_RADIUS * 2 };
+        const obstacles = allRects.filter((r) => r.id !== e.sourceId);
+        return [{
+          d: bezierAvoidingObstacles(s, t, obstacles),
+          isSummary: true,
+          key: `${e.sourceId}|${e.targetId}`,
+        }];
+      }
+
+      const t = positions.get(e.targetId);
+      if (!t) return [];
       const obstacles = allRects.filter(
         (r) => r.id !== e.sourceId && r.id !== e.targetId,
       );
@@ -301,6 +415,17 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         key: `${e.sourceId}|${e.targetId}`,
       }];
     });
+    // Dedup paths by key — the layout emits both the rewritten real
+    // edge and a synthetic anchor→summary edge for boundary badges,
+    // and we want exactly one path per (source, target) pair.
+    const seen = new Set<string>();
+    const out: { d: string; isSummary: boolean; key: string }[] = [];
+    for (const ev of all) {
+      if (seen.has(ev.key)) continue;
+      seen.add(ev.key);
+      out.push(ev);
+    }
+    return out;
   });
 
   // Mirror edgeViews into a keyed store so each <path> keeps its DOM
@@ -314,8 +439,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // Boundary badges: one short stub + count circle per summary group.
   // Replaces the previous "summary node" boxes. Position is the outer
   // edge of the visible anchor in the direction of the collapsed nodes.
-  const STUB_LENGTH = 28;
-  const BADGE_RADIUS = 11;
+  // (STUB_LENGTH and BADGE_RADIUS are declared earlier alongside
+  // sideBadgePositions so edgeViews can reuse them.)
 
   // Aggregate summaries by SIDE (left vs right of center). All hidden
   // nodes on a given side count into one badge — even if their nearest
@@ -373,11 +498,17 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       sides.push({ anchorId: rightAnchorId, dir: 1, count: rightCount, key: "side|+1" });
     }
 
+    const sidePos = sideBadgePositions();
     return sides.flatMap((g) => {
       const anchorPos = positions.get(g.anchorId);
       if (!anchorPos) return [];
       const dir = g.dir;
       const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
+      // Stub + badge sit vertically centered against the outermost
+      // column (averaged y across every visible node sharing that x),
+      // not just the topmost node's y.
+      const sideY =
+        dir === -1 ? sidePos.left?.y ?? anchorPos.y : sidePos.right?.y ?? anchorPos.y;
       // Both sides flow left -> right (dep-flow direction). The line ends
       // at the badge's *inner* edge so the arrowhead is always visible
       // next to the badge, never hidden underneath it. The badge then sits
@@ -398,9 +529,9 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           : arrowEnd + BADGE_RADIUS;
       return [{
         key: g.key,
-        d: `M ${arrowStart} ${anchorPos.y} L ${arrowEnd} ${anchorPos.y}`,
+        d: `M ${arrowStart} ${sideY} L ${arrowEnd} ${sideY}`,
         badgeX,
-        badgeY: anchorPos.y,
+        badgeY: sideY,
         count: g.count,
       }];
     });
@@ -523,16 +654,13 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
             )}
           </For>
 
-          {/* Boundary badges — short stub arrows + count circles at the
-              outer edge of anchors that have collapsed neighbors. */}
+          {/* Boundary badges — count circles at the outer edge of the
+              outermost visible column. Connecting lines to/from hidden
+              nodes are drawn by edgeViews (one dashed path per real
+              dep edge between a visible node and a hidden one). */}
           <For each={badgesStore}>
             {(b) => (
               <g class="sui-swimlane__boundary">
-                <path
-                  class="sui-swimlane__edge"
-                  d={b.d}
-                  marker-end={arrows() ? "url(#sui-swimlane-arrow)" : undefined}
-                />
                 <circle
                   class="sui-swimlane__boundary-badge"
                   cx={b.badgeX}

@@ -304,6 +304,7 @@ export function computeSwimlaneLayout<T>(
       sourceId: s.anchorId,
       targetId: s.id,
       points: [{ x: a.x, y: a.y }, { x: b.x, y: b.y }],
+      synthetic: true,
     });
   }
 

@@ -92,31 +92,28 @@ export function bezierAvoidingObstacles(
     return bezierThroughChannelPath(from, to);
   }
 
-  // Single-obstacle detour as ONE continuous cubic. Both control points
-  // are pinned to a corridor y, with x-positions just past the obstacle's
-  // left/right edges. A cubic with both controls at the same y reaches
-  // an apex roughly 75% of the way from the endpoints toward the control
-  // y, so we overshoot the corridor by ~30% to leave clearance over the
-  // obstacle's nearest edge.
+  // Single-obstacle detour as one continuous cubic from the source's
+  // inner-side anchor to one of the target's near corners.
+  //   - Source above the target's plane (from.y <= to.y) → top-near
+  //     corner; corridor passes above the obstacle.
+  //   - Source below the target's plane (from.y > to.y) → bottom-near
+  //     corner; corridor passes below the obstacle.
+  // Aiming at the corner gives the cubic a natural diagonal landing
+  // tangent so the marker-end arrowhead points into the corner.
   const o = blockers[0];
-  const above = from.y <= o.y;
+  const above = from.y <= to.y;
   const obsEdgeY = above ? o.y - o.height / 2 : o.y + o.height / 2;
-  // Overshoot factor so the cubic apex clears the obstacle by OBSTACLE_MARGIN.
-  // Derivation: apex_y ≈ 0.125·(from.y + to.y) + 0.75·corridorY, so to
-  // achieve apex_y == obsEdgeY ± margin we need corridorY pulled ~1.33×
-  // further than the desired clearance.
-  const desiredClearance = OBSTACLE_MARGIN;
   const corridorY = above
-    ? obsEdgeY - desiredClearance * 1.6
-    : obsEdgeY + desiredClearance * 1.6;
+    ? obsEdgeY - OBSTACLE_MARGIN * 2.5
+    : obsEdgeY + OBSTACLE_MARGIN * 2.5;
   const goingLeftToRight = toX >= fromX;
+  const toCornerX = goingLeftToRight ? to.x - to.width / 2 : to.x + to.width / 2;
+  const toCornerY = above ? to.y - to.height / 2 : to.y + to.height / 2;
   const c1x = goingLeftToRight
     ? o.x - o.width / 2 - OBSTACLE_MARGIN
     : o.x + o.width / 2 + OBSTACLE_MARGIN;
-  const c2x = goingLeftToRight
-    ? o.x + o.width / 2 + OBSTACLE_MARGIN
-    : o.x - o.width / 2 - OBSTACLE_MARGIN;
-  return `M ${fromX} ${from.y} C ${c1x} ${corridorY}, ${c2x} ${corridorY}, ${toX} ${to.y}`;
+  const c2x = goingLeftToRight ? toCornerX - 4 : toCornerX + 4;
+  return `M ${fromX} ${from.y} C ${c1x} ${corridorY}, ${c2x} ${corridorY}, ${toCornerX} ${toCornerY}`;
 }
 
 /**

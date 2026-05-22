@@ -62,7 +62,9 @@ const LANE_BOX_BORDER_PX = 2;
 // Vertical breathing room between the parent header and the chart row,
 // matching the `gap` declared on `.sui-statusflow__lane-box`. ~1rem.
 const PARENT_CHART_GAP_PX = 16;
-const VISIBLE_HALF = 2; // matches visibleCols=5 cap in STATUS_BREAKPOINTS
+// Half-window cap used by ChartBox sizing. Generous so the chart never
+// clips when wide enough to show many cols.
+const VISIBLE_HALF = 10;
 
 const STATUS_COLUMNS: StatusFlowColumn[] = [
   { label: "Done", statuses: ["DONE"] },
@@ -91,7 +93,10 @@ const computeStatusBreakpoints = (maxVisibleCols: number): StatusFlowBreakpoint[
   }
   return bps;
 };
-const STATUS_BREAKPOINTS: StatusFlowBreakpoint[] = computeStatusBreakpoints(5);
+// No fixed cap — pickVisibleCols selects the largest tier the container
+// actually has room for. Set a high upper bound so the breakpoint table
+// scales naturally; rendering only ever uses the tier that fits.
+const STATUS_BREAKPOINTS: StatusFlowBreakpoint[] = computeStatusBreakpoints(21);
 
 // Children are a dep-chain: c1 → c2 → … → c8. The parent has NO
 // dep edges to/from children (parentId is purely visual grouping).
@@ -260,7 +265,7 @@ const ParentChildrenRow: Component = () => {
     "background": "rgba(255,255,255,0.04)",
   };
   // visibleCols cap = 5 (per STATUS_BREAKPOINTS) → maxDepth = 2.
-  const TABLE_MAX_DEPTH = 2;
+  const TABLE_MAX_DEPTH = 3;
   const labelForCol = (col: number) => labelForColHelper(col, TABLE_MAX_DEPTH);
   const colStyleFor = (col: number) => ({
     ...cellStyle,
@@ -467,7 +472,7 @@ const TwoParentsRow: Component = () => {
     cursor: "pointer",
   } as const;
 
-  const TABLE_MAX_DEPTH = 2;
+  const TABLE_MAX_DEPTH = 3;
   const labelForCol = (col: number) => labelForColHelper(col, TABLE_MAX_DEPTH);
 
   const tableStyle = {
@@ -1181,9 +1186,28 @@ const RulesPanel: Component = () => (
         edge to target's left edge along a Bezier path.
       </li>
       <li>
+        <strong>Obstacle dodging</strong>: when the straight source →
+        target segment would cross an unrelated visible node, the curve
+        detours through a corridor above (or below) that node — single
+        smooth cubic, no straight segments. Control points pulled past
+        the obstacle's near edge so the apex clears it with margin.
+      </li>
+      <li>
+        <strong>Corner landing when source is above the dependent's
+        plane</strong>: when the detour goes <em>over</em> an obstacle
+        (source.y ≤ obstacle.y), the curve lands on the target's
+        top-near corner with a near-vertical tangent instead of its
+        side. Going under (source.y &gt; obstacle.y) mirrors to the
+        bottom-near corner. This keeps the arrowhead pointing into the
+        node along the corridor direction rather than glancing in
+        sideways.
+      </li>
+      <li>
         <strong>Visible → hidden</strong> (target collapsed to ±S): arrow
         ends at the side-summary badge, NOT at the hidden node itself.
-        The badge absorbs every cross-edge for hidden nodes on that side.
+        Rendered <em>dashed</em> so it's visually distinct from
+        node→node edges. The badge absorbs every cross-edge for hidden
+        nodes on that side.
       </li>
       <li>
         <strong>Hidden → visible</strong> (source collapsed to ±S): arrow
@@ -1194,44 +1218,38 @@ const RulesPanel: Component = () => (
         are inside the same summary).
       </li>
       <li>
-        Arrows DO NOT spawn duplicate per-edge summary stubs; each side
-        has exactly one badge regardless of how many cross-edges target
-        hidden nodes.
+        <strong>No duplicate stubs</strong>: arrows DO NOT spawn extra
+        per-edge summary stubs; each side has exactly one badge
+        regardless of how many cross-edges target hidden nodes. Edges
+        from the badge's layout anchor are suppressed since the badge's
+        own stub already draws them.
       </li>
     </ol>
   </div>
 );
 
-// Hand-picked broom snapshots that exhibit "edge passes through unrelated
-// node" cases — used as anchors when iterating on edge routing.
-const makeBroomFrame = (statuses: Partial<Record<string, string>>): StatusFlowNode[] =>
-  initParentB().map((n) =>
-    n.parentId === "pB" || n.id !== "pB"
-      ? { ...n, status: statuses[n.id] ?? n.status }
-      : n,
-  );
+// Dense layout: 7 visible columns × 3 stacked nodes each (21 leaves).
+// Built from 3 parallel dep chains a/b/c, each 7 long. Topo depths
+// 0..6 align with the rank-based col assignment so DONE triples sit at
+// cols -3/-2/-1, DOING at 0, TODO triples at +1/+2/+3 — no collapsed
+// badges. Requires container width ≥ minWidth(±3) ≈ 1584px.
+const initDense7x3 = (): StatusFlowNode[] => {
+  const out: StatusFlowNode[] = [
+    { id: "pX", title: "Parent Task", subtitle: "owns 21 children", status: "DOING" },
+  ];
+  for (const lane of ["a", "b", "c"] as const) {
+    out.push({ id: `d1${lane}`, title: `D1${lane}`, status: "DONE", parentId: "pX" });
+    out.push({ id: `d2${lane}`, title: `D2${lane}`, status: "DONE", parentId: "pX", dependsOn: [`d1${lane}`] });
+    out.push({ id: `d3${lane}`, title: `D3${lane}`, status: "DONE", parentId: "pX", dependsOn: [`d2${lane}`] });
+    out.push({ id: `m${lane}`,  title: `M${lane}`,  status: "DOING", parentId: "pX", dependsOn: [`d3${lane}`] });
+    out.push({ id: `t1${lane}`, title: `T1${lane}`, status: "TODO", parentId: "pX", dependsOn: [`m${lane}`] });
+    out.push({ id: `t2${lane}`, title: `T2${lane}`, status: "TODO", parentId: "pX", dependsOn: [`t1${lane}`] });
+    out.push({ id: `t3${lane}`, title: `T3${lane}`, status: "TODO", parentId: "pX", dependsOn: [`t2${lane}`] });
+  }
+  return out;
+};
 
-// 1. b3 (DOING, col 0) → b6 (TODO, col +2): line crosses b5 at col +1.
-const BROOM_CASE_1 = makeBroomFrame({
-  b1: "DONE", b2: "DONE", b3: "DOING", b4: "DOING",
-  b5: "TODO", b6: "TODO", b7: "TODO", b8: "TODO",
-});
-// 2. b3 (DONE, col -2) → b6 (TODO, col +2): line crosses b4 and b5.
-const BROOM_CASE_2 = makeBroomFrame({
-  b1: "DONE", b2: "DONE", b3: "DONE", b4: "DOING",
-  b5: "TODO", b6: "TODO", b7: "TODO", b8: "TODO",
-});
-// 3. Tail end of the broom: only b6, b7, b8 visible; b1..b5 collapse to −S.
-const BROOM_CASE_3 = makeBroomFrame({
-  b1: "DONE", b2: "DONE", b3: "DONE", b4: "DONE",
-  b5: "DONE", b6: "DONE", b7: "DONE", b8: "DOING",
-});
-
-const BROOM_CASES: { id: string; nodes: StatusFlowNode[]; note: string }[] = [
-  { id: "B1", nodes: BROOM_CASE_1, note: "b3 → b6 crosses b5" },
-  { id: "B2", nodes: BROOM_CASE_2, note: "b3 → b6 crosses b4 + b5" },
-  { id: "B3", nodes: BROOM_CASE_3, note: "tail end — clean routing" },
-];
+const BROOM_FRAMES: StatusFlowNode[][] = [initDense7x3()];
 
 const FrameExplorerRow: Component = () => {
   // Track the actual DAG (chart) container width — not the whole row,
@@ -1255,37 +1273,24 @@ const FrameExplorerRow: Component = () => {
   return (
     <>
       <div class="workshop-grid__cell">
-        <SubsectionTitle>Frame explorer — edge routing cases</SubsectionTitle>
+        <SubsectionTitle>Frame explorer — Parent B (first 9 frames)</SubsectionTitle>
         <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-          Hand-picked broom snapshots that exercise edge routing. The first
-          two cases draw a line from a source node straight through an
-          unrelated visible node — these are the configurations to verify
-          when iterating on the orthogonal-routing detour.
+          The first 9 frames of the Parent B broom state machine —
+          walked from the initial state with the same advance rule the
+          live row uses. Useful for verifying edge routing across the
+          full lifecycle without scrubbing the timer.
         </p>
         <RulesPanel />
       </div>
       <div class="workshop-grid__cell">
         <BreakpointsPanel width={width()} />
-        {BROOM_CASES.map((c, i) => (
-          <>
-            <div
-              style={{
-                "font-size": "11px",
-                "letter-spacing": "0.06em",
-                "text-transform": "uppercase" as const,
-                color: "rgba(255,255,255,0.5)",
-                margin: "16px 0 6px",
-              }}
-            >
-              {c.id} — {c.note}
-            </div>
-            <FrameRow
-              id={c.id}
-              nodes={c.nodes}
-              width={width()}
-              chartRef={i === 0 ? attachFirstChart : undefined}
-            />
-          </>
+        {BROOM_FRAMES.map((nodes, i) => (
+          <FrameRow
+            id={`B${i}`}
+            nodes={nodes}
+            width={width()}
+            chartRef={i === 0 ? attachFirstChart : undefined}
+          />
         ))}
       </div>
     </>

@@ -171,9 +171,9 @@ const colLabel = (col: number): string =>
   col < 0 ? "COMPLETED" : col > 0 ? "TODO" : "DOING";
 
 const colTint = (col: number): { bg: string; border: string } => {
-  if (col < 0) return { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" };
-  if (col > 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" };
-  return { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" };
+  if (col < 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }; // DONE → green
+  if (col > 0) return { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" }; // TODO → grey
+  return { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" }; // DOING → cyan
 };
 
 export const renderStubNode = (
@@ -270,9 +270,9 @@ const ANIM_STATUS_LABEL: Record<AnimStatus, string> = {
   done: "COMPLETED",
 };
 const ANIM_STATUS_TINT: Record<AnimStatus, { bg: string; border: string }> = {
-  todo: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" },
+  todo: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" }, // grey
   doing: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
-  done: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" },
+  done: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }, // green
 };
 
 type AnimNodeData = { label: string; col: number; status: AnimStatus };
