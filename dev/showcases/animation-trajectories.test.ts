@@ -460,6 +460,47 @@ describe("buildLaneTrajectory — statusAt", () => {
 // fan in. Verify the trajectory produces the right MIX of staying /
 // leaving / arriving / staying-hidden for one tick of the broom.
 
+describe("buildLaneTrajectory — hidden→hidden arrow suppression", () => {
+  // 5-deep chain: only `a` is visible (col +1); b/c/d/e hidden in +S.
+  // Edges b→c, c→d, d→e all have BOTH endpoints in the lozenge.
+  // Renderer should suppress these via mode-based check.
+  const chain: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+    { id: "c", title: "C", status: "TODO", dependsOn: ["b"] },
+    { id: "d", title: "D", status: "TODO", dependsOn: ["c"] },
+    { id: "e", title: "E", status: "TODO", dependsOn: ["d"] },
+  ];
+
+  it("hidden→hidden edges still appear in trajectory.arrows", () => {
+    // The trajectory keeps these edges — suppression is a renderer
+    // concern, not a data concern. (Other consumers may want to
+    // know about them for debugging / inspection.)
+    const traj = buildLaneTrajectory({
+      prevFrame: chain, nextFrame: chain,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    expect(traj.arrows.length).toBe(4);
+  });
+
+  it("both endpoints are mode='gone' for hidden→hidden edges", () => {
+    // The renderer's suppression check (bothHidden) reads modeAt(t).
+    // Verify the trajectory reports both endpoints as "gone" at any t
+    // for a stays-hidden→stays-hidden edge (the suppression criterion).
+    const traj = buildLaneTrajectory({
+      prevFrame: chain, nextFrame: chain,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const bToC = traj.arrows.find((a) => a.fromId === "b" && a.toId === "c")!;
+    const from = traj.cards.get(bToC.fromId)!;
+    const to = traj.cards.get(bToC.toId)!;
+    for (const t of [0, 0.5, 1]) {
+      expect(from.modeAt(t)).toBe("gone");
+      expect(to.modeAt(t)).toBe("gone");
+    }
+  });
+});
+
 describe("buildLaneTrajectory — broom topology", () => {
   // Matches the workshop's MS_PARENT_B_CHILDREN (without the parent).
   const broom: StatusFlowNode[] = [

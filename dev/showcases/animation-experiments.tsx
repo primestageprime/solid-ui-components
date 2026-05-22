@@ -1209,6 +1209,13 @@ function MixedShapesLaneReactive(props: {
             traj().cards.get(arrow.fromId);
           const toCard = (): CardTrajectory | undefined =>
             traj().cards.get(arrow.toId);
+          // Suppress hidden→hidden arrows. Both endpoints anchor to
+          // the same lozenge rect → a degenerate path, and visually
+          // the relationship lives entirely INSIDE the lozenge where
+          // an arrow has nothing to say.
+          const bothHidden = () =>
+            fromCard()?.modeAt(currentT()) === "gone" &&
+            toCard()?.modeAt(currentT()) === "gone";
           const src = () => fromCard()?.anchorAt(currentT());
           const tgt = () => toCard()?.anchorAt(currentT());
           // Dashedness ∈ [0, 1] — max hiddenness of the two endpoints.
@@ -1223,12 +1230,19 @@ function MixedShapesLaneReactive(props: {
             return `4 ${(d * 3).toFixed(2)}`;
           };
           const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
+          // Obstacles for orthogonal routing. We EXCLUDE parent cards
+          // — they sit in their own row (above the children) and
+          // including them tempts the router into "go AROUND the
+          // parent" detours that loop over the top of the lane. The
+          // parent's dep graph never overlaps the children's, so
+          // excluding it from obstacles can't create real conflicts.
           const obstacles = () => {
             const t = currentT();
             const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
             for (const [id, c] of traj().cards) {
               if (id === arrow.fromId || id === arrow.toId) continue;
               if (c.modeAt(t) !== "card") continue;
+              if (c.isParent) continue;
               const r = c.rectAt(t);
               if (!r) continue;
               list.push({ id, ...r });
@@ -1236,7 +1250,7 @@ function MixedShapesLaneReactive(props: {
             return list;
           };
           return (
-            <Show when={src() && tgt()}>
+            <Show when={!bothHidden() && src() && tgt()}>
               <path
                 d={orthogonalAvoidingObstacles(src()!, tgt()!, obstacles())}
                 fill="none"
