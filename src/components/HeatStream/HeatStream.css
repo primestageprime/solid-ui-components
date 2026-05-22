@@ -24,7 +24,7 @@
 }
 
 .jtf-heatstream__legend-color--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstream__legend-color--partial {
@@ -117,7 +117,7 @@
 }
 
 .jtf-heatstream__cell--full {
-  background-color: #00d4ff;
+  background-color: var(--status-full);
 }
 
 .jtf-heatstream__cell--partial {
@@ -130,7 +130,7 @@
 
 .jtf-heatstream__cell--unknown {
   background-color: #333;
-  outline: 1px solid rgba(0, 212, 255, 0.25);
+  outline: 1px solid rgba(var(--sui-accent-rgb), 0.25);
   outline-offset: -1px;
 }
 
@@ -163,8 +163,8 @@
 .jtf-heatstream__preview {
   display: none;
   padding: 8px;
-  background: var(--hud-bg-elevated, #0a1628);
-  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   pointer-events: none;

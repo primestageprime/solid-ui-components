@@ -13,7 +13,7 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--jtf-border)", "padding-bottom": "2px" }}>
+          <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--sui-border)", "padding-bottom": "2px" }}>
             <NavLink href="#" active>Dashboard</NavLink>
             <NavLink href="#">Reports</NavLink>
             <NavLink href="#" color="warning" badge={3}>Alerts</NavLink>

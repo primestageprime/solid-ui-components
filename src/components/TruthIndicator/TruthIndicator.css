@@ -12,11 +12,11 @@
 }
 
 .sui-truth--true {
-  color: var(--sui-success, #2a6);
+  color: var(--sui-success);
 }
 
 .sui-truth--false {
-  color: var(--sui-danger, #ff0040);
+  color: var(--sui-danger);
 }
 
 .sui-truth--interactive {
@@ -26,11 +26,11 @@
 }
 
 .sui-truth--interactive:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--sui-bg-secondary);
 }
 
 .sui-truth--interactive:focus-visible {
-  outline: 2px solid var(--sui-accent, #4ea1ff);
+  outline: 2px solid var(--sui-accent);
   outline-offset: 2px;
 }
 

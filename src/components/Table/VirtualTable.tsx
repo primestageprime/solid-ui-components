@@ -55,7 +55,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
       "font-size": "11px",
       "text-transform": "uppercase",
       "letter-spacing": "0.03em",
-      color: "var(--sui-accent, #00d4ff)",
+      color: "var(--sui-accent)",
       "white-space": "nowrap",
       ...(col.width ? { width: col.width, "min-width": col.width } : {}),
     };
@@ -123,7 +123,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
               <tr>
                 <td
                   colspan={local.columns.length}
-                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted, #4a6a80)" }}
+                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted)" }}
                 >
                   {local.emptyMessage ?? "No data"}
                 </td>

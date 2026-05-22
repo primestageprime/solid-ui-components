@@ -20,7 +20,7 @@
 
 .sui-participant-avatar--img {
   object-fit: cover;
-  background: var(--sui-surface-sunken, #222);
+  background: var(--sui-bg-secondary);
 }
 
 /* Size variants — width/height + matching font-size so initials read clean

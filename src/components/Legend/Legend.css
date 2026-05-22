@@ -29,7 +29,7 @@
 
 .sui-legend__item--highlighted {
   outline: 1px solid
-    var(--sui-legend-highlight-outline, rgba(255, 255, 255, 0.6));
+    var(--sui-text-secondary);
   outline-offset: 2px;
   filter: brightness(1.2);
 }
@@ -39,7 +39,7 @@
   width: var(--sui-legend-swatch-size);
   height: var(--sui-legend-swatch-size);
   border-radius: 2px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   flex-shrink: 0;
 }
 

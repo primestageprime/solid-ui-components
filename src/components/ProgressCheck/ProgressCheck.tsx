@@ -31,7 +31,7 @@ export const ProgressCheck: Component<ProgressCheckProps> = (props) => {
     }
     if (p >= 1) {
       // Complete — green circle with check
-      return `<circle cx="8" cy="8" r="7" fill="var(--sui-color-success, #00c853)"/>
+      return `<circle cx="8" cy="8" r="7" fill="var(--sui-success)"/>
               <path d="M5 8L7 10.5L11 5.5" stroke="var(--sui-bg-primary, #1a1a2e)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
     }
     // Partial — square with rising fill
@@ -39,7 +39,7 @@ export const ProgressCheck: Component<ProgressCheckProps> = (props) => {
     const fillY = 14 - fillHeight;
     return `<defs><clipPath id="pc-clip"><rect x="2" y="2" width="12" height="12" rx="2"/></clipPath></defs>
             <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.4"/>
-            <rect x="2" y="${fillY}" width="12" height="${fillHeight}" clip-path="url(#pc-clip)" fill="var(--sui-color-warning, #ffab00)" opacity="0.6"/>`;
+            <rect x="2" y="${fillY}" width="12" height="${fillHeight}" clip-path="url(#pc-clip)" fill="var(--sui-warning)" opacity="0.6"/>`;
   };
 
   return (

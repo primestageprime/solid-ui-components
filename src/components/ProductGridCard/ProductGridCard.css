@@ -7,9 +7,9 @@
    ============================================ */
 
 .sui-product-grid-card {
-  border: 1px dashed var(--sui-border, rgba(255, 255, 255, 0.18));
+  border: 1px dashed var(--sui-border);
   border-radius: 4px;
-  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.03));
+  background: var(--sui-bg-elevated);
   padding: 8px 12px;
   font-size: 13px;
   line-height: 1.4;
@@ -27,17 +27,17 @@
 
 .sui-product-grid-card[data-met] {
   border-style: solid;
-  border-color: var(--sui-success, #2a6);
-  background: color-mix(in srgb, var(--sui-success, #2a6) 18%, transparent);
-  color: var(--sui-success, #2a6);
+  border-color: var(--sui-success);
+  background: color-mix(in srgb, var(--sui-success) 18%, transparent);
+  color: var(--sui-success);
 }
 
 /* `selected` wins over `met`: keep this rule AFTER the [data-met] rule so it
    overrides border/background/color when both attributes are present. */
 .sui-product-grid-card[data-selected] {
   border-style: solid;
-  border-color: var(--sui-accent, #4ea1ff);
-  background: color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent);
+  border-color: var(--sui-accent);
+  background: color-mix(in srgb, var(--sui-accent) 18%, transparent);
   color: inherit;
 }
 

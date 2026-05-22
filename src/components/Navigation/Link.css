@@ -1,5 +1,5 @@
 .link {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   text-decoration: none;
   cursor: pointer;
 }

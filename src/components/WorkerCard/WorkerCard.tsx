@@ -67,11 +67,11 @@ const STATUS_LABELS: Record<WorkerStatus, string> = {
   writing: "WRITING", complete: "DONE",
 };
 
-const CYAN = "#00d4ff";
-const GREEN = "#00ff88";
-const RED = "#ff3366";
-const DIM = "#7aa8c0";
-const MUTED = "#4a6a80";
+const CYAN = "var(--sui-accent)";
+const GREEN = "var(--sui-success)";
+const RED = "var(--sui-danger)";
+const DIM = "var(--sui-text-secondary)";
+const MUTED = "var(--sui-text-muted)";
 
 function statusColor(s: WorkerStatus): string {
   switch (s) {

@@ -14,28 +14,28 @@ export const PageShowcase: Component = () => {
           <div>
             <div class="text-meta">default — dark bg, no pattern</div>
             <Page style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--hud-text-dim)", margin: 0 }}>Default page shell</p>
+              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>Default page shell</p>
             </Page>
           </div>
 
           <div>
             <div class="text-meta">gridPattern — 40px accent grid overlay</div>
             <Page gridPattern style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--hud-text-dim)", margin: 0 }}>Grid pattern background</p>
+              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>Grid pattern background</p>
             </Page>
           </div>
 
           <div>
             <div class="text-meta">scanLines — animated horizontal scan line effect</div>
             <Page scanLines style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--hud-text-dim)", margin: 0 }}>Scan lines overlay</p>
+              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>Scan lines overlay</p>
             </Page>
           </div>
 
           <div>
             <div class="text-meta">gridPattern + scanLines — combined effects</div>
             <Page gridPattern scanLines style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--hud-text-dim)", margin: 0 }}>Both effects combined</p>
+              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>Both effects combined</p>
             </Page>
           </div>
         </Stack>

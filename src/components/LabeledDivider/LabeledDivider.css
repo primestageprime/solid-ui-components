@@ -16,13 +16,13 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--sui-border, rgba(255, 255, 255, 0.1));
+  background: var(--sui-border);
 }
 
 .sui-labeled-divider__label {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
   white-space: nowrap;
 }

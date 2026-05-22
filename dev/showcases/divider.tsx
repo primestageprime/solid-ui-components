@@ -11,11 +11,11 @@ export const DividerShowcase: Component = () => {
       <div class="example-group">
         <h3>Solid & Dashed</h3>
         <Panel>
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content above</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content above</p>
           <Divider />
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content below (solid)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (solid)</p>
           <Divider variant="dashed" />
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content below (dashed)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (dashed)</p>
         </Panel>
       </div>
     </div>

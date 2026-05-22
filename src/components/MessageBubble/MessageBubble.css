@@ -6,7 +6,7 @@
  * ============================================ */
 
 .sui-message-bubble {
-  background: var(--sui-surface-sunken, rgba(255, 255, 255, 0.04));
+  background: var(--sui-bg-secondary);
   border-radius: 8px;
   padding: 6px 10px;
   white-space: pre-wrap;
@@ -57,7 +57,7 @@
   width: 6px;
 }
 .sui-message-bubble__text--expanded::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--sui-bg-elevated);
   border-radius: 3px;
 }
 

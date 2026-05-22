@@ -72,12 +72,16 @@
   user-select: text;
   box-sizing: content-box;
 }
-.json-panel .json-key    { color: #79c0ff; }
-.json-panel .json-string { color: #a5d6ff; }
-.json-panel .json-number { color: #ffa657; }
-.json-panel .json-bool   { color: #ff7b72; }
-.json-panel .json-null   { color: #ff7b72; }
-.json-panel .json-punct  { color: rgba(230, 236, 245, 0.55); }
+/* JSON syntax colors mapped to semantic tokens so they track the active
+   theme. Each theme's accent/success/warning/danger naturally lands in
+   that theme's palette (cyan/green/amber/coral for HUD, rust/moss/amber/
+   brick for Bronze, blue/green/amber/red for Default). */
+.json-panel .json-key    { color: var(--sui-accent); }
+.json-panel .json-string { color: var(--sui-success); }
+.json-panel .json-number { color: var(--sui-warning); }
+.json-panel .json-bool   { color: var(--sui-danger); }
+.json-panel .json-null   { color: var(--sui-danger); }
+.json-panel .json-punct  { color: var(--sui-text-muted); }
 
 .workshop-link {
   display: block;

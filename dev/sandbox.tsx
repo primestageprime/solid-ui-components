@@ -5,7 +5,7 @@
 // step-specific data so steps can be added/removed in isolation.
 // ============================================
 import { Component, createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { loadTheme } from "./load-theme";
+import { getPersistedTheme, loadTheme } from "./load-theme";
 import { MockBaseline, SEED_STEPS, type SandboxStep } from "./sandbox-steps";
 
 const FALLBACK_STEP: SandboxStep = {
@@ -63,7 +63,7 @@ export const Sandbox: Component = () => {
   };
 
   onMount(() => {
-    if (!document.getElementById("sui-theme")?.textContent) loadTheme("default");
+    if (!document.getElementById("sui-theme")?.textContent) loadTheme(getPersistedTheme());
 
     const onHash = () => {
       const id = stepIdFromHash(location.hash);

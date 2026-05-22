@@ -10,14 +10,14 @@
 }
 
 .nav-link:hover {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 /* Active state */
 .nav-link--active {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   font-weight: 600;
-  border-bottom-color: var(--hud-accent, #00d4ff);
+  border-bottom-color: var(--sui-accent);
 }
 
 /* Color variants */

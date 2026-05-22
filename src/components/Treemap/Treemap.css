@@ -27,13 +27,13 @@
   min-height: 0;
   gap: 6px;
   padding: 8px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
-  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.04));
+  background: var(--sui-bg-elevated);
 }
 
 .sui-treemap__outer--selected {
-  border-color: var(--sui-accent, #4ea1ff);
+  border-color: var(--sui-accent);
 }
 
 .sui-treemap__outer-header {
@@ -65,7 +65,7 @@
      styles come from this class. */
   min-width: 15ch;
   padding: 4px 6px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   border-radius: 3px;
   background: var(--sui-bg-deep, rgba(0, 0, 0, 0.2));
   display: flex;
@@ -78,13 +78,13 @@
 }
 
 .sui-treemap__inner--selected {
-  border-color: var(--sui-accent, #4ea1ff);
+  border-color: var(--sui-accent);
   background: var(--sui-bg-elevated, rgba(78, 161, 255, 0.12));
 }
 
 .sui-treemap__sidebar {
   /* `flex` is set inline (weight-driven). */
-  border: 1px dashed var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px dashed var(--sui-border);
   border-radius: 4px;
   padding: 8px;
   min-width: 15ch;
@@ -100,6 +100,6 @@
 }
 
 .sui-treemap__sidebar--selected {
-  border-color: var(--sui-accent, #4ea1ff);
+  border-color: var(--sui-accent);
   opacity: 1;
 }

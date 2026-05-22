@@ -175,16 +175,16 @@ export const PillVariantsShowcase: Component = () => {
           "margin-top": "16px",
           "margin-bottom": "20px",
           padding: "10px 14px",
-          background: "var(--jtf-bg-secondary, rgba(255,255,255,0.03))",
-          border: "1px solid var(--jtf-border)",
+          background: "var(--sui-bg-secondary)",
+          border: "1px solid var(--sui-border)",
           "border-radius": "6px",
         }}
       >
-        <span style={{ "font-size": "13px", color: "var(--jtf-text)" }}>
+        <span style={{ "font-size": "13px", color: "var(--sui-text-primary)" }}>
           <strong style={{ "font-feature-settings": '"tnum"' }}>{currentItems().length}</strong>
-          <span style={{ color: "var(--jtf-text-muted)" }}> / {TOTAL_ITEMS} matching</span>
+          <span style={{ color: "var(--sui-text-muted)" }}> / {TOTAL_ITEMS} matching</span>
         </span>
-        <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>
+        <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
           Selected:{" "}
           {selected().size === 0 ? (
             <em style={{ opacity: 0.6 }}>none</em>
@@ -200,9 +200,9 @@ export const PillVariantsShowcase: Component = () => {
               "margin-left": "auto",
               padding: "4px 10px",
               background: "transparent",
-              border: "1px solid var(--jtf-border)",
+              border: "1px solid var(--sui-border)",
               "border-radius": "4px",
-              color: "var(--jtf-text-muted)",
+              color: "var(--sui-text-muted)",
               "font-size": "11px",
               cursor: "pointer",
             }}
@@ -219,7 +219,7 @@ export const PillVariantsShowcase: Component = () => {
               style={{
                 "font-size": "10px",
                 "font-weight": 700,
-                color: "var(--jtf-text-muted)",
+                color: "var(--sui-text-muted)",
                 "text-transform": "uppercase",
                 "letter-spacing": "0.08em",
                 "margin-bottom": "8px",
@@ -247,7 +247,7 @@ export const PillVariantsShowcase: Component = () => {
         style={{
           "margin-top": "24px",
           "font-size": "11px",
-          color: "var(--jtf-text-muted)",
+          color: "var(--sui-text-muted)",
           "line-height": 1.6,
         }}
       >

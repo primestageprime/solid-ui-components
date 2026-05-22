@@ -19,7 +19,7 @@ export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
             subtitle="Real-time monitoring"
             headerAction={<Button variant="primary" size="sm">Refresh</Button>}
           >
-            <p style={{ margin: "0", color: "var(--hud-text-dim)", "font-size": "0.875rem" }}>
+            <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
               HUD section content goes here.
             </p>
           </Section>
@@ -38,7 +38,7 @@ export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Sublabel</div>
-            <p style={{ margin: "0", "font-size": "0.75rem", color: "var(--jtf-text-muted)" }}>Real-time monitoring</p>
+            <p style={{ margin: "0", "font-size": "0.75rem", color: "var(--sui-text-muted)" }}>Real-time monitoring</p>
           </div>
           <div
             class="depth2-atom depth2-atom--link"

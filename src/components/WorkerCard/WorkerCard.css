@@ -1,6 +1,6 @@
 .worker-card {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  border: 1px solid var(--sui-text-muted, #4a6a80);
+  border: 1px solid var(--sui-text-muted);
   border-radius: 8px;
   padding: 10px 14px;
   background: var(--sui-bg-secondary, rgba(13,26,42,0.8));
@@ -8,7 +8,7 @@
 }
 
 .worker-card--complete {
-  border-color: var(--sui-success, #00ff88);
+  border-color: var(--sui-success);
   background: rgba(0,255,136,0.04);
 }
 
@@ -19,11 +19,11 @@
 
 .worker-card--claimed,
 .worker-card--extracting {
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
 }
 
 .worker-card--writing {
-  border-color: var(--sui-success, #00ff88);
+  border-color: var(--sui-success);
 }
 
 /* Row 1: Identity */
@@ -57,7 +57,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sui-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
   margin-top: 4px;
 }
 
@@ -83,7 +83,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sui-text-secondary, #7aa8c0);
+  color: var(--sui-text-secondary);
 }
 
 /* Row 4: Progress (animated) */

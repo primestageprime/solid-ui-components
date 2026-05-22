@@ -39,7 +39,7 @@
   font-size: 0.9em;
   padding: 1px 5px;
   border-radius: 3px;
-  background: var(--sui-bg-elevated, rgba(255, 255, 255, 0.06));
+  background: var(--sui-bg-elevated);
   color: var(--sui-text-primary, inherit);
 }
 
@@ -62,7 +62,7 @@
   min-height: 200px;
   resize: vertical;
   padding: 10px 12px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   background: var(--sui-bg-deep, rgba(0, 0, 0, 0.4));
   color: var(--sui-text-primary, inherit);
@@ -74,12 +74,12 @@
 
 .sui-markdown-editor__textarea:focus {
   outline: none;
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
 }
 
 .sui-markdown-editor__preview {
   padding: 10px 12px;
-  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   background: var(--sui-bg-deep, rgba(0, 0, 0, 0.2));
   overflow-y: auto;

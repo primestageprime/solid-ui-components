@@ -1,7 +1,7 @@
 .sui-pivot-grid {
   overflow: auto;
-  background: var(--sui-bg-primary, #0d0d0d);
-  color: var(--sui-text-primary, #fff);
+  background: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
 }
 
 .sui-pivot-grid__table {
@@ -16,11 +16,11 @@
 .sui-pivot-grid__corner,
 .sui-pivot-grid__col-header,
 .sui-pivot-grid__row-header {
-  background: var(--sui-bg-secondary, #1a1a1a);
+  background: var(--sui-bg-secondary);
   text-align: left;
   padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
-  border-bottom: 1px solid var(--sui-border, #2a2a2a);
-  border-right: 1px solid var(--sui-border, #2a2a2a);
+  border-bottom: 1px solid var(--sui-border);
+  border-right: 1px solid var(--sui-border);
   white-space: nowrap;
   font-weight: 500;
 }
@@ -49,8 +49,8 @@
 
 .sui-pivot-grid__cell {
   padding: 0;
-  border-bottom: 1px solid var(--sui-border, #2a2a2a);
-  border-right: 1px solid var(--sui-border, #2a2a2a);
+  border-bottom: 1px solid var(--sui-border);
+  border-right: 1px solid var(--sui-border);
   white-space: nowrap;
   text-align: right;
 }
@@ -71,12 +71,12 @@
 
 .sui-pivot-grid__cell-link:hover,
 .sui-pivot-grid__cell-button:hover {
-  background-color: var(--sui-bg-hover, rgba(255, 255, 255, 0.04));
+  background-color: var(--sui-bg-secondary);
 }
 
 .sui-pivot-grid__cell-link:focus-visible,
 .sui-pivot-grid__cell-button:focus-visible {
-  outline: 2px solid var(--sui-accent, #4a9eff);
+  outline: 2px solid var(--sui-accent);
   outline-offset: -2px;
 }
 

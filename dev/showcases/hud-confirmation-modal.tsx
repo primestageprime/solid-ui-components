@@ -49,9 +49,9 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             }}>
               <thead>
                 <tr style={{ "border-bottom": "2px solid rgba(0, 212, 255, 0.3)" }}>
-                  <th style={{ padding: "8px", "text-align": "left", color: "var(--hud-accent, #00d4ff)" }}>ID</th>
-                  <th style={{ padding: "8px", "text-align": "left", color: "var(--hud-accent, #00d4ff)" }}>Name</th>
-                  <th style={{ padding: "8px", "text-align": "right", color: "var(--hud-accent, #00d4ff)" }}>Value</th>
+                  <th style={{ padding: "8px", "text-align": "left", color: "var(--sui-accent)" }}>ID</th>
+                  <th style={{ padding: "8px", "text-align": "left", color: "var(--sui-accent)" }}>Name</th>
+                  <th style={{ padding: "8px", "text-align": "right", color: "var(--sui-accent)" }}>Value</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { loadBaseline, loadTheme } from "./load-theme";
+import {
+  getPersistedTheme,
+  loadBaseline,
+  loadTheme,
+  persistTheme,
+} from "./load-theme";
 import { THEMES } from "../src/themes/manifest";
 
 const BASELINE_ID = "sui-baseline";
 const THEME_ID = "sui-theme";
+const STORAGE_KEY = "sui-theme";
 
 const getStyle = (id: string): HTMLStyleElement | null =>
   document.getElementById(id) as HTMLStyleElement | null;
@@ -11,6 +17,7 @@ const getStyle = (id: string): HTMLStyleElement | null =>
 describe("load-theme", () => {
   beforeEach(() => {
     document.head.innerHTML = "";
+    window.localStorage.clear();
   });
 
   it("loadBaseline injects #sui-baseline with non-empty content", () => {
@@ -46,5 +53,28 @@ describe("load-theme", () => {
     const baselineContent = getStyle(BASELINE_ID)!.textContent;
     loadTheme("hud");
     expect(getStyle(BASELINE_ID)!.textContent).toBe(baselineContent);
+  });
+
+  describe("persistence", () => {
+    it("getPersistedTheme returns the default when nothing is stored", () => {
+      expect(getPersistedTheme()).toBe("hud");
+    });
+
+    it("persistTheme writes the theme id to localStorage", () => {
+      persistTheme("bronze");
+      expect(window.localStorage.getItem(STORAGE_KEY)).toBe("bronze");
+    });
+
+    it("getPersistedTheme round-trips through persistTheme", () => {
+      persistTheme("bronze");
+      expect(getPersistedTheme()).toBe("bronze");
+      persistTheme("default");
+      expect(getPersistedTheme()).toBe("default");
+    });
+
+    it("getPersistedTheme falls back to the default for invalid stored values", () => {
+      window.localStorage.setItem(STORAGE_KEY, "not-a-theme");
+      expect(getPersistedTheme()).toBe("hud");
+    });
   });
 });

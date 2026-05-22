@@ -10,7 +10,7 @@ const StatusPill: Component<{ label: string; color: string }> = (props) => (
       padding: "2px 8px",
       "border-radius": "10px",
       "background-color": props.color,
-      color: "#fff",
+      color: "var(--sui-text-primary)",
       "font-size": "0.75rem",
       "font-weight": 600,
     }}

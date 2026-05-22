@@ -10,14 +10,14 @@
 .sui-metric-card {
   display: inline-block;
   padding: 1rem;
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid var(--border-color, var(--jtf-border));
+  background: rgba(var(--sui-accent-rgb), 0.05);
+  border: 1px solid var(--sui-border);
   border-radius: 6px;
   text-align: center;
 }
 
 .sui-metric-card__label {
-  color: var(--text-muted, var(--jtf-text-muted));
+  color: var(--sui-text-muted);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -27,30 +27,30 @@
 .sui-metric-card__value {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary, var(--jtf-text-primary));
+  color: var(--sui-text-primary);
 }
 
 .sui-metric-card__value--with-units {
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-family: var(--sui-font-mono);
 }
 
 .sui-metric-card__value-units {
   margin-left: 4px;
   font-size: 0.9rem;
   font-weight: normal;
-  font-family: var(--sui-font-family, system-ui, sans-serif);
-  color: var(--text-secondary, var(--jtf-text-secondary));
+  font-family: var(--sui-font-family);
+  color: var(--sui-text-secondary);
 }
 
 /* Color variants — tint the value text only. */
 .sui-metric-card--success .sui-metric-card__value {
-  color: #00ff88;
+  color: var(--sui-success);
 }
 
 .sui-metric-card--warning .sui-metric-card__value {
-  color: #ff8800;
+  color: var(--sui-warning);
 }
 
 .sui-metric-card--danger .sui-metric-card__value {
-  color: #ff0040;
+  color: var(--sui-danger);
 }
