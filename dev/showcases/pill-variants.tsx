@@ -77,7 +77,6 @@ const ITEMS: ItemMeta[] = [
   { id: "conversation-tree", tags: ["depth:3", "list", "chat"] },
   { id: "data-list", tags: ["depth:3", "list", "data"] },
   { id: "titled-time-range-header", tags: ["depth:1", "container", "data"] },
-  { id: "engine-data-section", tags: ["depth:3", "container", "data"] },
   { id: "formula-panel", tags: ["depth:4", "container", "math"] },
   { id: "interactive-formula", tags: ["depth:4", "form", "math"] },
   { id: "metric-card", tags: ["depth:3", "container", "indicator", "data"] },

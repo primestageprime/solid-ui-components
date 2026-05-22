@@ -220,7 +220,6 @@ State derivation:
 - **ResultPanel** — Wraps ResultDisplay in a FormulaProvider + NarrowStack. Key props: `label`, `value`, `units`, `sublabel`, `valueColor`, `badge`, `formulaProvider`. Use for: result sections that include formula/variable breakdowns.
 - **StatsTable** — Simple typed data table with column definitions. Key props: `columns` (array of `StatsColumn`), `rows`, `getRowClass`, `caption`. Use for: quick statistical summary tables.
 - **FormulaDecomposition** — Factory functions for compliance formula panels. Exports: `createFormulaResult`, `createGivens`, `createFormula`, `createFormulaPanel`. Key config: `FormulaConfig` with `vars`, `threshold`, `compute`, `latex`. Use for: interactive formula display with result, givens table, and LaTeX rendering.
-- **EngineDataSection** — Composite (Depth 3). Composes `AlertBox` (Depth 2) + Layout/Text curried variants + `NumberWithUnits` (Atomic Primitive). Heading + warning alert + content slot for engine power data. Key props: `heading`, `showWarning`, `defaultKw`, `auxEngineHref`. Use for: engine power compensation sections. Name is domain-bound — flagged for rename in a future library-wide naming pass.
 
 ## DataList
 - **DTable** — Compact key-value data table wrapper. Use for: definition-list style data.

@@ -92,7 +92,6 @@ import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
 import { ConversationTreeShowcase } from "./showcases/conversation-tree";
 import { DataListShowcase } from "./showcases/data-list";
-import { EngineDataSectionShowcase } from "./showcases/engine-data-section";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
 import { InteractiveFormulaShowcase } from "./showcases/interactive-formula";
 import { MetricCardShowcase } from "./showcases/metric-card";
@@ -199,7 +198,6 @@ const items: Item[] = [
   { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },
   { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:3", "list", "data"] },
   { id: "titled-time-range-header", label: "TitledTimeRangeHeader", component: TitledTimeRangeHeaderShowcase, tags: ["depth:1", "container", "data"] },
-  { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase, tags: ["depth:3", "container", "data"] },
   { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:3", "container", "math"] },
   { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:3", "form", "math"] },
   { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:1", "container", "indicator", "data"] },

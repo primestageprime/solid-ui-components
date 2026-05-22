@@ -4,7 +4,7 @@ import { DTable, DT, DD } from "../../src/components/DataList";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
 import { Button } from "../../src/components/Button";
 import { NavLink } from "../../src/components/Navigation";
-import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel, EngineDataSection } from "../../src/components/DataDisplay";
+import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel } from "../../src/components/DataDisplay";
 import { EmptyState, AlertBox } from "../../src/components/Feedback";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
@@ -702,55 +702,6 @@ const DataDisplayShowcase: Component = () => {
             <FormulaVarRow varId="kw"><DT>Engine</DT><DD><NumberWithUnits value={1200} units="kW" precision={0} /></DD></FormulaVarRow>
           </DTable>
         </ResultPanel>
-      </div>
-
-      <div class="example-group">
-        <h3>EngineDataSection — With Warning</h3>
-        <EngineDataSection
-          showWarning={true}
-          defaultKw={300}
-          auxEngineHref="#"
-        >
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style={{ padding: "8px" }}>90%</td><td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td></tr>
-              <tr><td style={{ padding: "8px" }}>95%</td><td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td></tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
-      </div>
-
-      <div class="example-group">
-        <h3>EngineDataSection — Without Warning</h3>
-        <EngineDataSection>
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Aux (450 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={{ padding: "8px" }}>90%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff", "font-weight": "700", "text-shadow": "0 0 8px currentColor" }}>2.274</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "8px" }}>95%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>1.760</td>
-              </tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
       </div>
 
       <FormulaPanelDemo />
