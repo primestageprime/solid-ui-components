@@ -13,6 +13,50 @@
 - `default.css` is now **tokens-only**. Consumers using `loadTheme()` (the documented JS API) are unaffected. Consumers loading `@primestageprime/solid-ui-components/themes/default.css` directly by URL will see component CSS go missing — they must also load `@primestageprime/solid-ui-components/themes/_baseline.css` (or move to the JS API). See `src/themes/README.md` for details.
 - The dev `ThemeSwitcher` is now a dropdown sourced from the manifest rather than a 2-state toggle.
 
+### Breaking changes
+
+**Domain-name rename pass.** SUI now names *shapes*; consumer apps name *domain concepts*. Three components carried maritime/engine-domain names that misrepresented their generic shape — they've been renamed (or removed) accordingly.
+
+| Old | New | Migration |
+|---|---|---|
+| `VesselCard`, `VesselCardProps` | `RemovableItemCard`, `RemovableItemCardProps` | Find/replace symbol names. Props unchanged. |
+| `VesselCallHeader`, `VesselCallHeaderProps` | `TitledTimeRangeHeader`, `TitledTimeRangeHeaderProps` | Find/replace symbol names *and* prop names — see below. |
+| `EngineDataSection`, `EngineDataSectionProps` | *(removed)* | Inline the pattern using existing Primitives — see below. |
+
+**`TitledTimeRangeHeader` prop renames** (in addition to the component symbol):
+
+| Old prop | New prop |
+|---|---|
+| `vesselName` | `title` |
+| `connectedAt` | `startAt` |
+| `disconnectedAt` | `endAt` |
+| `assetId` | `assetLabel` |
+
+The CSS class prefix changed in lockstep: `sui-vessel-call-header*` → `sui-titled-time-range-header*`. Consumers that target these classes directly need to update their selectors. The `badge`, `action`, and `href` props are unchanged.
+
+**`EngineDataSection` replacement.** The component baked the "Add Power Log" warning copy and `defaultKw` / `auxEngineHref` props into a thin wrapper around existing Primitives. Inline the pattern at the call site:
+
+```tsx
+import { NarrowStack, TextTitle, TextBody, AlertBox, NumberWithUnits } from "@primestageprime/solid-ui-components";
+
+<NarrowStack>
+  <TextTitle>{heading}</TextTitle>
+  {tableContent}
+  <Show when={showWarning}>
+    <AlertBox
+      variant="warning"
+      title="Power Log Required"
+      action={<a href={auxEngineHref}>Add Power Log</a>}
+    >
+      <TextBody>
+        Using default (<NumberWithUnits value={defaultKw} units="kW" precision={0} />).
+        Add aux engine data to improve accuracy.
+      </TextBody>
+    </AlertBox>
+  </Show>
+</NarrowStack>
+```
+
 ## 0.26.0
 
 Wave 2 composites/extensions drop: promotes patterns hand-rolled in
