@@ -306,38 +306,63 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   const STUB_LENGTH = 28;
   const BADGE_RADIUS = 11;
 
-  // Aggregate summaries by (anchor, side) so each visible anchor gets at
-  // most one badge per side, and the count reflects the entire collapsed
-  // subtree on that side — not just the closest ring of hidden nodes.
+  // Aggregate summaries by SIDE (left vs right of center). All hidden
+  // nodes on a given side count into one badge — even if their nearest
+  // visible neighbor (and thus their layout-anchor) is a node on the
+  // opposite side via a cross-side edge. The badge anchors to the
+  // OUTERMOST visible node on the matching side so the stub points from
+  // the chart edge outward.
   const boundaryBadges = createMemo(() => {
     const positions = layout().positions;
     const edges = layout().edges;
     const gap = effectiveColumnGap();
+    const centerColVal = props.centerCol ?? 0;
 
-    type Aggregated = { anchorId: string; dir: -1 | 1; count: number };
-    const grouped = new Map<string, Aggregated>();
+    // Pick the outermost visible node on each side from layout positions.
+    let leftAnchorId: string | undefined;
+    let rightAnchorId: string | undefined;
+    let leftMinX = Infinity;
+    let rightMaxX = -Infinity;
+    for (const [id, pos] of positions) {
+      if (id.startsWith("__collapsed_")) continue;
+      if (pos.x < leftMinX) { leftMinX = pos.x; leftAnchorId = id; }
+      if (pos.x > rightMaxX) { rightMaxX = pos.x; rightAnchorId = id; }
+    }
 
+    // Sum collapsed counts per side. A summary's side comes from its own
+    // column relative to centerCol (NOT its anchor), so a hidden node on
+    // the LEFT can never spill into a RIGHT badge just because the only
+    // visible neighbor it has via deps happens to be on the right.
+    let leftCount = 0;
+    let rightCount = 0;
     for (const s of layout().summaries) {
-      const anchorPos = positions.get(s.anchorId);
-      if (!anchorPos) continue;
-      // Anchor's col index from its center x.
-      const anchorCol = gap > 0 ? Math.round(anchorPos.x / gap) : 0;
-      let dir: -1 | 1;
-      if (s.column < anchorCol) dir = -1;
-      else if (s.column > anchorCol) dir = 1;
-      else {
+      if (s.column < centerColVal) {
+        leftCount += s.collapsedCount;
+      } else if (s.column > centerColVal) {
+        rightCount += s.collapsedCount;
+      } else {
+        // Tie at centerCol — fall back to the original edge-direction
+        // heuristic so the badge still picks a sensible side.
         const edge = edges.find(
           (e) => e.sourceId === s.id || e.targetId === s.id,
         );
-        dir = edge && edge.targetId === s.anchorId ? -1 : 1;
+        const dir = edge && edge.targetId === s.anchorId ? -1 : 1;
+        if (dir === -1) leftCount += s.collapsedCount;
+        else rightCount += s.collapsedCount;
       }
-      const key = `${s.anchorId}|${dir}`;
-      const existing = grouped.get(key);
-      if (existing) existing.count += s.collapsedCount;
-      else grouped.set(key, { anchorId: s.anchorId, dir, count: s.collapsedCount });
+    }
+    void gap;
+
+    type Aggregated = { anchorId: string; dir: -1 | 1; count: number; key: string };
+    const sides: Aggregated[] = [];
+    if (leftCount > 0 && leftAnchorId) {
+      sides.push({ anchorId: leftAnchorId, dir: -1, count: leftCount, key: "side|-1" });
+    }
+    if (rightCount > 0 && rightAnchorId) {
+      sides.push({ anchorId: rightAnchorId, dir: 1, count: rightCount, key: "side|+1" });
     }
 
-    return Array.from(grouped.entries()).flatMap(([key, g]) => {
+    return sides.flatMap((g) => {
       const anchorPos = positions.get(g.anchorId);
       if (!anchorPos) return [];
       const dir = g.dir;
@@ -361,7 +386,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           ? arrowStart - BADGE_RADIUS
           : arrowEnd + BADGE_RADIUS;
       return [{
-        key,
+        key: g.key,
         d: `M ${arrowStart} ${anchorPos.y} L ${arrowEnd} ${anchorPos.y}`,
         badgeX,
         badgeY: anchorPos.y,

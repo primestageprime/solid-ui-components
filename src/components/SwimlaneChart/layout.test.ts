@@ -106,15 +106,26 @@ describe("computeSwimlaneLayout — barycentric ordering", () => {
 });
 
 describe("computeSwimlaneLayout — falloff and collapse", () => {
-  it("when DOING is empty, shows all nodes regardless of maxDepth", () => {
-    const nodes: DAGNode<Item>[] = [
-      { id: "a", data: { status: 0 } },
-      { id: "b", data: { status: 2 } },
+  it("applies maxDepth even when centerCol is not in the data", () => {
+    // Nodes at cols 0 and 2; centerCol = 1 (no node there). The virtual
+    // centerCol slot in ordinalFor still defines a well-formed ordinal
+    // axis (cols 0 → ordinal -1; col 2 → ordinal +1 with centerCol
+    // inserted between them). With maxDepth=0, ONLY centerCol would be
+    // visible — both real nodes fall outside the window and collapse.
+    type Pos = { col: number };
+    const sw = (n: DAGNode<Pos>) => n.data.col;
+    const nodes: DAGNode<Pos>[] = [
+      { id: "a", data: { col: 0 } },
+      { id: "b", data: { col: 2 } },
     ];
-    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
-    expect(result.positions.has("a")).toBe(true);
-    expect(result.positions.has("b")).toBe(true);
-    expect(result.summaries).toEqual([]);
+    const result = computeSwimlaneLayout(nodes, [], {
+      ...defaults,
+      swimlaneFor: sw,
+      maxDepth: 0,
+      centerCol: 1,
+    });
+    expect(result.positions.has("a")).toBe(false);
+    expect(result.positions.has("b")).toBe(false);
   });
 
   it("hides nodes whose |col - center| > maxDepth", () => {

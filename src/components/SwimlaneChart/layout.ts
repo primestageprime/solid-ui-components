@@ -115,8 +115,11 @@ export function computeSwimlaneLayout<T>(
   // Ordinal distance matches the compact visual positioning above — i.e.
   // empty cols between the center and an outer col don't count as a
   // "ring", so an isolated far-out col can stay visible at modest depth.
+  // The earlier "no nodes at centerCol → visible" bypass is gone: with
+  // the virtual centerCol-slot logic in `ordinalFor`, ordinals are
+  // well-defined even when centerCol isn't in the data (every node is
+  // just laid out relative to where centerCol *would* sit).
   const isVisible = (id: string): boolean => {
-    if (centerNodeIds.length === 0) return true;
     const c = colOf.get(id);
     if (c === undefined) return true;
     return Math.abs(ordinalFor(c)) <= opts.maxDepth;
