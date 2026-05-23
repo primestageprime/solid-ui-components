@@ -229,6 +229,44 @@
   outline-offset: 2px;
 }
 
+/* Dismiss-all button (rendered by <ToastRegion showDismissAll />).
+   Hidden by default; shown via the sibling-`:has(li)` rule below so it
+   only appears when the toast list contains at least one toast. */
+.sui-toast__dismiss-all {
+  position: fixed;
+  bottom: var(--sui-space-3, 12px);
+  right: var(--sui-space-3, 12px);
+  z-index: 10000;
+  width: calc(380px - 24px);
+  padding: var(--sui-space-2, 8px);
+  font-family: var(--sui-font-family, system-ui);
+  font-size: 12px;
+  color: var(--sui-text-muted);
+  background-color: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-sm, 6px);
+  cursor: pointer;
+  text-align: center;
+  display: none;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.sui-toast__dismiss-all:hover {
+  color: var(--sui-text-primary);
+  background-color: var(--sui-bg-secondary);
+  border-color: var(--sui-border-bright);
+}
+.sui-toast__dismiss-all:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
+/* Show the button only when its sibling list has visible toasts. */
+.sui-toast__list:has(li) ~ .sui-toast__dismiss-all {
+  display: block;
+}
+
 @keyframes sui-toast-hide {
   from {
     opacity: 1;
