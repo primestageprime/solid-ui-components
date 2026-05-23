@@ -951,15 +951,30 @@ const MS_LOZENGE_GAP = 32;
 const MS_MAX_DEPTH = 1;
 
 /**
- * Pick the visible-window radius (maxDepth) based on available width.
- * Each step of maxDepth adds one col on EACH side, so each step adds
- * 2 × MS_COL_CENTER_GAP (= 400px) of needed width.
+ * Pick the visible-window radius (maxDepth) by measuring the panel:
+ * the largest `d` where the full horizontal layout — both `-S` and
+ * `+S` lozenges plus all visible cols — fits inside `stageWidth`
+ * with at least 2rem (32px) of breathing room on each side. Below
+ * that threshold, compress to the next-smaller `d`.
+ *
+ * Horizontal content for depth `d`:
+ *   leftLozengeOuterEdge  = -d·gap - cardW/2 - lozengeGap - lozengeW
+ *   rightLozengeOuterEdge = +d·gap + cardW/2 + lozengeGap + lozengeW
+ *   contentWidth = 2·(d·gap + cardW/2 + lozengeGap + lozengeW)
+ *                = 2·d·MS_COL_CENTER_GAP + 2·(cardW/2 + lozengeGap + lozengeW)
+ * For our defaults: 400·d + 236.
+ *
+ * Required panel width = contentWidth + 2 · PADDING_PX.
+ * Solve for max d where required ≤ stageWidth →
+ *   d ≤ (stageWidth − basePadded) / step.
  */
 function maxDepthForWidth(stageWidth: number): number {
-  if (stageWidth < 880) return 1;
-  if (stageWidth < 1280) return 2;
-  if (stageWidth < 1680) return 3;
-  return 4;
+  const PADDING_PX = 32; // 2rem on each side
+  const baseContent = 2 * (MS_CARD_W / 2 + MS_LOZENGE_GAP + LOZENGE_W);
+  const step = 2 * MS_COL_CENTER_GAP;
+  const usable = stageWidth - baseContent - 2 * PADDING_PX;
+  if (usable < 0) return 0;
+  return Math.floor(usable / step);
 }
 
 /**
