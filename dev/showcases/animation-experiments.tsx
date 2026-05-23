@@ -1429,10 +1429,39 @@ function MixedShapesLaneReactive(props: {
             }
             return list;
           };
+          // Path strategy:
+          //   - DURING animation (currentT < 1): always-3-segment Z
+          //     with knee at midX. Pure function of src/tgt — no
+          //     topology branching, so per-frame interpolation is
+          //     smooth even when src/tgt cross thresholds where the
+          //     full router would flip shape (straight ↔ Z ↔ U).
+          //   - AT REST (currentT === 1): full obstacle-avoiding
+          //     router for clean final dodge geometry.
+          //
+          // Snap from simple-Z → dodging path at t=1 is only visible
+          // when the simple-Z would have crossed an obstacle; for
+          // typical chart layouts the two outputs match.
+          const arrowPath = () => {
+            const s = src()!;
+            const tg = tgt()!;
+            if (currentT() < 1) {
+              const goingRight = tg.x >= s.x;
+              const fromOuterX = goingRight ? s.x + s.width / 2 : s.x - s.width / 2;
+              const toOuterX = goingRight ? tg.x - tg.width / 2 : tg.x + tg.width / 2;
+              const channelX = (fromOuterX + toOuterX) / 2;
+              return [
+                `M ${fromOuterX} ${s.y}`,
+                `L ${channelX} ${s.y}`,
+                `L ${channelX} ${tg.y}`,
+                `L ${toOuterX} ${tg.y}`,
+              ].join(" ");
+            }
+            return orthogonalAvoidingObstacles(s, tg, obstacles());
+          };
           return (
             <Show when={!bothHidden() && src() && tgt()}>
               <path
-                d={orthogonalAvoidingObstacles(src()!, tgt()!, obstacles())}
+                d={arrowPath()}
                 fill="none"
                 stroke={stroke()}
                 stroke-width="1.5"
