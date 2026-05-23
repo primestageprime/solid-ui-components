@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## 0.37.1
+
+### Fixed
+
+- **TabbedSidePanel**: `PaddedBody` now sets `min-width: 0` and `min-height: 0`. Without this, the CSS default `min-width: auto` on flex children let any descendant with intrinsic width (DAG SVG, wide tables, long words) propagate up through the panel and overflow its container. Symptom: side panel growing past its allocated flex width with horizontally clipped content. Promotes a downstream override that lived in `amygdala-ui/src/styles/sui-theme-overrides.css`.
+
+## 0.36.0
+
+### Added
+
+- **TabbedSidePanel**: new `contentPadding` prop (`"none" | "sm" | "md"`, default `"sm"`). Adds a small inboard gap between the vertical tab strip and the body so content no longer visually collides with the strip labels. **Default-changing visual bump** — every existing consumer gains ~8px of inboard padding on the body. Pass `contentPadding="none"` to preserve the previous flush behavior. Threaded through `RightDetailTabbedPanel` and `LeftNavTabbedPanel` curried variants.
+
+## 0.35.0
+
 ### Added
 
 - **Bronze theme** — a light, serif (Lora), friendly variant. Lora is used for prose; Inter for utility text (buttons, badges, subtitles, list metadata). Warm bone background, rust accent.
@@ -12,6 +26,56 @@
 
 - `default.css` is now **tokens-only**. Consumers using `loadTheme()` (the documented JS API) are unaffected. Consumers loading `@primestageprime/solid-ui-components/themes/default.css` directly by URL will see component CSS go missing — they must also load `@primestageprime/solid-ui-components/themes/_baseline.css` (or move to the JS API). See `src/themes/README.md` for details.
 - The dev `ThemeSwitcher` is now a dropdown sourced from the manifest rather than a 2-state toggle.
+
+### Dev / internal
+
+- **DotChart showcase** rebuilt as a reference for the amygdala-ui dotchart pattern: two stacked `<TimelineBar>` strips anchored in the chart's bottom margin (`bandY={{ anchor: "margin-bottom" }}`) so they sit along the bottom of the x-axis, with tick marks pushed below the strips via `XAxis.tickOffset` / `labelOffset`. Includes a data-check panel (hover any bar to pop dashed reference lines at its `start`/`end` and highlight its row in a tabular dump of `id`, `lane`, formatted clock + offset times, duration, and raw epoch ms). Dev-only — no library exports changed.
+
+### Breaking changes
+
+**Domain-name rename pass.** SUI now names *shapes*; consumer apps name *domain concepts*. Three components carried maritime/engine-domain names that misrepresented their generic shape — they've been renamed (or removed) accordingly.
+
+| Old | New | Migration |
+|---|---|---|
+| `VesselCard`, `VesselCardProps` | `RemovableItemCard`, `RemovableItemCardProps` | Find/replace symbol names. Props unchanged. No CSS-class changes — `RemovableItemCard` is zero-CSS and emits no own selectors. |
+| `VesselCallHeader`, `VesselCallHeaderProps` | `TitledTimeRangeHeader`, `TitledTimeRangeHeaderProps` | Find/replace symbol names *and* prop names — see below. |
+| `EngineDataSection`, `EngineDataSectionProps` | *(removed)* | Inline the pattern using existing Primitives — see below. |
+
+**`TitledTimeRangeHeader` prop renames** (in addition to the component symbol):
+
+| Old prop | New prop |
+|---|---|
+| `vesselName` | `title` |
+| `connectedAt` | `start` |
+| `disconnectedAt` | `end` |
+| `assetId` | `assetLabel` |
+
+The CSS class prefix changed in lockstep: `sui-vessel-call-header*` → `sui-titled-time-range-header*`. Consumers that target these classes directly need to update their selectors. The `badge`, `action`, and `href` props are unchanged.
+
+**`EngineDataSection` replacement.** The component baked the "Add Power Log" warning copy and `defaultKw` / `auxEngineHref` props into a thin wrapper around existing Primitives. Inline the pattern at the call site:
+
+```tsx
+import { NarrowStack, TextTitle, TextBody, AlertBox, NumberWithUnits } from "@primestageprime/solid-ui-components";
+
+<NarrowStack>
+  <TextTitle>{heading}</TextTitle>
+  {tableContent}
+  <Show when={showWarning}>
+    <AlertBox
+      variant="warning"
+      title="Power Log Required"
+      action={<a href={auxEngineHref}>Add Power Log</a>}
+    >
+      <TextBody>
+        Using default (<NumberWithUnits value={defaultKw} units="kW" precision={0} />).
+        Add aux engine data to improve accuracy.
+      </TextBody>
+    </AlertBox>
+  </Show>
+</NarrowStack>
+```
+
+The inlined version drops the `EngineDataSection`'s own chrome — adjust spacing/typography wrappers at the call site if the visual result differs from the original.
 
 ## 0.26.0
 

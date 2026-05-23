@@ -99,9 +99,9 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
           width: "100%",
           height: "100%",
           "border-radius": "8px",
-          background: "rgba(255,255,255,0.06)",
-          border: "1px dashed rgba(255,255,255,0.2)",
-          color: "rgba(255,255,255,0.7)",
+          background: "var(--sui-bg-elevated)",
+          border: "1px dashed var(--sui-border-bright)",
+          color: "var(--sui-text-secondary)",
           "font-size": "12px",
         }}
       >
@@ -122,15 +122,17 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
         height: "100%",
         padding: "8px 10px",
         "border-radius": "8px",
-        background: isFocused ? "rgba(62,207,142,0.18)" : "rgba(255,255,255,0.05)",
+        background: isFocused
+          ? `rgba(var(--sui-success-rgb), 0.18)`
+          : "var(--sui-bg-elevated)",
         border: `1px solid ${
           isFocused
             ? STATUS_COLORS[node.data.status]
             : isAdjacent
-              ? "rgba(255,255,255,0.35)"
-              : "rgba(255,255,255,0.15)"
+              ? "var(--sui-text-muted)"
+              : "var(--sui-border)"
         }`,
-        color: "var(--sui-text, #e6ecf5)",
+        color: "var(--sui-text-primary)",
         "font-size": "12px",
         "box-sizing": "border-box",
       }}
@@ -150,7 +152,7 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
         </span>
       </div>
       <Show when={node.data.sublabel || node.data.estimate}>
-        <div style={{ display: "flex", gap: "8px", color: "rgba(255,255,255,0.55)", "font-size": "11px" }}>
+        <div style={{ display: "flex", gap: "8px", color: "var(--sui-text-secondary)", "font-size": "11px" }}>
           <Show when={node.data.sublabel}>
             <span>{node.data.sublabel}</span>
           </Show>
@@ -175,7 +177,7 @@ export const DagChartShowcase: Component = () => {
       <div class="example-group">
         <h3>Vertical layout</h3>
         <p class="text-meta">5-node task graph rendered top-to-bottom.</p>
-        <div style={{ height: "420px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "420px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -189,7 +191,7 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Horizontal layout</h3>
-        <div style={{ height: "320px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "320px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -203,7 +205,7 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Minimal (label + status only)</h3>
-        <div style={{ height: "260px", border: "1px solid rgba(255,255,255,0.08)", "border-radius": "6px" }}>
+        <div style={{ height: "260px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
           <DagChart
             nodes={minimalNodes}
             edges={minimalEdges}

@@ -10,7 +10,7 @@ const StatusPill: Component<{ label: string; color: string }> = (props) => (
       padding: "2px 8px",
       "border-radius": "10px",
       "background-color": props.color,
-      color: "#fff",
+      color: "var(--sui-text-primary)",
       "font-size": "0.75rem",
       "font-weight": 600,
     }}
@@ -21,7 +21,7 @@ const StatusPill: Component<{ label: string; color: string }> = (props) => (
 
 const STATUS_COLORS: Record<string, string> = {
   NOMINAL: "#10b981",
-  ALARM: "#ef4444",
+  ALARM: "var(--sui-danger)",
   WARNING: "#f59e0b",
   OFFLINE: "#6b7280",
 };

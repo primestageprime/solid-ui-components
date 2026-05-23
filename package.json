@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.35.0",
+  "version": "0.39.0",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -61,6 +61,7 @@
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
+    "@types/node": "^25.9.1",
     "d3-scale": "^4.0.2",
     "jsdom": "^26.1.0",
     "solid-js": "^1.9.10",
@@ -74,7 +75,6 @@
     "@kobalte/core": "^0.13.11",
     "@tanstack/solid-virtual": "^3.13.23",
     "d3-dag": "^1.1.0",
-    "katex": "^0.16.0",
-    "motion": "^12.40.0"
+    "katex": "^0.16.0"
   }
 }

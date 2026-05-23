@@ -1,6 +1,6 @@
 .worker-card {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  border: 1px solid var(--sui-text-muted, #4a6a80);
+  border: 1px solid var(--sui-text-muted);
   border-radius: 8px;
   padding: 10px 14px;
   background: var(--sui-bg-secondary, rgba(13,26,42,0.8));
@@ -8,22 +8,22 @@
 }
 
 .worker-card--complete {
-  border-color: var(--sui-success, #00ff88);
-  background: rgba(0,255,136,0.04);
+  border-color: var(--sui-success);
+  background: rgba(var(--sui-success-rgb), 0.04);
 }
 
 .worker-card--overdue {
-  border-color: var(--sui-error, #ff3366);
-  background: rgba(255,51,102,0.04);
+  border-color: var(--sui-danger);
+  background: rgba(var(--sui-danger-rgb), 0.04);
 }
 
 .worker-card--claimed,
 .worker-card--extracting {
-  border-color: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent);
 }
 
 .worker-card--writing {
-  border-color: var(--sui-success, #00ff88);
+  border-color: var(--sui-success);
 }
 
 /* Row 1: Identity */
@@ -57,7 +57,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sui-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
   margin-top: 4px;
 }
 
@@ -83,7 +83,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sui-text-secondary, #7aa8c0);
+  color: var(--sui-text-secondary);
 }
 
 /* Row 4: Progress (animated) */
@@ -107,7 +107,7 @@
 .worker-card__bar-track {
   height: 4px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.08);
+  background: var(--sui-border);
   overflow: hidden;
 }
 
@@ -120,7 +120,7 @@
 .worker-card__bar-fill--extracting {
   background-image: repeating-linear-gradient(
     -45deg, transparent, transparent 8px,
-    rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px
+    var(--sui-border) 8px, var(--sui-border) 16px
   );
   background-size: 32px 32px;
   animation: worker-card-stripe 1s linear infinite;

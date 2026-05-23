@@ -172,8 +172,8 @@ const colLabel = (col: number): string =>
 
 const colTint = (col: number): { bg: string; border: string } => {
   if (col < 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }; // DONE → green
-  if (col > 0) return { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" }; // TODO → grey
-  return { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" }; // DOING → cyan
+  if (col > 0) return { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }; // TODO → grey
+  return { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" }; // DOING → cyan
 };
 
 export const renderStubNode = (
@@ -185,8 +185,8 @@ export const renderStubNode = (
       <Surface
         padding="sm"
         radius="sm"
-        bg="rgba(255,255,255,0.03)"
-        borderColor="rgba(255,255,255,0.25)"
+        bg="var(--sui-bg-secondary)"
+        borderColor="var(--sui-border-bright)"
         style={{
           width: "100%",
           height: "100%",
@@ -229,7 +229,7 @@ export const StubChart: Component<{
       width: props.width ?? "100%",
       height: `${10 * 1.4}em`,
       "min-width": props.minWidth ?? "320px",
-      border: "1px dashed rgba(255,255,255,0.12)",
+      border: "1px dashed var(--sui-border)",
       "border-radius": "4px",
       "box-sizing": "border-box",
     }}
@@ -270,8 +270,8 @@ const ANIM_STATUS_LABEL: Record<AnimStatus, string> = {
   done: "COMPLETED",
 };
 const ANIM_STATUS_TINT: Record<AnimStatus, { bg: string; border: string }> = {
-  todo: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.18)" }, // grey
-  doing: { bg: "rgba(0,212,255,0.10)", border: "var(--sui-accent, #00d4ff)" },
+  todo: { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }, // grey
+  doing: { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" },
   done: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }, // green
 };
 
@@ -286,8 +286,8 @@ const renderAnimNode = (
       <Surface
         padding="sm"
         radius="sm"
-        bg="rgba(255,255,255,0.03)"
-        borderColor="rgba(255,255,255,0.25)"
+        bg="var(--sui-bg-secondary)"
+        borderColor="var(--sui-border-bright)"
         style={{
           width: "100%",
           height: "100%",
@@ -383,9 +383,9 @@ const AnimatedChain: Component = () => {
     padding: "6px 14px",
     "font-size": "12px",
     "font-family": "inherit",
-    color: "var(--sui-text, #e6ecf5)",
+    color: "var(--sui-text-primary)",
     background: "var(--sui-surface, rgba(0,0,0,0.2))",
-    border: "1px solid var(--sui-border, rgba(255,255,255,0.15))",
+    border: "1px solid var(--sui-border)",
     "border-radius": "4px",
     cursor: "pointer",
   } as const;
@@ -398,7 +398,7 @@ const AnimatedChain: Component = () => {
           {playing() ? "⏸ Pause" : "▶ Play"}
         </button>
         <button type="button" style={btnStyle} onClick={advance}>Next →</button>
-        <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.5)" }}>
+        <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
           frame {idx() + 1} / {history().length}
         </span>
       </div>
@@ -407,7 +407,7 @@ const AnimatedChain: Component = () => {
           width: "100%",
           height: "560px",
           "min-width": "360px",
-          border: "1px dashed rgba(255,255,255,0.12)",
+          border: "1px dashed var(--sui-border)",
           "border-radius": "4px",
           "box-sizing": "border-box",
         }}
@@ -506,7 +506,7 @@ export const SwimlaneChartShowcase: Component = () => {
 
         <div class="workshop-grid__cell">
           <SubsectionTitle>9 · animated linear chain (live)</SubsectionTitle>
-          <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+          <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
             8-node chain ticking through TODO → DOING → DONE. Col is the
             signed graph distance from the current DOING node, so the
             whole chain slides horizontally as work progresses. Resize

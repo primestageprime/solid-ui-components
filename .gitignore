@@ -5,5 +5,10 @@ storybook-static/
 .DS_Store
 .worktrees/
 worktrees/
-entities.json
+
+# Superpowers brainstorm artifacts
+.superpowers/
+
+# MemPalace per-project runtime artifacts
 mempalace.yaml
+entities.json

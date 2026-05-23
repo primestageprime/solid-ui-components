@@ -4,7 +4,7 @@ import { DTable, DT, DD } from "../../src/components/DataList";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
 import { Button } from "../../src/components/Button";
 import { NavLink } from "../../src/components/Navigation";
-import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel, EngineDataSection } from "../../src/components/DataDisplay";
+import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel } from "../../src/components/DataDisplay";
 import { EmptyState, AlertBox } from "../../src/components/Feedback";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
@@ -39,7 +39,7 @@ import { Tabs } from "../../src/components/Tabs";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
 import { List, ListItem } from "../../src/components/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
-import { VesselCard } from "../../src/components/Card";
+import { RemovableItemCard } from "../../src/components/Card";
 
 // ── HUD ──────────────────────────────────────────────────────────────
 
@@ -64,25 +64,25 @@ const HUDShowcase: Component = () => {
   return (
     <Page gridPattern class="hud-showcase">
       <div style={{ padding: "24px" }}>
-        <h2 style={{ color: "var(--hud-accent)", "margin-bottom": "24px", "text-transform": "uppercase", "letter-spacing": "0.1em" }}>
+        <h2 style={{ color: "var(--sui-accent)", "margin-bottom": "24px", "text-transform": "uppercase", "letter-spacing": "0.1em" }}>
           HUD Component System
         </h2>
-        <p style={{ color: "var(--hud-text-dim)", "margin-bottom": "32px" }}>
+        <p style={{ color: "var(--sui-text-secondary)", "margin-bottom": "32px" }}>
           Sci-fi inspired interface components with clipped corners, edge accents, and glowing effects.
         </p>
 
         <Section title="Navigation Tabs" subtitle="Tab Variants" variant="primary">
           <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
             <div>
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Default (Underline)</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Default (Underline)</p>
               <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} />
             </div>
             <div>
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Boxed</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Boxed</p>
               <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="boxed" />
             </div>
             <div>
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "12px", "margin-bottom": "8px" }}>Pill</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Pill</p>
               <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="pill" />
             </div>
           </div>
@@ -91,17 +91,17 @@ const HUDShowcase: Component = () => {
         <Section title="Panel Variants" subtitle="Corner Styles & Glow Effects" variant="primary">
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px" }}>
             <Panel title="Clip Corners" corners="clip" glow="subtle">
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
                 Angled corners using clip-path for a tech aesthetic.
               </p>
             </Panel>
             <Panel title="Bracket Corners" corners="bracket" glow="medium">
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
                 L-shaped bracket decorations at each corner.
               </p>
             </Panel>
             <Panel title="Notch Corners" corners="notch" glow="strong">
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "13px", margin: 0 }}>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
                 Asymmetric notch cut-outs for visual interest.
               </p>
             </Panel>
@@ -109,13 +109,13 @@ const HUDShowcase: Component = () => {
 
           <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px", "margin-top": "16px" }}>
             <Panel title="Primary" variant="primary" corners="clip" size="sm">
-              <span style={{ color: "var(--hud-accent)" }}>Accent color panel</span>
+              <span style={{ color: "var(--sui-accent)" }}>Accent color panel</span>
             </Panel>
             <Panel title="Danger" variant="danger" corners="clip" size="sm">
-              <span style={{ color: "var(--hud-danger)" }}>Warning state</span>
+              <span style={{ color: "var(--sui-danger)" }}>Warning state</span>
             </Panel>
             <Panel title="Success" variant="success" corners="clip" size="sm">
-              <span style={{ color: "var(--hud-success)" }}>Positive state</span>
+              <span style={{ color: "var(--sui-success)" }}>Positive state</span>
             </Panel>
           </div>
         </Section>
@@ -130,7 +130,7 @@ const HUDShowcase: Component = () => {
         >
           <div style={{ display: "grid", "grid-template-columns": "repeat(2, 1fr)", gap: "24px" }}>
             <Panel corners="bracket">
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Default Style</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Default Style</p>
               <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
                 <Toggle
                   label="Primary Power"
@@ -166,7 +166,7 @@ const HUDShowcase: Component = () => {
         <Section title="Action Controls" subtitle="Button Groups" variant="primary">
           <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
             <div>
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Horizontal Group</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Horizontal Group</p>
               <ButtonGroup>
                 <Button>Scan</Button>
                 <Button>Analyze</Button>
@@ -176,7 +176,7 @@ const HUDShowcase: Component = () => {
             </div>
 
             <div>
-              <p style={{ color: "var(--hud-text-dim)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Connected Buttons</p>
+              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Connected Buttons</p>
               <ButtonGroup gap="none">
                 <Button active>Day</Button>
                 <Button>Week</Button>
@@ -230,11 +230,11 @@ const HUDShowcase: Component = () => {
               </>
             }
           >
-            <p style={{ color: "var(--hud-text)", margin: "0 0 16px" }}>
+            <p style={{ color: "var(--sui-text-primary)", margin: "0 0 16px" }}>
               Incoming transmission detected from unknown source.
             </p>
             <Panel corners="bracket" variant="warning" size="sm">
-              <p style={{ color: "var(--hud-warning)", margin: 0, "font-size": "12px" }}>
+              <p style={{ color: "var(--sui-warning)", margin: 0, "font-size": "12px" }}>
                 Warning: Unauthorized access attempt logged
               </p>
             </Panel>
@@ -281,28 +281,28 @@ const HopperBadgesShowcase: Component = () => {
 
       <div class="example-group">
         <h3>In Context</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Typical usage: inline with a result value.
         </p>
         <div style={{ display: "flex", "align-items": "center", gap: "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--jtf-text-primary)" }}>
+          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
             2.314
           </span>
-          <span style={{ color: "var(--jtf-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
           <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
         </div>
         <div style={{ display: "flex", "align-items": "center", gap: "12px", "margin-top": "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "#ff0040" }}>
+          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-danger)" }}>
             4.821
           </span>
-          <span style={{ color: "var(--jtf-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
           <StatusBadge variant="violation">VIOLATION</StatusBadge>
         </div>
       </div>
 
       <div class="example-group">
         <h3>NavLink</h3>
-        <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--jtf-border)", "padding-bottom": "2px" }}>
+        <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--sui-border)", "padding-bottom": "2px" }}>
           <NavLink href="#" active>Vessel Calls</NavLink>
           <NavLink href="#">Violations</NavLink>
           <NavLink href="#" color="warning" badge={3}>Unresolved</NavLink>
@@ -323,13 +323,13 @@ const FeedbackShowcase: Component = () => {
       <div class="example-group">
         <h3>EmptyState — Variants</h3>
         <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState message="No data available for this time period." />
           </div>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState variant="muted" message="Select a vessel call to view details." />
           </div>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState variant="accent" message="Loading vessel call data..." />
           </div>
         </div>
@@ -338,13 +338,13 @@ const FeedbackShowcase: Component = () => {
       <div class="example-group">
         <h3>Sizes</h3>
         <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState size="sm" message="No rows." />
           </div>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState message="Default size empty state." />
           </div>
-          <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
             <EmptyState size="lg" message="No vessel calls found matching your criteria." />
           </div>
         </div>
@@ -352,10 +352,10 @@ const FeedbackShowcase: Component = () => {
 
       <div class="example-group">
         <h3>With Children</h3>
-        <div style={{ border: "1px dashed var(--jtf-border)", "border-radius": "8px" }}>
+        <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
           <EmptyState>
-            <span style={{ color: "var(--jtf-text-muted)" }}>No hourly data. </span>
-            <span style={{ color: "var(--hud-accent, #00d4ff)" }}>Run the cache pipeline to generate it.</span>
+            <span style={{ color: "var(--sui-text-muted)" }}>No hourly data. </span>
+            <span style={{ color: "var(--sui-accent)" }}>Run the cache pipeline to generate it.</span>
           </EmptyState>
         </div>
       </div>
@@ -383,7 +383,7 @@ const FeedbackShowcase: Component = () => {
       <div class="example-group">
         <h3>With Custom Children</h3>
         <AlertBox variant="danger">
-          <div style={{ color: "#ff0040", "font-size": "0.875rem" }}>
+          <div style={{ color: "var(--sui-danger)", "font-size": "0.875rem" }}>
             Engine power data required. Using default engine power (1200 kW).
           </div>
         </AlertBox>
@@ -430,18 +430,18 @@ const FormulaPanelDemo: Component = () => {
     <>
       <div class="example-group">
         <h3>createFormulaPanel — Curried Factories</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Declarative formula panels from a single config object. Hover variables for bidirectional highlighting.
           Drag sliders to see reactive updates and compliance badge changes.
         </p>
         <div style={{ display: "flex", gap: "20px", "flex-wrap": "wrap", "margin-bottom": "16px" }}>
           <div style={{ flex: "1", "min-width": "300px" }}>
             <div style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}>
-              <label style={{ "font-size": "13px", color: "var(--jtf-text-secondary)" }}>
+              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
                 a: {sideA()}
                 <input type="range" min="1" max="15" step="0.5" value={sideA()} onInput={(e) => setSideA(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
               </label>
-              <label style={{ "font-size": "13px", color: "var(--jtf-text-secondary)" }}>
+              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
                 b: {sideB()}
                 <input type="range" min="1" max="15" step="0.5" value={sideB()} onInput={(e) => setSideB(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
               </label>
@@ -451,11 +451,11 @@ const FormulaPanelDemo: Component = () => {
 
           <div style={{ flex: "1", "min-width": "300px" }}>
             <div style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}>
-              <label style={{ "font-size": "13px", color: "var(--jtf-text-secondary)" }}>
+              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
                 m: {mass()} kg
                 <input type="range" min="10" max="200" step="5" value={mass()} onInput={(e) => setMass(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
               </label>
-              <label style={{ "font-size": "13px", color: "var(--jtf-text-secondary)" }}>
+              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
                 v: {velocity()} m/s
                 <input type="range" min="1" max="10" step="0.5" value={velocity()} onInput={(e) => setVelocity(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
               </label>
@@ -467,7 +467,7 @@ const FormulaPanelDemo: Component = () => {
 
       <div class="example-group">
         <h3>createFormulaPanel — Individual Composition</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           The same config decomposed into individual components arranged in a custom layout.
         </p>
         <FormulaProvider>
@@ -506,7 +506,7 @@ const DataDisplayShowcase: Component = () => {
 
       <div class="example-group">
         <h3>DigitRoller — Animated Value Transition</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Vertical digit rolling animation for transitioning between numeric values.
           Used to animate NOx/ROG result changes after power log submission.
         </p>
@@ -514,7 +514,7 @@ const DataDisplayShowcase: Component = () => {
           <span style={{
             "font-size": "1.5rem",
             "font-weight": "600",
-            color: "var(--jtf-text-primary)",
+            color: "var(--sui-text-primary)",
             "font-variant-numeric": "tabular-nums",
           }}>
             <DigitRoller
@@ -524,21 +524,21 @@ const DataDisplayShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span style={{ color: "var(--jtf-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
           <button class="demo-btn" onClick={triggerRoll}>
             Roll to {rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA()}
           </button>
         </div>
         <div style={{ "margin-top": "16px", display: "flex", gap: "24px", "align-items": "center" }}>
           <div>
-            <span style={{ "font-size": "11px", color: "var(--jtf-text-muted)", "text-transform": "uppercase" }}>Static (no animation)</span>
-            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--jtf-text-primary)" }}>
+            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)", "text-transform": "uppercase" }}>Static (no animation)</span>
+            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
               <DigitRoller value="0.1250" />
             </div>
           </div>
           <div>
-            <span style={{ "font-size": "11px", color: "var(--jtf-text-muted)", "text-transform": "uppercase" }}>Tabular digits</span>
-            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "#00d4ff" }}>
+            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)", "text-transform": "uppercase" }}>Tabular digits</span>
+            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-accent)" }}>
               <DigitRoller value="42.00" />
             </div>
           </div>
@@ -588,7 +588,7 @@ const DataDisplayShowcase: Component = () => {
             sublabel="Limit: 0.14 g/kWh"
             value="0.287"
             units="g/kWh"
-            valueColor="#ff0040"
+            valueColor="var(--sui-danger)"
             badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
           />
           <ResultDisplay
@@ -614,9 +614,9 @@ const DataDisplayShowcase: Component = () => {
             { header: "Avg NO₂ (ppm)", accessor: "avgNO2", align: "right" },
           ]}
           rows={[
-            { period: "Before Control", count: 142, avgNox: "18.34", noxColor: "#ff8800", avgNO: "12.81", avgNO2: "5.53" },
-            { period: "During Control", count: 89, avgNox: "3.21", noxColor: "#00ff88", avgNO: "2.14", avgNO2: "1.07" },
-            { period: "After Control", count: 56, avgNox: "16.92", noxColor: "#ff8800", avgNO: "11.44", avgNO2: "5.48" },
+            { period: "Before Control", count: 142, avgNox: "18.34", noxColor: "var(--sui-warning)", avgNO: "12.81", avgNO2: "5.53" },
+            { period: "During Control", count: 89, avgNox: "3.21", noxColor: "var(--sui-success)", avgNO: "2.14", avgNO2: "1.07" },
+            { period: "After Control", count: 56, avgNox: "16.92", noxColor: "var(--sui-warning)", avgNO: "11.44", avgNO2: "5.48" },
           ]}
           getRowClass={(row: any) => row.period === "During Control" ? "stats-table__row--highlight" : undefined}
         />
@@ -641,7 +641,7 @@ const DataDisplayShowcase: Component = () => {
 
       <div class="example-group">
         <h3>ResultPanel — Layout Shell with Formula</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Combines ResultDisplay header with a variables table and interactive formula.
           Hover a table row to highlight the corresponding formula variable.
         </p>
@@ -669,7 +669,7 @@ const DataDisplayShowcase: Component = () => {
             sublabel="Limit: 0.14 g/kWh"
             value="0.287"
             units="g/kWh"
-            valueColor="#ff0040"
+            valueColor="var(--sui-danger)"
             badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
             style={{ flex: "1", "min-width": "300px" }}
           >
@@ -702,55 +702,6 @@ const DataDisplayShowcase: Component = () => {
             <FormulaVarRow varId="kw"><DT>Engine</DT><DD><NumberWithUnits value={1200} units="kW" precision={0} /></DD></FormulaVarRow>
           </DTable>
         </ResultPanel>
-      </div>
-
-      <div class="example-group">
-        <h3>EngineDataSection — With Warning</h3>
-        <EngineDataSection
-          showWarning={true}
-          defaultKw={300}
-          auxEngineHref="#"
-        >
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style={{ padding: "8px" }}>90%</td><td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td></tr>
-              <tr><td style={{ padding: "8px" }}>95%</td><td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td></tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
-      </div>
-
-      <div class="example-group">
-        <h3>EngineDataSection — Without Warning</h3>
-        <EngineDataSection>
-          <table style={{ width: "100%", "border-collapse": "collapse", "font-size": "0.75rem" }}>
-            <thead>
-              <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.3)" }}>
-                <th style={{ padding: "8px", "text-align": "left", color: "var(--text-muted)" }}>CE</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Default (300 kW)</th>
-                <th style={{ padding: "8px", "text-align": "center", color: "var(--text-muted)" }}>Aux (450 kW)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={{ padding: "8px" }}>90%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#ff4444" }}>3.412</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff", "font-weight": "700", "text-shadow": "0 0 8px currentColor" }}>2.274</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "8px" }}>95%</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>2.641</td>
-                <td style={{ padding: "8px", "text-align": "center", color: "#00d4ff" }}>1.760</td>
-              </tr>
-            </tbody>
-          </table>
-        </EngineDataSection>
       </div>
 
       <FormulaPanelDemo />
@@ -904,7 +855,7 @@ const HopperToggleShowcase: Component = () => {
         <h3>Basic Toggle</h3>
         <div class="example-column">
           <Toggle checked={enabled1()} onChange={() => setEnabled1(!enabled1())} />
-          <span style={{ color: "var(--jtf-text-secondary)" }}>
+          <span style={{ color: "var(--sui-text-secondary)" }}>
             State: {enabled1() ? "ON" : "OFF"}
           </span>
         </div>
@@ -980,7 +931,7 @@ const ProgressShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Cache Workflow (Custom Icons)</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           5-stage caching workflow with custom icons per step.
         </p>
         <ProgressCard
@@ -1016,36 +967,36 @@ const ProgressShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Horizontal (default)</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Stacked colored segments fill left-to-right. Used for per-metric error bars.
         </p>
         <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
           <StackedProgressBar
             segments={[
               { percentage: 30, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 20, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={5}
-            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
         </div>
         <div style={{ display: "flex", gap: "8px", "align-items": "center", "margin-top": "8px" }}>
           <StackedProgressBar
             segments={[
               { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 0, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={0}
-            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--jtf-text-muted)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--sui-text-muted)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
         </div>
       </div>
 
       <div class="example-group">
         <h3>Vertical</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Segments fill bottom-to-top. Used for total error count bars.
         </p>
         <div style={{ display: "flex", gap: "12px", "align-items": "flex-end" }}>
@@ -1053,19 +1004,19 @@ const ProgressShowcase: Component = () => {
             direction="vertical"
             segments={[
               { percentage: 25, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 40, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
           <StackedProgressBar
             direction="vertical"
             segments={[
               { percentage: 50, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 10, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
         </div>
       </div>
@@ -1122,7 +1073,7 @@ const HeatmapShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Expanded Variant</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Three-day vessel call. Connection started Day 1 15:00, ended Day 3 07:00.
         </p>
         <HeatmapMulti
@@ -1205,7 +1156,7 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Cell Renderers</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           IdCell, StringCell, StatusCell, TagCell, IntCell, MoneyCell, DurationCell, DateCell
         </p>
         <BaseTable data={data.slice(0, 5)} columns={cellRendererColumns} hoverable />
@@ -1213,7 +1164,7 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>QuickFilter</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Type to filter across all columns. Try "cargo", "active", or "2024-01-1".
         </p>
         <QuickFilter
@@ -1227,7 +1178,7 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Selectable Table</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Checkbox selection with action bar. Select rows to see the action bar appear.
         </p>
         <SelectableTable
@@ -1251,7 +1202,7 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Grouped Table (Rowspan)</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Vessel, Barge, and Date columns are rowspanned when multiple assets share the same vessel call.
         </p>
         <GroupedTableDemo />
@@ -1259,12 +1210,12 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>DataTableContainer</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Scrollable wrapper with max-height and overflow. Wraps any table content.
         </p>
         <DataTableContainer maxHeight="180px">
           <table class="sui-table__table" style={{ width: "100%" }}>
-            <thead><tr><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--jtf-border)" }}>Row</th><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--jtf-border)" }}>Value</th></tr></thead>
+            <thead><tr><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Row</th><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Value</th></tr></thead>
             <tbody>
               <For each={Array.from({ length: 20 }, (_, i) => i + 1)}>
                 {(n) => <tr><td style={{ padding: "6px 8px" }}>Row {n}</td><td style={{ padding: "6px 8px" }}>{(n * 17) % 100}</td></tr>}
@@ -1287,7 +1238,7 @@ const SectionShowcase: Component = () => {
       <div class="example-group">
         <h3>Default Section</h3>
         <Section title="Section Title" subtitle="This is a subtitle with additional context">
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Section content goes here.
           </p>
         </Section>
@@ -1296,7 +1247,7 @@ const SectionShowcase: Component = () => {
       <div class="example-group">
         <h3>Bordered Section</h3>
         <Section title="Bordered Section" subtitle="With border and background" variant="bordered">
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             This section has a border and background.
           </p>
         </Section>
@@ -1305,7 +1256,7 @@ const SectionShowcase: Component = () => {
       <div class="example-group">
         <h3>Decorated Section</h3>
         <Section title="Decorated Section" variant="decorated">
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             This section has decorative corner accents and a clipped shape.
           </p>
         </Section>
@@ -1315,10 +1266,10 @@ const SectionShowcase: Component = () => {
         <h3>Panel</h3>
         <div class="example-row" style={{ gap: "16px" }}>
           <Panel title="Panel with Title" style={{ flex: 1 }}>
-            <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Panel content</p>
+            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Panel content</p>
           </Panel>
           <Panel padding="sm" style={{ flex: 1 }}>
-            <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Small padding panel</p>
+            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Small padding panel</p>
           </Panel>
         </div>
       </div>
@@ -1326,11 +1277,11 @@ const SectionShowcase: Component = () => {
       <div class="example-group">
         <h3>Dividers</h3>
         <Panel>
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content above</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content above</p>
           <Divider />
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content below (solid)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (solid)</p>
           <Divider variant="dashed" />
-          <p style={{ margin: 0, color: "var(--jtf-text-secondary)" }}>Content below (dashed)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (dashed)</p>
         </Panel>
       </div>
     </div>
@@ -1346,7 +1297,7 @@ const SelectorShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Sidebar Selector</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           A sidebar with selectable cards and an arbitrary content display area.
           This demo shows Avatar: The Last Airbender episodes with character focus.
         </p>
@@ -1359,12 +1310,12 @@ const SelectorShowcase: Component = () => {
 // ── Card ─────────────────────────────────────────────────────────────
 
 const CardShowcase: Component = () => {
-  const [activeId, setActiveId] = createSignal("vessel-2");
+  const [activeId, setActiveId] = createSignal("item-2");
 
-  const vessels = [
-    { id: "vessel-1", name: "Pacific Voyager", asset: "12-345", date: "2026-01-15" },
-    { id: "vessel-2", name: "Atlantic Runner", asset: "67-890", date: "2026-01-14" },
-    { id: "vessel-3", name: "Northern Star", asset: "11-222", date: "2026-01-13" },
+  const items = [
+    { id: "item-1", name: "Item Alpha", asset: "12-345", date: "2026-01-15" },
+    { id: "item-2", name: "Item Bravo", asset: "67-890", date: "2026-01-14" },
+    { id: "item-3", name: "Item Charlie", asset: "11-222", date: "2026-01-13" },
   ];
 
   return (
@@ -1372,22 +1323,22 @@ const CardShowcase: Component = () => {
       <h2>Card Components</h2>
 
       <div class="example-group">
-        <h3>VesselCard — States</h3>
-        <p style={{ color: "var(--jtf-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <h3>RemovableItemCard — States</h3>
+        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
           Click a card to set it active. Cards support title, details slot, remove button, and children.
         </p>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <For each={vessels}>
+          <For each={items}>
             {(v) => (
               <div onClick={() => setActiveId(v.id)}>
-                <VesselCard
+                <RemovableItemCard
                   title={v.name}
                   active={activeId() === v.id}
                   onRemove={() => setActiveId("")}
                   details={
                     <>
-                      <span style={{ "font-size": "12px", "font-weight": "600", color: "var(--jtf-text-secondary)", background: "rgba(0,168,204,0.15)", padding: "2px 6px", "border-radius": "3px" }}>{v.asset}</span>
-                      <span style={{ "font-size": "11px", color: "var(--jtf-text-muted)" }}>{v.date}</span>
+                      <span style={{ "font-size": "12px", "font-weight": "600", color: "var(--sui-text-secondary)", background: "rgba(0,168,204,0.15)", padding: "2px 6px", "border-radius": "3px" }}>{v.asset}</span>
+                      <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>{v.date}</span>
                     </>
                   }
                 />
@@ -1398,18 +1349,18 @@ const CardShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>VesselCard — Minimal</h3>
+        <h3>RemovableItemCard — Minimal</h3>
         <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
-          <VesselCard title="Title Only" />
-          <VesselCard title="With Remove" onRemove={() => {}} />
-          <VesselCard
+          <RemovableItemCard title="Title Only" />
+          <RemovableItemCard title="With Remove" onRemove={() => {}} />
+          <RemovableItemCard
             title="With Children"
-            details={<span style={{ "font-size": "11px", color: "var(--jtf-text-muted)" }}>Detail text</span>}
+            details={<span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>Detail text</span>}
           >
-            <div style={{ "font-size": "11px", color: "var(--jtf-text-muted)", "border-top": "1px solid rgba(0,168,204,0.2)", "padding-top": "8px" }}>
+            <div style={{ "font-size": "11px", color: "var(--sui-text-muted)", "border-top": "1px solid rgba(0,168,204,0.2)", "padding-top": "8px" }}>
               Footer content (heatmap, sparkline, etc.)
             </div>
-          </VesselCard>
+          </RemovableItemCard>
         </div>
       </div>
     </div>
@@ -1422,31 +1373,31 @@ export const HopperShowcase: Component = () => {
   return (
     <div class="component-section">
       <HUDShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Badges</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Badges</h2>
       <HopperBadgesShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Feedback</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Feedback</h2>
       <FeedbackShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Data Display</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Data Display</h2>
       <DataDisplayShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Inputs</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Inputs</h2>
       <HopperInputsShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Button</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Button</h2>
       <HopperButtonShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Icon</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Icon</h2>
       <HopperIconShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Toggle</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Toggle</h2>
       <HopperToggleShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Progress</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Progress</h2>
       <ProgressShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Heatmap</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Heatmap</h2>
       <HeatmapShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Table</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Table</h2>
       <TableShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Section</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Section</h2>
       <SectionShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Selector</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Selector</h2>
       <SelectorShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--jtf-border)" }}>Card</h2>
+      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Card</h2>
       <CardShowcase />
     </div>
   );

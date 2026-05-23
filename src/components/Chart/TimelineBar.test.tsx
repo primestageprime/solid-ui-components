@@ -280,10 +280,10 @@ describe("TimelineBar — segmentStroke", () => {
     color: "#fff",
   };
 
-  it("defaults to the --sui-border-strong token", () => {
+  it("defaults to the --sui-border-bright token", () => {
     const { container } = wrapper(() => <TimelineBar data={[bar]} />);
     const rect = container.querySelector(".sui-chart__timeline-bar")!;
-    expect(rect.getAttribute("stroke")).toMatch(/--sui-border-strong/);
+    expect(rect.getAttribute("stroke")).toMatch(/--sui-border-bright/);
   });
 
   it("override applies a custom stroke color", () => {

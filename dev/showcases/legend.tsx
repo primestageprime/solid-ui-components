@@ -6,15 +6,15 @@ import { TextSublabel, MutedBody } from "../../src/components/Text";
 // Chart series — the canonical "this color means this line" case. Generic
 // across any chart library that hands you a deterministic palette.
 const CHART_SERIES: LegendItem[] = [
-  { color: "#3b82f6", label: "Revenue" },
+  { color: "var(--sui-accent)", label: "Revenue" },
   { color: "#10b981", label: "Profit" },
   { color: "#f59e0b", label: "Costs" },
-  { color: "#ef4444", label: "Tax" },
+  { color: "var(--sui-danger)", label: "Tax" },
 ];
 
 // Generic category encoding — fleet / portfolio / product line groupings.
 const CATEGORY_BUCKETS: LegendItem[] = [
-  { color: "var(--sui-info, #4ea1ff)", label: "Tier 1" },
+  { color: "var(--sui-accent)", label: "Tier 1" },
   { color: "var(--sui-success, #2a6)", label: "Tier 2" },
   { color: "var(--sui-warning, #d4a017)", label: "Tier 3" },
 ];
@@ -30,12 +30,12 @@ const ALARM_SEVERITY_EXAMPLE: LegendItem[] = [
 ];
 
 const MANY_ITEMS: LegendItem[] = [
-  { color: "#3b82f6", label: "Engine" },
+  { color: "var(--sui-accent)", label: "Engine" },
   { color: "#8b5cf6", label: "Pumps" },
   { color: "#ec4899", label: "Cooling" },
   { color: "#f59e0b", label: "Electrical" },
   { color: "#10b981", label: "Hydraulics" },
-  { color: "#ef4444", label: "Auxiliary" },
+  { color: "var(--sui-danger)", label: "Auxiliary" },
   { color: "#06b6d4", label: "Navigation" },
   { color: "#a855f7", label: "Communications" },
 ];
@@ -68,14 +68,14 @@ const InteractiveLegendExample: Component = () => {
                 "background-color": item.color,
                 outline:
                   hovered() === item.label
-                    ? "2px solid rgba(255,255,255,0.85)"
-                    : "1px solid rgba(255,255,255,0.15)",
+                    ? "2px solid var(--sui-text-primary)"
+                    : "1px solid var(--sui-border-bright)",
                 "outline-offset": "2px",
                 filter: hovered() === item.label ? "brightness(1.2)" : "none",
                 display: "flex",
                 "align-items": "center",
                 "justify-content": "center",
-                color: "white",
+                color: "var(--sui-text-primary)",
                 "font-size": "11px",
                 "font-weight": "600",
                 cursor: "default",
@@ -146,7 +146,7 @@ export const LegendShowcase: Component = () => (
           Horizontal orientation uses <code>flex-wrap</code>, so long legends
           break onto multiple rows in narrow containers.
         </TextSublabel>
-        <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border, rgba(255,255,255,0.15))", padding: "8px" }}>
+        <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
           <Legend items={MANY_ITEMS} />
         </div>
       </SpacedStack>

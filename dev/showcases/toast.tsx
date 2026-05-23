@@ -136,7 +136,7 @@ export const ToastShowcase: Component = () => {
       <div class="example-group">
         <h3>Variants (show programmatically)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Each button calls `showToast({ variant, title, description })`.
+          Each button calls <code>{`showToast({ variant, title, description })`}</code>.
         </div>
         <Row gap="sm" wrap="wrap">
           <PrimaryButton onClick={showInfo}>Info</PrimaryButton>
@@ -223,9 +223,33 @@ import { ToastRegion, ToastList } from "solid-ui-components";
         </Stack>
       </div>
 
+      <div class="example-group">
+        <h3>Toast region with dismiss-all button — `showDismissAll`</h3>
+        <Stack gap="xs">
+          <Text variant="body">
+            Pass `showDismissAll` to `ToastRegion` to render a "Dismiss all"
+            button under the list. The button calls `toaster.clear()` and is
+            hidden by CSS (`:has(li)`) whenever the list is empty, so it never
+            shows for a region with zero toasts. This region is what the
+            showcase actually mounts below — fire a few toasts above to see
+            the button surface.
+          </Text>
+          <pre class="code-block">
+{`import { Portal } from "solid-js/web";
+import { ToastRegion, ToastList } from "solid-ui-components";
+
+<Portal>
+  <ToastRegion limit={10} showDismissAll>
+    <ToastList />
+  </ToastRegion>
+</Portal>`}
+          </pre>
+        </Stack>
+      </div>
+
       <Show when={mounted()}>
         <Portal>
-          <ToastRegion limit={5}>
+          <ToastRegion limit={5} showDismissAll>
             <ToastList />
           </ToastRegion>
         </Portal>

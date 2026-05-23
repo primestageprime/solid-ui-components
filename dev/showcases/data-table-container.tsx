@@ -23,18 +23,18 @@ export const DataTableContainerShowcase: Component = () => {
               <table style={{ width: "100%", "border-collapse": "collapse" }}>
                 <thead class="sticky-table-header">
                   <tr>
-                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>ID</th>
-                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>Vessel</th>
-                    <th style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--border-color)" }}>Value</th>
+                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>ID</th>
+                    <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Vessel</th>
+                    <th style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--sui-border)" }}>Value</th>
                   </tr>
                 </thead>
                 <tbody>
                   <For each={sampleRows}>
                     {(row) => (
                       <tr>
-                        <td style={{ padding: "8px", "border-bottom": "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>{row.id}</td>
-                        <td style={{ padding: "8px", "border-bottom": "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>{row.vessel}</td>
-                        <td style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>{row.value}</td>
+                        <td style={{ padding: "8px", "border-bottom": "1px solid var(--sui-border)" }}>{row.id}</td>
+                        <td style={{ padding: "8px", "border-bottom": "1px solid var(--sui-border)" }}>{row.vessel}</td>
+                        <td style={{ padding: "8px", "text-align": "right", "border-bottom": "1px solid var(--sui-border)" }}>{row.value}</td>
                       </tr>
                     )}
                   </For>
@@ -45,21 +45,21 @@ export const DataTableContainerShowcase: Component = () => {
 
           <div>
             <div class="text-meta">fill: true — flex: 1, no max-height (fills parent)</div>
-            <div style={{ height: "150px", display: "flex", "flex-direction": "column", border: "1px dashed var(--border-color, rgba(255,255,255,0.2))" }}>
+            <div style={{ height: "150px", display: "flex", "flex-direction": "column", border: "1px dashed var(--sui-border-bright)" }}>
               <DataTableContainer fill>
                 <table style={{ width: "100%", "border-collapse": "collapse" }}>
                   <thead class="sticky-table-header">
                     <tr>
-                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>ID</th>
-                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--border-color)" }}>Vessel</th>
+                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>ID</th>
+                      <th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Vessel</th>
                     </tr>
                   </thead>
                   <tbody>
                     <For each={sampleRows.slice(0, 10)}>
                       {(row) => (
                         <tr>
-                          <td style={{ padding: "8px", "border-bottom": "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>{row.id}</td>
-                          <td style={{ padding: "8px", "border-bottom": "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>{row.vessel}</td>
+                          <td style={{ padding: "8px", "border-bottom": "1px solid var(--sui-border)" }}>{row.id}</td>
+                          <td style={{ padding: "8px", "border-bottom": "1px solid var(--sui-border)" }}>{row.vessel}</td>
                         </tr>
                       )}
                     </For>

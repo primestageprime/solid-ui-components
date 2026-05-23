@@ -5,8 +5,8 @@
 /* Base Table */
 .hud-table {
   position: relative;
-  background: var(--hud-bg-panel, #0d1a2a);
-  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
   overflow: hidden;
   /* Clip corners — top-left and bottom-right */
   clip-path: polygon(
@@ -28,12 +28,12 @@
 .hud-table__table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
 }
 
 /* Header */
 .hud-table__head {
-  background: linear-gradient(180deg, var(--hud-bg-elevated, #142535), var(--hud-bg-panel, #0d1a2a));
+  background: linear-gradient(180deg, var(--sui-bg-elevated), var(--sui-bg-secondary));
 }
 
 /* Sticky header requires the wrapper not to clip — `overflow: hidden` on an
@@ -52,19 +52,19 @@
 /* Ensure the head paints opaquely so rows don't bleed through underneath. */
 .hud-table--sticky-header .hud-table__head,
 .hud-table--sticky-header .hud-table__header-cell {
-  background: var(--hud-bg-elevated, #142535);
+  background: var(--sui-bg-elevated);
 }
 
 .hud-table__header-cell {
   padding: 12px 16px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  border-bottom: 1px solid var(--sui-border);
   white-space: nowrap;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 10px rgba(var(--sui-accent-rgb), 0.3);
 }
 
 .hud-table__header-cell--sortable {
@@ -73,7 +73,7 @@
 }
 
 .hud-table__header-cell--sortable:hover {
-  background: rgba(0, 212, 255, 0.05);
+  background: rgba(var(--sui-accent-rgb), 0.05);
 }
 
 .hud-table__header-content {
@@ -93,7 +93,7 @@
 
 /* Body */
 .hud-table__body {
-  background-color: var(--hud-bg-panel, #0d1a2a);
+  background-color: var(--sui-bg-secondary);
 }
 
 .hud-table__row {
@@ -101,14 +101,14 @@
 }
 
 .hud-table__row:hover {
-  background-color: rgba(0, 212, 255, 0.05);
+  background-color: rgba(var(--sui-accent-rgb), 0.05);
 }
 
 .hud-table__cell {
   padding: 10px 16px;
   font-size: 13px;
-  color: var(--hud-text, #e0f4ff);
-  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  color: var(--sui-text-primary);
+  border-bottom: 1px solid rgba(var(--sui-accent-rgb), 0.1);
 }
 
 .hud-table__body .hud-table__row:last-child .hud-table__cell {
@@ -117,7 +117,7 @@
 
 /* Row index styling */
 .hud-table__cell:first-child {
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 11px;
 }
@@ -126,7 +126,7 @@
 .hud-table__empty {
   padding: 40px 20px;
   text-align: center;
-  color: var(--hud-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -134,7 +134,7 @@
 
 /* Striped variant */
 .hud-table--striped .hud-table__row:nth-child(even) {
-  background-color: rgba(0, 212, 255, 0.02);
+  background-color: rgba(var(--sui-accent-rgb), 0.02);
 }
 
 /* Compact variant */
@@ -149,12 +149,12 @@
 /* Column Group Headers (two-row thead) */
 .hud-table__header-cell--group {
   text-align: center;
-  border-bottom: 2px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  border-bottom: 2px solid var(--sui-border);
   letter-spacing: 0.12em;
 }
 
 .hud-table__header-cell--sub {
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   font-size: 10px;
   padding-top: 6px;
   padding-bottom: 10px;
@@ -185,8 +185,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: var(--hud-bg-panel, #0d1a2a);
-  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
   border-bottom: none;
   clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
 }
@@ -194,30 +194,30 @@
 .hud-table-quickfilter__input {
   width: 20ch;
   padding: 6px 12px;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
   font-size: 13px;
-  color: var(--hud-text, #e0f4ff);
-  background-color: var(--hud-bg-dark, #0a1420);
-  border: 1px solid var(--hud-border, rgba(0, 212, 255, 0.3));
+  color: var(--sui-text-primary);
+  background-color: var(--sui-bg-primary);
+  border: 1px solid var(--sui-border);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .hud-table-quickfilter__input::placeholder {
-  color: var(--hud-text-muted, #4a6a80);
+  color: var(--sui-text-muted);
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.05em;
 }
 
 .hud-table-quickfilter__input:focus {
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 10px rgba(var(--sui-accent-rgb), 0.2);
 }
 
 .hud-table-quickfilter__count {
   font-size: 11px;
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: "JetBrains Mono", "Fira Code", monospace;
@@ -240,7 +240,7 @@
 .hud-table__result-count {
   text-align: right;
   font-size: 12px;
-  color: var(--hud-text-dim, #7aa8c0);
+  color: var(--sui-text-secondary);
   padding: 4px 8px;
 }
 
@@ -271,8 +271,8 @@
 .hud-table__checkbox-indicator {
   width: 16px;
   height: 16px;
-  border: 1.5px solid var(--hud-border, rgba(0, 212, 255, 0.3));
-  background-color: var(--hud-bg-dark, #0a1420);
+  border: 1.5px solid var(--sui-border);
+  background-color: var(--sui-bg-primary);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -282,51 +282,51 @@
 }
 
 .hud-table__checkbox input:checked + .hud-table__checkbox-indicator {
-  background-color: var(--hud-accent, #00d4ff);
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+  background-color: var(--sui-accent);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 8px var(--sui-accent);
 }
 
 .hud-table__checkbox input:checked + .hud-table__checkbox-indicator::after {
   content: "";
   width: 4px;
   height: 8px;
-  border: solid var(--hud-bg-deep, #030810);
+  border: solid var(--sui-bg-deep);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) translateY(-1px);
 }
 
 .hud-table__checkbox input:indeterminate + .hud-table__checkbox-indicator {
-  background-color: var(--hud-accent, #00d4ff);
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 8px var(--hud-accent, #00d4ff);
+  background-color: var(--sui-accent);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 8px var(--sui-accent);
 }
 
 .hud-table__checkbox input:indeterminate + .hud-table__checkbox-indicator::after {
   content: "";
   width: 8px;
   height: 2px;
-  background-color: var(--hud-bg-deep, #030810);
+  background-color: var(--sui-bg-deep);
   border: none;
   transform: none;
 }
 
 .hud-table__checkbox:hover .hud-table__checkbox-indicator {
-  border-color: var(--hud-accent, #00d4ff);
-  box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 6px rgba(var(--sui-accent-rgb), 0.3);
 }
 
 /* Selected row */
 .hud-table__row--selected {
-  background-color: rgba(0, 212, 255, 0.08);
+  background-color: rgba(var(--sui-accent-rgb), 0.08);
 }
 
 .hud-table__row--selected:hover {
-  background-color: rgba(0, 212, 255, 0.12);
+  background-color: rgba(var(--sui-accent-rgb), 0.12);
 }
 
 .hud-table__row--selected .hud-table__cell {
-  border-bottom-color: rgba(0, 212, 255, 0.2);
+  border-bottom-color: rgba(var(--sui-accent-rgb), 0.2);
 }
 
 /* ============================================
@@ -337,8 +337,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: linear-gradient(90deg, var(--hud-accent, #00d4ff), var(--hud-accent-dim, #0099bb));
-  color: var(--hud-bg-deep, #030810);
+  background: linear-gradient(90deg, var(--sui-accent), var(--sui-accent-dim));
+  color: var(--sui-bg-deep);
   /* Clip top corners */
   clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%, 0 12px);
   position: relative;
@@ -351,7 +351,7 @@
   left: 16px;
   right: 16px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--sui-border-bright);
 }
 
 .hud-selection-action-bar + .hud-table {
@@ -375,7 +375,7 @@
 .hud-selection-action-bar__actions .hud-button {
   background-color: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(0, 0, 0, 0.3);
-  color: var(--hud-bg-deep, #030810);
+  color: var(--sui-bg-deep);
   font-weight: 600;
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
@@ -385,7 +385,7 @@
 }
 
 .hud-selection-action-bar__actions .hud-button--danger {
-  background-color: var(--hud-danger, #ff3366);
+  background-color: var(--sui-danger);
   border-color: transparent;
   color: white;
 }
@@ -399,7 +399,7 @@
   margin-left: auto;
   padding: 4px 12px;
   font-size: 11px;
-  font-family: var(--jtf-font-family);
+  font-family: var(--sui-font-family);
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
   background: none;
@@ -421,19 +421,19 @@
    ============================================ */
 .hud-table {
   box-shadow:
-    0 0 20px rgba(0, 212, 255, 0.1),
-    inset 0 1px 0 rgba(0, 212, 255, 0.1);
+    0 0 20px rgba(var(--sui-accent-rgb), 0.1),
+    inset 0 1px 0 rgba(var(--sui-accent-rgb), 0.1);
 }
 
 /* ============================================
    Hover Effects
    ============================================ */
 .hud-table__row[style*="cursor: pointer"]:hover {
-  background-color: rgba(0, 212, 255, 0.08);
+  background-color: rgba(var(--sui-accent-rgb), 0.08);
 }
 
 .hud-table__row[style*="cursor: pointer"]:hover .hud-table__cell {
-  color: var(--hud-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 /* ============================================
@@ -445,20 +445,20 @@
 }
 
 .hud-table::-webkit-scrollbar-track {
-  background: var(--hud-bg-dark, #0a1420);
+  background: var(--sui-bg-primary);
 }
 
 .hud-table::-webkit-scrollbar-thumb {
-  background: var(--hud-border, rgba(0, 212, 255, 0.3));
-  border: 1px solid var(--hud-bg-dark, #0a1420);
+  background: var(--sui-border);
+  border: 1px solid var(--sui-bg-primary);
 }
 
 .hud-table::-webkit-scrollbar-thumb:hover {
-  background: var(--hud-accent, #00d4ff);
+  background: var(--sui-accent);
 }
 
 .hud-table::-webkit-scrollbar-corner {
-  background: var(--hud-bg-dark, #0a1420);
+  background: var(--sui-bg-primary);
 }
 
 /* ============================================
@@ -467,19 +467,19 @@
 
 /* Rowspan cells - vertically centered and visually distinct */
 .hud-grouped-table__rowspan-cell {
-  background: linear-gradient(90deg, rgba(0, 212, 255, 0.06), transparent);
-  border-right: 1px solid rgba(0, 212, 255, 0.15);
+  background: linear-gradient(90deg, rgba(var(--sui-accent-rgb), 0.06), transparent);
+  border-right: 1px solid rgba(var(--sui-accent-rgb), 0.15);
   font-weight: 500;
 }
 
 /* First rowspan cell in a group gets left accent */
 .hud-grouped-table__rowspan-cell:first-child {
-  border-left: 3px solid var(--hud-accent, #00d4ff);
+  border-left: 3px solid var(--sui-accent);
 }
 
 /* Group separator - add subtle border between groups */
 .hud-grouped-table .hud-table__row:has(.hud-grouped-table__rowspan-cell) {
-  border-top: 1px solid rgba(0, 212, 255, 0.2);
+  border-top: 1px solid rgba(var(--sui-accent-rgb), 0.2);
 }
 
 /* Remove top border from first group row */

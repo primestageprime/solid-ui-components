@@ -35,12 +35,32 @@ export const TabsShowcase: Component = () => {
             activeTab="a"
             onTabChange={() => {}}
           />
+
+          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Default)</h3>
+          <div style={{ display: "flex", "min-height": "180px", border: "1px dashed var(--sui-border)" }}>
+            <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} orientation="vertical" />
+            <div style={{ flex: 1, padding: "16px", color: "var(--sui-text-muted)" }}>
+              Active tab: <strong>{active()}</strong>
+            </div>
+          </div>
+
+          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Boxed)</h3>
+          <div style={{ display: "flex", "min-height": "180px", border: "1px dashed var(--sui-border)" }}>
+            <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} orientation="vertical" variant="boxed" />
+            <div style={{ flex: 1, padding: "16px", color: "var(--sui-text-muted)" }}>
+              Active tab: <strong>{active()}</strong>
+            </div>
+          </div>
         </div>
         <div class="depth2-atoms">
           <h3>Props</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Variant</div>
             <div class="depth2-atom"><div class="depth2-atom__label">default / underline / boxed / pill</div></div>
+          </div>
+          <div class="depth2-atom-group">
+            <div class="depth2-atom-group__label">Orientation</div>
+            <div class="depth2-atom"><div class="depth2-atom__label">horizontal (default) / vertical</div></div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Color</div>

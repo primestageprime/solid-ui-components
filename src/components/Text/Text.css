@@ -6,35 +6,35 @@
 .text--value {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--sui-text-primary);
 }
 
 .text--label {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--sui-text-primary);
 }
 
 .text--title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--sui-text-primary);
 }
 
 .text--body {
   font-size: 0.875rem;
   font-weight: normal;
-  color: var(--text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 .text--units {
   font-size: 0.9rem;
   font-weight: normal;
-  color: var(--text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 .text--sublabel {
   font-size: 0.75rem;
   font-weight: normal;
-  color: var(--text-muted);
+  color: var(--sui-text-muted);
 }

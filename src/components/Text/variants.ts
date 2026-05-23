@@ -47,8 +47,8 @@ export const FadedNowrapSublabel = createText({
 });
 
 // Color-shifted body text
-export const MutedBody = createText({ variant: "body", color: "var(--text-muted, var(--jtf-text-muted, #64748b))" });
-export const AccentBody = createText({ variant: "body", color: "var(--hud-accent, #00d4ff)" });
+export const MutedBody = createText({ variant: "body", color: "var(--sui-text-muted)" });
+export const AccentBody = createText({ variant: "body", color: "var(--sui-accent)" });
 
 // ── Compact data-display variants ──
 // Used for tight chip/pivot/legend/cell typography where 1rem `label` text
@@ -83,7 +83,7 @@ export const EllipsizedChipLabel = createText({
 export const CountText = createText({
   variant: "sublabel",
   as: "span",
-  style: { "font-size": "10px", color: "var(--sui-text-muted, #888)" },
+  style: { "font-size": "10px", color: "var(--sui-text-muted)" },
 });
 
 // Monospace value — for numeric readouts alongside units
@@ -109,16 +109,16 @@ export const SectionTitle = createText({ variant: "title", as: "h2" });
 export const SubsectionTitle = createText({ variant: "title", as: "h3" });
 
 // Status-colored titles
-export const InfoTitle = createText({ variant: "title", color: "#00d4ff" });
+export const InfoTitle = createText({ variant: "title", color: "var(--sui-accent)" });
 export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
-export const SuccessTitle = createText({ variant: "title", color: "#00ff88" });
-export const DangerTitle = createText({ variant: "title", color: "#ff0040" });
+export const SuccessTitle = createText({ variant: "title", color: "var(--sui-success)" });
+export const DangerTitle = createText({ variant: "title", color: "var(--sui-danger)" });
 
 // Status-colored small value readouts — for compact in-cell numeric values
 // where color carries compliance state. Sized down from the default value
 // variant so they sit comfortably inside table rows / cards.
-export const TextValueSuccessSm = createText({ variant: "value", color: "#00ff88", style: { "font-size": "0.85rem" } });
-export const TextValueDangerSm = createText({ variant: "value", color: "#ff0040", style: { "font-size": "0.85rem" } });
+export const TextValueSuccessSm = createText({ variant: "value", color: "var(--sui-success)", style: { "font-size": "0.85rem" } });
+export const TextValueDangerSm = createText({ variant: "value", color: "var(--sui-danger)", style: { "font-size": "0.85rem" } });
 
 // ── Dashboard / game text roles ──
 
@@ -126,7 +126,7 @@ export const TextValueDangerSm = createText({ variant: "value", color: "#ff0040"
 export const ScoreValue = createText({ variant: "value", as: "div", style: { "font-size": "3rem", "line-height": "1" } });
 
 /** Multiplier readout — primary-colored, medium size */
-export const MultiplierLabel = createText({ variant: "value", color: "var(--sui-color-primary, #00d4ff)", style: { "font-size": "1.25rem" } });
+export const MultiplierLabel = createText({ variant: "value", color: "var(--sui-accent)", style: { "font-size": "1.25rem" } });
 
 /** Monospace formula variable */
 export const FormulaVar = createText({ variant: "value", style: { "font-family": "ui-monospace, monospace", "font-size": "1rem" } });

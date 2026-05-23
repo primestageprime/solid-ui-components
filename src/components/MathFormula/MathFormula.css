@@ -4,7 +4,7 @@
 
 .math-formula {
   padding: 12px 16px;
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(var(--sui-accent-rgb), 0.08);
   border-radius: 6px;
   overflow-x: auto;
 }
@@ -22,7 +22,7 @@
 /* KaTeX base styling for dark theme */
 .math-formula .katex {
   font-size: 1.1em;
-  color: var(--text-secondary, #b0d4e8);
+  color: var(--sui-text-secondary);
   background: transparent;
 }
 
@@ -34,7 +34,7 @@
 /* Variables (letters) - cyan */
 .math-formula .katex .mord.mathnormal,
 .math-formula .katex .mord.mathdefault {
-  color: #00d4ff;
+  color: var(--status-full);
 }
 
 /* Numbers - gold/yellow */
@@ -45,19 +45,19 @@
 /* Operators (+, -, ×, etc) */
 .math-formula .katex .mbin,
 .math-formula .katex .mrel {
-  color: var(--text-muted, #7aa8c0);
+  color: var(--sui-text-muted);
 }
 
 /* Parentheses and brackets */
 .math-formula .katex .mopen,
 .math-formula .katex .mclose {
-  color: var(--text-secondary, #b0d4e8);
+  color: var(--sui-text-secondary);
 }
 
 /* Fraction line */
 .math-formula .katex .frac-line {
-  border-color: var(--text-muted, #7aa8c0);
-  background: var(--text-muted, #7aa8c0);
+  border-color: var(--sui-text-muted);
+  background: var(--sui-text-muted);
 }
 
 /* ============================================
@@ -65,11 +65,11 @@
    ============================================ */
 
 .formula-row-highlight {
-  background: rgba(0, 255, 136, 0.15) !important;
+  background: rgba(var(--sui-success-rgb), 0.15) !important;
 }
 
 .formula-row-highlight td {
-  color: #00ff88 !important;
+  color: var(--sui-success) !important;
 }
 
 .data-row[class*="formula-row"] {
@@ -89,12 +89,12 @@
 
 .math-formula .katex .formula-var:hover,
 .math-formula .katex .formula-var-highlight {
-  color: #00ff88 !important;
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+  color: var(--sui-success) !important;
+  text-shadow: 0 0 8px rgba(var(--sui-success-rgb), 0.5);
 }
 
 /* Make sure all children of the highlighted var also get the color */
 .math-formula .katex .formula-var-highlight *,
 .math-formula .katex .formula-var:hover * {
-  color: #00ff88 !important;
+  color: var(--sui-success) !important;
 }

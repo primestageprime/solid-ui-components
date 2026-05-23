@@ -48,22 +48,22 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
               "font-family": "monospace",
             }}>
               <thead>
-                <tr style={{ "border-bottom": "2px solid rgba(0, 212, 255, 0.3)" }}>
-                  <th style={{ padding: "8px", "text-align": "left", color: "var(--hud-accent, #00d4ff)" }}>ID</th>
-                  <th style={{ padding: "8px", "text-align": "left", color: "var(--hud-accent, #00d4ff)" }}>Name</th>
-                  <th style={{ padding: "8px", "text-align": "right", color: "var(--hud-accent, #00d4ff)" }}>Value</th>
+                <tr style={{ "border-bottom": "2px solid rgba(var(--sui-accent-rgb), 0.3)" }}>
+                  <th style={{ padding: "8px", "text-align": "left", color: "var(--sui-accent)" }}>ID</th>
+                  <th style={{ padding: "8px", "text-align": "left", color: "var(--sui-accent)" }}>Name</th>
+                  <th style={{ padding: "8px", "text-align": "right", color: "var(--sui-accent)" }}>Value</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.1)" }}>
-                  <td style={{ padding: "8px", color: "var(--text-primary)" }}>001</td>
-                  <td style={{ padding: "8px", color: "var(--text-primary)" }}>Engine A</td>
-                  <td style={{ padding: "8px", "text-align": "right", color: "#00ff88", "font-weight": "700" }}>450.0</td>
+                <tr style={{ "border-bottom": "1px solid rgba(var(--sui-accent-rgb), 0.1)" }}>
+                  <td style={{ padding: "8px", color: "var(--sui-text-primary)" }}>001</td>
+                  <td style={{ padding: "8px", color: "var(--sui-text-primary)" }}>Engine A</td>
+                  <td style={{ padding: "8px", "text-align": "right", color: "var(--sui-success)", "font-weight": "700" }}>450.0</td>
                 </tr>
-                <tr style={{ "border-bottom": "1px solid rgba(0, 212, 255, 0.1)" }}>
-                  <td style={{ padding: "8px", color: "var(--text-primary)" }}>002</td>
-                  <td style={{ padding: "8px", color: "var(--text-primary)" }}>Engine B</td>
-                  <td style={{ padding: "8px", "text-align": "right", color: "#00ff88", "font-weight": "700" }}>380.0</td>
+                <tr style={{ "border-bottom": "1px solid rgba(var(--sui-accent-rgb), 0.1)" }}>
+                  <td style={{ padding: "8px", color: "var(--sui-text-primary)" }}>002</td>
+                  <td style={{ padding: "8px", color: "var(--sui-text-primary)" }}>Engine B</td>
+                  <td style={{ padding: "8px", "text-align": "right", color: "var(--sui-success)", "font-weight": "700" }}>380.0</td>
                 </tr>
               </tbody>
             </table>
@@ -83,7 +83,7 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             variant="danger"
             size="md"
           >
-            <p style={{ margin: "0", color: "var(--text-muted)", "font-size": "0.875rem" }}>
+            <p style={{ margin: "0", color: "var(--sui-text-muted)", "font-size": "0.875rem" }}>
               3 records will be permanently removed.
             </p>
           </ConfirmationModal>

@@ -39,7 +39,7 @@ export const RowShowcase: Component = () => {
           {(["start", "center", "end", "between"] as const).map((justify) => (
             <div>
               <Text variant="sublabel">{justify}</Text>
-              <Row gap="sm" justify={justify} style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+              <Row gap="sm" justify={justify} style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
                 <DemoBox label="A" />
                 <DemoBox label="B" />
                 <DemoBox label="C" />
@@ -55,7 +55,7 @@ export const RowShowcase: Component = () => {
           <div>
             <Text variant="sublabel">SpreadRow</Text>
             <div class="text-meta">align: "center", justify: "between", gap: "md"</div>
-            <SpreadRow style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+            <SpreadRow style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
               <DemoBox label="Left" />
               <DemoBox label="Right" />
             </SpreadRow>
@@ -63,7 +63,7 @@ export const RowShowcase: Component = () => {
           <div>
             <Text variant="sublabel">ClusterRow</Text>
             <div class="text-meta">align: "center", gap: "sm"</div>
-            <ClusterRow style={{ "margin-top": "8px", border: "1px dashed rgba(255,255,255,0.1)", padding: "8px" }}>
+            <ClusterRow style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
               <DemoBox label="A" />
               <DemoBox label="B" />
               <DemoBox label="C" />

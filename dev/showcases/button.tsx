@@ -48,6 +48,25 @@ export const ButtonShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Pill</h3>
+        <p class="text-meta">
+          Pure shape variant — rounded ends. Composes with any color variant and size.
+          Use a wrapper component if you need pill-specific padding/typography.
+        </p>
+        <div class="example-row" style={{ "align-items": "center" }}>
+          <Button variant="pill">Default</Button>
+          <Button variant="pill" size="sm">Small</Button>
+          <Button variant="pill" size="lg">Large</Button>
+        </div>
+        <div class="example-row" style={{ "align-items": "center", "margin-top": "12px" }}>
+          <Button variant="pill" tone="accent">Pill + accent tone</Button>
+          <Button variant="pill" tone="outline">Pill + outline tone</Button>
+          <Button variant="pill" tone="muted">Pill + muted tone</Button>
+        </div>
+        <div class="text-meta">Tone matrix composes with pill shape.</div>
+      </div>
+
+      <div class="example-group">
         <h3>States</h3>
         <div class="example-row">
           <Button disabled>Disabled</Button>

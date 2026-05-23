@@ -17,7 +17,8 @@ export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>
     | "ghost"
     | "outlined"
     | "text"
-    | "icon-only";
+    | "icon-only"
+    | "pill";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   /** Active/selected state (absorbed from HUDButton) */

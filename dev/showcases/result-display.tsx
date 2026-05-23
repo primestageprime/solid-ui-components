@@ -23,7 +23,7 @@ export const ResultDisplayShowcase: Component = () => {
         sublabel="Threshold: 3.5 g/kWh"
         value="4.12"
         units="g/kWh"
-        valueColor="#ff0040"
+        valueColor="var(--sui-danger)"
         badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
       />
 

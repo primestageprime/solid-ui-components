@@ -47,8 +47,8 @@ body {
   --sui-text-muted: #4a6a80;
 
   /* ---- Borders ---- */
-  --sui-border: rgba(0, 212, 255, 0.3);
-  --sui-border-bright: rgba(0, 212, 255, 0.6);
+  --sui-border: rgba(var(--sui-accent-rgb), 0.3);
+  --sui-border-bright: rgba(var(--sui-accent-rgb), 0.6);
   --sui-border-focus: #00d4ff;
 
   /* ---- Radii (0 for sharp HUD edges) ---- */
@@ -90,6 +90,12 @@ body {
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
   --status-missing: #ff0040;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
+     reference labels). Cool blue-gray reads as quiet HUD chrome against the
+     deep-navy backgrounds. */
+  --sui-chart-tick-color: #4a6a80;
 }
 
 /* ============================================

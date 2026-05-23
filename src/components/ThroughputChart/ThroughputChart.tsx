@@ -96,10 +96,10 @@ export function ThroughputChart(props: ThroughputChartProps) {
           padding: "0 8px 4px",
         }}
       >
-        <span style={{ color: "var(--sui-success, #00ff88)", "font-weight": "600" }}>
+        <span style={{ color: "var(--sui-success)", "font-weight": "600" }}>
           Extraction Throughput
         </span>
-        <span style={{ color: "var(--sui-text-muted, #7aa8c0)" }}>
+        <span style={{ color: "var(--sui-text-muted)" }}>
           avg {fmtNum(avg())} / peak {fmtNum(peak())} rows/min
         </span>
       </div>

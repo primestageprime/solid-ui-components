@@ -21,7 +21,7 @@
   gap: 4px;
   padding: 2px 6px;
   border-radius: 3px;
-  background: var(--sui-bg-tertiary, rgba(255,255,255,0.08));
+  background: var(--sui-bg-tertiary);
   color: var(--sui-text-secondary, var(--sui-text-muted));
   font-size: 12px;
   line-height: 1.2;
@@ -80,5 +80,5 @@
 }
 
 .tag-input__suggestion:hover {
-  background: var(--sui-bg-hover, rgba(255,255,255,0.05));
+  background: var(--sui-bg-secondary);
 }

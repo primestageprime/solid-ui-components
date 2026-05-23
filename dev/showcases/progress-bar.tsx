@@ -13,23 +13,23 @@ export const ProgressBarShowcase: Component = () => {
           <StackedProgressBar
             segments={[
               { percentage: 30, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 20, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={5}
-            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
         </div>
         <div style={{ display: "flex", gap: "8px", "align-items": "center", "margin-top": "8px" }}>
           <StackedProgressBar
             segments={[
               { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 0, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={0}
-            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--jtf-text-muted)" }}
+            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--sui-text-muted)" }}
           />
-          <span style={{ color: "var(--jtf-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
         </div>
       </div>
 
@@ -40,19 +40,19 @@ export const ProgressBarShowcase: Component = () => {
             direction="vertical"
             segments={[
               { percentage: 25, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 40, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
           <StackedProgressBar
             direction="vertical"
             segments={[
               { percentage: 50, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 10, color: "rgba(255, 0, 64, 0.7)" },
+              { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--jtf-text-primary)" }}
+            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
           />
         </div>
       </div>

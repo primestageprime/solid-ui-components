@@ -79,8 +79,8 @@ export const isSolutionSatisfied = (w?: ProductGridWorkCounts): boolean =>
 
 const SEGMENT_COLORS = {
   done: "var(--sui-success, #2a6)",
-  doing: "var(--sui-info, #4ea1ff)",
-  todo: "var(--sui-text-muted, #555)",
+  doing: "var(--sui-accent)",
+  todo: "var(--sui-text-muted)",
 } as const;
 
 const workSegments = (w: ProductGridWorkCounts) => {

@@ -115,7 +115,7 @@ export const EpisodeCard: Component<EpisodeCardProps> = (props) => {
         </span>
         <span
           class="episode-card__character"
-          style={{ color: props.episode.characterColor || "var(--hud-accent)" }}
+          style={{ color: props.episode.characterColor || "var(--sui-accent)" }}
         >
           {props.episode.primaryCharacter}
         </span>
@@ -155,7 +155,7 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
             <div class="episode-selection__meta">
               <span
                 class="episode-selection__character"
-                style={{ color: ep().characterColor || "var(--hud-accent)" }}
+                style={{ color: ep().characterColor || "var(--sui-accent)" }}
               >
                 Focus: {ep().primaryCharacter}
               </span>
@@ -266,10 +266,10 @@ export function SidebarSelectorDemo(): JSX.Element {
   };
 
   return (
-    <div style={{ padding: "20px", background: "var(--hud-bg-deep, #030810)" }}>
+    <div style={{ padding: "20px", background: "var(--sui-bg-deep)" }}>
       <h3
         style={{
-          color: "var(--hud-accent, #00d4ff)",
+          color: "var(--sui-accent)",
           "margin-bottom": "16px",
           "font-size": "14px",
           "text-transform": "uppercase",

@@ -47,7 +47,7 @@ const accessors: PivotAccessors<AlarmRow, Dim> = {
 const debugBlock = {
   "margin-top": "8px",
   padding: "8px 12px",
-  background: "rgba(255, 255, 255, 0.04)",
+  background: "var(--sui-bg-secondary)",
   "border-radius": "4px",
   "font-size": "12px",
   color: "var(--sui-text-secondary, #7aa8c0)",

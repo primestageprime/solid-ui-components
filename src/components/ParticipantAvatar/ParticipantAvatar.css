@@ -12,7 +12,7 @@
   flex-shrink: 0;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #fff;
+  color: var(--sui-text-primary);
   text-transform: uppercase;
   user-select: none;
   line-height: 1;
@@ -20,7 +20,7 @@
 
 .sui-participant-avatar--img {
   object-fit: cover;
-  background: var(--sui-surface-sunken, #222);
+  background: var(--sui-bg-secondary);
 }
 
 /* Size variants — width/height + matching font-size so initials read clean

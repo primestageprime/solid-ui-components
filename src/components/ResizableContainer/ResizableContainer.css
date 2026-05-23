@@ -6,7 +6,7 @@
 .sui-resizable__handle {
   position: absolute;
   z-index: 10;
-  background-color: transparent;
+  background-color: rgba(var(--sui-accent-rgb), 0.08);
   transition: background-color 0.15s ease;
 }
 

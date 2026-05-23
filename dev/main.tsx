@@ -28,6 +28,7 @@ import { PageShowcase } from "./showcases/hud-page";
 import { PanelShowcase } from "./showcases/hud-panel";
 import { AccentSectionShowcase } from "./showcases/hud-section";
 import { TabsShowcase } from "./showcases/hud-tabs";
+import { TabbedSidePanelShowcase } from "./showcases/tabbed-side-panel";
 import { ToggleShowcase } from "./showcases/hud-toggle";
 import { IconShowcase } from "./showcases/icon";
 import { InputsShowcase } from "./showcases/inputs";
@@ -86,18 +87,17 @@ import { PivotTreemapShowcase } from "./showcases/pivot-treemap";
 import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
-import { VesselCardShowcase } from "./showcases/vessel-card";
+import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
 
 // Depth 3
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
 import { ConversationTreeShowcase } from "./showcases/conversation-tree";
 import { DataListShowcase } from "./showcases/data-list";
-import { EngineDataSectionShowcase } from "./showcases/engine-data-section";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
 import { InteractiveFormulaShowcase } from "./showcases/interactive-formula";
 import { MetricCardShowcase } from "./showcases/metric-card";
 import { ResultDisplayShowcase } from "./showcases/result-display";
-import { VesselCallHeaderShowcase } from "./showcases/vessel-call-header";
+import { TitledTimeRangeHeaderShowcase } from "./showcases/titled-time-range-header";
 
 // Depth 4
 import { ResultPanelShowcase } from "./showcases/result-panel";
@@ -146,6 +146,7 @@ const items: Item[] = [
   { id: "stats-table", label: "StatsTable", component: StatsTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "hud-tabs", label: "Tabs", component: TabsShowcase, tags: ["depth:1", "navigation"] },
+  { id: "tabbed-side-panel", label: "TabbedSidePanel", component: TabbedSidePanelShowcase, tags: ["depth:2", "container", "navigation"] },
   { id: "text", label: "Text", component: TextShowcase, tags: ["depth:0", "text"] },
   { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase, tags: ["depth:1", "form"] },
   { id: "app-shell", label: "AppShell", component: AppShellShowcase, tags: ["depth:0", "layout", "navigation"] },
@@ -193,13 +194,12 @@ const items: Item[] = [
   { id: "progress-card", label: "ProgressCard", component: ProgressCardShowcase, tags: ["depth:2", "container", "indicator"] },
   { id: "quick-filter", label: "QuickFilter", component: QuickFilterShowcase, tags: ["depth:2", "form"] },
   { id: "selectable-table", label: "SelectableTable", component: SelectableTableShowcase, tags: ["depth:2", "table", "data", "form"] },
-  { id: "vessel-card", label: "VesselCard", component: VesselCardShowcase, tags: ["depth:2", "container", "data"] },
+  { id: "removable-item-card", label: "RemovableItemCard", component: RemovableItemCardShowcase, tags: ["depth:2", "container", "data"] },
 
   { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:3", "indicator", "status"] },
   { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:2", "list", "chat"] },
   { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:3", "list", "data"] },
-  { id: "detail-header", label: "DetailHeader", component: VesselCallHeaderShowcase, tags: ["depth:1", "container", "data"] },
-  { id: "engine-data-section", label: "EngineDataSection", component: EngineDataSectionShowcase, tags: ["depth:3", "container", "data"] },
+  { id: "titled-time-range-header", label: "TitledTimeRangeHeader", component: TitledTimeRangeHeaderShowcase, tags: ["depth:1", "container", "data"] },
   { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:3", "container", "math"] },
   { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:3", "form", "math"] },
   { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:1", "container", "indicator", "data"] },

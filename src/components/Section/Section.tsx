@@ -5,7 +5,7 @@
 // Collapsible section with title, subtitle, corner decorations.
 // Panel and Divider have been moved to their own directories.
 // ============================================
-import { Component, JSX, splitProps, Show, mergeProps } from "solid-js";
+import { Component, JSX, splitProps, Show, mergeProps, createSignal } from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Section.css";
 
@@ -43,11 +43,26 @@ export const Section: Component<SectionProps> = (props) => {
     "children",
   ]);
 
+  // Controlled if `collapsed` prop provided, uncontrolled otherwise.
+  // In uncontrolled mode, internal state seeds from `defaultExpanded` (defaults to expanded).
+  const [internalCollapsed, setInternalCollapsed] = createSignal(
+    local.defaultExpanded === false,
+  );
+  const isCollapsed = () =>
+    local.collapsed !== undefined ? local.collapsed : internalCollapsed();
+  const handleToggle = () => {
+    if (local.onToggleCollapse) {
+      local.onToggleCollapse();
+    } else {
+      setInternalCollapsed((c) => !c);
+    }
+  };
+
   const classes = () => {
     const classList = ["sui-section"];
     if (local.corners) classList.push(`sui-section--corners-${local.corners}`);
     if (local.fill) classList.push("sui-section--fill");
-    if (local.collapsed) classList.push("sui-section--collapsed");
+    if (isCollapsed()) classList.push("sui-section--collapsed");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -77,9 +92,9 @@ export const Section: Component<SectionProps> = (props) => {
             <Show when={local.collapsible}>
               <button
                 class="sui-section__collapse-btn"
-                onClick={local.onToggleCollapse}
+                onClick={handleToggle}
               >
-                {local.collapsed ? "+" : "\u2212"}
+                {isCollapsed() ? "+" : "\u2212"}
               </button>
             </Show>
           </div>

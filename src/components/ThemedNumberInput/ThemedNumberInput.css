@@ -15,7 +15,7 @@
 
 .sui-number-input__label {
   display: block;
-  color: var(--sui-text-secondary, #aaa);
+  color: var(--sui-text-secondary);
   font-size: 0.875rem;
   margin-bottom: 8px;
 }
@@ -26,18 +26,18 @@
   align-items: stretch;
   width: 100%;
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
-  border: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 6px);
   transition: border-color 0.15s ease;
   box-sizing: border-box;
 }
 
 .sui-number-input__group:focus-within {
-  border-color: var(--sui-border-focus, var(--sui-accent, #00d4ff));
+  border-color: var(--sui-border-focus, var(--sui-accent));
 }
 
 .sui-number-input[data-invalid] .sui-number-input__group {
-  border-color: var(--sui-danger, #ff3366);
+  border-color: var(--sui-danger);
 }
 
 .sui-number-input[data-disabled] .sui-number-input__group {
@@ -52,7 +52,7 @@
   background: transparent;
   border: none;
   outline: none;
-  color: var(--sui-text-primary, #ddd);
+  color: var(--sui-text-primary);
   font-family: inherit;
   font-size: 0.875rem;
   box-sizing: border-box;
@@ -68,13 +68,13 @@
 }
 
 .sui-number-input__input::placeholder {
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
 }
 
 .sui-number-input__triggers {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-left: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
 }
 
 .sui-number-input__trigger {
@@ -86,14 +86,14 @@
   padding: 0 6px;
   background: transparent;
   border: none;
-  color: var(--sui-text-secondary, #7aa8c0);
+  color: var(--sui-text-secondary);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
 
 .sui-number-input__trigger:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb, 0, 212, 255), 0.12);
-  color: var(--sui-accent, #00d4ff);
+  color: var(--sui-accent);
 }
 
 .sui-number-input__trigger:disabled {
@@ -102,17 +102,17 @@
 }
 
 .sui-number-input__trigger--increment {
-  border-bottom: 1px solid var(--sui-border, rgba(0, 212, 255, 0.3));
+  border-bottom: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
 }
 
 .sui-number-input__error {
   margin-top: 6px;
   font-size: 0.75rem;
-  color: var(--sui-danger, #ff3366);
+  color: var(--sui-danger);
 }
 
 .sui-number-input__description {
   margin-top: 6px;
   font-size: 0.75rem;
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
 }

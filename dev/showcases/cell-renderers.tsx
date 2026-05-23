@@ -7,9 +7,9 @@ import {
 } from "../../src/components/Table";
 import { Stack } from "../../src/components/Layout";
 
-const AccentFloat = withCellStyle(FloatCell, { color: "#00d4ff", fontWeight: 600 });
+const AccentFloat = withCellStyle(FloatCell, { color: "var(--sui-accent)", fontWeight: 600 });
 const SmallDate = withCellStyle(DateCell, { fontSize: "0.75rem" });
-const NoxCell = withValueColor(FloatCell, (v) => (v != null && v > 2.8) ? "#ff6b6b" : "#00ff88", { textAlign: "right" });
+const NoxCell = withValueColor(FloatCell, (v) => (v != null && v > 2.8) ? "var(--sui-danger)" : "var(--sui-success)", { textAlign: "right" });
 
 export const CellRendererShowcase: Component = () => {
   return (
@@ -197,7 +197,7 @@ export const CellRendererShowcase: Component = () => {
         <Stack gap="md">
           <div>
             <AccentFloat value={98.76} />
-            <div class="text-meta">withCellStyle(FloatCell, {"{"} color: "#00d4ff", fontWeight: 600 {"}"})</div>
+            <div class="text-meta">withCellStyle(FloatCell, {"{"} color: "var(--sui-accent)", fontWeight: 600 {"}"})</div>
           </div>
           <div>
             <SmallDate value="2026-02-13" />

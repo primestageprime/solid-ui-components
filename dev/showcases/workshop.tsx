@@ -244,9 +244,9 @@ const ParentChildrenRow: Component = () => {
     padding: "6px 14px",
     "font-size": "12px",
     "font-family": "inherit",
-    color: "var(--sui-text, #e6ecf5)",
-    background: "var(--sui-surface, rgba(0,0,0,0.2))",
-    border: "1px solid var(--sui-border, rgba(255,255,255,0.15))",
+    color: "var(--sui-text-primary)",
+    background: "var(--sui-bg-elevated)",
+    border: "1px solid var(--sui-border)",
     "border-radius": "4px",
     cursor: "pointer",
   } as const;
@@ -260,17 +260,17 @@ const ParentChildrenRow: Component = () => {
   };
   const cellStyle = {
     padding: "4px 8px",
-    "border-bottom": "1px solid rgba(255,255,255,0.08)",
+    "border-bottom": "1px solid var(--sui-border)",
     "text-align": "left" as const,
-    color: "var(--sui-text, #e6ecf5)",
+    color: "var(--sui-text-primary)",
   };
   const headStyle = {
     ...cellStyle,
     "font-size": "10px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.5)",
-    "background": "rgba(255,255,255,0.04)",
+    color: "var(--sui-text-secondary)",
+    "background": "var(--sui-bg-secondary)",
   };
   // visibleCols cap = 5 (per STATUS_BREAKPOINTS) → maxDepth = 2.
   const TABLE_MAX_DEPTH = 3;
@@ -280,12 +280,12 @@ const ParentChildrenRow: Component = () => {
     "text-align": "right" as const,
     color:
       Math.abs(col) > TABLE_MAX_DEPTH
-        ? "rgba(255,255,255,0.35)" // summary slot — muted
+        ? "var(--sui-text-muted)" // summary slot — muted
         : col === 0
-          ? "var(--sui-accent, #00d4ff)" // DOING center
+          ? "var(--sui-accent)" // DOING center
           : col < 0
-            ? "rgba(255,255,255,0.55)" // DONE side
-            : "rgba(95,179,124,0.85)", // TODO side
+            ? "var(--sui-text-secondary)" // DONE side
+            : "var(--sui-success)", // TODO side
     "font-weight": 600,
   });
 
@@ -293,7 +293,7 @@ const ParentChildrenRow: Component = () => {
     <>
       <div class="workshop-grid__cell">
         <SubsectionTitle>StatusFlowChart — single parent + 8 children</SubsectionTitle>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+        <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
           Caller passes nodes with <code>status</code> (no positional hints).
           The chart computes columns from breakpoints + container width.
           Any child DOING → parent DOING; all 8 DONE → parent flips to DONE
@@ -323,7 +323,7 @@ const ParentChildrenRow: Component = () => {
                 <td style={cellStyle}>
                   {r.effectiveStatus}
                   {r.status !== r.effectiveStatus && (
-                    <span style={{ color: "rgba(255,255,255,0.35)", "margin-left": "6px" }}>
+                    <span style={{ color: "var(--sui-text-muted)", "margin-left": "6px" }}>
                       (input: {r.status})
                     </span>
                   )}
@@ -342,7 +342,7 @@ const ParentChildrenRow: Component = () => {
               {playing() ? "⏸ Pause" : "▶ Play"}
             </button>
             <button type="button" style={btnStyle} onClick={advance}>Next →</button>
-            <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.5)" }}>
+            <span style={{ "font-size": "11px", color: "var(--sui-text-secondary)" }}>
               frame {idx() + 1} / {history().length}
             </span>
           </div>
@@ -473,9 +473,9 @@ const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rp
     padding: "6px 14px",
     "font-size": "12px",
     "font-family": "inherit",
-    color: "var(--sui-text, #e6ecf5)",
-    background: "var(--sui-surface, rgba(0,0,0,0.2))",
-    border: "1px solid var(--sui-border, rgba(255,255,255,0.15))",
+    color: "var(--sui-text-primary)",
+    background: "var(--sui-bg-elevated)",
+    border: "1px solid var(--sui-border)",
     "border-radius": "4px",
     cursor: "pointer",
   } as const;
@@ -492,29 +492,29 @@ const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rp
   };
   const cellStyle = {
     padding: "4px 8px",
-    "border-bottom": "1px solid rgba(255,255,255,0.08)",
+    "border-bottom": "1px solid var(--sui-border)",
     "text-align": "left" as const,
-    color: "var(--sui-text, #e6ecf5)",
+    color: "var(--sui-text-primary)",
   };
   const headStyle = {
     ...cellStyle,
     "font-size": "10px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.5)",
-    background: "rgba(255,255,255,0.04)",
+    color: "var(--sui-text-secondary)",
+    background: "var(--sui-bg-secondary)",
   };
   const colStyleFor = (col: number) => ({
     ...cellStyle,
     "text-align": "right" as const,
     color:
       Math.abs(col) > TABLE_MAX_DEPTH
-        ? "rgba(255,255,255,0.35)"
+        ? "var(--sui-text-muted)"
         : col === 0
-          ? "var(--sui-accent, #00d4ff)"
+          ? "var(--sui-accent)"
           : col < 0
-            ? "rgba(255,255,255,0.55)"
-            : "rgba(95,179,124,0.85)",
+            ? "var(--sui-text-secondary)"
+            : "var(--sui-success)",
     "font-weight": 600,
   });
 
@@ -559,7 +559,7 @@ const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rp
     <>
       <div class="workshop-grid__cell">
         <SubsectionTitle>StatusFlowChart — mixed shapes</SubsectionTitle>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+        <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
           Four lanes demonstrating different shapes — all sharing one tick:
           (1) Parent Task A owns 3 children;
           (2) Parent Task B owns 8 children;
@@ -582,7 +582,7 @@ const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rp
                 <td style={cellStyle}>
                   {r.effectiveStatus}
                   {r.status !== r.effectiveStatus && (
-                    <span style={{ color: "rgba(255,255,255,0.35)", "margin-left": "6px" }}>
+                    <span style={{ color: "var(--sui-text-muted)", "margin-left": "6px" }}>
                       (input: {r.status})
                     </span>
                   )}
@@ -601,7 +601,7 @@ const TwoParentsRow: Component<{ routingStyle?: "bezier" | "orthogonal" }> = (rp
               {playing() ? "⏸ Pause" : "▶ Play"}
             </button>
             <button type="button" style={btnStyle} onClick={advance}>Next →</button>
-            <span style={{ "font-size": "11px", color: "rgba(255,255,255,0.5)" }}>
+            <span style={{ "font-size": "11px", color: "var(--sui-text-secondary)" }}>
               frame {idx() + 1} / {Math.min(histA().length, histB().length)}
             </span>
           </div>
@@ -749,10 +749,10 @@ const ColLabelStrip: Component<{
             left: `calc(50% + ${l.x}px)`,
             transform: "translateX(-50%)",
             color: l.isSummary
-              ? "rgba(255,255,255,0.45)"
+              ? "var(--sui-text-muted)"
               : l.label === "0"
-                ? "var(--sui-accent, #00d4ff)"
-                : "rgba(255,255,255,0.6)",
+                ? "var(--sui-accent)"
+                : "var(--sui-text-secondary)",
             "font-weight": l.label === "0" ? 600 : 400,
           }}
         >
@@ -770,7 +770,7 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
     "font-family": "ui-monospace, SFMono-Regular, monospace",
     "font-size": "10px",
     "line-height": "1.5",
-    color: "rgba(255,255,255,0.75)",
+    color: "var(--sui-text-primary)",
   } as const;
 
   const effective = () => resolveParentStatuses(p.nodes, "DOING");
@@ -802,8 +802,8 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         ...cellStyle,
         width: "100%",
         "box-sizing": "border-box",
-        "background": "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        "background": "var(--sui-bg-secondary)",
+        border: "1px solid var(--sui-border)",
         "border-radius": "4px",
         padding: "4px 8px",
       }}
@@ -813,7 +813,7 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         visibleCols = {m().visibleCols} · maxDepth = ±{m().maxDepth}
       </div>
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         horizontal budget:
       </div>
       <div style={{ "padding-left": "8px" }}>node = {NODE_WIDTH_PX}px</div>
@@ -835,12 +835,12 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         </strong>
       </div>
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         slots ({m().visibleCols}):
       </div>
       <div style={{ "padding-left": "8px" }}>[{slotsList()}]</div>
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         switch (status → col):
       </div>
       {nodeDecisions().map((d) => (
@@ -848,8 +848,8 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
           style={{
             "padding-left": "8px",
             color: d.visible
-              ? "rgba(255,255,255,0.85)"
-              : "rgba(255,255,255,0.45)",
+              ? "var(--sui-text-primary)"
+              : "var(--sui-text-muted)",
           }}
         >
           {d.id} ({d.status}) → {labelForCol(d.col)}
@@ -857,7 +857,7 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         </div>
       ))}
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         byCol (in slot):
       </div>
       {m().byCol.map((c) => (
@@ -866,12 +866,12 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         </div>
       ))}
       {m().byCol.length === 0 && (
-        <div style={{ "padding-left": "8px", color: "rgba(255,255,255,0.4)" }}>
+        <div style={{ "padding-left": "8px", color: "var(--sui-text-muted)" }}>
           (no visible leaves)
         </div>
       )}
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         stack:
       </div>
       <div style={{ "padding-left": "8px" }}>maxStack = {m().maxStack}</div>
@@ -880,7 +880,7 @@ const FrameMathPanel: Component<{ nodes: StatusFlowNode[]; width: number }> = (p
         = {m().chartContent}
       </div>
 
-      <div style={{ "margin-top": "4px", color: "rgba(255,255,255,0.55)" }}>
+      <div style={{ "margin-top": "4px", color: "var(--sui-text-secondary)" }}>
         height = chart + padding{m().hasParent ? " + parent + gap + border" : ""}:
       </div>
       <div style={{ "padding-left": "8px" }}>
@@ -897,25 +897,25 @@ const BreakpointsPanel: Component<{ width: number }> = (p) => {
   const sorted = [...STATUS_BREAKPOINTS].sort((a, b) => a.minWidth - b.minWidth);
   const cell = {
     padding: "4px 10px",
-    "border-bottom": "1px solid rgba(255,255,255,0.06)",
+    "border-bottom": "1px solid var(--sui-border)",
     "font-family": "ui-monospace, SFMono-Regular, monospace",
     "font-size": "11px",
-    color: "var(--sui-text, #e6ecf5)",
+    color: "var(--sui-text-primary)",
   } as const;
   const head = {
     ...cell,
     "font-size": "10px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.5)",
-    background: "rgba(255,255,255,0.04)",
+    color: "var(--sui-text-secondary)",
+    background: "var(--sui-bg-secondary)",
     "text-align": "left" as const,
   };
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--sui-bg-secondary)",
+        border: "1px solid var(--sui-border)",
         "border-radius": "6px",
         padding: "10px 14px",
         "margin-bottom": "12px",
@@ -926,7 +926,7 @@ const BreakpointsPanel: Component<{ width: number }> = (p) => {
           "font-size": "10px",
           "letter-spacing": "0.08em",
           "text-transform": "uppercase",
-          color: "rgba(255,255,255,0.55)",
+          color: "var(--sui-text-secondary)",
           "margin-bottom": "8px",
         }}
       >
@@ -955,7 +955,7 @@ const BreakpointsPanel: Component<{ width: number }> = (p) => {
                 <td style={cell}>≥ {bp.minWidth}px</td>
                 <td style={cell}>{bp.visibleCols}</td>
                 <td style={cell}>±{depth}</td>
-                <td style={{ ...cell, color: isActive ? "var(--sui-accent, #00d4ff)" : cell.color }}>
+                <td style={{ ...cell, color: isActive ? "var(--sui-accent)" : cell.color }}>
                   {labels}
                 </td>
               </tr>
@@ -1004,16 +1004,16 @@ const FrameRow: Component<{
   };
   const cellStyle = {
     padding: "2px 6px",
-    "border-bottom": "1px solid rgba(255,255,255,0.06)",
-    color: "var(--sui-text, #e6ecf5)",
+    "border-bottom": "1px solid var(--sui-border)",
+    color: "var(--sui-text-primary)",
   };
   const headStyle = {
     ...cellStyle,
     "font-size": "9px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.45)",
-    background: "rgba(255,255,255,0.03)",
+    color: "var(--sui-text-secondary)",
+    background: "var(--sui-bg-secondary)",
     "text-align": "left" as const,
   };
   const colStyleFor = (col: number) => ({
@@ -1021,12 +1021,12 @@ const FrameRow: Component<{
     "text-align": "right" as const,
     color:
       Math.abs(col) > tableMaxDepth()
-        ? "rgba(255,255,255,0.35)"
+        ? "var(--sui-text-muted)"
         : col === 0
-          ? "var(--sui-accent, #00d4ff)"
+          ? "var(--sui-accent)"
           : col < 0
-            ? "rgba(255,255,255,0.55)"
-            : "rgba(95,179,124,0.85)",
+            ? "var(--sui-text-secondary)"
+            : "var(--sui-success)",
     "font-weight": 600,
   });
   const labelForCol = (col: number) => labelForColHelper(col, tableMaxDepth());
@@ -1044,7 +1044,7 @@ const FrameRow: Component<{
         style={{
           "font-family": "ui-monospace, SFMono-Regular, monospace",
           "font-size": "11px",
-          color: "var(--sui-accent, #00d4ff)",
+          color: "var(--sui-accent)",
           width: "32px",
           "flex-shrink": 0,
           "text-align": "right",
@@ -1111,7 +1111,7 @@ const FrameRow: Component<{
                 <td style={cellStyle}>
                   {r.effectiveStatus}
                   {r.inputStatus !== r.effectiveStatus && (
-                    <span style={{ color: "rgba(255,255,255,0.3)", "margin-left": "4px" }}>
+                    <span style={{ color: "var(--sui-text-muted)", "margin-left": "4px" }}>
                       ({r.inputStatus})
                     </span>
                   )}
@@ -1131,9 +1131,9 @@ const RulesPanel: Component = () => (
     style={{
       "font-size": "11px",
       "line-height": "1.6",
-      color: "rgba(255,255,255,0.75)",
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.08)",
+      color: "var(--sui-text-primary)",
+      background: "var(--sui-bg-secondary)",
+      border: "1px solid var(--sui-border)",
       "border-radius": "6px",
       padding: "10px 14px",
       "margin-bottom": "12px",
@@ -1144,14 +1144,14 @@ const RulesPanel: Component = () => (
         "font-size": "10px",
         "letter-spacing": "0.08em",
         "text-transform": "uppercase",
-        color: "rgba(255,255,255,0.55)",
+        color: "var(--sui-text-secondary)",
         "margin-bottom": "8px",
       }}
     >
       Layout rules
     </div>
 
-    <strong style={{ color: "var(--sui-accent, #00d4ff)" }}>Node placement</strong>
+    <strong style={{ color: "var(--sui-accent)" }}>Node placement</strong>
     <ol style={{ margin: "4px 0 10px", "padding-left": "20px" }}>
       <li>
         <strong>Parent</strong> column = status-based on its{" "}
@@ -1191,7 +1191,7 @@ const RulesPanel: Component = () => (
       </li>
     </ol>
 
-    <strong style={{ color: "var(--sui-accent, #00d4ff)" }}>Edges</strong>
+    <strong style={{ color: "var(--sui-accent)" }}>Edges</strong>
     <ol style={{ margin: "4px 0 0", "padding-left": "20px" }}>
       <li>
         <strong>Visible → visible</strong>: arrow drawn from source's right
@@ -1289,7 +1289,7 @@ const FrameExplorerRow: Component = () => {
     "font-size": "11px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.55)",
+    color: "var(--sui-text-secondary)",
     "margin": "16px 0 6px",
     "font-family": "ui-monospace, SFMono-Regular, monospace",
   };
@@ -1298,7 +1298,7 @@ const FrameExplorerRow: Component = () => {
     <>
       <div class="workshop-grid__cell">
         <SubsectionTitle>Frame explorer — B0 (dense 7×3)</SubsectionTitle>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+        <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
           Dense 7-column × 3-row test frame. Three parallel dep chains
           with a cross-edge (Ma → T2a) so the router has to dodge T1a.
           Uses the new default orthogonal routing.
@@ -1323,7 +1323,7 @@ const RouterDemoRow: Component = () => {
     "font-size": "11px",
     "letter-spacing": "0.06em",
     "text-transform": "uppercase" as const,
-    color: "rgba(255,255,255,0.55)",
+    color: "var(--sui-text-secondary)",
     "margin": "16px 0 6px",
     "font-family": "ui-monospace, SFMono-Regular, monospace",
   };
@@ -1331,7 +1331,7 @@ const RouterDemoRow: Component = () => {
     <>
       <div class="workshop-grid__cell">
         <SubsectionTitle>Router demo — isolated 9-case grid</SubsectionTitle>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+        <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
           Isolated edge router with no SwimlaneChart, no port
           assignment, no badges. Source rect fixed, target rect at
           each of 8 surrounding positions plus a center case that

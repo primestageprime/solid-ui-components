@@ -48,11 +48,20 @@ export interface BurndownChartProps {
   size?: "xs" | "sm" | "md";
 }
 
+// Series colours map to semantic theme tokens so each burndown bar follows
+// the active theme without per-theme overrides. Domain semantics preserved:
+//   pc (planned, complete)     → success  (goal-met green)
+//   pi (planned, incomplete)   → warning  (behind plan)
+//   uc (unplanned, complete)   → accent   (bonus, brand-accent highlight)
+//   ui (unplanned, incomplete) → danger   (unplanned work still open — read
+//                                          as a problem, not as muted ambient)
+// Consumers can still override per call-site via the `--sui-burndown-*`
+// custom-property fallback layer.
 const COLOR = {
-  pi: "var(--sui-burndown-pi, #3a4a5e)",
-  pc: "var(--sui-burndown-pc, #5fb37c)",
-  uc: "var(--sui-burndown-uc, #e0a14a)",
-  ui: "var(--sui-burndown-ui, #e57373)",
+  pi: "var(--sui-burndown-pi, var(--sui-warning))",
+  pc: "var(--sui-burndown-pc, var(--sui-success))",
+  uc: "var(--sui-burndown-uc, var(--sui-accent))",
+  ui: "var(--sui-burndown-ui, var(--sui-danger))",
 };
 
 export function BurndownChart(props: BurndownChartProps) {
@@ -152,7 +161,7 @@ export function BurndownChart(props: BurndownChartProps) {
             ]}
             x={(d) => d.x}
             y={(d) => d.y}
-            stroke="var(--sui-text-muted, #9bb)"
+            stroke="var(--sui-text-muted)"
             strokeWidth={1.5}
           />
           {trend()!.projDays !== null && (
@@ -163,7 +172,7 @@ export function BurndownChart(props: BurndownChartProps) {
               ]}
               x={(d) => d.x}
               y={(d) => d.y}
-              stroke="var(--sui-text-muted, #9bb)"
+              stroke="var(--sui-text-muted)"
               strokeDasharray="4 4"
             />
           )}

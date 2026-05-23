@@ -8,7 +8,7 @@
 }
 
 .sui-msf__label {
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
   flex-shrink: 0;
 }
 
@@ -23,8 +23,8 @@
 
 .sui-msf__chip {
   background: transparent;
-  color: var(--sui-text-muted, #888);
-  border: 1px solid var(--sui-border, #333);
+  color: var(--sui-text-muted);
+  border: 1px solid var(--sui-border);
   border-radius: 12px;
   padding: 2px 10px;
   font-size: 12px;
@@ -36,14 +36,14 @@
 }
 
 .sui-msf__chip:hover {
-  color: var(--sui-text-primary, #ddd);
+  color: var(--sui-text-primary);
   border-color: var(--sui-border-strong, #555);
 }
 
 .sui-msf__chip--active {
-  background: var(--sui-accent, #5a8ac0);
+  background: var(--sui-accent);
   color: var(--sui-bg-base, #111);
-  border-color: var(--sui-accent, #5a8ac0);
+  border-color: var(--sui-accent);
   font-weight: 500;
 }
 
@@ -63,9 +63,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  background: var(--sui-bg-elevated, #1a1a1a);
-  color: var(--sui-text-primary, #ddd);
-  border: 1px solid var(--sui-border, #333);
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-primary);
+  border: 1px solid var(--sui-border);
   border-radius: 3px;
   padding: 2px 8px;
   font-size: 12px;
@@ -83,7 +83,7 @@
 }
 
 .sui-msf__menu-caret {
-  color: var(--sui-text-muted, #888);
+  color: var(--sui-text-muted);
   font-size: 10px;
 }
 
@@ -95,8 +95,8 @@
   min-width: 180px;
   max-height: 60vh;
   overflow-y: auto;
-  background: var(--sui-bg-elevated, #1a1a1a);
-  border: 1px solid var(--sui-border, #333);
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   padding: 4px 0;
@@ -110,7 +110,7 @@
   gap: 8px;
   background: transparent;
   border: none;
-  color: var(--sui-text-primary, #ddd);
+  color: var(--sui-text-primary);
   font-family: inherit;
   font-size: 12px;
   text-align: left;
@@ -124,13 +124,13 @@
 }
 
 .sui-msf__menu-item--active {
-  color: var(--sui-accent, #5a8ac0);
+  color: var(--sui-accent);
   font-weight: 500;
 }
 
 .sui-msf__check {
   display: inline-block;
   width: 12px;
-  color: var(--sui-accent, #5a8ac0);
+  color: var(--sui-accent);
   flex-shrink: 0;
 }

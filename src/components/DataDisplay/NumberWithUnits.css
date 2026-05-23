@@ -19,11 +19,11 @@
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--sui-text-primary);
 }
 
 .sui-num-with-units__units {
   font-size: 0.9rem;
   font-weight: normal;
-  color: var(--text-secondary);
+  color: var(--sui-text-secondary);
 }

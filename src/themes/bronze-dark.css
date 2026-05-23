@@ -1,0 +1,95 @@
+/* ============================================
+   Bronze Dark Theme — Dark, Serif, Friendly
+   ============================================
+   The night-mode twin of Bronze. Same warm/serif/
+   friendly identity: Lora for prose, Inter for
+   utility text. Surfaces inverted to warm walnut,
+   text lifted to warm bone, rust accent lifted to
+   read well on dark.
+   ============================================ */
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--sui-font-family);
+  background-color: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ---- Accent ---- */
+  --sui-accent:     #E07A4F;
+  --sui-accent-rgb: 224, 122, 79;
+  --sui-accent-dim: #B85F38;
+
+  /* ---- Semantic ---- */
+  --sui-danger:      #D4584E;
+  --sui-danger-rgb:  212, 88, 78;
+  --sui-warning:     #E0A040;
+  --sui-warning-rgb: 224, 160, 64;
+  --sui-success:     #7BA67B;
+  --sui-success-rgb: 123, 166, 123;
+
+  /* ---- Backgrounds — warm walnut family ---- */
+  --sui-bg-deep:      #0F0A06;
+  --sui-bg-primary:   #1A120A;
+  --sui-bg-secondary: #221710;
+  --sui-bg-tertiary:  #2D1F14;
+  --sui-bg-elevated:  #382617;
+
+  /* ---- Text ---- */
+  --sui-text-primary:   #F4ECD8;
+  --sui-text-secondary: #C8B89A;
+  --sui-text-muted:     #8C7861;
+
+  /* ---- Borders ---- */
+  --sui-border:        #4A3625;
+  --sui-border-bright: #6B4F33;
+  --sui-border-focus:  #E07A4F;
+
+  /* ---- Radii — subtle round (matches light Bronze) ---- */
+  --sui-radius-sm: 4px;
+  --sui-radius-md: 6px;
+  --sui-radius-lg: 10px;
+
+  /* ---- Clip sizes ---- */
+  --sui-clip-sm:  8px;
+  --sui-clip-md: 12px;
+  --sui-clip-lg: 16px;
+  --sui-clip-xl: 24px;
+
+  /* ---- Spacing scale (identical across themes) ---- */
+  --sui-space-0: 0;
+  --sui-space-px: 1px;
+  --sui-space-0-5: 2px;
+  --sui-space-1: 4px;
+  --sui-space-1-5: 6px;
+  --sui-space-2: 8px;
+  --sui-space-2-5: 10px;
+  --sui-space-3: 12px;
+  --sui-space-4: 16px;
+  --sui-space-5: 20px;
+  --sui-space-6: 24px;
+
+  /* ---- Typography (unchanged from light Bronze) ---- */
+  --sui-font-family:  "Lora", Georgia, "Times New Roman", serif;
+  --sui-font-utility: "Inter", system-ui, -apple-system, sans-serif;
+  --sui-font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---- Chart status colors — warm mapping lifted for dark ---- */
+  --status-full:    #7BA67B;
+  --status-partial: #E0A040;
+  --status-sparse:  #E07A4F;
+  --status-missing: #D4584E;
+
+  /* ---- Chart chrome ----
+     Axis tick + label colour. Reuses --sui-text-muted (#8C7861) which on
+     dark walnut reads as quietly-warm chrome — the same hex Bronze light
+     uses for --sui-text-secondary, but in dark mode it lands as "muted". */
+  --sui-chart-tick-color: #8C7861;
+}

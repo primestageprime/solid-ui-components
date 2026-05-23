@@ -29,7 +29,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
               </div>
             }
           >
-            <p style={{ margin: "0", color: "var(--hud-text-dim, var(--jtf-text-secondary))" }}>
+            <p style={{ margin: "0", color: "var(--sui-text-secondary)" }}>
               Are you sure you want to proceed with this action?
             </p>
           </Modal>
@@ -48,7 +48,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Body</div>
-            <p style={{ margin: "0", "font-size": "0.875rem", color: "var(--jtf-text-secondary)" }}>
+            <p style={{ margin: "0", "font-size": "0.875rem", color: "var(--sui-text-secondary)" }}>
               Are you sure you want to proceed with this action?
             </p>
           </div>

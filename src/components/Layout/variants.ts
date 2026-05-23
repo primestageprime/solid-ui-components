@@ -87,7 +87,7 @@ export const ScrollPanel = createBox({
   style: {
     "max-height": "320px",
     overflow: "auto",
-    border: "1px solid var(--sui-border, rgba(255, 255, 255, 0.08))",
+    border: "1px solid var(--sui-border)",
     "border-radius": "4px",
   },
 });
@@ -98,7 +98,7 @@ export const ScrollPanel = createBox({
 // distinct surface that reads as "this is the app".
 export const PageCanvas = createBox({
   style: {
-    background: "var(--jtf-bg-primary, #1a1a2e)",
+    background: "var(--sui-bg-primary)",
     width: "100%",
     height: "100%",
     margin: "0",
@@ -118,7 +118,7 @@ export const DelineatedSidebar = createStack({
     "min-width": "400px",
     "max-width": "400px",
     "align-self": "stretch",
-    "border-right": "1px solid var(--sui-border, rgba(255, 255, 255, 0.12))",
+    "border-right": "1px solid var(--sui-border)",
     padding: "12px",
     "box-sizing": "border-box",
     "overflow-y": "auto",
