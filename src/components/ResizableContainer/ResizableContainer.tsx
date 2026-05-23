@@ -130,9 +130,25 @@ export const ResizableContainer: Component<ResizableContainerProps> = (props) =>
   const containerClass = () =>
     ["sui-resizable", props.class].filter(Boolean).join(" ");
 
+  const hasHorizontalHandle = () =>
+    directions().includes("left") || directions().includes("right");
+  const hasVerticalHandle = () =>
+    directions().includes("top") || directions().includes("bottom");
+
+  const dimensionStyle = (): JSX.CSSProperties => {
+    if (props.gridMode) return {};
+    return {
+      ...(hasHorizontalHandle() ? { width: `${width()}px` } : {}),
+      ...(hasVerticalHandle() ? { height: `${height()}px` } : {}),
+    };
+  };
+
   const containerStyle = (): JSX.CSSProperties => ({
-    ...(props.gridMode ? {} : { width: `${width()}px`, height: `${height()}px` }),
+    // Consumer style first; internal width/height spread last so a consumer
+    // passing `style={{ width: "100%" }}` cannot clobber the dimensions this
+    // component owns. ResizableContainer is the source of truth for its size.
     ...props.style,
+    ...dimensionStyle(),
   });
 
   return (

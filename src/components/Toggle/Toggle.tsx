@@ -19,6 +19,13 @@ export interface ToggleProps extends Omit<JSX.InputHTMLAttributes<HTMLInputEleme
   variant?: "default" | "minimal" | "thematic";
   /** Accent color when checked */
   color?: ColorVariant;
+  /**
+   * Value-handler variant of `onChange` — receives the new checked boolean
+   * directly so consumers can write `onCheckedChange={setEnabled}` instead of
+   * unwrapping `event.currentTarget.checked`. Fires alongside any native
+   * `onChange` handler if both are provided.
+   */
+  onCheckedChange?: (checked: boolean) => void;
 }
 
 export const Toggle: Component<ToggleProps> = (props) => {
@@ -30,6 +37,8 @@ export const Toggle: Component<ToggleProps> = (props) => {
     "color",
     "class",
     "id",
+    "onCheckedChange",
+    "onChange",
   ]);
 
   const generatedId = createUniqueId();
@@ -46,6 +55,24 @@ export const Toggle: Component<ToggleProps> = (props) => {
     return classList.join(" ");
   };
 
+  // Forwards the native event to any `onChange` listener (preserving the
+  // existing InputHTMLAttributes contract) and fans out the boolean value to
+  // `onCheckedChange` for the cleaner consumer signature.
+  type ToggleChangeEvent = Event & {
+    currentTarget: HTMLInputElement;
+    target: HTMLInputElement;
+  };
+  const handleChange: JSX.ChangeEventHandler<HTMLInputElement, Event> = (event) => {
+    const native = local.onChange;
+    if (typeof native === "function") {
+      native(event);
+    } else if (Array.isArray(native)) {
+      const [handler, data] = native;
+      (handler as (data: unknown, event: ToggleChangeEvent) => void)(data, event);
+    }
+    local.onCheckedChange?.(event.currentTarget.checked);
+  };
+
   return (
     <div class={classes()}>
       {local.label && local.labelPosition === "left" && (
@@ -58,6 +85,7 @@ export const Toggle: Component<ToggleProps> = (props) => {
           type="checkbox"
           id={toggleId()}
           class="sui-toggle__input"
+          onChange={handleChange}
           {...others}
         />
         <label class="sui-toggle__slider" for={toggleId()} />
