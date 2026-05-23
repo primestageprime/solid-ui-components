@@ -355,21 +355,61 @@ export function AnimatedSwimlaneChart<T>(
     const tNow = currentT();
     const bounds = viewBounds();
 
-    // Static obstacle list for arrow routing: visible non-morph cards
-    // at the current t. Recomputed on every t tick (cheap; small N).
-    const obstaclesAt = (
+    // Obstacles: SETTLED positions (rectAt(1)), not current-frame
+    // positions. Routing against lerped rects makes the router thrash
+    // mid-flight and snap at t=1 to a different topology. Using the
+    // final positions lets the path's endpoints follow the cards
+    // while its bent middle eases toward the final dodge shape — and
+    // matches the workshop's MixedShapesLaneReactive demo. Cards in
+    // motion are allowed to pass UNDER arrows; arrows only dodge once
+    // the layout settles, which is correct per the visual spec.
+    const obstaclesSettled = (
       exceptFrom: string,
       exceptTo: string,
     ): ObstacleRect[] => {
       const out: ObstacleRect[] = [];
       for (const [id, card] of t.cards) {
         if (id === exceptFrom || id === exceptTo) continue;
-        if (card.modeAt(tNow) !== "card") continue;
-        const r = card.rectAt(tNow);
+        // mode at t=1 (settled), not current — an arriving card may
+        // still be in "morph" mode now but its final rest rect is a
+        // valid obstacle for routing.
+        if (card.modeAt(1) !== "card") continue;
+        const r = card.rectAt(1);
         if (!r) continue;
         out.push({ id, x: r.x, y: r.y, width: r.width, height: r.height });
       }
       return out;
+    };
+
+    // Path strategy mirrors workshop MixedShapesLaneReactive:
+    //   - DURING animation (currentT < 1): simple-Z with knee anchored
+    //     near the TARGET (15px breathing room). Pure function of
+    //     src/tgt — no topology branching, so per-frame interpolation
+    //     is smooth even when endpoints cross thresholds where the
+    //     full router would flip shape (straight ↔ Z ↔ U).
+    //   - AT REST (currentT === 1): full obstacle-avoiding router for
+    //     final dodge geometry.
+    const buildArrowPath = (
+      s: { x: number; y: number; width: number; height: number },
+      tg: { x: number; y: number; width: number; height: number },
+      fromId: string,
+      toId: string,
+    ): string => {
+      if (tNow < 1) {
+        const goingRight = tg.x >= s.x;
+        const fromOuterX = goingRight ? s.x + s.width / 2 : s.x - s.width / 2;
+        const toOuterX = goingRight ? tg.x - tg.width / 2 : tg.x + tg.width / 2;
+        const channelX = goingRight
+          ? Math.max(fromOuterX + 4, toOuterX - 15)
+          : Math.min(fromOuterX - 4, toOuterX + 15);
+        return [
+          `M ${fromOuterX} ${s.y}`,
+          `L ${channelX} ${s.y}`,
+          `L ${channelX} ${tg.y}`,
+          `L ${toOuterX} ${tg.y}`,
+        ].join(" ");
+      }
+      return orthogonalAvoidingObstacles(s, tg, obstaclesSettled(fromId, toId));
     };
 
     return (
@@ -406,10 +446,11 @@ export function AnimatedSwimlaneChart<T>(
                         ? " sui-swimlane__edge--summary"
                         : ""
                     }`}
-                    d={orthogonalAvoidingObstacles(
+                    d={buildArrowPath(
                       src()!,
                       tgt()!,
-                      obstaclesAt(arrow.fromId, arrow.toId),
+                      arrow.fromId,
+                      arrow.toId,
                     )}
                     stroke-dasharray={dashArray()}
                   />
