@@ -337,12 +337,9 @@ function buildLeavingTrajectory(
   loz: Rect,
   side: "left" | "right",
 ): CardTrajectory {
-  // "Single-pixel anchor" at the lozenge's inner edge (the edge that
-  // faces the visible cards). Arrows attach here cleanly — we don't
-  // have to lerp between the tall pill-shaped lozenge rect and the
-  // card rect, which had very different dimensions and made the
-  // intermediate anchor "drift" through positions that didn't match
-  // the morph shape.
+  // Single-pixel anchor at the lozenge's inner edge (where the morph
+  // converges to). The arrow tip will track the morph's leading edge
+  // throughout the slurp and land here.
   const innerEdgeX = side === "left"
     ? loz.x - loz.width / 2
     : loz.x + loz.width / 2;
@@ -352,6 +349,9 @@ function buildLeavingTrajectory(
     width: 0,
     height: 0,
   };
+  const cardLeft = prevRect.x - prevRect.width / 2;
+  const cardRight = prevRect.x + prevRect.width / 2;
+  const leadingFarX = side === "left" ? cardLeft : cardRight;
   return {
     id,
     isParent,
@@ -362,20 +362,22 @@ function buildLeavingTrajectory(
       const local = t / PHASE_LEAVE_END;
       return slurpRectMorph(prevRect, loz, side, 1 - ease(local));
     },
-    // Anchor lerps from the card's rest rect → the lozenge pixel.
-    // Synced to the morph's visual collapse: the trailing edge
-    // begins shrinking at ease(local) ≥ 0.12 (i.e. t' ≤ 0.88).
-    // Before that the box still LOOKS like a full card, so the arrow
-    // stays put. After ease(local) > 0.12, the arrow tracks the
-    // collapse all the way to the lozenge pixel by local=1.
+    // Vertical-line anchor at the morph's leading edge — width=0,
+    // height interpolating from the card's height to the lozenge's.
+    // Arrows from any y in the morph's vertical extent attach at
+    // that source's y, staying horizontal. Post-leave: full lozenge
+    // rect (same semantics for stays-hidden cards).
     anchorAt: (t) => {
       if (t <= 0) return prevRect;
-      if (t >= PHASE_LEAVE_END) return lozPixel;
+      if (t >= PHASE_LEAVE_END) return loz;
       const local = t / PHASE_LEAVE_END;
-      const eased = ease(local);
-      if (eased < 0.12) return prevRect;
-      const collapseProgress = (eased - 0.12) / (1 - 0.12);
-      return lerpRect(prevRect, lozPixel, collapseProgress);
+      const tPrime = 1 - ease(local);
+      const leadingT = windowProgress(tPrime, 0, 0.55);
+      const leadingX = lerp(innerEdgeX, leadingFarX, ease(leadingT));
+      const yT = windowProgress(tPrime, 0, 0.7);
+      const morphCy = lerp(loz.y, prevRect.y, ease(yT));
+      const morphH = lerp(loz.height, prevRect.height, tPrime);
+      return { x: leadingX, y: morphCy, width: 0, height: morphH };
     },
     // Leaving cards are visible only during their morph — keep their
     // prev status throughout.
@@ -397,13 +399,9 @@ function buildArrivingTrajectory(
   loz: Rect,
   side: "left" | "right",
 ): CardTrajectory {
-  // "Single-pixel anchor" at the lozenge's inner edge. The arrow
-  // attaches to this point throughout the pre-slurp period, then
-  // smoothly grows out to the full card rect during the slurp.
-  // This avoids interpolating between the tall pill-shaped lozenge
-  // rect (16×~200) and the card rect (140×84) — those have very
-  // different dimensions and lerping between them produced an
-  // anchor that "drifted" to positions that didn't match the morph.
+  // Single-pixel anchor at the lozenge's inner edge (the edge facing
+  // the visible cards). This is where the arrow attaches BEFORE the
+  // slurp begins and where the morph's leading edge starts.
   const innerEdgeX = side === "left"
     ? loz.x - loz.width / 2
     : loz.x + loz.width / 2;
@@ -413,6 +411,9 @@ function buildArrivingTrajectory(
     width: 0,
     height: 0,
   };
+  const cardLeft = nextRect.x - nextRect.width / 2;
+  const cardRight = nextRect.x + nextRect.width / 2;
+  const leadingFarX = side === "left" ? cardLeft : cardRight;
   return {
     id,
     isParent,
@@ -428,21 +429,41 @@ function buildArrivingTrajectory(
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
       return slurpRectMorph(nextRect, loz, side, ease(local));
     },
-    // Anchor lerps from the lozenge pixel → the card's rest rect.
-    // Synced to the morph SHAPE's visual completion: the trailing
-    // edge's height ramp finishes at ease(local) ≥ 0.88, which is
-    // local ≈ 0.507. Using `min(1, ease(local) / 0.88)` makes the
-    // arrow tip arrive at the card at the SAME visual moment the
-    // morph fully forms — before this fix, plain ease(local) had
-    // the arrow finishing at local=1 while the box was already done
-    // by local≈0.5, so the user saw "box slurps first, arrow
-    // catches up after."
+    // Anchor is the morph SHAPE's bounding-box rect — spanning from
+    // its LEADING edge (far from lozenge) to its TRAILING edge (at
+    // the lozenge's inner edge). The router clips arrow tips to the
+    // edge of this rect facing the source:
+    //   - Arrow from outside (e.g. b1 → b4): clips to LEADING edge.
+    //   - Arrow from this card (e.g. b4 → loz): starts at TRAILING
+    //     edge, so the arrow body doesn't traverse THROUGH the morph
+    //     shape on its way to the lozenge.
+    //
+    // Pre-slurp: anchor is the FULL lozenge rect. Post-slurp: card rect.
     anchorAt: (t) => {
-      if (t < PHASE_MOVE_END) return lozPixel;
+      if (t < PHASE_MOVE_END) return loz;
       if (t >= 1 - 1e-9) return nextRect;
       const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
-      const morphCompletion = Math.min(1, ease(local) / 0.88);
-      return lerpRect(lozPixel, nextRect, morphCompletion);
+      const easedT = ease(local);
+      // leading + trailing X — same calculations as slurpRectMorph
+      const leadingT = windowProgress(easedT, 0, 0.55);
+      const leadingX = lerp(innerEdgeX, leadingFarX, ease(leadingT));
+      const trailingX = side === "left"
+        ? Math.min(innerEdgeX, leadingX + nextRect.width)
+        : Math.max(innerEdgeX, leadingX - nextRect.width);
+      // vertical extent — max of leading + trailing heights
+      const leadingH = lerp(SLURP_SLIT_H, nextRect.height, ease(leadingT));
+      const trailingHT = windowProgress(easedT, 0.4, 0.88);
+      const trailingH = lerp(SLURP_SLIT_H, nextRect.height, ease(trailingHT));
+      const yT = windowProgress(easedT, 0, 0.7);
+      const morphCy = lerp(loz.y, nextRect.y, ease(yT));
+      const left = Math.min(leadingX, trailingX);
+      const right = Math.max(leadingX, trailingX);
+      return {
+        x: (left + right) / 2,
+        y: morphCy,
+        width: right - left,
+        height: Math.max(leadingH, trailingH),
+      };
     },
     // Arriving cards are only visible during the slurp-out and after;
     // they wear their NEW status the whole time.

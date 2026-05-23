@@ -233,25 +233,29 @@ const TASKS: Record<string, TaskData> = {
 // Status-keyed palette so cards (and source labels) look right whether
 // rendered for a DOING/TODO/DONE node. Tracks the SwimlaneChart's
 // existing convention: TODO grey, DOING cyan, DONE green.
+// Opaque card fills, pre-blended over the page background (#0c141c).
+// Convention: arrows/lines render BEHIND cards; cards have opaque
+// backgrounds so anything routed behind them stays cleanly hidden.
+// Same hue as the previous rgba(..., 0.10) tint but fully opaque.
 function statusTheme(status: TaskData["status"]) {
   switch (status) {
     case "DOING":
       return {
         stroke: "var(--sui-accent, #00d4ff)",
-        fill: "rgba(0,212,255,0.10)",
+        fill: "#0b2733", // (0,212,255) blended 10% over #0c141c
         text: "var(--sui-accent, #00d4ff)",
       };
     case "DONE":
       return {
         stroke: "rgba(95,179,124,0.6)",
-        fill: "rgba(95,179,124,0.10)",
+        fill: "#142426", // (95,179,124) blended 10% over #0c141c
         text: "rgba(95,179,124,0.85)",
       };
     case "TODO":
     default:
       return {
         stroke: "rgba(255,255,255,0.45)",
-        fill: "rgba(255,255,255,0.04)",
+        fill: "#161d25", // white blended 4% over #0c141c
         text: "rgba(255,255,255,0.7)",
       };
   }
@@ -1193,49 +1197,32 @@ function MixedShapesLaneReactive(props: {
           {lozengeCounts().right}
         </text>
       </Show>
-      {/* Arrows: ONE pipeline driven by trajectory anchors. Each
-          arrow's source/target are read live from the trajectory's
-          per-card anchor functions, so:
-            - solid card → solid card → endpoints track resting rects
-            - solid card → morphing card → target follows the slurp
-              leading edge, naturally shortening the arrow as the
-              card emerges (or lengthening as it disappears)
-            - card → gone card → endpoint is the lozenge inner edge
-          Dashedness is a continuous fade — max hiddenness of the two
-          endpoints, mapped to a gap interpolation 0 → 3. */}
+      {/* Arrows FIRST — drawn BEHIND cards. Convention: opaque
+          cards win z-order, so any arrow routed behind a card is
+          cleanly hidden. */}
       <For each={traj().arrows}>
         {(arrow) => {
           const fromCard = (): CardTrajectory | undefined =>
             traj().cards.get(arrow.fromId);
           const toCard = (): CardTrajectory | undefined =>
             traj().cards.get(arrow.toId);
-          // Suppress hidden→hidden arrows. Both endpoints anchor to
-          // the same lozenge rect → a degenerate path, and visually
-          // the relationship lives entirely INSIDE the lozenge where
-          // an arrow has nothing to say.
+          // Suppress hidden→hidden: relationship is entirely inside
+          // the lozenge.
           const bothHidden = () =>
             fromCard()?.modeAt(currentT()) === "gone" &&
             toCard()?.modeAt(currentT()) === "gone";
           const src = () => fromCard()?.anchorAt(currentT());
           const tgt = () => toCard()?.anchorAt(currentT());
-          // Dashedness ∈ [0, 1] — max hiddenness of the two endpoints.
-          // We render this continuously: dash length stays at 4, gap
-          // length grows from 0 (solid) → 3 (fully dashed). Color
-          // crosses from accent → grey at the halfway mark.
           const dashedness = () =>
             dashednessAt(arrow, traj().cards, currentT());
           const dashArray = () => {
             const d = dashedness();
-            if (d <= 0.001) return undefined; // truly solid, no array
+            if (d <= 0.001) return undefined;
             return `4 ${(d * 3).toFixed(2)}`;
           };
           const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
-          // Obstacles for orthogonal routing. We EXCLUDE parent cards
-          // — they sit in their own row (above the children) and
-          // including them tempts the router into "go AROUND the
-          // parent" detours that loop over the top of the lane. The
-          // parent's dep graph never overlaps the children's, so
-          // excluding it from obstacles can't create real conflicts.
+          // Obstacles: visible cards (not morphing, not the parent —
+          // see arrow-loop-over-parent fix earlier).
           const obstacles = () => {
             const t = currentT();
             const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
@@ -1264,11 +1251,10 @@ function MixedShapesLaneReactive(props: {
           );
         }}
       </For>
-      {/* Cards: trajectory-driven. modeAt(t) gates between TaskCard
-          (resting/moving), SVG path morph (slurp in/out), and gone.
-          Iterating by STABLE string id so Solid's <For> preserves
-          the foreignObject DOM element across ticks (keeps hover
-          state stable, etc.). */}
+      {/* Cards AFTER — painted ON TOP of arrows. modeAt(t) gates
+          between TaskCard (resting/moving), SVG path morph (slurp
+          in/out), and gone. Iterating by STABLE string id so Solid's
+          <For> preserves foreignObject DOM across ticks. */}
       <For each={Array.from(traj().cards.keys())}>
         {(id) => {
           const card = (): CardTrajectory | undefined => traj().cards.get(id);
@@ -1277,8 +1263,6 @@ function MixedShapesLaneReactive(props: {
           const rect = () => card()?.rectAt(t()) ?? null;
           const status = () => card()?.statusAt(t()) ?? "TODO";
           const node = () => props.nodes.find((n) => n.id === id);
-          // TaskData for the card. statusAt(t) is the source of truth
-          // for status; we layer it over the node's title/owner.
           const task = (): TaskData | null => {
             const n = node();
             if (!n) return null;

@@ -5,6 +5,7 @@ import {
   dashednessAt,
   lerp,
   lerpRect,
+  MS_PHASE_TOTAL,
   PHASE_LEAVE_END,
   PHASE_MOVE_END,
   snapshotFrame,
@@ -246,7 +247,11 @@ describe("buildLaneTrajectory — arriving cards", () => {
     expect(arrivingId).toBeDefined();
     const card = traj.cards.get(arrivingId!)!;
     expect(card.modeAt(0)).toBe("gone");
-    expect(card.modeAt(PHASE_LEAVE_END + 0.05)).toBe("gone");
+    // Mid-move-phase: leave-end is past, move-end is not. Use the
+    // midpoint between the two so changing MS_SLURP_MS / MS_MOVE_MS
+    // doesn't shift this assertion across either boundary.
+    const midMove = (PHASE_LEAVE_END + PHASE_MOVE_END) / 2;
+    expect(card.modeAt(midMove)).toBe("gone");
     expect(card.modeAt(PHASE_MOVE_END + 0.01)).toBe("morph");
     expect(card.modeAt(1)).toBe("card");
     expect(card.rectAt(1)).toEqual(nextSnap.byId.get(arrivingId!)!.rect);
@@ -498,37 +503,51 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
     }
   });
 
-  it("arriving card anchor reaches the card by local≈0.5 (synced to morph)", () => {
+  it("arriving card anchor's LEFT edge tracks the morph's leading edge", () => {
+    // Anchor is the morph SHAPE's bbox (left = leading edge x for
+    // side="left"). Arrows from cards left of the morph clip to the
+    // bbox's left edge, which equals leadingX.
     const traj = buildLaneTrajectory({
       prevFrame: prev, nextFrame: next,
       layoutParams: PARAMS, lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
-    // ease(0.507) ≈ 0.88, so by local=0.507 the morph trailing edge
-    // is fully ramped AND the anchor's morphCompletion hits 1.
-    expect(b.anchorAt(tAt(0.55)).x).toBe(nextSnap.x);
-    expect(b.anchorAt(tAt(0.9)).x).toBe(nextSnap.x);
+    const cardFarEdge = nextSnap.x - nextSnap.width / 2;
+    const leftEdge = (t: number) => {
+      const r = b.anchorAt(t);
+      return r.x - r.width / 2;
+    };
+    // By local=0.234 (ease≈0.55, leading-edge window cap), leading
+    // edge has reached the card's far edge.
+    expect(leftEdge(tAt(0.234))).toBeCloseTo(cardFarEdge, 0);
+    expect(leftEdge(tAt(0.5))).toBeCloseTo(cardFarEdge, 0);
+    expect(leftEdge(tAt(0.9))).toBeCloseTo(cardFarEdge, 0);
   });
 
-  it("arriving card anchor uses front-loaded ease (more progress early)", () => {
+  it("arriving card anchor's RIGHT edge tracks the morph's trailing edge", () => {
+    // Arrows FROM this morphing card (e.g. b → loz) start at the
+    // bbox's right edge = trailingX. So they don't traverse THROUGH
+    // the morph shape on their way to the lozenge.
     const traj = buildLaneTrajectory({
       prevFrame: prev, nextFrame: next,
       layoutParams: PARAMS, lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
-    const x0 = b.anchorAt(tAt(0)).x;
-    const x1 = b.anchorAt(tAt(1)).x;
-    const span = Math.abs(x1 - x0);
-    // At local=0.5, anchor should be MORE than 50% of the way there
-    // because of the front-loaded ease (cubic ease(0.5) = 0.875).
-    const xHalf = b.anchorAt(tAt(0.5)).x;
-    const progressHalf = Math.abs(xHalf - x0) / span;
-    expect(progressHalf).toBeGreaterThan(0.5);
-    expect(progressHalf).toBeLessThan(1);
+    const lozInnerEdge = LOZENGES.right.x - LOZENGES.right.width / 2;
+    const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    const cardNearEdge = nextSnap.x + nextSnap.width / 2;
+    const rightEdge = (t: number) => {
+      const r = b.anchorAt(t);
+      return r.x + r.width / 2;
+    };
+    // At slurp-start, trailing edge is at the lozenge's inner edge.
+    expect(rightEdge(tAt(0))).toBeCloseTo(lozInnerEdge, 1);
+    // As morph completes, trailing edge reaches card's near edge.
+    expect(rightEdge(tAt(0.5))).toBeCloseTo(cardNearEdge, 0);
   });
 
-  it("anchor settles at card.rect at t=1", () => {
+  it("anchor settles at card.rect at t=1 (full rect for router clipping)", () => {
     const traj = buildLaneTrajectory({
       prevFrame: prev, nextFrame: next,
       layoutParams: PARAMS, lozengeRects: LOZENGES,
@@ -748,6 +767,6 @@ describe("buildLaneTrajectory — duration", () => {
       layoutParams: PARAMS,
       lozengeRects: LOZENGES,
     });
-    expect(traj.durationMs).toBe(1650);
+    expect(traj.durationMs).toBe(MS_PHASE_TOTAL);
   });
 });
