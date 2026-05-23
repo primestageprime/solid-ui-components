@@ -1731,10 +1731,13 @@ const MixedShapesRow: Component = () => {
   const [timing, setTiming] = createSignal<LaneTimingConfig>({
     ...DEFAULT_TIMING,
     arrowSettleMs: 200,
-    // 250ms CSS transition on arrow path `d` smooths the orthogonal
-    // router's topology changes (Z↔U) so bent arrows don't snap when
-    // a card stops moving. Tunable via the "path" timing knob.
-    arrowPathMs: 250,
+    // CSS `transition: d` introduces lag (every per-frame d update
+    // chains a fresh tween), so the path drags behind the cards.
+    // Defaulting to 0 keeps the path glued to the cards' current
+    // anchors at every frame — the bent middle segments evolve in
+    // lockstep with the endpoints because they're both pure functions
+    // of currentT. The knob's still exposed for experimentation.
+    arrowPathMs: 0,
   });
   let containerRef: HTMLDivElement | undefined;
   onMount(() => {
