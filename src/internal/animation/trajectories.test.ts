@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
+import type { StatusFlowNode } from "../../components/StatusFlowChart";
 import {
   buildLaneTrajectory,
+  buildLaneTrajectoryFromSnapshots,
   dashednessAt,
   lerp,
   lerpRect,
@@ -9,9 +10,10 @@ import {
   PHASE_LEAVE_END,
   PHASE_MOVE_END,
   snapshotFrame,
+  type LaneTrajectory,
   type LayoutParams,
   type LozengeRects,
-} from "./animation-trajectories";
+} from "./trajectories";
 
 // Standardised layout/lozenge params used across most tests. The exact
 // pixel values are arbitrary — what matters is that the math is
@@ -768,5 +770,79 @@ describe("buildLaneTrajectory — duration", () => {
       lozengeRects: LOZENGES,
     });
     expect(traj.durationMs).toBe(MS_PHASE_TOTAL);
+  });
+});
+
+// ─── generic snapshot builder (used by AnimatedSwimlaneChart) ───────────────
+//
+// `buildLaneTrajectoryFromSnapshots` is the status-agnostic entry point
+// that AnimatedSwimlaneChart uses — it accepts pre-computed FrameSnapshots
+// + an explicit edges list, with no StatusFlowNode dependency. The
+// SwimlaneChart-style consumer doesn't care about per-card status, so
+// the default statusOf resolver returns "TODO" and the test confirms
+// the trajectory is still well-formed in that mode.
+
+describe("buildLaneTrajectoryFromSnapshots — generic frame input", () => {
+  // Two visible cards (a, b) at cols -1 and +1; one hidden card (c) at
+  // col +3 outside the visible window. After "tick": positions stay the
+  // same — pure parity test that the builder runs end-to-end and
+  // produces card trajectories for every id, including the hidden one.
+  const rect = (x: number, y = 0): { x: number; y: number; width: number; height: number } => ({
+    x, y, width: 140, height: 60,
+  });
+  const prev = {
+    byId: new Map([
+      ["a", { id: "a", col: -1, visible: true, isParent: false, rect: rect(-200) }],
+      ["b", { id: "b", col: 1, visible: true, isParent: false, rect: rect(200) }],
+      ["c", { id: "c", col: 3, visible: false, isParent: false }],
+    ]),
+  };
+  const next = prev;
+
+  it("produces a trajectory entry for every id (visible + hidden)", () => {
+    const traj = buildLaneTrajectoryFromSnapshots({
+      prev,
+      next,
+      lozengeRects: LOZENGES,
+      edges: [["a", "b"], ["b", "c"]],
+    });
+    expect(traj.cards.get("a")).toBeDefined();
+    expect(traj.cards.get("b")).toBeDefined();
+    expect(traj.cards.get("c")).toBeDefined();
+  });
+
+  it("hidden card anchors at the appropriate-side lozenge", () => {
+    const traj = buildLaneTrajectoryFromSnapshots({
+      prev,
+      next,
+      lozengeRects: LOZENGES,
+      edges: [["b", "c"]],
+    });
+    const c = traj.cards.get("c")!;
+    // c is at col +3 (right side) — anchors at the right lozenge.
+    expect(c.anchorAt(0)).toEqual(LOZENGES.right);
+    expect(c.modeAt(0.5)).toBe("gone");
+  });
+
+  it("default statusOf resolver returns TODO when none is supplied", () => {
+    const traj = buildLaneTrajectoryFromSnapshots({
+      prev,
+      next,
+      lozengeRects: LOZENGES,
+      edges: [],
+    });
+    const a = traj.cards.get("a")!;
+    expect(a.statusAt(0)).toBe("TODO");
+    expect(a.statusAt(1)).toBe("TODO");
+  });
+
+  it("dedupes edges supplied multiple times", () => {
+    const traj = buildLaneTrajectoryFromSnapshots({
+      prev,
+      next,
+      lozengeRects: LOZENGES,
+      edges: [["a", "b"], ["a", "b"], ["b", "c"]],
+    });
+    expect(traj.arrows.length).toBe(2);
   });
 });

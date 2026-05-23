@@ -22,9 +22,11 @@
 // `evaluateAt(trajectory, t)` and render whatever the trajectory says
 // each card/arrow should look like right now.
 
-import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
-import { resolveParentStatuses } from "../../src/components/StatusFlowChart";
-import { computeColFor } from "./workshop-layout";
+import type { StatusFlowNode } from "../../components/StatusFlowChart";
+import {
+  resolveParentStatuses,
+  computeColFor,
+} from "../../components/StatusFlowChart/columns";
 
 // ─── primitives ─────────────────────────────────────────────────────────────
 
@@ -548,14 +550,80 @@ export function buildLaneTrajectory(
     return ((n?.status as CardStatus) ?? "TODO");
   };
 
-  const ids = new Set<string>([...prev.byId.keys(), ...next.byId.keys()]);
+  // Edges: union of dep edges referenced in either frame.
+  const edgePairs: Array<[string, string]> = [];
+  const edgeSeen = new Set<string>();
+  const addEdges = (frame: StatusFlowNode[]) => {
+    for (const n of frame) {
+      for (const depId of n.dependsOn ?? []) {
+        const key = `${depId}->${n.id}`;
+        if (edgeSeen.has(key)) continue;
+        edgeSeen.add(key);
+        edgePairs.push([depId, n.id]);
+      }
+    }
+  };
+  addEdges(args.prevFrame);
+  addEdges(args.nextFrame);
+
+  return buildLaneTrajectoryFromSnapshots({
+    prev,
+    next,
+    lozengeRects: args.lozengeRects,
+    isParent: (id) => parentIds.has(id),
+    prevStatusOf: (id) => statusOf(id, args.prevFrame, prevEffective),
+    nextStatusOf: (id) => statusOf(id, args.nextFrame, nextEffective),
+    edges: edgePairs,
+  });
+}
+
+/**
+ * Generic trajectory builder that works on pre-computed `FrameSnapshot`s.
+ *
+ * The status-flow flavour (`buildLaneTrajectory` above) constructs its
+ * snapshots via `snapshotFrame` + `computeColFor`. The SwimlaneChart
+ * flavour (`AnimatedSwimlaneChart`) constructs them from `swimlaneFor`
+ * and a `DAGEdge[]` list — neither path is special here. Status is opaque
+ * to this function: callers control what string lives in `statusAt(t)`
+ * by passing `{prev,next}StatusOf` resolvers. The default resolver
+ * returns "TODO" — fine for consumers (like SwimlaneChart) that don't
+ * care about per-card status overlays.
+ */
+export interface BuildFromSnapshotsArgs {
+  prev: FrameSnapshot;
+  next: FrameSnapshot;
+  lozengeRects: LozengeRects;
+  /** Returns true if the given id should be treated as a "parent" card
+   *  (lives on the parent row rather than the child grid). Defaults to
+   *  reading `isParent` off the matching FramePosition.  */
+  isParent?: (id: string) => boolean;
+  /** Status string the card displays in the prev frame. */
+  prevStatusOf?: (id: string) => CardStatus;
+  /** Status string the card displays in the next frame. */
+  nextStatusOf?: (id: string) => CardStatus;
+  /** Dep edges as [sourceId, targetId] pairs. Caller dedupes. */
+  edges: Array<[string, string]>;
+}
+
+export function buildLaneTrajectoryFromSnapshots(
+  args: BuildFromSnapshotsArgs,
+): LaneTrajectory {
+  const isParent = args.isParent ?? ((id) =>
+    !!(args.prev.byId.get(id)?.isParent || args.next.byId.get(id)?.isParent));
+  const prevStatusOf = args.prevStatusOf ?? (() => "TODO" as CardStatus);
+  const nextStatusOf = args.nextStatusOf ?? (() => "TODO" as CardStatus);
+
+  const ids = new Set<string>([
+    ...args.prev.byId.keys(),
+    ...args.next.byId.keys(),
+  ]);
   const cards = new Map<string, CardTrajectory>();
   for (const id of ids) {
-    const pp = prev.byId.get(id);
-    const np = next.byId.get(id);
-    const prevStatus = statusOf(id, args.prevFrame, prevEffective);
-    const nextStatus = statusOf(id, args.nextFrame, nextEffective);
-    const isParent = parentIds.has(id);
+    const pp = args.prev.byId.get(id);
+    const np = args.next.byId.get(id);
+    const prevStatus = prevStatusOf(id);
+    const nextStatus = nextStatusOf(id);
+    const parentFlag = isParent(id);
 
     if (pp?.visible && np?.visible) {
       cards.set(
@@ -564,7 +632,7 @@ export function buildLaneTrajectory(
           id,
           prevStatus,
           nextStatus,
-          isParent,
+          parentFlag,
           pp.rect!,
           np.rect!,
         ),
@@ -573,38 +641,41 @@ export function buildLaneTrajectory(
       const { side, loz } = sideAndLoz(np?.col ?? pp.col, args.lozengeRects);
       cards.set(
         id,
-        buildLeavingTrajectory(id, prevStatus, isParent, pp.rect!, loz, side),
+        buildLeavingTrajectory(
+          id,
+          prevStatus,
+          parentFlag,
+          pp.rect!,
+          loz,
+          side,
+        ),
       );
     } else if (!pp?.visible && np?.visible) {
       const { side, loz } = sideAndLoz(pp?.col ?? np.col, args.lozengeRects);
       cards.set(
         id,
-        buildArrivingTrajectory(id, nextStatus, isParent, np.rect!, loz, side),
+        buildArrivingTrajectory(
+          id,
+          nextStatus,
+          parentFlag,
+          np.rect!,
+          loz,
+          side,
+        ),
       );
     } else {
-      // Stays hidden — but we still need its anchor so arrows
-      // pointing at it can resolve.
       const col = np?.col ?? pp?.col ?? 0;
       const { loz } = sideAndLoz(col, args.lozengeRects);
-      cards.set(id, buildHiddenTrajectory(id, nextStatus, isParent, loz));
+      cards.set(id, buildHiddenTrajectory(id, nextStatus, parentFlag, loz));
     }
   }
 
-  // Arrows: union of dep edges referenced in either frame.
   const arrowsByKey = new Map<string, ArrowTrajectory>();
-  const seen = new Set<string>();
-  const addEdges = (frame: StatusFlowNode[]) => {
-    for (const n of frame) {
-      for (const depId of n.dependsOn ?? []) {
-        const key = `${depId}->${n.id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        arrowsByKey.set(key, { fromId: depId, toId: n.id });
-      }
-    }
-  };
-  addEdges(args.prevFrame);
-  addEdges(args.nextFrame);
+  for (const [fromId, toId] of args.edges) {
+    const key = `${fromId}->${toId}`;
+    if (arrowsByKey.has(key)) continue;
+    arrowsByKey.set(key, { fromId, toId });
+  }
 
   return {
     cards,

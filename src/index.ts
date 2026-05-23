@@ -64,6 +64,7 @@ export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
 export * from "./components/SwimlaneChart";
+export * from "./components/AnimatedSwimlaneChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";

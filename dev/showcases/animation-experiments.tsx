@@ -10,7 +10,7 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { Component, createSignal, createEffect, For, JSX, Match, Show, Switch } from "solid-js";
+import { Component, createSignal, createEffect, For, JSX, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import {
   buildLaneTrajectory,
   dashednessAt,
@@ -19,7 +19,7 @@ import {
   type LayoutParams as TrajLayoutParams,
   type LozengeRects,
   MS_PHASE_TOTAL,
-} from "./animation-trajectories";
+} from "../../src/internal/animation/trajectories";
 import { orthogonalAvoidingObstacles } from "../../src/internal/dag-svg";
 import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
 import {
@@ -945,10 +945,22 @@ const MS_LANE_PAD = 16; // padding inside each lane box
 const MS_LANE_GAP = 20; // gap between lanes
 const MS_LOZENGE_GAP = 32;
 
-// Visible window: how many cols of children we show before overflow
-// rolls into the right-side lozenge. Frame 2 in the reference is
-// maxDepth = 1 (parent col + dep depth 0 + dep depth 1). Tune to taste.
+// Default visible window: how many cols of children we show before
+// overflow rolls into the side lozenges. Used as the fallback; the
+// row picks a wider value when there's more horizontal room.
 const MS_MAX_DEPTH = 1;
+
+/**
+ * Pick the visible-window radius (maxDepth) based on available width.
+ * Each step of maxDepth adds one col on EACH side, so each step adds
+ * 2 × MS_COL_CENTER_GAP (= 400px) of needed width.
+ */
+function maxDepthForWidth(stageWidth: number): number {
+  if (stageWidth < 880) return 1;
+  if (stageWidth < 1280) return 2;
+  if (stageWidth < 1680) return 3;
+  return 4;
+}
 
 /**
  * Map a ChartChild + parent spec into a StatusFlowNode[] (the format
@@ -1008,9 +1020,14 @@ function MixedShapesLaneReactive(props: {
   spec: MixedLaneSpec;
   nodes: StatusFlowNode[];
   laneY: number;
+  stageWidth: number;
+  maxDepth: number;
   onCardHover?: (info: HoverInfo | null) => void;
 }): JSX.Element {
-  const centerX = MS_STAGE_W / 2;
+  // Dynamic — recomputes when stageWidth changes so the lane reflows
+  // on browser resize. centerX is half the stage; lozenges anchor
+  // outward from the visible-col span.
+  const centerX = () => props.stageWidth / 2;
   const hasParent = !!props.spec.parentTitle;
 
   // Size the lane based on the WORST-CASE stack height across the
@@ -1037,39 +1054,34 @@ function MixedShapesLaneReactive(props: {
   const colTopY = childRowCenterY - reservedChildRowH / 2;
   const colBottomY = childRowCenterY + reservedChildRowH / 2;
   const lozMidY = childRowCenterY;
-  // Lozenge anchor positions stay fixed at the visible-window edges.
-  const leftLozengeX =
-    centerX - MS_MAX_DEPTH * MS_COL_CENTER_GAP - MS_CARD_W / 2 -
+  // Lozenge x positions depend on centerX (= stageWidth/2), so they
+  // reflow on resize.
+  const leftLozengeX = () =>
+    centerX() - props.maxDepth * MS_COL_CENTER_GAP - MS_CARD_W / 2 -
     MS_LOZENGE_GAP - LOZENGE_W;
-  const rightLozengeX =
-    centerX + MS_MAX_DEPTH * MS_COL_CENTER_GAP + MS_CARD_W / 2 + MS_LOZENGE_GAP;
+  const rightLozengeX = () =>
+    centerX() + props.maxDepth * MS_COL_CENTER_GAP + MS_CARD_W / 2 + MS_LOZENGE_GAP;
 
   const greyStroke = "rgba(255,255,255,0.45)";
   const accentStroke = "var(--sui-accent, #00d4ff)";
 
-  // Lozenge rects (used by transition paths AND lozenge anchors).
   const leftLozRect = () => ({
-    x: leftLozengeX + LOZENGE_W / 2,
+    x: leftLozengeX() + LOZENGE_W / 2,
     y: lozMidY,
     width: LOZENGE_W,
     height: colBottomY - colTopY,
   });
   const rightLozRect = () => ({
-    x: rightLozengeX + LOZENGE_W / 2,
+    x: rightLozengeX() + LOZENGE_W / 2,
     y: lozMidY,
     width: LOZENGE_W,
     height: colBottomY - colTopY,
   });
 
   // ─── trajectory-driven animation ─────────────────────────────────────
-  // Cards, arrows, and lozenge counts are ALL derived from a single
-  // LaneTrajectory + currentT ∈ [0, 1]. When props.nodes changes the
-  // trajectory rebuilds with (prev, next) and a rAF loop drives
-  // currentT from 0 → 1 over the trajectory's duration. Solid handles
-  // re-rendering on every t update.
   const trajLayoutParams = (): TrajLayoutParams => ({
-    maxDepth: MS_MAX_DEPTH,
-    centerX,
+    maxDepth: props.maxDepth,
+    centerX: centerX(),
     parentRowCenterY,
     childRowCenterY,
     cardWidth: MS_CARD_W,
@@ -1093,21 +1105,34 @@ function MixedShapesLaneReactive(props: {
   // resting at its current rect — until the first state change).
   const [currentT, setCurrentT] = createSignal(1);
   let prevFrameRef = props.nodes;
+  let prevWidthRef = props.stageWidth;
+  let prevMaxDepthRef = props.maxDepth;
   let rafHandle: number | undefined;
 
   createEffect(() => {
     const incoming = props.nodes;
-    if (incoming === prevFrameRef) return;
+    const sw = props.stageWidth;
+    const md = props.maxDepth;
+    const nodesChanged = incoming !== prevFrameRef;
+    const widthChanged = sw !== prevWidthRef;
+    const depthChanged = md !== prevMaxDepthRef;
+    if (!nodesChanged && !widthChanged && !depthChanged) return;
+    // Layout-only changes (resize, maxDepth) should NOT replay the
+    // tick animation — snap to t=1. Only a node-change runs the rAF.
+    const layoutOnly = !nodesChanged && (widthChanged || depthChanged);
     const newTraj = buildLaneTrajectory({
-      prevFrame: prevFrameRef,
+      prevFrame: layoutOnly ? incoming : prevFrameRef,
       nextFrame: incoming,
       layoutParams: trajLayoutParams(),
       lozengeRects: lozengeRects(),
     });
     prevFrameRef = incoming;
+    prevWidthRef = sw;
+    prevMaxDepthRef = md;
     setTraj(newTraj);
-    setCurrentT(0);
+    setCurrentT(layoutOnly ? 1 : 0);
     if (rafHandle !== undefined) cancelAnimationFrame(rafHandle);
+    if (layoutOnly) return;
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / newTraj.durationMs);
@@ -1128,7 +1153,7 @@ function MixedShapesLaneReactive(props: {
     let right = 0;
     for (const c of traj().cards.values()) {
       if (c.modeAt(t) !== "gone") continue;
-      if (c.anchorAt(t).x < centerX) left++;
+      if (c.anchorAt(t).x < centerX()) left++;
       else right++;
     }
     return { left, right };
@@ -1140,7 +1165,7 @@ function MixedShapesLaneReactive(props: {
       <rect
         x={MS_LANE_PAD / 2}
         y={props.laneY}
-        width={MS_STAGE_W - MS_LANE_PAD}
+        width={props.stageWidth - MS_LANE_PAD}
         height={laneHeight}
         rx={8}
         fill="rgba(255,255,255,0.02)"
@@ -1151,7 +1176,7 @@ function MixedShapesLaneReactive(props: {
           a card "occupies" a lozenge while its mode is "gone". */}
       <Show when={lozengeCounts().left > 0}>
         <rect
-          x={leftLozengeX}
+          x={leftLozengeX()}
           y={colTopY}
           width={LOZENGE_W}
           height={colBottomY - colTopY}
@@ -1162,7 +1187,7 @@ function MixedShapesLaneReactive(props: {
           stroke-width="1"
         />
         <text
-          x={leftLozengeX + LOZENGE_W / 2}
+          x={leftLozengeX() + LOZENGE_W / 2}
           y={lozMidY}
           text-anchor="middle"
           dominant-baseline="central"
@@ -1175,7 +1200,7 @@ function MixedShapesLaneReactive(props: {
       </Show>
       <Show when={lozengeCounts().right > 0}>
         <rect
-          x={rightLozengeX}
+          x={rightLozengeX()}
           y={colTopY}
           width={LOZENGE_W}
           height={colBottomY - colTopY}
@@ -1186,7 +1211,7 @@ function MixedShapesLaneReactive(props: {
           stroke-width="1"
         />
         <text
-          x={rightLozengeX + LOZENGE_W / 2}
+          x={rightLozengeX() + LOZENGE_W / 2}
           y={lozMidY}
           text-anchor="middle"
           dominant-baseline="central"
@@ -1317,6 +1342,24 @@ const MS_TICK_MS = MS_PHASE_TOTAL + 200;
 
 const MixedShapesRow: Component = () => {
   const [hovered, setHovered] = createSignal<HoverInfo | null>(null);
+  // Responsive stage width: tracks the container div's measured width
+  // via ResizeObserver. Fallback to MS_STAGE_W until first measurement
+  // (e.g., during SSR or before mount). Min width clamps so the layout
+  // stays sane on very narrow viewports.
+  const [stageWidth, setStageWidth] = createSignal(MS_STAGE_W);
+  let containerRef: HTMLDivElement | undefined;
+  onMount(() => {
+    if (!containerRef) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        // contentRect.width excludes padding — exactly what we want
+        // for the SVG width.
+        setStageWidth(Math.max(400, Math.floor(e.contentRect.width)));
+      }
+    });
+    ro.observe(containerRef);
+    onCleanup(() => ro.disconnect());
+  });
   const lanes: MixedLaneSpec[] = [
     {
       id: "lane-a",
@@ -1501,18 +1544,22 @@ const MixedShapesRow: Component = () => {
       </div>
       <div class="workshop-grid__cell">
         <div
+          ref={containerRef}
           style={{
             background: "rgba(0,0,0,0.15)",
             border: "1px solid rgba(255,255,255,0.08)",
             "border-radius": "6px",
             padding: "12px",
-            overflow: "auto",
+            "box-sizing": "border-box",
+            // Width fills the cell so the ResizeObserver picks up real
+            // breakpoints when the user resizes the browser.
+            width: "100%",
           }}
         >
           <svg
-            width={MS_STAGE_W}
+            width={stageWidth()}
             height={totalH}
-            viewBox={`0 0 ${MS_STAGE_W} ${totalH}`}
+            viewBox={`0 0 ${stageWidth()} ${totalH}`}
             style={{ display: "block", overflow: "visible" }}
           >
             <defs>
@@ -1534,6 +1581,8 @@ const MixedShapesRow: Component = () => {
                   spec={l.spec}
                   nodes={currentStates()[i()]}
                   laneY={l.laneY}
+                  stageWidth={stageWidth()}
+                  maxDepth={maxDepthForWidth(stageWidth())}
                   onCardHover={setHovered}
                 />
               )}
@@ -1551,7 +1600,7 @@ const MixedShapesRow: Component = () => {
                 const POPOVER_H = 60;
                 const px = Math.min(
                   Math.max(info().x, 8),
-                  MS_STAGE_W - POPOVER_W - 8,
+                  stageWidth() - POPOVER_W - 8,
                 );
                 const py = info().y - POPOVER_H - POPOVER_GAP;
                 return (

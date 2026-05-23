@@ -155,3 +155,105 @@ export function resolveParentStatuses(
   }
   return out;
 }
+
+// ─── topological / col helpers (used by animated layouts) ───────────────────
+//
+// Moved here from `dev/showcases/workshop-layout.ts` so that production
+// code in `src/` can compute the same status-based column placements
+// without crossing the dev/src boundary. `workshop-layout.ts` re-exports
+// these as the canonical source.
+
+/**
+ * Status → signed column. Convention matches StatusFlowChart's default
+ * three-column layout:  DONE → -1, DOING → 0, TODO → +1.
+ */
+export const STATUS_TO_COL: Record<string, number> = {
+  DONE: -1,
+  DOING: 0,
+  TODO: 1,
+};
+
+/**
+ * Topological sort of a leaf set with alphabetical id as a tiebreaker
+ * when multiple nodes become ready simultaneously. Ignores `dependsOn`
+ * entries that reference ids outside the leaf set.
+ */
+export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
+  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const remainingDeps = new Map<string, Set<string>>();
+  for (const n of leaves) {
+    const deps = new Set<string>();
+    for (const d of n.dependsOn ?? []) if (byId.has(d)) deps.add(d);
+    remainingDeps.set(n.id, deps);
+  }
+
+  const result: string[] = [];
+  const inResult = new Set<string>();
+  while (inResult.size < leaves.length) {
+    const ready: string[] = [];
+    for (const n of leaves) {
+      if (inResult.has(n.id)) continue;
+      if ((remainingDeps.get(n.id)?.size ?? 0) === 0) ready.push(n.id);
+    }
+    if (ready.length === 0) break; // cycle / unreachable — stop
+    ready.sort();
+    for (const id of ready) {
+      result.push(id);
+      inResult.add(id);
+      for (const [, deps] of remainingDeps) deps.delete(id);
+    }
+  }
+  return result;
+}
+
+/** Compute each leaf's topological depth via memoized recursion. */
+function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
+  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const cache = new Map<string, number>();
+  const visit = (id: string): number => {
+    const hit = cache.get(id);
+    if (hit !== undefined) return hit;
+    const n = byId.get(id);
+    if (!n) return 0;
+    const deps = (n.dependsOn ?? []).filter((d) => byId.has(d));
+    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
+    cache.set(id, d);
+    return d;
+  };
+  for (const l of leaves) visit(l.id);
+  return cache;
+}
+
+/**
+ * Compute the column for a single node within `nodes`. See the workshop
+ * docs for the detailed depth-and-status ranking rules.
+ */
+export function computeColFor(
+  n: StatusFlowNode,
+  nodes: StatusFlowNode[],
+  effectiveStatusFor: (id: string) => string | undefined,
+): number {
+  const parentIds = new Set<string>();
+  for (const node of nodes) if (node.parentId) parentIds.add(node.parentId);
+
+  if (parentIds.has(n.id)) {
+    const eff = effectiveStatusFor(n.id) ?? n.status;
+    return STATUS_TO_COL[eff] ?? 0;
+  }
+
+  if (n.status === "DOING") return 0;
+
+  const leaves =
+    parentIds.size > 0 ? nodes.filter((node) => node.parentId) : nodes;
+  const depths = topoDepths(leaves);
+  const myDepth = depths.get(n.id) ?? 0;
+
+  const sameStatus = leaves.filter((l) => l.status === n.status);
+  const uniqueDepths = Array.from(
+    new Set(sameStatus.map((l) => depths.get(l.id) ?? 0)),
+  );
+  uniqueDepths.sort((a, b) => (n.status === "DONE" ? b - a : a - b));
+  const rank = uniqueDepths.indexOf(myDepth) + 1; // 1-indexed
+
+  return n.status === "DONE" ? -rank : rank;
+}

@@ -1,122 +1,18 @@
 // Pure layout helpers for the workshop's StatusFlowChart demos.
 // Extracted into a separate module so they can be unit-tested in
 // isolation from Solid components.
+//
+// `computeColFor` / `topoSortAlpha` / `STATUS_TO_COL` were promoted into
+// `src/components/StatusFlowChart/columns.ts` so the production trajectory
+// engine (used by `AnimatedSwimlaneChart`) can share the same column math.
+// Re-exported here so existing workshop call sites keep working.
 
 import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
-
-export const STATUS_TO_COL: Record<string, number> = {
-  DONE: -1,
-  DOING: 0,
-  TODO: 1,
-};
-
-/**
- * Topological sort of a leaf set with alphabetical id as a tiebreaker
- * when multiple nodes become ready simultaneously. Ignores `dependsOn`
- * entries that reference ids outside the leaf set.
- *
- * For a strict linear chain (c1→c2→…) returns [c1, c2, …].
- * For a broom (b1, b2, b3 roots; b4 depends on b1+b2; …) returns
- * [b1, b2, b3, b4, …] — alpha-sorted within each "ready bucket".
- */
-export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
-  const remainingDeps = new Map<string, Set<string>>();
-  for (const n of leaves) {
-    const deps = new Set<string>();
-    for (const d of n.dependsOn ?? []) if (byId.has(d)) deps.add(d);
-    remainingDeps.set(n.id, deps);
-  }
-
-  const result: string[] = [];
-  const inResult = new Set<string>();
-  while (inResult.size < leaves.length) {
-    const ready: string[] = [];
-    for (const n of leaves) {
-      if (inResult.has(n.id)) continue;
-      if ((remainingDeps.get(n.id)?.size ?? 0) === 0) ready.push(n.id);
-    }
-    if (ready.length === 0) break; // cycle / unreachable — stop
-    ready.sort();
-    for (const id of ready) {
-      result.push(id);
-      inResult.add(id);
-      for (const [, deps] of remainingDeps) deps.delete(id);
-    }
-  }
-  return result;
-}
-
-/** Compute each leaf's topological depth via memoized recursion. */
-function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
-  const cache = new Map<string, number>();
-  const visit = (id: string): number => {
-    const hit = cache.get(id);
-    if (hit !== undefined) return hit;
-    const n = byId.get(id);
-    if (!n) return 0;
-    const deps = (n.dependsOn ?? []).filter((d) => byId.has(d));
-    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
-    cache.set(id, d);
-    return d;
-  };
-  for (const l of leaves) visit(l.id);
-  return cache;
-}
-
-/**
- * Compute the column for a single node within `nodes`.
- *
- * Rules (uniform — same logic handles linear chain, broom, and chores):
- *  - **Parents** use status-based col (DONE → -1, DOING → 0, TODO → +1)
- *    via effective status from `effectiveStatusFor`.
- *  - **Leaves**: col depends on STATUS and (depth, status) ranking among
- *    siblings:
- *      - `status === DOING` → col **0** (always; multiple DOING stack).
- *      - `status === DONE` → cols **-1, -2, …** assigned by rank of the
- *        leaf's topo DEPTH among DONE leaves, **sorted descending**
- *        (higher depth → col closer to center).
- *      - `status === TODO` → cols **+1, +2, …** assigned by rank of the
- *        leaf's topo depth among TODO leaves, sorted ascending (lower
- *        depth → col closer to center).
- *
- * Same (depth, status) → same col → siblings STACK vertically. Different
- * (depth, status) → different cols → no two dependent nodes ever share
- * a col, because deps imply a depth difference.
- *
- * Falls through cleanly for chores (no deps): every leaf is at depth 0,
- * so all DONE chores stack at col -1, all DOING at col 0, etc.
- */
-export function computeColFor(
-  n: StatusFlowNode,
-  nodes: StatusFlowNode[],
-  effectiveStatusFor: (id: string) => string | undefined,
-): number {
-  const parentIds = new Set<string>();
-  for (const node of nodes) if (node.parentId) parentIds.add(node.parentId);
-
-  if (parentIds.has(n.id)) {
-    const eff = effectiveStatusFor(n.id) ?? n.status;
-    return STATUS_TO_COL[eff] ?? 0;
-  }
-
-  if (n.status === "DOING") return 0;
-
-  const leaves =
-    parentIds.size > 0 ? nodes.filter((node) => node.parentId) : nodes;
-  const depths = topoDepths(leaves);
-  const myDepth = depths.get(n.id) ?? 0;
-
-  const sameStatus = leaves.filter((l) => l.status === n.status);
-  const uniqueDepths = Array.from(
-    new Set(sameStatus.map((l) => depths.get(l.id) ?? 0)),
-  );
-  uniqueDepths.sort((a, b) => (n.status === "DONE" ? b - a : a - b));
-  const rank = uniqueDepths.indexOf(myDepth) + 1; // 1-indexed
-
-  return n.status === "DONE" ? -rank : rank;
-}
+export {
+  STATUS_TO_COL,
+  topoSortAlpha,
+  computeColFor,
+} from "../../src/components/StatusFlowChart/columns";
 
 /**
  * Render the column as a label per the convention `-S, -2, -1, 0, +1, +2, +S`.
