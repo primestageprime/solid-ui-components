@@ -2,7 +2,11 @@ import { Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
 import { JsonPanel } from "./swimlane-chart";
 import { RouterDemoGrid } from "./router-demo";
-import { AnimationExperimentsRow, MixedShapesRow } from "./animation-experiments";
+import {
+  AnimationExperimentsRow,
+  MixedShapesRow,
+  TwoFrameArrowDemoRow,
+} from "./animation-experiments";
 import {
   StatusFlowChart,
   resolveParentStatuses,
@@ -1357,6 +1361,7 @@ export const WorkshopShowcase: Component = () => {
         here too).
       </p>
       <div class="workshop-grid">
+        <TwoFrameArrowDemoRow />
         <AnimationExperimentsRow />
         <MixedShapesRow />
         <TwoParentsRow />

@@ -2417,6 +2417,159 @@ const EXPERIMENTS: Experiment[] = [
 // ─── separate row export for the full mixed-shapes preview ─────────────────
 export { MixedShapesRow };
 
+// ─── two-frame arrow-smoothness demo ────────────────────────────────────────
+//
+// A FOCUSED 2-frame demo for iterating on arrow smoothness. Two
+// hardcoded frames mirror the "b1 moves left, arrow drops between
+// b2 and b3" scenario from the user's screenshots:
+//
+//   Frame A:  b1 DOING ┐
+//             b2 DOING ├─ stacked at col 0, b4 TODO at col +1
+//             b3 DOING ┘
+//
+//   Frame B:  b1 DONE at col -1, b2/b3 DOING at col 0 (2-stack),
+//             b4 TODO at col +1
+//
+// Use prev / play / next to toggle between the two frames and inspect
+// how arrow b1→b4 morphs. Hardcoded width and default config — no
+// knobs (use the main MixedShapesRow below for those). Goal: quick
+// visual feedback while iterating on routing math.
+const TWO_FRAME_DEMO_NODES_A: StatusFlowNode[] = [
+  { id: "b1", title: "b1", status: "DOING" },
+  { id: "b2", title: "b2", status: "DOING" },
+  { id: "b3", title: "b3", status: "DOING" },
+  { id: "b4", title: "b4", status: "TODO", dependsOn: ["b1", "b2"] },
+];
+const TWO_FRAME_DEMO_NODES_B: StatusFlowNode[] = [
+  { id: "b1", title: "b1", status: "DONE" },
+  { id: "b2", title: "b2", status: "DOING" },
+  { id: "b3", title: "b3", status: "DOING" },
+  { id: "b4", title: "b4", status: "TODO", dependsOn: ["b1", "b2"] },
+];
+
+const TwoFrameArrowDemoRow: Component = () => {
+  const FRAMES: StatusFlowNode[][] = [TWO_FRAME_DEMO_NODES_A, TWO_FRAME_DEMO_NODES_B];
+  const [cursor, setCursor] = createSignal(0);
+  const [playing, setPlaying] = createSignal(false);
+  let toggleTimer: ReturnType<typeof setInterval> | undefined;
+  const next = () => setCursor((c) => (c + 1) % FRAMES.length);
+  const prev = () => setCursor((c) => (c - 1 + FRAMES.length) % FRAMES.length);
+  const reset = () => setCursor(0);
+  const play = () => {
+    if (playing()) {
+      setPlaying(false);
+      if (toggleTimer !== undefined) clearInterval(toggleTimer);
+      toggleTimer = undefined;
+      return;
+    }
+    setPlaying(true);
+    toggleTimer = setInterval(next, MS_PHASE_TOTAL + 400);
+  };
+  onCleanup(() => {
+    if (toggleTimer !== undefined) clearInterval(toggleTimer);
+  });
+
+  // Build a one-lane spec from the demo nodes.
+  const spec: MixedLaneSpec = {
+    id: "two-frame-demo",
+    children: [
+      { id: "b1", title: "b1", status: "DOING" },
+      { id: "b2", title: "b2", status: "DOING" },
+      { id: "b3", title: "b3", status: "DOING" },
+      { id: "b4", title: "b4", status: "TODO", dependsOn: ["b1", "b2"] },
+    ],
+  };
+  // Fixed compact width — enough for maxDepth=1 (cols -1, 0, +1) at
+  // the default 250px card width plus a couple lozenge gutters.
+  const stageWidth = 1100;
+  const maxDepth = maxDepthForWidth(stageWidth);
+  const laneY = 12;
+  const childCount = spec.children.length;
+  const initialRoots = spec.children.filter(
+    (c) => !c.dependsOn || c.dependsOn.length === 0,
+  ).length;
+  const reservedStack = Math.max(1, initialRoots, Math.min(childCount, 3));
+  const reservedChildRowH =
+    reservedStack * MS_CARD_H + (reservedStack - 1) * MS_ROW_GAP;
+  const parentRowH = 0; // no parent in this demo
+  const laneHeight = MS_LANE_PAD * 2 + parentRowH + reservedChildRowH;
+  const totalH = laneY + laneHeight + 12;
+
+  return (
+    <>
+      <div class="workshop-grid__cell">
+        <SubsectionTitleLite>Arrow smoothness · 2-frame demo</SubsectionTitleLite>
+        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
+          Toggle between two frames to inspect how the b1→b4 arrow
+          morphs as b1 moves from the col-0 stack out to col -1, and
+          b2/b3 re-stack. Goal: a smooth, snap-free transition.
+        </p>
+        <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
+          <button type="button" style={buttonStyle} onClick={prev}>← prev</button>
+          <button type="button" style={buttonStyle} onClick={play}>
+            {playing() ? "⏸ pause" : "▶ play"}
+          </button>
+          <button type="button" style={buttonStyle} onClick={next}>next →</button>
+          <button type="button" style={buttonStyle} onClick={reset}>↺ reset</button>
+          <span
+            style={{
+              "font-size": "11px",
+              color: "rgba(255,255,255,0.55)",
+              "font-family": "ui-monospace, SFMono-Regular, monospace",
+              "align-self": "center",
+            }}
+          >
+            frame {cursor() === 0 ? "A" : "B"}
+          </span>
+        </div>
+      </div>
+      <div class="workshop-grid__cell">
+        <div
+          style={{
+            background: "rgba(0,0,0,0.15)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            "border-radius": "6px",
+            padding: "12px",
+            "box-sizing": "border-box",
+          }}
+        >
+          <svg
+            width={stageWidth}
+            height={totalH}
+            viewBox={`0 0 ${stageWidth} ${totalH}`}
+            style={{ display: "block", overflow: "visible" }}
+          >
+            <defs>
+              <marker
+                id="ms-arrow-head"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+              </marker>
+            </defs>
+            <MixedShapesLaneReactive
+              spec={spec}
+              nodes={FRAMES[cursor()]}
+              laneY={laneY}
+              stageWidth={stageWidth}
+              maxDepth={maxDepth}
+              layoutConfig={DEFAULT_LANE_LAYOUT_CONFIG}
+              timing={DEFAULT_TIMING}
+            />
+          </svg>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export { TwoFrameArrowDemoRow };
+
 // ─── row entrypoint ─────────────────────────────────────────────────────────
 export const AnimationExperimentsRow: Component = () => {
   return (
