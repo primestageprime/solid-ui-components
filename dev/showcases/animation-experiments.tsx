@@ -1397,16 +1397,33 @@ function MixedShapesLaneReactive(props: {
             return `4 ${(d * 3).toFixed(2)}`;
           };
           const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
-          // Obstacles: visible cards (not morphing, not the parent —
-          // see arrow-loop-over-parent fix earlier).
+          // Obstacles: the SETTLED positions of visible cards, NOT
+          // their current-frame positions. As cards lerp through
+          // space during a move, treating their lerped positions as
+          // obstacles makes the router thrash between routing
+          // topologies — and at move-end the route snaps to a
+          // different shape than it had mid-flight. Routing against
+          // the FINAL positions throughout the animation produces a
+          // smooth morph: the path's endpoints follow the cards
+          // while its bent middle eases toward the final dodge
+          // shape. Arrows are allowed to pass through cards while
+          // those cards are still navigating — they only "dodge"
+          // when the layout has settled, which is exactly the spec
+          // (lines move behind nodes while in motion, dodge once at
+          // rest).
+          //
+          // Parents excluded (they sit in their own row and would
+          // tempt the router into ugly over-the-top detours).
           const obstacles = () => {
-            const t = currentT();
             const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
             for (const [id, c] of traj().cards) {
               if (id === arrow.fromId || id === arrow.toId) continue;
-              if (c.modeAt(t) !== "card") continue;
               if (c.isParent) continue;
-              const r = c.rectAt(t);
+              // mode at t=1 (settled state), not at current t — an
+              // arriving card hasn't reached "card" mode yet but its
+              // final rest position is still a valid obstacle.
+              if (c.modeAt(1) !== "card") continue;
+              const r = c.rectAt(1);
               if (!r) continue;
               list.push({ id, ...r });
             }
