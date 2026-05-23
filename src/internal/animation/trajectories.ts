@@ -45,12 +45,81 @@ export type CardMode = "card" | "morph" | "gone";
 export type CardStatus = "TODO" | "DOING" | "DONE";
 
 // ─── timing ─────────────────────────────────────────────────────────────────
+//
+// The trajectory is parameterised on a `LaneTimingConfig` so callers
+// (the workshop in particular) can tune animation speeds without
+// rebuilding the module. The exported `MS_*` constants below are kept
+// as the DEFAULT values and the matching phase fractions for callers
+// that just want the pre-knob defaults — they're equivalent to
+// `phasesFor(DEFAULT_TIMING)` with `arrowSettleMs = 0`.
 
-export const MS_SLURP_MS = 600;
-export const MS_MOVE_MS = 450;
-export const MS_PHASE_TOTAL = MS_SLURP_MS + MS_MOVE_MS + MS_SLURP_MS; // 1650
-export const PHASE_LEAVE_END = MS_SLURP_MS / MS_PHASE_TOTAL;
-export const PHASE_MOVE_END = (MS_SLURP_MS + MS_MOVE_MS) / MS_PHASE_TOTAL;
+export interface LaneTimingConfig {
+  /** ms spent in the slurp morph (in OR out). */
+  slurpMs: number;
+  /** ms spent moving visible cards between columns. */
+  moveMs: number;
+  /**
+   * NEW: ms spent in the "arrow settle" window between move-end and
+   * slurp-out. During this slice cards stay at rest at their next
+   * column but arrow endpoints ease from their move-end anchor toward
+   * their final attach point (the card's rest edge). Set to 0 to
+   * preserve the pre-knob behaviour where arrows snap at move-end.
+   *
+   * Mechanically: when > 0, the arriving-card anchor lerps from
+   * `loz` (its anchor just before move-end) to `nextRect` (its
+   * resting anchor) across the settle window, then stays fixed at
+   * `nextRect` for the rest of the tick — including throughout the
+   * slurp-out morph. This means the visible card emerges from the
+   * lozenge but the arrow no longer chases the morph's leading edge.
+   */
+  arrowSettleMs: number;
+}
+
+/**
+ * Default timing for callers that don't pass a `timing` arg. Matches
+ * the pre-knob constants exactly so all existing consumers (tests,
+ * AnimatedSwimlaneChart, etc.) keep their old behaviour. `arrowSettleMs`
+ * defaults to 0 so the regression invariant holds.
+ */
+export const DEFAULT_TIMING: LaneTimingConfig = {
+  slurpMs: 600,
+  moveMs: 450,
+  arrowSettleMs: 0,
+};
+
+/** Resolved phase boundaries derived from a `LaneTimingConfig`. */
+export interface LanePhases {
+  /** Total duration in ms — sum of slurp + move + arrowSettle + slurp. */
+  total: number;
+  /** Fraction of total at which the leave-slurp window ends. */
+  leaveEnd: number;
+  /** Fraction of total at which the card-move window ends. */
+  moveEnd: number;
+  /** Fraction of total at which the arrow-settle window ends. */
+  settleEnd: number;
+}
+
+/** Compute phase fractions for a timing config. */
+export function phasesFor(timing: LaneTimingConfig): LanePhases {
+  const total = timing.slurpMs + timing.moveMs + timing.arrowSettleMs + timing.slurpMs;
+  return {
+    total,
+    leaveEnd: timing.slurpMs / total,
+    moveEnd: (timing.slurpMs + timing.moveMs) / total,
+    settleEnd: (timing.slurpMs + timing.moveMs + timing.arrowSettleMs) / total,
+  };
+}
+
+// Back-compat exports: pre-knob constants for callers that don't take
+// a timing arg. These mirror the defaults exactly.
+export const MS_SLURP_MS = DEFAULT_TIMING.slurpMs;
+export const MS_MOVE_MS = DEFAULT_TIMING.moveMs;
+export const MS_PHASE_TOTAL =
+  DEFAULT_TIMING.slurpMs + DEFAULT_TIMING.moveMs +
+  DEFAULT_TIMING.arrowSettleMs + DEFAULT_TIMING.slurpMs;
+export const PHASE_LEAVE_END = DEFAULT_TIMING.slurpMs / MS_PHASE_TOTAL;
+export const PHASE_MOVE_END =
+  (DEFAULT_TIMING.slurpMs + DEFAULT_TIMING.moveMs) / MS_PHASE_TOTAL;
 
 // ─── math helpers ───────────────────────────────────────────────────────────
 
@@ -301,9 +370,9 @@ export interface LozengeRects {
 // `CardTrajectory`. The renderer doesn't care which case produced a
 // trajectory — it just evaluates it at the current `t`.
 
-/** Shared status interpolation: prev until PHASE_LEAVE_END, then next. */
-const stayingStatusAt = (prev: CardStatus, next: CardStatus) =>
-  (t: number): CardStatus => (t < PHASE_LEAVE_END ? prev : next);
+/** Shared status interpolation: prev until leaveEnd, then next. */
+const stayingStatusAt = (prev: CardStatus, next: CardStatus, leaveEnd: number) =>
+  (t: number): CardStatus => (t < leaveEnd ? prev : next);
 
 function buildStayingTrajectory(
   id: string,
@@ -312,11 +381,13 @@ function buildStayingTrajectory(
   isParent: boolean,
   prevRect: Rect,
   nextRect: Rect,
+  phases: LanePhases,
 ): CardTrajectory {
+  const { leaveEnd, moveEnd } = phases;
   const rectAt = (t: number): Rect => {
-    if (t <= PHASE_LEAVE_END) return prevRect;
-    if (t >= PHASE_MOVE_END) return nextRect;
-    const local = (t - PHASE_LEAVE_END) / (PHASE_MOVE_END - PHASE_LEAVE_END);
+    if (t <= leaveEnd) return prevRect;
+    if (t >= moveEnd) return nextRect;
+    const local = (t - leaveEnd) / (moveEnd - leaveEnd);
     return lerpRect(prevRect, nextRect, ease(local));
   };
   return {
@@ -326,7 +397,7 @@ function buildStayingTrajectory(
     rectAt,
     pathAt: () => null,
     anchorAt: rectAt,
-    statusAt: stayingStatusAt(prevStatus, nextStatus),
+    statusAt: stayingStatusAt(prevStatus, nextStatus, leaveEnd),
     hiddennessAt: () => 0,
   };
 }
@@ -338,7 +409,9 @@ function buildLeavingTrajectory(
   prevRect: Rect,
   loz: Rect,
   side: "left" | "right",
+  phases: LanePhases,
 ): CardTrajectory {
+  const { leaveEnd } = phases;
   // Single-pixel anchor at the lozenge's inner edge (where the morph
   // converges to). The arrow tip will track the morph's leading edge
   // throughout the slurp and land here.
@@ -357,11 +430,11 @@ function buildLeavingTrajectory(
   return {
     id,
     isParent,
-    modeAt: (t) => (t <= PHASE_LEAVE_END ? "morph" : "gone"),
+    modeAt: (t) => (t <= leaveEnd ? "morph" : "gone"),
     rectAt: () => null,
     pathAt: (t) => {
-      if (t > PHASE_LEAVE_END) return null;
-      const local = t / PHASE_LEAVE_END;
+      if (t > leaveEnd) return null;
+      const local = t / leaveEnd;
       return slurpRectMorph(prevRect, loz, side, 1 - ease(local));
     },
     // Vertical-line anchor at the morph's leading edge — width=0,
@@ -371,8 +444,8 @@ function buildLeavingTrajectory(
     // rect (same semantics for stays-hidden cards).
     anchorAt: (t) => {
       if (t <= 0) return prevRect;
-      if (t >= PHASE_LEAVE_END) return loz;
-      const local = t / PHASE_LEAVE_END;
+      if (t >= leaveEnd) return loz;
+      const local = t / leaveEnd;
       const tPrime = 1 - ease(local);
       const leadingT = windowProgress(tPrime, 0, 0.55);
       const leadingX = lerp(innerEdgeX, leadingFarX, ease(leadingT));
@@ -387,8 +460,8 @@ function buildLeavingTrajectory(
     // Leaving: 0 at start of morph (fully out), 1 after (fully gone).
     hiddennessAt: (t) => {
       if (t <= 0) return 0;
-      if (t >= PHASE_LEAVE_END) return 1;
-      return ease(t / PHASE_LEAVE_END);
+      if (t >= leaveEnd) return 1;
+      return ease(t / leaveEnd);
     },
   };
 }
@@ -400,7 +473,16 @@ function buildArrivingTrajectory(
   nextRect: Rect,
   loz: Rect,
   side: "left" | "right",
+  phases: LanePhases,
 ): CardTrajectory {
+  const { moveEnd, settleEnd } = phases;
+  // When the arrow-settle window is enabled, arrow anchors are
+  // detached from the morph's leading edge during the slurp-out:
+  // they finish landing on `nextRect` BEFORE slurp-out begins, and
+  // stay there. When `arrowSettleMs === 0` (default), we keep the
+  // pre-knob behaviour — anchors track the morph bbox through
+  // slurp-out so arrow tips visibly chase the card's leading edge.
+  const hasSettle = settleEnd > moveEnd + 1e-9;
   // Single-pixel anchor at the lozenge's inner edge (the edge facing
   // the visible cards). This is where the arrow attaches BEFORE the
   // slurp begins and where the morph's leading edge starts.
@@ -416,35 +498,60 @@ function buildArrivingTrajectory(
   const cardLeft = nextRect.x - nextRect.width / 2;
   const cardRight = nextRect.x + nextRect.width / 2;
   const leadingFarX = side === "left" ? cardLeft : cardRight;
+  // Slurp-out morph window starts at settleEnd (= moveEnd when
+  // arrowSettleMs === 0).
+  const slurpStart = settleEnd;
   return {
     id,
     isParent,
     modeAt: (t) =>
-      t < PHASE_MOVE_END
+      t < slurpStart
         ? "gone"
         : t >= 1 - 1e-9
           ? "card"
           : "morph",
     rectAt: (t) => (t >= 1 - 1e-9 ? nextRect : null),
     pathAt: (t) => {
-      if (t < PHASE_MOVE_END || t >= 1 - 1e-9) return null;
-      const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
+      if (t < slurpStart || t >= 1 - 1e-9) return null;
+      const local = (t - slurpStart) / (1 - slurpStart);
       return slurpRectMorph(nextRect, loz, side, ease(local));
     },
-    // Anchor is the morph SHAPE's bounding-box rect — spanning from
-    // its LEADING edge (far from lozenge) to its TRAILING edge (at
-    // the lozenge's inner edge). The router clips arrow tips to the
-    // edge of this rect facing the source:
-    //   - Arrow from outside (e.g. b1 → b4): clips to LEADING edge.
-    //   - Arrow from this card (e.g. b4 → loz): starts at TRAILING
-    //     edge, so the arrow body doesn't traverse THROUGH the morph
-    //     shape on its way to the lozenge.
+    // Anchor behaviour:
     //
-    // Pre-slurp: anchor is the FULL lozenge rect. Post-slurp: card rect.
+    //   t ∈ [0, moveEnd)         — full lozenge rect (arrow attaches
+    //                              to the lozenge).
+    //   t ∈ [moveEnd, settleEnd) — NEW arrow-settle window. Cards
+    //                              are at rest at nextRect; arrow
+    //                              anchor lerps loz → nextRect so the
+    //                              arrow visibly migrates from the
+    //                              lozenge to the card's edge before
+    //                              the slurp-out begins.
+    //   t ∈ [settleEnd, 1)       — slurp-out phase. If settle is
+    //                              enabled, anchor is fixed at
+    //                              nextRect (the arrow's already
+    //                              landed; the visible morph paints
+    //                              over it). If settle is zero, fall
+    //                              back to pre-knob behaviour where
+    //                              anchor tracks the morph bbox.
+    //   t = 1                    — nextRect (router uses full rect).
     anchorAt: (t) => {
-      if (t < PHASE_MOVE_END) return loz;
+      if (t < moveEnd) return loz;
       if (t >= 1 - 1e-9) return nextRect;
-      const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
+      if (t < settleEnd) {
+        // Arrow-settle window: lerp loz → nextRect.
+        const local = (t - moveEnd) / (settleEnd - moveEnd);
+        return lerpRect(loz, nextRect, ease(local));
+      }
+      if (hasSettle) {
+        // Slurp-out with settle enabled: anchor is parked at the
+        // card's rest rect. The slurp morph still animates the
+        // visible shape, but the arrow no longer chases it.
+        return nextRect;
+      }
+      // Pre-knob behaviour: anchor tracks the morph bbox during
+      // slurp-out so the arrow's tip clips to the morph's leading
+      // edge.
+      const local = (t - slurpStart) / (1 - slurpStart);
       const easedT = ease(local);
       // leading + trailing X — same calculations as slurpRectMorph
       const leadingT = windowProgress(easedT, 0, 0.55);
@@ -470,12 +577,15 @@ function buildArrivingTrajectory(
     // Arriving cards are only visible during the slurp-out and after;
     // they wear their NEW status the whole time.
     statusAt: () => nextStatus,
-    // Arriving: 1 until the slurp-out window starts, then 1 → 0
-    // tracking the morph progress, 0 once at rest.
+    // Arriving: 1 until the slurp-out morph window starts, then 1 → 0
+    // tracking the morph progress, 0 once at rest. (Note: hiddenness
+    // tracks the visible morph, not the anchor — so dashedness still
+    // fades to solid as the card emerges, even when the arrow's
+    // anchor has already settled.)
     hiddennessAt: (t) => {
-      if (t < PHASE_MOVE_END) return 1;
+      if (t < slurpStart) return 1;
       if (t >= 1) return 0;
-      const local = (t - PHASE_MOVE_END) / (1 - PHASE_MOVE_END);
+      const local = (t - slurpStart) / (1 - slurpStart);
       return 1 - ease(local);
     },
   };
@@ -520,6 +630,12 @@ export interface BuildLaneTrajectoryArgs {
   nextFrame: StatusFlowNode[];
   layoutParams: LayoutParams;
   lozengeRects: LozengeRects;
+  /**
+   * Optional timing overrides. Defaults to `DEFAULT_TIMING` (matches
+   * pre-knob constants, no arrow-settle window) so existing callers
+   * keep their old behaviour exactly.
+   */
+  timing?: LaneTimingConfig;
 }
 
 export function buildLaneTrajectory(
@@ -574,6 +690,7 @@ export function buildLaneTrajectory(
     prevStatusOf: (id) => statusOf(id, args.prevFrame, prevEffective),
     nextStatusOf: (id) => statusOf(id, args.nextFrame, nextEffective),
     edges: edgePairs,
+    timing: args.timing,
   });
 }
 
@@ -603,6 +720,11 @@ export interface BuildFromSnapshotsArgs {
   nextStatusOf?: (id: string) => CardStatus;
   /** Dep edges as [sourceId, targetId] pairs. Caller dedupes. */
   edges: Array<[string, string]>;
+  /**
+   * Optional timing overrides. Defaults to `DEFAULT_TIMING` so existing
+   * callers (AnimatedSwimlaneChart, tests) keep their old behaviour.
+   */
+  timing?: LaneTimingConfig;
 }
 
 export function buildLaneTrajectoryFromSnapshots(
@@ -612,6 +734,8 @@ export function buildLaneTrajectoryFromSnapshots(
     !!(args.prev.byId.get(id)?.isParent || args.next.byId.get(id)?.isParent));
   const prevStatusOf = args.prevStatusOf ?? (() => "TODO" as CardStatus);
   const nextStatusOf = args.nextStatusOf ?? (() => "TODO" as CardStatus);
+  const timing = args.timing ?? DEFAULT_TIMING;
+  const phases = phasesFor(timing);
 
   const ids = new Set<string>([
     ...args.prev.byId.keys(),
@@ -635,6 +759,7 @@ export function buildLaneTrajectoryFromSnapshots(
           parentFlag,
           pp.rect!,
           np.rect!,
+          phases,
         ),
       );
     } else if (pp?.visible && !np?.visible) {
@@ -648,6 +773,7 @@ export function buildLaneTrajectoryFromSnapshots(
           pp.rect!,
           loz,
           side,
+          phases,
         ),
       );
     } else if (!pp?.visible && np?.visible) {
@@ -661,6 +787,7 @@ export function buildLaneTrajectoryFromSnapshots(
           np.rect!,
           loz,
           side,
+          phases,
         ),
       );
     } else {
@@ -680,7 +807,7 @@ export function buildLaneTrajectoryFromSnapshots(
   return {
     cards,
     arrows: Array.from(arrowsByKey.values()),
-    durationMs: MS_PHASE_TOTAL,
+    durationMs: phases.total,
   };
 }
 

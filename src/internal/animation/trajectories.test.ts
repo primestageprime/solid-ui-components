@@ -4,12 +4,15 @@ import {
   buildLaneTrajectory,
   buildLaneTrajectoryFromSnapshots,
   dashednessAt,
+  DEFAULT_TIMING,
   lerp,
   lerpRect,
   MS_PHASE_TOTAL,
   PHASE_LEAVE_END,
   PHASE_MOVE_END,
+  phasesFor,
   snapshotFrame,
+  type LaneTimingConfig,
   type LaneTrajectory,
   type LayoutParams,
   type LozengeRects,
@@ -844,5 +847,217 @@ describe("buildLaneTrajectoryFromSnapshots — generic frame input", () => {
       edges: [["a", "b"], ["a", "b"], ["b", "c"]],
     });
     expect(traj.arrows.length).toBe(2);
+  });
+});
+
+// ─── tunable timing config ─────────────────────────────────────────────────
+//
+// `LaneTimingConfig` lets the workshop (and any other consumer) tune
+// the animation duration without rebuilding the module. Defaults match
+// the pre-knob constants so existing callers keep their behaviour.
+
+describe("LaneTimingConfig — phases derive from timing", () => {
+  it("DEFAULT_TIMING matches the back-compat constants exactly", () => {
+    expect(DEFAULT_TIMING.slurpMs).toBe(600);
+    expect(DEFAULT_TIMING.moveMs).toBe(450);
+    expect(DEFAULT_TIMING.arrowSettleMs).toBe(0);
+    const p = phasesFor(DEFAULT_TIMING);
+    expect(p.total).toBe(MS_PHASE_TOTAL);
+    expect(p.leaveEnd).toBe(PHASE_LEAVE_END);
+    expect(p.moveEnd).toBe(PHASE_MOVE_END);
+    // With arrowSettleMs=0 the settle window has zero width.
+    expect(p.settleEnd).toBe(p.moveEnd);
+  });
+
+  it("phasesFor doubles the total when every knob is doubled", () => {
+    const p1 = phasesFor({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 });
+    const p2 = phasesFor({ slurpMs: 1200, moveMs: 900, arrowSettleMs: 400 });
+    expect(p2.total).toBe(p1.total * 2);
+    // Phase FRACTIONS stay the same when all knobs scale together.
+    expect(p2.leaveEnd).toBeCloseTo(p1.leaveEnd);
+    expect(p2.moveEnd).toBeCloseTo(p1.moveEnd);
+    expect(p2.settleEnd).toBeCloseTo(p1.settleEnd);
+  });
+});
+
+describe("buildLaneTrajectory — durationMs updates when timing knobs change", () => {
+  const prev: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+  ];
+  const next: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DOING" },
+  ];
+
+  const dur = (timing: LaneTimingConfig) =>
+    buildLaneTrajectory({
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
+      timing,
+    }).durationMs;
+
+  it("durationMs is slurp + move + settle + slurp", () => {
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 0 }))
+      .toBe(600 + 450 + 0 + 600);
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 }))
+      .toBe(600 + 450 + 200 + 600);
+    expect(dur({ slurpMs: 1000, moveMs: 800, arrowSettleMs: 300 }))
+      .toBe(1000 + 800 + 300 + 1000);
+  });
+
+  it("durationMs responds independently to each knob", () => {
+    const base = dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 });
+    expect(dur({ slurpMs: 700, moveMs: 450, arrowSettleMs: 200 }))
+      .toBe(base + 200); // slurp adds to both ends
+    expect(dur({ slurpMs: 600, moveMs: 500, arrowSettleMs: 200 }))
+      .toBe(base + 50);
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 350 }))
+      .toBe(base + 150);
+  });
+});
+
+describe("buildLaneTrajectory — arrow-settle window placement", () => {
+  // a TODO → DOING; b arrives from the right lozenge.
+  const prev: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "TODO" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+  const next: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DOING" },
+    { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
+  ];
+  const timing: LaneTimingConfig = {
+    slurpMs: 600,
+    moveMs: 450,
+    arrowSettleMs: 200,
+  };
+  const phases = phasesFor(timing);
+
+  it("settle window sits between move-end and the slurp-out start", () => {
+    // Sanity: ordered correctly with a positive-width settle window.
+    expect(phases.leaveEnd).toBeLessThan(phases.moveEnd);
+    expect(phases.moveEnd).toBeLessThan(phases.settleEnd);
+    expect(phases.settleEnd).toBeLessThan(1);
+    // settle width matches the configured fraction.
+    expect(phases.settleEnd - phases.moveEnd)
+      .toBeCloseTo(200 / phases.total);
+  });
+
+  it("arriving card stays gone (no morph) until settleEnd", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      timing,
+    });
+    const b = traj.cards.get("b")!;
+    // During the settle window the card is still "gone" — only its
+    // arrow anchor is moving; the visible slurp morph hasn't started.
+    const midSettle = (phases.moveEnd + phases.settleEnd) / 2;
+    expect(b.modeAt(midSettle)).toBe("gone");
+    expect(b.pathAt(midSettle)).toBeNull();
+    // Slurp-out starts at settleEnd.
+    expect(b.modeAt(phases.settleEnd + 0.001)).toBe("morph");
+  });
+
+  it("arriving card anchor lerps from lozenge to next rect across the settle window", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      timing,
+    });
+    const b = traj.cards.get("b")!;
+    const nextRect = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    // Just before move-end: anchored at the lozenge.
+    expect(b.anchorAt(phases.moveEnd - 0.001)).toEqual(LOZENGES.right);
+    // Midway through settle: anchor x is strictly between loz and card.
+    const mid = (phases.moveEnd + phases.settleEnd) / 2;
+    const midX = b.anchorAt(mid).x;
+    const lozX = LOZENGES.right.x;
+    const [lo, hi] = lozX < nextRect.x ? [lozX, nextRect.x] : [nextRect.x, lozX];
+    expect(midX).toBeGreaterThan(lo);
+    expect(midX).toBeLessThan(hi);
+  });
+
+  it("arriving card anchor is parked at next rect during slurp-out (settle enabled)", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      timing,
+    });
+    const b = traj.cards.get("b")!;
+    const nextRect = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    // Anywhere inside the slurp-out window: anchor is the card's rest
+    // rect (the arrow has already landed; the morph plays over it).
+    const slurpMid = phases.settleEnd + (1 - phases.settleEnd) * 0.5;
+    expect(b.anchorAt(slurpMid)).toEqual(nextRect);
+    expect(b.anchorAt(1)).toEqual(nextRect);
+  });
+
+  it("with arrowSettleMs=0, anchor still tracks the morph bbox (regression)", () => {
+    // Default config: no settle window. Arrow anchor reverts to
+    // pre-knob behaviour — tracks the morph bbox throughout slurp-out.
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const b = traj.cards.get("b")!;
+    const nextRect = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
+    // Just past PHASE_MOVE_END, anchor is NOT yet at nextRect — it's
+    // tracking the morph bbox (which is still very narrow / near the
+    // lozenge).
+    const justAfterMove = PHASE_MOVE_END + 0.005;
+    const anchor = b.anchorAt(justAfterMove);
+    expect(anchor).not.toEqual(nextRect);
+    // By t=1 it does settle at nextRect.
+    expect(b.anchorAt(1)).toEqual(nextRect);
+  });
+});
+
+describe("buildLaneTrajectory — default behaviour matches pre-knob system", () => {
+  // Regression invariant: a trajectory built WITHOUT a timing override
+  // must produce byte-identical durationMs, phase fractions, and
+  // mode/anchor sequences to one built with the explicit DEFAULT_TIMING.
+  // Both must equal the pre-knob exported constants.
+  const prev: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DONE" },
+    { id: "b", title: "B", status: "DOING", dependsOn: ["a"] },
+    { id: "c", title: "C", status: "TODO", dependsOn: ["b"] },
+  ];
+  const next: StatusFlowNode[] = [
+    { id: "a", title: "A", status: "DONE" },
+    { id: "b", title: "B", status: "DONE", dependsOn: ["a"] },
+    { id: "c", title: "C", status: "DOING", dependsOn: ["b"] },
+  ];
+
+  it("durationMs equals MS_PHASE_TOTAL with no timing arg", () => {
+    const traj = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    expect(traj.durationMs).toBe(MS_PHASE_TOTAL);
+  });
+
+  it("explicit DEFAULT_TIMING produces same anchor + mode sequence as no arg", () => {
+    const trajA = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+    });
+    const trajB = buildLaneTrajectory({
+      prevFrame: prev, nextFrame: next,
+      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      timing: DEFAULT_TIMING,
+    });
+    expect(trajB.durationMs).toBe(trajA.durationMs);
+    for (const id of trajA.cards.keys()) {
+      const ca = trajA.cards.get(id)!;
+      const cb = trajB.cards.get(id)!;
+      for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+        expect(cb.modeAt(t)).toBe(ca.modeAt(t));
+        expect(cb.anchorAt(t)).toEqual(ca.anchorAt(t));
+        expect(cb.hiddennessAt(t)).toBe(ca.hiddennessAt(t));
+        expect(cb.statusAt(t)).toBe(ca.statusAt(t));
+      }
+    }
   });
 });

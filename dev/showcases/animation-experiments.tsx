@@ -14,7 +14,10 @@ import { Component, createSignal, createEffect, For, JSX, Match, onCleanup, onMo
 import {
   buildLaneTrajectory,
   dashednessAt,
+  DEFAULT_TIMING,
+  phasesFor,
   type CardTrajectory,
+  type LaneTimingConfig,
   type LaneTrajectory,
   type LayoutParams as TrajLayoutParams,
   type LozengeRects,
@@ -280,11 +283,48 @@ function TaskCard(props: {
   onHoverChange?: (hovered: boolean) => void;
 }): JSX.Element {
   const [hovered, setHovered] = createSignal(false);
+  // `mounted` flips to true one rAF after the foreignObject mounts.
+  // Combined with `opacity: (mounted && visible) ? 1 : 0` and the
+  // CSS `transition: opacity`, this gives a fade-in on EVERY fresh
+  // mount of the TaskCard — which, thanks to the keyed <For>/<Switch>
+  // in MixedShapesLaneReactive, happens precisely on the morph→card
+  // transition. Layout-only rebuilds (resize, knob nudge) don't
+  // remount the component, so they don't re-fade. Hover toggling
+  // doesn't touch `mounted`, so steady-state interactions don't
+  // re-fade either.
+  const [mounted, setMounted] = createSignal(false);
+  onMount(() => {
+    // Defer one rAF so the initial opacity:0 paints before
+    // transitioning to 1 — otherwise the browser collapses both
+    // states into a single layout and no transition runs.
+    requestAnimationFrame(() => setMounted(true));
+  });
   const theme = () => statusTheme(props.task.status);
   const liftedPopover = !!props.onHoverChange;
+  // Debounce hover-enter by 300ms so the popover only fires when the
+  // user actually rests on a card — quick mouse sweeps don't flash
+  // a popover. Leave fires immediately (no delay on dismiss).
+  const HOVER_DELAY_MS = 300;
+  let hoverDelay: number | undefined;
+  const cancelDelay = () => {
+    if (hoverDelay !== undefined) {
+      clearTimeout(hoverDelay);
+      hoverDelay = undefined;
+    }
+  };
+  onCleanup(cancelDelay);
   const setHover = (h: boolean) => {
-    setHovered(h);
-    props.onHoverChange?.(h);
+    cancelDelay();
+    if (h) {
+      hoverDelay = window.setTimeout(() => {
+        hoverDelay = undefined;
+        setHovered(true);
+        props.onHoverChange?.(true);
+      }, HOVER_DELAY_MS);
+    } else {
+      setHovered(false);
+      props.onHoverChange?.(false);
+    }
   };
   return (
     <foreignObject
@@ -312,7 +352,7 @@ function TaskCard(props: {
           "font-family": "ui-monospace, SFMono-Regular, monospace",
           color: "var(--sui-text, #e6ecf5)",
           cursor: props.visible ? "pointer" : "default",
-          opacity: props.visible ? 1 : 0,
+          opacity: (mounted() && props.visible) ? 1 : 0,
           "pointer-events": props.visible ? "auto" : "none",
           transition: `opacity ${CARD_FADE_MS}ms ease-out`,
         }}
@@ -951,28 +991,94 @@ const MS_LOZENGE_GAP = 32;
 const MS_MAX_DEPTH = 1;
 
 /**
+ * Pure layout-config shape: just the FOUR horizontal-fit knobs plus
+ * the outer padding. Vertical constants (row gap, lane pad, etc.) are
+ * NOT in here — they don't affect breakpoint math.
+ */
+export interface LaneLayoutConfig {
+  /** Card width (currently MS_CARD_W = 140). */
+  cardWidth: number;
+  /** Gap between adjacent card EDGES (currently MS_COL_GAP = 60). */
+  cardGap: number;
+  /** Lozenge bar width (currently LOZENGE_W = 16). */
+  lozengeWidth: number;
+  /** Gap between outer card and lozenge (currently MS_LOZENGE_GAP = 32). */
+  lozengeGap: number;
+  /** Outer padding each side of the stage (currently 32 = 2rem). */
+  padding: number;
+}
+
+export interface Breakpoint {
+  /** 0, 1, 2, … */
+  depth: number;
+  /** 2·depth + 1 → 1, 3, 5, 7, 9 … */
+  visibleCols: number;
+  /** Smallest stageWidth where this depth fits with the configured padding. */
+  minWidth: number;
+}
+
+/**
+ * Default config used by the workshop chart at boot. `cardWidth` is
+ * deliberately wider than the legacy MS_CARD_W (140) — the user wants
+ * the default card to be 250 so the workshop reflects the production
+ * sizing target. `MS_CARD_W` is no longer the source of truth for
+ * cards in `MixedShapesLaneReactive` (the lane reads `cardWidth` off
+ * the reactive `layoutConfig` prop), so the rendered card and the
+ * breakpoint math agree at this default.
+ *
+ * Note: the legacy slurp / dep / chain demos elsewhere in this file
+ * still use `NODE_W = 140` literally — those panels are standalone
+ * effect experiments and intentionally stay at their hand-tuned
+ * geometry. Only the `MixedShapesRow` panel consumes this default.
+ */
+const DEFAULT_LANE_LAYOUT_CONFIG: LaneLayoutConfig = {
+  cardWidth: 250,
+  cardGap: MS_COL_GAP,
+  lozengeWidth: LOZENGE_W,
+  lozengeGap: MS_LOZENGE_GAP,
+  padding: 32,
+};
+
+/**
+ * Geometry for the breakpoint math:
+ *   colCenterGap = cardWidth + cardGap
+ *   baseContent  = 2 * (cardWidth/2 + lozengeGap + lozengeWidth)
+ *   minWidth(d)  = baseContent + 2 * d * colCenterGap + 2 * padding
+ */
+export function computeBreakpoints(
+  config: LaneLayoutConfig,
+  maxDepth: number,
+): Breakpoint[] {
+  const colCenterGap = config.cardWidth + config.cardGap;
+  const baseContent =
+    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
+  const rows: Breakpoint[] = [];
+  for (let d = 0; d <= maxDepth; d++) {
+    rows.push({
+      depth: d,
+      visibleCols: 2 * d + 1,
+      minWidth: baseContent + 2 * d * colCenterGap + 2 * config.padding,
+    });
+  }
+  return rows;
+}
+
+/**
  * Pick the visible-window radius (maxDepth) by measuring the panel:
  * the largest `d` where the full horizontal layout — both `-S` and
  * `+S` lozenges plus all visible cols — fits inside `stageWidth`
- * with at least 2rem (32px) of breathing room on each side. Below
- * that threshold, compress to the next-smaller `d`.
- *
- * Horizontal content for depth `d`:
- *   leftLozengeOuterEdge  = -d·gap - cardW/2 - lozengeGap - lozengeW
- *   rightLozengeOuterEdge = +d·gap + cardW/2 + lozengeGap + lozengeW
- *   contentWidth = 2·(d·gap + cardW/2 + lozengeGap + lozengeW)
- *                = 2·d·MS_COL_CENTER_GAP + 2·(cardW/2 + lozengeGap + lozengeW)
- * For our defaults: 400·d + 236.
- *
- * Required panel width = contentWidth + 2 · PADDING_PX.
- * Solve for max d where required ≤ stageWidth →
- *   d ≤ (stageWidth − basePadded) / step.
+ * with at least `config.padding` of breathing room on each side.
+ * Below that threshold, compress to the next-smaller `d`.
  */
-function maxDepthForWidth(stageWidth: number): number {
-  const PADDING_PX = 32; // 2rem on each side
-  const baseContent = 2 * (MS_CARD_W / 2 + MS_LOZENGE_GAP + LOZENGE_W);
-  const step = 2 * MS_COL_CENTER_GAP;
-  const usable = stageWidth - baseContent - 2 * PADDING_PX;
+export function maxDepthForWidth(
+  stageWidth: number,
+  config: LaneLayoutConfig = DEFAULT_LANE_LAYOUT_CONFIG,
+): number {
+  const colCenterGap = config.cardWidth + config.cardGap;
+  const baseContent =
+    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
+  const step = 2 * colCenterGap;
+  const usable = stageWidth - baseContent - 2 * config.padding;
   if (usable < 0) return 0;
   return Math.floor(usable / step);
 }
@@ -1037,8 +1143,20 @@ function MixedShapesLaneReactive(props: {
   laneY: number;
   stageWidth: number;
   maxDepth: number;
+  layoutConfig: LaneLayoutConfig;
+  /** Reactive timing knobs from the workshop sidebar. */
+  timing: LaneTimingConfig;
   onCardHover?: (info: HoverInfo | null) => void;
 }): JSX.Element {
+  // Width-affecting layout pulled from the reactive config prop. The
+  // four other constants (MS_CARD_H, MS_ROW_GAP, MS_PARENT_GAP,
+  // MS_LANE_PAD, MS_LANE_GAP) stay literal — they don't shift the
+  // breakpoint math.
+  const cardW = () => props.layoutConfig.cardWidth;
+  const lozW = () => props.layoutConfig.lozengeWidth;
+  const lozGap = () => props.layoutConfig.lozengeGap;
+  const colCenterGap = () =>
+    props.layoutConfig.cardWidth + props.layoutConfig.cardGap;
   // Dynamic — recomputes when stageWidth changes so the lane reflows
   // on browser resize. centerX is half the stage; lozenges anchor
   // outward from the visible-col span.
@@ -1072,24 +1190,24 @@ function MixedShapesLaneReactive(props: {
   // Lozenge x positions depend on centerX (= stageWidth/2), so they
   // reflow on resize.
   const leftLozengeX = () =>
-    centerX() - props.maxDepth * MS_COL_CENTER_GAP - MS_CARD_W / 2 -
-    MS_LOZENGE_GAP - LOZENGE_W;
+    centerX() - props.maxDepth * colCenterGap() - cardW() / 2 -
+    lozGap() - lozW();
   const rightLozengeX = () =>
-    centerX() + props.maxDepth * MS_COL_CENTER_GAP + MS_CARD_W / 2 + MS_LOZENGE_GAP;
+    centerX() + props.maxDepth * colCenterGap() + cardW() / 2 + lozGap();
 
   const greyStroke = "rgba(255,255,255,0.45)";
   const accentStroke = "var(--sui-accent, #00d4ff)";
 
   const leftLozRect = () => ({
-    x: leftLozengeX() + LOZENGE_W / 2,
+    x: leftLozengeX() + lozW() / 2,
     y: lozMidY,
-    width: LOZENGE_W,
+    width: lozW(),
     height: colBottomY - colTopY,
   });
   const rightLozRect = () => ({
-    x: rightLozengeX() + LOZENGE_W / 2,
+    x: rightLozengeX() + lozW() / 2,
     y: lozMidY,
-    width: LOZENGE_W,
+    width: lozW(),
     height: colBottomY - colTopY,
   });
 
@@ -1099,9 +1217,9 @@ function MixedShapesLaneReactive(props: {
     centerX: centerX(),
     parentRowCenterY,
     childRowCenterY,
-    cardWidth: MS_CARD_W,
+    cardWidth: cardW(),
     cardHeight: MS_CARD_H,
-    colCenterGap: MS_COL_CENTER_GAP,
+    colCenterGap: colCenterGap(),
     rowGap: MS_ROW_GAP,
   });
   const lozengeRects = (): LozengeRects => ({
@@ -1114,6 +1232,7 @@ function MixedShapesLaneReactive(props: {
       nextFrame: props.nodes,
       layoutParams: trajLayoutParams(),
       lozengeRects: lozengeRects(),
+      timing: props.timing,
     }),
   );
   // currentT starts at 1 (the trajectory is the identity — every card
@@ -1122,28 +1241,45 @@ function MixedShapesLaneReactive(props: {
   let prevFrameRef = props.nodes;
   let prevWidthRef = props.stageWidth;
   let prevMaxDepthRef = props.maxDepth;
+  let prevConfigRef = props.layoutConfig;
+  let prevTimingRef = props.timing;
   let rafHandle: number | undefined;
 
   createEffect(() => {
     const incoming = props.nodes;
     const sw = props.stageWidth;
     const md = props.maxDepth;
+    const cfg = props.layoutConfig;
+    const timing = props.timing;
     const nodesChanged = incoming !== prevFrameRef;
     const widthChanged = sw !== prevWidthRef;
     const depthChanged = md !== prevMaxDepthRef;
-    if (!nodesChanged && !widthChanged && !depthChanged) return;
-    // Layout-only changes (resize, maxDepth) should NOT replay the
-    // tick animation — snap to t=1. Only a node-change runs the rAF.
-    const layoutOnly = !nodesChanged && (widthChanged || depthChanged);
+    const configChanged = cfg !== prevConfigRef;
+    const timingChanged = timing !== prevTimingRef;
+    if (
+      !nodesChanged && !widthChanged && !depthChanged
+      && !configChanged && !timingChanged
+    ) return;
+    // Layout/timing-only changes (resize, maxDepth, config, timing
+    // knob nudge) should NOT replay the tick animation — snap to t=1.
+    // Only a node-change runs the rAF. This matches what the user
+    // wants: tuning the timing affects the NEXT animation, not the
+    // currently in-flight one.
+    const layoutOnly = !nodesChanged && (
+      widthChanged || depthChanged || configChanged || timingChanged
+    );
     const newTraj = buildLaneTrajectory({
       prevFrame: layoutOnly ? incoming : prevFrameRef,
       nextFrame: incoming,
       layoutParams: trajLayoutParams(),
       lozengeRects: lozengeRects(),
+      timing,
     });
     prevFrameRef = incoming;
     prevWidthRef = sw;
     prevMaxDepthRef = md;
+    prevConfigRef = cfg;
+    prevTimingRef = timing;
     setTraj(newTraj);
     setCurrentT(layoutOnly ? 1 : 0);
     if (rafHandle !== undefined) cancelAnimationFrame(rafHandle);
@@ -1193,16 +1329,16 @@ function MixedShapesLaneReactive(props: {
         <rect
           x={leftLozengeX()}
           y={colTopY}
-          width={LOZENGE_W}
+          width={lozW()}
           height={colBottomY - colTopY}
-          rx={LOZENGE_W / 2}
-          ry={LOZENGE_W / 2}
+          rx={lozW() / 2}
+          ry={lozW() / 2}
           fill="rgba(255,255,255,0.04)"
           stroke="rgba(255,255,255,0.4)"
           stroke-width="1"
         />
         <text
-          x={leftLozengeX() + LOZENGE_W / 2}
+          x={leftLozengeX() + lozW() / 2}
           y={lozMidY}
           text-anchor="middle"
           dominant-baseline="central"
@@ -1217,16 +1353,16 @@ function MixedShapesLaneReactive(props: {
         <rect
           x={rightLozengeX()}
           y={colTopY}
-          width={LOZENGE_W}
+          width={lozW()}
           height={colBottomY - colTopY}
-          rx={LOZENGE_W / 2}
-          ry={LOZENGE_W / 2}
+          rx={lozW() / 2}
+          ry={lozW() / 2}
           fill="rgba(255,255,255,0.04)"
           stroke="rgba(255,255,255,0.4)"
           stroke-width="1"
         />
         <text
-          x={rightLozengeX() + LOZENGE_W / 2}
+          x={rightLozengeX() + lozW() / 2}
           y={lozMidY}
           text-anchor="middle"
           dominant-baseline="central"
@@ -1313,9 +1449,9 @@ function MixedShapesLaneReactive(props: {
             <Switch>
               <Match when={mode() === "card" && rect() && task()}>
                 <TaskCard
-                  x={rect()!.x - MS_CARD_W / 2}
+                  x={rect()!.x - cardW() / 2}
                   y={rect()!.y - MS_CARD_H / 2}
-                  width={MS_CARD_W}
+                  width={cardW()}
                   height={MS_CARD_H}
                   visible={true}
                   task={task()!}
@@ -1324,9 +1460,9 @@ function MixedShapesLaneReactive(props: {
                       h
                         ? {
                             task: task()!,
-                            x: rect()!.x - MS_CARD_W / 2,
+                            x: rect()!.x - cardW() / 2,
                             y: rect()!.y - MS_CARD_H / 2,
-                            width: MS_CARD_W,
+                            width: cardW(),
                             height: MS_CARD_H,
                           }
                         : null,
@@ -1351,9 +1487,220 @@ function MixedShapesLaneReactive(props: {
 }
 
 // Pacing — tick must be ≥ the full phase sequence (slurp-in + move +
-// slurp-out = MS_PHASE_TOTAL) plus a small buffer so the next tick
-// doesn't trample an in-flight one.
-const MS_TICK_MS = MS_PHASE_TOTAL + 200;
+// arrow-settle + slurp-out) plus a small buffer so the next tick
+// doesn't trample an in-flight one. The actual interval is computed
+// reactively inside `MixedShapesRow` from the current timing config;
+// `MS_PHASE_TOTAL` remains exported by the trajectory module as the
+// pre-knob default for non-workshop callers.
+void MS_PHASE_TOTAL;
+
+/**
+ * Compact knobs + breakpoints table that lives in the left cell of
+ * the MixedShapesRow. Pure presentational — config state is owned by
+ * the row.
+ */
+const LayoutKnobsPanel: Component<{
+  config: LaneLayoutConfig;
+  onChange: (patch: Partial<LaneLayoutConfig>) => void;
+  /**
+   * Reactive timing config — slurp / move / arrowSettle knobs. Same
+   * UI pattern as the layout knobs; grouped under an "Animation"
+   * sub-heading so the two concerns stay visually distinct.
+   */
+  timing: LaneTimingConfig;
+  onTimingChange: (patch: Partial<LaneTimingConfig>) => void;
+  stageWidth: number;
+}> = (props) => {
+  const monoFont = "ui-monospace, SFMono-Regular, monospace";
+  const labelStyle: JSX.CSSProperties = {
+    display: "flex",
+    "align-items": "center",
+    gap: "4px",
+    "font-family": monoFont,
+    "font-size": "10px",
+    color: "var(--sui-text, rgba(255,255,255,0.7))",
+  };
+  const inputStyle: JSX.CSSProperties = {
+    width: "44px",
+    padding: "1px 3px",
+    "font-family": monoFont,
+    "font-size": "10px",
+    background: "rgba(0,0,0,0.25)",
+    color: "var(--sui-text, rgba(255,255,255,0.9))",
+    border: "1px solid rgba(255,255,255,0.18)",
+    "border-radius": "3px",
+  };
+  const knob = (
+    key: keyof LaneLayoutConfig,
+    label: string,
+  ): JSX.Element => (
+    <label style={labelStyle}>
+      {label}
+      <input
+        type="number"
+        style={inputStyle}
+        value={props.config[key]}
+        min={1}
+        onInput={(e) => {
+          const raw = (e.currentTarget as HTMLInputElement).value;
+          const n = Number(raw);
+          if (!Number.isFinite(n) || n <= 0) return;
+          props.onChange({ [key]: n } as Partial<LaneLayoutConfig>);
+        }}
+      />
+    </label>
+  );
+  // Timing knobs follow the same pattern as the layout knobs but pull
+  // from the timing signal. `arrowSettleMs` allows 0 (no settle window)
+  // — the other two require > 0 to avoid divide-by-zero in phase math.
+  const timingKnob = (
+    key: keyof LaneTimingConfig,
+    label: string,
+    minValue: number,
+  ): JSX.Element => (
+    <label style={labelStyle}>
+      {label}
+      <input
+        type="number"
+        style={inputStyle}
+        value={props.timing[key]}
+        min={minValue}
+        step={10}
+        onInput={(e) => {
+          const raw = (e.currentTarget as HTMLInputElement).value;
+          const n = Number(raw);
+          if (!Number.isFinite(n) || n < minValue) return;
+          props.onTimingChange({ [key]: n } as Partial<LaneTimingConfig>);
+        }}
+      />
+    </label>
+  );
+  // Active timing summary: total tick duration in ms. Recomputes
+  // reactively when any of the three timing knobs change.
+  const timingTotal = () => phasesFor(props.timing).total;
+  const activeDepth = () => maxDepthForWidth(props.stageWidth, props.config);
+  // Always show 5 rows (depths 0..4 → 1, 3, 5, 7, 9 cols) so the
+  // table doesn't reflow as the user resizes.
+  const rows = () => computeBreakpoints(props.config, 4);
+  const cellStyle: JSX.CSSProperties = {
+    padding: "2px 6px",
+    "text-align": "right",
+    "font-family": monoFont,
+    "font-size": "10px",
+    color: "var(--sui-text, rgba(255,255,255,0.75))",
+  };
+  const headerCellStyle: JSX.CSSProperties = {
+    ...cellStyle,
+    color: "rgba(255,255,255,0.45)",
+    "border-bottom": "1px solid rgba(255,255,255,0.12)",
+  };
+  return (
+    <div style={{ "margin-top": "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          "flex-wrap": "wrap",
+          "align-items": "center",
+        }}
+      >
+        {knob("cardWidth", "card")}
+        {knob("cardGap", "gap")}
+        {knob("lozengeWidth", "lozW")}
+        {knob("lozengeGap", "lozGap")}
+        {knob("padding", "pad")}
+      </div>
+      {/* ── Animation knobs ─────────────────────────────────────────
+          Tunes how long each phase of the per-tick animation runs.
+          slurpMs governs both the leave-slurp at the start of the
+          tick AND the arrive-slurp at the end; moveMs is the column
+          shift in the middle; arrowSettleMs is a new window between
+          the move and the slurp-out during which cards are at rest
+          but arrow endpoints ease toward their final attach points
+          on the card edges (instead of snapping the instant cards
+          finish moving). Set arrowSettleMs to 0 to disable that
+          window and match the pre-knob behaviour. */}
+      <div
+        style={{
+          "margin-top": "8px",
+          "font-family": monoFont,
+          "font-size": "10px",
+          color: "rgba(255,255,255,0.55)",
+          "text-transform": "uppercase",
+          "letter-spacing": "0.04em",
+        }}
+      >
+        Animation
+      </div>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          "flex-wrap": "wrap",
+          "align-items": "center",
+          "margin-top": "4px",
+        }}
+      >
+        {timingKnob("slurpMs", "slurp", 1)}
+        {timingKnob("moveMs", "move", 1)}
+        {timingKnob("arrowSettleMs", "settle", 0)}
+        <span
+          style={{
+            "font-family": monoFont,
+            "font-size": "10px",
+            color: "rgba(255,255,255,0.55)",
+          }}
+        >
+          total {timingTotal()}ms
+        </span>
+      </div>
+      <table
+        style={{
+          "margin-top": "8px",
+          "border-collapse": "collapse",
+          "font-family": monoFont,
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={headerCellStyle}>cols</th>
+            <th style={headerCellStyle}>min-width</th>
+            <th style={{ ...headerCellStyle, "text-align": "center" }}>
+              status
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={rows()}>
+            {(b) => (
+              <tr>
+                <td style={cellStyle}>{b.visibleCols}</td>
+                <td style={cellStyle}>{Math.ceil(b.minWidth)}</td>
+                <td style={{ ...cellStyle, "text-align": "center" }}>
+                  <Show when={b.depth === activeDepth()}>
+                    <span style={{ color: "var(--sui-accent, #00d4ff)" }}>
+                      ● current
+                    </span>
+                  </Show>
+                </td>
+              </tr>
+            )}
+          </For>
+        </tbody>
+      </table>
+      <div
+        style={{
+          "margin-top": "4px",
+          "font-family": monoFont,
+          "font-size": "10px",
+          color: "rgba(255,255,255,0.55)",
+        }}
+      >
+        stage width: {props.stageWidth}px
+      </div>
+    </div>
+  );
+};
 
 const MixedShapesRow: Component = () => {
   const [hovered, setHovered] = createSignal<HoverInfo | null>(null);
@@ -1362,6 +1709,20 @@ const MixedShapesRow: Component = () => {
   // (e.g., during SSR or before mount). Min width clamps so the layout
   // stays sane on very narrow viewports.
   const [stageWidth, setStageWidth] = createSignal(MS_STAGE_W);
+  // Knob-driven layout config. Defaults match today's hardcoded
+  // constants exactly so the chart looks identical at boot.
+  const [layoutConfig, setLayoutConfig] = createSignal<LaneLayoutConfig>({
+    ...DEFAULT_LANE_LAYOUT_CONFIG,
+  });
+  // Knob-driven animation timing. Defaults: pre-knob slurp/move values
+  // plus a 200ms arrow-settle window (the new "ease arrows to their
+  // final routes after cards land" behaviour the user asked for). The
+  // library's DEFAULT_TIMING uses settle=0 to preserve regression
+  // behaviour for non-workshop callers — the workshop opts in.
+  const [timing, setTiming] = createSignal<LaneTimingConfig>({
+    ...DEFAULT_TIMING,
+    arrowSettleMs: 200,
+  });
   let containerRef: HTMLDivElement | undefined;
   onMount(() => {
     if (!containerRef) return;
@@ -1474,6 +1835,14 @@ const MixedShapesRow: Component = () => {
     }
   };
 
+  // Tick interval derives reactively from the current timing config:
+  // each tick must wait at least the full trajectory duration plus a
+  // small buffer so the next tick doesn't trample an in-flight one.
+  // Tuning slurpMs / moveMs / arrowSettleMs immediately changes the
+  // pacing of the play loop on the next play() call (and on the
+  // interval restart below if play is already in progress).
+  const tickIntervalMs = () => phasesFor(timing()).total + 200;
+
   const play = () => {
     if (playing()) return;
     // If everything is already done, reset before starting so play has
@@ -1487,8 +1856,21 @@ const MixedShapesRow: Component = () => {
       if (!advanced) pause();
     };
     tick(); // immediate feedback
-    tickTimer = setInterval(tick, MS_TICK_MS);
+    tickTimer = setInterval(tick, tickIntervalMs());
   };
+
+  // If the timing knob changes while playing, restart the interval so
+  // the new total duration takes effect immediately (otherwise the
+  // setInterval cadence is locked to the value at play() time).
+  createEffect(() => {
+    const ms = tickIntervalMs();
+    if (tickTimer === undefined) return;
+    clearInterval(tickTimer);
+    tickTimer = setInterval(() => {
+      const advanced = next();
+      if (!advanced) pause();
+    }, ms);
+  });
 
   const reset = () => {
     pause();
@@ -1556,6 +1938,14 @@ const MixedShapesRow: Component = () => {
             frame {cursor() + 1}
           </span>
         </div>
+        {/* ── Knob row + breakpoints table ──────────────────────────── */}
+        <LayoutKnobsPanel
+          config={layoutConfig()}
+          onChange={(patch) => setLayoutConfig({ ...layoutConfig(), ...patch })}
+          timing={timing()}
+          onTimingChange={(patch) => setTiming({ ...timing(), ...patch })}
+          stageWidth={stageWidth()}
+        />
       </div>
       <div class="workshop-grid__cell">
         <div
@@ -1597,7 +1987,9 @@ const MixedShapesRow: Component = () => {
                   nodes={currentStates()[i()]}
                   laneY={l.laneY}
                   stageWidth={stageWidth()}
-                  maxDepth={maxDepthForWidth(stageWidth())}
+                  maxDepth={maxDepthForWidth(stageWidth(), layoutConfig())}
+                  layoutConfig={layoutConfig()}
+                  timing={timing()}
                   onCardHover={setHovered}
                 />
               )}
