@@ -142,11 +142,32 @@ export interface ToastRegionCurriedProps
   extends Omit<KobalteToastRegionProps, "children"> {
   /** Slot for `<ToastList />` (and any siblings like a dismiss-all button). */
   children?: JSX.Element;
+  /**
+   * When true, renders a "Dismiss all" button below the toast list that
+   * calls `toaster.clear()` on click. The button is shown only when the
+   * list contains at least one toast (driven by CSS `:has(li)`), so an
+   * empty region stays out of the way.
+   */
+  showDismissAll?: boolean;
 }
 
-export const ToastRegion: Component<ToastRegionCurriedProps> = (props) => (
-  <KobalteToast.Region {...props}>{props.children}</KobalteToast.Region>
-);
+export const ToastRegion: Component<ToastRegionCurriedProps> = (props) => {
+  const [local, rest] = splitProps(props, ["children", "showDismissAll"]);
+  return (
+    <KobalteToast.Region {...rest}>
+      {local.children}
+      <Show when={local.showDismissAll}>
+        <button
+          type="button"
+          class="sui-toast__dismiss-all"
+          onClick={() => kobalteToaster.clear()}
+        >
+          Dismiss all
+        </button>
+      </Show>
+    </KobalteToast.Region>
+  );
+};
 
 /**
  * Curried `ToastList` props. Widens the kobalte base props with an explicit
