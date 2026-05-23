@@ -73,6 +73,15 @@ export interface LaneTimingConfig {
    * lozenge but the arrow no longer chases the morph's leading edge.
    */
   arrowSettleMs: number;
+  /**
+   * CSS `transition: d` duration on rendered arrow paths. NOT used
+   * by the trajectory math — purely a render-layer hint, so optional.
+   * Smooths the orthogonal router's topology changes (e.g. Z-shape ↔
+   * U-shape when an obstacle threshold flips just as a card stops
+   * moving) by letting the browser interpolate path commands between
+   * successive `d` values. Defaults to 0 (legacy snap behaviour).
+   */
+  arrowPathMs?: number;
 }
 
 /**
@@ -85,6 +94,7 @@ export const DEFAULT_TIMING: LaneTimingConfig = {
   slurpMs: 600,
   moveMs: 450,
   arrowSettleMs: 0,
+  arrowPathMs: 0,
 };
 
 /** Resolved phase boundaries derived from a `LaneTimingConfig`. */

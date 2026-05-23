@@ -1421,7 +1421,15 @@ function MixedShapesLaneReactive(props: {
                 stroke-width="1.5"
                 stroke-dasharray={dashArray()}
                 marker-end="url(#ms-arrow-head)"
-                style={{ color: stroke() }}
+                style={{
+                  color: stroke(),
+                  // CSS interpolation of the path's `d` attribute so
+                  // topology changes (e.g. Z-shape ↔ U-shape detour
+                  // when an obstacle threshold flips) smooth into
+                  // each other instead of snapping. Tunable via the
+                  // `arrowPath` knob in LaneTimingConfig.
+                  transition: `d ${props.timing.arrowPathMs ?? 0}ms ease-out`,
+                }}
               />
             </Show>
           );
@@ -1644,6 +1652,7 @@ const LayoutKnobsPanel: Component<{
         {timingKnob("slurpMs", "slurp", 1)}
         {timingKnob("moveMs", "move", 1)}
         {timingKnob("arrowSettleMs", "settle", 0)}
+        {timingKnob("arrowPathMs", "path", 0)}
         <span
           style={{
             "font-family": monoFont,
@@ -1722,6 +1731,10 @@ const MixedShapesRow: Component = () => {
   const [timing, setTiming] = createSignal<LaneTimingConfig>({
     ...DEFAULT_TIMING,
     arrowSettleMs: 200,
+    // 250ms CSS transition on arrow path `d` smooths the orthogonal
+    // router's topology changes (Z↔U) so bent arrows don't snap when
+    // a card stops moving. Tunable via the "path" timing knob.
+    arrowPathMs: 250,
   });
   let containerRef: HTMLDivElement | undefined;
   onMount(() => {
