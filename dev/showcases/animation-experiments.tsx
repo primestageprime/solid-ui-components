@@ -1448,7 +1448,20 @@ function MixedShapesLaneReactive(props: {
               const goingRight = tg.x >= s.x;
               const fromOuterX = goingRight ? s.x + s.width / 2 : s.x - s.width / 2;
               const toOuterX = goingRight ? tg.x - tg.width / 2 : tg.x + tg.width / 2;
-              const channelX = (fromOuterX + toOuterX) / 2;
+              // Anchor the knee near the TARGET (15px breathing
+              // room from tgt.left) instead of at the midpoint. As
+              // src moves laterally during the animation, the
+              // vertical leg stays put near tgt — the src-side
+              // horizontal segment stretches/shrinks instead. With
+              // a midpoint knee the leg would slide laterally with
+              // src, which read as a wiggle.
+              //
+              // Clamped to stay outside the source's bbox so we
+              // don't punch back through it when src is unusually
+              // close to tgt.
+              const channelX = goingRight
+                ? Math.max(fromOuterX + 4, toOuterX - 15)
+                : Math.min(fromOuterX - 4, toOuterX + 15);
               return [
                 `M ${fromOuterX} ${s.y}`,
                 `L ${channelX} ${s.y}`,
