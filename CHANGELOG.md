@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.37.1
+
+### Fixed
+
+- **TabbedSidePanel**: `PaddedBody` now sets `min-width: 0` and `min-height: 0`. Without this, the CSS default `min-width: auto` on flex children let any descendant with intrinsic width (DAG SVG, wide tables, long words) propagate up through the panel and overflow its container. Symptom: side panel growing past its allocated flex width with horizontally clipped content. Promotes a downstream override that lived in `amygdala-ui/src/styles/sui-theme-overrides.css`.
+
 ## 0.36.0
 
 ### Added

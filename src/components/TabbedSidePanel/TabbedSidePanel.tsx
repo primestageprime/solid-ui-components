@@ -62,9 +62,15 @@ const PaddedBody: Component<{
 }> = (props) => {
   const style = (): JSX.CSSProperties => {
     const value = PADDING_TOKEN[props.padding];
+    // min-width/min-height: 0 lets PaddedBody shrink to its flex-allocated
+    // size regardless of intrinsic content width (DAG SVG, wide tables, long
+    // words). Without this, the CSS default `min-width: auto` propagates the
+    // largest descendant's natural width up through the panel, blowing it
+    // past its container.
+    const base: JSX.CSSProperties = { "min-width": "0", "min-height": "0" };
     return props.side === "right"
-      ? { "padding-left": value }
-      : { "padding-right": value };
+      ? { ...base, "padding-left": value }
+      : { ...base, "padding-right": value };
   };
   return (
     <div
