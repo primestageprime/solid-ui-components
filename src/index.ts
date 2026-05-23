@@ -64,8 +64,57 @@ export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
-export * from "./components/SwimlaneChart";
-export * from "./components/AnimatedSwimlaneChart";
+// SwimlaneChart public API: as of v0.40 the *animated* variant is the
+// public default. The underlying static implementation is still
+// re-exported as `SwimlaneChartStatic` (and via the
+// `./components/SwimlaneChart/SwimlaneChart` path) for internal
+// consumers like StatusFlowChart that need synchronous DOM. Props/types
+// are intentionally identical, so existing consumers (dside-ui's
+// MonitorSwimlane etc.) keep compiling unchanged.
+export {
+  AnimatedSwimlaneChart as SwimlaneChart,
+  createAnimatedSwimlaneChart as createSwimlaneChart,
+} from "./components/AnimatedSwimlaneChart";
+export type {
+  AnimatedSwimlaneChartProps as SwimlaneChartProps,
+  AnimatedSwimlaneChartOverrides as SwimlaneChartOverrides,
+  AnimatedSwimlaneChartDataProps as SwimlaneChartDataProps,
+} from "./components/AnimatedSwimlaneChart";
+// Static variant under a distinct public name so the surface doesn't
+// collide. Internal callers may also import directly from the folder.
+export { SwimlaneChart as SwimlaneChartStatic } from "./components/SwimlaneChart/SwimlaneChart";
+// Layout/converter/variants from the SwimlaneChart folder — these are
+// component-independent and remain part of the public surface.
+export {
+  computeSwimlaneLayout,
+  LinearFlowSwimlaneChart,
+  convertSwimlaneDagInput,
+} from "./components/SwimlaneChart";
+export type {
+  SwimlaneLayoutResult,
+  SwimlaneSummary,
+  SwimlaneOptions,
+  SwimlaneDagInput,
+  SwimlaneDagNode,
+  SwimlaneDagEdge,
+  SwimlaneDagLane,
+  SwimlaneStateMachine,
+  SwimlaneBucket,
+  ConvertedNode,
+  ConvertedNodeData,
+  ConvertedResult,
+} from "./components/SwimlaneChart";
+// Animated variant also exported under its original name for callers
+// that prefer to be explicit.
+export {
+  AnimatedSwimlaneChart,
+  createAnimatedSwimlaneChart,
+} from "./components/AnimatedSwimlaneChart";
+export type {
+  AnimatedSwimlaneChartProps,
+  AnimatedSwimlaneChartOverrides,
+  AnimatedSwimlaneChartDataProps,
+} from "./components/AnimatedSwimlaneChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";
