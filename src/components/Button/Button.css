@@ -25,6 +25,14 @@
   padding: 12px 24px;
 }
 
+/* Pill — pure shape (rounded ends). Orthogonal to color/size variants:
+   composes with `primary`, `ghost`, `sm`, `lg`, etc. The double-class
+   selector lifts specificity (0,2,0) above theme `.sui-btn` rules so
+   the rounded radius wins regardless of CSS load order. */
+.sui-btn.sui-btn--pill {
+  border-radius: 9999px;
+}
+
 /* Tone matrix — orthogonal to variant. Mirrors the accent/outline/muted
    trio used by the inline button factories in dside-ui. */
 .sui-btn--tone-accent {
@@ -42,6 +50,15 @@
   border: 1px solid var(--sui-border);
   background: transparent;
   color: var(--sui-text-muted);
+}
+
+/* Content wrapper — inherits the button's flex layout so multi-element
+   children (icons, SVGs, badges, text) align on the vertical center
+   instead of the text baseline. */
+.sui-btn__content {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
 }
 
 /* Loading state */
