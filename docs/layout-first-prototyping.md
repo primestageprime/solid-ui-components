@@ -81,12 +81,26 @@ feature" and not the easiest one to reach. Once that risky feature is proven, th
 remaining features on the page (filters, sort, drag-and-drop, polish, empty
 states, etc.) are low-risk, well-trodden UI patterns — **defer them**.
 
-The deferral is app-wide, not just page-local: hold off on the low-risk features
-of *every* page until **all** pages in the app-level MVP have had their risky /
-impactful feature proven out. The point is to **mitigate risk and let the
-hard features inform the wider application architecture** — surfacing the real
-data shapes and cross-page constraints early — rather than getting bogged down
-polishing one page with patterns we already know how to build.
+**Joseki vs. non-joseki.** Borrowing the Go term: a *joseki* is a well-understood,
+near-deterministic sequence — we already know how to complete it and there's no
+hidden gotcha that could sink the project. The well-trodden features above are
+joseki; we don't need to finish them now precisely *because* their completion is
+already known. The risky/impactful feature is **non-joseki** — its outcome is
+genuinely uncertain. So the rule is: **build the non-joseki parts up-front and
+leave the joseki parts for the end.** Proving a non-joseki feature retires real
+risk; finishing a joseki one only burns down work we could have done at any time.
+
+As we identify joseki and work out their solutions, **note them** — capture the
+feature and the known approach. Because they're deterministic and gotcha-free,
+they're exactly the work we can **dispatch to background LLM agents** to complete
+without close human supervision, freeing humans to stay on the non-joseki risk.
+
+The deferral is app-wide, not just page-local: hold off on the joseki (low-risk)
+features of *every* page until **all** pages in the app-level MVP have had their
+non-joseki (risky / impactful) feature proven out. The point is to **mitigate risk
+and let the hard features inform the wider application architecture** — surfacing
+the real data shapes and cross-page constraints early — rather than getting bogged
+down polishing one page with patterns we already know how to build.
 
 - Use the **real components** where they already exist (e.g. the actual chart the
   product uses), fed by stub data — not a placeholder box.
