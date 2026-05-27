@@ -1,0 +1,224 @@
+/* ── CashflowChart ── */
+
+.rc-cashflow-container {
+  position: relative;
+  width: 100%;
+  /* Fill the height the layout box allots us. min-height:0 lets the container
+     shrink inside a flex parent (so it tracks the box instead of forcing its
+     own intrinsic height); the JS floor keeps the chart legible when small. */
+  height: 100%;
+  min-height: 0;
+}
+
+.rc-cashflow {
+  display: block;
+  /* Fill the container on BOTH axes. The viewBox is measured to the container's
+     real pixel box, so xMidYMid meet maps it 1:1 — no horizontal scroll, no
+     vertical overflow. */
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Axis & grid ── */
+
+.rc-cashflow__axis {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.rc-cashflow__tick {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.rc-cashflow__grid {
+  stroke: var(--sui-border);
+  stroke-width: 0.5;
+  stroke-dasharray: 4 4;
+}
+
+/* ── Bars (shared) ── */
+
+.rc-cashflow__bar {
+  transition: opacity 0.15s;
+}
+
+/* ── Revenue bars ── */
+
+.rc-cashflow__bar--rev-recurring {
+  fill: var(--sui-success);
+  opacity: 0.85;
+}
+
+.rc-cashflow__bar--rev-recurring:hover {
+  opacity: 1;
+}
+
+.rc-cashflow__bar--rev-hourly {
+  fill: var(--sui-success);
+  opacity: 0.45;
+}
+
+.rc-cashflow__bar--rev-hourly:hover {
+  opacity: 0.65;
+}
+
+.rc-cashflow__bar--rev-onetime {
+  fill: var(--sui-success);
+  opacity: 0.25;
+}
+
+.rc-cashflow__bar--rev-onetime:hover {
+  opacity: 0.4;
+}
+
+.rc-cashflow__bar--rev-project {
+  fill: #1a7a3a;
+  opacity: 0.85;
+}
+
+.rc-cashflow__bar--rev-project:hover {
+  opacity: 1;
+}
+
+/* ── Expense bars ── */
+
+.rc-cashflow__bar--exp-recurring {
+  fill: var(--sui-danger);
+  opacity: 0.55;
+}
+
+.rc-cashflow__bar--exp-recurring:hover {
+  opacity: 0.75;
+}
+
+.rc-cashflow__bar--exp-onetime {
+  fill: #cc2222;
+  opacity: 0.9;
+}
+
+.rc-cashflow__bar--exp-onetime:hover {
+  opacity: 1;
+}
+
+/* ── Projected bars (weekly mode) ── */
+
+.rc-cashflow__bar--projected {
+  opacity: 0.45;
+}
+
+/* ── Coffers line ── */
+
+.rc-cashflow__coffers {
+  stroke: var(--sui-accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.rc-cashflow__coffers--dashed {
+  stroke-dasharray: 6 4;
+}
+
+/* ── Now marker ── */
+
+.rc-cashflow__now {
+  stroke: var(--sui-warning);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+/* ── Labels ── */
+
+.rc-cashflow__label-x,
+.rc-cashflow__label-y {
+  font-size: 11px;
+  fill: var(--sui-text-muted);
+  font-family: inherit;
+}
+
+/* ── Bankruptcy annotation ── */
+
+.rc-cashflow__bankruptcy {
+  font-size: 11px;
+  fill: var(--sui-danger);
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.rc-cashflow__bankruptcy-marker {
+  fill: var(--sui-danger);
+}
+
+/* ── Coffers hover indicator ── */
+
+.rc-cashflow__coffers-dot {
+  fill: var(--sui-accent);
+  stroke: var(--sui-bg);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.rc-cashflow__coffers-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--sui-accent);
+  font-family: inherit;
+  pointer-events: none;
+}
+
+/* ── Popover ── */
+
+.rc-cashflow__popover {
+  position: absolute;
+  z-index: 10;
+  min-width: 200px;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-md, 6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.rc-cashflow__popover-header {
+  color: var(--sui-text-muted);
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.rc-cashflow__popover-total {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--sui-text);
+  margin-bottom: 8px;
+}
+
+.rc-cashflow__popover-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--sui-border);
+  padding-top: 6px;
+}
+
+.rc-cashflow__popover-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
+}
+
+.rc-cashflow__popover-name {
+  color: var(--sui-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-cashflow__popover-amount {
+  color: var(--sui-text);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
