@@ -5,6 +5,7 @@ import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Sandbox } from "./sandbox";
+import { LayoutsGallery } from "./layouts-gallery";
 import { TagPill, type PillStats } from "./tag-pill";
 
 // Atomic
@@ -379,6 +380,15 @@ const App: Component = () => {
           Workshop
         </button>
 
+        <button
+          type="button"
+          class="workshop-link"
+          onClick={() => { location.hash = "#/layouts"; }}
+          title="Gallery of saved default layouts"
+        >
+          Layouts →
+        </button>
+
         <div class="showcase__tags">
           <For each={TAG_CATEGORIES}>
             {(cat) => (
@@ -461,7 +471,13 @@ const Root: Component = () => {
     window.addEventListener("hashchange", onHash);
     onCleanup(() => window.removeEventListener("hashchange", onHash));
   });
-  return <Show when={route().startsWith("#/sandbox")} fallback={<App />}><Sandbox /></Show>;
+  return (
+    <Show when={route().startsWith("#/layouts")} fallback={
+      <Show when={route().startsWith("#/sandbox")} fallback={<App />}><Sandbox /></Show>
+    }>
+      <LayoutsGallery />
+    </Show>
+  );
 };
 
 render(() => <Root />, document.getElementById("root")!);
