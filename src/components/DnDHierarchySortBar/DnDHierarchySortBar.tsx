@@ -1,5 +1,5 @@
 // ============================================
-// DragBar — Atomic (Depth 1).
+// DnDHierarchySortBar — Atomic (Depth 1).
 // Horizontal row of draggable "dimension" pills the user drag-reorders to
 // reorder a tag hierarchy. Controlled: caller owns the order via `items` +
 // `onReorder`. Uses native HTML drag-and-drop (same mechanism as dside's
@@ -7,26 +7,26 @@
 //
 // KEY DIFFERENCE from PivotPills (PivotTreemap/PivotPills.tsx):
 //   - PivotPills: fixed 3-slot system (outer / inner / unused) with SWAP semantics.
-//   - DragBar: N-item general list with INSERT semantics — dragged pill
+//   - DnDHierarchySortBar: N-item general list with INSERT semantics — dragged pill
 //     moves to the target index, shifting others. Matches dside's reorder().
 // ============================================
 
 import { Component, createSignal, For } from "solid-js";
-import "./DragBar.css";
+import "./DnDHierarchySortBar.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
 /** A single reorderable dimension pill. */
-export interface DragBarItem {
+export interface DnDHierarchySortBarItem {
   /** Stable key used in the reordered-ids callback. */
   id: string;
   /** Display label shown inside the pill. */
   label: string;
 }
 
-export interface DragBarProps {
+export interface DnDHierarchySortBarProps {
   /** Current ordered list of dimension items. */
-  items: DragBarItem[];
+  items: DnDHierarchySortBarItem[];
   /**
    * Called with the new ordered array of ids after a successful drop.
    * The caller is responsible for updating `items` in response.
@@ -52,7 +52,7 @@ const insertReorder = (ids: string[], from: number, to: number): string[] => {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-export const DragBar: Component<DragBarProps> = (props) => {
+export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) => {
   const [dragFrom, setDragFrom] = createSignal<number | null>(null);
   const [dragOver, setDragOver] = createSignal<number | null>(null);
 
@@ -72,8 +72,8 @@ export const DragBar: Component<DragBarProps> = (props) => {
   };
 
   return (
-    <div class="sui-drag-bar" role="list" aria-label={label()}>
-      <span class="sui-drag-bar__label" aria-hidden="true">
+    <div class="sui-dnd-hierarchy-sort-bar" role="list" aria-label={label()}>
+      <span class="sui-dnd-hierarchy-sort-bar__label" aria-hidden="true">
         {label()}
       </span>
       <For each={props.items}>
@@ -84,7 +84,7 @@ export const DragBar: Component<DragBarProps> = (props) => {
 
           return (
             <span
-              class={`sui-drag-bar__pill${isSource() ? " sui-drag-bar__pill--dragging" : ""}${isTarget() ? " sui-drag-bar__pill--drag-over" : ""}`}
+              class={`sui-dnd-hierarchy-sort-bar__pill${isSource() ? " sui-dnd-hierarchy-sort-bar__pill--dragging" : ""}${isTarget() ? " sui-dnd-hierarchy-sort-bar__pill--drag-over" : ""}`}
               draggable={true}
               role="listitem"
               aria-label={item.label}
@@ -111,7 +111,7 @@ export const DragBar: Component<DragBarProps> = (props) => {
                 handleDrop(idx());
               }}
             >
-              <span class="sui-drag-bar__grip" aria-hidden="true">
+              <span class="sui-dnd-hierarchy-sort-bar__grip" aria-hidden="true">
                 ⋮⋮
               </span>
               {item.label}

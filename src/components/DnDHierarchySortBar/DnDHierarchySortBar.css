@@ -1,8 +1,8 @@
 /* ============================================
-   DragBar — Atomic (Depth 1). Drag-to-reorder pill row.
+   DnDHierarchySortBar — Atomic (Depth 1). Drag-to-reorder pill row.
    ============================================ */
 
-.sui-drag-bar {
+.sui-dnd-hierarchy-sort-bar {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -11,14 +11,14 @@
   font-size: 12px;
 }
 
-.sui-drag-bar__label {
+.sui-dnd-hierarchy-sort-bar__label {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sui-text-muted);
 }
 
-.sui-drag-bar__pill {
+.sui-dnd-hierarchy-sort-bar__pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -37,17 +37,17 @@
     background 0.12s ease;
 }
 
-.sui-drag-bar__pill:hover {
+.sui-dnd-hierarchy-sort-bar__pill:hover {
   border-color: var(--sui-border-bright, var(--sui-border));
   background: var(--sui-bg-elevated);
 }
 
-.sui-drag-bar__pill--dragging {
+.sui-dnd-hierarchy-sort-bar__pill--dragging {
   opacity: 0.4;
   cursor: grabbing;
 }
 
-.sui-drag-bar__pill--drag-over {
+.sui-dnd-hierarchy-sort-bar__pill--drag-over {
   border-color: var(--sui-accent, #00a8cc);
   background: color-mix(
     in srgb,
@@ -56,7 +56,7 @@
   );
 }
 
-.sui-drag-bar__grip {
+.sui-dnd-hierarchy-sort-bar__grip {
   opacity: 0.45;
   font-size: 10px;
   line-height: 1;
