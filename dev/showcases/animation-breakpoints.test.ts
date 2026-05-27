@@ -3,7 +3,7 @@ import {
   computeBreakpoints,
   maxDepthForWidth,
   type LaneLayoutConfig,
-} from "./animation-experiments";
+} from "../../src/internal/animation/breakpoints";
 
 // Default config matches today's hardcoded constants (the chart should
 // behave identically at boot under the refactor).

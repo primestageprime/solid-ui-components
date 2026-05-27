@@ -29,6 +29,13 @@ import {
   advanceChildren as advanceChildrenLib,
   isAllDone,
 } from "./workshop-layout";
+import {
+  computeBreakpoints,
+  maxDepthForWidth,
+  DEFAULT_LANE_LAYOUT_CONFIG,
+  type LaneLayoutConfig,
+  type Breakpoint,
+} from "../../src/internal/animation/breakpoints";
 
 interface Experiment {
   /** Short slug, used in the heading and as a stable id. */
@@ -990,98 +997,6 @@ const MS_LOZENGE_GAP = 32;
 // row picks a wider value when there's more horizontal room.
 const MS_MAX_DEPTH = 1;
 
-/**
- * Pure layout-config shape: just the FOUR horizontal-fit knobs plus
- * the outer padding. Vertical constants (row gap, lane pad, etc.) are
- * NOT in here — they don't affect breakpoint math.
- */
-export interface LaneLayoutConfig {
-  /** Card width (currently MS_CARD_W = 140). */
-  cardWidth: number;
-  /** Gap between adjacent card EDGES (currently MS_COL_GAP = 60). */
-  cardGap: number;
-  /** Lozenge bar width (currently LOZENGE_W = 16). */
-  lozengeWidth: number;
-  /** Gap between outer card and lozenge (currently MS_LOZENGE_GAP = 32). */
-  lozengeGap: number;
-  /** Outer padding each side of the stage (currently 32 = 2rem). */
-  padding: number;
-}
-
-export interface Breakpoint {
-  /** 0, 1, 2, … */
-  depth: number;
-  /** 2·depth + 1 → 1, 3, 5, 7, 9 … */
-  visibleCols: number;
-  /** Smallest stageWidth where this depth fits with the configured padding. */
-  minWidth: number;
-}
-
-/**
- * Default config used by the workshop chart at boot. `cardWidth` is
- * deliberately wider than the legacy MS_CARD_W (140) — the user wants
- * the default card to be 250 so the workshop reflects the production
- * sizing target. `MS_CARD_W` is no longer the source of truth for
- * cards in `MixedShapesLaneReactive` (the lane reads `cardWidth` off
- * the reactive `layoutConfig` prop), so the rendered card and the
- * breakpoint math agree at this default.
- *
- * Note: the legacy slurp / dep / chain demos elsewhere in this file
- * still use `NODE_W = 140` literally — those panels are standalone
- * effect experiments and intentionally stay at their hand-tuned
- * geometry. Only the `MixedShapesRow` panel consumes this default.
- */
-const DEFAULT_LANE_LAYOUT_CONFIG: LaneLayoutConfig = {
-  cardWidth: 250,
-  cardGap: MS_COL_GAP,
-  lozengeWidth: LOZENGE_W,
-  lozengeGap: MS_LOZENGE_GAP,
-  padding: 32,
-};
-
-/**
- * Geometry for the breakpoint math:
- *   colCenterGap = cardWidth + cardGap
- *   baseContent  = 2 * (cardWidth/2 + lozengeGap + lozengeWidth)
- *   minWidth(d)  = baseContent + 2 * d * colCenterGap + 2 * padding
- */
-export function computeBreakpoints(
-  config: LaneLayoutConfig,
-  maxDepth: number,
-): Breakpoint[] {
-  const colCenterGap = config.cardWidth + config.cardGap;
-  const baseContent =
-    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
-  const rows: Breakpoint[] = [];
-  for (let d = 0; d <= maxDepth; d++) {
-    rows.push({
-      depth: d,
-      visibleCols: 2 * d + 1,
-      minWidth: baseContent + 2 * d * colCenterGap + 2 * config.padding,
-    });
-  }
-  return rows;
-}
-
-/**
- * Pick the visible-window radius (maxDepth) by measuring the panel:
- * the largest `d` where the full horizontal layout — both `-S` and
- * `+S` lozenges plus all visible cols — fits inside `stageWidth`
- * with at least `config.padding` of breathing room on each side.
- * Below that threshold, compress to the next-smaller `d`.
- */
-export function maxDepthForWidth(
-  stageWidth: number,
-  config: LaneLayoutConfig = DEFAULT_LANE_LAYOUT_CONFIG,
-): number {
-  const colCenterGap = config.cardWidth + config.cardGap;
-  const baseContent =
-    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
-  const step = 2 * colCenterGap;
-  const usable = stageWidth - baseContent - 2 * config.padding;
-  if (usable < 0) return 0;
-  return Math.floor(usable / step);
-}
 
 /**
  * Map a ChartChild + parent spec into a StatusFlowNode[] (the format
