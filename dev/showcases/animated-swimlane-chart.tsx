@@ -16,8 +16,12 @@ const ProjectFlow = createAnimatedSwimlaneChart({});
 // Multi-lane fixture exercising the full visual vocabulary:
 //   Lane A (deck build)   — long linear chain; dependency arrows that
 //                           ease and dash-fade as upstream tasks finish.
-//   Lane B (roof repair)  — second chain whose ticks interleave with A
-//                           so multiple lanes are mid-animation at once.
+//   Lane B (roof repair)  — fan-in: parallel prep steps converge into
+//                           a single task, and a later step has two
+//                           independent dependencies (mirrors the
+//                           workshop's MS_PARENT_B_CHILDREN pattern
+//                           where b4 depends on [b1, b2] and b6 on
+//                           [b3, b5]).
 //   Lane C (garden)       — long chain; nodes spill into the lozenges
 //                           on narrow viewports so you can see the
 //                           count badges roll up/down.
@@ -33,13 +37,15 @@ const INITIAL: StatusFlowNode[] = [
   { id: "deckSand", title: "Sand the surface", status: "TODO", parentId: "deckP", dependsOn: ["deckScrew"] },
   { id: "deckStain", title: "Stain the deck", status: "TODO", parentId: "deckP", dependsOn: ["deckSand"] },
 
-  // Lane B — roof repair
+  // Lane B — roof repair (fan-in: roofNail depends on [roofTarp, roofCut];
+  // roofSeal depends on [roofNail, roofInspect])
   { id: "roofP", title: "Patch the roof", status: "TODO" },
   { id: "roofClear", title: "Clear the gutters", status: "TODO", parentId: "roofP" },
-  { id: "roofTarp", title: "Lay down the tarp", status: "TODO", parentId: "roofP", dependsOn: ["roofClear"] },
-  { id: "roofCut", title: "Cut replacement shingles", status: "TODO", parentId: "roofP", dependsOn: ["roofTarp"] },
-  { id: "roofNail", title: "Nail down shingles", status: "TODO", parentId: "roofP", dependsOn: ["roofCut"] },
-  { id: "roofSeal", title: "Seal the seams", status: "TODO", parentId: "roofP", dependsOn: ["roofNail"] },
+  { id: "roofTarp", title: "Lay down the tarp", status: "TODO", parentId: "roofP" },
+  { id: "roofCut", title: "Cut replacement shingles", status: "TODO", parentId: "roofP" },
+  { id: "roofNail", title: "Nail down shingles", status: "TODO", parentId: "roofP", dependsOn: ["roofTarp", "roofCut"] },
+  { id: "roofInspect", title: "Inspector signs off", status: "TODO", parentId: "roofP", dependsOn: ["roofNail"] },
+  { id: "roofSeal", title: "Seal the seams", status: "TODO", parentId: "roofP", dependsOn: ["roofNail", "roofInspect"] },
 
   // Lane C — garden (long, spills into lozenges)
   { id: "gardenP", title: "Plant the garden", status: "TODO" },
