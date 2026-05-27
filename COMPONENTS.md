@@ -745,5 +745,29 @@ The renderers family is a set of small, composable components for displaying fie
     />
     ```
 
+## DnDHierarchySortBar
+- **DnDHierarchySortBar** — Atomic (Depth 1). Owns `DnDHierarchySortBar.css`, no component imports (raw elements + native HTML drag-and-drop events). A controlled horizontal row of draggable "dimension" pills for reordering a tag hierarchy. Uses INSERT semantics: the dragged pill moves to the target index and the others shift — matching dside's `reorder()`. **Distinct from PivotPills**: PivotPills has a fixed 3-slot SWAP system; this is an N-item general list with INSERT semantics. Key props: `items` (`DnDHierarchySortBarItem[]` — ordered list of `{id: string; label: string}` pairs), `onReorder` (`(nextOrderedIds: string[]) => void` — called after a successful drop with the new id order; caller updates `items` in response), `label?` (`string` — label text shown before the pills; defaults to `"nest by"`). Exported types: `DnDHierarchySortBarProps`, `DnDHierarchySortBarItem`. Use for: tag-hierarchy nest-order controls, dimension ordering in pivot/aggregation UIs.
+  - **No curried variant — intentional.** Every prop is data or a callback (`items` / `onReorder` / `label`); there are no presentational props to freeze, so a factory would add nothing. The base component is already zero-config at the call site. This mirrors the BottomSheet decision: see STYLE_GUIDE.md "Variant Surface: keep it minimal".
+  - Example:
+    ```tsx
+    import { DnDHierarchySortBar, DnDHierarchySortBarItem } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [items, setItems] = createSignal<DnDHierarchySortBarItem[]>([
+      { id: "region", label: "Region" },
+      { id: "product", label: "Product" },
+      { id: "quarter", label: "Quarter" },
+    ]);
+
+    const handleReorder = (nextIds: string[]) => {
+      const lookup = new Map(items().map((item) => [item.id, item]));
+      setItems(nextIds.flatMap((id) => { const item = lookup.get(id); return item ? [item] : []; }));
+    };
+
+    <DnDHierarchySortBar items={items()} onReorder={handleReorder} />
+    // With custom label:
+    <DnDHierarchySortBar items={items()} onReorder={handleReorder} label="group by" />
+    ```
+
 ## TitledTimeRangeHeader
 - **TitledTimeRangeHeader** — Atomic Primitive (Depth 1). Owns `TitledTimeRangeHeader.css`; no library-component imports — the date formatting comes from the pure `formatDateTimeRange` helper. Title + optional badge + ISO date range + duration + optional asset chip + optional action slot, optionally wrapped in a link. Key props: `title`, `start`, `end`, `assetLabel`, `badge`, `action`, `href`. The `start` / `end` shape matches the sibling `DateTimeRange` Composite (both feed `formatDateTimeRange`). Use for: detail-page and list-item headers for titled records with a time range — sessions, runs, calls, jobs, events.

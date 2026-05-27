@@ -140,6 +140,7 @@ export * from "./components/WeekCalendar";
 export * from "./components/ActionRow";
 export * from "./components/AssigneeChips";
 export * from "./components/CashflowChart";
+export * from "./components/DnDHierarchySortBar";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

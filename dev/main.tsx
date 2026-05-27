@@ -11,6 +11,7 @@ import { TagPill, type PillStats } from "./tag-pill";
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
 import { ButtonShowcase } from "./showcases/button";
+import { DnDHierarchySortBarShowcase } from "./showcases/dnd-hierarchy-sort-bar";
 import { FabShowcase } from "./showcases/fab";
 import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
@@ -123,6 +124,7 @@ const items: Item[] = [
   { id: "workshop", label: "Workshop", component: WorkshopShowcase, tags: ["workshop"] },
   { id: "base-table", label: "BaseTable", component: BaseTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "button", label: "Button", component: ButtonShowcase, tags: ["depth:1", "form"] },
+  { id: "dnd-hierarchy-sort-bar", label: "DnDHierarchySortBar", component: DnDHierarchySortBarShowcase, tags: ["depth:1", "form"] },
   { id: "fab", label: "Fab", component: FabShowcase, tags: ["depth:2", "form"] },
   { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase, tags: ["depth:1", "form"] },
   { id: "candlestick-renderer", label: "CandlestickRenderer", component: CandlestickRendererShowcase, tags: ["depth:1", "chart", "data"] },
