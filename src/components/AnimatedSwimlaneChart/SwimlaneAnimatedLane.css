@@ -1,2 +1,94 @@
 /* src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.css */
-/* Populated in Task 4 alongside SwimlaneAnimatedLane.tsx. */
+.sui-asc__lane-bg {
+  fill: rgba(255, 255, 255, 0.02);
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.sui-asc__lozenge {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1;
+}
+
+.sui-asc__lozenge-count {
+  fill: rgba(255, 255, 255, 0.55);
+  font-size: 9px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.sui-asc__morph {
+  fill: var(--sui-surface, rgba(0, 0, 0, 0.2));
+  stroke: var(--sui-accent, #00d4ff);
+  stroke-width: 1;
+}
+.sui-asc__morph[data-status="DONE"] {
+  stroke: var(--sui-success, #4ade80);
+}
+.sui-asc__morph[data-status="TODO"] {
+  stroke: rgba(255, 255, 255, 0.45);
+}
+
+.sui-asc__card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--sui-surface, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--sui-accent, #00d4ff);
+  box-sizing: border-box;
+}
+.sui-asc__card[data-status="DONE"] {
+  border-color: var(--sui-success, #4ade80);
+}
+.sui-asc__card[data-status="TODO"] {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+.sui-asc__card[data-parent] {
+  background: rgba(0, 0, 0, 0.35);
+}
+.sui-asc__card-status {
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--sui-accent, #00d4ff);
+  margin-bottom: 4px;
+}
+.sui-asc__card-title {
+  font-size: 12px;
+  color: var(--sui-text, #e6ecf5);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.sui-asc__card-subtitle {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+.sui-asc__popover-host {
+  pointer-events: none;
+}
+.sui-asc__popover {
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--sui-text, #e6ecf5);
+}
+.sui-asc__popover-status {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: var(--sui-accent, #00d4ff);
+  margin-bottom: 4px;
+}
+.sui-asc__popover-subtitle {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.55);
+}
