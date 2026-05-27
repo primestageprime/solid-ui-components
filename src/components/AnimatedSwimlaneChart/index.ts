@@ -1,3 +1,4 @@
+// src/components/AnimatedSwimlaneChart/index.ts
 export {
   AnimatedSwimlaneChart,
   createAnimatedSwimlaneChart,
@@ -7,3 +8,4 @@ export type {
   AnimatedSwimlaneChartOverrides,
   AnimatedSwimlaneChartDataProps,
 } from "./AnimatedSwimlaneChart";
+export type { RenderNodeContext } from "./defaults";
