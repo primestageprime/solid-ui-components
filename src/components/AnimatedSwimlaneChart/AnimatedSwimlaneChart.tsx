@@ -4,7 +4,7 @@ import {
   createSignal,
   onCleanup,
   onMount,
-  For,
+  Index,
   mergeProps,
   type Component,
   type JSX,
@@ -197,12 +197,18 @@ export const AnimatedSwimlaneChart: Component<AnimatedSwimlaneChartProps> = (
         viewBox={`0 0 ${stageWidth()} ${lanesWithY().totalH}`}
         style={{ display: "block", overflow: "visible" }}
       >
-        <For each={lanesWithY().items}>
+        {/* Index, not For: lanesWithY rebuilds its items array on every
+            `nodes` change, so a For would re-mount every lane on every
+            tick and discard the per-lane animation state. Index keys by
+            position and forwards the new item via a reactive accessor,
+            so SwimlaneAnimatedLane stays mounted and its createEffect
+            sees `nodes` change → animation runs. */}
+        <Index each={lanesWithY().items}>
           {(item) => (
             <SwimlaneAnimatedLane
-              spec={item.spec}
-              nodes={item.group.nodes}
-              laneY={item.laneY}
+              spec={item().spec}
+              nodes={item().group.nodes}
+              laneY={item().laneY}
               stageWidth={stageWidth()}
               maxDepth={effectiveMaxDepth()}
               layoutConfig={layoutConfig()}
@@ -216,7 +222,7 @@ export const AnimatedSwimlaneChart: Component<AnimatedSwimlaneChartProps> = (
               onCardClick={props.onNodeClick}
             />
           )}
-        </For>
+        </Index>
       </svg>
     </div>
   );
