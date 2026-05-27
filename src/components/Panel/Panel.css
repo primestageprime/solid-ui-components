@@ -12,6 +12,21 @@
 .sui-panel--md { padding: 16px; }
 .sui-panel--lg { padding: 24px; }
 
+/* Fill — panel grows to its flex parent's height and lays out as a column so the
+   content region takes the space left after the (optional) title. Lets a
+   flexible child such as a container-sized chart fill the panel vertically
+   instead of forcing its own intrinsic height. */
+.sui-panel--fill {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sui-panel--fill .sui-panel__content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 /* Panel header */
 .sui-panel__header {
   display: flex;

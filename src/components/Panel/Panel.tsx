@@ -20,6 +20,13 @@ export interface PanelProps extends JSX.HTMLAttributes<HTMLDivElement> {
   glow?: "none" | "subtle" | "medium" | "strong";
   /** Show edge accents */
   edgeAccents?: boolean;
+  /**
+   * Fill the parent's height and lay children out as a flex column, with the
+   * content region growing to take the space left after the optional title.
+   * Use when a panel sits in a flex/proportional slot and must hand its full
+   * remaining height to a flexible child (e.g. a container-sized chart).
+   */
+  fill?: boolean;
 }
 
 export const Panel: Component<PanelProps> = (props) => {
@@ -30,6 +37,7 @@ export const Panel: Component<PanelProps> = (props) => {
     "size",
     "glow",
     "edgeAccents",
+    "fill",
     "class",
     "children",
   ]);
@@ -41,6 +49,7 @@ export const Panel: Component<PanelProps> = (props) => {
     if (local.size) classList.push(`sui-panel--${local.size}`);
     if (local.glow && local.glow !== "none") classList.push(`sui-panel--glow-${local.glow}`);
     if (local.edgeAccents) classList.push("sui-panel--edge-accents");
+    if (local.fill) classList.push("sui-panel--fill");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -58,7 +67,11 @@ export const Panel: Component<PanelProps> = (props) => {
           <h3 class="sui-panel__title">{local.title}</h3>
         </div>
       </Show>
-      {local.children}
+      <Show when={local.fill} fallback={local.children}>
+        {/* Filling panels wrap content in a growing region so a flexible child
+            (e.g. a container-sized chart) takes the height left after the title. */}
+        <div class="sui-panel__content">{local.children}</div>
+      </Show>
     </div>
   );
 };
