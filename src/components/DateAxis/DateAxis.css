@@ -1,0 +1,163 @@
+/* ============================================
+   DateAxis — Atomic (Depth 1).
+   Freestanding horizontal day-cell ribbon.
+   ============================================ */
+
+/* Scroll container — fixed height, hides overflow horizontally. The inner
+   track is flex so cells tile in a single row regardless of range length. */
+.sui-date-axis {
+  --sui-date-axis-cell-width: 40px;
+  --sui-date-axis-height: 32px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: var(--sui-date-axis-height);
+  /* Thin but visible scrollbar — avoids jumping layout on hover-show systems. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sui-border) transparent;
+  font-family: var(--sui-font-family, inherit);
+}
+
+.sui-date-axis::-webkit-scrollbar {
+  height: 4px;
+}
+
+.sui-date-axis::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sui-date-axis::-webkit-scrollbar-thumb {
+  background: var(--sui-border);
+  border-radius: 2px;
+}
+
+/* Track — single flex row; min-width keeps cells from collapsing when the
+   container is narrower than the full range. */
+.sui-date-axis__track {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-width: max-content;
+}
+
+/* ── Cell ─────────────────────────────────────────────────────────── */
+
+.sui-date-axis__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--sui-date-axis-cell-width);
+  flex: 0 0 var(--sui-date-axis-cell-width);
+  height: 100%;
+  border-right: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+  box-sizing: border-box;
+  gap: 2px;
+}
+
+.sui-date-axis__cell:first-child {
+  border-left: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+}
+
+/* ── Label ────────────────────────────────────────────────────────── */
+
+.sui-date-axis__label {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--sui-text-muted, rgba(255, 255, 255, 0.45));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(var(--sui-date-axis-cell-width) - 4px);
+  text-align: center;
+}
+
+/* Month label — a small uppercase month name shown above the day number on the
+   first and last day of each month. Always rendered (empty on other days) so
+   the day numbers stay vertically aligned across the whole ribbon. */
+.sui-date-axis__month {
+  display: block;
+  height: 9px;
+  line-height: 9px;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--sui-text-secondary, rgba(255, 255, 255, 0.65));
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+  max-width: calc(var(--sui-date-axis-cell-width) - 2px);
+}
+
+/* ── Today cell ───────────────────────────────────────────────────── */
+
+.sui-date-axis__cell--today {
+  background: color-mix(
+    in srgb,
+    var(--sui-accent, #00a8cc) 14%,
+    transparent
+  );
+  border-right-color: var(--sui-accent, #00a8cc);
+  border-left-color: var(--sui-accent, #00a8cc);
+}
+
+/* If the today cell also starts a month, override the left border explicitly. */
+.sui-date-axis__cell--today:first-child {
+  border-left-color: var(--sui-accent, #00a8cc);
+}
+
+.sui-date-axis__cell--today .sui-date-axis__label {
+  color: var(--sui-accent, #00a8cc);
+  font-weight: 600;
+}
+
+/* Pip — small dot below the label anchors the "today" marker visually. */
+.sui-date-axis__today-pip {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--sui-accent, #00a8cc);
+  flex-shrink: 0;
+}
+
+/* ── Selected cell (linked-view position) ─────────────────────────── */
+/* Distinct from `today`: a solid accent underline bar + brighter label,
+   marking where a linked view (e.g. a graph) is currently scrubbed to. */
+.sui-date-axis__cell--selected {
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 22%, transparent);
+}
+
+.sui-date-axis__cell--selected::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--sui-accent, #00a8cc);
+}
+
+.sui-date-axis__cell--selected .sui-date-axis__label {
+  color: var(--sui-accent, #00a8cc);
+  font-weight: 600;
+}
+
+/* ── Clickable cells ──────────────────────────────────────────────── */
+/* Applied only when `onDayClick` is supplied. */
+.sui-date-axis__cell--clickable {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.sui-date-axis__cell--clickable:hover {
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 8%, transparent);
+}
+
+.sui-date-axis__cell--clickable:focus-visible {
+  outline: 2px solid var(--sui-accent, #00a8cc);
+  outline-offset: -2px;
+}
