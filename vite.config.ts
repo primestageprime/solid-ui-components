@@ -3,6 +3,7 @@ import solidPlugin from "vite-plugin-solid";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
 import { mkdirSync, readdirSync, copyFileSync } from "fs";
+import devtools from "solid-devtools/vite";
 
 function copyThemes(): Plugin {
   return {
@@ -59,12 +60,17 @@ const CLIENT_ROLLUP_EXTERNALS: (string | RegExp)[] = [
 const SERVER_ROLLUP_EXTERNALS: (string | RegExp)[] = [...BASE_EXTERNALS];
 const SSR_EXTERNALS: string[] = [...BASE_EXTERNALS];
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const isDev = mode === "development";
+  const isServe = command === "serve";
   const isServerBuild = !isDev && RESOLVED_TARGET === "server";
 
   return {
     plugins: [
+      // Solid DevTools — dev gallery only, never included in library builds.
+      // Gated on `command === "serve"` so it is completely absent from
+      // `build:client` (SUI_BUILD_TARGET=client) and `build:server` runs.
+      isServe && devtools({ autoname: true }),
       // For the server bundle, turn on SSR codegen in vite-plugin-solid so
       // JSX compiles to ssr()/ssrElement() instead of template()/insert()/etc.
       // The resulting bundle has no top-level imports of DOM-only symbols
