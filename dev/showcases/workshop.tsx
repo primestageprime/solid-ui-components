@@ -1,12 +1,12 @@
 import { Component, createSignal, For } from "solid-js";
 import { SectionTitle, SubsectionTitle } from "../../src/components/Text";
-import { DragBar, DragBarItem } from "../../src/components/DragBar";
+import { DnDHierarchySortBar, DnDHierarchySortBarItem } from "../../src/components/DnDHierarchySortBar";
 
 // ─── Workshop ────────────────────────────────────────────────────────────
 // Scratch bench for in-progress components. Current occupant: DragBar.
 // Prototype goal: a controlled N-pill drag-reorder row for tag hierarchies.
 
-const INITIAL_ITEMS: DragBarItem[] = [
+const INITIAL_ITEMS: DnDHierarchySortBarItem[] = [
   { id: "region", label: "Region" },
   { id: "product", label: "Product" },
   { id: "quarter", label: "Quarter" },
@@ -14,7 +14,7 @@ const INITIAL_ITEMS: DragBarItem[] = [
 ];
 
 export const WorkshopShowcase: Component = () => {
-  const [items, setItems] = createSignal<DragBarItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = createSignal<DnDHierarchySortBarItem[]>(INITIAL_ITEMS);
 
   const handleReorder = (nextIds: string[]) => {
     const lookup = new Map(items().map((item) => [item.id, item]));
@@ -35,7 +35,7 @@ export const WorkshopShowcase: Component = () => {
           margin: "8px 0 24px",
         }}
       >
-        In-progress: <strong>DragBar</strong> — a controlled N-pill
+        In-progress: <strong>DnDHierarchySortBar</strong> — a controlled N-pill
         drag-reorder row for tag hierarchies. Drag the pills left or right to
         change nesting order. The current order is reflected live in the readout
         below.
@@ -67,7 +67,7 @@ export const WorkshopShowcase: Component = () => {
           "max-width": "600px",
         }}
       >
-        <DragBar items={items()} onReorder={handleReorder} />
+        <DnDHierarchySortBar items={items()} onReorder={handleReorder} />
 
         {/* ── Live order readout ──────────────────────────────────── */}
         <div
@@ -189,7 +189,7 @@ export const WorkshopShowcase: Component = () => {
         <tbody>
           {(
             [
-              ["items", "DragBarItem[]", "Ordered list — {id, label} pairs"],
+              ["items", "DnDHierarchySortBarItem[]", "Ordered list — {id, label} pairs"],
               [
                 "onReorder",
                 "(nextIds: string[]) => void",
@@ -239,14 +239,14 @@ export const WorkshopShowcase: Component = () => {
 
 // ── Independent demo sub-component (avoids lifting state into parent) ─────
 
-const DEMO_B_ITEMS: DragBarItem[] = [
+const DEMO_B_ITEMS: DnDHierarchySortBarItem[] = [
   { id: "team", label: "Team" },
   { id: "sprint", label: "Sprint" },
   { id: "priority", label: "Priority" },
 ];
 
 const IndependentDemo: Component = () => {
-  const [items, setItems] = createSignal<DragBarItem[]>(DEMO_B_ITEMS);
+  const [items, setItems] = createSignal<DnDHierarchySortBarItem[]>(DEMO_B_ITEMS);
 
   const handleReorder = (nextIds: string[]) => {
     const lookup = new Map(items().map((item) => [item.id, item]));
@@ -257,5 +257,5 @@ const IndependentDemo: Component = () => {
     setItems(reordered);
   };
 
-  return <DragBar items={items()} onReorder={handleReorder} label="group by" />;
+  return <DnDHierarchySortBar items={items()} onReorder={handleReorder} label="group by" />;
 };
