@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.42.0
+
+### Added
+
+- **DnDHierarchySortBar** — Atomic (Depth 1). A drag-to-reorder horizontal row of dimension pills for reordering a tag hierarchy (extracted from dside's `DesignView` nest-order bar). Controlled: `items: { id, label }[]` + `onReorder: (nextOrderedIds) => void`, plus an optional `label` (default "nest by"). No curried variant — every prop is data/callback, so there's nothing presentational to freeze.
+
 ## 0.41.0
 
 ### Added
