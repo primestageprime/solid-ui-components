@@ -124,8 +124,8 @@ export const WorkshopShowcase: Component = () => {
         </div>
       </div>
 
-      {/* ── Custom hint label ────────────────────────────────────────── */}
-      <SubsectionTitle>Custom hint</SubsectionTitle>
+      {/* ── Custom label ────────────────────────────────────────── */}
+      <SubsectionTitle>Custom label</SubsectionTitle>
       <p
         style={{
           "font-size": "12px",
@@ -133,7 +133,7 @@ export const WorkshopShowcase: Component = () => {
           margin: "4px 0 16px",
         }}
       >
-        The <code>hint</code> prop overrides the default "nest by" label.
+        The <code>label</code> prop overrides the default "nest by" label.
         This instance uses a separate, independent order signal.
       </p>
 
@@ -195,7 +195,7 @@ export const WorkshopShowcase: Component = () => {
                 "(nextIds: string[]) => void",
                 "Called with new id order after drop",
               ],
-              ["hint", "string?", 'Label before pills (default "nest by")'],
+              ["label", "string?", 'Label before pills (default "nest by")'],
             ] as const
           ).map(([prop, type, notes]) => (
             <tr>
@@ -257,5 +257,5 @@ const IndependentDemo: Component = () => {
     setItems(reordered);
   };
 
-  return <DragBar items={items()} onReorder={handleReorder} hint="group by" />;
+  return <DragBar items={items()} onReorder={handleReorder} label="group by" />;
 };

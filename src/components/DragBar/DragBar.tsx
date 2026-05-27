@@ -32,8 +32,8 @@ export interface DragBarProps {
    * The caller is responsible for updating `items` in response.
    */
   onReorder: (nextOrderedIds: string[]) => void;
-  /** Optional hint text shown before the pills. Defaults to "nest by". */
-  hint?: string;
+  /** Optional label text shown before the pills. Defaults to "nest by". */
+  label?: string;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ export const DragBar: Component<DragBarProps> = (props) => {
   const [dragFrom, setDragFrom] = createSignal<number | null>(null);
   const [dragOver, setDragOver] = createSignal<number | null>(null);
 
-  const hint = () => props.hint ?? "nest by";
+  const label = () => props.label ?? "nest by";
 
   const handleDrop = (toIdx: number) => {
     const from = dragFrom();
@@ -72,9 +72,9 @@ export const DragBar: Component<DragBarProps> = (props) => {
   };
 
   return (
-    <div class="sui-drag-bar" role="list" aria-label={hint()}>
-      <span class="sui-drag-bar__hint" aria-hidden="true">
-        {hint()}
+    <div class="sui-drag-bar" role="list" aria-label={label()}>
+      <span class="sui-drag-bar__label" aria-hidden="true">
+        {label()}
       </span>
       <For each={props.items}>
         {(item, idx) => {
