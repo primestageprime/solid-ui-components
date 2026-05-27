@@ -111,6 +111,7 @@ import { PillVariantsShowcase } from "./showcases/pill-variants";
 import { DagTraversalSandboxShowcase } from "./showcases/dag-traversal-sandbox";
 import { DagTraversalBulkSandboxShowcase } from "./showcases/dag-traversal-bulk-sandbox";
 import { WorkshopShowcase } from "./showcases/workshop";
+import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-chart";
 
 type Item = { id: string; label: string; component: Component; tags: string[] };
 
@@ -126,6 +127,7 @@ const items: Item[] = [
   { id: "combobox", label: "Combobox", component: ComboboxShowcase, tags: ["depth:1", "form"] },
   { id: "dag-chart", label: "DagChart", component: DagChartShowcase, tags: ["depth:1", "chart", "data"] },
   { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:2", "chart", "data"] },
+  { id: "animated-swimlane-chart", label: "AnimatedSwimlaneChart", component: AnimatedSwimlaneChartShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase, tags: ["depth:1", "table", "data", "container"] },
   { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase, tags: ["depth:1", "indicator", "data"] },
   { id: "divider", label: "Divider", component: DividerShowcase, tags: ["depth:1", "layout"] },

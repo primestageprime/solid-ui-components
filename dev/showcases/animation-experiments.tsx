@@ -29,6 +29,15 @@ import {
   advanceChildren as advanceChildrenLib,
   isAllDone,
 } from "./workshop-layout";
+import {
+  computeBreakpoints,
+  maxDepthForWidth,
+  DEFAULT_LANE_LAYOUT_CONFIG,
+  type LaneLayoutConfig,
+  type Breakpoint,
+} from "../../src/internal/animation/breakpoints";
+import { SwimlaneAnimatedLane } from "../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane";
+import type { RenderNodeContext } from "../../src/components/AnimatedSwimlaneChart/defaults";
 
 interface Experiment {
   /** Short slug, used in the heading and as a stable id. */
@@ -287,7 +296,7 @@ function TaskCard(props: {
   // Combined with `opacity: (mounted && visible) ? 1 : 0` and the
   // CSS `transition: opacity`, this gives a fade-in on EVERY fresh
   // mount of the TaskCard — which, thanks to the keyed <For>/<Switch>
-  // in MixedShapesLaneReactive, happens precisely on the morph→card
+  // in SwimlaneAnimatedLane, happens precisely on the morph→card
   // transition. Layout-only rebuilds (resize, knob nudge) don't
   // remount the component, so they don't re-fade. Hover toggling
   // doesn't touch `mounted`, so steady-state interactions don't
@@ -990,98 +999,6 @@ const MS_LOZENGE_GAP = 32;
 // row picks a wider value when there's more horizontal room.
 const MS_MAX_DEPTH = 1;
 
-/**
- * Pure layout-config shape: just the FOUR horizontal-fit knobs plus
- * the outer padding. Vertical constants (row gap, lane pad, etc.) are
- * NOT in here — they don't affect breakpoint math.
- */
-export interface LaneLayoutConfig {
-  /** Card width (currently MS_CARD_W = 140). */
-  cardWidth: number;
-  /** Gap between adjacent card EDGES (currently MS_COL_GAP = 60). */
-  cardGap: number;
-  /** Lozenge bar width (currently LOZENGE_W = 16). */
-  lozengeWidth: number;
-  /** Gap between outer card and lozenge (currently MS_LOZENGE_GAP = 32). */
-  lozengeGap: number;
-  /** Outer padding each side of the stage (currently 32 = 2rem). */
-  padding: number;
-}
-
-export interface Breakpoint {
-  /** 0, 1, 2, … */
-  depth: number;
-  /** 2·depth + 1 → 1, 3, 5, 7, 9 … */
-  visibleCols: number;
-  /** Smallest stageWidth where this depth fits with the configured padding. */
-  minWidth: number;
-}
-
-/**
- * Default config used by the workshop chart at boot. `cardWidth` is
- * deliberately wider than the legacy MS_CARD_W (140) — the user wants
- * the default card to be 250 so the workshop reflects the production
- * sizing target. `MS_CARD_W` is no longer the source of truth for
- * cards in `MixedShapesLaneReactive` (the lane reads `cardWidth` off
- * the reactive `layoutConfig` prop), so the rendered card and the
- * breakpoint math agree at this default.
- *
- * Note: the legacy slurp / dep / chain demos elsewhere in this file
- * still use `NODE_W = 140` literally — those panels are standalone
- * effect experiments and intentionally stay at their hand-tuned
- * geometry. Only the `MixedShapesRow` panel consumes this default.
- */
-const DEFAULT_LANE_LAYOUT_CONFIG: LaneLayoutConfig = {
-  cardWidth: 250,
-  cardGap: MS_COL_GAP,
-  lozengeWidth: LOZENGE_W,
-  lozengeGap: MS_LOZENGE_GAP,
-  padding: 32,
-};
-
-/**
- * Geometry for the breakpoint math:
- *   colCenterGap = cardWidth + cardGap
- *   baseContent  = 2 * (cardWidth/2 + lozengeGap + lozengeWidth)
- *   minWidth(d)  = baseContent + 2 * d * colCenterGap + 2 * padding
- */
-export function computeBreakpoints(
-  config: LaneLayoutConfig,
-  maxDepth: number,
-): Breakpoint[] {
-  const colCenterGap = config.cardWidth + config.cardGap;
-  const baseContent =
-    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
-  const rows: Breakpoint[] = [];
-  for (let d = 0; d <= maxDepth; d++) {
-    rows.push({
-      depth: d,
-      visibleCols: 2 * d + 1,
-      minWidth: baseContent + 2 * d * colCenterGap + 2 * config.padding,
-    });
-  }
-  return rows;
-}
-
-/**
- * Pick the visible-window radius (maxDepth) by measuring the panel:
- * the largest `d` where the full horizontal layout — both `-S` and
- * `+S` lozenges plus all visible cols — fits inside `stageWidth`
- * with at least `config.padding` of breathing room on each side.
- * Below that threshold, compress to the next-smaller `d`.
- */
-export function maxDepthForWidth(
-  stageWidth: number,
-  config: LaneLayoutConfig = DEFAULT_LANE_LAYOUT_CONFIG,
-): number {
-  const colCenterGap = config.cardWidth + config.cardGap;
-  const baseContent =
-    2 * (config.cardWidth / 2 + config.lozengeGap + config.lozengeWidth);
-  const step = 2 * colCenterGap;
-  const usable = stageWidth - baseContent - 2 * config.padding;
-  if (usable < 0) return 0;
-  return Math.floor(usable / step);
-}
 
 /**
  * Map a ChartChild + parent spec into a StatusFlowNode[] (the format
@@ -1136,422 +1053,6 @@ function nodeToTask(n: StatusFlowNode): TaskData {
 // Animation timing (slurp + move + slurp totals MS_PHASE_TOTAL) lives
 // in `./animation-trajectories` so the trajectory math and the row
 // tick rate stay in lockstep — imported from the top.
-
-function MixedShapesLaneReactive(props: {
-  spec: MixedLaneSpec;
-  nodes: StatusFlowNode[];
-  laneY: number;
-  stageWidth: number;
-  maxDepth: number;
-  layoutConfig: LaneLayoutConfig;
-  /** Reactive timing knobs from the workshop sidebar. */
-  timing: LaneTimingConfig;
-  onCardHover?: (info: HoverInfo | null) => void;
-}): JSX.Element {
-  // Width-affecting layout pulled from the reactive config prop. The
-  // four other constants (MS_CARD_H, MS_ROW_GAP, MS_PARENT_GAP,
-  // MS_LANE_PAD, MS_LANE_GAP) stay literal — they don't shift the
-  // breakpoint math.
-  const cardW = () => props.layoutConfig.cardWidth;
-  const lozW = () => props.layoutConfig.lozengeWidth;
-  const lozGap = () => props.layoutConfig.lozengeGap;
-  const colCenterGap = () =>
-    props.layoutConfig.cardWidth + props.layoutConfig.cardGap;
-  // Dynamic — recomputes when stageWidth changes so the lane reflows
-  // on browser resize. centerX is half the stage; lozenges anchor
-  // outward from the visible-col span.
-  const centerX = () => props.stageWidth / 2;
-  const hasParent = !!props.spec.parentTitle;
-
-  // Size the lane based on the WORST-CASE stack height across the
-  // animation so cards don't jump as siblings finish. A naive measure
-  // is the largest col group at any given time; we approximate with
-  // the maximum number of children sharing the same parent (initial
-  // all-TODO → all roots stack at +1).
-  const childCount = props.spec.children.length;
-  // Lower-bound the stack to the largest "depth=0 root group" since
-  // independent roots all share col +1 at initial state.
-  const initialRoots = props.spec.children.filter(
-    (c) => !c.dependsOn || c.dependsOn.length === 0,
-  ).length;
-  const reservedStack = Math.max(1, initialRoots, Math.min(childCount, 3));
-  const reservedChildRowH =
-    reservedStack * MS_CARD_H + (reservedStack - 1) * MS_ROW_GAP;
-  const parentRowH = hasParent ? MS_CARD_H + MS_PARENT_GAP : 0;
-  const laneHeight = MS_LANE_PAD * 2 + parentRowH + reservedChildRowH;
-
-  const parentRowCenterY = props.laneY + MS_LANE_PAD + MS_CARD_H / 2;
-  const childRowCenterY =
-    props.laneY + MS_LANE_PAD + parentRowH + reservedChildRowH / 2;
-
-  const colTopY = childRowCenterY - reservedChildRowH / 2;
-  const colBottomY = childRowCenterY + reservedChildRowH / 2;
-  const lozMidY = childRowCenterY;
-  // Lozenge x positions depend on centerX (= stageWidth/2), so they
-  // reflow on resize.
-  const leftLozengeX = () =>
-    centerX() - props.maxDepth * colCenterGap() - cardW() / 2 -
-    lozGap() - lozW();
-  const rightLozengeX = () =>
-    centerX() + props.maxDepth * colCenterGap() + cardW() / 2 + lozGap();
-
-  const greyStroke = "rgba(255,255,255,0.45)";
-  const accentStroke = "var(--sui-accent, #00d4ff)";
-
-  const leftLozRect = () => ({
-    x: leftLozengeX() + lozW() / 2,
-    y: lozMidY,
-    width: lozW(),
-    height: colBottomY - colTopY,
-  });
-  const rightLozRect = () => ({
-    x: rightLozengeX() + lozW() / 2,
-    y: lozMidY,
-    width: lozW(),
-    height: colBottomY - colTopY,
-  });
-
-  // ─── trajectory-driven animation ─────────────────────────────────────
-  const trajLayoutParams = (): TrajLayoutParams => ({
-    maxDepth: props.maxDepth,
-    centerX: centerX(),
-    parentRowCenterY,
-    childRowCenterY,
-    cardWidth: cardW(),
-    cardHeight: MS_CARD_H,
-    colCenterGap: colCenterGap(),
-    rowGap: MS_ROW_GAP,
-  });
-  const lozengeRects = (): LozengeRects => ({
-    left: leftLozRect(),
-    right: rightLozRect(),
-  });
-  const [traj, setTraj] = createSignal<LaneTrajectory>(
-    buildLaneTrajectory({
-      prevFrame: props.nodes,
-      nextFrame: props.nodes,
-      layoutParams: trajLayoutParams(),
-      lozengeRects: lozengeRects(),
-      timing: props.timing,
-    }),
-  );
-  // currentT starts at 1 (the trajectory is the identity — every card
-  // resting at its current rect — until the first state change).
-  const [currentT, setCurrentT] = createSignal(1);
-  let prevFrameRef = props.nodes;
-  let prevWidthRef = props.stageWidth;
-  let prevMaxDepthRef = props.maxDepth;
-  let prevConfigRef = props.layoutConfig;
-  let prevTimingRef = props.timing;
-  let rafHandle: number | undefined;
-
-  createEffect(() => {
-    const incoming = props.nodes;
-    const sw = props.stageWidth;
-    const md = props.maxDepth;
-    const cfg = props.layoutConfig;
-    const timing = props.timing;
-    const nodesChanged = incoming !== prevFrameRef;
-    const widthChanged = sw !== prevWidthRef;
-    const depthChanged = md !== prevMaxDepthRef;
-    const configChanged = cfg !== prevConfigRef;
-    const timingChanged = timing !== prevTimingRef;
-    if (
-      !nodesChanged && !widthChanged && !depthChanged
-      && !configChanged && !timingChanged
-    ) return;
-    // Layout/timing-only changes (resize, maxDepth, config, timing
-    // knob nudge) should NOT replay the tick animation — snap to t=1.
-    // Only a node-change runs the rAF. This matches what the user
-    // wants: tuning the timing affects the NEXT animation, not the
-    // currently in-flight one.
-    const layoutOnly = !nodesChanged && (
-      widthChanged || depthChanged || configChanged || timingChanged
-    );
-    const newTraj = buildLaneTrajectory({
-      prevFrame: layoutOnly ? incoming : prevFrameRef,
-      nextFrame: incoming,
-      layoutParams: trajLayoutParams(),
-      lozengeRects: lozengeRects(),
-      timing,
-    });
-    prevFrameRef = incoming;
-    prevWidthRef = sw;
-    prevMaxDepthRef = md;
-    prevConfigRef = cfg;
-    prevTimingRef = timing;
-    setTraj(newTraj);
-    setCurrentT(layoutOnly ? 1 : 0);
-    if (rafHandle !== undefined) cancelAnimationFrame(rafHandle);
-    if (layoutOnly) return;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / newTraj.durationMs);
-      setCurrentT(t);
-      if (t < 1) rafHandle = requestAnimationFrame(tick);
-      else rafHandle = undefined;
-    };
-    rafHandle = requestAnimationFrame(tick);
-  });
-
-  // Lozenge counts derive from the trajectory: a card "occupies" a
-  // lozenge when its current mode is "gone". The counts roll down /
-  // up automatically at phase boundaries (leavers count at LEAVE_END,
-  // arrivers stop counting at MOVE_END).
-  const lozengeCounts = () => {
-    const t = currentT();
-    let left = 0;
-    let right = 0;
-    for (const c of traj().cards.values()) {
-      if (c.modeAt(t) !== "gone") continue;
-      if (c.anchorAt(t).x < centerX()) left++;
-      else right++;
-    }
-    return { left, right };
-  };
-
-  return (
-    <g>
-      {/* Lane box */}
-      <rect
-        x={MS_LANE_PAD / 2}
-        y={props.laneY}
-        width={props.stageWidth - MS_LANE_PAD}
-        height={laneHeight}
-        rx={8}
-        fill="rgba(255,255,255,0.02)"
-        stroke="rgba(255,255,255,0.1)"
-        stroke-width="1"
-      />
-      {/* Left + right lozenges. Counts come from the trajectory:
-          a card "occupies" a lozenge while its mode is "gone". */}
-      <Show when={lozengeCounts().left > 0}>
-        <rect
-          x={leftLozengeX()}
-          y={colTopY}
-          width={lozW()}
-          height={colBottomY - colTopY}
-          rx={lozW() / 2}
-          ry={lozW() / 2}
-          fill="rgba(255,255,255,0.04)"
-          stroke="rgba(255,255,255,0.4)"
-          stroke-width="1"
-        />
-        <text
-          x={leftLozengeX() + lozW() / 2}
-          y={lozMidY}
-          text-anchor="middle"
-          dominant-baseline="central"
-          fill="rgba(255,255,255,0.55)"
-          font-size="9"
-          font-family="ui-monospace, SFMono-Regular, monospace"
-        >
-          {lozengeCounts().left}
-        </text>
-      </Show>
-      <Show when={lozengeCounts().right > 0}>
-        <rect
-          x={rightLozengeX()}
-          y={colTopY}
-          width={lozW()}
-          height={colBottomY - colTopY}
-          rx={lozW() / 2}
-          ry={lozW() / 2}
-          fill="rgba(255,255,255,0.04)"
-          stroke="rgba(255,255,255,0.4)"
-          stroke-width="1"
-        />
-        <text
-          x={rightLozengeX() + lozW() / 2}
-          y={lozMidY}
-          text-anchor="middle"
-          dominant-baseline="central"
-          fill="rgba(255,255,255,0.55)"
-          font-size="9"
-          font-family="ui-monospace, SFMono-Regular, monospace"
-        >
-          {lozengeCounts().right}
-        </text>
-      </Show>
-      {/* Arrows FIRST — drawn BEHIND cards. Convention: opaque
-          cards win z-order, so any arrow routed behind a card is
-          cleanly hidden. */}
-      <For each={traj().arrows}>
-        {(arrow) => {
-          const fromCard = (): CardTrajectory | undefined =>
-            traj().cards.get(arrow.fromId);
-          const toCard = (): CardTrajectory | undefined =>
-            traj().cards.get(arrow.toId);
-          // Suppress hidden→hidden: relationship is entirely inside
-          // the lozenge.
-          const bothHidden = () =>
-            fromCard()?.modeAt(currentT()) === "gone" &&
-            toCard()?.modeAt(currentT()) === "gone";
-          const src = () => fromCard()?.anchorAt(currentT());
-          const tgt = () => toCard()?.anchorAt(currentT());
-          const dashedness = () =>
-            dashednessAt(arrow, traj().cards, currentT());
-          const dashArray = () => {
-            const d = dashedness();
-            if (d <= 0.001) return undefined;
-            return `4 ${(d * 3).toFixed(2)}`;
-          };
-          const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
-          // Obstacles: the SETTLED positions of visible cards, NOT
-          // their current-frame positions. As cards lerp through
-          // space during a move, treating their lerped positions as
-          // obstacles makes the router thrash between routing
-          // topologies — and at move-end the route snaps to a
-          // different shape than it had mid-flight. Routing against
-          // the FINAL positions throughout the animation produces a
-          // smooth morph: the path's endpoints follow the cards
-          // while its bent middle eases toward the final dodge
-          // shape. Arrows are allowed to pass through cards while
-          // those cards are still navigating — they only "dodge"
-          // when the layout has settled, which is exactly the spec
-          // (lines move behind nodes while in motion, dodge once at
-          // rest).
-          //
-          // Parents excluded (they sit in their own row and would
-          // tempt the router into ugly over-the-top detours).
-          const obstacles = () => {
-            const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
-            for (const [id, c] of traj().cards) {
-              if (id === arrow.fromId || id === arrow.toId) continue;
-              if (c.isParent) continue;
-              // mode at t=1 (settled state), not at current t — an
-              // arriving card hasn't reached "card" mode yet but its
-              // final rest position is still a valid obstacle.
-              if (c.modeAt(1) !== "card") continue;
-              const r = c.rectAt(1);
-              if (!r) continue;
-              list.push({ id, ...r });
-            }
-            return list;
-          };
-          // Path strategy:
-          //   - DURING animation (currentT < 1): always-3-segment Z
-          //     with knee at midX. Pure function of src/tgt — no
-          //     topology branching, so per-frame interpolation is
-          //     smooth even when src/tgt cross thresholds where the
-          //     full router would flip shape (straight ↔ Z ↔ U).
-          //   - AT REST (currentT === 1): full obstacle-avoiding
-          //     router for clean final dodge geometry.
-          //
-          // Snap from simple-Z → dodging path at t=1 is only visible
-          // when the simple-Z would have crossed an obstacle; for
-          // typical chart layouts the two outputs match.
-          const arrowPath = () => {
-            const s = src()!;
-            const tg = tgt()!;
-            if (currentT() < 1) {
-              const goingRight = tg.x >= s.x;
-              const fromOuterX = goingRight ? s.x + s.width / 2 : s.x - s.width / 2;
-              const toOuterX = goingRight ? tg.x - tg.width / 2 : tg.x + tg.width / 2;
-              // Anchor the knee near the TARGET (15px breathing
-              // room from tgt.left) instead of at the midpoint. As
-              // src moves laterally during the animation, the
-              // vertical leg stays put near tgt — the src-side
-              // horizontal segment stretches/shrinks instead. With
-              // a midpoint knee the leg would slide laterally with
-              // src, which read as a wiggle.
-              //
-              // Clamped to stay outside the source's bbox so we
-              // don't punch back through it when src is unusually
-              // close to tgt.
-              const channelX = goingRight
-                ? Math.max(fromOuterX + 4, toOuterX - 15)
-                : Math.min(fromOuterX - 4, toOuterX + 15);
-              return [
-                `M ${fromOuterX} ${s.y}`,
-                `L ${channelX} ${s.y}`,
-                `L ${channelX} ${tg.y}`,
-                `L ${toOuterX} ${tg.y}`,
-              ].join(" ");
-            }
-            return orthogonalAvoidingObstacles(s, tg, obstacles());
-          };
-          return (
-            <Show when={!bothHidden() && src() && tgt()}>
-              <path
-                d={arrowPath()}
-                fill="none"
-                stroke={stroke()}
-                stroke-width="1.5"
-                stroke-dasharray={dashArray()}
-                marker-end="url(#ms-arrow-head)"
-                style={{
-                  color: stroke(),
-                  // CSS interpolation of the path's `d` attribute so
-                  // topology changes (e.g. Z-shape ↔ U-shape detour
-                  // when an obstacle threshold flips) smooth into
-                  // each other instead of snapping. Tunable via the
-                  // `arrowPath` knob in LaneTimingConfig.
-                  transition: `d ${props.timing.arrowPathMs ?? 0}ms ease-out`,
-                }}
-              />
-            </Show>
-          );
-        }}
-      </For>
-      {/* Cards AFTER — painted ON TOP of arrows. modeAt(t) gates
-          between TaskCard (resting/moving), SVG path morph (slurp
-          in/out), and gone. Iterating by STABLE string id so Solid's
-          <For> preserves foreignObject DOM across ticks. */}
-      <For each={Array.from(traj().cards.keys())}>
-        {(id) => {
-          const card = (): CardTrajectory | undefined => traj().cards.get(id);
-          const t = () => currentT();
-          const mode = () => card()?.modeAt(t()) ?? "gone";
-          const rect = () => card()?.rectAt(t()) ?? null;
-          const status = () => card()?.statusAt(t()) ?? "TODO";
-          const node = () => props.nodes.find((n) => n.id === id);
-          const task = (): TaskData | null => {
-            const n = node();
-            if (!n) return null;
-            return { ...nodeToTask(n), status: status() };
-          };
-          const theme = () => statusTheme(status());
-          return (
-            <Switch>
-              <Match when={mode() === "card" && rect() && task()}>
-                <TaskCard
-                  x={rect()!.x - cardW() / 2}
-                  y={rect()!.y - MS_CARD_H / 2}
-                  width={cardW()}
-                  height={MS_CARD_H}
-                  visible={true}
-                  task={task()!}
-                  onHoverChange={(h) =>
-                    props.onCardHover?.(
-                      h
-                        ? {
-                            task: task()!,
-                            x: rect()!.x - cardW() / 2,
-                            y: rect()!.y - MS_CARD_H / 2,
-                            width: cardW(),
-                            height: MS_CARD_H,
-                          }
-                        : null,
-                    )
-                  }
-                />
-              </Match>
-              <Match when={mode() === "morph" && card()?.pathAt(t())}>
-                <path
-                  d={card()!.pathAt(t())!}
-                  fill={theme().fill}
-                  stroke={theme().stroke}
-                  stroke-width="1"
-                />
-              </Match>
-            </Switch>
-          );
-        }}
-      </For>
-    </g>
-  );
-}
 
 // Pacing — tick must be ≥ the full phase sequence (slurp-in + move +
 // arrow-settle + slurp-out) plus a small buffer so the next tick
@@ -2057,15 +1558,41 @@ const MixedShapesRow: Component = () => {
             </defs>
             <For each={lanesWithY}>
               {(l, i) => (
-                <MixedShapesLaneReactive
+                <SwimlaneAnimatedLane
                   spec={l.spec}
                   nodes={currentStates()[i()]}
                   laneY={l.laneY}
                   stageWidth={stageWidth()}
                   maxDepth={maxDepthForWidth(stageWidth(), layoutConfig())}
                   layoutConfig={layoutConfig()}
+                  cardHeight={MS_CARD_H}
+                  rowGap={MS_ROW_GAP}
+                  parentGap={MS_PARENT_GAP}
+                  lanePadding={MS_LANE_PAD}
                   timing={timing()}
-                  onCardHover={setHovered}
+                  renderNode={(n, _ctx: RenderNodeContext) => {
+                    const task = nodeToTask(n);
+                    const theme = statusTheme(task.status);
+                    return (
+                      <div
+                        style={{
+                          height: "100%",
+                          padding: "8px 12px",
+                          "border-radius": "6px",
+                          background: theme.fill,
+                          border: `1px solid ${theme.stroke}`,
+                          color: theme.text,
+                          "font-size": "12px",
+                          "box-sizing": "border-box",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div style={{ "font-size": "10px", "margin-bottom": "4px" }}>{task.status}</div>
+                        <div>{task.title}</div>
+                      </div>
+                    );
+                  }}
+                  renderPopover={null}
                 />
               )}
             </For>
@@ -2594,14 +2121,41 @@ const TwoFrameArrowDemoRow: Component = () => {
                 <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
               </marker>
             </defs>
-            <MixedShapesLaneReactive
+            <SwimlaneAnimatedLane
               spec={spec}
               nodes={FRAMES[cursor()]}
               laneY={laneY}
               stageWidth={stageWidth}
               maxDepth={maxDepth}
               layoutConfig={DEFAULT_LANE_LAYOUT_CONFIG}
+              cardHeight={MS_CARD_H}
+              rowGap={MS_ROW_GAP}
+              parentGap={MS_PARENT_GAP}
+              lanePadding={MS_LANE_PAD}
               timing={DEFAULT_TIMING}
+              renderNode={(n, _ctx: RenderNodeContext) => {
+                const task = nodeToTask(n);
+                const theme = statusTheme(task.status);
+                return (
+                  <div
+                    style={{
+                      height: "100%",
+                      padding: "8px 12px",
+                      "border-radius": "6px",
+                      background: theme.fill,
+                      border: `1px solid ${theme.stroke}`,
+                      color: theme.text,
+                      "font-size": "12px",
+                      "box-sizing": "border-box",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div style={{ "font-size": "10px", "margin-bottom": "4px" }}>{task.status}</div>
+                    <div>{task.title}</div>
+                  </div>
+                );
+              }}
+              renderPopover={null}
             />
           </svg>
         </div>

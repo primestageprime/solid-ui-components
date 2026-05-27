@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Changed — BREAKING
+
+- **AnimatedSwimlaneChart** (alias `SwimlaneChart`): status-driven rewrite. The component now takes a `StatusFlowNode[]` instead of positional `DAGNode<T>[]`, and ships the polished lozenge + slurp + orthogonal-arrows + arrow-settle + hover-popover animation that previously lived only in the workshop. Consumers only have to pass `nodes`; sizes, timing, lozenge geometry, routing, and breakpoints all have library defaults overridable once via the curry factory.
+
+  **New minimum usage:**
+
+  ```tsx
+  import { createAnimatedSwimlaneChart } from "@primestageprime/solid-ui-components";
+
+  const ProjectFlow = createAnimatedSwimlaneChart({});
+
+  <ProjectFlow nodes={tasks} />
+  ```
+
+  `tasks` is `StatusFlowNode[]`: `{ id, title, status, parentId?, dependsOn?, subtitle? }`.
+
+  **Migration from the old positional-DAG API:**
+  1. Convert each `DAGNode<T>` into a `StatusFlowNode`. The `x`/`y`/`lane` positional fields are dropped; you supply `status` instead, and the chart computes column positions itself.
+  2. If you previously used `lane` to group nodes into rows, set `parentId` on the children to the id of the lane's parent node, and add the parent node itself.
+  3. Replace `<AnimatedSwimlaneChart {...positionalProps} />` with a curried `createAnimatedSwimlaneChart({})` and pass only `{ nodes }`.
+
+  Old positional rendering is no longer available. If you need it back temporarily, pin the package to the previous version.
+
 ## 0.37.1
 
 ### Fixed
