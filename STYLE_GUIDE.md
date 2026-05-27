@@ -162,6 +162,29 @@ export const HabitCard = createSurface({
 
 Then export it from `index.ts` and use it in your app. Never inline the same visual config repeatedly.
 
+## Variant Surface: keep it minimal
+
+Build a new component with the **minimal set of variants the current use case
+actually needs** — not the full matrix of sizes, colors, and modes it *could*
+support. A round 56px button used in one place is `Fab({ icon, label })`, not
+`Fab({ icon, label, size, variant, anchor, offset })`.
+
+**Why:** Every prop is a public contract you must keep working, test, document,
+and reason about — and most speculative variants are never used. Unused variants
+are the "joseki" of component work: low-risk, well-understood, and deferrable.
+Adding them up-front spends effort on the certain to avoid the uncertain, and a
+wide surface makes the component harder to change later (every option multiplies
+the states you must preserve).
+
+**How to apply:**
+- Start from the real caller. Ship only the props it needs.
+- When a second use case appears that genuinely differs, *then* add the variant
+  (and prefer a curried variant over a new prop where the config is static — see
+  above).
+- A single fixed size/color is fine; it inherits sensible behavior from the
+  composed primitive (e.g. a `Fab` with no `variant` gets Button's default hover
+  for free).
+
 ## Quality Checks
 
 After every commit, verify:
