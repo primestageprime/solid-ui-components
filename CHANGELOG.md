@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 0.41.0
+
+### Added
+
+- **Fab** — floating action button (Composite, Depth 2). Composes `Button` + `Icon`; round 56px, default color, placement-agnostic (the container positions it — no `position`/`offset` props). Required `icon` + `label` (the accessible name). Ships a `createFab` factory and the `AddFab` curried variant (`createFab({ icon: "plus" })`) for drop-in add actions: `<AddFab label="Add item" onClick={fn} />`.
+- **BottomSheet** — container-bounded bottom sheet (Atomic, Depth 1). Slides up from the bottom of its parent — NOT a viewport overlay like `Modal`: the scrim and sheet are `position: absolute` inside a `position: relative` parent with a 60% max-height, so it can never cover a sibling region above it. Controlled via `open` + `onClose`, with a grabber handle and scrim-click dismiss.
+
 ## 0.37.1
 
 ### Fixed
