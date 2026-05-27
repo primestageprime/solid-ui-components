@@ -1,0 +1,63 @@
+/* ============================================
+   DragBar — Atomic (Depth 1). Drag-to-reorder pill row.
+   ============================================ */
+
+.sui-drag-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.sui-drag-bar__hint {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sui-text-muted);
+}
+
+.sui-drag-bar__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sui-border);
+  background: transparent;
+  color: var(--sui-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  transition:
+    opacity 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.sui-drag-bar__pill:hover {
+  border-color: var(--sui-border-bright, var(--sui-border));
+  background: var(--sui-bg-elevated);
+}
+
+.sui-drag-bar__pill--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.sui-drag-bar__pill--drag-over {
+  border-color: var(--sui-accent, #00a8cc);
+  background: color-mix(
+    in srgb,
+    var(--sui-accent, #00a8cc) 12%,
+    transparent
+  );
+}
+
+.sui-drag-bar__grip {
+  opacity: 0.45;
+  font-size: 10px;
+  line-height: 1;
+}
