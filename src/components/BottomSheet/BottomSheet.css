@@ -1,0 +1,100 @@
+/* ============================================
+   BottomSheet — Structural
+   ============================================
+   BOUNDING CONTRACT: both .sui-bottom-sheet-scrim and .sui-bottom-sheet
+   use `position: absolute` so they are clipped to the nearest
+   `position: relative` ancestor (the caller's container).
+   They CANNOT escape that box and will never cover a sibling region
+   that lives outside — or above — the container.
+   ============================================ */
+
+/* ── Scrim ─────────────────────────────────────────────────────────── */
+
+.sui-bottom-sheet-scrim {
+  /* Fill parent container exactly */
+  position: absolute;
+  inset: 0;
+
+  /* Pointer events only when open; invisible when closed */
+  pointer-events: none;
+  background: transparent;
+  transition: background 0.25s ease;
+
+  /* Sit above normal content, below modals */
+  z-index: 100;
+}
+
+.sui-bottom-sheet-scrim--visible {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ── Sheet panel ────────────────────────────────────────────────────── */
+
+.sui-bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  /* Bounded max-height: never more than 60% of the container */
+  max-height: 60%;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--sui-bg-elevated, #1a2a35);
+  border-top: 1px solid var(--sui-border, rgba(0, 168, 204, 0.2));
+  border-radius: var(--sui-radius-md, 8px) var(--sui-radius-md, 8px) 0 0;
+
+  /* Slide transition: closed = fully below the container's bottom edge */
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sui-bottom-sheet--open {
+  transform: translateY(0);
+}
+
+/* ── Grabber ────────────────────────────────────────────────────────── */
+
+.sui-bottom-sheet__grabber {
+  /* Reset button appearance */
+  background: transparent;
+  border: none;
+  padding: 10px 0 6px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sui-bottom-sheet__grabber:focus-visible {
+  outline: 2px solid var(--sui-accent, #00a8cc);
+  outline-offset: -2px;
+  border-radius: var(--sui-radius-md, 8px) var(--sui-radius-md, 8px) 0 0;
+}
+
+.sui-bottom-sheet__grabber-pill {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--sui-text-muted, rgba(255, 255, 255, 0.3));
+  transition: background 0.15s ease;
+}
+
+.sui-bottom-sheet__grabber:hover .sui-bottom-sheet__grabber-pill {
+  background: var(--sui-text-secondary, rgba(255, 255, 255, 0.55));
+}
+
+/* ── Body ───────────────────────────────────────────────────────────── */
+
+.sui-bottom-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px 16px;
+  min-height: 0;
+}

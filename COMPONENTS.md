@@ -163,6 +163,16 @@ State derivation:
 ## ButtonGroup
 - **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
 
+## Fab
+- **Fab** — Composite (Depth 2). Composes `Button` + `Icon` (both Depth-1 atomics). Owns a minimal structural CSS file (circle / fixed 56px / elevation) — a deliberate exception to "Depth 2 = zero CSS" because the float/circle/size geometry is structural and not expressible as a Button variant. Floating action button: round 56px, default color (Button's default variant), placement-agnostic. On hover the icon adopts the accent color for free via Button's default hover. Key props: `icon` (`IconName`), `label` (required — used as both `aria-label` and `title`; the FAB renders no visible text). All standard `<button>` attributes pass through. Has `createFab` factory for curried variants. Use for: primary floating actions anchored to a container corner.
+  - **AddFab** — Curried variant via `createFab({ icon: "plus" })`. Call site provides only `label` and callbacks — no presentational props. Use for: floating "add item" actions.
+    - Example:
+      ```tsx
+      import { AddFab } from "solid-ui-components";
+
+      <AddFab label="Add item" onClick={handleAdd} />
+      ```
+
 ## Card
 - **RemovableItemCard** — Composite (Depth 2). Composes `InteractiveCard` (Surface curried variant) + `SpreadRow` (Layout curried variant) + `FlexLabel` (Text curried variant) + `Button` (Atomic Primitive). Interactive card displaying a named item with title, optional remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable list items.
 
@@ -380,6 +390,25 @@ State derivation:
 
 ## ConfirmationModal
 - **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
+
+## BottomSheet
+- **BottomSheet** — Atomic (Depth 1). Owns `BottomSheet.css`, no component imports (raw `div`s + a raw `<button>` grabber + `<Show>`). A controlled sheet that slides up from the bottom of its *parent container* — distinct from `Modal`, which is a viewport portal with a fixed overlay. **Bounding contract:** both the scrim and the sheet panel are `position: absolute`, so they are clipped to the nearest `position: relative` ancestor (the caller's container). The sheet caps at `max-height: 60%` of that container and slides in via `transform: translateY`; it can never escape the box or cover a sibling region above it. Dismiss paths: grabber tap, or a *direct* click on the scrim (a click on the sheet body is ignored). Key props: `open` (boolean — controlled), `onClose` (`() => void`), `children?` (`JSX.Element` — sheet body), `label?` (`string` — `aria-label` for the dialog region). The parent must set `position: relative` to bound the sheet. Use for: container-scoped action sheets, in-pane detail drawers, mobile-style option pickers within a bounded app region.
+  - **No curried variant — intentional.** Every prop is data or a callback (`open` / `onClose` / `children` / `label`); there are no presentational props to freeze, so a `createBottomSheet` factory would add nothing. The base component is already zero-config at the call site (data + events only). This is a clean demonstration of STYLE_GUIDE.md "Variant Surface: keep it minimal" — ship only what the use case needs and skip the speculative size/color matrix.
+  - Example:
+    ```tsx
+    import { BottomSheet } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [open, setOpen] = createSignal(false);
+
+    // The parent MUST be position: relative — it bounds the sheet.
+    <div style={{ position: "relative", height: "480px" }}>
+      <button onClick={() => setOpen(true)}>Open</button>
+      <BottomSheet open={open()} onClose={() => setOpen(false)} label="Options">
+        <p>Sheet contents</p>
+      </BottomSheet>
+    </div>
+    ```
 
 ## Navigation
 - **NavLink** — Anchor link with active state, color variants, and optional badge. Key props: `active`, `color` (`accent`|`warning`|`danger`|`success`), `badge`. Use for: navigation menus, sidebar links.

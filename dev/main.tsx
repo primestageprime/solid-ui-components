@@ -11,6 +11,7 @@ import { TagPill, type PillStats } from "./tag-pill";
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
 import { ButtonShowcase } from "./showcases/button";
+import { FabShowcase } from "./showcases/fab";
 import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { ComboboxShowcase } from "./showcases/combobox";
@@ -25,6 +26,7 @@ import { HeatStreamShowcase } from "./showcases/heatstream";
 import { ButtonGroupShowcase } from "./showcases/hud-button-group";
 import { ListShowcase } from "./showcases/hud-list";
 import { ModalShowcase } from "./showcases/hud-modal";
+import { BottomSheetShowcase } from "./showcases/bottom-sheet";
 import { PageShowcase } from "./showcases/hud-page";
 import { PanelShowcase } from "./showcases/hud-panel";
 import { AccentSectionShowcase } from "./showcases/hud-section";
@@ -120,6 +122,7 @@ const items: Item[] = [
   { id: "workshop", label: "Workshop", component: WorkshopShowcase, tags: ["workshop"] },
   { id: "base-table", label: "BaseTable", component: BaseTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "button", label: "Button", component: ButtonShowcase, tags: ["depth:1", "form"] },
+  { id: "fab", label: "Fab", component: FabShowcase, tags: ["depth:2", "form"] },
   { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase, tags: ["depth:1", "form"] },
   { id: "candlestick-renderer", label: "CandlestickRenderer", component: CandlestickRendererShowcase, tags: ["depth:1", "chart", "data"] },
   { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase, tags: ["depth:1", "data"] },
@@ -136,6 +139,7 @@ const items: Item[] = [
   { id: "hud-list", label: "List", component: ListShowcase, tags: ["depth:1", "list"] },
   { id: "math-formula", label: "MathFormula", component: MathFormulaShowcase, tags: ["depth:1", "math", "text"] },
   { id: "hud-modal", label: "Modal", component: ModalShowcase, tags: ["depth:1", "feedback"] },
+  { id: "bottom-sheet", label: "BottomSheet", component: BottomSheetShowcase, tags: ["depth:1", "feedback"] },
   { id: "nav-item", label: "NavItem", component: NavItemShowcase, tags: ["depth:1", "navigation"] },
   { id: "hud-page", label: "Page", component: PageShowcase, tags: ["depth:1", "layout"] },
   { id: "hud-panel", label: "Panel", component: PanelShowcase, tags: ["depth:1", "container"] },
