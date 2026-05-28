@@ -183,6 +183,7 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
               <div
                 class={[
                   "sui-date-axis__cell",
+                  props.renderDay ? "sui-date-axis__cell--custom" : "",
                   isToday() ? "sui-date-axis__cell--today" : "",
                   isSelected() ? "sui-date-axis__cell--selected" : "",
                   clickable() ? "sui-date-axis__cell--clickable" : "",

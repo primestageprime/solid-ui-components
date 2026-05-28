@@ -7,13 +7,15 @@
    track is flex so cells tile in a single row regardless of range length. */
 .sui-date-axis {
   --sui-date-axis-cell-width: 40px;
-  --sui-date-axis-height: 32px;
 
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
-  height: var(--sui-date-axis-height);
-  /* Thin but visible scrollbar — avoids jumping layout on hover-show systems. */
+  /* No fixed height: the axis grows to the tallest cell. A custom `renderDay`
+     element determines its own cell height, and the axis respects it. */
+  /* Reserve a strip below the cells for the horizontal scrollbar so the bar
+     sits entirely below the content and never overlaps a cell renderer. */
+  padding-bottom: 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--sui-border) transparent;
   font-family: var(--sui-font-family, inherit);
@@ -37,7 +39,7 @@
 .sui-date-axis__track {
   display: flex;
   flex-direction: row;
-  height: 100%;
+  align-items: stretch;
   min-width: max-content;
 }
 
@@ -51,7 +53,7 @@
   justify-content: center;
   width: var(--sui-date-axis-cell-width);
   flex: 0 0 var(--sui-date-axis-cell-width);
-  height: 100%;
+  padding: 4px 0;
   border-right: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
   box-sizing: border-box;
   gap: 2px;
@@ -59,6 +61,20 @@
 
 .sui-date-axis__cell:first-child {
   border-left: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+}
+
+/* Custom-content cells (renderDay): the rendered element determines the cell's
+   width and height. No fixed width, no inner padding, no separator border — the
+   caller's content owns the full cell box (e.g. flush heatmap squares). */
+.sui-date-axis__cell--custom {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0;
+  border-right: none;
+}
+
+.sui-date-axis__cell--custom:first-child {
+  border-left: none;
 }
 
 /* ── Label ────────────────────────────────────────────────────────── */

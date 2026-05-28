@@ -28,18 +28,17 @@ const fmtLong = (d: Date): string =>
     timeZone: "UTC",
   });
 
-// Deterministic stub metric for the heatmap demo — a gentle wave so runs of
-// up/down days appear without real data. `renderDay` colours each square by
-// the day-over-day delta: green when the metric rises, red when it falls.
-const heatValue = (i: number): number => Math.sin(i / 6) * 50 + Math.sin(i / 2.3) * 18;
+// Deterministic stub net-cashflow ($) per day for the heatmap demo — a wave
+// that swings positive/negative so both the green (up) and red (down) bars get
+// exercised. `renderDay` turns each day into a calendar-style cashflow cell.
+const cashflow = (i: number): number =>
+  Math.round(Math.sin(i / 3.5) * 1100 + Math.sin(i / 1.6) * 480 + Math.sin(i / 13) * 260);
 
-const heatColor = (i: number): string => {
-  if (i === 0) return "transparent";
-  const delta = heatValue(i) - heatValue(i - 1);
-  const mag = Math.min(1, Math.abs(delta) / 22);
-  const alpha = (0.18 + mag * 0.62).toFixed(2);
-  return delta >= 0 ? `rgba(0, 200, 120, ${alpha})` : `rgba(230, 70, 70, ${alpha})`;
-};
+const fmtDollars = (v: number): string =>
+  `${v >= 0 ? "+" : "−"}$${Math.abs(v).toLocaleString("en-US")}`;
+
+const HEAT_GREEN = "rgba(0, 200, 120, 0.85)";
+const HEAT_RED = "rgba(230, 70, 70, 0.85)";
 
 // ── Shared demo chrome ────────────────────────────────────────────────────
 
@@ -178,30 +177,92 @@ export const WorkshopShowcase: Component = () => {
           margin: "4px 0 16px",
         }}
       >
-        Pass <code>renderDay</code> to control each square's content. Below, a
-        plain DateAxis supplies the date scale, and a second one over the same
-        range renders a <strong>heatmap</strong>: each day is a colored cell —
-        green when a stub metric rises vs. the prior day, red when it falls,
-        intensity by magnitude. Same component, same range; only the cell
-        content differs. <code>ctx.index</code> indexes into the caller's series.
+        Pass <code>renderDay</code> to make each day a calendar-style{" "}
+        <strong>cashflow cell</strong>: the date sits in the top corner (month +
+        day on month edges, like the simple axis), a diverging bar shows the
+        day's net cashflow — green growing up when positive, red growing down
+        when negative — and the dollar amount driving the colour is printed
+        below. The renderer sizes each cell (60×72); the axis grows to respect it
+        and the scrollbar stays entirely below the cells.
       </p>
-      {demoBox("DateAxis · date scale + renderDay heatmap (shared range)", () => (
-        <div>
-          <DateAxis start={RANGE_START} end={RANGE_END} today={PINNED_TODAY} />
-          <DateAxis
-            start={RANGE_START}
-            end={RANGE_END}
-            renderDay={(_day, ctx) => (
+      {demoBox("DateAxis · renderDay cashflow — date corner + diverging bar + $", () => (
+        <DateAxis
+          start={RANGE_START}
+          end={RANGE_END}
+          renderDay={(day, ctx) => {
+            const v = cashflow(ctx.index);
+            const up = v >= 0;
+            const frac = Math.min(1, Math.abs(v) / 2200);
+            const corner =
+              ctx.isFirstOfMonth || ctx.isLastOfMonth
+                ? `${day.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })} ${day.getUTCDate()}`
+                : String(day.getUTCDate());
+            return (
               <div
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  background: heatColor(ctx.index),
+                  position: "relative",
+                  width: "60px",
+                  height: "72px",
+                  "box-sizing": "border-box",
+                  display: "flex",
+                  "flex-direction": "column",
+                  padding: "3px 4px 4px",
+                  gap: "2px",
+                  "border-right": "1px solid var(--sui-border)",
+                  background: up ? "rgba(0,200,120,0.05)" : "rgba(230,70,70,0.05)",
                 }}
-              />
-            )}
-          />
-        </div>
+              >
+                {/* date in the corner, like a calendar day */}
+                <div
+                  style={{
+                    "font-size": "9px",
+                    "line-height": "1.1",
+                    color: "var(--sui-text-muted)",
+                    "white-space": "nowrap",
+                  }}
+                >
+                  {corner}
+                </div>
+                {/* diverging bar: green grows up (positive), red grows down (negative) */}
+                <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: "50%",
+                      height: "1px",
+                      background: "var(--sui-border)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: "24%",
+                      right: "24%",
+                      height: `${(frac * 50).toFixed(0)}%`,
+                      ...(up
+                        ? { bottom: "50%", background: HEAT_GREEN, "border-radius": "1px 1px 0 0" }
+                        : { top: "50%", background: HEAT_RED, "border-radius": "0 0 1px 1px" }),
+                    }}
+                  />
+                </div>
+                {/* the dollar value driving the colour */}
+                <div
+                  style={{
+                    "font-size": "9px",
+                    "font-weight": "600",
+                    "text-align": "center",
+                    "white-space": "nowrap",
+                    color: up ? HEAT_GREEN : HEAT_RED,
+                  }}
+                >
+                  {fmtDollars(v)}
+                </div>
+              </div>
+            );
+          }}
+        />
       ))}
 
       {/* ── Passive (no onDayClick) ──────────────────────────────────── */}
