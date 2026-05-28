@@ -15,3 +15,5 @@ export {
 } from "./cells";
 export { dayCellContent, dayCellContext } from "./dayCellContent";
 export type { DayCellContext } from "./dayCellContent";
+export { DailyDateAxis } from "./DailyDateAxis";
+export type { DailyDateAxisProps } from "./DailyDateAxis";
