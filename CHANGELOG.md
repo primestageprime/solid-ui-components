@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+## 0.44.0
+
+### Added
+
+- **ScrubChart** — Composite (Depth 2). Pairs `DateAxis` with a user-supplied chart slot via a 20 px SVG gutter that draws diagonal connectors between each cell's chart-side and axis-side bounds. The focused cell occupies a fixed fraction of chart width (default 2/3) and morphs smoothly when scrubbed; neighbours compress into the side bands (fisheye). Two scale knobs (`selectedFraction`, `sideCompression`) tune the geometry. Scrubbing supports axis-cell click and drag-on-chart; drags use `setPointerCapture` and anchor to a start-frozen layout so the pointer-to-cell mapping doesn't shift as the layout morphs. Internal fractional `selectedAnim` drives a 250 ms ease-out tween on programmatic change via `requestAnimationFrame`. Generic over `C extends Cell` so consumers attach payload directly. Ships `createScrubChart` factory (no concrete named variant yet — single known use case; add one when a second emerges) plus pure helpers `layoutCells` / `xToCell` for chart authors who want the fisheye math standalone.
+- **DailyDateAxis** — Curried day-cell variant restoring the original DateAxis ergonomics on top of the cadence-generic surface: takes `start: Date`, `end: Date`, `selected?: Date`, `onDayClick?: (day: Date) => void`, and a `renderDay?` whose `DayCellContext` includes `isFirstOfMonth` / `isLastOfMonth`. Internally generates `dailyCells(start, end)` and maps the date-keyed selection back to integer indices.
+- **Cell helpers** — Pure functions exported from `./components/DateAxis`: `dailyCells`, `weeklyCells` (Monday-anchored by default; pass `0` for Sunday), `monthlyCells` (1st-of-month UTC), `hourlyCells` (UTC-hour-anchored). Each returns `Cell[]` whose `[start, end)` cover the requested range.
+
+### Changed — BREAKING
+
+- **DateAxis** is now cadence-generic. The component takes `cells: C[]` (where `C extends Cell`) instead of `start` / `end`, an integer `selected?: number` instead of `selected?: Date`, an `onCellClick?: (index, cell) => void` instead of `onDayClick?: (day: Date) => void`, and a required `renderCell` instead of an optional `renderDay`. The cell context shrinks to `{ isToday, isSelected, index }` — month-edge detection (`isFirstOfMonth` / `isLastOfMonth`) is day-specific and moves to `DayCellContext`, surfaced by the new `DailyDateAxis` variant and the exported `dayCellContext` helper. New behaviour: when `selected` is provided, the axis scrolls smoothly to centre it (skipped while the user is actively panning manually). New optional prop `scrollableRef` lets `ScrubChart` subscribe to the axis's scroll position.
+
+  **Migration to keep day-cell ergonomics:**
+
+  ```tsx
+  // Before
+  <DateAxis start={start} end={end} selected={day} onDayClick={setDay} renderDay={renderDay} />
+
+  // After — same API, just rename to DailyDateAxis
+  <DailyDateAxis start={start} end={end} selected={day} onDayClick={setDay} renderDay={renderDay} />
+  ```
+
+  **Migration to use the new generic surface directly:**
+
+  ```tsx
+  import { DateAxis, dailyCells, dayCellContent } from "@primestageprime/solid-ui-components";
+
+  const cells = dailyCells(start, end);
+  <DateAxis cells={cells} selected={index} onCellClick={(i) => setIndex(i)} renderCell={dayCellContent} />
+  ```
+
+- The package root export `Cell` is now reserved by the existing table-cell component. The DateAxis time-bucket type is exported from the package root as **`DateAxisCell`** instead. Deep imports (`from "@primestageprime/solid-ui-components/components/DateAxis"`) still see it as `Cell`.
+
 ## 0.43.0
 
 ### Added
