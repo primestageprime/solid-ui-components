@@ -5,14 +5,21 @@ description: Use when graduating a component from the dev workshop bench into th
 
 # Promote a component (workshop → published catalog)
 
-Graduates a component that has been prototyped on the **workshop bench**
-(`dev/showcases/workshop.tsx`) into the shipped library: exported from the
-barrel, given a dedicated showcase, registered in the catalog, documented, and
-published to GitHub Packages via a version bump.
+Graduates a component that has been prototyped on a **workshop surface** —
+either the master bench (`dev/showcases/workshop.tsx`) or a standalone **Bench**
+(`dev/showcases/workshop/<slug>.tsx`, spun up via `/workshop`) — into the
+shipped library: exported from the barrel, given a dedicated showcase,
+registered in the catalog, documented, and published to GitHub Packages via a
+version bump.
+
+Throughout this skill, **the source surface** means whichever of those two the
+component currently lives on. Determine it first: if the component sits in
+`dev/showcases/workshop/<slug>.tsx`, that **Bench** is the source surface;
+otherwise it's the master `dev/showcases/workshop.tsx`.
 
 This is the back half of the team's build loop:
 
-> build on the workshop bench → **iterate until the API is settled** → `/promote` → repeat for the next component.
+> build on a workshop surface → **iterate until the API is settled** → `/promote` → repeat for the next component.
 
 ## Preconditions (stop and fix if any fail)
 
@@ -22,7 +29,8 @@ This is the back half of the team's build loop:
   port 6006) and the user is happy. Promotion is not the time to redesign.
 - `npx tsc --noEmit` and `npm test` already pass for the component.
 
-If the component is still only inline in `workshop.tsx`, first extract it into
+If the component is still only inline on the source surface (the master
+`workshop.tsx` or its Bench file), first extract it into
 `src/components/<Name>/` — promotion graduates a real folder, not a sketch.
 
 ## Use the Design System persona
@@ -84,10 +92,16 @@ Create a TodoWrite item per step and complete them in order.
 6. **Update `COMPONENTS.md`.** Add the component in the existing format: name,
    depth, public API, curried variants, one usage example.
 
-7. **Clear the bench.** Remove the component's section from
-   `dev/showcases/workshop.tsx` so the workshop is ready for the next component
-   (often the next prototype already replaces it — coordinate so two agents
-   don't both edit `workshop.tsx`).
+7. **Clear the source surface.**
+   - If the source surface was a **Bench** (`dev/showcases/workshop/<slug>.tsx`):
+     delete it with `node scripts/workshop-remove.mjs <slug>` (or `/workshop
+     remove <slug>`). It auto-disappears from the gallery — no `dev/main.tsx`
+     edit needed. This is the clean case for parallel agents: you only touch
+     your own Bench file.
+   - If the source surface was the master `dev/showcases/workshop.tsx`: remove
+     the component's section so the master is ready for the next component
+     (often the next prototype already replaces it — coordinate so two agents
+     don't both edit `workshop.tsx`).
 
 8. **Verify gates (all must be green):**
    ```bash
@@ -133,4 +147,5 @@ local npm token needed) and dispatches a `sui-published` event to consumers
 - New version is live on GitHub Packages and tagged `vX.Y.Z` on `main`.
 - The component has a barrel export, a dedicated showcase, a `COMPONENTS.md`
   entry, and passing tsc/test/build.
-- The workshop bench is clear for the next component.
+- The source surface is clear: the Bench file is deleted, or the master
+  `workshop.tsx` section is removed.
