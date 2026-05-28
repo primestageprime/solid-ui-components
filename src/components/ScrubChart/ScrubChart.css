@@ -1,0 +1,29 @@
+/* ============================================
+   ScrubChart — Composite (Depth 2).
+   Chart frame + gutter (diagonal connectors) + DateAxis stacked vertically.
+   ============================================ */
+
+.sui-scrub-chart {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+  overflow: hidden;
+}
+
+.sui-scrub-chart__frame {
+  position: relative;
+  width: 100%;
+  background: var(--sui-bg-base, transparent);
+}
+
+.sui-scrub-chart__gutter {
+  display: block;
+  width: 100%;
+  background: var(--sui-bg-base, transparent);
+  border-top: 1px solid var(--sui-border);
+  border-bottom: 1px solid var(--sui-border);
+  overflow: hidden;
+}
