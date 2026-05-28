@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.43.0
+
+### Added
+
+- **DateAxis** — Atomic (Depth 1). A standalone horizontal day-cell ribbon (one cell per calendar day, horizontal scroll for long ranges, today marker, month label above the number on the first/last day of each month). NOT the chart-internal `XAxis` — plain HTML, no scale or chart context, usable as a bottom-of-chart date header or a freestanding "rules" axis. Props: `start`/`end` (inclusive range), `today?`, `cellWidth?`, `selected?`, `onDayClick?` (clickable + keyboard-activatable days for scrubbing a linked view), and `renderDay?: (day, ctx) => JSX.Element` — a per-cell render prop where the caller owns each cell's content *and* size (the axis grows to fit and the scrollbar sits below). Ships `createDateAxis` (baking the `cellWidth` override) plus the pure helpers `eachDayOfRange` / `isSameCalendarDay`.
+
 ## 0.42.0
 
 ### Added
