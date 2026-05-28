@@ -221,8 +221,17 @@ export const ScrubChart = <C extends Cell>(
   // fractional `selectedAnim` (active gesture / mid-tween) we set scrollLeft
   // imperatively each frame so the axis tracks the chart's morph smoothly.
   let axisScrollEl: HTMLDivElement | undefined;
+  // Mirror the axis's scrollLeft into a signal so the gutter diagonals can
+  // subtract it from each cell's axis-side x and stay glued to the moving
+  // axis cells (B8).
+  const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
   const handleScrollableRef = (el: HTMLDivElement) => {
     axisScrollEl = el;
+    el.addEventListener(
+      "scroll",
+      () => setAxisScrollLeft(el.scrollLeft),
+      { passive: true },
+    );
   };
 
   createEffect(() => {
@@ -261,8 +270,8 @@ export const ScrubChart = <C extends Cell>(
           {(i) => {
             const isSelected = i === props.selected;
             const [chL, chR] = layout().bounds[i];
-            const axL = i * cellWidth();
-            const axR = (i + 1) * cellWidth();
+            const axL = i * cellWidth() - axisScrollLeft();
+            const axR = (i + 1) * cellWidth() - axisScrollLeft();
             const stroke = isSelected
               ? "var(--sui-accent)"
               : "var(--sui-border)";
