@@ -20,6 +20,7 @@ import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
 import { ScrubChartShowcase } from "./showcases/scrub-chart";
+import { CashflowScrubChartShowcase } from "./showcases/cashflow-scrub-chart";
 import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
@@ -144,6 +145,7 @@ const items: Item[] = [
   { id: "dag-chart", label: "DagChart", component: DagChartShowcase, tags: ["depth:1", "chart", "data"] },
   { id: "date-axis", label: "DateAxis", component: DateAxisShowcase, tags: ["depth:1", "chart", "time"] },
   { id: "scrub-chart", label: "ScrubChart", component: ScrubChartShowcase, tags: ["depth:2", "chart", "time", "data"] },
+  { id: "cashflow-scrub-chart", label: "CashflowScrubChart", component: CashflowScrubChartShowcase, tags: ["depth:3", "chart", "time", "data"] },
   { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "animated-swimlane-chart", label: "AnimatedSwimlaneChart", component: AnimatedSwimlaneChartShowcase, tags: ["depth:2", "chart", "data"] },
   { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase, tags: ["depth:1", "table", "data", "container"] },

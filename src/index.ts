@@ -162,6 +162,7 @@ export * from "./components/AssigneeChips";
 export * from "./components/CashflowChart";
 export * from "./components/DnDHierarchySortBar";
 export * from "./components/ScrubChart";
+export * from "./components/CashflowScrubChart";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

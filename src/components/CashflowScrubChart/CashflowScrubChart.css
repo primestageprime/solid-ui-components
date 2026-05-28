@@ -1,0 +1,125 @@
+/* ============================================
+   CashflowScrubChart — Domain Composite (Depth 3).
+
+   Owns CSS for the cashflow day-cell renderer and the running-balance
+   line chart. Depth-3 composites are allowed to ship CSS when the visual
+   is genuinely domain-specific (positive / negative cashflow polarity,
+   diverging bars, etc.) and not expressible as variants of upstream
+   atomics.
+   ============================================ */
+
+/* ── Day cell — date corner + diverging bar + dollar amount ───────── */
+
+.sui-cashflow-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 60px;
+  height: 72px;
+  box-sizing: border-box;
+  padding: 3px 4px 4px;
+  gap: 2px;
+  border-right: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+  font-family: var(--sui-font-family, inherit);
+}
+
+.sui-cashflow-cell--positive {
+  background: var(
+    --sui-cashflow-cell-positive-bg,
+    rgba(0, 200, 120, 0.05)
+  );
+}
+
+.sui-cashflow-cell--negative {
+  background: var(
+    --sui-cashflow-cell-negative-bg,
+    rgba(230, 70, 70, 0.05)
+  );
+}
+
+.sui-cashflow-cell__date {
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--sui-text-muted, rgba(255, 255, 255, 0.45));
+  white-space: nowrap;
+}
+
+.sui-cashflow-cell__bar-track {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.sui-cashflow-cell__zero {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--sui-border, rgba(255, 255, 255, 0.08));
+}
+
+.sui-cashflow-cell__bar {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+}
+
+.sui-cashflow-cell__bar--up {
+  bottom: 50%;
+  background: var(
+    --sui-cashflow-positive,
+    rgba(0, 200, 120, 0.85)
+  );
+  border-radius: 1px 1px 0 0;
+}
+
+.sui-cashflow-cell__bar--down {
+  top: 50%;
+  background: var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+  border-radius: 0 0 1px 1px;
+}
+
+.sui-cashflow-cell__amount {
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sui-cashflow-cell--positive .sui-cashflow-cell__amount {
+  color: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+}
+
+.sui-cashflow-cell--negative .sui-cashflow-cell__amount {
+  color: var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+}
+
+/* ── Running-balance line chart ───────────────────────────────────── */
+
+.sui-cashflow-scrub-chart__chart {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.sui-cashflow-scrub-chart__zero-line {
+  stroke: var(--sui-border, rgba(255, 255, 255, 0.08));
+  stroke-dasharray: 4 4;
+}
+
+.sui-cashflow-scrub-chart__line {
+  fill: none;
+  stroke: var(--sui-accent, #00a8cc);
+  stroke-width: 1.6;
+}
+
+.sui-cashflow-scrub-chart__selected-rule {
+  stroke: var(--sui-warning, #f5a623);
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
+}
+
+.sui-cashflow-scrub-chart__selected-dot {
+  fill: var(--sui-warning, #f5a623);
+}

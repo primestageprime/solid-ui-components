@@ -241,6 +241,24 @@ State derivation:
     ```
   - **createScrubChart factory; no concrete variant (intentional).** `createScrubChart({ chartHeight, cellWidth })` returns a curried `Component<ScrubChartDataProps<C>>` with the two sizing knobs frozen — call sites then pass only data / callbacks. Per STYLE_GUIDE.md "Variant Surface: keep it minimal," no concrete named variant ships yet: defaults handle the only known use case. Add a named variant when a second emerges.
 
+## CashflowScrubChart
+- **CashflowScrubChart** — Domain Composite (Depth 3). Composes `ScrubChart` (Depth 2) with a baked-in cashflow day-cell renderer (date corner + diverging green/red bar + dollar amount) and a baked-in running-balance line drawing. Zero-config at the call site: just pass `cells: CashflowCell[]` + `selected` + `onScrub`. Per-cell payload `CashflowCell = Cell & { cashflowCents: number; balanceCents: number }`: `cashflowCents` is the day's net flow (negative for an expense day); `balanceCents` is the cumulative running balance. The bar's fill fraction is hand-tuned for typical cashflow magnitudes (saturates at $2,200/day-equivalent); the line plots `balanceCents` across all cells. Inherits ScrubChart's window-band overlay, axis auto-scroll, and pointer scrub behaviour. Key props: `cells: CashflowCell[]`, `selected: number`, `onScrub: (index, cell) => void`, `today?`, `chartHeight?` (default `200`), `cellWidth?` (default `60` — matches the cashflow cell's content; not `40` like bare ScrubChart). Owns `CashflowScrubChart.css`; allowed at Depth 3 because the diverging-polarity visual is genuinely domain-specific and not expressible as variants of upstream atomics. Theme tokens: `--sui-cashflow-positive`, `--sui-cashflow-negative` (bar + amount colour); `--sui-cashflow-cell-positive-bg`, `--sui-cashflow-cell-negative-bg` (cell background tint); inherits `--sui-scrub-chart-window-fill`, `--sui-scrub-chart-window-stroke` from `ScrubChart`. Exported types: `CashflowCell`, `CashflowScrubChartProps`. Use for: cashflow / coffers visualisations that need both per-day detail (the axis ribbon) and the running-balance arc (the chart). No factory: every prop is data or sizing — there's nothing presentational to freeze.
+  - Example:
+    ```tsx
+    import { CashflowScrubChart, dailyCells, type CashflowCell } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    let runningTotal = 0;
+    const cells: CashflowCell[] = dailyCells(rangeStart, rangeEnd).map((cell, i) => {
+      const cashflowCents = myCashflowAt(i);
+      runningTotal += cashflowCents;
+      return { ...cell, cashflowCents, balanceCents: runningTotal };
+    });
+    const [selectedIdx, setSelectedIdx] = createSignal(0);
+
+    <CashflowScrubChart cells={cells} selected={selectedIdx()} onScrub={setSelectedIdx} today={today} />
+    ```
+
 ## SwimlaneChart
 - **SwimlaneChart** — Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: "collapsed", collapsedCount }` for nodes that overflowed the depth window), `maxDepth` (rings on each side of center; default 2), `responsiveCollapse` (default true — shrinks depth to fit `containerWidth`), `centerCol` (default 0), `nodeSize`, `columnGap`, `rowGap`, `interactive`, `arrows`, `onNodeClick`. Nodes outside the visible depth window collapse into boundary badges (circle + count) at the outer edge of the outermost visible anchor. Width budgeting is purely symmetric — chart reserves `depth` columns on each side of center, so DOING-anchored layouts never push content off-screen. Leaving nodes play a 360ms mirrored compress-into-badge animation (rect → circle, shrinks toward the badge side); entering nodes mirror the leave in reverse (emerge from the badge as a circle, expand to rect). Use for: current-step-in-workflow displays, DOING-centered Kanban, dependency chain visualizations with overflow summarization.
 - **LinearFlowSwimlaneChart** — Curried variant of SwimlaneChart pre-configured for "current step in a sequential workflow" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom.
