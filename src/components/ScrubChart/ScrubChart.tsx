@@ -13,6 +13,7 @@ import {
   For,
   type JSX,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -65,6 +66,7 @@ const DEFAULT_SIDE_COMPRESSION = 28;
 const DEFAULT_CHART_HEIGHT = 200;
 const DEFAULT_GUTTER_HEIGHT = 20;
 const DEFAULT_CELL_WIDTH = 40;
+const TWEEN_MS = 250;
 
 export const ScrubChart = <C extends Cell>(
   props: ScrubChartProps<C>,
@@ -91,14 +93,54 @@ export const ScrubChart = <C extends Cell>(
     onCleanup(() => obs.disconnect());
   });
 
-  // Static integer-only layout for the scaffold; B5 swaps to fractional selectedAnim.
+  // ── Continuous fractional focus position ─────────────────────────────
+  // All layout reads from this — not from `props.selected` directly. It
+  // tracks `props.selected` via a tween (B5) or the active gesture (B6).
+  const [selectedAnim, setSelectedAnim] = createSignal(props.selected);
+  // True while a pointer-driven gesture owns `selectedAnim`. The prop-change
+  // tween bails out while gestureActive is set so the two drivers don't fight.
+  const [gestureActive, setGestureActive] = createSignal(false);
+
+  // Tween `selectedAnim` toward `target` over TWEEN_MS via ease-out cubic.
+  // Cancels any in-flight tween so back-to-back prop changes always animate
+  // from the current visible position.
+  let rafHandle: number | null = null;
+  const tweenTo = (target: number) => {
+    if (rafHandle !== null) cancelAnimationFrame(rafHandle);
+    const start = selectedAnim();
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / TWEEN_MS);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setSelectedAnim(start + (target - start) * eased);
+      if (t < 1) {
+        rafHandle = requestAnimationFrame(step);
+      } else {
+        rafHandle = null;
+      }
+    };
+    rafHandle = requestAnimationFrame(step);
+  };
+  onCleanup(() => {
+    if (rafHandle !== null) cancelAnimationFrame(rafHandle);
+  });
+
+  // Tween toward `props.selected` whenever it changes (unless the user is
+  // actively gesturing — then the gesture owns `selectedAnim`).
+  createEffect(() => {
+    const target = props.selected;
+    if (gestureActive()) return;
+    if (Math.abs(target - selectedAnim()) < 0.001) return;
+    tweenTo(target);
+  });
+
   const layout = createMemo<CellLayout>(() =>
     layoutCells({
       cellCount: props.cells.length,
       chartWidth: chartWidth(),
       selectedFraction: selectedFraction(),
       sideCompression: sideCompression(),
-      selectedAnim: props.selected,
+      selectedAnim: selectedAnim(),
     }),
   );
 
