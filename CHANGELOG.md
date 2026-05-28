@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 0.47.0
+
+### Added
+
+- **CashflowScrubChart** — Domain Composite (Depth 3). Zero-config drop-in over `ScrubChart` that bakes in the cashflow day-cell renderer (date corner + diverging green/red bar + dollar amount) and the running-balance line drawing. Call site is `cells: CashflowCell[]` + `selected` + `onScrub` — no `renderChart` / `renderCell` boilerplate. Per-day payload `CashflowCell = Cell & { cashflowCents: number; balanceCents: number }`: net day flow (signed) + cumulative running balance. Theming hangs off `--sui-cashflow-positive` / `--sui-cashflow-negative` (bar + amount colour) and `--sui-cashflow-cell-positive-bg` / `--sui-cashflow-cell-negative-bg` (cell background tint); window-band tokens inherited from `ScrubChart`. For a different visualisation on the same cell shape, drop down to bare `ScrubChart` and supply your own render slots.
+- **`CashflowCell` type** exported from the package root for callers building their own cell arrays.
+
 ## 0.46.0
 
 ### Added
