@@ -1,6 +1,6 @@
 // src/components/ScrubChart/scales.test.ts
 import { describe, it, expect } from "vitest";
-import { layoutCells } from "./scales";
+import { layoutCells, xToCell } from "./scales";
 
 const DEFAULT = {
   cellCount: 22,
@@ -84,5 +84,27 @@ describe("layoutCells", () => {
     // Cell 0's left edge is off-canvas (the right edge sits at x = bounds[1][0] = 0).
     expect(layout.bounds[0][0]).toBeLessThan(0);
     expect(layout.bounds[0][1]).toBeLessThanOrEqual(0);
+  });
+});
+
+describe("xToCell", () => {
+  it("returns the focused cell index for x at chart centre", () => {
+    const layout = layoutCells({ ...DEFAULT, selectedAnim: 8 });
+    expect(xToCell(DEFAULT.chartWidth / 2, layout)).toBeCloseTo(8, 2);
+  });
+
+  it("returns a fractional value within the focused cell", () => {
+    const layout = layoutCells({ ...DEFAULT, selectedAnim: 8 });
+    const [l, r] = layout.bounds[8];
+    expect(xToCell(l + (r - l) * 0.25, layout)).toBeCloseTo(8 - 0.25, 2);
+    expect(xToCell(l + (r - l) * 0.75, layout)).toBeCloseTo(8 + 0.25, 2);
+  });
+
+  it("clamps to nearest visible cell when x is outside the chart range", () => {
+    const layout = layoutCells({ ...DEFAULT, selectedAnim: 8 });
+    // Far left → leftmost visible cell.
+    expect(xToCell(-1000, layout)).toBe(layout.activeWindow[0]);
+    // Far right → rightmost visible cell.
+    expect(xToCell(99999, layout)).toBe(layout.activeWindow.at(-1));
   });
 });

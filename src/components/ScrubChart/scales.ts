@@ -99,3 +99,28 @@ export function layoutCells(input: LayoutCellsInput): CellLayout {
 
   return { bounds, activeWindow, sideWindow };
 }
+
+/**
+ * Inverse of layoutCells: given a chart-pixel x, return the fractional cell
+ * position that x falls within. Used to map pointer x → selectedAnim during
+ * a scrub gesture. Clamps to the nearest visible cell when x falls outside
+ * the active window's bounds.
+ */
+export function xToCell(x: number, layout: CellLayout): number {
+  const win = layout.activeWindow;
+  if (win.length === 0) return 0;
+  // Below the leftmost visible cell.
+  if (x <= layout.bounds[win[0]][0]) return win[0];
+  // Walk visible cells; find the one whose bounds contain x.
+  for (const i of win) {
+    const [l, r] = layout.bounds[i];
+    if (x >= l && x <= r) {
+      const frac = (x - l) / (r - l); // 0..1 inside the cell
+      // Cell i spans [i − 0.5, i + 0.5] in fractional-cell coords.
+      return i - 0.5 + frac;
+    }
+  }
+  // Past the rightmost visible cell.
+  return win[win.length - 1];
+}
+
