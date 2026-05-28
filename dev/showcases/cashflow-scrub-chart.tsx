@@ -19,14 +19,27 @@ const RANGE_START = new Date("2026-05-01");
 const RANGE_END = new Date("2026-09-30");
 const PINNED_TODAY = new Date("2026-05-28");
 
-const cells: CashflowCell[] = (() => {
+const buildCells = (start: Date, end: Date): CashflowCell[] => {
   let running = 0;
-  return dailyCells(RANGE_START, RANGE_END).map((cell, i) => {
+  return dailyCells(start, end).map((cell, i) => {
     const cashflowCents = cashflowAt(i) * 100;
     running += cashflowCents;
     return { ...cell, cashflowCents, balanceCents: running };
   });
-})();
+};
+
+const cells = buildCells(RANGE_START, RANGE_END);
+
+// Long range to exercise the auto-cadence ladder — 2.5 years forces quarter
+// ticks under the default 12-tick cap.
+const LONG_RANGE_START = new Date("2025-01-01");
+const LONG_RANGE_END = new Date("2027-06-30");
+const longCells = buildCells(LONG_RANGE_START, LONG_RANGE_END);
+const longTodayIndex = longCells.findIndex(
+  (c) =>
+    PINNED_TODAY.getTime() >= c.start.getTime() &&
+    PINNED_TODAY.getTime() < c.end.getTime(),
+);
 
 const todayIndex = cells.findIndex(
   (c) =>
@@ -53,6 +66,9 @@ const fmtDollars = (cents: number): string => {
 export const CashflowScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
+  const [longSelectedIdx, setLongSelectedIdx] = createSignal(
+    Math.max(0, longTodayIndex),
+  );
 
   return (
     <div class="component-section component-section--full">
@@ -103,6 +119,25 @@ export const CashflowScrubChartShowcase: Component = () => {
           {" · Day cashflow: "}
           <span>{fmtDollars(cell().cashflowCents)}</span>
         </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Auto x-tick cadence on a long range</h3>
+        <p class="text-meta">
+          The same component with {longCells.length} daily cells (
+          {LONG_RANGE_START.getUTCFullYear()}–{LONG_RANGE_END.getUTCFullYear()}).
+          Per-week ticks would render ~130 labels; <code>xTickCadence="auto"</code>
+          walks the week→month→quarter→year ladder and picks the finest unit
+          whose tick count fits under the default <code>xMaxTicks=12</code>.
+          Here that lands on <strong>quarter</strong>.
+        </p>
+
+        <CashflowScrubChart
+          cells={longCells}
+          selected={longSelectedIdx()}
+          onScrub={(i) => setLongSelectedIdx(i)}
+          today={PINNED_TODAY}
+        />
       </div>
 
       <div class="example-group">

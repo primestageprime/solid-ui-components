@@ -15,7 +15,7 @@
 // supply your own `renderChart` / `renderCell`.
 // ============================================
 
-import { type Component } from "solid-js";
+import { type Component, createMemo } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
 import { type Cell } from "../DateAxis";
 import "./CashflowScrubChart.css";
@@ -52,6 +52,24 @@ const fmtDollars = (cents: number): string => {
   })}`;
 };
 
+// Y-axis labels — unsigned dollars with `$` prefix and a `−` for negatives.
+const fmtAxisDollars = (cents: number): string => {
+  const dollars = cents / 100;
+  const abs = Math.abs(dollars);
+  const compact =
+    abs >= 1_000_000
+      ? `${(dollars / 1_000_000).toLocaleString("en-US", {
+          maximumFractionDigits: 1,
+        })}M`
+      : abs >= 1_000
+        ? `${(dollars / 1_000).toLocaleString("en-US", {
+            maximumFractionDigits: 1,
+          })}k`
+        : dollars.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return dollars < 0 ? `−$${compact.replace(/^-/, "")}` : `$${compact}`;
+};
+
+
 const formatCornerLabel = (cell: CashflowCell): string => {
   const day = cell.start.getUTCDate();
   // First / last day of month gets a "Jun 30" / "Jul 1" style label so the
@@ -79,6 +97,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 ) => {
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
+
+  // Y-domain is forced to include zero so the zero-line + diverging axis
+  // labels read consistently regardless of whether the running balance
+  // dips negative.
+  const yDomain = createMemo<[number, number]>(() => {
+    if (props.cells.length === 0) return [0, 1];
+    const balances = props.cells.map((c) => c.balanceCents);
+    return [Math.min(0, ...balances), Math.max(0, ...balances)];
+  });
 
   // ── Per-day cell renderer ────────────────────────────────────────────
   const renderCashflowCell = (cell: CashflowCell) => {
@@ -110,31 +137,20 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const renderBalanceChart = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
-    if (ctx.cells.length === 0) return null;
-    // Pre-compute y-domain across all cells.
-    const balances = ctx.cells.map((c) => c.balanceCents);
-    const yMin = Math.min(0, ...balances);
-    const yMax = Math.max(0, ...balances);
-    const yRange = yMax - yMin || 1;
-    const topPad = 12;
-    const bottomPad = 16;
-    const plotH = ctx.height - topPad - bottomPad;
-    const balanceToY = (cents: number): number =>
-      ctx.height - bottomPad - ((cents - yMin) / yRange) * plotH;
-    const zeroY = balanceToY(0);
+    if (ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    const yToPlot = ctx.yToPlot;
+    const zeroY = yToPlot(0);
 
     const points = ctx.cells
       .map(
         (c, i) =>
-          `${ctx.cellToX(i).toFixed(1)},${balanceToY(c.balanceCents).toFixed(
-            1,
-          )}`,
+          `${ctx.cellToX(i).toFixed(1)},${yToPlot(c.balanceCents).toFixed(1)}`,
       )
       .join(" ");
 
     const selectedCell = ctx.cells[ctx.selected];
     const selectedX = ctx.cellToX(ctx.selected);
-    const selectedY = balanceToY(selectedCell.balanceCents);
+    const selectedY = yToPlot(selectedCell.balanceCents);
 
     return (
       <svg
@@ -144,8 +160,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       >
         <line
           class="sui-cashflow-scrub-chart__zero-line"
-          x1={0}
-          x2={ctx.width}
+          x1={ctx.plotLeft}
+          x2={ctx.plotRight}
           y1={zeroY}
           y2={zeroY}
         />
@@ -158,8 +174,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           class="sui-cashflow-scrub-chart__selected-rule"
           x1={selectedX}
           x2={selectedX}
-          y1={topPad}
-          y2={ctx.height - bottomPad}
+          y1={ctx.plotTop}
+          y2={ctx.plotBottom}
         />
         <circle
           class="sui-cashflow-scrub-chart__selected-dot"
@@ -179,6 +195,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}
+      yDomain={yDomain()}
+      formatYLabel={fmtAxisDollars}
+      xTickCadence="auto"
       renderCell={renderCashflowCell}
       renderChart={renderBalanceChart}
     />

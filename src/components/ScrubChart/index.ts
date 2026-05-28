@@ -4,4 +4,6 @@ export type {
   ScrubChartContext,
   ScrubChartOverrides,
   ScrubChartDataProps,
+  ScrubChartXTickCadence,
+  ResolvedXTickCadence,
 } from "./ScrubChart";
