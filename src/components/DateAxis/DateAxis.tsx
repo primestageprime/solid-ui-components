@@ -12,7 +12,7 @@
 //     Suitable as bottom-of-chart date header OR standalone "rules" axis.
 // ============================================
 
-import { Component, For, type JSX } from "solid-js";
+import { Component, For, mergeProps, type JSX } from "solid-js";
 import "./DateAxis.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -76,15 +76,18 @@ export interface DateAxisProps {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Strips the time component from a Date, returning midnight UTC-0 as a
- * numeric timestamp. Used only for day-equality comparisons — avoids
- * browser-local midnight ambiguity by normalising both operands the same way.
+ * Strips the time component from a Date, returning midnight UTC as a numeric
+ * timestamp. Keyed in UTC to stay consistent with the rest of the component —
+ * cells are generated at UTC midnight (`eachDayOfRange`) and month-edge / label
+ * logic reads `getUTC*`. Comparing in UTC keeps `today` / `selected` matching
+ * on the correct cell in every timezone (a local-time key would be off by one
+ * for browsers behind UTC).
  */
 const dayKey = (d: Date): number =>
-  Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 
 /**
- * Returns true when `a` and `b` fall on the same calendar day (browser-local).
+ * Returns true when `a` and `b` fall on the same calendar day (UTC).
  */
 export const isSameCalendarDay = (a: Date, b: Date): boolean =>
   dayKey(a) === dayKey(b);
@@ -236,3 +239,29 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
     </div>
   );
 };
+
+// ── Override / Data split + factory ────────────────────────────────────────
+
+/**
+ * Props that are visual/static overrides — locked at variant-definition time.
+ * `cellWidth` is the only presentational knob; everything else is data/callback.
+ */
+export type DateAxisOverrides = Pick<DateAxisProps, "cellWidth">;
+
+/** Props that remain available to consumers of a curried DateAxis variant. */
+export type DateAxisDataProps = Omit<DateAxisProps, keyof DateAxisOverrides>;
+
+/**
+ * Factory that returns a curried DateAxis with a baked-in presentational
+ * `cellWidth`. Call sites then receive only `DateAxisDataProps` (the date range,
+ * `today`, `selected`, `onDayClick`, `renderDay`) — the override is frozen.
+ *
+ * @example
+ * const WideDateAxis = createDateAxis({ cellWidth: 56 });
+ * // call site: <WideDateAxis start={start} end={end} onDayClick={scrub} />
+ */
+export function createDateAxis(
+  defaults: Partial<Omit<DateAxisProps, "children">>,
+): Component<DateAxisDataProps> {
+  return (props) => <DateAxis {...(mergeProps(defaults, props) as DateAxisProps)} />;
+}

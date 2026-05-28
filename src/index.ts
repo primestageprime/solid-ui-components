@@ -132,6 +132,7 @@ export * from "./components/DiffPair";
 export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
+export * from "./components/DateAxis";
 export * from "./components/ThreePanelLayout";
 export * from "./components/Markdown";
 export * from "./components/Kbd";

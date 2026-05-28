@@ -179,6 +179,32 @@ State derivation:
 ## DagChart
 - **DagChart** — SVG directed acyclic graph with dagre-computed layout. Key props: `nodes` (array of `DagNode` with `id`, `label`, `status` (`ColorVariant`), optional `metadata`, optional `sublabel`, optional `avatar`), `edges` (array of `DagEdge` with `source`/`target`), `onNodeClick`, `direction` (`TB`|`LR`), `height`. Nodes render as rounded rects colored by status. When `avatar` is provided, a circular 20px image renders left-aligned inside the node and the label shifts right. When `sublabel` is provided, muted smaller text renders below the label. Edges are directed paths with arrowheads. SVG auto-sizes viewBox to fit all content. Uses `--sui-*` CSS variables. Exported types: `DagNode`, `DagEdge`, `DagChartProps`. Use for: task dependency graphs, workflow DAGs, pipeline visualization.
 
+## DateAxis
+- **DateAxis** — Atomic (Depth 1). Owns `DateAxis.css` (BEM `sui-date-axis*`), composes no other components — pure HTML `<div>`s + `<For>`. A freestanding horizontal day-cell ribbon: one cell per calendar day from `start` to `end` (inclusive), month labels above the day number on the first and last day of each month, a highlighted `today` cell (accent tint + pip), and horizontal scroll for long ranges (the scrollbar sits in a reserved strip below the cells). NOT the chart-internal XAxis — no SVG, no scale, no chart context; usable as a bottom-of-chart date header OR a standalone "rules header". Day-equality is computed via a UTC `dayKey`, so the marker logic is timezone-stable. Key props: `start` (`Date`, inclusive), `end` (`Date`, inclusive), `today?` (`Date`, default `new Date()` — the cell to mark as today), `cellWidth?` (`number`, default `40` — px per default cell; the one presentational override), `selected?` (`Date` — the linked-view position, highlighted distinctly from today with an accent underline), `onDayClick?` (`(day: Date) => void` — when supplied, cells become `role="button"`, focusable, and fire on click + Enter/Space; omit for a passive header), `renderDay?` (`(day: Date, ctx: DateAxisDayContext) => JSX.Element` — custom per-cell content). With `renderDay`, the cell switches to `--custom` mode (`flex: 0 0 auto`, no fixed width, no separator border) so the **renderer owns each cell's content AND size** (e.g. a 60×72 cashflow square); DateAxis still owns the wrapper, click handling, and today/selected highlight. `DateAxisDayContext` = `{ isToday, isSelected, isFirstOfMonth, isLastOfMonth, index }` (`index` is the zero-based position into your own series). Exported pure helpers: `eachDayOfRange(start, end)` (one `Date` per day, inclusive; empty when `start > end`) and `isSameCalendarDay(a, b)`. Exported types: `DateAxisProps`, `DateAxisOverrides`, `DateAxisDataProps`, `DateAxisDayContext`. Uses `--sui-accent`, `--sui-border`, `--sui-text-muted`, `--sui-text-secondary`, `--sui-radius-md`, `--sui-font-family`. Use for: scrubber/date-header ribbons, calendar-style per-day heatmaps (cashflow, activity), linked date selection above a graph.
+  - **createDateAxis factory; no concrete variant (intentional).** `createDateAxis({ cellWidth })` returns a curried `Component<DateAxisDataProps>` with the one presentational override (`cellWidth`) frozen — call sites then pass only data/callbacks. Per STYLE_GUIDE.md "Variant Surface: keep it minimal," no concrete named variant ships yet: there is exactly one real use case and a single fixed `cellWidth` is fine. Add a named variant (e.g. `WideDateAxis`) only when a second use case genuinely needs a different baked width.
+  - Example:
+    ```tsx
+    import { DateAxis, eachDayOfRange } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const start = new Date("2026-05-01");
+    const end = new Date("2026-07-14");
+    const [selected, setSelected] = createSignal<Date>(new Date("2026-05-27"));
+
+    // Passive header
+    <DateAxis start={start} end={end} />
+
+    // Clickable, driving a linked graph view
+    <DateAxis start={start} end={end} selected={selected()} onDayClick={setSelected} />
+
+    // Custom per-day cell (renderer owns size)
+    <DateAxis
+      start={start}
+      end={end}
+      renderDay={(day, ctx) => <MyCashflowCell value={series[ctx.index]} day={day} />}
+    />
+    ```
+
 ## SwimlaneChart
 - **SwimlaneChart** — Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: "collapsed", collapsedCount }` for nodes that overflowed the depth window), `maxDepth` (rings on each side of center; default 2), `responsiveCollapse` (default true — shrinks depth to fit `containerWidth`), `centerCol` (default 0), `nodeSize`, `columnGap`, `rowGap`, `interactive`, `arrows`, `onNodeClick`. Nodes outside the visible depth window collapse into boundary badges (circle + count) at the outer edge of the outermost visible anchor. Width budgeting is purely symmetric — chart reserves `depth` columns on each side of center, so DOING-anchored layouts never push content off-screen. Leaving nodes play a 360ms mirrored compress-into-badge animation (rect → circle, shrinks toward the badge side); entering nodes mirror the leave in reverse (emerge from the badge as a circle, expand to rect). Use for: current-step-in-workflow displays, DOING-centered Kanban, dependency chain visualizations with overflow summarization.
 - **LinearFlowSwimlaneChart** — Curried variant of SwimlaneChart pre-configured for "current step in a sequential workflow" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom.
