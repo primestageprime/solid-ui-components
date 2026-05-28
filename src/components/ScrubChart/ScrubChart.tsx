@@ -243,6 +243,12 @@ export const ScrubChart = <C extends Cell>(
     el.scrollLeft = Math.max(0, targetLeft);
   });
 
+  // Cells worth drawing chart-side day edges + gutter diagonals for: the
+  // active window. Cells outside the active window have bounds extrapolated
+  // far off-canvas — their diagonals would degenerate into near-horizontal
+  // noise across the gutter, so we omit them entirely.
+  const edgeCells = () => layout().activeWindow;
+
   return (
     <div class="sui-scrub-chart">
       <div
@@ -250,6 +256,49 @@ export const ScrubChart = <C extends Cell>(
         style={{ height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
       >
+        {/* Day-edge vertical lines inside the chart. Rendered as the first
+            child so they sit BEHIND the user's renderChart content (gridlines
+            should never occlude data) and continue downward into the gutter
+            diagonals to give the "connector lands on a vertical line" effect. */}
+        <svg
+          class="sui-scrub-chart__edges"
+          viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
+          preserveAspectRatio="none"
+        >
+          <For each={edgeCells()}>
+            {(i) => {
+              const isSelected = i === props.selected;
+              const [chL, chR] = layout().bounds[i];
+              const stroke = isSelected
+                ? "var(--sui-accent)"
+                : "var(--sui-border)";
+              const opacity = isSelected ? 0.5 : 0.25;
+              const strokeWidth = isSelected ? 1.2 : 1;
+              return (
+                <>
+                  <line
+                    x1={chL}
+                    y1={0}
+                    x2={chL}
+                    y2={chartHeight()}
+                    stroke={stroke}
+                    stroke-width={strokeWidth}
+                    opacity={opacity}
+                  />
+                  <line
+                    x1={chR}
+                    y1={0}
+                    x2={chR}
+                    y2={chartHeight()}
+                    stroke={stroke}
+                    stroke-width={strokeWidth}
+                    opacity={opacity}
+                  />
+                </>
+              );
+            }}
+          </For>
+        </svg>
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         <div
           class="sui-scrub-chart__overlay"
@@ -266,7 +315,7 @@ export const ScrubChart = <C extends Cell>(
         preserveAspectRatio="none"
         style={{ height: `${gutterHeight()}px` }}
       >
-        <For each={Array.from({ length: props.cells.length }, (_, i) => i)}>
+        <For each={edgeCells()}>
           {(i) => {
             const isSelected = i === props.selected;
             const [chL, chR] = layout().bounds[i];
