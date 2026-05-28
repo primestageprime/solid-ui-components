@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.46.0
+
+### Added
+
+- **Stack** / **Row** grow a `fill?: boolean` prop. `Stack fill` applies `height: 100%; min-height: 0`; `Row fill` applies `width: 100%; min-width: 0` — forwarding the parent's size through so a scrolling descendant (e.g. a `fill` BaseTable) has a concrete dimension to size against. Additive, no breaking change. `fill` is also a lockable override on `createStack` / `createRow`.
+
+### Changed
+
+- **BaseTable** `fill` now makes internal scrolling the default instead of a no-op. When `fill` is set (and `maxHeight` is not), the table fills its parent and scrolls its body with the sticky header pinned — no more `maxHeight="100%"` + manual flex-ancestor plumbing. Implemented by splitting the scroll container off the sticky-header wrapper: a new inner `.hud-table__scroll` `<div>` wraps the `<table>` and owns `overflow-y: auto`, while the outer `.hud-table--fill` becomes a clipping flex column. `maxHeight` is unchanged as the explicit "cap at Npx and scroll" escape hatch (its inline style now lands on the inner scroll region). **FilterableTable** `fill` passes through the same way (toolbar stays fixed, table fills + scrolls). The extra wrapper `<div>` is the only DOM change for existing tables; default and `maxHeight` tables render and scroll as before.
+
 ## 0.45.0
 
 ### Changed — BREAKING

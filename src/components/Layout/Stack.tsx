@@ -10,6 +10,9 @@ export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
   gap?: "xs" | "sm" | "md" | "lg" | "xl";
   align?: "start" | "center" | "end" | "stretch";
   justify?: "start" | "center" | "end" | "between";
+  /** Fill the parent's height and forward it through (height:100%; min-height:0)
+   *  so a scrolling child — e.g. a `fill` BaseTable — has concrete height. */
+  fill?: boolean;
 }
 
 export const Stack: Component<StackProps> = (props) => {
@@ -17,6 +20,7 @@ export const Stack: Component<StackProps> = (props) => {
     "gap",
     "align",
     "justify",
+    "fill",
     "class",
     "children",
   ]);
@@ -26,6 +30,7 @@ export const Stack: Component<StackProps> = (props) => {
     if (local.gap) classList.push(`stack--gap-${local.gap}`);
     if (local.align) classList.push(`stack--align-${local.align}`);
     if (local.justify) classList.push(`stack--justify-${local.justify}`);
+    if (local.fill) classList.push("stack--fill");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -38,7 +43,7 @@ export const Stack: Component<StackProps> = (props) => {
 };
 
 /** Props that are layout overrides — locked at variant-definition time. */
-export type StackOverrides = Pick<StackProps, "gap" | "align" | "justify">;
+export type StackOverrides = Pick<StackProps, "gap" | "align" | "justify" | "fill">;
 
 /** Props that remain available to consumers of a curried Stack variant. */
 export type StackDataProps = Omit<StackProps, keyof StackOverrides>;

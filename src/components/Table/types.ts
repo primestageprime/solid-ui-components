@@ -63,7 +63,14 @@ export function getCellValue<T, C extends { accessor: keyof T | ((row: T) => any
   return row[column.accessor];
 }
 
-/** Shared container style for maxHeight scroll tables */
+/**
+ * Inline style for the inner scroll region wrapping the <table>.
+ *
+ * `maxHeight` is the explicit escape hatch — "cap at 400px and scroll". When
+ * it's unset, scrolling is driven by the `fill` prop via the `.hud-table--fill`
+ * CSS class (which makes the outer wrapper a clipping flex column and the inner
+ * scroll region flex-grow + overflow-y:auto), so no inline style is needed here.
+ */
 export function tableContainerStyle(maxHeight?: string): JSX.CSSProperties {
   if (!maxHeight) return {};
   return { "max-height": maxHeight, "overflow-y": "auto" };

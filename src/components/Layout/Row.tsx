@@ -11,6 +11,9 @@ export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
   align?: "start" | "center" | "end" | "stretch" | "baseline";
   justify?: "start" | "center" | "end" | "between";
   wrap?: boolean;
+  /** Fill the parent's width and forward it through (width:100%; min-width:0)
+   *  so a scrolling child has concrete width to constrain against. */
+  fill?: boolean;
 }
 
 export const Row: Component<RowProps> = (props) => {
@@ -19,6 +22,7 @@ export const Row: Component<RowProps> = (props) => {
     "align",
     "justify",
     "wrap",
+    "fill",
     "class",
     "children",
   ]);
@@ -29,6 +33,7 @@ export const Row: Component<RowProps> = (props) => {
     if (local.align) classList.push(`row--align-${local.align}`);
     if (local.justify) classList.push(`row--justify-${local.justify}`);
     if (local.wrap) classList.push("row--wrap");
+    if (local.fill) classList.push("row--fill");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -41,7 +46,7 @@ export const Row: Component<RowProps> = (props) => {
 };
 
 /** Props that are layout overrides — locked at variant-definition time. */
-export type RowOverrides = Pick<RowProps, "gap" | "align" | "justify" | "wrap">;
+export type RowOverrides = Pick<RowProps, "gap" | "align" | "justify" | "wrap" | "fill">;
 
 /** Props that remain available to consumers of a curried Row variant. */
 export type RowDataProps = Omit<RowProps, keyof RowOverrides>;

@@ -162,7 +162,7 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
   );
 
   return (
-    <div class={classes()} style={tableContainerStyle(local.maxHeight)} {...others}>
+    <div class={classes()} {...others}>
       <Show when={local.data.length === 0}>
         <div class="hud-table__empty">
           {local.emptyMessage || "No data available"}
@@ -170,6 +170,10 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
       </Show>
 
       <Show when={local.data.length > 0}>
+        {/* Inner scroll region. Owns the scroll container so the sticky <thead>
+            sticks relative to it: maxHeight caps + scrolls inline, while `fill`
+            flex-grows it to fill the clipping outer wrapper (see Table.css). */}
+        <div class="hud-table__scroll" style={tableContainerStyle(local.maxHeight)}>
         <table class="hud-table__table">
           <Show when={columnGroups()} fallback={
             /* Single-row header — no groups */
@@ -246,6 +250,7 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
             </For>
           </tbody>
         </table>
+        </div>
       </Show>
     </div>
   );

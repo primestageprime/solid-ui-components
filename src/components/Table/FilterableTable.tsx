@@ -73,8 +73,14 @@ export function FilterableTable<T extends Record<string, any>>(props: Filterable
 
   const formatCount = (n: number) => n.toLocaleString();
 
+  // `fill` passes straight through to BaseTable (still in tableProps); the
+  // wrapper just needs to become a filling flex column so the table has a
+  // concrete height to scroll within — the toolbar stays fixed, table grows.
+  const wrapperClass = () =>
+    props.fill ? "hud-table-quickfilter hud-table-quickfilter--fill" : "hud-table-quickfilter";
+
   return (
-    <div class="hud-table-quickfilter">
+    <div class={wrapperClass()}>
       <div class="hud-table-quickfilter__toolbar">
         <input
           type="text"

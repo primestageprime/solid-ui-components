@@ -19,10 +19,27 @@
   );
 }
 
+/* `fill` makes internal scrolling the default: the outer wrapper becomes a
+   clipping flex column (grows to its parent on both a flex-column parent via
+   `flex` and a definite-height block parent via `height: 100%`), and the inner
+   scroll region flex-grows to fill it with its own vertical scrollbar. The
+   sticky <thead> stays put because it sticks relative to that scroll region.
+   `maxHeight` overrides this (inline style on the scroll region) as the
+   explicit "cap at Npx" escape hatch. Higher specificity than
+   `.hud-table--sticky-header { overflow: visible }` so the clip wins. */
 .hud-table.hud-table--fill {
-  flex: 1;
+  height: 100%;
   min-height: 0;
-  overflow: auto;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hud-table.hud-table--fill .hud-table__scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .hud-table__table {
@@ -178,6 +195,19 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Fill: the quickfilter becomes a filling flex column so its BaseTable child
+   (which carries `hud-table--fill`) has a concrete height to scroll within.
+   Toolbar stays fixed; the table flex-grows into the rest. */
+.hud-table-quickfilter--fill {
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0;
+}
+
+.hud-table-quickfilter--fill .hud-table-quickfilter__toolbar {
+  flex: 0 0 auto;
 }
 
 .hud-table-quickfilter__toolbar {
@@ -439,25 +469,30 @@
 /* ============================================
    Scrollbar Styling
    ============================================ */
-.hud-table::-webkit-scrollbar {
+.hud-table::-webkit-scrollbar,
+.hud-table__scroll::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.hud-table::-webkit-scrollbar-track {
+.hud-table::-webkit-scrollbar-track,
+.hud-table__scroll::-webkit-scrollbar-track {
   background: var(--sui-bg-primary);
 }
 
-.hud-table::-webkit-scrollbar-thumb {
+.hud-table::-webkit-scrollbar-thumb,
+.hud-table__scroll::-webkit-scrollbar-thumb {
   background: var(--sui-border);
   border: 1px solid var(--sui-bg-primary);
 }
 
-.hud-table::-webkit-scrollbar-thumb:hover {
+.hud-table::-webkit-scrollbar-thumb:hover,
+.hud-table__scroll::-webkit-scrollbar-thumb:hover {
   background: var(--sui-accent);
 }
 
-.hud-table::-webkit-scrollbar-corner {
+.hud-table::-webkit-scrollbar-corner,
+.hud-table__scroll::-webkit-scrollbar-corner {
   background: var(--sui-bg-primary);
 }
 
