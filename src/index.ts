@@ -132,7 +132,26 @@ export * from "./components/DiffPair";
 export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
-export * from "./components/DateAxis";
+// DateAxis re-exports — `Cell` (time-bucket type) collides with the existing
+// `Cell` table component at the root surface, so we list each export
+// explicitly and alias the type to `DateAxisCell` for root-level consumers.
+// Consumers who prefer the bare `Cell` name can still import it from
+// `solid-ui-components/dist/components/DateAxis`.
+export { DateAxis, createDateAxis } from "./components/DateAxis";
+export type {
+  DateAxisProps,
+  DateAxisOverrides,
+  DateAxisDataProps,
+  DateAxisCellContext,
+} from "./components/DateAxis";
+export type { Cell as DateAxisCell } from "./components/DateAxis";
+export {
+  dailyCells,
+  weeklyCells,
+  monthlyCells,
+  hourlyCells,
+  isSameCalendarDay,
+} from "./components/DateAxis";
 export * from "./components/ThreePanelLayout";
 export * from "./components/Markdown";
 export * from "./components/Kbd";

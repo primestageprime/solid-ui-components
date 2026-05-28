@@ -1,163 +1,113 @@
 // ============================================
 // DateAxis — Atomic (Depth 1).
-// A freestanding horizontal day-cell ribbon. One cell per calendar day across
-// a date range, with date labels, horizontal scrolling for long ranges, and a
-// highlighted "today" cell.
+// Cadence-generic horizontal cell ribbon. One cell per item in `cells`;
+// caller supplies a `renderCell` function that draws each cell's content.
 //
-// KEY DIFFERENCE from Chart/Axes XAxis:
-//   - XAxis: scale-driven SVG axis rendered inside a <Chart>'s coordinate
-//     system; works with numeric domain values; requires chart context.
-//   - DateAxis: freestanding HTML ribbon; one <div> per calendar day; owns
-//     its own DOM and scroll container; usable without any chart wrapper.
-//     Suitable as bottom-of-chart date header OR standalone "rules" axis.
+// Use the helpers in ./cells (dailyCells, weeklyCells, monthlyCells, hourlyCells)
+// to generate `Cell[]` for common cadences. For the original day-cell
+// ergonomics, prefer the curried `DailyDateAxis` from ./DailyDateAxis.
 // ============================================
 
-import { Component, For, mergeProps, type JSX } from "solid-js";
+import {
+  Component,
+  For,
+  type JSX,
+  createEffect,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import "./DateAxis.css";
+import type { Cell } from "./cells";
 
-// ── Types ─────────────────────────────────────────────────────────────────
+export type { Cell } from "./cells";
 
 /**
- * Per-cell context passed to a custom `renderDay`. Lets the caller branch on
- * the day's role (today / selected / month edges) and index into its own data.
+ * Per-cell context passed to `renderCell`. Lets the caller branch on the
+ * cell's role and its index into the wider `cells` array.
  */
-export interface DateAxisDayContext {
-  /** This cell is the `today` day. */
+export interface DateAxisCellContext {
+  /** `today` Date falls within this cell's [start, end). */
   isToday: boolean;
-  /** This cell is the `selected` day. */
+  /** This cell is the selected one. */
   isSelected: boolean;
-  /** First calendar day of its month. */
-  isFirstOfMonth: boolean;
-  /** Last calendar day of its month. */
-  isLastOfMonth: boolean;
-  /** Zero-based position within the rendered range — index into your own series. */
+  /** Zero-based position in `cells`. */
   index: number;
 }
 
-export interface DateAxisProps {
-  /** First day of the displayed range (inclusive). */
-  start: Date;
-  /** Last day of the displayed range (inclusive). */
-  end: Date;
+export interface DateAxisProps<C extends Cell = Cell> {
+  /** The cells to render, left to right. Generate via the helpers in ./cells. */
+  cells: C[];
   /**
-   * The calendar day to highlight as "today". Defaults to `new Date()`.
-   * Pass an explicit value to pin the marker in tests or historical views.
+   * Index of the selected cell. When provided, the axis scrolls smoothly so
+   * the selected cell sits at the centre of the viewport (unless the user is
+   * actively panning manually).
+   */
+  selected?: number;
+  /**
+   * A Date used to compute the today highlight. The cell whose [start, end)
+   * contains it gets marked.
    */
   today?: Date;
   /**
-   * Width in pixels of each day cell. Default: 40.
-   * Smaller values compress a long range; larger values give more label room.
+   * Width in pixels of each default cell. Default 40. Ignored when `renderCell`
+   * returns a self-sized element.
    */
   cellWidth?: number;
+  /** Called when a cell is clicked or activated via Enter / Space. */
+  onCellClick?: (index: number, cell: C) => void;
+  /** Required cell content renderer. */
+  renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
   /**
-   * The currently-selected day — e.g. the day a linked graph is scrolled to.
-   * Highlighted distinctly from `today`. Controlled by the caller.
+   * Callback receiving the scroll container element on mount. Used by
+   * ScrubChart to subscribe to the axis's scroll position; consumers that
+   * don't need this can omit it.
    */
-  selected?: Date;
-  /**
-   * Called when a day cell is clicked or activated via keyboard. When provided,
-   * cells become interactive (pointer cursor, focusable, hover state). Use it to
-   * drive a linked view — e.g. scrub a graph to the clicked day.
-   */
-  onDayClick?: (day: Date) => void;
-  /**
-   * Custom renderer for the CONTENT of each day cell. When omitted, the default
-   * "simple" content is used (month label + day number + today pip). Use it to
-   * render anything per day — e.g. a heatmap square coloured by a value, a dot,
-   * or a mini-bar. DateAxis still owns the cell wrapper (sizing, borders, click
-   * handling, today/selected highlight); `renderDay` controls only what's inside.
-   */
-  renderDay?: (day: Date, ctx: DateAxisDayContext) => JSX.Element;
+  scrollableRef?: (el: HTMLDivElement) => void;
 }
 
-// ── Pure day-range helpers ────────────────────────────────────────────────
+/** True when `t` falls within `cell`'s [start, end). */
+const cellContainsTime = (cell: Cell, t: Date): boolean =>
+  t.getTime() >= cell.start.getTime() && t.getTime() < cell.end.getTime();
 
-/** Milliseconds in one calendar day. */
-const DAY_MS = 24 * 60 * 60 * 1000;
+/** Threshold in ms within which a user-initiated scroll suppresses programmatic scroll. */
+const USER_SCROLL_GRACE_MS = 250;
 
-/**
- * Strips the time component from a Date, returning midnight UTC as a numeric
- * timestamp. Keyed in UTC to stay consistent with the rest of the component —
- * cells are generated at UTC midnight (`eachDayOfRange`) and month-edge / label
- * logic reads `getUTC*`. Comparing in UTC keeps `today` / `selected` matching
- * on the correct cell in every timezone (a local-time key would be off by one
- * for browsers behind UTC).
- */
-const dayKey = (d: Date): number =>
-  Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-
-/**
- * Returns true when `a` and `b` fall on the same calendar day (UTC).
- */
-export const isSameCalendarDay = (a: Date, b: Date): boolean =>
-  dayKey(a) === dayKey(b);
-
-/**
- * Produces an array of one Date per calendar day from `start` to `end`
- * inclusive. Returns an empty array when `start > end`. Purely derived from
- * inputs — no side effects.
- */
-export const eachDayOfRange = (start: Date, end: Date): Date[] => {
-  const startKey = dayKey(start);
-  const endKey = dayKey(end);
-  if (startKey > endKey) return [];
-
-  const count = Math.round((endKey - startKey) / DAY_MS) + 1;
-  return Array.from({ length: count }, (_, i) => new Date(startKey + i * DAY_MS));
-};
-
-// ── Label formatters ──────────────────────────────────────────────────────
-
-/**
- * Short day label: "1", "2", …, "31" (no leading zero).
- * Falls back to the numeric date to avoid locale surprises.
- */
-const formatDayNumber = (d: Date): string => String(d.getUTCDate());
-
-/**
- * Month label shown above the day number on the first and last day of each
- * month. E.g. "May", "Jun".
- */
-const formatMonth = (d: Date): string =>
-  d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
-
-/** True when `d` is the first calendar day of its month. */
-const isFirstOfMonth = (d: Date): boolean => d.getUTCDate() === 1;
-
-/** True when `d` is the last calendar day of its month (the next day rolls over).
- * Cells are generated at UTC midnight, so step a full day off the raw timestamp
- * and compare in UTC — mixing in local-time accessors would be off by one in
- * timezones behind UTC. */
-const isLastOfMonth = (d: Date): boolean =>
-  new Date(d.getTime() + DAY_MS).getUTCMonth() !== d.getUTCMonth();
-
-/**
- * The first and last day of each month get a month label above the day number,
- * so the ribbon stays scannable as you scroll across month boundaries.
- */
-const showsMonth = (d: Date): boolean => isFirstOfMonth(d) || isLastOfMonth(d);
-
-// ── Component ─────────────────────────────────────────────────────────────
-
-/**
- * Standalone horizontal date-axis ribbon.
- *
- * Renders one cell per calendar day from `start` to `end` (inclusive).
- * The `today` cell receives a distinct highlight. Long ranges scroll
- * horizontally within a fixed-height container.
- *
- * @example
- * ```tsx
- * const start = new Date("2025-05-01");
- * const end   = new Date("2025-07-31");
- * <DateAxis start={start} end={end} />
- * ```
- */
-export const DateAxis: Component<DateAxisProps> = (props) => {
-  const resolvedToday = () => props.today ?? new Date();
+export const DateAxis = <C extends Cell = Cell>(
+  props: DateAxisProps<C>,
+): JSX.Element => {
   const cellW = () => props.cellWidth ?? 40;
-  const days = () => eachDayOfRange(props.start, props.end);
-  const clickable = () => props.onDayClick !== undefined;
+  const clickable = () => props.onCellClick !== undefined;
+  let scrollEl: HTMLDivElement | undefined;
+  // Tracks the timestamp of the most recent user-initiated scroll so we can
+  // suppress programmatic scroll-into-view when the user is actively panning.
+  let lastUserScrollAt = 0;
+
+  onMount(() => {
+    if (scrollEl) props.scrollableRef?.(scrollEl);
+  });
+
+  // Programmatic scroll-into-view on selected change.
+  createEffect(() => {
+    const idx = props.selected;
+    if (idx === undefined || idx < 0 || idx >= props.cells.length) return;
+    const el = scrollEl;
+    if (!el) return;
+    if (Date.now() - lastUserScrollAt < USER_SCROLL_GRACE_MS) return;
+    const cellLeft = idx * cellW();
+    const target = cellLeft + cellW() / 2 - el.clientWidth / 2;
+    // `scrollTo` is unavailable in some test environments (JSDOM); fall back
+    // to assigning `scrollLeft` directly. Real browsers always have scrollTo.
+    if (typeof el.scrollTo === "function") {
+      el.scrollTo({ left: target, behavior: "smooth" });
+    } else {
+      el.scrollLeft = Math.max(0, target);
+    }
+  });
+
+  const onScrollListener = () => {
+    lastUserScrollAt = Date.now();
+  };
 
   return (
     <div
@@ -165,28 +115,30 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
       style={{ "--sui-date-axis-cell-width": `${cellW()}px` }}
       role="row"
       aria-label="Date axis"
+      ref={(el) => {
+        scrollEl = el;
+        el.addEventListener("scroll", onScrollListener, { passive: true });
+        onCleanup(() => el.removeEventListener("scroll", onScrollListener));
+      }}
     >
       <div class="sui-date-axis__track">
-        <For each={days()}>
-          {(day, idx) => {
-            const isToday = () => isSameCalendarDay(day, resolvedToday());
-            const isSelected = () =>
-              props.selected !== undefined && isSameCalendarDay(day, props.selected);
-            const monthLabel = () => (showsMonth(day) ? formatMonth(day) : "");
-            const activate = () => props.onDayClick?.(day);
-            const ctx = (): DateAxisDayContext => ({
+        <For each={props.cells}>
+          {(cell, idx) => {
+            const isToday = () =>
+              props.today !== undefined && cellContainsTime(cell, props.today);
+            const isSelected = () => props.selected === idx();
+            const ctx = (): DateAxisCellContext => ({
               isToday: isToday(),
               isSelected: isSelected(),
-              isFirstOfMonth: isFirstOfMonth(day),
-              isLastOfMonth: isLastOfMonth(day),
               index: idx(),
             });
+            const activate = () => props.onCellClick?.(idx(), cell);
 
             return (
               <div
                 class={[
                   "sui-date-axis__cell",
-                  props.renderDay ? "sui-date-axis__cell--custom" : "",
+                  "sui-date-axis__cell--custom",
                   isToday() ? "sui-date-axis__cell--today" : "",
                   isSelected() ? "sui-date-axis__cell--selected" : "",
                   clickable() ? "sui-date-axis__cell--clickable" : "",
@@ -195,21 +147,8 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
                   .join(" ")}
                 role={clickable() ? "button" : "columnheader"}
                 tabindex={clickable() ? 0 : undefined}
-                aria-label={day.toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  timeZone: "UTC",
-                })}
                 aria-current={isToday() ? "date" : undefined}
                 aria-pressed={clickable() ? isSelected() : undefined}
-                title={day.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                  timeZone: "UTC",
-                })}
                 onClick={clickable() ? activate : undefined}
                 onKeyDown={
                   clickable()
@@ -222,15 +161,7 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
                     : undefined
                 }
               >
-                {props.renderDay ? (
-                  props.renderDay(day, ctx())
-                ) : (
-                  <>
-                    <span class="sui-date-axis__month" aria-hidden="true">{monthLabel()}</span>
-                    <span class="sui-date-axis__label">{formatDayNumber(day)}</span>
-                    {isToday() && <span class="sui-date-axis__today-pip" aria-hidden="true" />}
-                  </>
-                )}
+                {props.renderCell(cell, ctx())}
               </div>
             );
           }}
@@ -246,22 +177,25 @@ export const DateAxis: Component<DateAxisProps> = (props) => {
  * Props that are visual/static overrides — locked at variant-definition time.
  * `cellWidth` is the only presentational knob; everything else is data/callback.
  */
-export type DateAxisOverrides = Pick<DateAxisProps, "cellWidth">;
+export type DateAxisOverrides<C extends Cell = Cell> = Pick<
+  DateAxisProps<C>,
+  "cellWidth"
+>;
 
 /** Props that remain available to consumers of a curried DateAxis variant. */
-export type DateAxisDataProps = Omit<DateAxisProps, keyof DateAxisOverrides>;
+export type DateAxisDataProps<C extends Cell = Cell> = Omit<
+  DateAxisProps<C>,
+  keyof DateAxisOverrides<C>
+>;
 
 /**
  * Factory that returns a curried DateAxis with a baked-in presentational
- * `cellWidth`. Call sites then receive only `DateAxisDataProps` (the date range,
- * `today`, `selected`, `onDayClick`, `renderDay`) — the override is frozen.
- *
- * @example
- * const WideDateAxis = createDateAxis({ cellWidth: 56 });
- * // call site: <WideDateAxis start={start} end={end} onDayClick={scrub} />
+ * `cellWidth`. Call sites then receive only `DateAxisDataProps`.
  */
-export function createDateAxis(
-  defaults: Partial<Omit<DateAxisProps, "children">>,
-): Component<DateAxisDataProps> {
-  return (props) => <DateAxis {...(mergeProps(defaults, props) as DateAxisProps)} />;
+export function createDateAxis<C extends Cell = Cell>(
+  defaults: Partial<Omit<DateAxisProps<C>, "children">>,
+): Component<DateAxisDataProps<C>> {
+  return (props) => (
+    <DateAxis {...(mergeProps(defaults, props) as DateAxisProps<C>)} />
+  );
 }
