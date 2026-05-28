@@ -180,28 +180,62 @@ State derivation:
 - **DagChart** — SVG directed acyclic graph with dagre-computed layout. Key props: `nodes` (array of `DagNode` with `id`, `label`, `status` (`ColorVariant`), optional `metadata`, optional `sublabel`, optional `avatar`), `edges` (array of `DagEdge` with `source`/`target`), `onNodeClick`, `direction` (`TB`|`LR`), `height`. Nodes render as rounded rects colored by status. When `avatar` is provided, a circular 20px image renders left-aligned inside the node and the label shifts right. When `sublabel` is provided, muted smaller text renders below the label. Edges are directed paths with arrowheads. SVG auto-sizes viewBox to fit all content. Uses `--sui-*` CSS variables. Exported types: `DagNode`, `DagEdge`, `DagChartProps`. Use for: task dependency graphs, workflow DAGs, pipeline visualization.
 
 ## DateAxis
-- **DateAxis** — Atomic (Depth 1). Owns `DateAxis.css` (BEM `sui-date-axis*`), composes no other components — pure HTML `<div>`s + `<For>`. A freestanding horizontal day-cell ribbon: one cell per calendar day from `start` to `end` (inclusive), month labels above the day number on the first and last day of each month, a highlighted `today` cell (accent tint + pip), and horizontal scroll for long ranges (the scrollbar sits in a reserved strip below the cells). NOT the chart-internal XAxis — no SVG, no scale, no chart context; usable as a bottom-of-chart date header OR a standalone "rules header". Day-equality is computed via a UTC `dayKey`, so the marker logic is timezone-stable. Key props: `start` (`Date`, inclusive), `end` (`Date`, inclusive), `today?` (`Date`, default `new Date()` — the cell to mark as today), `cellWidth?` (`number`, default `40` — px per default cell; the one presentational override), `selected?` (`Date` — the linked-view position, highlighted distinctly from today with an accent underline), `onDayClick?` (`(day: Date) => void` — when supplied, cells become `role="button"`, focusable, and fire on click + Enter/Space; omit for a passive header), `renderDay?` (`(day: Date, ctx: DateAxisDayContext) => JSX.Element` — custom per-cell content). With `renderDay`, the cell switches to `--custom` mode (`flex: 0 0 auto`, no fixed width, no separator border) so the **renderer owns each cell's content AND size** (e.g. a 60×72 cashflow square); DateAxis still owns the wrapper, click handling, and today/selected highlight. `DateAxisDayContext` = `{ isToday, isSelected, isFirstOfMonth, isLastOfMonth, index }` (`index` is the zero-based position into your own series). Exported pure helpers: `eachDayOfRange(start, end)` (one `Date` per day, inclusive; empty when `start > end`) and `isSameCalendarDay(a, b)`. Exported types: `DateAxisProps`, `DateAxisOverrides`, `DateAxisDataProps`, `DateAxisDayContext`. Uses `--sui-accent`, `--sui-border`, `--sui-text-muted`, `--sui-text-secondary`, `--sui-radius-md`, `--sui-font-family`. Use for: scrubber/date-header ribbons, calendar-style per-day heatmaps (cashflow, activity), linked date selection above a graph.
-  - **createDateAxis factory; no concrete variant (intentional).** `createDateAxis({ cellWidth })` returns a curried `Component<DateAxisDataProps>` with the one presentational override (`cellWidth`) frozen — call sites then pass only data/callbacks. Per STYLE_GUIDE.md "Variant Surface: keep it minimal," no concrete named variant ships yet: there is exactly one real use case and a single fixed `cellWidth` is fine. Add a named variant (e.g. `WideDateAxis`) only when a second use case genuinely needs a different baked width.
+- **DateAxis** — Atomic (Depth 1). Cadence-generic horizontal cell ribbon. Pass any `Cell[]` produced by the exported helpers (`dailyCells`, `weeklyCells`, `monthlyCells`, `hourlyCells`) or a custom array, plus a `renderCell` function. The axis owns the scroll container, the selected-cell highlight, the today highlight (the cell whose `[start, end)` contains `today`), and click/keyboard activation. Key props: `cells` (`C[]` where `C extends Cell`), `selected?` (number index), `today?` (`Date`), `cellWidth?` (default `40`), `onCellClick?` (`(index, cell) => void`), `renderCell` (required), `scrollableRef?` (callback receiving the scroll container, used by `ScrubChart` to subscribe to scroll position). When `selected` is provided, the axis scrolls smoothly to centre it (skipped while the user is actively panning — a recent-scroll-delta check). `DateAxisCellContext` passed to `renderCell` = `{ isToday, isSelected, index }`. The `Cell` time-bucket type lives in `./components/DateAxis` and is exported from the package root as **`DateAxisCell`** (the bare name `Cell` is already taken by the table-cell component). Exported pure helpers: `dailyCells`, `weeklyCells`, `monthlyCells`, `hourlyCells`, `isSameCalendarDay`, `dayCellContent`, `dayCellContext`. Exported types: `DateAxisProps`, `DateAxisOverrides`, `DateAxisDataProps`, `DateAxisCellContext`, `DayCellContext`. Uses `--sui-accent`, `--sui-border`, `--sui-text-muted`, `--sui-text-secondary`, `--sui-radius-md`, `--sui-font-family`. Use for: scrubber/date-header ribbons, per-cell heatmaps at any cadence, linked time-axis controls above a graph.
+  - **createDateAxis factory** — `createDateAxis({ cellWidth })` returns a curried `Component<DateAxisDataProps<C>>` with the one presentational override frozen.
+  - **DailyDateAxis** — Curried day-cell variant. Restores the original ergonomics: takes `start: Date`, `end: Date`, optional `selected: Date` and `onDayClick: (day: Date) => void`, plus an optional `renderDay` whose `DayCellContext` includes `isFirstOfMonth` / `isLastOfMonth`. Use for the common day-cell case so you don't have to wire `dailyCells(...)` + index mapping yourself.
   - Example:
     ```tsx
-    import { DateAxis, eachDayOfRange } from "solid-ui-components";
+    import { DailyDateAxis } from "solid-ui-components";
     import { createSignal } from "solid-js";
 
-    const start = new Date("2026-05-01");
-    const end = new Date("2026-07-14");
     const [selected, setSelected] = createSignal<Date>(new Date("2026-05-27"));
+    <DailyDateAxis
+      start={new Date("2026-05-01")}
+      end={new Date("2026-07-14")}
+      selected={selected()}
+      onDayClick={setSelected}
+    />
+    ```
+  - Bare-DateAxis example with a custom renderer:
+    ```tsx
+    import { DateAxis, dailyCells, dayCellContext, type DateAxisCell } from "solid-ui-components";
 
-    // Passive header
-    <DateAxis start={start} end={end} />
-
-    // Clickable, driving a linked graph view
-    <DateAxis start={start} end={end} selected={selected()} onDayClick={setSelected} />
-
-    // Custom per-day cell (renderer owns size)
+    const cells = dailyCells(new Date("2026-05-01"), new Date("2026-07-14"));
     <DateAxis
-      start={start}
-      end={end}
-      renderDay={(day, ctx) => <MyCashflowCell value={series[ctx.index]} day={day} />}
+      cells={cells}
+      today={new Date("2026-05-27")}
+      renderCell={(cell, ctx) => {
+        const dayCtx = dayCellContext(cell, ctx);
+        return <MyCashflowCell day={cell.start} ctx={dayCtx} />;
+      }}
+    />
+    ```
+
+## ScrubChart
+- **ScrubChart** — Composite (Depth 2). Composes `DateAxis` (Atomic) + a user-supplied chart slot + an internal gutter SVG that draws diagonal connectors between each cell's chart-side and axis-side bounds. Generic over `C extends Cell`: consumers attach payload to each cell and read it back inside `renderChart`. The focused cell occupies a fixed fraction of chart width (`selectedFraction`, default 2/3) and morphs smoothly when scrubbed. Two scale knobs (`selectedFraction`, `sideCompression`) tune the geometry; the side-window size is derived. Scrubbing supports both axis-cell click and drag-on-chart — drags use `setPointerCapture` and anchor to the start-frozen layout so the pointer-to-cell mapping doesn't shift as the layout morphs. The axis auto-scrolls so the focused cell stays centred; the internal `selectedAnim` is fractional during gestures and tweens, then snaps to an integer on release. Programmatic / axis-driven selection (non-gesture `props.selected` changes) tweens `selectedAnim` to the new integer over ~250ms ease-out via `requestAnimationFrame`. Key props: `cells: C[]`, `selected: number`, `onScrub: (index, cell) => void`, `renderChart: (ctx) => JSX.Element`, `renderCell` (forwarded to the inner DateAxis), `selectedFraction?` (default `2/3`), `sideCompression?` (default `28`), `chartHeight?` (default `200`), `gutterHeight?` (default `20`), `cellWidth?` (default `40`), `today?`. The `ScrubChartContext` passed to `renderChart` exposes `cellToX(i)`, `cellBounds(i)`, `selected`, `cells`, `visibleCells`, `width`, `height`. Exported types: `ScrubChartProps`, `ScrubChartContext`, plus pure helpers `layoutCells` and `xToCell` for chart authors who want the same fisheye geometry standalone. Uses `--sui-accent`, `--sui-border`, `--sui-bg-elevated`, `--sui-bg-base`, `--sui-radius-md`. Use for: linked chart + axis pairings where one focused day/week/hour gets the magnifying glass while context cells stay visible.
+  - Example:
+    ```tsx
+    import { ScrubChart, dailyCells, type DateAxisCell } from "solid-ui-components";
+    import { createSignal, For } from "solid-js";
+
+    type Row = DateAxisCell & { balanceCents: number };
+    const cells: Row[] = dailyCells(start, end).map((c, i) => ({ ...c, balanceCents: runningBalances[i] }));
+    const [selected, setSelected] = createSignal(0);
+
+    <ScrubChart<Row>
+      cells={cells}
+      selected={selected()}
+      onScrub={(i) => setSelected(i)}
+      renderCell={myCellRender}
+      renderChart={(ctx) => (
+        <svg viewBox={`0 0 ${ctx.width} ${ctx.height}`} preserveAspectRatio="none">
+          <polyline
+            points={ctx.visibleCells.map(i => `${ctx.cellToX(i)},${balanceToY(ctx.cells[i].balanceCents)}`).join(" ")}
+            fill="none"
+            stroke="var(--sui-accent)"
+          />
+        </svg>
+      )}
     />
     ```
 
