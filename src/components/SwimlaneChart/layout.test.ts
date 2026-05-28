@@ -231,3 +231,31 @@ describe("computeSwimlaneLayout — orphan summaries (anchorless hidden nodes)",
     expect(orphan!.collapsedCount).toBe(1);
   });
 });
+
+describe("computeSwimlaneLayout — vertical row overflow (maxRows)", () => {
+  it("caps a column to maxRows and summarizes the overflow", () => {
+    const nodes: DAGNode<Item>[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `n${i}`,
+      data: { status: 1 as const }, // all in the center column
+    }));
+    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxRows: 2 });
+    // Only 2 of the 5 center-col nodes are positioned.
+    const positionedCenter = [...result.positions.keys()].filter((id) => !id.startsWith("__"));
+    expect(positionedCenter.length).toBe(2);
+    // The other 3 surface as a row-overflow summary on the center column.
+    const overflow = result.summaries.find((s) => s.id === "__rowoverflow_0");
+    expect(overflow).toBeDefined();
+    expect(overflow!.collapsedCount).toBe(3);
+    expect(overflow!.anchorId).toBe("");
+  });
+
+  it("does not cap when the column fits within maxRows", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 1 } },
+      { id: "b", data: { status: 1 } },
+    ];
+    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxRows: 5 });
+    expect(result.positions.size).toBe(2);
+    expect(result.summaries.find((s) => s.id.startsWith("__rowoverflow"))).toBeUndefined();
+  });
+});

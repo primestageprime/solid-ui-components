@@ -16,6 +16,13 @@ export type SwimlaneOptions<T> = {
   columnGap: number;
   rowGap: number;
   /**
+   * Max nodes shown per column (vertical fit). When a column has more nodes
+   * than this, the overflow is collapsed into a per-column summary so the
+   * side edge-lozenge can show a "+N" count — the vertical analogue of
+   * `maxDepth`'s horizontal collapse. Omit (or 0) for no row cap.
+   */
+  maxRows?: number;
+  /**
    * Which column should sit at the chart's horizontal center (x=0). When
    * omitted, defaults to 0. Set this to a non-zero value to "follow" a
    * different column without rewriting the node data — the falloff anchor
@@ -191,7 +198,7 @@ export function computeSwimlaneLayout<T>(
       });
     }
   }
-  const summaries = Array.from(summaryMap.values());
+  let summaries = Array.from(summaryMap.values());
 
   // 7. Insert summary placeholders so barycentric ordering sees them.
   // (They aren't rendered as boxes — SwimlaneChart renders boundary
@@ -247,6 +254,29 @@ export function computeSwimlaneLayout<T>(
   for (let sweep = 0; sweep < SWEEPS; sweep++) {
     const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
     for (const col of order) sortCol(col);
+  }
+
+  // 10.5 Vertical fit: cap each column to `maxRows` real nodes. Overflow
+  // rows collapse into a per-column orphan summary so the side edge-lozenge
+  // shows a "+N" for the rows that don't fit on screen — the vertical
+  // analogue of the horizontal `maxDepth` collapse. The kept rows are
+  // re-centered by the Y pass below, so the visible band fills the viewport.
+  if (opts.maxRows && opts.maxRows > 0) {
+    for (const col of orderedCols) {
+      const ids = visibleCols.get(col)!;
+      const realIds = ids.filter((id) => !id.startsWith("__collapsed_"));
+      if (realIds.length <= opts.maxRows) continue;
+      const keepReal = realIds.slice(0, opts.maxRows);
+      const overflowCount = realIds.length - keepReal.length;
+      const placeholders = ids.filter((id) => id.startsWith("__collapsed_"));
+      visibleCols.set(col, [...keepReal, ...placeholders]);
+      const key = `__rowoverflow_${col}`;
+      const existing = summaryMap.get(key);
+      if (existing) existing.collapsedCount += overflowCount;
+      else summaryMap.set(key, { id: key, anchorId: "", column: col, collapsedCount: overflowCount });
+    }
+    // Rebuild so the row-overflow summaries feed the side badge counts.
+    summaries = Array.from(summaryMap.values());
   }
 
   // 11. Y per column, centered around y=0.

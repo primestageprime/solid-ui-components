@@ -163,6 +163,29 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // Retained for forward compat; not used in the new discrete algorithm.
   void DEPTH_STEP_PX;
 
+  const tallestNodeHeight = createMemo(() => {
+    let max = 0;
+    for (const n of props.nodes) {
+      const [, h] = nodeSize(n);
+      if (h > max) max = h;
+    }
+    return max || DEFAULT_SIZE[1];
+  });
+
+  // Vertical analogue of effectiveMaxDepth: how many rows fit in the
+  // container height. Columns with more nodes than this collapse their
+  // overflow into the side "+N" lozenge (see layout.ts maxRows). Opt out
+  // with responsiveCollapse=false. `undefined` = no cap.
+  const V_PADDING_PX = 24;
+  const effectiveMaxRows = createMemo(() => {
+    if (props.responsiveCollapse === false) return undefined;
+    const ch = containerHeight();
+    if (ch === 0) return undefined;
+    const rowGap = props.rowGap ?? 80;
+    const usable = ch - 2 * V_PADDING_PX - tallestNodeHeight();
+    return Math.max(1, Math.floor(usable / rowGap) + 1);
+  });
+
   const layout = createMemo(() => {
     try {
       return computeSwimlaneLayout(props.nodes, props.edges, {
@@ -172,6 +195,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         columnGap: effectiveColumnGap(),
         rowGap: props.rowGap ?? 80,
         centerCol: props.centerCol ?? 0,
+        maxRows: effectiveMaxRows(),
       });
     } catch (err) {
       console.error("[SwimlaneChart] layout failed:", err);
@@ -832,7 +856,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                   text-anchor="middle"
                   dominant-baseline="central"
                 >
-                  {b.count}
+                  +{b.count}
                 </text>
               </g>
             )}
