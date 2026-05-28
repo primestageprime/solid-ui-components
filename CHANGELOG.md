@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## 0.48.0
+
+### Added
+
+- **ScrubChart axes** — `ScrubChart` (and the `CashflowScrubChart` composite that wraps it) now grows a built-in y-axis and x-axis chrome.
+  - **Y-axis** activates when the new `yDomain?: [number, number]` prop is set. ScrubChart computes a shared d3 linear scale (nice'd), draws the axis line + tick marks + right-anchored labels, and exposes `ctx.yToPlot(value)` to the `renderChart` slot so consumer-drawn series automatically share the same scale. Tick count is tunable via `yTickCount?: number` (default `5`); labels format via `formatYLabel?: (v: number) => string`.
+  - **Auto-sized y-axis column** — the label column width is measured from the longest formatted tick label (canvas `measureText`, with a per-character estimate fallback for SSR/test environments) plus an 8px gap, so the axis sits as close to the container edge as the data allows. No manual sizing. An optional `yAxisWidth?: number` escape hatch on bare `ScrubChart` is available for advanced alignment use cases (e.g. two charts sharing a column); `CashflowScrubChart` does not expose it.
+  - **X-axis ticks** activate via `xTickCadence?: "none" | "auto" | "week" | "month" | "quarter" | "year"` (default `"none"`). `"auto"` walks the week → month → quarter → year ladder and picks the finest cadence whose tick count stays under `xMaxTicks` (default `12`); if even the coarsest exceeds the cap it strides by `ceil(count / max)`. Default per-cadence labels: `MMM d` (week), `MMM` with `'YY` on January transitions (month), `QN 'YY` (quarter), `YYYY` (year). Custom formatter receives `(cell, resolvedCadence)` so it can vary output by unit.
+  - **`renderChart` ctx** grows `plotLeft` / `plotTop` / `plotRight` / `plotBottom` / `plotWidth` / `plotHeight` describing the inner drawing region (full frame minus reserved axis margins). `cellToX(i)` / `cellBounds(i)` are now offset by `plotLeft` so consumer-drawn series land inside the plot region without doing the math themselves. `ctx.width` / `ctx.height` remain the full frame dimensions (backward compatible).
+- **CashflowScrubChart** now ships these axes out of the box — running-balance line gets a dollar y-axis (compact `$1.5M` / `$5k` / `−$200` labels) and an auto-cadence x-axis. The internal renderer was switched to `ctx.yToPlot` + `ctx.plotLeft/Right/Top/Bottom` so the line, zero-line, selected-rule, and dot all align to the shared scale automatically.
+
+### Changed
+
+- **ScrubChart `cellToX(i)` coordinate system** — values are now offset by `plotLeft` (which is `0` when no `yDomain` is supplied, so existing consumers are unaffected). The window-band overlay and pointer-scrub mapping respect the same offset. If you've been calling `cellToX` from a `renderChart` that draws into a sibling SVG covering the full frame (the normal pattern), no change is needed.
+- **`ScrubChartContext`** type expanded with the plot-region + `yToPlot` fields above. Additive; existing consumers continue to compile.
+
 ## 0.47.1
 
 ### Added
