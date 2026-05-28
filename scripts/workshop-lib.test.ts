@@ -4,6 +4,7 @@ import {
   slugToTitle,
   slugToPascal,
   renderBenchTemplate,
+  extractBenchLabel,
 } from "./workshop-lib.mjs";
 
 describe("isValidSlug", () => {
@@ -40,5 +41,19 @@ describe("renderBenchTemplate", () => {
     expect(out).toContain("export default ScrubChartBench;");
     expect(out).toContain('from "../../../src/components/Text"');
     expect(out).toContain("<SectionTitle>Scrub Chart</SectionTitle>");
+  });
+});
+
+describe("extractBenchLabel", () => {
+  it("reads meta.label out of bench source", () => {
+    const src = renderBenchTemplate({ slug: "e2e-final", label: "E2E Final" });
+    expect(extractBenchLabel(src, "e2e-final")).toBe("E2E Final");
+  });
+  it("unescapes a label containing a quote", () => {
+    const src = renderBenchTemplate({ slug: "quotey", label: 'A "Quoted" Bench' });
+    expect(extractBenchLabel(src, "quotey")).toBe('A "Quoted" Bench');
+  });
+  it("falls back to slugToTitle when there is no meta.label", () => {
+    expect(extractBenchLabel("export default () => null;", "scrub-chart")).toBe("Scrub Chart");
   });
 });
