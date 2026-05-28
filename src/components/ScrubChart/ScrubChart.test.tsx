@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { ScrubChart } from "./ScrubChart";
+import { ScrubChart, type ScrubChartContext } from "./ScrubChart";
 import { dailyCells, type Cell } from "../DateAxis";
 
 const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
@@ -21,13 +21,12 @@ const firePointer = (
     clientX: init.clientX,
     clientY: init.clientY,
   });
-  // Attach the pointerId so handlers calling setPointerCapture work.
   Object.defineProperty(ev, "pointerId", { value: init.pointerId ?? 1 });
   el.dispatchEvent(ev);
 };
 
-describe("ScrubChart static composition", () => {
-  it("renders chart frame, gutter, and axis", () => {
+describe("ScrubChart composition", () => {
+  it("renders the chart frame, window overlay, and inner DateAxis", () => {
     const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
     const { container } = render(() => (
       <ScrubChart
@@ -40,13 +39,14 @@ describe("ScrubChart static composition", () => {
     ));
     expect(container.querySelector(".sui-scrub-chart")).toBeTruthy();
     expect(container.querySelector(".sui-scrub-chart__frame")).toBeTruthy();
-    expect(container.querySelector(".sui-scrub-chart__gutter")).toBeTruthy();
+    expect(container.querySelector(".sui-scrub-chart__window")).toBeTruthy();
+    expect(container.querySelector(".sui-scrub-chart__overlay")).toBeTruthy();
     expect(container.querySelector(".sui-date-axis")).toBeTruthy();
     expect(container.querySelector('[data-testid="chart"]')).toBeTruthy();
   });
 
-  it("passes a context with cellToX, cellBounds, and visibleCells to renderChart", () => {
-    let seenCtx: { selected: number; width: number; visibleCount: number } | null = null;
+  it("passes a linear cellToX + cellBounds to renderChart", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
     const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
     render(() => (
       <ScrubChart
@@ -55,20 +55,51 @@ describe("ScrubChart static composition", () => {
         onScrub={() => {}}
         renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
         renderChart={(ctx) => {
-          seenCtx = { selected: ctx.selected, width: ctx.width, visibleCount: ctx.visibleCells.length };
+          seen = ctx;
           return <svg />;
         }}
       />
     ));
-    expect(seenCtx).not.toBeNull();
-    expect(seenCtx!.selected).toBe(15);
-    expect(seenCtx!.width).toBeGreaterThan(0);
-    // Default knobs (2/3 + 28) → 7 cells per side → 15 visible.
-    expect(seenCtx!.visibleCount).toBe(15);
+    expect(seen).not.toBeNull();
+    expect(seen!.selected).toBe(15);
+    expect(seen!.cells.length).toBe(31);
+    // Default chart width is 1200; with 31 cells → ~38.7 px per day.
+    const pitch = seen!.dayPitch;
+    expect(pitch).toBeGreaterThan(38);
+    expect(pitch).toBeLessThan(39);
+    // Cell 0's centre sits half a pitch from the left edge.
+    expect(seen!.cellToX(0)).toBeCloseTo(pitch / 2, 3);
+    // Bounds are pitch-wide and contiguous.
+    const b0 = seen!.cellBounds(0);
+    const b1 = seen!.cellBounds(1);
+    expect(b0[1]).toBeCloseTo(b1[0], 3);
+    expect(b0[1] - b0[0]).toBeCloseTo(pitch, 3);
+  });
+
+  it("exposes windowCells / windowBounds for the visible axis slice", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={0}
+        onScrub={() => {}}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+      />
+    ));
+    // JSDOM reports clientWidth = 0, so the initial window collapses to
+    // [0, 0]. The signal stays reactive — in a real browser the
+    // scrollableRef wires it to the axis viewport.
+    expect(seen!.windowCells).toEqual([0, 0]);
+    expect(seen!.windowBounds[0]).toBe(0);
   });
 });
 
-describe("ScrubChart click-to-scrub on the chart", () => {
+describe("ScrubChart click-to-scrub", () => {
   it("calls onScrub with the cell under the pointer when the overlay is clicked", () => {
     const onScrub = vi.fn();
     const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
@@ -82,21 +113,19 @@ describe("ScrubChart click-to-scrub on the chart", () => {
       />
     ));
     const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
-    // JSDOM doesn't compute layout — stub the frame's bounding rect so
-    // (clientX − rect.left) gives a sensible chart-x.
-    const frame = container.querySelector(".sui-scrub-chart__frame")! as HTMLDivElement;
-    frame.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 880, height: 200, right: 880, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
-    // Click at chart-x = chartWidth/2 → focused cell (15).
-    firePointer(overlay, "pointerdown", { clientX: 440, clientY: 100 });
-    firePointer(overlay, "pointerup", { clientX: 440, clientY: 100 });
-    expect(onScrub).toHaveBeenCalledTimes(1);
+    overlay.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+    // 31 cells across 1200 px → pitch ≈ 38.71. Cell 15 spans x ∈ [580.6, 619.4);
+    // x = 600 lands solidly inside it.
+    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerup", { clientX: 600, clientY: 100, pointerId: 1 });
+    expect(onScrub).toHaveBeenCalled();
     expect(onScrub.mock.calls[0][0]).toBe(15);
   });
 });
 
 describe("ScrubChart drag scrub", () => {
-  it("updates selectedAnim mid-drag and commits the rounded value on pointerup", () => {
+  it("emits new onScrub calls as the pointer moves across cells", () => {
     const onScrub = vi.fn();
     const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
     const { container } = render(() => (
@@ -109,18 +138,14 @@ describe("ScrubChart drag scrub", () => {
       />
     ));
     const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
-    const frame = container.querySelector(".sui-scrub-chart__frame")! as HTMLDivElement;
-    frame.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 880, height: 200, right: 880, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
-    // Down at chart centre, drag right past the focused cell's right edge,
-    // release. With default knobs the focused cell occupies roughly
-    // [chartWidth × (1−2/3)/2, chartWidth × (1−(1−2/3)/2)] ≈ [147, 733], so
-    // a drag to x=820 falls well into the right-side cells and the commit
-    // must advance past the original focus.
-    firePointer(overlay, "pointerdown", { clientX: 440, clientY: 100 });
-    firePointer(overlay, "pointermove", { clientX: 820, clientY: 100 });
-    firePointer(overlay, "pointerup", { clientX: 820, clientY: 100 });
-    expect(onScrub).toHaveBeenCalledTimes(1);
-    expect(onScrub.mock.calls[0][0]).toBeGreaterThan(15);
+    overlay.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+    firePointer(overlay, "pointerdown", { clientX: 580, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointermove", { clientX: 800, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerup", { clientX: 800, clientY: 100, pointerId: 1 });
+    // Down committed cell 15; move-over crossed into cell ~20 → another emit.
+    expect(onScrub.mock.calls.length).toBeGreaterThanOrEqual(2);
+    const lastCall = onScrub.mock.calls.at(-1)!;
+    expect(lastCall[0]).toBeGreaterThan(15);
   });
 });

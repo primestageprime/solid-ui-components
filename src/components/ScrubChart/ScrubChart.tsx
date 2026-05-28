@@ -1,20 +1,27 @@
 // ============================================
 // ScrubChart — Composite (Depth 2).
-// Pairs a (cadence-generic) DateAxis with a user-supplied chart slot via an
-// SVG gutter that draws diagonal connectors between each cell's chart-side
-// and axis-side bounds. The focused cell occupies `selectedFraction` of the
-// chart width; side cells compress around it (fisheye).
+// Linear-scale chart paired with a DateAxis (overview + detail).
 //
-// B3 — static integer-only scaffold. Drag scrub, fractional `selectedAnim`,
-// and axis-scroll coupling land in B4–B8.
+//   ┌─ chart frame (renderChart slot) ───────────────────────────────┐
+//   │  user-drawn line/series at linear scale across all cells       │
+//   │  + ScrubChart-drawn window band over the slice currently       │
+//   │    visible in the DateAxis viewport                            │
+//   └────────────────────────────────────────────────────────────────┘
+//   ┌─ DateAxis ─────────────────────────────────────────────────────┐
+//   │  horizontally scrollable cell ribbon                           │
+//   └────────────────────────────────────────────────────────────────┘
+//
+// Replaces the original fisheye implementation (selectedFraction /
+// sideCompression / gutter / pointer-anchored drag). The linear scale is
+// uniform across all cells — `cellToX(i)` is just `(i + 0.5) × dayPitch`
+// — and the DateAxis's scroll position drives the window-band overlay so
+// the chart serves as a minimap.
 // ============================================
 
 import {
   type Component,
-  For,
   type JSX,
   Show,
-  createEffect,
   createMemo,
   createSignal,
   mergeProps,
@@ -22,21 +29,24 @@ import {
   onMount,
 } from "solid-js";
 import { DateAxis, type Cell, type DateAxisCellContext } from "../DateAxis";
-import { layoutCells, xToCell, type CellLayout } from "./scales";
 import "./ScrubChart.css";
 
 /** Context passed to the consumer's `renderChart`. */
 export interface ScrubChartContext<C extends Cell> {
-  /** Centre x in chart pixels for the cell at `index`. */
+  /** Centre x in chart pixels for the cell at `index`. Linear. */
   cellToX(index: number): number;
-  /** [leftX, rightX] in chart pixels — may extend outside [0, width]. */
+  /** [leftX, rightX] in chart pixels for the cell at `index`. */
   cellBounds(index: number): [number, number];
+  /** Width of one cell in chart pixels (`width / cells.length`). */
+  dayPitch: number;
   /** Selected cell's index. */
   selected: number;
   /** Full cell array, for iteration + payload access. */
   cells: C[];
-  /** Indices of cells whose bounds intersect [0, width]. */
-  visibleCells: number[];
+  /** [firstIndex, lastIndex] of cells currently visible in the axis viewport. */
+  windowCells: [number, number];
+  /** [leftX, rightX] in chart pixels covering the visible-window cells. */
+  windowBounds: [number, number];
   width: number;
   height: number;
 }
@@ -48,39 +58,24 @@ export interface ScrubChartProps<C extends Cell> {
   renderChart: (ctx: ScrubChartContext<C>) => JSX.Element;
   renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
 
-  /** Fraction of chart pixel width the focused cell occupies. Default 2/3. */
-  selectedFraction?: number;
-  /** Focused cell is this many times wider than each side cell. Default 28. */
-  sideCompression?: number;
   /** Chart drawing-area height in px. Default 200. */
   chartHeight?: number;
-  /** Gutter height in px. Default 20. */
-  gutterHeight?: number;
   /** Width of one axis cell in px. Default 40. */
   cellWidth?: number;
   /** `today` Date forwarded to the inner DateAxis. */
   today?: Date;
 }
 
-const DEFAULT_CHART_WIDTH = 880;
-const DEFAULT_SELECTED_FRACTION = 2 / 3;
-const DEFAULT_SIDE_COMPRESSION = 28;
+const DEFAULT_CHART_WIDTH = 1200;
 const DEFAULT_CHART_HEIGHT = 200;
-const DEFAULT_GUTTER_HEIGHT = 20;
 const DEFAULT_CELL_WIDTH = 40;
-const TWEEN_MS = 250;
 
 export const ScrubChart = <C extends Cell>(
   props: ScrubChartProps<C>,
 ): JSX.Element => {
-  // ── Defaults ─────────────────────────────────────────────────────────
-  const selectedFraction = () => props.selectedFraction ?? DEFAULT_SELECTED_FRACTION;
-  const sideCompression = () => props.sideCompression ?? DEFAULT_SIDE_COMPRESSION;
   const chartHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
-  const gutterHeight = () => props.gutterHeight ?? DEFAULT_GUTTER_HEIGHT;
   const cellWidth = () => props.cellWidth ?? DEFAULT_CELL_WIDTH;
 
-  // ── Layout ───────────────────────────────────────────────────────────
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
   let frameEl: HTMLDivElement | undefined;
@@ -95,161 +90,97 @@ export const ScrubChart = <C extends Cell>(
     onCleanup(() => obs.disconnect());
   });
 
-  // ── Continuous fractional focus position ─────────────────────────────
-  // All layout reads from this — not from `props.selected` directly. It
-  // tracks `props.selected` via a tween (B5) or the active gesture (B6).
-  const [selectedAnim, setSelectedAnim] = createSignal(props.selected);
-  // True while a pointer-driven gesture owns `selectedAnim`. The prop-change
-  // tween bails out while gestureActive is set so the two drivers don't fight.
-  const [gestureActive, setGestureActive] = createSignal(false);
-
-  // Tween `selectedAnim` toward `target` over TWEEN_MS via ease-out cubic.
-  // Cancels any in-flight tween so back-to-back prop changes always animate
-  // from the current visible position.
-  let rafHandle: number | null = null;
-  const tweenTo = (target: number) => {
-    if (rafHandle !== null) cancelAnimationFrame(rafHandle);
-    const start = selectedAnim();
-    const t0 = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - t0) / TWEEN_MS);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setSelectedAnim(start + (target - start) * eased);
-      if (t < 1) {
-        rafHandle = requestAnimationFrame(step);
-      } else {
-        rafHandle = null;
-      }
-    };
-    rafHandle = requestAnimationFrame(step);
-  };
-  onCleanup(() => {
-    if (rafHandle !== null) cancelAnimationFrame(rafHandle);
-  });
-
-  // Tween toward `props.selected` whenever it changes (unless the user is
-  // actively gesturing — then the gesture owns `selectedAnim`).
-  createEffect(() => {
-    const target = props.selected;
-    if (gestureActive()) return;
-    if (Math.abs(target - selectedAnim()) < 0.001) return;
-    tweenTo(target);
-  });
-
-  const layout = createMemo<CellLayout>(() =>
-    layoutCells({
-      cellCount: props.cells.length,
-      chartWidth: chartWidth(),
-      selectedFraction: selectedFraction(),
-      sideCompression: sideCompression(),
-      selectedAnim: selectedAnim(),
-    }),
+  // Linear day pitch.
+  const dayPitch = createMemo(() =>
+    props.cells.length > 0 ? chartWidth() / props.cells.length : 0,
   );
-
-  const ctx = (): ScrubChartContext<C> => {
-    const lay = layout();
-    return {
-      cellToX: (i: number) => (lay.bounds[i][0] + lay.bounds[i][1]) / 2,
-      cellBounds: (i: number) => lay.bounds[i],
-      selected: props.selected,
-      cells: props.cells,
-      visibleCells: lay.activeWindow.filter((i) => {
-        const [l, r] = lay.bounds[i];
-        return r >= 0 && l <= chartWidth();
-      }),
-      width: chartWidth(),
-      height: chartHeight(),
-    };
+  const indexToX = (i: number): number => (i + 0.5) * dayPitch();
+  const indexBounds = (i: number): [number, number] => [
+    i * dayPitch(),
+    (i + 1) * dayPitch(),
+  ];
+  const xToIndex = (x: number): number => {
+    if (props.cells.length === 0) return 0;
+    const pitch = dayPitch();
+    if (pitch <= 0) return 0;
+    return Math.max(0, Math.min(props.cells.length - 1, Math.floor(x / pitch)));
   };
 
-  // ── Pointer handlers — pointer-anchored drag scrub (B6) ──────────────
-  // The gesture freezes the layout that was visible at pointerdown so the
-  // mapping between pointer x and the focused cell stays stable even as the
-  // visible layout morphs. The pointer effectively "anchors" to a virtual
-  // cell position; further moves shift `selectedAnim` by the delta between
-  // the current pointer cell and the anchor.
-  type GestureState = {
-    pointerId: number;
-    startLayout: CellLayout;
-    selectedAtStart: number;
-    anchorCell: number;
-  };
-  let gesture: GestureState | null = null;
-
-  const clampCellIndex = (i: number): number =>
-    Math.max(0, Math.min(props.cells.length - 1, i));
-
-  const handlePointerDown = (e: PointerEvent) => {
-    if (!frameEl) return;
-    const rect = frameEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const startLayout = layout();
-    const anchorCell = xToCell(x, startLayout);
-    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    gesture = {
-      pointerId: e.pointerId,
-      startLayout,
-      selectedAtStart: selectedAnim(),
-      anchorCell,
-    };
-    setGestureActive(true);
-  };
-
-  const handlePointerMove = (e: PointerEvent) => {
-    if (!gesture || !frameEl) return;
-    const rect = frameEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const cellAtNow = xToCell(x, gesture.startLayout);
-    const next = gesture.selectedAtStart + (cellAtNow - gesture.anchorCell);
-    setSelectedAnim(clampCellIndex(next));
-  };
-
-  const endGesture = (e: PointerEvent) => {
-    if (!gesture) return;
-    try {
-      (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
-    } catch {
-      /* pointer wasn't captured; nothing to release */
-    }
-    const committed = clampCellIndex(Math.round(selectedAnim()));
-    setSelectedAnim(committed); // snap
-    gesture = null;
-    setGestureActive(false);
-    props.onScrub(committed, props.cells[committed]);
-  };
-
-  // ── Continuous axis scroll driven by `selectedAnim` (B7) ─────────────
-  // The DateAxis's own scroll-into-view effect handles integer changes; for
-  // fractional `selectedAnim` (active gesture / mid-tween) we set scrollLeft
-  // imperatively each frame so the axis tracks the chart's morph smoothly.
-  let axisScrollEl: HTMLDivElement | undefined;
-  // Mirror the axis's scrollLeft into a signal so the gutter diagonals can
-  // subtract it from each cell's axis-side x and stay glued to the moving
-  // axis cells (B8).
+  // ── Track the inner DateAxis's scroll position + viewport width so we
+  //    can render the window-band overlay over the slice of overview data
+  //    currently visible in the axis.
   const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
-  const handleScrollableRef = (el: HTMLDivElement) => {
-    axisScrollEl = el;
+  const [axisViewportWidth, setAxisViewportWidth] = createSignal(0);
+  const handleAxisRef = (el: HTMLDivElement) => {
+    setAxisViewportWidth(el.clientWidth);
+    setAxisScrollLeft(el.scrollLeft);
     el.addEventListener(
       "scroll",
       () => setAxisScrollLeft(el.scrollLeft),
       { passive: true },
     );
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => setAxisViewportWidth(el.clientWidth));
+      ro.observe(el);
+      onCleanup(() => ro.disconnect());
+    }
   };
 
-  createEffect(() => {
-    const anim = selectedAnim();
-    const el = axisScrollEl;
-    if (!el) return;
+  const windowCells = createMemo<[number, number]>(() => {
     const w = cellWidth();
-    const targetLeft = anim * w + w / 2 - el.clientWidth / 2;
-    el.scrollLeft = Math.max(0, targetLeft);
+    if (w <= 0 || props.cells.length === 0) return [0, 0];
+    const first = Math.max(0, Math.floor(axisScrollLeft() / w));
+    const last = Math.min(
+      props.cells.length - 1,
+      Math.ceil((axisScrollLeft() + axisViewportWidth()) / w) - 1,
+    );
+    return [first, Math.max(first, last)];
+  });
+  const windowBounds = createMemo<[number, number]>(() => {
+    const [first, last] = windowCells();
+    return [first * dayPitch(), (last + 1) * dayPitch()];
   });
 
-  // Cells worth drawing chart-side day edges + gutter diagonals for: the
-  // active window. Cells outside the active window have bounds extrapolated
-  // far off-canvas — their diagonals would degenerate into near-horizontal
-  // noise across the gutter, so we omit them entirely.
-  const edgeCells = () => layout().activeWindow;
+  const ctx = (): ScrubChartContext<C> => ({
+    cellToX: indexToX,
+    cellBounds: indexBounds,
+    dayPitch: dayPitch(),
+    selected: props.selected,
+    cells: props.cells,
+    windowCells: windowCells(),
+    windowBounds: windowBounds(),
+    width: chartWidth(),
+    height: chartHeight(),
+  });
+
+  // ── Pointer-driven scrub on the chart. Linear pitch means every move
+  //    maps directly to a cell index — no anchored layout, no tween.
+  let dragging = false;
+  const clampIdx = (i: number): number =>
+    Math.max(0, Math.min(props.cells.length - 1, i));
+  const handlePointerDown = (e: PointerEvent) => {
+    if (!frameEl || props.cells.length === 0) return;
+    const rect = frameEl.getBoundingClientRect();
+    const idx = clampIdx(xToIndex(e.clientX - rect.left));
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    dragging = true;
+    props.onScrub(idx, props.cells[idx]);
+  };
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!dragging || !frameEl) return;
+    const rect = frameEl.getBoundingClientRect();
+    const idx = clampIdx(xToIndex(e.clientX - rect.left));
+    if (idx !== props.selected) props.onScrub(idx, props.cells[idx]);
+  };
+  const handlePointerUp = (e: PointerEvent) => {
+    if (!dragging) return;
+    try {
+      (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
+    } catch {
+      /* not captured; nothing to release */
+    }
+    dragging = false;
+  };
 
   return (
     <div class="sui-scrub-chart">
@@ -258,98 +189,35 @@ export const ScrubChart = <C extends Cell>(
         style={{ height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
       >
-        {/* Day-edge vertical lines inside the chart. Rendered as the first
-            child so they sit BEHIND the user's renderChart content (gridlines
-            should never occlude data) and continue downward into the gutter
-            diagonals to give the "connector lands on a vertical line" effect. */}
-        <svg
-          class="sui-scrub-chart__edges"
-          viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
-          preserveAspectRatio="none"
-        >
-          <For each={edgeCells()}>
-            {(i) => {
-              const isSelected = i === props.selected;
-              const [chL, chR] = layout().bounds[i];
-              const stroke = isSelected
-                ? "var(--sui-accent)"
-                : "var(--sui-border)";
-              const opacity = isSelected ? 0.5 : 0.25;
-              const strokeWidth = isSelected ? 1.2 : 1;
-              return (
-                <>
-                  <line
-                    x1={chL}
-                    y1={0}
-                    x2={chL}
-                    y2={chartHeight()}
-                    stroke={stroke}
-                    stroke-width={strokeWidth}
-                    opacity={opacity}
-                  />
-                  <line
-                    x1={chR}
-                    y1={0}
-                    x2={chR}
-                    y2={chartHeight()}
-                    stroke={stroke}
-                    stroke-width={strokeWidth}
-                    opacity={opacity}
-                  />
-                </>
-              );
-            }}
-          </For>
-        </svg>
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
+        {/* Window-band overlay — owned by ScrubChart so consumers don't
+            have to draw it themselves. Translucent rect over the slice of
+            cells currently visible in the axis viewport. */}
+        <Show when={props.cells.length > 0}>
+          <svg
+            class="sui-scrub-chart__window"
+            viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
+            preserveAspectRatio="none"
+          >
+            <rect
+              x={windowBounds()[0]}
+              y={0}
+              width={windowBounds()[1] - windowBounds()[0]}
+              height={chartHeight()}
+              fill="var(--sui-scrub-chart-window-fill, rgba(88,166,255,0.14))"
+              stroke="var(--sui-scrub-chart-window-stroke, rgba(88,166,255,0.55))"
+              stroke-width={1}
+            />
+          </svg>
+        </Show>
         <div
           class="sui-scrub-chart__overlay"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
-          onPointerUp={endGesture}
-          onPointerCancel={endGesture}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         />
       </div>
-
-      <svg
-        class="sui-scrub-chart__gutter"
-        viewBox={`0 0 ${chartWidth()} ${gutterHeight()}`}
-        preserveAspectRatio="none"
-        style={{ height: `${gutterHeight()}px` }}
-      >
-        <For each={edgeCells()}>
-          {(i) => {
-            const isSelected = i === props.selected;
-            const [chL, chR] = layout().bounds[i];
-            const axL = i * cellWidth() - axisScrollLeft();
-            const axR = (i + 1) * cellWidth() - axisScrollLeft();
-            const stroke = isSelected
-              ? "var(--sui-accent)"
-              : "var(--sui-border)";
-            const strokeWidth = isSelected ? 1.5 : 1;
-            return (
-              <>
-                <line
-                  x1={chL}
-                  y1={0}
-                  x2={axL}
-                  y2={gutterHeight()}
-                  stroke={stroke}
-                  stroke-width={strokeWidth}
-                />
-                <line
-                  x1={chR}
-                  y1={0}
-                  x2={axR}
-                  y2={gutterHeight()}
-                  stroke={stroke}
-                  stroke-width={strokeWidth}
-                />
-              </>
-            );
-          }}
-        </For>
-      </svg>
 
       <DateAxis<C>
         cells={props.cells}
@@ -358,7 +226,7 @@ export const ScrubChart = <C extends Cell>(
         cellWidth={cellWidth()}
         onCellClick={(idx, cell) => props.onScrub(idx, cell)}
         renderCell={props.renderCell}
-        scrollableRef={handleScrollableRef}
+        scrollableRef={handleAxisRef}
       />
     </div>
   );
@@ -368,11 +236,11 @@ export const ScrubChart = <C extends Cell>(
 
 /**
  * Props that are visual / structural overrides — locked at variant-definition
- * time. All five are presentational; everything else is data or a callback.
+ * time. Just the two sizing knobs; everything else is data or a callback.
  */
 export type ScrubChartOverrides<C extends Cell> = Pick<
   ScrubChartProps<C>,
-  "selectedFraction" | "sideCompression" | "chartHeight" | "gutterHeight" | "cellWidth"
+  "chartHeight" | "cellWidth"
 >;
 
 /** Props that remain available to consumers of a curried ScrubChart variant. */
@@ -382,18 +250,10 @@ export type ScrubChartDataProps<C extends Cell> = Omit<
 >;
 
 /**
- * Factory that returns a curried ScrubChart with presentational defaults
- * baked in. Call sites then receive only the data/callback surface
- * (cells, selected, onScrub, renderChart, renderCell, today).
- *
- * Per STYLE_GUIDE.md "Variant Surface: keep it minimal," no concrete named
- * variant ships yet — the only known use case is the cashflow demo using
- * defaults. Add a named variant only when a second use case genuinely needs
- * different baked-in geometry.
- *
- * @example
- * const ZoomedScrubChart = createScrubChart({ selectedFraction: 0.85, sideCompression: 60 });
- * // call site: <ZoomedScrubChart cells={cells} selected={i} onScrub={set} renderCell={…} renderChart={…} />
+ * Factory that returns a curried ScrubChart with `chartHeight` and / or
+ * `cellWidth` baked in. Per STYLE_GUIDE.md "Variant Surface: keep it
+ * minimal", no concrete named variant ships yet — defaults handle the only
+ * known use case. Add one when a second emerges.
  */
 export function createScrubChart<C extends Cell = Cell>(
   defaults: Partial<ScrubChartOverrides<C>>,

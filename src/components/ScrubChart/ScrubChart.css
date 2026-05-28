@@ -1,6 +1,7 @@
 /* ============================================
    ScrubChart — Composite (Depth 2).
-   Chart frame + gutter (diagonal connectors) + DateAxis stacked vertically.
+   Linear-scale chart frame + DateAxis stacked vertically, with a
+   ScrubChart-owned translucent rect over the visible-axis window.
    ============================================ */
 
 .sui-scrub-chart {
@@ -20,24 +21,16 @@
   overflow: hidden;
 }
 
-/* Day-edge vertical lines inside the chart. Positioned absolutely so they
-   underlay the user's renderChart content; pointer-events disabled so the
+/* Window-band overlay — translucent rect spanning the slice of cells
+   currently visible in the DateAxis viewport. Positioned absolutely on
+   top of the user's renderChart content; pointer-events disabled so the
    gesture overlay above still captures clicks/drags. */
-.sui-scrub-chart__edges {
+.sui-scrub-chart__window {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-}
-
-.sui-scrub-chart__gutter {
-  display: block;
-  width: 100%;
-  background: var(--sui-bg-base, transparent);
-  border-top: 1px solid var(--sui-border);
-  border-bottom: 1px solid var(--sui-border);
-  overflow: hidden;
 }
 
 .sui-scrub-chart__overlay {

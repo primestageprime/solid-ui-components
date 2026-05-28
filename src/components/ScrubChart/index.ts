@@ -5,5 +5,3 @@ export type {
   ScrubChartOverrides,
   ScrubChartDataProps,
 } from "./ScrubChart";
-export { layoutCells, xToCell } from "./scales";
-export type { LayoutCellsInput, CellLayout } from "./scales";
