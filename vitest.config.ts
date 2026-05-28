@@ -56,6 +56,7 @@ export default defineConfig({
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "dev/**/*.{test,spec}.{ts,tsx}",
+      "scripts/**/*.{test,spec}.{ts,tsx}",
     ],
     setupFiles: ["./src/test-setup.ts"],
   },
