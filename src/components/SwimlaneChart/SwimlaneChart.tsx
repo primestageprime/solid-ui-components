@@ -618,38 +618,59 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     }
     void gap;
 
-    type Aggregated = { anchorId: string; dir: -1 | 1; count: number; key: string };
+    type Aggregated = { anchorId: string | undefined; dir: -1 | 1; count: number; key: string };
     const sides: Aggregated[] = [];
-    if (leftCount > 0 && leftAnchorId) {
+    if (leftCount > 0) {
       sides.push({ anchorId: leftAnchorId, dir: -1, count: leftCount, key: "side|-1" });
     }
-    if (rightCount > 0 && rightAnchorId) {
+    if (rightCount > 0) {
       sides.push({ anchorId: rightAnchorId, dir: 1, count: rightCount, key: "side|+1" });
     }
 
+    // Viewport edges in content coords. The centering effect pins col 0
+    // (x=0) to the viewport horizontal center at scale 1, so the visible
+    // content x-range is [-cw/2, +cw/2]. A side with collapsed nodes but NO
+    // visible anchor (a disconnected subtree, or nothing visible at all)
+    // pins its lozenge just inside the matching viewport edge so the count
+    // is ALWAYS shown — the "edge lozenge whenever a node is invisible"
+    // behavior, even when there are zero visible nodes.
+    const cw = containerWidth();
+    const vpLeftX = -cw / 2 + H_PADDING_PX + BADGE_RADIUS;
+    const vpRightX = cw / 2 - H_PADDING_PX - BADGE_RADIUS;
+
     const sidePos = sideBadgePositions();
     return sides.flatMap((g) => {
-      const anchorPos = positions.get(g.anchorId);
-      if (!anchorPos) return [];
       const dir = g.dir;
-      const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
+      const anchorPos = g.anchorId ? positions.get(g.anchorId) : undefined;
       const sideInfo = dir === -1 ? sidePos.left : sidePos.right;
-      const sideY = sideInfo?.y ?? anchorPos.y;
+      // Vertical placement: follow the anchor column's span when present,
+      // else sit at content y=0 (which the centering effect maps to the
+      // viewport vertical center when there are no visible nodes).
+      const sideY = sideInfo?.y ?? anchorPos?.y ?? 0;
       const pillTopY = sideInfo?.topY ?? sideY - BADGE_RADIUS;
       const pillBottomY = sideInfo?.bottomY ?? sideY + BADGE_RADIUS;
-      const badgeX =
-        dir === -1
-          ? anchorOuterX - STUB_LENGTH - BADGE_RADIUS
-          : anchorOuterX + STUB_LENGTH + BADGE_RADIUS;
-      return [{
-        key: g.key,
-        d: "",
-        badgeX,
-        badgeY: sideY,
-        pillTopY,
-        pillBottomY,
-        count: g.count,
-      }];
+
+      // Preferred X: just outside the outermost visible node on this side.
+      // But the lozenge must ALWAYS stay inside the viewport — clamp it to
+      // the viewport edge when the anchor is off-screen (a tall/parallel
+      // column pushed past the edge) or absent (nothing visible). Without
+      // this, off-screen collapsed counts vanished with their off-screen
+      // anchor. cw===0 only on the first paint, before the ResizeObserver.
+      let badgeX: number;
+      if (anchorPos) {
+        const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
+        badgeX =
+          dir === -1
+            ? anchorOuterX - STUB_LENGTH - BADGE_RADIUS
+            : anchorOuterX + STUB_LENGTH + BADGE_RADIUS;
+      } else {
+        if (cw === 0) return [];
+        badgeX = dir === -1 ? vpLeftX : vpRightX;
+      }
+      if (cw > 0) {
+        badgeX = dir === -1 ? Math.max(badgeX, vpLeftX) : Math.min(badgeX, vpRightX);
+      }
+      return [{ key: g.key, d: "", badgeX, badgeY: sideY, pillTopY, pillBottomY, count: g.count }];
     });
   });
 

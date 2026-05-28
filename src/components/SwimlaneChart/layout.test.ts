@@ -191,3 +191,43 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
     expect(result.summaries.every((s) => s.column === -2 && s.collapsedCount === 1)).toBe(true);
   });
 });
+
+describe("computeSwimlaneLayout — orphan summaries (anchorless hidden nodes)", () => {
+  // When NOTHING is visible (no node at the center col, everything beyond
+  // maxDepth), every hidden node must still surface as an orphan summary so
+  // the chart can render edge lozenges. Regression: previously these were
+  // dropped (no visible anchor to seed the BFS), leaving a blank chart.
+  it("summarizes hidden nodes per-column when there are no visible nodes", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "a", data: { status: 0 } }, // col -1
+      { id: "c", data: { status: 2 } }, // col +1
+    ];
+    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
+    expect(result.positions.size).toBe(0); // nothing visible
+    const left = result.summaries.find((s) => s.column === -1);
+    const right = result.summaries.find((s) => s.column === 1);
+    expect(left).toBeDefined();
+    expect(right).toBeDefined();
+    expect(left!.collapsedCount).toBe(1);
+    expect(right!.collapsedCount).toBe(1);
+    // Orphan summaries carry no visible anchor.
+    expect(left!.anchorId).toBe("");
+    expect(right!.anchorId).toBe("");
+  });
+
+  // A hidden node disconnected from the visible set (no edge path to any
+  // visible node — e.g. a completed standalone subtree) must still be
+  // summarized, not silently dropped.
+  it("summarizes a disconnected hidden node as an orphan even when a node is visible", () => {
+    const nodes: DAGNode<Item>[] = [
+      { id: "b", data: { status: 1 } }, // col 0, visible
+      { id: "c", data: { status: 2 } }, // col +1, hidden, no edge to b
+    ];
+    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
+    expect(result.positions.has("b")).toBe(true);
+    const orphan = result.summaries.find((s) => s.column === 1);
+    expect(orphan).toBeDefined();
+    expect(orphan!.anchorId).toBe("");
+    expect(orphan!.collapsedCount).toBe(1);
+  });
+});

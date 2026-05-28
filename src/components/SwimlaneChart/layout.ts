@@ -164,21 +164,28 @@ export function computeSwimlaneLayout<T>(
     visibleCols.set(centerCol, [...centerNodeIds]);
   }
 
-  // 6. Summaries: group hidden nodes by (anchor, hiddenCol).
+  // 6. Summaries: group hidden nodes. Nodes with a visible anchor group by
+  // (anchor, hiddenCol) so the badge can attach a dashed connector to that
+  // neighbor. Nodes WITHOUT a visible anchor — a disconnected/completed
+  // subtree, or any hidden node when NOTHING is visible at all — still need
+  // representation, else whole columns vanish silently. They group per-column
+  // into an "orphan" summary (anchorId === "") which the chart renders as an
+  // edge lozenge pinned to the viewport boundary (no connector, count only).
   const summaryMap = new Map<string, SwimlaneSummary>();
   for (const n of nodes) {
     if (isVisible(n.id)) continue;
-    const anchor = anchorOf.get(n.id);
-    if (!anchor) continue;
     const col = colOf.get(n.id)!;
-    const key = `__collapsed_${anchor}_${col}`;
+    const anchor = anchorOf.get(n.id);
+    const key = anchor
+      ? `__collapsed_${anchor}_${col}`
+      : `__collapsed_orphan_${col}`;
     const existing = summaryMap.get(key);
     if (existing) {
       existing.collapsedCount++;
     } else {
       summaryMap.set(key, {
         id: key,
-        anchorId: anchor,
+        anchorId: anchor ?? "",
         column: col,
         collapsedCount: 1,
       });
@@ -191,6 +198,10 @@ export function computeSwimlaneLayout<T>(
   //  badges instead — but the synthetic edge to the anchor still helps
   //  the consumer detect "collapsed neighbor" relationships.)
   for (const s of summaries) {
+    // Orphan summaries (no visible anchor) aren't positioned in the column
+    // grid — they're count-only and render as viewport-edge lozenges. Skip
+    // placeholder/neighbor wiring (anchorId "" has no node to attach to).
+    if (!s.anchorId) continue;
     sizeFor.set(s.id, [120, 40]);
     colOf.set(s.id, s.column);
     if (!visibleCols.has(s.column)) visibleCols.set(s.column, []);
