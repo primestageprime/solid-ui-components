@@ -10,6 +10,7 @@ describe("isValidSlug", () => {
   it("accepts kebab-case", () => {
     expect(isValidSlug("scrub-chart")).toBe(true);
     expect(isValidSlug("fisheye")).toBe(true);
+    expect(isValidSlug("chart-3d")).toBe(true);
   });
   it("rejects non-kebab", () => {
     expect(isValidSlug("ScrubChart")).toBe(false);
@@ -17,6 +18,8 @@ describe("isValidSlug", () => {
     expect(isValidSlug("scrub chart")).toBe(false);
     expect(isValidSlug("-lead")).toBe(false);
     expect(isValidSlug("")).toBe(false);
+    expect(isValidSlug("3d-chart")).toBe(false);
+    expect(isValidSlug("1password")).toBe(false);
   });
 });
 

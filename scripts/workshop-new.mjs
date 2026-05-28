@@ -19,7 +19,7 @@ const fail = (msg) => {
 };
 
 if (!slug) fail("missing <slug>");
-if (!isValidSlug(slug)) fail(`"${slug}" is not a kebab-case slug (a-z, 0-9, hyphen)`);
+if (!isValidSlug(slug)) fail(`"${slug}" is not a kebab-case slug (kebab-case, must start with a letter)`);
 
 mkdirSync(benchDir, { recursive: true });
 const filePath = join(benchDir, `${slug}.tsx`);

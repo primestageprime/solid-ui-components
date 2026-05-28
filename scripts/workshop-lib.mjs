@@ -1,4 +1,4 @@
-export const isValidSlug = (slug) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
+export const isValidSlug = (slug) => /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(slug);
 
 export const slugToTitle = (slug) =>
   slug
