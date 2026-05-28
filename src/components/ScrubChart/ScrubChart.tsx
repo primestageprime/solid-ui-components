@@ -10,12 +10,14 @@
 // ============================================
 
 import {
+  type Component,
   For,
   type JSX,
   Show,
   createEffect,
   createMemo,
   createSignal,
+  mergeProps,
   onCleanup,
   onMount,
 } from "solid-js";
@@ -361,3 +363,42 @@ export const ScrubChart = <C extends Cell>(
     </div>
   );
 };
+
+// ── Override / Data split + factory ───────────────────────────────────────
+
+/**
+ * Props that are visual / structural overrides — locked at variant-definition
+ * time. All five are presentational; everything else is data or a callback.
+ */
+export type ScrubChartOverrides<C extends Cell> = Pick<
+  ScrubChartProps<C>,
+  "selectedFraction" | "sideCompression" | "chartHeight" | "gutterHeight" | "cellWidth"
+>;
+
+/** Props that remain available to consumers of a curried ScrubChart variant. */
+export type ScrubChartDataProps<C extends Cell> = Omit<
+  ScrubChartProps<C>,
+  keyof ScrubChartOverrides<C>
+>;
+
+/**
+ * Factory that returns a curried ScrubChart with presentational defaults
+ * baked in. Call sites then receive only the data/callback surface
+ * (cells, selected, onScrub, renderChart, renderCell, today).
+ *
+ * Per STYLE_GUIDE.md "Variant Surface: keep it minimal," no concrete named
+ * variant ships yet — the only known use case is the cashflow demo using
+ * defaults. Add a named variant only when a second use case genuinely needs
+ * different baked-in geometry.
+ *
+ * @example
+ * const ZoomedScrubChart = createScrubChart({ selectedFraction: 0.85, sideCompression: 60 });
+ * // call site: <ZoomedScrubChart cells={cells} selected={i} onScrub={set} renderCell={…} renderChart={…} />
+ */
+export function createScrubChart<C extends Cell = Cell>(
+  defaults: Partial<ScrubChartOverrides<C>>,
+): Component<ScrubChartDataProps<C>> {
+  return (props) => (
+    <ScrubChart<C> {...(mergeProps(defaults, props) as ScrubChartProps<C>)} />
+  );
+}
