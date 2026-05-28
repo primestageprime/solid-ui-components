@@ -13,3 +13,5 @@ export {
   hourlyCells,
   isSameCalendarDay,
 } from "./cells";
+export { dayCellContent, dayCellContext } from "./dayCellContent";
+export type { DayCellContext } from "./dayCellContent";
