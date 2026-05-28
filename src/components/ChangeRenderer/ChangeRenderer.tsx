@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ChangeRenderer — Pure Composite (Depth 2)
 // Composes DiffPair (Depth 1) + two ValueRenderer (Depth 1) instances.

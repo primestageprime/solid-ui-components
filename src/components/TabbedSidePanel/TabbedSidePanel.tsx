@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // TabbedSidePanel — Composite (Depth 2)
 // Zero CSS. Composes Tabs (vertical) + Row.

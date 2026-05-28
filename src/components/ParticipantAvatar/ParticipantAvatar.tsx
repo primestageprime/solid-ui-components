@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ParticipantAvatar — Atomic Primitive (Depth 1)
 // Owns CSS (ParticipantAvatar.css). Renders a

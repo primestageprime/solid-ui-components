@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Tabs — Atomic (Depth 1)
 // Owns CSS (Tabs.css), no component imports.

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
 import { slotId as brandSlotId } from "./slot-types";

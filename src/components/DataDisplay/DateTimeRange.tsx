@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateTimeRange — Composite (Depth 2).
 // Owns zero CSS. Composes the `NowrapBody` Text Curried Variant; the

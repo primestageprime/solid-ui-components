@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // src/components/AnimatedSwimlaneChart/defaults.tsx
 import type { JSX } from "solid-js";
 import type { StatusFlowNode, StatusFlowColumn, StatusFlowBreakpoint } from "../StatusFlowChart";

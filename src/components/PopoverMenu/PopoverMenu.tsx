@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // PopoverMenu — Atomic Primitive (Depth 1)
 // Owns CSS (PopoverMenu.css), no component imports beyond external libs.

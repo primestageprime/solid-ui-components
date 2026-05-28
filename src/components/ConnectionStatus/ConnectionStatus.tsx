@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ConnectionStatus — Composed (Depth 3)
 // Pure Composite: owns zero CSS, composes only curried variants

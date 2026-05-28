@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // TitledTimeRangeHeader — Atomic Primitive (Depth 1)
 // Owns CSS (TitledTimeRangeHeader.css), no library Primitive imports.

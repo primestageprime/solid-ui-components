@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { JSX } from "solid-js";
 import { PivotGrid, type PivotGridProps } from "./PivotGrid";
 

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // AppNavLink — Atomic (Depth 1)
 // Owns CSS (Layout.css). Button-based top-bar nav link with an active state.

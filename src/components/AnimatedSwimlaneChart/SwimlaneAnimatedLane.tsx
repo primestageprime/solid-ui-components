@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.tsx
 import {
   createEffect,

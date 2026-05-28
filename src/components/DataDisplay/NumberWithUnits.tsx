@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // NumberWithUnits — Atomic Primitive (Depth 1)
 // Owns CSS (NumberWithUnits.css), no library Primitive imports.

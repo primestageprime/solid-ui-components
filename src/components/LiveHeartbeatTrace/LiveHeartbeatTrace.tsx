@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // LiveHeartbeatTrace — Composed (Depth 2)
 // Composes HeartbeatSparkline (Atomic). Owns the sample buffer + tick timer

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // CellRenderers — Atomic (Depth 1)
 // Owns CSS (CellRenderers.css), no component imports.

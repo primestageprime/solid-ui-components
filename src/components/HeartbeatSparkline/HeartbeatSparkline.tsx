@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // HeartbeatSparkline — Atomic (Depth 1)
 // Owns CSS (HeartbeatSparkline.css), no component imports.

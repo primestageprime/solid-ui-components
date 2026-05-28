@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // AlertBox — Depth 2 (zero CSS)
 // Composes Surface (curried) + Layout (curried) +

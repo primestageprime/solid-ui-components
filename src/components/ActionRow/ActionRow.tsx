@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ActionRow — Composed (Depth 2)
 // Owns CSS (ActionRow.css), no component imports.

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Select — Atomic (Depth 1)
 // Owns CSS (Select.css), no library component imports (wraps Kobalte primitive).

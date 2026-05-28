@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ThemedInput — Atomic (Depth 1)
 // Owns CSS (ThemedInputs.css), no component imports.

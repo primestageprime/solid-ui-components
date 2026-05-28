@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // QuickFilter — Atomic (Depth 1)
 // Owns CSS (QuickFilter.css), no component imports.

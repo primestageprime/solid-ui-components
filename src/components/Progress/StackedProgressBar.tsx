@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // StackedProgressBar — Atomic (Depth 1)
 // Owns CSS (StackedProgressBar.css), no component imports.

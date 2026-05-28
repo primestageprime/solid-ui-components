@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // FormulaDecomposition — factory module (zero CSS).
 // Exports factories (`createFormulaResult`, `createGivens`,

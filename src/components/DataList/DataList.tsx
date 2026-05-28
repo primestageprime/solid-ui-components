@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DataList — Depth 3 (zero CSS)
 // Composes Cell (curried) + Text (curried) +

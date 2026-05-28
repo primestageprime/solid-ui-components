@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { type Component, type JSX, createMemo } from "solid-js";
 import { DateAxis } from "./DateAxis";
 import { dailyCells, isSameCalendarDay, type Cell } from "./cells";

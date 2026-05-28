@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateRangePicker/CalendarGrid — Internal (not exported from library root).
 // 42-cell (6-week) day grid with Monday-first week; handles range highlight,

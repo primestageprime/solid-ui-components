@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ValueRenderer — Atomic (Depth 1)
 // Owns CSS (ValueRenderer.css), no component imports.

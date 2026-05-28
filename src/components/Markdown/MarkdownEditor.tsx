@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // MarkdownEditor — Composed (Depth 2)
 // Composes Markdown for preview. 50/50 split: textarea | preview.

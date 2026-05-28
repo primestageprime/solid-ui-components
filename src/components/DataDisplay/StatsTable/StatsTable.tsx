@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // StatsTable — Atomic (Depth 1)
 // Owns CSS (StatsTable.css), no component imports.

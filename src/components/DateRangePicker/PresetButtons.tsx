@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateRangePicker/PresetButtons — Internal (not exported from library root).
 // Native <button> chips styled by the parent Primitive's own CSS

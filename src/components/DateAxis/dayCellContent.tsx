@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import type { JSX } from "solid-js";
 import type { Cell } from "./cells";
 

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // LabeledDivider — Atomic Primitive (Depth 1)
 // Owns CSS (LabeledDivider.css). Renders a

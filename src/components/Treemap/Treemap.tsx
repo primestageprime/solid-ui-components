@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Treemap — Atomic Primitive (Depth 1).
 // Owns the outer-column × inner-leaf grid layout CSS. No library Primitive

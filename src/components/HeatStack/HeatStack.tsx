@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // HeatStack — Atomic (Depth 1)
 // Owns CSS (HeatStack.css), no component imports.

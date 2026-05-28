@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // List + ListItem — Atomic (Depth 1)
 // Owns CSS (List.css), no component imports.

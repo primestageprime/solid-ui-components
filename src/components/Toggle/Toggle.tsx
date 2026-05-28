@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Toggle — Atomic (Depth 1)
 // Owns CSS (Toggle.css), no component imports.

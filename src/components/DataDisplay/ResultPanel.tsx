@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ResultPanel — Composite (Depth 2, zero CSS).
 // Composes ResultDisplay (Atomic Primitive, Depth 1) +

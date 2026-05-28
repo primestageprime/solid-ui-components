@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // InlineChartErrorOverlay — Atomic (Depth 1)
 // Owns CSS (InlineChartErrorOverlay.css), no component imports.

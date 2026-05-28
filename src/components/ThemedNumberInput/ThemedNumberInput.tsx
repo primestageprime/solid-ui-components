@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ThemedNumberInput — Atomic (Depth 1)
 // Owns CSS (ThemedNumberInput.css), no library component imports (wraps Kobalte primitive).

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // AppShell + AppHeader + AppMain — Primitive layout (Depth 0)
 // Owns CSS (Layout.css). Vertical column root that fills the viewport height,

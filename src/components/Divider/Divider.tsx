@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Divider — Atomic (Depth 1)
 // Owns CSS (Divider.css), no component imports.

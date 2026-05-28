@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Lanes are inferred from data in first-encounter order when `lanes` is
 // omitted (otherwise the caller-supplied order wins, top-to-bottom).
 import { Component, For, Show, createMemo, mergeProps } from "solid-js";

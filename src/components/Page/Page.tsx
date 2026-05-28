@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Page — Atomic (Depth 1)
 // Owns CSS (Page.css), no component imports.

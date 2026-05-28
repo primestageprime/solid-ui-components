@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // GroupBracket — Atomic (Depth 0)
 // Owns CSS (GroupBracket.css), no component imports.

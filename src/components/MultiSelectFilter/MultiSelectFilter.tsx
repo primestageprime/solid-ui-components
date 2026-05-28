@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // MultiSelectFilter — Atomic (Depth 1)
 // Owns CSS (MultiSelectFilter.css), no component imports.

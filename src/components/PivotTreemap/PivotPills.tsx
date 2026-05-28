@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // PivotPills — Atomic (Depth 1).
 // Drag-to-reorder pill row that lifts a Dim[] permutation to the caller.

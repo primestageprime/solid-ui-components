@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { createMemo, createEffect, createSignal, on, For, Show, onMount, onCleanup } from "solid-js";
 import type { DAGProps, PositionedNode } from "./types";
 import { computeLayout, type LayoutResult } from "./layout";

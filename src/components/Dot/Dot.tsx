@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Dot — Atomic (Depth 0)
 // Owns CSS (Dot.css), no component imports.

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // PivotTreemap — Pure Composite (Depth 2).
 // Composes Treemap + SlotFillBar + the compact Text/Layout Curried Variants

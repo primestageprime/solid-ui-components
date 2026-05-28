@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // TruthIndicator — Atomic (Depth 1)
 // Owns CSS (TruthIndicator.css), no component imports.

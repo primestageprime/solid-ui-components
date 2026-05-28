@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ProgressCard — Depth 2
 // Owns CSS (ProgressCard.css).

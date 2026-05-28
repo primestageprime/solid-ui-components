@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // FocusLabelBand — Primitive (Depth 1). Atomic.
 // Owns CSS (FocusLabelBand.css), imports no other components.

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { For, Show } from "solid-js";
 
 export interface RingChartProps {

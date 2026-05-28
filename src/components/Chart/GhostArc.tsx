@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // pointer-events=none so the arc (a preview-only affordance) never
 // intercepts clicks intended for the slots beneath it.
 import { Component, Show, mergeProps } from "solid-js";

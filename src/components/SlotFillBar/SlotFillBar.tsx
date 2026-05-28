@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // SlotFillBar — Atomic (Depth 1)
 // Owns CSS (SlotFillBar.css), no component imports.

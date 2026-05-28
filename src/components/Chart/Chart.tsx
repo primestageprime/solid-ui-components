@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Chart — composed root. Owns the single pointer listener on its <svg>
 // (so per-slot listeners would clobber dispatch); slots read scales +
 // pointer state via context.

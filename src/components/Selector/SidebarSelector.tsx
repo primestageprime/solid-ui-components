@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // SidebarSelector — Atomic (Depth 1)
 // Owns CSS (SidebarSelector.css), no component imports.

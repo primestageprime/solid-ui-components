@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Combobox — Atomic (Depth 1)
 // Owns CSS (Combobox.css), no library component imports (wraps Kobalte primitive).

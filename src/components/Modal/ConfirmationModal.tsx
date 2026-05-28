@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ConfirmationModal — Depth 2 (zero CSS)
 // Composes Modal (Atomic) + Button (Atomic).

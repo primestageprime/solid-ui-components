@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // SprintSelector — Atomic (Depth 1)
 // Owns CSS (SprintSelector.css), no component imports.

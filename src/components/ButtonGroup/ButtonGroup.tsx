@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ButtonGroup — Atomic (Depth 1)
 // Owns CSS (ButtonGroup.css), no component imports.

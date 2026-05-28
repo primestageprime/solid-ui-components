@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Toast — Atomic (Depth 1)
 // Owns CSS (Toast.css). No imports from other Atomic/Layout components

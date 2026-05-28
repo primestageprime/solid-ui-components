@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // AssigneeChips — Atomic (Depth 1)
 // Owns CSS (AssigneeChips.css), no component imports.

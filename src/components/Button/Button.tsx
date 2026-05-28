@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Button — Atomic (Depth 1)
 // Owns CSS (Button.css), no component imports.

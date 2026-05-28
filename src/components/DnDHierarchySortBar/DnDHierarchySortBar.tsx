@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DnDHierarchySortBar — Atomic (Depth 1).
 // Horizontal row of draggable "dimension" pills the user drag-reorders to

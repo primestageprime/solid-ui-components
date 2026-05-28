@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Link — Atomic (Depth 1)
 // Owns CSS (Link.css), no component imports.

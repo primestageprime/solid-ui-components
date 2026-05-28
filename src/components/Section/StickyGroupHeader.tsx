@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // StickyGroupHeader + SectionLabel — Atomic (Depth 1)
 // Owns CSS (StickyGroupHeader.css), no component imports.

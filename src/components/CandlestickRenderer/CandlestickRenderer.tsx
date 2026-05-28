@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // CandlestickRenderer — Atomic (Depth 1)
 // Owns CSS (CandlestickRenderer.css), no component imports.

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Cell + CellTable + CellRow — Primitive (Depth 0)
 // Owns CSS (Cell.css). Table cell/row/table primitives

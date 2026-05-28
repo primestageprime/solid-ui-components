@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // GroupedTable — Atomic (Depth 1)
 // Owns CSS (Table.css), no component imports.

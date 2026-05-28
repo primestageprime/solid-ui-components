@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateAxis — Atomic (Depth 1).
 // Cadence-generic horizontal cell ribbon. One cell per item in `cells`;

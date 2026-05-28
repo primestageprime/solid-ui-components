@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // CollapsiblePanel — Composed (Depth 2)
 // Owns CSS (CollapsiblePanel.css), no component imports.

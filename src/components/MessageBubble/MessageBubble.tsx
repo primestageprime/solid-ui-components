@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // MessageBubble — Atomic Primitive (Depth 1)
 // Owns CSS (MessageBubble.css). Renders a single

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // AsyncProgress — Depth 1 (owns CSS)
 // Time-based progress bar that estimates completion

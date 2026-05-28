@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { Component, For } from "solid-js";
 import { useChart } from "../Chart/context";
 import type { Range } from "./alarm";

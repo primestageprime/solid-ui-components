@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // OverflowNav — Pure Composite (Depth 2)
 // Composes Row (Layout Primitive) + NavLink (Atomic Primitive)

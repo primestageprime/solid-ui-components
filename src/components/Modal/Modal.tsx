@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Modal — Atomic (Depth 1)
 // Owns CSS (Modal.css), no component imports.

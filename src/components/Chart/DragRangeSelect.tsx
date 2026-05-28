@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Config-only consumer of context.drag.range — the root <Chart> owns the
 // pointer listener, so this slot deliberately attaches none of its own
 // (would clobber dispatch).

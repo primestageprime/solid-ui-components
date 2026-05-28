@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // CashflowScrubChart — Domain Composite (Depth 3).
 // Composes `ScrubChart` (Depth 2) with a baked-in cashflow day-cell renderer

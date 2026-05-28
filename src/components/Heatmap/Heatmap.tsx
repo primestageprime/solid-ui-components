@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Heatmap + HeatmapMulti — Atomic (Depth 1)
 // Owns CSS (Heatmap.css), no component imports.

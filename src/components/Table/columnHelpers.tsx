@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { FloatCell, IntCell, DateTimeCell, DateCell, StringCell } from "./CellRenderers";
 import type { TableColumn } from "./types";
 

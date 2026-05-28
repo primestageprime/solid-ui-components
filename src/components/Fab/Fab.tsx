@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Fab — Composite (Depth 2)
 // Composes Button + Icon (both Depth-1 atomics).

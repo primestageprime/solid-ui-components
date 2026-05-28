@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ThroughputChart — Composed (Depth 2)
 // Composes Chart + Grid + axes + AreaSeries + LineSeries + ReferenceLine

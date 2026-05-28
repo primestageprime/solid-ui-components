@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateRangePicker — Atomic Primitive (Depth 1).
 // Owns `DateRangePicker.css`; wraps `@kobalte/core/popover` (same shape as

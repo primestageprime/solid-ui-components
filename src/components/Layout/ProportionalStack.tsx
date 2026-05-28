@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ProportionalStack — Primitive (Depth 0)
 // Flex container whose children declare a `weight`. When all children fit

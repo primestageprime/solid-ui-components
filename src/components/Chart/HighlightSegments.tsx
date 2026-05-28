@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
 import { Component, For, Show, createMemo, mergeProps } from "solid-js";

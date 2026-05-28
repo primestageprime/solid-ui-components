@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // TagInput — Atomic (Depth 1)
 // Owns CSS (TagInput.css), no component imports.

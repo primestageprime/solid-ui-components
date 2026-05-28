@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DigitRoller — Atomic (Depth 1)
 // Owns CSS (DigitRoller.css), no component imports.

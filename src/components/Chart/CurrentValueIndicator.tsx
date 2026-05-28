@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Pure slot — no internal state; consumer controls the point.
 import { Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";

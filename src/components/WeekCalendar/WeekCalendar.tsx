@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // WeekCalendar — Composed (Depth 2)
 // Owns CSS (WeekCalendar.css), no component imports.

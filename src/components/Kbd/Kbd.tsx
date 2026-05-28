@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Kbd — Atomic (Depth 1)
 // Owns CSS (Kbd.css), no component imports.

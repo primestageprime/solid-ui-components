@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DataTableContainer — Atomic (Depth 1)
 // Owns CSS (DataTableContainer.css), no component imports.

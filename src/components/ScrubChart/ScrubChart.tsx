@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ScrubChart — Composite (Depth 2).
 // Linear-scale chart paired with a DateAxis (overview + detail).

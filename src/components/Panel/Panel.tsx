@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Panel — Atomic (Depth 1)
 // Owns CSS (Panel.css), no component imports.

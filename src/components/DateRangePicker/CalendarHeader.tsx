@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // DateRangePicker/CalendarHeader — Internal (not exported from library root).
 // Month label + prev/next month nav buttons.

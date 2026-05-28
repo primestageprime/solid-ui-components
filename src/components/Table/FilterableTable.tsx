@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // FilterableTable — Depth 2 (zero CSS)
 // Composes BaseTable (Atomic/Depth 1).

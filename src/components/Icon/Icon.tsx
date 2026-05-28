@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Icon — Atomic (Depth 1)
 // Owns CSS (Icon.css), no component imports.

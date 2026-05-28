@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // StatusLight — Atomic (Depth 1)
 // Owns CSS (StatusLight.css), no component imports.

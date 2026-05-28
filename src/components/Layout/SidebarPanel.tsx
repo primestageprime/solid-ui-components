@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // SidebarPanel — Primitive (Depth 0)
 // Owns CSS (Layout.css). Flexible-width sidebar with right-edge delineation

@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // MathFormula + FormulaProvider — Atomic (Depth 1)
 // Owns CSS (MathFormula.css), no component imports.

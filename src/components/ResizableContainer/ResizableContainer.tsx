@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // ResizableContainer — Layout (Depth 0)
 // Owns CSS (ResizableContainer.css), no component imports.

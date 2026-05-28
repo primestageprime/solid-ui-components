@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // Chart slot: Crosshair — vertical guide + dot at hovered series points.
 import { Component, For, Show, createMemo } from "solid-js";
 import { useChart } from "./context";

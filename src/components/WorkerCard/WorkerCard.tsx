@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // WorkerCard — Depth 1 (owns CSS)
 // Displays the status of an extraction worker with

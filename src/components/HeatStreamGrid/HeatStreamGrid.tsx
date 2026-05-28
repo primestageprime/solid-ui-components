@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // HeatStreamGrid — Depth 2
 // Composes HeatStream (Depth 1).

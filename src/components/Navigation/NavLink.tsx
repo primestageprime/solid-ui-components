@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // NavLink — Atomic (Depth 1)
 // Owns CSS (NavLink.css), no component imports.

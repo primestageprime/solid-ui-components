@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Text — Primitive (Depth 0)
 // Owns CSS (Text.css). Polymorphic text element

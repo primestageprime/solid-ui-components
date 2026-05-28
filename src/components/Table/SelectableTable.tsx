@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // SelectableTable — Depth 2 (zero CSS)
 // Composes Button (Atomic/Depth 1).

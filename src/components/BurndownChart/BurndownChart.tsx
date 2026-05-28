@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // BurndownChart — Composed (Depth 2)
 // Composes Chart + Grid + axes + BarSeries (stacked +/-) + ReferenceLine

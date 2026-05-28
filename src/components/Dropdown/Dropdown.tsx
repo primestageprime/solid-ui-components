@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 // ============================================
 // Dropdown — Atomic (Depth 1)
 // Owns CSS (Dropdown.css), no component imports.

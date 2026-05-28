@@ -1,3 +1,5 @@
+// lastReviewedAt: 2026-05-28
+// lastReviewedBy: adlai.arnold
 import { createMemo, For, JSX, Show } from "solid-js";
 import "./PivotGrid.css";
 
