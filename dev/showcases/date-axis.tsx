@@ -1,5 +1,11 @@
-import { Component, createSignal } from "solid-js";
-import { DateAxis } from "../../src/components/DateAxis";
+import { type Component, createSignal } from "solid-js";
+import {
+  DateAxis,
+  DailyDateAxis,
+  dailyCells,
+  dayCellContext,
+  type Cell,
+} from "../../src/components/DateAxis";
 
 // ── Static dates — anchored to 2026-05-01 so the gallery shows a stable
 //    range without clocking. `today` is pinned near the middle of the range.
@@ -7,8 +13,6 @@ const RANGE_START = new Date("2026-05-01");
 const RANGE_END = new Date("2026-07-14"); // ~75 days — forces horizontal scroll
 const PINNED_TODAY = new Date("2026-05-27");
 
-// A narrower range (3 weeks) for a second instance so both ends are visible
-// at once and a larger cellWidth is exercised.
 const NARROW_START = new Date("2026-05-19");
 const NARROW_END = new Date("2026-06-08");
 
@@ -21,9 +25,7 @@ const fmtLong = (d: Date): string =>
     timeZone: "UTC",
   });
 
-// Deterministic stub net-cashflow ($) per day for the heatmap demo — a wave
-// that swings positive/negative so both the green (up) and red (down) bars get
-// exercised. `renderDay` turns each day into a calendar-style cashflow cell.
+// Deterministic stub net-cashflow ($) per day for the heatmap demo.
 const cashflow = (i: number): number =>
   Math.round(Math.sin(i / 3.5) * 1100 + Math.sin(i / 1.6) * 480 + Math.sin(i / 13) * 260);
 
@@ -33,7 +35,6 @@ const fmtDollars = (v: number): string =>
 const HEAT_GREEN = "rgba(0, 200, 120, 0.85)";
 const HEAT_RED = "rgba(230, 70, 70, 0.85)";
 
-// Shared framed-box chrome for each ribbon (label strip + bordered body).
 const demoBox = (label: string, children: () => unknown) => (
   <div
     style={{
@@ -62,53 +63,45 @@ const demoBox = (label: string, children: () => unknown) => (
 );
 
 export const DateAxisShowcase: Component = () => {
-  // The "linked view" position. In a real page this scrolls a graph; here we
-  // just render the selected day so the click→navigate loop is visible.
   const [selected, setSelected] = createSignal<Date>(PINNED_TODAY);
+
+  // Cells for the custom-render example are computed once.
+  const customCells = dailyCells(RANGE_START, RANGE_END);
 
   return (
     <div class="component-section">
       <h2>DateAxis — Atomic (Depth 1)</h2>
       <p class="text-meta">
-        Owns CSS (DateAxis.css), composes no other components. A freestanding
-        horizontal day-cell ribbon — one cell per calendar day across a date
-        range, with month labels on month edges, a today marker, horizontal
-        scroll for long ranges, and optional clickable days that drive a linked
-        view. Not the chart-internal XAxis: no SVG, no scale, no chart context.
-        With <code>renderDay</code> the caller owns each cell's content and size.
+        Cadence-generic horizontal cell ribbon. Pass any <code>Cell[]</code>
+        produced by <code>dailyCells</code> / <code>weeklyCells</code> /
+        <code>monthlyCells</code> / <code>hourlyCells</code>, or build your own.
+        For day-cell ergonomics use <code>DailyDateAxis</code>.
       </p>
 
       <div class="example-group">
-        <h3>Default ribbon</h3>
+        <h3>Default ribbon — DailyDateAxis</h3>
         <p class="text-meta">
-          The simplest form: <code>{"<DateAxis start={…} end={…} />"}</code>.
-          Today (May 27) is marked with an accent highlight and pip; month names
-          appear above the day number on the first and last day of each month.
+          <code>{"<DailyDateAxis start={…} end={…} />"}</code>. Today (May 27)
+          is marked; month names appear above the day number on the first and
+          last day of each month.
         </p>
-        {demoBox("DateAxis · passive · 3-week · cellWidth=56", () => (
-          <DateAxis
+        {demoBox("DailyDateAxis · passive · 3-week · cellWidth=56", () => (
+          <DailyDateAxis
             start={NARROW_START}
             end={NARROW_END}
             today={PINNED_TODAY}
             cellWidth={56}
           />
         ))}
-        <div class="text-meta">
-          Without <code>onDayClick</code> the ribbon is a passive header — no
-          pointer cursor, not focusable.
-        </div>
       </div>
 
       <div class="example-group">
         <h3>Clickable days drive a linked view</h3>
         <p class="text-meta">
-          Click (or focus + Enter/Space on) any day below. The selected day gets
-          an accent underline and the stand-in "graph view" updates — the hook a
-          real page uses to scrub a chart to a date. Both ribbons share one{" "}
-          <code>selected</code> signal, so either drives the view.
+          Click (or focus + Enter/Space on) any day below. Both ribbons share
+          one <code>selected</code> signal.
         </p>
 
-        {/* Stand-in for the graph a real consumer would scrub. */}
         <div
           style={{
             display: "flex",
@@ -145,8 +138,8 @@ export const DateAxisShowcase: Component = () => {
           </div>
         </div>
 
-        {demoBox("DateAxis · clickable · start=2026-05-01  end=2026-07-14", () => (
-          <DateAxis
+        {demoBox("DailyDateAxis · clickable · start=2026-05-01  end=2026-07-14", () => (
+          <DailyDateAxis
             start={RANGE_START}
             end={RANGE_END}
             today={PINNED_TODAY}
@@ -155,8 +148,8 @@ export const DateAxisShowcase: Component = () => {
           />
         ))}
 
-        {demoBox("DateAxis · clickable · 3-week · cellWidth=56", () => (
-          <DateAxis
+        {demoBox("DailyDateAxis · clickable · 3-week · cellWidth=56", () => (
+          <DailyDateAxis
             start={NARROW_START}
             end={NARROW_END}
             today={PINNED_TODAY}
@@ -168,28 +161,26 @@ export const DateAxisShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>Custom cell renderer — cashflow heatmap</h3>
+        <h3>Custom cell renderer — cashflow heatmap (bare DateAxis)</h3>
         <p class="text-meta">
-          Pass <code>renderDay</code> to make each day a calendar-style{" "}
-          <strong>cashflow cell</strong>: the date sits in the top corner (month +
-          day on month edges, like the default axis), a diverging bar shows the
-          day's net cashflow — green growing up when positive, red growing down
-          when negative — and the dollar amount driving the colour is printed
-          below. The renderer sizes each cell (60×72); the axis grows to respect
-          it and the scrollbar stays entirely below the cells.
+          Drop the curry: <code>DateAxis</code> with <code>cells</code> from
+          <code>dailyCells(...)</code> and a custom <code>renderCell</code>.
+          The renderer sizes each cell; the axis grows to respect it and the
+          scrollbar stays entirely below the cells.
         </p>
-        {demoBox("DateAxis · renderDay cashflow — date corner + diverging bar + $", () => (
+        {demoBox("DateAxis · custom renderCell — date corner + diverging bar + $", () => (
           <DateAxis
-            start={RANGE_START}
-            end={RANGE_END}
-            renderDay={(day, ctx) => {
+            cells={customCells}
+            today={PINNED_TODAY}
+            renderCell={(cell: Cell, ctx) => {
+              const dayCtx = dayCellContext(cell, ctx);
               const v = cashflow(ctx.index);
               const up = v >= 0;
               const frac = Math.min(1, Math.abs(v) / 2200);
               const corner =
-                ctx.isFirstOfMonth || ctx.isLastOfMonth
-                  ? `${day.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })} ${day.getUTCDate()}`
-                  : String(day.getUTCDate());
+                dayCtx.isFirstOfMonth || dayCtx.isLastOfMonth
+                  ? `${cell.start.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })} ${cell.start.getUTCDate()}`
+                  : String(cell.start.getUTCDate());
               return (
                 <div
                   style={{
@@ -205,7 +196,6 @@ export const DateAxisShowcase: Component = () => {
                     background: up ? "rgba(0,200,120,0.05)" : "rgba(230,70,70,0.05)",
                   }}
                 >
-                  {/* date in the corner, like a calendar day */}
                   <div
                     style={{
                       "font-size": "9px",
@@ -216,7 +206,6 @@ export const DateAxisShowcase: Component = () => {
                   >
                     {corner}
                   </div>
-                  {/* diverging bar: green grows up (positive), red grows down (negative) */}
                   <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
                     <div
                       style={{
@@ -240,7 +229,6 @@ export const DateAxisShowcase: Component = () => {
                       }}
                     />
                   </div>
-                  {/* the dollar value driving the colour */}
                   <div
                     style={{
                       "font-size": "9px",
@@ -258,9 +246,8 @@ export const DateAxisShowcase: Component = () => {
           />
         ))}
         <div class="text-meta">
-          DateAxis still owns the cell wrapper (click handling, today/selected
-          highlight); <code>renderDay</code> controls only what's inside — and,
-          for custom cells, the cell's own width and height.
+          DateAxis owns the cell wrapper (click handling, today / selected highlight);
+          your <code>renderCell</code> controls what's inside and the cell's own size.
         </div>
       </div>
     </div>
