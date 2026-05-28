@@ -117,13 +117,21 @@ import { DagTraversalSandboxShowcase } from "./showcases/dag-traversal-sandbox";
 import { DagTraversalBulkSandboxShowcase } from "./showcases/dag-traversal-bulk-sandbox";
 import { WorkshopShowcase } from "./showcases/workshop";
 import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-chart";
+import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
 type Item = { id: string; label: string; component: Component; tags: string[] };
+
+// Auto-discovered workshop benches (dev/showcases/workshop/*.tsx). Each file
+// default-exports a Component; new benches appear here with no registration edit.
+const workshopBenchItems = buildWorkshopItems(
+  import.meta.glob<BenchModule>("./showcases/workshop/*.tsx", { eager: true }),
+);
 
 const items: Item[] = [
   // Workshop: standalone entry, surfaced via the dedicated sidebar link.
   // Tagged "workshop" so the depth-grouped list filters it out.
   { id: "workshop", label: "Workshop", component: WorkshopShowcase, tags: ["workshop"] },
+  ...workshopBenchItems,
   { id: "base-table", label: "BaseTable", component: BaseTableShowcase, tags: ["depth:1", "table", "data"] },
   { id: "button", label: "Button", component: ButtonShowcase, tags: ["depth:1", "form"] },
   { id: "dnd-hierarchy-sort-bar", label: "DnDHierarchySortBar", component: DnDHierarchySortBarShowcase, tags: ["depth:1", "form"] },
@@ -390,6 +398,19 @@ const App: Component = () => {
         >
           Workshop
         </button>
+
+        <For each={workshopBenchItems}>
+          {(bench) => (
+            <button
+              type="button"
+              class={`workshop-link workshop-link--bench ${activeId() === bench.id ? "workshop-link--active" : ""}`}
+              onClick={() => navigate(bench.id)}
+              title="Workshop bench (in-progress component)"
+            >
+              {bench.label}
+            </button>
+          )}
+        </For>
 
         <button
           type="button"

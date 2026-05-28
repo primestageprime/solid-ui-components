@@ -1197,3 +1197,8 @@
   font: inherit;
   cursor: pointer;
 }
+
+.workshop-link--bench {
+  padding-left: 24px;
+  font-size: 12px;
+}
