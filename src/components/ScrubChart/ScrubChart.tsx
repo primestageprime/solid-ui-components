@@ -160,30 +160,60 @@ export const ScrubChart = <C extends Cell>(
     };
   };
 
-  // ── Pointer handlers — B4 click-only (drag lands in B6) ──────────────
-  let pendingIndex: number | null = null;
+  // ── Pointer handlers — pointer-anchored drag scrub (B6) ──────────────
+  // The gesture freezes the layout that was visible at pointerdown so the
+  // mapping between pointer x and the focused cell stays stable even as the
+  // visible layout morphs. The pointer effectively "anchors" to a virtual
+  // cell position; further moves shift `selectedAnim` by the delta between
+  // the current pointer cell and the anchor.
+  type GestureState = {
+    pointerId: number;
+    startLayout: CellLayout;
+    selectedAtStart: number;
+    anchorCell: number;
+  };
+  let gesture: GestureState | null = null;
+
+  const clampCellIndex = (i: number): number =>
+    Math.max(0, Math.min(props.cells.length - 1, i));
 
   const handlePointerDown = (e: PointerEvent) => {
     if (!frameEl) return;
     const rect = frameEl.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const fractional = xToCell(x, layout());
-    const idx = Math.round(fractional);
-    const clamped = Math.max(0, Math.min(props.cells.length - 1, idx));
+    const startLayout = layout();
+    const anchorCell = xToCell(x, startLayout);
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    pendingIndex = clamped;
+    gesture = {
+      pointerId: e.pointerId,
+      startLayout,
+      selectedAtStart: selectedAnim(),
+      anchorCell,
+    };
+    setGestureActive(true);
   };
 
-  const handlePointerUp = (e: PointerEvent) => {
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!gesture || !frameEl) return;
+    const rect = frameEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const cellAtNow = xToCell(x, gesture.startLayout);
+    const next = gesture.selectedAtStart + (cellAtNow - gesture.anchorCell);
+    setSelectedAnim(clampCellIndex(next));
+  };
+
+  const endGesture = (e: PointerEvent) => {
+    if (!gesture) return;
     try {
       (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
     } catch {
       /* pointer wasn't captured; nothing to release */
     }
-    if (pendingIndex === null) return;
-    const i = pendingIndex;
-    pendingIndex = null;
-    props.onScrub(i, props.cells[i]);
+    const committed = clampCellIndex(Math.round(selectedAnim()));
+    setSelectedAnim(committed); // snap
+    gesture = null;
+    setGestureActive(false);
+    props.onScrub(committed, props.cells[committed]);
   };
 
   return (
@@ -197,7 +227,9 @@ export const ScrubChart = <C extends Cell>(
         <div
           class="sui-scrub-chart__overlay"
           onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endGesture}
+          onPointerCancel={endGesture}
         />
       </div>
 

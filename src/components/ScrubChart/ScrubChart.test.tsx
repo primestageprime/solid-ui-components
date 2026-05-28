@@ -94,3 +94,33 @@ describe("ScrubChart click-to-scrub on the chart", () => {
     expect(onScrub.mock.calls[0][0]).toBe(15);
   });
 });
+
+describe("ScrubChart drag scrub", () => {
+  it("updates selectedAnim mid-drag and commits the rounded value on pointerup", () => {
+    const onScrub = vi.fn();
+    const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={15}
+        onScrub={onScrub}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={() => <svg />}
+      />
+    ));
+    const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
+    const frame = container.querySelector(".sui-scrub-chart__frame")! as HTMLDivElement;
+    frame.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 880, height: 200, right: 880, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+    // Down at chart centre, drag right past the focused cell's right edge,
+    // release. With default knobs the focused cell occupies roughly
+    // [chartWidth × (1−2/3)/2, chartWidth × (1−(1−2/3)/2)] ≈ [147, 733], so
+    // a drag to x=820 falls well into the right-side cells and the commit
+    // must advance past the original focus.
+    firePointer(overlay, "pointerdown", { clientX: 440, clientY: 100 });
+    firePointer(overlay, "pointermove", { clientX: 820, clientY: 100 });
+    firePointer(overlay, "pointerup", { clientX: 820, clientY: 100 });
+    expect(onScrub).toHaveBeenCalledTimes(1);
+    expect(onScrub.mock.calls[0][0]).toBeGreaterThan(15);
+  });
+});
