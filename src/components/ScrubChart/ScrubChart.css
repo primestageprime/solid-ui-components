@@ -27,3 +27,10 @@
   border-bottom: 1px solid var(--sui-border);
   overflow: hidden;
 }
+
+.sui-scrub-chart__overlay {
+  position: absolute;
+  inset: 0;
+  cursor: ew-resize;
+  touch-action: none;
+}

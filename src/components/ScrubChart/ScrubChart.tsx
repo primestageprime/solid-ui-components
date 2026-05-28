@@ -19,7 +19,7 @@ import {
   onMount,
 } from "solid-js";
 import { DateAxis, type Cell, type DateAxisCellContext } from "../DateAxis";
-import { layoutCells, type CellLayout } from "./scales";
+import { layoutCells, xToCell, type CellLayout } from "./scales";
 import "./ScrubChart.css";
 
 /** Context passed to the consumer's `renderChart`. */
@@ -118,6 +118,32 @@ export const ScrubChart = <C extends Cell>(
     };
   };
 
+  // ── Pointer handlers — B4 click-only (drag lands in B6) ──────────────
+  let pendingIndex: number | null = null;
+
+  const handlePointerDown = (e: PointerEvent) => {
+    if (!frameEl) return;
+    const rect = frameEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const fractional = xToCell(x, layout());
+    const idx = Math.round(fractional);
+    const clamped = Math.max(0, Math.min(props.cells.length - 1, idx));
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    pendingIndex = clamped;
+  };
+
+  const handlePointerUp = (e: PointerEvent) => {
+    try {
+      (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
+    } catch {
+      /* pointer wasn't captured; nothing to release */
+    }
+    if (pendingIndex === null) return;
+    const i = pendingIndex;
+    pendingIndex = null;
+    props.onScrub(i, props.cells[i]);
+  };
+
   return (
     <div class="sui-scrub-chart">
       <div
@@ -126,6 +152,11 @@ export const ScrubChart = <C extends Cell>(
         ref={(el) => (frameEl = el)}
       >
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
+        <div
+          class="sui-scrub-chart__overlay"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+        />
       </div>
 
       <svg
