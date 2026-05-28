@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+## 0.45.0
+
+### Changed — BREAKING
+
+- **ScrubChart** rewritten with a linear-scale + visible-axis-window model, replacing the original fisheye geometry. Every cell now sits at uniform pixel pitch (`width / cells.length`), and ScrubChart owns a translucent rect overlay that tracks the slice of cells currently visible in the inner DateAxis viewport — classic overview + detail. Click-and-drag on the chart maps each pointer x directly to a cell index; there's no anchored start-layout, no `selectedAnim` tween, no `requestAnimationFrame` loop.
+
+  **Removed:** `selectedFraction`, `sideCompression`, `gutterHeight` props; the gutter SVG + diagonal connectors; the in-chart day-edge vertical lines; the `layoutCells` / `xToCell` exports (and the `scales.ts` module that backed them). The `selectedFraction`/`sideCompression` factory variants no longer exist.
+
+  **Added to `ScrubChartContext`:** `dayPitch` (number, the linear cell width in chart px), `windowCells` (`[firstIdx, lastIdx]` of cells in the axis viewport), `windowBounds` (`[leftX, rightX]` in chart px covering that slice). `visibleCells` is gone — iterate `ctx.cells` directly and use `ctx.cellToX(i)` for positions.
+
+  **Theme tokens:** new `--sui-scrub-chart-window-fill` and `--sui-scrub-chart-window-stroke` CSS variables let consumers re-skin the window-band overlay.
+
+  **Migration:**
+
+  ```tsx
+  // Before (0.44.0 — fisheye)
+  <ScrubChart
+    cells={cells} selected={i} onScrub={setI}
+    selectedFraction={0.67} sideCompression={28}
+    renderCell={renderCell}
+    renderChart={(ctx) => {
+      const points = ctx.visibleCells.map((j) => `${ctx.cellToX(j)},${y(ctx.cells[j])}`).join(" ");
+      return <svg viewBox={`0 0 ${ctx.width} ${ctx.height}`}><polyline points={points} /></svg>;
+    }}
+  />
+
+  // After (0.45.0 — linear + window)
+  <ScrubChart
+    cells={cells} selected={i} onScrub={setI}
+    renderCell={renderCell}
+    renderChart={(ctx) => {
+      const points = ctx.cells.map((c, j) => `${ctx.cellToX(j)},${y(c)}`).join(" ");
+      return <svg viewBox={`0 0 ${ctx.width} ${ctx.height}`}><polyline points={points} /></svg>;
+    }}
+  />
+  ```
+
+  The fisheye model didn't read well in practice — cell widths morphed under the cursor in ways that fought the user. The overview-plus-detail framing matches how the component is actually used (chart is the big picture, axis is the zoomed-in detail), and the math is dramatically simpler.
+
 ## 0.44.0
 
 ### Added
