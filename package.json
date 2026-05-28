@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -15,16 +15,29 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "node": "./dist/server.js",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./themes/default.css": "./dist/themes/default.css",
-    "./themes/hud.css": "./dist/themes/hud.css",
-    "./themes/bronze.css": "./dist/themes/bronze.css",
-    "./styles.css": "./dist/themes/default.css",
+    "./themes/default.css": {
+      "source": "./src/themes/default.css",
+      "default": "./dist/themes/default.css"
+    },
+    "./themes/hud.css": {
+      "source": "./src/themes/hud.css",
+      "default": "./dist/themes/hud.css"
+    },
+    "./themes/bronze.css": {
+      "source": "./src/themes/bronze.css",
+      "default": "./dist/themes/bronze.css"
+    },
+    "./styles.css": {
+      "source": "./src/themes/default.css",
+      "default": "./dist/themes/default.css"
+    },
     "./index.css": "./dist/index.css"
   },
   "files": [

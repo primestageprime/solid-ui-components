@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.47.1
+
+### Added
+
+- **`source` export condition** for `.`, `./styles.css`, `./themes/*.css` — opt-in path for local consumers (npm link / file: dep / workspace) to read SUI from `src/` instead of `dist/`. Enables readable component names + `autoname` signal labels in the consumer's Solid DevTools, plus instant HMR on SUI edits. Activate by adding `"source"` to the consumer's `resolve.conditions` in `vite.config`. Production consumers are unaffected — the condition only fires when explicitly listed. See `docs/local-development.md` for full setup.
+
 ## 0.47.0
 
 ### Added
