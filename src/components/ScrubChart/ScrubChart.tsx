@@ -216,6 +216,24 @@ export const ScrubChart = <C extends Cell>(
     props.onScrub(committed, props.cells[committed]);
   };
 
+  // ── Continuous axis scroll driven by `selectedAnim` (B7) ─────────────
+  // The DateAxis's own scroll-into-view effect handles integer changes; for
+  // fractional `selectedAnim` (active gesture / mid-tween) we set scrollLeft
+  // imperatively each frame so the axis tracks the chart's morph smoothly.
+  let axisScrollEl: HTMLDivElement | undefined;
+  const handleScrollableRef = (el: HTMLDivElement) => {
+    axisScrollEl = el;
+  };
+
+  createEffect(() => {
+    const anim = selectedAnim();
+    const el = axisScrollEl;
+    if (!el) return;
+    const w = cellWidth();
+    const targetLeft = anim * w + w / 2 - el.clientWidth / 2;
+    el.scrollLeft = Math.max(0, targetLeft);
+  });
+
   return (
     <div class="sui-scrub-chart">
       <div
@@ -280,6 +298,7 @@ export const ScrubChart = <C extends Cell>(
         cellWidth={cellWidth()}
         onCellClick={(idx, cell) => props.onScrub(idx, cell)}
         renderCell={props.renderCell}
+        scrollableRef={handleScrollableRef}
       />
     </div>
   );
