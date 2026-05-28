@@ -48,6 +48,8 @@ const fmtDate = (d: Date): string =>
 
 export const WorkshopShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
+  const [selectedFraction, setSelectedFraction] = createSignal(2 / 3);
+  const [sideCompression, setSideCompression] = createSignal(28);
 
   const cell = createMemo(() => cells[selectedIdx()]);
 
@@ -63,8 +65,9 @@ export const WorkshopShowcase: Component = () => {
         }}
       >
         DateAxis paired with a fisheye chart. Click an axis cell or drag on the
-        chart to scrub. The focused cell smoothly morphs to 67% of the chart
-        width while neighbouring cells compress into the side bands.
+        chart to scrub. The focused cell smoothly morphs to{" "}
+        {(selectedFraction() * 100).toFixed(0)}% of the chart width while
+        neighbouring cells compress into the side bands.
       </p>
 
       <ScrubChart<CashflowCell>
@@ -72,6 +75,8 @@ export const WorkshopShowcase: Component = () => {
         selected={selectedIdx()}
         onScrub={(i) => setSelectedIdx(i)}
         today={PINNED_TODAY}
+        selectedFraction={selectedFraction()}
+        sideCompression={sideCompression()}
         renderCell={cashflowDayCell}
         renderChart={(ctx) => {
           const points = ctx.visibleCells
@@ -148,6 +153,73 @@ export const WorkshopShowcase: Component = () => {
         </strong>
         {"  · Day cashflow: "}
         <span>{fmtDollars(cell().cashflowCents / 100)}</span>
+      </div>
+
+      <div
+        style={{
+          "margin-top": "20px",
+          padding: "12px 16px",
+          background: "var(--sui-bg-elevated)",
+          border: "1px solid var(--sui-border)",
+          "border-radius": "var(--sui-radius-md)",
+          display: "flex",
+          "flex-direction": "column",
+          gap: "8px",
+          "max-width": "560px",
+        }}
+      >
+        <div
+          style={{
+            "font-size": "11px",
+            "text-transform": "uppercase",
+            "letter-spacing": "0.08em",
+            color: "var(--sui-text-muted)",
+          }}
+        >
+          Geometry controls
+        </div>
+        <label
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "12px",
+            "font-size": "12px",
+          }}
+        >
+          <span style={{ width: "150px", color: "var(--sui-text-secondary)" }}>
+            Selected fraction: <code>{selectedFraction().toFixed(2)}</code>
+          </span>
+          <input
+            type="range"
+            min={0.4}
+            max={0.9}
+            step={0.01}
+            value={selectedFraction()}
+            onInput={(e) => setSelectedFraction(parseFloat(e.currentTarget.value))}
+            style={{ flex: 1 }}
+          />
+        </label>
+        <label
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "12px",
+            "font-size": "12px",
+          }}
+        >
+          <span style={{ width: "150px", color: "var(--sui-text-secondary)" }}>
+            Side compression: <code>{sideCompression()}</code>
+          </span>
+          <input
+            type="range"
+            min={4}
+            max={60}
+            step={1}
+            value={sideCompression()}
+            onInput={(e) => setSideCompression(parseInt(e.currentTarget.value, 10))}
+            style={{ flex: 1 }}
+          />
+        </label>
       </div>
     </div>
   );
