@@ -78,8 +78,12 @@ The single-file index `COMPONENTS.md` that lists every exported component with i
 _Avoid_: Catalog, API doc, README.
 
 **Workshop**:
-An ephemeral iteration environment under `dev/showcases/workshop.tsx`, tagged `"workshop"` in `dev/main.tsx` and surfaced via the dedicated sidebar link. The scratch surface where in-progress components are built and exercised before they have a stable API. Its contents are deliberately throwaway — the current file gets rewritten as components are **Promoted** out of it.
+The scratch surface where in-progress components are built and exercised before they have a stable API. Two flavors: the **master workshop** (`dev/showcases/workshop.tsx`, id `"workshop"`, surfaced via the dedicated sidebar link) and an arbitrary number of **Benches**. All are tagged `"workshop"` in `dev/main.tsx` so they're filtered out of the depth-grouped list. Contents are deliberately throwaway — a workshop surface gets rewritten or deleted as components are **Promoted** out of it.
 _Avoid_: Playground, scratch, draft.
+
+**Bench**:
+A standalone workshop file under `dev/showcases/workshop/<slug>.tsx`, auto-discovered by `dev/main.tsx` (via `import.meta.glob`) and surfaced as its own row beneath the master **Workshop** link. Each Bench default-exports a `Component` and may `export const meta = { label?, order? }`. Because every Bench is its own file with no shared registration block, multiple agents can prototype different components simultaneously without clobbering each other. Spun up and torn down via the `/workshop` skill (`scripts/workshop-{new,list,remove}.mjs`). A Bench is the per-agent counterpart to the single shared master **Workshop**.
+_Avoid_: Slot, tab, scratch file.
 
 **Promotion**:
 The workflow of moving a component from **Workshop** into a stable **Showcase** once its API has settled, including its **Manifest** entry and `src/index.ts` export. Mirrors the **Migration** / **Adoption** pair in shape: each names a directional movement between two surfaces.
