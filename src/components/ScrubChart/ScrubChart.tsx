@@ -404,42 +404,80 @@ export const ScrubChart = <C extends Cell>(
     yToPlot: yScale() ? yToPlot : null,
   });
 
-  // ── Pointer-driven pan on the chart frame ────────────────────────────
-  // Dragging anywhere on the chart pulls the DateAxis viewport — the
-  // window-band overlay follows the user's finger. One cell on the chart
-  // (`dayPitch` px) maps to one cell on the axis (`cellWidth` px), so a
-  // graph drag of N cells worth of pixels scrolls the axis by exactly N
-  // cells regardless of how different the two scales are. Selection is
-  // unaffected by chart drags — to change selection, click a cell on the
-  // axis below (which scrubs the linked view and recentres the axis).
-  let chartPan:
-    | { startClientX: number; startScrollLeft: number; pointerId: number }
+  // ── Pointer-driven pan / click on the chart frame ────────────────────
+  // Click without drag → scrubs the selection to the cell under the
+  // pointer (the chart is the overview; pointing at a point on the line
+  // is the natural way to ask "what day is that?"). Click + drag past
+  // CHART_PAN_THRESHOLD_PX → pans the inner DateAxis viewport at a 1:1
+  // cell ratio (`axisScrollLeft += dx * cellWidth / dayPitch`), so the
+  // window-band slides under the user's finger and the cells under the
+  // axis slide with it.
+  //
+  // Capture is deferred until the threshold is crossed; a pointerup that
+  // never crossed it resolves as a click. Selection is unchanged by
+  // panning — only single clicks (here) and axis cell taps (handled by
+  // DateAxis) move the selected day.
+  const CHART_PAN_THRESHOLD_PX = 4;
+  const cellAtClientX = (clientX: number): number | null => {
+    if (!frameEl || props.cells.length === 0) return null;
+    const pitch = dayPitch();
+    if (pitch <= 0) return null;
+    const rect = frameEl.getBoundingClientRect();
+    const xInPlot = clientX - rect.left - plotLeft();
+    return Math.max(
+      0,
+      Math.min(props.cells.length - 1, Math.floor(xInPlot / pitch)),
+    );
+  };
+  let chartGesture:
+    | {
+        startClientX: number;
+        startScrollLeft: number;
+        pointerId: number;
+        panActive: boolean;
+      }
     | null = null;
   const handlePointerDown = (e: PointerEvent) => {
     if (!axisScrollEl || props.cells.length === 0 || e.button !== 0) return;
-    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    chartPan = {
+    chartGesture = {
       startClientX: e.clientX,
       startScrollLeft: axisScrollEl.scrollLeft,
       pointerId: e.pointerId,
+      panActive: false,
     };
   };
   const handlePointerMove = (e: PointerEvent) => {
-    if (!chartPan || !axisScrollEl) return;
+    if (!chartGesture || !axisScrollEl) return;
+    const dx = e.clientX - chartGesture.startClientX;
+    if (!chartGesture.panActive) {
+      if (Math.abs(dx) < CHART_PAN_THRESHOLD_PX) return;
+      chartGesture.panActive = true;
+      (e.currentTarget as Element).setPointerCapture?.(chartGesture.pointerId);
+    }
     const pitch = dayPitch();
     if (pitch <= 0) return;
-    const dx = e.clientX - chartPan.startClientX;
     axisScrollEl.scrollLeft =
-      chartPan.startScrollLeft + dx * (cellWidth() / pitch);
+      chartGesture.startScrollLeft + dx * (cellWidth() / pitch);
   };
   const handlePointerUp = (e: PointerEvent) => {
-    if (!chartPan) return;
-    try {
-      (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
-    } catch {
-      /* not captured; nothing to release */
+    if (!chartGesture) return;
+    const wasPan = chartGesture.panActive;
+    if (wasPan) {
+      try {
+        (e.currentTarget as Element).releasePointerCapture?.(
+          chartGesture.pointerId,
+        );
+      } catch {
+        /* not captured */
+      }
     }
-    chartPan = null;
+    chartGesture = null;
+    // Below-threshold pointerup that isn't a cancel resolves as a click —
+    // scrub to the cell at the pointer x.
+    if (!wasPan && e.type !== "pointercancel") {
+      const idx = cellAtClientX(e.clientX);
+      if (idx !== null) props.onScrub(idx, props.cells[idx]);
+    }
   };
 
   const fmtY = (): ((v: number) => string) =>
