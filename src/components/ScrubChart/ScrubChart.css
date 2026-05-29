@@ -36,8 +36,12 @@
 .sui-scrub-chart__overlay {
   position: absolute;
   inset: 0;
-  cursor: ew-resize;
+  cursor: grab;
   touch-action: none;
+}
+
+.sui-scrub-chart__overlay:active {
+  cursor: grabbing;
 }
 
 /* Axis chrome — y-axis labels on the left + x-axis ticks at the bottom. */

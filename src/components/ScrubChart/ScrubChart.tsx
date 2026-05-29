@@ -295,13 +295,6 @@ export const ScrubChart = <C extends Cell>(
     plotLeft() + i * dayPitch(),
     plotLeft() + (i + 1) * dayPitch(),
   ];
-  const xToIndex = (x: number): number => {
-    if (props.cells.length === 0) return 0;
-    const pitch = dayPitch();
-    if (pitch <= 0) return 0;
-    const rel = x - plotLeft();
-    return Math.max(0, Math.min(props.cells.length - 1, Math.floor(rel / pitch)));
-  };
 
   // ── X-ticks ──────────────────────────────────────────────────────────
   // Two-stage selection: (1) pick a cadence from the user-supplied unit, or
@@ -352,7 +345,9 @@ export const ScrubChart = <C extends Cell>(
   //    currently visible in the axis.
   const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
   const [axisViewportWidth, setAxisViewportWidth] = createSignal(0);
+  let axisScrollEl: HTMLDivElement | undefined;
   const handleAxisRef = (el: HTMLDivElement) => {
+    axisScrollEl = el;
     setAxisViewportWidth(el.clientWidth);
     setAxisScrollLeft(el.scrollLeft);
     el.addEventListener(
@@ -409,33 +404,42 @@ export const ScrubChart = <C extends Cell>(
     yToPlot: yScale() ? yToPlot : null,
   });
 
-  // ── Pointer-driven scrub on the chart. Linear pitch means every move
-  //    maps directly to a cell index — no anchored layout, no tween.
-  let dragging = false;
-  const clampIdx = (i: number): number =>
-    Math.max(0, Math.min(props.cells.length - 1, i));
+  // ── Pointer-driven pan on the chart frame ────────────────────────────
+  // Dragging anywhere on the chart pulls the DateAxis viewport — the
+  // window-band overlay follows the user's finger. One cell on the chart
+  // (`dayPitch` px) maps to one cell on the axis (`cellWidth` px), so a
+  // graph drag of N cells worth of pixels scrolls the axis by exactly N
+  // cells regardless of how different the two scales are. Selection is
+  // unaffected by chart drags — to change selection, click a cell on the
+  // axis below (which scrubs the linked view and recentres the axis).
+  let chartPan:
+    | { startClientX: number; startScrollLeft: number; pointerId: number }
+    | null = null;
   const handlePointerDown = (e: PointerEvent) => {
-    if (!frameEl || props.cells.length === 0) return;
-    const rect = frameEl.getBoundingClientRect();
-    const idx = clampIdx(xToIndex(e.clientX - rect.left));
+    if (!axisScrollEl || props.cells.length === 0 || e.button !== 0) return;
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    dragging = true;
-    props.onScrub(idx, props.cells[idx]);
+    chartPan = {
+      startClientX: e.clientX,
+      startScrollLeft: axisScrollEl.scrollLeft,
+      pointerId: e.pointerId,
+    };
   };
   const handlePointerMove = (e: PointerEvent) => {
-    if (!dragging || !frameEl) return;
-    const rect = frameEl.getBoundingClientRect();
-    const idx = clampIdx(xToIndex(e.clientX - rect.left));
-    if (idx !== props.selected) props.onScrub(idx, props.cells[idx]);
+    if (!chartPan || !axisScrollEl) return;
+    const pitch = dayPitch();
+    if (pitch <= 0) return;
+    const dx = e.clientX - chartPan.startClientX;
+    axisScrollEl.scrollLeft =
+      chartPan.startScrollLeft + dx * (cellWidth() / pitch);
   };
   const handlePointerUp = (e: PointerEvent) => {
-    if (!dragging) return;
+    if (!chartPan) return;
     try {
       (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
     } catch {
       /* not captured; nothing to release */
     }
-    dragging = false;
+    chartPan = null;
   };
 
   const fmtY = (): ((v: number) => string) =>

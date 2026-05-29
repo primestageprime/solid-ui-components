@@ -99,8 +99,8 @@ describe("ScrubChart composition", () => {
   });
 });
 
-describe("ScrubChart click-to-scrub", () => {
-  it("calls onScrub with the cell under the pointer when the overlay is clicked", () => {
+describe("ScrubChart chart-frame drag", () => {
+  it("pans the inner axis viewport instead of changing selection", () => {
     const onScrub = vi.fn();
     const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
     const { container } = render(() => (
@@ -108,44 +108,25 @@ describe("ScrubChart click-to-scrub", () => {
         cells={cells}
         selected={15}
         onScrub={onScrub}
+        cellWidth={60}
         renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
         renderChart={() => <svg />}
       />
     ));
     const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
+    const axisEl = container.querySelector(".sui-date-axis")! as HTMLDivElement;
     overlay.getBoundingClientRect = () =>
       ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
-    // 31 cells across 1200 px → pitch ≈ 38.71. Cell 15 spans x ∈ [580.6, 619.4);
-    // x = 600 lands solidly inside it.
-    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointerup", { clientX: 600, clientY: 100, pointerId: 1 });
-    expect(onScrub).toHaveBeenCalled();
-    expect(onScrub.mock.calls[0][0]).toBe(15);
-  });
-});
+    axisEl.scrollLeft = 0;
 
-describe("ScrubChart drag scrub", () => {
-  it("emits new onScrub calls as the pointer moves across cells", () => {
-    const onScrub = vi.fn();
-    const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));
-    const { container } = render(() => (
-      <ScrubChart
-        cells={cells}
-        selected={15}
-        onScrub={onScrub}
-        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
-        renderChart={() => <svg />}
-      />
-    ));
-    const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
-    overlay.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
-    firePointer(overlay, "pointerdown", { clientX: 580, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointermove", { clientX: 800, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointerup", { clientX: 800, clientY: 100, pointerId: 1 });
-    // Down committed cell 15; move-over crossed into cell ~20 → another emit.
-    expect(onScrub.mock.calls.length).toBeGreaterThanOrEqual(2);
-    const lastCall = onScrub.mock.calls.at(-1)!;
-    expect(lastCall[0]).toBeGreaterThan(15);
+    // 31 cells across 1200 px → dayPitch ≈ 38.71. cellWidth = 60. So a 100-px
+    // graph drag should scroll the axis by 100 * (60 / 38.71) ≈ 155 px.
+    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointermove", { clientX: 700, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerup", { clientX: 700, clientY: 100, pointerId: 1 });
+
+    expect(onScrub).not.toHaveBeenCalled();
+    expect(axisEl.scrollLeft).toBeGreaterThan(140);
+    expect(axisEl.scrollLeft).toBeLessThan(170);
   });
 });
