@@ -86,10 +86,14 @@ export function computeChartHeight(
 
 /**
  * Advance a status-flow state by one tick. Finishes one currently-DOING
- * leaf (chosen alphabetically for stable ordering) and promotes any TODO
+ * leaf (chosen alphabetically for stable ordering) and promotes TODO
  * leaves whose `dependsOn` set is now satisfied. Parent nodes (referenced
  * by another node's `parentId`) are left untouched — their effective
  * status is derived from their children at render time.
+ *
+ * `maxConcurrent` models a fixed worker pool (e.g. 5 concurrent agents):
+ * no more than this many leaves may be DOING at once, so ready TODOs only
+ * start when a slot frees up. Defaults to Infinity (no cap).
  *
  * Returns a NEW array — does not mutate `prev`.
  *
@@ -98,7 +102,10 @@ export function computeChartHeight(
  * historically this helper called `init()` here, but stop-when-done is
  * the more common UX so we now leave that decision to the caller.)
  */
-export function advanceChildren(prev: StatusFlowNode[]): StatusFlowNode[] {
+export function advanceChildren(
+  prev: StatusFlowNode[],
+  maxConcurrent = Infinity,
+): StatusFlowNode[] {
   const parentIds = new Set<string>();
   for (const n of prev) if (n.parentId) parentIds.add(n.parentId);
   const isLeaf = (n: StatusFlowNode) => !parentIds.has(n.id);
@@ -111,12 +118,24 @@ export function advanceChildren(prev: StatusFlowNode[]): StatusFlowNode[] {
   const doing = next.filter((n) => isLeaf(n) && n.status === "DOING");
   doing.sort((a, b) => a.id.localeCompare(b.id));
   if (doing[0]) doing[0].status = "DONE";
-  for (const n of next) {
-    if (!isLeaf(n) || n.status !== "TODO") continue;
-    const ready = (n.dependsOn ?? []).every((d) =>
-      next.find((x) => x.id === d)?.status === "DONE",
-    );
-    if (ready) n.status = "DOING";
+
+  // Promote ready TODOs (alphabetical, stable) only while a worker slot is
+  // free — i.e. fewer than maxConcurrent leaves are currently DOING.
+  let doingCount = next.filter((n) => isLeaf(n) && n.status === "DOING").length;
+  const ready = next
+    .filter(
+      (n) =>
+        isLeaf(n) &&
+        n.status === "TODO" &&
+        (n.dependsOn ?? []).every(
+          (d) => next.find((x) => x.id === d)?.status === "DONE",
+        ),
+    )
+    .sort((a, b) => a.id.localeCompare(b.id));
+  for (const n of ready) {
+    if (doingCount >= maxConcurrent) break;
+    n.status = "DOING";
+    doingCount++;
   }
   return next;
 }

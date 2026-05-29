@@ -1,5 +1,34 @@
 // src/components/AnimatedSwimlaneChart/lanes.ts
 import type { StatusFlowNode } from "../StatusFlowChart";
+import { computeColFor, resolveParentStatuses } from "../StatusFlowChart/columns";
+
+/**
+ * How many child rows are VISIBLE right now in this lane's tallest column —
+ * i.e. the height (in rows) the lane needs to shrinkwrap its visible cards.
+ * Mirrors the trajectory's own visibility test (`snapshotFrame`): children
+ * whose |col| exceeds `maxDepth` are collapsed into side-lozenges and don't
+ * count. The parent row is excluded. Pure — same lane nodes + maxDepth in,
+ * same count out — so the chart's lane-height math and the lane renderer
+ * agree without passing extra props.
+ */
+export function visibleChildRowCount(
+  laneNodes: StatusFlowNode[],
+  maxDepth: number,
+): number {
+  const effective = resolveParentStatuses(laneNodes, "DOING");
+  const parentIds = new Set<string>();
+  for (const n of laneNodes) if (n.parentId) parentIds.add(n.parentId);
+  const countByCol = new Map<number, number>();
+  for (const n of laneNodes) {
+    if (parentIds.has(n.id)) continue;
+    const col = computeColFor(n, laneNodes, (id) => effective.get(id));
+    if (Math.abs(col) > maxDepth) continue;
+    countByCol.set(col, (countByCol.get(col) ?? 0) + 1);
+  }
+  let max = 0;
+  for (const c of countByCol.values()) if (c > max) max = c;
+  return max;
+}
 
 export interface LaneGroup {
   /** Lane id — the parent's id when grouped, "default" for ungrouped. */

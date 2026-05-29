@@ -42,6 +42,9 @@ export interface SwimlaneAnimatedLaneProps {
    *  tick → no animation; new reference → tick animation. */
   nodes: StatusFlowNode[];
   laneY: number;
+  /** Rows the lane is sized for. Owned by the chart (it lags shrinks behind
+   *  the card move), so the rect/lozenge resize in lockstep with laneY. */
+  rowCount: number;
   stageWidth: number;
   maxDepth: number;
   layoutConfig: LaneLayoutConfig;
@@ -75,16 +78,17 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   const centerX = () => props.stageWidth / 2;
   const hasParent = () => !!props.spec.parentTitle;
 
-  const childCount = () => props.spec.children.length;
-  const initialRoots = () =>
-    props.spec.children.filter((c) => !c.dependsOn || c.dependsOn.length === 0).length;
-  const reservedStack = () =>
-    Math.max(1, initialRoots(), Math.min(childCount(), 3));
-  const reservedChildRowH = () =>
-    reservedStack() * props.cardHeight + (reservedStack() - 1) * props.rowGap;
+  // Shrinkwrap height is owned by the chart (props.rowCount): it grows
+  // immediately but lags shrinks until the card has finished moving, so the
+  // lane never snaps smaller mid-move.
+  const visibleRows = () => props.rowCount;
+  const childRowH = () =>
+    visibleRows() > 0
+      ? visibleRows() * props.cardHeight + (visibleRows() - 1) * props.rowGap
+      : 0;
   const parentRowH = () => (hasParent() ? props.cardHeight + props.parentGap : 0);
   const laneHeight = () =>
-    props.lanePadding * 2 + parentRowH() + reservedChildRowH();
+    props.lanePadding * 2 + parentRowH() + childRowH();
 
   // Internal coordinates are lane-relative (origin at the lane's own top).
   // The lane's absolute vertical position comes from a CSS-transitioned
@@ -94,9 +98,12 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   const parentRowCenterY = () =>
     props.lanePadding + props.cardHeight / 2;
   const childRowCenterY = () =>
-    props.lanePadding + parentRowH() + reservedChildRowH() / 2;
-  const colTopY = () => childRowCenterY() - reservedChildRowH() / 2;
-  const colBottomY = () => childRowCenterY() + reservedChildRowH() / 2;
+    props.lanePadding + parentRowH() + childRowH() / 2;
+  // Center Y of the first (top) child row — children stack downward from here.
+  const childStackTopY = () =>
+    props.lanePadding + parentRowH() + props.cardHeight / 2;
+  const colTopY = () => childRowCenterY() - childRowH() / 2;
+  const colBottomY = () => childRowCenterY() + childRowH() / 2;
   const lozMidY = () => childRowCenterY();
   const leftLozengeX = () =>
     centerX() - props.maxDepth * colCenterGap() - cardW() / 2 - lozGap() - lozW();
@@ -120,7 +127,7 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
     maxDepth: props.maxDepth,
     centerX: centerX(),
     parentRowCenterY: parentRowCenterY(),
-    childRowCenterY: childRowCenterY(),
+    childStackTopY: childStackTopY(),
     cardWidth: cardW(),
     cardHeight: props.cardHeight,
     colCenterGap: colCenterGap(),
@@ -147,6 +154,7 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   let prevMaxDepthRef = props.maxDepth;
   let prevConfigRef = props.layoutConfig;
   let prevTimingRef = props.timing;
+  let prevRowsRef = props.rowCount;
   let rafHandle: number | undefined;
 
   createEffect(() => {
@@ -155,15 +163,28 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
     const md = props.maxDepth;
     const cfg = props.layoutConfig;
     const timing = props.timing;
+    const rows = props.rowCount;
     const nodesChanged = incoming !== prevFrameRef;
     const widthChanged = sw !== prevWidthRef;
     const depthChanged = md !== prevMaxDepthRef;
     const configChanged = cfg !== prevConfigRef;
     const timingChanged = timing !== prevTimingRef;
-    if (!nodesChanged && !widthChanged && !depthChanged && !configChanged && !timingChanged)
+    const otherLayoutChanged =
+      widthChanged || depthChanged || configChanged || timingChanged;
+    // A row SHRINK pulls the lozenge rects up, so the trajectory's baked
+    // lozenge anchors must be rebuilt or arrows keep pointing at the lozenge's
+    // old (taller) position — exactly the "leftover arrow" stranded below the
+    // lane. Shrinks fire at rest via the resize debounce, so a static rebuild
+    // is safe. A row GROW rides along with a card move (handled by
+    // nodesChanged) and only makes the lane taller, so it needs no separate
+    // rebuild — and skipping it avoids snapping the in-flight animation.
+    const rowsShrank = rows < prevRowsRef;
+    if (!nodesChanged && !otherLayoutChanged && rows === prevRowsRef) return;
+    if (!nodesChanged && !otherLayoutChanged && !rowsShrank) {
+      prevRowsRef = rows; // grow only — nothing to re-anchor
       return;
-    const layoutOnly =
-      !nodesChanged && (widthChanged || depthChanged || configChanged || timingChanged);
+    }
+    const layoutOnly = !nodesChanged && (otherLayoutChanged || rowsShrank);
     const newTraj = buildLaneTrajectory({
       prevFrame: layoutOnly ? incoming : prevFrameRef,
       nextFrame: incoming,
@@ -176,6 +197,7 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
     prevMaxDepthRef = md;
     prevConfigRef = cfg;
     prevTimingRef = timing;
+    prevRowsRef = rows;
     setTraj(newTraj);
     setCurrentT(layoutOnly ? 1 : 0);
     if (rafHandle !== undefined) cancelAnimationFrame(rafHandle);

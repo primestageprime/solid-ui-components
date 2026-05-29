@@ -37,6 +37,7 @@ import {
   type Breakpoint,
 } from "../../src/internal/animation/breakpoints";
 import { SwimlaneAnimatedLane } from "../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane";
+import { visibleChildRowCount } from "../../src/components/AnimatedSwimlaneChart/lanes";
 import type { RenderNodeContext } from "../../src/components/AnimatedSwimlaneChart/defaults";
 
 interface Experiment {
@@ -1562,6 +1563,13 @@ const MixedShapesRow: Component = () => {
                   spec={l.spec}
                   nodes={currentStates()[i()]}
                   laneY={l.laneY}
+                  rowCount={Math.max(
+                    1,
+                    visibleChildRowCount(
+                      currentStates()[i()],
+                      maxDepthForWidth(stageWidth(), layoutConfig()),
+                    ),
+                  )}
                   stageWidth={stageWidth()}
                   maxDepth={maxDepthForWidth(stageWidth(), layoutConfig())}
                   layoutConfig={layoutConfig()}
@@ -2125,6 +2133,7 @@ const TwoFrameArrowDemoRow: Component = () => {
               spec={spec}
               nodes={FRAMES[cursor()]}
               laneY={laneY}
+              rowCount={Math.max(1, visibleChildRowCount(FRAMES[cursor()], maxDepth))}
               stageWidth={stageWidth}
               maxDepth={maxDepth}
               layoutConfig={DEFAULT_LANE_LAYOUT_CONFIG}

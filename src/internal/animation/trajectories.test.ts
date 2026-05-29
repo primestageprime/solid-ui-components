@@ -25,7 +25,7 @@ const PARAMS: LayoutParams = {
   maxDepth: 1,
   centerX: 500,
   parentRowCenterY: 50,
-  childRowCenterY: 200,
+  childStackTopY: 200,
   cardWidth: 140,
   cardHeight: 84,
   colCenterGap: 200,

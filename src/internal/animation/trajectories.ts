@@ -96,6 +96,14 @@ export interface LaneTimingConfig {
    * becoming active) are not held — they re-sort promptly. Defaults to 10000.
    */
   reorderHoldMs?: number;
+  /**
+   * Debounce (ms) before a lane SHRINKS to fit fewer visible cards. Any node
+   * movement in the lane resets it, so the lane only tightens after this long
+   * with no movement — a card always finishes moving before the resize, and a
+   * burst of moves collapses into a single resize. Growth is immediate (a new
+   * card needs room). Defaults to 3000.
+   */
+  laneResizeSettleMs?: number;
 }
 
 /**
@@ -111,6 +119,7 @@ export const DEFAULT_TIMING: LaneTimingConfig = {
   arrowPathMs: 0,
   laneSlideMs: 420,
   reorderHoldMs: 10000,
+  laneResizeSettleMs: 3000,
 };
 
 /** Resolved phase boundaries derived from a `LaneTimingConfig`. */
@@ -249,7 +258,10 @@ export interface LayoutParams {
   maxDepth: number;
   centerX: number;
   parentRowCenterY: number;
-  childRowCenterY: number;
+  /** Center Y of the FIRST child row. Children stack downward from here with
+   *  `rowGap` between rows (top-aligned just under the parent), rather than
+   *  being centered in the reserved child block. */
+  childStackTopY: number;
   cardWidth: number;
   cardHeight: number;
   colCenterGap: number;
@@ -291,11 +303,11 @@ export function snapshotFrame(
   const byId = new Map<string, FramePosition>();
   const colToX = (col: number) => params.centerX + col * params.colCenterGap;
 
-  // Visible children — placed in their stack, vertically centered.
+  // Visible children — stacked top-down from the first row, so the topmost
+  // child sits one rowGap below the parent and successive rows are rowGap
+  // apart (no extra centering gap when fewer than the reserved rows show).
   for (const [col, group] of visibleByCol) {
-    const totalH =
-      group.length * params.cardHeight + (group.length - 1) * params.rowGap;
-    const startY = params.childRowCenterY - totalH / 2 + params.cardHeight / 2;
+    const startY = params.childStackTopY;
     group.forEach((n, i) => {
       byId.set(n.id, {
         id: n.id,

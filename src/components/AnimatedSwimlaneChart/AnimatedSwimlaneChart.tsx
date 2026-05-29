@@ -28,7 +28,7 @@ import {
   ANIMATED_SWIMLANE_DEFAULTS,
   type RenderNodeContext,
 } from "./defaults";
-import { groupIntoLanes } from "./lanes";
+import { groupIntoLanes, visibleChildRowCount } from "./lanes";
 import { SwimlaneAnimatedLane } from "./SwimlaneAnimatedLane";
 
 export type AnimatedSwimlaneChartProps = {
@@ -158,16 +158,21 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
 
   const lanes = createMemo(() => groupIntoLanes(props.nodes));
 
-  const laneHeightFor = (laneNodes: StatusFlowNode[], hasParent: boolean) => {
+  // Shrinkwrap: a lane is only as tall as the cards currently visible in it —
+  // its tallest visible column (≥1 row whenever the lane has any children, so
+  // the side-lozenge still has somewhere to sit). Lanes grow/shrink as cards
+  // appear and collapse, and the slide transition reflows the lanes below.
+  const laneRowCount = (laneNodes: StatusFlowNode[], hasParent: boolean) => {
     const childCount = laneNodes.length - (hasParent ? 1 : 0);
-    const rootCount = laneNodes
-      .filter((n) => (hasParent ? !!n.parentId : true))
-      .filter((n) => !n.dependsOn || n.dependsOn.length === 0).length;
-    const reservedStack = Math.max(1, rootCount, Math.min(childCount, 3));
-    const reservedChildRowH =
-      reservedStack * props.nodeSize[1] + (reservedStack - 1) * props.rowGap;
+    if (childCount === 0) return 0;
+    return Math.max(1, visibleChildRowCount(laneNodes, effectiveMaxDepth()));
+  };
+
+  const laneHeightForRows = (rows: number, hasParent: boolean) => {
+    const childRowH =
+      rows > 0 ? rows * props.nodeSize[1] + (rows - 1) * props.rowGap : 0;
     const parentRowH = hasParent ? props.nodeSize[1] + props.parentGap : 0;
-    return props.lanePadding * 2 + parentRowH + reservedChildRowH;
+    return props.lanePadding * 2 + parentRowH + childRowH;
   };
 
   // Vertical status band for a lane: DOING (0, top) → TODO/mixed (1, middle)
@@ -222,37 +227,58 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
   const holdTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const [displayBump, setDisplayBump] = createSignal(0);
 
-  const clearHold = (id: string) => {
-    const t = holdTimers.get(id);
+  // `displayedRows` is the row count a lane is *sized* for right now, which can
+  // lag the live count. Growing (a card appears) applies immediately so the
+  // new card has somewhere to land; SHRINKING (a card moves out / collapses,
+  // e.g. DOING→DONE) is DEBOUNCED: any node movement in the lane resets the
+  // timer, so the lane only tightens after `laneResizeSettleMs` with nothing
+  // moving — the card always finishes moving first, and a burst of moves
+  // collapses into one resize. `prevStatusForResize` powers the move test.
+  const displayedRows = new Map<string, number>();
+  const rowHoldTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  let prevStatusForResize = new Map<string, string>();
+
+  const clearTimer = (
+    map: Map<string, ReturnType<typeof setTimeout>>,
+    id: string,
+  ) => {
+    const t = map.get(id);
     if (t !== undefined) {
       clearTimeout(t);
-      holdTimers.delete(id);
+      map.delete(id);
     }
   };
+  const clearHold = (id: string) => clearTimer(holdTimers, id);
 
   createEffect(() => {
     const groups = lanes();
     const holdMs = timing().reorderHoldMs ?? 10000;
+    const settleMs = timing().laneResizeSettleMs ?? 3000;
+    const nextStatus = new Map<string, string>();
     for (const g of groups) {
-      const actual = laneBandRank(g.nodes, !!g.parentId);
+      const hasParent = !!g.parentId;
+
+      // Did any node in THIS lane change status this frame? (Resets the
+      // shrink debounce.)
+      let moved = false;
+      for (const n of g.nodes) {
+        nextStatus.set(n.id, n.status);
+        const prev = prevStatusForResize.get(n.id);
+        if (prev !== undefined && prev !== n.status) moved = true;
+      }
+
+      // ── Band position (DOING/TODO/DONE) — up prompt, down held ~10s. ──
+      const actual = laneBandRank(g.nodes, hasParent);
       const shown = displayedBand.get(g.id);
       if (shown === undefined) {
         displayedBand.set(g.id, actual); // first sight — no slide
-        continue;
-      }
-      if (actual === shown) {
-        clearHold(g.id); // settled
-        continue;
-      }
-      if (actual < shown) {
-        // Moving up (more active) — promptly.
+      } else if (actual === shown) {
+        clearHold(g.id);
+      } else if (actual < shown) {
         clearHold(g.id);
         displayedBand.set(g.id, actual);
         setDisplayBump((v) => v + 1);
-        continue;
-      }
-      // Moving down (completing/deprioritizing) — hold, then re-sort.
-      if (!holdTimers.has(g.id)) {
+      } else if (!holdTimers.has(g.id)) {
         const handle = setTimeout(() => {
           holdTimers.delete(g.id);
           const grp = lanes().find((x) => x.id === g.id);
@@ -262,12 +288,41 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
         }, holdMs);
         holdTimers.set(g.id, handle);
       }
+
+      // ── Row count / lane height — grow prompt, SHRINK debounced. ──
+      const rows = laneRowCount(g.nodes, hasParent);
+      const shownRows = displayedRows.get(g.id);
+      if (shownRows === undefined) {
+        displayedRows.set(g.id, rows); // first sight — size to fit
+      } else if (rows > shownRows) {
+        // Grow now so an appearing card has room to land.
+        clearTimer(rowHoldTimers, g.id);
+        displayedRows.set(g.id, rows);
+        setDisplayBump((v) => v + 1);
+      } else if (rows === shownRows) {
+        clearTimer(rowHoldTimers, g.id); // no shrink pending
+      } else if (moved || !rowHoldTimers.has(g.id)) {
+        // Shrink pending. (Re)start the debounce — a fresh move resets it, so
+        // the lane only tightens after settleMs of stillness.
+        clearTimer(rowHoldTimers, g.id);
+        const handle = setTimeout(() => {
+          rowHoldTimers.delete(g.id);
+          const grp = lanes().find((x) => x.id === g.id);
+          if (!grp) return;
+          displayedRows.set(g.id, laneRowCount(grp.nodes, !!grp.parentId));
+          setDisplayBump((v) => v + 1);
+        }, settleMs);
+        rowHoldTimers.set(g.id, handle);
+      }
     }
+    prevStatusForResize = nextStatus;
   });
 
   onCleanup(() => {
     for (const t of holdTimers.values()) clearTimeout(t);
+    for (const t of rowHoldTimers.values()) clearTimeout(t);
     holdTimers.clear();
+    rowHoldTimers.clear();
   });
 
   const lanesWithY = createMemo(() => {
@@ -284,11 +339,13 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
       // Use the displayed (possibly held) band for positioning, falling back
       // to the live band before the effect has seen this lane.
       const band = displayedBand.get(g.id) ?? laneBandRank(g.nodes, hasParent);
+      const rows = displayedRows.get(g.id) ?? laneRowCount(g.nodes, hasParent);
       return {
         group: g,
         inputIndex,
         hasParent,
-        height: laneHeightFor(g.nodes, hasParent),
+        rows,
+        height: laneHeightForRows(rows, hasParent),
         band,
       };
     });
@@ -317,6 +374,7 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
       return {
         group: m.group,
         laneY: yById.get(m.group.id)!,
+        rows: m.rows,
         spec: {
           id: m.group.id,
           parentTitle: parentNode?.title,
@@ -348,6 +406,7 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
               spec={item().spec}
               nodes={item().group.nodes}
               laneY={item().laneY}
+              rowCount={item().rows}
               stageWidth={stageWidth()}
               maxDepth={effectiveMaxDepth()}
               layoutConfig={layoutConfig()}

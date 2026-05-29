@@ -70,12 +70,17 @@ const INITIAL: StatusFlowNode[] = [
 // next tick doesn't trample an in-flight one.
 const TICK_INTERVAL_MS = 1800;
 
+// Model a fixed pool of workers: at most this many tasks are DOING at once,
+// so ready work only starts when an agent frees up.
+const CONCURRENT_AGENTS = 5;
+
 export const AnimatedSwimlaneChartShowcase: Component = () => {
   const [nodes, setNodes] = createSignal<StatusFlowNode[]>(INITIAL);
   const [playing, setPlaying] = createSignal(false);
   let timer: ReturnType<typeof setInterval> | undefined;
 
-  const next = () => setNodes((cur) => advanceChildren(cur));
+  const next = () =>
+    setNodes((cur) => advanceChildren(cur, CONCURRENT_AGENTS));
   const pause = () => {
     setPlaying(false);
     if (timer !== undefined) {
@@ -97,7 +102,7 @@ export const AnimatedSwimlaneChartShowcase: Component = () => {
           pause();
           return cur;
         }
-        return advanceChildren(cur);
+        return advanceChildren(cur, CONCURRENT_AGENTS);
       });
     }, TICK_INTERVAL_MS);
   };
@@ -123,9 +128,11 @@ export const AnimatedSwimlaneChartShowcase: Component = () => {
         <code style={{ "font-family": "ui-monospace, SFMono-Regular, monospace" }}>
           &lt;ProjectFlow nodes=&#123;tasks&#125; /&gt;
         </code>
-        . Play walks every lane through its dependency graph one tick at a time.
-        Resize the window to watch the visible-column window collapse and the
-        side-lozenges roll up the hidden node counts.
+        . Play walks every lane through its dependency graph one tick at a time,
+        modeling a pool of {CONCURRENT_AGENTS} concurrent agents — at most{" "}
+        {CONCURRENT_AGENTS} tasks are DOING at once, so ready work only starts as
+        an agent frees up. Resize the window to watch the visible-column window
+        collapse and the side-lozenges roll up the hidden node counts.
       </div>
       <div style={{ display: "flex", gap: "8px" }}>
         <button type="button" onClick={play}>{playing() ? "⏸ Pause" : "▶ Play"}</button>
