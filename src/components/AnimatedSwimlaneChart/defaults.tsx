@@ -94,7 +94,8 @@ export const ANIMATED_SWIMLANE_DEFAULTS: AnimatedSwimlaneDefaults = {
   columns: DEFAULT_COLUMNS,
   centerStatus: "DOING",
   terminalStatus: "DONE",
-  nodeSize: [DEFAULT_LANE_LAYOUT_CONFIG.cardWidth, 84],
+  // 50% wider than the base card width; taller to fit a 3-line title.
+  nodeSize: [DEFAULT_LANE_LAYOUT_CONFIG.cardWidth * 1.5, 104],
   columnGap: DEFAULT_LANE_LAYOUT_CONFIG.cardGap,
   rowGap: 16,
   laneGap: 20,
