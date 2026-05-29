@@ -27,6 +27,7 @@ import { TimeInputs } from "./TimeInputs";
 import {
   addMonths,
   applyTimeToDate,
+  clampEndToMaxDate,
   clampRange,
   clampToMaxRange,
   formatRangeLabel,
@@ -83,8 +84,12 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
 
   const applyPreset = (preset: DateRangePreset) => {
     const now = new Date();
-    const start = new Date(now.getTime() - preset.days * 86_400_000);
-    const range = clampRange(start, now, maxRangeDays());
+    // End at the cap when it is in the past, so a preset becomes "N days
+    // ending at maxDate" rather than spilling past it.
+    const cap = props.maxDate;
+    const end = cap !== undefined && cap.getTime() < now.getTime() ? cap : now;
+    const start = new Date(end.getTime() - preset.days * 86_400_000);
+    const range = clampRange(start, end, maxRangeDays());
     props.onChange(range);
     setPendingStart(undefined);
     setOpen(false);
@@ -94,7 +99,10 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
     const s = showTime() ? applyTimeToDate(start, startTime(), props.timeZone) : start;
     const e = showTime() ? applyTimeToDate(end, endTime(), props.timeZone) : end;
     const ordered = orderDates(s, e);
-    props.onChange(clampRange(ordered.start, ordered.end, maxRangeDays()));
+    // Defensive: the disabled cells should already prevent picking beyond the
+    // cap, but clamp the end at day granularity as a safety net.
+    const cappedEnd = clampEndToMaxDate(ordered.end, props.maxDate, props.timeZone);
+    props.onChange(clampRange(ordered.start, cappedEnd, maxRangeDays()));
   };
 
   const handleDayClick = (day: Date) => {
@@ -157,6 +165,8 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
             hoveredDate={hoveredDate}
             pendingStart={pendingStart}
             maxRangeDays={maxRangeDays()}
+            maxDate={props.maxDate}
+            maxDateTooltip={props.maxDateTooltip}
             timeZone={props.timeZone}
             onDayClick={handleDayClick}
             onDayHover={setHoveredDate}

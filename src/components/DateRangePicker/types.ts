@@ -25,6 +25,21 @@ export interface DateRangePickerProps {
    * and preset selections are clamped to the same bound.
    */
   maxRangeDays?: number;
+  /**
+   * Optional absolute hard cap on the latest selectable day. Days *after* the
+   * calendar day containing `maxDate` are disabled and cannot be selected;
+   * the day containing `maxDate` itself stays selectable (comparison is at
+   * day granularity, so a mid-day `maxDate` still allows picking that day).
+   * Independent of and complementary to `maxRangeDays` (which caps span).
+   * Presets are clamped so their end never exceeds this cap.
+   */
+  maxDate?: Date;
+  /**
+   * Tooltip text shown when hovering a day disabled *because* it is beyond
+   * `maxDate`. Has no effect unless `maxDate` is set. Defaults to a generic
+   * message when omitted.
+   */
+  maxDateTooltip?: string;
   /** Placeholder shown in the trigger when `value` is absent (unusual). */
   placeholder?: string;
   /** Additional class applied to the trigger button. */

@@ -12,15 +12,19 @@
 // (`cellMatchesBoundary`, `cellInRange`) bridge those two coordinate
 // systems so the highlighting stays consistent at TZ boundaries.
 // ============================================
-import { type Accessor, type Component, For, createMemo } from "solid-js";
+import { type Accessor, type Component, For, Show, createMemo } from "solid-js";
+import { Tooltip } from "../Tooltip/Tooltip";
 import {
   cellInRange,
   cellMatchesBoundary,
   clampToMaxRange,
   getCalendarDays,
+  isAfterMaxDate,
   isOutOfMaxRange,
   isSameDay,
 } from "./calendarUtils";
+
+const DEFAULT_MAX_DATE_TOOLTIP = "Not available yet.";
 
 const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] as const;
 
@@ -33,6 +37,10 @@ export interface CalendarGridProps {
   hoveredDate: Accessor<Date | undefined>;
   pendingStart: Accessor<Date | undefined>;
   maxRangeDays?: number;
+  /** Absolute hard cap: days after the day containing this are disabled. */
+  maxDate?: Date;
+  /** Tooltip shown on cells disabled because they are beyond `maxDate`. */
+  maxDateTooltip?: string;
   /** IANA TZ identifier for boundary comparison. Undefined = browser-local. */
   timeZone?: string;
   onDayClick: (day: Date) => void;
@@ -83,7 +91,13 @@ export const CalendarGrid: Component<CalendarGridProps> = (props) => {
   const days = createMemo(() => getCalendarDays(props.year(), props.month()));
   const today = new Date();
 
-  const isDayDisabled = (day: Date): boolean => {
+  // Disabled-because-beyond-maxDate: independent of the pending anchor.
+  const isBeyondMaxDate = (day: Date): boolean =>
+    props.maxDate !== undefined &&
+    isAfterMaxDate(day, props.maxDate, props.timeZone);
+
+  // Disabled-because-span-cap: only once a start is pending.
+  const isBeyondMaxRange = (day: Date): boolean => {
     const anchor = props.pendingStart();
     return (
       anchor !== undefined &&
@@ -91,6 +105,23 @@ export const CalendarGrid: Component<CalendarGridProps> = (props) => {
       isOutOfMaxRange(day, anchor, props.maxRangeDays)
     );
   };
+
+  const isDayDisabled = (day: Date): boolean =>
+    isBeyondMaxRange(day) || isBeyondMaxDate(day);
+
+  const dayClassFor = (day: Date): string =>
+    buildDayClass(
+      day,
+      today,
+      props.month(),
+      props.rangeStart(),
+      props.rangeEnd(),
+      props.hoveredDate(),
+      props.pendingStart(),
+      props.maxRangeDays,
+      props.timeZone,
+      isDayDisabled(day),
+    );
 
   return (
     <div class="sui-drp__calendar-grid">
@@ -102,27 +133,39 @@ export const CalendarGrid: Component<CalendarGridProps> = (props) => {
       <div class="sui-drp__days-grid">
         <For each={days()}>
           {(day) => (
-            <button
-              type="button"
-              class={buildDayClass(
-                day,
-                today,
-                props.month(),
-                props.rangeStart(),
-                props.rangeEnd(),
-                props.hoveredDate(),
-                props.pendingStart(),
-                props.maxRangeDays,
-                props.timeZone,
-                isDayDisabled(day),
-              )}
-              disabled={isDayDisabled(day)}
-              onClick={() => props.onDayClick(day)}
-              onMouseEnter={() => props.onDayHover(day)}
-              onMouseLeave={() => props.onDayHoverEnd()}
+            // maxDate-blocked cells render via the Tooltip's own (Kobalte)
+            // trigger button so the tooltip fires on hover/focus — a natively
+            // `disabled` button suppresses pointer events and would swallow it.
+            // The cell carries `aria-disabled` (not `disabled`) and a no-op
+            // click handler so it reads as a non-selectable day. maxRangeDays-
+            // blocked and normal cells use a plain native button as before.
+            <Show
+              when={isBeyondMaxDate(day)}
+              fallback={
+                <button
+                  type="button"
+                  class={dayClassFor(day)}
+                  disabled={isDayDisabled(day)}
+                  onClick={() => props.onDayClick(day)}
+                  onMouseEnter={() => props.onDayHover(day)}
+                  onMouseLeave={() => props.onDayHoverEnd()}
+                >
+                  {day.getDate()}
+                </button>
+              }
             >
-              {day.getDate()}
-            </button>
+              <Tooltip
+                content={props.maxDateTooltip ?? DEFAULT_MAX_DATE_TOOLTIP}
+                class={dayClassFor(day)}
+                triggerProps={{
+                  type: "button",
+                  "aria-disabled": "true",
+                  onClick: (e) => e.preventDefault(),
+                }}
+              >
+                {day.getDate()}
+              </Tooltip>
+            </Show>
           )}
         </For>
       </div>

@@ -22,6 +22,12 @@ export interface TooltipProps extends Omit<TooltipRootProps, "children"> {
   children: JSX.Element;
   /** Additional class applied to the trigger element. */
   class?: string;
+  /**
+   * Extra props forwarded onto the trigger `<button>` (e.g. `aria-disabled`,
+   * `onClick`, `disabled`). Lets callers make the trigger non-interactive
+   * while keeping it hover/focus-able so the tooltip still fires.
+   */
+  triggerProps?: JSX.ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
 const DEFAULT_OPEN_DELAY = 100;
@@ -39,14 +45,19 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     { openDelay: DEFAULT_OPEN_DELAY, closeDelay: DEFAULT_CLOSE_DELAY },
     props,
   );
-  const [local, rest] = splitProps(withDefaults, ["content", "children", "class"]);
+  const [local, rest] = splitProps(withDefaults, [
+    "content",
+    "children",
+    "class",
+    "triggerProps",
+  ]);
 
   const triggerClass = () =>
     ["sui-tooltip__trigger", local.class].filter(Boolean).join(" ");
 
   return (
     <KobalteTooltip {...rest}>
-      <KobalteTooltip.Trigger class={triggerClass()}>
+      <KobalteTooltip.Trigger {...local.triggerProps} class={triggerClass()}>
         {local.children}
       </KobalteTooltip.Trigger>
       <KobalteTooltip.Portal>

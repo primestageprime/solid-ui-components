@@ -163,6 +163,18 @@ export const sanitizeMaxRangeDays = (
   return undefined;
 };
 
+/**
+ * True when `day`'s start-of-day is strictly after the calendar day containing
+ * `maxDate` — i.e. the day containing `maxDate` itself is NOT after the cap and
+ * stays selectable, only later days return true. Compared at day granularity in
+ * the given TZ so a mid-day `maxDate` still permits selecting that day.
+ */
+export const isAfterMaxDate = (
+  day: Date,
+  maxDate: Date,
+  timeZone?: string,
+): boolean => stripTime(day, timeZone) > stripTime(maxDate, timeZone);
+
 /** True when `day` is more than `maxDays` calendar days from `anchor`. */
 export const isOutOfMaxRange = (
   day: Date,
@@ -208,6 +220,25 @@ export const clampRange = (
   const maxMs = maxDays * DAY_MS;
   if (diffMs <= maxMs) return { start, end };
   return { start: new Date(end.getTime() - maxMs), end };
+};
+
+/**
+ * Defensive end-cap clamp against an absolute `maxDate`. The calendar day
+ * *containing* `maxDate` stays selectable, so an `end` that falls on or before
+ * that day (per `stripTime`) is returned unchanged; only an `end` whose
+ * start-of-day is strictly after `maxDate`'s day is pulled back to `maxDate`.
+ * Returns `end` unchanged when `maxDate` is undefined. TZ-aware at day
+ * granularity. A safety net behind the disabled cells — not the primary guard.
+ */
+export const clampEndToMaxDate = (
+  end: Date,
+  maxDate: Date | undefined,
+  timeZone?: string,
+): Date => {
+  if (maxDate === undefined) return end;
+  return stripTime(end, timeZone) > stripTime(maxDate, timeZone)
+    ? maxDate
+    : end;
 };
 
 /** Add whole months to a numeric (year, month) pair. TZ does not apply. */
