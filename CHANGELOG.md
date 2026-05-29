@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.54.0
+
+### Removed — BREAKING
+
+- **Removed the deprecated `HUDSection`, `HUDPanel`, and `HUDList` aliases** from the package root. These re-exported config-bearing base components and were the last base-export leaks after the 0.52.0 curried-only refactor. Migrate:
+  - `HUDPanel` → a Panel variant (`InfoPanel`, `AccentPanel`, `DangerPanel`, `CompactPanel`, …) or `createPanel({ … })`; a plain default panel is `createPanel({})`.
+  - `HUDSection` → a Section variant (`CollapsibleSection`, `DecoratedSection`, `BorderedSection`) or `createSection({})`.
+  - `HUDList` → `ScrollList` (scrolling) or `createList({})` (plain). `ListItem` / `HUDListItem` are unchanged.
+- `HUDModal`, `HUDTabs`, `HUDButtonGroup` already resolve to curried variants; `HUDPage`, `HUDListItem`, and `createHUDPanel` are unaffected. See the "Curried-only exports" section in `COMPONENTS.md` for the full migration guidance.
+
 ## 0.53.0
 
 ### Added

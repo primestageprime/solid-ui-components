@@ -4,6 +4,30 @@ SolidJS UI component library. All components accept standard HTML attributes via
 
 **Always prefer a curried variant over configuring a base component.** If no curried variant exists for your use case, propose one upstream rather than repeatedly passing the same props.
 
+## Curried-only exports (read this first)
+
+This library exports **only curried components**. A component you import exposes only props knowable at runtime or set per-client (data, ids, callbacks, content) — every visual/static decision (`variant`, `size`, `tone`, `glow`, `corners`, `align`, …) is baked at variant-definition time. The config-bearing **base** components are intentionally **not exported**.
+
+If you reach for a base component and a config prop, you are doing it wrong. Do one of:
+
+1. **Use a named curried variant** — e.g. `PrimaryButton`, `CompliantBadge`, `TightStack`, `LargeModal`, `InfoPanel`.
+2. **Curry your own once** with the factory and reuse it — e.g. `const ToolbarButton = createButton({ variant: "ghost", size: "sm" })`. Bake the config in one place; never pass it at the call site.
+3. If neither fits, **add a variant upstream** in the component's `variants.ts` rather than threading config through call sites.
+
+Components with no design-config props (e.g. `CountChip`, `AppShell`, `AppMain`, `Page`, `Tooltip`, `ListItem`, `InlineChartErrorOverlay`) are exported directly — they are already effectively curried.
+
+### Removed in 0.54.0 — `HUD*` base aliases
+
+The deprecated `HUDSection`, `HUDPanel`, and `HUDList` aliases re-exported base components and have been removed. Migrate as follows:
+
+| Removed export | Use instead |
+|---|---|
+| `HUDPanel` | a Panel variant (`InfoPanel`, `AccentPanel`, `DangerPanel`, `CompactPanel`, …) or `createPanel({ … })` for a custom config. A plain default panel is `createPanel({})`. |
+| `HUDSection` | a Section variant (`CollapsibleSection`, `DecoratedSection`, `BorderedSection`) or `createSection({})` for a plain section. |
+| `HUDList` | `ScrollList` (scrolling) or `createList({})` for a plain non-scrolling list. `ListItem` is unchanged and still exported. |
+
+(`HUDModal`, `HUDTabs`, `HUDButtonGroup` already resolve to curried variants; `HUDPage`, `HUDListItem`, `createHUDPanel` are unchanged.)
+
 ## Theming
 
 Components use `--sui-*` CSS custom properties for all colors, spacing, and visual tokens. The library ships two built-in themes:

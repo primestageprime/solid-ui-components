@@ -168,13 +168,10 @@ export * from "./components/CashflowScrubChart";
 
 // Backward compatibility — will be removed in a future version
 export { Page as HUDPage } from "./components/Page";
-export { Section as HUDSection } from "./components/Section/Section";
-export { Panel as HUDPanel } from "./components/Panel/Panel";
 export { Modal as HUDModal } from "./components/Modal";
 export { ConfirmationModal as HUDConfirmationModal } from "./components/Modal";
 export { Tabs as HUDTabs } from "./components/Tabs";
 export { ButtonGroup as HUDButtonGroup } from "./components/ButtonGroup";
-export { List as HUDList } from "./components/List/List";
 export { ListItem as HUDListItem } from "./components/List";
 export { createPanel as createHUDPanel } from "./components/Panel";
 export * from "./components/WorkerCard";
