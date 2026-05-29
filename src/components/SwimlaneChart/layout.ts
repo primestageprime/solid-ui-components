@@ -39,8 +39,24 @@ export type SwimlaneSummary = {
   collapsedCount: number;
 };
 
+/**
+ * Per-column VERTICAL overflow: nodes in a column that don't fit the
+ * `maxRows` height cap. Rendered as a "+N" placeholder at the BOTTOM of the
+ * column (distinct from the side edge lozenges, which absorb HORIZONTAL /
+ * depth overflow). `x`/`bottomY` are the column's center-x and the bottom
+ * edge of its lowest visible node, so the chart can anchor the placeholder.
+ */
+export type SwimlaneRowOverflow = {
+  column: number;
+  count: number;
+  x: number;
+  bottomY: number;
+};
+
 export type SwimlaneLayoutResult = LayoutResult & {
   summaries: SwimlaneSummary[];
+  /** Per-column vertical (height) overflow placeholders. */
+  rowOverflows: SwimlaneRowOverflow[];
   /** The col value at the chart's horizontal center. */
   centerCol: number;
 };
@@ -51,6 +67,7 @@ const EMPTY_RESULT: SwimlaneLayoutResult = {
   totalWidth: 0,
   totalHeight: 0,
   summaries: [],
+  rowOverflows: [],
   centerCol: 0,
 };
 
@@ -198,7 +215,7 @@ export function computeSwimlaneLayout<T>(
       });
     }
   }
-  let summaries = Array.from(summaryMap.values());
+  const summaries = Array.from(summaryMap.values());
 
   // 7. Insert summary placeholders so barycentric ordering sees them.
   // (They aren't rendered as boxes — SwimlaneChart renders boundary
@@ -256,11 +273,12 @@ export function computeSwimlaneLayout<T>(
     for (const col of order) sortCol(col);
   }
 
-  // 10.5 Vertical fit: cap each column to `maxRows` real nodes. Overflow
-  // rows collapse into a per-column orphan summary so the side edge-lozenge
-  // shows a "+N" for the rows that don't fit on screen — the vertical
-  // analogue of the horizontal `maxDepth` collapse. The kept rows are
-  // re-centered by the Y pass below, so the visible band fills the viewport.
+  // 10.5 Vertical fit: cap each column to `maxRows` real nodes. The overflow
+  // is recorded per-column and surfaced as a BOTTOM "+N" placeholder (see
+  // step 12.5) — the vertical analogue of the horizontal `maxDepth` collapse,
+  // but kept SEPARATE from the side edge lozenges (which absorb depth
+  // overflow). The kept rows are re-centered by the Y pass below.
+  const rowOverflowByCol = new Map<number, number>();
   if (opts.maxRows && opts.maxRows > 0) {
     for (const col of orderedCols) {
       const ids = visibleCols.get(col)!;
@@ -270,13 +288,8 @@ export function computeSwimlaneLayout<T>(
       const overflowCount = realIds.length - keepReal.length;
       const placeholders = ids.filter((id) => id.startsWith("__collapsed_"));
       visibleCols.set(col, [...keepReal, ...placeholders]);
-      const key = `__rowoverflow_${col}`;
-      const existing = summaryMap.get(key);
-      if (existing) existing.collapsedCount += overflowCount;
-      else summaryMap.set(key, { id: key, anchorId: "", column: col, collapsedCount: overflowCount });
+      rowOverflowByCol.set(col, (rowOverflowByCol.get(col) ?? 0) + overflowCount);
     }
-    // Rebuild so the row-overflow summaries feed the side badge counts.
-    summaries = Array.from(summaryMap.values());
   }
 
   // 11. Y per column, centered around y=0.
@@ -362,12 +375,32 @@ export function computeSwimlaneLayout<T>(
   const colSpan = (maxCol - minCol) * opts.columnGap;
   const totalWidth = colSpan + 180; // approximate; not strictly used
 
+  // 12.5 Bottom row-overflow placeholders: anchor each to its column's
+  // center-x and the bottom edge of its lowest visible (real) node.
+  const rowOverflows: SwimlaneRowOverflow[] = [];
+  for (const [col, count] of rowOverflowByCol) {
+    if (count <= 0) continue;
+    let bottomY = -Infinity;
+    for (const id of visibleCols.get(col) ?? []) {
+      if (id.startsWith("__collapsed_")) continue;
+      const p = positions.get(id);
+      if (p) bottomY = Math.max(bottomY, p.y + p.height / 2);
+    }
+    rowOverflows.push({
+      column: col,
+      count,
+      x: xForCol(col),
+      bottomY: bottomY === -Infinity ? 0 : bottomY,
+    });
+  }
+
   return {
     positions,
     edges: layoutEdges,
     totalWidth,
     totalHeight: maxColumnHeight,
     summaries,
+    rowOverflows,
     centerCol,
   };
 }

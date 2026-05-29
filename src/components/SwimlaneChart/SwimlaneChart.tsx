@@ -199,7 +199,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       });
     } catch (err) {
       console.error("[SwimlaneChart] layout failed:", err);
-      return { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0, summaries: [], centerCol: props.centerCol ?? 0 };
+      return { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0, summaries: [], rowOverflows: [], centerCol: props.centerCol ?? 0 };
     }
   });
 
@@ -715,6 +715,24 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     setBadgesStore(reconcile(boundaryBadges(), { key: "key" }));
   });
 
+  // Bottom row-overflow placeholders: a "+N" pill beneath a column whose
+  // nodes exceed the height cap (maxRows). Distinct from the side boundary
+  // badges — those absorb HORIZONTAL/depth overflow, these show VERTICAL/
+  // height overflow at the bottom of the affected column.
+  type BottomBadge = { key: string; x: number; y: number; count: number };
+  const bottomBadges = createMemo<BottomBadge[]>(() =>
+    (layout().rowOverflows ?? []).map((o) => ({
+      key: `rowoverflow|${o.column}`,
+      x: o.x,
+      y: o.bottomY + STUB_LENGTH + BADGE_RADIUS,
+      count: o.count,
+    })),
+  );
+  const [bottomBadgesStore, setBottomBadgesStore] = createStore<BottomBadge[]>([]);
+  createEffect(() => {
+    setBottomBadgesStore(reconcile(bottomBadges(), { key: "key" }));
+  });
+
   // Bounding box of all positioned content (real nodes + boundary badges).
   // Extra vertical padding inside the SVG view box so corridor edges
   // routed above the topmost row (or below the bottommost row) don't
@@ -738,6 +756,11 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       maxX = Math.max(maxX, b.badgeX + BADGE_RADIUS);
       minY = Math.min(minY, b.pillTopY);
       maxY = Math.max(maxY, b.pillBottomY);
+    }
+    for (const b of bottomBadges()) {
+      minX = Math.min(minX, b.x - BADGE_RADIUS);
+      maxX = Math.max(maxX, b.x + BADGE_RADIUS);
+      maxY = Math.max(maxY, b.y + BADGE_RADIUS);
     }
     // Extend vertically so corridor routes above/below have room.
     minY -= EDGE_GUTTER;
@@ -853,6 +876,33 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                   class="sui-swimlane__boundary-badge-text"
                   x={b.badgeX}
                   y={(b.pillTopY + b.pillBottomY) / 2}
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  +{b.count}
+                </text>
+              </g>
+            )}
+          </For>
+
+          {/* Bottom row-overflow placeholders — "+N" pill beneath a column
+              whose node count exceeds the height cap. */}
+          <For each={bottomBadgesStore}>
+            {(b) => (
+              <g class="sui-swimlane__boundary sui-swimlane__boundary--bottom">
+                <rect
+                  class="sui-swimlane__boundary-badge"
+                  x={b.x - BADGE_RADIUS}
+                  y={b.y - BADGE_RADIUS}
+                  width={BADGE_RADIUS * 2}
+                  height={BADGE_RADIUS * 2}
+                  rx={BADGE_RADIUS}
+                  ry={BADGE_RADIUS}
+                />
+                <text
+                  class="sui-swimlane__boundary-badge-text"
+                  x={b.x}
+                  y={b.y}
                   text-anchor="middle"
                   dominant-baseline="central"
                 >
