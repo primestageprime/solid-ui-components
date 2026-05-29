@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.53.0
+
+### Added
+
+- **`ScrubChart` click-to-select on the chart body** — a click on the chart frame (no drag) now scrubs the selection to the cell at the pointer x, complementing the existing drag-to-pan gesture from 0.51.0. The pointer handler defers capture until movement crosses a 4-px threshold, so a clean tap resolves as `onScrub(idx)` while a drag activates pan as before. Releasing back near the start after a drag does **not** stray-fire `onScrub` — the pan flag is sticky once set. Cell-index mapping reads the chart frame's bounding box and subtracts `plotLeft`, so clicks on the y-axis label column don't get misread as "click on cell 0".
+
 ## 0.52.0
 
 ### Changed — BREAKING (API surface)
