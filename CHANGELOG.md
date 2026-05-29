@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.57.0
+
+### Added
+
+- **Export `StatusFlowNode` and `RenderNodeContext` from the package root.** These are the consumer-facing types for building `SwimlaneChart` data (`nodes: StatusFlowNode[]`) and writing a custom `renderNode` card. They were reachable only internally before; consumers had to derive them from `SwimlaneChartDataProps`.
+
 ## 0.56.0
 
 ### Added

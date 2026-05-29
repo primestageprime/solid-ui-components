@@ -112,6 +112,9 @@ export {
   createAnimatedSwimlaneChart,
 } from "./components/AnimatedSwimlaneChart";
 export type { AnimatedSwimlaneChartDataProps } from "./components/AnimatedSwimlaneChart";
+// Consumer-facing types for building SwimlaneChart data + custom node cards.
+export type { RenderNodeContext } from "./components/AnimatedSwimlaneChart";
+export type { StatusFlowNode } from "./components/StatusFlowChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";
