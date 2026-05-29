@@ -5,7 +5,7 @@ import {
   FloatCell, IntCell, MetricValueCell, LongTextCell,
   withCellStyle, withValueColor,
 } from "../../src/components/Table";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const AccentFloat = withCellStyle(FloatCell, { color: "var(--sui-accent)", fontWeight: 600 });
 const SmallDate = withCellStyle(DateCell, { fontSize: "0.75rem" });

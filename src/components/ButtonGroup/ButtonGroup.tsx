@@ -5,7 +5,7 @@
 // Owns CSS (ButtonGroup.css), no component imports.
 // Button arrangement with orientation + gap.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import "./ButtonGroup.css";
 
 export interface ButtonGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -49,3 +49,15 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
     </div>
   );
 };
+
+/** Visual/layout overrides — locked at variant-definition time. */
+export type ButtonGroupOverrides = Pick<ButtonGroupProps, "orientation" | "gap" | "bordered" | "tone">;
+
+/** Props available to consumers of a curried ButtonGroup variant. */
+export type ButtonGroupDataProps = Omit<ButtonGroupProps, keyof ButtonGroupOverrides>;
+
+export function createButtonGroup(
+  defaults: Partial<Omit<ButtonGroupProps, "children">>,
+): Component<ButtonGroupDataProps> {
+  return (props) => <ButtonGroup {...mergeProps(defaults, props)} />;
+}

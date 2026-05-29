@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
-import { Button } from "../../src/components/Button";
+import { Button } from "../../src/components/Button/Button";
 
 export const ButtonGroupShowcase: Component = () => {
   return (

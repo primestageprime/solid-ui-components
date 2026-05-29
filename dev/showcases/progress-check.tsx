@@ -1,6 +1,7 @@
 import { Component, For } from "solid-js";
 import { ProgressCheck } from "../../src/components/ProgressCheck";
-import { Row, Stack } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const ProgressCheckShowcase: Component = () => (
   <div class="component-section">

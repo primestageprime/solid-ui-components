@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { DateTimeRange } from "../../src/components/DataDisplay";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 import { NowrapBody } from "../../src/components/Text";
 
 interface Depth2Props {

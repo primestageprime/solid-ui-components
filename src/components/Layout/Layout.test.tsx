@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
+import { Stack } from "./Stack";
+import { Row } from "./Row";
+import { Box } from "./Box";
 import {
-  Stack,
-  Row,
-  Box,
   ProportionalStack,
   ProportionalItem,
   TightStack,

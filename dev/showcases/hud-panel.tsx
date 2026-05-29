@@ -1,10 +1,7 @@
 import { Component } from "solid-js";
-import {
-  Panel,
-  InfoPanel, AccentPanel, DangerPanel, WarningPanel,
-  SuccessPanel, CompactPanel, DecoratedPanel,
-} from "../../src/components/Panel";
-import { Stack } from "../../src/components/Layout";
+import {InfoPanel, AccentPanel, DangerPanel, WarningPanel, SuccessPanel, CompactPanel, DecoratedPanel} from "../../src/components/Panel";
+import { Panel } from "../../src/components/Panel/Panel";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const PanelShowcase: Component = () => {
   return (

@@ -1,6 +1,6 @@
 import { Component, For } from "solid-js";
 import { QuickFilter } from "../../src/components/QuickFilter";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 import { CompactCard } from "../../src/components/Surface";
 import { TextLabel, TextSublabel } from "../../src/components/Text";
 

@@ -5,7 +5,7 @@
 // Composes Layout (curried) + Text (curried).
 // Centered placeholder with icon, message, size variants.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { SmRegion, MdRegion, LgRegion, FadedBox, ConstrainedBox } from "../Layout";
 import { TextBody, MutedBody, AccentBody } from "../Text";
@@ -46,3 +46,13 @@ export const EmptyState: Component<EmptyStateProps> = (props) => {
     </Dynamic>
   );
 };
+
+/** Visual overrides — locked at variant-definition time. */
+export type EmptyStateOverrides = Pick<EmptyStateProps, "variant" | "size">;
+
+/** Props available to consumers of a curried EmptyState variant. */
+export type EmptyStateDataProps = Omit<EmptyStateProps, keyof EmptyStateOverrides>;
+
+export function createEmptyState(defaults: Partial<EmptyStateProps>): Component<EmptyStateDataProps> {
+  return (props) => <EmptyState {...mergeProps(defaults, props)} />;
+}

@@ -6,7 +6,7 @@
 // Compliance-themed status badge with 5 variants.
 // When href is provided, renders as an anchor tag.
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { Component, JSX, Show, splitProps, mergeProps } from "solid-js";
 import "./StatusBadge.css";
 
 export type StatusBadgeVariant = "compliant" | "violation" | "warning" | "pending" | "info";
@@ -61,3 +61,15 @@ export const StatusBadge: Component<StatusBadgeProps> = (props) => {
     </Show>
   );
 };
+
+/** Props that are visual/static overrides — locked at variant-definition time. */
+export type StatusBadgeOverrides = Pick<StatusBadgeProps, "variant" | "size">;
+
+/** Props that remain available to consumers of a curried StatusBadge variant. */
+export type StatusBadgeDataProps = Omit<StatusBadgeProps, keyof StatusBadgeOverrides>;
+
+export function createStatusBadge(
+  defaults: Partial<Omit<StatusBadgeProps, "children">>,
+): Component<StatusBadgeDataProps> {
+  return (props) => <StatusBadge {...mergeProps(defaults, props)} />;
+}

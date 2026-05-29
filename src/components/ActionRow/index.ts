@@ -1,7 +1,8 @@
-export { ActionRow, createActionRow } from "./ActionRow";
+// Base (ActionRow) is intentionally NOT exported — use curried variants or createActionRow().
+export { createActionRow } from "./ActionRow";
 export type {
-  ActionRowProps,
+  ActionRowDataProps,
   ActionRowAction,
-  ActionRowTone,
   ActionRowActionTone,
 } from "./ActionRow";
+export * from "./variants";

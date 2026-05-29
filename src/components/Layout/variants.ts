@@ -12,6 +12,8 @@
 import { createStack } from "./Stack";
 import { createRow } from "./Row";
 import { createBox } from "./Box";
+import { createAppHeader } from "./AppShell";
+import type { AppHeaderDataProps } from "./AppShell";
 import type { StackDataProps } from "./Stack";
 import type { RowDataProps } from "./Row";
 import type { BoxDataProps } from "./Box";
@@ -124,3 +126,14 @@ export const DelineatedSidebar = createStack({
     "overflow-y": "auto",
   },
 });
+
+// --- AppHeader variants (size/inline baked) ---
+
+/** Default page-top header (md padding). */
+export const AppHeader: Component<AppHeaderDataProps> = createAppHeader({});
+
+/** Compact page-top header (sm padding). */
+export const CompactAppHeader: Component<AppHeaderDataProps> = createAppHeader({ size: "sm" });
+
+/** Inline header rendered inside AppMain rather than as the page-top bar. */
+export const InlineAppHeader: Component<AppHeaderDataProps> = createAppHeader({ inline: true });

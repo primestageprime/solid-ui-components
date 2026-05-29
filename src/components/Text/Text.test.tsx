@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Text, TextLabel, EllipsizedTitle, createText } from "./index";
+import { Text, createText } from "./Text";
+import { TextLabel, EllipsizedTitle } from "./index";
 
 describe("Text", () => {
   it("renders with the variant class", () => {

@@ -1,11 +1,11 @@
 import { Component } from "solid-js";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 import {
   TightStack, NarrowStack, SpacedStack, ContentStack, CenteredStack,
   SmRegion, MdRegion, LgRegion,
 } from "../../src/components/Layout";
-import { Surface } from "../../src/components/Surface";
-import { Text } from "../../src/components/Text";
+import { Surface } from "../../src/components/Surface/Surface";
+import { Text } from "../../src/components/Text/Text";
 
 const DemoBox: Component<{ label: string }> = (props) => (
   <Surface padding="sm" radius="sm" bg="rgba(0,212,255,0.1)" borderColor="rgba(0,212,255,0.3)">

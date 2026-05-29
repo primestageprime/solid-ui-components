@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { PopoverMenu } from "../../src/components/PopoverMenu";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 
 export const PopoverMenuShowcase: Component = () => {
   const [last, setLast] = createSignal<string>("");

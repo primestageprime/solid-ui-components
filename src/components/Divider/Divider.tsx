@@ -6,7 +6,7 @@
 // Content separator with orientation variants.
 // Moved from Section.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import "./Divider.css";
 
 export interface DividerProps extends JSX.HTMLAttributes<HTMLHRElement> {
@@ -34,3 +34,13 @@ export const Divider: Component<DividerProps> = (props) => {
 
   return <hr class={classes()} {...others} />;
 };
+
+/** Visual overrides — locked at variant-definition time. */
+export type DividerOverrides = Pick<DividerProps, "orientation" | "variant" | "spacing">;
+
+/** Props available to consumers of a curried Divider variant. */
+export type DividerDataProps = Omit<DividerProps, keyof DividerOverrides>;
+
+export function createDivider(defaults: Partial<DividerProps>): Component<DividerDataProps> {
+  return (props) => <Divider {...mergeProps(defaults, props)} />;
+}

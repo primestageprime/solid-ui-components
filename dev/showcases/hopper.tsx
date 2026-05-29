@@ -1,11 +1,12 @@
 import { createSignal, For, Component } from "solid-js";
-import { StatusBadge } from "../../src/components/Badge";
+import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { DTable, DT, DD } from "../../src/components/DataList";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
-import { Button } from "../../src/components/Button";
+import { Button } from "../../src/components/Button/Button";
 import { NavLink } from "../../src/components/Navigation";
 import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel } from "../../src/components/DataDisplay";
-import { EmptyState, AlertBox } from "../../src/components/Feedback";
+import {EmptyState} from "../../src/components/Feedback";
+import { AlertBox } from "../../src/components/Feedback/AlertBox";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
 import { Toggle } from "../../src/components/Toggle";
@@ -30,14 +31,15 @@ import {
   GroupedTableDemo,
   DataTableContainer,
 } from "../../src/components/Table";
-import { Section } from "../../src/components/Section";
-import { Panel } from "../../src/components/Panel";
+import { Section } from "../../src/components/Section/Section";
+import { Panel } from "../../src/components/Panel/Panel";
 import { Divider } from "../../src/components/Divider";
 import { Page } from "../../src/components/Page";
 import { Modal } from "../../src/components/Modal";
 import { Tabs } from "../../src/components/Tabs";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
-import { List, ListItem } from "../../src/components/List";
+import {ListItem} from "../../src/components/List";
+import { List } from "../../src/components/List/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
 import { RemovableItemCard } from "../../src/components/Card";
 

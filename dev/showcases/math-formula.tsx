@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { MathFormula } from "../../src/components/MathFormula";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const MathFormulaShowcase: Component = () => {
   return (

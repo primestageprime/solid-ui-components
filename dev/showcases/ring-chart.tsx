@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { RingChart } from "../../src/components/RingChart";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 
 export const RingChartShowcase: Component = () => (
   <div class="component-section">

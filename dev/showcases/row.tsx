@@ -1,9 +1,9 @@
 import { Component } from "solid-js";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 import { SpreadRow, ClusterRow } from "../../src/components/Layout";
-import { Surface } from "../../src/components/Surface";
-import { Text } from "../../src/components/Text";
-import { Stack } from "../../src/components/Layout";
+import { Surface } from "../../src/components/Surface/Surface";
+import { Text } from "../../src/components/Text/Text";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const DemoBox: Component<{ label: string }> = (props) => (
   <Surface padding="sm" radius="sm" bg="rgba(0,255,136,0.1)" borderColor="rgba(0,255,136,0.3)">

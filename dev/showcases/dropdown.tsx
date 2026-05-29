@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { Dropdown } from "../../src/components/Dropdown";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");

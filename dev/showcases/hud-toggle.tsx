@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { Toggle } from "../../src/components/Toggle";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const ToggleShowcase: Component = () => {
   const [checked, setChecked] = createSignal(false);

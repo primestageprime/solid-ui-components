@@ -1,5 +1,6 @@
 import { Component } from "solid-js";
-import { List, ListItem } from "../../src/components/List";
+import {ListItem} from "../../src/components/List";
+import { List } from "../../src/components/List/List";
 
 export const ListShowcase: Component = () => {
   return (

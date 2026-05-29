@@ -255,3 +255,15 @@ const KebabGlyph: Component = () => (
     <circle cx="8" cy="13" r="1.4" fill="currentColor" />
   </svg>
 );
+
+/** Layout overrides (gap/align) — locked at variant-definition time. */
+export type OverflowNavOverrides = Pick<OverflowNavProps, "gap" | "align">;
+
+/** Props available to consumers of a curried OverflowNav variant (`items` is runtime data). */
+export type OverflowNavDataProps = Omit<OverflowNavProps, keyof OverflowNavOverrides>;
+
+export function createOverflowNav(
+  defaults: Partial<OverflowNavProps>,
+): Component<OverflowNavDataProps> {
+  return (props) => <OverflowNav {...mergeProps(defaults, props)} />;
+}

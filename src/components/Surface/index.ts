@@ -1,3 +1,4 @@
-export { Surface, createSurface } from "./Surface";
-export type { SurfaceProps, SurfaceOverrides, SurfaceDataProps } from "./Surface";
+// Base (Surface) is intentionally NOT exported — use curried variants or createSurface().
+export { createSurface } from "./Surface";
+export type { SurfaceDataProps } from "./Surface";
 export * from "./variants";

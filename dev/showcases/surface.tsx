@@ -1,11 +1,11 @@
 import { Component } from "solid-js";
-import { Surface } from "../../src/components/Surface";
+import { Surface } from "../../src/components/Surface/Surface";
 import {
   CardSurface, CompactSurface,
   InfoSurface, WarningSurface, SuccessSurface, DangerSurface,
 } from "../../src/components/Surface";
-import { Stack } from "../../src/components/Layout";
-import { Text } from "../../src/components/Text";
+import { Stack } from "../../src/components/Layout/Stack";
+import { Text } from "../../src/components/Text/Text";
 
 export const SurfaceShowcase: Component = () => {
   return (

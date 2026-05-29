@@ -35,8 +35,14 @@ export const AssigneeChips: Component<AssigneeChipsProps> = (rawProps) => {
   );
 };
 
+/** Props that are visual/static overrides — locked at variant-definition time. */
+export type AssigneeChipsOverrides = Pick<AssigneeChipsProps, "size">;
+
+/** Props that remain available to consumers of a curried AssigneeChips variant. */
+export type AssigneeChipsDataProps = Omit<AssigneeChipsProps, keyof AssigneeChipsOverrides>;
+
 export function createAssigneeChips(
   defaults: Partial<AssigneeChipsProps>,
-): Component<AssigneeChipsProps> {
+): Component<AssigneeChipsDataProps> {
   return (props) => <AssigneeChips {...mergeProps(defaults, props)} />;
 }

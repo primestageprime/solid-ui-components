@@ -13,7 +13,7 @@
 // ============================================
 import { Component, Show } from "solid-js";
 import { LiveHeartbeatTrace } from "../LiveHeartbeatTrace";
-import type { StatusLightVariant } from "../StatusLight";
+import type { StatusLightVariant } from "../StatusLight/StatusLight";
 import { SmallStatusLight } from "../StatusLight/variants";
 import { SmallTightStack } from "../Layout/variants";
 import { NowrapLabel } from "../Text/variants";

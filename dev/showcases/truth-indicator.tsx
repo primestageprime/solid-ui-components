@@ -1,6 +1,7 @@
 import { Component, createSignal } from "solid-js";
 import { TruthIndicator, createTruthIndicator } from "../../src/components/TruthIndicator";
-import { Row, Stack } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const SmallTruth = createTruthIndicator({ size: "sm" });
 const LargeTruth = createTruthIndicator({ size: "lg" });

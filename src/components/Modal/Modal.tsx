@@ -5,7 +5,7 @@
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
 // ============================================
-import { Component, JSX, Show, createEffect, onCleanup } from "solid-js";
+import { Component, JSX, Show, createEffect, onCleanup, mergeProps } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Modal.css";
@@ -112,3 +112,13 @@ export const Modal: Component<ModalProps> = (props) => {
     </Show>
   );
 };
+
+/** Visual overrides — locked at variant-definition time. */
+export type ModalOverrides = Pick<ModalProps, "corners" | "variant" | "size">;
+
+/** Props available to consumers of a curried Modal variant. */
+export type ModalDataProps = Omit<ModalProps, keyof ModalOverrides>;
+
+export function createModal(defaults: Partial<ModalProps>): Component<ModalDataProps> {
+  return (props) => <Modal {...mergeProps(defaults, props)} />;
+}

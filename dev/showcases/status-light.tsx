@@ -1,6 +1,8 @@
 import { Component, For } from "solid-js";
-import { StatusLight, StatusLightVariant } from "../../src/components/StatusLight";
-import { Row, Stack } from "../../src/components/Layout";
+import {StatusLightVariant} from "../../src/components/StatusLight";
+import { StatusLight } from "../../src/components/StatusLight/StatusLight";
+import { Row } from "../../src/components/Layout/Row";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const VARIANTS: StatusLightVariant[] = ["success", "warning", "danger", "info", "idle"];
 

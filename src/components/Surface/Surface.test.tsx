@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Surface, CompactCard, CardSurface, createSurface } from "./index";
+import { Surface, createSurface } from "./Surface";
+import { CompactCard, CardSurface } from "./index";
 
 describe("Surface", () => {
   it("renders a div with the surface class", () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { TruthIndicator, createTruthIndicator } from "./index";
+// Tests exercise the base (incl. baked-away props like `size`) — import it directly.
+import { TruthIndicator, createTruthIndicator } from "./TruthIndicator";
 
 describe("TruthIndicator", () => {
   it("value=true renders the check path with the true variant class", () => {

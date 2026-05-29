@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Button, createButton } from "./index";
+import { Button, createButton } from "./Button";
 
 describe("Button", () => {
   it("renders with default variant class", () => {

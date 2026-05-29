@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { ConfirmationModal } from "../../src/components/Modal";
-import { Button } from "../../src/components/Button";
+import { Button } from "../../src/components/Button/Button";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;

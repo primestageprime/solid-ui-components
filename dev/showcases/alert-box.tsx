@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
-import { AlertBox } from "../../src/components/Feedback";
-import { Button } from "../../src/components/Button";
-import { Stack } from "../../src/components/Layout";
+import { AlertBox } from "../../src/components/Feedback/AlertBox";
+import { Button } from "../../src/components/Button/Button";
+import { Stack } from "../../src/components/Layout/Stack";
 import {
   WarningSurface, InfoSurface, SuccessSurface, DangerSurface,
 } from "../../src/components/Surface";

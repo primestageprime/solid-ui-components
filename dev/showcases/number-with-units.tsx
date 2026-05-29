@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;

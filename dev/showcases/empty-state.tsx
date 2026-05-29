@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { EmptyState } from "../../src/components/Feedback";
 import { Icon } from "../../src/components/Icon";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 import { TextBody, MutedBody, AccentBody } from "../../src/components/Text";
 
 interface Depth2Props {

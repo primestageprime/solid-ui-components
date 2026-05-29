@@ -1,6 +1,6 @@
 import { Component, For } from "solid-js";
 import { DataTableContainer } from "../../src/components/Table";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const sampleRows = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,

@@ -1,8 +1,8 @@
 import { Component } from "solid-js";
-import { Section } from "../../src/components/Section";
+import { Section } from "../../src/components/Section/Section";
 import { CollapsibleSection, DecoratedSection, BorderedSection } from "../../src/components/Section";
-import { Button } from "../../src/components/Button";
-import { Stack } from "../../src/components/Layout";
+import { Button } from "../../src/components/Button/Button";
+import { Stack } from "../../src/components/Layout/Stack";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;

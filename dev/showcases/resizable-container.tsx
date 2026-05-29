@@ -1,8 +1,8 @@
 import { Component, createSignal } from "solid-js";
 import { ResizableContainer } from "../../src/components/ResizableContainer";
-import { Surface } from "../../src/components/Surface";
-import { Text } from "../../src/components/Text";
-import { Stack } from "../../src/components/Layout";
+import { Surface } from "../../src/components/Surface/Surface";
+import { Text } from "../../src/components/Text/Text";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const DemoContent: Component<{ label: string }> = (props) => (
   <Surface

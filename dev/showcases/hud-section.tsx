@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
-import { Section } from "../../src/components/Section";
-import { Button } from "../../src/components/Button";
+import { Section } from "../../src/components/Section/Section";
+import { Button } from "../../src/components/Button/Button";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;

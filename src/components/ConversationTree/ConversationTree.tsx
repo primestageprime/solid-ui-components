@@ -22,12 +22,12 @@
 import { Component, For, Show, createMemo } from "solid-js";
 import { ConversationStack } from "../Layout";
 import { Duration } from "../Duration";
-import { MessageBubble } from "../MessageBubble";
-import { ParticipantAvatar } from "../ParticipantAvatar";
+import { MessageBubble } from "../MessageBubble/MessageBubble";
+import { ParticipantAvatar } from "../ParticipantAvatar/ParticipantAvatar";
 import { ParticipantNameLabel } from "../ParticipantNameLabel";
 import { ParticipantTimeLabel } from "../ParticipantTimeLabel";
 import { LabeledDivider } from "../LabeledDivider";
-import { ThreadGroup } from "../ThreadGroup";
+import { ThreadGroup } from "../ThreadGroup/ThreadGroup";
 
 export interface Participant {
   id: string;

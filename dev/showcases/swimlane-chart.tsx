@@ -1,8 +1,8 @@
 import { Component, For, JSX, createEffect, createSignal, onCleanup } from "solid-js";
 import { SwimlaneChart, LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
-import { Surface } from "../../src/components/Surface";
-import { Stack } from "../../src/components/Layout";
+import { Surface } from "../../src/components/Surface/Surface";
+import { Stack } from "../../src/components/Layout/Stack";
 import {
   TextLabel,
   EllipsizedTitle,

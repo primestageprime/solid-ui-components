@@ -1,11 +1,5 @@
-export { StatusLight, createStatusLight } from "./StatusLight";
-export type {
-  StatusLightProps,
-  StatusLightVariant,
-  StatusLightSize,
-  StatusLightOverrides,
-  StatusLightDataProps,
-} from "./StatusLight";
-// Re-export every variant so adding a new one in variants.ts is automatically
-// public — explicit lists drift and quietly hide additions.
+// Base (StatusLight) is intentionally NOT exported — consumers use the curried
+// variants or createStatusLight(). Internal users import "./StatusLight" directly.
+export { createStatusLight } from "./StatusLight";
+export type { StatusLightDataProps } from "./StatusLight";
 export * from "./variants";

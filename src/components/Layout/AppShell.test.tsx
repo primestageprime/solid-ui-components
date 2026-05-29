@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { AppShell, AppHeader, AppMain, AppNavLink, SidebarPanel } from "./index";
+// AppHeader is now curried; this test exercises baked props (size/inline) so it uses the base.
+import { AppHeader } from "./AppShell";
+import { AppShell, AppMain, AppNavLink, SidebarPanel } from "./index";
 
 describe("AppShell / AppHeader / AppMain", () => {
   it("AppShell renders an app-shell div", () => {

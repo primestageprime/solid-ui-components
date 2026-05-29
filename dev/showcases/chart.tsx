@@ -13,7 +13,8 @@ import {
   ChartTooltip,
   domainOf,
 } from "../../src/components/Chart";
-import { Stack, Row } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
+import { Row } from "../../src/components/Layout/Row";
 
 interface Pt {
   t: number;

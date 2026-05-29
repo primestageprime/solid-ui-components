@@ -1,11 +1,4 @@
-export {
-  ParticipantAvatar,
-  createParticipantAvatar,
-} from "./ParticipantAvatar";
-export type {
-  ParticipantAvatarProps,
-  ParticipantAvatarSize,
-  ParticipantAvatarOverrides,
-  ParticipantAvatarDataProps,
-} from "./ParticipantAvatar";
+// Base (ParticipantAvatar) is intentionally NOT exported — use curried variants or createParticipantAvatar().
+export { createParticipantAvatar } from "./ParticipantAvatar";
+export type { ParticipantAvatarDataProps } from "./ParticipantAvatar";
 export * from "./variants";

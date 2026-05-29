@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { Panel } from "../../src/components/Panel";
+import { Panel } from "../../src/components/Panel/Panel";
 import { Divider } from "../../src/components/Divider";
 
 export const DividerShowcase: Component = () => {

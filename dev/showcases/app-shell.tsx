@@ -1,9 +1,11 @@
 import { Component } from "solid-js";
-import { AppShell, AppHeader, AppMain, Row, Stack } from "../../src/components/Layout";
+import {AppShell, AppHeader, AppMain} from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
+import { Stack } from "../../src/components/Layout/Stack";
 import { CountChip } from "../../src/components/Badge";
 import { StickyGroupHeader, SectionLabel } from "../../src/components/Section";
 import { TextLabel, TextSublabel, MutedBody } from "../../src/components/Text";
-import { Button } from "../../src/components/Button";
+import { Button } from "../../src/components/Button/Button";
 import { Icon } from "../../src/components/Icon";
 
 const FAKE_GROUPS = [

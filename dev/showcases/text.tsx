@@ -1,11 +1,11 @@
 import { Component } from "solid-js";
-import { Text } from "../../src/components/Text";
+import { Text } from "../../src/components/Text/Text";
 import {
   TextValue, TextLabel, TextTitle, TextBody, TextUnits, TextSublabel,
   NowrapBody, MutedBody, AccentBody,
   InfoTitle, WarningTitle, SuccessTitle, DangerTitle,
 } from "../../src/components/Text";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const TextShowcase: Component = () => {
   return (

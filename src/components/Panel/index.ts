@@ -1,3 +1,4 @@
-export { Panel, createPanel } from "./Panel";
-export type { PanelProps, PanelOverrides, PanelDataProps } from "./Panel";
+// Base (Panel) is intentionally NOT exported — use curried variants or createPanel().
+export { createPanel } from "./Panel";
+export type { PanelDataProps } from "./Panel";
 export * from "./variants";

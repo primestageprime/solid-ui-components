@@ -1,6 +1,7 @@
 import { Component, For } from "solid-js";
 import { Duration } from "../../src/components/Duration";
-import { Row, Stack } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
+import { Stack } from "../../src/components/Layout/Stack";
 
 const SAMPLES = [
   { label: "null", ms: null as number | null },

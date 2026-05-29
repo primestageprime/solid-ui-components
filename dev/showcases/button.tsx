@@ -1,5 +1,5 @@
 import { createSignal, Component } from "solid-js";
-import { Button } from "../../src/components/Button";
+import { Button } from "../../src/components/Button/Button";
 import {
   PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,
   OutlinedButton, TextButton, IconOnlyButton,

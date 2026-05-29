@@ -5,7 +5,7 @@
 // Composes Modal (Atomic) + Button (Atomic).
 // Confirmation dialog with Cancel/Confirm footer.
 // ============================================
-import { Component, JSX, splitProps, Show } from "solid-js";
+import { Component, JSX, splitProps, Show, mergeProps } from "solid-js";
 import { Modal } from "./Modal";
 import { Button } from "../Button/Button";
 import type { ColorVariant, CornerStyle } from "../../types";
@@ -111,3 +111,18 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
     </Modal>
   );
 };
+
+/** Visual overrides — locked at variant-definition time (incl. the destructive confirm tone). */
+export type ConfirmationModalOverrides = Pick<
+  ConfirmationModalProps,
+  "size" | "corners" | "variant" | "confirmVariant"
+>;
+
+/** Props available to consumers of a curried ConfirmationModal variant. */
+export type ConfirmationModalDataProps = Omit<ConfirmationModalProps, keyof ConfirmationModalOverrides>;
+
+export function createConfirmationModal(
+  defaults: Partial<ConfirmationModalProps>,
+): Component<ConfirmationModalDataProps> {
+  return (props) => <ConfirmationModal {...mergeProps(defaults, props)} />;
+}

@@ -5,7 +5,7 @@
 // Owns CSS (ProgressCheck.css), imports Icon types.
 // Three-state progress indicator: empty, partial, complete.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import type { IconSize } from "../Icon/Icon";
 import "./ProgressCheck.css";
 
@@ -54,3 +54,15 @@ export const ProgressCheck: Component<ProgressCheckProps> = (props) => {
     />
   );
 };
+
+/** Visual overrides — locked at variant-definition time. */
+export type ProgressCheckOverrides = Pick<ProgressCheckProps, "size">;
+
+/** Props available to consumers of a curried ProgressCheck variant (`progress` is runtime data). */
+export type ProgressCheckDataProps = Omit<ProgressCheckProps, keyof ProgressCheckOverrides>;
+
+export function createProgressCheck(
+  defaults: Partial<ProgressCheckProps>,
+): Component<ProgressCheckDataProps> {
+  return (props) => <ProgressCheck {...mergeProps(defaults, props)} />;
+}

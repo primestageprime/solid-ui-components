@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { WorkerCard } from "../../src/components/WorkerCard";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 
 export const WorkerCardShowcase: Component = () => {
   const now = Date.now();

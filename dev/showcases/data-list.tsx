@@ -1,8 +1,8 @@
 import { Component } from "solid-js";
 import { DTable, DTableWithHeader, DHeader, DH, DRow, DT, DD, Units, Val, SigFig } from "../../src/components/DataList";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
-import { StatusBadge } from "../../src/components/Badge";
-import { Stack } from "../../src/components/Layout";
+import { StatusBadge } from "../../src/components/Badge/StatusBadge";
+import { Stack } from "../../src/components/Layout/Stack";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;

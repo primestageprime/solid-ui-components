@@ -80,8 +80,14 @@ export const ActionRow: Component<ActionRowProps> = (rawProps) => {
   );
 };
 
+/** Props that are visual/static overrides — locked at variant-definition time. */
+export type ActionRowOverrides = Pick<ActionRowProps, "tone" | "leading">;
+
+/** Props that remain available to consumers of a curried ActionRow variant. */
+export type ActionRowDataProps = Omit<ActionRowProps, keyof ActionRowOverrides>;
+
 export function createActionRow(
-  defaults: Partial<ActionRowProps>,
-): Component<ActionRowProps> {
+  defaults: Partial<Omit<ActionRowProps, "children">>,
+): Component<ActionRowDataProps> {
   return (props) => <ActionRow {...mergeProps(defaults, props)} />;
 }

@@ -44,6 +44,16 @@ export const AppHeader: Component<AppHeaderProps> = (rawProps) => {
   );
 };
 
+/** Visual/layout overrides — locked at variant-definition time. */
+export type AppHeaderOverrides = Pick<AppHeaderProps, "size" | "inline">;
+
+/** Props available to consumers of a curried AppHeader variant. */
+export type AppHeaderDataProps = Omit<AppHeaderProps, keyof AppHeaderOverrides>;
+
+export function createAppHeader(defaults: Partial<AppHeaderProps>): Component<AppHeaderDataProps> {
+  return (props) => <AppHeader {...mergeProps(defaults, props)} />;
+}
+
 export interface AppMainProps extends JSX.HTMLAttributes<HTMLElement> {
   /** Pad the main area. Default false (caller handles padding). */
   padded?: boolean;

@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { Page } from "../../src/components/Page";
-import { Stack } from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
 
 export const PageShowcase: Component = () => {
   return (

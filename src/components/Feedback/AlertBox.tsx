@@ -5,7 +5,7 @@
 // Composes Surface (curried) + Layout (curried) +
 // Text (curried). Status-colored alert with action.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { Component, JSX, splitProps, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { InfoSurface, WarningSurface, SuccessSurface, DangerSurface } from "../Surface";
 import { SpreadRow, ContentStack, ActionSlot } from "../Layout";
@@ -47,3 +47,13 @@ export const AlertBox: Component<AlertBoxProps> = (props) => {
     </Dynamic>
   );
 };
+
+/** Visual override — locked at variant-definition time. */
+export type AlertBoxOverrides = Pick<AlertBoxProps, "variant">;
+
+/** Props available to consumers of a curried AlertBox variant. */
+export type AlertBoxDataProps = Omit<AlertBoxProps, keyof AlertBoxOverrides>;
+
+export function createAlertBox(defaults: Partial<AlertBoxProps>): Component<AlertBoxDataProps> {
+  return (props) => <AlertBox {...mergeProps(defaults, props)} />;
+}

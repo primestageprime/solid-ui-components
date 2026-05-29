@@ -1,7 +1,7 @@
 import { Component, createSignal } from "solid-js";
 import { RemovableItemCard } from "../../src/components/Card";
-import { StatusBadge } from "../../src/components/Badge";
-import { Stack } from "../../src/components/Layout";
+import { StatusBadge } from "../../src/components/Badge/StatusBadge";
+import { Stack } from "../../src/components/Layout/Stack";
 import { TextBody, MutedBody } from "../../src/components/Text";
 
 interface Depth2Props {

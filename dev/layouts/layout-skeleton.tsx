@@ -11,19 +11,13 @@
 // inside its Panel as Text. There are no raw inline-styled colored divs — the
 // color of a region is a Panel `variant`, never a hand-rolled background.
 import { Component, Show, createSignal } from "solid-js";
-import {
-  ProportionalStack,
-  ProportionalItem,
-  SidebarPanel,
-  Stack,
-  SpreadRow,
-  ClusterRow,
-  Row,
-  Box,
-} from "../../src/components/Layout";
+import {ProportionalStack, ProportionalItem, SidebarPanel, SpreadRow, ClusterRow} from "../../src/components/Layout";
+import { Stack } from "../../src/components/Layout/Stack";
+import { Row } from "../../src/components/Layout/Row";
+import { Box } from "../../src/components/Layout/Box";
 import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
-import { Panel } from "../../src/components/Panel";
-import { Text } from "../../src/components/Text";
+import { Panel } from "../../src/components/Panel/Panel";
+import { Text } from "../../src/components/Text/Text";
 import { Tabs } from "../../src/components/Tabs";
 import { Dot } from "../../src/components/Dot";
 import { HeartbeatSparkline } from "../../src/components/HeartbeatSparkline";

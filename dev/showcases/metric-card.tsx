@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { MetricCard } from "../../src/components/DataDisplay";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 
 export const MetricCardShowcase: Component = () => {
   return (

@@ -2,7 +2,7 @@ import { Component, createSignal, onCleanup, onMount, For } from "solid-js";
 import { HeartbeatSparkline } from "../../src/components/HeartbeatSparkline";
 import { LiveHeartbeatTrace } from "../../src/components/LiveHeartbeatTrace";
 import { ConnectionStatus } from "../../src/components/ConnectionStatus";
-import { Row } from "../../src/components/Layout";
+import { Row } from "../../src/components/Layout/Row";
 
 // --- Synthetic sample generators for the atom showcase ---
 const flatLow = (n: number) =>

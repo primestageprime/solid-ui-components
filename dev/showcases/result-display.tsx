@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { StatusBadge } from "../../src/components/Badge";
+import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { ResultDisplay } from "../../src/components/DataDisplay";
 
 export const ResultDisplayShowcase: Component = () => {

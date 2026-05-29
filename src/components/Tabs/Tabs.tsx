@@ -6,7 +6,7 @@
 // Tab bar with horizontal or vertical orientation,
 // and underline/boxed/pill variants.
 // ============================================
-import { Component, For, JSX, Show } from "solid-js";
+import { Component, For, JSX, Show, mergeProps } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Tabs.css";
 
@@ -71,3 +71,13 @@ export const Tabs: Component<TabsProps> = (props) => {
     </div>
   );
 };
+
+/** Visual overrides — locked at variant-definition time. */
+export type TabsOverrides = Pick<TabsProps, "variant" | "orientation" | "color">;
+
+/** Props available to consumers of a curried Tabs variant (tabs/activeTab/onTabChange are runtime). */
+export type TabsDataProps = Omit<TabsProps, keyof TabsOverrides>;
+
+export function createTabs(defaults: Partial<TabsProps>): Component<TabsDataProps> {
+  return (props) => <Tabs {...mergeProps(defaults, props)} />;
+}
