@@ -134,7 +134,16 @@
   outline-offset: -1px;
 }
 
-/* Compact variant — no labels, no headers, dense */
+/* Compact variant — no labels, no headers, dense.
+   Fluid-fill: when the parent gives this component an explicit height, the
+   status rows split it evenly and each hour-cell stretches to fill its row.
+   Falls back to intrinsic sizing when the parent height is auto. */
+.jtf-heatstream--compact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .jtf-heatstream--compact .jtf-heatstream__header {
   display: none;
 }
@@ -145,24 +154,61 @@
 
 .jtf-heatstream--compact .jtf-heatstream__rows {
   gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.jtf-heatstream--compact .jtf-heatstream__row {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
 }
 
 .jtf-heatstream--compact .jtf-heatstream__cells {
   gap: 0;
-  flex: none;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
 }
 
 .jtf-heatstream--compact .jtf-heatstream__cell {
   flex: none;
   width: 3px;
-  height: 2px;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
   border-radius: 0;
 }
 
-/* Hover preview — hidden by default, shown on parent :hover */
+/* Auto-fill compact (maxItems set): every cell uses one shared width derived
+   from the fullest stream (--jtf-hs-max-count = M items). We size for M+1 equal
+   slots (M gaps) across the column but only render M marks, so the fullest row
+   leaves one empty cell + gap of breathing room before the next column. Shorter
+   streams left-align and stay narrower. Marks are uniform across the whole set. */
+.jtf-heatstream--compact.jtf-heatstream--fill .jtf-heatstream__cells {
+  gap: 1px;
+  overflow: hidden; /* guard against sub-pixel rounding spill */
+}
+
+.jtf-heatstream--compact.jtf-heatstream--fill .jtf-heatstream__cell {
+  width: calc(
+    (100% - var(--jtf-hs-max-count, 1) * 1px) / (var(--jtf-hs-max-count, 1) + 1)
+  );
+}
+
+/* Hover preview — hidden by default, shown on parent :hover.
+   Sized to ~1/4 of the viewport so the marks scale up for detail; the 7 status
+   rows split the height evenly and cells fill the width. Keep the 0.25 factors
+   in sync with updatePosition() in HeatStream.tsx (used for edge-flipping). */
 .jtf-heatstream__preview {
   display: none;
-  padding: 8px;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 25vw;
+  min-width: 280px;
+  height: 25vh;
+  min-height: 200px;
+  padding: 12px;
   background: var(--sui-bg-elevated);
   border: 1px solid var(--sui-border);
   border-radius: 4px;
@@ -171,34 +217,44 @@
   z-index: 10000;
 }
 
-.jtf-heatstream--compact:hover > .jtf-heatstream__preview {
-  display: block;
+/* Shown by JS after a 700ms hover-intent debounce (see HeatStream.tsx). The
+   debounce arms only while an actual mark is under the pointer, so this also
+   enforces "marks only" — not the empty space to the right of a sparse row. */
+.jtf-heatstream--compact.jtf-heatstream--preview-open > .jtf-heatstream__preview {
+  display: flex;
 }
 
 .jtf-heatstream__preview-heading {
-  font-size: 10px;
+  flex: none;
+  font-size: 12px;
   font-weight: 600;
   color: var(--sui-text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .jtf-heatstream__preview-rows {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Preview inner elements — avoid compact overrides entirely */
 .jtf-heatstream__preview-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 .jtf-heatstream__preview-label {
-  width: 48px;
+  display: flex;
+  align-items: center;
+  width: 56px;
   flex-shrink: 0;
-  padding-right: 6px;
-  font-size: 10px;
+  padding-right: 8px;
+  font-size: 11px;
   line-height: 1;
   color: var(--sui-text-secondary);
   white-space: nowrap;
@@ -211,11 +267,12 @@
   gap: 1px;
   flex: 1;
   min-width: 0;
+  align-items: stretch;
 }
 
 .jtf-heatstream__preview-cells .jtf-heatstream__cell {
-  flex: none;
-  width: 3px;
-  height: 14px;
-  border-radius: 2px;
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  border-radius: 1px;
 }
