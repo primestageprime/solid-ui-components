@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.52.0
+
+### Changed — BREAKING (API surface)
+
+- **The package now exports only curried components.** Base components that carried visual/static configuration props (`variant` / `size` / `tone` / `glow` / `align` / `corners` / etc.) are no longer exported from the package root. Consumers must use the curried named variants or the `createX(...)` factories; the bare base components are now internal. This enforces the library directive that an exported component exposes only props knowable at runtime or configured by a specific client — every visual decision is baked at variant-definition time.
+  - Affected components: `Button`, `StatusBadge`, `Panel`, `Surface`, `Text`, `StatusLight`, `ThreadGroup`, `MessageBubble`, `ParticipantAvatar`, `Section`, `List`, Layout's `Stack` / `Row` / `Box` / `AppHeader`, `ActionRow`, `AssigneeChips`, `Divider`, `ProgressCheck`, `ButtonGroup`, `Tabs`, `TruthIndicator`, `OverflowNav`, Feedback's `AlertBox` / `EmptyState`, Modal's `Modal` / `ConfirmationModal`, and `Toast`.
+  - Each now exposes `createX(defaults)` + curried named variants + an `XDataProps` type. The base component value and the full `XProps` type are no longer part of the public surface.
+  - Components with no design-config props (e.g. `CountChip`, `AppShell`, `AppMain`, `Page`, `Tooltip`, `ListItem`, `InlineChartErrorOverlay`) are unaffected and remain exported directly.
+  - **Migration:** swap the configured base for the matching variant — `<Button variant="primary">` → `<PrimaryButton>`, `<StatusBadge variant="compliant">` → `<CompliantBadge>`, `<Stack>` → `<TightStack>` / `<ContentStack>` / etc., `<Modal size="lg">` → `<LargeModal>`. For combinations without a named variant, curry your own once with `createX({...})` and reuse it. `Toast` consumers keep using `showToast(...)` / `<ToastRegion>` (unchanged).
+  - The legacy `HUD*` aliases that resolved to bases now resolve to the curried variants where one exists; `HUDSection`, `HUDPanel`, and `HUDList` still re-export base components and remain deprecated pending removal.
+
 ## 0.51.0
 
 ### Added
