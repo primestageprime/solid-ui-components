@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.51.0
+
+### Added
+
+- **DateAxis drag-to-pan** — mouse/pen click-and-drag horizontally on the date ribbon now pans the visible window (changes `scrollLeft`) in addition to the existing scrollbar / wheel / programmatic-recentre paths. A 4-px movement threshold defers pointer capture, so a click without movement still resolves to the per-cell `onClick` (tap-to-select) — no regression for keyboard or touch flows. Touch is left to native horizontal scroll (`pointerType === "touch"` early-return) so phones / tablets keep pan-x. Cursor flips to `grab` to advertise the affordance.
+- **DateAxis sticky month/year labels** — two small pills (`MAY 2026` / `JUN 2026`-style, theming via `--sui-bg-elevated` + `--sui-text-secondary`) overlay the left and right edges of the visible ribbon and update reactively as the viewport scrolls. The right label is hidden when it would match the left (single-month viewport), reducing visual clutter. Implemented by wrapping the scroll container in a new `.sui-date-axis-wrapper` positioned ancestor; the labels sit `position: absolute` outside the scroll context with `pointer-events: none` so they never block scrub/pan gestures on the cells below.
+
+### Changed — BREAKING (behavioural)
+
+- **`ScrubChart` chart-frame drag now pans the inner DateAxis** instead of changing the selection. Dragging anywhere on the line-chart area pulls the window-band overlay around the chart (and the cells under the axis along with it), at a rate where one cell of motion on the graph maps to one cell of motion on the axis (`axisScrollLeft += dx * (cellWidth / dayPitch)`). To change the selected day, click (or tap) a cell on the DateAxis — the existing auto-recentre then slides the axis so the selected cell sits at the centre of the viewport (and the window-band on the chart follows). The `onScrub` prop is unchanged in shape and is still fired by axis cell clicks; only the trigger source has changed (drag no longer fires it). Consumers that relied on chart-drag-to-scrub will see no `onScrub` calls during graph drags after upgrading — wire to axis clicks instead. The overlay cursor flips from `ew-resize` to `grab` / `grabbing` to advertise the new gesture.
+
 ## 0.48.0
 
 ### Added
