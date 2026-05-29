@@ -14,7 +14,10 @@ import {
   Component,
   For,
   type JSX,
+  Show,
   createEffect,
+  createMemo,
+  createSignal,
   mergeProps,
   onCleanup,
   onMount,
@@ -75,6 +78,14 @@ const cellContainsTime = (cell: Cell, t: Date): boolean =>
 /** Threshold in ms within which a user-initiated scroll suppresses programmatic scroll. */
 const USER_SCROLL_GRACE_MS = 250;
 
+/** Pretty "Mon YYYY" formatter, UTC-anchored to match the cell start dates. */
+const formatMonthYear = (d: Date): string =>
+  d.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
 export const DateAxis = <C extends Cell = Cell>(
   props: DateAxisProps<C>,
 ): JSX.Element => {
@@ -84,6 +95,48 @@ export const DateAxis = <C extends Cell = Cell>(
   // Tracks the timestamp of the most recent user-initiated scroll so we can
   // suppress programmatic scroll-into-view when the user is actively panning.
   let lastUserScrollAt = 0;
+
+  // ── Visible-window tracking → sticky month/year labels ─────────────────
+  // The two corner labels show the month + year of the leftmost and
+  // rightmost cells currently in the scroll viewport so the user always
+  // knows which months they're looking at without having to scroll up to
+  // find a month-marker cell.
+  const [scrollLeft, setScrollLeft] = createSignal(0);
+  const [viewportWidth, setViewportWidth] = createSignal(0);
+
+  const leftVisibleIdx = createMemo(() => {
+    const w = cellW();
+    if (w <= 0 || props.cells.length === 0) return 0;
+    return Math.max(
+      0,
+      Math.min(props.cells.length - 1, Math.floor(scrollLeft() / w)),
+    );
+  });
+  const rightVisibleIdx = createMemo(() => {
+    const w = cellW();
+    const vw = viewportWidth();
+    if (w <= 0 || vw === 0 || props.cells.length === 0) return leftVisibleIdx();
+    return Math.max(
+      0,
+      Math.min(
+        props.cells.length - 1,
+        Math.floor((scrollLeft() + vw - 1) / w),
+      ),
+    );
+  });
+  const leftMonthLabel = createMemo(() =>
+    props.cells.length > 0
+      ? formatMonthYear(props.cells[leftVisibleIdx()].start)
+      : "",
+  );
+  const rightMonthLabel = createMemo(() =>
+    props.cells.length > 0
+      ? formatMonthYear(props.cells[rightVisibleIdx()].start)
+      : "",
+  );
+  // Show the right label only when it differs from the left — otherwise the
+  // single "May 2026" on the left already tells the whole story.
+  const showRightLabel = () => rightMonthLabel() !== leftMonthLabel();
 
   onMount(() => {
     if (scrollEl) props.scrollableRef?.(scrollEl);
@@ -108,10 +161,76 @@ export const DateAxis = <C extends Cell = Cell>(
   });
 
   const onScrollListener = () => {
+    if (scrollEl) setScrollLeft(scrollEl.scrollLeft);
     lastUserScrollAt = Date.now();
   };
 
+  // ── Drag-to-pan (mouse / pen) ─────────────────────────────────────────
+  // Mouse/pen click-and-drag horizontally on the ribbon pans the visible
+  // window — it's a grab-and-slide gesture on the cells themselves, not
+  // just on the scrollbar. Capture only kicks in once movement exceeds a
+  // small threshold so taps on cells still resolve to the per-cell click
+  // handler (no capture set = click target stays on the cell).
+  //
+  // Touch is left to native horizontal scroll so phone / tablet users
+  // don't lose pan-to-scroll. Tap-to-select still works on touch via the
+  // per-cell onClick below.
+  const PAN_THRESHOLD_PX = 4;
+  let panState:
+    | { startClientX: number; startScrollLeft: number; pointerId: number; active: boolean }
+    | null = null;
+
+  const handleAxisPointerDown = (e: PointerEvent) => {
+    if (!scrollEl || e.pointerType === "touch" || e.button !== 0) return;
+    panState = {
+      startClientX: e.clientX,
+      startScrollLeft: scrollEl.scrollLeft,
+      pointerId: e.pointerId,
+      active: false,
+    };
+  };
+  const handleAxisPointerMove = (e: PointerEvent) => {
+    if (!panState || !scrollEl) return;
+    const dx = e.clientX - panState.startClientX;
+    if (!panState.active) {
+      if (Math.abs(dx) < PAN_THRESHOLD_PX) return;
+      panState.active = true;
+      scrollEl.setPointerCapture?.(panState.pointerId);
+    }
+    scrollEl.scrollLeft = panState.startScrollLeft - dx;
+    lastUserScrollAt = Date.now();
+  };
+  const handleAxisPointerUp = (e: PointerEvent) => {
+    if (!panState) return;
+    if (panState.active) {
+      try {
+        scrollEl?.releasePointerCapture?.(panState.pointerId);
+      } catch {
+        /* not captured */
+      }
+    }
+    panState = null;
+    // Mark the gesture as a user scroll so any pending programmatic
+    // recentre-on-selected stays out of the way for the grace window.
+    if (e.type !== "pointercancel") lastUserScrollAt = Date.now();
+  };
+
   return (
+    <div class="sui-date-axis-wrapper">
+      <div
+        class="sui-date-axis__sticky-month sui-date-axis__sticky-month--left"
+        aria-hidden="true"
+      >
+        {leftMonthLabel()}
+      </div>
+      <Show when={showRightLabel()}>
+        <div
+          class="sui-date-axis__sticky-month sui-date-axis__sticky-month--right"
+          aria-hidden="true"
+        >
+          {rightMonthLabel()}
+        </div>
+      </Show>
     <div
       class="sui-date-axis"
       style={{ "--sui-date-axis-cell-width": `${cellW()}px` }}
@@ -119,8 +238,25 @@ export const DateAxis = <C extends Cell = Cell>(
       aria-label="Date axis"
       ref={(el) => {
         scrollEl = el;
+        setScrollLeft(el.scrollLeft);
+        setViewportWidth(el.clientWidth);
         el.addEventListener("scroll", onScrollListener, { passive: true });
-        onCleanup(() => el.removeEventListener("scroll", onScrollListener));
+        el.addEventListener("pointerdown", handleAxisPointerDown);
+        el.addEventListener("pointermove", handleAxisPointerMove);
+        el.addEventListener("pointerup", handleAxisPointerUp);
+        el.addEventListener("pointercancel", handleAxisPointerUp);
+        if (typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(() => setViewportWidth(el.clientWidth));
+          ro.observe(el);
+          onCleanup(() => ro.disconnect());
+        }
+        onCleanup(() => {
+          el.removeEventListener("scroll", onScrollListener);
+          el.removeEventListener("pointerdown", handleAxisPointerDown);
+          el.removeEventListener("pointermove", handleAxisPointerMove);
+          el.removeEventListener("pointerup", handleAxisPointerUp);
+          el.removeEventListener("pointercancel", handleAxisPointerUp);
+        });
       }}
     >
       <div class="sui-date-axis__track">
@@ -169,6 +305,7 @@ export const DateAxis = <C extends Cell = Cell>(
           }}
         </For>
       </div>
+    </div>
     </div>
   );
 };

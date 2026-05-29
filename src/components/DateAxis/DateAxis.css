@@ -5,12 +5,59 @@
 
 /* Scroll container — fixed height, hides overflow horizontally. The inner
    track is flex so cells tile in a single row regardless of range length. */
+/* Wrapper — gives the sticky month/year labels a positioned ancestor that
+   does NOT scroll with the cells. The actual scroll container is the inner
+   `.sui-date-axis`. */
+.sui-date-axis-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Sticky month/year labels — pin to the left + right edges of the visible
+   ribbon while cells scroll behind them. Content is reactive to the
+   currently-visible cell range; pointer-events disabled so they never
+   block scrub/pan gestures on the cells below. */
+.sui-date-axis__sticky-month {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
+  padding: 3px 6px;
+  font-size: 9px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
+  background: color-mix(
+    in srgb,
+    var(--sui-bg-elevated, rgba(0, 0, 0, 0.7)) 78%,
+    transparent
+  );
+  border-radius: 2px;
+  font-family: var(--sui-font-family, inherit);
+  white-space: nowrap;
+}
+
+.sui-date-axis__sticky-month--left {
+  left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.sui-date-axis__sticky-month--right {
+  right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .sui-date-axis {
   --sui-date-axis-cell-width: 40px;
 
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
+  cursor: grab;
   /* No fixed height: the axis grows to the tallest cell. A custom `renderDay`
      element determines its own cell height, and the axis respects it. */
   /* Reserve a strip below the cells for the horizontal scrollbar so the bar
