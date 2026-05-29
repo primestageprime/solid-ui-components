@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.tsx
 import {
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -169,30 +170,161 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
     return props.lanePadding * 2 + parentRowH + reservedChildRowH;
   };
 
+  // Vertical status band for a lane: DOING (0, top) → TODO/mixed (1, middle)
+  // → DONE (2, bottom). A lane is DOING if any of its work items is in the
+  // center status; DONE only when every item is terminal; otherwise middle.
+  // For a parented lane the "work items" are the children; otherwise the
+  // lane's own nodes (so a childless/default lane sorts by its own status).
+  const laneBandRank = (laneNodes: StatusFlowNode[], hasParent: boolean) => {
+    const work = hasParent ? laneNodes.slice(1) : laneNodes;
+    const pool = work.length > 0 ? work : laneNodes;
+    if (pool.some((n) => n.status === props.centerStatus)) return 0; // DOING → top
+    if (pool.length > 0 && pool.every((n) => n.status === props.terminalStatus))
+      return 2; // DONE → bottom
+    return 1; // TODO / mixed-not-done → middle
+  };
+
+  // Per-lane recency tracking. `laneActivity` maps lane id → a monotonically
+  // increasing sequence stamped whenever ANY node in the lane changes status
+  // between frames (an item starts, finishes, etc.). Within a band, lanes
+  // sort by this DESCENDING — the most recently worked-on lane floats to the
+  // top of its band, and lanes that just moved into DONE sit at the top of
+  // the DONE band. Idempotent across re-runs: once prevStatusByNode is
+  // updated to the current frame, a re-run sees no change and won't re-stamp.
+  let activitySeq = 0;
+  const laneActivity = new Map<string, number>();
+  let prevStatusByNode = new Map<string, string>();
+
+  const recordActivity = (groups: ReturnType<typeof groupIntoLanes>) => {
+    const next = new Map<string, string>();
+    for (const g of groups) {
+      let changed = false;
+      for (const n of g.nodes) {
+        next.set(n.id, n.status);
+        const prev = prevStatusByNode.get(n.id);
+        if (prev !== undefined && prev !== n.status) changed = true;
+      }
+      // First frame: no prev → nothing "changed" → lane stays at 0, so the
+      // initial within-band order falls back to input order.
+      if (changed) laneActivity.set(g.id, ++activitySeq);
+      else if (!laneActivity.has(g.id)) laneActivity.set(g.id, 0);
+    }
+    prevStatusByNode = next;
+  };
+
+  // Hold-before-resort. `displayedBand` is the band a lane is *positioned* in
+  // right now, which can lag its real band. Moving UP (toward DOING) applies
+  // immediately — work becoming active should re-sort promptly. Moving DOWN
+  // (toward DONE on completion) is held for `reorderHoldMs` so the finishing
+  // item can be appreciated in place before it slides away. `displayBump` is
+  // a reactive nudge so lanesWithY recomputes when a hold timer fires.
+  const displayedBand = new Map<string, number>();
+  const holdTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  const [displayBump, setDisplayBump] = createSignal(0);
+
+  const clearHold = (id: string) => {
+    const t = holdTimers.get(id);
+    if (t !== undefined) {
+      clearTimeout(t);
+      holdTimers.delete(id);
+    }
+  };
+
+  createEffect(() => {
+    const groups = lanes();
+    const holdMs = timing().reorderHoldMs ?? 10000;
+    for (const g of groups) {
+      const actual = laneBandRank(g.nodes, !!g.parentId);
+      const shown = displayedBand.get(g.id);
+      if (shown === undefined) {
+        displayedBand.set(g.id, actual); // first sight — no slide
+        continue;
+      }
+      if (actual === shown) {
+        clearHold(g.id); // settled
+        continue;
+      }
+      if (actual < shown) {
+        // Moving up (more active) — promptly.
+        clearHold(g.id);
+        displayedBand.set(g.id, actual);
+        setDisplayBump((v) => v + 1);
+        continue;
+      }
+      // Moving down (completing/deprioritizing) — hold, then re-sort.
+      if (!holdTimers.has(g.id)) {
+        const handle = setTimeout(() => {
+          holdTimers.delete(g.id);
+          const grp = lanes().find((x) => x.id === g.id);
+          if (!grp) return;
+          displayedBand.set(g.id, laneBandRank(grp.nodes, !!grp.parentId));
+          setDisplayBump((v) => v + 1);
+        }, holdMs);
+        holdTimers.set(g.id, handle);
+      }
+    }
+  });
+
+  onCleanup(() => {
+    for (const t of holdTimers.values()) clearTimeout(t);
+    holdTimers.clear();
+  });
+
   const lanesWithY = createMemo(() => {
-    let runningY = 0;
-    const out: Array<{
-      group: ReturnType<typeof groupIntoLanes>[number];
-      laneY: number;
-      spec: import("./SwimlaneAnimatedLane").SwimlaneAnimatedLaneSpec;
-    }> = [];
-    for (const g of lanes()) {
+    displayBump(); // recompute when a hold timer releases a lane
+    const groups = lanes();
+    recordActivity(groups);
+
+    // Measure + classify every lane in INPUT order. We keep this order for
+    // the emitted `items` so the <Index> below (keyed by position) never
+    // re-mounts a lane — only each lane's `laneY` changes, and the lane
+    // slides to it. The vertical band ORDER lives entirely in laneY.
+    const measured = groups.map((g, inputIndex) => {
       const hasParent = !!g.parentId;
-      const laneY = runningY;
-      const parentNode = hasParent ? g.nodes[0] : undefined;
-      const children = hasParent ? g.nodes.slice(1) : g.nodes;
-      out.push({
+      // Use the displayed (possibly held) band for positioning, falling back
+      // to the live band before the effect has seen this lane.
+      const band = displayedBand.get(g.id) ?? laneBandRank(g.nodes, hasParent);
+      return {
         group: g,
-        laneY,
+        inputIndex,
+        hasParent,
+        height: laneHeightFor(g.nodes, hasParent),
+        band,
+      };
+    });
+
+    // Sorted order: by band; within a band, most recently active first
+    // (recency descending), with input order as the final stable tiebreak.
+    const sorted = [...measured].sort(
+      (a, b) =>
+        a.band - b.band ||
+        (laneActivity.get(b.group.id) ?? 0) - (laneActivity.get(a.group.id) ?? 0) ||
+        a.inputIndex - b.inputIndex,
+    );
+
+    // Walk the sorted order to assign each lane its vertical offset.
+    const yById = new Map<string, number>();
+    let runningY = 0;
+    for (const m of sorted) {
+      yById.set(m.group.id, runningY);
+      runningY += m.height + props.laneGap;
+    }
+
+    // Emit in input order with the sorted laneY.
+    const out = measured.map((m) => {
+      const parentNode = m.hasParent ? m.group.nodes[0] : undefined;
+      const children = m.hasParent ? m.group.nodes.slice(1) : m.group.nodes;
+      return {
+        group: m.group,
+        laneY: yById.get(m.group.id)!,
         spec: {
-          id: g.id,
+          id: m.group.id,
           parentTitle: parentNode?.title,
           parentSubtitle: parentNode?.subtitle,
           children,
-        },
-      });
-      runningY += laneHeightFor(g.nodes, hasParent) + props.laneGap;
-    }
+        } as import("./SwimlaneAnimatedLane").SwimlaneAnimatedLaneSpec,
+      };
+    });
     return { items: out, totalH: runningY };
   });
 

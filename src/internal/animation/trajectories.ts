@@ -82,6 +82,20 @@ export interface LaneTimingConfig {
    * successive `d` values. Defaults to 0 (legacy snap behaviour).
    */
   arrowPathMs?: number;
+  /**
+   * CSS `transition: transform` duration (ms) for a whole lane sliding to a
+   * new vertical position when lanes are re-sorted by status band (DOING
+   * top → TODO → DONE bottom). NOT used by the trajectory math — purely a
+   * render-layer hint on the lane `<g>`. Defaults to 420.
+   */
+  laneSlideMs?: number;
+  /**
+   * How long (ms) a lane holds its current vertical position before sliding
+   * DOWN to a less-active band (e.g. into DONE on completion), so a finishing
+   * item can be appreciated in place before it re-sorts away. Moves UP (work
+   * becoming active) are not held — they re-sort promptly. Defaults to 10000.
+   */
+  reorderHoldMs?: number;
 }
 
 /**
@@ -95,6 +109,8 @@ export const DEFAULT_TIMING: LaneTimingConfig = {
   moveMs: 450,
   arrowSettleMs: 0,
   arrowPathMs: 0,
+  laneSlideMs: 420,
+  reorderHoldMs: 10000,
 };
 
 /** Resolved phase boundaries derived from a `LaneTimingConfig`. */

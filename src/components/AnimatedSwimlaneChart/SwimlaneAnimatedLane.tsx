@@ -86,10 +86,15 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   const laneHeight = () =>
     props.lanePadding * 2 + parentRowH() + reservedChildRowH();
 
+  // Internal coordinates are lane-relative (origin at the lane's own top).
+  // The lane's absolute vertical position comes from a CSS-transitioned
+  // group transform (translateY(props.laneY)) below, so the whole lane
+  // *slides* when it's re-sorted into a new status band — without rebuilding
+  // the card trajectory (which is laneY-independent).
   const parentRowCenterY = () =>
-    props.laneY + props.lanePadding + props.cardHeight / 2;
+    props.lanePadding + props.cardHeight / 2;
   const childRowCenterY = () =>
-    props.laneY + props.lanePadding + parentRowH() + reservedChildRowH() / 2;
+    props.lanePadding + parentRowH() + reservedChildRowH() / 2;
   const colTopY = () => childRowCenterY() - reservedChildRowH() / 2;
   const colBottomY = () => childRowCenterY() + reservedChildRowH() / 2;
   const lozMidY = () => childRowCenterY();
@@ -208,7 +213,12 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   const markerId = `asc-arrow-${props.spec.id}`;
 
   return (
-    <g>
+    <g
+      style={{
+        transform: `translateY(${props.laneY}px)`,
+        transition: `transform ${props.timing.laneSlideMs ?? 420}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+      }}
+    >
       <defs>
         <marker
           id={markerId}
@@ -224,7 +234,7 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
       </defs>
       <rect
         x={props.lanePadding / 2}
-        y={props.laneY}
+        y={0}
         width={props.stageWidth - props.lanePadding}
         height={laneHeight()}
         rx={8}
