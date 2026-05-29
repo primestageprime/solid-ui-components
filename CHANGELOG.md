@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.56.0
+
+### Added
+
+- **`SwimlaneChart` now sorts swimlanes into vertical status bands** — DOING (top) → TODO/mixed (middle) → DONE (bottom). Within a band, lanes order by recency of activity, so actively-worked and just-completed lanes float to the top. Lanes slide between bands via a CSS-transitioned transform.
+- **Completion hold** — a lane moving down (e.g. into DONE) holds its position for `reorderHoldMs` (default 10000ms) so a finishing item can be appreciated before it re-sorts; upward moves are prompt.
+- New optional timing knobs on `SwimlaneChart`/`createSwimlaneChart`: `laneSlideMs` (lane slide duration, default 420), `reorderHoldMs` (default 10000), `laneResizeSettleMs` (resize debounce, default 3000).
+
+### Changed
+
+- **Lanes shrinkwrap to their visible cards.** A lane is only as tall as its tallest currently-visible column instead of reserving a fixed multi-row block, and children top-align under the parent at 1rem spacing. Lanes grow immediately when a card appears but debounce shrinks (reset by any node movement) so cards finish moving before the lane tightens; lozenge-targeted arrows re-anchor as the lane resizes.
+
 ## 0.55.0
 
 ### Added
