@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.55.0
+
+### Added
+
+- **`SwimlaneChart` node cards now render `claimedBy`, `estimate`, and `actual`.** `StatusFlowNode` gained three optional fields: `claimedBy` (top-left of the card, status moves to the top-right), `estimate` (bottom-left), and `actual` (bottom-right, accent-colored). The default card layout is now `claimedBy ┄ status` on top, the title filling the middle (clamped to 3 lines, full text in the hover popover), and `estimate ┄ actual` pinned to the bottom. All three are optional and their lines are omitted when absent.
+
+### Changed — BREAKING
+
+- **`SwimlaneChart` / `AnimatedSwimlaneChart` are now curried (data-only).** The default-named exports no longer accept visual/layout overrides (`nodeSize`, `columns`, `centerStatus`, `terminalStatus`, `timing`, `routingStyle`, `breakpoints`, `renderNode`, `renderPopover`, gaps) at the call site — only `nodes` and `onNodeClick`. This brings the chart in line with the curried-only export convention (0.52.0).
+  - Migrate call-site overrides into a curry: `<SwimlaneChart nodeSize={…} renderNode={…} nodes={…} />` → `const Chart = createSwimlaneChart({ nodeSize, renderNode }); <Chart nodes={…} />`.
+- **Removed the `SwimlaneChartProps` / `SwimlaneChartOverrides` / `AnimatedSwimlaneChartProps` / `AnimatedSwimlaneChartOverrides` type exports.** Use `SwimlaneChartDataProps` (alias of `AnimatedSwimlaneChartDataProps`) for the data-prop type. The base component is no longer exported. See the "AnimatedSwimlaneChart (public `SwimlaneChart`)" entry in `COMPONENTS.md`.
+
 ## 0.54.0
 
 ### Removed — BREAKING

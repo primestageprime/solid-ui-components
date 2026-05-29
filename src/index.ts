@@ -78,8 +78,6 @@ export {
   createAnimatedSwimlaneChart as createSwimlaneChart,
 } from "./components/AnimatedSwimlaneChart";
 export type {
-  AnimatedSwimlaneChartProps as SwimlaneChartProps,
-  AnimatedSwimlaneChartOverrides as SwimlaneChartOverrides,
   AnimatedSwimlaneChartDataProps as SwimlaneChartDataProps,
 } from "./components/AnimatedSwimlaneChart";
 // Static variant under a distinct public name so the surface doesn't
@@ -107,16 +105,13 @@ export type {
   ConvertedResult,
 } from "./components/SwimlaneChart";
 // Animated variant also exported under its original name for callers
-// that prefer to be explicit.
+// that prefer to be explicit. Curried (data-only); bake overrides with
+// createAnimatedSwimlaneChart.
 export {
   AnimatedSwimlaneChart,
   createAnimatedSwimlaneChart,
 } from "./components/AnimatedSwimlaneChart";
-export type {
-  AnimatedSwimlaneChartProps,
-  AnimatedSwimlaneChartOverrides,
-  AnimatedSwimlaneChartDataProps,
-} from "./components/AnimatedSwimlaneChart";
+export type { AnimatedSwimlaneChartDataProps } from "./components/AnimatedSwimlaneChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";

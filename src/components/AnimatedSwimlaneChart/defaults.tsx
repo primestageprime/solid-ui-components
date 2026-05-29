@@ -75,9 +75,26 @@ export const defaultRenderNode = (
     data-status={ctx.effectiveStatus}
     data-parent={ctx.isParent ? "" : undefined}
   >
-    <div class="sui-asc__card-status">{ctx.effectiveStatus}</div>
+    <div class="sui-asc__card-header">
+      <span class="sui-asc__card-claimed">{node.claimedBy}</span>
+      <span class="sui-asc__card-status">{ctx.effectiveStatus}</span>
+    </div>
     <div class="sui-asc__card-title">{node.title}</div>
-    {node.subtitle && <div class="sui-asc__card-subtitle">{node.subtitle}</div>}
+    {(node.subtitle != null ||
+      node.estimate != null ||
+      node.actual != null) && (
+      <div class="sui-asc__card-footer">
+        {node.subtitle && (
+          <div class="sui-asc__card-subtitle">{node.subtitle}</div>
+        )}
+        {(node.estimate != null || node.actual != null) && (
+          <div class="sui-asc__card-meta">
+            <span class="sui-asc__card-estimate">{node.estimate}</span>
+            <span class="sui-asc__card-actual">{node.actual}</span>
+          </div>
+        )}
+      </div>
+    )}
   </div>
 );
 

@@ -33,7 +33,9 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* Status pinned to the top, subtitle pinned to the bottom; the title
+     fills the gap between them (see .sui-asc__card-title flex). */
+  justify-content: flex-start;
   padding: 8px 12px;
   border-radius: 6px;
   background: var(--sui-surface, rgba(0, 0, 0, 0.2));
@@ -49,13 +51,31 @@
 .sui-asc__card[data-parent] {
   background: rgba(0, 0, 0, 0.35);
 }
-.sui-asc__card-status {
+/* Top line: claimedBy pinned left, status pinned right. */
+.sui-asc__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
   font-size: 10px;
   font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.sui-asc__card-claimed {
+  color: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sui-asc__card-status {
   color: var(--sui-accent, #00d4ff);
-  margin-bottom: 4px;
+  white-space: nowrap;
 }
 .sui-asc__card-title {
+  /* Top-aligned, clamped to 3 lines. The box height is exactly 3 lines so
+     the -webkit-box clamp engages and adds an ellipsis on overflow — do NOT
+     flex-grow this, or the box gets tall enough to fit every line and the
+     clamp never triggers. The footer's margin-top:auto fills the gap. */
   font-size: 12px;
   color: var(--sui-text, #e6ecf5);
   line-height: 1.3;
@@ -65,10 +85,31 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+/* Subtitle + estimate/actual, pinned to the bottom of the card. */
+.sui-asc__card-footer {
+  margin-top: auto;
+}
 .sui-asc__card-subtitle {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.55);
   margin-top: 2px;
+}
+/* Bottom line: estimate pinned left, actual pinned right. */
+.sui-asc__card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.sui-asc__card-estimate {
+  color: rgba(255, 255, 255, 0.55);
+}
+.sui-asc__card-actual {
+  color: var(--sui-accent, #00d4ff);
+  text-align: right;
 }
 
 .sui-asc__popover-host {

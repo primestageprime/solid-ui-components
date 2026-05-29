@@ -79,7 +79,12 @@ export type AnimatedSwimlaneChartDataProps = Omit<
   AnimatedSwimlaneChartOverrides
 >;
 
-export const AnimatedSwimlaneChart: Component<AnimatedSwimlaneChartProps> = (
+// Internal base: accepts the full prop surface (data + every override). This
+// is exported for white-box tests/internal currying only — it is intentionally
+// NOT re-exported by index.ts, so it never reaches the package surface.
+// Consumers use the curried `AnimatedSwimlaneChart` (data-only) or
+// `createAnimatedSwimlaneChart(defaults)` to bake overrides.
+export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = (
   rawProps,
 ) => {
   const props = mergeProps(
@@ -237,12 +242,10 @@ export function createAnimatedSwimlaneChart(
   >,
 ): Component<AnimatedSwimlaneChartDataProps> {
   return (props) => (
-    <AnimatedSwimlaneChart
+    <AnimatedSwimlaneChartBase
       {...(mergeProps(defaults, props) as AnimatedSwimlaneChartProps)}
     />
   );
 }
 
-// Re-export for back-compat: AnimatedSwimlaneChart is also exported as
-// SwimlaneChart from src/index.ts.
 export { phasesFor };

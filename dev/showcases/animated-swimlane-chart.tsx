@@ -28,39 +28,42 @@ const ProjectFlow = createAnimatedSwimlaneChart({});
 //   Lane D (admin)        — flat list of independent tasks, no edges.
 //                           Shows parallel slurp morphs without arrow
 //                           noise.
+// Every node carries the full card payload — claimedBy (top-left) /
+// status (top-right), title, subtitle, and estimate (bottom-left) /
+// actual (bottom-right) — so the chart exercises the complete node layout.
 const INITIAL: StatusFlowNode[] = [
   // Lane A — deck build
-  { id: "deckP", title: "Build the deck", status: "TODO" },
-  { id: "deckSaw", title: "Saw planks to length", status: "TODO", parentId: "deckP" },
-  { id: "deckDrill", title: "Drill pilot holes", status: "TODO", parentId: "deckP", dependsOn: ["deckSaw"] },
-  { id: "deckScrew", title: "Screw planks down", status: "TODO", parentId: "deckP", dependsOn: ["deckDrill"] },
-  { id: "deckSand", title: "Sand the surface", status: "TODO", parentId: "deckP", dependsOn: ["deckScrew"] },
-  { id: "deckStain", title: "Stain the deck", status: "TODO", parentId: "deckP", dependsOn: ["deckSand"] },
+  { id: "deckP", title: "Build the deck", subtitle: "back yard, pressure-treated", status: "TODO", claimedBy: "Dana", estimate: "5d", actual: "6d" },
+  { id: "deckSaw", title: "Saw planks to length", subtitle: "32 boards", status: "TODO", parentId: "deckP", claimedBy: "Miguel", estimate: "4h", actual: "5h" },
+  { id: "deckDrill", title: "Drill pilot holes", subtitle: "avoid splitting", status: "TODO", parentId: "deckP", dependsOn: ["deckSaw"], claimedBy: "Priya", estimate: "2h", actual: "2h" },
+  { id: "deckScrew", title: "Screw planks down", subtitle: "stainless deck screws", status: "TODO", parentId: "deckP", dependsOn: ["deckDrill"], claimedBy: "Sam", estimate: "6h", actual: "7h" },
+  { id: "deckSand", title: "Sand the surface", subtitle: "80 then 120 grit", status: "TODO", parentId: "deckP", dependsOn: ["deckScrew"], claimedBy: "Lee", estimate: "3h", actual: "3h" },
+  { id: "deckStain", title: "Stain the deck", subtitle: "semi-transparent cedar", status: "TODO", parentId: "deckP", dependsOn: ["deckSand"], claimedBy: "Ada", estimate: "1d", actual: "1d" },
 
   // Lane B — roof repair (fan-in: roofNail depends on [roofTarp, roofCut];
   // roofSeal depends on [roofNail, roofInspect])
-  { id: "roofP", title: "Patch the roof", status: "TODO" },
-  { id: "roofClear", title: "Clear the gutters", status: "TODO", parentId: "roofP" },
-  { id: "roofTarp", title: "Lay down the tarp", status: "TODO", parentId: "roofP" },
-  { id: "roofCut", title: "Cut replacement shingles", status: "TODO", parentId: "roofP" },
-  { id: "roofNail", title: "Nail down shingles", status: "TODO", parentId: "roofP", dependsOn: ["roofTarp", "roofCut"] },
-  { id: "roofInspect", title: "Inspector signs off", status: "TODO", parentId: "roofP", dependsOn: ["roofNail"] },
-  { id: "roofSeal", title: "Seal the seams", status: "TODO", parentId: "roofP", dependsOn: ["roofNail", "roofInspect"] },
+  { id: "roofP", title: "Patch the roof", subtitle: "NW corner leak", status: "TODO", claimedBy: "Jo", estimate: "3d", actual: "4d" },
+  { id: "roofClear", title: "Clear the gutters", subtitle: "two stories", status: "TODO", parentId: "roofP", claimedBy: "Kai", estimate: "2h", actual: "3h" },
+  { id: "roofTarp", title: "Lay down the tarp", subtitle: "weather hold", status: "TODO", parentId: "roofP", claimedBy: "Noor", estimate: "1h", actual: "1h" },
+  { id: "roofCut", title: "Cut replacement shingles", subtitle: "match existing", status: "TODO", parentId: "roofP", claimedBy: "Raj", estimate: "3h", actual: "4h" },
+  { id: "roofNail", title: "Nail down shingles", subtitle: "6-nail pattern", status: "TODO", parentId: "roofP", dependsOn: ["roofTarp", "roofCut"], claimedBy: "Tess", estimate: "5h", actual: "6h" },
+  { id: "roofInspect", title: "Inspector signs off", subtitle: "blocked on permit #4471", status: "TODO", parentId: "roofP", dependsOn: ["roofNail"], claimedBy: "Uma", estimate: "1d", actual: "2d" },
+  { id: "roofSeal", title: "Seal the seams", subtitle: "polyurethane", status: "TODO", parentId: "roofP", dependsOn: ["roofNail", "roofInspect"], claimedBy: "Vik", estimate: "2h", actual: "2h" },
 
   // Lane C — garden (long, spills into lozenges)
-  { id: "gardenP", title: "Plant the garden", status: "TODO" },
-  { id: "gardenWeed", title: "Pull the weeds", status: "TODO", parentId: "gardenP" },
-  { id: "gardenTill", title: "Till the soil", status: "TODO", parentId: "gardenP", dependsOn: ["gardenWeed"] },
-  { id: "gardenAmend", title: "Amend with compost", status: "TODO", parentId: "gardenP", dependsOn: ["gardenTill"] },
-  { id: "gardenSeed", title: "Sow the seeds", status: "TODO", parentId: "gardenP", dependsOn: ["gardenAmend"] },
-  { id: "gardenWater", title: "Water everything in", status: "TODO", parentId: "gardenP", dependsOn: ["gardenSeed"] },
+  { id: "gardenP", title: "Plant the garden", subtitle: "raised beds", status: "TODO", claimedBy: "Wen", estimate: "2d", actual: "3d" },
+  { id: "gardenWeed", title: "Pull the weeds", subtitle: "by hand", status: "TODO", parentId: "gardenP", claimedBy: "Xan", estimate: "3h", actual: "4h" },
+  { id: "gardenTill", title: "Till the soil", subtitle: "8in depth", status: "TODO", parentId: "gardenP", dependsOn: ["gardenWeed"], claimedBy: "Yuki", estimate: "2h", actual: "2h" },
+  { id: "gardenAmend", title: "Amend with compost", subtitle: "3 cu yd", status: "TODO", parentId: "gardenP", dependsOn: ["gardenTill"], claimedBy: "Zoe", estimate: "2h", actual: "3h" },
+  { id: "gardenSeed", title: "Sow the seeds", subtitle: "succession plan", status: "TODO", parentId: "gardenP", dependsOn: ["gardenAmend"], claimedBy: "Dana", estimate: "1h", actual: "1h" },
+  { id: "gardenWater", title: "Water everything in", subtitle: "deep soak", status: "TODO", parentId: "gardenP", dependsOn: ["gardenSeed"], claimedBy: "Miguel", estimate: "1h", actual: "1h" },
 
   // Lane D — admin (no edges, parallel slurps)
-  { id: "adminP", title: "Admin chores", status: "TODO" },
-  { id: "adminMail", title: "Open the mail", status: "TODO", parentId: "adminP" },
-  { id: "adminPay", title: "Pay the bills", status: "TODO", parentId: "adminP" },
-  { id: "adminFile", title: "File receipts", status: "TODO", parentId: "adminP" },
-  { id: "adminCall", title: "Return the calls", status: "TODO", parentId: "adminP" },
+  { id: "adminP", title: "Admin chores", subtitle: "end of month", status: "TODO", claimedBy: "Priya", estimate: "1d", actual: "1d" },
+  { id: "adminMail", title: "Open the mail", subtitle: "two weeks' backlog", status: "TODO", parentId: "adminP", claimedBy: "Sam", estimate: "30m", actual: "45m" },
+  { id: "adminPay", title: "Pay the bills", subtitle: "utilities + card", status: "TODO", parentId: "adminP", claimedBy: "Lee", estimate: "1h", actual: "1h" },
+  { id: "adminFile", title: "File receipts", subtitle: "Q2 tax folder", status: "TODO", parentId: "adminP", claimedBy: "Ada", estimate: "2h", actual: "3h" },
+  { id: "adminCall", title: "Return the calls", subtitle: "contractor + bank", status: "TODO", parentId: "adminP", claimedBy: "Jo", estimate: "1h", actual: "1h" },
 ];
 
 // Tick interval ≥ slurp + move + arrow-settle + slurp + buffer so the

@@ -1,7 +1,12 @@
 // src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.test.tsx
 import { describe, it, expect, beforeAll } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { AnimatedSwimlaneChart, createAnimatedSwimlaneChart } from "./AnimatedSwimlaneChart";
+// White-box test of the internal base (full override surface). The public
+// package only exposes the curried `AnimatedSwimlaneChart` + factory.
+import {
+  AnimatedSwimlaneChartBase as AnimatedSwimlaneChart,
+  createAnimatedSwimlaneChart,
+} from "./AnimatedSwimlaneChart";
 import type { StatusFlowNode } from "../StatusFlowChart";
 
 beforeAll(() => {

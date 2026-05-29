@@ -10,6 +10,12 @@ export type StatusFlowNode = {
   title: string;
   subtitle?: string;
   status: string;
+  /** Who claimed the task, shown top-left on the default card (e.g. a name or initials). */
+  claimedBy?: string;
+  /** Pre-formatted estimate, shown bottom-left on the default card (e.g. "3d", "8h"). */
+  estimate?: string;
+  /** Pre-formatted actual, shown bottom-right on the default card (e.g. "4d", "10h"). */
+  actual?: string;
   /** Optional visual grouping — children stack under this parent in their own lane. */
   parentId?: string;
   /** Optional dependency edges (one→many). Purely informational; not used for layout. */
