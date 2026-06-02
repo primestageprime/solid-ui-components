@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.58.1
+
+### Fixed
+
+- **`CashflowScrubChart` deviation band colours were reversed.** A `balanceSeries` `fill` now shades green where the series rises **above** its reference line and red where it dips below (previously the opposite). `positiveClass` / `negativeClass` semantics flip accordingly.
+
 ## 0.58.0
 
 ### Added
