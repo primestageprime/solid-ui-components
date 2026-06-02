@@ -114,6 +114,28 @@
   stroke-width: 1.6;
 }
 
+/* Extra balance lines (the `balanceSeries` prop). Muted default so they read
+   as secondary; consumers override colour / dash via their own series class. */
+.sui-cashflow-scrub-chart__line--series {
+  stroke: var(--sui-text-muted, rgba(255, 255, 255, 0.45));
+  stroke-width: 1.4;
+}
+
+/* Variance band (the `balanceSeries[].fill` option) — diverging shade between
+   a series and its baseline. Green where the series is above the baseline,
+   red where below. Translucent so the lines stay readable on top. */
+.sui-cashflow-scrub-chart__band {
+  stroke: none;
+}
+
+.sui-cashflow-scrub-chart__band--positive {
+  fill: var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18));
+}
+
+.sui-cashflow-scrub-chart__band--negative {
+  fill: var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18));
+}
+
 .sui-cashflow-scrub-chart__selected-rule {
   stroke: var(--sui-warning, #f5a623);
   stroke-dasharray: 3 3;
