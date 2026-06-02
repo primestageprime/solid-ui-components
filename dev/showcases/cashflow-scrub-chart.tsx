@@ -47,6 +47,26 @@ const todayIndex = cells.findIndex(
     PINNED_TODAY.getTime() < c.end.getTime(),
 );
 
+// Forecast accessor: a straight-line projection that branches off today's
+// actual balance and drifts by a fixed amount per day. Returns null before
+// the anchor so the line only renders over the forecast (future) region —
+// which also exercises CashflowScrubChart's null-gap line breaking.
+const forecast =
+  (anchorIdx: number, dailyDriftCents: number) =>
+  (_cell: CashflowCell, i: number): number | null => {
+    if (i < anchorIdx) return null;
+    const base = cells[anchorIdx]?.balanceCents ?? 0;
+    return base + (i - anchorIdx) * dailyDriftCents;
+  };
+
+// A flat "target" balance set to the mean of the actual running balance, so
+// the wiggly actual crosses it repeatedly — green where the actual runs above
+// target (surplus), red where it dips below (shortfall).
+const meanBalanceCents =
+  cells.reduce((sum, c) => sum + c.balanceCents, 0) / Math.max(1, cells.length);
+const targetBalance = (_cell: CashflowCell, _i: number): number =>
+  meanBalanceCents;
+
 const fmtDate = (d: Date): string =>
   d.toLocaleDateString("en-US", {
     weekday: "short",
@@ -68,6 +88,12 @@ export const CashflowScrubChartShowcase: Component = () => {
   const cell = createMemo(() => cells[selectedIdx()]);
   const [longSelectedIdx, setLongSelectedIdx] = createSignal(
     Math.max(0, longTodayIndex),
+  );
+  const [multiSelectedIdx, setMultiSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [bandSelectedIdx, setBandSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
   );
 
   return (
@@ -138,6 +164,196 @@ export const CashflowScrubChartShowcase: Component = () => {
           onScrub={(i) => setLongSelectedIdx(i)}
           today={PINNED_TODAY}
         />
+      </div>
+
+      <div class="example-group">
+        <h3>Multiple balance lines (forecast scenarios)</h3>
+        <p class="text-meta">
+          The same actual running-balance line, plus two projection lines
+          passed via <code>balanceSeries</code>. Each is a{" "}
+          <code>(cell, index) =&gt; number | null</code> accessor; both return{" "}
+          <code>null</code> before <strong>today</strong> so the forecasts
+          only render over the future region (the <code>null</code> gap breaks
+          the line). Styling is consumer-owned — each series carries a CSS{" "}
+          <code>class</code> defined below in a scoped <code>&lt;style&gt;</code>.
+          The y-domain auto-widens to keep the optimistic line in frame.
+        </p>
+
+        {/* Consumer-owned series styling — exactly how a real caller would
+            colour its forecast lines. */}
+        <style>{`
+          .demo-forecast--optimistic {
+            stroke: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+            stroke-width: 1.6;
+            stroke-dasharray: 5 4;
+          }
+          .demo-forecast--pessimistic {
+            stroke: var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+            stroke-width: 1.6;
+            stroke-dasharray: 5 4;
+          }
+        `}</style>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={multiSelectedIdx()}
+          onScrub={(i) => setMultiSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "optimistic",
+              label: "Optimistic",
+              class: "demo-forecast--optimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000),
+            },
+            {
+              id: "pessimistic",
+              label: "Pessimistic",
+              class: "demo-forecast--pessimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), -20_000),
+            },
+          ]}
+        />
+
+        <div
+          style={{
+            "margin-top": "12px",
+            display: "flex",
+            gap: "18px",
+            "font-size": "12px",
+            color: "var(--sui-text-secondary)",
+          }}
+        >
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "18px",
+                "border-top": "2px solid var(--sui-accent, #00a8cc)",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Actual
+          </span>
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "18px",
+                "border-top":
+                  "2px dashed var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Optimistic (+$400/day)
+          </span>
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "18px",
+                "border-top":
+                  "2px dashed var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Pessimistic (−$200/day)
+          </span>
+        </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Deviation band (actual vs target)</h3>
+        <p class="text-meta">
+          A <code>Target</code> series with a <code>fill</code> set shades the
+          deviation between the actual line and the target —{" "}
+          <strong>green</strong> where the actual balance runs above the target
+          (surplus), <strong>red</strong> only where it dips below (shortfall).
+          The band is split at every crossing, so each region is one solid
+          colour. The reference defaults to the primary line; both band colours
+          are themeable via <code>--sui-cashflow-band-positive</code> /{" "}
+          <code>--sui-cashflow-band-negative</code>.
+        </p>
+
+        <style>{`
+          .demo-target-line {
+            stroke: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
+            stroke-width: 1.4;
+            stroke-dasharray: 2 3;
+          }
+        `}</style>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={bandSelectedIdx()}
+          onScrub={(i) => setBandSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "target",
+              label: "Target",
+              class: "demo-target-line",
+              balanceCents: targetBalance,
+              fill: {
+                // baseline defaults to the primary (actual) running balance
+              },
+            },
+          ]}
+        />
+
+        <div
+          style={{
+            "margin-top": "12px",
+            display: "flex",
+            gap: "18px",
+            "font-size": "12px",
+            color: "var(--sui-text-secondary)",
+          }}
+        >
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "14px",
+                height: "10px",
+                background: "var(--sui-cashflow-band-positive, rgba(0,200,120,0.18))",
+                border: "1px solid var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Actual above target
+          </span>
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "14px",
+                height: "10px",
+                background: "var(--sui-cashflow-band-negative, rgba(230,70,70,0.18))",
+                border: "1px solid var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Actual below target
+          </span>
+          <span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "18px",
+                "border-top": "2px dashed var(--sui-text-secondary, rgba(255,255,255,0.7))",
+                "vertical-align": "middle",
+                "margin-right": "6px",
+              }}
+            />
+            Target line
+          </span>
+        </div>
       </div>
 
       <div class="example-group">

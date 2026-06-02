@@ -13,11 +13,19 @@
 // payload shape (cashflow + balance in cents). If you need a different
 // visualisation on the same date range, drop down to bare `ScrubChart` and
 // supply your own `renderChart` / `renderCell`.
+//
+// The day-cell ribbon stays single-account (one diverging bar + amount per
+// day, driven by `cell.cashflowCents`). When you need to overlay more than
+// one balance line on the chart — scenario forecasts, a prior period, a
+// second account's running balance — pass `balanceSeries`. Each entry is a
+// `(cell, index) => number | null` accessor (null breaks the line into a
+// gap) plus a CSS class for styling; the y-domain widens to span them all.
 // ============================================
 
-import { type Component, createMemo } from "solid-js";
+import { type Component, For, createMemo } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
 import { type Cell } from "../DateAxis";
+import { buildDeviationBand } from "./deviationBand";
 import "./CashflowScrubChart.css";
 
 /**
@@ -30,6 +38,49 @@ export type CashflowCell = Cell & {
   balanceCents: number;
 };
 
+/**
+ * Draws a deviation band between this series and a reference line (the primary
+ * running-balance line by default), coloured by the sign of the deviation:
+ * `positiveClass` where the reference runs ABOVE the series, `negativeClass`
+ * where it dips below. Defaults read as a surplus/shortfall chart — green
+ * where the primary balance exceeds the series, red where it falls short. The
+ * band is split at every crossing so the colour flips exactly where the lines
+ * meet.
+ */
+export interface CashflowSeriesFill {
+  /** Reference line the deviation is measured against. Defaults to the primary
+   *  running-balance line (`cell.balanceCents`). Return `null` to break the
+   *  band over a cell. */
+  baseline?: (cell: CashflowCell, index: number) => number | null;
+  /** CSS class for the region where the reference is above the series
+   *  (positive deviation). Falls back to the default green band style. */
+  positiveClass?: string;
+  /** CSS class for the region where the reference is below the series
+   *  (negative deviation). Falls back to the default red band style. */
+  negativeClass?: string;
+}
+
+/**
+ * An extra balance line overlaid on the running-balance chart, in addition to
+ * the primary line drawn from `cell.balanceCents`. Useful for scenario
+ * forecasts, a prior period, or a second account's running balance.
+ */
+export interface CashflowBalanceSeries {
+  /** Stable identity — used to key the rendered line. */
+  id: string;
+  /** Human-readable label (legend / a11y). Optional. */
+  label?: string;
+  /** CSS class added to the polyline alongside the base line class.
+   *  Color / dash / opacity are the consumer's to define on this class. */
+  class?: string;
+  /** Balance in cents for the cell at `index`, or `null` to break the line
+   *  (e.g. to draw a forecast only for cells after `today`). */
+  balanceCents: (cell: CashflowCell, index: number) => number | null;
+  /** When set, shade the variance between this series and a baseline line,
+   *  green where this series is higher and red where lower. */
+  fill?: CashflowSeriesFill;
+}
+
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
   selected: number;
@@ -40,6 +91,9 @@ export interface CashflowScrubChartProps {
   chartHeight?: number;
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
+  /** Extra balance lines overlaid on the chart. The y-domain widens to span
+   *  their values. Drawn beneath the primary running-balance line. */
+  balanceSeries?: CashflowBalanceSeries[];
 }
 
 // ── Pure helpers (private — keep the public surface narrow) ─────────────
@@ -92,6 +146,32 @@ const BAR_SCALE_CENTS = 220_000;
 const barFraction = (cents: number): number =>
   Math.min(1, Math.abs(cents) / BAR_SCALE_CENTS);
 
+// Map a balance accessor over the cells into one or more polyline point
+// strings, splitting on every `null` so a gap breaks the line rather than
+// connecting across it. Pure: same cells + accessor → same segments.
+const buildLineSegments = (
+  cells: CashflowCell[],
+  cellToX: (i: number) => number,
+  yToPlot: (cents: number) => number,
+  value: (cell: CashflowCell, index: number) => number | null,
+): string[] => {
+  const segments: string[] = [];
+  let current: string[] = [];
+  cells.forEach((cell, i) => {
+    const v = value(cell, i);
+    if (v == null) {
+      if (current.length > 0) {
+        segments.push(current.join(" "));
+        current = [];
+      }
+      return;
+    }
+    current.push(`${cellToX(i).toFixed(1)},${yToPlot(v).toFixed(1)}`);
+  });
+  if (current.length > 0) segments.push(current.join(" "));
+  return segments;
+};
+
 export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   props,
 ) => {
@@ -100,11 +180,21 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
-  // dips negative.
+  // dips negative. Spans the primary balance plus every extra series so no
+  // overlaid line clips against the top/bottom of the plot.
   const yDomain = createMemo<[number, number]>(() => {
     if (props.cells.length === 0) return [0, 1];
-    const balances = props.cells.map((c) => c.balanceCents);
-    return [Math.min(0, ...balances), Math.max(0, ...balances)];
+    const series = props.balanceSeries ?? [];
+    const values = props.cells.flatMap((c, i) => [
+      c.balanceCents,
+      ...series
+        .map((s) => s.balanceCents(c, i))
+        .filter((v): v is number => v != null),
+    ]);
+    // Reduce (not Math.min(...spread)) to stay safe on long ranges.
+    const lo = values.reduce((m, v) => Math.min(m, v), 0);
+    const hi = values.reduce((m, v) => Math.max(m, v), 0);
+    return [lo, hi];
   });
 
   // ── Per-day cell renderer ────────────────────────────────────────────
@@ -148,6 +238,47 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       )
       .join(" ");
 
+    // Extra balance lines (forecasts, prior periods, other accounts) drawn
+    // beneath the primary line. Each may break into multiple segments where
+    // its accessor returns null.
+    const extraSeries = (props.balanceSeries ?? []).map((s) => ({
+      id: s.id,
+      class: s.class,
+      segments: buildLineSegments(
+        ctx.cells,
+        ctx.cellToX,
+        yToPlot,
+        s.balanceCents,
+      ),
+    }));
+
+    // Deviation bands — the coloured area between a `fill`-bearing series and
+    // its reference line (primary line by default). Drawn at the very back so
+    // the lines and decorations sit on top. Split at crossings by the geometry
+    // helper, so each polygon is uniformly green (reference above series) or
+    // red (reference below series).
+    const bands = (props.balanceSeries ?? [])
+      .filter((s) => s.fill)
+      .flatMap((s) => {
+        const fill = s.fill!;
+        const reference =
+          fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
+        const overrideClass = (sign: "positive" | "negative") =>
+          sign === "positive" ? fill.positiveClass : fill.negativeClass;
+        return buildDeviationBand(
+          ctx.cells,
+          ctx.cellToX,
+          yToPlot,
+          s.balanceCents,
+          reference,
+        ).map((run, i) => ({
+          key: `${s.id}-${i}`,
+          sign: run.sign,
+          points: run.points,
+          overrideClass: overrideClass(run.sign),
+        }));
+      });
+
     const selectedCell = ctx.cells[ctx.selected];
     const selectedX = ctx.cellToX(ctx.selected);
     const selectedY = yToPlot(selectedCell.balanceCents);
@@ -158,6 +289,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
+        <For each={bands}>
+          {(band) => (
+            <polygon
+              class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
+                band.sign
+              }${band.overrideClass ? ` ${band.overrideClass}` : ""}`}
+              points={band.points}
+            />
+          )}
+        </For>
         <line
           class="sui-cashflow-scrub-chart__zero-line"
           x1={ctx.plotLeft}
@@ -165,6 +306,20 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           y1={zeroY}
           y2={zeroY}
         />
+        <For each={extraSeries}>
+          {(series) => (
+            <For each={series.segments}>
+              {(seg) => (
+                <polyline
+                  class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
+                    series.class ? ` ${series.class}` : ""
+                  }`}
+                  points={seg}
+                />
+              )}
+            </For>
+          )}
+        </For>
         <polyline class="sui-cashflow-scrub-chart__line" points={points} />
         {/* Per-cell dots are deliberately omitted from the line — the line
             alone reads as a smooth running balance, and the selected dot
