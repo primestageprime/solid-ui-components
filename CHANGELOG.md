@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.58.2
+
+### Fixed
+
+- **`DateAxis` / `ScrubChart` recentre now honours a new selection made mid-animation.** Clicking a new spot while the view is still gliding toward the last click smoothly redirects to the new spot instead of finishing the old move. The programmatic smooth-scroll's own scroll events were being mistaken for user scrolls, re-arming the grace window and suppressing the next recentre.
+
 ## 0.58.1
 
 ### Fixed
