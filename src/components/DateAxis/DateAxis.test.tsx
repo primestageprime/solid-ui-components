@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { DateAxis } from "./DateAxis";
 import { dailyCells, type Cell } from "./cells";
@@ -103,5 +104,40 @@ describe("DateAxis with payload-carrying cells", () => {
       />
     ));
     expect(tags).toEqual(["t0", "t1", "t2"]);
+  });
+});
+
+describe("DateAxis recentre takeover", () => {
+  it("re-centres on a new selection while a previous smooth scroll is still in flight", async () => {
+    const [sel, setSel] = createSignal(5);
+    // ~90 daily cells so the viewport overflows and a target is computed.
+    const cells = dailyCells(d("2026-01-01"), d("2026-03-31"));
+    const { container } = render(() => (
+      <DateAxis cells={cells} selected={sel()} cellWidth={40} renderCell={noopRender} />
+    ));
+    const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
+    // Give the element a viewport + overflow (JSDOM reports 0 otherwise).
+    Object.defineProperty(el, "clientWidth", { configurable: true, value: 200 });
+    Object.defineProperty(el, "scrollWidth", {
+      configurable: true,
+      value: cells.length * 40,
+    });
+
+    // Stub the smooth scroll: record each target and emit a `scroll` event like
+    // a real animation frame would — without ever reaching the target, so the
+    // recentre is still "in flight".
+    const targets: number[] = [];
+    el.scrollTo = ((opts: ScrollToOptions) => {
+      targets.push(opts.left as number);
+      el.dispatchEvent(new Event("scroll"));
+    }) as typeof el.scrollTo;
+
+    setSel(20); // first recentre → scrollTo #1, emits an in-flight scroll event
+    await Promise.resolve();
+    setSel(60); // lands mid-flight → must issue scrollTo #2 (takeover)
+    await Promise.resolve();
+
+    expect(targets).toHaveLength(2);
+    expect(targets[1]).toBeGreaterThan(targets[0]); // redirected to the later cell
   });
 });
