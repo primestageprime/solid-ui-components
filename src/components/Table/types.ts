@@ -2,7 +2,8 @@ import { JSX, Accessor, Setter } from "solid-js";
 
 export interface TableColumn<T> {
   id: string;
-  header: string;
+  /** Header content — plain text or any JSX (e.g. a select-all checkbox). Rendered directly by every table renderer. */
+  header: string | JSX.Element;
   accessor: keyof T | ((row: T) => JSX.Element | string | number);
   width?: string;
   align?: "left" | "center" | "right";

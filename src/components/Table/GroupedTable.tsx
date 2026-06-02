@@ -21,7 +21,8 @@ export interface GroupedRow<T> {
 
 export interface RowspanColumn<T> {
   id: string;
-  header: string;
+  /** Header content — plain text or any JSX. Rendered directly, matching TableColumn.header. */
+  header: string | JSX.Element;
   /** Accessor for the cell value */
   accessor: keyof T | ((row: T) => JSX.Element | string | number);
   /** If true, this column will be rowspanned for grouped rows */
