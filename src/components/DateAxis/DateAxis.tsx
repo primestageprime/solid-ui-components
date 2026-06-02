@@ -78,6 +78,12 @@ const cellContainsTime = (cell: Cell, t: Date): boolean =>
 /** Threshold in ms within which a user-initiated scroll suppresses programmatic scroll. */
 const USER_SCROLL_GRACE_MS = 250;
 
+/** Safety net: clear the "programmatic scroll in flight" flag this long after a
+ *  smooth-scroll begins, in case the user interrupts and we never reach the
+ *  exact target (so the flag can't get stuck and swallow real user scrolls). A
+ *  native smooth scroll across the viewport settles well within this. */
+const MAX_PROGRAMMATIC_SCROLL_MS = 800;
+
 /** Pretty "Mon YYYY" formatter, UTC-anchored to match the cell start dates. */
 const formatMonthYear = (d: Date): string =>
   d.toLocaleDateString("en-US", {
@@ -95,6 +101,23 @@ export const DateAxis = <C extends Cell = Cell>(
   // Tracks the timestamp of the most recent user-initiated scroll so we can
   // suppress programmatic scroll-into-view when the user is actively panning.
   let lastUserScrollAt = 0;
+  // While we drive a programmatic smooth-scroll, the `scroll` events it emits
+  // must NOT be counted as user scrolls — otherwise each animation frame
+  // re-arms the grace window and the *next* recentre (e.g. a click that lands
+  // mid-flight) gets suppressed, so it can't take over. We flag the
+  // programmatic scroll, ignore its scroll events, and clear the flag once the
+  // viewport settles on the target (or the safety timer fires).
+  let programmaticScrollActive = false;
+  let programmaticTarget = 0;
+  let programmaticTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const endProgrammaticScroll = () => {
+    programmaticScrollActive = false;
+    if (programmaticTimer !== undefined) {
+      clearTimeout(programmaticTimer);
+      programmaticTimer = undefined;
+    }
+  };
 
   // ── Visible-window tracking → sticky month/year labels ─────────────────
   // The two corner labels show the month + year of the leftmost and
@@ -142,26 +165,55 @@ export const DateAxis = <C extends Cell = Cell>(
     if (scrollEl) props.scrollableRef?.(scrollEl);
   });
 
-  // Programmatic scroll-into-view on selected change.
+  // Programmatic scroll-into-view on selected change. Reacts to every
+  // `selected` change, so clicking a new cell while a previous recentre is
+  // still gliding issues a fresh `scrollTo` — the browser smoothly redirects
+  // the in-flight smooth scroll from the old target to the new one.
   createEffect(() => {
     const idx = props.selected;
     if (idx === undefined || idx < 0 || idx >= props.cells.length) return;
     const el = scrollEl;
     if (!el) return;
+    // A genuine user scroll/pan within the grace window wins — don't fight it.
+    // (Our own in-flight programmatic frames no longer count, see onScrollListener.)
     if (Date.now() - lastUserScrollAt < USER_SCROLL_GRACE_MS) return;
     const cellLeft = idx * cellW();
-    const target = cellLeft + cellW() / 2 - el.clientWidth / 2;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const target = Math.max(
+      0,
+      Math.min(maxScroll, cellLeft + cellW() / 2 - el.clientWidth / 2),
+    );
+    // Already centred (within 1px) — nothing to animate, and arming the flag
+    // for a no-op scroll could leave it stuck.
+    if (Math.abs(el.scrollLeft - target) <= 1) return;
     // `scrollTo` is unavailable in some test environments (JSDOM); fall back
     // to assigning `scrollLeft` directly. Real browsers always have scrollTo.
     if (typeof el.scrollTo === "function") {
+      programmaticTarget = target;
+      programmaticScrollActive = true;
+      if (programmaticTimer !== undefined) clearTimeout(programmaticTimer);
+      programmaticTimer = setTimeout(
+        endProgrammaticScroll,
+        MAX_PROGRAMMATIC_SCROLL_MS,
+      );
       el.scrollTo({ left: target, behavior: "smooth" });
     } else {
-      el.scrollLeft = Math.max(0, target);
+      el.scrollLeft = target;
     }
   });
 
   const onScrollListener = () => {
-    if (scrollEl) setScrollLeft(scrollEl.scrollLeft);
+    const el = scrollEl;
+    if (!el) return;
+    setScrollLeft(el.scrollLeft);
+    if (programmaticScrollActive) {
+      // Our own smooth-scroll frame — don't treat it as a user scroll. Clear
+      // the flag once we've essentially landed on the target.
+      if (Math.abs(el.scrollLeft - programmaticTarget) <= 1) {
+        endProgrammaticScroll();
+      }
+      return;
+    }
     lastUserScrollAt = Date.now();
   };
 
@@ -196,6 +248,9 @@ export const DateAxis = <C extends Cell = Cell>(
       if (Math.abs(dx) < PAN_THRESHOLD_PX) return;
       panState.active = true;
       scrollEl.setPointerCapture?.(panState.pointerId);
+      // User grabbed the ribbon mid-recentre — drop programmatic control so
+      // their drag is treated as a user scroll (and isn't fought by the flag).
+      endProgrammaticScroll();
     }
     scrollEl.scrollLeft = panState.startScrollLeft - dx;
     lastUserScrollAt = Date.now();
@@ -256,6 +311,7 @@ export const DateAxis = <C extends Cell = Cell>(
           el.removeEventListener("pointermove", handleAxisPointerMove);
           el.removeEventListener("pointerup", handleAxisPointerUp);
           el.removeEventListener("pointercancel", handleAxisPointerUp);
+          endProgrammaticScroll();
         });
       }}
     >
