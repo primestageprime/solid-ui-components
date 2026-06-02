@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 0.58.0
+
+### Added
+
+- **`CashflowScrubChart` now overlays multiple balance lines** via a new `balanceSeries` prop. Each series supplies its y-values through a `(cell, index) => number | null` accessor (a `null` breaks the line into a gap — e.g. a forecast that only renders after `today`) and styles itself with a CSS class. The primary running-balance line is unchanged; the y-domain auto-widens to span every series.
+- **Deviation bands.** A `balanceSeries` entry may carry a `fill` to shade the deviation between itself and a reference line (the primary line by default): green where the reference runs above the series, red where it dips below. The band is split at every crossing so each region is one solid colour. Themeable via `--sui-cashflow-band-positive` / `--sui-cashflow-band-negative`.
+- **Export `CashflowBalanceSeries` and `CashflowSeriesFill` from the package root** so consumers can type their `balanceSeries` arrays and `fill` descriptors.
+
 ## 0.57.0
 
 ### Added
