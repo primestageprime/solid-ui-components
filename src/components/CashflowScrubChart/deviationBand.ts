@@ -1,9 +1,9 @@
 // ============================================
 // deviationBand — pure geometry for a deviation band between two lines.
 //
-// A deviation chart shades the gap between a `reference` line and a `series`
+// A deviation chart shades the gap between a `series` line and a `reference`
 // line, coloured by the sign of the deviation: "positive" where the
-// reference runs ABOVE the series, "negative" where it dips below. A vertex
+// series runs ABOVE the reference, "negative" where it dips below. A vertex
 // is inserted at every crossing so the colour flips exactly where the lines
 // meet — no fill bleeds across a crossover. Either accessor returning `null`
 // breaks the band: spans on each side are shaded independently, the gap is
@@ -14,12 +14,12 @@
 // can be unit-tested in isolation (see deviationBand.test.ts).
 // ============================================
 
-/** Which line is higher across a band run. "positive" = reference above series. */
+/** Which line is higher across a band run. "positive" = series above reference. */
 export type BandSign = "positive" | "negative";
 
 /** One filled region of the deviation band. */
 export interface BandRun {
-  /** "positive" where the reference line sits above the series. */
+  /** "positive" where the series line sits above the reference. */
   sign: BandSign;
   /** SVG polygon points ("x,y x,y …"); `<polygon>` closes it automatically. */
   points: string;
@@ -30,7 +30,7 @@ interface Sample {
   x: number;
   seriesY: number;
   refY: number;
-  /** reference value − series value, in data units; drives the colour. */
+  /** series value − reference value, in data units; drives the colour. */
   diff: number;
 }
 
@@ -99,7 +99,7 @@ const runsForSpan = (span: Sample[]): BandRun[] => {
 
 /**
  * Build the deviation band between a `series` line and a `reference` line.
- * Each returned run is "positive" where the reference runs above the series,
+ * Each returned run is "positive" where the series runs above the reference,
  * "negative" where it dips below.
  *
  * @param items      Ordered items (e.g. day cells).
@@ -132,7 +132,7 @@ export const buildDeviationBand = <T>(
       x: cellToX(i),
       seriesY: yToPlot(sVal),
       refY: yToPlot(rVal),
-      diff: rVal - sVal,
+      diff: sVal - rVal,
     });
   });
   if (span.length > 0) spans.push(span);

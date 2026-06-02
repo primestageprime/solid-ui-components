@@ -41,21 +41,20 @@ export type CashflowCell = Cell & {
 /**
  * Draws a deviation band between this series and a reference line (the primary
  * running-balance line by default), coloured by the sign of the deviation:
- * `positiveClass` where the reference runs ABOVE the series, `negativeClass`
+ * `positiveClass` where this series runs ABOVE the reference, `negativeClass`
  * where it dips below. Defaults read as a surplus/shortfall chart — green
- * where the primary balance exceeds the series, red where it falls short. The
- * band is split at every crossing so the colour flips exactly where the lines
- * meet.
+ * where the series exceeds the reference, red where it falls short. The band
+ * is split at every crossing so the colour flips exactly where the lines meet.
  */
 export interface CashflowSeriesFill {
   /** Reference line the deviation is measured against. Defaults to the primary
    *  running-balance line (`cell.balanceCents`). Return `null` to break the
    *  band over a cell. */
   baseline?: (cell: CashflowCell, index: number) => number | null;
-  /** CSS class for the region where the reference is above the series
+  /** CSS class for the region where the series is above the reference
    *  (positive deviation). Falls back to the default green band style. */
   positiveClass?: string;
-  /** CSS class for the region where the reference is below the series
+  /** CSS class for the region where the series is below the reference
    *  (negative deviation). Falls back to the default red band style. */
   negativeClass?: string;
 }
@@ -255,8 +254,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // Deviation bands — the coloured area between a `fill`-bearing series and
     // its reference line (primary line by default). Drawn at the very back so
     // the lines and decorations sit on top. Split at crossings by the geometry
-    // helper, so each polygon is uniformly green (reference above series) or
-    // red (reference below series).
+    // helper, so each polygon is uniformly green (series above reference) or
+    // red (series below reference).
     const bands = (props.balanceSeries ?? [])
       .filter((s) => s.fill)
       .flatMap((s) => {

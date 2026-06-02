@@ -266,15 +266,15 @@ export const CashflowScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>Deviation band (actual vs target)</h3>
+        <h3>Deviation band (target vs actual)</h3>
         <p class="text-meta">
           A <code>Target</code> series with a <code>fill</code> set shades the
-          deviation between the actual line and the target —{" "}
-          <strong>green</strong> where the actual balance runs above the target
-          (surplus), <strong>red</strong> only where it dips below (shortfall).
-          The band is split at every crossing, so each region is one solid
-          colour. The reference defaults to the primary line; both band colours
-          are themeable via <code>--sui-cashflow-band-positive</code> /{" "}
+          deviation between the target (the comparison line) and the actual —{" "}
+          <strong>green</strong> where the target sits above the actual,{" "}
+          <strong>red</strong> where it dips below. The band is split at every
+          crossing, so each region is one solid colour. The reference defaults
+          to the primary line; both band colours are themeable via{" "}
+          <code>--sui-cashflow-band-positive</code> /{" "}
           <code>--sui-cashflow-band-negative</code>.
         </p>
 
@@ -325,7 +325,7 @@ export const CashflowScrubChartShowcase: Component = () => {
                 "margin-right": "6px",
               }}
             />
-            Actual above target
+            Target above actual
           </span>
           <span>
             <span
@@ -339,7 +339,7 @@ export const CashflowScrubChartShowcase: Component = () => {
                 "margin-right": "6px",
               }}
             />
-            Actual below target
+            Target below actual
           </span>
           <span>
             <span
