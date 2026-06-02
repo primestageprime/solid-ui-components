@@ -64,6 +64,7 @@ import { ProgressCheckShowcase } from "./showcases/progress-check";
 import { SprintSelectorShowcase } from "./showcases/sprint-selector";
 import { TagInputShowcase } from "./showcases/tag-input";
 import { WorkerCardShowcase } from "./showcases/worker-card";
+import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
@@ -195,6 +196,7 @@ const items: Item[] = [
   { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase, tags: ["depth:1", "indicator"] },
   { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase, tags: ["depth:1", "form"] },
   { id: "worker-card", label: "WorkerCard", component: WorkerCardShowcase, tags: ["depth:1", "container", "indicator"] },
+  { id: "work-progress-card", label: "WorkProgressCard", component: WorkProgressCardShowcase, tags: ["depth:1", "container", "indicator", "data", "time"] },
   { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase, tags: ["depth:1", "layout"] },
   { id: "toast", label: "Toast", component: ToastShowcase, tags: ["depth:1", "feedback"] },
   { id: "toggle", label: "Toggle", component: ToggleShowcase, tags: ["depth:1", "form"] },

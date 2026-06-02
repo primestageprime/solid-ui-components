@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 0.59.0
+
+### Added
+
+- **`WorkProgressCard`** — a status-aware work card whose bottom progress bar is derived entirely from metadata. Data-only props (`status`, `title`, `claimedBy?`, `subtitle?`, `estimate?`, `actual?`); the library decides all colors/proportions, so callers never style it. Bar treatment: in-progress→blue, complete→forest green, over-budget→crimson (bar reproportioned to actual), unused budget→dark grey, blocked/question→⚠/? sign over the work-so-far, new/closed→empty.
+- **Card-progress derivation helpers** (pure, unit-tested — exported for custom renderers): `deriveCardBar({ status, estimate?, actual? })` → `{ segments, sign }`; `statusAccent(status)`; `actualFromSegments(segments, now)` (Σ closed-segment durations + open segment to `now`, the live-actual formula); `isRunning(segments)`. Plus `CARD_BAR_COLOR` / `CARD_SIGN_COLOR` and types `WorkStatus`, `CardProgressInput`, `CardBar`, `CardBarSegment`, `CardSign`, `WorkSegment`.
+- Dev showcase **WorkProgressCard** — the nine states (A–I) plus a live simulation (Play / Step / Reset) of three tasks accruing actual time from work segments off a clock.
+
 ## 0.58.2
 
 ### Fixed

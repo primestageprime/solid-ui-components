@@ -1,0 +1,90 @@
+/* WorkProgressCard — status-aware work card with a derived progress bar.
+   Structure lives here; the dynamic colors (status accent, bar segment fills,
+   sign badge) are applied inline from cardProgress.ts so the styling logic
+   stays in one tested place. */
+
+.sui-wpc {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--sui-surface, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--sui-accent, #00d4ff); /* border-color overridden inline per status */
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, monospace);
+  color: var(--sui-text, #e6ecf5);
+}
+.sui-wpc[data-status="CLOSED"] {
+  opacity: 0.55;
+}
+
+.sui-wpc__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+}
+.sui-wpc__claimed {
+  color: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sui-wpc__status {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.sui-wpc__title {
+  font-size: 12px;
+  line-height: 1.3;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.sui-wpc__subtitle {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+/* Bottom-pinned progress bar. */
+.sui-wpc__bar-wrap {
+  position: relative;
+  margin-top: auto;
+  height: 12px;
+  display: flex;
+  align-items: center;
+}
+.sui-wpc__bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+.sui-wpc__seg {
+  height: 100%;
+}
+.sui-wpc__sign {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--sui-surface, #16202a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
