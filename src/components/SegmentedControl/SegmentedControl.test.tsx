@@ -114,4 +114,42 @@ describe("SegmentedControl", () => {
     expect(segs[2].getAttribute("aria-checked")).toBe("true");
     expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true);
   });
+
+  it("gives the selected segment tabindex 0 and the rest -1", () => {
+    const { container } = render(() => <SegmentedControl options={OPTS} value="prod" />);
+    const segs = container.querySelectorAll('[role="radio"]');
+    expect(segs[0].getAttribute("tabindex")).toBe("-1");
+    expect(segs[1].getAttribute("tabindex")).toBe("0"); // Prod selected
+    expect(segs[2].getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("ArrowRight moves selection to the next segment", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={OPTS} value="auto" onValueChange={onValueChange} />
+    ));
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowRight" });
+    expect(onValueChange).toHaveBeenCalledWith("prod");
+  });
+
+  it("ArrowLeft from the first segment wraps to the last", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={OPTS} value="auto" onValueChange={onValueChange} />
+    ));
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowLeft" });
+    expect(onValueChange).toHaveBeenCalledWith("off");
+  });
+
+  it("Home selects the first, End selects the last", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={OPTS} value="prod" onValueChange={onValueChange} />
+    ));
+    const group = container.querySelector('[role="radiogroup"]')!;
+    fireEvent.keyDown(group, { key: "Home" });
+    expect(onValueChange).toHaveBeenLastCalledWith("auto");
+    fireEvent.keyDown(group, { key: "End" });
+    expect(onValueChange).toHaveBeenLastCalledWith("off");
+  });
 });

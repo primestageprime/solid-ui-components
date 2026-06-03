@@ -76,8 +76,47 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
     local.onValueChange?.(opt.value);
   };
 
+  const enabledValues = () => local.options.filter((o) => !isDisabled(o)).map((o) => o.value);
+
+  const move = (dir: 1 | -1 | "home" | "end") => {
+    const vals = enabledValues();
+    if (vals.length === 0) return;
+    let next: string;
+    if (dir === "home") next = vals[0];
+    else if (dir === "end") next = vals[vals.length - 1];
+    else {
+      const idx = vals.indexOf(local.value);
+      const start = idx === -1 ? 0 : idx;
+      next = vals[(start + dir + vals.length) % vals.length];
+    }
+    if (next !== local.value) local.onValueChange?.(next);
+  };
+
+  const onKeyDown: JSX.EventHandler<HTMLDivElement, KeyboardEvent> = (e) => {
+    switch (e.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        e.preventDefault();
+        move(1);
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        e.preventDefault();
+        move(-1);
+        break;
+      case "Home":
+        e.preventDefault();
+        move("home");
+        break;
+      case "End":
+        e.preventDefault();
+        move("end");
+        break;
+    }
+  };
+
   return (
-    <div class={containerClasses()} role="radiogroup" {...others}>
+    <div class={containerClasses()} role="radiogroup" onKeyDown={onKeyDown} {...others}>
       <For each={local.options}>
         {(opt, i) => {
           const selected = () => opt.value === local.value;
@@ -91,6 +130,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
                 type="button"
                 role="radio"
                 aria-checked={selected() ? "true" : "false"}
+                tabindex={selected() ? 0 : -1}
                 class={segClasses(opt)}
                 onClick={() => select(opt)}
               >
