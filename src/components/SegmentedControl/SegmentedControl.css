@@ -1,0 +1,10 @@
+/* ============================================
+   SegmentedControl Component — Structural
+   ============================================ */
+.sui-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--sui-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
