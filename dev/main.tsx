@@ -38,6 +38,7 @@ import { AccentSectionShowcase } from "./showcases/hud-section";
 import { TabsShowcase } from "./showcases/hud-tabs";
 import { TabbedSidePanelShowcase } from "./showcases/tabbed-side-panel";
 import { ToggleShowcase } from "./showcases/hud-toggle";
+import { SegmentedControlShowcase } from "./showcases/segmented-control";
 import { IconShowcase } from "./showcases/icon";
 import { InputsShowcase } from "./showcases/inputs";
 import { MathFormulaShowcase } from "./showcases/math-formula";
@@ -200,6 +201,7 @@ const items: Item[] = [
   { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase, tags: ["depth:1", "layout"] },
   { id: "toast", label: "Toast", component: ToastShowcase, tags: ["depth:1", "feedback"] },
   { id: "toggle", label: "Toggle", component: ToggleShowcase, tags: ["depth:1", "form"] },
+  { id: "segmented-control", label: "SegmentedControl", component: SegmentedControlShowcase, tags: ["depth:1", "form"] },
   { id: "tooltip", label: "Tooltip", component: TooltipShowcase, tags: ["depth:1", "feedback"] },
   { id: "value-renderer", label: "ValueRenderer", component: ValueRendererShowcase, tags: ["depth:1", "data"] },
 
