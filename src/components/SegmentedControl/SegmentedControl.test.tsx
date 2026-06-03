@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { SegmentedControl, createSegmentedControl, OverrideToggle } from "./index";
 import type { SegmentOption } from "./index";
@@ -97,5 +98,20 @@ describe("SegmentedControl", () => {
   it("defaults to md size", () => {
     const { container } = render(() => <SegmentedControl options={OPTS} value="auto" />);
     expect(container.querySelector(".sui-segmented--md")).toBeTruthy();
+  });
+
+  it("updates selected segment reactively when value changes", () => {
+    const [value, setValue] = createSignal("auto");
+    const { container } = render(() => <SegmentedControl options={OPTS} value={value()} />);
+    const segs = container.querySelectorAll('[role="radio"]');
+    expect(segs[0].classList.contains("sui-segmented__seg--selected")).toBe(true);
+    expect(segs[0].getAttribute("aria-checked")).toBe("true");
+
+    setValue("off");
+    expect(segs[0].classList.contains("sui-segmented__seg--selected")).toBe(false);
+    expect(segs[0].getAttribute("aria-checked")).toBe("false");
+    expect(segs[2].classList.contains("sui-segmented__seg--selected")).toBe(true);
+    expect(segs[2].getAttribute("aria-checked")).toBe("true");
+    expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true);
   });
 });

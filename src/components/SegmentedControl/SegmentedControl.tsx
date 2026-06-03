@@ -110,8 +110,9 @@ export type SegmentedControlOverrides = Pick<SegmentedControlProps, "options" | 
 export type SegmentedControlDataProps = Omit<SegmentedControlProps, keyof SegmentedControlOverrides>;
 
 export function createSegmentedControl(
-  defaults: Partial<SegmentedControlProps>,
+  defaults: Pick<SegmentedControlProps, "options"> & Partial<SegmentedControlProps>,
 ): Component<SegmentedControlDataProps> {
-  // `options` is baked into `defaults`; the cast asserts the merged props are complete.
+  // `options` is required in `defaults`; the cast bridges mergeProps' merged type to the
+  // full SegmentedControlProps shape, which TS cannot infer satisfies the required fields.
   return (props) => <SegmentedControl {...(mergeProps(defaults, props) as SegmentedControlProps)} />;
 }
