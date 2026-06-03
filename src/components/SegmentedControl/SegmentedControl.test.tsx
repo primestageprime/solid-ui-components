@@ -152,4 +152,41 @@ describe("SegmentedControl", () => {
     fireEvent.keyDown(group, { key: "End" });
     expect(onValueChange).toHaveBeenLastCalledWith("off");
   });
+
+  it("does not fire onValueChange when a disabled segment is clicked", () => {
+    const onValueChange = vi.fn();
+    const opts: SegmentOption[] = [
+      { value: "a" },
+      { value: "b", disabled: true },
+    ];
+    const { container } = render(() => (
+      <SegmentedControl options={opts} value="a" onValueChange={onValueChange} />
+    ));
+    fireEvent.click(container.querySelectorAll('[role="radio"]')[1]);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("keyboard nav skips disabled segments", () => {
+    const onValueChange = vi.fn();
+    const opts: SegmentOption[] = [
+      { value: "a" },
+      { value: "b", disabled: true },
+      { value: "c" },
+    ];
+    const { container } = render(() => (
+      <SegmentedControl options={opts} value="a" onValueChange={onValueChange} />
+    ));
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowRight" });
+    expect(onValueChange).toHaveBeenCalledWith("c"); // skipped "b"
+  });
+
+  it("a fully-disabled control ignores clicks and sets aria-disabled", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={OPTS} value="auto" disabled onValueChange={onValueChange} />
+    ));
+    expect(container.querySelector('[role="radiogroup"]')!.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(container.querySelectorAll('[role="radio"]')[1]);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
 });

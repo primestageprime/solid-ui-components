@@ -116,7 +116,13 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
   };
 
   return (
-    <div class={containerClasses()} role="radiogroup" onKeyDown={onKeyDown} {...others}>
+    <div
+      class={containerClasses()}
+      role="radiogroup"
+      aria-disabled={local.disabled ? "true" : undefined}
+      onKeyDown={onKeyDown}
+      {...others}
+    >
       <For each={local.options}>
         {(opt, i) => {
           const selected = () => opt.value === local.value;
@@ -130,6 +136,8 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
                 type="button"
                 role="radio"
                 aria-checked={selected() ? "true" : "false"}
+                aria-disabled={isDisabled(opt) ? "true" : undefined}
+                disabled={isDisabled(opt)}
                 tabindex={selected() ? 0 : -1}
                 class={segClasses(opt)}
                 onClick={() => select(opt)}
