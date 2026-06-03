@@ -25,6 +25,13 @@ export interface SegmentOption {
 
 export type SegmentedControlSize = "sm" | "md" | "lg";
 
+/**
+ * Single-select segmented control with optional grouping (dividers) and per-state color.
+ *
+ * Accessibility: provide an accessible name via `aria-label` or `aria-labelledby` —
+ * these flow through the prop spread onto the `role="radiogroup"` element and are
+ * required by the WAI-ARIA radio-group pattern.
+ */
 export interface SegmentedControlProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "onChange"> {
   /** Ordered list of selectable states. */
   options: SegmentOption[];
@@ -78,17 +85,22 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
 
   const enabledValues = () => local.options.filter((o) => !isDisabled(o)).map((o) => o.value);
 
+  const resolveNext = (dir: 1 | -1 | "home" | "end", vals: string[]): string => {
+    if (dir === "home") return vals[0];
+    if (dir === "end") return vals[vals.length - 1];
+    const idx = vals.indexOf(local.value);
+    // Current value absent from the enabled set (e.g. the selected option became
+    // disabled): step in from the appropriate end rather than the same index for
+    // both directions.
+    if (idx === -1) return dir === 1 ? vals[0] : vals[vals.length - 1];
+    return vals[(idx + dir + vals.length) % vals.length];
+  };
+
   const move = (dir: 1 | -1 | "home" | "end") => {
+    if (local.disabled) return; // a fully-disabled control ignores keyboard nav
     const vals = enabledValues();
     if (vals.length === 0) return;
-    let next: string;
-    if (dir === "home") next = vals[0];
-    else if (dir === "end") next = vals[vals.length - 1];
-    else {
-      const idx = vals.indexOf(local.value);
-      const start = idx === -1 ? 0 : idx;
-      next = vals[(start + dir + vals.length) % vals.length];
-    }
+    const next = resolveNext(dir, vals);
     if (next !== local.value) local.onValueChange?.(next);
   };
 
@@ -138,7 +150,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
                 aria-checked={selected() ? "true" : "false"}
                 aria-disabled={isDisabled(opt) ? "true" : undefined}
                 disabled={isDisabled(opt)}
-                tabindex={selected() ? 0 : -1}
+                tabindex={!isDisabled(opt) && selected() ? 0 : -1}
                 class={segClasses(opt)}
                 onClick={() => select(opt)}
               >

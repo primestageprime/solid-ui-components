@@ -142,6 +142,7 @@ describe("SegmentedControl", () => {
   });
 
   it("Home selects the first, End selects the last", () => {
+  // Home/End are value-independent, so firing both against one render is valid.
     const onValueChange = vi.fn();
     const { container } = render(() => (
       <SegmentedControl options={OPTS} value="prod" onValueChange={onValueChange} />
@@ -187,6 +188,15 @@ describe("SegmentedControl", () => {
     ));
     expect(container.querySelector('[role="radiogroup"]')!.getAttribute("aria-disabled")).toBe("true");
     fireEvent.click(container.querySelectorAll('[role="radio"]')[1]);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("suppresses keyboard nav when the whole control is disabled", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={OPTS} value="auto" disabled onValueChange={onValueChange} />
+    ));
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowRight" });
     expect(onValueChange).not.toHaveBeenCalled();
   });
 });
