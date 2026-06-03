@@ -7,7 +7,7 @@
   /* Always content-width: don't get stretched by an align-items:stretch flex parent. */
   align-self: start;
   width: fit-content;
-  border: 1px solid var(--sui-border);
+  border: 1px solid var(--sui-border-bright);
   border-radius: var(--sui-radius-md);
   overflow: hidden;
   user-select: none;
@@ -27,8 +27,11 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* Ridged groove seam: a recessed dark line plus a bright inset ridge, so the
+   boundary between adjacent segments reads as a tactile groove. */
 .sui-segmented__seg:not(:first-child) {
-  border-left: 1px solid var(--sui-border);
+  border-left: 1px solid var(--sui-bg-deep, #001018);
+  box-shadow: inset 1px 0 0 var(--sui-border-bright);
 }
 
 .sui-segmented__seg:hover:not(.sui-segmented__seg--disabled):not(.sui-segmented__seg--selected) {
@@ -72,10 +75,11 @@
   align-self: stretch;
   background: var(--sui-border-bright);
 }
-/* The divider already separates groups; drop the segment's own left border
-   immediately after a divider to avoid a double line. */
+/* The divider already separates groups; drop the segment's own groove seam
+   immediately after a divider to avoid a doubled line. */
 .sui-segmented__divider + .sui-segmented__seg {
   border-left: none;
+  box-shadow: none;
 }
 
 /* Disabled */
