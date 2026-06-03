@@ -42,8 +42,6 @@ export interface SegmentOption {
   disabled?: boolean;
 }
 
-export type SegmentedControlSize = "sm" | "md" | "lg";
-
 export interface SegmentedControlProps
   extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "onChange"> {
   /** Ordered list of selectable states. */
@@ -52,8 +50,6 @@ export interface SegmentedControlProps
   value: string;
   /** Fires with the new value, only when the selection actually changes. */
   onValueChange?: (value: string) => void;
-  /** Sizing, consistent with Toggle/Button. Default "md". */
-  size?: SegmentedControlSize;
   /** Fallback accent for selected segments that don't specify their own. */
   color?: ColorVariant;
   /** Disable the entire control. */
@@ -63,13 +59,13 @@ export interface SegmentedControlProps
 
 ### Curried factory + variant
 
-Mirrors `createToggle`. Visual + config props (`options`, `size`, `color`) are
-locked at variant-definition time; data props (`value`, `onValueChange`,
-`disabled`) stay open.
+Mirrors `createToggle`. Config props (`options`, `color`) are locked at
+variant-definition time; data props (`value`, `onValueChange`, `disabled`)
+stay open.
 
 ```ts
 export type SegmentedControlOverrides =
-  Pick<SegmentedControlProps, "options" | "size" | "color">;
+  Pick<SegmentedControlProps, "options" | "color">;
 export type SegmentedControlDataProps =
   Omit<SegmentedControlProps, keyof SegmentedControlOverrides>;
 
@@ -125,7 +121,9 @@ Own CSS (`SegmentedControl.css`), theme-variable driven like `Toggle.css`.
   reusing `ColorVariant`.
 - `.sui-segmented__divider` — thin rule between groups, heavier than the
   inter-segment border.
-- `.sui-segmented--{sm,md,lg}` — padding + font-size.
+- Fixed single size (md padding + font-size baked into `.sui-segmented__seg`);
+  the control is always content-width (`align-self: start; width: fit-content`)
+  so a stretching flex parent can't widen it.
 - Disabled (whole control or per-segment): reduced opacity,
   `cursor: not-allowed`, not focusable.
 
@@ -168,6 +166,7 @@ Behavior tests written first (red → green):
 ## Out of scope
 
 - Multi-select (this is a sum type — exactly one active).
+- Multiple sizes (fixed single md size; `size` prop dropped).
 - Uncontrolled mode / `defaultValue`.
 - Nested option arrays (grouping is a flat `group` key).
 - Two-tier reveal layout (mockup C) — rejected in favor of grouped segmented (B).

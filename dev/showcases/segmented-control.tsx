@@ -5,7 +5,6 @@ import { Stack } from "../../src/components/Layout/Stack";
 export const SegmentedControlShowcase: Component = () => {
   const [mode, setMode] = createSignal("auto");
   const [view, setView] = createSignal("day");
-  const [sizeDemo, setSizeDemo] = createSignal("a");
 
   return (
     <div class="component-section">
@@ -18,7 +17,7 @@ export const SegmentedControlShowcase: Component = () => {
         <h3>OverrideToggle — <code>AUTO | (PROD | OFF)</code></h3>
         <p class="text-meta">
           Curried variant. <code>Auto</code> is its own group; <code>Prod</code>/<code>Off</code>
-          form the override group. <code>Off</code> colors danger when selected.
+          form the override group. Selected colors are distinct: Auto accent, Prod green, Off red.
         </p>
         <OverrideToggle value={mode()} onValueChange={setMode} />
         <div class="text-meta">State: {mode()}</div>
@@ -37,15 +36,6 @@ export const SegmentedControlShowcase: Component = () => {
           color="success"
         />
         <div class="text-meta">View: {view()}</div>
-      </div>
-
-      <div class="example-group">
-        <h3>Sizes</h3>
-        <Stack gap="md">
-          <SegmentedControl size="sm" options={[{ value: "a", label: "SM A" }, { value: "b", label: "SM B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
-          <SegmentedControl size="md" options={[{ value: "a", label: "MD A" }, { value: "b", label: "MD B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
-          <SegmentedControl size="lg" options={[{ value: "a", label: "LG A" }, { value: "b", label: "LG B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
-        </Stack>
       </div>
 
       <div class="example-group">

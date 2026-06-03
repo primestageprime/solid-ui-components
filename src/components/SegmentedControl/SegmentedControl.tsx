@@ -23,8 +23,6 @@ export interface SegmentOption {
   disabled?: boolean;
 }
 
-export type SegmentedControlSize = "sm" | "md" | "lg";
-
 /**
  * Single-select segmented control with optional grouping (dividers) and per-state color.
  *
@@ -39,8 +37,6 @@ export interface SegmentedControlProps extends Omit<JSX.HTMLAttributes<HTMLDivEl
   value: string;
   /** Fires with the new value, only when the selection actually changes. */
   onValueChange?: (value: string) => void;
-  /** Sizing, consistent with Toggle/Button. Default "md". */
-  size?: SegmentedControlSize;
   /** Fallback accent for selected segments that don't specify their own. */
   color?: ColorVariant;
   /** Disable the entire control. */
@@ -52,7 +48,6 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
     "options",
     "value",
     "onValueChange",
-    "size",
     "color",
     "disabled",
     "class",
@@ -60,7 +55,6 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
 
   const containerClasses = () => {
     const cl = ["sui-segmented"];
-    cl.push(`sui-segmented--${local.size || "md"}`);
     if (local.disabled) cl.push("sui-segmented--disabled");
     if (local.class) cl.push(local.class);
     return cl.join(" ");
@@ -165,7 +159,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
 };
 
 /** Config/visual props locked at variant-definition time. */
-export type SegmentedControlOverrides = Pick<SegmentedControlProps, "options" | "size" | "color">;
+export type SegmentedControlOverrides = Pick<SegmentedControlProps, "options" | "color">;
 /** Props available to consumers of a curried variant. */
 export type SegmentedControlDataProps = Omit<SegmentedControlProps, keyof SegmentedControlOverrides>;
 

@@ -4,6 +4,9 @@
 .sui-segmented {
   display: inline-flex;
   align-items: stretch;
+  /* Always content-width: don't get stretched by an align-items:stretch flex parent. */
+  align-self: start;
+  width: fit-content;
   border: 1px solid var(--sui-border);
   border-radius: var(--sui-radius-md);
   overflow: hidden;
@@ -17,7 +20,9 @@
   background: transparent;
   color: var(--sui-text-muted);
   font: inherit;
+  font-size: 13px;
   line-height: 1;
+  padding: 8px 16px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -71,20 +76,6 @@
    immediately after a divider to avoid a double line. */
 .sui-segmented__divider + .sui-segmented__seg {
   border-left: none;
-}
-
-/* Sizes */
-.sui-segmented--sm .sui-segmented__seg {
-  padding: 5px 12px;
-  font-size: 12px;
-}
-.sui-segmented--md .sui-segmented__seg {
-  padding: 8px 16px;
-  font-size: 13px;
-}
-.sui-segmented--lg .sui-segmented__seg {
-  padding: 11px 22px;
-  font-size: 15px;
 }
 
 /* Disabled */

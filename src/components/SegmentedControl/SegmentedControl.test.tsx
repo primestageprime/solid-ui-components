@@ -90,16 +90,6 @@ describe("SegmentedControl", () => {
     expect(container.querySelectorAll('[role="radio"]')[0].classList.contains("sui-segmented__seg--success")).toBe(true);
   });
 
-  it("applies the size modifier class to the container", () => {
-    const { container } = render(() => <SegmentedControl options={OPTS} value="auto" size="lg" />);
-    expect(container.querySelector(".sui-segmented--lg")).toBeTruthy();
-  });
-
-  it("defaults to md size", () => {
-    const { container } = render(() => <SegmentedControl options={OPTS} value="auto" />);
-    expect(container.querySelector(".sui-segmented--md")).toBeTruthy();
-  });
-
   it("updates selected segment reactively when value changes", () => {
     const [value, setValue] = createSignal("auto");
     const { container } = render(() => <SegmentedControl options={OPTS} value={value()} />);
