@@ -38,6 +38,13 @@ export interface BigNumberInputProps
   sign?: "+" | "-" | "none";
   /** Text alignment of the number. Default "left". */
   align?: "left" | "right";
+  /**
+   * Select the entire contents when the input receives focus, so the
+   * user can immediately type a replacement value. Default `true`.
+   * Arrow keys then move the caret and deselect (natural browser
+   * behaviour). Set `false` to opt out of select-on-focus.
+   */
+  selectOnFocus?: boolean;
 }
 
 /** Parse the editable buffer to a number; empty / partial → 0. */
@@ -48,13 +55,16 @@ function parse(raw: string): number {
 }
 
 export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
-  const [local, others] = splitProps(props, [
+  const merged = mergeProps({ selectOnFocus: true }, props);
+  const [local, others] = splitProps(merged, [
     "value",
     "onChange",
     "prefix",
     "sign",
     "align",
     "class",
+    "selectOnFocus",
+    "onFocus",
   ]);
 
   // Local editable buffer. Initialised from the incoming value.
@@ -75,6 +85,22 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
     const raw = e.currentTarget.value;
     setText(raw);
     local.onChange(parse(raw));
+  };
+
+  // Select-all on focus (default). Compose with any consumer onFocus
+  // rather than clobbering it. Keyboard/tab focus is the primary case;
+  // mouse click stays browser-default.
+  const handleFocus: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> = (
+    e,
+  ) => {
+    if (local.selectOnFocus) e.currentTarget.select();
+    const consumerOnFocus = local.onFocus;
+    // Solid allows either a plain handler or a bound `[handler, data]` tuple.
+    if (typeof consumerOnFocus === "function") {
+      consumerOnFocus(e);
+    } else if (Array.isArray(consumerOnFocus)) {
+      consumerOnFocus[0](consumerOnFocus[1], e);
+    }
   };
 
   const rootClass = () =>
@@ -102,6 +128,7 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
         style={{ "text-align": local.align ?? "left" }}
         value={text()}
         onInput={handleInput}
+        onFocus={handleFocus}
         {...others}
       />
     </div>
