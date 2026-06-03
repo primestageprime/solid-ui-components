@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 0.60.0
+
+### Added
+
+- **`SegmentedControl`** — a generic single-select segmented control for choosing across 3+ mutually-exclusive states. States can carry a `group` key (a divider renders at group boundaries) and a per-state `color` (with a control-level fallback). Controlled (`value` + `onValueChange`, fires only on change), radio-group a11y with full keyboard nav (arrows/Home/End, roving tabindex, disabled-skipping), per-segment and whole-control `disabled`. Ridged-groove seam between segments; fixed single (md) size; always content-width. Ships `createSegmentedControl` and exports `SegmentOption`, `SegmentedControlProps`, `SegmentedControlOverrides`, `SegmentedControlDataProps`.
+- **`OverrideToggle`** — curried `SegmentedControl` for the `AUTO | (PROD | OFF)` case: `Auto` in its own group; `Prod`/`Off` in the override group; selected colors distinct (Auto accent, Prod success, Off danger).
+- Dev showcase **SegmentedControl** — OverrideToggle, ungrouped control-level color, and disabled states.
+
 ## 0.59.0
 
 ### Added

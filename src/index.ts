@@ -38,6 +38,7 @@ export * from "./components/Inputs";
 export * from "./components/Navigation";
 export * from "./components/OverflowNav";
 export * from "./components/Toggle";
+export * from "./components/SegmentedControl";
 export * from "./components/Progress";
 export * from "./components/ProgressCard";
 export * from "./components/Heatmap";

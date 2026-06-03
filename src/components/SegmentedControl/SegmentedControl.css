@@ -1,0 +1,95 @@
+/* ============================================
+   SegmentedControl Component — visual states (selected colors, hover, divider, disabled)
+   ============================================ */
+.sui-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  /* Always content-width: don't get stretched by an align-items:stretch flex parent. */
+  align-self: start;
+  width: fit-content;
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-md);
+  overflow: hidden;
+  user-select: none;
+  background: transparent;
+}
+
+.sui-segmented__seg {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--sui-text-muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* Ridged groove seam: a recessed dark line plus a bright inset ridge, so the
+   boundary between adjacent segments reads as a tactile groove. */
+.sui-segmented__seg:not(:first-child) {
+  border-left: 1px solid var(--sui-bg-deep, #001018);
+  box-shadow: inset 1px 0 0 var(--sui-border-bright);
+}
+
+.sui-segmented__seg:hover:not(.sui-segmented__seg--disabled):not(.sui-segmented__seg--selected) {
+  color: var(--sui-text-primary);
+  background: rgba(var(--sui-accent-rgb), 0.06);
+}
+
+.sui-segmented__seg:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: -2px;
+}
+
+/* Selected — default accent */
+.sui-segmented__seg--selected {
+  background: var(--sui-accent);
+  color: var(--sui-bg-deep, #001018);
+}
+
+/* Selected — color modifiers (primary maps to accent) */
+/* primary is an explicit alias for the default accent fill */
+.sui-segmented__seg--selected.sui-segmented__seg--primary {
+  background: var(--sui-accent);
+  color: var(--sui-bg-deep, #001018);
+}
+.sui-segmented__seg--selected.sui-segmented__seg--danger {
+  background: var(--sui-danger);
+  color: #fff;
+}
+.sui-segmented__seg--selected.sui-segmented__seg--warning {
+  background: var(--sui-warning);
+  color: var(--sui-bg-deep, #001018);
+}
+.sui-segmented__seg--selected.sui-segmented__seg--success {
+  background: var(--sui-success);
+  color: var(--sui-bg-deep, #001018);
+}
+
+/* Group divider — heavier than the inter-segment border */
+.sui-segmented__divider {
+  width: 2px;
+  align-self: stretch;
+  background: var(--sui-border-bright);
+}
+/* The divider already separates groups; drop the segment's own groove seam
+   immediately after a divider to avoid a doubled line. */
+.sui-segmented__divider + .sui-segmented__seg {
+  border-left: none;
+  box-shadow: none;
+}
+
+/* Disabled */
+.sui-segmented__seg--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sui-segmented--disabled {
+  opacity: 0.6;
+}
+.sui-segmented--disabled .sui-segmented__seg {
+  cursor: not-allowed;
+}
