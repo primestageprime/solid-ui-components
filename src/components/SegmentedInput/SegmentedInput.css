@@ -116,7 +116,9 @@
   justify-content: center;
   padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
   font-family: inherit;
-  font-size: 0.875rem;
+  /* Match the library's headline "value" size so the selected cadence
+     reads at the same size as the other values in a consumer form. */
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
   color: var(--sui-text-primary, #f1f5f9);
