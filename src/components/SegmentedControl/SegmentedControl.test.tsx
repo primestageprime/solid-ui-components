@@ -73,4 +73,29 @@ describe("SegmentedControl", () => {
     const { container } = render(() => <SegmentedControl options={three} value="a" />);
     expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(2);
   });
+
+  it("applies the per-state color class to the selected segment only", () => {
+    const { container } = render(() => <SegmentedControl options={OPTS} value="off" />);
+    const segs = container.querySelectorAll('[role="radio"]');
+    expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true); // Off selected
+    expect(segs[0].classList.contains("sui-segmented__seg--primary")).toBe(false); // Auto not selected
+  });
+
+  it("falls back to control-level color when a segment has none", () => {
+    const opts: SegmentOption[] = [{ value: "a" }, { value: "b" }];
+    const { container } = render(() => (
+      <SegmentedControl options={opts} value="a" color="success" />
+    ));
+    expect(container.querySelectorAll('[role="radio"]')[0].classList.contains("sui-segmented__seg--success")).toBe(true);
+  });
+
+  it("applies the size modifier class to the container", () => {
+    const { container } = render(() => <SegmentedControl options={OPTS} value="auto" size="lg" />);
+    expect(container.querySelector(".sui-segmented--lg")).toBeTruthy();
+  });
+
+  it("defaults to md size", () => {
+    const { container } = render(() => <SegmentedControl options={OPTS} value="auto" />);
+    expect(container.querySelector(".sui-segmented--md")).toBeTruthy();
+  });
 });
