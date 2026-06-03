@@ -3,14 +3,32 @@
 // Owns CSS (BigNumberInput.css), no component imports.
 // An editable numeric input rendered at a LARGE font (the
 // size of a `Text variant="value"` headline). Used to edit
-// a money amount in place. Optional `prefix` (e.g. "$") and
-// optional leading `sign` ("+"/"-") render as static chrome.
-//   <BigNumberInput value={1200} prefix="$" sign="+"
-//                   onChange={(n) => ...} />
-// Controlled + loop-free: a local string buffer mirrors the
-// input text and only re-syncs from `value` when the parsed
-// number actually differs, so typing never fights the prop.
+// a money amount in place.
+//
+// CURRENCY MASKING (default): the displayed text is masked as
+// localized currency via Intl.NumberFormat while the VALUE stays
+// a raw `number`. Symbol, grouping separators, decimal mark and
+// symbol position are all locale-driven presentation — they are
+// NEVER part of the value and `onChange` always emits the parsed
+// raw `number`.
+//   <BigNumberInput value={800} onChange={(n) => ...} />   // → "$800.00"
+//   <BigNumberInput value={-800} ... />                    // → "-$800.00"
+//   <BigNumberInput value={1234.5} locale="de-DE"          // → "1.234,50 €"
+//                   currency="EUR" ... />
+//
+// Format-on-blur: while FOCUSED the input shows the bare editable
+// number (no grouping) so the caret doesn't jump as you type; on
+// BLUR it reformats to the masked currency string.
+//
+// Controlled + loop-free: a local string buffer mirrors the input
+// text and only re-syncs from `value` when the parsed number
+// actually differs, so typing never fights the prop.
 // Factory: createBigNumberInput() for curried variants.
+//
+// `prefix` / `sign` are DEPRECATED static chrome from the pre-Intl
+// API. They are retained only as optional escape hatches and render
+// as static glyphs alongside the bare number; they do NOT participate
+// in currency masking and are ignored for the parsed value.
 // ============================================
 import {
   Component,
@@ -30,45 +48,107 @@ export interface BigNumberInputProps
   > {
   /** Current numeric value (controlled). */
   value: number;
-  /** Called with the parsed number whenever the input changes. */
+  /** Called with the parsed raw `number` whenever the input changes. */
   onChange: (n: number) => void;
-  /** Optional static prefix rendered before the number, e.g. "$". */
+  /**
+   * BCP-47 locale used to mask the displayed value as currency.
+   * Default `"en-US"`. Drives the symbol position, grouping
+   * separator and decimal mark.
+   */
+  locale?: string;
+  /**
+   * ISO-4217 currency code used for the masked display.
+   * Default `"USD"`.
+   */
+  currency?: string;
+  /**
+   * @deprecated Superseded by currency masking. Optional static prefix
+   * glyph rendered before the bare number (non-currency escape hatch).
+   */
   prefix?: string;
-  /** Optional leading sign glyph. "none" (default) renders nothing. */
+  /**
+   * @deprecated Superseded by currency masking. Optional leading sign
+   * glyph; "none" (default) renders nothing.
+   */
   sign?: "+" | "-" | "none";
   /** Text alignment of the number. Default "left". */
   align?: "left" | "right";
   /**
    * Select the entire contents when the input receives focus, so the
    * user can immediately type a replacement value. Default `true`.
-   * Arrow keys then move the caret and deselect (natural browser
-   * behaviour). Set `false` to opt out of select-on-focus.
+   * The select is DEFERRED to the next frame because browsers move the
+   * caret to the end after a synchronous focus-time `select()`. Set
+   * `false` to opt out of select-on-focus.
    */
   selectOnFocus?: boolean;
 }
 
-/** Parse the editable buffer to a number; empty / partial → 0. */
+/**
+ * Parse the editable buffer to a number leniently: keep only digits, a
+ * single decimal point and a leading minus, then `Number()` it. Empty /
+ * partial (`""`, `"-"`, `"."`) → 0.
+ */
 function parse(raw: string): number {
-  if (raw.trim() === "" || raw === "-" || raw === ".") return 0;
-  const n = Number(raw);
+  // Strip everything except digits, dot and minus.
+  let cleaned = raw.replace(/[^0-9.\-]/g, "");
+  // Keep only a leading minus.
+  const negative = cleaned.startsWith("-");
+  cleaned = cleaned.replace(/-/g, "");
+  // Keep only the first decimal point.
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot !== -1) {
+    cleaned =
+      cleaned.slice(0, firstDot + 1) +
+      cleaned.slice(firstDot + 1).replace(/\./g, "");
+  }
+  if (negative) cleaned = "-" + cleaned;
+  if (cleaned === "" || cleaned === "-" || cleaned === ".") return 0;
+  const n = Number(cleaned);
   return Number.isNaN(n) ? 0 : n;
 }
 
+/** The bare, editable representation of a number (no grouping). */
+function bare(value: number): string {
+  return String(value);
+}
+
+/** Mask a number as localized currency text. */
+function mask(value: number, locale: string, currency: string): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+    }).format(value);
+  } catch {
+    // Invalid locale/currency → fall back to the bare number.
+    return bare(value);
+  }
+}
+
 export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
-  const merged = mergeProps({ selectOnFocus: true }, props);
+  const merged = mergeProps(
+    { selectOnFocus: true, locale: "en-US", currency: "USD" },
+    props,
+  );
   const [local, others] = splitProps(merged, [
     "value",
     "onChange",
+    "locale",
+    "currency",
     "prefix",
     "sign",
     "align",
     "class",
     "selectOnFocus",
     "onFocus",
+    "onBlur",
   ]);
 
-  // Local editable buffer. Initialised from the incoming value.
-  const [text, setText] = createSignal(String(local.value));
+  let inputEl: HTMLInputElement | undefined;
+  const [focused, setFocused] = createSignal(false);
+
+  // Local editable buffer (always the BARE number while editing).
+  const [text, setText] = createSignal(bare(local.value));
 
   // Re-sync the buffer from `value` ONLY when the prop's numeric value
   // diverges from what the buffer currently represents. This keeps the
@@ -77,9 +157,14 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
   createEffect(() => {
     const incoming = local.value;
     if (parse(text()) !== incoming) {
-      setText(String(incoming));
+      setText(bare(incoming));
     }
   });
+
+  // What the input displays: bare number while focused (so the caret
+  // never jumps mid-edit), masked currency once blurred.
+  const display = () =>
+    focused() ? text() : mask(local.value, local.locale, local.currency);
 
   const handleInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (e) => {
     const raw = e.currentTarget.value;
@@ -87,19 +172,38 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
     local.onChange(parse(raw));
   };
 
-  // Select-all on focus (default). Compose with any consumer onFocus
-  // rather than clobbering it. Keyboard/tab focus is the primary case;
-  // mouse click stays browser-default.
+  // On focus: switch to the bare editable number and (default) select it
+  // all so the user can type a replacement immediately. The select is
+  // DEFERRED to the next frame — a synchronous focus-time `select()` is
+  // overridden by the browser, which drops the caret at the end.
   const handleFocus: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> = (
     e,
   ) => {
-    if (local.selectOnFocus) e.currentTarget.select();
+    setFocused(true);
+    // Ensure the editable buffer reflects the current value.
+    setText(bare(local.value));
+    if (local.selectOnFocus) {
+      const el = e.currentTarget;
+      requestAnimationFrame(() => el.select());
+    }
     const consumerOnFocus = local.onFocus;
-    // Solid allows either a plain handler or a bound `[handler, data]` tuple.
     if (typeof consumerOnFocus === "function") {
       consumerOnFocus(e);
     } else if (Array.isArray(consumerOnFocus)) {
       consumerOnFocus[0](consumerOnFocus[1], e);
+    }
+  };
+
+  // On blur: drop back to the masked currency representation.
+  const handleBlur: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> = (
+    e,
+  ) => {
+    setFocused(false);
+    const consumerOnBlur = local.onBlur;
+    if (typeof consumerOnBlur === "function") {
+      consumerOnBlur(e);
+    } else if (Array.isArray(consumerOnBlur)) {
+      consumerOnBlur[0](consumerOnBlur[1], e);
     }
   };
 
@@ -122,13 +226,15 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
         </span>
       </Show>
       <input
+        ref={inputEl}
         type="text"
         inputmode="decimal"
         class="sui-big-number__input"
         style={{ "text-align": local.align ?? "left" }}
-        value={text()}
+        value={display()}
         onInput={handleInput}
         onFocus={handleFocus}
+        onBlur={handleBlur}
         {...others}
       />
     </div>
