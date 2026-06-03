@@ -81,7 +81,7 @@ export function createSegmentedControl(
 export const OverrideToggle = createSegmentedControl({
   options: [
     { value: "auto", label: "Auto", group: "mode",     color: "primary" },
-    { value: "prod", label: "Prod", group: "override", color: "primary" },
+    { value: "prod", label: "Prod", group: "override", color: "success" },
     { value: "off",  label: "Off",  group: "override", color: "danger"  },
   ],
 });
