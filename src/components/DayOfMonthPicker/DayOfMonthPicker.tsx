@@ -18,6 +18,11 @@ export interface DayOfMonthPickerProps
   onChange: (day: number) => void;
   /** Highest day to render. Default 31. */
   max?: number;
+  /**
+   * Fixed size of each day cell (width and height), as a CSS length.
+   * Default "3.5rem". Sets the `--dom-cell-size` CSS var.
+   */
+  cellSize?: string;
 }
 
 export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
@@ -25,6 +30,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
     "value",
     "onChange",
     "max",
+    "cellSize",
     "class",
   ]);
 
@@ -35,7 +41,12 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
     local.class ? `sui-dom-picker ${local.class}` : "sui-dom-picker";
 
   return (
-    <div class={rootClass()} role="grid" {...others}>
+    <div
+      class={rootClass()}
+      role="grid"
+      style={{ "--dom-cell-size": local.cellSize ?? "3.5rem" }}
+      {...others}
+    >
       <For each={days()}>
         {(day) => {
           const selected = () => local.value === day;

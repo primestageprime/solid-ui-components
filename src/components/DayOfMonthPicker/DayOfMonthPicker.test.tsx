@@ -55,6 +55,22 @@ describe("DayOfMonthPicker", () => {
     expect(cell.tagName).toBe("BUTTON");
   });
 
+  it("applies the default fixed cell size via CSS var", () => {
+    const { container } = render(() => (
+      <DayOfMonthPicker value={null} onChange={() => {}} />
+    ));
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.getPropertyValue("--dom-cell-size")).toBe("3.5rem");
+  });
+
+  it("respects a custom cellSize prop", () => {
+    const { container } = render(() => (
+      <DayOfMonthPicker value={null} cellSize="4rem" onChange={() => {}} />
+    ));
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.getPropertyValue("--dom-cell-size")).toBe("4rem");
+  });
+
   it("createDayOfMonthPicker bakes defaults", () => {
     const Picker = createDayOfMonthPicker({ max: 7 });
     const { container } = render(() => (

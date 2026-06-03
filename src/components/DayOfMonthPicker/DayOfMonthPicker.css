@@ -4,15 +4,19 @@
    of the month (1..max). 7-column uniform grid.
    ============================================ */
 .sui-dom-picker {
+  /* Fixed-size 7-column grid that does NOT stretch to its
+     container: tracks are sized by --dom-cell-size, and the
+     grid is only as wide as 7 cells + gaps, left-aligned. */
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, var(--dom-cell-size, 3.5rem));
   gap: var(--sui-space-1, 4px);
-  width: 100%;
+  width: fit-content;
 }
 
 .sui-dom-picker__cell {
-  /* Uniform, square-ish cells of equal width. */
-  aspect-ratio: 1 / 1;
+  /* Small fixed square cells, sized by --dom-cell-size. */
+  width: var(--dom-cell-size, 3.5rem);
+  height: var(--dom-cell-size, 3.5rem);
   display: flex;
   align-items: center;
   justify-content: center;
