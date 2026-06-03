@@ -5,7 +5,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 export const SegmentedControlShowcase: Component = () => {
   const [mode, setMode] = createSignal("auto");
   const [view, setView] = createSignal("day");
-  const [size, setSize] = createSignal("md");
+  const [sizeDemo, setSizeDemo] = createSignal("a");
 
   return (
     <div class="component-section">
@@ -42,9 +42,9 @@ export const SegmentedControlShowcase: Component = () => {
       <div class="example-group">
         <h3>Sizes</h3>
         <Stack gap="md">
-          <SegmentedControl size="sm" options={[{ value: "a", label: "SM A" }, { value: "b", label: "SM B" }]} value={size()} onValueChange={setSize} />
-          <SegmentedControl size="md" options={[{ value: "a", label: "MD A" }, { value: "b", label: "MD B" }]} value={size()} onValueChange={setSize} />
-          <SegmentedControl size="lg" options={[{ value: "a", label: "LG A" }, { value: "b", label: "LG B" }]} value={size()} onValueChange={setSize} />
+          <SegmentedControl size="sm" options={[{ value: "a", label: "SM A" }, { value: "b", label: "SM B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
+          <SegmentedControl size="md" options={[{ value: "a", label: "MD A" }, { value: "b", label: "MD B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
+          <SegmentedControl size="lg" options={[{ value: "a", label: "LG A" }, { value: "b", label: "LG B" }]} value={sizeDemo()} onValueChange={setSizeDemo} />
         </Stack>
       </div>
 

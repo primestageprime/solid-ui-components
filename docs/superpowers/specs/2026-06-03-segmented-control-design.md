@@ -74,7 +74,7 @@ export type SegmentedControlDataProps =
   Omit<SegmentedControlProps, keyof SegmentedControlOverrides>;
 
 export function createSegmentedControl(
-  defaults: Partial<SegmentedControlProps>,
+  defaults: Pick<SegmentedControlProps, "options"> & Partial<SegmentedControlProps>,
 ): Component<SegmentedControlDataProps>;
 
 // variants.ts

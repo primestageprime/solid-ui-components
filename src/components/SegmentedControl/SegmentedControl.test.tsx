@@ -221,4 +221,29 @@ describe("SegmentedControl", () => {
     const segs = container.querySelectorAll('[role="radio"]');
     expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true);
   });
+
+  it("per-segment color overrides control-level color", () => {
+    const opts: SegmentOption[] = [{ value: "a", color: "danger" }, { value: "b" }];
+    const { container } = render(() => (
+      <SegmentedControl options={opts} value="a" color="success" />
+    ));
+    const seg = container.querySelectorAll('[role="radio"]')[0];
+    expect(seg.classList.contains("sui-segmented__seg--danger")).toBe(true);
+    expect(seg.classList.contains("sui-segmented__seg--success")).toBe(false);
+  });
+
+  it("renders a divider at a group boundary even when a boundary segment is disabled, and keyboard nav skips it across the group", () => {
+    const onValueChange = vi.fn();
+    const opts: SegmentOption[] = [
+      { value: "auto", group: "mode" },
+      { value: "prod", group: "override", disabled: true },
+      { value: "off", group: "override" },
+    ];
+    const { container } = render(() => (
+      <SegmentedControl options={opts} value="auto" onValueChange={onValueChange} />
+    ));
+    expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(1);
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowRight" });
+    expect(onValueChange).toHaveBeenCalledWith("off"); // skipped disabled "prod"
+  });
 });
