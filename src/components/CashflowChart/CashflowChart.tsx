@@ -195,8 +195,28 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
     const FIXED_Y_MIN = -10_000_000; // -$100k in cents
     const autoMax = Math.max(maxRevenue, maxBalance);
     const isManual = props.yMax != null;
-    const domainMax = isManual ? props.yMax! : autoMax;
-    const domainMin = Math.min(FIXED_Y_MIN, minBalance);
+
+    // Degenerate / empty data: no bars, or every bar's revenue, expense, and
+    // balance round to ~$0. In that case auto-scaling would otherwise anchor on
+    // the FIXED_Y_MIN floor (-$100k) and draw a flat line in deep negative
+    // space. Detect it (threshold = half a cent so genuine zero counts) and pin
+    // the domain to [$0, small positive default] so the empty chart rests on
+    // the $0 baseline with no negative region. An explicit `yMax` still wins.
+    const ZERO_EPS = 0.5; // cents; below this a value is treated as $0
+    const DEGENERATE_Y_MAX = 100_000; // $1,000 in cents — a small default top
+    const hasMeaningfulData =
+      bars.length > 0 &&
+      bars.some(
+        (b) =>
+          Math.abs(b.revenue_cents) >= ZERO_EPS ||
+          Math.abs(b.expense_cents) >= ZERO_EPS ||
+          Math.abs(b.balance_cents) >= ZERO_EPS,
+      );
+
+    const domainMax = isManual ? props.yMax! : hasMeaningfulData ? autoMax : DEGENERATE_Y_MAX;
+    // With no meaningful data, anchor the bottom at $0 (no negative region).
+    // Otherwise keep the existing floor so real negatives stay visible.
+    const domainMin = hasMeaningfulData ? Math.min(FIXED_Y_MIN, minBalance) : 0;
 
     const yScale = scaleLinear()
       .domain([domainMin, domainMax])

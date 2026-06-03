@@ -1,6 +1,33 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { WeeklyCashflowChart, type WeeklyCashflowChartData } from "./CashflowChart";
+import { WeeklyCashflowChart, type WeeklyCashflowChartData, type WeeklyChartBar } from "./CashflowChart";
+
+/** Build a chart bar, defaulting every numeric field to 0. */
+function bar(week_start: string, over: Partial<WeeklyChartBar> = {}): WeeklyChartBar {
+  return {
+    week_start,
+    month_label: "",
+    revenue_cents: 0,
+    recurring_revenue_cents: 0,
+    project_revenue_cents: 0,
+    product_revenue_cents: 0,
+    expense_cents: 0,
+    recurring_expense_cents: 0,
+    onetime_expense_cents: 0,
+    balance_cents: 0,
+    revenue_items: [],
+    expense_items: [],
+    recurring_expense_items: [],
+    onetime_expense_items: [],
+    isProjected: false,
+    ...over,
+  };
+}
+
+/** Read the rendered y-axis tick label texts. */
+function yTickLabels(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll(".rc-cashflow__label-y")).map((n) => n.textContent ?? "");
+}
 
 // Minimal mock ResizeObserver: jsdom has none, so we install one that captures
 // the callback and lets the test drive entries by hand. This lets us assert the
@@ -106,5 +133,50 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
     flushRaf();
     // Width tracks the container; height stays pinned to the prop.
     expect(svg.getAttribute("viewBox")).toBe("0 0 640 300");
+  });
+});
+
+describe("WeeklyCashflowChart y-domain (degenerate → $0-anchored)", () => {
+  // formatDollars renders negatives with a leading "-" (e.g. "-$100k"). A
+  // $0-anchored domain therefore produces NO label starting with "-".
+  const hasNegativeTick = (labels: string[]) => labels.some((t) => t.trim().startsWith("-"));
+
+  it("anchors the domain at $0 when there are no bars", () => {
+    const { container } = render(() => <WeeklyCashflowChart data={{ bars: [] }} />);
+    const labels = yTickLabels(container);
+    expect(labels.length).toBeGreaterThan(0);
+    expect(hasNegativeTick(labels)).toBe(false);
+    expect(labels).toContain("$0");
+  });
+
+  it("anchors the domain at $0 when every bar is all-zero", () => {
+    const data: WeeklyCashflowChartData = {
+      bars: [bar("2026-06-01"), bar("2026-06-08"), bar("2026-06-15")],
+    };
+    const { container } = render(() => <WeeklyCashflowChart data={data} />);
+    const labels = yTickLabels(container);
+    expect(hasNegativeTick(labels)).toBe(false);
+    expect(labels).toContain("$0");
+  });
+
+  it("keeps normal auto-scaling (negatives allowed) once a balance goes negative", () => {
+    const data: WeeklyCashflowChartData = {
+      bars: [
+        bar("2026-06-01", { revenue_cents: 500_000, balance_cents: 500_000 }),
+        // A real, deep negative balance — the chart must show negative ticks.
+        bar("2026-06-08", { expense_cents: 9_000_000, balance_cents: -8_500_000 }),
+      ],
+    };
+    const { container } = render(() => <WeeklyCashflowChart data={data} />);
+    const labels = yTickLabels(container);
+    expect(hasNegativeTick(labels)).toBe(true);
+  });
+
+  it("respects an explicit yMax even when data is degenerate", () => {
+    const { container } = render(() => <WeeklyCashflowChart data={{ bars: [] }} yMax={5_000_000} />);
+    const labels = yTickLabels(container);
+    // $0-anchored bottom, but the top is driven by the manual yMax ($50k).
+    expect(hasNegativeTick(labels)).toBe(false);
+    expect(labels.some((t) => t.includes("k"))).toBe(true);
   });
 });
