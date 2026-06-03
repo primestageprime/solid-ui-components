@@ -40,6 +40,17 @@ export interface CashflowScrubChartProps {
   chartHeight?: number;
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
+  /**
+   * Optional fixed upper y-bound, in **cents** (same semantics as
+   * `WeeklyCashflowChart.yMax`). When provided (non-null), the chart's upper
+   * y-domain is pinned to this value instead of auto-deriving from the running
+   * balance — "fixed-range" mode. When `null`/`undefined` (the default), the
+   * upper bound is auto-derived as before (no behavior change for current
+   * callers). The lower bound is left auto-derived either way, but is always
+   * pulled to `≤ 0` so the zero-line stays visible; an explicit `yMax` smaller
+   * than the actual peak balance simply clips the top of the line.
+   */
+  yMax?: number | null;
 }
 
 // ── Pure helpers (private — keep the public surface narrow) ─────────────
@@ -100,11 +111,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
-  // dips negative.
+  // dips negative. When `yMax` is provided (non-null), the upper bound is
+  // pinned to it (fixed-range mode); otherwise it auto-derives from the data.
   const yDomain = createMemo<[number, number]>(() => {
-    if (props.cells.length === 0) return [0, 1];
+    const manualMax = props.yMax;
+    const hasManualMax = manualMax != null;
+    if (props.cells.length === 0) return [0, hasManualMax ? manualMax : 1];
     const balances = props.cells.map((c) => c.balanceCents);
-    return [Math.min(0, ...balances), Math.max(0, ...balances)];
+    const lower = Math.min(0, ...balances);
+    const upper = hasManualMax ? manualMax : Math.max(0, ...balances);
+    return [lower, upper];
   });
 
   // ── Per-day cell renderer ────────────────────────────────────────────
