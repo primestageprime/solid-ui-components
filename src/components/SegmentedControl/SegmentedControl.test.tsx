@@ -49,4 +49,28 @@ describe("SegmentedControl", () => {
     fireEvent.click(container.querySelectorAll('[role="radio"]')[0]); // Auto (already selected)
     expect(onValueChange).not.toHaveBeenCalled();
   });
+
+  it("renders exactly one divider for AUTO | (PROD | OFF)", () => {
+    const { container } = render(() => <SegmentedControl options={OPTS} value="auto" />);
+    expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(1);
+  });
+
+  it("renders no divider when all options share a group", () => {
+    const same: SegmentOption[] = [
+      { value: "a", group: "g" },
+      { value: "b", group: "g" },
+    ];
+    const { container } = render(() => <SegmentedControl options={same} value="a" />);
+    expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(0);
+  });
+
+  it("renders a divider between each distinct adjacent group", () => {
+    const three: SegmentOption[] = [
+      { value: "a", group: "x" },
+      { value: "b", group: "y" },
+      { value: "c", group: "z" },
+    ];
+    const { container } = render(() => <SegmentedControl options={three} value="a" />);
+    expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(2);
+  });
 });
