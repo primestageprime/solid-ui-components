@@ -153,6 +153,7 @@ export {
 export * from "./components/ThreePanelLayout";
 export * from "./components/Markdown";
 export * from "./components/Kbd";
+export * from "./components/CodeBlock";
 export * from "./components/CollapsiblePanel";
 export * from "./components/WeekCalendar";
 export * from "./components/ActionRow";

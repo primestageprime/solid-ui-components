@@ -1,0 +1,20 @@
+/* ============================================
+   CodeBlock Component — Structural
+   Recessed dark monospace block for raw code / JSON.
+   ============================================ */
+.sui-code-block {
+  margin: 0;
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+  padding: var(--sui-space-3, 12px);
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-deep, #0d0d1a);
+  color: var(--sui-text-primary, #f1f5f9);
+}
+
+.sui-code-block--sm { font-size: 0.8125rem; }
+.sui-code-block--md { font-size: 0.875rem; }
+.sui-code-block--lg { font-size: 1rem; }
