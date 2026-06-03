@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { SegmentedControl, createSegmentedControl, OverrideToggle } from "./index";
+import { SegmentedControl, createSegmentedControl } from "./index";
 import type { SegmentOption } from "./index";
 
 const OPTS: SegmentOption[] = [
@@ -190,26 +190,22 @@ describe("SegmentedControl", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it("OverrideToggle renders Auto / Prod / Off with one divider", () => {
-    const { container } = render(() => <OverrideToggle value="auto" />);
+  it("createSegmentedControl bakes options into a data-only variant", () => {
+    const ModeControl = createSegmentedControl({
+      options: [
+        { value: "auto", label: "Auto", group: "mode" },
+        { value: "prod", label: "Prod", group: "override", color: "success" },
+        { value: "off", label: "Off", group: "override", color: "danger" },
+      ],
+    });
+    const onValueChange = vi.fn();
+    const { container } = render(() => <ModeControl value="off" onValueChange={onValueChange} />);
     const segs = container.querySelectorAll('[role="radio"]');
     expect([...segs].map((s) => s.textContent)).toEqual(["Auto", "Prod", "Off"]);
     expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(1);
-  });
-
-  it("OverrideToggle forwards value + onValueChange", () => {
-    const onValueChange = vi.fn();
-    const { container } = render(() => (
-      <OverrideToggle value="auto" onValueChange={onValueChange} />
-    ));
-    fireEvent.click(container.querySelectorAll('[role="radio"]')[2]); // Off
-    expect(onValueChange).toHaveBeenCalledWith("off");
-  });
-
-  it("OverrideToggle colors Off as danger when selected", () => {
-    const { container } = render(() => <OverrideToggle value="off" />);
-    const segs = container.querySelectorAll('[role="radio"]');
     expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true);
+    fireEvent.click(segs[0]); // Auto
+    expect(onValueChange).toHaveBeenCalledWith("auto");
   });
 
   it("per-segment color overrides control-level color", () => {

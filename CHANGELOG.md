@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## 0.61.0
+
+### Removed
+
+- **`OverrideToggle`** — dropped the domain-specific `AUTO | (PROD | OFF)` curried variant from the library. Per the "names shapes, not domains" rule, deployment/override jargon belongs in consumer apps, not SUI. `SegmentedControl` and the `createSegmentedControl` factory remain exported; rebuild the variant in your app's own `variants.ts`:
+
+  ```ts
+  import { createSegmentedControl } from "@primestageprime/solid-ui-components";
+
+  export const OverrideToggle = createSegmentedControl({
+    options: [
+      { value: "auto", label: "Auto", group: "mode" },
+      { value: "prod", label: "Prod", group: "override", color: "success" },
+      { value: "off",  label: "Off",  group: "override", color: "danger"  },
+    ],
+  });
+  ```
+
 ## 0.60.0
 
 ### Added

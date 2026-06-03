@@ -1,6 +1,17 @@
 import { Component, createSignal } from "solid-js";
-import { SegmentedControl, OverrideToggle } from "../../src/components/SegmentedControl";
+import { SegmentedControl, createSegmentedControl } from "../../src/components/SegmentedControl";
 import { Stack } from "../../src/components/Layout/Stack";
+
+// The dev gallery is itself a consumer app: domain-specific variants belong
+// here, not in the library. This AUTO | (PROD | OFF) control is curried
+// locally from the generic factory — exactly how a real consumer builds one.
+const OverrideControl = createSegmentedControl({
+  options: [
+    { value: "auto", label: "Auto", group: "mode" },
+    { value: "prod", label: "Prod", group: "override", color: "success" },
+    { value: "off", label: "Off", group: "override", color: "danger" },
+  ],
+});
 
 export const SegmentedControlShowcase: Component = () => {
   const [mode, setMode] = createSignal("auto");
@@ -14,12 +25,13 @@ export const SegmentedControlShowcase: Component = () => {
       </p>
 
       <div class="example-group">
-        <h3>OverrideToggle — <code>AUTO | (PROD | OFF)</code></h3>
+        <h3>App-defined variant via <code>createSegmentedControl</code> — <code>AUTO | (PROD | OFF)</code></h3>
         <p class="text-meta">
-          Curried variant. <code>Auto</code> is its own group; <code>Prod</code>/<code>Off</code>
+          Domain variants live in consumer apps, not the library. This control is curried
+          locally from the factory: <code>Auto</code> in its own group; <code>Prod</code>/<code>Off</code>
           form the override group. Selected colors are distinct: Auto accent, Prod green, Off red.
         </p>
-        <OverrideToggle value={mode()} onValueChange={setMode} />
+        <OverrideControl value={mode()} onValueChange={setMode} />
         <div class="text-meta">State: {mode()}</div>
       </div>
 
