@@ -458,6 +458,16 @@ State derivation:
 ## Icon
 - **Icon** — SVG icon component with 27 named icons across 6 groups (status, navigation, data, time, actions, UI/cache). Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). Use for: all iconography. Spinner icon auto-animates.
 
+## Checkbox
+- **Checkbox** — Atomic boolean control: a native `input[type=checkbox]` (visually hidden) behind a themed box + checkmark, with an optional inline label. Mirrors the `Toggle` API so the two are interchangeable. Key props: `checked`, `size` (`sm`|`md`|`lg`), `color` (`ColorVariant`, tints the checked fill), `label`, `labelPosition` (`left`|`right`), `onCheckedChange(checked)` (value handler) plus all native `<input>` attributes and `onChange`. Uses `--sui-accent`, `--sui-border`, `--sui-success`, `--sui-danger`, `--sui-bg-deep` tokens. Curried: `createCheckbox(defaults)`, `SmallCheckbox`, `DoneCheckbox`. Use for: standalone checkboxes (do NOT hand-roll an `<input type=checkbox>`).
+- **CheckboxField** — Form-field row: the `Checkbox` control + a clickable label and optional `hint` line, tied together by `id`. Zero-config call site — pass only data + a handler. Key props: `id`, `label`, `hint`, `checked`, `disabled`, `size`, `color`, `onChange`, `onCheckedChange`. Uses `--sui-text`, `--sui-text-muted` tokens. Use for: checklists and settings rows.
+  - Example:
+    ```tsx
+    import { CheckboxField } from "solid-ui-components";
+    <CheckboxField id="ci" label="Wire up CI" hint="Lint + test on push"
+      checked={done()} onChange={() => setDone((d) => !d)} />
+    ```
+
 ## Inputs
 - **ThemedInput** — Styled text input with optional label. Key props: `label`, plus all native `<input>` attributes. Use for: themed form text inputs.
 - **ThemedNumberInput** — Themed numeric field built on `@kobalte/core/number-field` with stacked increment/decrement triggers. Key props: `value` (`Accessor<number | undefined>`), `onChange` (`(value: number | undefined) => void`), `name`, `label`, `description`, `errorMessage`, `min`, `max`, `step` (default `1`). Friendly names `min`/`max` map to kobalte's `minValue`/`maxValue`; any other `NumberFieldRootProps` (e.g. `disabled`, `required`, `format`, `formatOptions`, `changeOnWheel`) is forwarded via spread. When `errorMessage` is set, the field renders in invalid state and suppresses the description. Kobalte emits `NaN` on clear — normalized to `undefined` before `onChange`. Uses `--sui-bg-secondary`, `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-accent-rgb`, `--sui-danger`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-radius-sm`, `--sui-font-family` theme tokens. Use for: numeric form fields (RPM, counts, thresholds, bounded parameters).

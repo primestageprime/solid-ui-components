@@ -33,6 +33,7 @@ export * from "./components/Fab";
 export * from "./components/Card";
 export * from "./components/DataDisplay";
 export * from "./components/Feedback";
+export * from "./components/Checkbox";
 export * from "./components/Icon";
 export * from "./components/Inputs";
 export * from "./components/Navigation";
