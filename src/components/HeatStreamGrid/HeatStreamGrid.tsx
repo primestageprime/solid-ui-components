@@ -7,7 +7,7 @@
 // columns (e.g. time windows), each cell containing
 // a compact HeatStream.
 // ============================================
-import { Component, JSX, splitProps, For, Show } from "solid-js";
+import { Component, JSX, splitProps, For, Show, createMemo } from "solid-js";
 import { HeatStream, HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
@@ -34,7 +34,29 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
     "selectionStore",
     "rowLabels",
     "class",
+    "style",
   ]);
+
+  // Fluid-fill: if parent gives this component a height, distribute it evenly
+  // across the data rows. Exposed via a CSS variable so the stylesheet can
+  // compute `calc(100% / N)` per row without JS-time measurement.
+  const rootStyle = (): JSX.CSSProperties => ({
+    ...((typeof local.style === "object" && local.style) || {}),
+    "--jtf-hs-grid-row-count": String(Math.max(1, local.rows.length)),
+  });
+
+  // Largest item count across every visible cell. Drives the shared compact
+  // cell width so the fullest cell fills its column and all marks are uniform.
+  const maxItems = createMemo(() => {
+    let m = 1;
+    for (const row of local.rows) {
+      for (const col of local.columns) {
+        const n = local.data(row, col).length;
+        if (n > m) m = n;
+      }
+    }
+    return m;
+  });
 
   // Selection helpers — "include unless all already included, then exclude"
   const toggleKeys = (keys: string[]) => {
@@ -90,7 +112,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
   };
 
   return (
-    <div class={classes()} {...others}>
+    <div class={classes()} style={rootStyle()} {...others}>
       <table class="jtf-heatstream-grid__table">
         <thead>
           <tr>
@@ -146,6 +168,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                             keys={local.keys}
                             variant="compact"
                             showLabels={false}
+                            maxItems={maxItems()}
                             previewLabel={local.rowLabels?.[row] ?? row}
                           />
                         </Show>

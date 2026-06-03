@@ -2,12 +2,31 @@
 .jtf-heatstream-grid {
   font-family: var(--jtf-font-family);
   width: 100%;
+  /* Fill parent height when sized; collapses to intrinsic when parent is auto. */
+  height: 100%;
 }
 
 .jtf-heatstream-grid__table {
   width: 100%;
+  height: 100%;
   border-collapse: collapse;
   border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* Each data row gets an equal share of the table's height. The row count
+   is provided as --jtf-hs-grid-row-count by the component. */
+.jtf-heatstream-grid__table tbody tr {
+  height: calc(100% / var(--jtf-hs-grid-row-count, 1));
+}
+
+/* Highlight the whole row on hover so the hovered asset reads as one band. */
+.jtf-heatstream-grid__table tbody tr:hover {
+  background-color: rgba(var(--sui-accent-rgb), 0.1);
+}
+
+.jtf-heatstream-grid__table tbody tr:hover .jtf-heatstream-grid__row-label {
+  color: var(--sui-accent);
 }
 
 .jtf-heatstream-grid__header {
@@ -35,7 +54,8 @@
 
 .jtf-heatstream-grid__cell {
   padding: 1px;
-  vertical-align: bottom;
+  vertical-align: middle;
+  height: inherit;
 }
 
 /* Selection mode */

@@ -1,0 +1,128 @@
+/* ============================================
+   Checkbox Component — Structural
+   Native input is visually hidden; the .sui-checkbox__box span is the
+   painted control. Colors come from SUI theme tokens (no magic hex).
+   ============================================ */
+.sui-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sui-checkbox--label-left {
+  flex-direction: row;
+}
+
+.sui-checkbox__label {
+  user-select: none;
+  cursor: pointer;
+}
+
+.sui-checkbox__control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.sui-checkbox__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sui-checkbox__box {
+  display: block;
+  box-sizing: border-box;
+  border: 1.5px solid var(--sui-border);
+  border-radius: 4px;
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+/* Checkmark — drawn with a rotated border, revealed when checked. */
+.sui-checkbox__box::after {
+  content: "";
+  position: absolute;
+  opacity: 0;
+  border: solid var(--sui-bg-deep, #001018);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  transition: opacity 0.15s ease;
+}
+
+/* Sizes */
+.sui-checkbox--sm .sui-checkbox__box {
+  width: 14px;
+  height: 14px;
+}
+.sui-checkbox--sm .sui-checkbox__box::after {
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+}
+
+.sui-checkbox--md .sui-checkbox__box {
+  width: 18px;
+  height: 18px;
+}
+.sui-checkbox--md .sui-checkbox__box::after {
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+}
+
+.sui-checkbox--lg .sui-checkbox__box {
+  width: 24px;
+  height: 24px;
+}
+.sui-checkbox--lg .sui-checkbox__box::after {
+  left: 7px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+}
+
+/* Checked state — accent fill + revealed checkmark. */
+.sui-checkbox__input:checked + .sui-checkbox__box {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+}
+
+.sui-checkbox__input:checked + .sui-checkbox__box::after {
+  opacity: 1;
+}
+
+/* Color variants — override the checked accent. */
+.sui-checkbox--primary .sui-checkbox__input:checked + .sui-checkbox__box {
+  background: var(--sui-primary, var(--sui-accent));
+  border-color: var(--sui-primary, var(--sui-accent));
+}
+.sui-checkbox--success .sui-checkbox__input:checked + .sui-checkbox__box {
+  background: var(--sui-success);
+  border-color: var(--sui-success);
+}
+.sui-checkbox--danger .sui-checkbox__input:checked + .sui-checkbox__box {
+  background: var(--sui-danger);
+  border-color: var(--sui-danger);
+}
+
+/* Focus state */
+.sui-checkbox__input:focus-visible + .sui-checkbox__box {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+.sui-checkbox:has(.sui-checkbox__input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.sui-checkbox:has(.sui-checkbox__input:disabled) .sui-checkbox__label,
+.sui-checkbox__input:disabled + .sui-checkbox__box {
+  cursor: not-allowed;
+}

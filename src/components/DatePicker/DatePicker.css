@@ -1,0 +1,47 @@
+/* ============================================
+   DatePicker Component — Structural
+   Themed wrapper over a native <input type="date">.
+   Styled with --sui-* tokens to match the dark HUD
+   theme; the native calendar popup is reused as-is.
+   ============================================ */
+.sui-date-picker {
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1;
+  padding: var(--sui-space-2, 8px) var(--sui-space-3, 12px);
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-elevated, #1e2a3e);
+  color: var(--sui-text-primary, #f1f5f9);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  /* Dark-theme the native calendar/clock indicator UI. */
+  color-scheme: dark;
+}
+
+.sui-date-picker:hover {
+  border-color: var(--sui-border-bright, #475569);
+}
+
+.sui-date-picker:focus-visible {
+  outline: none;
+  border-color: var(--sui-border-focus, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(var(--sui-accent-rgb, 59, 130, 246), 0.35);
+}
+
+/* Tint the calendar picker indicator to the accent. */
+.sui-date-picker::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  filter: invert(0.85);
+  transition: opacity 0.12s ease;
+}
+
+.sui-date-picker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.sui-date-picker:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

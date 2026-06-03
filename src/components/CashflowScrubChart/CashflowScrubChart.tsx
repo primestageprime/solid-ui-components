@@ -93,6 +93,17 @@ export interface CashflowScrubChartProps {
   /** Extra balance lines overlaid on the chart. The y-domain widens to span
    *  their values. Drawn beneath the primary running-balance line. */
   balanceSeries?: CashflowBalanceSeries[];
+  /**
+   * Optional fixed upper y-bound, in **cents** (same semantics as
+   * `WeeklyCashflowChart.yMax`). When provided (non-null), the chart's upper
+   * y-domain is pinned to this value instead of auto-deriving from the running
+   * balance — "fixed-range" mode. When `null`/`undefined` (the default), the
+   * upper bound is auto-derived as before (no behavior change for current
+   * callers). The lower bound is left auto-derived either way, but is always
+   * pulled to `≤ 0` so the zero-line stays visible; an explicit `yMax` smaller
+   * than the actual peak balance simply clips the top of the line.
+   */
+  yMax?: number | null;
 }
 
 // ── Pure helpers (private — keep the public surface narrow) ─────────────
@@ -179,10 +190,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
-  // dips negative. Spans the primary balance plus every extra series so no
-  // overlaid line clips against the top/bottom of the plot.
+  // dips negative. The domain spans the primary balance plus every extra
+  // series so no overlaid line clips. When `yMax` is provided (non-null) the
+  // upper bound is instead pinned to it (fixed-range mode); the lower bound is
+  // always auto-derived and pulled to ≤ 0 so the zero-line stays visible.
   const yDomain = createMemo<[number, number]>(() => {
-    if (props.cells.length === 0) return [0, 1];
+    const manualMax = props.yMax;
+    const hasManualMax = manualMax != null;
+    if (props.cells.length === 0) return [0, hasManualMax ? manualMax : 1];
     const series = props.balanceSeries ?? [];
     const values = props.cells.flatMap((c, i) => [
       c.balanceCents,
@@ -192,7 +207,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     ]);
     // Reduce (not Math.min(...spread)) to stay safe on long ranges.
     const lo = values.reduce((m, v) => Math.min(m, v), 0);
-    const hi = values.reduce((m, v) => Math.max(m, v), 0);
+    const hi = hasManualMax
+      ? manualMax
+      : values.reduce((m, v) => Math.max(m, v), 0);
     return [lo, hi];
   });
 

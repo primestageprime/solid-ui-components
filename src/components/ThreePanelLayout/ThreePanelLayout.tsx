@@ -43,12 +43,23 @@ export interface ThreePanelLayoutProps {
    * Defaults to `"240px"`.
    */
   rightPanelWidth?: string;
+  /**
+   * Max-height applied to the left/right asides when the layout collapses to
+   * a single stacked column (≤900px). Defaults to `"200px"`, which caps each
+   * aside and lets it scroll internally — preserving the original behavior.
+   * Pass `"none"` (or any CSS length) to opt out of the cap so a stacked aside
+   * sizes to its full content height (no clip, no internal scroll). Wired into
+   * the stacked media query via the `--sui-three-panel-aside-max` custom
+   * property on the root element.
+   */
+  asideMaxHeight?: string;
   /** Optional class appended to the root `.sui-three-panel` element. */
   class?: string;
 }
 
 const DEFAULT_LEFT_WIDTH = "220px";
 const DEFAULT_RIGHT_WIDTH = "240px";
+const DEFAULT_ASIDE_MAX_HEIGHT = "200px";
 
 const resolveHeight = (height: string | undefined, fullHeight: boolean | undefined): string => {
   if (height) return height;
@@ -76,6 +87,7 @@ export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
       props.leftPanelWidth ?? DEFAULT_LEFT_WIDTH,
       props.rightPanelWidth ?? DEFAULT_RIGHT_WIDTH,
     ),
+    "--sui-three-panel-aside-max": props.asideMaxHeight ?? DEFAULT_ASIDE_MAX_HEIGHT,
   });
 
   const rootClass = (): string => {

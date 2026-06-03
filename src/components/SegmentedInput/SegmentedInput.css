@@ -1,0 +1,126 @@
+/* ============================================
+   SegmentedInput Component — Structural
+   Single-select segmented control: connected
+   buttons in a horizontal row, accent-selected.
+   ============================================ */
+.sui-segmented {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: var(--sui-space-0-5, 2px);
+  gap: var(--sui-space-0-5, 2px);
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-md, 8px);
+  background: var(--sui-bg-deep, #0d0d1a);
+  width: fit-content;
+}
+
+.sui-segmented__segment {
+  appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm, 4px);
+  background: transparent;
+  color: var(--sui-text-secondary, #94a3b8);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sui-segmented__segment:hover {
+  color: var(--sui-text-primary, #f1f5f9);
+  background: var(--sui-bg-elevated, #1e2a3e);
+}
+
+.sui-segmented__segment:focus-visible {
+  outline: 2px solid var(--sui-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+.sui-segmented__segment--selected,
+.sui-segmented__segment--selected:hover {
+  background: var(--sui-accent, #3b82f6);
+  border-color: var(--sui-accent, #3b82f6);
+  color: var(--sui-bg-deep, #0d0d1a);
+  font-weight: 600;
+}
+
+/* ============================================
+   SegmentedInput — Compact (stepper) variant
+   Content-width ‹ label › control. Same dark HUD
+   token styling as the full strip.
+   ============================================ */
+.sui-segmented-stepper {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: var(--sui-space-0-5, 2px);
+  gap: var(--sui-space-0-5, 2px);
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-md, 8px);
+  background: var(--sui-bg-deep, #0d0d1a);
+  width: fit-content;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.sui-segmented-stepper:focus-visible {
+  outline: 2px solid var(--sui-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+.sui-segmented-stepper__chevron {
+  appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sui-space-6, 24px);
+  padding: var(--sui-space-1-5, 6px) var(--sui-space-2, 8px);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm, 4px);
+  background: transparent;
+  color: var(--sui-text-secondary, #94a3b8);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sui-segmented-stepper__chevron:hover:not(:disabled) {
+  color: var(--sui-text-primary, #f1f5f9);
+  background: var(--sui-bg-elevated, #1e2a3e);
+}
+
+.sui-segmented-stepper__chevron:focus-visible {
+  outline: 2px solid var(--sui-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+.sui-segmented-stepper__chevron:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sui-segmented-stepper__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
+  font-family: inherit;
+  /* Match the library's headline "value" size so the selected cadence
+     reads at the same size as the other values in a consumer form. */
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--sui-text-primary, #f1f5f9);
+  white-space: nowrap;
+}

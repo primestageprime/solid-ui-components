@@ -1,0 +1,56 @@
+/* ============================================
+   DayOfMonthPicker Component — Structural
+   Compact calendar-style grid for choosing a day
+   of the month (1..max). 7-column uniform grid.
+   ============================================ */
+.sui-dom-picker {
+  /* Fixed-size 7-column grid that does NOT stretch to its
+     container: tracks are sized by --dom-cell-size, and the
+     grid is only as wide as 7 cells + gaps, left-aligned. */
+  display: grid;
+  grid-template-columns: repeat(7, var(--dom-cell-size, 3.5rem));
+  gap: var(--sui-space-1, 4px);
+  width: fit-content;
+}
+
+.sui-dom-picker__cell {
+  /* Small fixed square cells, sized by --dom-cell-size. */
+  width: var(--dom-cell-size, 3.5rem);
+  height: var(--dom-cell-size, 3.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  /* Day number scales with the cell so it reads as a headline-sized
+     value (~1.5rem at the default --dom-cell-size: 3.5rem) and shrinks
+     proportionally for smaller cells. 3.5rem * 0.43 = 1.505rem ≈ 24px. */
+  font-size: calc(var(--dom-cell-size, 3.5rem) * 0.43);
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-elevated, #142535);
+  color: var(--sui-text-primary, #e0f4ff);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.sui-dom-picker__cell:hover {
+  border-color: var(--sui-accent, #00d4ff);
+  background: var(--sui-bg-primary, #0a1420);
+}
+
+.sui-dom-picker__cell:focus-visible {
+  outline: 2px solid var(--sui-accent, #00d4ff);
+  outline-offset: 1px;
+}
+
+.sui-dom-picker__cell--selected,
+.sui-dom-picker__cell--selected:hover {
+  background: var(--sui-accent, #00d4ff);
+  border-color: var(--sui-accent, #00d4ff);
+  color: var(--sui-bg-deep, #030810);
+  font-weight: 600;
+}
