@@ -199,4 +199,26 @@ describe("SegmentedControl", () => {
     fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, { key: "ArrowRight" });
     expect(onValueChange).not.toHaveBeenCalled();
   });
+
+  it("OverrideToggle renders Auto / Prod / Off with one divider", () => {
+    const { container } = render(() => <OverrideToggle value="auto" />);
+    const segs = container.querySelectorAll('[role="radio"]');
+    expect([...segs].map((s) => s.textContent)).toEqual(["Auto", "Prod", "Off"]);
+    expect(container.querySelectorAll(".sui-segmented__divider").length).toBe(1);
+  });
+
+  it("OverrideToggle forwards value + onValueChange", () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <OverrideToggle value="auto" onValueChange={onValueChange} />
+    ));
+    fireEvent.click(container.querySelectorAll('[role="radio"]')[2]); // Off
+    expect(onValueChange).toHaveBeenCalledWith("off");
+  });
+
+  it("OverrideToggle colors Off as danger when selected", () => {
+    const { container } = render(() => <OverrideToggle value="off" />);
+    const segs = container.querySelectorAll('[role="radio"]');
+    expect(segs[2].classList.contains("sui-segmented__seg--danger")).toBe(true);
+  });
 });
