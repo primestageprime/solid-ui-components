@@ -1,14 +1,14 @@
 /* ============================================
-   SegmentedControl Component
+   SegmentedControl Component — visual states (selected colors, hover, divider, disabled)
    ============================================ */
 .sui-segmented {
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--sui-border);
-  border-radius: 8px;
+  border-radius: var(--sui-radius-md);
   overflow: hidden;
   user-select: none;
-  background: var(--sui-surface, transparent);
+  background: transparent;
 }
 
 .sui-segmented__seg {
@@ -27,7 +27,7 @@
 }
 
 .sui-segmented__seg:hover:not(.sui-segmented__seg--disabled):not(.sui-segmented__seg--selected) {
-  color: var(--sui-text);
+  color: var(--sui-text-primary);
   background: rgba(var(--sui-accent-rgb), 0.06);
 }
 
@@ -43,6 +43,7 @@
 }
 
 /* Selected — color modifiers (primary maps to accent) */
+/* primary is an explicit alias for the default accent fill */
 .sui-segmented__seg--selected.sui-segmented__seg--primary {
   background: var(--sui-accent);
   color: var(--sui-bg-deep, #001018);
@@ -64,7 +65,7 @@
 .sui-segmented__divider {
   width: 2px;
   align-self: stretch;
-  background: var(--sui-border-strong, var(--sui-text-muted));
+  background: var(--sui-border-bright);
 }
 /* The divider already separates groups; drop the segment's own left border
    immediately after a divider to avoid a double line. */
