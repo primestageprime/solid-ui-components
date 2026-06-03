@@ -99,9 +99,13 @@
     grid-column: 1;
   }
 
+  /* Cap (and internally scroll) each stacked aside by default. Consumers can
+     pass `asideMaxHeight="none"` (or any CSS length) to override the cap so the
+     aside grows to its full content height — the value flows in via the
+     --sui-three-panel-aside-max custom property written on the root element. */
   .sui-three-panel__left,
   .sui-three-panel__right {
     border: none;
-    max-height: 200px;
+    max-height: var(--sui-three-panel-aside-max, 200px);
   }
 }
