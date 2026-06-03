@@ -1,0 +1,51 @@
+/* ============================================
+   SegmentedInput Component — Structural
+   Single-select segmented control: connected
+   buttons in a horizontal row, accent-selected.
+   ============================================ */
+.sui-segmented {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: var(--sui-space-0-5, 2px);
+  gap: var(--sui-space-0-5, 2px);
+  border: 1px solid var(--sui-border, #334155);
+  border-radius: var(--sui-radius-md, 8px);
+  background: var(--sui-bg-deep, #0d0d1a);
+  width: fit-content;
+}
+
+.sui-segmented__segment {
+  appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm, 4px);
+  background: transparent;
+  color: var(--sui-text-secondary, #94a3b8);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sui-segmented__segment:hover {
+  color: var(--sui-text-primary, #f1f5f9);
+  background: var(--sui-bg-elevated, #1e2a3e);
+}
+
+.sui-segmented__segment:focus-visible {
+  outline: 2px solid var(--sui-accent, #3b82f6);
+  outline-offset: 1px;
+}
+
+.sui-segmented__segment--selected,
+.sui-segmented__segment--selected:hover {
+  background: var(--sui-accent, #3b82f6);
+  border-color: var(--sui-accent, #3b82f6);
+  color: var(--sui-bg-deep, #0d0d1a);
+  font-weight: 600;
+}

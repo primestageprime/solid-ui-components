@@ -1,0 +1,57 @@
+/* ============================================
+   BigNumberInput Component — Structural
+   Large-font editable numeric input (matches the
+   `Text variant="value"` headline scale). No
+   spinner chrome; prefix/sign are static glyphs.
+   ============================================ */
+.sui-big-number {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sui-space-1, 4px);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--sui-text-primary, #f1f5f9);
+}
+
+.sui-big-number__sign,
+.sui-big-number__prefix {
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--sui-text-secondary, #94a3b8);
+  user-select: none;
+}
+
+.sui-big-number__input {
+  /* Inherit the big font; strip all native input chrome. */
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  min-width: 1ch;
+  width: 100%;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* Remove WebKit/Blink spinner chrome (defensive — type is text). */
+.sui-big-number__input::-webkit-outer-spin-button,
+.sui-big-number__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sui-big-number__input:focus-visible {
+  outline: none;
+}
+
+.sui-big-number:focus-within {
+  /* Subtle accent underline when editing. */
+  box-shadow: inset 0 -2px 0 0 var(--sui-accent, #3b82f6);
+}
