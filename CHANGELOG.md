@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## 0.61.1
+
+### Added
+
+- **`BaseTable` `rowActions` prop** — `rowActions?: (row: T, rowIndex: number) => JSX.Element`. When provided, a tight, right-aligned trailing cell is rendered on every body row (with a matching empty trailing header cell so columns stay aligned). The action content is hidden by default and hover-revealed (`opacity` fade) on row hover, and always visible on keyboard `:focus-within` for a11y. Clicks inside the action cell stop propagation, so they never trigger `onRowClick`. Purely additive — tables without `rowActions` render exactly as before. The hover CSS lives in SUI (`.hud-table__actions-cell` / `.hud-table__actions-content` in `Table.css`), so no per-consumer CSS is needed. Passes through `FilterableTable` automatically.
+
+  ```tsx
+  <BaseTable
+    data={rows}
+    columns={cols}
+    rowActions={(r) => (
+      <Button variant="icon-only" onClick={() => onDelete(r)}>
+        <Icon name="close" />
+      </Button>
+    )}
+  />
+  ```
+
 ## 0.61.0
 
 ### Removed

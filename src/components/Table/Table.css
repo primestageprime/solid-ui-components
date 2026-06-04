@@ -149,6 +149,39 @@
   letter-spacing: 0.05em;
 }
 
+/* ============================================
+   Per-row trailing action slot (rowActions)
+   Hover-revealed; always visible on keyboard focus-within.
+   ============================================ */
+.hud-table__actions-header,
+.hud-table__actions-cell {
+  /* Keep the column tight and pinned to the right edge. */
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.hud-table__actions-cell {
+  /* Avoid horizontal padding piling onto the action's own spacing. */
+  padding-left: 4px;
+  padding-right: 8px;
+}
+
+.hud-table__actions-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* Reveal on row hover or when an action inside receives keyboard focus. */
+.hud-table__row:hover .hud-table__actions-content,
+.hud-table__actions-cell:focus-within .hud-table__actions-content {
+  opacity: 1;
+}
+
 /* Striped variant */
 .hud-table--striped .hud-table__row:nth-child(even) {
   background-color: rgba(var(--sui-accent-rgb), 0.02);

@@ -2,6 +2,8 @@ import { Component } from "solid-js";
 import { BaseTable } from "../../src/components/Table";
 import { CompactTable, StripedTable, StickyTable, DataTable } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";
+import { Button } from "../../src/components/Button";
+import { Icon } from "../../src/components/Icon";
 
 const sampleData = [
   { id: 1, vessel: "MV Northern Star", imo: "9876543", status: "Active", speed: 14.2 },
@@ -55,6 +57,20 @@ export const BaseTableShowcase: Component = () => {
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Compact + Sticky Header</h3>
           <BaseTable data={sampleData} columns={columns} compact stickyHeader maxHeight="150px" />
+
+          <h3 style={{ "margin-top": "24px" }}>Composed — Hover Row Actions</h3>
+          <p class="text-meta">Hover a row to reveal the trailing action. Clicking the action does not fire <code>onRowClick</code>.</p>
+          <BaseTable
+            data={sampleData}
+            columns={columns}
+            hoverable
+            onRowClick={(r) => console.log("row click", r.vessel)}
+            rowActions={(r) => (
+              <Button variant="icon-only" size="sm" onClick={() => console.log("delete", r.vessel)}>
+                <Icon name="close" />
+              </Button>
+            )}
+          />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Empty State</h3>
           <BaseTable data={[]} columns={columns} emptyMessage="No vessels found" />

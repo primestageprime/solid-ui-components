@@ -24,6 +24,16 @@ export interface BaseTableProps<T> extends Omit<JSX.HTMLAttributes<HTMLDivElemen
   getRowClass?: (row: T, index: number) => string;
   onRowClick?: (row: T, index: number) => void;
   emptyMessage?: string;
+  /**
+   * Optional per-row trailing action slot. When provided, an extra cell is
+   * rendered at the right end of every body row containing `rowActions(row, i)`,
+   * plus a matching empty trailing header cell to keep columns aligned.
+   *
+   * The action cell is hover-revealed (hidden by default, fades in on row hover
+   * or keyboard focus-within — see `.hud-table__actions-cell` in Table.css) and
+   * stops click propagation so action clicks never trigger `onRowClick`.
+   */
+  rowActions?: (row: T, rowIndex: number) => JSX.Element;
 }
 
 /**

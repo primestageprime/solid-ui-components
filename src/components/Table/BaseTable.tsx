@@ -69,6 +69,7 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
     "getRowClass",
     "onRowClick",
     "emptyMessage",
+    "rowActions",
     "class",
   ]);
 
@@ -184,6 +185,9 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
                 <For each={local.columns}>
                   {(column) => renderColumnTh(column)}
                 </For>
+                <Show when={local.rowActions}>
+                  <th class="hud-table__header-cell hud-table__actions-header" aria-hidden="true" />
+                </Show>
               </tr>
             </thead>
           }>
@@ -209,6 +213,9 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
                       </Show>
                     )}
                   </For>
+                  <Show when={local.rowActions}>
+                    <th class="hud-table__header-cell hud-table__actions-header hud-table__header-cell--rowspan" aria-hidden="true" rowspan={2} />
+                  </Show>
                 </tr>
                 {/* Row 2: sub-column headers for grouped columns only */}
                 <tr class="hud-table__row">
@@ -247,6 +254,18 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
                       </td>
                     )}
                   </For>
+                  <Show when={local.rowActions}>
+                    {(rowActions) => (
+                      <td
+                        class="hud-table__cell hud-table__actions-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div class="hud-table__actions-content">
+                          {rowActions()(row, rowIndex())}
+                        </div>
+                      </td>
+                    )}
+                  </Show>
                 </tr>
               )}
             </For>
