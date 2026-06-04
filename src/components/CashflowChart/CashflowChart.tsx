@@ -189,11 +189,16 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
       .range([PAD.left, VB_W() - PAD.right])
       .padding(0.15);
 
-    const maxRevenue = Math.max(1, ...bars.map((b) => b.revenue_cents));
+    const maxRevenue = Math.max(0, ...bars.map((b) => b.revenue_cents));
+    const maxExpense = Math.max(0, ...bars.map((b) => b.expense_cents));
     const minBalance = bars.length ? Math.min(0, ...bars.map((b) => b.balance_cents)) : 0;
     const maxBalance = bars.length ? Math.max(0, ...bars.map((b) => b.balance_cents)) : 0;
-    const FIXED_Y_MIN = -10_000_000; // -$100k in cents
-    const autoMax = Math.max(maxRevenue, maxBalance);
+    const FIXED_Y_MIN = -10_000_000; // -$100k in cents (manual/fixed-range floor)
+    // Full rendered vertical extent: revenue bars rise from $0, expense bars drop
+    // below $0, and the balance line can land on either side. Auto-scaling fits
+    // this whole extent so nothing floats in empty space.
+    const dataMax = Math.max(0, maxRevenue, maxBalance);
+    const dataMin = Math.min(0, -maxExpense, minBalance);
     const isManual = props.yMax != null;
 
     // Degenerate / empty data: no bars, or every bar's revenue, expense, and
@@ -213,15 +218,27 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
           Math.abs(b.balance_cents) >= ZERO_EPS,
       );
 
-    const domainMax = isManual ? props.yMax! : hasMeaningfulData ? autoMax : DEGENERATE_Y_MAX;
-    // With no meaningful data, anchor the bottom at $0 (no negative region).
-    // Otherwise keep the existing floor so real negatives stay visible.
-    const domainMin = hasMeaningfulData ? Math.min(FIXED_Y_MIN, minBalance) : 0;
+    // Auto mode fits the data extent with 10% headroom on each edge so the full
+    // line + bars are visible without floating in empty space. Manual mode keeps
+    // the caller's pinned yMax and the historical fixed floor.
+    const PAD_FRAC = 0.1;
+    const span = dataMax - dataMin || DEGENERATE_Y_MAX;
+    const domainMax = isManual
+      ? props.yMax!
+      : hasMeaningfulData
+        ? dataMax + span * PAD_FRAC
+        : DEGENERATE_Y_MAX;
+    const domainMin = !hasMeaningfulData
+      ? 0 // degenerate/empty data rests on the $0 baseline in either mode
+      : isManual
+        ? Math.min(FIXED_Y_MIN, minBalance)
+        : dataMin - span * PAD_FRAC;
 
     const yScale = scaleLinear()
       .domain([domainMin, domainMax])
       .range([h() - PAD.bottom, PAD.top]);
-    if (!isManual) yScale.nice();
+    // No .nice() in auto mode — rounding the domain outward would reintroduce the
+    // empty margins the 10% fit is meant to remove.
 
     const ticks = yScale.ticks(5);
     const bw = xScale.bandwidth();
