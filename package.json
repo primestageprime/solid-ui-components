@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.61.2",
+  "version": "0.61.3",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -22,6 +22,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./themes/_baseline.css": {
+      "source": "./src/themes/_baseline.css",
+      "default": "./dist/themes/_baseline.css"
+    },
     "./themes/default.css": {
       "source": "./src/themes/default.css",
       "default": "./dist/themes/default.css"
@@ -37,6 +41,10 @@
     "./themes/bronze-dark.css": {
       "source": "./src/themes/bronze-dark.css",
       "default": "./dist/themes/bronze-dark.css"
+    },
+    "./themes/*": {
+      "source": "./src/themes/*",
+      "default": "./dist/themes/*"
     },
     "./styles.css": {
       "source": "./src/themes/default.css",

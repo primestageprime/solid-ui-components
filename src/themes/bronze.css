@@ -4,7 +4,12 @@
    Lora for prose, Inter for utility text
    (buttons, badges, eyebrows, metadata). Warm
    bone backgrounds, deep warm ink, rust accent.
+
+   The baseline @import must stay first (CSS requires all
+   @import rules precede other rules); the bronze overrides
+   later in this file still win over the imported baseline.
    ============================================ */
+@import "./_baseline.css";
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
 
 *, *::before, *::after {

@@ -4,7 +4,13 @@
    The HUD theme uses sharp edges and clip-paths
    instead of border-radius, so --sui-radius-*
    values are set to 0.
+
+   Pulls in the shared component baseline so importing
+   this one file gives a consumer baseline + tokens +
+   HUD overrides. (Inert under the dev gallery's ?raw
+   injection — see dev/load-theme.ts.)
    ============================================ */
+@import "./_baseline.css";
 
 /* Box-sizing reset */
 *, *::before, *::after {

@@ -6,7 +6,12 @@
    utility text. Surfaces inverted to warm walnut,
    text lifted to warm bone, rust accent lifted to
    read well on dark.
+
+   The baseline @import must stay first (CSS requires all
+   @import rules precede other rules); the bronze-dark
+   overrides later in this file still win over baseline.
    ============================================ */
+@import "./_baseline.css";
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
 
 *, *::before, *::after {

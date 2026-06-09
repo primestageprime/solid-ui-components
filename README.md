@@ -36,3 +36,38 @@ dev/sandbox.tsx        — ephemeral page-mockup harness
 dist/                  — build output (gitignored at runtime)
 scripts/               — small repo-maintenance scripts
 ```
+
+## Consuming the CSS (import contract)
+
+A consumer app needs **two** stylesheets, imported once at the app entry
+(e.g. `app.tsx`):
+
+```ts
+import "solid-ui-components/index.css";          // per-component bundled CSS
+import "solid-ui-components/themes/default.css"; // theme tokens + global baseline
+```
+
+The theme file is **not just tokens** — each shipped theme
+(`default.css`, `hud.css`, `bronze.css`, `bronze-dark.css`) begins with
+`@import "./_baseline.css";`, so importing one theme also pulls in the global
+baseline layer. The baseline supplies page-level rules that are NOT in
+`index.css`:
+
+- `body { background-color: var(--sui-bg-primary); color: var(--sui-text-primary); }`
+- the box-sizing reset
+- baseline styling for native `button`, `input`, scrollbars, and every
+  `.sui-*` component class (written purely against `--sui-*` tokens)
+
+So `index.css` alone is **not** enough — without a theme import the page
+`<body>` stays unstyled (white background, unstyled native controls). Switch
+themes by swapping the second import (`themes/hud.css`, `themes/bronze.css`, …).
+
+If you need the baseline on its own (e.g. you supply your own token file),
+it is also exported directly:
+
+```ts
+import "solid-ui-components/themes/_baseline.css";
+import "./my-tokens.css"; // your own :root { --sui-*: … } declarations
+```
+
+All `./themes/*.css` paths resolve via the package `exports` map.

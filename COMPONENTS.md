@@ -35,13 +35,32 @@ Components use `--sui-*` CSS custom properties for all colors, spacing, and visu
 - **`themes/default.css`** — Clean, neutral theme suitable for standard business applications.
 - **`themes/hud.css`** — Sci-fi / heads-up-display theme with glow effects, scan lines, and angular decorations.
 
-Import one theme in your app entry point:
+Import the bundled component CSS **and** one theme in your app entry point:
 
 ```ts
-import "solid-ui-components/themes/hud.css";
+import "solid-ui-components/index.css"; // per-component bundled CSS
+import "solid-ui-components/themes/hud.css"; // theme tokens + global baseline
 ```
 
-To create a custom theme, define `--sui-*` variables in a CSS file and import it instead. See the built-in themes for the full list of available tokens.
+Each shipped theme file (`default.css`, `hud.css`, `bronze.css`, `bronze-dark.css`)
+starts with `@import "./_baseline.css";`, so importing one theme also pulls in the
+global baseline layer — the page-level rules (`body` background/color, box-sizing
+reset, native `button`/`input`/scrollbar styling, and all `.sui-*` component
+classes) that `index.css` does NOT contain. **`index.css` alone is not enough:**
+without a theme import the `<body>` stays unstyled (white background, unstyled
+native controls).
+
+To create a custom theme, define `--sui-*` variables in a CSS file and pull in the
+baseline yourself:
+
+```ts
+import "solid-ui-components/themes/_baseline.css";
+import "./my-tokens.css"; // your own :root { --sui-*: … }
+```
+
+The baseline (`themes/_baseline.css`) and every `themes/*.css` file are exported
+via the package `exports` map. See the built-in themes for the full list of
+available tokens.
 
 ### Spacing Scale
 

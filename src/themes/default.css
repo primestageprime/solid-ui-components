@@ -1,9 +1,16 @@
 /* ============================================
    Default Theme — Clean/Standard Tokens
    ============================================
-   Tokens-only. Shared component CSS lives in
-   _baseline.css and is loaded by load-theme.ts.
+   Declares the --sui-* token contract. The shared
+   component CSS lives in _baseline.css and is pulled
+   in via the @import below, so a consumer that imports
+   this single file (e.g.
+   `import "solid-ui-components/themes/default.css"`)
+   gets baseline + tokens with no extra import. The dev
+   gallery instead injects _baseline.css separately via
+   dev/load-theme.ts (?raw), where this @import is inert.
    ============================================ */
+@import "./_baseline.css";
 
 :root {
   /* ---- Accent / Primary ---- */
