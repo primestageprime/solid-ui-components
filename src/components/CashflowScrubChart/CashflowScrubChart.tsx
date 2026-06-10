@@ -216,25 +216,29 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // ── Per-day cell renderer ────────────────────────────────────────────
   const renderCashflowCell = (cell: CashflowCell) => {
     const v = cell.cashflowCents;
-    const up = v >= 0;
+    // Exactly-zero days get a neutral/grey treatment: no colour tint, no bar,
+    // no amount label. Non-zero positive = green, non-zero negative = red.
+    const isZero = v === 0;
+    const up = v > 0;
     const frac = barFraction(v);
+    const polarity = isZero ? "neutral" : up ? "positive" : "negative";
     return (
-      <div
-        class={`sui-cashflow-cell sui-cashflow-cell--${
-          up ? "positive" : "negative"
-        }`}
-      >
+      <div class={`sui-cashflow-cell sui-cashflow-cell--${polarity}`}>
         <div class="sui-cashflow-cell__date">{formatCornerLabel(cell)}</div>
         <div class="sui-cashflow-cell__bar-track">
           <div class="sui-cashflow-cell__zero" />
-          <div
-            class={`sui-cashflow-cell__bar sui-cashflow-cell__bar--${
-              up ? "up" : "down"
-            }`}
-            style={{ height: `${(frac * 50).toFixed(1)}%` }}
-          />
+          {!isZero && (
+            <div
+              class={`sui-cashflow-cell__bar sui-cashflow-cell__bar--${
+                up ? "up" : "down"
+              }`}
+              style={{ height: `${(frac * 50).toFixed(1)}%` }}
+            />
+          )}
         </div>
-        <div class="sui-cashflow-cell__amount">{fmtDollars(v)}</div>
+        {!isZero && (
+          <div class="sui-cashflow-cell__amount">{fmtDollars(v)}</div>
+        )}
       </div>
     );
   };

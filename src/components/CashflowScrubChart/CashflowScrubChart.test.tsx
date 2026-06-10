@@ -76,6 +76,34 @@ describe("CashflowScrubChart", () => {
     expect(amounts[1]).toBe("−$987");
   });
 
+  it("renders zero-delta days as neutral — no amount label, no bar, neutral class", () => {
+    const cells: CashflowCell[] = [
+      { ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0], cashflowCents: 50_000, balanceCents: 50_000 },
+      { ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0], cashflowCents: 0, balanceCents: 50_000 },
+      { ...dailyCells(d("2026-05-03"), d("2026-05-03"))[0], cashflowCents: -20_000, balanceCents: 30_000 },
+    ];
+    const { container } = render(() => (
+      <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
+    ));
+    const allCells = container.querySelectorAll(".sui-cashflow-cell");
+    expect(allCells.length).toBe(3);
+
+    // Zero-delta cell gets neutral modifier, not positive or negative.
+    expect(allCells[1].classList.contains("sui-cashflow-cell--neutral")).toBe(true);
+    expect(allCells[1].classList.contains("sui-cashflow-cell--positive")).toBe(false);
+    expect(allCells[1].classList.contains("sui-cashflow-cell--negative")).toBe(false);
+
+    // Zero-delta cell has no amount label.
+    expect(allCells[1].querySelector(".sui-cashflow-cell__amount")).toBeNull();
+
+    // Zero-delta cell has no bar element.
+    expect(allCells[1].querySelector(".sui-cashflow-cell__bar")).toBeNull();
+
+    // Non-zero cells still get their polarity classes.
+    expect(allCells[0].classList.contains("sui-cashflow-cell--positive")).toBe(true);
+    expect(allCells[2].classList.contains("sui-cashflow-cell--negative")).toBe(true);
+  });
+
   it("renders empty cleanly when cells is []", () => {
     const { container } = render(() => (
       <CashflowScrubChart cells={[]} selected={0} onScrub={() => {}} />
