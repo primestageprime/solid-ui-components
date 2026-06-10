@@ -76,7 +76,7 @@ describe("CashflowScrubChart", () => {
     expect(amounts[1]).toBe("−$987");
   });
 
-  it("renders zero-delta days as neutral — no amount label, no bar, neutral class", () => {
+  it("renders zero-delta days as neutral — no amount label, no bar, midline kept", () => {
     const cells: CashflowCell[] = [
       { ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0], cashflowCents: 50_000, balanceCents: 50_000 },
       { ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0], cashflowCents: 0, balanceCents: 50_000 },
@@ -98,6 +98,23 @@ describe("CashflowScrubChart", () => {
 
     // Zero-delta cell has no bar element.
     expect(allCells[1].querySelector(".sui-cashflow-cell__bar")).toBeNull();
+
+    // The midline (per-cell zero/baseline) IS present on EVERY cell — neutral
+    // included — so it reads as one continuous line across the strip.
+    allCells.forEach((c) => {
+      expect(c.querySelector(".sui-cashflow-cell__zero")).toBeTruthy();
+    });
+
+    // Neutral cells carry an invisible amount-row spacer so the bar-track —
+    // and the midline at its 50% mark — keeps the same height as in
+    // value-bearing cells (midline continuity is geometric, not just DOM
+    // presence).
+    expect(
+      allCells[1].querySelector(".sui-cashflow-cell__amount-spacer"),
+    ).toBeTruthy();
+    expect(
+      allCells[0].querySelector(".sui-cashflow-cell__amount-spacer"),
+    ).toBeNull();
 
     // Non-zero cells still get their polarity classes.
     expect(allCells[0].classList.contains("sui-cashflow-cell--positive")).toBe(true);

@@ -92,6 +92,18 @@
   white-space: nowrap;
 }
 
+/* Invisible stand-in for the amount row on zero-delta cells. Must mirror the
+   amount's type metrics exactly: the bar-track above is flex-grown, so if
+   this row were missing (or a different height) the track — and the midline
+   drawn at its 50% mark — would shift, breaking the midline's continuity
+   across the strip. */
+.sui-cashflow-cell__amount-spacer {
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  visibility: hidden;
+}
+
 .sui-cashflow-cell--positive .sui-cashflow-cell__amount {
   color: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
 }

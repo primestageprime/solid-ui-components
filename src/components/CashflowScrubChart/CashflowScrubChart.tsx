@@ -236,7 +236,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             />
           )}
         </div>
-        {!isZero && (
+        {/* Zero cells keep an invisible spacer where the amount label would
+            be: the midline sits at 50% of the flex-grown bar-track, so the
+            amount row must occupy space in EVERY cell or the midline shifts
+            and breaks continuity across the strip. */}
+        {isZero ? (
+          <div class="sui-cashflow-cell__amount-spacer" aria-hidden="true">
+            {"\u00A0"}
+          </div>
+        ) : (
           <div class="sui-cashflow-cell__amount">{fmtDollars(v)}</div>
         )}
       </div>
