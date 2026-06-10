@@ -26,6 +26,9 @@ export interface SectionProps extends JSX.HTMLAttributes<HTMLElement> {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   defaultExpanded?: boolean;
+  /** Dense layout for stacked sibling sections: no external margin (the
+   *  parent layout owns spacing) and a tighter header. */
+  compact?: boolean;
 }
 
 export const Section: Component<SectionProps> = (props) => {
@@ -41,6 +44,7 @@ export const Section: Component<SectionProps> = (props) => {
     "collapsed",
     "onToggleCollapse",
     "defaultExpanded",
+    "compact",
     "class",
     "children",
   ]);
@@ -64,6 +68,7 @@ export const Section: Component<SectionProps> = (props) => {
     const classList = ["sui-section"];
     if (local.corners) classList.push(`sui-section--corners-${local.corners}`);
     if (local.fill) classList.push("sui-section--fill");
+    if (local.compact) classList.push("sui-section--compact");
     if (isCollapsed()) classList.push("sui-section--collapsed");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
@@ -110,7 +115,7 @@ export const Section: Component<SectionProps> = (props) => {
 };
 
 /** Props that are visual/behavioral overrides — locked at variant-definition time. */
-export type SectionOverrides = Pick<SectionProps, "variant" | "corners" | "fill" | "collapsible" | "defaultExpanded">;
+export type SectionOverrides = Pick<SectionProps, "variant" | "corners" | "fill" | "collapsible" | "defaultExpanded" | "compact">;
 
 /** Props that remain available to consumers of a curried Section variant. */
 export type SectionDataProps = Omit<SectionProps, keyof SectionOverrides>;

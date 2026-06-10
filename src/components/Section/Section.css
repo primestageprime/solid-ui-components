@@ -37,6 +37,21 @@
   margin: 0;
 }
 
+/* A collapsed section's header should not reserve space for hidden content. */
+.sui-section--collapsed .sui-section__header {
+  margin-bottom: 0;
+}
+
+/* Compact: dense stacked siblings — the parent layout owns external spacing. */
+.sui-section--compact {
+  margin-bottom: 0;
+}
+
+.sui-section--compact .sui-section__header {
+  padding: 6px 12px;
+  margin-bottom: 8px;
+}
+
 /* Collapse button */
 .sui-section__collapse-btn {
   width: 24px;
