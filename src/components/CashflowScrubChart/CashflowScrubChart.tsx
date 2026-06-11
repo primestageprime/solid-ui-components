@@ -150,11 +150,15 @@ const formatCornerLabel = (cell: CashflowCell): string => {
   return String(day);
 };
 
-// Magnitude → bar fill fraction (0..1). Hand-tuned to keep typical cashflow
-// magnitudes visually informative without saturating on outliers.
-const BAR_SCALE_CENTS = 220_000;
-const barFraction = (cents: number): number =>
-  Math.min(1, Math.abs(cents) / BAR_SCALE_CENTS);
+// Magnitude → bar fill fraction (0..1), LINEAR against the largest |cashflow|
+// across the strip so bar heights are proportionate to their amounts (a fixed
+// clamp made a $1.7k bar read as 80% of an $8.4k bar). Tiny non-zero days keep
+// a 4% floor so they stay distinguishable from true-zero (bar-less) days.
+const BAR_MIN_FRACTION = 0.04;
+const barFraction = (cents: number, maxAbsCents: number): number => {
+  if (cents === 0 || maxAbsCents <= 0) return 0;
+  return Math.max(BAR_MIN_FRACTION, Math.abs(cents) / maxAbsCents);
+};
 
 // Map a balance accessor over the cells into one or more polyline point
 // strings, splitting on every `null` so a gap breaks the line rather than
@@ -213,6 +217,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     return [lo, hi];
   });
 
+  // Largest |cashflow| across the strip — the 100%-height reference bar.
+  const maxAbsCashflow = createMemo(() =>
+    props.cells.reduce((m, c) => Math.max(m, Math.abs(c.cashflowCents)), 0),
+  );
+
   // ── Per-day cell renderer ────────────────────────────────────────────
   const renderCashflowCell = (cell: CashflowCell) => {
     const v = cell.cashflowCents;
@@ -220,7 +229,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // no amount label. Non-zero positive = green, non-zero negative = red.
     const isZero = v === 0;
     const up = v > 0;
-    const frac = barFraction(v);
+    const frac = barFraction(v, maxAbsCashflow());
     const polarity = isZero ? "neutral" : up ? "positive" : "negative";
     return (
       <div class={`sui-cashflow-cell sui-cashflow-cell--${polarity}`}>
