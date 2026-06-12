@@ -28,6 +28,7 @@ import {
   type JSX,
   For,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   mergeProps,
@@ -89,7 +90,17 @@ export interface ScrubChartProps<C extends Cell> {
   /** Selection callback. Optional in plain (scrub=false) mode. */
   onScrub?: (index: number, cell: C) => void;
   renderChart: (ctx: ScrubChartContext<C>) => JSX.Element;
+  /** Optional layer rendered ABOVE the gesture overlay — pointer events reach
+   *  it, so it can host clickable decorations (e.g. CashflowScrubChart's
+   *  plotline markers). Off by default; same ctx as `renderChart`. */
+  renderChartOverlay?: (ctx: ScrubChartContext<C>) => JSX.Element;
   renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
+
+  /** When set (a fresh object per request), scroll the detail ribbon so the
+   *  cell at `index` is CENTERED in the axis viewport — "recenter the scrub".
+   *  Object identity is the trigger, so re-centering on the same index works.
+   *  Scrub mode only (plain mode has no ribbon). */
+  centerOn?: { index: number } | null;
 
   /**
    * Scrub layer toggle. Default `true` — the full overview+detail pairing:
@@ -381,6 +392,21 @@ export const ScrubChart = <C extends Cell>(
     }
   };
 
+  // Recenter request — scroll the axis so the requested cell is centered.
+  // Runs whenever the centerOn OBJECT changes (fresh object per request).
+  createEffect(() => {
+    const req = props.centerOn;
+    if (!req || !scrubOn()) return;
+    const el = axisScrollEl;
+    if (!el) return;
+    const target =
+      (req.index + 0.5) * cellWidth() - el.clientWidth / 2;
+    el.scrollTo({
+      left: Math.max(0, target),
+      behavior: "smooth",
+    });
+  });
+
   const windowCells = createMemo<[number, number]>(() => {
     const w = cellWidth();
     if (w <= 0 || props.cells.length === 0) return [0, 0];
@@ -616,6 +642,11 @@ export const ScrubChart = <C extends Cell>(
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
           />
+        </Show>
+        {/* Consumer overlay layer — ABOVE the gesture overlay so its
+            interactive decorations (plotline markers) receive clicks. */}
+        <Show when={props.renderChartOverlay && chartWidth() > 0}>
+          {props.renderChartOverlay!(ctx())}
         </Show>
       </div>
 

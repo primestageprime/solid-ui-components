@@ -173,6 +173,68 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("plotline markers (the markers prop)", () => {
+    it("renders a rule + flag + dot per marker, ring on the selected one", () => {
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          selected={3}
+          onScrub={() => {}}
+          markers={[{ index: 2 }, { index: 6, selected: true }]}
+        />
+      ));
+      const groups = container.querySelectorAll(".sui-cashflow-scrub-chart__marker");
+      expect(groups.length).toBe(2);
+      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-line").length).toBe(2);
+      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-dot").length).toBe(2);
+      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-flag").length).toBe(2);
+      // Only the chosen instance gets the ring (the whiteboard's circle).
+      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-ring").length).toBe(1);
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__marker--selected").length,
+      ).toBe(1);
+    });
+
+    it("fires onMarkerClick with the marker's index", () => {
+      const onMarkerClick = vi.fn();
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          selected={0}
+          onScrub={() => {}}
+          markers={[{ index: 5 }]}
+          onMarkerClick={onMarkerClick}
+        />
+      ));
+      const g = container.querySelector(".sui-cashflow-scrub-chart__marker")!;
+      g.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(onMarkerClick).toHaveBeenCalledTimes(1);
+      expect(onMarkerClick.mock.calls[0][0]).toBe(5);
+      expect(onMarkerClick.mock.calls[0][1]).toBe(cells[5]);
+    });
+
+    it("renders no marker layer by default, drops out-of-range indices, and composes in plain mode", () => {
+      const cells = makeCells(5);
+      const none = render(() => (
+        <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
+      ));
+      expect(none.container.querySelector(".sui-cashflow-scrub-chart__markers")).toBeNull();
+      const ranged = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 99 }, { index: -1 }, { index: 1 }]}
+        />
+      ));
+      // Out-of-range markers drop; the in-range one renders even in plain mode.
+      expect(
+        ranged.container.querySelectorAll(".sui-cashflow-scrub-chart__marker").length,
+      ).toBe(1);
+    });
+  });
+
   it("renders empty cleanly when cells is []", () => {
     const { container } = render(() => (
       <CashflowScrubChart cells={[]} selected={0} onScrub={() => {}} />

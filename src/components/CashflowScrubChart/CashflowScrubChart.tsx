@@ -80,6 +80,12 @@ export interface CashflowBalanceSeries {
   fill?: CashflowSeriesFill;
 }
 
+/** One plotline marker: the cell index it sits on, optionally selected. */
+export interface CashflowChartMarker {
+  index: number;
+  selected?: boolean;
+}
+
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
   /** Selected day index. Optional in plain (scrub=false) mode. */
@@ -96,6 +102,18 @@ export interface CashflowScrubChartProps {
    * (console / configure / calibrate) render just the series.
    */
   scrub?: boolean;
+  /**
+   * PLOTLINE MARKERS — vertical dashed rules dropping from a flag at the top
+   * of the plot to a dot ON the running-balance line, marking the dates a
+   * chosen config fires. `selected` circles that instance. Rendered in the
+   * overlay layer (above the scrub gestures) so the dots are CLICKABLE:
+   * `onMarkerClick` fires with the marker's cell index. Off by default.
+   */
+  markers?: CashflowChartMarker[];
+  onMarkerClick?: (index: number, cell: CashflowCell) => void;
+  /** Recenter the detail ribbon on a cell (fresh object per request) —
+   *  forwarded to ScrubChart. */
+  centerOn?: { index: number } | null;
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
   /** Chart drawing-area height in px. Default 200. */
@@ -398,12 +416,82 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     );
   };
 
+  // ── Plotline markers overlay ─────────────────────────────────────────
+  // Rendered via ScrubChart's renderChartOverlay slot (above the gesture
+  // overlay): the svg itself ignores pointer events; each marker group
+  // re-enables them so dots/flags are clickable without blocking scrubbing.
+  const renderMarkers = (
+    ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
+  ) => {
+    const list = props.markers ?? [];
+    if (list.length === 0 || ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    const yToPlot = ctx.yToPlot;
+    return (
+      <svg
+        class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__markers"
+        viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+        preserveAspectRatio="none"
+      >
+        <For each={list.filter((m) => m.index >= 0 && m.index < ctx.cells.length)}>
+          {(m) => {
+            const x = ctx.cellToX(m.index);
+            const y = yToPlot(ctx.cells[m.index].balanceCents);
+            return (
+              <g
+                class={`sui-cashflow-scrub-chart__marker${
+                  m.selected ? " sui-cashflow-scrub-chart__marker--selected" : ""
+                }`}
+                onClick={() => props.onMarkerClick?.(m.index, ctx.cells[m.index])}
+              >
+                {/* generous invisible hit area so the thin rule is clickable */}
+                <rect
+                  class="sui-cashflow-scrub-chart__marker-hit"
+                  x={x - 6}
+                  y={ctx.plotTop}
+                  width={12}
+                  height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
+                />
+                <line
+                  class="sui-cashflow-scrub-chart__marker-line"
+                  x1={x}
+                  x2={x}
+                  y1={ctx.plotTop}
+                  y2={y}
+                />
+                <path
+                  class="sui-cashflow-scrub-chart__marker-flag"
+                  d={`M ${x} ${ctx.plotTop} l 8 3.5 l -8 3.5 Z`}
+                />
+                {m.selected && (
+                  <circle
+                    class="sui-cashflow-scrub-chart__marker-ring"
+                    cx={x}
+                    cy={y}
+                    r={8}
+                  />
+                )}
+                <circle
+                  class="sui-cashflow-scrub-chart__marker-dot"
+                  cx={x}
+                  cy={y}
+                  r={3.5}
+                />
+              </g>
+            );
+          }}
+        </For>
+      </svg>
+    );
+  };
+
   return (
     <ScrubChart<CashflowCell>
       cells={props.cells}
       selected={props.selected}
       onScrub={props.onScrub}
       scrub={props.scrub}
+      centerOn={props.centerOn}
+      renderChartOverlay={(props.markers?.length ?? 0) > 0 ? renderMarkers : undefined}
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}
