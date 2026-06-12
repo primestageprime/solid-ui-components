@@ -1,0 +1,22 @@
+/* ============================================
+   FormComposite Component — Structural
+   [[identity][schedule]]: two sibling blocks,
+   side by side with room, stacked without —
+   holy-albatross basis on --fc-break.
+   ============================================ */
+.sui-form-composite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sui-space-3, 12px);
+  align-items: flex-start;
+}
+
+.sui-form-composite__identity,
+.sui-form-composite__schedule {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-2, 8px);
+  flex-grow: 1;
+  flex-basis: calc((var(--fc-break, 38rem) - 100%) * 999);
+  min-width: 0;
+}
