@@ -46,5 +46,8 @@ export const SmallDangerButton: Component<ButtonDataProps> = createButton({ vari
 // Small ghost button — compact subtle action
 export const SmallGhostButton: Component<ButtonDataProps> = createButton({ variant: "ghost", size: "sm" });
 
+// Small warning button — compact amber caution action (not destructive)
+export const SmallWarningButton: Component<ButtonDataProps> = createButton({ variant: "warning", size: "sm" });
+
 // Large primary button — prominent primary action
 export const LargePrimaryButton: Component<ButtonDataProps> = createButton({ variant: "primary", size: "lg" });
