@@ -84,10 +84,24 @@ export interface ScrubChartContext<C extends Cell> {
 
 export interface ScrubChartProps<C extends Cell> {
   cells: C[];
-  selected: number;
-  onScrub: (index: number, cell: C) => void;
+  /** Selected cell index. Optional in plain (scrub=false) mode. */
+  selected?: number;
+  /** Selection callback. Optional in plain (scrub=false) mode. */
+  onScrub?: (index: number, cell: C) => void;
   renderChart: (ctx: ScrubChartContext<C>) => JSX.Element;
   renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
+
+  /**
+   * Scrub layer toggle. Default `true` — the full overview+detail pairing:
+   * the DateAxis cell ribbon below the chart, the window-band minimap
+   * overlay, and the pointer pan / click-to-scrub gestures. Set `false` for
+   * a PLAIN time series: the same chart frame, axes, and `renderChart`
+   * series with the entire scrub layer composed off (no ribbon, no window
+   * band, no pointer interaction, no selection). One codebase — pages that
+   * need scrubbing and pages that just need the series share everything
+   * but this flag.
+   */
+  scrub?: boolean;
 
   /** Chart drawing-area height in px. Default 200. Includes any reserved
    *  x-axis margin. */
@@ -223,6 +237,11 @@ export const ScrubChart = <C extends Cell>(
 ): JSX.Element => {
   const chartHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
   const cellWidth = () => props.cellWidth ?? DEFAULT_CELL_WIDTH;
+  // Scrub layer on/off — gates the DateAxis ribbon, the window band, and the
+  // pointer gestures together (see the prop doc).
+  const scrubOn = () => props.scrub !== false;
+  const selectedIdx = () => props.selected ?? -1;
+  const emitScrub = (index: number, cell: C) => props.onScrub?.(index, cell);
 
   // ── Axis-chrome geometry ──────────────────────────────────────────────
   const xAxisHeight = () =>
@@ -365,6 +384,8 @@ export const ScrubChart = <C extends Cell>(
   const windowCells = createMemo<[number, number]>(() => {
     const w = cellWidth();
     if (w <= 0 || props.cells.length === 0) return [0, 0];
+    // Plain mode has no axis viewport — the whole range counts as visible.
+    if (!scrubOn()) return [0, props.cells.length - 1];
     const first = Math.max(0, Math.floor(axisScrollLeft() / w));
     const last = Math.min(
       props.cells.length - 1,
@@ -389,7 +410,7 @@ export const ScrubChart = <C extends Cell>(
     cellToX: indexToX,
     cellBounds: indexBounds,
     dayPitch: dayPitch(),
-    selected: props.selected,
+    selected: selectedIdx(),
     cells: props.cells,
     windowCells: windowCells(),
     windowBounds: windowBounds(),
@@ -476,7 +497,7 @@ export const ScrubChart = <C extends Cell>(
     // scrub to the cell at the pointer x.
     if (!wasPan && e.type !== "pointercancel") {
       const idx = cellAtClientX(e.clientX);
-      if (idx !== null) props.onScrub(idx, props.cells[idx]);
+      if (idx !== null) emitScrub(idx, props.cells[idx]);
     }
   };
 
@@ -567,8 +588,9 @@ export const ScrubChart = <C extends Cell>(
         </Show>
         {/* Window-band overlay — owned by ScrubChart so consumers don't
             have to draw it themselves. Translucent rect over the slice of
-            cells currently visible in the axis viewport. */}
-        <Show when={props.cells.length > 0}>
+            cells currently visible in the axis viewport. Part of the scrub
+            layer: composed off entirely in plain mode. */}
+        <Show when={scrubOn() && props.cells.length > 0}>
           <svg
             class="sui-scrub-chart__window"
             viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
@@ -585,24 +607,31 @@ export const ScrubChart = <C extends Cell>(
             />
           </svg>
         </Show>
-        <div
-          class="sui-scrub-chart__overlay"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        />
+        {/* Pointer gestures (pan + click-to-scrub) — scrub layer only. */}
+        <Show when={scrubOn()}>
+          <div
+            class="sui-scrub-chart__overlay"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          />
+        </Show>
       </div>
 
-      <DateAxis<C>
-        cells={props.cells}
-        selected={props.selected}
-        today={props.today}
-        cellWidth={cellWidth()}
-        onCellClick={(idx, cell) => props.onScrub(idx, cell)}
-        renderCell={props.renderCell}
-        scrollableRef={handleAxisRef}
-      />
+      {/* The detail ribbon (day-cell filmstrip) — scrub layer only. Plain
+          mode renders just the chart frame above. */}
+      <Show when={scrubOn()}>
+        <DateAxis<C>
+          cells={props.cells}
+          selected={selectedIdx()}
+          today={props.today}
+          cellWidth={cellWidth()}
+          onCellClick={(idx, cell) => emitScrub(idx, cell)}
+          renderCell={props.renderCell}
+          scrollableRef={handleAxisRef}
+        />
+      </Show>
     </div>
   );
 };

@@ -82,8 +82,20 @@ export interface CashflowBalanceSeries {
 
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
-  selected: number;
-  onScrub: (index: number, cell: CashflowCell) => void;
+  /** Selected day index. Optional in plain (scrub=false) mode. */
+  selected?: number;
+  /** Scrub callback. Optional in plain (scrub=false) mode. */
+  onScrub?: (index: number, cell: CashflowCell) => void;
+  /**
+   * Scrub layer toggle, forwarded to the inner ScrubChart. Default `true`:
+   * the daily filmstrip ribbon, the window-band minimap, the pointer
+   * gestures, and the selected-day rule + dot. Set `false` for the PLAIN
+   * time series — the same running-balance line, overlay series, deviation
+   * bands, and axes with the entire scrub layer composed off. One chart
+   * codebase: Timeline composes the scrub + filmstrip on; overview pages
+   * (console / configure / calibrate) render just the series.
+   */
+  scrub?: boolean;
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
   /** Chart drawing-area height in px. Default 200. */
@@ -316,9 +328,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         }));
       });
 
-    const selectedCell = ctx.cells[ctx.selected];
-    const selectedX = ctx.cellToX(ctx.selected);
-    const selectedY = yToPlot(selectedCell.balanceCents);
+    // Selection decorations are part of the scrub layer — omitted in plain
+    // mode (and whenever the selected index is out of range).
+    const selectedCell =
+      props.scrub !== false ? ctx.cells[ctx.selected] : undefined;
+    const selectedX = selectedCell ? ctx.cellToX(ctx.selected) : 0;
+    const selectedY = selectedCell ? yToPlot(selectedCell.balanceCents) : 0;
 
     return (
       <svg
@@ -362,19 +377,23 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             alone reads as a smooth running balance, and the selected dot
             below provides the precise anchor. Tradeoff explained in the
             component header. */}
-        <line
-          class="sui-cashflow-scrub-chart__selected-rule"
-          x1={selectedX}
-          x2={selectedX}
-          y1={ctx.plotTop}
-          y2={ctx.plotBottom}
-        />
-        <circle
-          class="sui-cashflow-scrub-chart__selected-dot"
-          cx={selectedX}
-          cy={selectedY}
-          r={4}
-        />
+        {selectedCell && (
+          <>
+            <line
+              class="sui-cashflow-scrub-chart__selected-rule"
+              x1={selectedX}
+              x2={selectedX}
+              y1={ctx.plotTop}
+              y2={ctx.plotBottom}
+            />
+            <circle
+              class="sui-cashflow-scrub-chart__selected-dot"
+              cx={selectedX}
+              cy={selectedY}
+              r={4}
+            />
+          </>
+        )}
       </svg>
     );
   };
@@ -384,6 +403,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       cells={props.cells}
       selected={props.selected}
       onScrub={props.onScrub}
+      scrub={props.scrub}
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}

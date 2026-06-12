@@ -121,6 +121,58 @@ describe("CashflowScrubChart", () => {
     expect(allCells[2].classList.contains("sui-cashflow-cell--negative")).toBe(true);
   });
 
+  describe("plain mode (scrub=false) — the same chart, scrub layer composed off", () => {
+    it("renders the time series WITHOUT the filmstrip ribbon, window band, or selection", () => {
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart cells={cells} scrub={false} />
+      ));
+      // The series itself still draws: balance line + zero line.
+      expect(container.querySelector(".sui-cashflow-scrub-chart__line")).toBeTruthy();
+      expect(container.querySelector(".sui-cashflow-scrub-chart__zero-line")).toBeTruthy();
+      // Scrub layer is gone: no day-cell filmstrip, no window-band minimap,
+      // no pointer overlay, no selected rule/dot.
+      expect(container.querySelector(".sui-date-axis")).toBeNull();
+      expect(container.querySelectorAll(".sui-cashflow-cell").length).toBe(0);
+      expect(container.querySelector(".sui-scrub-chart__window")).toBeNull();
+      expect(container.querySelector(".sui-scrub-chart__overlay")).toBeNull();
+      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-dot")).toBeNull();
+      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-rule")).toBeNull();
+    });
+
+    it("still draws overlay series + deviation bands (the cone composes in plain mode)", () => {
+      const cells = makeCells(8);
+      const lo = (c: CashflowCell) => c.balanceCents - 10_000;
+      const hi = (c: CashflowCell) => c.balanceCents + 10_000;
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          balanceSeries={[
+            { id: "range-lo", balanceCents: lo },
+            { id: "range-hi", balanceCents: hi, fill: { baseline: lo } },
+          ]}
+        />
+      ));
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__line--series").length,
+      ).toBe(2);
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__band").length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("keeps the full scrub layer by default (scrub omitted)", () => {
+      const cells = makeCells(5);
+      const { container } = render(() => (
+        <CashflowScrubChart cells={cells} selected={2} onScrub={() => {}} />
+      ));
+      expect(container.querySelector(".sui-date-axis")).toBeTruthy();
+      expect(container.querySelector(".sui-scrub-chart__window")).toBeTruthy();
+      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-dot")).toBeTruthy();
+    });
+  });
+
   it("renders empty cleanly when cells is []", () => {
     const { container } = render(() => (
       <CashflowScrubChart cells={[]} selected={0} onScrub={() => {}} />
