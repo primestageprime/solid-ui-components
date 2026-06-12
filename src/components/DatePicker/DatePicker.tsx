@@ -1,13 +1,19 @@
 // ============================================
 // DatePicker — Atomic (Depth 1)
 // Owns CSS (DatePicker.css), no component imports.
-// A themed date control. Wraps a native
-// <input type="date"> styled with --sui-* tokens to match
-// the dark HUD theme; returns an ISO YYYY-MM-DD string.
+// A themed date control that ALWAYS DISPLAYS ISO YYYY-MM-DD at a FIXED
+// width, regardless of browser/OS locale.
+//
+// HOW (and why): a native <input type="date"> renders its value in the OS
+// locale (08/28/2026 …) and that presentation cannot be forced to ISO. So
+// the control renders its own ISO text display ("YYYY-MM-DD" placeholder
+// when empty) and keeps the NATIVE input stretched invisibly over it —
+// clicking anywhere opens the native calendar picker, and keyboard entry
+// still works through the native input's segments (the display echoes the
+// committed ISO value live). Width is fixed to the ISO string + icon +
+// padding; the control never flexes to fill its container.
 //   <DatePicker value="2026-06-02" onChange={(iso) => ...} />
-// Intentionally NOT a custom calendar — the native control
-// gives us the picker UI for free. Factory:
-// createDatePicker() for curried variants.
+// Factory: createDatePicker() for curried variants.
 // ============================================
 import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./DatePicker.css";
@@ -35,13 +41,26 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
   };
 
   return (
-    <input
-      type="date"
-      class={rootClass()}
-      value={local.value}
-      onInput={handleInput}
-      {...others}
-    />
+    <span class={rootClass()}>
+      <span
+        class="sui-date-picker__display"
+        classList={{ "sui-date-picker__display--empty": !local.value }}
+      >
+        {local.value || "YYYY-MM-DD"}
+      </span>
+      <span class="sui-date-picker__icon" aria-hidden="true">
+        ▾
+      </span>
+      {/* The native input — invisible, stretched over the whole control so a
+          click anywhere opens the native calendar and typing still works. */}
+      <input
+        type="date"
+        class="sui-date-picker__native"
+        value={local.value}
+        onInput={handleInput}
+        {...others}
+      />
+    </span>
   );
 };
 
