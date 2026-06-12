@@ -219,6 +219,28 @@ State derivation:
 ## Card
 - **RemovableItemCard** — Composite (Depth 2). Composes `InteractiveCard` (Surface curried variant) + `SpreadRow` (Layout curried variant) + `FlexLabel` (Text curried variant) + `Button` (Atomic Primitive). Interactive card displaying a named item with title, optional remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable list items.
 
+## ChartCanvas
+- **ChartCanvas** — Atomic Primitive (Depth 1). Owns `ChartCanvas.css`; no library-component imports. A positioned container wrapping a Chart.js `<canvas>` — replaces the hand-rolled `<div style={{height}}><canvas ref/></div>` pattern that Chart.js consumers repeat. The container owns `position: relative` + `width: 100%`; the chart-area **height is baked per curried variant** (`createChartCanvas({ height })`) and applied inline by the primitive (a static variant decision, not a call-site override). The relative positioning establishes the containing block for an optional **overlay slot** passed as `children` — typically an `InlineChartErrorOverlay` gated behind a `<Show>` to cover the canvas when data is unavailable. Wire your Chart.js instance to the canvas via the forwarded `ref`. No explicit canvas dimensions are set — Chart.js (`responsive: true, maintainAspectRatio: false`) sizes the canvas to the container's determinate height. **Curried-only exports** (the config-bearing base is not exported): `createChartCanvas({ height })` factory + `ChartCanvasMd` (240px), `ChartCanvasLg` (300px), `ChartCanvasXl` (420px). `height` accepts a number (→px) or a string (verbatim, e.g. `"50vh"`). Data props at the call site: `ref` (canvas ref callback) + optional `children` (overlay slot); standard `<div>` attributes (`class`, `id`, `data-*`, aria) pass through to the container. Exported type: `ChartCanvasDataProps`. Owns no theme tokens (purely structural — colours come from the chart and the optional overlay). Use for: any Chart.js chart that previously lived in a height-styled wrapper div.
+  - Example:
+    ```tsx
+    import { ChartCanvasMd } from "solid-ui-components";
+    import { InlineChartErrorOverlay } from "solid-ui-components";
+    import { Show, onMount } from "solid-js";
+    import Chart from "chart.js/auto";
+
+    let canvasRef: HTMLCanvasElement | undefined;
+    onMount(() => {
+      if (canvasRef) new Chart(canvasRef, { /* type, data, options */ });
+    });
+
+    <ChartCanvasMd ref={(c) => (canvasRef = c)}>
+      <Show when={!hasData()}>
+        <InlineChartErrorOverlay title="No data" subtitle="Nothing to plot for this range" />
+      </Show>
+    </ChartCanvasMd>
+    ```
+  - Need a height the three variants don't cover? Curry your own once and reuse it — `const ChartCanvasTall = createChartCanvas({ height: 520 });` — rather than passing a height at the call site.
+
 ## DagChart
 - **DagChart** — SVG directed acyclic graph with dagre-computed layout. Key props: `nodes` (array of `DagNode` with `id`, `label`, `status` (`ColorVariant`), optional `metadata`, optional `sublabel`, optional `avatar`), `edges` (array of `DagEdge` with `source`/`target`), `onNodeClick`, `direction` (`TB`|`LR`), `height`. Nodes render as rounded rects colored by status. When `avatar` is provided, a circular 20px image renders left-aligned inside the node and the label shifts right. When `sublabel` is provided, muted smaller text renders below the label. Edges are directed paths with arrowheads. SVG auto-sizes viewBox to fit all content. Uses `--sui-*` CSS variables. Exported types: `DagNode`, `DagEdge`, `DagChartProps`. Use for: task dependency graphs, workflow DAGs, pipeline visualization.
 

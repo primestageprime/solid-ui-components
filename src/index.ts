@@ -24,6 +24,7 @@ export * from "./components/ParticipantTimeLabel";
 export * from "./components/ThreadGroup";
 export * from "./components/LabeledDivider";
 export * from "./components/Chart";
+export * from "./components/ChartCanvas";
 export * from "./components/Alarm";
 export * from "./components/GroupBracket";
 export * from "./components/RecentStarred";
