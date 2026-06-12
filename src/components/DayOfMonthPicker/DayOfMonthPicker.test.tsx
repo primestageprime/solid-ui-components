@@ -78,4 +78,45 @@ describe("DayOfMonthPicker", () => {
     ));
     expect(container.querySelectorAll(".sui-dom-picker__cell").length).toBe(7);
   });
+
+  describe("lastOfMonth mode", () => {
+    it("renders days 1..28 plus one wide Last of month cell", () => {
+      const { container } = render(() => (
+        <DayOfMonthPicker value={null} lastOfMonth onChange={() => {}} />
+      ));
+      const cells = container.querySelectorAll(".sui-dom-picker__cell");
+      expect(cells.length).toBe(29); // 28 days + the last-of-month cell
+      expect(cells[27].textContent).toBe("28");
+      const last = container.querySelector(".sui-dom-picker__cell--last")!;
+      expect(last.textContent).toBe("Last of month");
+      expect(last.getAttribute("aria-label")).toBe("Last of month");
+    });
+
+    it("selects via onSelectLast and highlights when value is 'last'", () => {
+      let gotLast = false;
+      const { container } = render(() => (
+        <DayOfMonthPicker
+          value={"last"}
+          lastOfMonth
+          onChange={() => {}}
+          onSelectLast={() => (gotLast = true)}
+        />
+      ));
+      const last = container.querySelector(".sui-dom-picker__cell--last")!;
+      expect(last.className).toMatch(/--selected/);
+      expect(last.getAttribute("aria-selected")).toBe("true");
+      fireEvent.click(last);
+      expect(gotLast).toBe(true);
+    });
+
+    it("numeric cells still call onChange and no day exceeds 28", () => {
+      let got: number | null = null;
+      const { container } = render(() => (
+        <DayOfMonthPicker value={null} lastOfMonth onChange={(d) => (got = d)} />
+      ));
+      const cells = container.querySelectorAll(".sui-dom-picker__cell");
+      fireEvent.click(cells[27]);
+      expect(got).toBe(28);
+    });
+  });
 });
