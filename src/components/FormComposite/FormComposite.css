@@ -12,6 +12,7 @@
 }
 
 .sui-form-composite__identity,
+.sui-form-composite__amounts,
 .sui-form-composite__schedule {
   display: flex;
   flex-direction: column;

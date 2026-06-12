@@ -1,11 +1,14 @@
 // ============================================
 // FormComposite — Layout (Depth 1)
 // Owns CSS (FormComposite.css), no component imports.
-// SLOT-BASED form layout: [[identity][schedule]] — the fields that don't
-// vary across curried form variants (name, amount) group in the `identity`
-// slot; the curry-VARYING schedule picker (day-of-month, weekday, date,
-// payday selector, …) sits beside them in the `schedule` slot. The two
-// blocks sit side by side when there's room and stack otherwise.
+// SLOT-BASED form layout: [[identity][amounts][schedule]] — the fields that
+// don't vary across curried form variants (name + a single amount) group in
+// the `identity` slot; an ATOMIC amount group (a min/typical/max trio) takes
+// the optional `amounts` slot so the amounts stay together and never
+// interleave with the name; the curry-VARYING schedule picker (day-of-month,
+// weekday, date, payday selector, …) sits in the `schedule` slot. Blocks sit
+// side by side when there's room and stack otherwise, reading
+// name → amounts → cadence in both arrangements.
 //
 // The composite owns ONLY layout (grouping, gap, responsive stacking) —
 // slot contents are arbitrary JSX, so the individual field components stay
@@ -25,6 +28,9 @@ export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** The stable block — fields that read the same across variants
    *  (name, amount). Stacked vertically. */
   identity?: JSX.Element;
+  /** An atomic amount group (e.g. a min/typical/max trio) rendered BETWEEN
+   *  identity and schedule — kept together, never interleaved. */
+  amounts?: JSX.Element;
   /** The variant-specific block — whatever schedule picker the curry
    *  needs. Rendered beside the identity block. */
   schedule?: JSX.Element;
@@ -38,6 +44,7 @@ export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {
 export const FormComposite: Component<FormCompositeProps> = (props) => {
   const [local, others] = splitProps(props, [
     "identity",
+    "amounts",
     "schedule",
     "breakWidth",
     "class",
@@ -52,6 +59,9 @@ export const FormComposite: Component<FormCompositeProps> = (props) => {
     >
       <Show when={local.identity}>
         <div class="sui-form-composite__identity">{local.identity}</div>
+      </Show>
+      <Show when={local.amounts}>
+        <div class="sui-form-composite__amounts">{local.amounts}</div>
       </Show>
       <Show when={local.schedule}>
         <div class="sui-form-composite__schedule">{local.schedule}</div>

@@ -40,3 +40,23 @@ describe("FormComposite", () => {
     expect(root.style.getPropertyValue("--fc-break")).toBe("20rem");
   });
 });
+
+describe("FormComposite amounts slot", () => {
+  it("renders [identity][amounts][schedule] in order, amounts atomic", () => {
+    const { container } = render(() => (
+      <FormComposite
+        identity={<span>name</span>}
+        amounts={<span class="trio">min typical max</span>}
+        schedule={<span>cadence</span>}
+      />
+    ));
+    const root = container.firstElementChild!;
+    const classes = [...root.children].map((c) => c.className);
+    expect(classes).toEqual([
+      "sui-form-composite__identity",
+      "sui-form-composite__amounts",
+      "sui-form-composite__schedule",
+    ]);
+    expect(root.querySelector(".sui-form-composite__amounts .trio")).toBeTruthy();
+  });
+});
