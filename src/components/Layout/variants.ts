@@ -79,6 +79,16 @@ export const WrappedClusterRow: Component<RowDataProps> = createRow({ gap: "sm",
 
 // Box variants — named by flex-child behavior
 export const ActionSlot: Component<BoxDataProps> = createBox({ shrink: false });
+// GrowBox — the "growing column": fills remaining space (flex-grow:1, basis 0)
+// AND may shrink past its content (min-width:0). The min-width:0 is the load-
+// bearing part — without it a flex child refuses to shrink below its content
+// width, so a wide table/center pane forces the layout to content-width instead
+// of letting fixed siblings (sidebars, images) keep their size. The `box--grow`
+// class supplies flex-grow:1; the baked style adds flex-basis:0% + min-width:0.
+export const GrowBox: Component<BoxDataProps> = createBox({
+  grow: true,
+  style: { "flex-basis": "0%", "min-width": "0" },
+});
 export const FadedBox: Component<BoxDataProps> = createBox({ style: { opacity: "0.5" } });
 export const ConstrainedBox: Component<BoxDataProps> = createBox({ style: { "max-width": "400px" } });
 
