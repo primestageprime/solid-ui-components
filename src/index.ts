@@ -4,6 +4,7 @@ export type { ColorVariant, CornerStyle } from "./types";
 // Components
 export * from "./components/Layout";
 export * from "./components/Text";
+export * from "./components/InlineText";
 export * from "./components/Surface";
 export * from "./components/Badge";
 export * from "./components/SlotFillBar";
@@ -24,6 +25,7 @@ export * from "./components/ParticipantTimeLabel";
 export * from "./components/ThreadGroup";
 export * from "./components/LabeledDivider";
 export * from "./components/Chart";
+export * from "./components/ChartCanvas";
 export * from "./components/Alarm";
 export * from "./components/GroupBracket";
 export * from "./components/RecentStarred";

@@ -24,6 +24,32 @@ body {
   padding: 0;
 }
 
+/* Global scrollbar default: thin, themed, quiet. Token-driven so this theme's
+ * border colour and corner radius carry through. Component CSS may still
+ * override for special cases — DateAxis.css and Table.css already do, and
+ * their class selectors out-specify these universal rules. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sui-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--sui-border-bright);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 :root {
   /* ---- Accent ---- */
   --sui-accent:     #C96442;

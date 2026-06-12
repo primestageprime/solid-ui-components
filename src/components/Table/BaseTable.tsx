@@ -7,6 +7,7 @@
 // Supports optional column groups (colspan headers).
 // ============================================
 import { splitProps, For, Show, createSignal, createMemo, mergeProps } from "solid-js";
+import type { JSX } from "solid-js";
 import type { TableColumn } from "./types";
 import { BaseTableProps, getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
@@ -70,6 +71,7 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
     "onRowClick",
     "emptyMessage",
     "rowActions",
+    "spanRow",
     "class",
   ]);
 
@@ -142,6 +144,15 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
+
+  /** Shared body-cell style — width clamp + alignment. */
+  const cellStyle = (column: TableColumn<T>): JSX.CSSProperties => ({
+    "text-align": column.align || "left",
+    "max-width": column.width,
+    overflow: column.width ? "hidden" : undefined,
+    "text-overflow": column.width ? "ellipsis" : undefined,
+    "white-space": column.width ? "nowrap" : undefined,
+  });
 
   /** Render a sortable <th> for a single column */
   const renderColumnTh = (column: TableColumn<T>, extraClass?: string, rowspan?: number) => (
@@ -232,42 +243,68 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
           </Show>
           <tbody class="hud-table__body">
             <For each={sortedData()}>
-              {(row, rowIndex) => (
-                <tr
-                  class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
-                  onClick={() => local.onRowClick?.(row, rowIndex())}
-                  style={local.onRowClick ? { cursor: "pointer" } : undefined}
-                >
-                  <For each={local.columns}>
-                    {(column) => (
+              {(row, rowIndex) => {
+                // Per-row tail-collapse: index of the column from which the row
+                // collapses into one spanning cell, or -1 for normal rendering
+                // (no spanRow, returned null, or an unknown fromColumnId).
+                const spanFromIndex = () => {
+                  const span = local.spanRow?.(row, rowIndex());
+                  if (!span) return -1;
+                  return local.columns.findIndex((c) => c.id === span.fromColumnId);
+                };
+                return (
+                  <tr
+                    class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
+                    onClick={() => local.onRowClick?.(row, rowIndex())}
+                    style={local.onRowClick ? { cursor: "pointer" } : undefined}
+                  >
+                    <Show
+                      when={spanFromIndex() >= 0}
+                      fallback={
+                        <>
+                          <For each={local.columns}>
+                            {(column) => (
+                              <td class="hud-table__cell" style={cellStyle(column)}>
+                                {getCellValue(row, column)}
+                              </td>
+                            )}
+                          </For>
+                          <Show when={local.rowActions}>
+                            {(rowActions) => (
+                              <td
+                                class="hud-table__cell hud-table__actions-cell"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div class="hud-table__actions-content">
+                                  {rowActions()(row, rowIndex())}
+                                </div>
+                              </td>
+                            )}
+                          </Show>
+                        </>
+                      }
+                    >
+                      {/* Leading columns before the span render normally… */}
+                      <For each={local.columns.slice(0, spanFromIndex())}>
+                        {(column) => (
+                          <td class="hud-table__cell" style={cellStyle(column)}>
+                            {getCellValue(row, column)}
+                          </td>
+                        )}
+                      </For>
+                      {/* …then one cell spans the rest (+ the actions column). */}
                       <td
-                        class="hud-table__cell"
-                        style={{
-                          "text-align": column.align || "left",
-                          "max-width": column.width,
-                          overflow: column.width ? "hidden" : undefined,
-                          "text-overflow": column.width ? "ellipsis" : undefined,
-                          "white-space": column.width ? "nowrap" : undefined,
-                        }}
+                        class="hud-table__cell hud-table__cell--span"
+                        colspan={
+                          local.columns.length - spanFromIndex() + (local.rowActions ? 1 : 0)
+                        }
                       >
-                        {getCellValue(row, column)}
+                        {local.spanRow!(row, rowIndex())!.content}
                       </td>
-                    )}
-                  </For>
-                  <Show when={local.rowActions}>
-                    {(rowActions) => (
-                      <td
-                        class="hud-table__cell hud-table__actions-cell"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div class="hud-table__actions-content">
-                          {rowActions()(row, rowIndex())}
-                        </div>
-                      </td>
-                    )}
-                  </Show>
-                </tr>
-              )}
+                    </Show>
+                  </tr>
+                );
+              }}
             </For>
           </tbody>
         </table>

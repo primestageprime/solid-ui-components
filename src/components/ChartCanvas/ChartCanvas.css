@@ -1,0 +1,18 @@
+/* ChartCanvas — positioned container for a Chart.js <canvas>.
+ *
+ * Owns position + width only; the chart-area height is a static decision
+ * baked per curried variant (createChartCanvas({ height })) and applied
+ * inline by the primitive. The relative positioning establishes the
+ * containing block for an optional absolutely-positioned overlay slot
+ * (e.g. InlineChartErrorOverlay rendered via children). */
+.sui-chart-canvas {
+  position: relative;
+  width: 100%;
+}
+
+/* No explicit canvas dimensions — Chart.js (responsive: true,
+ * maintainAspectRatio: false) sizes the canvas to this container's
+ * determinate height. display:block removes inline descender whitespace. */
+.sui-chart-canvas__canvas {
+  display: block;
+}

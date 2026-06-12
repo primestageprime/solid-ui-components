@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.61.5
+
+### Added
+
+- **Global themed thin scrollbars** — the self-contained themes (`hud`, `bronze`, `bronze-dark`) and the dev `_baseline` now style every scrollbar (`scrollbar-width: thin`; transparent track; thumb `--sui-border`, `--sui-border-bright` on hover; radius `--sui-radius-sm`), replacing native browser scrollbars in consuming apps.
+- **`ChartCanvas` primitive** — curried canvas-in-frame for Chart.js consumers: `createChartCanvas({ height })` plus `ChartCanvasMd` (240px), `ChartCanvasLg` (300px), `ChartCanvasMlg` (350px), `ChartCanvasXl` (420px). `ref` forwards to the inner canvas; `children` is an absolutely-positioned overlay slot (e.g. `InlineChartErrorOverlay`).
+- **`BaseTable` `spanRow`** — per-row tail-collapse hook (`spanRow?: (row, rowIndex) => TableRowSpan | null`): the row's leading cells render normally, then the remaining columns collapse into one spanning cell — for partial-data summary rows like "12 of 16 evaluated" + an action.
+- **`InlineText`** — styleless inline text primitive for data-driven colored values.
+- **`GrowBox`** — flex-grow child layout variant.
+- **`SmallWarningButton`** — small warning-toned Button variant.
+- **`PopoverMenu` `header` slot** — optional non-interactive header content rendered above the menu actions.
+
 ## 0.61.1
 
 ### Added

@@ -87,6 +87,18 @@
   left: 0;
 }
 
+/* ---- Optional non-interactive header (e.g. account email) ---- */
+.sui-popover-menu__header {
+  padding: 6px 16px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--sui-border);
+  color: var(--sui-text-muted);
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: default;
+}
+
 /* ---- Menu items ---- */
 .sui-popover-menu__item {
   display: flex;

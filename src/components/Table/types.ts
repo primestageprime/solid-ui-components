@@ -34,6 +34,31 @@ export interface BaseTableProps<T> extends Omit<JSX.HTMLAttributes<HTMLDivElemen
    * stops click propagation so action clicks never trigger `onRowClick`.
    */
   rowActions?: (row: T, rowIndex: number) => JSX.Element;
+  /**
+   * Optional per-row "tail collapse". For rows where this returns non-null, the
+   * columns from `fromColumnId` onward — including the trailing `rowActions`
+   * cell, if any — are replaced by a single spanning `<td colspan=…>` holding
+   * `content`; columns BEFORE `fromColumnId` render normally. Return `null` (or
+   * omit the prop) and the row renders cell-by-cell exactly as before.
+   *
+   * Use for summary / takeover rows: e.g. a partially-evaluated period that
+   * shows a centered "X of Y evaluated" message + a Run button across the stat
+   * columns instead of one value per stat cell. If `fromColumnId` doesn't match
+   * a column, the row falls back to normal rendering.
+   */
+  spanRow?: (row: T, rowIndex: number) => TableRowSpan | null;
+}
+
+/**
+ * A per-row tail-collapse directive returned by `BaseTableProps.spanRow`. The
+ * row renders its columns up to (but not including) `fromColumnId` normally,
+ * then a single spanning cell carrying `content` for the remaining columns.
+ */
+export interface TableRowSpan {
+  /** Column id from which the remaining cells collapse into one spanning `<td>`. */
+  fromColumnId: string;
+  /** Content rendered inside the spanning cell (centered by default). */
+  content: JSX.Element;
 }
 
 /**
