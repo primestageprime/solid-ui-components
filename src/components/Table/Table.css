@@ -139,6 +139,17 @@
   font-size: 11px;
 }
 
+/* Tail-collapse summary cell (BaseTableProps.spanRow): centered, prose
+   typography. The compound selector matches the :first-child specificity so a
+   full-row takeover (span from the first column) still overrides the row-index
+   mono styling above. */
+.hud-table__cell.hud-table__cell--span {
+  text-align: center;
+  color: var(--sui-text-secondary);
+  font-family: var(--sui-font-family);
+  font-size: 13px;
+}
+
 /* Empty state */
 .hud-table__empty {
   padding: 40px 20px;
