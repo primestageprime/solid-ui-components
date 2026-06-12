@@ -11,6 +11,9 @@ export const ChartCanvasMd: Component<ChartCanvasDataProps> = createChartCanvas(
 export const ChartCanvasLg: Component<ChartCanvasDataProps> = createChartCanvas({
   height: 300,
 });
+export const ChartCanvasMlg: Component<ChartCanvasDataProps> = createChartCanvas({
+  height: 350,
+});
 export const ChartCanvasXl: Component<ChartCanvasDataProps> = createChartCanvas({
   height: 420,
 });
