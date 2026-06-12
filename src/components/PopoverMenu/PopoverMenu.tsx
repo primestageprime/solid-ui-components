@@ -20,6 +20,14 @@ export interface PopoverMenuItem<Id extends string = string> {
 export interface PopoverMenuProps<Id extends string = string> {
   /** Content rendered inside the trigger button */
   trigger: JSX.Element;
+  /**
+   * Optional non-interactive header rendered above the items (e.g. the
+   * signed-in user's email in an account menu). It is excluded from the
+   * keyboard navigation and the menu's a11y semantics (`role="presentation"`,
+   * no focus) — purely a labelling slot. Omit it and the panel is byte-identical
+   * to before.
+   */
+  header?: JSX.Element;
   /** Menu items (at least one required) */
   items: [PopoverMenuItem<Id>, ...PopoverMenuItem<Id>[]];
   /** Called when an item is selected */
@@ -126,6 +134,11 @@ export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<
 
       <Show when={open()}>
         <ul class="sui-popover-menu__panel">
+          <Show when={merged.header}>
+            <li class="sui-popover-menu__header" role="presentation">
+              {merged.header}
+            </li>
+          </Show>
           <For each={merged.items}>
             {(item) => (
               <li
