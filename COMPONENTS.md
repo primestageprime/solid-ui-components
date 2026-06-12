@@ -740,6 +740,15 @@ State derivation:
 
 ## Text
 - **Text** — Polymorphic text element with variant and color. Key props: `variant` (`value`|`label`|`title`|`body`|`units`|`sublabel`), `color`, `as` (`span`|`p`|`h1`..`h4`|`div`). Use for: all themed text rendering.
+- **InlineText** — Atomic Primitive (Depth 1, styleless; owns no CSS file). A bare `<span>` that imposes **no typography of its own** — font-size/weight/family all inherit from the surrounding context — with a single optional **data-driven** `color?` applied inline (same pattern as `Duration`/`NumberWithUnits`). Exported directly (no factory/variants — colour is the only input and it's data, not design-config); pass-through standard `<span>` attrs + `children`. Use for: numeric/text cell values whose colour is computed from data (e.g. muted grey when zero/null, normal otherwise) while their size must match the host table/list — where no size-baking `Text` variant fits. Replaces bare `<span style={{color: muted ? "var(--sui-text-muted)" : "inherit"}}>` in dense grids (e.g. `ViolationsPivotGrid` cells).
+  - Example:
+    ```tsx
+    import { InlineText } from "solid-ui-components";
+
+    <InlineText color={value === 0 ? "var(--sui-text-muted)" : undefined}>
+      {value}
+    </InlineText>
+    ```
 - Curried variants (always prefer these over configuring `Text` directly):
   - **TextValue** — `variant="value"`. Use for: data values, readouts.
   - **TextLabel** — `variant="label"`. Use for: field labels, captions.

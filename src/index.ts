@@ -4,6 +4,7 @@ export type { ColorVariant, CornerStyle } from "./types";
 // Components
 export * from "./components/Layout";
 export * from "./components/Text";
+export * from "./components/InlineText";
 export * from "./components/Surface";
 export * from "./components/Badge";
 export * from "./components/SlotFillBar";
