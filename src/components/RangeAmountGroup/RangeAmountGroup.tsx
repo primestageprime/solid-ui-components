@@ -15,7 +15,7 @@
 // for arbitrary triple inputs (e.g. three date pickers).
 // Factory: createRangeAmountGroup() for curried variants.
 // ============================================
-import { Component, For, JSX, Show, mergeProps, splitProps } from "solid-js";
+import { Component, Index, JSX, Show, mergeProps, splitProps } from "solid-js";
 import { ThemedNumberInput } from "../ThemedNumberInput/ThemedNumberInput";
 import "./RangeAmountGroup.css";
 
@@ -67,21 +67,23 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
       <Show
         when={local.children}
         fallback={
-          <For each={local.slots ?? []}>
+          // Index (not For): slots are recreated by callers on every value
+          // change — position keying keeps the focused input mounted.
+          <Index each={local.slots ?? []}>
             {(slot, i) => (
               <div class="sui-range-amount-group__slot">
                 <span class="sui-range-amount-group__label">
-                  {slot.label || DEFAULT_LABELS[i()] || ""}
+                  {slot().label || DEFAULT_LABELS[i] || ""}
                 </span>
                 <ThemedNumberInput
-                  name={`${local.name ?? "range-amount"}-${i()}`}
-                  value={() => slot.value}
+                  name={`${local.name ?? "range-amount"}-${i}`}
+                  value={() => slot().value}
                   step={local.step ?? 0.01}
-                  onChange={(v: number | undefined) => slot.onChange(v)}
+                  onChange={(v: number | undefined) => slot().onChange(v)}
                 />
               </div>
             )}
-          </For>
+          </Index>
         }
       >
         {local.children}
