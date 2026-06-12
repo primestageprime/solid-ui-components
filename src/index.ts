@@ -160,6 +160,7 @@ export * from "./components/DayOfMonthPicker";
 export * from "./components/DayOfWeekPicker";
 export * from "./components/DatePicker";
 export * from "./components/SegmentedInput";
+export * from "./components/RangeAmountGroup";
 export * from "./components/BigNumberInput";
 export * from "./components/CollapsiblePanel";
 export * from "./components/WeekCalendar";

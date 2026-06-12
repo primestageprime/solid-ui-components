@@ -56,6 +56,8 @@
   font-family: inherit;
   font-size: 0.875rem;
   box-sizing: border-box;
+  /* Numbers right-align so digits line up across stacked fields. */
+  text-align: right;
   /* Suppress native number spinners — we render themed triggers. */
   -moz-appearance: textfield;
   appearance: textfield;
