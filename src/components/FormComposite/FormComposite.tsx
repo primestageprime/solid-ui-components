@@ -39,6 +39,13 @@ export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {
    * Default "38rem".
    */
   breakWidth?: string;
+  /**
+   * Force the STACKED arrangement at every width: identity (name + amount,
+   * sharing a line when they fit) on ROW 1, amounts trio next, the schedule
+   * block on its OWN row — never beside identity. For wide detail panels
+   * where a grid-sized schedule cramming beside the name reads poorly.
+   */
+  stacked?: boolean;
 }
 
 export const FormComposite: Component<FormCompositeProps> = (props) => {
@@ -47,10 +54,17 @@ export const FormComposite: Component<FormCompositeProps> = (props) => {
     "amounts",
     "schedule",
     "breakWidth",
+    "stacked",
     "class",
   ]);
   const rootClass = () =>
-    local.class ? `sui-form-composite ${local.class}` : "sui-form-composite";
+    [
+      "sui-form-composite",
+      local.stacked ? "sui-form-composite--stacked" : "",
+      local.class ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
   return (
     <div
       class={rootClass()}

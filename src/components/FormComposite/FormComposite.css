@@ -21,3 +21,12 @@
   flex-basis: calc((var(--fc-break, 38rem) - 100%) * 999);
   min-width: 0;
 }
+
+/* Forced stacking (the `stacked` prop): every block takes the full row —
+   identity row 1, amounts row 2 (when present), schedule row 3 — at every
+   container width. */
+.sui-form-composite--stacked .sui-form-composite__identity,
+.sui-form-composite--stacked .sui-form-composite__amounts,
+.sui-form-composite--stacked .sui-form-composite__schedule {
+  flex-basis: 100%;
+}

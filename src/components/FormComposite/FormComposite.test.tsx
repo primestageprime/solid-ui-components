@@ -60,3 +60,15 @@ describe("FormComposite amounts slot", () => {
     expect(root.querySelector(".sui-form-composite__amounts .trio")).toBeTruthy();
   });
 });
+
+describe("FormComposite stacked", () => {
+  it("the stacked prop forces the row-per-block arrangement class", async () => {
+    const { render } = await import("@solidjs/testing-library");
+    const { FormComposite } = await import("./FormComposite");
+    const { container } = render(() => (
+      <FormComposite stacked identity={<input />} schedule={<div>grid</div>} />
+    ));
+    const root = container.querySelector(".sui-form-composite")!;
+    expect(root.classList.contains("sui-form-composite--stacked")).toBe(true);
+  });
+});
