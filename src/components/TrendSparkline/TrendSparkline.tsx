@@ -29,11 +29,16 @@ export interface TrendSparklineProps
   height?: number;
   /** Max points rendered — longer series are evenly DOWNSAMPLED. Default 80. */
   capacity?: number;
+  /** Explicit [min, max] value domain. When provided, OVERRIDES the per-series
+   *  auto-scale so a group of sparklines drawn together can share ONE scale
+   *  (apples-to-apples heights). Omit for per-series auto-scaling (default). A
+   *  degenerate domain (min===max) falls back to auto-scaling. */
+  yDomain?: [number, number];
 }
 
 export const TrendSparkline: Component<TrendSparklineProps> = (props) => {
   const [local, others] = splitProps(props, [
-    "values", "trend", "width", "height", "capacity", "class",
+    "values", "trend", "width", "height", "capacity", "yDomain", "class",
   ]);
   const w = () => local.width ?? 120;
   const h = () => local.height ?? 24;
@@ -51,8 +56,12 @@ export const TrendSparkline: Component<TrendSparklineProps> = (props) => {
     const v = sampled();
     if (v.length === 0) return "";
     if (v.length === 1) return `0,${h() / 2} ${w()},${h() / 2}`;
-    const lo = Math.min(...v);
-    const hi = Math.max(...v);
+    // A shared domain (when valid) overrides the per-series auto-scale, so a
+    // group of sparklines renders on one common scale; otherwise auto-scale.
+    const dom = local.yDomain;
+    const shared = dom && dom[0] !== dom[1];
+    const lo = shared ? Math.min(dom![0], dom![1]) : Math.min(...v);
+    const hi = shared ? Math.max(dom![0], dom![1]) : Math.max(...v);
     const span = hi - lo || 1;
     const PAD = 1.5; // keep the stroke inside the rect
     const plotH = h() - PAD * 2;
