@@ -40,6 +40,10 @@ export const IconOnlyButton: Component<ButtonDataProps> = createButton({ variant
 // Small primary button — compact primary action
 export const SmallPrimaryButton: Component<ButtonDataProps> = createButton({ variant: "primary", size: "sm" });
 
+// Small button — compact, no variant baked. `tone` (accent/outline/muted) is a
+// runtime data prop (not stripped), so callers select tone per instance.
+export const SmallButton: Component<ButtonDataProps> = createButton({ size: "sm" });
+
 // Small danger button — compact destructive action
 export const SmallDangerButton: Component<ButtonDataProps> = createButton({ variant: "danger", size: "sm" });
 

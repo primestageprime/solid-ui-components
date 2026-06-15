@@ -8,3 +8,6 @@ import type { Component } from "solid-js";
 
 /** Small status dot — for dense rows / inline indicators. */
 export const SmallStatusLight: Component<StatusLightDataProps> = createStatusLight({ size: "sm" });
+
+/** Medium status dot. */
+export const MdStatusLight: Component<StatusLightDataProps> = createStatusLight({ size: "md" });

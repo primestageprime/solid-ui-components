@@ -62,8 +62,11 @@ export const StatusBadge: Component<StatusBadgeProps> = (props) => {
   );
 };
 
-/** Props that are visual/static overrides — locked at variant-definition time. */
-export type StatusBadgeOverrides = Pick<StatusBadgeProps, "variant" | "size">;
+/** Props that are visual/static overrides — locked at variant-definition time.
+ *  `variant` is intentionally NOT locked: a status badge's variant is the
+ *  status being shown (often computed from runtime data), so it stays a data
+ *  prop — same treatment as StatusLight. Only `size` is curried. */
+export type StatusBadgeOverrides = Pick<StatusBadgeProps, "size">;
 
 /** Props that remain available to consumers of a curried StatusBadge variant. */
 export type StatusBadgeDataProps = Omit<StatusBadgeProps, keyof StatusBadgeOverrides>;

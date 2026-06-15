@@ -1,3 +1,12 @@
+// Global reset + design tokens. Imported here (not just authored in source) so
+// the box-sizing reset and base `body` rules (margin:0, theme background) ship
+// in dist/index.css for consumers of `solid-ui-components/index.css`. Without
+// this the default 8px body margin shows as a white frame around dark apps.
+import "./styles/global.css";
+
+// createSection is used below to reconstruct the legacy HUDSection alias.
+import { createSection } from "./components/Section";
+
 // Types
 export type { ColorVariant, CornerStyle } from "./types";
 
@@ -182,6 +191,11 @@ export { ConfirmationModal as HUDConfirmationModal } from "./components/Modal";
 export { Tabs as HUDTabs } from "./components/Tabs";
 export { ButtonGroup as HUDButtonGroup } from "./components/ButtonGroup";
 export { ListItem as HUDListItem } from "./components/List";
+// Section's base component is intentionally unexported on this version (consumers
+// use createSection()/curried variants). HUDSection was the old raw default
+// Section; recreate it as a default-configured Section so legacy consumers keep
+// working. title/subtitle/children remain accepted (not in the overridable set).
+export const HUDSection = createSection({});
 export { createPanel as createHUDPanel } from "./components/Panel";
 export * from "./components/WorkerCard";
 export * from "./components/CompletionTimeline";
