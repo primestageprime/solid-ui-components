@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.64.0
+
+### Added
+
+- **`ScrollRegion`** — a dynamic fade scroll-affordance component: a vertically-scrolling viewport whose top/bottom edges fade in only when there is more content to scroll toward (no fade at the true start/end), so users get a clear "there's more" cue. Curried via `createScrollRegion`; ships optional bounded presets `ScrollRegionMd` (~240px) and `ScrollRegionLg` (~360px) for non-flex contexts. The base `ScrollRegion` is height-agnostic and fills its flex parent — prefer it in flex layouts; the fade logic is identical either way.
+- **`MathFormula` `wrap` variant** — opt-in `wrap?: boolean` prop (also a passthrough on `FormulaDecomposition`) that renders each top-level term as its own inline KaTeX element inside a `flex-wrap` row, so a formula too wide for its container breaks onto multiple lines at top-level operator boundaries. Pure CSS wrapping — no JS measuring, no shrink-to-fit, no horizontal scroll. Default behaviour is unchanged: without `wrap`, the historical single-line rendering is preserved.
+
+### Fixed
+
+- **`Panel`** — bottom corner brackets are now pinned to the visible frame on scroll instead of drifting with scrolled content, so the HUD corner brackets stay anchored to the panel edges.
+
 ## 0.61.5
 
 ### Added
