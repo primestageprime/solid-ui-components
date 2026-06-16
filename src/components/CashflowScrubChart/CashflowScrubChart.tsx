@@ -221,6 +221,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 ) => {
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
+  // Unique clipPath id per instance — multiple charts on one page must not
+  // share a clip rect (each has its own plot geometry).
+  const clipId = `sui-cashflow-clip-${Math.random().toString(36).slice(2, 9)}`;
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
@@ -353,12 +356,64 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const selectedX = selectedCell ? ctx.cellToX(ctx.selected) : 0;
     const selectedY = selectedCell ? yToPlot(selectedCell.balanceCents) : 0;
 
+    // ── Over-top indicator ───────────────────────────────────────────────
+    // The y-axis scales to the LINES (consumer passes a line-based `yMax`); the
+    // range cone is allowed to overflow the top, clipped to the plot rect. When
+    // any series point exceeds the top of the plot (maps ABOVE plotTop in px),
+    // mark the GLOBAL peak with an upward chevron + the compact-formatted value
+    // at the top edge, so the unshown high point is legible. One marker at the
+    // peak suffices. A 0.5px epsilon avoids flagging values pinned exactly at
+    // the (nice-rounded) domain top.
+    const OVERTOP_EPS_PX = 0.5;
+    const overtopPeak = (() => {
+      let best: { x: number; value: number } | null = null;
+      ctx.cells.forEach((cell, i) => {
+        const candidates: number[] = [cell.balanceCents];
+        for (const s of props.balanceSeries ?? []) {
+          const v = s.balanceCents(cell, i);
+          if (v != null) candidates.push(v);
+        }
+        for (const v of candidates) {
+          // Above the plot top in screen space → exceeds the visible domain.
+          if (yToPlot(v) < ctx.plotTop - OVERTOP_EPS_PX) {
+            if (!best || v > best.value) best = { x: ctx.cellToX(i), value: v };
+          }
+        }
+      });
+      return best as { x: number; value: number } | null;
+    })();
+
+    // Keep the chevron + label clamped inside the plot's horizontal span so the
+    // label never clips off the left/right edges. The marker is drawn OUTSIDE
+    // the clip group (after it), at the very top edge of the plot.
+    const overtopLabelX =
+      overtopPeak == null
+        ? 0
+        : Math.min(
+            Math.max(overtopPeak.x, ctx.plotLeft + 28),
+            ctx.plotRight - 28,
+          );
+
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart"
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
+        {/* Clip the plotted content (cone fills + balance lines) to the plot
+            rect so a cone exceeding the line-based domain clips at the plot TOP
+            rather than spilling over the axis labels. */}
+        <defs>
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            <rect
+              x={ctx.plotLeft}
+              y={ctx.plotTop}
+              width={Math.max(0, ctx.plotRight - ctx.plotLeft)}
+              height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
+            />
+          </clipPath>
+        </defs>
+        <g clip-path={`url(#${clipId})`}>
         <For each={bands}>
           {(band) => (
             <polygon
@@ -391,6 +446,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           )}
         </For>
         <polyline class="sui-cashflow-scrub-chart__line" points={points} />
+        </g>
+        {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
+            edge and the label stays fully visible. */}
+        {overtopPeak && (
+          <g class="sui-cashflow-scrub-chart__overtop">
+            <path
+              class="sui-cashflow-scrub-chart__overtop-chevron"
+              d={`M ${overtopPeak.x} ${ctx.plotTop + 1} l 4 5 l -8 0 Z`}
+            />
+            <text
+              class="sui-cashflow-scrub-chart__overtop-label"
+              x={overtopLabelX}
+              y={ctx.plotTop + 9}
+              text-anchor="middle"
+            >
+              {fmtAxisDollars(overtopPeak.value)}
+            </text>
+          </g>
+        )}
         {/* Per-cell dots are deliberately omitted from the line — the line
             alone reads as a smooth running balance, and the selected dot
             below provides the precise anchor. Tradeoff explained in the

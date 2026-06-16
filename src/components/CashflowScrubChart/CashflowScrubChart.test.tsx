@@ -235,6 +235,63 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("over-top indicator (cone overflowing a line-based yMax)", () => {
+    it("pins the domain to yMax and marks the cone's off-screen peak", () => {
+      const cells = makeCells(8); // balances stay well under 100_000
+      const lo = (c: CashflowCell) => c.balanceCents;
+      // Hi edge far exceeds the explicit yMax → cone runs off the top.
+      // Cents: 400_000_000c = $4,000,000 → compact "$4M".
+      const hi = (_c: CashflowCell, i: number) => 400_000_000 + i * 1000;
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          yMax={100_000}
+          balanceSeries={[
+            { id: "range-lo", balanceCents: lo },
+            { id: "range-hi", balanceCents: hi, fill: { baseline: lo } },
+          ]}
+        />
+      ));
+      // (a) axis domain stays pinned to yMax: the highest tick label does not
+      // jump up to the cone's $4M — it tops out near the pinned $100k.
+      const tickLabels = Array.from(
+        container.querySelectorAll(".sui-scrub-chart__label--y"),
+      ).map((t) => t.textContent ?? "");
+      expect(tickLabels.some((t) => t.includes("M"))).toBe(false);
+      // (b) the over-top indicator renders with the compact-formatted peak.
+      const overtop = container.querySelector(".sui-cashflow-scrub-chart__overtop");
+      expect(overtop).toBeTruthy();
+      const label = container.querySelector(".sui-cashflow-scrub-chart__overtop-label");
+      expect(label?.textContent).toBe("$4M");
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__overtop-chevron"),
+      ).toBeTruthy();
+      // The plotted content is wrapped in a clip group.
+      expect(container.querySelector("clipPath")).toBeTruthy();
+    });
+
+    it("shows NO indicator when every series fits under yMax", () => {
+      const cells = makeCells(8);
+      const lo = (c: CashflowCell) => c.balanceCents - 5_000;
+      const hi = (c: CashflowCell) => c.balanceCents + 5_000;
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          yMax={5_000_000}
+          balanceSeries={[
+            { id: "range-lo", balanceCents: lo },
+            { id: "range-hi", balanceCents: hi, fill: { baseline: lo } },
+          ]}
+        />
+      ));
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__overtop"),
+      ).toBeNull();
+    });
+  });
+
   it("renders empty cleanly when cells is []", () => {
     const { container } = render(() => (
       <CashflowScrubChart cells={[]} selected={0} onScrub={() => {}} />

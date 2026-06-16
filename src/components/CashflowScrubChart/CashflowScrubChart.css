@@ -163,6 +163,23 @@
   fill: var(--sui-warning, #f5a623);
 }
 
+/* ── Over-top indicator ───────────────────────────────────────────── */
+/* When the range cone overflows the line-based y-domain it is clipped at the
+   plot top; this marker (chevron + compact value) flags the unshown peak at
+   the top edge. Muted/secondary text, the cone accent for the chevron. */
+
+.sui-cashflow-scrub-chart__overtop-chevron {
+  fill: var(--sui-accent, #00a8cc);
+  opacity: 0.85;
+}
+
+.sui-cashflow-scrub-chart__overtop-label {
+  fill: var(--sui-text-muted, rgba(255, 255, 255, 0.55));
+  font-size: 9px;
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
 /* ── Plotline markers (the `markers` prop) ────────────────────────── */
 /* Overlay svg sits above the gesture layer; the svg ignores pointer
    events, each marker group re-enables them so the rule/dot is clickable
