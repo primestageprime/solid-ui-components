@@ -1,0 +1,83 @@
+/* ScrollRegion — dynamic top/bottom fade scroll affordance.
+   See ScrollRegion.tsx. All colours key off --sui-* theme tokens so the fades
+   match the surrounding panel/background in every theme. */
+
+/* Relative frame: the fades are absolutely positioned against this. It owns no
+   scroll itself — the inner __viewport does. */
+.sui-scroll-region {
+  position: relative;
+  min-height: 0;
+}
+
+/* The scroll container. The themed scrollbar is a SECONDARY cue: on macOS,
+   overlay scrollbars stay invisible at rest, so the fades (below) are the
+   primary affordance. scrollbar-gutter:stable reserves the track up-front so
+   painting it never shifts layout. */
+.sui-scroll-region__viewport {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sui-border) var(--sui-bg-primary);
+  /* flex column so the content wrapper (flex:1 0 auto) fills the viewport when
+     content is short, and grows past it — overflowing into scroll — when tall.
+     This lets a `height:100%` / `fill` child of the content resolve against the
+     viewport while still allowing real overflow. */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Single content wrapper the ResizeObserver/MutationObserver watch so total
+   content-height changes (rows toggled in/out, async data) re-evaluate the
+   fades. flex:1 0 auto makes it fill the viewport (short content) yet expand to
+   its content height (tall content → scroll). */
+.sui-scroll-region__content {
+  flex: 1 0 auto;
+}
+
+/* Component-scoped scrollbar to match the jtf-ui look (slightly wider track than
+   the global thin default in themes/_baseline.css). Token-driven so each theme's
+   colours carry through. */
+.sui-scroll-region__viewport::-webkit-scrollbar {
+  width: 10px;
+}
+.sui-scroll-region__viewport::-webkit-scrollbar-track {
+  background: var(--sui-bg-primary);
+}
+.sui-scroll-region__viewport::-webkit-scrollbar-thumb {
+  background: var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+}
+.sui-scroll-region__viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--sui-border-bright);
+}
+
+/* Fade overlays — gradient cues meaning "more content this way." Hidden by
+   default; the component toggles `is-visible` from live scroll/resize state, so
+   a fade only paints when content is actually clipped in that direction.
+   pointer-events:none keeps content beneath them clickable. The right inset
+   clears the reserved scrollbar gutter so a fade never paints over the thumb.
+   The transparent gradient stop fades into the panel/background token, matching
+   the model components. */
+.sui-scroll-region__fade {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 10px;
+  height: 56px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.sui-scroll-region__fade.is-visible {
+  opacity: 1;
+}
+.sui-scroll-region__fade--top {
+  top: 0;
+  background: linear-gradient(to top, transparent, var(--sui-bg-primary));
+  border-radius: var(--sui-radius-sm, 4px) var(--sui-radius-sm, 4px) 0 0;
+}
+.sui-scroll-region__fade--bottom {
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, var(--sui-bg-primary));
+  border-radius: 0 0 var(--sui-radius-sm, 4px) var(--sui-radius-sm, 4px);
+}

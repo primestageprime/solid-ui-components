@@ -62,6 +62,7 @@ export * from "./components/Table";
 export * from "./components/PivotGrid";
 export * from "./components/Section";
 export * from "./components/Panel";
+export * from "./components/ScrollRegion";
 export * from "./components/Divider";
 export * from "./components/Page";
 export * from "./components/Modal";

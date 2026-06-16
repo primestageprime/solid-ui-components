@@ -44,6 +44,7 @@ import { InputsShowcase } from "./showcases/inputs";
 import { MathFormulaShowcase } from "./showcases/math-formula";
 import { NavItemShowcase } from "./showcases/nav-item";
 import { ProgressBarShowcase } from "./showcases/progress-bar";
+import { ScrollRegionShowcase } from "./showcases/scroll-region";
 import { SectionShowcase } from "./showcases/section";
 import { SelectShowcase } from "./showcases/select";
 import { SidebarSelectorShowcase } from "./showcases/sidebar-selector";
@@ -167,6 +168,7 @@ const items: Item[] = [
   { id: "hud-page", label: "Page", component: PageShowcase, tags: ["depth:1", "layout"] },
   { id: "hud-panel", label: "Panel", component: PanelShowcase, tags: ["depth:1", "container"] },
   { id: "progress-bar", label: "ProgressBar", component: ProgressBarShowcase, tags: ["depth:1", "indicator"] },
+  { id: "scroll-region", label: "ScrollRegion", component: ScrollRegionShowcase, tags: ["depth:1", "container", "layout"] },
   { id: "section", label: "Section", component: SectionShowcase, tags: ["depth:1", "container"] },
   { id: "hud-section", label: "Section (Accent)", component: AccentSectionShowcase, tags: ["depth:1", "container"] },
   { id: "select", label: "Select", component: SelectShowcase, tags: ["depth:1", "form"] },
