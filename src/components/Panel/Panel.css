@@ -4,6 +4,35 @@
 .sui-panel {
   position: relative;
   padding: 16px;
+  /* The frame is a flex column so its inner content region is bounded by the
+     frame's height: when the frame is height-bounded (e.g. flex:1;min-height:0
+     in a viewport-locked chain) the region scrolls inside it; when the frame is
+     auto-height (short/unbounded) the region resolves to its content height and
+     simply grows — no scrollbar. */
+  display: flex;
+  flex-direction: column;
+  /* Non-scrolling frame: clips the bottom corner-bracket bleed (bottom:-1px),
+     any x-axis sub-pixel rounding, and the corners-clip/notch clip-path
+     overflow. Scrolling is delegated to .sui-panel__content, so the
+     absolutely-positioned bottom brackets stay pinned to the visible panel edge
+     instead of riding the scroll content. */
+  overflow: clip;
+}
+
+/* Inner content region — ALWAYS present and the scroll owner. flex:1 + min-height:0
+   bounds it to the space the frame leaves after the (optional) header, so it
+   scrolls inside a height-bounded frame and grows in an auto-height one. It is a
+   flex column so children that expect the panel to be a flex-column container
+   (e.g. a child that uses flex:1/min-height:0 to claim the remaining height)
+   resolve their layout against this region exactly as they did when they were
+   direct flex-column children of the frame. The panel's PADDING stays on the
+   frame so the header shares it and it is never doubled. */
+.sui-panel__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* Panel sizes */
@@ -22,7 +51,7 @@
   display: flex;
   flex-direction: column;
 }
-.sui-panel--fill .sui-panel__content {
+.sui-panel--fill > .sui-panel__content {
   flex: 1 1 auto;
   min-height: 0;
 }

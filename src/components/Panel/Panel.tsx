@@ -69,11 +69,15 @@ export const Panel: Component<PanelProps> = (props) => {
           <h3 class="sui-panel__title">{local.title}</h3>
         </div>
       </Show>
-      <Show when={local.fill} fallback={local.children}>
-        {/* Filling panels wrap content in a growing region so a flexible child
-            (e.g. a container-sized chart) takes the height left after the title. */}
-        <div class="sui-panel__content">{local.children}</div>
-      </Show>
+      {/* Children ALWAYS live in an inner content region. The outer .sui-panel
+          frame is non-scrolling (overflow:clip) and owns the corner brackets;
+          .sui-panel__content is the scroll owner (overflow:auto), so a
+          height-bounded panel scrolls inside the frame and the bottom brackets
+          stay pinned to the visible panel edge instead of riding the scroll
+          content. `fill` additionally makes this region grow (flex:1;min-height:0)
+          so a flexible child (e.g. a container-sized chart) takes the height
+          left after the title. */}
+      <div class="sui-panel__content">{local.children}</div>
     </div>
   );
 };
