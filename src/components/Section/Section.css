@@ -52,6 +52,16 @@
   margin-bottom: 8px;
 }
 
+/* Indent: left-pad the BODY so nested sections read as a hierarchy.
+   One step per nesting level; subtle and consistent. */
+.sui-section--indent-sm > .sui-section__content {
+  padding-left: 12px;
+}
+
+.sui-section--indent-md > .sui-section__content {
+  padding-left: 20px;
+}
+
 /* Collapse button */
 .sui-section__collapse-btn {
   width: 24px;
