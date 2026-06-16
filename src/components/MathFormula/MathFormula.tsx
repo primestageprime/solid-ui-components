@@ -9,6 +9,7 @@ import { createContext, useContext, createSignal, createEffect, on, ParentCompon
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import "./MathFormula.css";
+import { splitLatexSegments, hasSplittableOperators } from "./latexSegments";
 
 // ============================================
 // Formula Highlight Context
@@ -51,6 +52,15 @@ export interface MathFormulaProps {
   latex: string;
   /** Display mode (block) vs inline */
   displayMode?: boolean;
+  /**
+   * Opt-in: split the formula at top-level `+`/`-`/`=` operators and render
+   * each term as its own inline KaTeX element inside a `flex-wrap` row, so a
+   * formula too wide for its container WRAPS to multiple lines at operator
+   * boundaries instead of overflowing. Defaults to `false` (single block),
+   * preserving the historical render exactly. Only takes effect when the
+   * formula actually has a top-level operator to break on.
+   */
+  wrap?: boolean;
   /** Additional CSS class */
   class?: string;
   /** Custom styles */
@@ -100,21 +110,45 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     });
   };
 
+  // Render a single chunk of LaTeX to a KaTeX HTML string.
+  const renderChunk = (latex: string, displayMode: boolean): string =>
+    katex.renderToString(processLatex(latex), {
+      displayMode,
+      throwOnError: false,
+      strict: false,
+      trust: true, // Enable \htmlId, \htmlClass, etc.
+    });
+
+  // Single-block render — the historical (default) behaviour.
+  const renderSingleBlock = (): string =>
+    renderChunk(props.latex, props.displayMode ?? true);
+
+  // Wrapping render — split at top-level operators and emit one inline KaTeX
+  // element per term plus standalone operator elements, all inside a
+  // flex-wrap row so the formula breaks to new lines at `+`/`=` boundaries
+  // when its container is narrow. `\displaystyle` keeps fractions full-size
+  // even though each term is rendered in inline (non-display) mode.
+  const renderWrapped = (): string => {
+    const segments = splitLatexSegments(props.latex);
+    const pieces = segments.map((seg) => {
+      const cls = seg.kind === "op" ? "math-formula-op" : "math-formula-term";
+      const body =
+        seg.kind === "op"
+          ? renderChunk(seg.latex, false)
+          : renderChunk(`\\displaystyle ${seg.latex}`, false);
+      return `<span class="${cls}">${body}</span>`;
+    });
+    return `<span class="math-formula-row">${pieces.join("")}</span>`;
+  };
+
   // Render and set up interactivity
   const renderFormula = () => {
     if (!containerRef) return;
 
-    const processedLatex = processLatex(props.latex);
-
     try {
-      // Use renderToString instead of render - may work better with bundling
-      const html = katex.renderToString(processedLatex, {
-        displayMode: props.displayMode ?? true,
-        throwOnError: false,
-        strict: false,
-        trust: true, // Enable \htmlId, \htmlClass, etc.
-      });
-      containerRef.innerHTML = html;
+      const useWrap = (props.wrap ?? false) && hasSplittableOperators(props.latex);
+      containerRef.innerHTML = useWrap ? renderWrapped() : renderSingleBlock();
+      containerRef.classList.toggle("math-formula--wrap", useWrap);
 
       addInteractivity();
     } catch (e) {
@@ -123,10 +157,11 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     }
   };
 
-  // Use createEffect to render when mounted and when latex changes
-  createEffect(on(() => props.latex, () => {
-    renderFormula();
-  }));
+  // Render on mount and whenever the latex / wrap / displayMode inputs change.
+  createEffect(on(
+    () => [props.latex, props.wrap, props.displayMode] as const,
+    () => renderFormula(),
+  ));
 
   // Update highlighting when hoveredVar changes
   createEffect(() => {

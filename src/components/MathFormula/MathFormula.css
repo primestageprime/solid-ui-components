@@ -9,6 +9,40 @@
   overflow-x: auto;
 }
 
+/* ============================================
+   Wrapping variant (<MathFormula wrap />)
+   ============================================
+   Each top-level term + operator is rendered as its own inline KaTeX
+   element; this flex row lets them wrap to new lines at `+`/`=` boundaries
+   when the container is narrow, and sit on one line when it is wide. No JS
+   measuring — pure CSS wrapping. `min-width: 0` so the row (and so the card)
+   can shrink below the formula's intrinsic width instead of overflowing. */
+.math-formula--wrap {
+  overflow-x: hidden;
+}
+
+.math-formula--wrap .math-formula-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center; /* operators line up with the centre of fraction terms */
+  justify-content: center;
+  column-gap: 0.4em;
+  row-gap: 0.25em;
+  min-width: 0;
+}
+
+/* Inline KaTeX inside each segment must not add the display-mode block
+   margins; keep terms tight so the gaps above are the only spacing. */
+.math-formula--wrap .math-formula-term .katex,
+.math-formula--wrap .math-formula-op .katex {
+  font-size: 1.1em;
+  display: inline-block;
+}
+
+.math-formula--wrap .math-formula-op {
+  color: var(--sui-text-muted);
+}
+
 /* Override KaTeX's default background */
 .math-formula .katex-display {
   margin: 0;

@@ -53,6 +53,13 @@ export interface FormulaConfig {
   latex: (resultStr: string) => string;
   /** Optional border color for the panel Surface */
   borderColor?: string;
+  /**
+   * Opt-in: render the formula with the wrapping `MathFormula` variant, which
+   * breaks the equation to multiple lines at top-level `+`/`=` operators when
+   * the panel is narrow (instead of overflowing). Defaults to the historical
+   * single-block render. See {@link MathFormula} `wrap`.
+   */
+  wrap?: boolean;
 }
 
 // ============================================
@@ -148,7 +155,7 @@ export function createFormula(config: FormulaConfig): Component<FormulaValuesPro
   return (props) => {
     const resultStr = () => computeResult(config, props.values);
     const latex = () => config.latex(resultStr());
-    return <MathFormula latex={latex()} />;
+    return <MathFormula latex={latex()} wrap={config.wrap} />;
   };
 }
 

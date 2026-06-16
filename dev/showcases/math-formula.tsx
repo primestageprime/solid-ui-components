@@ -32,6 +32,43 @@ export const MathFormulaShowcase: Component = () => {
         </Stack>
       </div>
 
+      <div class="example-group">
+        <h3>Wrapping variant (wrap)</h3>
+        <p class="text-meta">
+          Opt-in <code>wrap</code> splits the formula at top-level <code>+</code>/<code>=</code> operators and renders each
+          term as its own inline KaTeX element in a flex-wrap row. Wide: one line. Narrow: it wraps to multiple lines at
+          operator boundaries (no shrinking, no horizontal scroll). Drag the panes to compare.
+        </p>
+        <Stack gap="md">
+          <div>
+            <div class="text-meta">Wide container — fits on one line</div>
+            <div style={{ width: "100%" }}>
+              <MathFormula
+                wrap
+                latex={"(1 - CE) \\times 13.8 + \\frac{NOx \\times F_2 \\times 2760}{836200 \\times kW} + \\frac{0.1029 \\times A}{kW} = 1.2345"}
+              />
+            </div>
+          </div>
+          <div>
+            <div class="text-meta">Narrow container (320px) — wraps at + / = boundaries</div>
+            <div style={{ width: "320px", "max-width": "100%", border: "1px dashed var(--sui-border)", "border-radius": "6px" }}>
+              <MathFormula
+                wrap
+                latex={"(1 - CE) \\times 13.8 + \\frac{NOx \\times F_2 \\times 2760}{836200 \\times kW} + \\frac{0.1029 \\times A}{kW} = 1.2345"}
+              />
+            </div>
+          </div>
+          <div>
+            <div class="text-meta">Narrow WITHOUT wrap (default) — single block, scrolls</div>
+            <div style={{ width: "320px", "max-width": "100%", border: "1px dashed var(--sui-border)", "border-radius": "6px" }}>
+              <MathFormula
+                latex={"(1 - CE) \\times 13.8 + \\frac{NOx \\times F_2 \\times 2760}{836200 \\times kW} + \\frac{0.1029 \\times A}{kW} = 1.2345"}
+              />
+            </div>
+          </div>
+        </Stack>
+      </div>
+
     </div>
   );
 };
