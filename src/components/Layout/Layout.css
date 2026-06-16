@@ -97,6 +97,14 @@
   color: var(--sui-text-primary, inherit);
 }
 
+/* Full-bleed variant: pin to the viewport, escaping ancestor page padding.
+   `height: 100vh` from the base still applies; inset:0 anchors it. */
+.app-shell--fixed {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
 .app-header {
   display: flex;
   align-items: center;

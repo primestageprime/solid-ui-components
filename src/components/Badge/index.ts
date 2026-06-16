@@ -6,3 +6,6 @@ export * from "./variants";
 // CountChip has no design-config props — already effectively curried, re-exported as-is.
 export { CountChip } from "./CountChip";
 export type { CountChipProps } from "./CountChip";
+// BaselineDot has no design-config props — re-exported as-is.
+export { BaselineDot } from "./BaselineDot";
+export type { BaselineDotProps } from "./BaselineDot";

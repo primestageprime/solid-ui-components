@@ -10,12 +10,25 @@
 import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
-export interface AppShellProps extends JSX.HTMLAttributes<HTMLDivElement> {}
+export interface AppShellProps extends JSX.HTMLAttributes<HTMLDivElement> {
+  /**
+   * Pin the shell to the full viewport (position: fixed; inset: 0;
+   * overflow: hidden) instead of flowing in the document. Use for full-bleed
+   * app screens that must escape any ancestor page padding. Default false.
+   */
+  fixed?: boolean;
+}
 
 export const AppShell: Component<AppShellProps> = (props) => {
-  const [local, others] = splitProps(props, ["class", "children"]);
+  const [local, others] = splitProps(props, ["fixed", "class", "children"]);
+  const cls = () => {
+    const c = ["app-shell"];
+    if (local.fixed) c.push("app-shell--fixed");
+    if (local.class) c.push(local.class);
+    return c.join(" ");
+  };
   return (
-    <div class={`app-shell${local.class ? " " + local.class : ""}`} {...others}>
+    <div class={cls()} {...others}>
       {local.children}
     </div>
   );
