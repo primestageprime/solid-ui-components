@@ -70,6 +70,8 @@ import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
+import { CompletionChartShowcase } from "./showcases/completion-chart";
+import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
 import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
@@ -196,6 +198,8 @@ const items: Item[] = [
   { id: "status-light", label: "StatusLight", component: StatusLightShowcase, tags: ["depth:1", "indicator", "status"] },
   { id: "tag-input", label: "TagInput", component: TagInputShowcase, tags: ["depth:1", "form"] },
   { id: "throughput-chart", label: "ThroughputChart", component: ThroughputChartShowcase, tags: ["depth:2", "chart", "time", "data"] },
+  { id: "completion-chart", label: "CompletionChart", component: CompletionChartShowcase, tags: ["depth:2", "chart", "time", "data"] },
+  { id: "extraction-board", label: "ExtractionBoard", component: ExtractionBoardShowcase, tags: ["depth:2", "chart", "data", "container"] },
   { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase, tags: ["depth:1", "indicator"] },
   { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase, tags: ["depth:1", "form"] },
   { id: "worker-card", label: "WorkerCard", component: WorkerCardShowcase, tags: ["depth:1", "container", "indicator"] },

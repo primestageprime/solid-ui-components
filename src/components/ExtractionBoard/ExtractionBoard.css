@@ -1,0 +1,102 @@
+/* ============================================
+ * ExtractionBoard — owned structural CSS.
+ *
+ * The board composes SUI primitives (Surface / Text / StatusBadge / Icon /
+ * SlotFillBar / BatchBar / CountChip / ProportionalStack) for all VISUALS.
+ * This file only carries the board's own flex SCAFFOLD: the row of equal-width
+ * columns, the centered column-type stat cells, and the fixed-width status-bar
+ * number cells. No colors, no component styling — those come from SUI tokens.
+ * ============================================ */
+
+/* The board is a vertical stack of swimlane rows. */
+.sui-xb {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-md, 12px);
+  width: 100%;
+}
+
+/* One swimlane: equal-width card columns + a fixed lozenge column. Height is
+ * natural (stretch) so a multi-card Doing cell makes the lane taller and the
+ * neighbours stretch to match. */
+.sui-xb__row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--sui-space-md, 12px);
+  align-items: stretch;
+}
+
+/* The fixed-width +N lozenge column (and the header spacer that matches it). */
+.sui-xb__lozenge {
+  flex: 0 0 72px;
+  min-width: 72px;
+  max-width: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stacked Doing cards inside a single (taller) Doing cell. */
+.sui-xb__doing-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-sm, 8px);
+}
+
+/* Card header: name on the left, badge on the right. */
+.sui-xb__card-head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sui-space-sm, 8px);
+}
+
+/* Centered column-type "icon over count" stats; wraps on narrow cards. */
+.sui-xb__coltypes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--sui-space-sm, 8px);
+}
+.sui-xb__coltype {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sui-space-xs, 4px);
+}
+
+/* Totals (Done/Todo cards): centered stacked lines. */
+.sui-xb__totals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sui-space-xs, 4px);
+}
+
+/* A status bar line: [done #] · [══ fill ══] · [total #]. The number cells are
+ * a fixed width so every bar is the same length regardless of the digits. */
+.sui-xb__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-xs, 4px);
+}
+.sui-xb__bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sui-space-sm, 8px);
+}
+.sui-xb__bar-num {
+  flex: 0 0 56px;
+  min-width: 56px;
+  max-width: 56px;
+  display: flex;
+  justify-content: flex-end;
+}
+.sui-xb__bar-fill {
+  flex: 1 1 auto;
+  min-width: 0;
+}
