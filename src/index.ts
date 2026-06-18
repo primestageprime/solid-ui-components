@@ -18,6 +18,7 @@ export * from "./components/Surface";
 export * from "./components/Badge";
 export * from "./components/SlotFillBar";
 export * from "./components/BatchBar";
+export * from "./components/ExtractionBoard";
 export * from "./components/Legend";
 export * from "./components/StatusLight";
 export * from "./components/Dot";

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 0.66.0
+
+### Added
+
+- **`ExtractionBoard`** — a composite swimlane board for an ETL extraction view. One swimlane per configured category, columns left → right `Summary │ Done │ Doing │ Todo │ +N`. The client supplies CONFIG (categories, data types + icons, column labels, multi-batch threshold, motion timing) and a reactive `tables: BoardTable[]` store; the board DERIVES the whole view as pure functions over `tables` (no simulation inside) — the Summary aggregate (counts + colsByType sum + monotonic status), the latest Done/Skipped card, the Doing card(s) (single fill bar ≤ threshold, multi-batch `BatchBar` above), the next Todo, and the +N lozenge. Lanes sort by Summary status (active → top, pending → middle, complete → bottom) with a debounced re-sort so a lane is seen completing before it sinks. Structural transitions animate via an internal FLIP engine (slurp the folded Done card into the Summary → slide the just-finished Doing card into Done → grow the next Todo out of the lozenge). Composes `Surface` / `Text` / `StatusBadge` / `CountChip` / `Icon` / `Tooltip` / `SlotFillBar` / `BatchBar` / `ProportionalStack`. Curried via `createExtractionBoard(config)` (bakes the config; the returned component takes `tables` only).
+- **`CompletionChart`** — a sibling of `ThroughputChart` (same module) that plots PROGRESS rather than instantaneous rate: per-hour completed-item bars + a cumulative-% line on one shared 0–100 axis (bars scaled by the busiest bucket, so the two series coexist without a second axis). Data-only and self-sizing — the caller hands over raw completion events + the window/total, and the component buckets them itself and measures its own width with a `ResizeObserver` (SSR/test-safe fallback). Built for an ETL "tables done / hr + % complete" header but item-agnostic. Composes the `Chart` family + `Legend`. Public API: `{ completions, now, windowHours, totalCount, baselineCompleted?, height?, barsLabel?, cumulativeLabel? }`.
+
 ## 0.65.1
 
 ### Fixed
