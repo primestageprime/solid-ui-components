@@ -2,7 +2,7 @@ import { Component } from "solid-js";
 import { BaseTable } from "../../src/components/Table";
 import { CompactTable, StripedTable, StickyTable, DataTable } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";
-import { Button } from "../../src/components/Button";
+import { IconOnlyButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
 
 const sampleData = [
@@ -66,9 +66,9 @@ export const BaseTableShowcase: Component = () => {
             hoverable
             onRowClick={(r) => console.log("row click", r.vessel)}
             rowActions={(r) => (
-              <Button variant="icon-only" size="sm" onClick={() => console.log("delete", r.vessel)}>
+              <IconOnlyButton onClick={() => console.log("delete", r.vessel)}>
                 <Icon name="close" />
-              </Button>
+              </IconOnlyButton>
             )}
           />
 
