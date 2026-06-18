@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.67.0
+
+### Changed
+
+- **`ThroughputChart`** — gained an opt-in **COMPLETION mode** (per-hour completed-item bars + a cumulative-% line on one shared 0–100 axis), selected by passing `completions` (raw events the chart buckets itself) instead of `dataPoints`. In completion mode the chart self-sizes (measures its own width via `ResizeObserver`, SSR/jsdom-safe). New optional props: `completions`, `now?`, `totalCount?`, `baselineCompleted?`, `barsLabel?`, `cumulativeLabel?`, `height?`, `initialWidth?`; `dataPoints` is now optional. **Fully backward-compatible** — with the completion props absent the chart renders the original rows/min area + line + average reference + crosshair exactly as before. Built for an ETL "tables done / hr + % complete" header.
+
+### Removed
+
+- **`CompletionChart`** (added in 0.66.0) — folded into `ThroughputChart`'s new COMPLETION mode so the progress chart is one component, not a near-duplicate. Migrate `<CompletionChart {...} />` → `<ThroughputChart {...} />` (identical completion props). 0.66.0 was published only briefly with no downstream consumers.
+
 ## 0.66.0
 
 ### Added
