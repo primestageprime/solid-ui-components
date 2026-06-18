@@ -23,3 +23,19 @@
   z-index: 1;
   padding: 24px;
 }
+
+/* Fill: stretch to the parent's height (instead of the default content/100vh
+   sizing) and lay children out as a growable column, so a child can stretch to
+   the bottom. Requires a flex parent with a concrete height (e.g. AppMain). */
+.sui-page--fill {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.sui-page--fill > .sui-page__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
