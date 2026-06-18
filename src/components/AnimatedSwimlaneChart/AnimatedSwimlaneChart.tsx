@@ -128,13 +128,36 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
   const [stageWidth, setStageWidth] = createSignal(800);
   onMount(() => {
     if (!containerRef) return;
+    // Coalesce RO writes into a single pending frame. Writing setStageWidth
+    // synchronously inside the observer dispatch mutates the observed
+    // subtree's layout DURING dispatch (stageWidth → maxDepth → lane rows),
+    // which makes the browser defer remaining notifications and emit the
+    // benign "ResizeObserver loop completed with undelivered notifications"
+    // warning. Deferring the write to the next frame lets the dispatch finish
+    // first. Only the newest measured width survives.
+    let rafId: number | null = null;
+    let pendingWidth = 0;
+    const flush = () => {
+      rafId = null;
+      if (pendingWidth > 0) setStageWidth(Math.max(400, Math.floor(pendingWidth)));
+    };
     const ro = new ResizeObserver((entries) => {
-      for (const e of entries) {
-        setStageWidth(Math.max(400, Math.floor(e.contentRect.width)));
+      for (const e of entries) pendingWidth = e.contentRect.width;
+      if (rafId == null) {
+        rafId =
+          typeof requestAnimationFrame !== "undefined"
+            ? requestAnimationFrame(flush)
+            : (setTimeout(flush, 0) as unknown as number);
       }
     });
     ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(() => {
+      ro.disconnect();
+      if (rafId != null) {
+        if (typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(rafId);
+        else clearTimeout(rafId);
+      }
+    });
   });
 
   const maxDepth = createMemo<number>(() => {

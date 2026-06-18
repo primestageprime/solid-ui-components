@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.65.1
+
+### Fixed
+
+- **`AnimatedSwimlaneChart`** — resize handling no longer emits the benign `ResizeObserver loop completed with undelivered notifications` window error. The `ResizeObserver` callback previously wrote `stageWidth` synchronously during the observer dispatch, which mutated the observed subtree's layout (`stageWidth → maxDepth → lane rows`) mid-dispatch and made the browser defer remaining notifications. The width write is now coalesced into a single `requestAnimationFrame` (newest measured width wins; pending frame cancelled on cleanup), so the layout mutation happens after the dispatch completes. Public API/props are unchanged.
+
 ## 0.64.0
 
 ### Added
