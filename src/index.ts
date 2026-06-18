@@ -7,6 +7,7 @@ export * from "./components/Text";
 export * from "./components/InlineText";
 export * from "./components/Surface";
 export * from "./components/Badge";
+export * from "./components/BulkActionBar";
 export * from "./components/SlotFillBar";
 export * from "./components/BatchBar";
 export * from "./components/Legend";
