@@ -4,7 +4,20 @@ import {
   ExtractionBoard,
   type ExtractionBoardConfig,
   type BoardTable,
+  type TableBatch,
 } from "../../src/components/ExtractionBoard";
+
+/** Split a row count into ~10k-row chunks, all `pending` to start. */
+function chunkBatches(totalRows: number): TableBatch[] {
+  const out: TableBatch[] = [];
+  let left = totalRows;
+  while (left > 0) {
+    const rows = Math.min(10_000, left);
+    out.push({ rows, state: "pending" });
+    left -= rows;
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------------------
 // Board config: 3 categories, a handful of data types with icons. Headers and
@@ -42,10 +55,11 @@ function seedTables(): BoardTable[] {
     totalRows,
     transferredRows: 0,
     colsByType: cols,
+    // Multi-batch tables split into ~10k-row chunks, all `pending` to start.
+    // Small tables omit `batches` — the board drives one synthetic whole-table
+    // batch off `status` doing → done.
     batches:
-      totalRows > 10_000
-        ? { total: Math.ceil(totalRows / 10_000), done: 0, inFlight: [] }
-        : undefined,
+      totalRows > 10_000 ? chunkBatches(totalRows) : undefined,
   });
   return [
     mk("DIM_CURRENCY", "lookup", 180, { int: 2, text: 3 }),
@@ -79,29 +93,30 @@ const ExtractionBoardShowcase: Component = () => {
       produce((ts) => {
         const doing = ts.find((t) => t.status === "doing");
         if (doing) {
-          const stepRows = Math.max(1, Math.ceil(doing.totalRows / 2));
-          doing.transferredRows = Math.min(
-            doing.totalRows,
-            doing.transferredRows + stepRows,
-          );
-          if (doing.batches) {
-            const b = doing.batches;
-            b.done = Math.min(
-              b.total,
-              Math.round((doing.transferredRows / doing.totalRows) * b.total),
-            );
-            const left = b.total - b.done;
-            b.inFlight =
-              left > 0 && doing.transferredRows < doing.totalRows
-                ? [0.35, 0.7].slice(0, Math.min(2, left))
-                : [];
-          }
-          if (doing.transferredRows >= doing.totalRows) {
-            doing.status = "done";
-            if (doing.batches) {
-              doing.batches.done = doing.batches.total;
-              doing.batches.inFlight = [];
+          // The board itself measures + eases the in-flight fill. The sim only
+          // holds the TRUTH of batch lifecycle: commit a running batch (→ done,
+          // bumping committed rows) and start the next pending one as running.
+          const b = doing.batches;
+          if (b) {
+            const running = b.findIndex((x) => x.state === "running");
+            if (running >= 0) {
+              b[running].state = "done";
+              doing.transferredRows = Math.min(
+                doing.totalRows,
+                doing.transferredRows + b[running].rows,
+              );
             }
+            const pending = b.findIndex((x) => x.state === "pending");
+            if (pending >= 0) {
+              b[pending].state = "running";
+            } else if (b.every((x) => x.state === "done")) {
+              doing.transferredRows = doing.totalRows;
+              doing.status = "done";
+            }
+          } else {
+            // Single-fill small table: one tick of "running", then done.
+            doing.transferredRows = doing.totalRows;
+            doing.status = "done";
           }
           return;
         }
@@ -112,6 +127,9 @@ const ExtractionBoardShowcase: Component = () => {
         if (next) {
           next.status = "doing";
           next.transferredRows = 0;
+          if (next.batches && next.batches.length > 0) {
+            next.batches[0].state = "running";
+          }
         } else {
           // All resolved → reset to start so the motion loops.
           for (const t of ts) {
@@ -121,8 +139,7 @@ const ExtractionBoardShowcase: Component = () => {
               t.status = "todo";
               t.transferredRows = 0;
               if (t.batches) {
-                t.batches.done = 0;
-                t.batches.inFlight = [];
+                for (const x of t.batches) x.state = "pending";
               }
             }
           }

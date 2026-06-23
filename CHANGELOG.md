@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.70.0
+
+### Changed
+
+- **`BatchBar` is now self-estimating — everything smart lives in SUI.** New declarative API: pass `batches: { rows: number; state: "pending" | "running" | "done" }[]` (`BatchSpec[]` — discrete states, **no fractions**) + `totalRows` + `committedRows`. BatchBar observes the batch lifecycle, measures each batch's wall-clock duration on `running → done`, folds the real `(rows, durationMs)` sample into an internal online linear regression (`T̂(rows) = base + perRow·rows`, seeded with a low-weight prior so batch #1 isn't garbage and the denominator is never singular), and eases each running batch's fill on an internal `requestAnimationFrame` loop — **race** (near-linear to ~90% at the estimate) → **creep** (decelerating, asymptotes below 1) → **snap** (a real `done` event tweens to 1.0 over ~180ms). The curve never self-reaches 1.0, so a real completion always finishes the bar. The fill renders via `scaleX` (compositor-only); the rAF loop starts on demand and stops itself when nothing is animating. All easing constants (`P_KNEE = 0.90`, `SNAP_MS`, the prior, τ) are encapsulated, not configurable. New `useBatchProgress()` returns a shared `ProgressController` so many bars can learn into one model (the whole board). New estimator/engine logic lives in `src/internal/progress/` with an injectable clock for deterministic tests.
+- **`ExtractionBoard` adopts the declarative bar.** The board creates one shared progress engine per instance and hands every Doing bar (multi-batch and single-fill) the same learned model. `BoardTable.transferredRows` is now **committed rows only** (jumps on completion, not interpolated). Small (single-fill) tables drive one synthetic whole-table batch off `status` doing → done.
+
+### Breaking
+
+- `BoardTable.batches` changed from `{ total: number; done: number; inFlight: number[] }` (app-computed in-flight **fractions**) to `TableBatch[]` = `{ rows: number; state: "pending" | "running" | "done" }[]` (declarative, no fractions). The board now derives all fractions/estimates/durations/interpolation internally. **Migration:** emit `batches: { rows, state }[]`, set `transferredRows` to committed rows only, and delete any app-side `inFlight`/`interpolatedRows` computation. The legacy numeric `BatchBar` API (`donePct` / `inFlightPct` / `batches: number[]`) is kept (deprecated) for backward compatibility.
+
 ## 0.69.0
 
 ### Changed

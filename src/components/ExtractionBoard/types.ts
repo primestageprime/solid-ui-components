@@ -3,12 +3,14 @@
 // ============================================
 // ExtractionBoard — public types.
 //
-// PURE TYPES. No SUI / Solid / DOM imports. These describe the CONFIG the
+// PURE TYPES (one type-only import of the progress engine's BatchState — also
+// pure logic, no Solid/DOM). These describe the CONFIG the
 // client bakes in once and the per-table data store the client feeds in
 // reactively. There is NO simulation here — the board derives its swimlane
 // view (Summary / Done / Doing / Todo / +N) purely from `tables`.
 // ============================================
 import type { IconName } from "../Icon/Icon";
+import type { BatchState } from "../../internal/progress/engine";
 
 /** A table's lifecycle status, supplied by the caller's data store. */
 export type TableStatus = "todo" | "doing" | "done" | "skipped";
@@ -70,14 +72,18 @@ export interface ExtractionBoardConfig {
   timing?: BoardTiming;
 }
 
-/** Per-batch progress for a large (multi-batch) table being extracted. */
-export interface BatchProgress {
-  /** Total batches for the whole table. */
-  total: number;
-  /** Batches fully transferred so far. */
-  done: number;
-  /** In-flight batches, each a 0..1 fraction of its own batch. */
-  inFlight: number[];
+/** The discrete lifecycle state of one batch. NO fractions — the board
+ *  observes the lifecycle and eases the fill itself. (Alias of the engine's
+ *  `BatchState`, surfaced here for the board's public table type.) */
+export type BatchProgressState = BatchState;
+
+/** One batch of a large (multi-batch) table. DECLARATIVE — the caller emits
+ *  only `rows` + a discrete `state`; the board measures durations, learns an
+ *  estimate, and animates the in-flight fill internally. This is the same shape
+ *  as BatchBar's `BatchSpec`. */
+export interface TableBatch {
+  rows: number;
+  state: BatchProgressState;
 }
 
 /** One source table — the reactive unit the caller feeds the board. The
@@ -89,11 +95,15 @@ export interface BoardTable {
   category: string;
   status: TableStatus;
   totalRows: number;
+  /** Rows already COMMITTED (jumps on batch/table completion) — NOT an
+   *  interpolated value. The board animates the in-flight portion itself. */
   transferredRows: number;
   /** Column counts keyed by `DataTypeConfig.id`. Missing keys read as 0. */
   colsByType: Record<string, number>;
-  /** Per-batch progress for tables above `multiBatchAbove`. Optional. */
-  batches?: BatchProgress;
+  /** Discrete per-batch states for tables above `multiBatchAbove`. Optional —
+   *  a small (single-fill) table omits this and the board treats the whole
+   *  table as one batch driven by `status` doing → done. NO fractions. */
+  batches?: TableBatch[];
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +142,7 @@ export interface DoingItem {
   totalRows: number;
   transferredRows: number;
   /** Present iff the table is above `multiBatchAbove` and supplied `batches`. */
-  batches?: BatchProgress;
+  batches?: TableBatch[];
 }
 
 /** The next queued table in a category. */

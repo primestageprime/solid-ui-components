@@ -90,7 +90,7 @@ describe("ExtractionBoard", () => {
     expect(textOf(container)).toContain("Skipped");
   });
 
-  it("renders a single fill bar for a small doing table (≤ multiBatchAbove)", () => {
+  it("renders an eased BatchBar for a small doing table (whole table as one batch)", () => {
     const tables: BoardTable[] = [
       mk({
         name: "DIM_SMALL",
@@ -103,8 +103,11 @@ describe("ExtractionBoard", () => {
     const { container } = render(() => (
       <ExtractionBoard config={config} tables={tables} />
     ));
-    // Single-bar path uses SlotFillBar; the multi-batch BatchBar is absent.
-    expect(container.querySelector(".sui-batch-bar")).toBeNull();
+    // Small tables now drive the same self-easing BatchBar (one synthetic
+    // batch of the whole table) rather than a static SlotFillBar.
+    const bar = container.querySelector(".sui-batch-bar");
+    expect(bar).not.toBeNull();
+    expect(bar!.querySelector(".sui-batch-bar__fill")).not.toBeNull();
     expect(textOf(container)).toContain("DIM_SMALL");
   });
 
@@ -116,7 +119,13 @@ describe("ExtractionBoard", () => {
         status: "doing",
         totalRows: 50_000,
         transferredRows: 20_000,
-        batches: { total: 5, done: 2, inFlight: [0.4, 0.7] },
+        batches: [
+          { rows: 10_000, state: "done" },
+          { rows: 10_000, state: "done" },
+          { rows: 10_000, state: "running" },
+          { rows: 10_000, state: "running" },
+          { rows: 10_000, state: "pending" },
+        ],
       }),
     ];
     const { container } = render(() => (

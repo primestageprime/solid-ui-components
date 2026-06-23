@@ -8,6 +8,17 @@
   align-items: stretch;
 }
 
+/* Declarative API: one solid green fill, eased on an internal rAF loop. The
+   width is driven by scaleX so the per-frame updates stay on the compositor
+   (no layout). transform-origin pins the fill to the left edge. No CSS
+   transition here — the smoothness comes from the ~60fps rAF easing itself. */
+.sui-batch-bar__fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  will-change: transform;
+}
+
 /* Solid green "done" fill anchored to the left. */
 .sui-batch-bar__done {
   flex: 0 0 auto;

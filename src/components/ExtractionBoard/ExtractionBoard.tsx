@@ -49,7 +49,9 @@ import { Icon } from "../Icon/Icon";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { ProportionalItem } from "../Layout/ProportionalStack";
 import { SlotFillBar } from "../SlotFillBar/SlotFillBar";
-import { BatchBar } from "../BatchBar/BatchBar";
+import { BatchBar, type BatchSpec } from "../BatchBar/BatchBar";
+import { useProgressEngine } from "../../internal/progress/useProgressEngine";
+import type { ProgressController } from "../../internal/progress/useProgressEngine";
 
 import { createCardFlip } from "./motion";
 import type {
@@ -300,6 +302,12 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
     flip.sync(sig);
   });
 
+  // ---- shared progress engine --------------------------------------------
+  // ONE learned model per board instance: every Doing bar (multi-batch and
+  // single-fill alike) registers its batches with this controller, so the
+  // duration estimate sharpens across the whole extraction, not per-bar.
+  const progress = useProgressEngine();
+
   const rootClass = () =>
     local.class ? `sui-xb ${local.class}` : "sui-xb";
 
@@ -367,6 +375,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                           dataTypes={dataTypeOrder()}
                           iconById={iconById()}
                           multiBatchAbove={multiBatchAbove()}
+                          progress={progress}
                         />
                       )}
                     </For>
@@ -634,19 +643,25 @@ function DoneCard(props: { item: DoneItem | null } & StatProps) {
 // ---- Doing card -----------------------------------------------------------
 
 function DoingCard(
-  props: { item: DoingItem; multiBatchAbove: number } & StatProps,
+  props: {
+    item: DoingItem;
+    multiBatchAbove: number;
+    progress: ProgressController;
+  } & StatProps,
 ) {
   const d = () => props.item;
-  const pct = () =>
-    d().totalRows > 0 ? (d().transferredRows / d().totalRows) * 100 : 0;
   const multi = () => d().totalRows > props.multiBatchAbove && !!d().batches;
-  const b = () => d().batches!;
-  const donePct = () => (b().total > 0 ? (b().done / b().total) * 100 : 0);
-  const inFlightPct = () => {
-    const tot = b().total || 1;
-    const n = Math.min(b().inFlight.length, tot - b().done);
-    return (n / tot) * 100;
-  };
+
+  // Declarative batches handed straight to BatchBar. A small (single-fill)
+  // table carries no `batches`, so we synthesize ONE batch of the whole table,
+  // running while the card is in the Doing column. Either way the BatchBar
+  // observes/measures/eases internally off the SHARED board controller, so the
+  // estimate sharpens across every bar.
+  const batches = (): BatchSpec[] =>
+    multi()
+      ? d().batches!
+      : [{ rows: Math.max(0, d().totalRows - d().transferredRows), state: "running" }];
+
   return (
     <Card data-flip-key={d().name} data-flip-cat={d().category}>
       <div class="sui-xb__card-head">
@@ -658,39 +673,28 @@ function DoingCard(
         dataTypes={props.dataTypes}
         iconById={props.iconById}
       />
-      <Show
-        when={multi()}
-        fallback={
-          <div class="sui-xb__bars">
-            <BarRow
-              left={compact.format(d().transferredRows)}
-              right={compact.format(d().totalRows)}
-              pct={pct()}
-            />
-          </div>
-        }
-      >
-        <div class="sui-xb__bar">
-          <div class="sui-xb__bar-num">
-            <Muted>{compact.format(d().transferredRows)}</Muted>
-          </div>
-          <div class="sui-xb__bar-fill">
-            <BatchBar
-              height={20}
-              maxWidth={null}
-              doneColor={FILL}
-              batchColor={BATCH_FILL}
-              todoColor={TRACK}
-              donePct={donePct()}
-              inFlightPct={inFlightPct()}
-              batches={b().inFlight}
-            />
-          </div>
-          <div class="sui-xb__bar-num">
-            <Muted>{compact.format(d().totalRows)}</Muted>
-          </div>
+      <div class="sui-xb__bar">
+        <div class="sui-xb__bar-num">
+          <Muted>{compact.format(d().transferredRows)}</Muted>
         </div>
-      </Show>
+        <div class="sui-xb__bar-fill">
+          <BatchBar
+            id={`${d().category}:${d().name}`}
+            controller={props.progress}
+            height={20}
+            maxWidth={null}
+            doneColor={FILL}
+            batchColor={BATCH_FILL}
+            todoColor={TRACK}
+            totalRows={d().totalRows}
+            committedRows={d().transferredRows}
+            batches={batches()}
+          />
+        </div>
+        <div class="sui-xb__bar-num">
+          <Muted>{compact.format(d().totalRows)}</Muted>
+        </div>
+      </div>
     </Card>
   );
 }
