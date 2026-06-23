@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.69.0
+
+### Changed
+
+- **Reconciled the divergent `feat/batch-bar` line into `main`.** The two lines had forked with parallel component sets — `main` carried `CurrencyInput` (0.68.0), `ExtractionBoard`, `ScrollRegion`; `feat/batch-bar` carried `BulkActionBar`, `FormComposite`, `MonthOfYearPicker`, `RangeAmountGroup`, `TrendSparkline` (+ `trendOf`), and `BaselineDot`, plus the `CashflowScrubChart` `scrub` prop and the `AppShell` `fixed` prop. This release **unifies both sets** so consumers no longer have to choose a line. No component or API was dropped: `CashflowScrubChart` keeps `scrub`, `AppShell` keeps `fixed`, and all the batch-bar components are exported alongside the main-line additions. Merge was a clean union (3 trivial conflicts: version, lockfile, one export block); full test suite (976) and build verified green post-merge.
+
 ## 0.68.0
 
 ### Added
