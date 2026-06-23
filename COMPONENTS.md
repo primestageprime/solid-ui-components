@@ -537,7 +537,31 @@ State derivation:
       step={50}
     />
     ```
+- **CurrencyInput** — Curried variant of `ThemedNumberInput` (Depth 1). Owns `CurrencyInput.css`; composes `ThemedNumberInput` + the shared `fieldWidthForChars` util. A money-amount field: the Primitive's stepper + keyboard semantics, plus USD currency masking (`formatOptions: { style: "currency", currency }`) and a **fixed width capped to the widest expected value** so it never stretches to fill its column. The cap is **derived, not magic** — `"$10,000,000,000.00"` is 18 chars → `18 × 0.62rem + 4rem` stepper chrome = **15.16rem** (via `currencyWidthRem`/`fieldWidthForChars`). Tabular figures keep the masked digits from reflowing as you type. Key props: everything `ThemedNumberInput` takes (`value`, `onChange`, `name`, `label`, `min`, `max`, `step`, `errorMessage`, `description`) **plus** `maxValue?` (default `$10,000,000,000` — drives both the width cap and kobalte's `maxValue` unless `max` is set) and `currency?` (ISO-4217, default `"USD"`). Locale is the app's i18n default (en-US). Exports the `currencyWidthRem(maxValue?)` helper for sharing the exact rem cap. Use for: any money input — pick a smaller `maxValue` for a tighter column. **This is the curried money field; do not configure `ThemedNumberInput` with `formatOptions` at the call site.**
+  - Example:
+    ```tsx
+    import { CurrencyInput } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [amount, setAmount] = createSignal<number | undefined>(0);
+
+    <CurrencyInput name="amount" label="Amount ($)" value={amount} onChange={setAmount} />
+    // narrower cap for a column that never exceeds a million:
+    <CurrencyInput name="fee" maxValue={1_000_000} value={amount} onChange={setAmount} />
+    ```
 - **ThemedTextarea** — Styled textarea with optional label. Key props: `label`, plus all native `<textarea>` attributes. Use for: themed form textareas.
+
+### Fixed-width fields convention
+
+Fields whose rendered content has a **known maximum width** should reserve exactly that space and never flex to fill their column. The shared rule lives in `src/internal/fieldWidth` — `fieldWidthForChars(chars, chromeRem)` returns a rem cap of `chars × 0.62rem + chromeRem` (rounded up), where `0.62rem` is a generous tabular-glyph advance at the body font size. **Always pair the cap with `font-variant-numeric: tabular-nums`** so the per-char estimate holds. Currently width-capped:
+
+| Field | Max content | Cap | Source |
+|---|---|---|---|
+| `CurrencyInput` | `maxValue` formatted (default `$10B` = 18 chars) + stepper | `15.16rem` (default) | `currencyWidthRem` → `fieldWidthForChars(18, 4)` |
+| `MoneyCell` | `maxValue` formatted (default `$10B`) + cell padding; `maxValue={null}` opts out | `15.16rem` (default) | `fieldWidthForChars(18, 0.5)` |
+| `DatePicker` | fixed ISO `YYYY-MM-DD` (10 chars) + caret icon | `8.75rem` | hand-sized in `DatePicker.css`, tabular |
+
+New fixed-width fields (fixed codes, capped numerics) should derive their cap from `fieldWidthForChars` rather than picking a magic rem.
 
 ## Layout
 - **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg`|`xl`), `align`, `justify`, `fill` (`height: 100%; min-height: 0` — forwards height through so a scrolling child like a `fill` BaseTable has concrete height). Use for: vertical stacking of elements.
@@ -731,6 +755,7 @@ State derivation:
 - **PivotGrid<RowKey, ColKey, Cell>** — Dense pivot of runtime-derived rows × runtime-derived columns, with two-axis sticky positioning (top header AND left column), optional clickable cells, and optional continuous heat coloring. Caller passes flat `readonly RowKey[]` + `readonly ColKey[]` arrays (caller sorts), label functions, a `cell(row, col) → Cell | null` lookup, and a `renderCell(cell, row, col) → JSX` formatter. Three optional hooks layer on top: `cellHref` (wraps cells in `<a>` for cross-route navigation), `onCellClick` (button-wrapped fallback for in-page selection), and `getCellHeat → number | null` (the grid does the 0..1 → alpha math). Heat ramp defaults to `Math.sqrt` (perceptual); pass `heatRamp={(v) => v}` for linear. Curried variants `HeatPivotGrid` (type-enforces `getCellHeat`) and `LinkPivotGrid` (type-enforces `cellHref`) ship alongside. Use for: alarm-period grids, ops metrics pivots, flag matrices — anywhere the same row × col × cell shape recurs with dynamic axes.
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
+  - **MoneyCell** props: `value` (number cents-or-units), `currency?` (default `"USD"`), `locale?` (default `"en-US"`), `maxValue?` (default `$10B`). Renders with **tabular figures + right alignment** and a **width cap** derived from `maxValue` (see the Fixed-width fields convention) so a money column reserves no more than its widest value; pass `maxValue={null}` to opt out of the cap. It is the display counterpart to `CurrencyInput` — same width discipline so input and column line up.
   - **LongTextCell** props:
     - `maxLength?: number` (default `50`) — char-count truncation threshold; ignored when `clampLines` is set.
     - `expandable?: boolean` (default `true`) — enables the inline "more..."/"less" toggle in `reveal="inline"` mode.

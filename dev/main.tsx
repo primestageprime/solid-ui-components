@@ -52,6 +52,7 @@ import { StatsTableShowcase } from "./showcases/stats-table";
 import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
+import { CurrencyInputShowcase } from "./showcases/currency-input";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
@@ -180,6 +181,7 @@ const items: Item[] = [
   { id: "tabbed-side-panel", label: "TabbedSidePanel", component: TabbedSidePanelShowcase, tags: ["depth:2", "container", "navigation"] },
   { id: "text", label: "Text", component: TextShowcase, tags: ["depth:0", "text"] },
   { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase, tags: ["depth:1", "form"] },
+  { id: "currency-input", label: "CurrencyInput", component: CurrencyInputShowcase, tags: ["depth:1", "form"] },
   { id: "app-shell", label: "AppShell", component: AppShellShowcase, tags: ["depth:0", "layout", "navigation"] },
   { id: "burndown-chart", label: "BurndownChart", component: BurndownChartShowcase, tags: ["depth:2", "chart", "time", "data"] },
   { id: "completion-timeline", label: "CompletionTimeline", component: CompletionTimelineShowcase, tags: ["depth:2", "chart", "time", "data"] },

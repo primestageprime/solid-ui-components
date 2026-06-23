@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.68.0
+
+### Added
+
+- **`CurrencyInput`** — a curried variant of `ThemedNumberInput` for money amounts. Masks the value as USD currency (Kobalte `formatOptions: { style: "currency", currency }`) and caps its width to the widest expected value so it never stretches to fill its column. The cap is **derived, not magic**: `"$10,000,000,000.00"` is 18 characters → `18 × 0.62rem + 4rem` stepper/padding chrome = **15.16rem** (default). Tabular figures keep the masked digits from reflowing as you type. The full `ThemedNumberInput` API (value accessor, `onChange`, `name`, `label`, `min`/`max`, `step`, `errorMessage`, `description`) passes through unchanged; adds `maxValue?` (default `$10,000,000,000` — drives both the width cap and the numeric ceiling unless `max` is set) and `currency?` (ISO-4217, default `"USD"`). Exports the `currencyWidthRem(maxValue?)` helper for sharing the exact rem cap. This is the curried money field — do not configure `ThemedNumberInput` with `formatOptions` at the call site.
+- **Fixed-width fields convention** (`src/internal/fieldWidth`) — a reusable rule for fields whose content has a known maximum width: `fieldWidthForChars(chars, chromeRem)` returns `chars × 0.62rem + chromeRem` (rounded up; `0.62rem` is a generous tabular-glyph advance at the body font size). Always pair the cap with `font-variant-numeric: tabular-nums`. Drives `CurrencyInput` and `MoneyCell`; `DatePicker`'s existing 10-char ISO cap is documented under the same convention (see COMPONENTS.md).
+
+### Changed
+
+- **`MoneyCell`** — gained the same width discipline as `CurrencyInput`: renders with **tabular figures + right alignment** and a **width cap** derived from a new `maxValue?` prop (default `$10B`; pass `maxValue={null}` to opt out). It is the display counterpart to `CurrencyInput`, so a money input and its column line up. Backward-compatible — existing `MoneyCell` usages get the cap at the default ceiling.
+
 ## 0.67.0
 
 ### Changed

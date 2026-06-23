@@ -1,0 +1,20 @@
+/* ============================================
+   CurrencyInput — Structural
+   A width-capped wrapper around ThemedNumberInput. The wrapper reserves the
+   field's flex track but never grows past the derived `max-width` (sized for
+   the widest expected money value + stepper chrome). Tabular figures keep the
+   masked digits from reflowing as the value changes.
+   ============================================ */
+.sui-currency-input {
+  /* Take part in a flex row like a bare field would, but never stretch past
+     the value-derived cap set inline (--sui-currency-input width). */
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  /* `max-width` is set inline from the derived rem cap. */
+}
+
+/* Stable digit advance so the masked currency never resizes the field. */
+.sui-currency-input .sui-number-input__input {
+  font-variant-numeric: tabular-nums;
+}

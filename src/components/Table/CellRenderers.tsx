@@ -8,6 +8,11 @@
 // ============================================
 import { Component, Show, createSignal, createEffect, on, onMount, onCleanup, JSX } from "solid-js";
 import { Tooltip } from "../Tooltip";
+import {
+  CURRENCY_DEFAULT_MAX,
+  currencyMaxChars,
+  fieldWidthForChars,
+} from "../../internal/fieldWidth/fieldWidth";
 import "./CellRenderers.css";
 
 // ============================================
@@ -147,6 +152,20 @@ export const TagCell: Component<TagCellProps> = (props) => {
 export interface MoneyCellProps extends CellRendererProps<number | null | undefined> {
   currency?: string;
   locale?: string;
+  /**
+   * Largest value this column is expected to hold. Caps the cell's width to
+   * the rendered width of that magnitude (via the shared `fieldWidthForChars`
+   * rule) so a money column reserves no more than its widest value needs.
+   * Default `$10,000,000,000` (ten billion); pass a smaller ceiling for
+   * tighter columns, or `null` to opt out of the width cap.
+   */
+  maxValue?: number | null;
+}
+
+/** Width cap (rem) for a money cell holding up to `maxValue`. No stepper
+ *  chrome here (display only), just the right-padding the cell paints. */
+function moneyCellWidthRem(maxValue: number): number {
+  return fieldWidthForChars(currencyMaxChars(maxValue), 0.5);
 }
 
 export const MoneyCell: Component<MoneyCellProps> = (props) => {
@@ -162,9 +181,18 @@ export const MoneyCell: Component<MoneyCellProps> = (props) => {
     }).format(props.value);
   };
 
+  // Same width discipline as CurrencyInput: tabular figures + a cap derived
+  // from the widest formatted value (unless explicitly opted out with null).
+  const maxRem = () => {
+    const cap = props.maxValue === undefined ? CURRENCY_DEFAULT_MAX : props.maxValue;
+    return cap == null ? undefined : `${moneyCellWidthRem(cap)}rem`;
+  };
+
   return (
     <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
-      <span class="cell-money">{formatted()}</span>
+      <span class="cell-money" style={{ "max-width": maxRem() }}>
+        {formatted()}
+      </span>
     </Show>
   );
 };

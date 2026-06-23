@@ -83,12 +83,18 @@
   box-shadow: 0 0 8px rgba(102, 153, 255, 0.2);
 }
 
-/* Money Cell */
+/* Money Cell — fixed-width money value. Tabular figures + right alignment so
+   digits line up across rows; an inline `max-width` (derived from the column's
+   maxValue, see MoneyCell) caps it to its widest value. */
 .cell-money {
+  display: inline-block;
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
   color: var(--sui-success);
   text-shadow: 0 0 10px rgba(var(--sui-success-rgb), 0.3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* Date Cell */
