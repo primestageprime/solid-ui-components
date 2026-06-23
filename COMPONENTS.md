@@ -607,6 +607,23 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
 - **ListItem** — List item with status indicators and interactive states. Key props: `status` (`active`|`inactive`|`warning`|`error`|`success`), `icon`, `secondary`, `interactive`, `selected`. Use for: items within List.
 - **ScrollList** — Curried `List` with `scroll: true` baked in. Drop into a height-constrained flex column (e.g. a panel with `display: flex; flex-direction: column`) to get a list that fills the remaining height and scrolls internally instead of pushing siblings. Use for: filter-result lists in a sidebar, log-style streams in a fixed-height panel, any vertical list that may overflow its container.
 
+## SplitQueueList
+- **SplitQueueList** — A linked two-list "processing queue" sidebar with a SUI-owned resolve animation. One fixed-height column holds two stacked lists: the **top** = *resolved* (processed) items, the **bottom** = *unresolved* (to-process). The user works the bottom; resolving an item appends it to the **bottom of the top list** (at the seam), so the most-recent work sits adjacent to what's next and is one click away to revisit. **Sizing rule:** the bottom list has height priority — it gets the height it needs up to `total − topMinRows*rowHeight`; the top keeps a floor of `topMinRows` (default 3) and auto-scrolls to its bottom so the newest sits at the seam; when the bottom is short the top absorbs the slack and grows past 3; when the bottom is empty it collapses to a thin "all clear" strip. **Status borders:** resolved rows carry a solid-accent left border + ✓; unresolved rows a dashed-muted left border + a ▸ focus marker — so crossing the seam is a visible restyle. **Animation (SUI owns it; the consumer only swaps the two arrays):** when a key moves `unresolved → resolved`, the row FLIP-slides up across the seam to its new home, while a transient unresolved-styled clipped ghost rides up inside the bottom list and is clipped away at its top edge → the row visually *repaints* as it crosses. Honors `prefers-reduced-motion` (places without sliding). Generic over the item type `T`. Key props: `resolved: T[]`, `unresolved: T[]`, `renderItem: (item: T) => JSX.Element`, `keyOf: (item: T) => string`, `focusedKey?`, `onFocusChange?`, `onResolve?`, `resolvedLabel="Resolved"`, `unresolvedLabel="Unresolved"`, `allClearLabel?`, `topMinRows=3`, `rowHeight=40`, `height=420`, `animationMs=360`. Use for: triage/review/categorization queues where processed and pending items must stay adjacent (transaction categorization, inbox triage, accept/remaining review). No factory — the data/labels are per-call, so the base component is already curried.
+  - The pure sizing core is exported as `computeSplitLayout(input): SplitLayout` (with `SplitLayoutInput`/`SplitLayout` types) for callers who need the same bottom-priority math outside the component.
+  - Example:
+    ```tsx
+    import { SplitQueueList } from "solid-ui-components";
+
+    <SplitQueueList<Txn>
+      resolved={categorized()}
+      unresolved={toCategorize()}
+      keyOf={(t) => t.id}
+      onResolve={(id) => moveToResolved(id)}     // consumer swaps the arrays
+      renderItem={(t) => <span>{t.label}</span>}
+      height={480}
+    />
+    ```
+
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.
