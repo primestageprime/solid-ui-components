@@ -82,4 +82,28 @@
      reference labels). Held separate from --sui-text-muted so chart chrome
      can be tinted independently from broader app muted text. */
   --sui-chart-tick-color: #64748b;
+
+  /* ---- Chart semantics (violation / threshold / transition windows) ----
+     Consumed by violation charts (jtf-ui ViolationChart). Held as tokens so a
+     colorblind theme can swap the red/green-laden defaults for a CB-safe set
+     without touching chart code. Each violation band needs a translucent fill
+     plus a stronger border; the threshold line is a single solid hue.
+     --chart-series-1..n give a deterministic, CB-distinguishable rotation for
+     charts that don't carry their own per-series colour. */
+  --chart-violation-band: rgba(255, 0, 64, 0.12);
+  --chart-violation-band-border: rgba(255, 0, 64, 0.35);
+  --chart-threshold: #ff0040;
+  /* Leading warm-up / trailing shutdown transition windows. Neutral grey so
+     they read as "context, not evidence" against any series colour. */
+  --chart-warmup: rgba(148, 163, 184, 0.10);
+  --chart-warmup-border: rgba(148, 163, 184, 0.30);
+  --chart-shutdown: rgba(148, 163, 184, 0.10);
+  --chart-shutdown-border: rgba(148, 163, 184, 0.30);
+  /* Deterministic series rotation (default = current data-driven hues). */
+  --chart-series-1: #00d4ff;
+  --chart-series-2: #ff8800;
+  --chart-series-3: #ffcc00;
+  --chart-series-4: #22c55e;
+  --chart-series-5: #a855f7;
+  --chart-series-6: #ec4899;
 }

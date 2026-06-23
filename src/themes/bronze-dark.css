@@ -123,4 +123,20 @@ body {
      dark walnut reads as quietly-warm chrome — the same hex Bronze light
      uses for --sui-text-secondary, but in dark mode it lands as "muted". */
   --sui-chart-tick-color: #8C7861;
+
+  /* ---- Chart semantics (violation / threshold / transition windows) ----
+     See default.css. Warm-mapped to the bronze-dark palette. */
+  --chart-violation-band: rgba(200, 90, 80, 0.16);
+  --chart-violation-band-border: rgba(200, 90, 80, 0.42);
+  --chart-threshold: #C85A50;
+  --chart-warmup: rgba(140, 120, 97, 0.16);
+  --chart-warmup-border: rgba(140, 120, 97, 0.38);
+  --chart-shutdown: rgba(140, 120, 97, 0.16);
+  --chart-shutdown-border: rgba(140, 120, 97, 0.38);
+  --chart-series-1: #6FA5D4;
+  --chart-series-2: #D4A04C;
+  --chart-series-3: #7C9C7C;
+  --chart-series-4: #D48462;
+  --chart-series-5: #A07CB4;
+  --chart-series-6: #4C9CAC;
 }

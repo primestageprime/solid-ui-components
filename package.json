@@ -42,6 +42,10 @@
       "source": "./src/themes/bronze-dark.css",
       "default": "./dist/themes/bronze-dark.css"
     },
+    "./themes/colorblind.css": {
+      "source": "./src/themes/colorblind.css",
+      "default": "./dist/themes/colorblind.css"
+    },
     "./themes/*": {
       "source": "./src/themes/*",
       "default": "./dist/themes/*"
