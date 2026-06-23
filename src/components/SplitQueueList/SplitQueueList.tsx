@@ -290,10 +290,21 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const exitMs = total;
     const enterMs = total;
 
-    // Hide the real resolved row until the enter phase lands.
-    nowEl.style.visibility = "hidden";
-
+    // Collapse the real resolved row to ZERO height for the duration so it
+    // reserves NO space — the enter EXPAND element grows the slot from 0 instead,
+    // so there's never a blank full-height gap in the top list. Restored at the
+    // end. (Save the inline overrides to undo precisely.)
     const newFocusedContent = nowEl.innerHTML;
+    const restoreRow = () => {
+      nowEl.style.visibility = "";
+      nowEl.style.height = "";
+      nowEl.style.minHeight = "";
+      nowEl.style.overflow = "";
+    };
+    nowEl.style.visibility = "hidden";
+    nowEl.style.height = "0px";
+    nowEl.style.minHeight = "0";
+    nowEl.style.overflow = "hidden";
 
     // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
     // finish/cancel OR a timeout fallback (WAAPI events don't fire in a hidden
@@ -322,28 +333,44 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       setTimeout(fire, ms + 80);
     };
 
-    // ---- Phase 2 (enter): resolved-styled clone rising into the top list.
+    // ---- Phase 2 (enter): HEIGHT EXPAND of the resolved card in the top list —
+    // the exact inverse of the exit collapse. An in-flow placeholder at the new
+    // resolved slot grows its height 0 → H while the bottom card collapses H → 0,
+    // so the two mirror each other across the seam and NO blank full-height gap
+    // ever appears. The inner ✓ card is pinned to the BOTTOM (the mirror of the
+    // exit's bottom-pin), so the card reveals from the bottom up as the slot
+    // grows.
+    const enterRowH = last.height;
     const runEnter = () => {
-      const topRect = topList.getBoundingClientRect();
-      const enterClone = document.createElement("div");
-      enterClone.className = "sui-sql__row sui-sql__row--resolved sui-sql__phase";
-      enterClone.innerHTML = newFocusedContent; // already carries the ✓ marker
-      enterClone.style.position = "absolute";
-      enterClone.style.left = "0";
-      enterClone.style.right = "0";
-      enterClone.style.top = `${last.top - topRect.top + topList.scrollTop}px`;
-      enterClone.style.height = `${last.height}px`;
-      topList.appendChild(enterClone);
+      const expand = document.createElement("li");
+      expand.className = "sui-sql__collapse"; // same in-flow / min-height:0 base
+      expand.style.height = "0px";
+      expand.style.minHeight = "0";
+      expand.style.overflow = "hidden";
+      expand.style.position = "relative";
 
-      // Start one row-height below (under the top list's bottom edge, clipped),
-      // slide up to its resting slot.
+      const inner = document.createElement("div");
+      inner.className = "sui-sql__row sui-sql__row--resolved";
+      inner.innerHTML = newFocusedContent; // already carries the ✓ marker
+      inner.style.position = "absolute";
+      inner.style.left = "0";
+      inner.style.right = "0";
+      inner.style.bottom = "0";
+      inner.style.height = `${enterRowH}px`;
+      inner.style.margin = "0";
+      expand.appendChild(inner);
+
+      // Insert at the real resolved row's slot (it's collapsed to 0), so the
+      // expand grows the slot from nothing right where the row will live.
+      nowEl.parentElement?.insertBefore(expand, nowEl);
+
       animateOnce(
-        enterClone,
-        [{ transform: `translateY(${last.height}px)` }, { transform: "translateY(0)" }],
+        expand,
+        [{ height: "0px" }, { height: `${enterRowH}px` }],
         enterMs,
         () => {
-          enterClone.remove();
-          nowEl.style.visibility = ""; // repaint to resolved ✓ on arrival
+          expand.remove();
+          restoreRow(); // un-collapse the real ✓ row into its final slot
         },
       );
     };
