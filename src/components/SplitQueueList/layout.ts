@@ -18,6 +18,11 @@ export interface SplitLayoutInput {
   seamHeight?: number;
   /** Collapsed "all clear" strip height when unresolved is empty. Default rowHeight. */
   clearStripHeight?: number;
+  /** Height of each list's sticky header, in px. Each list renders a header
+   * row above its items, so the bottom pane needs `headerHeight + rows*rowH`
+   * to show every row unclipped, and the top pane fits `headerHeight` fewer
+   * pixels of rows. Default 0 (header-less). */
+  headerHeight?: number;
 }
 
 export interface SplitLayout {
@@ -58,10 +63,13 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
   } = input;
   const seam = Math.max(0, input.seamHeight ?? 0);
   const clearStrip = Math.max(0, input.clearStripHeight ?? rowHeight);
+  const headerH = Math.max(0, input.headerHeight ?? 0);
 
   const usable = Math.max(0, totalHeight - seam);
   const rowH = Math.max(1, rowHeight);
-  const topFloor = Math.max(0, topMinRows) * rowH;
+  // The top pane's floor must also include its header so `topMinRows` rows stay
+  // visible above the header, not partly under it.
+  const topFloor = Math.max(0, topMinRows) * rowH + (topMinRows > 0 ? headerH : 0);
 
   // Bottom collapsed: nothing to process — thin strip, top takes the rest.
   if (unresolvedCount <= 0) {
@@ -70,12 +78,14 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
       topHeight: Math.max(0, usable - bottomHeight),
       bottomHeight,
       bottomCollapsed: true,
-      ...topRowInfo(Math.max(0, usable - bottomHeight), rowH, resolvedCount),
+      ...topRowInfo(Math.max(0, usable - bottomHeight), rowH, headerH, resolvedCount),
     };
   }
 
-  // What the bottom wants to show all its rows.
-  const bottomDesired = unresolvedCount * rowH;
+  // What the bottom wants in order to show ALL its rows AND its header without
+  // clipping the last row. Omitting the header here was the off-by-one that cut
+  // off the final row when the bottom wasn't scrolling.
+  const bottomDesired = unresolvedCount * rowH + headerH;
   // Cap so the top keeps its floor (but the cap can't go below zero).
   const bottomCap = Math.max(0, usable - topFloor);
   const bottomHeight = Math.min(bottomDesired, bottomCap, usable);
@@ -85,16 +95,18 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
     topHeight,
     bottomHeight,
     bottomCollapsed: false,
-    ...topRowInfo(topHeight, rowH, resolvedCount),
+    ...topRowInfo(topHeight, rowH, headerH, resolvedCount),
   };
 }
 
 function topRowInfo(
   topHeight: number,
   rowH: number,
+  headerH: number,
   resolvedCount: number,
 ): Pick<SplitLayout, "topVisibleRows" | "topScrolls"> {
-  const fit = Math.max(0, Math.floor(topHeight / rowH));
+  // Rows share the pane with the sticky header, so subtract it before counting.
+  const fit = Math.max(0, Math.floor((topHeight - headerH) / rowH));
   return {
     topVisibleRows: Math.min(fit, resolvedCount),
     topScrolls: resolvedCount > fit,

@@ -123,3 +123,78 @@ describe("computeSplitLayout — seam + degenerate inputs", () => {
     expect(r.topHeight).toBe(80);
   });
 });
+
+describe("computeSplitLayout — header accounting (no last-row clip)", () => {
+  // Each list renders a sticky header above its rows. The bottom pane must get
+  // headerHeight + rows*rowH so the final row is never clipped; the top pane
+  // counts rows against (height - header). headerHeight = 28 here.
+  const withHeader = { rowHeight: 40, topMinRows: 3, seamHeight: 0, headerHeight: 28 } as const;
+
+  it("bottom pane fits its header + every row when not scrolling (N=1)", () => {
+    // The reported repro: Tall pane, a single unresolved item. The row must be
+    // fully visible, so bottomHeight >= header + 1 row.
+    const r = computeSplitLayout({
+      ...withHeader,
+      totalHeight: 480,
+      resolvedCount: 0,
+      unresolvedCount: 1,
+    });
+    expect(r.bottomHeight).toBe(28 + 1 * 40); // 68, not 40
+    expect(r.bottomHeight).toBeGreaterThanOrEqual(28 + 1 * 40);
+  });
+
+  it("bottom content height covers header + rowCount*rowHeight for small N", () => {
+    for (const n of [1, 2, 3, 4, 6]) {
+      const r = computeSplitLayout({
+        ...withHeader,
+        totalHeight: 480,
+        resolvedCount: 0,
+        unresolvedCount: n,
+      });
+      // Not scrolling at these counts (480 is ample), so no fractional row.
+      expect(r.bottomCollapsed).toBe(false);
+      expect(r.bottomHeight).toBeGreaterThanOrEqual(28 + n * 40);
+    }
+  });
+
+  it("top floor includes the header so topMinRows rows show below it", () => {
+    // Bottom wants everything; the top must still keep header + 3 rows = 148.
+    const r = computeSplitLayout({
+      ...withHeader,
+      totalHeight: 480,
+      resolvedCount: 10,
+      unresolvedCount: 20,
+    });
+    expect(r.topHeight).toBe(28 + 3 * 40); // 148
+    // And topVisibleRows counts rows against (topHeight - header).
+    expect(r.topVisibleRows).toBe(3);
+  });
+
+  it("top row count subtracts the header (no over-count)", () => {
+    // topHeight 188 => (188 - 28)/40 = 4 rows fit, not floor(188/40)=4... here
+    // we choose 200 so the difference is observable: (200-28)/40 = 4.3 -> 4,
+    // whereas without the header subtraction it'd be floor(200/40)=5.
+    const r = computeSplitLayout({
+      ...withHeader,
+      totalHeight: 480,
+      resolvedCount: 8,
+      unresolvedCount: 7, // bottom wants 28+280=308, top gets 172
+    });
+    // top = 480 - 308 = 172; rows = floor((172-28)/40) = floor(3.6) = 3
+    expect(r.topHeight).toBe(172);
+    expect(r.topVisibleRows).toBe(3);
+    expect(r.topScrolls).toBe(true); // 8 resolved > 3 visible
+  });
+
+  it("defaults headerHeight to 0 (back-compat with header-less callers)", () => {
+    const r = computeSplitLayout({
+      rowHeight: 40,
+      topMinRows: 3,
+      seamHeight: 0,
+      totalHeight: 480,
+      resolvedCount: 0,
+      unresolvedCount: 1,
+    });
+    expect(r.bottomHeight).toBe(40); // exactly one row, no header term
+  });
+});

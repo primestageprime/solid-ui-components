@@ -4,8 +4,10 @@ import {
   Show,
   JSX,
   createMemo,
+  createSignal,
   createEffect,
   on,
+  onMount,
   onCleanup,
 } from "solid-js";
 import { computeSplitLayout } from "./layout";
@@ -88,10 +90,32 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
   let topListEl: HTMLUListElement | undefined;
   let rootEl: HTMLDivElement | undefined;
+  // The top header is always rendered (the bottom one disappears when the queue
+  // collapses), and both share the same `.sui-sql__header` metrics, so we
+  // measure this one.
+  let headerProbeEl: HTMLLIElement | undefined;
 
   // Rects of every keyed row captured on the previous render — the "First" in
   // FLIP. Read synchronously before the data swap reflows the DOM.
   const prevRects = new Map<string, DOMRect>();
+
+  // Measured height of a list's sticky header. Each list renders a header above
+  // its rows, so the bottom pane's allotted height must include it or the last
+  // row clips against the container edge. Seed with a conservative default so
+  // the first paint (before measurement) doesn't clip; the effect below
+  // replaces it with the exact measured value.
+  const DEFAULT_HEADER_HEIGHT = 28;
+  const [headerHeight, setHeaderHeight] = createSignal(DEFAULT_HEADER_HEIGHT);
+
+  const measureHeader = () => {
+    if (headerProbeEl) {
+      const h = headerProbeEl.getBoundingClientRect().height;
+      if (h > 0) setHeaderHeight(h);
+    }
+  };
+  // Measure after mount (fonts/borders applied) so the layout math uses the
+  // real header height rather than the seeded default.
+  onMount(() => requestAnimationFrame(measureHeader));
 
   const layout = createMemo(() =>
     computeSplitLayout({
@@ -101,6 +125,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       resolvedCount: props.resolved.length,
       unresolvedCount: props.unresolved.length,
       seamHeight: SEAM_HEIGHT,
+      headerHeight: headerHeight(),
     }),
   );
 
@@ -294,13 +319,14 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       class={`sui-sql${props.class ? " " + props.class : ""}`}
       style={{ height: `${height()}px` }}
     >
-      {/* TOP — resolved. Grows to absorb slack; min-height = topMinRows. */}
+      {/* TOP — resolved. Grows to absorb slack; min-height keeps topMinRows
+          rows visible BELOW the sticky header (so include the header height). */}
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
-        style={{ "min-height": `${topMinRows() * rowHeight()}px` }}
+        style={{ "min-height": `${topMinRows() * rowHeight() + headerHeight()}px` }}
       >
-        <li class="sui-sql__header sui-sql__header--top">
+        <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
           <span>{props.resolvedLabel ?? "Resolved"}</span>
           <span class="sui-sql__count">{props.resolved.length}</span>
         </li>
