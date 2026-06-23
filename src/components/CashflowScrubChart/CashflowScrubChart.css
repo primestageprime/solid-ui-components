@@ -37,6 +37,11 @@
   );
 }
 
+/* Zero-delta days: neutral grey — no colour tint, no bar, no amount label. */
+.sui-cashflow-cell--neutral {
+  background: var(--sui-cashflow-cell-neutral-bg, transparent);
+}
+
 .sui-cashflow-cell__date {
   font-size: 9px;
   line-height: 1.1;
@@ -85,6 +90,18 @@
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
+}
+
+/* Invisible stand-in for the amount row on zero-delta cells. Must mirror the
+   amount's type metrics exactly: the bar-track above is flex-grown, so if
+   this row were missing (or a different height) the track — and the midline
+   drawn at its 50% mark — would shift, breaking the midline's continuity
+   across the strip. */
+.sui-cashflow-cell__amount-spacer {
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  visibility: hidden;
 }
 
 .sui-cashflow-cell--positive .sui-cashflow-cell__amount {
@@ -144,4 +161,69 @@
 
 .sui-cashflow-scrub-chart__selected-dot {
   fill: var(--sui-warning, #f5a623);
+}
+
+/* ── Over-top indicator ───────────────────────────────────────────── */
+/* When the range cone overflows the line-based y-domain it is clipped at the
+   plot top; this marker (chevron + compact value) flags the unshown peak at
+   the top edge. Muted/secondary text, the cone accent for the chevron. */
+
+.sui-cashflow-scrub-chart__overtop-chevron {
+  fill: var(--sui-accent, #00a8cc);
+  opacity: 0.85;
+}
+
+.sui-cashflow-scrub-chart__overtop-label {
+  fill: var(--sui-text-muted, rgba(255, 255, 255, 0.55));
+  font-size: 9px;
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
+/* ── Plotline markers (the `markers` prop) ────────────────────────── */
+/* Overlay svg sits above the gesture layer; the svg ignores pointer
+   events, each marker group re-enables them so the rule/dot is clickable
+   without blocking scrub/pan elsewhere. */
+
+.sui-cashflow-scrub-chart__markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sui-cashflow-scrub-chart__marker {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.sui-cashflow-scrub-chart__marker-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.sui-cashflow-scrub-chart__marker-line {
+  stroke: var(--sui-cashflow-marker, #e0b24d);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.6;
+}
+
+.sui-cashflow-scrub-chart__marker-flag {
+  fill: var(--sui-cashflow-marker, #e0b24d);
+  opacity: 0.85;
+}
+
+.sui-cashflow-scrub-chart__marker-dot {
+  fill: var(--sui-cashflow-marker, #e0b24d);
+}
+
+/* The CHOSEN instance: a ring circling its dot (the whiteboard's circle). */
+.sui-cashflow-scrub-chart__marker-ring {
+  fill: none;
+  stroke: var(--sui-cashflow-marker, #e0b24d);
+  stroke-width: 1.5;
+}
+
+.sui-cashflow-scrub-chart__marker--selected .sui-cashflow-scrub-chart__marker-line {
+  opacity: 1;
 }

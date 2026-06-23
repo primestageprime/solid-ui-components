@@ -1,11 +1,20 @@
 /* ============================================
    DatePicker Component — Structural
-   Themed wrapper over a native <input type="date">.
-   Styled with --sui-* tokens to match the dark HUD
-   theme; the native calendar popup is reused as-is.
+   Fixed-width control that always displays ISO YYYY-MM-DD: an ISO text
+   display + caret icon, with the NATIVE <input type="date"> stretched
+   invisibly over the whole control (click anywhere → native calendar;
+   keyboard entry goes through the native input's locale segments while
+   the display echoes the committed ISO value).
    ============================================ */
 .sui-date-picker {
+  /* FIXED width: 10 ISO characters + icon + padding. Never flexes to fill. */
   box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sui-space-1, 4px);
+  width: 8.75rem;
+  flex: 0 0 auto;
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1;
@@ -15,7 +24,7 @@
   background: var(--sui-bg-elevated, #1e2a3e);
   color: var(--sui-text-primary, #f1f5f9);
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-  /* Dark-theme the native calendar/clock indicator UI. */
+  /* Dark-theme the native calendar popup. */
   color-scheme: dark;
 }
 
@@ -23,25 +32,54 @@
   border-color: var(--sui-border-bright, #475569);
 }
 
-.sui-date-picker:focus-visible {
-  outline: none;
+.sui-date-picker:focus-within {
   border-color: var(--sui-border-focus, #3b82f6);
   box-shadow: 0 0 0 2px rgba(var(--sui-accent-rgb, 59, 130, 246), 0.35);
 }
 
-/* Tint the calendar picker indicator to the accent. */
-.sui-date-picker::-webkit-calendar-picker-indicator {
-  cursor: pointer;
+/* The ISO text — digits aligned so the fixed width always fits exactly. */
+.sui-date-picker__display {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sui-date-picker__display--empty {
+  color: var(--sui-text-muted, rgba(241, 245, 249, 0.45));
+}
+
+.sui-date-picker__icon {
+  flex: none;
+  font-size: 0.65rem;
   opacity: 0.7;
-  filter: invert(0.85);
-  transition: opacity 0.12s ease;
 }
 
-.sui-date-picker::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
+/* The native input: invisible but fully interactive, covering the control —
+   clicks open the native picker, focus/typing work as usual. */
+.sui-date-picker__native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  color-scheme: dark;
 }
 
-.sui-date-picker:disabled {
+.sui-date-picker__native:focus {
+  outline: none;
+}
+
+.sui-date-picker:has(.sui-date-picker__native:disabled) {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-date-picker__native:disabled {
   cursor: not-allowed;
 }

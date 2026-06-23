@@ -1,0 +1,9 @@
+/* BaselineDot — marks the chart-baseline selection; matches the chart's blue
+   running-balance line (--sui-primary). Never shrinks in a flex row. */
+.baseline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sui-primary, #3b82f6);
+  flex: 0 0 auto;
+}

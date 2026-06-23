@@ -93,6 +93,25 @@ Spacing does not vary by theme — only the typographic / decorative tokens do. 
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 - **StatusLight** — Atomic. Small colored indicator dot (LED-style) with optional keepalive pulse animation. Key props: `variant` (`success`|`warning`|`danger`|`info`|`idle`), `size` (`sm`|`md`|`lg`), `pulse` (animates a slow expanding halo — use when the source is actively reporting), `label` (optional inline text rendered to the right). Honors `prefers-reduced-motion`. Uses `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-info`, `--sui-text-muted`. Use for: dispatcher liveness, connection state, daemon keepalive, sensor health.
 
+## BulkActionBar
+- **BulkActionBar** — Composite (Depth 2). Composes `CountChip` + `PrimaryButton` (+ optional `GhostButton` for "Clear"). Owns a minimal structural CSS file (`position: sticky; bottom`, centered max-content strip, elevation) — a deliberate Depth-2 CSS exception for the stick-to-bottom geometry, same rationale as `Fab`. A multi-select action strip: a count chip ("N cells") on the left, a primary action on the right ("Align to baseline"), and an optional "Clear" ghost button. **Render it gated behind `<Show when={count > 0}>`** — it has no internal visibility logic. The host scroll/grid container needs `position: relative` so the bar sticks to its bottom edge. Zero-config call site — pass only data + callbacks; the noun auto-pluralizes (trailing `s` when `count !== 1`). Key props: `count` (number), `noun` (singular, e.g. `"cell"`), `actionLabel` (e.g. `"Align to baseline"`), `onAction` (`() => void`), `onClear?` (`() => void` — renders the Clear button when present), `disabled?` (greys the primary action while a bulk op is in flight). Exported type: `BulkActionBarProps`. Uses `--sui-bg-elevated`, `--sui-border-bright`, `--sui-border`, `--sui-radius-md`, `--sui-space-*`. Use for: one-row multi-select bulk actions over a grid (e.g. "Align N cells to baseline" on `/calibrate`), batch operations over any selection that isn't a `SelectableTable`.
+  - Example:
+    ```tsx
+    import { BulkActionBar } from "solid-ui-components";
+    import { Show } from "solid-js";
+
+    // host container is position: relative
+    <Show when={selected().size > 0}>
+      <BulkActionBar
+        count={selected().size}
+        noun="cell"
+        actionLabel="Align to baseline"
+        onAction={alignSelected}
+        onClear={() => setSelected(new Set())}
+      />
+    </Show>
+    ```
+
 ## ConnectionStatus
 A three-layer family for showing service liveness as a sparkline that tracks how stale a heartbeat is. Designed to be reassuring, not distracting: a healthy service draws a flat low line; an idle service sawtooths to a peak then resets; an errored service blinks red; an off service flat-lines at the top. Caller passes `lastHeartbeatAt` (the most recent heartbeat) and `timeoutMs` (when stale → disconnected). Each tick, the sparkline plots `(now - lastHeartbeatAt) / timeoutMs` clamped 0..1.
 

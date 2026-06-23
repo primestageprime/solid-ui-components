@@ -1,0 +1,26 @@
+/* ============================================
+   TrendSparkline Component — Structural
+   Tiny value sparkline colored by trajectory:
+   up = green, down = red, flat = grey.
+   ============================================ */
+.sui-trend-sparkline {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.sui-trend-sparkline__line {
+  fill: none;
+  stroke-width: 1.4;
+}
+
+.sui-trend-sparkline--up .sui-trend-sparkline__line {
+  stroke: var(--sui-trend-up, #6fcf97);
+}
+
+.sui-trend-sparkline--down .sui-trend-sparkline__line {
+  stroke: var(--sui-trend-down, #e07a7a);
+}
+
+.sui-trend-sparkline--flat .sui-trend-sparkline__line {
+  stroke: var(--sui-trend-flat, rgba(241, 245, 249, 0.45));
+}

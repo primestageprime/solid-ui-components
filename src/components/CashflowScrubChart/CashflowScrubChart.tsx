@@ -80,10 +80,40 @@ export interface CashflowBalanceSeries {
   fill?: CashflowSeriesFill;
 }
 
+/** One plotline marker: the cell index it sits on, optionally selected. */
+export interface CashflowChartMarker {
+  index: number;
+  selected?: boolean;
+}
+
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
-  selected: number;
-  onScrub: (index: number, cell: CashflowCell) => void;
+  /** Selected day index. Optional in plain (scrub=false) mode. */
+  selected?: number;
+  /** Scrub callback. Optional in plain (scrub=false) mode. */
+  onScrub?: (index: number, cell: CashflowCell) => void;
+  /**
+   * Scrub layer toggle, forwarded to the inner ScrubChart. Default `true`:
+   * the daily filmstrip ribbon, the window-band minimap, the pointer
+   * gestures, and the selected-day rule + dot. Set `false` for the PLAIN
+   * time series — the same running-balance line, overlay series, deviation
+   * bands, and axes with the entire scrub layer composed off. One chart
+   * codebase: Timeline composes the scrub + filmstrip on; overview pages
+   * (console / configure / calibrate) render just the series.
+   */
+  scrub?: boolean;
+  /**
+   * PLOTLINE MARKERS — vertical dashed rules dropping from a flag at the top
+   * of the plot to a dot ON the running-balance line, marking the dates a
+   * chosen config fires. `selected` circles that instance. Rendered in the
+   * overlay layer (above the scrub gestures) so the dots are CLICKABLE:
+   * `onMarkerClick` fires with the marker's cell index. Off by default.
+   */
+  markers?: CashflowChartMarker[];
+  onMarkerClick?: (index: number, cell: CashflowCell) => void;
+  /** Recenter the detail ribbon on a cell (fresh object per request) —
+   *  forwarded to ScrubChart. */
+  centerOn?: { index: number } | null;
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
   /** Chart drawing-area height in px. Default 200. */
@@ -150,11 +180,15 @@ const formatCornerLabel = (cell: CashflowCell): string => {
   return String(day);
 };
 
-// Magnitude → bar fill fraction (0..1). Hand-tuned to keep typical cashflow
-// magnitudes visually informative without saturating on outliers.
-const BAR_SCALE_CENTS = 220_000;
-const barFraction = (cents: number): number =>
-  Math.min(1, Math.abs(cents) / BAR_SCALE_CENTS);
+// Magnitude → bar fill fraction (0..1), LINEAR against the largest |cashflow|
+// across the strip so bar heights are proportionate to their amounts (a fixed
+// clamp made a $1.7k bar read as 80% of an $8.4k bar). Tiny non-zero days keep
+// a 4% floor so they stay distinguishable from true-zero (bar-less) days.
+const BAR_MIN_FRACTION = 0.04;
+const barFraction = (cents: number, maxAbsCents: number): number => {
+  if (cents === 0 || maxAbsCents <= 0) return 0;
+  return Math.max(BAR_MIN_FRACTION, Math.abs(cents) / maxAbsCents);
+};
 
 // Map a balance accessor over the cells into one or more polyline point
 // strings, splitting on every `null` so a gap breaks the line rather than
@@ -187,6 +221,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 ) => {
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
+  // Unique clipPath id per instance — multiple charts on one page must not
+  // share a clip rect (each has its own plot geometry).
+  const clipId = `sui-cashflow-clip-${Math.random().toString(36).slice(2, 9)}`;
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
@@ -213,28 +250,45 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     return [lo, hi];
   });
 
+  // Largest |cashflow| across the strip — the 100%-height reference bar.
+  const maxAbsCashflow = createMemo(() =>
+    props.cells.reduce((m, c) => Math.max(m, Math.abs(c.cashflowCents)), 0),
+  );
+
   // ── Per-day cell renderer ────────────────────────────────────────────
   const renderCashflowCell = (cell: CashflowCell) => {
     const v = cell.cashflowCents;
-    const up = v >= 0;
-    const frac = barFraction(v);
+    // Exactly-zero days get a neutral/grey treatment: no colour tint, no bar,
+    // no amount label. Non-zero positive = green, non-zero negative = red.
+    const isZero = v === 0;
+    const up = v > 0;
+    const frac = barFraction(v, maxAbsCashflow());
+    const polarity = isZero ? "neutral" : up ? "positive" : "negative";
     return (
-      <div
-        class={`sui-cashflow-cell sui-cashflow-cell--${
-          up ? "positive" : "negative"
-        }`}
-      >
+      <div class={`sui-cashflow-cell sui-cashflow-cell--${polarity}`}>
         <div class="sui-cashflow-cell__date">{formatCornerLabel(cell)}</div>
         <div class="sui-cashflow-cell__bar-track">
           <div class="sui-cashflow-cell__zero" />
-          <div
-            class={`sui-cashflow-cell__bar sui-cashflow-cell__bar--${
-              up ? "up" : "down"
-            }`}
-            style={{ height: `${(frac * 50).toFixed(1)}%` }}
-          />
+          {!isZero && (
+            <div
+              class={`sui-cashflow-cell__bar sui-cashflow-cell__bar--${
+                up ? "up" : "down"
+              }`}
+              style={{ height: `${(frac * 50).toFixed(1)}%` }}
+            />
+          )}
         </div>
-        <div class="sui-cashflow-cell__amount">{fmtDollars(v)}</div>
+        {/* Zero cells keep an invisible spacer where the amount label would
+            be: the midline sits at 50% of the flex-grown bar-track, so the
+            amount row must occupy space in EVERY cell or the midline shifts
+            and breaks continuity across the strip. */}
+        {isZero ? (
+          <div class="sui-cashflow-cell__amount-spacer" aria-hidden="true">
+            {"\u00A0"}
+          </div>
+        ) : (
+          <div class="sui-cashflow-cell__amount">{fmtDollars(v)}</div>
+        )}
       </div>
     );
   };
@@ -295,9 +349,50 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         }));
       });
 
-    const selectedCell = ctx.cells[ctx.selected];
-    const selectedX = ctx.cellToX(ctx.selected);
-    const selectedY = yToPlot(selectedCell.balanceCents);
+    // Selection decorations are part of the scrub layer — omitted in plain
+    // mode (and whenever the selected index is out of range).
+    const selectedCell =
+      props.scrub !== false ? ctx.cells[ctx.selected] : undefined;
+    const selectedX = selectedCell ? ctx.cellToX(ctx.selected) : 0;
+    const selectedY = selectedCell ? yToPlot(selectedCell.balanceCents) : 0;
+
+    // ── Over-top indicator ───────────────────────────────────────────────
+    // The y-axis scales to the LINES (consumer passes a line-based `yMax`); the
+    // range cone is allowed to overflow the top, clipped to the plot rect. When
+    // any series point exceeds the top of the plot (maps ABOVE plotTop in px),
+    // mark the GLOBAL peak with an upward chevron + the compact-formatted value
+    // at the top edge, so the unshown high point is legible. One marker at the
+    // peak suffices. A 0.5px epsilon avoids flagging values pinned exactly at
+    // the (nice-rounded) domain top.
+    const OVERTOP_EPS_PX = 0.5;
+    const overtopPeak = (() => {
+      let best: { x: number; value: number } | null = null;
+      ctx.cells.forEach((cell, i) => {
+        const candidates: number[] = [cell.balanceCents];
+        for (const s of props.balanceSeries ?? []) {
+          const v = s.balanceCents(cell, i);
+          if (v != null) candidates.push(v);
+        }
+        for (const v of candidates) {
+          // Above the plot top in screen space → exceeds the visible domain.
+          if (yToPlot(v) < ctx.plotTop - OVERTOP_EPS_PX) {
+            if (!best || v > best.value) best = { x: ctx.cellToX(i), value: v };
+          }
+        }
+      });
+      return best as { x: number; value: number } | null;
+    })();
+
+    // Keep the chevron + label clamped inside the plot's horizontal span so the
+    // label never clips off the left/right edges. The marker is drawn OUTSIDE
+    // the clip group (after it), at the very top edge of the plot.
+    const overtopLabelX =
+      overtopPeak == null
+        ? 0
+        : Math.min(
+            Math.max(overtopPeak.x, ctx.plotLeft + 28),
+            ctx.plotRight - 28,
+          );
 
     return (
       <svg
@@ -305,6 +400,20 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
+        {/* Clip the plotted content (cone fills + balance lines) to the plot
+            rect so a cone exceeding the line-based domain clips at the plot TOP
+            rather than spilling over the axis labels. */}
+        <defs>
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            <rect
+              x={ctx.plotLeft}
+              y={ctx.plotTop}
+              width={Math.max(0, ctx.plotRight - ctx.plotLeft)}
+              height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
+            />
+          </clipPath>
+        </defs>
+        <g clip-path={`url(#${clipId})`}>
         <For each={bands}>
           {(band) => (
             <polygon
@@ -337,23 +446,114 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           )}
         </For>
         <polyline class="sui-cashflow-scrub-chart__line" points={points} />
+        </g>
+        {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
+            edge and the label stays fully visible. */}
+        {overtopPeak && (
+          <g class="sui-cashflow-scrub-chart__overtop">
+            <path
+              class="sui-cashflow-scrub-chart__overtop-chevron"
+              d={`M ${overtopPeak.x} ${ctx.plotTop + 1} l 4 5 l -8 0 Z`}
+            />
+            <text
+              class="sui-cashflow-scrub-chart__overtop-label"
+              x={overtopLabelX}
+              y={ctx.plotTop + 9}
+              text-anchor="middle"
+            >
+              {fmtAxisDollars(overtopPeak.value)}
+            </text>
+          </g>
+        )}
         {/* Per-cell dots are deliberately omitted from the line — the line
             alone reads as a smooth running balance, and the selected dot
             below provides the precise anchor. Tradeoff explained in the
             component header. */}
-        <line
-          class="sui-cashflow-scrub-chart__selected-rule"
-          x1={selectedX}
-          x2={selectedX}
-          y1={ctx.plotTop}
-          y2={ctx.plotBottom}
-        />
-        <circle
-          class="sui-cashflow-scrub-chart__selected-dot"
-          cx={selectedX}
-          cy={selectedY}
-          r={4}
-        />
+        {selectedCell && (
+          <>
+            <line
+              class="sui-cashflow-scrub-chart__selected-rule"
+              x1={selectedX}
+              x2={selectedX}
+              y1={ctx.plotTop}
+              y2={ctx.plotBottom}
+            />
+            <circle
+              class="sui-cashflow-scrub-chart__selected-dot"
+              cx={selectedX}
+              cy={selectedY}
+              r={4}
+            />
+          </>
+        )}
+      </svg>
+    );
+  };
+
+  // ── Plotline markers overlay ─────────────────────────────────────────
+  // Rendered via ScrubChart's renderChartOverlay slot (above the gesture
+  // overlay): the svg itself ignores pointer events; each marker group
+  // re-enables them so dots/flags are clickable without blocking scrubbing.
+  const renderMarkers = (
+    ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
+  ) => {
+    const list = props.markers ?? [];
+    if (list.length === 0 || ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    const yToPlot = ctx.yToPlot;
+    return (
+      <svg
+        class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__markers"
+        viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+        preserveAspectRatio="none"
+      >
+        <For each={list.filter((m) => m.index >= 0 && m.index < ctx.cells.length)}>
+          {(m) => {
+            const x = ctx.cellToX(m.index);
+            const y = yToPlot(ctx.cells[m.index].balanceCents);
+            return (
+              <g
+                class={`sui-cashflow-scrub-chart__marker${
+                  m.selected ? " sui-cashflow-scrub-chart__marker--selected" : ""
+                }`}
+                onClick={() => props.onMarkerClick?.(m.index, ctx.cells[m.index])}
+              >
+                {/* generous invisible hit area so the thin rule is clickable */}
+                <rect
+                  class="sui-cashflow-scrub-chart__marker-hit"
+                  x={x - 6}
+                  y={ctx.plotTop}
+                  width={12}
+                  height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
+                />
+                <line
+                  class="sui-cashflow-scrub-chart__marker-line"
+                  x1={x}
+                  x2={x}
+                  y1={ctx.plotTop}
+                  y2={y}
+                />
+                <path
+                  class="sui-cashflow-scrub-chart__marker-flag"
+                  d={`M ${x} ${ctx.plotTop} l 8 3.5 l -8 3.5 Z`}
+                />
+                {m.selected && (
+                  <circle
+                    class="sui-cashflow-scrub-chart__marker-ring"
+                    cx={x}
+                    cy={y}
+                    r={8}
+                  />
+                )}
+                <circle
+                  class="sui-cashflow-scrub-chart__marker-dot"
+                  cx={x}
+                  cy={y}
+                  r={3.5}
+                />
+              </g>
+            );
+          }}
+        </For>
       </svg>
     );
   };
@@ -363,6 +563,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       cells={props.cells}
       selected={props.selected}
       onScrub={props.onScrub}
+      scrub={props.scrub}
+      centerOn={props.centerOn}
+      renderChartOverlay={(props.markers?.length ?? 0) > 0 ? renderMarkers : undefined}
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}

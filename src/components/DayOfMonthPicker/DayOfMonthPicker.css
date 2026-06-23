@@ -47,6 +47,13 @@
   outline-offset: 1px;
 }
 
+.sui-dom-picker__cell--last {
+  /* The wide "Last of month" cell occupies the 29/30/31 slots (3 columns). */
+  grid-column: span 3;
+  width: auto;
+  font-size: calc(var(--dom-cell-size, 3.5rem) * 0.3);
+}
+
 .sui-dom-picker__cell--selected,
 .sui-dom-picker__cell--selected:hover {
   background: var(--sui-accent, #00d4ff);
