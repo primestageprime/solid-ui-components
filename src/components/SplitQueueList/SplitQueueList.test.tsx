@@ -19,9 +19,11 @@ const tick = (ms = 150) => new Promise((r) => setTimeout(r, ms));
  * updated only via `onFocusChange`, and a `resolveFocused()` that resolves the
  * current head — preferring `focused` but falling back to the unresolved head
  * (exactly like the showcase's "Resolve next"). The fallback matters because
- * focus is now advanced asynchronously, at the END of the exit-collapse phase:
- * during the collapse the component reports focus as null so no real row lights
- * up, then fires onFocusChange with the new head once the card is gone.
+ * focus is now advanced asynchronously, at the END of the resolve animation
+ * (the exit collapse and the enter slide run simultaneously over the full
+ * duration): while the card is collapsing the component reports focus as null so
+ * no real row lights up, then fires onFocusChange with the new head once it's
+ * gone.
  *
  * Regression guards: focus still advances on EVERY resolve, and the queue
  * always drains (the original "stuck after one item" bug must stay fixed).

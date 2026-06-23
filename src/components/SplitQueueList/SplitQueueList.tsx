@@ -282,9 +282,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     if (!first || !nowEl || !topList) return bail();
     const last = nowEl.getBoundingClientRect();
 
+    // Both phases run SIMULTANEOUSLY over the FULL duration, mirrored across the
+    // seam: as the bottom card collapses up under the "to categorize" header,
+    // the resolved clone slides up into the top list at the same time — the card
+    // reads as passing up through the seam in one synchronized motion.
     const total = animationMs();
-    const exitMs = Math.round(total * 0.5);
-    const enterMs = total - exitMs;
+    const exitMs = total;
+    const enterMs = total;
 
     // Hide the real resolved row until the enter phase lands.
     nowEl.style.visibility = "hidden";
@@ -387,21 +391,25 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       // Insert at the head slot (right after the sticky header).
       bottomHeader.insertAdjacentElement("afterend", placeholder);
 
+      // Start the enter slide AT THE SAME TIME as the exit collapse — they run
+      // in parallel over the same duration and finish together (mirrored).
+      runEnter();
+
       animateOnce(
         placeholder,
         [{ height: `${rowH}px` }, { height: "0px" }],
         exitMs,
         () => {
           placeholder.remove();
-          // The resolved card is now ENTIRELY gone from the bottom list —
-          // advance focus exactly here, so the new head lights up with the
-          // orange ▸ only now (not at resolve time).
+          // The collapse has finished (= end of the full animation), so the
+          // resolved card is now entirely gone from the bottom list. Advance
+          // focus here so the new head lights up with the orange ▸ only now.
           advanceFocusAfterExit();
-          runEnter();
         },
       );
     } else {
-      // No bottom list (queue emptied) — skip straight to the enter phase.
+      // No bottom list (queue emptied) — just run the enter phase. Nothing is
+      // collapsing, so focus can advance immediately.
       advanceFocusAfterExit();
       runEnter();
     }
