@@ -154,6 +154,16 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     }),
   );
 
+  // During a resolve we animate the SECTION heights from their pre-resolve values
+  // to the new layout values, so the categorized section visibly grows downward
+  // from the seam (and the to-categorize section shrinks) in lockstep — instead
+  // of the panes snapping to the memo's new heights. While this override is set
+  // it takes precedence over the layout memo for the pane heights.
+  const [heightOverride, setHeightOverride] =
+    createSignal<{ top: number; bottom: number } | null>(null);
+  const effTopHeight = () => heightOverride()?.top ?? layout().topHeight;
+  const effBottomHeight = () => heightOverride()?.bottom ?? layout().bottomHeight;
+
   const reducedMotion = () =>
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -181,6 +191,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // so a resolved key's pre-move rect survives. Resolve-detection schedules
   // playFlight on a microtask (runs before the next rAF), so during a flight
   // `prevRects` still holds the pre-swap rects.
+  // The last RENDERED section heights, snapshotted post-paint alongside the rects.
+  // On a resolve, playFlight (microtask) runs before the next rAF capture, so
+  // these still hold the PRE-resolve heights — the values the section-height
+  // grow/shrink animates away from.
+  let prevTopH = layout().topHeight;
+  let prevBottomH = layout().bottomHeight;
+
   const captureRects = () => {
     if (!rootEl) return;
     prevRects.clear();
@@ -188,6 +205,14 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const k = el.dataset.sqlKey!;
       prevRects.set(k, el.getBoundingClientRect());
     });
+    // Snapshot the rendered pane heights too (skip while an override animation
+    // is mutating them, so we keep the true resting heights).
+    if (!heightOverride()) {
+      const topEl = rootEl.querySelector<HTMLElement>(".sui-sql__list--top");
+      const botEl = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
+      if (topEl) prevTopH = topEl.getBoundingClientRect().height;
+      if (botEl) prevBottomH = botEl.getBoundingClientRect().height;
+    }
   };
 
   // Re-snapshot after every render's paint. Reading both array lengths makes
@@ -257,13 +282,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   //   Phase 1 (exit): an orange focused-styled clone in the BOTTOM list slides
   //     up and is clipped away under the sticky "to categorize" header — it
   //     disappears beneath the label (the header sits above it via z-index).
-  //   Phase 2 (enter): once it's gone, a resolved-styled clone in the TOP list
-  //     slides up from under its bottom edge into the resolved row's slot,
-  //     clipped by the top list so it appears to emerge from under the seam.
-  // The real resolved row is hidden until phase 2 lands (repaint-on-arrival).
-  // animationMs is split ~50/50 across the phases so the knob controls total time.
-  const EASE = "cubic-bezier(.22,.61,.36,1)";
-
+  // SIMULTANEOUSLY the categorized (top) SECTION grows from its pre-resolve
+  // height to its new height (seam descends), revealing the newest ✓ row at the
+  // seam. Both run over the full animationMs; the seam moves as one.
   const playFlight = (key: string) => {
     // If we can't run the flight (missing refs / no captured rect — e.g. the
     // tab was hidden so rAF capture didn't run), don't strand focus: clear the
@@ -280,133 +301,66 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
     const topList = topListEl;
     if (!first || !nowEl || !topList) return bail();
-    const last = nowEl.getBoundingClientRect();
 
-    // Both phases run SIMULTANEOUSLY over the FULL duration, mirrored across the
-    // seam: as the bottom card collapses up under the "to categorize" header,
-    // the resolved clone slides up into the top list at the same time — the card
-    // reads as passing up through the seam in one synchronized motion.
     const total = animationMs();
-    const exitMs = total;
-    const enterMs = total;
-
-    // Collapse the real resolved row to ZERO height for the duration so it
-    // reserves NO space — the enter EXPAND element grows the slot from 0 instead,
-    // so there's never a blank full-height gap in the top list. Restored at the
-    // end. (Save the inline overrides to undo precisely.)
     const newFocusedContent = nowEl.innerHTML;
-    const restoreRow = () => {
-      nowEl.style.visibility = "";
-      nowEl.style.height = "";
-      nowEl.style.minHeight = "";
-      nowEl.style.overflow = "";
-    };
-    nowEl.style.visibility = "hidden";
-    nowEl.style.height = "0px";
-    nowEl.style.minHeight = "0";
-    nowEl.style.overflow = "hidden";
+    const rowH = first.height;
 
-    // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
-    // finish/cancel OR a timeout fallback (WAAPI events don't fire in a hidden
-    // tab; without the fallback a phase could stall and strand state). If WAAPI
-    // is unavailable entirely (e.g. jsdom, where Element.animate is missing), we
-    // skip the motion and settle on the next microtask so `then` still runs.
-    const animateOnce = (
-      el: HTMLElement,
-      keyframes: Keyframe[],
-      ms: number,
-      then: () => void,
-    ) => {
-      let done = false;
-      const fire = () => {
-        if (done) return;
-        done = true;
-        then();
-      };
-      if (typeof el.animate !== "function") {
-        queueMicrotask(fire);
-        return;
+    // ---- The SECTION-height animation (the headline motion) ----------------
+    // The categorized (top) section GROWS from its pre-resolve height to the new
+    // (taller) layout height, extending its bottom edge down = the seam DESCENDS.
+    // The to-categorize (bottom) section shrinks complementarily, so the seam
+    // moves as one. Heights are driven through `heightOverride` (which takes
+    // precedence over the layout memo) so the panes don't snap. The real newest
+    // ✓ row already sits at the bottom of the top list; with the top list
+    // overflow-clipped and pinned to its bottom, it's REVEALED at the seam as
+    // the section grows into it — not sliding in from the top.
+    const fromTop = prevTopH;
+    const fromBottom = prevBottomH;
+    const toTop = layout().topHeight;
+    const toBottom = layout().bottomHeight;
+    // Capture the scroll position BEFORE we override heights. When the top is
+    // CAPPED (fromTop === toTop, e.g. 4+ resolved) the section can't grow, so the
+    // newest row must SCROLL in at the seam while an equal amount scrolls off the
+    // top: we animate scrollTop from its pre-resolve value to the new max. When
+    // the section grows, scroll stays pinned to the bottom so the newest is
+    // revealed by the growth.
+    const fromScroll = topList.scrollTop;
+    const capped = Math.abs(toTop - fromTop) < 1;
+    setHeightOverride({ top: fromTop, bottom: fromBottom });
+    topList.style.overflow = "hidden";
+
+    const driveScroll = (e: number) => {
+      const maxScroll = topList.scrollHeight - topList.clientHeight;
+      if (capped) {
+        topList.scrollTop = fromScroll + (maxScroll - fromScroll) * e;
+      } else {
+        topList.scrollTop = maxScroll; // grown section reveals newest at seam
       }
-      const anim = el.animate(keyframes, { duration: ms, easing: EASE });
-      anim.onfinish = fire;
-      anim.oncancel = fire;
-      setTimeout(fire, ms + 80);
     };
 
-    // ---- Phase 2 (enter): HEIGHT EXPAND of the resolved card in the top list —
-    // the exact inverse of the exit collapse. An in-flow placeholder at the new
-    // resolved slot grows its height 0 → H while the bottom card collapses H → 0,
-    // so the two mirror each other across the seam and NO blank full-height gap
-    // ever appears. The inner ✓ card is pinned to the BOTTOM (the mirror of the
-    // exit's bottom-pin), so the card reveals from the bottom up as the slot
-    // grows.
-    const enterRowH = last.height;
-    const runEnter = () => {
-      const expand = document.createElement("li");
-      expand.className = "sui-sql__collapse"; // same in-flow / min-height:0 base
-      expand.style.height = "0px";
-      expand.style.minHeight = "0";
-      expand.style.overflow = "hidden";
-      expand.style.position = "relative";
-
-      const inner = document.createElement("div");
-      inner.className = "sui-sql__row sui-sql__row--resolved";
-      inner.innerHTML = newFocusedContent; // already carries the ✓ marker
-      inner.style.position = "absolute";
-      inner.style.left = "0";
-      inner.style.right = "0";
-      inner.style.bottom = "0";
-      inner.style.height = `${enterRowH}px`;
-      inner.style.margin = "0";
-      expand.appendChild(inner);
-
-      // Insert at the real resolved row's slot (it's collapsed to 0), so the
-      // expand grows the slot from nothing right where the row will live.
-      nowEl.parentElement?.insertBefore(expand, nowEl);
-
-      animateOnce(
-        expand,
-        [{ height: "0px" }, { height: `${enterRowH}px` }],
-        enterMs,
-        () => {
-          expand.remove();
-          restoreRow(); // un-collapse the real ✓ row into its final slot
-        },
-      );
-    };
-
-    // ---- Phase 1 (exit): HEIGHT COLLAPSE of the resolved card in the bottom
-    // list. The card was the head of the bottom list; the data swap already
-    // pulled the rows below it up by one row. We re-insert an orange
-    // focused-styled placeholder IN FLOW at the head slot (which pushes those
-    // rows back down to where they were), then collapse its height to 0 — so the
-    // whole list below glides up in LOCKSTEP, smoothly and together, with no
-    // card sliding over another and no instant jump. The placeholder clips its
-    // content from the TOP (content pinned to the bottom of the shrinking box,
-    // overflow:hidden), keeping its orange background until it reaches 0.
+    // ---- The bottom orange head card collapse (kept) -----------------------
+    // The resolved card was the head of the bottom list; the swap removed it and
+    // pulled the rows up. We re-insert an orange focused placeholder at the head
+    // slot and collapse it H→0 IN FLOW, so the orange card visibly disappears
+    // under the "to categorize" header while the rows below glide up — mirroring
+    // the top growing. (min-height:0 so it can actually reach 0; content pinned
+    // to the bottom so the top edge clips it under the header.)
     const bottomHeader = bottomList?.querySelector<HTMLElement>(".sui-sql__header");
+    let placeholder: HTMLLIElement | null = null;
     if (bottomList && bottomHeader) {
-      const rowH = first.height;
-
-      const placeholder = document.createElement("li");
+      placeholder = document.createElement("li");
       placeholder.className = "sui-sql__collapse";
       placeholder.style.height = `${rowH}px`;
-      // CRITICAL: min-height:0 — real rows carry an inline min-height:120px, and
-      // without overriding it here the height animation can't actually reach 0
-      // (the collapse would jam at the row's min-height). This is the "fight"
-      // between the JS height animation and the CSS row sizing.
       placeholder.style.minHeight = "0";
       placeholder.style.overflow = "hidden";
       placeholder.style.position = "relative";
-
-      // Inner card pinned to the bottom of the placeholder, fixed at full row
-      // height, so as the placeholder shrinks the TOP edge clips it away.
       const inner = document.createElement("div");
       inner.className =
         "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused";
       inner.innerHTML = newFocusedContent;
       const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
-      if (marker) marker.textContent = "▸"; // focused glyph, not ✓
+      if (marker) marker.textContent = "▸";
       inner.style.position = "absolute";
       inner.style.left = "0";
       inner.style.right = "0";
@@ -414,31 +368,53 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       inner.style.height = `${rowH}px`;
       inner.style.margin = "0";
       placeholder.appendChild(inner);
-
-      // Insert at the head slot (right after the sticky header).
       bottomHeader.insertAdjacentElement("afterend", placeholder);
+    }
 
-      // Start the enter slide AT THE SAME TIME as the exit collapse — they run
-      // in parallel over the same duration and finish together (mirrored).
-      runEnter();
-
-      animateOnce(
-        placeholder,
-        [{ height: `${rowH}px` }, { height: "0px" }],
-        exitMs,
-        () => {
-          placeholder.remove();
-          // The collapse has finished (= end of the full animation), so the
-          // resolved card is now entirely gone from the bottom list. Advance
-          // focus here so the new head lights up with the orange ▸ only now.
-          advanceFocusAfterExit();
-        },
-      );
-    } else {
-      // No bottom list (queue emptied) — just run the enter phase. Nothing is
-      // collapsing, so focus can advance immediately.
+    // ---- Drive everything from one progress 0→1 over the full duration -----
+    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3); // cubic-ish, matches EASE feel
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      placeholder?.remove();
+      topList.style.overflow = "";
+      setHeightOverride(null); // release the panes back to the layout memo
+      topList.scrollTop = topList.scrollHeight; // newest flush at the seam
+      // The card is now entirely out of the bottom list — advance focus so the
+      // new head lights up with the orange ▸ exactly now (end of the animation).
       advanceFocusAfterExit();
-      runEnter();
+    };
+
+    const now = () =>
+      typeof performance !== "undefined" ? performance.now() : Date.now();
+    const startTs = now();
+    // Time-driven ticker: progress is computed from elapsed time, so the result
+    // is correct regardless of how often ticks actually fire (smooth ~16ms when
+    // visible; coarser but still correct if the tab is backgrounded). setTimeout
+    // (not rAF) so it keeps advancing in a hidden tab instead of freezing.
+    const frame = () => {
+      if (settled) return;
+      const p = total <= 0 ? 1 : Math.min(1, (now() - startTs) / total);
+      const e = easeOut(p);
+      setHeightOverride({
+        top: fromTop + (toTop - fromTop) * e,
+        bottom: fromBottom + (toBottom - fromBottom) * e,
+      });
+      if (placeholder) placeholder.style.height = `${rowH * (1 - e)}px`;
+      driveScroll(e);
+      if (p < 1) {
+        setTimeout(frame, 16);
+      } else {
+        settle();
+      }
+    };
+
+    if (total > 0 && typeof setTimeout === "function") {
+      frame();
+    } else {
+      // Zero duration / no timers (jsdom edge) — settle immediately.
+      settle();
     }
   };
 
@@ -453,12 +429,14 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest
   // resolved row sits flush at the seam, adjacent to the next unresolved item.
+  // Skipped while a resolve's section-height animation is running — that loop
+  // drives scrollTop itself (and settles it to the bottom at the end).
   createEffect(
     on(
       () => [props.resolved.length, layout().topScrollToBottom, layout().topHeight] as const,
       ([, scrollToBottom]) => {
         queueMicrotask(() => {
-          if (topListEl && scrollToBottom) {
+          if (topListEl && scrollToBottom && !heightOverride()) {
             topListEl.scrollTop = topListEl.scrollHeight;
           }
         });
@@ -504,7 +482,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
-        style={{ height: `${layout().topHeight}px` }}
+        style={{ height: `${effTopHeight()}px` }}
       >
         <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
           <span>{props.resolvedLabel ?? "Resolved"}</span>
@@ -520,7 +498,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       <ul
         class="sui-sql__list sui-sql__list--bottom"
         classList={{ "sui-sql__list--collapsed": props.unresolved.length === 0 }}
-        style={{ height: `${layout().bottomHeight}px` }}
+        style={{ height: `${effBottomHeight()}px` }}
       >
         <Show
           when={props.unresolved.length > 0}
