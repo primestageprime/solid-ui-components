@@ -92,7 +92,6 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // Rects of every keyed row captured on the previous render — the "First" in
   // FLIP. Read synchronously before the data swap reflows the DOM.
   const prevRects = new Map<string, DOMRect>();
-  let prevUnresolvedKeys: string[] = [];
 
   const layout = createMemo(() =>
     computeSplitLayout({
@@ -142,34 +141,49 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     ),
   );
 
-  // Detect a resolve (key moved unresolved -> resolved) and play the flight.
-  createEffect(
-    on(
-      () => props.resolved.map(props.keyOf).join(""),
-      (resolvedSig, prevSig) => {
-        const resolvedKeys = resolvedSig.split("").filter(Boolean);
-        const prevResolved = (prevSig ?? "").split("").filter(Boolean);
-        const newlyResolved = resolvedKeys.filter(
-          (k) => !prevResolved.includes(k) && prevUnresolvedKeys.includes(k),
-        );
-        // Auto-advance focus to the new head of the unresolved list.
-        if (newlyResolved.length > 0) {
-          props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
-        }
-        prevUnresolvedKeys = props.unresolved.map(props.keyOf);
+  // Detect a resolve and play the flight, then advance focus.
+  //
+  // A newly-resolved key is simply one that is in `resolved` now but was not in
+  // the previous `resolved`. We intentionally do NOT also require it to have
+  // been in the previous `unresolved`: consumers update the two arrays in two
+  // separate (un-batched) setter calls, and depending on order there is an
+  // intermediate frame where the key sits in NEITHER list. Guarding on the
+  // unresolved snapshot would miss the resolve in that frame — this was the
+  // "stuck after one item" bug. Entering `resolved` is sufficient evidence of a
+  // resolve; `playFlight` self-guards by only animating rows it captured a rect
+  // for (i.e. rows that were actually rendered in the unresolved list).
+  //
+  // This single effect owns `prevResolvedKeys`; nothing else writes it, so the
+  // diff is order- and batch-independent.
+  let prevResolvedKeys: string[] = props.resolved.map(props.keyOf);
+  let detectFirstRun = true;
 
-        if (newlyResolved.length === 0 || prevSig === undefined) return;
-        if (reducedMotion()) return;
-        // Defer to the post-render frame so new rects are final, then FLIP.
-        const movedKey = newlyResolved[newlyResolved.length - 1];
-        queueMicrotask(() => playFlight(movedKey));
-      },
-    ),
-  );
-
-  // Keep prevUnresolvedKeys current even when no resolve happens (e.g. adds).
   createEffect(() => {
-    prevUnresolvedKeys = props.unresolved.map(props.keyOf);
+    const resolvedKeys = props.resolved.map(props.keyOf);
+    const unresolvedKeys = props.unresolved.map(props.keyOf);
+
+    const newlyResolved = resolvedKeys.filter(
+      (k) => !prevResolvedKeys.includes(k),
+    );
+    prevResolvedKeys = resolvedKeys;
+
+    if (newlyResolved.length === 0) {
+      detectFirstRun = false;
+      return;
+    }
+
+    // Next item to process = current head of the post-swap unresolved list, or
+    // null when the queue is now empty. Fires on EVERY resolve so a consumer
+    // that resolves the focused key advances each time instead of re-targeting
+    // the just-resolved item.
+    props.onFocusChange?.(unresolvedKeys[0] ?? null);
+
+    if (!detectFirstRun && !reducedMotion()) {
+      // Defer to the post-render frame so new rects are final, then FLIP.
+      const movedKey = newlyResolved[newlyResolved.length - 1];
+      queueMicrotask(() => playFlight(movedKey));
+    }
+    detectFirstRun = false;
   });
 
   const playFlight = (key: string) => {
@@ -202,6 +216,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bottomList = rootEl?.querySelector<HTMLElement>(".sui-sql__list--bottom");
     const first = prevRects.get(key);
     if (!bottomList || !first) return;
+    // When this resolve empties the queue the bottom list collapses to the
+    // "all clear" strip — there's no list body to clip the ghost against, and a
+    // ghost appended now would be orphaned by the <Show> swap and linger. Skip
+    // the seam paint in that case (the real row still FLIP-slides into place).
+    if (props.unresolved.length === 0) return;
     const listRect = bottomList.getBoundingClientRect();
 
     const ghost = document.createElement("div");
@@ -217,15 +236,18 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // Slide the ghost up by the same distance the real row travels (out the top
     // of the bottom list, where overflow:hidden clips it — the seam repaint).
     const dist = first.top - listRect.top + first.height;
-    ghost
-      .animate(
-        [
-          { transform: "translateY(0)", opacity: 1 },
-          { transform: `translateY(${-dist}px)`, opacity: 1 },
-        ],
-        { duration: animationMs(), easing: "cubic-bezier(.22,.61,.36,1)" },
-      )
-      .finished.finally(() => ghost.remove());
+    const anim = ghost.animate(
+      [
+        { transform: "translateY(0)", opacity: 1 },
+        { transform: `translateY(${-dist}px)`, opacity: 1 },
+      ],
+      { duration: animationMs(), easing: "cubic-bezier(.22,.61,.36,1)" },
+    );
+    // Remove on finish OR cancel (a cancelled finished-promise rejects, so use
+    // the event handlers directly to guarantee the ghost never lingers).
+    const drop = () => ghost.remove();
+    anim.onfinish = drop;
+    anim.oncancel = drop;
   };
 
   // Auto-scroll the top list to its bottom so the newest resolved row sits at

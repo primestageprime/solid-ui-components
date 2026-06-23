@@ -39,7 +39,12 @@ function QueueDemo(props: { height: number; topMinRows?: number }) {
   };
 
   const resolveNext = () => {
-    const next = focused() ?? unresolved()[0]?.id;
+    // Resolve the focused item, but only if it's still in the unresolved list;
+    // otherwise fall back to the head. This guarantees forward progress even if
+    // `focused` lags the data by a tick, so the queue always drains.
+    const list = unresolved();
+    const f = focused();
+    const next = (f && list.some((i) => i.id === f) ? f : list[0]?.id) ?? null;
     if (next) resolveKey(next);
   };
 
