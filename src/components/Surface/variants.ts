@@ -3,6 +3,8 @@
 // Pre-configured Surface via createSurface() factory.
 // ============================================
 import { createSurface } from "./Surface";
+import type { SurfaceDataProps } from "./Surface";
+import type { Component } from "solid-js";
 
 // Shape variants
 export const CardSurface = createSurface({ padding: "md", radius: "md" });
@@ -44,3 +46,35 @@ export const SquareCard = createSurface({
 
 /** Dark recessed container for formula/code displays */
 export const FormulaBlock = createSurface({ padding: "sm", radius: "sm", bg: "var(--sui-bg-inset)" });
+
+// Content-area surfaces — ergonomic defaults for the common "box of content"
+// pattern so consumers never need to hand-roll padding/gap/direction.
+
+/** General-purpose content area: md padding, sm gap, column layout.
+ *  The everyday alternative to a bare Surface — use this when content
+ *  should be vertically stacked with breathing room. */
+export const ContentSurface: Component<SurfaceDataProps> = createSurface({
+  padding: "md",
+  radius: "sm",
+  direction: "column",
+  gap: "sm",
+});
+
+/** Spacious content panel: lg padding, md gap, column layout.
+ *  For detail panes / explain boxes where generous breathing room matters. */
+export const PanelSurface: Component<SurfaceDataProps> = createSurface({
+  padding: "lg",
+  radius: "md",
+  direction: "column",
+  gap: "md",
+});
+
+/** Centered surface — content centered both axes. For empty states,
+ *  placeholders, loading indicators, or any single-focus content area. */
+export const CenteredSurface: Component<SurfaceDataProps> = createSurface({
+  padding: "md",
+  radius: "sm",
+  direction: "column",
+  align: "center",
+  gap: "sm",
+});

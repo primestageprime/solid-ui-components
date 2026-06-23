@@ -11,6 +11,8 @@ import {
   DelineatedSidebar,
   PageCanvas,
   ScrollPanel,
+  PaddedStack,
+  SectionStack,
 } from "./index";
 
 describe("Layout primitives", () => {
@@ -63,6 +65,19 @@ describe("Layout curried variants", () => {
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toMatch(/overflow: ?auto/);
     expect(style).toMatch(/max-height/);
+  });
+
+  it("PaddedStack applies gap-sm and inline padding", () => {
+    const { container } = render(() => <PaddedStack>x</PaddedStack>);
+    const el = container.firstElementChild!;
+    expect(el.className).toMatch(/stack--gap-sm/);
+    const style = el.getAttribute("style") ?? "";
+    expect(style).toMatch(/padding/);
+  });
+
+  it("SectionStack applies gap-lg", () => {
+    const { container } = render(() => <SectionStack>x</SectionStack>);
+    expect(container.firstElementChild!.className).toMatch(/stack--gap-lg/);
   });
 });
 

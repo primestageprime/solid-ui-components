@@ -22,7 +22,10 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   maxWidth?: string;
 }
 
-export const Surface: Component<SurfaceProps> = (props) => {
+export const Surface: Component<SurfaceProps> = (rawProps) => {
+  // Default to md padding so content is offset from the surface edge without
+  // consumers needing to hand-roll it. Pass padding="none" to suppress.
+  const props = mergeProps({ padding: "md" as const, radius: "sm" as const }, rawProps);
   const [local, others] = splitProps(props, [
     "padding",
     "radius",
