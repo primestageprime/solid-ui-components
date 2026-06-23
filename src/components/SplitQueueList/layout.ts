@@ -1,114 +1,133 @@
 /* Pure sizing math for SplitQueueList. Extracted from the component so the
- * bottom-priority / top-min-rows / slack-absorption rules can be unit-tested
- * without a DOM. The animation (FLIP + seam repaint) is DOM-only and lives in
- * the component; this module is everything that can be proven by arithmetic. */
+ * content-driven top / remaining-space bottom / slack-absorption rules can be
+ * unit-tested without a DOM. The animation (FLIP + seam repaint) is DOM-only
+ * and lives in the component; this module is everything provable by arithmetic.
+ *
+ * Sizing model (the revised spec):
+ *  - The TOP pane (resolved / "categorized") is CONTENT-DRIVEN between a 1-row
+ *    floor and a 3-row soft cap. 0 categorized still shows 1 row of space; 1/2/3
+ *    grow to fit; 4+ stays capped at 3 rows and the pane scrolls so the NEWEST
+ *    (most-recently-categorized) row sits flush at the bottom (the seam).
+ *  - The BOTTOM pane (unresolved / "to categorize") gets the REMAINING space and
+ *    scrolls when its content overflows.
+ *  - The 3-row cap holds only WHILE the bottom has enough content to fill its
+ *    remaining area. When the bottom is short, it shrinks to its content height
+ *    and the freed slack flows UP — the top may then grow past 3 rows.
+ *
+ * Each pane renders its own sticky header above its rows, so all heights here
+ * are PANE heights that already include one `headerHeight`. A non-scrolling
+ * pane is always sized to whole rows + its header, so the last row never clips.
+ */
 
 export interface SplitLayoutInput {
-  /** Total inner height available to both lists + seam, in px. */
+  /** Total inner height available to both panes + seam, in px. */
   totalHeight: number;
-  /** Per-row height in px (uniform). */
+  /** Per-row height in px (uniform). Measure the real rendered row to be safe. */
   rowHeight: number;
-  /** Minimum rows the top (resolved) list keeps visible. Default 3. */
-  topMinRows: number;
-  /** Number of resolved items. */
+  /** Number of resolved ("categorized") items — drives the top pane. */
   resolvedCount: number;
-  /** Number of unresolved items. */
+  /** Number of unresolved ("to categorize") items — fills the bottom pane. */
   unresolvedCount: number;
-  /** Height of the seam divider, in px. Default 0. */
+  /** Height of the seam divider between the panes, in px. Default 0. */
   seamHeight?: number;
-  /** Collapsed "all clear" strip height when unresolved is empty. Default rowHeight. */
-  clearStripHeight?: number;
-  /** Height of each list's sticky header, in px. Each list renders a header
-   * row above its items, so the bottom pane needs `headerHeight + rows*rowH`
-   * to show every row unclipped, and the top pane fits `headerHeight` fewer
-   * pixels of rows. Default 0 (header-less). */
+  /** Height of each pane's sticky header, in px. Default 0 (header-less). */
   headerHeight?: number;
+  /** Soft cap on the top pane, in rows. Default 3. */
+  topCapRows?: number;
+  /** Floor on the top pane, in rows (shown even at 0 categorized). Default 1. */
+  topFloorRows?: number;
 }
 
 export interface SplitLayout {
-  /** Height (px) allotted to the top (resolved) list region. */
+  /** Height (px) of the top (resolved) pane, INCLUDING its header. */
   topHeight: number;
-  /** Height (px) allotted to the bottom (unresolved) list region. */
+  /** Height (px) of the bottom (unresolved) pane, INCLUDING its header. */
   bottomHeight: number;
-  /** True when the bottom region is collapsed to the "all clear" strip. */
-  bottomCollapsed: boolean;
-  /** Number of resolved rows that fit in topHeight without scrolling. */
+  /** Number of resolved rows visible in the top pane without scrolling. */
   topVisibleRows: number;
-  /** True when the top list has more rows than fit (older ones scroll up). */
+  /** True when the top pane has more rows than fit (older ones scroll up). */
   topScrolls: boolean;
+  /** True when the top pane should be scrolled to its bottom so the newest
+   * categorized row sits flush at the seam (set once the top is capped). */
+  topScrollToBottom: boolean;
+  /** True when the bottom pane content overflows its height (it scrolls). */
+  bottomScrolls: boolean;
+  /** True when the bottom shrank to its content and the top absorbed the slack
+   * (top grew past the cap). */
+  topAbsorbedSlack: boolean;
 }
 
 /**
- * Resolve the two-list split.
+ * Resolve the two-pane split under the content-driven-top model.
  *
- * Rules (mirrors the flex behavior the CSS implements):
- *  1. The bottom (unresolved) list has priority — it gets all the height it
- *     needs to show its rows, but never more than `total - topMinRows*rowH`
- *     (the top keeps a floor of `topMinRows`).
- *  2. When the bottom needs less than its cap, the top absorbs the slack and
- *     grows past `topMinRows`.
- *  3. When the bottom is empty, it collapses to `clearStripHeight` and the top
- *     fills everything else.
- *
- * All heights are clamped to be non-negative; degenerate inputs (zero/negative
- * total) yield zeroed regions rather than throwing.
+ * All heights are clamped non-negative; degenerate inputs (zero/negative total)
+ * yield zeroed regions rather than throwing.
  */
 export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
-  const {
-    totalHeight,
-    rowHeight,
-    topMinRows,
-    resolvedCount,
-    unresolvedCount,
-  } = input;
+  const { totalHeight, resolvedCount, unresolvedCount } = input;
   const seam = Math.max(0, input.seamHeight ?? 0);
-  const clearStrip = Math.max(0, input.clearStripHeight ?? rowHeight);
   const headerH = Math.max(0, input.headerHeight ?? 0);
+  const rowH = Math.max(1, input.rowHeight);
+  const capRows = Math.max(1, input.topCapRows ?? 3);
+  const floorRows = Math.max(0, input.topFloorRows ?? 1);
 
   const usable = Math.max(0, totalHeight - seam);
-  const rowH = Math.max(1, rowHeight);
-  // The top pane's floor must also include its header so `topMinRows` rows stay
-  // visible above the header, not partly under it.
-  const topFloor = Math.max(0, topMinRows) * rowH + (topMinRows > 0 ? headerH : 0);
 
-  // Bottom collapsed: nothing to process — thin strip, top takes the rest.
-  if (unresolvedCount <= 0) {
-    const bottomHeight = Math.min(clearStrip, usable);
-    return {
-      topHeight: Math.max(0, usable - bottomHeight),
-      bottomHeight,
-      bottomCollapsed: true,
-      ...topRowInfo(Math.max(0, usable - bottomHeight), rowH, headerH, resolvedCount),
-    };
+  // Pane heights for a given whole-row count (rows + this pane's header).
+  const paneFor = (rows: number) => headerH + Math.max(0, rows) * rowH;
+
+  // The top pane's content-driven target: clamp the categorized count to
+  // [floorRows, capRows] and size to that many rows + header. 0 categorized
+  // still shows the floor (1 row of space), never a big empty block.
+  const topRowsWanted = clamp(resolvedCount, floorRows, capRows);
+  const topCappedHeight = Math.min(paneFor(topRowsWanted), usable);
+
+  // What the bottom pane needs to show ALL its rows + header without clipping.
+  const bottomContentHeight = paneFor(unresolvedCount);
+
+  // The remaining space the bottom would get if the top stays at its capped
+  // height. If the bottom doesn't need all of that, it shrinks to its content
+  // and the leftover flows up to the top (top absorbs slack, may pass the cap).
+  const bottomRemainingIfCapped = Math.max(0, usable - topCappedHeight);
+
+  let topHeight: number;
+  let bottomHeight: number;
+  let topAbsorbedSlack = false;
+
+  if (bottomContentHeight <= bottomRemainingIfCapped) {
+    // Bottom is short: it shrinks to content, top takes everything else.
+    bottomHeight = bottomContentHeight;
+    topHeight = Math.max(0, usable - bottomHeight);
+    topAbsorbedSlack = topHeight > topCappedHeight + 0.5;
+  } else {
+    // Bottom is full/overfull: top holds at its capped height, bottom scrolls
+    // through the remainder.
+    topHeight = topCappedHeight;
+    bottomHeight = Math.max(0, usable - topHeight);
   }
 
-  // What the bottom wants in order to show ALL its rows AND its header without
-  // clipping the last row. Omitting the header here was the off-by-one that cut
-  // off the final row when the bottom wasn't scrolling.
-  const bottomDesired = unresolvedCount * rowH + headerH;
-  // Cap so the top keeps its floor (but the cap can't go below zero).
-  const bottomCap = Math.max(0, usable - topFloor);
-  const bottomHeight = Math.min(bottomDesired, bottomCap, usable);
-  const topHeight = Math.max(0, usable - bottomHeight);
+  // How many whole resolved rows actually fit in the top pane (after header).
+  const topRowsFit = Math.max(0, Math.floor((topHeight - headerH) / rowH));
+  const topVisibleRows = Math.min(topRowsFit, resolvedCount);
+  const topScrolls = resolvedCount > topRowsFit;
+  // Once the top can't show every categorized row, keep it pinned to the bottom
+  // so the newest sits at the seam. (Also true exactly at the cap boundary.)
+  const topScrollToBottom = topScrolls;
+
+  const bottomRowsFit = Math.max(0, Math.floor((bottomHeight - headerH) / rowH));
+  const bottomScrolls = unresolvedCount > bottomRowsFit;
 
   return {
     topHeight,
     bottomHeight,
-    bottomCollapsed: false,
-    ...topRowInfo(topHeight, rowH, headerH, resolvedCount),
+    topVisibleRows,
+    topScrolls,
+    topScrollToBottom,
+    bottomScrolls,
+    topAbsorbedSlack,
   };
 }
 
-function topRowInfo(
-  topHeight: number,
-  rowH: number,
-  headerH: number,
-  resolvedCount: number,
-): Pick<SplitLayout, "topVisibleRows" | "topScrolls"> {
-  // Rows share the pane with the sticky header, so subtract it before counting.
-  const fit = Math.max(0, Math.floor((topHeight - headerH) / rowH));
-  return {
-    topVisibleRows: Math.min(fit, resolvedCount),
-    topScrolls: resolvedCount > fit,
-  };
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
 }

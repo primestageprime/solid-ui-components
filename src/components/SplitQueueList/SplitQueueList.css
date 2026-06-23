@@ -25,20 +25,16 @@
   position: relative; /* anchor for the seam ghost */
 }
 
-/* TOP (resolved): grows to absorb slack (flex:1 1 auto) but never shrinks
- * below topMinRows (min-height set inline). Newest sits at the bottom. */
-.sui-sql__list--top {
-  flex: 1 1 auto;
-}
-
-/* BOTTOM (unresolved): priority height (max-height set inline from the layout
- * calc); flex:0 1 auto so it takes what it needs and yields slack upward. */
+/* Both panes are sized explicitly (inline `height` from the JS layout), so they
+ * neither grow nor shrink on their own — they scroll internally when their
+ * content exceeds the allotted height. The top is content-driven (1–3 row band,
+ * absorbing slack); the bottom takes the remainder. */
+.sui-sql__list--top,
 .sui-sql__list--bottom {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
 }
 
 .sui-sql__list--collapsed {
-  flex: 0 0 auto;
   overflow: hidden;
 }
 

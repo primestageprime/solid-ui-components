@@ -22,11 +22,15 @@ import "./SplitQueueList.css";
  * of the top list (at the seam between the two), so the most-recent work sits
  * adjacent to what's next and is one click away to revisit.
  *
- * Sizing (see ./layout.ts for the testable core):
- *  - The bottom list has priority: it gets the height it needs, up to
- *    `total - topMinRows*rowHeight`. The top list keeps a floor of `topMinRows`
- *    (default 3) and auto-scrolls to its bottom so the newest sits at the seam.
- *  - When the bottom is short, the top absorbs the slack and grows past 3.
+ * Sizing (see ./layout.ts for the testable core; the component measures the
+ * real header/row heights and re-measures on container resize via ResizeObserver):
+ *  - The TOP list is content-driven between a 1-row floor and a 3-row cap: 0
+ *    categorized still shows 1 row of space; 1/2/3 grow to fit; 4+ caps at 3 and
+ *    the pane scrolls so the NEWEST row sits flush at the seam (newest-at-seam).
+ *  - The BOTTOM list gets the remaining space and scrolls when overfull.
+ *  - The cap holds only while the bottom has enough content to fill its area;
+ *    when the bottom is short it shrinks to its content and the freed slack flows
+ *    UP, so the top may grow past 3 rows.
  *  - When the bottom is empty, it collapses to a thin "all clear" strip.
  *
  * Animation (SUI owns it — the consumer just swaps the two arrays):
@@ -62,9 +66,13 @@ export interface SplitQueueListProps<T> {
   unresolvedLabel?: string;
   /** Copy for the collapsed strip when nothing is left to process. */
   allClearLabel?: JSX.Element;
-  /** Minimum rows the top list keeps. Default 3. */
-  topMinRows?: number;
-  /** Per-row height in px. Default 40. */
+  /** Soft cap on the top (resolved) pane, in rows. Beyond this the top pane
+   * scrolls with the newest row pinned at the seam. Default 3. */
+  topCapRows?: number;
+  /** Floor on the top pane, in rows (shown even with 0 categorized). Default 1. */
+  topFloorRows?: number;
+  /** Per-row height in px. Used as the initial estimate; the component measures
+   * the real rendered row height and sizes from that. Default 40. */
   rowHeight?: number;
   /** Total height of the sidebar in px. Default 420. */
   height?: number;
@@ -83,8 +91,9 @@ interface FlightState {
 }
 
 export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
-  const rowHeight = () => props.rowHeight ?? 40;
-  const topMinRows = () => props.topMinRows ?? 3;
+  const rowHeightProp = () => props.rowHeight ?? 40;
+  const topCapRows = () => props.topCapRows ?? 3;
+  const topFloorRows = () => props.topFloorRows ?? 1;
   const height = () => props.height ?? 420;
   const animationMs = () => props.animationMs ?? 360;
 
@@ -92,40 +101,56 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   let rootEl: HTMLDivElement | undefined;
   // The top header is always rendered (the bottom one disappears when the queue
   // collapses), and both share the same `.sui-sql__header` metrics, so we
-  // measure this one.
+  // measure this one. We also measure a real row to size from actual rendered
+  // height (the earlier clip bug was rows overflowing their configured slot).
   let headerProbeEl: HTMLLIElement | undefined;
 
   // Rects of every keyed row captured on the previous render — the "First" in
   // FLIP. Read synchronously before the data swap reflows the DOM.
   const prevRects = new Map<string, DOMRect>();
 
-  // Measured height of a list's sticky header. Each list renders a header above
-  // its rows, so the bottom pane's allotted height must include it or the last
-  // row clips against the container edge. Seed with a conservative default so
-  // the first paint (before measurement) doesn't clip; the effect below
-  // replaces it with the exact measured value.
+  // Measured header / row heights. Seeded with sensible defaults so the first
+  // paint (before measurement) is close; the effects below replace them with
+  // exact measured values, and the container ResizeObserver re-measures on
+  // resize.
   const DEFAULT_HEADER_HEIGHT = 28;
   const [headerHeight, setHeaderHeight] = createSignal(DEFAULT_HEADER_HEIGHT);
+  const [rowHeight, setRowHeight] = createSignal(rowHeightProp());
 
-  const measureHeader = () => {
+  const measure = () => {
     if (headerProbeEl) {
       const h = headerProbeEl.getBoundingClientRect().height;
       if (h > 0) setHeaderHeight(h);
     }
+    // Measure the first real row in either pane to learn the true row height.
+    const row = rootEl?.querySelector<HTMLElement>(".sui-sql__row");
+    if (row) {
+      const rh = row.getBoundingClientRect().height;
+      if (rh > 0) setRowHeight(rh);
+    }
   };
-  // Measure after mount (fonts/borders applied) so the layout math uses the
-  // real header height rather than the seeded default.
-  onMount(() => requestAnimationFrame(measureHeader));
+  // Measure after mount (fonts/borders applied), and on every container resize
+  // so the JS-computed pane heights track the real available space.
+  let resizeObserver: ResizeObserver | undefined;
+  onMount(() => {
+    requestAnimationFrame(measure);
+    if (typeof ResizeObserver !== "undefined" && rootEl) {
+      resizeObserver = new ResizeObserver(() => measure());
+      resizeObserver.observe(rootEl);
+    }
+  });
+  onCleanup(() => resizeObserver?.disconnect());
 
   const layout = createMemo(() =>
     computeSplitLayout({
       totalHeight: height(),
       rowHeight: rowHeight(),
-      topMinRows: topMinRows(),
       resolvedCount: props.resolved.length,
       unresolvedCount: props.unresolved.length,
       seamHeight: SEAM_HEIGHT,
       headerHeight: headerHeight(),
+      topCapRows: topCapRows(),
+      topFloorRows: topFloorRows(),
     }),
   );
 
@@ -275,14 +300,16 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     anim.oncancel = drop;
   };
 
-  // Auto-scroll the top list to its bottom so the newest resolved row sits at
-  // the seam, adjacent to the next unresolved item.
+  // When the top pane is capped/scrolling, pin it to the bottom so the newest
+  // resolved row sits flush at the seam, adjacent to the next unresolved item.
   createEffect(
     on(
-      () => props.resolved.length,
-      () => {
+      () => [props.resolved.length, layout().topScrollToBottom, layout().topHeight] as const,
+      ([, scrollToBottom]) => {
         queueMicrotask(() => {
-          if (topListEl) topListEl.scrollTop = topListEl.scrollHeight;
+          if (topListEl && scrollToBottom) {
+            topListEl.scrollTop = topListEl.scrollHeight;
+          }
         });
       },
     ),
@@ -319,12 +346,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       class={`sui-sql${props.class ? " " + props.class : ""}`}
       style={{ height: `${height()}px` }}
     >
-      {/* TOP — resolved. Grows to absorb slack; min-height keeps topMinRows
-          rows visible BELOW the sticky header (so include the header height). */}
+      {/* TOP — resolved ("categorized"). Content-driven height between a 1-row
+          floor and a 3-row cap; absorbs slack when the bottom is short. Sized
+          explicitly from the JS layout (each pane includes its own header). */}
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
-        style={{ "min-height": `${topMinRows() * rowHeight() + headerHeight()}px` }}
+        style={{ height: `${layout().topHeight}px` }}
       >
         <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
           <span>{props.resolvedLabel ?? "Resolved"}</span>
@@ -335,14 +363,15 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
       <div class="sui-sql__seam" aria-hidden="true" />
 
-      {/* BOTTOM — unresolved. Priority height; collapses when empty. */}
+      {/* BOTTOM — unresolved ("to categorize"). Gets the remaining space and
+          scrolls when overfull; collapses to the "all clear" strip when empty. */}
       <ul
         class="sui-sql__list sui-sql__list--bottom"
-        classList={{ "sui-sql__list--collapsed": layout().bottomCollapsed }}
-        style={{ "max-height": `${layout().bottomHeight}px` }}
+        classList={{ "sui-sql__list--collapsed": props.unresolved.length === 0 }}
+        style={{ height: `${layout().bottomHeight}px` }}
       >
         <Show
-          when={!layout().bottomCollapsed}
+          when={props.unresolved.length > 0}
           fallback={
             <li class="sui-sql__clear">
               {props.allClearLabel ?? "All clear — nothing to process"}

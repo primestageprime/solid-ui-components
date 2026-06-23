@@ -1,6 +1,10 @@
 import { Component, createSignal, onCleanup } from "solid-js";
 import { SplitQueueList } from "../../src/components/SplitQueueList";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
+import {
+  SmallPrimaryButton,
+  SmallGhostButton,
+} from "../../src/components/Button/variants";
 
 /* Demo item type — a small "transaction to categorize" record so the
  * resolved/unresolved framing reads naturally. */
@@ -65,7 +69,7 @@ const LENGTH_OPTIONS = [
 ];
 const DEFAULT_COUNT = 6;
 
-function QueueDemo(props: { height: number; topMinRows?: number }) {
+function QueueDemo(props: { height: number }) {
   const [count, setCount] = createSignal(DEFAULT_COUNT);
   const seed = () => POOL.slice(0, count());
 
@@ -133,14 +137,14 @@ function QueueDemo(props: { height: number; topMinRows?: number }) {
           onValueChange={(v) => loadCount(Number(v))}
         />
       </div>
-      <div style={{ display: "flex", gap: "8px", "flex-wrap": "wrap" }}>
-        <button onClick={resolveNext} disabled={unresolved().length === 0}>
+      <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
+        <SmallPrimaryButton onClick={resolveNext} disabled={unresolved().length === 0}>
           Resolve next ▸
-        </button>
-        <button onClick={toggleAuto} disabled={unresolved().length === 0 && !auto()}>
+        </SmallPrimaryButton>
+        <SmallGhostButton onClick={toggleAuto} disabled={unresolved().length === 0 && !auto()}>
           {auto() ? "Pause" : "Auto-play"}
-        </button>
-        <button onClick={reset}>Reset</button>
+        </SmallGhostButton>
+        <SmallGhostButton onClick={reset}>Reset</SmallGhostButton>
         <span class="text-meta" style={{ "align-self": "center" }}>
           {resolved().length} resolved · {unresolved().length} left
         </span>
@@ -154,7 +158,6 @@ function QueueDemo(props: { height: number; topMinRows?: number }) {
           onFocusChange={setFocused}
           onResolve={resolveKey}
           height={props.height}
-          topMinRows={props.topMinRows}
           resolvedLabel="Categorized"
           unresolvedLabel="To categorize"
           allClearLabel="All clear — every transaction categorized"
@@ -175,12 +178,14 @@ export const SplitQueueListShowcase: Component = () => {
     <div class="component-section">
       <h2>SplitQueueList — linked processing queue</h2>
       <p class="text-meta">
-        Two stacked lists sharing a fixed height. Top = resolved (solid accent
-        border + ✓), bottom = unresolved (dashed muted border + ▸ focus). The
-        bottom has height priority; the top keeps a 3-row floor and absorbs
-        slack when the bottom is short. Resolving a row (button or click)
-        FLIP-slides it up across the seam, repainting from unresolved to
-        resolved styling. Honors <code>prefers-reduced-motion</code>.
+        Two stacked lists sharing a fixed height. Top = categorized (solid accent
+        border + ✓), bottom = to-categorize (dashed muted border + ▸ focus). The
+        top is content-driven between a 1-row floor and a 3-row cap; at 4+ it
+        caps and scrolls so the newest sits at the seam. The bottom takes the
+        remaining space and scrolls when overfull; when the bottom is short it
+        shrinks and the top absorbs the slack. Resolving a row (button or click)
+        FLIP-slides it up across the seam, repainting from unresolved to resolved
+        styling. Honors <code>prefers-reduced-motion</code>.
       </p>
       <p class="text-meta">
         Use the <strong>Items</strong> toggle to see the layout at every length:
@@ -193,20 +198,20 @@ export const SplitQueueListShowcase: Component = () => {
 
       <div style={{ display: "flex", gap: "40px", "flex-wrap": "wrap" }}>
         <div>
-          <h3>Tall (480px) — bottom fills, top scrolls past 3</h3>
+          <h3>Tall (480px) — top caps at 3, newest at the seam</h3>
           <p class="text-meta">
-            Resolve a few: the top list grows toward absorbing slack as the
-            bottom shrinks, and once &gt;3 are resolved the top scrolls so the
-            newest sits at the seam.
+            Resolve a few: the top fits 1→2→3 by content, then caps at 3 and
+            scrolls so the newest categorized row sits at the seam. Drain the
+            bottom and the top absorbs the freed slack (grows past 3).
           </p>
           <QueueDemo height={480} />
         </div>
 
         <div>
-          <h3>Short (260px) — 3-row floor + slack</h3>
+          <h3>Short (260px) — same model, less room</h3>
           <p class="text-meta">
-            Drain the bottom to watch the top grow past 3 rows, then collapse to
-            the "all clear" strip when empty.
+            The 1-row floor / 3-row cap and slack-absorption hold at a smaller
+            height; drain the bottom to the "all clear" strip.
           </p>
           <QueueDemo height={260} />
         </div>
