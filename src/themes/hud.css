@@ -129,6 +129,23 @@ body {
      reference labels). Cool blue-gray reads as quiet HUD chrome against the
      deep-navy backgrounds. */
   --sui-chart-tick-color: #4a6a80;
+
+  /* ---- Chart semantics (violation / threshold / transition windows) ----
+     See default.css for the rationale. HUD's brighter red (#ff0040) matches
+     the existing ViolationChart hardcodes and the --status-missing hue. */
+  --chart-violation-band: rgba(255, 0, 64, 0.12);
+  --chart-violation-band-border: rgba(255, 0, 64, 0.35);
+  --chart-threshold: #ff0040;
+  --chart-warmup: rgba(74, 106, 128, 0.15);
+  --chart-warmup-border: rgba(74, 106, 128, 0.40);
+  --chart-shutdown: rgba(74, 106, 128, 0.15);
+  --chart-shutdown-border: rgba(74, 106, 128, 0.40);
+  --chart-series-1: #00d4ff;
+  --chart-series-2: #ff8800;
+  --chart-series-3: #ffcc00;
+  --chart-series-4: #00ff88;
+  --chart-series-5: #b388ff;
+  --chart-series-6: #ff66cc;
 }
 
 /* ============================================

@@ -1,0 +1,204 @@
+/* ============================================
+   Colorblind-Safe Theme — red/green deuteranopia &
+   protanopia friendly
+   ============================================
+   Two ways to use this file:
+
+   1. As a full standalone theme (registered in manifest.ts). Importing this
+      one file gives baseline + a complete CB-safe token set. It is a dark
+      theme built on the same deep-navy surfaces as HUD, so it drops in for
+      apps that currently ship HUD.
+
+   2. As a *modifier* layered on top of another theme. The block under
+      `[data-colorblind="true"]` re-declares only the colour tokens that carry
+      red/green meaning (semantic pairs + chart violation/threshold). A
+      consumer that statically imports another theme (e.g. jtf-ui imports
+      hud.css) can import this file too and toggle the colourblind palette by
+      setting `data-colorblind="true"` on a root element — no full theme swap.
+
+   Palette rationale
+   -----------------
+   Red⇄green is the classic confusion axis for deuteranopia/protanopia. We
+   replace the danger/success pair (red/green) with a blue⇄orange pair drawn
+   from the Okabe-Ito colourblind-safe set, which stays distinguishable across
+   all common CVD types:
+     - danger  → vermilion/orange  #E66100  (was red)
+     - success → blue              #3B82F6  (was green)
+     - warning → amber/yellow      #E6A700  (kept; yellow is safe vs both)
+   The accent stays cyan. Chart violation bands/threshold move off pure red
+   onto the same vermilion so "bad" reads consistently with the danger token.
+   ============================================ */
+@import "./_baseline.css";
+
+/* Box-sizing reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Body defaults */
+body {
+  font-family: var(--sui-font-family);
+  background-color: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Global scrollbar default (token-driven; mirrors other themes). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sui-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--sui-border-bright);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:root {
+  /* ---- Accent / Primary (cyan — safe across CVD types) ---- */
+  --sui-accent: #3aa0ff;
+  --sui-accent-rgb: 58, 160, 255;
+  --sui-accent-dim: #2d7fcc;
+
+  /* ---- Semantic Colors — CB-safe blue/orange pair ----
+     danger=vermilion, success=blue, warning=amber. */
+  --sui-danger: #e66100;
+  --sui-danger-rgb: 230, 97, 0;
+  --sui-warning: #e6a700;
+  --sui-warning-rgb: 230, 167, 0;
+  --sui-success: #3b82f6;
+  --sui-success-rgb: 59, 130, 246;
+
+  /* ---- Backgrounds (dark, HUD-like) ---- */
+  --sui-bg-deep: #0a0f16;
+  --sui-bg-primary: #11161f;
+  --sui-bg-secondary: #161d28;
+  --sui-bg-tertiary: #1c2533;
+  --sui-bg-elevated: #1c2533;
+
+  /* ---- Text ---- */
+  --sui-text-primary: #eaf1f8;
+  --sui-text-secondary: #9fb2c4;
+  --sui-text-muted: #6b7e90;
+
+  /* ---- Borders ---- */
+  --sui-border: #2c3a4a;
+  --sui-border-bright: #3e5163;
+  --sui-border-focus: #3aa0ff;
+
+  /* ---- Radii ---- */
+  --sui-radius-sm: 4px;
+  --sui-radius-md: 8px;
+  --sui-radius-lg: 12px;
+
+  /* ---- Clip Sizes ---- */
+  --sui-clip-sm: 8px;
+  --sui-clip-md: 12px;
+  --sui-clip-lg: 16px;
+  --sui-clip-xl: 24px;
+
+  /* ---- Spacing Scale (identical across themes) ---- */
+  --sui-space-0: 0;
+  --sui-space-px: 1px;
+  --sui-space-0-5: 2px;
+  --sui-space-1: 4px;
+  --sui-space-1-5: 6px;
+  --sui-space-2: 8px;
+  --sui-space-2-5: 10px;
+  --sui-space-3: 12px;
+  --sui-space-4: 16px;
+  --sui-space-5: 20px;
+  --sui-space-6: 24px;
+
+  /* ---- Typography ---- */
+  --sui-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sui-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---- Status Colors (heatmap cells) — CB-safe ramp ----
+     Avoids the red↔green endpoints. Uses a blue→amber→vermilion ramp where
+     "missing" (worst) is vermilion and "full" (best) is blue, mirroring the
+     danger/success remap above. Lightness also varies so the steps survive
+     greyscale. */
+  --status-full:    #3b82f6; /* best  — blue */
+  --status-partial: #6fa8dc; /* light blue */
+  --status-sparse:  #e6a700; /* amber */
+  --status-missing: #e66100; /* worst — vermilion */
+
+  /* ---- Chart chrome ---- */
+  --sui-chart-tick-color: #6b7e90;
+
+  /* ---- Chart semantics — CB-safe ----
+     Violation/threshold move to vermilion (matches --sui-danger). Transition
+     windows stay neutral grey. Series rotation uses an Okabe-Ito-derived set
+     that stays mutually distinguishable under deuteranopia/protanopia. */
+  --chart-violation-band: rgba(230, 97, 0, 0.14);
+  --chart-violation-band-border: rgba(230, 97, 0, 0.42);
+  --chart-threshold: #e66100;
+  --chart-warmup: rgba(159, 178, 196, 0.12);
+  --chart-warmup-border: rgba(159, 178, 196, 0.32);
+  --chart-shutdown: rgba(159, 178, 196, 0.12);
+  --chart-shutdown-border: rgba(159, 178, 196, 0.32);
+  /* Okabe-Ito-inspired, CB-distinguishable series rotation. */
+  --chart-series-1: #56b4e9; /* sky blue */
+  --chart-series-2: #e69f00; /* orange */
+  --chart-series-3: #009e73; /* bluish green (distinct from orange under CVD) */
+  --chart-series-4: #cc79a7; /* reddish purple */
+  --chart-series-5: #f0e442; /* yellow */
+  --chart-series-6: #0072b2; /* blue */
+}
+
+/* ============================================
+   Modifier mode — layered over another base theme
+   ============================================
+   When this file is imported alongside another theme (e.g. hud.css), these
+   rules re-declare ONLY the colour tokens that encode red/green meaning. They
+   take effect when `data-colorblind="true"` is set on a root element (html or
+   body). Backgrounds, radii, spacing, and typography are intentionally left to
+   the base theme so the app's look is preserved — only the confusable hues
+   change. Specificity of an attribute selector (0,1,0) out-ranks the base
+   theme's `:root` (0,1,0 as well, but later-loaded wins; import this file
+   AFTER the base theme to guarantee the cascade).
+   ============================================ */
+[data-colorblind="true"] {
+  /* Semantic pair: red→vermilion, green→blue, amber kept. */
+  --sui-danger: #e66100;
+  --sui-danger-rgb: 230, 97, 0;
+  --sui-success: #3b82f6;
+  --sui-success-rgb: 59, 130, 246;
+  --sui-warning: #e6a700;
+  --sui-warning-rgb: 230, 167, 0;
+
+  /* Heatmap status ramp (blue→amber→vermilion). */
+  --status-full:    #3b82f6;
+  --status-partial: #6fa8dc;
+  --status-sparse:  #e6a700;
+  --status-missing: #e66100;
+
+  /* Chart semantics. */
+  --chart-violation-band: rgba(230, 97, 0, 0.14);
+  --chart-violation-band-border: rgba(230, 97, 0, 0.42);
+  --chart-threshold: #e66100;
+  --chart-warmup: rgba(159, 178, 196, 0.12);
+  --chart-warmup-border: rgba(159, 178, 196, 0.32);
+  --chart-shutdown: rgba(159, 178, 196, 0.12);
+  --chart-shutdown-border: rgba(159, 178, 196, 0.32);
+  --chart-series-1: #56b4e9;
+  --chart-series-2: #e69f00;
+  --chart-series-3: #009e73;
+  --chart-series-4: #cc79a7;
+  --chart-series-5: #f0e442;
+  --chart-series-6: #0072b2;
+}
