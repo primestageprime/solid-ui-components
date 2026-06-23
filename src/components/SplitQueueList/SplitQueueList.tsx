@@ -237,60 +237,119 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     detectFirstRun = false;
   });
 
+  // Two-phase resolve animation. The card does NOT fly over the seam; instead it
+  // moves INSIDE each list's clipped region:
+  //   Phase 1 (exit): an orange focused-styled clone in the BOTTOM list slides
+  //     up and is clipped away under the sticky "to categorize" header — it
+  //     disappears beneath the label (the header sits above it via z-index).
+  //   Phase 2 (enter): once it's gone, a resolved-styled clone in the TOP list
+  //     slides up from under its bottom edge into the resolved row's slot,
+  //     clipped by the top list so it appears to emerge from under the seam.
+  // The real resolved row is hidden until phase 2 lands (repaint-on-arrival).
+  // animationMs is split ~50/50 across the phases so the knob controls total time.
+  const EASE = "cubic-bezier(.22,.61,.36,1)";
+
   const playFlight = (key: string) => {
     if (!rootEl) return;
     const first = prevRects.get(key);
     const nowEl = rootEl.querySelector<HTMLElement>(
       `[data-sql-key="${cssEscape(key)}"]`,
     );
-    if (!first || !nowEl) return;
+    const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
+    const topList = topListEl;
+    if (!first || !nowEl || !topList) return;
     const last = nowEl.getBoundingClientRect();
-    if (Math.abs(first.top - last.top) < 1) return;
 
-    // ONE coherent card crosses the seam. We fly a single clone that holds the
-    // orange focused/unresolved styling for the whole slide, so the resolved row
-    // reads as the same card travelling up — not a blank ghost and not the
-    // resolved look mid-flight. The clone is appended to the root (whose
-    // overflow:hidden clips it to the component, but it is NOT inside either
-    // list's overflow:auto), so it travels freely across the seam. The real
-    // resolved row underneath is hidden until the clone lands, then revealed in
-    // its resolved ✓ styling — i.e. the repaint happens AT THE END, on arrival.
-    const rootRect = rootEl.getBoundingClientRect();
-    const flyer = document.createElement("div");
-    flyer.className =
-      "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused sui-sql__flyer";
-    flyer.innerHTML = nowEl.innerHTML;
-    // The clone carries the resolved row's content (its ✓ marker); restyle the
-    // marker to the focused-unresolved glyph so the in-flight card reads exactly
-    // as the orange focused card the user just clicked.
-    const marker = flyer.querySelector<HTMLElement>(".sui-sql__marker");
-    if (marker) marker.textContent = "▸";
-    flyer.style.position = "absolute";
-    flyer.style.left = `${first.left - rootRect.left}px`;
-    flyer.style.top = `${first.top - rootRect.top}px`;
-    flyer.style.width = `${first.width}px`;
-    flyer.style.height = `${first.height}px`;
-    flyer.style.margin = "0";
-    rootEl.appendChild(flyer);
+    const total = animationMs();
+    const exitMs = Math.round(total * 0.5);
+    const enterMs = total - exitMs;
 
-    // Hide the real (resolved-styled) landing row while the orange clone is in
-    // flight, so we never see the destination styling until the card arrives.
+    // Hide the real resolved row until the enter phase lands.
     nowEl.style.visibility = "hidden";
 
-    const dy = first.top - last.top; // travel distance (old minus new)
-    const anim = flyer.animate(
-      [
-        { transform: `translateY(0)` },
-        { transform: `translateY(${-dy}px)` },
-      ],
-      { duration: animationMs(), easing: "cubic-bezier(.22,.61,.36,1)" },
-    );
-    const settle = () => {
-      flyer.remove();
-      nowEl.style.visibility = "";
+    const newFocusedContent = nowEl.innerHTML;
+
+    // Run an animation but guarantee `then` fires exactly once — on WAAPI finish,
+    // on cancel, OR via a timeout fallback. WAAPI events don't fire while the tab
+    // is hidden, so without the fallback a phase could stall and leave the real
+    // row hidden forever. `slack` covers the throttled case.
+    const runOnce = (anim: Animation, ms: number, then: () => void) => {
+      let done = false;
+      const fire = () => {
+        if (done) return;
+        done = true;
+        then();
+      };
+      anim.onfinish = fire;
+      anim.oncancel = fire;
+      setTimeout(fire, ms + 80);
     };
-    anim.onfinish = settle;
-    anim.oncancel = settle;
+
+    // ---- Phase 2 (enter): resolved-styled clone rising into the top list.
+    const runEnter = () => {
+      const topRect = topList.getBoundingClientRect();
+      const enterClone = document.createElement("div");
+      enterClone.className = "sui-sql__row sui-sql__row--resolved sui-sql__phase";
+      enterClone.innerHTML = newFocusedContent; // already carries the ✓ marker
+      enterClone.style.position = "absolute";
+      enterClone.style.left = "0";
+      enterClone.style.right = "0";
+      enterClone.style.top = `${last.top - topRect.top + topList.scrollTop}px`;
+      enterClone.style.height = `${last.height}px`;
+      topList.appendChild(enterClone);
+
+      // Start one row-height below (under the top list's bottom edge, clipped),
+      // slide up to its resting slot.
+      const anim = enterClone.animate(
+        [{ transform: `translateY(${last.height}px)` }, { transform: "translateY(0)" }],
+        { duration: enterMs, easing: EASE },
+      );
+      runOnce(anim, enterMs, () => {
+        enterClone.remove();
+        nowEl.style.visibility = ""; // repaint to resolved ✓ on arrival
+      });
+    };
+
+    // ---- Phase 1 (exit): orange focused-styled clone leaving the bottom list.
+    // The resolved card was the HEAD of the bottom list, so the clone starts at
+    // the top of the bottom list's content (just below its sticky header) and
+    // slides up by header+row so it is fully clipped away under the label. We
+    // anchor to the bottom list's CURRENT (post-swap) header for a self-
+    // consistent measurement — mixing the pre-swap rect with the post-swap list
+    // geometry put the clone in the wrong place.
+    const bottomHeader = bottomList?.querySelector<HTMLElement>(".sui-sql__header");
+    if (bottomList && bottomHeader) {
+      const rowH = first.height;
+      const headH = bottomHeader.getBoundingClientRect().height;
+      const exitClone = document.createElement("div");
+      exitClone.className =
+        "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused sui-sql__phase";
+      exitClone.innerHTML = newFocusedContent;
+      const marker = exitClone.querySelector<HTMLElement>(".sui-sql__marker");
+      if (marker) marker.textContent = "▸"; // focused glyph, not ✓
+      exitClone.style.position = "absolute";
+      exitClone.style.left = "0";
+      exitClone.style.right = "0";
+      // Sit at the head slot: directly below the sticky header, at the current
+      // scroll offset.
+      exitClone.style.top = `${headH + bottomList.scrollTop}px`;
+      exitClone.style.height = `${rowH}px`;
+      bottomList.appendChild(exitClone);
+
+      // Slide up by a full row + the header so it disappears beneath the label.
+      const dist = rowH + headH;
+      const anim = exitClone.animate(
+        [{ transform: "translateY(0)" }, { transform: `translateY(${-dist}px)` }],
+        { duration: exitMs, easing: EASE },
+      );
+      runOnce(anim, exitMs, () => {
+        exitClone.remove();
+        runEnter();
+      });
+    } else {
+      // No bottom list (queue emptied) — skip straight to the enter phase.
+      runEnter();
+    }
   };
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest

@@ -109,12 +109,13 @@
   outline-offset: -1px;
 }
 
-/* The single card that flies across the seam on resolve. It is appended to the
- * root (not inside a list), holds the orange focused/unresolved styling for the
- * whole slide, and paints above both lists. The real resolved row underneath is
- * hidden until the flight finishes, so the repaint to ✓ happens on arrival. */
-.sui-sql__flyer {
-  z-index: 5;
+/* Two-phase resolve clones. Each is appended INSIDE a list so that list's
+ * overflow clips it: the exit clone (bottom list) slides up UNDER the sticky
+ * header and is clipped away; the enter clone (top list) slides up from under
+ * the bottom edge into place. z-index sits ABOVE plain rows but BELOW the
+ * sticky header (z-index 2), so the exit card passes behind the label. */
+.sui-sql__phase {
+  z-index: 1;
   pointer-events: none;
   box-sizing: border-box;
   will-change: transform;
@@ -163,7 +164,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sui-sql__flyer {
+  .sui-sql__phase {
     will-change: auto;
   }
 }
