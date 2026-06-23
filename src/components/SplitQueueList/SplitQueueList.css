@@ -2,6 +2,7 @@
  * Owns all of its styling via --sui-* tokens; imports no other components. */
 
 .sui-sql {
+  position: relative; /* anchors the absolutely-positioned in-flight card */
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -108,10 +109,14 @@
   outline-offset: -1px;
 }
 
-/* The row currently flying across the seam paints above its neighbors. */
-.sui-sql__row--landing {
-  position: relative;
-  z-index: 3;
+/* The single card that flies across the seam on resolve. It is appended to the
+ * root (not inside a list), holds the orange focused/unresolved styling for the
+ * whole slide, and paints above both lists. The real resolved row underneath is
+ * hidden until the flight finishes, so the repaint to ✓ happens on arrival. */
+.sui-sql__flyer {
+  z-index: 5;
+  pointer-events: none;
+  box-sizing: border-box;
   will-change: transform;
 }
 
@@ -157,15 +162,8 @@
   letter-spacing: 0.03em;
 }
 
-/* ---- Seam ghost (the unresolved-styled clipped copy) ------------------- */
-
-.sui-sql__ghost {
-  pointer-events: none;
-  z-index: 1;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .sui-sql__row--landing {
+  .sui-sql__flyer {
     will-change: auto;
   }
 }

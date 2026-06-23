@@ -168,8 +168,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
   // ---- FLIP: snapshot the rects of every rendered row. We keep the snapshot
   // from the *previous* paint as the "First" position. Capture runs on rAF
-  // (after paint); resolve-detection + playFlight run on a microtask (before
-  // the next rAF), so during a flight `prevRects` still holds pre-swap rects.
+  // (after paint), which also coalesces the consumer's two un-batched setters
+  // (remove-from-unresolved + add-to-resolved) into ONE post-frame snapshot —
+  // so a resolved key's pre-move rect survives. Resolve-detection schedules
+  // playFlight on a microtask (runs before the next rAF), so during a flight
+  // `prevRects` still holds the pre-swap rects.
   const captureRects = () => {
     if (!rootEl) return;
     prevRects.clear();
@@ -184,10 +187,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   createEffect(
     on(
       () => [props.resolved.length, props.unresolved.length] as const,
-      () => {
-        requestAnimationFrame(captureRects);
-      },
-      { defer: false },
+      () => requestAnimationFrame(captureRects),
     ),
   );
 
@@ -229,7 +229,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     props.onFocusChange?.(unresolvedKeys[0] ?? null);
 
     if (!detectFirstRun && !reducedMotion()) {
-      // Defer to the post-render frame so new rects are final, then FLIP.
+      // Defer to a microtask so the resolved row is in its final DOM spot for
+      // `last`; `prevRects` still holds the pre-swap rect for `first`.
       const movedKey = newlyResolved[newlyResolved.length - 1];
       queueMicrotask(() => playFlight(movedKey));
     }
@@ -244,60 +245,52 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     );
     if (!first || !nowEl) return;
     const last = nowEl.getBoundingClientRect();
-    const fromY = first.top - last.top;
-    if (Math.abs(fromY) < 1) return;
+    if (Math.abs(first.top - last.top) < 1) return;
 
-    nowEl.classList.add("sui-sql__row--landing");
-    nowEl.animate(
-      [{ transform: `translateY(${fromY}px)` }, { transform: "translateY(0)" }],
-      { duration: animationMs(), easing: "cubic-bezier(.22,.61,.36,1)" },
-    ).finished.finally(() => nowEl.classList.remove("sui-sql__row--landing"));
+    // ONE coherent card crosses the seam. We fly a single clone that holds the
+    // orange focused/unresolved styling for the whole slide, so the resolved row
+    // reads as the same card travelling up — not a blank ghost and not the
+    // resolved look mid-flight. The clone is appended to the root (whose
+    // overflow:hidden clips it to the component, but it is NOT inside either
+    // list's overflow:auto), so it travels freely across the seam. The real
+    // resolved row underneath is hidden until the clone lands, then revealed in
+    // its resolved ✓ styling — i.e. the repaint happens AT THE END, on arrival.
+    const rootRect = rootEl.getBoundingClientRect();
+    const flyer = document.createElement("div");
+    flyer.className =
+      "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused sui-sql__flyer";
+    flyer.innerHTML = nowEl.innerHTML;
+    // The clone carries the resolved row's content (its ✓ marker); restyle the
+    // marker to the focused-unresolved glyph so the in-flight card reads exactly
+    // as the orange focused card the user just clicked.
+    const marker = flyer.querySelector<HTMLElement>(".sui-sql__marker");
+    if (marker) marker.textContent = "▸";
+    flyer.style.position = "absolute";
+    flyer.style.left = `${first.left - rootRect.left}px`;
+    flyer.style.top = `${first.top - rootRect.top}px`;
+    flyer.style.width = `${first.width}px`;
+    flyer.style.height = `${first.height}px`;
+    flyer.style.margin = "0";
+    rootEl.appendChild(flyer);
 
-    // Seam repaint: a transient clipped "ghost" of the moving row styled as
-    // *unresolved*, riding up inside the bottom list and clipped away at its
-    // top edge. The real (resolved-styled) row provides the emerging half.
-    paintSeamGhost(key, nowEl);
-  };
+    // Hide the real (resolved-styled) landing row while the orange clone is in
+    // flight, so we never see the destination styling until the card arrives.
+    nowEl.style.visibility = "hidden";
 
-  // Render a clipped unresolved-styled clone inside the bottom list that
-  // travels from the row's old position up to the seam, then fades as it is
-  // clipped by overflow. Removed when the animation ends.
-  const paintSeamGhost = (key: string, resolvedRowEl: HTMLElement) => {
-    const bottomList = rootEl?.querySelector<HTMLElement>(".sui-sql__list--bottom");
-    const first = prevRects.get(key);
-    if (!bottomList || !first) return;
-    // When this resolve empties the queue the bottom list collapses to the
-    // "all clear" strip — there's no list body to clip the ghost against, and a
-    // ghost appended now would be orphaned by the <Show> swap and linger. Skip
-    // the seam paint in that case (the real row still FLIP-slides into place).
-    if (props.unresolved.length === 0) return;
-    const listRect = bottomList.getBoundingClientRect();
-
-    const ghost = document.createElement("div");
-    ghost.className = "sui-sql__ghost sui-sql__row sui-sql__row--unresolved";
-    ghost.innerHTML = resolvedRowEl.innerHTML;
-    ghost.style.position = "absolute";
-    ghost.style.left = "0";
-    ghost.style.right = "0";
-    ghost.style.top = `${first.top - listRect.top}px`;
-    ghost.style.height = `${first.height}px`;
-    bottomList.appendChild(ghost);
-
-    // Slide the ghost up by the same distance the real row travels (out the top
-    // of the bottom list, where overflow:hidden clips it — the seam repaint).
-    const dist = first.top - listRect.top + first.height;
-    const anim = ghost.animate(
+    const dy = first.top - last.top; // travel distance (old minus new)
+    const anim = flyer.animate(
       [
-        { transform: "translateY(0)", opacity: 1 },
-        { transform: `translateY(${-dist}px)`, opacity: 1 },
+        { transform: `translateY(0)` },
+        { transform: `translateY(${-dy}px)` },
       ],
       { duration: animationMs(), easing: "cubic-bezier(.22,.61,.36,1)" },
     );
-    // Remove on finish OR cancel (a cancelled finished-promise rejects, so use
-    // the event handlers directly to guarantee the ghost never lingers).
-    const drop = () => ghost.remove();
-    anim.onfinish = drop;
-    anim.oncancel = drop;
+    const settle = () => {
+      flyer.remove();
+      nowEl.style.visibility = "";
+    };
+    anim.onfinish = settle;
+    anim.oncancel = settle;
   };
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest
