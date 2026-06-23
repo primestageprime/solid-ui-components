@@ -16,7 +16,7 @@ export const ICON_GROUPS = {
   time: ["clock", "hourglass"] as const,
   actions: ["plus", "minus", "close", "search", "filter", "refresh"] as const,
   ui: ["spinner", "menu", "settings", "external-link"] as const,
-  auth: ["log-out", "log-in"] as const,
+  auth: ["log-out", "log-in", "user"] as const,
   cache: ["cache-minutes", "cache-hours", "cache-stats", "cache-coverage", "cache-calc"] as const,
 } as const;
 
@@ -56,6 +56,7 @@ export type IconName =
   // Auth
   | "log-out"
   | "log-in"
+  | "user"
   // Cache
   | "cache-minutes"
   | "cache-hours"
@@ -229,6 +230,13 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> = 
   },
 
   // === AUTH ICONS ===
+  // Head + shoulders silhouette.
+  user: {
+    outline: `<circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+    solid: `<circle cx="8" cy="6" r="3.5" fill="currentColor"/>
+            <path d="M1.5 14.5c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+  },
   // Door frame open on the right + arrow exiting rightward.
   "log-out": {
     outline: `<path d="M9 3H4a1 1 0 00-1 1v8a1 1 0 001 1h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
