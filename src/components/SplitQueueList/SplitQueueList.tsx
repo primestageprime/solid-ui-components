@@ -158,9 +158,17 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+  // While a resolve's exit collapse is animating, we suppress focus entirely so
+  // the new head doesn't light up orange/▸ until the resolved card is fully gone
+  // from the bottom list. Set to the resolving key for the duration of phase 1.
+  const [exitingKey, setExitingKey] = createSignal<string | null>(null);
+
   // The focused unresolved key — controlled prop, falling back to the head of
   // the unresolved list so focus always lands on the next item to process.
+  // Returns null during the exit collapse so NO real bottom row shows the
+  // focused styling while the card is collapsing (only the orange clone does).
   const focusedKey = createMemo(() => {
+    if (exitingKey()) return null;
     const keys = props.unresolved.map(props.keyOf);
     if (props.focusedKey && keys.includes(props.focusedKey)) return props.focusedKey;
     return keys[0] ?? null;
@@ -222,19 +230,26 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       return;
     }
 
-    // Next item to process = current head of the post-swap unresolved list, or
-    // null when the queue is now empty. Fires on EVERY resolve so a consumer
-    // that resolves the focused key advances each time instead of re-targeting
-    // the just-resolved item.
-    props.onFocusChange?.(unresolvedKeys[0] ?? null);
+    const willAnimate = !detectFirstRun && !reducedMotion();
+    detectFirstRun = false;
 
-    if (!detectFirstRun && !reducedMotion()) {
+    if (willAnimate) {
+      // Suppress focus during the exit collapse: no real bottom row should show
+      // the orange ▸ styling until the resolved card is entirely gone. We mark
+      // the resolving key as exiting and fire onFocusChange at the END of phase
+      // 1 (in playFlight's exit-finish callback) instead of now.
+      const movedKey = newlyResolved[newlyResolved.length - 1];
+      setExitingKey(movedKey);
       // Defer to a microtask so the resolved row is in its final DOM spot for
       // `last`; `prevRects` still holds the pre-swap rect for `first`.
-      const movedKey = newlyResolved[newlyResolved.length - 1];
       queueMicrotask(() => playFlight(movedKey));
+    } else {
+      // Reduced-motion / first-run: no phases, so advance focus immediately.
+      // Next item to process = current head of the post-swap unresolved list,
+      // or null when the queue is now empty. Fires on EVERY resolve so a
+      // consumer that resolves the focused key advances each time.
+      props.onFocusChange?.(unresolvedKeys[0] ?? null);
     }
-    detectFirstRun = false;
   });
 
   // Two-phase resolve animation. The card does NOT fly over the seam; instead it
@@ -250,14 +265,21 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const EASE = "cubic-bezier(.22,.61,.36,1)";
 
   const playFlight = (key: string) => {
-    if (!rootEl) return;
+    // If we can't run the flight (missing refs / no captured rect — e.g. the
+    // tab was hidden so rAF capture didn't run), don't strand focus: clear the
+    // exit suppression and advance immediately so the queue keeps draining.
+    const bail = () => {
+      setExitingKey(null);
+      props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+    };
+    if (!rootEl) return bail();
     const first = prevRects.get(key);
     const nowEl = rootEl.querySelector<HTMLElement>(
       `[data-sql-key="${cssEscape(key)}"]`,
     );
     const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
     const topList = topListEl;
-    if (!first || !nowEl || !topList) return;
+    if (!first || !nowEl || !topList) return bail();
     const last = nowEl.getBoundingClientRect();
 
     const total = animationMs();
@@ -269,17 +291,28 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
     const newFocusedContent = nowEl.innerHTML;
 
-    // Run an animation but guarantee `then` fires exactly once — on WAAPI finish,
-    // on cancel, OR via a timeout fallback. WAAPI events don't fire while the tab
-    // is hidden, so without the fallback a phase could stall and leave the real
-    // row hidden forever. `slack` covers the throttled case.
-    const runOnce = (anim: Animation, ms: number, then: () => void) => {
+    // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
+    // finish/cancel OR a timeout fallback (WAAPI events don't fire in a hidden
+    // tab; without the fallback a phase could stall and strand state). If WAAPI
+    // is unavailable entirely (e.g. jsdom, where Element.animate is missing), we
+    // skip the motion and settle on the next microtask so `then` still runs.
+    const animateOnce = (
+      el: HTMLElement,
+      keyframes: Keyframe[],
+      ms: number,
+      then: () => void,
+    ) => {
       let done = false;
       const fire = () => {
         if (done) return;
         done = true;
         then();
       };
+      if (typeof el.animate !== "function") {
+        queueMicrotask(fire);
+        return;
+      }
+      const anim = el.animate(keyframes, { duration: ms, easing: EASE });
       anim.onfinish = fire;
       anim.oncancel = fire;
       setTimeout(fire, ms + 80);
@@ -300,14 +333,15 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
       // Start one row-height below (under the top list's bottom edge, clipped),
       // slide up to its resting slot.
-      const anim = enterClone.animate(
+      animateOnce(
+        enterClone,
         [{ transform: `translateY(${last.height}px)` }, { transform: "translateY(0)" }],
-        { duration: enterMs, easing: EASE },
+        enterMs,
+        () => {
+          enterClone.remove();
+          nowEl.style.visibility = ""; // repaint to resolved ✓ on arrival
+        },
       );
-      runOnce(anim, enterMs, () => {
-        enterClone.remove();
-        nowEl.style.visibility = ""; // repaint to resolved ✓ on arrival
-      });
     };
 
     // ---- Phase 1 (exit): HEIGHT COLLAPSE of the resolved card in the bottom
@@ -353,18 +387,33 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       // Insert at the head slot (right after the sticky header).
       bottomHeader.insertAdjacentElement("afterend", placeholder);
 
-      const anim = placeholder.animate(
+      animateOnce(
+        placeholder,
         [{ height: `${rowH}px` }, { height: "0px" }],
-        { duration: exitMs, easing: EASE },
+        exitMs,
+        () => {
+          placeholder.remove();
+          // The resolved card is now ENTIRELY gone from the bottom list —
+          // advance focus exactly here, so the new head lights up with the
+          // orange ▸ only now (not at resolve time).
+          advanceFocusAfterExit();
+          runEnter();
+        },
       );
-      runOnce(anim, exitMs, () => {
-        placeholder.remove();
-        runEnter();
-      });
     } else {
       // No bottom list (queue emptied) — skip straight to the enter phase.
+      advanceFocusAfterExit();
       runEnter();
     }
+  };
+
+  // Clear the exit suppression and fire onFocusChange with the current head of
+  // the unresolved list (null if the queue is now empty). Called at the END of
+  // the exit collapse so focus advances exactly when the resolved card is gone.
+  // Guarantees onFocusChange still fires for every animated resolve.
+  const advanceFocusAfterExit = () => {
+    setExitingKey(null);
+    props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
   };
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest

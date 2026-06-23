@@ -12,17 +12,21 @@ interface Item {
 const seed = (n: number): Item[] =>
   Array.from({ length: n }, (_, i) => ({ id: `k${i + 1}` }));
 
+const tick = (ms = 150) => new Promise((r) => setTimeout(r, ms));
+
 /**
- * Wire the component the way a real consumer does: two signals for the two
- * arrays, a `focused` signal updated only via `onFocusChange`, and a
- * `resolveFocused()` that resolves whatever the component currently reports as
- * focused. This reproduces the gallery's "Resolve next" loop.
+ * Wire the component the way the gallery does: two arrays, a `focused` signal
+ * updated only via `onFocusChange`, and a `resolveFocused()` that resolves the
+ * current head — preferring `focused` but falling back to the unresolved head
+ * (exactly like the showcase's "Resolve next"). The fallback matters because
+ * focus is now advanced asynchronously, at the END of the exit-collapse phase:
+ * during the collapse the component reports focus as null so no real row lights
+ * up, then fires onFocusChange with the new head once the card is gone.
  *
- * The bug under test: after the first resolve, `focused` did not advance to the
- * next unresolved head, so `resolveFocused()` targeted the already-resolved
- * item and no-op'd — the queue stuck at one resolved item.
+ * Regression guards: focus still advances on EVERY resolve, and the queue
+ * always drains (the original "stuck after one item" bug must stay fixed).
  */
-function mountConsumer(count: number) {
+function mountConsumer(count: number, animationMs = 0) {
   const [resolved, setResolved] = createSignal<Item[]>([]);
   const [unresolved, setUnresolved] = createSignal<Item[]>(seed(count));
   const [focused, setFocused] = createSignal<string | null>(seed(count)[0].id);
@@ -30,7 +34,7 @@ function mountConsumer(count: number) {
 
   const resolveKey = (key: string) => {
     const item = unresolved().find((i) => i.id === key);
-    if (!item) return; // no-op if focus points at an already-resolved item
+    if (!item) return;
     setUnresolved((u) => u.filter((i) => i.id !== key));
     setResolved((r) => [...r, item]);
   };
@@ -47,7 +51,7 @@ function mountConsumer(count: number) {
       }}
       onResolve={resolveKey}
       renderItem={(i) => <span>{i.id}</span>}
-      animationMs={0}
+      animationMs={animationMs}
     />
   ));
 
@@ -56,35 +60,44 @@ function mountConsumer(count: number) {
     unresolved,
     focused,
     focusEvents,
+    // Prefer focus, fall back to the unresolved head (as the showcase does), so
+    // a queue still drains while focus is briefly suppressed during a collapse.
     resolveFocused: () => {
+      const list = unresolved();
       const f = focused();
-      if (f) resolveKey(f);
+      const next = (f && list.some((i) => i.id === f) ? f : list[0]?.id) ?? null;
+      if (next) resolveKey(next);
     },
   };
 }
 
-describe("SplitQueueList — repeated resolve advances focus", () => {
-  it("advances focus to the next unresolved head on every resolve", () => {
+describe("SplitQueueList — repeated resolve advances focus (deferred to exit end)", () => {
+  it("advances focus to the next unresolved head after each resolve's collapse", async () => {
     const c = mountConsumer(4);
     expect(c.focused()).toBe("k1");
 
     c.resolveFocused();
     expect(c.resolved().map((i) => i.id)).toEqual(["k1"]);
-    // The crux: focus must move to k2 (not stay on the resolved k1).
+    await tick(); // focus advances at the end of the exit collapse
     expect(c.focused()).toBe("k2");
 
     c.resolveFocused();
+    await tick();
     expect(c.resolved().map((i) => i.id)).toEqual(["k1", "k2"]);
     expect(c.focused()).toBe("k3");
 
     c.resolveFocused();
+    await tick();
     expect(c.resolved().map((i) => i.id)).toEqual(["k1", "k2", "k3"]);
     expect(c.focused()).toBe("k4");
   });
 
-  it("drains the entire queue, not just the first item", () => {
+  it("drains the entire queue with the head-fallback (Auto-play style)", async () => {
     const c = mountConsumer(6);
-    for (let i = 0; i < 6; i++) c.resolveFocused();
+    for (let i = 0; i < 6; i++) {
+      c.resolveFocused();
+      await tick(30);
+    }
     expect(c.unresolved().length).toBe(0);
     expect(c.resolved().map((i) => i.id)).toEqual([
       "k1",
@@ -96,11 +109,44 @@ describe("SplitQueueList — repeated resolve advances focus", () => {
     ]);
   });
 
-  it("fires onFocusChange with the correct next head each resolve, null at the end", () => {
+  it("fires onFocusChange with the correct next head each resolve, null at the end", async () => {
     const c = mountConsumer(3);
-    c.resolveFocused(); // k1 -> focus k2
-    c.resolveFocused(); // k2 -> focus k3
-    c.resolveFocused(); // k3 -> focus null (queue empty)
+    c.resolveFocused();
+    await tick();
+    c.resolveFocused();
+    await tick();
+    c.resolveFocused();
+    await tick();
     expect(c.focusEvents).toEqual(["k2", "k3", null]);
+  });
+});
+
+describe("SplitQueueList — reduced-motion advances focus synchronously", () => {
+  it("with prefers-reduced-motion, focus advances immediately (no phases)", () => {
+    // Force reduced-motion so the component takes the no-animation path.
+    const orig = window.matchMedia;
+    window.matchMedia = ((q: string) =>
+      ({
+        matches: /reduce/.test(q),
+        media: q,
+        addEventListener() {},
+        removeEventListener() {},
+        addListener() {},
+        removeListener() {},
+        onchange: null,
+        dispatchEvent() {
+          return false;
+        },
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      const c = mountConsumer(3);
+      c.resolveFocused();
+      // No collapse phase — focus is advanced in the same tick.
+      expect(c.focused()).toBe("k2");
+      c.resolveFocused();
+      expect(c.focused()).toBe("k3");
+    } finally {
+      window.matchMedia = orig;
+    }
   });
 });
