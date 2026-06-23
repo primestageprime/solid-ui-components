@@ -311,10 +311,12 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // (taller) layout height, extending its bottom edge down = the seam DESCENDS.
     // The to-categorize (bottom) section shrinks complementarily, so the seam
     // moves as one. Heights are driven through `heightOverride` (which takes
-    // precedence over the layout memo) so the panes don't snap. The real newest
-    // ✓ row already sits at the bottom of the top list; with the top list
-    // overflow-clipped and pinned to its bottom, it's REVEALED at the seam as
-    // the section grows into it — not sliding in from the top.
+    // precedence over the layout memo) so the panes don't snap. The newest row
+    // (the real resolved row, at the bottom of the top list) grows in BLANK at
+    // the seam — just the card shell — while the section grows; it's populated
+    // with the ✓ content only AFTER the growth completes (in settle()). The top
+    // list is overflow-clipped and pinned to its bottom so the card is revealed
+    // from the seam upward, not sliding in from the top.
     const fromTop = prevTopH;
     const fromBottom = prevBottomH;
     const toTop = layout().topHeight;
@@ -329,6 +331,12 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const capped = Math.abs(toTop - fromTop) < 1;
     setHeightOverride({ top: fromTop, bottom: fromBottom });
     topList.style.overflow = "hidden";
+
+    // The newest categorized card grows in BLANK — just the card shell, no ✓ and
+    // no text — while the section grows from the seam. It's populated with the
+    // resolved content only AFTER the growth completes (in settle()). So during
+    // the grow we hide the row's inner content via a class.
+    nowEl.classList.add("sui-sql__row--blank");
 
     const driveScroll = (e: number) => {
       const maxScroll = topList.scrollHeight - topList.clientHeight;
@@ -381,6 +389,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       topList.style.overflow = "";
       setHeightOverride(null); // release the panes back to the layout memo
       topList.scrollTop = topList.scrollHeight; // newest flush at the seam
+      // The card has finished growing — NOW populate it with the resolved
+      // content (✓ + text repaints in).
+      nowEl.classList.remove("sui-sql__row--blank");
       // The card is now entirely out of the bottom list — advance focus so the
       // new head lights up with the orange ▸ exactly now (end of the animation).
       advanceFocusAfterExit();
