@@ -326,6 +326,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const placeholder = document.createElement("li");
       placeholder.className = "sui-sql__collapse";
       placeholder.style.height = `${rowH}px`;
+      // CRITICAL: min-height:0 — real rows carry an inline min-height:120px, and
+      // without overriding it here the height animation can't actually reach 0
+      // (the collapse would jam at the row's min-height). This is the "fight"
+      // between the JS height animation and the CSS row sizing.
+      placeholder.style.minHeight = "0";
       placeholder.style.overflow = "hidden";
       placeholder.style.position = "relative";
 
