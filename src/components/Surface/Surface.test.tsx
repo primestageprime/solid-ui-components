@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Surface, createSurface } from "./Surface";
-import { CompactCard, CardSurface } from "./index";
+import { CompactCard, CardSurface, ContentSurface, PanelSurface, CenteredSurface } from "./index";
 
 describe("Surface", () => {
   it("renders a div with the surface class", () => {
@@ -25,5 +25,33 @@ describe("Surface", () => {
     const Big = createSurface({ padding: "lg" });
     const { container } = render(() => <Big>x</Big>);
     expect(container.firstElementChild!).toBeTruthy();
+  });
+
+  it("bare Surface gets default md padding and sm radius", () => {
+    const { container } = render(() => <Surface>x</Surface>);
+    const cls = container.firstElementChild!.className;
+    expect(cls).toMatch(/surface--padding-md/);
+    expect(cls).toMatch(/surface--radius-sm/);
+  });
+
+  it("explicit padding overrides the default", () => {
+    const { container } = render(() => <Surface padding="none">x</Surface>);
+    expect(container.firstElementChild!.className).toMatch(/surface--padding-none/);
+    expect(container.firstElementChild!.className).not.toMatch(/surface--padding-md/);
+  });
+
+  it("ContentSurface curried variant applies column direction", () => {
+    const { container } = render(() => <ContentSurface>x</ContentSurface>);
+    expect(container.firstElementChild!.className).toMatch(/surface--dir-column/);
+  });
+
+  it("PanelSurface applies lg padding", () => {
+    const { container } = render(() => <PanelSurface>x</PanelSurface>);
+    expect(container.firstElementChild!.className).toMatch(/surface--padding-lg/);
+  });
+
+  it("CenteredSurface applies center align", () => {
+    const { container } = render(() => <CenteredSurface>x</CenteredSurface>);
+    expect(container.firstElementChild!.className).toMatch(/surface--align-center/);
   });
 });

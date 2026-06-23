@@ -137,6 +137,17 @@ export const DelineatedSidebar = createStack({
   },
 });
 
+// PaddedStack — vertical column with sm gap and inset padding. The default
+// goto for any content region that lives inside a Surface or card. Gives
+// content the breathing room that bare Stack withholds.
+export const PaddedStack: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { padding: "16px" },
+});
+
+// SectionStack — lg gap between top-level page sections.
+export const SectionStack: Component<StackDataProps> = createStack({ gap: "lg" });
+
 // --- AppHeader variants (size/inline baked) ---
 
 /** Default page-top header (md padding). */
