@@ -106,6 +106,28 @@ describe("computeSplitLayout — short bottom: slack flows up to the top", () =>
     expect(r.topHeight).toBe(480 - 20); // 460
     expect(r.topAbsorbedSlack).toBe(true);
   });
+
+  it("does NOT absorb slack when categorized <= cap, even with a short bottom", () => {
+    // The proportions bug: with 0–3 categorized the top has nothing hidden to
+    // reveal, so it must stay at its content height (NOT balloon) and let the
+    // bottom take the remainder, even though the bottom is short.
+    for (const n of [0, 1, 2, 3]) {
+      const r = computeSplitLayout({ ...base, resolvedCount: n, unresolvedCount: 2 });
+      const wantRows = Math.max(1, Math.min(3, n)); // floor 1, cap 3
+      expect(r.topHeight).toBe(paneFor(wantRows)); // content height only
+      expect(r.topAbsorbedSlack).toBe(false);
+      // Bottom gets all the rest and (with 2 short items at this height) fits.
+      expect(r.bottomHeight).toBe(480 - paneFor(wantRows));
+    }
+  });
+
+  it("0 categorized + 6 to-categorize → top = 1 row, bottom takes the rest", () => {
+    // The exact Items=6 / 0-resolved repro from the bug report.
+    const r = computeSplitLayout({ ...base, resolvedCount: 0, unresolvedCount: 6 });
+    expect(r.topHeight).toBe(paneFor(1)); // 60 — one row, NOT a big empty box
+    expect(r.bottomHeight).toBe(480 - 60); // 420 — items pinned top, space below
+    expect(r.topAbsorbedSlack).toBe(false);
+  });
 });
 
 describe("computeSplitLayout — last row never clips when not scrolling", () => {

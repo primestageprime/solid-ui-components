@@ -79,30 +79,36 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
   // The top pane's content-driven target: clamp the categorized count to
   // [floorRows, capRows] and size to that many rows + header. 0 categorized
   // still shows the floor (1 row of space), never a big empty block.
-  const topRowsWanted = clamp(resolvedCount, floorRows, capRows);
-  const topCappedHeight = Math.min(paneFor(topRowsWanted), usable);
+  // Top's content-driven height: clamp the categorized count to [floor, cap]
+  // and size to that many rows + header. This is the top's natural height when
+  // it has nothing hidden to reveal.
+  const topContentRows = clamp(resolvedCount, floorRows, capRows);
+  const topContentHeight = Math.min(paneFor(topContentRows), usable);
 
   // What the bottom pane needs to show ALL its rows + header without clipping.
   const bottomContentHeight = paneFor(unresolvedCount);
 
-  // The remaining space the bottom would get if the top stays at its capped
-  // height. If the bottom doesn't need all of that, it shrinks to its content
-  // and the leftover flows up to the top (top absorbs slack, may pass the cap).
-  const bottomRemainingIfCapped = Math.max(0, usable - topCappedHeight);
+  // The space the bottom would have if the top stayed at its 3-row cap. Slack
+  // only exists to flow up when the bottom needs LESS than this.
+  const cappedTopHeight = Math.min(paneFor(capRows), usable);
+  const bottomRemainingIfCapped = Math.max(0, usable - cappedTopHeight);
 
   let topHeight: number;
   let bottomHeight: number;
   let topAbsorbedSlack = false;
 
-  if (bottomContentHeight <= bottomRemainingIfCapped) {
-    // Bottom is short: it shrinks to content, top takes everything else.
+  // Absorb slack ONLY when the top genuinely has more rows than the cap (hidden
+  // older items the extra room would reveal) AND the bottom is short enough that
+  // freeing space is worthwhile. Otherwise the top stays at its content height
+  // and the bottom takes the remainder — a top with <=cap items never balloons
+  // into a big empty box.
+  const topHasHiddenRows = resolvedCount > capRows;
+  if (topHasHiddenRows && bottomContentHeight <= bottomRemainingIfCapped) {
     bottomHeight = bottomContentHeight;
     topHeight = Math.max(0, usable - bottomHeight);
-    topAbsorbedSlack = topHeight > topCappedHeight + 0.5;
+    topAbsorbedSlack = topHeight > cappedTopHeight + 0.5;
   } else {
-    // Bottom is full/overfull: top holds at its capped height, bottom scrolls
-    // through the remainder.
-    topHeight = topCappedHeight;
+    topHeight = topContentHeight;
     bottomHeight = Math.max(0, usable - topHeight);
   }
 

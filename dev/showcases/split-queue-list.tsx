@@ -69,6 +69,18 @@ const LENGTH_OPTIONS = [
 ];
 const DEFAULT_COUNT = 6;
 
+const SPEED_OPTIONS = [
+  { value: "400", label: "400ms" },
+  { value: "800", label: "800ms" },
+  { value: "1500", label: "1500ms" },
+];
+const DEFAULT_SPEED = 800;
+
+// Tall, easy-to-watch cards (3× the library default 40px). The container is
+// sized so the 3-row top cap (3 * CARD_H + header) plus a useful bottom area
+// fit; Short shows the same model with less room.
+const CARD_H = 120;
+
 function QueueDemo(props: { height: number }) {
   const [count, setCount] = createSignal(DEFAULT_COUNT);
   const seed = () => POOL.slice(0, count());
@@ -77,6 +89,7 @@ function QueueDemo(props: { height: number }) {
   const [unresolved, setUnresolved] = createSignal<QueueItem[]>(seed());
   const [focused, setFocused] = createSignal<string | null>(seed()[0]?.id ?? null);
   const [auto, setAuto] = createSignal(false);
+  const [speed, setSpeed] = createSignal(DEFAULT_SPEED);
 
   const resolveKey = (key: string) => {
     const item = unresolved().find((i) => i.id === key);
@@ -117,7 +130,9 @@ function QueueDemo(props: { height: number }) {
       return;
     }
     resolveNext();
-    timer = window.setTimeout(tick, 700);
+    // Pace auto-play a touch slower than the slide so each animation finishes
+    // before the next resolve starts.
+    timer = window.setTimeout(tick, speed() + 250);
   };
   const toggleAuto = () => {
     const next = !auto();
@@ -129,13 +144,23 @@ function QueueDemo(props: { height: number }) {
 
   return (
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
-        <span class="text-meta">Items</span>
-        <SegmentedControl
-          options={LENGTH_OPTIONS}
-          value={String(count())}
-          onValueChange={(v) => loadCount(Number(v))}
-        />
+      <div style={{ display: "flex", gap: "16px", "align-items": "center", "flex-wrap": "wrap" }}>
+        <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+          <span class="text-meta">Items</span>
+          <SegmentedControl
+            options={LENGTH_OPTIONS}
+            value={String(count())}
+            onValueChange={(v) => loadCount(Number(v))}
+          />
+        </div>
+        <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+          <span class="text-meta">Speed</span>
+          <SegmentedControl
+            options={SPEED_OPTIONS}
+            value={String(speed())}
+            onValueChange={(v) => setSpeed(Number(v))}
+          />
+        </div>
       </div>
       <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
         <SmallPrimaryButton onClick={resolveNext} disabled={unresolved().length === 0}>
@@ -158,6 +183,8 @@ function QueueDemo(props: { height: number }) {
           onFocusChange={setFocused}
           onResolve={resolveKey}
           height={props.height}
+          rowHeight={CARD_H}
+          animationMs={speed()}
           resolvedLabel="Categorized"
           unresolvedLabel="To categorize"
           allClearLabel="All clear — every transaction categorized"
@@ -198,22 +225,22 @@ export const SplitQueueListShowcase: Component = () => {
 
       <div style={{ display: "flex", gap: "40px", "flex-wrap": "wrap" }}>
         <div>
-          <h3>Tall (480px) — top caps at 3, newest at the seam</h3>
+          <h3>Tall (760px) — top caps at 3, newest at the seam</h3>
           <p class="text-meta">
             Resolve a few: the top fits 1→2→3 by content, then caps at 3 and
             scrolls so the newest categorized row sits at the seam. Drain the
             bottom and the top absorbs the freed slack (grows past 3).
           </p>
-          <QueueDemo height={480} />
+          <QueueDemo height={760} />
         </div>
 
         <div>
-          <h3>Short (260px) — same model, less room</h3>
+          <h3>Short (520px) — same model, less room</h3>
           <p class="text-meta">
             The 1-row floor / 3-row cap and slack-absorption hold at a smaller
             height; drain the bottom to the "all clear" strip.
           </p>
-          <QueueDemo height={260} />
+          <QueueDemo height={520} />
         </div>
       </div>
     </div>

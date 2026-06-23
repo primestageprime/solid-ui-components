@@ -76,7 +76,7 @@ export interface SplitQueueListProps<T> {
   rowHeight?: number;
   /** Total height of the sidebar in px. Default 420. */
   height?: number;
-  /** Slide duration in ms. Default 360. */
+  /** Slide duration in ms. Default 800. */
   animationMs?: number;
   class?: string;
 }
@@ -95,7 +95,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const topCapRows = () => props.topCapRows ?? 3;
   const topFloorRows = () => props.topFloorRows ?? 1;
   const height = () => props.height ?? 420;
-  const animationMs = () => props.animationMs ?? 360;
+  const animationMs = () => props.animationMs ?? 800;
 
   let topListEl: HTMLUListElement | undefined;
   let rootEl: HTMLDivElement | undefined;
@@ -325,6 +325,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         data-sql-key={key}
         class={`sui-sql__row sui-sql__row--${kind}`}
         classList={{ "sui-sql__row--focused": isFocused() }}
+        style={{ "min-height": `${rowHeightProp()}px` }}
         onClick={() => {
           if (kind === "unresolved") {
             props.onFocusChange?.(key);
