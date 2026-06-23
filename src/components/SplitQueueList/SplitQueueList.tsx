@@ -310,40 +310,50 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       });
     };
 
-    // ---- Phase 1 (exit): orange focused-styled clone leaving the bottom list.
-    // The resolved card was the HEAD of the bottom list, so the clone starts at
-    // the top of the bottom list's content (just below its sticky header) and
-    // slides up by header+row so it is fully clipped away under the label. We
-    // anchor to the bottom list's CURRENT (post-swap) header for a self-
-    // consistent measurement — mixing the pre-swap rect with the post-swap list
-    // geometry put the clone in the wrong place.
+    // ---- Phase 1 (exit): HEIGHT COLLAPSE of the resolved card in the bottom
+    // list. The card was the head of the bottom list; the data swap already
+    // pulled the rows below it up by one row. We re-insert an orange
+    // focused-styled placeholder IN FLOW at the head slot (which pushes those
+    // rows back down to where they were), then collapse its height to 0 — so the
+    // whole list below glides up in LOCKSTEP, smoothly and together, with no
+    // card sliding over another and no instant jump. The placeholder clips its
+    // content from the TOP (content pinned to the bottom of the shrinking box,
+    // overflow:hidden), keeping its orange background until it reaches 0.
     const bottomHeader = bottomList?.querySelector<HTMLElement>(".sui-sql__header");
     if (bottomList && bottomHeader) {
       const rowH = first.height;
-      const headH = bottomHeader.getBoundingClientRect().height;
-      const exitClone = document.createElement("div");
-      exitClone.className =
-        "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused sui-sql__phase";
-      exitClone.innerHTML = newFocusedContent;
-      const marker = exitClone.querySelector<HTMLElement>(".sui-sql__marker");
-      if (marker) marker.textContent = "▸"; // focused glyph, not ✓
-      exitClone.style.position = "absolute";
-      exitClone.style.left = "0";
-      exitClone.style.right = "0";
-      // Sit at the head slot: directly below the sticky header, at the current
-      // scroll offset.
-      exitClone.style.top = `${headH + bottomList.scrollTop}px`;
-      exitClone.style.height = `${rowH}px`;
-      bottomList.appendChild(exitClone);
 
-      // Slide up by a full row + the header so it disappears beneath the label.
-      const dist = rowH + headH;
-      const anim = exitClone.animate(
-        [{ transform: "translateY(0)" }, { transform: `translateY(${-dist}px)` }],
+      const placeholder = document.createElement("li");
+      placeholder.className = "sui-sql__collapse";
+      placeholder.style.height = `${rowH}px`;
+      placeholder.style.overflow = "hidden";
+      placeholder.style.position = "relative";
+
+      // Inner card pinned to the bottom of the placeholder, fixed at full row
+      // height, so as the placeholder shrinks the TOP edge clips it away.
+      const inner = document.createElement("div");
+      inner.className =
+        "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused";
+      inner.innerHTML = newFocusedContent;
+      const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
+      if (marker) marker.textContent = "▸"; // focused glyph, not ✓
+      inner.style.position = "absolute";
+      inner.style.left = "0";
+      inner.style.right = "0";
+      inner.style.bottom = "0";
+      inner.style.height = `${rowH}px`;
+      inner.style.margin = "0";
+      placeholder.appendChild(inner);
+
+      // Insert at the head slot (right after the sticky header).
+      bottomHeader.insertAdjacentElement("afterend", placeholder);
+
+      const anim = placeholder.animate(
+        [{ height: `${rowH}px` }, { height: "0px" }],
         { duration: exitMs, easing: EASE },
       );
       runOnce(anim, exitMs, () => {
-        exitClone.remove();
+        placeholder.remove();
         runEnter();
       });
     } else {
