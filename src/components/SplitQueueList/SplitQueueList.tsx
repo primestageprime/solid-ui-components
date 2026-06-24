@@ -160,6 +160,16 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     }),
   );
 
+  // In topOnly mode the categorized panel is CONTENT-DRIVEN: it starts ~1 row
+  // tall when empty (header + the row floor) so its S edge is visible, and grows
+  // with each resolved card (header + N rows), uncapped but never exceeding the
+  // container height. This makes the "card emerges from the S edge" enter
+  // watchable. (The normal two-panel layout uses layout().topHeight, unchanged.)
+  const topOnlyHeight = () => {
+    const rows = Math.max(topFloorRows(), props.resolved.length);
+    return Math.min(height(), headerHeight() + rows * rowHeight());
+  };
+
   const reducedMotion = () =>
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -515,7 +525,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
         style={{
-          height: props.topOnly ? `${height()}px` : `${layout().topHeight}px`,
+          height: props.topOnly
+            ? `${topOnlyHeight()}px`
+            : `${layout().topHeight}px`,
         }}
       >
         <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
