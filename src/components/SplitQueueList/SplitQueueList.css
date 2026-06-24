@@ -132,14 +132,6 @@
   will-change: height;
 }
 
-/* The newest categorized card while it GROWS in at the seam: just the card
- * shell (background + accent border), with its content (✓ marker + text) hidden
- * until the growth completes and the row is populated. */
-.sui-sql__row--blank .sui-sql__marker,
-.sui-sql__row--blank .sui-sql__content {
-  visibility: hidden;
-}
-
 .sui-sql__marker {
   flex: 0 0 auto;
   width: 1em;
