@@ -44,6 +44,9 @@
 }
 
 .themed-textarea {
-  min-height: 100px;
+  /* Height is driven by the `rows` attribute / content so a textarea starts
+     terse (single line when rows={1}) and grows only as needed, rather than
+     reserving a fixed ~4-line block. Consumers wanting a taller default set
+     `rows` or a min-height. */
   resize: vertical;
 }

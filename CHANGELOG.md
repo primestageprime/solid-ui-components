@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.78.1
+
+### Added
+
+- **`Surface`** — new `xs` (4px) padding token and a directional `paddingTop` override (`"none" | "xs" | "sm" | "md" | "lg"`). `paddingTop` is declared after the uniform padding rules so it wins, letting a surface keep its side/bottom padding while pulling a heading flush near the top for a terser layout (e.g. `createSurface({ padding: "lg", paddingTop: "xs" })`).
+
+### Changed
+
+- **`ThemedTextarea`** — dropped the fixed `min-height: 100px`; height now follows the `rows` attribute / content, so a textarea starts terse (single line with `rows={1}`, growing as needed) instead of always reserving ~4 lines. Consumers wanting a taller default set `rows` or a `min-height`.
+
 ## 0.78.0
 
 ### Added

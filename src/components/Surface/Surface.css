@@ -4,9 +4,19 @@
 }
 
 .surface--padding-none { padding: 0; }
+.surface--padding-xs { padding: 4px; }
 .surface--padding-sm { padding: 8px; }
 .surface--padding-md { padding: 16px; }
 .surface--padding-lg { padding: 24px; }
+
+/* Per-side top override — declared AFTER the uniform rules so it wins (equal
+   specificity, later wins). Lets a surface keep its side/bottom padding while
+   pulling a heading flush near the top for a terser layout. */
+.surface--padding-top-none { padding-top: 0; }
+.surface--padding-top-xs { padding-top: 4px; }
+.surface--padding-top-sm { padding-top: 8px; }
+.surface--padding-top-md { padding-top: 16px; }
+.surface--padding-top-lg { padding-top: 24px; }
 
 .surface--radius-none { border-radius: 0; }
 .surface--radius-sm { border-radius: 4px; }

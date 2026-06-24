@@ -9,7 +9,9 @@ import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./Surface.css";
 
 export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  padding?: "none" | "sm" | "md" | "lg";
+  padding?: "none" | "xs" | "sm" | "md" | "lg";
+  /** Override just the top padding (e.g. a terse heading flush near the top). */
+  paddingTop?: "none" | "xs" | "sm" | "md" | "lg";
   radius?: "none" | "sm" | "md" | "lg";
   bg?: string;
   borderColor?: string;
@@ -28,6 +30,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
   const props = mergeProps({ padding: "md" as const, radius: "sm" as const }, rawProps);
   const [local, others] = splitProps(props, [
     "padding",
+    "paddingTop",
     "radius",
     "bg",
     "borderColor",
@@ -46,6 +49,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
   const classes = () => {
     const classList = ["surface"];
     if (local.padding) classList.push(`surface--padding-${local.padding}`);
+    if (local.paddingTop) classList.push(`surface--padding-top-${local.paddingTop}`);
     if (local.radius) classList.push(`surface--radius-${local.radius}`);
     if (local.direction) classList.push(`surface--dir-${local.direction}`);
     if (local.align) classList.push(`surface--align-${local.align}`);
@@ -76,7 +80,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
 
 /** Props that are visual/layout overrides — locked at variant-definition time. */
 export type SurfaceOverrides = Pick<SurfaceProps,
-  "padding" | "radius" | "bg" | "borderColor" | "interactive" |
+  "padding" | "paddingTop" | "radius" | "bg" | "borderColor" | "interactive" |
   "direction" | "align" | "gap" | "minWidth" | "maxWidth"
 >;
 
