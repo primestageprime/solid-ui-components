@@ -36,6 +36,52 @@ const ITEMS: QueueItem[] = [
 const CARD_H = 120;
 const CONTAINER_H = 760;
 
+/* Workshop-only annotation: a relatively-positioned wrapper that drops small
+ * muted N/E/W/S compass labels centered on each edge of its child, so we share a
+ * vocabulary for the enter animation (N = top, S = bottom, E = right, W = left).
+ * Dev-harness overlay only — never touches the SplitQueueList component. */
+function EdgeLabels(props: {
+  children: JSX.Element;
+  /** Fix the overlay to this pixel height (e.g. a card row) so N/S land on the
+   * real top/bottom edges rather than on the centered content's small box. */
+  rowH?: number;
+}): JSX.Element {
+  const cap: JSX.CSSProperties = {
+    position: "absolute",
+    "font-family": "var(--sui-font-mono, monospace)",
+    "font-size": "10px",
+    "font-weight": "700",
+    color: "var(--sui-text-muted)",
+    "letter-spacing": "0.05em",
+    "pointer-events": "none",
+    "z-index": "10",
+    "line-height": "1",
+  };
+  return (
+    <div
+      style={{
+        position: "relative",
+        ...(props.rowH
+          ? {
+              // Center the card content vertically inside a full-row-height box
+              // so the absolute N/S/E/W labels sit on the row's true edges.
+              height: `${props.rowH}px`,
+              width: "100%",
+              display: "flex",
+              "align-items": "center",
+            }
+          : {}),
+      }}
+    >
+      {props.children}
+      <span style={{ ...cap, top: "1px", left: "50%", transform: "translateX(-50%)" }}>N</span>
+      <span style={{ ...cap, bottom: "1px", left: "50%", transform: "translateX(-50%)" }}>S</span>
+      <span style={{ ...cap, right: "2px", top: "50%", transform: "translateY(-50%)" }}>E</span>
+      <span style={{ ...cap, left: "2px", top: "50%", transform: "translateY(-50%)" }}>W</span>
+    </div>
+  );
+}
+
 export const WorkshopShowcase: Component = () => {
   const [resolved, setResolved] = createSignal<QueueItem[]>([]);
   const [unresolved, setUnresolved] = createSignal<QueueItem[]>([...ITEMS]);
@@ -94,6 +140,15 @@ export const WorkshopShowcase: Component = () => {
       <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>{i.amount}</span>
     </span>
   );
+
+  // Top-only column renderer: annotate the FIRST item's card with the N/E/W/S
+  // compass labels (the card fills its row, so the labels sit on the row edges).
+  const renderItemTopOnly = (i: QueueItem): JSX.Element =>
+    i.id === ITEMS[0].id ? (
+      <EdgeLabels rowH={CARD_H}>{renderItem(i)}</EdgeLabels>
+    ) : (
+      renderItem(i)
+    );
 
   return (
     <div class="component-section component-section--full">
@@ -193,22 +248,25 @@ export const WorkshopShowcase: Component = () => {
 
         <div style={{ width: "340px" }}>
           <div class="text-meta" style={{ "margin-bottom": "6px" }}>
-            Top panel only
+            Top panel only (N=top · S=bottom · E=right · W=left)
           </div>
-          <SplitQueueList<QueueItem>
-            topOnly
-            resolved={resolved()}
-            unresolved={unresolved()}
-            keyOf={(i) => i.id}
-            focusedKey={focused() ?? undefined}
-            onFocusChange={setFocused}
-            onResolve={resolveKey}
-            height={CONTAINER_H}
-            rowHeight={CARD_H}
-            animationMs={duration()}
-            resolvedLabel="Categorized"
-            renderItem={renderItem}
-          />
+          {/* Panel container annotated with N/E/W/S on its four edges. */}
+          <EdgeLabels>
+            <SplitQueueList<QueueItem>
+              topOnly
+              resolved={resolved()}
+              unresolved={unresolved()}
+              keyOf={(i) => i.id}
+              focusedKey={focused() ?? undefined}
+              onFocusChange={setFocused}
+              onResolve={resolveKey}
+              height={CONTAINER_H}
+              rowHeight={CARD_H}
+              animationMs={duration()}
+              resolvedLabel="Categorized"
+              renderItem={renderItemTopOnly}
+            />
+          </EdgeLabels>
         </div>
       </div>
     </div>
