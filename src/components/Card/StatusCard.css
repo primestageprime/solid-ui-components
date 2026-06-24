@@ -48,33 +48,35 @@
   align-items: center;
 }
 
-/* Row 2 — clamped detail + more */
+/* Row 2 — detail. Grows to fill the gap between the title and the
+   bottom-pinned meta row; overflow is clipped, with a floating "more". */
 .sui-status-card__row2 {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sui-status-card__desc {
-  flex: 1;
-  min-width: 0;
+  display: block;
+  height: 100%;
   font-size: 11px;
   line-height: 1.35;
   color: var(--sui-text-muted);
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .sui-status-card__more {
-  flex-shrink: 0;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-left: 8px;
   font-size: 10px;
   color: var(--sui-accent, #00d4ff);
-  background: transparent;
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
   border: none;
-  padding: 0;
   cursor: pointer;
   text-decoration: underline;
 }
@@ -121,8 +123,9 @@
   cursor: pointer;
 }
 
-/* Row 3 — meta strip */
+/* Row 3 — meta strip, pinned to the bottom of the card */
 .sui-status-card__row3 {
+  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 6px;

@@ -88,14 +88,11 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
         </Show>
       </div>
 
-      {/* Row 2 — clamped description with "more" popover */}
+      {/* Row 2 — description fills the space between the title and the
+          bottom-pinned meta row; overflow is clipped with a "more" popover. */}
       <Show when={local.description && local.description.trim().length > 0}>
         <div class="sui-status-card__row2">
-          <span
-            class="sui-status-card__desc"
-            style={{ "-webkit-line-clamp": String(local.descriptionLines) }}
-          >
-            {local.description}
+          <span class="sui-status-card__desc">{local.description}
           </span>
           <button
             type="button"
