@@ -1,0 +1,157 @@
+.sui-status-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--sui-radius-md, 6px);
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
+  color: var(--sui-text-primary);
+}
+
+.sui-status-card--clickable {
+  cursor: pointer;
+}
+
+.sui-status-card--clickable:hover {
+  border-color: var(--sui-text-muted);
+}
+
+.sui-status-card--active {
+  border-color: var(--sui-accent, #00d4ff);
+  background: color-mix(in srgb, var(--sui-accent, #00d4ff) 12%, transparent);
+}
+
+/* Row 1 — name + status */
+.sui-status-card__row1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sui-status-card__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sui-status-card__status {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Row 2 — clamped detail + more */
+.sui-status-card__row2 {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.sui-status-card__desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--sui-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+.sui-status-card__more {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--sui-accent, #00d4ff);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Popover with full detail */
+.sui-status-card__popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-radius: var(--sui-radius-md, 6px);
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-elevated, #1e2a3e);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.sui-status-card__popover-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+  margin-bottom: 6px;
+}
+
+.sui-status-card__popover-body {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--sui-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sui-status-card__popover-close {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--sui-text-muted);
+  background: transparent;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* Row 3 — meta strip */
+.sui-status-card__row3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--sui-text-muted);
+}
+
+.sui-status-card__meta-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.sui-status-card__meta-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sui-status-card__meta-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
