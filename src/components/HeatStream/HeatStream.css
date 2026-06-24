@@ -134,6 +134,17 @@
   outline-offset: -1px;
 }
 
+/* Unset key — fully transparent so an item lights only the keys it sets,
+   producing a sparse stream rather than a solid block. */
+.jtf-heatstream__cell--empty {
+  background-color: transparent;
+}
+
+/* Informational mark (blue) — e.g. an item with no primary classification. */
+.jtf-heatstream__cell--info {
+  background-color: var(--status-info, #3b82f6);
+}
+
 /* Compact variant — no labels, no headers, dense.
    Fluid-fill: when the parent gives this component an explicit height, the
    status rows split it evenly and each hour-cell stretches to fill its row.
@@ -186,13 +197,13 @@
    leaves one empty cell + gap of breathing room before the next column. Shorter
    streams left-align and stay narrower. Marks are uniform across the whole set. */
 .jtf-heatstream--compact.jtf-heatstream--fill .jtf-heatstream__cells {
-  gap: 1px;
+  gap: var(--jtf-hs-gap, 1px);
   overflow: hidden; /* guard against sub-pixel rounding spill */
 }
 
 .jtf-heatstream--compact.jtf-heatstream--fill .jtf-heatstream__cell {
   width: calc(
-    (100% - var(--jtf-hs-max-count, 1) * 1px) / (var(--jtf-hs-max-count, 1) + 1)
+    (100% - var(--jtf-hs-max-count, 1) * var(--jtf-hs-gap, 1px)) / (var(--jtf-hs-max-count, 1) + 1)
   );
 }
 
@@ -251,7 +262,7 @@
 .jtf-heatstream__preview-label {
   display: flex;
   align-items: center;
-  width: 56px;
+  width: 140px;
   flex-shrink: 0;
   padding-right: 8px;
   font-size: 11px;

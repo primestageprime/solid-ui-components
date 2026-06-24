@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.76.1
+
+### Added
+
+- **`HeatStream`** — two new cell statuses, `empty` and `info`. `empty` renders a fully transparent cell (for grid positions that should read as blank rather than "missing"); `info` renders the informational blue (`--status-info`, default `#3b82f6`), complementing the existing `missing` red so a grid can show a neutral/positive baseline with red call-outs. Cell gap is now configurable via the `--jtf-hs-gap` custom property (default `1px`), and preview-row labels are wider to fit longer captions.
+
 ## 0.76.0
 
 ### Added

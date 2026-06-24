@@ -9,7 +9,7 @@
 import { Component, JSX, splitProps, For, Show, createSignal, onCleanup } from "solid-js";
 import "./HeatStream.css";
 
-export type HeatStreamStatus = "missing" | "partial" | "full" | "unknown";
+export type HeatStreamStatus = "missing" | "partial" | "full" | "unknown" | "empty" | "info";
 
 export interface HeatStreamItem {
   name: string;
@@ -195,7 +195,9 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
               <div class="jtf-heatstream__cells">
                 <For each={orderedItems()}>
                   {(item) => {
-                    const status = item.statuses[key] || "missing";
+                    // Unset keys render as `empty` (transparent) — a sparse
+                    // stream where each item lights only the keys it sets.
+                    const status = item.statuses[key] || "empty";
                     return (
                       <div
                         class={`jtf-heatstream__cell jtf-heatstream__cell--${status}`}
