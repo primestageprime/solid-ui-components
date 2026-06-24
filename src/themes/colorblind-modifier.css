@@ -1,0 +1,49 @@
+/* ============================================
+   Colorblind-Safe MODIFIER (layer-on-top only)
+   ============================================
+   Import this ALONGSIDE a base theme (e.g. hud.css) to make the app
+   colorblind-toggleable WITHOUT swapping the whole theme. It contains ONLY the
+   `html[data-colorblind="true"]` overrides — no `:root` block, no baseline, no
+   body/scrollbar styles — so importing it is inert until something sets
+   `data-colorblind="true"` on the <html> element.
+
+   This is the file consumers should import for a toggle. The full
+   `colorblind.css` (which also has a standalone `:root` theme) is for whole-
+   theme use via the manifest, and must NOT be statically imported next to
+   another theme — its `:root` block would override the base theme always.
+
+   `html[data-colorblind="true"]` has specificity (0,1,1), which out-ranks any
+   base theme's `:root` (0,1,0) regardless of import order — so the overrides
+   win deterministically when the attribute is set, and otherwise the base
+   theme is untouched.
+   ============================================ */
+html[data-colorblind="true"] {
+  /* Semantic pair: red→vermilion, green→blue, amber kept. */
+  --sui-danger: #e66100;
+  --sui-danger-rgb: 230, 97, 0;
+  --sui-success: #3b82f6;
+  --sui-success-rgb: 59, 130, 246;
+  --sui-warning: #e6a700;
+  --sui-warning-rgb: 230, 167, 0;
+
+  /* Heatmap status ramp (blue→amber→vermilion). */
+  --status-full:    #3b82f6;
+  --status-partial: #6fa8dc;
+  --status-sparse:  #e6a700;
+  --status-missing: #e66100;
+
+  /* Chart semantics. */
+  --chart-violation-band: rgba(230, 97, 0, 0.14);
+  --chart-violation-band-border: rgba(230, 97, 0, 0.42);
+  --chart-threshold: #e66100;
+  --chart-warmup: rgba(159, 178, 196, 0.12);
+  --chart-warmup-border: rgba(159, 178, 196, 0.32);
+  --chart-shutdown: rgba(159, 178, 196, 0.12);
+  --chart-shutdown-border: rgba(159, 178, 196, 0.32);
+  --chart-series-1: #56b4e9;
+  --chart-series-2: #e69f00;
+  --chart-series-3: #009e73;
+  --chart-series-4: #cc79a7;
+  --chart-series-5: #f0e442;
+  --chart-series-6: #0072b2;
+}
