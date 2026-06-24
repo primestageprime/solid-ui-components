@@ -137,3 +137,44 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
+
+export interface EnterFrameInput {
+  /** Top pane height (px) BEFORE the resolve (one row shorter). */
+  oldTop: number;
+  /** Top pane height (px) AFTER the resolve (its new layout height). */
+  newTop: number;
+  /** Total inner height shared by both panes + seam, in px. */
+  totalHeight: number;
+  /** Seam divider height in px. Default 0. */
+  seamHeight?: number;
+  /** Animation progress in [0,1] (already eased by the caller). */
+  progress: number;
+}
+
+export interface EnterFrame {
+  /** Top pane height (px) at this frame — lerp(oldTop, newTop, progress). */
+  topHeight: number;
+  /** Bottom pane height (px) — DRIVEN as the remainder so panes+seam sum to
+   * total at every frame (the seam descends with no gap). */
+  bottomHeight: number;
+}
+
+/**
+ * One frame of the full-component enter. The TOP pane height lerps oldTop→newTop
+ * and the BOTTOM is driven as `total - seam - top`, so the two panes plus the
+ * seam ALWAYS sum to the total height — no one-row gap appears while the top
+ * grows. A full-size card sits at the bottom of the top list (overflow:hidden),
+ * so the growing top reveals it N-edge-first at the seam. When oldTop == newTop
+ * (capped top) the height holds and the reveal happens via scroll in the DOM.
+ */
+export function computeEnterFrame(input: EnterFrameInput): EnterFrame {
+  const seam = Math.max(0, input.seamHeight ?? 0);
+  const usable = Math.max(0, input.totalHeight - seam);
+  const p = clamp(input.progress, 0, 1);
+  const topHeight = Math.max(
+    0,
+    Math.min(usable, input.oldTop + (input.newTop - input.oldTop) * p),
+  );
+  const bottomHeight = Math.max(0, usable - topHeight);
+  return { topHeight, bottomHeight };
+}

@@ -10,7 +10,7 @@ import {
   onMount,
   onCleanup,
 } from "solid-js";
-import { computeSplitLayout } from "./layout";
+import { computeSplitLayout, computeEnterFrame } from "./layout";
 import "./SplitQueueList.css";
 
 /**
@@ -177,6 +177,41 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+  // A TIME-DRIVEN tween: progress is computed from ELAPSED time (not rAF/WAAPI),
+  // so it lands correctly even when the tab is backgrounded (where rAF/WAAPI
+  // throttle) and can't strand mid-animation. `onFrame(progress)` is called with
+  // eased progress each step; `onSettle` runs exactly once at the end. Returns a
+  // cancel fn. Falls back to settling immediately if setTimeout is unavailable.
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+  const tweenOverTime = (
+    durationMs: number,
+    onFrame: (easedProgress: number) => void,
+    onSettle: () => void,
+  ): (() => void) => {
+    if (durationMs <= 0 || typeof setTimeout !== "function") {
+      onSettle();
+      return () => {};
+    }
+    const now = () =>
+      typeof performance !== "undefined" ? performance.now() : Date.now();
+    const startTs = now();
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      onSettle();
+    };
+    const tick = () => {
+      if (settled) return;
+      const p = Math.min(1, (now() - startTs) / durationMs);
+      onFrame(easeOutCubic(p));
+      if (p < 1) setTimeout(tick, 16);
+      else settle();
+    };
+    tick();
+    return settle;
+  };
+
   // While a resolve's exit collapse is animating, we suppress focus entirely so
   // the new head doesn't light up orange/▸ until the resolved card is fully gone
   // from the bottom list. Set to the resolving key for the duration of phase 1.
@@ -327,41 +362,28 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const prevOverflow = topList.style.overflow;
       const prevHeight = topList.style.height;
       topList.style.overflow = "hidden";
-      const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-      const now = () =>
-        typeof performance !== "undefined" ? performance.now() : Date.now();
-      const startTs = now();
-      let settled = false;
-      const settle = () => {
-        if (settled) return;
-        settled = true;
-        // Release the inline override back to the reactive content-driven height.
-        topList.style.height = prevHeight;
-        topList.style.overflow = prevOverflow;
-        advance();
-      };
-      const tick = () => {
-        if (settled) return;
-        const p = Math.min(1, (now() - startTs) / total);
-        const e = easeOut(p);
-        topList.style.height = `${oldH + (newH - oldH) * e}px`;
-        if (p < 1) setTimeout(tick, 16);
-        else settle();
-      };
-      tick();
+      tweenOverTime(
+        total,
+        (e) => {
+          topList.style.height = `${oldH + (newH - oldH) * e}px`;
+        },
+        () => {
+          // Release the inline override back to the reactive content height.
+          topList.style.height = prevHeight;
+          topList.style.overflow = prevOverflow;
+          advance();
+        },
+      );
       return;
     }
 
     if (!first || !nowEl || !topList) return bail();
-    const last = nowEl.getBoundingClientRect();
 
     // Both phases run SIMULTANEOUSLY over the FULL duration, mirrored across the
-    // seam: as the bottom card collapses up under the "to categorize" header,
-    // the resolved clone slides up into the top list at the same time — the card
+    // seam: as the bottom card collapses up under the "to categorize" header, the
+    // top pane grows to reveal the resolved card at the same time — the card
     // reads as passing up through the seam in one synchronized motion.
-    const total = animationMs();
-    const exitMs = total;
-    const enterMs = total;
+    const exitMs = animationMs();
 
     const newFocusedContent = nowEl.innerHTML;
 
@@ -392,63 +414,83 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       setTimeout(fire, ms + 80);
     };
 
-    // ---- Phase 2 (enter): the newest resolved card's N (top) edge emerges from
-    // the panel's S (bottom) edge and slides UP into its resting slot.
+    // ---- Phase 2 (enter): the TOP panel GROWS to reveal a STATIONARY, full-size
+    // card — the same mechanism the topOnly column uses, now applied to the full
+    // two-panel layout.
     //
-    // No pre-reserved blank slot: the real row (nowEl) is collapsed to height 0
-    // for the whole slide, so it reserves NO space and no empty gap is visible.
-    // The visible motion is a clone that rests exactly where nowEl WILL be (the
-    // bottom of the current content) and starts pushed one row DOWN so its N edge
-    // sits at the panel's S edge (clipped by the list's overflow:hidden), then
-    // slides up. On finish the clone is removed and nowEl is restored into the
-    // same spot — a seamless swap, with the card having filled its own slot as it
-    // emerged from the S edge.
-    const enterRowH = last.height;
+    // The newest resolved row (nowEl) is already rendered at its FULL fixed
+    // height at the bottom of the top list; it NEVER resizes or translates. We
+    // animate the PANE HEIGHTS: the top grows oldTop→newTop while the bottom is
+    // DRIVEN as the remainder (computeEnterFrame), so the two panes + seam always
+    // sum to the total — the seam descends smoothly with no one-row gap. The top's
+    // overflow:hidden clips the full card, so the growing S edge reveals it
+    // N-edge-first at the seam, in lockstep (revealed height == pane growth).
+    //
+    // Time-driven via tweenOverTime (setTimeout, elapsed-time progress) so it's
+    // robust/measurable even when the tab is backgrounded.
+    const bottomListEl = bottomList; // the bottom <ul>, sized by computeEnterFrame
     const runEnter = () => {
-      const prevOverflow = topList.style.overflow;
-      topList.style.overflow = "hidden";
+      // Pane heights BEFORE this resolve (one more unresolved, one fewer
+      // resolved) and AFTER (the current layout). These bracket the tween.
+      const prevLayout = computeSplitLayout({
+        totalHeight: height(),
+        rowHeight: rowHeight(),
+        resolvedCount: Math.max(0, props.resolved.length - 1),
+        unresolvedCount: props.unresolved.length + 1,
+        seamHeight: SEAM_HEIGHT,
+        headerHeight: headerHeight(),
+        topCapRows: topCapRows(),
+        topFloorRows: topFloorRows(),
+      });
+      const oldTop = prevLayout.topHeight;
+      const newTop = layout().topHeight;
+      const total = animationMs();
 
-      // Collapse the real row so it reserves no slot during the slide.
-      const restoreRow = () => {
-        nowEl.style.height = "";
-        nowEl.style.minHeight = "";
-        nowEl.style.overflow = "";
-        nowEl.style.visibility = "";
+      const prevTopOverflow = topList.style.overflow;
+      const prevTopHeight = topList.style.height;
+      const prevBottomHeight = bottomListEl?.style.height ?? "";
+      const releaseHeights = () => {
+        // Release the inline overrides back to the reactive layout-driven heights.
+        topList.style.overflow = prevTopOverflow;
+        topList.style.height = prevTopHeight;
+        if (bottomListEl) bottomListEl.style.height = prevBottomHeight;
       };
-      nowEl.style.height = "0px";
-      nowEl.style.minHeight = "0";
-      nowEl.style.overflow = "hidden";
-      nowEl.style.visibility = "hidden";
 
-      // With nowEl collapsed, the clone rests right after the last visible row
-      // (= nowEl's own future position). Measure that bottom-of-content now.
-      const topRect = topList.getBoundingClientRect();
-      const restTop = nowEl.offsetTop; // offset within the scrolling list
+      // Capped top (4+ resolved): the pane can't grow (oldTop == newTop). Reveal
+      // the newest row at the seam by scrolling the top to its bottom over the
+      // duration, so it reads as "grow in at the seam", not a snap.
+      if (newTop <= oldTop + 0.5) {
+        const fromScroll = topList.scrollTop;
+        const toScroll = topList.scrollHeight - topList.clientHeight;
+        if (toScroll <= fromScroll + 0.5) return; // nothing to reveal
+        tweenOverTime(
+          total,
+          (e) => {
+            topList.scrollTop = fromScroll + (toScroll - fromScroll) * e;
+          },
+          () => {
+            topList.scrollTop = toScroll;
+          },
+        );
+        return;
+      }
 
-      const enterClone = document.createElement("div");
-      enterClone.className = "sui-sql__row sui-sql__row--resolved sui-sql__phase";
-      enterClone.innerHTML = newFocusedContent; // already carries the ✓ marker
-      enterClone.style.position = "absolute";
-      enterClone.style.left = "0";
-      enterClone.style.right = "0";
-      enterClone.style.top = `${restTop}px`;
-      enterClone.style.height = `${enterRowH}px`;
-      topList.appendChild(enterClone);
-
-      // Distance from the rest slot down to the panel's S edge — start the clone
-      // there so its N edge first appears at the S edge, then slides up to rest.
-      const slotTopInView = restTop - topList.scrollTop; // px from panel N edge
-      const startY = Math.max(0, topRect.height - slotTopInView);
-
-      animateOnce(
-        enterClone,
-        [{ transform: `translateY(${startY}px)` }, { transform: "translateY(0)" }],
-        enterMs,
-        () => {
-          enterClone.remove();
-          restoreRow(); // real ✓ row takes over its slot, seamless
-          topList.style.overflow = prevOverflow;
+      // Growing top: clip the full card and tween both pane heights in lockstep.
+      topList.style.overflow = "hidden";
+      tweenOverTime(
+        total,
+        (e) => {
+          const f = computeEnterFrame({
+            oldTop,
+            newTop,
+            totalHeight: height(),
+            seamHeight: SEAM_HEIGHT,
+            progress: e,
+          });
+          topList.style.height = `${f.topHeight}px`;
+          if (bottomListEl) bottomListEl.style.height = `${f.bottomHeight}px`;
         },
+        releaseHeights,
       );
     };
 

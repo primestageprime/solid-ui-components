@@ -126,6 +126,55 @@ describe("SplitQueueList — repeated resolve advances focus (deferred to exit e
   });
 });
 
+describe("SplitQueueList — full-component enter: TOP grows, panes sum to total", () => {
+  // The full two-panel enter mirrors the topOnly panel-grow: the resolved card
+  // is full-size and stationary; the TOP <ul> grows old→new while the BOTTOM
+  // <ul> is DRIVEN as the remainder so the panes never gap (seam descends).
+  it("keeps the resolved row at full rowHeight while the panes tween in lockstep", async () => {
+    const c = mountConsumer(6, 400, false); // 6 unresolved, two-panel mode
+    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const bottomUl = c.container.querySelector(
+      ".sui-sql__list--bottom",
+    ) as HTMLElement;
+
+    // First resolve (0→1) is the floor case (top already 1 row, no growth).
+    // Resolve again (1→2) so the TOP actually GROWS a row — the case we verify.
+    c.resolveFocused();
+    await tick(500);
+    c.resolveFocused(); // k2: top grows 1 row to reveal the new full card
+
+    await tick(60); // sample mid-tween
+    const topMid = parseFloat(topUl.style.height || "0");
+    const bottomMid = parseFloat(bottomUl.style.height || "0");
+
+    // The resolved card is rendered at full fixed height in the top list — its
+    // inline min-height is the full rowHeight and is NEVER shrunk to fit.
+    const row = c.container.querySelector(
+      '.sui-sql__list--top [data-sql-key="k2"]',
+    ) as HTMLElement;
+    expect(row).toBeTruthy();
+    expect(row.style.minHeight).toBe("120px");
+
+    // Mid-tween BOTH panes carry an inline (driven) height — the bottom is not
+    // left snapped; it's driven down in lockstep with the top growing.
+    expect(topMid).toBeGreaterThan(0);
+    expect(bottomMid).toBeGreaterThan(0);
+
+    // The top is GROWING: mid-tween it is taller than its 1-row start (148) but
+    // not yet at its 2-row end (268) — a real tween, not a snap.
+    expect(topMid).toBeGreaterThan(148);
+    expect(topMid).toBeLessThan(268);
+
+    // Panes + seam sum to the total height at the sampled frame (no gap). The
+    // default height is 420 and SEAM_HEIGHT is 2.
+    expect(topMid + bottomMid + 2).toBeCloseTo(420, 0);
+
+    await tick(500); // let the tween settle and release inline overrides
+    expect(c.resolved().map((i) => i.id)).toEqual(["k1", "k2"]);
+    expect(c.focused()).toBe("k3"); // focus advanced at the end of the collapse
+  });
+});
+
 describe("SplitQueueList — topOnly enter: PANEL grows to reveal a FIXED card", () => {
   // The corrected model: the card is ALWAYS its full, fixed rowHeight (120px)
   // from frame 0 — it never resizes. The PANEL (top <ul>) height is what

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeSplitLayout } from "./layout";
+import { computeSplitLayout, computeEnterFrame } from "./layout";
 
 /* The layout calc is total and pure, so exact-equality assertions hold.
  *
@@ -141,6 +141,76 @@ describe("computeSplitLayout — last row never clips when not scrolling", () =>
       expect(r.bottomHeight).toBeGreaterThanOrEqual(paneFor(1));
       expect(r.bottomScrolls).toBe(false);
     }
+  });
+});
+
+describe("computeEnterFrame — full-component enter: top grows, panes sum to total", () => {
+  // The full two-panel enter mirrors the topOnly panel-grow: the TOP pane height
+  // lerps oldTop -> newTop over progress p, and the BOTTOM pane is DRIVEN as the
+  // remainder so the two panes (+ seam) ALWAYS sum to totalHeight — the seam
+  // descends smoothly with no one-row gap. The card is full-size and clipped.
+  const frame = (p: number) =>
+    computeEnterFrame({
+      oldTop: 100,
+      newTop: 140, // top grows by one 40px row on resolve
+      totalHeight: 480,
+      seamHeight: 0,
+      progress: p,
+    });
+
+  it("at p=0 the top is at its OLD height (pre-resolve)", () => {
+    expect(frame(0).topHeight).toBe(100);
+  });
+
+  it("at p=1 the top is at its NEW height (fully revealed)", () => {
+    expect(frame(1).topHeight).toBe(140);
+  });
+
+  it("at p=0.5 the top is halfway (linear lerp of the height)", () => {
+    expect(frame(0.5).topHeight).toBe(120); // 100 + (140-100)*0.5
+  });
+
+  it("panes + seam sum to total at EVERY frame (no gap, seam descends)", () => {
+    for (const p of [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]) {
+      const f = frame(p);
+      expect(f.topHeight + f.bottomHeight).toBe(480); // seam 0 here
+    }
+  });
+
+  it("the bottom is DRIVEN as the remainder, shrinking as the top grows", () => {
+    expect(frame(0).bottomHeight).toBe(380); // 480 - 100
+    expect(frame(1).bottomHeight).toBe(340); // 480 - 140 (one row less)
+    // It only loses exactly the one row the top gained — no double-count.
+    expect(frame(0).bottomHeight - frame(1).bottomHeight).toBe(40);
+  });
+
+  it("accounts for the seam: top + bottom + seam == total every frame", () => {
+    const seamHeight = 8;
+    for (const p of [0, 0.3, 0.6, 1]) {
+      const f = computeEnterFrame({
+        oldTop: 100,
+        newTop: 140,
+        totalHeight: 480,
+        seamHeight,
+        progress: p,
+      });
+      expect(f.topHeight + f.bottomHeight + seamHeight).toBe(480);
+    }
+  });
+
+  it("clamps progress to [0,1] and never returns negative panes", () => {
+    expect(computeEnterFrame({ oldTop: 100, newTop: 140, totalHeight: 480, progress: -1 }).topHeight).toBe(100);
+    expect(computeEnterFrame({ oldTop: 100, newTop: 140, totalHeight: 480, progress: 2 }).topHeight).toBe(140);
+    const tiny = computeEnterFrame({ oldTop: 100, newTop: 140, totalHeight: 50, progress: 1 });
+    expect(tiny.bottomHeight).toBeGreaterThanOrEqual(0);
+  });
+
+  it("capped top (oldTop == newTop) holds height — no grow, bottom unchanged", () => {
+    // 4+ resolved: top is already at its 3-row cap, so it can't grow; the reveal
+    // happens via scroll (handled in the component), not a height tween.
+    const f = computeEnterFrame({ oldTop: 140, newTop: 140, totalHeight: 480, progress: 0.5 });
+    expect(f.topHeight).toBe(140);
+    expect(f.bottomHeight).toBe(340);
   });
 });
 
