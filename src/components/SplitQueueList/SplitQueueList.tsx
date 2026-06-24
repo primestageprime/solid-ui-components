@@ -166,7 +166,10 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // container height. This makes the "card emerges from the S edge" enter
   // watchable. (The normal two-panel layout uses layout().topHeight, unchanged.)
   const topOnlyHeight = () => {
-    const rows = Math.max(topFloorRows(), props.resolved.length);
+    // "One line" (just the header) when empty; grows by exactly one row per
+    // resolved card so every resolve animates the panel open and reveals the
+    // newest card at the S edge.
+    const rows = props.resolved.length;
     return Math.min(height(), headerHeight() + rows * rowHeight());
   };
 
@@ -295,6 +298,47 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     );
     const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
     const topList = topListEl;
+
+    // topOnly enter: the PANEL adjusts to the card, not the card to the panel.
+    // The newest resolved row is already rendered at its FULL, fixed height at
+    // the bottom of the list. We animate the PANEL's own height from its
+    // pre-resolve value (one row shorter) up to its new value; overflow:hidden
+    // clips the stationary full-size card, so as the panel grows its descending
+    // S (bottom) edge uncovers the card N-edge-first, in lockstep — revealed
+    // height == panel growth at every frame. No clone, no translate, no card
+    // resize, and no rAF rect-capture, so it can't bail in a throttled tab.
+    if (props.topOnly) {
+      if (!topList) return bail();
+      const total = animationMs();
+      const newH = topOnlyHeight();
+      const oldH = Math.max(headerHeight(), newH - rowHeight());
+      const advance = () => {
+        setExitingKey(null);
+        props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+      };
+      if (newH <= oldH || typeof topList.animate !== "function") {
+        advance();
+        return;
+      }
+      const prevOverflow = topList.style.overflow;
+      topList.style.overflow = "hidden";
+      let fired = false;
+      const finish = () => {
+        if (fired) return;
+        fired = true;
+        topList.style.overflow = prevOverflow;
+        advance();
+      };
+      const anim = topList.animate(
+        [{ height: `${oldH}px` }, { height: `${newH}px` }],
+        { duration: total, easing: EASE },
+      );
+      anim.onfinish = finish;
+      anim.oncancel = finish;
+      setTimeout(finish, total + 80);
+      return;
+    }
+
     if (!first || !nowEl || !topList) return bail();
     const last = nowEl.getBoundingClientRect();
 
@@ -516,7 +560,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     <div
       ref={rootEl}
       class={`sui-sql${props.class ? " " + props.class : ""}`}
-      style={{ height: `${height()}px` }}
+      // In topOnly the root hugs its single (top) panel so the container follows
+      // the panel's content-driven / animated height — "one line" when empty,
+      // growing with the panel as it reveals each card. The normal two-panel
+      // layout keeps the fixed total height.
+      style={{ height: props.topOnly ? undefined : `${height()}px` }}
     >
       {/* TOP — resolved ("categorized"). Content-driven height between a 1-row
           floor and a 3-row cap; absorbs slack when the bottom is short. Sized
