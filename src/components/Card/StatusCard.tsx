@@ -18,6 +18,8 @@ import {
   splitProps,
   mergeProps,
   createSignal,
+  createEffect,
+  onCleanup,
 } from "solid-js";
 import "./StatusCard.css";
 
@@ -60,6 +62,28 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
     "children",
   ]);
   const [moreOpen, setMoreOpen] = createSignal(false);
+  // "more" is only offered when the description is actually clipped — i.e. the
+  // text overflows the fixed-height detail area. Measured live (the area grows
+  // to fill the card, so its height isn't known until laid out).
+  const [overflowing, setOverflowing] = createSignal(false);
+  let descRef: HTMLSpanElement | undefined;
+  const measure = () => {
+    const el = descRef;
+    if (!el) return;
+    setOverflowing(el.scrollHeight - el.clientHeight > 1);
+  };
+  createEffect(() => {
+    // re-measure when the text changes
+    local.description;
+    queueMicrotask(measure);
+  });
+  const attachRef = (el: HTMLSpanElement) => {
+    descRef = el;
+    queueMicrotask(measure);
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+    onCleanup(() => ro.disconnect());
+  };
 
   const classes = () => {
     const cl = ["sui-status-card"];
@@ -92,18 +116,21 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
           bottom-pinned meta row; overflow is clipped with a "more" popover. */}
       <Show when={local.description && local.description.trim().length > 0}>
         <div class="sui-status-card__row2">
-          <span class="sui-status-card__desc">{local.description}
+          <span class="sui-status-card__desc" ref={attachRef}>
+            {local.description}
           </span>
-          <button
-            type="button"
-            class="sui-status-card__more"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMoreOpen((v) => !v);
-            }}
-          >
-            more
-          </button>
+          <Show when={overflowing()}>
+            <button
+              type="button"
+              class="sui-status-card__more"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMoreOpen((v) => !v);
+              }}
+            >
+              more
+            </button>
+          </Show>
           <Show when={moreOpen()}>
             <div
               class="sui-status-card__popover"
