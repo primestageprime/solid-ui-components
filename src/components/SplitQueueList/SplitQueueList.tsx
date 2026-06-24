@@ -307,6 +307,10 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // S (bottom) edge uncovers the card N-edge-first, in lockstep — revealed
     // height == panel growth at every frame. No clone, no translate, no card
     // resize, and no rAF rect-capture, so it can't bail in a throttled tab.
+    //
+    // The tween is TIME-DRIVEN via setTimeout (not WAAPI): progress is computed
+    // from elapsed time so it lands correctly even when the tab is backgrounded
+    // (where rAF/WAAPI throttle), and it can't strand the panel mid-height.
     if (props.topOnly) {
       if (!topList) return bail();
       const total = animationMs();
@@ -316,26 +320,35 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         setExitingKey(null);
         props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
       };
-      if (newH <= oldH || typeof topList.animate !== "function") {
+      if (newH <= oldH || total <= 0 || typeof setTimeout !== "function") {
         advance();
         return;
       }
       const prevOverflow = topList.style.overflow;
+      const prevHeight = topList.style.height;
       topList.style.overflow = "hidden";
-      let fired = false;
-      const finish = () => {
-        if (fired) return;
-        fired = true;
+      const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+      const now = () =>
+        typeof performance !== "undefined" ? performance.now() : Date.now();
+      const startTs = now();
+      let settled = false;
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        // Release the inline override back to the reactive content-driven height.
+        topList.style.height = prevHeight;
         topList.style.overflow = prevOverflow;
         advance();
       };
-      const anim = topList.animate(
-        [{ height: `${oldH}px` }, { height: `${newH}px` }],
-        { duration: total, easing: EASE },
-      );
-      anim.onfinish = finish;
-      anim.oncancel = finish;
-      setTimeout(finish, total + 80);
+      const tick = () => {
+        if (settled) return;
+        const p = Math.min(1, (now() - startTs) / total);
+        const e = easeOut(p);
+        topList.style.height = `${oldH + (newH - oldH) * e}px`;
+        if (p < 1) setTimeout(tick, 16);
+        else settle();
+      };
+      tick();
       return;
     }
 
