@@ -296,9 +296,6 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const exitMs = total;
     const enterMs = total;
 
-    // Hide the real resolved row until the enter phase lands.
-    nowEl.style.visibility = "hidden";
-
     const newFocusedContent = nowEl.innerHTML;
 
     // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
@@ -328,28 +325,62 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       setTimeout(fire, ms + 80);
     };
 
-    // ---- Phase 2 (enter): resolved-styled clone rising into the top list.
+    // ---- Phase 2 (enter): the newest resolved card's N (top) edge emerges from
+    // the panel's S (bottom) edge and slides UP into its resting slot.
+    //
+    // No pre-reserved blank slot: the real row (nowEl) is collapsed to height 0
+    // for the whole slide, so it reserves NO space and no empty gap is visible.
+    // The visible motion is a clone that rests exactly where nowEl WILL be (the
+    // bottom of the current content) and starts pushed one row DOWN so its N edge
+    // sits at the panel's S edge (clipped by the list's overflow:hidden), then
+    // slides up. On finish the clone is removed and nowEl is restored into the
+    // same spot — a seamless swap, with the card having filled its own slot as it
+    // emerged from the S edge.
+    const enterRowH = last.height;
     const runEnter = () => {
+      const prevOverflow = topList.style.overflow;
+      topList.style.overflow = "hidden";
+
+      // Collapse the real row so it reserves no slot during the slide.
+      const restoreRow = () => {
+        nowEl.style.height = "";
+        nowEl.style.minHeight = "";
+        nowEl.style.overflow = "";
+        nowEl.style.visibility = "";
+      };
+      nowEl.style.height = "0px";
+      nowEl.style.minHeight = "0";
+      nowEl.style.overflow = "hidden";
+      nowEl.style.visibility = "hidden";
+
+      // With nowEl collapsed, the clone rests right after the last visible row
+      // (= nowEl's own future position). Measure that bottom-of-content now.
       const topRect = topList.getBoundingClientRect();
+      const restTop = nowEl.offsetTop; // offset within the scrolling list
+
       const enterClone = document.createElement("div");
       enterClone.className = "sui-sql__row sui-sql__row--resolved sui-sql__phase";
       enterClone.innerHTML = newFocusedContent; // already carries the ✓ marker
       enterClone.style.position = "absolute";
       enterClone.style.left = "0";
       enterClone.style.right = "0";
-      enterClone.style.top = `${last.top - topRect.top + topList.scrollTop}px`;
-      enterClone.style.height = `${last.height}px`;
+      enterClone.style.top = `${restTop}px`;
+      enterClone.style.height = `${enterRowH}px`;
       topList.appendChild(enterClone);
 
-      // Start one row-height below (under the top list's bottom edge, clipped),
-      // slide up to its resting slot.
+      // Distance from the rest slot down to the panel's S edge — start the clone
+      // there so its N edge first appears at the S edge, then slides up to rest.
+      const slotTopInView = restTop - topList.scrollTop; // px from panel N edge
+      const startY = Math.max(0, topRect.height - slotTopInView);
+
       animateOnce(
         enterClone,
-        [{ transform: `translateY(${last.height}px)` }, { transform: "translateY(0)" }],
+        [{ transform: `translateY(${startY}px)` }, { transform: "translateY(0)" }],
         enterMs,
         () => {
           enterClone.remove();
-          nowEl.style.visibility = ""; // repaint to resolved ✓ on arrival
+          restoreRow(); // real ✓ row takes over its slot, seamless
+          topList.style.overflow = prevOverflow;
         },
       );
     };
