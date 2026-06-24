@@ -19,6 +19,13 @@
 /* Two stacked labeled sections with a seam, no queue animation. The top is a
  * read-only capped/scrolling list; the bottom takes the remaining space and
  * scrolls, hosting arbitrary consumer content. */
+/* Fill a flex-column parent (height:100% needs a definite parent height; the
+ * flex sizing makes it work inside the common collapsible-rail layout too). */
+.sui-sql--static {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .sui-sql--static .sui-sql__list--top {
   flex: 0 0 auto;
 }

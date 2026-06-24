@@ -966,11 +966,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
   if (props.static) {
     const topItems = () => props.topItems ?? props.resolved;
+    // Fill the parent by default so the rail tracks the available height; an
+    // explicit `height` prop pins a fixed px height instead.
     return (
       <div
         ref={rootEl}
         class={`sui-sql sui-sql--static${props.class ? " " + props.class : ""}`}
-        style={{ height: `${height()}px` }}
+        style={{ height: props.height != null ? `${props.height}px` : "100%" }}
       >
         {/* TOP — read-only list, capped to topCapRows then scrolls. */}
         <ul
