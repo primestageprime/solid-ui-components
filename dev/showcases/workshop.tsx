@@ -1,4 +1,4 @@
-import { type Component, createSignal, onCleanup } from "solid-js";
+import { type Component, type JSX, createSignal, onCleanup } from "solid-js";
 import { SectionTitle } from "../../src/components/Text";
 import { SplitQueueList } from "../../src/components/SplitQueueList";
 import {
@@ -87,6 +87,14 @@ export const WorkshopShowcase: Component = () => {
   };
   onCleanup(() => timer && clearTimeout(timer));
 
+  // Shared row renderer used by both columns.
+  const renderItem = (i: QueueItem): JSX.Element => (
+    <span style={{ display: "flex", "justify-content": "space-between", gap: "8px" }}>
+      <span style={{ overflow: "hidden", "text-overflow": "ellipsis" }}>{i.label}</span>
+      <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>{i.amount}</span>
+    </span>
+  );
+
   return (
     <div class="component-section component-section--full">
       <SectionTitle>Workshop — SplitQueueList animation</SectionTitle>
@@ -100,10 +108,12 @@ export const WorkshopShowcase: Component = () => {
       >
         Iteration surface for the SplitQueueList resolve animation. Tall (120px)
         cards, a fixed queue of 10 transactions that starts <strong>empty</strong>{" "}
-        (0 categorized, 10 to categorize). Resolving a row FLIP-slides it up
-        across the seam and repaints from unresolved to resolved styling. Drag the{" "}
-        <strong>Animation duration</strong> knob to scrub the slide speed live
-        (honors <code>prefers-reduced-motion</code> — instant when reduced).
+        (0 categorized, 10 to categorize). Two columns share the same state and
+        controls: <strong>Full</strong> (both panels) and <strong>Top panel
+        only</strong> (just the categorized list, full height) — resolving plays
+        the enter animation in both at once so the categorized-panel behavior can
+        be watched in isolation. Drag the <strong>Animation duration</strong> knob
+        to scrub the speed live (honors <code>prefers-reduced-motion</code>).
       </p>
 
       <div
@@ -155,27 +165,51 @@ export const WorkshopShowcase: Component = () => {
         </span>
       </div>
 
-      <div style={{ width: "340px" }}>
-        <SplitQueueList<QueueItem>
-          resolved={resolved()}
-          unresolved={unresolved()}
-          keyOf={(i) => i.id}
-          focusedKey={focused() ?? undefined}
-          onFocusChange={setFocused}
-          onResolve={resolveKey}
-          height={CONTAINER_H}
-          rowHeight={CARD_H}
-          animationMs={duration()}
-          resolvedLabel="Categorized"
-          unresolvedLabel="To categorize"
-          allClearLabel="All clear — every transaction categorized"
-          renderItem={(i) => (
-            <span style={{ display: "flex", "justify-content": "space-between", gap: "8px" }}>
-              <span style={{ overflow: "hidden", "text-overflow": "ellipsis" }}>{i.label}</span>
-              <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>{i.amount}</span>
-            </span>
-          )}
-        />
+      {/* Two columns sharing the SAME state + controls: left = the full
+          component, right = ONLY the categorized panel (topOnly). Resolving
+          plays the enter animation in BOTH at once, so the categorized-panel
+          behavior can be watched in isolation. */}
+      <div style={{ display: "flex", gap: "40px", "flex-wrap": "wrap" }}>
+        <div style={{ width: "340px" }}>
+          <div class="text-meta" style={{ "margin-bottom": "6px" }}>
+            Full
+          </div>
+          <SplitQueueList<QueueItem>
+            resolved={resolved()}
+            unresolved={unresolved()}
+            keyOf={(i) => i.id}
+            focusedKey={focused() ?? undefined}
+            onFocusChange={setFocused}
+            onResolve={resolveKey}
+            height={CONTAINER_H}
+            rowHeight={CARD_H}
+            animationMs={duration()}
+            resolvedLabel="Categorized"
+            unresolvedLabel="To categorize"
+            allClearLabel="All clear — every transaction categorized"
+            renderItem={renderItem}
+          />
+        </div>
+
+        <div style={{ width: "340px" }}>
+          <div class="text-meta" style={{ "margin-bottom": "6px" }}>
+            Top panel only
+          </div>
+          <SplitQueueList<QueueItem>
+            topOnly
+            resolved={resolved()}
+            unresolved={unresolved()}
+            keyOf={(i) => i.id}
+            focusedKey={focused() ?? undefined}
+            onFocusChange={setFocused}
+            onResolve={resolveKey}
+            height={CONTAINER_H}
+            rowHeight={CARD_H}
+            animationMs={duration()}
+            resolvedLabel="Categorized"
+            renderItem={renderItem}
+          />
+        </div>
       </div>
     </div>
   );

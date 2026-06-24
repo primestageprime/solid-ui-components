@@ -78,6 +78,12 @@ export interface SplitQueueListProps<T> {
   height?: number;
   /** Slide duration in ms. Default 800. */
   animationMs?: number;
+  /** Render ONLY the top (resolved / "categorized") panel at full height —
+   * omit the bottom "to categorize" list and the seam. The resolve animation's
+   * enter/grow into the top still plays; the bottom-collapse half is naturally
+   * skipped (there is no bottom list). Default false (full two-panel layout,
+   * baseline behavior unchanged). */
+  topOnly?: boolean;
   class?: string;
 }
 
@@ -477,7 +483,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
-        style={{ height: `${layout().topHeight}px` }}
+        style={{
+          height: props.topOnly ? `${height()}px` : `${layout().topHeight}px`,
+        }}
       >
         <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
           <span>{props.resolvedLabel ?? "Resolved"}</span>
@@ -486,32 +494,36 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         <For each={props.resolved}>{(item) => renderRow(item, "resolved")}</For>
       </ul>
 
-      <div class="sui-sql__seam" aria-hidden="true" />
+      {/* Seam + BOTTOM panel are omitted in topOnly mode — the categorized list
+          takes the full height. The resolve enter/grow still plays. */}
+      <Show when={!props.topOnly}>
+        <div class="sui-sql__seam" aria-hidden="true" />
 
-      {/* BOTTOM — unresolved ("to categorize"). Gets the remaining space and
-          scrolls when overfull; collapses to the "all clear" strip when empty. */}
-      <ul
-        class="sui-sql__list sui-sql__list--bottom"
-        classList={{ "sui-sql__list--collapsed": props.unresolved.length === 0 }}
-        style={{ height: `${layout().bottomHeight}px` }}
-      >
-        <Show
-          when={props.unresolved.length > 0}
-          fallback={
-            <li class="sui-sql__clear">
-              {props.allClearLabel ?? "All clear — nothing to process"}
-            </li>
-          }
+        {/* BOTTOM — unresolved ("to categorize"). Gets the remaining space and
+            scrolls when overfull; collapses to the "all clear" strip when empty. */}
+        <ul
+          class="sui-sql__list sui-sql__list--bottom"
+          classList={{ "sui-sql__list--collapsed": props.unresolved.length === 0 }}
+          style={{ height: `${layout().bottomHeight}px` }}
         >
-          <li class="sui-sql__header sui-sql__header--bottom">
-            <span>{props.unresolvedLabel ?? "Unresolved"}</span>
-            <span class="sui-sql__count">{props.unresolved.length}</span>
-          </li>
-          <For each={props.unresolved}>
-            {(item) => renderRow(item, "unresolved")}
-          </For>
-        </Show>
-      </ul>
+          <Show
+            when={props.unresolved.length > 0}
+            fallback={
+              <li class="sui-sql__clear">
+                {props.allClearLabel ?? "All clear — nothing to process"}
+              </li>
+            }
+          >
+            <li class="sui-sql__header sui-sql__header--bottom">
+              <span>{props.unresolvedLabel ?? "Unresolved"}</span>
+              <span class="sui-sql__count">{props.unresolved.length}</span>
+            </li>
+            <For each={props.unresolved}>
+              {(item) => renderRow(item, "unresolved")}
+            </For>
+          </Show>
+        </ul>
+      </Show>
     </div>
   );
 }
