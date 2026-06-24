@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.78.0
+
+### Added
+
+- **`TimelineBar` gains `highlightedState`** — a group-highlight affordance. Unlike `selectedId`/`hoveredId` (single-bar), `highlightedState?: string | null` flags **every** bar whose `state` equals the value with `data-highlighted="true"`, so a legend hover or `onBarHover` reading `bar.state` can light up *all* segments of a given status at once (e.g. every `WARNING` bar across multiple lanes). Default `null` (nothing highlighted). Styling is left to the consumer via the data attribute; the chart stylesheet ships a reference treatment (`[data-highlighted="true"]` → brighter stroke + accent glow). The DotChart showcase wires a hoverable OK/WARNING/ALARM legend to demonstrate it.
+
 ## 0.76.1
 
 ### Added

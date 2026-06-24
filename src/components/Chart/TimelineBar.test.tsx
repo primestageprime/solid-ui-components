@@ -80,6 +80,28 @@ describe("TimelineBar — reactivity", () => {
     setSel(slotId("a"));
     expect(container.querySelector(".sui-chart__timeline-bar")!.getAttribute("data-selected")).toBe("true");
   });
+
+  it("highlightedState marks every bar whose state matches with data-highlighted", () => {
+    // Legend-/hover-linked "highlight all segments of status X" affordance:
+    // a single highlightedState value flags ALL bars sharing that state, not
+    // just one id (contrast with selectedId/hoveredId which are single-bar).
+    const [hl, setHl] = createSignal<string | null>(null);
+    const bars: TimelineBarDatum[] = [
+      { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff", state: "WARNING" },
+      { id: slotId("b"), start: 3, end: 5, lane: "x", color: "#fff", state: "ALARM" },
+      { id: slotId("c"), start: 6, end: 8, lane: "x", color: "#fff", state: "WARNING" },
+    ];
+    const { container } = wrapper(() => <TimelineBar data={bars} highlightedState={hl()} />);
+    const rects = () =>
+      Array.from(container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"));
+
+    // Unset: no bar is highlighted.
+    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual([null, null, null]);
+
+    // Set to WARNING: both WARNING bars flagged, the ALARM bar untouched.
+    setHl("WARNING");
+    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual(["true", null, "true"]);
+  });
 });
 
 describe("TimelineBar — callbacks", () => {

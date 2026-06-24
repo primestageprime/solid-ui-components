@@ -160,6 +160,16 @@
   stroke: var(--sui-text, #e8eef7);
   stroke-width: 1;
 }
+/* Group highlight — every bar sharing the highlighted `state` lights up at
+   once (legend-/hover-linked "highlight all segments of status X"). Consumer
+   styling per the data attribute; this is the gallery's reference treatment. */
+.sui-chart__timeline-bar[data-highlighted="true"] {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px var(--sui-accent, #5b8def))
+    drop-shadow(0 0 10px var(--sui-accent, #5b8def));
+}
 
 /* Timeline-strip labels — rendered in the chart's left margin, right-aligned
    against the strip's start. Same tick-color palette as axis labels so labels

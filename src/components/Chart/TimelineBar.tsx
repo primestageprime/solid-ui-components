@@ -51,6 +51,15 @@ export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum>
   lanes?: readonly string[];
   selectedId?: Id | null;
   hoveredId?: Id | null;
+  /**
+   * Flags EVERY bar whose `state` equals this value with
+   * `data-highlighted="true"`. Unlike `selectedId`/`hoveredId` (single-bar),
+   * this is a group affordance for legend- or hover-linked "highlight all
+   * segments of status X" interactions. Pairs naturally with reading
+   * `bar.state` off the `onBarHover` argument. Default `null` (nothing
+   * highlighted). Styling is left to the consumer via the data attribute.
+   */
+  highlightedState?: string | null;
   /** Bar height as fraction of lane height. Default 0.6. */
   barHeight?: number;
   /**
@@ -205,6 +214,9 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               (laneHeight() * (1 - merged.barHeight)) / 2;
             const isSelected = () => merged.selectedId === bar.id;
             const isHovered = () => merged.hoveredId === bar.id;
+            const isHighlighted = () =>
+              merged.highlightedState != null &&
+              bar.state === merged.highlightedState;
             return (
               <Show
                 when={laneIdx() >= 0}
@@ -216,6 +228,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                   data-state={bar.state}
                   data-selected={isSelected() ? "true" : undefined}
                   data-hovered={isHovered() ? "true" : undefined}
+                  data-highlighted={isHighlighted() ? "true" : undefined}
                   x={Math.min(x1(), x2())}
                   y={yTop()}
                   width={Math.abs(x2() - x1())}

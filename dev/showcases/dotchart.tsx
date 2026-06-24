@@ -62,12 +62,12 @@ export const DotchartShowcase: Component = () => {
     { id: "s1", start: t0 + 1 * 3600_000, end: t0 + 3 * 3600_000, color: "var(--sui-accent)" },
   ];
   const scheduledBars: TimelineBarDatum[] = [
-    { id: "sched-1", start: t0 + 0.5 * 3600_000, end: t0 + 2.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)" },
-    { id: "sched-2", start: t0 + 5 * 3600_000, end: t0 + 6.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)" },
+    { id: "sched-1", start: t0 + 0.5 * 3600_000, end: t0 + 2.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)", state: "OK" },
+    { id: "sched-2", start: t0 + 5 * 3600_000, end: t0 + 6.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)", state: "WARNING" },
   ];
   const detectedBars: TimelineBarDatum[] = [
-    { id: "det-1", start: t0 + 3 * 3600_000, end: t0 + 4 * 3600_000, lane: "detected", color: "var(--sui-warning)" },
-    { id: "det-2", start: t0 + 6 * 3600_000, end: t0 + 7 * 3600_000, lane: "detected", color: "var(--sui-warning)" },
+    { id: "det-1", start: t0 + 3 * 3600_000, end: t0 + 4 * 3600_000, lane: "detected", color: "var(--sui-warning)", state: "WARNING" },
+    { id: "det-2", start: t0 + 6 * 3600_000, end: t0 + 7 * 3600_000, lane: "detected", color: "var(--sui-warning)", state: "ALARM" },
   ];
   const [pins, setPins] = createSignal<Pin[]>([
     { id: "p1", x: t0 + 1.5 * 3600_000, descriptor: warningPin },
@@ -77,6 +77,7 @@ export const DotchartShowcase: Component = () => {
   const currentPoint = createMemo(() => ({ x: currentX(), y: 50, label: "now" }));
 
   const [hoveredBarId, setHoveredBarId] = createSignal<string | number | null>(null);
+  const [highlightedState, setHighlightedState] = createSignal<string | null>(null);
   const allBars = createMemo<TimelineBarDatum[]>(() => [...scheduledBars, ...detectedBars]);
   const hoveredBar = createMemo<TimelineBarDatum | null>(
     () => allBars().find((b) => b.id === hoveredBarId()) ?? null,
@@ -93,6 +94,37 @@ export const DotchartShowcase: Component = () => {
         amygdala-ui dotchart layout — strips anchored in <code>margin-bottom</code>,
         with x-axis ticks pushed below.
       </p>
+      <div class="text-meta" style={{ display: "flex", "align-items": "center", gap: "8px", "margin-bottom": "8px" }}>
+        <span>Highlight status:</span>
+        <For each={["OK", "WARNING", "ALARM"]}>
+          {(status) => (
+            <button
+              type="button"
+              onPointerEnter={() => setHighlightedState(status)}
+              onPointerLeave={() => setHighlightedState(null)}
+              onFocus={() => setHighlightedState(status)}
+              onBlur={() => setHighlightedState(null)}
+              style={{
+                padding: "2px 10px",
+                "border-radius": "12px",
+                border: highlightedState() === status
+                  ? "1px solid var(--sui-accent, #5b8def)"
+                  : "1px solid var(--sui-border, #333)",
+                background: highlightedState() === status
+                  ? "var(--sui-accent, #5b8def)"
+                  : "transparent",
+                color: "inherit",
+                cursor: "pointer",
+                "font-family": "var(--sui-font-mono, monospace)",
+                "font-size": "11px",
+              }}
+            >
+              {status}
+            </button>
+          )}
+        </For>
+        <span style={{ opacity: 0.6 }}>← hover a chip; every bar with that state glows</span>
+      </div>
       <Chart
         width={800}
         height={300}
@@ -112,6 +144,7 @@ export const DotchartShowcase: Component = () => {
           barHeight={1}
           label="scheduled"
           hoveredId={hoveredBarId()}
+          highlightedState={highlightedState()}
           onBarHover={(bar) => setHoveredBarId(bar ? bar.id : null)}
         />
         <TimelineBar
@@ -122,6 +155,7 @@ export const DotchartShowcase: Component = () => {
           barHeight={1}
           label="detected"
           hoveredId={hoveredBarId()}
+          highlightedState={highlightedState()}
           onBarHover={(bar) => setHoveredBarId(bar ? bar.id : null)}
         />
         <Show when={hoveredBar()}>
