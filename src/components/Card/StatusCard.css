@@ -48,9 +48,22 @@
   align-items: center;
 }
 
-/* Row 2 — detail. Grows to fill the gap between the title and the
-   bottom-pinned meta row; overflow is clipped, with a floating "more". */
+/* Row 2 — detail area. A flex column: the description grows to fill the gap
+   between the title and the bottom-pinned meta row; optional actions sit at
+   the bottom of the detail area. */
 .sui-status-card__row2 {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+/* Wraps the description so the "more" affordance can anchor to its corner
+   while actions live below it. */
+.sui-status-card__desc-wrap {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
@@ -66,6 +79,15 @@
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Detail-area actions — pinned below the description, above the meta row. */
+.sui-status-card__actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
 .sui-status-card__more {
@@ -137,9 +159,9 @@
   flex: 1;
   min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  overflow: hidden;
 }
 
 .sui-status-card__meta-center {

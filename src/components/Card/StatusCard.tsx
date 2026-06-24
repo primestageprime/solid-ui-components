@@ -38,6 +38,10 @@ export interface StatusCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
   progress?: JSX.Element;
   /** Row 3, right — e.g. estimated (todo/doing) or actual (done). */
   estimate?: JSX.Element;
+  /** Detail-area actions — buttons etc. rendered at the bottom of the detail
+   *  area (row 2), below the description and above the meta row. Clicks are
+   *  isolated from the whole-card onSelect. */
+  actions?: JSX.Element;
   /** Selected / active styling. */
   active?: boolean;
   /** Whole-card click. */
@@ -55,6 +59,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
     "claimedBy",
     "progress",
     "estimate",
+    "actions",
     "active",
     "onSelect",
     "descriptionLines",
@@ -112,24 +117,42 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
         </Show>
       </div>
 
-      {/* Row 2 — description fills the space between the title and the
-          bottom-pinned meta row; overflow is clipped with a "more" popover. */}
-      <Show when={local.description && local.description.trim().length > 0}>
+      {/* Row 2 — detail area. The description fills the space between the title
+          and the bottom-pinned meta row (overflow clipped with a "more"
+          popover); optional actions sit at the bottom of the detail area. */}
+      <Show
+        when={
+          (local.description && local.description.trim().length > 0) ||
+          local.actions != null
+        }
+      >
         <div class="sui-status-card__row2">
-          <span class="sui-status-card__desc" ref={attachRef}>
-            {local.description}
-          </span>
-          <Show when={overflowing()}>
-            <button
-              type="button"
-              class="sui-status-card__more"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMoreOpen((v) => !v);
-              }}
+          <Show when={local.description && local.description.trim().length > 0}>
+            <div class="sui-status-card__desc-wrap">
+              <span class="sui-status-card__desc" ref={attachRef}>
+                {local.description}
+              </span>
+              <Show when={overflowing()}>
+                <button
+                  type="button"
+                  class="sui-status-card__more"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMoreOpen((v) => !v);
+                  }}
+                >
+                  more
+                </button>
+              </Show>
+            </div>
+          </Show>
+          <Show when={local.actions != null}>
+            <div
+              class="sui-status-card__actions"
+              onClick={(e) => e.stopPropagation()}
             >
-              more
-            </button>
+              {local.actions}
+            </div>
           </Show>
           <Show when={moreOpen()}>
             <div
