@@ -168,11 +168,14 @@ body {
    take effect when `data-colorblind="true"` is set on a root element (html or
    body). Backgrounds, radii, spacing, and typography are intentionally left to
    the base theme so the app's look is preserved — only the confusable hues
-   change. Specificity of an attribute selector (0,1,0) out-ranks the base
-   theme's `:root` (0,1,0 as well, but later-loaded wins; import this file
-   AFTER the base theme to guarantee the cascade).
+   change. The `html[data-colorblind="true"]` selector has specificity (0,1,1)
+   — an element type plus an attribute — which OUT-RANKS any base theme's
+   `:root`/`:where(:root)` (0,1,0 or lower) regardless of import order, so the
+   override wins deterministically whenever the attribute is set (and otherwise
+   the base theme is untouched). This is the modifier path; the standalone
+   `:root` block above is for whole-theme use via the manifest.
    ============================================ */
-[data-colorblind="true"] {
+html[data-colorblind="true"] {
   /* Semantic pair: red→vermilion, green→blue, amber kept. */
   --sui-danger: #e66100;
   --sui-danger-rgb: 230, 97, 0;
