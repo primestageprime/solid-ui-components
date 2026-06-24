@@ -45,14 +45,18 @@ import "./SplitQueueList.css";
  * for content.
  */
 export interface SplitQueueListProps<T> {
-  /** Resolved (processed) items — rendered top list, oldest first. */
-  resolved: T[];
-  /** Unresolved (to-process) items — rendered bottom list, next first. */
-  unresolved: T[];
-  /** Render an item's content. */
-  renderItem: (item: T) => JSX.Element;
-  /** Stable identity for an item — drives the resolve animation. */
-  keyOf: (item: T) => string;
+  /** Resolved (processed) items — rendered top list, oldest first. Required for
+   * the animated queue; ignored in `static` mode (use `topItems`). */
+  resolved?: T[];
+  /** Unresolved (to-process) items — rendered bottom list, next first. Required
+   * for the animated queue; ignored in `static` mode (use `bottomContent`). */
+  unresolved?: T[];
+  /** Render an item's content. Required for the animated queue; in `static` mode
+   * the top uses `renderTop` (falling back to this). */
+  renderItem?: (item: T) => JSX.Element;
+  /** Stable identity for an item — drives the resolve animation. Required for the
+   * animated queue; optional in `static` mode. */
+  keyOf?: (item: T) => string;
   /** Key of the focused unresolved item (controlled). Falls back to the
    * top of the unresolved list when omitted/stale. */
   focusedKey?: string;
@@ -127,6 +131,14 @@ interface FlightState {
 }
 
 export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
+  // Internal accessors so the animated queue can read the (now optional) data
+  // props safely. The animated path requires them; `static` mode ignores them.
+  const resolvedItems = (): T[] => props.resolved ?? [];
+  const unresolvedItems = (): T[] => props.unresolved ?? [];
+  const keyOf = (item: T): string => (props.keyOf ?? ((x) => String(x)))(item);
+  const renderItemFn = (item: T): JSX.Element =>
+    (props.renderItem ?? (() => null))(item);
+
   const rowHeightProp = () => props.rowHeight ?? 40;
   const topCapRows = () => props.topCapRows ?? 3;
   const topFloorRows = () => props.topFloorRows ?? 0;
@@ -186,8 +198,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     computeSplitLayout({
       totalHeight: height(),
       rowHeight: rowHeight(),
-      resolvedCount: props.resolved.length,
-      unresolvedCount: props.unresolved.length,
+      resolvedCount: resolvedItems().length,
+      unresolvedCount: unresolvedItems().length,
       seamHeight: SEAM_HEIGHT,
       headerHeight: headerHeight(),
       topCapRows: topCapRows(),
@@ -202,7 +214,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // enter branch), so older rows glide up smoothly rather than popping. (The
   // normal two-panel layout uses layout().topHeight, unchanged.)
   const topOnlyHeight = () => {
-    const rows = props.resolved.length;
+    const rows = resolvedItems().length;
     const capHeight = headerHeight() + topCapRows() * rowHeight();
     const contentHeight = headerHeight() + rows * rowHeight();
     // Grow row-by-row up to the cap, then hold; never exceed the container.
@@ -259,7 +271,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // focused styling while the card is collapsing (only the orange clone does).
   const focusedKey = createMemo(() => {
     if (exitingKey()) return null;
-    const keys = props.unresolved.map(props.keyOf);
+    const keys = unresolvedItems().map(keyOf);
     if (props.focusedKey && keys.includes(props.focusedKey)) return props.focusedKey;
     return keys[0] ?? null;
   });
@@ -284,7 +296,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // this effect depend on any data change; the rAF defers capture past paint.
   createEffect(
     on(
-      () => [props.resolved.length, props.unresolved.length] as const,
+      () => [resolvedItems().length, unresolvedItems().length] as const,
       () => requestAnimationFrame(captureRects),
     ),
   );
@@ -303,16 +315,16 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   //
   // This single effect owns `prevResolvedKeys`; nothing else writes it, so the
   // diff is order- and batch-independent.
-  let prevResolvedKeys: string[] = props.resolved.map(props.keyOf);
+  let prevResolvedKeys: string[] = resolvedItems().map(keyOf);
   // Previous unresolved order, so we can recover the resolved card's ORIGINAL
   // position and collapse the exit at that index (random access — resolving a
   // MIDDLE card animates in place, not at the head). Owned solely by this effect.
-  let prevUnresolvedKeys: string[] = props.unresolved.map(props.keyOf);
+  let prevUnresolvedKeys: string[] = unresolvedItems().map(keyOf);
   let detectFirstRun = true;
 
   createEffect(() => {
-    const resolvedKeys = props.resolved.map(props.keyOf);
-    const unresolvedKeys = props.unresolved.map(props.keyOf);
+    const resolvedKeys = resolvedItems().map(keyOf);
+    const unresolvedKeys = unresolvedItems().map(keyOf);
 
     // FORWARD (resolve): a key now in `resolved` that wasn't before.
     const newlyResolved = resolvedKeys.filter(
@@ -403,7 +415,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bail = () => {
       scrollAnimating = false;
       setExitingKey(null);
-      props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
     };
     if (!rootEl) return bail();
     const first = prevRects.get(key);
@@ -434,7 +446,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       // (panel grows a row); AT/above the cap it equals newH (already capped), so
       // newH <= oldH and the enter takes the scroll-up path instead of growing.
       const cap = headerHeight() + topCapRows() * rowHeight();
-      const prevRows = Math.max(0, props.resolved.length - 1);
+      const prevRows = Math.max(0, resolvedItems().length - 1);
       const oldH = Math.min(height(), cap, headerHeight() + prevRows * rowHeight());
       // scrollAnimating was set true synchronously in the detect effect (before
       // any microtask was queued) so the scroll-pin can't snap underneath us
@@ -442,7 +454,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const advance = () => {
         scrollAnimating = false;
         setExitingKey(null);
-        props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+        props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
       };
       // Instant settle for reduced-motion / zero-duration / no timer.
       if (total <= 0 || typeof setTimeout !== "function") {
@@ -549,8 +561,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const prevLayout = computeSplitLayout({
         totalHeight: height(),
         rowHeight: rowHeight(),
-        resolvedCount: Math.max(0, props.resolved.length - 1),
-        unresolvedCount: props.unresolved.length + 1,
+        resolvedCount: Math.max(0, resolvedItems().length - 1),
+        unresolvedCount: unresolvedItems().length + 1,
         seamHeight: SEAM_HEIGHT,
         headerHeight: headerHeight(),
         topCapRows: topCapRows(),
@@ -719,7 +731,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bail = () => {
       scrollAnimating = false;
       setExitingKey(null);
-      props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
     };
     if (!rootEl) return bail();
     const topList = topListEl;
@@ -762,7 +774,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const settleReverse = () => {
       setExitingKey(null);
       markArrived(key, "bottom");
-      props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
     };
 
     // ---- Phase 2 (enter): pane heights tween — top SHRINKS, bottom GROWS. Pre-
@@ -771,8 +783,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const prevLayout = computeSplitLayout({
       totalHeight: height(),
       rowHeight: rowHeight(),
-      resolvedCount: props.resolved.length + 1,
-      unresolvedCount: Math.max(0, props.unresolved.length - 1),
+      resolvedCount: resolvedItems().length + 1,
+      unresolvedCount: Math.max(0, unresolvedItems().length - 1),
       seamHeight: SEAM_HEIGHT,
       headerHeight: headerHeight(),
       topCapRows: topCapRows(),
@@ -898,14 +910,14 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const advanceFocusAfterExit = (key?: string) => {
     setExitingKey(null);
     if (key) markArrived(key);
-    props.onFocusChange?.(props.unresolved.map(props.keyOf)[0] ?? null);
+    props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
   };
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest
   // resolved row sits flush at the seam, adjacent to the next unresolved item.
   createEffect(
     on(
-      () => [props.resolved.length, layout().topScrollToBottom, layout().topHeight] as const,
+      () => [resolvedItems().length, layout().topScrollToBottom, layout().topHeight] as const,
       ([, scrollToBottom]) => {
         queueMicrotask(() => {
           // Skip while a resolve tween owns scrollTop — otherwise this snap races
@@ -924,7 +936,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   onCleanup(() => prevRects.clear());
 
   const renderRow = (item: T, kind: "resolved" | "unresolved") => {
-    const key = props.keyOf(item);
+    const key = keyOf(item);
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
     const isSelected = () => props.selectedKey === key;
     return (
@@ -943,7 +955,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         <span class="sui-sql__marker" aria-hidden="true">
           {kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
         </span>
-        <span class="sui-sql__content">{props.renderItem(item)}</span>
+        <span class="sui-sql__content">{renderItemFn(item)}</span>
       </li>
     );
   };
@@ -953,7 +965,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // children. Shares the chrome (headers, seam, row styling) with the animated
   // queue but skips all of the diff/FLIP/scroll-pin machinery above.
   const renderStaticRow = (item: T) => {
-    const render = props.renderTop ?? props.renderItem;
+    const render = props.renderTop ?? renderItemFn;
     return (
       <li class="sui-sql__row sui-sql__row--resolved">
         <span class="sui-sql__marker" aria-hidden="true">
@@ -965,7 +977,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   };
 
   if (props.static) {
-    const topItems = () => props.topItems ?? props.resolved;
+    const topItems = () => props.topItems ?? resolvedItems();
     // Fill the parent by default so the rail tracks the available height; an
     // explicit `height` prop pins a fixed px height instead.
     return (
@@ -1031,9 +1043,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       >
         <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
           <span>{props.resolvedLabel ?? "Resolved"}</span>
-          <span class="sui-sql__count">{props.resolved.length}</span>
+          <span class="sui-sql__count">{resolvedItems().length}</span>
         </li>
-        <For each={props.resolved}>{(item) => renderRow(item, "resolved")}</For>
+        <For each={resolvedItems()}>{(item) => renderRow(item, "resolved")}</For>
       </ul>
 
       {/* Seam + BOTTOM panel are omitted in topOnly mode — the categorized list
@@ -1045,11 +1057,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
             scrolls when overfull; collapses to the "all clear" strip when empty. */}
         <ul
           class="sui-sql__list sui-sql__list--bottom"
-          classList={{ "sui-sql__list--collapsed": props.unresolved.length === 0 }}
+          classList={{ "sui-sql__list--collapsed": unresolvedItems().length === 0 }}
           style={{ height: `${layout().bottomHeight}px` }}
         >
           <Show
-            when={props.unresolved.length > 0}
+            when={unresolvedItems().length > 0}
             fallback={
               <li class="sui-sql__clear">
                 {props.allClearLabel ?? "All clear — nothing to process"}
@@ -1058,9 +1070,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
           >
             <li class="sui-sql__header sui-sql__header--bottom">
               <span>{props.unresolvedLabel ?? "Unresolved"}</span>
-              <span class="sui-sql__count">{props.unresolved.length}</span>
+              <span class="sui-sql__count">{unresolvedItems().length}</span>
             </li>
-            <For each={props.unresolved}>
+            <For each={unresolvedItems()}>
               {(item) => renderRow(item, "unresolved")}
             </For>
           </Show>
