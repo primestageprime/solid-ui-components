@@ -75,7 +75,10 @@ export function createPanZoom() {
     const availableHeight = containerHeight - FIT_PADDING * 2;
     const scaleX = availableWidth / graphWidth;
     const scaleY = availableHeight / graphHeight;
-    const scale = Math.max(MIN_SCALE, Math.min(scaleX, scaleY, 1));
+    // Allow fit-to-view to scale UP (not just down) so a graph smaller than its
+    // container fills the space, capped at MAX_SCALE. Previously hard-capped at
+    // 1x, which left small/filtered DAGs tiny with lots of empty space.
+    const scale = Math.max(MIN_SCALE, Math.min(scaleX, scaleY, MAX_SCALE));
 
     // Center on the graph's center point (not assuming origin at 0,0)
     const cx = centerX ?? graphWidth / 2;
