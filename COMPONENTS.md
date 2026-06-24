@@ -607,6 +607,32 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
 - **ListItem** — List item with status indicators and interactive states. Key props: `status` (`active`|`inactive`|`warning`|`error`|`success`), `icon`, `secondary`, `interactive`, `selected`. Use for: items within List.
 - **ScrollList** — Curried `List` with `scroll: true` baked in. Drop into a height-constrained flex column (e.g. a panel with `display: flex; flex-direction: column`) to get a list that fills the remaining height and scrolls internally instead of pushing siblings. Use for: filter-result lists in a sidebar, log-style streams in a fixed-height panel, any vertical list that may overflow its container.
 
+## SplitQueueList
+- **SplitQueueList** — A linked two-list "processing queue" in one fixed-height column: the **top** = *resolved* (done) items, the **bottom** = *unresolved* (to-process). The user works the bottom; resolving a card moves it up across the seam into the top, so recent work sits adjacent to what's next and is one click away to revisit. **Controlled + generic over the item type `T`: the consumer owns the data and the card content (`renderItem`); SUI owns the layout + animation.** There is **no `resolve()` method** — you drive it by mutating the two arrays and the component detects + animates the change: `unresolved → resolved` (**append**) plays the forward animation, `resolved → unresolved` (**prepend**) plays the **mirrored reverse**. **Sizing (content-driven top, measured in JS via ResizeObserver — pure CSS can't express it):** `topFloorRows` (default **0**) collapses the top to a header-only strip at 0 resolved and grows one row per card; `topCapRows` (default **3**) caps growth and then **scrolls** with the newest row flush at the seam; the bottom pane takes the **remainder** and absorbs slack when short. **Status borders:** resolved rows carry a solid-accent left border + ✓; unresolved rows a dashed-muted left border + a ▸ focus marker. **Animation (SUI owns it; consumer only swaps arrays):** the exiting card height-collapses out of one list while the other pane grows (or scrolls, when capped) to reveal the arriving card — panes always sum to the total height so the seam glides with no gap; the arriving card's background **fades in** on landing. Honors `prefers-reduced-motion` (places without motion). **Selection is controlled; the detail panel is consumer-composed** — `onSelect(key)` fires on any row click (clicking does **not** resolve), `selectedKey` rings the matching row in either panel, and `focusedKey`/`onFocusChange` drive the orange "current" highlight (the two compose). `topOnly` renders just the resolved panel. Key props: `resolved: T[]`, `unresolved: T[]`, `renderItem: (item: T) => JSX.Element`, `keyOf: (item: T) => string`, `focusedKey?`, `onFocusChange?`, `selectedKey?`, `onSelect?`, `resolvedLabel="Resolved"`, `unresolvedLabel="Unresolved"`, `allClearLabel?`, `topCapRows=3`, `topFloorRows=0`, `rowHeight=40` (initial estimate; measured), `height=420`, `animationMs=800`, `topOnly=false`. (`onResolve?` is deprecated/unused — resolve is array-driven.) Use for: triage/review/categorization queues where processed and pending items must stay adjacent (transaction categorization, inbox triage, accept/remaining review). No factory — the data/labels are per-call, so the base component is already curried. **Full usage guide: `src/components/SplitQueueList/README.md`.**
+  - The pure sizing core is exported as `computeSplitLayout(input): SplitLayout` (with `SplitLayoutInput`/`SplitLayout` types) for callers who need the same content-driven-top math outside the component.
+  - Example:
+    ```tsx
+    import { SplitQueueList } from "solid-ui-components";
+
+    // Resolve = remove from unresolved, append to resolved. SUI animates it.
+    const resolve = (id: string) => {
+      const item = toCategorize().find((t) => t.id === id);
+      if (!item) return;
+      setToCategorize((u) => u.filter((t) => t.id !== id));
+      setCategorized((r) => [...r, item]);
+    };
+
+    <SplitQueueList<Txn>
+      resolved={categorized()}
+      unresolved={toCategorize()}
+      keyOf={(t) => t.id}
+      renderItem={(t) => <span>{t.label}</span>}
+      selectedKey={selected() ?? undefined}
+      onSelect={setSelected}            // open a consumer-composed detail panel
+      height={480}
+    />
+    ```
+
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.

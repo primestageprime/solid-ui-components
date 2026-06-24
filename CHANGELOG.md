@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`SplitQueueList`** — a linked two-list "processing queue" in one fixed-height column: the **top** holds *resolved* (done) items, the **bottom** holds *unresolved* (to-process). Resolving moves a card up across the seam so recent work stays adjacent to what's next. Generic over the item type `T`; the consumer owns the data and the card content (`renderItem`), SUI owns the layout + animation. **It is fully controlled and driven by array mutation — there is no `resolve()` method:** moving a key `unresolved → resolved` (append) plays the forward animation, and `resolved → unresolved` (prepend) plays the mirrored reverse. The top pane is content-driven, measured in JS via `ResizeObserver` (pure CSS can't express it): `topFloorRows` (default **0**) collapses it to a header-only strip at 0 resolved and grows one row per card; `topCapRows` (default **3**) caps growth and then **scrolls** with the newest row flush at the seam; the bottom pane takes the remainder and absorbs slack when short. The resolve/unresolve motion is a height-collapse on the exiting side mirrored by a pane-grow (or capped scroll) on the entering side, with the panes always summing to the total height so the seam glides with no gap; the arriving card's background **fades in** on landing. **Selection is controlled and the detail panel is consumer-composed** — `onSelect(key)` fires on any row click (clicking no longer resolves), `selectedKey` rings the matching row in either panel, and `focusedKey`/`onFocusChange` drive the orange "current" highlight (the two compose). `topOnly` renders just the resolved panel. Honors `prefers-reduced-motion`. Key props: `resolved: T[]`, `unresolved: T[]`, `renderItem`, `keyOf`, `focusedKey?`, `onFocusChange?`, `selectedKey?`, `onSelect?`, `resolvedLabel`, `unresolvedLabel`, `allClearLabel?`, `topCapRows=3`, `topFloorRows=0`, `rowHeight=40` (initial estimate; measured), `height=420`, `animationMs=800`, `topOnly=false`. See `src/components/SplitQueueList/README.md` for the full usage guide. (`onResolve` from earlier drafts is deprecated/unused — resolve is array-driven.)
+
 ## 0.70.0
 
 ### Changed
