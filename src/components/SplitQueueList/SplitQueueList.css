@@ -15,6 +15,21 @@
   overflow: hidden;
 }
 
+/* ---- Static mode ------------------------------------------------------- */
+/* Two stacked labeled sections with a seam, no queue animation. The top is a
+ * read-only capped/scrolling list; the bottom takes the remaining space and
+ * scrolls, hosting arbitrary consumer content. */
+.sui-sql--static .sui-sql__list--top {
+  flex: 0 0 auto;
+}
+
+.sui-sql__static-bottom {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: block;
+}
+
 /* ---- Lists ------------------------------------------------------------- */
 
 .sui-sql__list {

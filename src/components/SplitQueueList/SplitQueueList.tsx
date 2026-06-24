@@ -76,6 +76,25 @@ export interface SplitQueueListProps<T> {
   unresolvedLabel?: string;
   /** Copy for the collapsed strip when nothing is left to process. */
   allClearLabel?: JSX.Element;
+  /** STATIC mode — a non-animated "two stacked labeled sections with a seam"
+   * layout. There is no processing queue, no resolve/unresolve animation, and no
+   * array diffing: the TOP section is a read-only list rendered from `topItems`
+   * via `renderTop` (falls back to `resolved`/`renderItem` when omitted), and the
+   * BOTTOM section is arbitrary `bottomContent` children. Use this when you want
+   * SplitQueueList's framing (labeled top section + seam + bottom section, all in
+   * the house style) around a top list of recent items and a bottom block you
+   * compose yourself. The top section scrolls within `topCapRows`; the bottom
+   * takes the remaining space and scrolls. Default false (the animated queue). */
+  static?: boolean;
+  /** STATIC mode only — items for the read-only TOP section. Falls back to
+   * `resolved` when omitted. */
+  topItems?: T[];
+  /** STATIC mode only — render a TOP item's content. Falls back to `renderItem`
+   * when omitted. */
+  renderTop?: (item: T) => JSX.Element;
+  /** STATIC mode only — arbitrary content for the BOTTOM section (nested as-is
+   * below the seam). */
+  bottomContent?: JSX.Element;
   /** Soft cap on the top (resolved) pane, in rows. Beyond this the top pane
    * scrolls with the newest row pinned at the seam. Default 3. */
   topCapRows?: number;
@@ -928,6 +947,63 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       </li>
     );
   };
+
+  // ---- STATIC mode: two labeled sections with a seam, no queue animation.
+  // The TOP section is a read-only list; the BOTTOM section is arbitrary
+  // children. Shares the chrome (headers, seam, row styling) with the animated
+  // queue but skips all of the diff/FLIP/scroll-pin machinery above.
+  const renderStaticRow = (item: T) => {
+    const render = props.renderTop ?? props.renderItem;
+    return (
+      <li class="sui-sql__row sui-sql__row--resolved">
+        <span class="sui-sql__marker" aria-hidden="true">
+          ✓
+        </span>
+        <span class="sui-sql__content">{render(item)}</span>
+      </li>
+    );
+  };
+
+  if (props.static) {
+    const topItems = () => props.topItems ?? props.resolved;
+    return (
+      <div
+        ref={rootEl}
+        class={`sui-sql sui-sql--static${props.class ? " " + props.class : ""}`}
+        style={{ height: `${height()}px` }}
+      >
+        {/* TOP — read-only list, capped to topCapRows then scrolls. */}
+        <ul
+          class="sui-sql__list sui-sql__list--top"
+          style={{
+            "max-height": `${headerHeight() + topCapRows() * rowHeight()}px`,
+          }}
+        >
+          <li class="sui-sql__header sui-sql__header--top">
+            <span>{props.resolvedLabel ?? "Resolved"}</span>
+            <span class="sui-sql__count">{topItems().length}</span>
+          </li>
+          <Show
+            when={topItems().length > 0}
+            fallback={
+              <li class="sui-sql__clear">
+                {props.allClearLabel ?? "Nothing yet"}
+              </li>
+            }
+          >
+            <For each={topItems()}>{(item) => renderStaticRow(item)}</For>
+          </Show>
+        </ul>
+
+        <div class="sui-sql__seam" aria-hidden="true" />
+
+        {/* BOTTOM — arbitrary consumer content, takes the remaining space. */}
+        <div class="sui-sql__list sui-sql__list--bottom sui-sql__static-bottom">
+          {props.bottomContent}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
