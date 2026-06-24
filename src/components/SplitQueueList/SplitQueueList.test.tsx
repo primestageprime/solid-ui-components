@@ -28,7 +28,7 @@ const tick = (ms = 150) => new Promise((r) => setTimeout(r, ms));
  * Regression guards: focus still advances on EVERY resolve, and the queue
  * always drains (the original "stuck after one item" bug must stay fixed).
  */
-function mountConsumer(count: number, animationMs = 0) {
+function mountConsumer(count: number, animationMs = 0, topOnly = false) {
   const [resolved, setResolved] = createSignal<Item[]>([]);
   const [unresolved, setUnresolved] = createSignal<Item[]>(seed(count));
   const [focused, setFocused] = createSignal<string | null>(seed(count)[0].id);
@@ -41,7 +41,7 @@ function mountConsumer(count: number, animationMs = 0) {
     setResolved((r) => [...r, item]);
   };
 
-  render(() => (
+  const { container } = render(() => (
     <SplitQueueList<Item>
       resolved={resolved()}
       unresolved={unresolved()}
@@ -54,10 +54,13 @@ function mountConsumer(count: number, animationMs = 0) {
       onResolve={resolveKey}
       renderItem={(i) => <span>{i.id}</span>}
       animationMs={animationMs}
+      rowHeight={120}
+      topOnly={topOnly}
     />
   ));
 
   return {
+    container,
     resolved,
     unresolved,
     focused,
@@ -120,6 +123,41 @@ describe("SplitQueueList — repeated resolve advances focus (deferred to exit e
     c.resolveFocused();
     await tick();
     expect(c.focusEvents).toEqual(["k2", "k3", null]);
+  });
+});
+
+describe("SplitQueueList — topOnly enter: PANEL grows to reveal a FIXED card", () => {
+  // The corrected model: the card is ALWAYS its full, fixed rowHeight (120px)
+  // from frame 0 — it never resizes. The PANEL (top <ul>) height is what
+  // animates, growing old→new; overflow:hidden clips the stationary full-size
+  // card so the panel's S edge reveals it N-edge-first.
+  it("keeps the resolved row at full rowHeight while the panel height tweens", async () => {
+    const c = mountConsumer(2, 400, true);
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
+
+    c.resolveFocused(); // resolve k1 → top panel must grow by one 120px row
+
+    // Mid-tween: sample the inline panel height while the ticker is running.
+    await tick(60);
+    const midH = parseFloat(topUl.style.height || "0");
+
+    // The resolved card itself is rendered at full fixed height — its inline
+    // min-height is the full rowHeight and is NEVER shrunk to fit the panel.
+    const row = c.container.querySelector(
+      '.sui-sql__list--top [data-sql-key="k1"]',
+    ) as HTMLElement;
+    expect(row).toBeTruthy();
+    expect(row.style.minHeight).toBe("120px");
+
+    // The panel is mid-grow (clipping the full card), not snapped to full height.
+    // It is taller than just the header but has not yet reached the final height.
+    await tick(500); // let the tween settle
+    const finalH = parseFloat(topUl.style.height || "0");
+    expect(finalH).toBeGreaterThan(midH); // panel grew over time, not instantly
+    // Final reveals the whole card: header + one full 120px row.
+    expect(finalH).toBeGreaterThanOrEqual(120);
   });
 });
 
