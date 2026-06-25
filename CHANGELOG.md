@@ -16,6 +16,18 @@
   </PaneRow>
   ```
 
+## 0.78.4
+
+### Fixed
+
+- **`SplitQueueList`** — the static bottom panel now scrolls instead of clipping its overflow. The panel carried both `.sui-sql__static-bottom` and `.sui-sql__list--bottom`; at equal specificity (0,1,0) the later generic `.sui-sql__list--bottom { flex: 0 0 auto }` won, sizing the panel to its content so `overflow:auto` never engaged and content was cut off by the root `overflow:hidden`. The static-bottom rule is now scoped to `.sui-sql--static .sui-sql__static-bottom` (0,2,0) so it wins the cascade.
+
+## 0.78.3
+
+### Added
+
+- **`HotkeyButton` / `createHotkeyButton`** — a button that renders its label with the hotkey character emphasized (e.g. "Done" with the **D** bold + underlined) and, when armed, fires `onTrigger` on a window `keydown` (guarded against modifier keys and focused inputs). Label/key/trailing content render tight on one line so the JSX compiler can't inject whitespace nodes (no "D one" gap).
+
 ## 0.78.1
 
 ### Added
