@@ -1,0 +1,14 @@
+/* HotkeyButton — emphasize the hotkey character so the affordance is obvious. */
+.sui-hotkey-btn__key {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Trailing hint shown when the hotkey char isn't present in the label. */
+.sui-hotkey-btn__hint {
+  margin-left: 0.4em;
+  font-weight: 700;
+  opacity: 0.85;
+  font-size: 0.85em;
+}

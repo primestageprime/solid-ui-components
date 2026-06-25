@@ -44,6 +44,7 @@ export * from "./components/GroupBracket";
 export * from "./components/RecentStarred";
 export * from "./components/Cell";
 export * from "./components/Button";
+export * from "./components/HotkeyButton";
 export * from "./components/Fab";
 export * from "./components/Card";
 export * from "./components/DataDisplay";
