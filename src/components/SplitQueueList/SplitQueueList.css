@@ -30,7 +30,11 @@
   flex: 0 0 auto;
 }
 
-.sui-sql__static-bottom {
+/* Scoped to `.sui-sql--static` so this beats the later, equal-specificity
+   generic `.sui-sql__list--bottom { flex: 0 0 auto }` rule below — the bottom
+   panel carries both classes, and without the extra ancestor the generic rule
+   won the cascade, sizing the panel to its content so it never scrolled. */
+.sui-sql--static .sui-sql__static-bottom {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
