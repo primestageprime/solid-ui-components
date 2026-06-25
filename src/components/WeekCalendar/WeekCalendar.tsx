@@ -34,6 +34,10 @@ export interface WeekCalendarProps {
   pxPerHour?: number;
   blocks: WeekCalendarBlock[];
   renderBlock: (block: WeekCalendarBlock) => JSX.Element;
+  /** Optional custom column-header content. `day` is the identity string from
+   *  `days` (still used for block matching); `index` is its column position.
+   *  Defaults to rendering the raw `day` string. Use to append a date, etc. */
+  dayLabel?: (day: string, index: number) => JSX.Element;
   highlight?: WeekCalendarHighlight | null;
   /** Time gutter width in px. Default 56. */
   gutterWidth?: number;
@@ -96,12 +100,12 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
         style={{ height: `${props.headerHeight}px` }}
       />
       <For each={props.days}>
-        {(d) => (
+        {(d, i) => (
           <div
             class="sui-week-calendar__day-header"
             style={{ height: `${props.headerHeight}px` }}
           >
-            {d}
+            {props.dayLabel ? props.dayLabel(d, i()) : d}
           </div>
         )}
       </For>
