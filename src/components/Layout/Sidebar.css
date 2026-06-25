@@ -1,0 +1,57 @@
+/* Sidebar — resizable side column (see Sidebar.tsx). */
+
+.sidebar {
+  position: relative;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* Inner content owns the vertical scroll so the drag handle stays put. */
+.sidebar__content {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Drag handle — a thin invisible strip straddling the resize edge that reveals
+   an accent line on hover / while dragging. */
+.sidebar__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 2;
+  /* The visible line. */
+  background:
+    linear-gradient(to var(--sidebar-handle-dir, right),
+      transparent 0,
+      transparent calc(50% - 0.5px),
+      var(--sui-border) calc(50% - 0.5px),
+      var(--sui-border) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px));
+  transition: background-color 0.12s ease;
+}
+
+.sidebar__handle--right {
+  right: -4px;
+  --sidebar-handle-dir: right;
+}
+
+.sidebar__handle--left {
+  left: -4px;
+  --sidebar-handle-dir: left;
+}
+
+.sidebar__handle:hover,
+.sidebar__handle:active {
+  background:
+    linear-gradient(to var(--sidebar-handle-dir, right),
+      transparent 0,
+      transparent calc(50% - 1px),
+      var(--sui-accent) calc(50% - 1px),
+      var(--sui-accent) calc(50% + 1px),
+      transparent calc(50% + 1px));
+}

@@ -16,5 +16,8 @@ export { AppNavLink } from "./AppNavLink";
 export type { AppNavLinkProps } from "./AppNavLink";
 export { SidebarPanel } from "./SidebarPanel";
 export type { SidebarPanelProps } from "./SidebarPanel";
+// Resizable, width-persisting side column (drag the edge; width saved per id).
+export { Sidebar } from "./Sidebar";
+export type { SidebarProps } from "./Sidebar";
 // Re-export every curried variant so adding a new one in variants.ts is automatically public.
 export * from "./variants";

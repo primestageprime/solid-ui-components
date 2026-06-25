@@ -148,6 +148,36 @@ export const PaddedStack: Component<StackDataProps> = createStack({
 // SectionStack — lg gap between top-level page sections.
 export const SectionStack: Component<StackDataProps> = createStack({ gap: "lg" });
 
+// --- Page-structure columns / rows (full-height layout skeleton) ---
+// These bake the fill/flex/overflow plumbing so route code never hand-rolls
+// `createStack({ fill, style:{flex,min-height,overflow} })` at the call site.
+
+/** Full-height page (or pane) column — GROWS to fill the remaining height of a
+ *  flex-column parent (`flex:1; min-height:0`) rather than claiming `height:100%`,
+ *  so it coexists correctly with a fixed header sibling (e.g. a page title) and
+ *  still forwards a concrete height to a `fill` table/scroll child. md gap
+ *  between sections. The standard outermost wrapper for a route body. */
+export const FillColumn: Component<StackDataProps> = createStack({
+  gap: "md",
+  style: { flex: "1", "min-height": "0" },
+});
+
+/** Full-height two-pane body row — `fill` + `flex:1; min-height:0` so a
+ *  sidebar + main split shares the column's remaining height and each pane can
+ *  own its own internal scroll. */
+export const PaneRow: Component<RowDataProps> = createRow({
+  gap: "md",
+  fill: true,
+  style: { flex: "1", "min-height": "0" },
+});
+
+/** Flex column that scrolls its own overflow — `flex:1; min-width:0;
+ *  overflow:auto`. The main/detail pane beside a Sidebar. */
+export const ScrollColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "1", "min-width": "0", overflow: "auto" },
+});
+
 // --- AppHeader variants (size/inline baked) ---
 
 /** Default page-top header (md padding). */

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## 0.78.5
+
+### Added
+
+- **`FillColumn` / `PaneRow` / `ScrollColumn`** — baked page-skeleton layout components so consumer apps stop hand-rolling `createStack`/`createRow` with `gap`/`fill`/`style` at call sites. `FillColumn` is the outermost route-body column — it **grows** to fill the remaining height of a flex-column parent (`flex:1; min-height:0`) rather than claiming `height:100%`, so it coexists correctly with a fixed header sibling (e.g. a page title) and still forwards a concrete height to a `fill` table/scroll child. `PaneRow` is a full-height two-pane row (`fill` + `flex:1; min-height:0`) for a sidebar+main split where each pane owns its own scroll. `ScrollColumn` is a flex column that scrolls its own overflow (`flex:1; min-width:0; overflow:auto`) — the main/detail pane beside a `Sidebar`.
+- **`Sidebar`** — a fixed-width side column that is **drag-resizable**, with the chosen width **persisted in `localStorage`** keyed by `id` (per-machine, so different screens keep their own preference; restored on the client, SSR renders the canonical default). Drag the inner edge to resize (clamped 200–720px, default 300px); double-click the handle to reset. `handle="right"` (default) for a left-docked sidebar, `handle="left"` for a right-docked one. Bakes the width/`flex-shrink`/internal-scroll plumbing so call sites pass only `id`, optional `handle`/`gap`, and children:
+
+  ```tsx
+  <PaneRow>
+    <Sidebar id="triage-calls" handle="right">…list…</Sidebar>
+    <ScrollColumn>…detail…</ScrollColumn>
+  </PaneRow>
+  ```
+
 ## 0.78.1
 
 ### Added
