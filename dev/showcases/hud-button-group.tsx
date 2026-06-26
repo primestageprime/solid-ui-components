@@ -5,7 +5,7 @@ import { Button } from "../../src/components/Button/Button";
 export const ButtonGroupShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ButtonGroup + Button — Atomic (Depth 1)</h2>
+      <h2>ButtonGroup + Button — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Button arrangement with gap variants.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

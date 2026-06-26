@@ -16,7 +16,7 @@ export const ThemedNumberInputShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>ThemedNumberInput — Atomic (Depth 1)</h2>
+      <h2>ThemedNumberInput — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (ThemedNumberInput.css), composes Icon for stepper triggers.
         Kobalte-backed (`@kobalte/core/number-field`). Zero-config default —

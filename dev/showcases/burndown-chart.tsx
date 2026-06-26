@@ -13,7 +13,7 @@ export const BurndownChartShowcase: Component = () => {
   ];
   return (
     <div class="component-section">
-      <h2>BurndownChart — Composed (Depth 2)</h2>
+      <h2>BurndownChart — Composed (Depth 1)</h2>
       <p class="text-meta">
         Stacked bars above (planned) + below (unplanned) the zero axis, with
         a trend line + projected close. Now composes <code>Chart</code> +

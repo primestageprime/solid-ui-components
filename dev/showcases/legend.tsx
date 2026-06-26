@@ -96,7 +96,7 @@ const InteractiveLegendExample: Component = () => {
 
 export const LegendShowcase: Component = () => (
   <div class="component-section">
-    <h2>Legend — Atomic (Depth 1)</h2>
+    <h2>Legend — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Data-driven row (or column) of color-swatch + label pairs. Use to
       explain a color encoding in a chart, heatmap, or any other

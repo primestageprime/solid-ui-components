@@ -10,7 +10,7 @@ export const SprintSelectorShowcase: Component = () => {
   ];
   return (
     <div class="component-section">
-      <h2>SprintSelector — Composed (Depth 2)</h2>
+      <h2>SprintSelector — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Pick a sprint from a horizontal strip; shows label + progress per
         sprint. Reactive over <code>selectedIndex</code>.

@@ -73,7 +73,7 @@ const partialUnknownItems: HeatStackItem[] = [
 export const HeatStackShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>HeatStack — Atomic (Depth 1)</h2>
+      <h2>HeatStack — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HeatStack.css), no component imports. Vertical stack of items with status cells per key. Earliest at bottom, latest on top.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

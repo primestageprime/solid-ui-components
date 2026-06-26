@@ -19,7 +19,7 @@ export const SidebarSelectorShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>SidebarSelector — Atomic (Depth 1)</h2>
+      <h2>SidebarSelector — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (SidebarSelector.css), no component imports. Sidebar card list + content area.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

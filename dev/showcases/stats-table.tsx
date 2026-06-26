@@ -82,7 +82,7 @@ const engineRows: EngineRow[] = [
 export const StatsTableShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>StatsTable — Atomic (Depth 1)</h2>
+      <h2>StatsTable — Composed (Depth 2)</h2>
       <p class="text-meta">Owns CSS (StatsTable.css), no component imports. Simple stats table with typed columns and row classes.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

@@ -11,7 +11,7 @@ interface Depth2Props {
 export const DataListShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>DataList — Depth 3 (zero CSS)</h2>
+      <h2>DataList — Depth 1 (zero CSS)</h2>
       <p class="text-meta">Composes Cell + Text (curried) + StatusBadge (Atomic). Semantic key-value table with DTable, DT, DD, Val, Units, SigFig.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

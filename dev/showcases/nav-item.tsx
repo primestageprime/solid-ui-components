@@ -4,7 +4,7 @@ import { NavLink } from "../../src/components/Navigation";
 export const NavItemShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>NavLink — Atomic (Depth 1)</h2>
+      <h2>NavLink — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (NavLink.css), no component imports. Anchor link with active state, color variants, badge.</p>
 
       <div class="example-group">

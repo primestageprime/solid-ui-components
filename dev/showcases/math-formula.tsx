@@ -5,7 +5,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 export const MathFormulaShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>MathFormula — Atomic (Depth 1)</h2>
+      <h2>MathFormula — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (MathFormula.css), no component imports. KaTeX renderer with interactive variable highlighting.</p>
 
       <div class="example-group">

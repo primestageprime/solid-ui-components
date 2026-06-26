@@ -6,7 +6,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 export const PanelShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>Panel — Atomic (Depth 1)</h2>
+      <h2>Panel — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Sci-fi panel with title, corners, glow.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

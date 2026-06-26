@@ -46,7 +46,7 @@ export const FormulaPanelShowcase: Component<Depth3Props> = (props) => {
 
   return (
     <div class="component-section">
-      <h2>createFormulaPanel — Depth 3 (zero CSS)</h2>
+      <h2>createFormulaPanel — Depth 2 (zero CSS)</h2>
       <p class="text-meta">
         Factory function producing composed panels using ResultDisplay, DTable,
         MathFormula, and StatusBadge. Hover a variable row or the result to see

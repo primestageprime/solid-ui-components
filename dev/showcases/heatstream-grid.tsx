@@ -76,7 +76,7 @@ export const HeatStreamGridShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>HeatStreamGrid — Depth 2</h2>
+      <h2>HeatStreamGrid — Depth 1</h2>
       <p class="text-meta">Composes HeatStream. Renders a grid table with assets as rows and time windows as columns. Each cell contains a compact HeatStream. Click cells, row labels, column headers, or the corner to toggle selection.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

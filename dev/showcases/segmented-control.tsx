@@ -19,7 +19,7 @@ export const SegmentedControlShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>SegmentedControl — Atomic (Depth 1)</h2>
+      <h2>SegmentedControl — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Single-select control across more than two states, with group dividers and per-state color.
       </p>

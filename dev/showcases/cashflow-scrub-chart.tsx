@@ -98,7 +98,7 @@ export const CashflowScrubChartShowcase: Component = () => {
 
   return (
     <div class="component-section component-section--full">
-      <h2>CashflowScrubChart — Domain Composite (Depth 3)</h2>
+      <h2>CashflowScrubChart — Domain Composite (Depth 2)</h2>
       <p class="text-meta">
         Bundles <code>ScrubChart</code> with a baked-in cashflow day-cell
         renderer (date corner + diverging green/red bar + dollar amount) and

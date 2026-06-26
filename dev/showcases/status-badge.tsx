@@ -4,7 +4,7 @@ import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 export const StatusBadgeShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>StatusBadge — Atomic (Depth 1)</h2>
+      <h2>StatusBadge — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (StatusBadge.css), no component imports. Compliance-themed status badge with 5 variants.</p>
 
       <div class="example-group">

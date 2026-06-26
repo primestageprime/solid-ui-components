@@ -21,7 +21,7 @@ export const ResizableContainerShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>ResizableContainer — Layout (Depth 0)</h2>
+      <h2>ResizableContainer — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (ResizableContainer.css). Container with draggable edge handles for manual resize.
         Drag the edges to resize. Callback receives `{'{ width, height }'}`.

@@ -5,7 +5,7 @@ import { Divider } from "../../src/components/Divider";
 export const DividerShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>Divider — Atomic (Depth 1)</h2>
+      <h2>Divider — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (Section.css), no component imports. Horizontal/vertical content separator.</p>
 
       <div class="example-group">

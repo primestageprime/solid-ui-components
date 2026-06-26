@@ -12,7 +12,7 @@ export const TabsShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Tabs — Atomic (Depth 1)</h2>
+      <h2>Tabs — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Tab bar with variant styles.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

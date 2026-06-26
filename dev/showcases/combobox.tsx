@@ -82,7 +82,7 @@ export const ComboboxShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Combobox — Atomic (Depth 1)</h2>
+      <h2>Combobox — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Combobox.css). Unified single + multi built on
         `@kobalte/core/combobox`. Supports freeform creation via `onCreate`

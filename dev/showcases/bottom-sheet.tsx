@@ -6,7 +6,7 @@ export const BottomSheetShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>BottomSheet — Atomic (Depth 1)</h2>
+      <h2>BottomSheet — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (BottomSheet.css), no component imports. A controlled sheet that
         slides up from the bottom of its <em>parent container</em>. Unlike{" "}

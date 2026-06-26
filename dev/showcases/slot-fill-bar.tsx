@@ -88,7 +88,7 @@ const AnimatedExample: Component = () => {
 
 export const SlotFillBarShowcase: Component = () => (
   <div class="component-section">
-    <h2>SlotFillBar — Atomic (Depth 1)</h2>
+    <h2>SlotFillBar — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Fill-from-left progress bar for an ordered queue of equal-sized work
       slots that move through <code>todo → doing → done</code>. Two distinct

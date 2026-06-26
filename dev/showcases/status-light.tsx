@@ -8,7 +8,7 @@ const VARIANTS: StatusLightVariant[] = ["success", "warning", "danger", "info", 
 
 export const StatusLightShowcase: Component = () => (
   <div class="component-section">
-    <h2>StatusLight — Atomic (Depth 1)</h2>
+    <h2>StatusLight — Primitive (Depth 0)</h2>
     <p class="text-meta">
       LED-style indicator dot with optional pulse. Drop next to a label to
       show liveness or alert state. For sparkline-driven liveness, use

@@ -39,7 +39,7 @@ export const ButtonShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Button — Atomic (Depth 1)</h2>
+      <h2>Button — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Button.css), no component imports. Multi-variant button with loading spinner.
         Prefer the curried variants (PrimaryButton, GhostButton, …) at call sites so emphasis is

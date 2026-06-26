@@ -40,8 +40,8 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
 
   return (
     <div class="component-section">
-      <h2>ProgressCard — Depth 2</h2>
-      <p class="text-meta">Owns CSS (ProgressCard.css). Composes Icon (Atomic/Depth 1) via ICON_PATHS in variants. Step icons with title, subtitle, message.</p>
+      <h2>ProgressCard — Depth 1</h2>
+      <p class="text-meta">Owns CSS (ProgressCard.css). Composes Icon (Primitive/Depth 0) via ICON_PATHS in variants. Step icons with title, subtitle, message.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — In Progress</h3>

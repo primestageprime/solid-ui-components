@@ -15,7 +15,7 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
 
   return (
     <div class="component-section">
-      <h2>RemovableItemCard — Depth 2 (zero CSS)</h2>
+      <h2>RemovableItemCard — Depth 1 (zero CSS)</h2>
       <p class="text-meta">Composes Surface + Layout + Text (curried) + Button (Atomic). Interactive card with title, details, remove action.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

@@ -39,7 +39,7 @@ const statusAwareDispatch = (v: unknown): JSX.Element | undefined =>
 export const ValueRendererShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ValueRenderer — Atomic (Depth 1)</h2>
+      <h2>ValueRenderer — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (ValueRenderer.css), no component imports. Meta-primitive for
         labeled label/value layout with a pluggable value dispatcher. Zero

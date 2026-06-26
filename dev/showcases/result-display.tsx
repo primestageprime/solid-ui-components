@@ -5,7 +5,7 @@ import { ResultDisplay } from "../../src/components/DataDisplay";
 export const ResultDisplayShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ResultDisplay — Atomic Primitive (Depth 1)</h2>
+      <h2>ResultDisplay — Composed (Depth 2)</h2>
       <p class="text-meta">Owns CSS (ResultDisplay.css); no library-component imports. Header (label + sublabel) over a value+units row with optional badge slot. Data-driven `valueColor` flows as inline style on the value span (allowed inside a Primitive).</p>
 
       <h3>Pass case</h3>

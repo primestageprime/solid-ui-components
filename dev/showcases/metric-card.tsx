@@ -5,7 +5,7 @@ import { Row } from "../../src/components/Layout/Row";
 export const MetricCardShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>MetricCard — Atomic Primitive (Depth 1)</h2>
+      <h2>MetricCard — Composed (Depth 2)</h2>
       <p class="text-meta">Owns CSS (MetricCard.css); no library-component imports. Labeled value card with optional units and status color variants. When `units` is supplied the value uses the same monospace face as the sibling NumberWithUnits Primitive.</p>
 
       <h3>Color variants</h3>

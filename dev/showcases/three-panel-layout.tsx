@@ -49,7 +49,7 @@ const DemoCenter = () => (
 export const ThreePanelLayoutShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ThreePanelLayout — Atomic (Depth 1)</h2>
+      <h2>ThreePanelLayout — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (ThreePanelLayout.css), no component imports. Top-bar +
         three-column (left / center / right) page scaffold. Zero-config:

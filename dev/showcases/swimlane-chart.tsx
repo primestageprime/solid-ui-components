@@ -427,7 +427,7 @@ const AnimatedChain: Component = () => {
 export const SwimlaneChartShowcase: Component = () => {
   return (
     <div class="component-section component-section--full">
-      <SectionTitle>SwimlaneChart — Composed (Depth 2)</SectionTitle>
+      <SectionTitle>SwimlaneChart — Primitive (Depth 0)</SectionTitle>
       <p class="text-meta">
         DAG visualizer where each node's signed{" "}
         <code>col</code> determines its column relative to center

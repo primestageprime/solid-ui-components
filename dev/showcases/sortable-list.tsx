@@ -72,7 +72,7 @@ export const SortableListShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>SortableList — Composite (Depth 2)</h2>
+      <h2>SortableList — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (<code>SortableList.css</code>), no component imports. A controlled
         vertical drag-to-reorder list of full-width rows — the SUI equivalent of

@@ -5,7 +5,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 export const PageShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>Page — Atomic (Depth 1)</h2>
+      <h2>Page — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Page container with scanline and grid overlays.</p>
 
       <div class="example-group">

@@ -17,7 +17,7 @@ interface Depth2Props {
 export const AlertBoxShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>AlertBox — Depth 2 (zero CSS)</h2>
+      <h2>AlertBox — Depth 1 (zero CSS)</h2>
       <p class="text-meta">Composes Surface + Layout + Text (curried). Status-colored alert with optional action slot.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

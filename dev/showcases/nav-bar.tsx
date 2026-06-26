@@ -8,7 +8,7 @@ interface Depth2Props {
 export const NavBarShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>NavBar — Depth 2 (zero CSS)</h2>
+      <h2>NavBar — Primitive (Depth 0)</h2>
       <p class="text-meta">Composes NavLink (Atomic). Horizontal navigation bar with active state and badges.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

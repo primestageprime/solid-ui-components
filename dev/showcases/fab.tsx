@@ -7,9 +7,9 @@ export const FabShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Fab — Composite (Depth 2)</h2>
+      <h2>Fab — Composite (Depth 1)</h2>
       <p class="text-meta">
-        Composes Button + Icon (both Depth-1 atomics). Owns a minimal structural
+        Composes Button + Icon (both Depth-0 primitives). Owns a minimal structural
         CSS file (circle / fixed 56px / elevation) — a deliberate exception to
         "Depth 2 = zero CSS" because the float/circle/size geometry is structural
         and not expressible as a Button variant. Placement is always the

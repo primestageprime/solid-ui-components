@@ -13,7 +13,7 @@ export const IconShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Icon — Atomic (Depth 1)</h2>
+      <h2>Icon — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (Icon.css), no component imports. SVG icon set with outline/solid variants, 5 sizes.</p>
 
       <For each={Object.entries(ICON_GROUPS) as [keyof typeof ICON_GROUPS, readonly IconName[]][]}>

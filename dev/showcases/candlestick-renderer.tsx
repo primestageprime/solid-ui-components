@@ -49,7 +49,7 @@ const dojiAwareColor = (c: Candlestick): string => {
 export const CandlestickRendererShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>CandlestickRenderer — Atomic (Depth 1)</h2>
+      <h2>CandlestickRenderer — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (CandlestickRenderer.css), no component imports. OHLC box
         visualization with open/close flanks, high/low stacked markers, and a

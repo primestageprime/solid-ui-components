@@ -54,7 +54,7 @@ const multiRows: HeatmapMultiRow[] = [
 export const HeatmapShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>Heatmap + HeatmapMulti — Atomic (Depth 1)</h2>
+      <h2>Heatmap + HeatmapMulti — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (Heatmap.css), no component imports. Grid cells with status colors, legends, tooltips.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

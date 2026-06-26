@@ -9,7 +9,7 @@ interface Depth2Props {
 export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>Section — Atomic (Depth 1)</h2>
+      <h2>Section — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Collapsible section with title, subtitle, corners.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

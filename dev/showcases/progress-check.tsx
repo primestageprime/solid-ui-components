@@ -5,7 +5,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 
 export const ProgressCheckShowcase: Component = () => (
   <div class="component-section">
-    <h2>ProgressCheck — Atomic (Depth 1)</h2>
+    <h2>ProgressCheck — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Circular progress + completion check. Useful as a compact next-to-label
       indicator. Pass <code>progress</code> 0–1.

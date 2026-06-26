@@ -12,7 +12,7 @@ export const CompletionTimelineShowcase: Component = () => {
   }));
   return (
     <div class="component-section">
-      <h2>CompletionTimeline — Composed (Depth 2)</h2>
+      <h2>CompletionTimeline — Composed (Depth 1)</h2>
       <p class="text-meta">
         Per-30-min bucket completion bars over a rolling window. Internally
         composes <code>Chart</code> + <code>BarSeries</code>.

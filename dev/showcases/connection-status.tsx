@@ -39,7 +39,7 @@ export const ConnectionStatusShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>ConnectionStatus — Depth 3</h2>
+      <h2>ConnectionStatus — Depth 2</h2>
       <p class="text-meta">
         Stacked indicator: label on top, sparkline beneath. Reassuring when
         healthy — no time-since text, just the trace.
@@ -60,7 +60,7 @@ export const ConnectionStatusShowcase: Component = () => {
             <ConnectionStatus name="off" lastHeartbeatAt={null} timeoutMs={5000} />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>LiveHeartbeatTrace — Depth 2 (raw)</h3>
+          <h3 style={{ "margin-top": "32px" }}>LiveHeartbeatTrace — Depth 1 (raw)</h3>
           <p class="text-meta">
             Same four states, without the surrounding label.
           </p>
@@ -77,7 +77,7 @@ export const ConnectionStatusShowcase: Component = () => {
             <LiveHeartbeatTrace lastHeartbeatAt={null} timeoutMs={5000} width={120} height={20} />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>HeartbeatSparkline — Atomic (Depth 1, hand-fed)</h3>
+          <h3 style={{ "margin-top": "32px" }}>HeartbeatSparkline — Primitive (Depth 0, hand-fed)</h3>
           <p class="text-meta">
             Pure SVG. Caller feeds samples (0..1 = fraction of timeout consumed).
           </p>

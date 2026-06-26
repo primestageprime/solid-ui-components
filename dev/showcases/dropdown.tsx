@@ -6,7 +6,7 @@ export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");
   return (
     <div class="component-section">
-      <h2>Dropdown — Atomic (Depth 1)</h2>
+      <h2>Dropdown — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Selectable list with optional footer, label, and color accent. Uses
         controlled <code>value</code> + <code>onChange</code>.

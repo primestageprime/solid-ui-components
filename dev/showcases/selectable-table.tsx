@@ -19,8 +19,8 @@ export const SelectableTableShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>SelectableTable — Depth 2 (zero CSS)</h2>
-      <p class="text-meta">Composes Button (Atomic/Depth 1). Table + checkbox selection + action bar.</p>
+      <h2>SelectableTable — Depth 1 (zero CSS)</h2>
+      <p class="text-meta">Composes Button (Primitive/Depth 0). Table + checkbox selection + action bar.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — With Selection Actions</h3>

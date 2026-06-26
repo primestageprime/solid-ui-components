@@ -5,7 +5,7 @@ export const TagInputShowcase: Component = () => {
   const [tags, setTags] = createSignal<string[]>(["solid", "ssr"]);
   return (
     <div class="component-section">
-      <h2>TagInput — Atomic (Depth 1)</h2>
+      <h2>TagInput — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Inline pill-style tag editor. Caller owns the tag list; component
         emits <code>onAdd</code> / <code>onRemove</code>.

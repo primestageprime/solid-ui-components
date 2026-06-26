@@ -5,7 +5,7 @@ import { List } from "../../src/components/List/List";
 export const ListShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>List + ListItem — Atomic (Depth 1)</h2>
+      <h2>List + ListItem — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HUD.css), no component imports. Status/menu list with dividers.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

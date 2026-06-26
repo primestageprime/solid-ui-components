@@ -4,8 +4,8 @@ import { ResultPanel } from "../../src/components/DataDisplay";
 export const ResultPanelShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ResultPanel — Depth 4 (zero CSS)</h2>
-      <p class="text-meta">Composes ResultDisplay (Depth 3) + FormulaProvider (Atomic). Layout shell for result + formula content.</p>
+      <h2>ResultPanel — Depth 2 (zero CSS)</h2>
+      <p class="text-meta">Composes ResultDisplay (Depth 2) + FormulaProvider (Atomic). Layout shell for result + formula content.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — NOx Result</h3>

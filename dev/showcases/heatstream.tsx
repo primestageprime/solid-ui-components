@@ -74,7 +74,7 @@ const partialUnknownItems: HeatStreamItem[] = [
 export const HeatStreamShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>HeatStream — Atomic (Depth 1)</h2>
+      <h2>HeatStream — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (HeatStream.css), no component imports. Transposed stream: keys flow top-to-bottom (rows), items flow left-to-right (columns, earliest left, latest right).</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

@@ -17,7 +17,7 @@ export const DigitRollerShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>DigitRoller — Atomic (Depth 1)</h2>
+      <h2>DigitRoller — Composed (Depth 2)</h2>
       <p class="text-meta">Owns CSS (DigitRoller.css), no component imports. Animated digit-by-digit value transition.</p>
 
       <div class="example-group">

@@ -26,7 +26,7 @@ export const ThroughputChartShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>ThroughputChart — Composed (Depth 2)</h2>
+      <h2>ThroughputChart — Composed (Depth 1)</h2>
       <p class="text-meta">
         Two modes, one component. RATE (default): rows/min line + area + average
         reference + crosshair tooltip — <code>{` { dataPoints, windowHours? } `}</code>.

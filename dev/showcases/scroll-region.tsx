@@ -35,7 +35,7 @@ const Row: Component<{ children: any }> = (props) => (
 export const ScrollRegionShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ScrollRegion — Atomic (Depth 1)</h2>
+      <h2>ScrollRegion — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (ScrollRegion.css), no component imports. DYNAMIC top/bottom fade
         scroll affordance: fades are computed at runtime from scroll position

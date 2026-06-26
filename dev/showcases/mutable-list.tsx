@@ -83,7 +83,7 @@ export const MutableListShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>MutableList — Composite (Depth 3)</h2>
+      <h2>MutableList — Composite (Depth 1)</h2>
       <p class="text-meta">
         Owns CSS (<code>MutableList.css</code>). A <code>SortableList</code> specialized
         into editable, deletable cards: it COMPOSES <code>SortableList</code> and supplies

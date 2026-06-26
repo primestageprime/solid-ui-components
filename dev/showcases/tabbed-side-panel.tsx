@@ -97,7 +97,7 @@ export const TabbedSidePanelShowcase: Component = () => {
   const [padding, setPadding] = createSignal<ContentPaddingValue>("sm");
   return (
     <div class="component-section">
-      <h2>TabbedSidePanel — Composite (Depth 2)</h2>
+      <h2>TabbedSidePanel — Composite (Depth 1)</h2>
       <p class="text-meta">
         Zero CSS. Composes vertical Tabs + Row. Tab strip is always visible; the
         active tab's content renders inboard only when isOpen=true. Clicking the

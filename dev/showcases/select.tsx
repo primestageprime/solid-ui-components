@@ -37,7 +37,7 @@ export const SelectShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Select — Atomic (Depth 1)</h2>
+      <h2>Select — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Select.css). Unified single + multi built on
         `@kobalte/core/select`. `multiple` literal narrows `value` /

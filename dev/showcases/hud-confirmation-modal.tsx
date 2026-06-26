@@ -21,7 +21,7 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
 
   return (
     <div class="component-section">
-      <h2>ConfirmationModal — Depth 2 (zero CSS)</h2>
+      <h2>ConfirmationModal — Depth 1 (zero CSS)</h2>
       <p class="text-meta">
         Composes HUDModal (Atomic) + Button (Atomic). Confirmation dialog with
         Cancel/Confirm footer, loading state, and scrollable body.

@@ -120,7 +120,7 @@ export const DnDHierarchySortBarShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>DnDHierarchySortBar — Atomic (Depth 1)</h2>
+      <h2>DnDHierarchySortBar — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (<code>DnDHierarchySortBar.css</code>), no component imports. A
         controlled N-pill drag-to-reorder row for tag/dimension hierarchies. Built

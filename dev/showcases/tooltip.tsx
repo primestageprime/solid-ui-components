@@ -15,7 +15,7 @@ export const TooltipShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Tooltip — Atomic (Depth 1)</h2>
+      <h2>Tooltip — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Tooltip.css). Kobalte-backed hover/focus tooltip with arrow and fade animation.
         Accepts either a value or an accessor for `content`. Defaults to 100ms open/close delay;

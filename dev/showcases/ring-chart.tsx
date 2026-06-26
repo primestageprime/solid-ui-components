@@ -4,7 +4,7 @@ import { Row } from "../../src/components/Layout/Row";
 
 export const RingChartShowcase: Component = () => (
   <div class="component-section">
-    <h2>RingChart — Atomic (Depth 1)</h2>
+    <h2>RingChart — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Donut / ring chart with stacked segments + center label. Pure SVG.
     </p>

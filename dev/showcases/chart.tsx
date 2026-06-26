@@ -71,7 +71,7 @@ export const ChartShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Chart — Composable Family (Depth 2)</h2>
+      <h2>Chart — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Slot-style chart: <code>&lt;Chart&gt;</code> provides scales + viewport
         via context; drop in <code>&lt;Grid&gt;</code>,{" "}

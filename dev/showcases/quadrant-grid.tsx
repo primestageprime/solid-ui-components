@@ -3,7 +3,7 @@ import { QuadrantGrid } from "../../src/components/DragDrop";
 
 export const QuadrantGridShowcase: Component = () => (
   <div class="component-section">
-    <h2>QuadrantGrid — Composed (Depth 2)</h2>
+    <h2>QuadrantGrid — Primitive (Depth 0)</h2>
     <p class="text-meta">
       2×2 drop-zone grid. Each cell has a key, label, color, and child
       content. Use for prioritization matrices (Eisenhower, RICE, etc.).

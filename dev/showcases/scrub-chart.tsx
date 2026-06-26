@@ -90,7 +90,7 @@ export const ScrubChartShowcase: Component = () => {
 
   return (
     <div class="component-section component-section--full">
-      <h2>ScrubChart — Composite (Depth 2)</h2>
+      <h2>ScrubChart — Composite (Depth 1)</h2>
       <p class="text-meta">
         Linear-scale overview chart paired with a <code>DateAxis</code>. The
         chart slot renders all {cells.length} cells at uniform pixel pitch

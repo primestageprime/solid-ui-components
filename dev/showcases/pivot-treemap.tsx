@@ -69,7 +69,7 @@ export const PivotTreemapShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>PivotTreemap — Pure Composite (Depth 2)</h2>
+      <h2>PivotTreemap — Pure Composite (Depth 1)</h2>
       <p class="text-meta">
         Composes Treemap + SlotFillBar + the PivotPills sub-Primitive + the
         compact ChipLabel / EllipsizedChipLabel / CountText (Text) and

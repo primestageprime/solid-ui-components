@@ -34,7 +34,7 @@ const statusAwareDispatch = (v: unknown): JSX.Element | undefined =>
 export const ChangeRendererShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ChangeRenderer — Depth 2 (Composite)</h2>
+      <h2>ChangeRenderer — Depth 1 (Composite)</h2>
       <p class="text-meta">
         Composes <code>ValueRenderer</code> for the before/after sides, with a
         directional arrow between them. Both sides share the same{" "}

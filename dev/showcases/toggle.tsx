@@ -8,7 +8,7 @@ export const ToggleShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Toggle — Atomic (Depth 1)</h2>
+      <h2>Toggle — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (Toggle.css), no component imports. Checkbox toggle switch with label positioning.</p>
 
       <div class="example-group">

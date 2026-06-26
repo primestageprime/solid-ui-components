@@ -11,8 +11,8 @@ interface Depth3Props {
 export const InteractiveFormulaShowcase: Component<Depth3Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>InteractiveFormula — Depth 4 (zero CSS)</h2>
-      <p class="text-meta">Composes MathFormula (Atomic) + DataList (Depth 3) + NumberWithUnits (Depth 2). Hover-linked formula + variable table.</p>
+      <h2>InteractiveFormula — Depth 3 (zero CSS)</h2>
+      <p class="text-meta">Composes MathFormula (Atomic) + DataList (Depth 1) + NumberWithUnits (Depth 2). Hover-linked formula + variable table.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>

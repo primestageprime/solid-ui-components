@@ -59,7 +59,7 @@ export const DateAxisShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>DateAxis — Atomic (Depth 1)</h2>
+      <h2>DateAxis — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Cadence-generic horizontal cell ribbon. Pass any <code>Cell[]</code>
         produced by <code>dailyCells</code> / <code>weeklyCells</code> /

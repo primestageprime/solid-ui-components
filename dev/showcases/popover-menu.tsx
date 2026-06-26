@@ -6,7 +6,7 @@ export const PopoverMenuShowcase: Component = () => {
   const [last, setLast] = createSignal<string>("");
   return (
     <div class="component-section">
-      <h2>PopoverMenu — Atomic (Depth 1)</h2>
+      <h2>PopoverMenu — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Click-to-open menu anchored to a trigger element. Generic over the
         item id type.

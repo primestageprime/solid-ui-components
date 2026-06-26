@@ -117,7 +117,7 @@ export const ToastShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Toast — Atomic (Depth 1)</h2>
+      <h2>Toast — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Toast.css). Kobalte-backed toast with four variants
         (info/success/warning/error), optional description, actions, and

@@ -11,7 +11,7 @@ interface Depth2Props {
 export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
-      <h2>EmptyState — Depth 2 (zero CSS)</h2>
+      <h2>EmptyState — Depth 1 (zero CSS)</h2>
       <p class="text-meta">Composes Layout + Text (curried). Centered placeholder with icon, message, size variants.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

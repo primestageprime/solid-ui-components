@@ -4,7 +4,7 @@ import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 export const InputsShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>Inputs — Atomic (Depth 1)</h2>
+      <h2>Inputs — Primitive (Depth 0)</h2>
       <p class="text-meta">Owns CSS (ThemedInputs.css), no component imports. Styled text input and textarea with labels.</p>
 
       <div class="example-group">

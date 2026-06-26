@@ -18,7 +18,7 @@ const ITEMS: Item[] = [
 export const QuickFilterAtomShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>QuickFilter — Atomic (Depth 1, generic)</h2>
+      <h2>QuickFilter — Primitive (Depth 0, generic)</h2>
       <p class="text-meta">
         Generic filter input with a render-prop child. Tokenized AND-matching
         across whitespace-split tokens. Composes over any list/table/tree.

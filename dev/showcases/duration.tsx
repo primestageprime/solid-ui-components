@@ -16,7 +16,7 @@ const SAMPLES = [
 
 export const DurationShowcase: Component = () => (
   <div class="component-section">
-    <h2>Duration — Atomic (Depth 1)</h2>
+    <h2>Duration — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Renders a span with a human-friendly duration. <code>ms</code> ≤ 1s →
       <code>123ms</code>; 1–10s → <code>12.3s</code>; minutes → <code>4m 8s</code>;

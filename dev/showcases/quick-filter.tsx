@@ -20,7 +20,7 @@ const columns = [
 export const QuickFilterShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>QuickFilter — Depth 2 (zero CSS)</h2>
+      <h2>QuickFilter — Depth 1 (zero CSS)</h2>
       <p class="text-meta">Composes BaseTable (Atomic/Depth 1). Filter input + table passthrough.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">

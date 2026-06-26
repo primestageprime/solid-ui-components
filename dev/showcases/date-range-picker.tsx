@@ -58,7 +58,7 @@ export const DateRangePickerShowcase: Component = () => {
             text-transform: uppercase;
           }`}
       </style>
-      <h2>DateRangePicker — Atomic Primitive (Depth 1)</h2>
+      <h2>DateRangePicker — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (DateRangePicker.css). Wraps `@kobalte/core/popover` (matches
         the Combobox/Select/Tooltip/Toast/ThemedNumberInput Kobalte-wrapping

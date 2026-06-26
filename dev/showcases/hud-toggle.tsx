@@ -9,7 +9,7 @@ export const ToggleShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Toggle — Atomic (Depth 1)</h2>
+      <h2>Toggle — Primitive (Depth 0)</h2>
       <p class="text-meta">Toggle component with default and minimal variants.</p>
 
       <div class="example-group">

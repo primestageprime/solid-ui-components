@@ -168,7 +168,7 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
 export const DagChartShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>DagChart — Atomic (Depth 1)</h2>
+      <h2>DagChart — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Generic DAG visualizer. Consumer supplies <code>renderNode</code>; supports
         pan/zoom, focus-driven collapse, and horizontal/vertical layout.
