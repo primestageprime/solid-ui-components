@@ -402,6 +402,7 @@ const App: Component = () => {
   return (
     <div class="showcase">
       <nav class="showcase__sidebar">
+        <div class="showcase__sidebar-head">
         <div class="showcase__brand">
           <h1>Solid Components</h1>
           <p>SolidJS Component Library</p>
@@ -478,7 +479,9 @@ const App: Component = () => {
             }}
           />
         </div>
+        </div>
 
+        <div class="showcase__sidebar-list">
         <For each={groupedItems()}>
           {(group) => (
             <div class="nav-group">
@@ -502,6 +505,7 @@ const App: Component = () => {
             </div>
           )}
         </For>
+        </div>
       </nav>
 
       <main class="showcase__content">

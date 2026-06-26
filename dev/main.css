@@ -2,7 +2,8 @@
 
 .showcase {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Sidebar ───────────────────────────────────────────── */
@@ -14,6 +15,22 @@
   background: var(--sui-bg-secondary);
   display: flex;
   flex-direction: column;
+  /* Full-height column: filter head stays frozen, list scrolls. */
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Frozen filter/controls block — never scrolls away. */
+.showcase__sidebar-head {
+  flex: 0 0 auto;
+}
+
+/* Component list — scrolls internally in the remaining space.
+   min-height: 0 is required so this flex child can shrink below
+   its content height and actually become a scroll container. */
+.showcase__sidebar-list {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 
