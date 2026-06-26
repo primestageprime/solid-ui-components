@@ -123,11 +123,13 @@ export const DnDHierarchySortBarShowcase: Component = () => {
       <h2>DnDHierarchySortBar — Atomic (Depth 1)</h2>
       <p class="text-meta">
         Owns CSS (<code>DnDHierarchySortBar.css</code>), no component imports. A
-        controlled N-pill drag-to-reorder row for tag/dimension hierarchies. Uses
-        native HTML drag-and-drop with INSERT semantics: the dragged pill moves to
-        the target index and the others shift to fill — matching dside's{" "}
-        <code>reorder()</code>. The caller owns the order via{" "}
-        <code>items</code> + <code>onReorder</code>.
+        controlled N-pill drag-to-reorder row for tag/dimension hierarchies. Built
+        on the headless <code>createDnDReorder</code> hook (axis <code>"x"</code>):
+        as you drag, an explicit placeholder opens a gap in the slot the pill will
+        land in and the whole row reflows live to preview the reordered state; the
+        drop commits it. The floating pill under the cursor is the browser's native
+        drag image. The caller owns the order via <code>items</code> +{" "}
+        <code>onReorder</code>.
       </p>
       <p class="text-meta">
         No curried variant — intentional. Every prop is data or a callback (
@@ -140,8 +142,10 @@ export const DnDHierarchySortBarShowcase: Component = () => {
       <div class="example-group">
         <h3>Drag to reorder</h3>
         <p class="text-meta">
-          Drag any pill onto another to insert it at that position (the others
-          shift to fill). The live order readout below updates immediately on drop.
+          Drag a pill across the row: a dashed placeholder opens a gap where it
+          will land and the other pills reflow live around it (the placeholder
+          reserves the dragged pill's width). Release to commit — the live order
+          readout below updates on drop.
         </p>
         <div
           style={{

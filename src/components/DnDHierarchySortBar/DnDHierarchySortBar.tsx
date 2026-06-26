@@ -4,16 +4,22 @@
 // DnDHierarchySortBar — Atomic (Depth 1).
 // Horizontal row of draggable "dimension" pills the user drag-reorders to
 // reorder a tag hierarchy. Controlled: caller owns the order via `items` +
-// `onReorder`. Uses native HTML drag-and-drop (same mechanism as dside's
-// DesignView nestOrder bar and PivotPills).
+// `onReorder`. Uses native HTML drag-and-drop via the headless `createDnDReorder`
+// hook (the placeholder-drop-target pattern from dside's BrainstormPane).
+//
+// PATTERN: during a drag an explicit PLACEHOLDER opens up and occupies the slot
+// the dragged pill will land in; the whole row reflows live as you drag, and the
+// drop commits the previewed order. The floating pill under the cursor is the
+// browser's native drag image. (Replaces the old `--drag-over` highlight.)
 //
 // KEY DIFFERENCE from PivotPills (PivotTreemap/PivotPills.tsx):
 //   - PivotPills: fixed 3-slot system (outer / inner / unused) with SWAP semantics.
-//   - DnDHierarchySortBar: N-item general list with INSERT semantics — dragged pill
-//     moves to the target index, shifting others. Matches dside's reorder().
+//   - DnDHierarchySortBar: N-item general list with INSERT semantics — the row
+//     previews the reordered state on every hover. Matches dside's reorder().
 // ============================================
 
-import { Component, createSignal, For } from "solid-js";
+import { Component, For, Show } from "solid-js";
+import { createDnDReorder } from "./createDnDReorder";
 import "./DnDHierarchySortBar.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -38,86 +44,68 @@ export interface DnDHierarchySortBarProps {
   label?: string;
 }
 
-// ── Pure helpers ──────────────────────────────────────────────────────────
-
-/**
- * Produces a new id-order array by removing the item at `from` and
- * inserting it at `to`. Mirrors dside's DesignView `reorder()` function.
- */
-const insertReorder = (ids: string[], from: number, to: number): string[] => {
-  if (from === to) return ids;
-  const next = [...ids];
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
-  return next;
-};
-
 // ── Component ─────────────────────────────────────────────────────────────
 
 export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) => {
-  const [dragFrom, setDragFrom] = createSignal<number | null>(null);
-  const [dragOver, setDragOver] = createSignal<number | null>(null);
-
   const label = () => props.label ?? "nest by";
 
-  const handleDrop = (toIdx: number) => {
-    const from = dragFrom();
-    setDragFrom(null);
-    setDragOver(null);
-    if (from == null || from === toIdx) return;
-    const nextIds = insertReorder(
-      props.items.map((item) => item.id),
-      from,
-      toIdx,
-    );
-    props.onReorder(nextIds);
-  };
+  // axis "x": this is a horizontal flex-wrap row, so the before/after hit-test
+  // compares the cursor's X against each pill's horizontal midpoint.
+  const dnd = createDnDReorder<DnDHierarchySortBarItem>({
+    items: () => props.items,
+    getId: (item) => item.id,
+    onReorder: (ids) => props.onReorder(ids),
+    axis: "x",
+  });
 
   return (
     <div class="sui-dnd-hierarchy-sort-bar" role="list" aria-label={label()}>
       <span class="sui-dnd-hierarchy-sort-bar__label" aria-hidden="true">
         {label()}
       </span>
-      <For each={props.items}>
-        {(item, idx) => {
-          const isSource = () => dragFrom() === idx();
-          const isTarget = () =>
-            dragOver() === idx() && dragFrom() !== idx();
-
+      <For each={dnd.displayItems()}>
+        {(item) => {
+          const handlers = () => dnd.dragHandlers(item.id);
           return (
-            <span
-              class={`sui-dnd-hierarchy-sort-bar__pill${isSource() ? " sui-dnd-hierarchy-sort-bar__pill--dragging" : ""}${isTarget() ? " sui-dnd-hierarchy-sort-bar__pill--drag-over" : ""}`}
-              draggable={true}
-              role="listitem"
-              aria-label={item.label}
-              title="drag to reorder"
-              onDragStart={(e) => {
-                setDragFrom(idx());
-                e.dataTransfer?.setData("text/plain", String(idx()));
-                if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-              }}
-              onDragEnd={() => {
-                setDragFrom(null);
-                setDragOver(null);
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-                setDragOver(idx());
-              }}
-              onDragLeave={() => {
-                if (dragOver() === idx()) setDragOver(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                handleDrop(idx());
-              }}
+            <Show
+              when={!dnd.isPlaceholder(item.id)}
+              fallback={
+                /* Placeholder — the dragged pill's live drop slot. It opens a
+                   gap that reflows through the row as you drag; the floating
+                   pill under the cursor is the browser's drag image. Reserves
+                   the dragged pill's WIDTH (labels vary) so the gap matches. */
+                <span
+                  class="sui-dnd-hierarchy-sort-bar__pill sui-dnd-hierarchy-sort-bar__placeholder"
+                  aria-label="Drop position"
+                  draggable={handlers().draggable}
+                  onDragOver={handlers().onDragOver}
+                  onDrop={handlers().onDrop}
+                  onDragEnd={handlers().onDragEnd}
+                  style={
+                    dnd.dragSize()
+                      ? { "min-width": `${dnd.dragSize()!.width}px` }
+                      : undefined
+                  }
+                />
+              }
             >
-              <span class="sui-dnd-hierarchy-sort-bar__grip" aria-hidden="true">
-                ⋮⋮
+              <span
+                class="sui-dnd-hierarchy-sort-bar__pill"
+                role="listitem"
+                aria-label={item.label}
+                title="drag to reorder"
+                draggable={handlers().draggable}
+                onDragStart={handlers().onDragStart}
+                onDragOver={handlers().onDragOver}
+                onDrop={handlers().onDrop}
+                onDragEnd={handlers().onDragEnd}
+              >
+                <span class="sui-dnd-hierarchy-sort-bar__grip" aria-hidden="true">
+                  ⋮⋮
+                </span>
+                {item.label}
               </span>
-              {item.label}
-            </span>
+            </Show>
           );
         }}
       </For>

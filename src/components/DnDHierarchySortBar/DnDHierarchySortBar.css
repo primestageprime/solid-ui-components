@@ -42,12 +42,22 @@
   background: var(--sui-bg-elevated);
 }
 
-.sui-dnd-hierarchy-sort-bar__pill--dragging {
-  opacity: 0.4;
+/* The dragged pill's live drop slot. Opens a gap that reflows through the row
+   as you drag; sized via an inline min-width to match the dragged pill's
+   captured width. The old `--drag-over` highlight is replaced by this. */
+.sui-dnd-hierarchy-sort-bar__placeholder {
+  border-style: dashed;
+  border-color: var(--sui-accent, #00a8cc);
+  background: color-mix(
+    in srgb,
+    var(--sui-accent, #00a8cc) 12%,
+    transparent
+  );
   cursor: grabbing;
 }
 
-.sui-dnd-hierarchy-sort-bar__pill--drag-over {
+.sui-dnd-hierarchy-sort-bar__placeholder:hover {
+  /* Keep the placeholder visually stable while hovered. */
   border-color: var(--sui-accent, #00a8cc);
   background: color-mix(
     in srgb,
