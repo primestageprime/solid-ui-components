@@ -13,7 +13,10 @@ import { Component, JSX, splitProps, Show } from "solid-js";
 import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
 import "./TitledTimeRangeHeader.css";
 
-export interface TitledTimeRangeHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
+// Omit the DOM `title` attribute (typed `string`) so our richer heading prop
+// (string | JSX.Element) doesn't conflict with it — `title` is consumed into
+// the heading content, never spread onto the div.
+export interface TitledTimeRangeHeaderProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "title"> {
   /** Heading content — a plain string, or rich JSX (e.g. an icon + name). */
   title: string | JSX.Element;
   start: string;

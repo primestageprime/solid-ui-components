@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.79.2
+
+### Fixed
+
+- **`TitledTimeRangeHeader`** — fix the 0.79.1 type regression: widening `title` to `string | JSX.Element` collided with the DOM `title` attribute (typed `string`) inherited via `HTMLAttributes`, breaking `tsc`. The props now `Omit` the DOM `title`, so the rich-heading prop typechecks cleanly.
+
 ## 0.79.1
 
 ### Changed
