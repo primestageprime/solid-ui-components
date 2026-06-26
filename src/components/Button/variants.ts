@@ -13,6 +13,9 @@ import { createButton } from "./Button";
 import type { ButtonDataProps } from "./Button";
 import type { Component } from "solid-js";
 
+// Default button — standard, no-emphasis action (the no-variant baseline)
+export const DefaultButton: Component<ButtonDataProps> = createButton({ variant: "default" });
+
 // Primary button — default size
 export const PrimaryButton: Component<ButtonDataProps> = createButton({ variant: "primary" });
 

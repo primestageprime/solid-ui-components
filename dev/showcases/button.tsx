@@ -1,7 +1,7 @@
 import { createSignal, Component, JSX } from "solid-js";
 import { Button } from "../../src/components/Button/Button";
 import {
-  PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,
+  DefaultButton, PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,
   OutlinedButton, TextButton, IconOnlyButton,
 } from "../../src/components/Button";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -67,7 +67,7 @@ export const ButtonShowcase: Component = () => {
             (e.g. "Back" in a wizard). Visible, but clearly subordinate.
           </GuidanceRow>
 
-          <GuidanceRow button={<Button>Edit</Button>}>
+          <GuidanceRow button={<DefaultButton>Edit</DefaultButton>}>
             <strong>default</strong> — a standard action with no strong emphasis. Use when the
             button is just one of several equals and none deserves the spotlight.
           </GuidanceRow>
@@ -224,10 +224,10 @@ export const ButtonShowcase: Component = () => {
           </div>
 
           <div class="text-meta">
-            Curried variants (PrimaryButton, SecondaryButton, DangerButton, WarningButton,
-            GhostButton, OutlinedButton, TextButton, IconOnlyButton, plus Small*/Large* size-locked
-            forms) are exported from the Button barrel and are the preferred call-site form. There is
-            no curried "DefaultButton" — render the base `Button` with no variant for the default style.
+            Curried variants (DefaultButton, PrimaryButton, SecondaryButton, DangerButton,
+            WarningButton, GhostButton, OutlinedButton, TextButton, IconOnlyButton, plus Small*/Large*
+            size-locked forms) are exported from the Button barrel and are the preferred call-site
+            form — emphasis is chosen by name, never by a `variant` prop.
           </div>
         </Stack>
       </div>
