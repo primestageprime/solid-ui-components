@@ -10,6 +10,7 @@ import {
   onMount,
   onCleanup,
 } from "solid-js";
+import { Surface } from "../Surface/Surface";
 import { computeSplitLayout, computeEnterFrame } from "./layout";
 import "./SplitQueueList.css";
 
@@ -981,10 +982,25 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // Fill the parent by default so the rail tracks the available height; an
     // explicit `height` prop pins a fixed px height instead.
     return (
-      <div
+      // Container CHROME (background + 1px border) comes from the base Surface
+      // primitive via the bg/borderColor props; `padding="none"`/`radius="none"`
+      // keep Surface from imposing its own scale, and the theme-aware corner
+      // radius (var(--sui-radius-md) — 6px in some themes, off Surface's 8px
+      // "md") is supplied inline. The structural rest (flex column, overflow,
+      // position, font/colour) stays in `.sui-sql`. `ref` forwards through
+      // Surface to its inner div, so `rootEl` is still the element the FLIP
+      // queries/measures — the animation is structurally unaffected.
+      <Surface
         ref={rootEl}
         class={`sui-sql sui-sql--static${props.class ? " " + props.class : ""}`}
-        style={{ height: props.height != null ? `${props.height}px` : "100%" }}
+        padding="none"
+        radius="none"
+        bg="var(--sui-bg-secondary)"
+        borderColor="var(--sui-border)"
+        style={{
+          "border-radius": "var(--sui-radius-md)",
+          height: props.height != null ? `${props.height}px` : "100%",
+        }}
       >
         {/* TOP — read-only list, capped to topCapRows then scrolls. */}
         <ul
@@ -1015,19 +1031,31 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         <div class="sui-sql__list sui-sql__list--bottom sui-sql__static-bottom">
           {props.bottomContent}
         </div>
-      </div>
+      </Surface>
     );
   }
 
   return (
-    <div
+    // Container CHROME (background + 1px border) comes from the base Surface
+    // primitive (see the static branch above for the full rationale); the
+    // theme-aware corner radius is inline and the structural rest stays in
+    // `.sui-sql`. `ref` forwards through Surface to its inner div, so `rootEl`
+    // is unchanged for the FLIP's measurement/queries.
+    <Surface
       ref={rootEl}
       class={`sui-sql${props.class ? " " + props.class : ""}`}
+      padding="none"
+      radius="none"
+      bg="var(--sui-bg-secondary)"
+      borderColor="var(--sui-border)"
       // In topOnly the root hugs its single (top) panel so the container follows
       // the panel's content-driven / animated height — "one line" when empty,
       // growing with the panel as it reveals each card. The normal two-panel
       // layout keeps the fixed total height.
-      style={{ height: props.topOnly ? undefined : `${height()}px` }}
+      style={{
+        "border-radius": "var(--sui-radius-md)",
+        height: props.topOnly ? undefined : `${height()}px`,
+      }}
     >
       {/* TOP — resolved ("categorized"). Content-driven height between a 1-row
           floor and a 3-row cap; absorbs slack when the bottom is short. Sized
@@ -1078,7 +1106,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
           </Show>
         </ul>
       </Show>
-    </div>
+    </Surface>
   );
 }
 

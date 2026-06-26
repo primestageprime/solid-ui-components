@@ -1,29 +1,12 @@
+/* Card chrome (border / radius / padding / background) is owned by the
+   Surface primitive. Per-status border-color + background are computed in
+   WorkerCard.tsx and passed to Surface as inline overrides. This rule keeps
+   only the genuinely component-specific bits: the monospace typography and the
+   colour transition. The .worker-card / .worker-card--<status> / --overdue
+   classes remain as public BEM hooks for consumers. */
 .worker-card {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  border: 1px solid var(--sui-text-muted);
-  border-radius: 8px;
-  padding: 10px 14px;
-  background: var(--sui-bg-secondary, rgba(13,26,42,0.8));
   transition: border-color 0.3s ease, background 0.3s ease;
-}
-
-.worker-card--complete {
-  border-color: var(--sui-success);
-  background: rgba(var(--sui-success-rgb), 0.04);
-}
-
-.worker-card--overdue {
-  border-color: var(--sui-danger);
-  background: rgba(var(--sui-danger-rgb), 0.04);
-}
-
-.worker-card--claimed,
-.worker-card--extracting {
-  border-color: var(--sui-accent);
-}
-
-.worker-card--writing {
-  border-color: var(--sui-success);
 }
 
 /* Row 1: Identity */
@@ -130,6 +113,13 @@
   font-size: 10px;
   text-align: right;
   margin-top: 2px;
+}
+
+/* Idle state */
+.worker-card__idle {
+  font-size: 11px;
+  text-align: center;
+  padding: 6px 0;
 }
 
 @keyframes worker-card-stripe {

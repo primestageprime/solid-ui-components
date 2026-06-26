@@ -12,18 +12,23 @@
   font-size: 12px;
 }
 
-.sui-sortable-list__row {
+/* Row chrome — the 1px border, the md radius, the padding box-model and the
+   elevated background — is composed from the Surface primitive (see
+   SortableList.tsx), which previously lived hand-rolled here. This rule keeps
+   only the genuinely SortableList-specific bits: the grip+content flex layout,
+   the resting border COLOUR + hover brighten, the drag cursor, and box-sizing
+   so the placeholder's captured (border-box) height yields the SAME footprint
+   and the column never reflows mid-drag. The `.sui-sortable-list` ancestor
+   lifts specificity above Surface's base `.surface` rule so the border colour
+   wins; it stays in CSS (not an inline Surface prop) so the `:hover` brighten
+   below can override it — an inline border-color would block it. */
+.sui-sortable-list .sui-sortable-list__row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  /* border-box so the placeholder's captured height yields the SAME footprint
-     even with its dashed border, and the column never reflows mid-drag. */
   box-sizing: border-box;
   gap: 10px;
-  padding: 8px 12px;
-  border-radius: var(--sui-radius-md, 8px);
-  border: 1px solid var(--sui-border);
-  background: var(--sui-bg-elevated);
+  border-color: var(--sui-border);
   color: var(--sui-text-primary);
   cursor: grab;
   user-select: none;
@@ -32,7 +37,7 @@
     background 0.12s ease;
 }
 
-.sui-sortable-list__row:hover {
+.sui-sortable-list .sui-sortable-list__row:hover {
   border-color: var(--sui-border-bright, var(--sui-border));
 }
 
@@ -61,14 +66,14 @@
    dragged row's exact captured (border-box) footprint so the gap matches the
    source row precisely and the column geometry doesn't shift. Mirrors the
    DnDHierarchySortBar placeholder, vertical edition. */
-.sui-sortable-list__placeholder {
+.sui-sortable-list .sui-sortable-list__placeholder {
   border-style: dashed;
   border-color: var(--sui-accent, #00a8cc);
   background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);
   cursor: grabbing;
 }
 
-.sui-sortable-list__placeholder:hover {
+.sui-sortable-list .sui-sortable-list__placeholder:hover {
   /* Keep the placeholder visually stable while hovered. */
   border-color: var(--sui-accent, #00a8cc);
   background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);

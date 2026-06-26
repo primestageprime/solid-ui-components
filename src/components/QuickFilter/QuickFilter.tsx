@@ -1,14 +1,16 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// QuickFilter — Atomic (Depth 1)
-// Owns CSS (QuickFilter.css), no component imports.
+// QuickFilter — Molecule (Depth 2)
+// Composes the ThemedInput primitive (Inputs/) for the search field; owns only
+// its container layout + the compact (dense) sizing overrides in QuickFilter.css.
 // Generic, composition-friendly: a search input that filters a list of items
 // in-page on any text inside them. Works with lists, tables, trees, or any
 // other collection — caller renders the filtered result via a render-prop
 // child, OR caller listens to onQueryChange and filters externally.
 // ============================================
-import { Component, JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { ThemedInput } from "../Inputs";
 import "./QuickFilter.css";
 
 export interface QuickFilterProps<T> {
@@ -73,7 +75,7 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
 
   return (
     <div class={`sui-quickfilter${local.class ? " " + local.class : ""}`} {...(others as JSX.HTMLAttributes<HTMLDivElement>)}>
-      <input
+      <ThemedInput
         class="sui-quickfilter__input"
         type="search"
         placeholder={local.placeholder ?? "Filter…"}

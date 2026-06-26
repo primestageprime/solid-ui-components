@@ -1,18 +1,20 @@
 /* WorkProgressCard — status-aware work card with a derived progress bar.
-   Structure lives here; the dynamic colors (status accent, bar segment fills,
-   sign badge) are applied inline from cardProgress.ts so the styling logic
-   stays in one tested place. */
+   The outer card chrome (background + 1px border) is delegated to the Surface
+   primitive; padding (8px 12px) and radius (6px) are supplied inline at the
+   composition site since they sit off Surface's padding/radius scale, and the
+   per-status border color is passed via Surface's borderColor.
+
+   Typography is provided by <Text> variants (claimed/subtitle: sublabel,
+   status: label, title: title). The rules below are scoped under .sui-wpc to
+   outrank the Text variant defaults, pinning the compact px sizing / mono
+   context / clamp that this dense card needs. Dynamic colors (status accent,
+   bar segment fills, sign badge) are applied inline from cardProgress.ts so
+   the styling logic stays in one tested place. */
 
 .sui-wpc {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background: var(--sui-surface, rgba(0, 0, 0, 0.2));
-  border: 1px solid var(--sui-accent, #00d4ff); /* border-color overridden inline per status */
-  border-radius: 6px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
   font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, monospace);
   color: var(--sui-text, #e6ecf5);
 }
@@ -26,21 +28,25 @@
   align-items: baseline;
   font-size: 10px;
 }
-.sui-wpc__claimed {
+.sui-wpc .sui-wpc__claimed {
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.55);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sui-wpc__status {
+.sui-wpc .sui-wpc__status {
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
-.sui-wpc__title {
+.sui-wpc .sui-wpc__title {
   font-size: 12px;
+  font-weight: normal;
   line-height: 1.3;
+  color: inherit;
   margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -48,7 +54,7 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
-.sui-wpc__subtitle {
+.sui-wpc .sui-wpc__subtitle {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.55);
   margin-top: 2px;

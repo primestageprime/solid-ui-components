@@ -6,29 +6,34 @@
   min-width: 0;
 }
 
-.sui-quickfilter__input {
-  width: 100%;
-  box-sizing: border-box;
+/* The field's surface (background, border, text/placeholder colour, focus ring,
+   box-sizing, transition) comes from the composed ThemedInput primitive
+   (.themed-input). QuickFilter only layers a COMPACT/dense sizing on top — the
+   filter input is smaller than a form field — plus a couple of structural
+   neutralisations for the primitive's form-field defaults. Selectors are scoped
+   under .sui-quickfilter so they reliably win over .themed-input regardless of
+   stylesheet order. */
+
+/* ThemedInput wraps its <input> in a .themed-input-group flex column that grows
+   (flex: 1) to fill a form layout. Inside QuickFilter's own column, let it size
+   to content so the input sits above the rendered list at its natural height. */
+.sui-quickfilter .themed-input-group {
+  flex: 0 0 auto;
+}
+
+.sui-quickfilter .sui-quickfilter__input {
+  /* compact sizing — smaller than the 12px padding / 0.875rem form default */
   padding: 6px 10px;
-  font: inherit;
   font-size: 12px;
-  color: var(--sui-text-primary, inherit);
-  background: var(--sui-bg-secondary);
-  border: 1px solid var(--sui-border);
+  /* keep the dense 4px corners (the primitive's var(--sui-radius-sm) is 0 in
+     the HUD theme); drop the form field's 80ch readability cap. */
   border-radius: 4px;
-  outline: none;
-}
-
-.sui-quickfilter__input::placeholder {
-  color: var(--sui-text-muted);
-}
-
-.sui-quickfilter__input:focus {
-  border-color: var(--sui-accent);
+  max-width: none;
 }
 
 /* Strip the native search clear button on WebKit so it matches the rest of
-   the surface; keep it functional via Esc / clear-text. */
-.sui-quickfilter__input::-webkit-search-cancel-button {
+   the surface; keep it functional via Esc / clear-text. ThemedInput is a plain
+   text input and doesn't provide this for type="search". */
+.sui-quickfilter .sui-quickfilter__input::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }

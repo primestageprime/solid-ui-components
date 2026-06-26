@@ -1,11 +1,16 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// WorkerCard — Depth 1 (owns CSS)
+// WorkerCard — Depth 2 (owns CSS)
+// Composes the Surface primitive (card chrome) and Text
+// primitive (name/timer/meta) and hand-rolls only the
+// bespoke status micro-badge + expand/collapse rows.
 // Displays the status of an extraction worker with
 // animated expand/collapse for plan and progress rows.
 // ============================================
 import { Component, JSX, splitProps, Show } from "solid-js";
+import { Surface } from "../Surface/Surface";
+import { Text } from "../Text/Text";
 import "./WorkerCard.css";
 
 export type WorkerStatus = "idle" | "claimed" | "extracting" | "writing" | "complete";
@@ -75,6 +80,11 @@ const RED = "var(--sui-danger)";
 const DIM = "var(--sui-text-secondary)";
 const MUTED = "var(--sui-text-muted)";
 
+// Card surface backgrounds (mirror the former .worker-card / status CSS rules).
+const BASE_BG = "var(--sui-bg-secondary, rgba(13,26,42,0.8))";
+const SUCCESS_BG = "rgba(var(--sui-success-rgb), 0.04)";
+const DANGER_BG = "rgba(var(--sui-danger-rgb), 0.04)";
+
 function statusColor(s: WorkerStatus): string {
   switch (s) {
     case "idle": return MUTED;
@@ -88,7 +98,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
     "slotId", "status", "now", "startedAt", "extractStartedAt",
     "jobsCompleted", "avgRatePerSec", "estimatedS", "elapsedS", "overdue",
     "rows", "pkStart", "pkEnd", "batchSize", "totalRecords", "columnCount",
-    "currentJob", "class", "children",
+    "currentJob", "class", "children", "style",
   ]);
 
   const isActive = () => local.status === "extracting" || local.status === "writing";
@@ -125,14 +135,50 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
     return cl.join(" ");
   };
 
+  // Border-color / background that the former .worker-card status modifier
+  // rules produced (replicating the CSS cascade exactly, including the
+  // overdue + status precedence). Passed to Surface as inline overrides.
+  const cardBorderColor = () => {
+    switch (local.status) {
+      case "claimed":
+      case "extracting": return CYAN;
+      case "writing": return GREEN;
+      case "complete": return local.overdue ? RED : GREEN;
+      case "idle": return local.overdue ? RED : MUTED;
+    }
+  };
+
+  const cardBg = () => {
+    if (local.status === "complete") return local.overdue ? DANGER_BG : SUCCESS_BG;
+    if (local.overdue) return DANGER_BG;
+    return BASE_BG;
+  };
+
+  // Padding (10px 14px) sits off Surface's padding scale (sm=8/md=16), so it's
+  // supplied inline. Radius 8px maps cleanly to radius="md". Consumer-provided
+  // style still wins (spread last) to preserve the previous behaviour where
+  // `style` landed on the root div.
+  const cardStyle = (): JSX.CSSProperties => {
+    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    return { padding: "10px 14px", ...base };
+  };
+
   return (
-    <div class={cardClass()} {...others}>
+    <Surface
+      class={cardClass()}
+      radius="md"
+      padding="none"
+      bg={cardBg()}
+      borderColor={cardBorderColor()}
+      style={cardStyle()}
+      {...others}
+    >
       {/* Row 1: Identity */}
       <div class="worker-card__identity">
         <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
-          <span class="worker-card__name" style={{ color: effectiveColor() }}>
+          <Text as="span" class="worker-card__name" color={effectiveColor()}>
             W{local.slotId}
-          </span>
+          </Text>
           <span class="worker-card__badge" style={{
             background: `${effectiveColor()}22`,
             color: effectiveColor(),
@@ -140,31 +186,33 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             {effectiveLabel()}
           </span>
         </div>
-        <span class="worker-card__timer" style={{
-          color: local.overdue ? RED : local.status === "complete" ? GREEN : DIM,
-        }}>
+        <Text
+          as="span"
+          class="worker-card__timer"
+          color={local.overdue ? RED : local.status === "complete" ? GREEN : DIM}
+        >
           {formatTime(elapsed())}
-        </span>
+        </Text>
       </div>
 
       {/* Row 2: History */}
       <div class="worker-card__history">
-        <span>{local.jobsCompleted} jobs done</span>
+        <Text as="span">{local.jobsCompleted} jobs done</Text>
         <Show when={local.currentJob}>
-          <span style={{ color: CYAN }}>· {local.currentJob}</span>
+          <Text as="span" color={CYAN}>· {local.currentJob}</Text>
         </Show>
         <Show when={local.avgRatePerSec > 0}>
-          <span style={{ color: DIM }}>{fmtNum(local.avgRatePerSec)} rec/s avg</span>
+          <Text as="span" color={DIM}>{fmtNum(local.avgRatePerSec)} rec/s avg</Text>
         </Show>
       </div>
 
       {/* Row 3: Plan (animated expand/collapse) */}
       <div class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}>
         <div class="worker-card__plan-inner">
-          <Show when={isBatchMode()} fallback={<span>single stream</span>}>
-            <span>PK: {fmtNum(Number(local.pkStart))} – {fmtNum(Number(local.pkEnd))}</span>
+          <Show when={isBatchMode()} fallback={<Text as="span">single stream</Text>}>
+            <Text as="span">PK: {fmtNum(Number(local.pkStart))} – {fmtNum(Number(local.pkEnd))}</Text>
           </Show>
-          <span style={{ color: MUTED }}>
+          <Text as="span" color={MUTED}>
             <Show when={isBatchMode()}>
               {fmtNum(local.batchSize!)} batch &middot;{" "}
             </Show>
@@ -172,7 +220,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
               {fmtNum(local.totalRecords!)} records &middot;{" "}
             </Show>
             {local.columnCount ?? "?"} cols
-          </span>
+          </Text>
         </div>
       </div>
 
@@ -188,21 +236,21 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
           />
         </div>
         <Show when={local.rows != null}>
-          <div class="worker-card__rows" style={{ color: CYAN }}>
+          <Text as="div" class="worker-card__rows" color={CYAN}>
             {fmtNum(local.rows!)} rows
             <Show when={!isBatchMode() && local.totalRecords && local.totalRecords > 0}>
               {" "}({(local.rows! / local.totalRecords! * 100).toFixed(1)}%)
             </Show>
-          </div>
+          </Text>
         </Show>
       </div>
 
       {/* Idle state */}
       <Show when={local.status === "idle"}>
-        <div style={{ "font-size": "11px", color: MUTED, "text-align": "center", padding: "6px 0" }}>
+        <Text as="div" color={MUTED} class="worker-card__idle">
           waiting for batch
-        </div>
+        </Text>
       </Show>
-    </div>
+    </Surface>
   );
 };

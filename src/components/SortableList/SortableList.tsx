@@ -29,6 +29,7 @@
 
 import { For, JSX, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
+import { Surface } from "../Surface/Surface";
 import "./SortableList.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -84,30 +85,44 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
               when={!dnd.isPlaceholder(id())}
               fallback={
                 /* Placeholder — the dragged row's live drop slot. A full-width
-                   dashed gap that reflows down the column as you drag. Sized to
-                   the dragged row's EXACT captured HEIGHT (border-box) so the
-                   gap matches the source row's footprint and the column doesn't
-                   shift mid-drag (width comes from the flex column itself, like
-                   the bar matches width). `data-dnd-id` carries the dragged id
-                   so the container hit-test excludes this slot. */
-                <div
+                   dashed gap that reflows down the column as you drag. Composes
+                   the SAME Surface chrome (border / radius / padding box-model)
+                   as the live row so its footprint matches exactly; the dashed
+                   accent border + tint come from `.sui-sortable-list__placeholder`.
+                   Sized to the dragged row's EXACT captured HEIGHT (border-box)
+                   so the gap matches the source row's footprint and the column
+                   doesn't shift mid-drag (width comes from the flex column
+                   itself, like the bar matches width). `data-dnd-id` carries the
+                   dragged id so the container hit-test excludes this slot.
+                   Surface forwards `data-dnd-id` / `draggable` / `onDragEnd` to
+                   its root div via its prop-spread, so the DnD wiring is intact. */
+                <Surface
                   class="sui-sortable-list__row sui-sortable-list__placeholder"
                   aria-label="Drop position"
                   data-dnd-id={id()}
                   draggable={handlers().draggable}
                   onDragEnd={handlers().onDragEnd}
+                  padding="none"
+                  radius="md"
                   style={
                     dnd.dragSize()
                       ? {
+                          padding: "8px 12px",
                           height: `${dnd.dragSize()!.height}px`,
                           "box-sizing": "border-box",
                         }
-                      : undefined
+                      : { padding: "8px 12px" }
                   }
                 />
               }
             >
-              <div
+              {/* The draggable row composes the Surface primitive for its chrome
+                  (border / radius / padding box-model + the elevated background).
+                  Surface splits off only its visual props and spreads everything
+                  else — `data-dnd-id`, `draggable`, `onDragStart`, `onDragEnd`,
+                  `role`, `title` — onto its root div, so this IS the geometry-
+                  measured, drag-source element the container hit-test reads. */}
+              <Surface
                 class="sui-sortable-list__row"
                 role="listitem"
                 title="drag to reorder"
@@ -115,6 +130,10 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
                 draggable={handlers().draggable}
                 onDragStart={handlers().onDragStart}
                 onDragEnd={handlers().onDragEnd}
+                padding="none"
+                radius="md"
+                bg="var(--sui-bg-elevated)"
+                style={{ padding: "8px 12px" }}
               >
                 <span class="sui-sortable-list__grip" aria-hidden="true">
                   ⠿
@@ -122,7 +141,7 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
                 <div class="sui-sortable-list__content">
                   {props.renderItem(item)}
                 </div>
-              </div>
+              </Surface>
             </Show>
           );
         }}

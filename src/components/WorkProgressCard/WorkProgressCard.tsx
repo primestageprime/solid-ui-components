@@ -3,7 +3,9 @@
 // (status, estimate, actual) and never reasons about colors or proportions —
 // all styling comes from cardProgress.ts. It carries no visual/size overrides,
 // so per the curried-only convention it's re-exported directly (no factory).
-import { For, Show, type Component } from "solid-js";
+import { For, Show, type Component, type JSX } from "solid-js";
+import { Surface } from "../Surface/Surface";
+import { Text } from "../Text/Text";
 import {
   deriveCardBar,
   statusAccent,
@@ -33,15 +35,32 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
   const accent = () => statusAccent(props.status);
   const bar = () =>
     deriveCardBar({ status: props.status, estimate: props.estimate, actual: props.actual });
+  // Padding (8px 12px) and radius (6px) sit off Surface's padding/radius scale
+  // (sm=8/md=16, sm=4/md=8), so they're supplied inline at the composition
+  // site. The status accent drives the border color, matching the previous
+  // per-status inline border-color override.
+  const cardStyle = (): JSX.CSSProperties => ({
+    padding: "8px 12px",
+    "border-radius": "6px",
+  });
   return (
-    <div class="sui-wpc" data-status={props.status} style={{ "border-color": accent() }}>
+    <Surface
+      class="sui-wpc"
+      data-status={props.status}
+      direction="column"
+      padding="none"
+      radius="none"
+      bg="var(--sui-surface, rgba(0, 0, 0, 0.2))"
+      borderColor={accent()}
+      style={cardStyle()}
+    >
       <div class="sui-wpc__header">
-        <span class="sui-wpc__claimed">{props.claimedBy}</span>
-        <span class="sui-wpc__status" style={{ color: accent() }}>{props.status}</span>
+        <Text variant="sublabel" as="span" class="sui-wpc__claimed">{props.claimedBy}</Text>
+        <Text variant="label" as="span" class="sui-wpc__status" color={accent()}>{props.status}</Text>
       </div>
-      <div class="sui-wpc__title">{props.title}</div>
+      <Text variant="title" as="div" class="sui-wpc__title">{props.title}</Text>
       <Show when={props.subtitle}>
-        <div class="sui-wpc__subtitle">{props.subtitle}</div>
+        <Text variant="sublabel" as="div" class="sui-wpc__subtitle">{props.subtitle}</Text>
       </Show>
       <div class="sui-wpc__bar-wrap">
         <div class="sui-wpc__bar">
@@ -59,6 +78,6 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
           )}
         </Show>
       </div>
-    </div>
+    </Surface>
   );
 };

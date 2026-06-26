@@ -1,12 +1,14 @@
+/* Card chrome (1px border + background) and the flex-column/gap layout are
+   delegated to the composed Surface primitive. The border colour and
+   background are driven through Surface's --surface-border / --surface-bg
+   custom properties so the hover/active state rules below can re-tint them via
+   the normal cascade (an inline bg/border prop on Surface couldn't be
+   overridden by these class rules). Padding (8px 10px) and radius (md) sit off
+   Surface's scale and are supplied inline at the composition site. */
 .sui-status-card {
+  --surface-bg: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
+  --surface-border: var(--sui-border);
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: var(--sui-radius-md, 6px);
-  border: 1px solid var(--sui-border);
-  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
   color: var(--sui-text-primary);
 }
 
@@ -15,12 +17,12 @@
 }
 
 .sui-status-card--clickable:hover {
-  border-color: var(--sui-text-muted);
+  --surface-border: var(--sui-text-muted);
 }
 
 .sui-status-card--active {
-  border-color: var(--sui-accent, #00d4ff);
-  background: color-mix(in srgb, var(--sui-accent, #00d4ff) 12%, transparent);
+  --surface-border: var(--sui-accent, #00d4ff);
+  --surface-bg: color-mix(in srgb, var(--sui-accent, #00d4ff) 12%, transparent);
 }
 
 /* Row 1 — name + status */
@@ -90,16 +92,23 @@
   gap: 6px;
 }
 
-.sui-status-card__more {
+/* "more" affordance — composed from <Button variant="text"> (accent text +
+   cursor from the variant). StatusCard pins it into the description's
+   bottom-right corner over an opaque mask so it sits above the clipped text,
+   and resets the themed button's uppercase/13px/border chrome back to the
+   card's dense lowercase 10px look. Nested under .sui-status-card to outrank
+   the .sui-btn base rules regardless of stylesheet order. */
+.sui-status-card .sui-status-card__more {
   position: absolute;
   bottom: 0;
   right: 0;
-  padding-left: 8px;
+  padding: 0 0 0 8px;
   font-size: 10px;
-  color: var(--sui-accent, #00d4ff);
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
   border: none;
-  cursor: pointer;
   text-decoration: underline;
 }
 
@@ -134,15 +143,19 @@
   word-break: break-word;
 }
 
-.sui-status-card__popover-close {
+/* Popover close — composed from <Button size="sm" tone="muted">; the muted
+   tone supplies the transparent fill + var(--sui-border) outline + muted text
+   that matched the old hand-rolled button. StatusCard only re-tightens the
+   dense lowercase typography and the compact padding/radius (nested under
+   .sui-status-card to outrank the .sui-btn base padding/radius). */
+.sui-status-card .sui-status-card__popover-close {
   margin-top: 8px;
-  font-size: 10px;
-  color: var(--sui-text-muted);
-  background: transparent;
-  border: 1px solid var(--sui-border);
-  border-radius: 4px;
   padding: 2px 8px;
-  cursor: pointer;
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 4px;
 }
 
 /* Row 3 — meta strip, pinned to the bottom of the card */

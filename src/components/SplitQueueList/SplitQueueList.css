@@ -1,6 +1,13 @@
 /* SplitQueueList — linked two-list processing queue with a seam repaint.
- * Owns all of its styling via --sui-* tokens; imports no other components. */
+ * Styles its structure/animation via --sui-* tokens; the container chrome
+ * (background + border) is composed from the base Surface primitive. */
 
+/* The container CHROME — background + 1px border — is provided by the base
+ * Surface primitive this root composes (bg/borderColor props); the theme-aware
+ * corner radius (var(--sui-radius-md)) is applied inline because it sits off
+ * Surface's fixed radius scale. Everything below is STRUCTURAL (the FLIP's
+ * positioning context, the flex column the panes stack in, overflow clipping
+ * to the radius, and inherited typography) and stays hand-rolled. */
 .sui-sql {
   position: relative; /* anchors the absolutely-positioned in-flight card */
   display: flex;
@@ -9,9 +16,6 @@
   box-sizing: border-box;
   font-family: var(--sui-font-family);
   color: var(--sui-text-primary);
-  background: var(--sui-bg-secondary);
-  border: 1px solid var(--sui-border);
-  border-radius: var(--sui-radius-md);
   overflow: hidden;
 }
 

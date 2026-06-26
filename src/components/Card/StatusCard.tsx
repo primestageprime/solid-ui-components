@@ -1,6 +1,10 @@
 // ============================================
 // StatusCard — Depth 2
 // Owns CSS (StatusCard.css).
+// Composes Surface (card chrome — border/background/flex column) + Text
+// (labels) + Button (more / popover-close affordances). Only the dense,
+// off-scale layout/typography that the primitives don't supply lives in
+// StatusCard.css.
 // A 3-row status card:
 //   Row 1: name (ellipsised, hover-full title) + status badge (slot)
 //   Row 2: 2-3 lines of wrapped detail, lighter/smaller, line-clamped with a
@@ -21,6 +25,9 @@ import {
   createEffect,
   onCleanup,
 } from "solid-js";
+import { Surface } from "../Surface/Surface";
+import { Text } from "../Text/Text";
+import { Button } from "../Button/Button";
 import "./StatusCard.css";
 
 export interface StatusCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -65,6 +72,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
     "descriptionLines",
     "class",
     "children",
+    "style",
   ]);
   const [moreOpen, setMoreOpen] = createSignal(false);
   // "more" is only offered when the description is actually clipped — i.e. the
@@ -98,20 +106,36 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
     return cl.join(" ");
   };
 
+  // Padding (8px 10px, asymmetric) and radius (md = 6px) sit off Surface's
+  // padding/radius scale (sm=8/md=16, sm=4/md=8), so they're supplied inline
+  // at the composition site (and beat Surface's padding-none/radius-none
+  // class rules regardless of stylesheet order). Consumer `style` still wins
+  // (spread last) — preserving the previous behaviour where `style` landed on
+  // the root element.
+  const cardStyle = (): JSX.CSSProperties => {
+    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    return { padding: "8px 10px", "border-radius": "var(--sui-radius-md, 6px)", ...base };
+  };
+
   const hasMeta = () =>
     local.claimedBy != null || local.progress != null || local.estimate != null;
 
   return (
-    <div
+    <Surface
+      direction="column"
+      gap="sm"
+      padding="none"
+      radius="none"
       class={classes()}
+      style={cardStyle()}
       onClick={() => local.onSelect?.()}
       {...others}
     >
       {/* Row 1 — name + status */}
       <div class="sui-status-card__row1">
-        <span class="sui-status-card__name" title={local.name}>
+        <Text as="span" class="sui-status-card__name" title={local.name}>
           {local.name}
-        </span>
+        </Text>
         <Show when={local.status != null}>
           <span class="sui-status-card__status">{local.status}</span>
         </Show>
@@ -133,7 +157,8 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
                 {local.description}
               </span>
               <Show when={overflowing()}>
-                <button
+                <Button
+                  variant="text"
                   type="button"
                   class="sui-status-card__more"
                   onClick={(e) => {
@@ -142,7 +167,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
                   }}
                 >
                   more
-                </button>
+                </Button>
               </Show>
             </div>
           </Show>
@@ -159,11 +184,15 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
               class="sui-status-card__popover"
               onClick={(e) => e.stopPropagation()}
             >
-              <div class="sui-status-card__popover-name">{local.name}</div>
-              <div class="sui-status-card__popover-body">
+              <Text as="div" class="sui-status-card__popover-name">
+                {local.name}
+              </Text>
+              <Text as="div" class="sui-status-card__popover-body">
                 {local.description}
-              </div>
-              <button
+              </Text>
+              <Button
+                size="sm"
+                tone="muted"
                 type="button"
                 class="sui-status-card__popover-close"
                 onClick={(e) => {
@@ -172,7 +201,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
                 }}
               >
                 close
-              </button>
+              </Button>
             </div>
           </Show>
         </div>
@@ -188,7 +217,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
       </Show>
 
       {local.children}
-    </div>
+    </Surface>
   );
 };
 
