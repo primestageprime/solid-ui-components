@@ -147,6 +147,22 @@ export const PaddedStack: Component<StackDataProps> = createStack({
 // These bake the fill/flex/overflow plumbing so route code never hand-rolls
 // `createStack({ fill, style:{flex,min-height,overflow} })` at the call site.
 
+/** Flex column that fills its parent — `flex:1; min-height:0`. The full-height
+ *  body region of a page (wraps a PaneRow / Sidebar layout). Sibling of
+ *  ScrollColumn; bakes fill plumbing so routes never hand-roll it. */
+export const FillColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "1", "min-height": "0" },
+});
+
+/** Flex row that fills its parent — `fill; flex:1; min-height:0`. Holds a
+ *  Sidebar beside a ScrollColumn pane. */
+export const PaneRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  fill: true,
+  style: { flex: "1", "min-height": "0" },
+});
+
 /** Flex column that scrolls its own overflow — `flex:1; min-width:0;
  *  overflow:auto`. The main/detail pane beside a Sidebar. */
 export const ScrollColumn: Component<StackDataProps> = createStack({
