@@ -3,6 +3,8 @@ import {
   previewOrder,
   hitTestInsertPos,
   isAfterMidpoint,
+  pointerToInsertIndex,
+  type AxisRect,
 } from "./createDnDReorder";
 
 interface Item {
@@ -107,6 +109,66 @@ describe("full drag (hitTestInsertPos → previewOrder) commits cursor intent", 
 
   it("no-op: drop back in place (drag b, after a) → [a,b,c,d]", () => {
     expect(drop("b", "a", true)).toEqual(["a", "b", "c", "d"]);
+  });
+});
+
+// pointerToInsertIndex is the CONTAINER-level, geometry-based hit-test that
+// fixes the dead-zone bug: it computes the insert index from the cursor coord
+// against the midpoints of the NON-DRAGGED items, so it returns a sensible
+// index for ANY cursor position in the row — including gaps and the trailing
+// empty space past the last item (where no per-pill handler ever fires).
+describe("pointerToInsertIndex", () => {
+  // Three non-dragged items along X with GAPS between them and trailing space:
+  //   r0: 0..40  (mid 20)   r1: 100..140 (mid 120)   r2: 200..240 (mid 220)
+  const rx: AxisRect[] = [
+    { left: 0, right: 40, top: 0, bottom: 24 },
+    { left: 100, right: 140, top: 0, bottom: 24 },
+    { left: 200, right: 240, top: 0, bottom: 24 },
+  ];
+
+  it("axis x: before the first midpoint → 0", () => {
+    expect(pointerToInsertIndex(rx, -50, "x")).toBe(0);
+    expect(pointerToInsertIndex(rx, 0, "x")).toBe(0);
+    expect(pointerToInsertIndex(rx, 19, "x")).toBe(0);
+  });
+
+  it("axis x: in each between-items gap → the count of midpoints before it", () => {
+    expect(pointerToInsertIndex(rx, 60, "x")).toBe(1); // gap between r0 and r1
+    expect(pointerToInsertIndex(rx, 170, "x")).toBe(2); // gap between r1 and r2
+  });
+
+  it("axis x: PAST the last item (trailing dead zone) → length (end)", () => {
+    expect(pointerToInsertIndex(rx, 300, "x")).toBe(3);
+    expect(pointerToInsertIndex(rx, 240, "x")).toBe(3);
+  });
+
+  it("axis x: clamps to [0, length]", () => {
+    expect(pointerToInsertIndex(rx, -9999, "x")).toBe(0);
+    expect(pointerToInsertIndex(rx, 9999, "x")).toBe(3);
+    expect(pointerToInsertIndex([], 123, "x")).toBe(0);
+  });
+
+  it("axis y: counts midpoints above the cursor (before/after = top/bottom)", () => {
+    const ry: AxisRect[] = [
+      { left: 0, right: 40, top: 0, bottom: 20 }, // mid 10
+      { left: 0, right: 40, top: 40, bottom: 60 }, // mid 50
+      { left: 0, right: 40, top: 80, bottom: 100 }, // mid 90
+    ];
+    expect(pointerToInsertIndex(ry, 5, "y")).toBe(0); // above first
+    expect(pointerToInsertIndex(ry, 30, "y")).toBe(1); // gap between 0 and 1
+    expect(pointerToInsertIndex(ry, 70, "y")).toBe(2); // gap between 1 and 2
+    expect(pointerToInsertIndex(ry, 200, "y")).toBe(3); // past last
+  });
+
+  it("works on rects that EXCLUDE the dragged item (caller filters them out)", () => {
+    // Simulate dragging the middle of 3 items: rects only carry the 2 others.
+    const nonDragged: AxisRect[] = [
+      { left: 0, right: 40, top: 0, bottom: 24 }, // mid 20
+      { left: 200, right: 240, top: 0, bottom: 24 }, // mid 220
+    ];
+    expect(pointerToInsertIndex(nonDragged, 10, "x")).toBe(0);
+    expect(pointerToInsertIndex(nonDragged, 100, "x")).toBe(1); // between the two
+    expect(pointerToInsertIndex(nonDragged, 300, "x")).toBe(2); // past last → end
   });
 });
 

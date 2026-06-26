@@ -49,12 +49,30 @@ export interface DragSize {
   height: number;
 }
 
-export interface DnDDragHandlers {
+/**
+ * Per-item drag props. `onDragStart` MUST stay on the item so the browser uses
+ * that element as the drag source (and we can capture its footprint as the drag
+ * image). `onDragEnd` stays on the item too: dragend fires on the original
+ * source node — which Solid swaps out for the placeholder during the drag — so
+ * the listener has to live where it was captured to still fire when the drag
+ * aborts outside any drop target.
+ */
+export interface DnDItemHandlers {
   draggable: true;
   onDragStart: (e: DragEvent) => void;
+  onDragEnd: (e: DragEvent) => void;
+}
+
+/**
+ * CONTAINER-row drag props. Hit-testing lives here (not on each pill) so it
+ * covers the row's DEAD ZONES — gaps between pills, the label area, and the
+ * trailing empty space past the last pill — where a per-pill handler never
+ * fires. `onDragOver` reads the live geometry of the `[data-dnd-id]` items the
+ * component renders and updates `insertPos` for ANY cursor coordinate.
+ */
+export interface DnDContainerHandlers {
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
-  onDragEnd: (e: DragEvent) => void;
 }
 
 export interface DnDReorder<T> {
@@ -68,8 +86,21 @@ export interface DnDReorder<T> {
   dragSize: Accessor<DragSize | null>;
   /** True when `id` is the dragged item — its slot should render as a placeholder. */
   isPlaceholder: (id: string) => boolean;
-  /** Drag-and-drop event props to spread onto the item element for `id`. */
-  dragHandlers: (id: string) => DnDDragHandlers;
+  /** Per-item drag props to spread onto the item element for `id`. */
+  itemHandlers: (id: string) => DnDItemHandlers;
+  /**
+   * Drag props to spread onto the CONTAINER row element. The component must mark
+   * each rendered item (and its placeholder) with `data-dnd-id={id}` so the
+   * container handler can read their geometry.
+   */
+  containerHandlers: DnDContainerHandlers;
+  /**
+   * Imperatively set the insert index (dragged-removed coordinate space).
+   * Exposed for callers that want to compute the index themselves (e.g. via
+   * `pointerToInsertIndex` on their own geometry). Clamped on commit by
+   * `previewOrder`. Pass `null` to clear.
+   */
+  setInsertIndex: (index: number | null) => void;
 }
 
 // ── Pure helpers (exported for unit testing) ────────────────────────────────
@@ -111,6 +142,42 @@ export function hitTestInsertPos<T>(
   const k = without.findIndex((it) => getId(it) === overId);
   if (k < 0) return null;
   return after ? k + 1 : k;
+}
+
+/** Minimal geometry an item contributes to container-level hit-testing. */
+export interface AxisRect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/**
+ * CONTAINER-level, geometry-based hit-test. Given the rects of the NON-DRAGGED
+ * items in document order and a cursor `coord` (clientX for axis "x", clientY
+ * for "y"), returns the insert index in the DRAGGED-REMOVED coordinate space =
+ * the count of items whose midpoint along `axis` is before `coord`:
+ *   - before the first midpoint → 0
+ *   - between items → k
+ *   - past the last item → rects.length (the end)
+ * Result is clamped to [0, rects.length].
+ *
+ * Unlike per-item hit-testing this is defined for ANY coordinate in the row,
+ * which is what makes dead zones (gaps, label area, trailing space) work: the
+ * placeholder tracks the pointer everywhere. The dragged item is excluded by
+ * the caller (it isn't in `rects`), so hovering its own placeholder is a no-op.
+ */
+export function pointerToInsertIndex(
+  rects: AxisRect[],
+  coord: number,
+  axis: DnDReorderAxis,
+): number {
+  let count = 0;
+  for (const r of rects) {
+    const mid = axis === "x" ? (r.left + r.right) / 2 : (r.top + r.bottom) / 2;
+    if (mid < coord) count++;
+  }
+  return Math.max(0, Math.min(count, rects.length));
 }
 
 /**
@@ -182,16 +249,30 @@ export function createDnDReorder<T>(
     setTimeout(() => setDragId(id), 0);
   };
 
-  const onDragOver = (overId: string) => (e: DragEvent) => {
+  // CONTAINER-level dragover. Fires for ANY cursor position over the row — pills,
+  // the gaps between them, the label, and the trailing space past the last pill
+  // — which is what fixes the dead-zone staleness. The hook reads geometry only
+  // through the event's `currentTarget` (the row element the component owns);
+  // the component supplies geometry by stamping each item with `data-dnd-id`.
+  const onContainerDragOver = (e: DragEvent) => {
     const current = dragId();
-    if (!current) return;
-    e.preventDefault();
+    if (!current) return; // not our drag — leave other dnd (text, etc.) alone.
+    e.preventDefault(); // required so the subsequent `drop` fires.
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    if (overId === current) return; // hovering the placeholder — hold position.
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const after = isAfterMidpoint(axis, rect, e.clientX, e.clientY);
-    const next = hitTestInsertPos(items(), getId, current, overId, after);
-    if (next != null && insertPos() !== next) setInsertPos(next);
+    const container = e.currentTarget as HTMLElement | null;
+    if (!container) return;
+    const coord = axis === "x" ? e.clientX : e.clientY;
+    // Build rects for the NON-DRAGGED items in document order. The dragged
+    // item's slot is its placeholder (also tagged data-dnd-id={dragId}); we skip
+    // it so the index is geometric over the other items only.
+    const rects: AxisRect[] = [];
+    container.querySelectorAll<HTMLElement>("[data-dnd-id]").forEach((el) => {
+      if (el.getAttribute("data-dnd-id") === current) return;
+      const r = el.getBoundingClientRect();
+      rects.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+    });
+    const next = pointerToInsertIndex(rects, coord, axis);
+    if (insertPos() !== next) setInsertPos(next);
   };
 
   const onDrop = (e: DragEvent) => {
@@ -200,18 +281,22 @@ export function createDnDReorder<T>(
   };
 
   // dragend fires on the source even when the drag is aborted (e.g. dropped
-  // outside any target), so it both commits and cleans up.
+  // outside any target), so it both commits and cleans up. It must stay on the
+  // item element: that is the node the browser captured as the drag source.
   const onDragEnd = () => {
     commit();
   };
 
-  const dragHandlers = (id: string): DnDDragHandlers => ({
+  const itemHandlers = (id: string): DnDItemHandlers => ({
     draggable: true,
     onDragStart: onDragStart(id),
-    onDragOver: onDragOver(id),
-    onDrop,
     onDragEnd,
   });
+
+  const containerHandlers: DnDContainerHandlers = {
+    onDragOver: onContainerDragOver,
+    onDrop,
+  };
 
   return {
     displayItems,
@@ -219,6 +304,8 @@ export function createDnDReorder<T>(
     insertPos,
     dragSize,
     isPlaceholder: (id: string) => dragId() === id,
-    dragHandlers,
+    itemHandlers,
+    containerHandlers,
+    setInsertIndex: setInsertPos,
   };
 }

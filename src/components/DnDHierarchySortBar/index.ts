@@ -5,11 +5,14 @@ export {
   previewOrder,
   hitTestInsertPos,
   isAfterMidpoint,
+  pointerToInsertIndex,
 } from "./createDnDReorder";
 export type {
   CreateDnDReorderOptions,
   DnDReorder,
   DnDReorderAxis,
-  DnDDragHandlers,
+  DnDItemHandlers,
+  DnDContainerHandlers,
+  AxisRect,
   DragSize,
 } from "./createDnDReorder";

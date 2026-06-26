@@ -59,13 +59,24 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
   });
 
   return (
-    <div class="sui-dnd-hierarchy-sort-bar" role="list" aria-label={label()}>
+    // Hit-testing lives on the CONTAINER row (not the pills) so the placeholder
+    // tracks the cursor through the row's dead zones — the gaps between pills,
+    // the label, and the empty space past the last pill — where a per-pill
+    // dragover never fires. The handler reads each item's live geometry via the
+    // `data-dnd-id` stamps below.
+    <div
+      class="sui-dnd-hierarchy-sort-bar"
+      role="list"
+      aria-label={label()}
+      onDragOver={dnd.containerHandlers.onDragOver}
+      onDrop={dnd.containerHandlers.onDrop}
+    >
       <span class="sui-dnd-hierarchy-sort-bar__label" aria-hidden="true">
         {label()}
       </span>
       <For each={dnd.displayItems()}>
         {(item) => {
-          const handlers = () => dnd.dragHandlers(item.id);
+          const handlers = () => dnd.itemHandlers(item.id);
           return (
             <Show
               when={!dnd.isPlaceholder(item.id)}
@@ -77,13 +88,13 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
                    height, border-box — so the gap matches the source pill
                    precisely and the row geometry doesn't shift (which would
                    otherwise reflow/wrap the row and move pills under the
-                   cursor). */
+                   cursor). `data-dnd-id` carries the dragged id so the container
+                   hit-test can exclude this slot from the geometry. */
                 <span
                   class="sui-dnd-hierarchy-sort-bar__pill sui-dnd-hierarchy-sort-bar__placeholder"
                   aria-label="Drop position"
+                  data-dnd-id={item.id}
                   draggable={handlers().draggable}
-                  onDragOver={handlers().onDragOver}
-                  onDrop={handlers().onDrop}
                   onDragEnd={handlers().onDragEnd}
                   style={
                     dnd.dragSize()
@@ -102,10 +113,9 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
                 role="listitem"
                 aria-label={item.label}
                 title="drag to reorder"
+                data-dnd-id={item.id}
                 draggable={handlers().draggable}
                 onDragStart={handlers().onDragStart}
-                onDragOver={handlers().onDragOver}
-                onDrop={handlers().onDrop}
                 onDragEnd={handlers().onDragEnd}
               >
                 <span class="sui-dnd-hierarchy-sort-bar__grip" aria-hidden="true">
