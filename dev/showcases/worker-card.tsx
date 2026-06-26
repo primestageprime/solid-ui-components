@@ -6,7 +6,7 @@ export const WorkerCardShowcase: Component = () => {
   const now = Date.now();
   return (
     <div class="component-section">
-      <h2>WorkerCard — Primitive (Depth 0)</h2>
+      <h2>WorkerCard — Composed (Depth 1)</h2>
       <p class="text-meta">
         Card visualizing a single extraction-worker slot's state: status,
         elapsed time, jobs completed, projected completion vs. estimate.
