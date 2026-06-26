@@ -8,6 +8,8 @@
 // Step icons with title, subtitle, message.
 // ============================================
 import { Component, JSX, splitProps, For, Show, mergeProps } from "solid-js";
+import { Surface } from "../Surface/Surface";
+import { Text } from "../Text/Text";
 import "./ProgressCard.css";
 
 export type ProgressStatus = "pending" | "active" | "completed" | "error";
@@ -49,12 +51,22 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
     "message",
     "class",
     "children",
+    "style",
   ]);
 
   const classes = () => {
     const classList = ["jtf-progress-card"];
     if (local.class) classList.push(local.class);
     return classList.join(" ");
+  };
+
+  // Padding (12px) and radius (lg = 12px) sit off Surface's padding/radius
+  // scale (sm=8/md=16, sm=4/md=8), so they're supplied inline at the
+  // composition site. Consumer-provided style still wins (spread last) to
+  // preserve the previous behaviour where `style` landed on the root div.
+  const cardStyle = (): JSX.CSSProperties => {
+    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    return { padding: "12px", "border-radius": "var(--sui-radius-lg)", ...base };
   };
 
   const getStepIcon = (step: ProgressStep) => {
@@ -72,11 +84,23 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
   const steps = () => local.steps || [];
 
   return (
-    <div class={classes()} {...others}>
+    <Surface
+      bg="rgba(var(--sui-accent-rgb), 0.05)"
+      borderColor="var(--sui-border)"
+      padding="none"
+      radius="none"
+      class={classes()}
+      style={cardStyle()}
+      {...others}
+    >
       <div class="jtf-progress-card__header">
-        <div class="jtf-progress-card__title">{local.title}</div>
+        <Text variant="title" as="div" class="jtf-progress-card__title">
+          {local.title}
+        </Text>
         <Show when={local.subtitle}>
-          <div class="jtf-progress-card__subtitle">{local.subtitle}</div>
+          <Text variant="sublabel" as="div" class="jtf-progress-card__subtitle">
+            {local.subtitle}
+          </Text>
         </Show>
       </div>
 
@@ -122,7 +146,7 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
       </Show>
 
       {local.children}
-    </div>
+    </Surface>
   );
 };
 

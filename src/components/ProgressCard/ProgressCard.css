@@ -1,9 +1,6 @@
-.jtf-progress-card {
-  background-color: rgba(var(--sui-accent-rgb), 0.05);
-  border: 1px solid var(--sui-border);
-  border-radius: var(--sui-radius-lg);
-  padding: 12px;
-}
+/* Outer card chrome (background + border) is delegated to the Surface
+   primitive; padding (12px) and border-radius (lg) are supplied inline at
+   the composition site since they sit off Surface's padding/radius scale. */
 
 .jtf-progress-card__header {
   display: flex;
@@ -12,16 +9,10 @@
   margin-bottom: 8px;
 }
 
-.jtf-progress-card__title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--sui-text-primary);
-}
-
+/* Title/subtitle typography is provided by <Text variant="title|sublabel">.
+   Only the monospace face for the subtitle is component-specific. */
 .jtf-progress-card__subtitle {
-  font-size: 12px;
   font-family: monospace;
-  color: var(--sui-text-muted);
 }
 
 .jtf-progress-card__steps {
