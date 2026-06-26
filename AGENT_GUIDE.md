@@ -120,6 +120,65 @@ export const ScoreValue = createText({
 
 This is acceptable — the key is that override props are set once, not repeated at every call site.
 
+## The #2 Rule
+
+**Start with ONE variant and only expand as demanded.**
+
+SUI is a deliberately minimal-set UI library. **Consistency wins over variety.**
+When you build or touch a component, ship the single variant/size/token/prop the
+real use case needs — not the matrix it *could* support.
+
+```tsx
+// ❌ WRONG — speculative spread of sizes/tones nobody asked for
+const gaps = { xs, sm, md, lg, xl };          // five gaps, two are used
+<Fab size="lg" variant="ghost" tone="warn" /> // props no caller sets
+
+// ✅ RIGHT — one variant, expanded later only when a real consumer demands it
+const gaps = { xs, sm };                       // the two that ship
+<Fab icon={icon} label={label} />              // the shape one place needs
+```
+
+### Why?
+
+1. **Consistency:** a small, fixed set means every app composes from the same
+   handful of choices — variety is the enemy of a coherent look.
+2. **Dead surface area:** every variant/size/token/prop is a public contract you
+   must keep working, test, document, and preserve through every later change.
+   Unused ones are pure cost with no consumer.
+3. **Changeability:** a narrow surface is easy to evolve; a wide one multiplies
+   the states you must not break.
+
+### Enforcement — expansion requires confirmation
+
+**If you expand the set of variants / sizes / tokens / props, you MUST confirm
+with Peter first** — explaining *why* you're expanding and *why it's important*.
+This is a hard gate, not a suggestion.
+
+**Test-only and showcase-only usage does NOT count as demand.** A showcase that
+exercises every size, or a test that asserts on a tone, is not a shipped
+consumer. Only a real consumer app that actually renders the new variant in
+product justifies the expansion. No real consumer → no expansion.
+
+This applies to creating a **new curried variant** too: the "create the variant
+in the library" guidance under [The #1 Rule](#the-1-rule) and
+[When a Variant Doesn't Exist](#when-a-variant-doesnt-exist) still presumes a
+real caller needs it. Create the variant to serve a shipping consumer — never to
+pre-stock the shelf. (See also *Variant Surface: keep it minimal* in
+`STYLE_GUIDE.md`.)
+
+### This is why the scales are short
+
+This rule is already load-bearing in the library:
+
+- **`Stack` / `Row` gap scale** was trimmed to **`xs` / `sm`** — the larger gaps
+  had no shipped caller.
+- **`Surface` `padding` / `radius`** were trimmed to **`none` / `sm` / `md`** —
+  `md` survived only because it is genuinely load-bearing; the rest were dead
+  surface area.
+
+Don't reintroduce a removed value (or add a new one) without a real consumer and
+Peter's sign-off.
+
 ## What NOT To Do
 
 ### Don't use raw HTML/CSS for things the library handles

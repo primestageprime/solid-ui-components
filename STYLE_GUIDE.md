@@ -70,8 +70,8 @@ These are **dynamic** — they change based on application state.
 // Inside the library — full prop type with overrides
 interface SurfaceInternalProps extends JSX.HTMLAttributes<HTMLDivElement> {
   // Overrides
-  padding?: "none" | "sm" | "md" | "lg";
-  radius?: "none" | "sm" | "md" | "lg";
+  padding?: "none" | "sm" | "md";
+  radius?: "none" | "sm" | "md";
   bg?: string;
   borderColor?: string;
   interactive?: boolean;
@@ -184,6 +184,13 @@ the states you must preserve).
 - A single fixed size/color is fine; it inherits sensible behavior from the
   composed primitive (e.g. a `Fab` with no `variant` gets Button's default hover
   for free).
+
+**Expansion is gated.** This is the same principle as *The #2 Rule* in
+`AGENT_GUIDE.md`: start with one variant and expand only on real demand. Growing
+the set of variants/sizes/tokens/props requires confirming with Peter first
+(why + why important), and **test-only / showcase-only usage does not count as
+demand** — only a shipped consumer does. This is why `Stack`/`Row` gaps were
+trimmed to `xs`/`sm` and `Surface` `padding`/`radius` to `none`/`sm`/`md`.
 
 ## Quality Checks
 
