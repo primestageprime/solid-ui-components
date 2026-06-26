@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## 0.79.0
+
+### Added
+
+- **`SortableList`** — a generic vertical drag-to-reorder list of full-width rows, the reusable equivalent of dside's todo reorder. Data/callback-only API (`items` / `getId` / `onReorder` / `renderItem`, optional `label`); each row gets a drag grip and, while dragging, an explicit **placeholder gap** opens in the slot where the row will land (sized to the dragged row) and the list reflows live to preview the result — committing on drop. No curried variant (data-only).
+
+  ```tsx
+  <SortableList items={rows()} getId={(r) => r.id} onReorder={setOrder} renderItem={(r) => <Row {...r} />} />
+  ```
+
+- **`MutableList`** — `SortableList` specialized into editable cards: each card has an inline-editable name (click → input; Enter/blur commits `onRename`, Escape reverts) and a delete button revealed on hover at the right (`onDelete`). Data/callback-only (`items` / `getId` / `getName` / `onReorder` / `onRename` / `onDelete`, optional `renderDetail`). Delete fires directly — the consumer owns any confirmation.
+
+- **`createDnDReorder`** (in `hooks`) — the headless engine behind the reorder components: native HTML5 DnD with the placeholder-drop-target pattern (dragged item spliced out and re-inserted at the live `insertPos`, container-level geometry hit-testing so cursor dead zones still track, and the SolidJS dragstart-defer handled). Axis-generic (`"x"` / `"y"`); reusable for building custom reorder UIs.
+
+- **`DefaultButton`** — curried `variant: "default"` button, completing the curried Button set so call sites never need the bare `Button`.
+
+### Changed
+
+- **Layout gap scale trimmed to `"xs" | "sm"`** (BREAKING). `Stack` / `Row` / `ProportionalStack` (and `Sidebar` / `OverflowNav`) no longer accept `md` / `lg` / `xl` gaps — nothing in shipped UIs needed 16/24/32px gaps. Removed the dead variants `SpacedStack`, `SectionStack`, `SpacedClusterRow`. `FillColumn` / `PaneRow` (added in 0.78.5 at `md`) and `ProportionalStack`'s default now use `sm`. Consumers passing `gap="md|lg|xl"` must move to `sm`/`xs` or a local explicit style.
+- **`DnDHierarchySortBar`** — rebuilt on `createDnDReorder`; the pill reorder now opens a placeholder gap that tracks the pointer across the whole row (replacing the old insert-and-shift-on-drop). Same public contract.
+
+### Removed
+
+- **`Surface` padding/radius trimmed** (BREAKING). `padding` is now `"none" | "sm" | "md"` (removed unused `xs` and `lg`); `radius` is now `"none" | "sm" | "md"` (removed unused `lg`). The unconsumed `paddingTop` prop and the `PanelSurface` variant are gone. `md` is retained (it is the default and the status surfaces' padding/radius).
+
 ## 0.78.5
 
 ### Added
