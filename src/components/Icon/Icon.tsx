@@ -14,7 +14,7 @@ export const ICON_GROUPS = {
   navigation: ["chevron-down", "chevron-up", "chevron-left", "chevron-right", "arrow-right"] as const,
   data: ["data", "table", "chart-bar", "chart-line", "chart-area"] as const,
   time: ["clock", "hourglass"] as const,
-  actions: ["plus", "minus", "close", "search", "filter", "refresh"] as const,
+  actions: ["plus", "minus", "close", "search", "filter", "refresh", "download"] as const,
   ui: ["spinner", "menu", "settings", "external-link"] as const,
   auth: ["log-out", "log-in", "user"] as const,
   cache: ["cache-minutes", "cache-hours", "cache-stats", "cache-coverage", "cache-calc"] as const,
@@ -48,6 +48,7 @@ export type IconName =
   | "search"
   | "filter"
   | "refresh"
+  | "download"
   // UI
   | "spinner"
   | "menu"
@@ -205,6 +206,13 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> = 
               <path d="M12 2v2.5h-2.5M4 14v-2.5h2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     solid: `<path d="M2.5 8a5.5 5.5 0 0 1 9.5-3.75V2M13.5 8a5.5 5.5 0 0 1-9.5 3.75V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M12 2v2.5h-2.5M4 14v-2.5h2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  },
+  // Downward arrow into a tray (outline style: shaft + arrowhead + open U-tray).
+  download: {
+    outline: `<path d="M8 2V10M5 7L8 10L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    solid: `<path d="M8 2V10M5 7L8 10L11 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   },
 
   // === UI ICONS ===
