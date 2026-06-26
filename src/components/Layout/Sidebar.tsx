@@ -31,7 +31,7 @@ export interface SidebarProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "
    */
   handle?: "left" | "right";
   /** Gap between stacked children. Defaults to `sm`. */
-  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  gap?: "xs" | "sm";
   children?: JSX.Element;
 }
 

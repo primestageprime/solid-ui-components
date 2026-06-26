@@ -12,7 +12,7 @@ export const DropdownShowcase: Component = () => {
         controlled <code>value</code> + <code>onChange</code>.
       </p>
       <div class="example-group">
-        <Stack gap="md" style={{ "max-width": "300px" }}>
+        <Stack gap="sm" style={{ "max-width": "300px" }}>
           <Dropdown
             id="region"
             label="Region"

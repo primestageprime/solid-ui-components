@@ -48,7 +48,7 @@ export const ConnectionStatusShowcase: Component = () => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Four states</h3>
-          <Row gap="xl" align="start" wrap>
+          <Row gap="sm" align="start" wrap>
             <ConnectionStatus name="worker-bee" lastHeartbeatAt={healthyBeat()} timeoutMs={5000} />
             <ConnectionStatus name="idle" lastHeartbeatAt={idleBeat()} timeoutMs={4000} />
             <ConnectionStatus
@@ -64,7 +64,7 @@ export const ConnectionStatusShowcase: Component = () => {
           <p class="text-meta">
             Same four states, without the surrounding label.
           </p>
-          <Row gap="lg" align="center" wrap>
+          <Row gap="sm" align="center" wrap>
             <LiveHeartbeatTrace lastHeartbeatAt={healthyBeat()} timeoutMs={5000} width={120} height={20} />
             <LiveHeartbeatTrace lastHeartbeatAt={idleBeat()} timeoutMs={4000} width={120} height={20} />
             <LiveHeartbeatTrace
@@ -93,7 +93,7 @@ export const ConnectionStatusShowcase: Component = () => {
             }
           >
             {(row) => (
-              <Row gap="md" align="center">
+              <Row gap="sm" align="center">
                 <span style={{ "min-width": "22rem", "font-size": "0.8rem" }}>{row.label}</span>
                 <HeartbeatSparkline state={row.state} samples={row.samples} width={160} height={20} />
               </Row>

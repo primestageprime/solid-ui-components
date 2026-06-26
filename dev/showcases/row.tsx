@@ -19,8 +19,8 @@ export const RowShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Gap Sizes</h3>
-        <Stack gap="md">
-          {(["xs", "sm", "md", "lg", "xl"] as const).map((gap) => (
+        <Stack gap="sm">
+          {(["xs", "sm"] as const).map((gap) => (
             <div>
               <Text variant="sublabel">{gap}</Text>
               <Row gap={gap} style={{ "margin-top": "8px" }}>
@@ -35,7 +35,7 @@ export const RowShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Justify</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           {(["start", "center", "end", "between"] as const).map((justify) => (
             <div>
               <Text variant="sublabel">{justify}</Text>
@@ -51,10 +51,10 @@ export const RowShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <Text variant="sublabel">SpreadRow</Text>
-            <div class="text-meta">align: "center", justify: "between", gap: "md"</div>
+            <div class="text-meta">align: "center", justify: "between", gap: "sm"</div>
             <SpreadRow style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
               <DemoBox label="Left" />
               <DemoBox label="Right" />

@@ -22,7 +22,6 @@ import type { Component } from "solid-js";
 // Stack variants — named by gap
 export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
 export const NarrowStack: Component<StackDataProps> = createStack({ gap: "sm" });
-export const SpacedStack: Component<StackDataProps> = createStack({ gap: "md" });
 
 // Conversation root — capped reading width and conversation-typography for a
 // multi-participant chat tree. Width math: bubble max = 80ch, body width = 80%
@@ -60,7 +59,7 @@ export const MdRegion: Component<StackDataProps> = createStack({ align: "center"
 export const LgRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "48px 24px", "min-height": "200px", "text-align": "center" } });
 
 // Row variants — named by layout behavior
-export const SpreadRow: Component<RowDataProps> = createRow({ align: "center", justify: "between", gap: "md" });
+export const SpreadRow: Component<RowDataProps> = createRow({ align: "center", justify: "between", gap: "sm" });
 /** Tight spread row — 4px gap, baseline-aligned key+count rows for compact
  *  data displays (pivot cells, legend rows, chip groupings). */
 export const TightSpreadRow: Component<RowDataProps> = createRow({ align: "baseline", justify: "between", gap: "xs" });
@@ -69,7 +68,6 @@ export const TightClusterRow: Component<RowDataProps> = createRow({ gap: "xs", a
 export const TopClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "start" });
 export const TagRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true, align: "center" });
 export const WrapRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true });
-export const SpacedClusterRow: Component<RowDataProps> = createRow({ gap: "md", align: "center" });
 export const FlexRow: Component<RowDataProps> = createRow({});
 
 // Wrapping center-aligned cluster — for header rows where a name + timestamp
@@ -145,31 +143,9 @@ export const PaddedStack: Component<StackDataProps> = createStack({
   style: { padding: "16px" },
 });
 
-// SectionStack — lg gap between top-level page sections.
-export const SectionStack: Component<StackDataProps> = createStack({ gap: "lg" });
-
 // --- Page-structure columns / rows (full-height layout skeleton) ---
 // These bake the fill/flex/overflow plumbing so route code never hand-rolls
 // `createStack({ fill, style:{flex,min-height,overflow} })` at the call site.
-
-/** Full-height page (or pane) column — GROWS to fill the remaining height of a
- *  flex-column parent (`flex:1; min-height:0`) rather than claiming `height:100%`,
- *  so it coexists correctly with a fixed header sibling (e.g. a page title) and
- *  still forwards a concrete height to a `fill` table/scroll child. md gap
- *  between sections. The standard outermost wrapper for a route body. */
-export const FillColumn: Component<StackDataProps> = createStack({
-  gap: "md",
-  style: { flex: "1", "min-height": "0" },
-});
-
-/** Full-height two-pane body row — `fill` + `flex:1; min-height:0` so a
- *  sidebar + main split shares the column's remaining height and each pane can
- *  own its own internal scroll. */
-export const PaneRow: Component<RowDataProps> = createRow({
-  gap: "md",
-  fill: true,
-  style: { flex: "1", "min-height": "0" },
-});
 
 /** Flex column that scrolls its own overflow — `flex:1; min-width:0;
  *  overflow:auto`. The main/detail pane beside a Sidebar. */

@@ -12,7 +12,7 @@ export const PopoverMenuShowcase: Component = () => {
         item id type.
       </p>
       <div class="example-group">
-        <Row gap="md" align="center">
+        <Row gap="sm" align="center">
           <PopoverMenu
             trigger={<button>Actions ▾</button>}
             items={[

@@ -50,7 +50,7 @@ export const PanelShowcase: Component = () => {
           </Panel>
 
           <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <div>
               <InfoPanel title="InfoPanel">
                 <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>clip corners, subtle glow</p>

@@ -15,7 +15,7 @@ export const DateTimeRangeShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <div>
               <div class="text-meta">Same day (date shown once)</div>
               <DateTimeRange

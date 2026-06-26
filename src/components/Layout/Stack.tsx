@@ -9,7 +9,7 @@ import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  gap?: "xs" | "sm";
   align?: "start" | "center" | "end" | "stretch";
   justify?: "start" | "center" | "end" | "between";
   /** Fill the parent's height and forward it through (height:100%; min-height:0)

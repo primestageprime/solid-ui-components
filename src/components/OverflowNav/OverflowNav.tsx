@@ -50,7 +50,7 @@ export interface OverflowNavProps {
   /** Items to render. */
   items: OverflowNavItem[];
   /** Gap between inline NavLink items (forwarded to Row). Default `"sm"`. */
-  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  gap?: "xs" | "sm";
   /** Vertical alignment of inline items (forwarded to Row). Default `"center"`. */
   align?: "start" | "center" | "end" | "stretch" | "baseline";
   /** Class appended to the outer Row. */
@@ -82,9 +82,6 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
     switch (props.gap) {
       case "xs": return 4;
       case "sm": return 8;
-      case "md": return 12;
-      case "lg": return 16;
-      case "xl": return 24;
       default: return 8;
     }
   };

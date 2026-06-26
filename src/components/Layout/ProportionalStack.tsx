@@ -21,12 +21,12 @@ import "./Layout.css";
 export interface ProportionalStackProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Lay children out vertically (column) or horizontally (row). Default `column`. */
   direction?: "column" | "row";
-  /** Gap between items. Default `md` (16px). */
-  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  /** Gap between items. Default `sm` (8px). */
+  gap?: "xs" | "sm";
 }
 
 export const ProportionalStack: Component<ProportionalStackProps> = (rawProps) => {
-  const props = mergeProps({ direction: "column" as const, gap: "md" as const }, rawProps);
+  const props = mergeProps({ direction: "column" as const, gap: "sm" as const }, rawProps);
   const [local, others] = splitProps(props, ["direction", "gap", "class", "children"]);
   const classes = () => {
     const cls = ["proportional-stack", `proportional-stack--${local.direction}`, `proportional-stack--gap-${local.gap}`];

@@ -12,7 +12,7 @@ export const WorkerCardShowcase: Component = () => {
         elapsed time, jobs completed, projected completion vs. estimate.
       </p>
       <div class="example-group">
-        <Row gap="md" align="start" wrap>
+        <Row gap="sm" align="start" wrap>
           <WorkerCard
             slotId={1}
             status="extracting"

@@ -22,7 +22,7 @@ export const AlertBoxShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <AlertBox
               variant="info"
               title="Information"

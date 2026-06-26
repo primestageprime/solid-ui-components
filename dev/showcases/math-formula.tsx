@@ -10,7 +10,7 @@ export const MathFormulaShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <div class="text-meta">Simple expression (display mode)</div>
             <MathFormula latex="E = mc^2" />
@@ -39,7 +39,7 @@ export const MathFormulaShowcase: Component = () => {
           term as its own inline KaTeX element in a flex-wrap row. Wide: one line. Narrow: it wraps to multiple lines at
           operator boundaries (no shrinking, no horizontal scroll). Drag the panes to compare.
         </p>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <div class="text-meta">Wide container — fits on one line</div>
             <div style={{ width: "100%" }}>

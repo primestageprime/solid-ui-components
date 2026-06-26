@@ -19,7 +19,7 @@ export const CellRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Text Cells</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <IdCell value="JTF-0042" />
             <div class="text-meta">IdCell — monospace, clipped corners, accent bg</div>
@@ -68,7 +68,7 @@ export const CellRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Number Cells</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <IntCell value={1234567} />
             <div class="text-meta">IntCell — formatted integer, monospace, right-aligned</div>
@@ -94,7 +94,7 @@ export const CellRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Date & Time Cells</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <DateCell value="2026-02-13T08:30:00Z" />
             <div class="text-meta">DateCell — ISO format (YYYY-MM-DD), monospace</div>
@@ -136,7 +136,7 @@ export const CellRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Duration Cell</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <DurationCell value={45} />
             <div class="text-meta">45 seconds → "45s"</div>
@@ -194,7 +194,7 @@ export const CellRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants (withCellStyle / withValueColor)</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <AccentFloat value={98.76} />
             <div class="text-meta">withCellStyle(FloatCell, {"{"} color: "var(--sui-accent)", fontWeight: 600 {"}"})</div>

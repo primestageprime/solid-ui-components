@@ -110,7 +110,7 @@ export const ValueRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Objects (recursive dispatch)</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <ValueRenderer
             label="Context"
             value={{

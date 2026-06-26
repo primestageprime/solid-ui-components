@@ -16,7 +16,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Sizes</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <div>
               <div class="text-meta">sm</div>
               <EmptyState size="sm" message="No results found" />
@@ -39,7 +39,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
           </Stack>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Variants</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <div>
               <div class="text-meta">default</div>
               <EmptyState message="Default text style" />

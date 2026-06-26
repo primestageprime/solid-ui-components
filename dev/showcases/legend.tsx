@@ -1,6 +1,6 @@
 import { Component, For, createSignal } from "solid-js";
 import { Legend, type LegendItem } from "../../src/components/Legend";
-import { SpacedStack, TightStack } from "../../src/components/Layout";
+import { NarrowStack, TightStack } from "../../src/components/Layout";
 import { TextSublabel, MutedBody } from "../../src/components/Text";
 
 // Chart series — the canonical "this color means this line" case. Generic
@@ -141,7 +141,7 @@ export const LegendShowcase: Component = () => (
 
     <div class="example-group">
       <h3>Many items — wraps on overflow</h3>
-      <SpacedStack>
+      <NarrowStack>
         <TextSublabel>
           Horizontal orientation uses <code>flex-wrap</code>, so long legends
           break onto multiple rows in narrow containers.
@@ -149,7 +149,7 @@ export const LegendShowcase: Component = () => (
         <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
           <Legend items={MANY_ITEMS} />
         </div>
-      </SpacedStack>
+      </NarrowStack>
     </div>
 
     <div class="example-group">

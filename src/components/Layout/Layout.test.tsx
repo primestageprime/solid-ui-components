@@ -12,13 +12,12 @@ import {
   PageCanvas,
   ScrollPanel,
   PaddedStack,
-  SectionStack,
 } from "./index";
 
 describe("Layout primitives", () => {
   it("Stack applies gap class", () => {
-    const { container } = render(() => <Stack gap="md">a</Stack>);
-    expect(container.firstElementChild!.className).toMatch(/stack--gap-md/);
+    const { container } = render(() => <Stack gap="sm">a</Stack>);
+    expect(container.firstElementChild!.className).toMatch(/stack--gap-sm/);
   });
 
   it("Row applies align/justify classes", () => {
@@ -74,23 +73,18 @@ describe("Layout curried variants", () => {
     const style = el.getAttribute("style") ?? "";
     expect(style).toMatch(/padding/);
   });
-
-  it("SectionStack applies gap-lg", () => {
-    const { container } = render(() => <SectionStack>x</SectionStack>);
-    expect(container.firstElementChild!.className).toMatch(/stack--gap-lg/);
-  });
 });
 
 describe("ProportionalStack / ProportionalItem", () => {
   it("ProportionalStack applies direction + gap class", () => {
     const { container } = render(() => (
-      <ProportionalStack direction="column" gap="md">
+      <ProportionalStack direction="column" gap="sm">
         <ProportionalItem weight={1}>a</ProportionalItem>
       </ProportionalStack>
     ));
     const root = container.firstElementChild!;
     expect(root.className).toMatch(/proportional-stack--column/);
-    expect(root.className).toMatch(/proportional-stack--gap-md/);
+    expect(root.className).toMatch(/proportional-stack--gap-sm/);
   });
 
   it("ProportionalItem with weight=0 is fixed-content", () => {

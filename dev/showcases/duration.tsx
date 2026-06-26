@@ -26,7 +26,7 @@ export const DurationShowcase: Component = () => (
       <Stack gap="xs">
         <For each={SAMPLES}>
           {(s) => (
-            <Row gap="md">
+            <Row gap="sm">
               <span style={{ "min-width": "10rem" }} class="text-meta">{s.label}</span>
               <Duration ms={s.ms ?? null} verbose={s.verbose} />
             </Row>

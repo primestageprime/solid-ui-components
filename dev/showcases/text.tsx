@@ -15,7 +15,7 @@ export const TextShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <Text variant="value">92.4</Text>
             <div class="text-meta">value: 1.5rem / 600 / --text-primary</div>
@@ -54,7 +54,7 @@ export const TextShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <TextValue>92.4</TextValue>
             <div class="text-meta">TextValue — variant: "value"</div>

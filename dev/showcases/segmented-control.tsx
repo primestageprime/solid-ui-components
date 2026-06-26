@@ -52,7 +52,7 @@ export const SegmentedControlShowcase: Component = () => {
 
       <div class="example-group">
         <h3>States</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <SegmentedControl
             options={[{ value: "a", label: "Enabled" }, { value: "b", label: "Disabled seg", disabled: true }, { value: "c", label: "Other" }]}
             value="a"

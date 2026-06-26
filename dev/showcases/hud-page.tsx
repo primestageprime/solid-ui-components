@@ -10,7 +10,7 @@ export const PageShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <div class="text-meta">default — dark bg, no pattern</div>
             <Page style={{ height: "120px", "min-height": "unset" }}>

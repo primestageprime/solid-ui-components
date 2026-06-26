@@ -27,7 +27,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
           </Section>
 
           <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
-          <Stack gap="md">
+          <Stack gap="sm">
             <div>
               <CollapsibleSection title="CollapsibleSection" subtitle="Click header to collapse">
                 <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>

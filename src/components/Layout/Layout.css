@@ -6,9 +6,6 @@
 
 .stack--gap-xs { gap: 4px; }
 .stack--gap-sm { gap: 8px; }
-.stack--gap-md { gap: 16px; }
-.stack--gap-lg { gap: 24px; }
-.stack--gap-xl { gap: 32px; }
 
 .stack--align-start { align-items: flex-start; }
 .stack--align-center { align-items: center; }
@@ -33,9 +30,6 @@
 
 .row--gap-xs { gap: 4px; }
 .row--gap-sm { gap: 8px; }
-.row--gap-md { gap: 16px; }
-.row--gap-lg { gap: 24px; }
-.row--gap-xl { gap: 32px; }
 
 .row--align-start { align-items: flex-start; }
 .row--align-center { align-items: center; }
@@ -72,9 +66,6 @@
 
 .proportional-stack--gap-xs { gap: 4px; }
 .proportional-stack--gap-sm { gap: 8px; }
-.proportional-stack--gap-md { gap: 16px; }
-.proportional-stack--gap-lg { gap: 24px; }
-.proportional-stack--gap-xl { gap: 32px; }
 
 .proportional-item {
   /* `flex` itself is set inline to inject the per-instance weight. */

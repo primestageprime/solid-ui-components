@@ -12,7 +12,7 @@ export const ProgressCheckShowcase: Component = () => (
     </p>
     <div class="example-group">
       <h3>Progress values</h3>
-      <Row gap="lg" align="center">
+      <Row gap="sm" align="center">
         <For each={[0, 0.25, 0.5, 0.75, 1]}>
           {(p) => (
             <Stack gap="xs" align="center">

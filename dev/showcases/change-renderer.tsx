@@ -63,7 +63,7 @@ export const ChangeRendererShowcase: Component = () => {
           concern. Callers needing per-key diff build it on top via a{" "}
           <code>renderValue</code> override or a wrapping component.
         </Text>
-        <Stack gap="md">
+        <Stack gap="sm">
           <ChangeRenderer
             label="Context"
             before={{ temperature: 45, active: true }}

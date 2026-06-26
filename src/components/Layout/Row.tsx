@@ -9,7 +9,7 @@ import { Component, JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  gap?: "xs" | "sm";
   align?: "start" | "center" | "end" | "stretch" | "baseline";
   justify?: "start" | "center" | "end" | "between";
   wrap?: boolean;

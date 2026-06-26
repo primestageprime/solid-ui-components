@@ -16,7 +16,7 @@ export const DataTableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <div class="text-meta">maxHeight: 200px (default: 500px)</div>
             <DataTableContainer maxHeight="200px">
@@ -73,7 +73,7 @@ export const DataTableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>CSS Utility Classes</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <code class="text-meta">.sticky-table-header</code>
             <div class="text-meta">Apply to thead — sticky top: 0, z-index: 10, dark bg</div>

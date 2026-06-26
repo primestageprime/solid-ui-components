@@ -1,6 +1,6 @@
 import { Component, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { SlotFillBar } from "../../src/components/SlotFillBar";
-import { SpacedStack, TightStack, ClusterRow } from "../../src/components/Layout";
+import { NarrowStack, TightStack, ClusterRow } from "../../src/components/Layout";
 import { TextLabel, TextSublabel, MutedBody } from "../../src/components/Text";
 
 const QUEUE_LENGTH = 10;
@@ -126,13 +126,13 @@ export const SlotFillBarShowcase: Component = () => (
 
     <div class="example-group">
       <h3>Animated — single task moving through 20 phase transitions</h3>
-      <SpacedStack>
+      <NarrowStack>
         <TextSublabel>
           1s per step. Watch the overlay slide on doing-entry and fade in
           place on doing→done while the static fill grows underneath.
         </TextSublabel>
         <AnimatedExample />
-      </SpacedStack>
+      </NarrowStack>
     </div>
   </div>
 );

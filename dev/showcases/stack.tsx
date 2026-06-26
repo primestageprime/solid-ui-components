@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { Stack } from "../../src/components/Layout/Stack";
 import {
-  TightStack, NarrowStack, SpacedStack, ContentStack, CenteredStack,
+  TightStack, NarrowStack, ContentStack, CenteredStack,
   SmRegion, MdRegion, LgRegion,
 } from "../../src/components/Layout";
 import { Surface } from "../../src/components/Surface/Surface";
@@ -22,7 +22,7 @@ export const StackShowcase: Component = () => {
       <div class="example-group">
         <h3>Base Component — Gap Sizes</h3>
         <div class="example-row" style={{ "align-items": "flex-start", gap: "32px" }}>
-          {(["xs", "sm", "md", "lg", "xl"] as const).map((gap) => (
+          {(["xs", "sm"] as const).map((gap) => (
             <div>
               <Text variant="sublabel">{gap}</Text>
               <Stack gap={gap} style={{ "margin-top": "8px" }}>
@@ -73,15 +73,6 @@ export const StackShowcase: Component = () => {
             </NarrowStack>
           </div>
           <div>
-            <Text variant="sublabel">SpacedStack</Text>
-            <div class="text-meta">gap: "md"</div>
-            <SpacedStack style={{ "margin-top": "8px" }}>
-              <DemoBox label="A" />
-              <DemoBox label="B" />
-              <DemoBox label="C" />
-            </SpacedStack>
-          </div>
-          <div>
             <Text variant="sublabel">ContentStack</Text>
             <div class="text-meta">gap: "xs", flex: 1</div>
             <ContentStack style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
@@ -102,7 +93,7 @@ export const StackShowcase: Component = () => {
       <div class="example-group">
         <h3>Region Variants</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>Centered stacks with size-specific padding and min-height</div>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <Text variant="sublabel">SmRegion</Text>
             <div class="text-meta">padding: 16px 12px, min-height: 60px</div>

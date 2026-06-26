@@ -7,7 +7,7 @@ import {
   type ProductGridSelection,
   type ProductGridWorkCounts,
 } from "../../src/components/ProductGrid";
-import { SpacedStack, ContentStack, ClusterRow, FlexRow } from "../../src/components/Layout";
+import { NarrowStack, ContentStack, ClusterRow, FlexRow } from "../../src/components/Layout";
 import { TextLabel, MutedBody, PageTitle } from "../../src/components/Text";
 import { BaseTable, type TableColumn } from "../../src/components/Table";
 
@@ -179,7 +179,7 @@ export const ProductGridShowcase: Component = () => {
   ];
 
   return (
-    <SpacedStack style={{ padding: "20px 24px" }}>
+    <NarrowStack style={{ padding: "20px 24px" }}>
       <PageTitle style={{ margin: 0, "font-size": "1.25rem" }}>ProductGrid</PageTitle>
       <MutedBody>
         Each sub-column is a focus within its area. Above-the-line solutions
@@ -226,7 +226,7 @@ export const ProductGridShowcase: Component = () => {
         onSelectionChange={setSelection}
       />
       <ContentStack>
-        <FlexRow gap="md" align="center">
+        <FlexRow gap="sm" align="center">
           <TextLabel>
             items{" "}
             <span style={{ color: "var(--sui-text-muted)" }}>
@@ -263,6 +263,6 @@ export const ProductGridShowcase: Component = () => {
           }
         />
       </ContentStack>
-    </SpacedStack>
+    </NarrowStack>
   );
 };

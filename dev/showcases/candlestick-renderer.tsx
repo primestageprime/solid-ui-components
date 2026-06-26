@@ -75,7 +75,7 @@ export const CandlestickRendererShowcase: Component = () => {
           <code> getBoxColor</code> to detect near-flat candles and highlight
           them differently.
         </Text>
-        <Stack gap="md">
+        <Stack gap="sm">
           <CandlestickRenderer label="Default" candlestick={doji} />
           <CandlestickRenderer
             label="Doji-aware"
@@ -95,7 +95,7 @@ export const CandlestickRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Custom precision</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <CandlestickRenderer
             label="precision=0"
             candlestick={uptrend}

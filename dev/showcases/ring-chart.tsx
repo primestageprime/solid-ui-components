@@ -9,7 +9,7 @@ export const RingChartShowcase: Component = () => (
       Donut / ring chart with stacked segments + center label. Pure SVG.
     </p>
     <div class="example-group">
-      <Row gap="lg" align="center" wrap>
+      <Row gap="sm" align="center" wrap>
         <RingChart
           size={140}
           total={100}

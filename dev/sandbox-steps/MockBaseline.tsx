@@ -25,7 +25,7 @@ const DEFAULT_DETAIL_EMPTY = "nothing selected";
 
 export const MockBaseline: Component<MockBaselineProps> = (props) => (
   <PageCanvas>
-    <FlexRow gap="md" align="stretch" style={{ height: "100%", "min-height": "70vh" }}>
+    <FlexRow gap="sm" align="stretch" style={{ height: "100%", "min-height": "70vh" }}>
       <DelineatedSidebar>
         {props.sidebar ?? (
           <LgRegion>

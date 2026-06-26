@@ -23,7 +23,7 @@ export const ToggleShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Variants</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <Toggle label="Default" checked={checked()} onCheckedChange={setChecked} />
             <div class="text-meta">default — standard slider toggle</div>
