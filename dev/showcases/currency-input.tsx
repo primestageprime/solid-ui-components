@@ -1,7 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { CurrencyInput, currencyWidthRem } from "../../src/components/CurrencyInput";
 import { MoneyCell } from "../../src/components/Table/CellRenderers";
-import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";
 
@@ -57,18 +56,6 @@ export const CurrencyInputShowcase: Component = () => {
         <div style={{ width: "640px", border: "1px dashed var(--sui-border)", padding: "12px" }}>
           <CurrencyInput name="fee" maxValue={1_000_000} value={capped} onChange={setCapped} />
         </div>
-      </div>
-
-      <div class="example-group">
-        <h3>Before / after — the problem it fixes</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Bare `ThemedNumberInput` (top) stretches to fill the column; the
-          `CurrencyInput` (bottom) caps at the value-derived width.
-        </div>
-        <Stack gap="sm" style={{ width: "640px", border: "1px dashed var(--sui-border)", padding: "12px" }}>
-          <ThemedNumberInput name="bare" label="Amount ($) — uncapped" value={amount} onChange={setAmount} />
-          <CurrencyInput name="capped" label="Amount ($) — capped" value={amount} onChange={setAmount} />
-        </Stack>
       </div>
 
       <div class="example-group">

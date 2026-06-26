@@ -8,8 +8,22 @@ import { Icon } from "../../src/components/Icon";
 const sampleData = [
   { id: 1, vessel: "MV Northern Star", imo: "9876543", status: "Active", speed: 14.2 },
   { id: 2, vessel: "SS Pacific Dawn", imo: "9123456", status: "Berthed", speed: 0 },
-  { id: 3, vessel: "MT Coral Sea", imo: "9654321", status: "Active", speed: 11.8 },
+  { id: 3, vessel: "MT Coral Sea", imo: "9654321", status: "Underway", speed: 11.8 },
   { id: 4, vessel: "MV Aurora", imo: "9345678", status: "Anchored", speed: 0 },
+  { id: 5, vessel: "MV Baltic Trader", imo: "9501234", status: "Underway", speed: 16.5 },
+  { id: 6, vessel: "SS Gulf Pioneer", imo: "9412785", status: "Berthed", speed: 0 },
+  { id: 7, vessel: "MT Arctic Voyager", imo: "9388210", status: "Active", speed: 9.4 },
+  { id: 8, vessel: "MV Coral Princess", imo: "9276543", status: "Anchored", speed: 0.3 },
+  { id: 9, vessel: "SS Atlantic Crest", imo: "9655012", status: "Underway", speed: 18.1 },
+  { id: 10, vessel: "MT Sahara Wind", imo: "9701456", status: "Active", speed: 12.7 },
+  { id: 11, vessel: "MV Orion Spirit", imo: "9234871", status: "Berthed", speed: 0 },
+  { id: 12, vessel: "SS Caspian Dawn", imo: "9588304", status: "Underway", speed: 15.0 },
+  { id: 13, vessel: "MT Bering Glory", imo: "9447120", status: "Anchored", speed: 0 },
+  { id: 14, vessel: "MV Indus Mariner", imo: "9319802", status: "Active", speed: 13.6 },
+  { id: 15, vessel: "SS Celtic Horizon", imo: "9672345", status: "Underway", speed: 17.3 },
+  { id: 16, vessel: "MT Andaman Pearl", imo: "9505678", status: "Berthed", speed: 0 },
+  { id: 17, vessel: "MV Tasman Glory", imo: "9398012", status: "Active", speed: 10.9 },
+  { id: 18, vessel: "SS Aegean Light", imo: "9261904", status: "Anchored", speed: 0.1 },
 ];
 
 const columns = [
@@ -49,14 +63,17 @@ export const BaseTableShowcase: Component = () => {
       <p class="text-meta">Owns CSS (Table.css), no component imports. Sortable table with sticky header, striped rows.</p>
       <div class="depth2-layout">
         <div class="depth2-composed">
-          <h3>Composed — Default</h3>
+          <h3>Composed — Default (natural height)</h3>
+          <p class="text-meta">No <code>maxHeight</code> — the table grows to fit all rows. Shown for contrast against the scrolling demos below.</p>
           <BaseTable data={sampleData} columns={columns} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Striped + Hoverable</h3>
-          <BaseTable data={sampleData} columns={columns} striped hoverable />
+          <h3 style={{ "margin-top": "24px" }}>Composed — Striped + Hoverable + Scroll</h3>
+          <p class="text-meta"><code>maxHeight="300px"</code> caps the body so the {sampleData.length}-row dataset scrolls internally.</p>
+          <BaseTable data={sampleData} columns={columns} striped hoverable maxHeight="300px" />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Compact + Sticky Header</h3>
-          <BaseTable data={sampleData} columns={columns} compact stickyHeader maxHeight="150px" />
+          <p class="text-meta">{sampleData.length} rows capped at <code>maxHeight="300px"</code>: scroll the body and the header stays pinned.</p>
+          <BaseTable data={sampleData} columns={columns} compact stickyHeader maxHeight="300px" />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Hover Row Actions</h3>
           <p class="text-meta">Hover a row to reveal the trailing action. Clicking the action does not fire <code>onRowClick</code>.</p>
