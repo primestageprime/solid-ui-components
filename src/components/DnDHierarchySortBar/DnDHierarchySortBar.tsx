@@ -19,7 +19,7 @@
 // ============================================
 
 import { Component, For, Show } from "solid-js";
-import { createDnDReorder } from "./createDnDReorder";
+import { createDnDReorder } from "../../hooks/createDnDReorder";
 import "./DnDHierarchySortBar.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────

@@ -1,0 +1,75 @@
+/* ============================================
+   SortableList — Composite (Depth 2). Vertical drag-to-reorder list of
+   full-width rows. Owns all of its visuals; no sibling component imports. The
+   row CONTENT comes from the consumer's `renderItem` — SortableList provides
+   only the row wrapper, the drag grip, the spacing, and the placeholder gap.
+   ============================================ */
+
+.sui-sortable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.sui-sortable-list__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* border-box so the placeholder's captured height yields the SAME footprint
+     even with its dashed border, and the column never reflows mid-drag. */
+  box-sizing: border-box;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--sui-radius-md, 8px);
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-primary);
+  cursor: grab;
+  user-select: none;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.sui-sortable-list__row:hover {
+  border-color: var(--sui-border-bright, var(--sui-border));
+}
+
+/* The drag-grip affordance — the ⠿ handle that signals the row is draggable.
+   Decorative; the whole row is the drag source. */
+.sui-sortable-list__grip {
+  flex: none;
+  opacity: 0.45;
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+}
+
+.sui-sortable-list__row:active .sui-sortable-list__grip {
+  cursor: grabbing;
+}
+
+/* The consumer's row content fills the remaining width. */
+.sui-sortable-list__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The dragged row's live drop slot. Opens a full-width dashed gap that tracks
+   the cursor down the column as you drag; its HEIGHT is set inline from the
+   dragged row's exact captured (border-box) footprint so the gap matches the
+   source row precisely and the column geometry doesn't shift. Mirrors the
+   DnDHierarchySortBar placeholder, vertical edition. */
+.sui-sortable-list__placeholder {
+  border-style: dashed;
+  border-color: var(--sui-accent, #00a8cc);
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);
+  cursor: grabbing;
+}
+
+.sui-sortable-list__placeholder:hover {
+  /* Keep the placeholder visually stable while hovered. */
+  border-color: var(--sui-accent, #00a8cc);
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);
+}

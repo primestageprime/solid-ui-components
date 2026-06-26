@@ -192,6 +192,7 @@ export * from "./components/ScrubChart";
 export * from "./components/CashflowScrubChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
+export * from "./components/SortableList";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
