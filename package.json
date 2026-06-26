@@ -72,6 +72,7 @@
     "preview": "vite preview",
     "prepare": "npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
+    "report:exports": "node scripts/export-usage-report.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
