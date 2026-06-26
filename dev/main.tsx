@@ -70,6 +70,7 @@ import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
+import { MutableListShowcase } from "./showcases/mutable-list";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
@@ -208,6 +209,7 @@ const items: Item[] = [
   { id: "work-progress-card", label: "WorkProgressCard", component: WorkProgressCardShowcase, tags: ["depth:1", "container", "indicator", "data", "time"] },
   { id: "split-queue-list", label: "SplitQueueList", component: SplitQueueListShowcase, tags: ["depth:2", "list", "navigation", "container"] },
   { id: "sortable-list", label: "SortableList", component: SortableListShowcase, tags: ["depth:2", "list", "form", "container"] },
+  { id: "mutable-list", label: "MutableList", component: MutableListShowcase, tags: ["depth:3", "list", "form", "container"] },
   { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase, tags: ["depth:1", "layout"] },
   { id: "toast", label: "Toast", component: ToastShowcase, tags: ["depth:1", "feedback"] },
   { id: "toggle", label: "Toggle", component: ToggleShowcase, tags: ["depth:1", "form"] },
