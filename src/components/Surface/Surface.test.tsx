@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Surface, createSurface } from "./Surface";
-import { CompactCard, CardSurface, ContentSurface, PanelSurface, CenteredSurface } from "./index";
+import { CompactCard, CardSurface, ContentSurface, CenteredSurface } from "./index";
 
 describe("Surface", () => {
   it("renders a div with the surface class", () => {
@@ -22,7 +22,7 @@ describe("Surface", () => {
   });
 
   it("createSurface bakes defaults", () => {
-    const Big = createSurface({ padding: "lg" });
+    const Big = createSurface({ padding: "md" });
     const { container } = render(() => <Big>x</Big>);
     expect(container.firstElementChild!).toBeTruthy();
   });
@@ -43,11 +43,6 @@ describe("Surface", () => {
   it("ContentSurface curried variant applies column direction", () => {
     const { container } = render(() => <ContentSurface>x</ContentSurface>);
     expect(container.firstElementChild!.className).toMatch(/surface--dir-column/);
-  });
-
-  it("PanelSurface applies lg padding", () => {
-    const { container } = render(() => <PanelSurface>x</PanelSurface>);
-    expect(container.firstElementChild!.className).toMatch(/surface--padding-lg/);
   });
 
   it("CenteredSurface applies center align", () => {

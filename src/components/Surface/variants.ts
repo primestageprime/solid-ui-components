@@ -60,15 +60,6 @@ export const ContentSurface: Component<SurfaceDataProps> = createSurface({
   gap: "sm",
 });
 
-/** Spacious content panel: lg padding, md gap, column layout.
- *  For detail panes / explain boxes where generous breathing room matters. */
-export const PanelSurface: Component<SurfaceDataProps> = createSurface({
-  padding: "lg",
-  radius: "md",
-  direction: "column",
-  gap: "md",
-});
-
 /** Centered surface — content centered both axes. For empty states,
  *  placeholders, loading indicators, or any single-focus content area. */
 export const CenteredSurface: Component<SurfaceDataProps> = createSurface({

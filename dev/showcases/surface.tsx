@@ -16,7 +16,7 @@ export const SurfaceShowcase: Component = () => {
       <div class="example-group">
         <h3>Base Component — Padding</h3>
         <div class="example-row" style={{ "align-items": "flex-start" }}>
-          {(["none", "sm", "md", "lg"] as const).map((padding) => (
+          {(["none", "sm", "md"] as const).map((padding) => (
             <Surface padding={padding} radius="md">
               <Text variant="body">padding="{padding}"</Text>
             </Surface>
@@ -27,7 +27,7 @@ export const SurfaceShowcase: Component = () => {
       <div class="example-group">
         <h3>Base Component — Border Radius</h3>
         <div class="example-row" style={{ "align-items": "flex-start" }}>
-          {(["none", "sm", "md", "lg"] as const).map((radius) => (
+          {(["none", "sm", "md"] as const).map((radius) => (
             <Surface padding="md" radius={radius}>
               <Text variant="body">radius="{radius}"</Text>
             </Surface>
@@ -37,7 +37,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants — Shape</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <CardSurface>
               <Text variant="body">CardSurface</Text>
@@ -55,7 +55,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants — Status Colors</h3>
-        <Stack gap="md">
+        <Stack gap="sm">
           <div>
             <InfoSurface>
               <Text variant="body">InfoSurface</Text>
