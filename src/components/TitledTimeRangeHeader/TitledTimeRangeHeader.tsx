@@ -14,7 +14,8 @@ import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
 import "./TitledTimeRangeHeader.css";
 
 export interface TitledTimeRangeHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  title: string;
+  /** Heading content — a plain string, or rich JSX (e.g. an icon + name). */
+  title: string | JSX.Element;
   start: string;
   end?: string | null;
   assetLabel?: string;

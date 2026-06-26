@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.79.1
+
+### Changed
+
+- **`TitledTimeRangeHeader`** — `title` now accepts `JSX.Element` as well as `string`, so callers can render a rich heading (e.g. an icon beside the name) instead of plain text. Backward-compatible: existing string callers are unaffected.
+
+  ```tsx
+  <TitledTimeRangeHeader title={<VesselName type={t} name={n} />} start={s} end={e} />
+  ```
+
+- **`ProgressCard`** — recomposed from `Surface` + `Text` primitives instead of a hand-rolled card; same public API.
+
 ## 0.79.0
 
 ### Added
