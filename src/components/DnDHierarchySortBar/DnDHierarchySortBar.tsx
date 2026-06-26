@@ -72,8 +72,12 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
               fallback={
                 /* Placeholder — the dragged pill's live drop slot. It opens a
                    gap that reflows through the row as you drag; the floating
-                   pill under the cursor is the browser's drag image. Reserves
-                   the dragged pill's WIDTH (labels vary) so the gap matches. */
+                   pill under the cursor is the browser's drag image. Sized to
+                   the dragged pill's EXACT captured footprint — both width AND
+                   height, border-box — so the gap matches the source pill
+                   precisely and the row geometry doesn't shift (which would
+                   otherwise reflow/wrap the row and move pills under the
+                   cursor). */
                 <span
                   class="sui-dnd-hierarchy-sort-bar__pill sui-dnd-hierarchy-sort-bar__placeholder"
                   aria-label="Drop position"
@@ -83,7 +87,11 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
                   onDragEnd={handlers().onDragEnd}
                   style={
                     dnd.dragSize()
-                      ? { "min-width": `${dnd.dragSize()!.width}px` }
+                      ? {
+                          width: `${dnd.dragSize()!.width}px`,
+                          height: `${dnd.dragSize()!.height}px`,
+                          "box-sizing": "border-box",
+                        }
                       : undefined
                   }
                 />

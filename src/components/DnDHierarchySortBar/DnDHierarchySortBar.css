@@ -21,6 +21,10 @@
 .sui-dnd-hierarchy-sort-bar__pill {
   display: inline-flex;
   align-items: center;
+  /* border-box so the placeholder's exact width/height (captured from the
+     source pill's border-box rect) yields an identical footprint even with the
+     dashed border, and never reflows/wraps the row mid-drag. */
+  box-sizing: border-box;
   gap: 5px;
   padding: 3px 10px;
   border-radius: 999px;
@@ -43,8 +47,9 @@
 }
 
 /* The dragged pill's live drop slot. Opens a gap that reflows through the row
-   as you drag; sized via an inline min-width to match the dragged pill's
-   captured width. The old `--drag-over` highlight is replaced by this. */
+   as you drag; sized via inline width + height to the dragged pill's exact
+   captured (border-box) footprint, so the gap is the SAME SIZE as the source
+   pill. The old `--drag-over` highlight is replaced by this. */
 .sui-dnd-hierarchy-sort-bar__placeholder {
   border-style: dashed;
   border-color: var(--sui-accent, #00a8cc);

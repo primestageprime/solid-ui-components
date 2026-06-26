@@ -68,6 +68,48 @@ describe("hitTestInsertPos", () => {
   });
 });
 
+// Full-drag composition: a real hover is hitTestInsertPos → previewOrder. These
+// assert the FINAL committed order matches the user's cursor intent, and pin the
+// dragged-removed coordinate space. A regression to a displayItems-index hit-test
+// (k taken from the dragged-INCLUDED list) would push every "after" past a
+// left-of-cursor dragged item by one — e.g. "drag a, after c" would wrongly
+// commit [b,c,d,a] instead of [b,c,a,d] — so these guard that exact off-by-one.
+describe("full drag (hitTestInsertPos → previewOrder) commits cursor intent", () => {
+  const base = items("a", "b", "c", "d");
+  const drop = (dragId: string, overId: string, after: boolean): string[] => {
+    const pos = hitTestInsertPos(base, getId, dragId, overId, after);
+    return ids(previewOrder(base, getId, dragId, pos));
+  };
+
+  it("drag a LEFT item rightward, after c → a lands after c [b,c,a,d]", () => {
+    expect(drop("a", "c", true)).toEqual(["b", "c", "a", "d"]);
+  });
+
+  it("drag a LEFT item rightward, before c → a lands before c [b,a,c,d]", () => {
+    expect(drop("a", "c", false)).toEqual(["b", "a", "c", "d"]);
+  });
+
+  it("drag a RIGHT item leftward, before b → d lands before b [a,d,b,c]", () => {
+    expect(drop("d", "b", false)).toEqual(["a", "d", "b", "c"]);
+  });
+
+  it("drag a RIGHT item leftward, after b → d lands after b [a,b,d,c]", () => {
+    expect(drop("d", "b", true)).toEqual(["a", "b", "d", "c"]);
+  });
+
+  it("drag a to the far end, after d → [b,c,d,a]", () => {
+    expect(drop("a", "d", true)).toEqual(["b", "c", "d", "a"]);
+  });
+
+  it("no-op: drop back in place (drag a, before b) → [a,b,c,d]", () => {
+    expect(drop("a", "b", false)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("no-op: drop back in place (drag b, after a) → [a,b,c,d]", () => {
+    expect(drop("b", "a", true)).toEqual(["a", "b", "c", "d"]);
+  });
+});
+
 describe("isAfterMidpoint", () => {
   const rect = { left: 100, top: 50, width: 40, height: 20 };
 
