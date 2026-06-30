@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.80.2
+
+### Fixed
+
+- **`Checkbox`** — completes the 0.80.1 fix: a label-less checkbox is *actually* clickable now. Overlaying the input with `inset:0` was not enough — the painted `.sui-checkbox__box` span is itself positioned (`position:relative`, for its `::after` checkmark) and follows the input in the DOM, so it painted on top and swallowed the click (`elementFromPoint` at the control center returned the box, not the input). The input now has `z-index:1` to sit above the box. Verified end-to-end with a real browser click toggling a table row-select checkbox.
+
 ## 0.80.1
 
 ### Fixed

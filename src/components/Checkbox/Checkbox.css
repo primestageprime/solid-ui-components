@@ -36,6 +36,11 @@
   margin: 0;
   opacity: 0;
   cursor: pointer;
+  /* Sit above the painted .sui-checkbox__box span: the box is positioned
+     (position: relative, for its ::after checkmark) and follows the input in
+     the DOM, so without a z-index it paints on top and swallows the click —
+     making a label-less checkbox unclickable. */
+  z-index: 1;
 }
 
 .sui-checkbox__box {
