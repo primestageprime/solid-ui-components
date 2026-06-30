@@ -25,11 +25,17 @@
   flex-shrink: 0;
 }
 
+/* Visually hidden but still the click target: overlay the input across the
+   whole control so a label-less checkbox (no <label for=…> to click) toggles
+   when the styled box is clicked. width/height:0 would leave nothing to hit. */
 .sui-checkbox__input {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  width: 0;
-  height: 0;
+  cursor: pointer;
 }
 
 .sui-checkbox__box {

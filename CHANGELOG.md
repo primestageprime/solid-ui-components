@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.80.1
+
+### Fixed
+
+- **`Checkbox`** — a checkbox with no `label` is clickable again. The hidden native input was `width:0;height:0`, leaving no hit target when there was no associated `<label>` to click (e.g. table row-select checkboxes), so toggling silently did nothing. The input now overlays its control (`inset:0; opacity:0; cursor:pointer`), restoring clicks with or without a label.
+
+## 0.80.0
+
+### Added
+
+- **`Icon`** — added a `download` glyph.
+
 ## 0.79.2
 
 ### Fixed
