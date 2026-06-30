@@ -75,6 +75,27 @@ Check `COMPONENTS.md` or the source for available variants. Common ones:
 <DangerPanel>
 ```
 
+### Tables: default to `FilterableTable`
+
+**When rendering a data table, reach for `FilterableTable` by default** — not the
+lower-level `BaseTable` — unless the consumer explicitly asks otherwise or the
+table genuinely can't use it. `FilterableTable` composes `BaseTable` with the
+standard toolbar already laid out correctly: **quick-filter input on the left,
+result count on the right** (`X of Y`). Hand-rolling a count/filter toolbar
+beside `BaseTable` reinvents this and tends to get the conventional left/right
+order backwards.
+
+```tsx
+<FilterableTable data={rows} columns={columns} filterPlaceholder="Filter…" compact stickyHeader fill />
+```
+
+Legitimate "told otherwise" exceptions (use `BaseTable` directly, or extend
+`FilterableTable` first): a table needing a custom multi-key default sort, a
+filter scoped to specific columns rather than all of them, or its own
+selection/select-all logic that must track the post-filter row set. If you hit
+one of these often, that's a signal to enhance `FilterableTable` so it stays the
+default — surface it rather than quietly forking to `BaseTable`.
+
 ### When a Variant Doesn't Exist
 
 **Do NOT** work around it with inline styles or override props. Instead:
