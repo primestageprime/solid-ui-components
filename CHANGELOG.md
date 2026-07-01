@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.81.1
+
+### Fixed
+
+- **`SplitQueueList`** — the resolve/unresolve collapse animation now deep-clones the collapsing row's content (`cloneNode`) instead of round-tripping it through `innerHTML`, so nodes are copied verbatim (no re-parse, no injection surface) and richer `renderItem` output survives the animation intact. Separately, a row's `min-height` now uses the component's *measured* row height rather than the raw `rowHeight` prop, keeping each row's reserved slot consistent with the pane sizing (the two could previously disagree when the measured height differed from the prop).
+
 ## 0.81.0
 
 ### Added
