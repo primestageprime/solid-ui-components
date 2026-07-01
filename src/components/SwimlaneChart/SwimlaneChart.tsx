@@ -29,7 +29,15 @@ import {
   DagSvgEdge,
 } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
-import { computeEdgeViews, type EdgeView } from "./geometry";
+import {
+  computeBoundaryBadges,
+  computeEdgeViews,
+  computePortAssignments,
+  computeSideBadges,
+  computeViewBounds,
+  type BoundaryBadge,
+  type EdgeView,
+} from "./geometry";
 import "./SwimlaneChart.css";
 
 export type SwimlaneChartProps<T> = {
@@ -308,109 +316,14 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // a visible→hidden edge terminates exactly where the badge renders.
   const STUB_LENGTH = 28;
   const BADGE_RADIUS = 11;
-  const sideBadgePositions = createMemo(() => {
-    const positions = layout().positions;
-    // First pass: find the outermost x on each side.
-    let leftMinX = Infinity;
-    let rightMaxX = -Infinity;
-    for (const [id, p] of positions) {
-      if (id.startsWith("__collapsed_")) continue;
-      if (p.x < leftMinX) leftMinX = p.x;
-      if (p.x > rightMaxX) rightMaxX = p.x;
-    }
-    // Second pass: collect every visible node sharing that outermost x,
-    // and compute (avgY, topY, bottomY). The pill badge sits at the avg
-    // center; topY/bottomY define the pill's vertical span so it reads
-    // as "this badge collects the hidden neighbors of these nodes."
-    const collect = (targetX: number) => {
-      const matches: { id: string; x: number; y: number; width: number; height: number }[] = [];
-      for (const [id, p] of positions) {
-        if (id.startsWith("__collapsed_")) continue;
-        if (Math.abs(p.x - targetX) < 0.5) matches.push({ id, ...p });
-      }
-      if (matches.length === 0) return undefined;
-      const avgY = matches.reduce((s, m) => s + m.y, 0) / matches.length;
-      const topY = Math.min(...matches.map((m) => m.y - m.height / 2));
-      const bottomY = Math.max(...matches.map((m) => m.y + m.height / 2));
-      const ref = matches[0];
-      return { ref, y: avgY, topY, bottomY };
-    };
-    type Side = { x: number; y: number; topY: number; bottomY: number; anchorId: string };
-    const out: { left?: Side; right?: Side } = {};
-    const left = leftMinX < Infinity ? collect(leftMinX) : undefined;
-    if (left) {
-      out.left = {
-        x: left.ref.x - left.ref.width / 2 - STUB_LENGTH - BADGE_RADIUS,
-        y: left.y,
-        topY: left.topY,
-        bottomY: left.bottomY,
-        anchorId: left.ref.id,
-      };
-    }
-    const right = rightMaxX > -Infinity ? collect(rightMaxX) : undefined;
-    if (right) {
-      out.right = {
-        x: right.ref.x + right.ref.width / 2 + STUB_LENGTH + BADGE_RADIUS,
-        y: right.y,
-        topY: right.topY,
-        bottomY: right.bottomY,
-        anchorId: right.ref.id,
-      };
-    }
-    return out;
-  });
 
-  // Per-edge port assignment for orthogonal routing. For each visible
-  // node, in/out edges get distinct y positions spread evenly along the
-  // node's vertical extent so parallel connections fan instead of
-  // stacking at the same anchor. Built once per layout pass.
-  const portAssignments = createMemo(() => {
-    const positions = layout().positions;
-    // Ordered: edges with smaller (source.y) or (target.y) get earlier ports
-    // so visually the fan reads top-to-bottom.
-    const incoming = new Map<string, { edgeKey: string; otherY: number }[]>();
-    const outgoing = new Map<string, { edgeKey: string; otherY: number }[]>();
-    for (const e of layout().edges) {
-      if (e.synthetic) continue;
-      const key = `${e.sourceId}|${e.targetId}`;
-      const s = positions.get(e.sourceId);
-      const t = positions.get(e.targetId);
-      if (s && positions.has(e.targetId)) {
-        const arr = outgoing.get(e.sourceId) ?? [];
-        arr.push({ edgeKey: key, otherY: t!.y });
-        outgoing.set(e.sourceId, arr);
-      }
-      if (t && positions.has(e.sourceId)) {
-        const arr = incoming.get(e.targetId) ?? [];
-        arr.push({ edgeKey: key, otherY: s!.y });
-        incoming.set(e.targetId, arr);
-      }
-    }
-    const portY = new Map<string, { from: number; to: number }>();
-    const assign = (
-      side: "in" | "out",
-      list: Map<string, { edgeKey: string; otherY: number }[]>,
-    ) => {
-      for (const [nodeId, edges] of list) {
-        const p = positions.get(nodeId);
-        if (!p) continue;
-        edges.sort((a, b) => a.otherY - b.otherY);
-        const n = edges.length;
-        const top = p.y - p.height / 2;
-        const h = p.height;
-        edges.forEach((e, i) => {
-          const y = top + (h * (i + 1)) / (n + 1);
-          const cur = portY.get(e.edgeKey) ?? { from: p.y, to: p.y };
-          if (side === "out") cur.from = y;
-          else cur.to = y;
-          portY.set(e.edgeKey, cur);
-        });
-      }
-    };
-    assign("out", outgoing);
-    assign("in", incoming);
-    return portY;
-  });
+  // Boundary-badge positions + per-edge ports — pure geometry (see ./geometry).
+  const sideBadgePositions = createMemo(() =>
+    computeSideBadges(layout().positions, STUB_LENGTH, BADGE_RADIUS),
+  );
+  const portAssignments = createMemo(() =>
+    computePortAssignments(layout().positions, layout().edges),
+  );
 
   // Routed SVG path per visible edge — pure geometry (see ./geometry).
   const edgeViews = createMemo(() =>
@@ -439,121 +352,24 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // (STUB_LENGTH and BADGE_RADIUS are declared earlier alongside
   // sideBadgePositions so edgeViews can reuse them.)
 
-  // Aggregate summaries by SIDE (left vs right of center). All hidden
-  // nodes on a given side count into one badge — even if their nearest
-  // visible neighbor (and thus their layout-anchor) is a node on the
-  // opposite side via a cross-side edge. The badge anchors to the
-  // OUTERMOST visible node on the matching side so the stub points from
-  // the chart edge outward.
-  const boundaryBadges = createMemo(() => {
-    const positions = layout().positions;
-    const edges = layout().edges;
-    const gap = effectiveColumnGap();
-    const centerColVal = props.centerCol ?? 0;
-
-    // Pick the outermost visible node on each side from layout positions.
-    let leftAnchorId: string | undefined;
-    let rightAnchorId: string | undefined;
-    let leftMinX = Infinity;
-    let rightMaxX = -Infinity;
-    for (const [id, pos] of positions) {
-      if (id.startsWith("__collapsed_")) continue;
-      if (pos.x < leftMinX) { leftMinX = pos.x; leftAnchorId = id; }
-      if (pos.x > rightMaxX) { rightMaxX = pos.x; rightAnchorId = id; }
-    }
-
-    // Sum collapsed counts per side. A summary's side comes from its own
-    // column relative to centerCol (NOT its anchor), so a hidden node on
-    // the LEFT can never spill into a RIGHT badge just because the only
-    // visible neighbor it has via deps happens to be on the right.
-    let leftCount = 0;
-    let rightCount = 0;
-    for (const s of layout().summaries) {
-      if (s.column < centerColVal) {
-        leftCount += s.collapsedCount;
-      } else if (s.column > centerColVal) {
-        rightCount += s.collapsedCount;
-      } else {
-        // Tie at centerCol — fall back to the original edge-direction
-        // heuristic so the badge still picks a sensible side.
-        const edge = edges.find(
-          (e) => e.sourceId === s.id || e.targetId === s.id,
-        );
-        const dir = edge && edge.targetId === s.anchorId ? -1 : 1;
-        if (dir === -1) leftCount += s.collapsedCount;
-        else rightCount += s.collapsedCount;
-      }
-    }
-    void gap;
-
-    type Aggregated = { anchorId: string | undefined; dir: -1 | 1; count: number; key: string };
-    const sides: Aggregated[] = [];
-    if (leftCount > 0) {
-      sides.push({ anchorId: leftAnchorId, dir: -1, count: leftCount, key: "side|-1" });
-    }
-    if (rightCount > 0) {
-      sides.push({ anchorId: rightAnchorId, dir: 1, count: rightCount, key: "side|+1" });
-    }
-
-    // Viewport edges in content coords. The centering effect pins col 0
-    // (x=0) to the viewport horizontal center at scale 1, so the visible
-    // content x-range is [-cw/2, +cw/2]. A side with collapsed nodes but NO
-    // visible anchor (a disconnected subtree, or nothing visible at all)
-    // pins its lozenge just inside the matching viewport edge so the count
-    // is ALWAYS shown — the "edge lozenge whenever a node is invisible"
-    // behavior, even when there are zero visible nodes.
-    const cw = containerWidth();
-    const vpLeftX = -cw / 2 + H_PADDING_PX + BADGE_RADIUS;
-    const vpRightX = cw / 2 - H_PADDING_PX - BADGE_RADIUS;
-
-    const sidePos = sideBadgePositions();
-    return sides.flatMap((g) => {
-      const dir = g.dir;
-      const anchorPos = g.anchorId ? positions.get(g.anchorId) : undefined;
-      const sideInfo = dir === -1 ? sidePos.left : sidePos.right;
-      // Vertical placement: follow the anchor column's span when present,
-      // else sit at content y=0 (which the centering effect maps to the
-      // viewport vertical center when there are no visible nodes).
-      const sideY = sideInfo?.y ?? anchorPos?.y ?? 0;
-      const pillTopY = sideInfo?.topY ?? sideY - BADGE_RADIUS;
-      const pillBottomY = sideInfo?.bottomY ?? sideY + BADGE_RADIUS;
-
-      // Preferred X: just outside the outermost visible node on this side.
-      // But the lozenge must ALWAYS stay inside the viewport — clamp it to
-      // the viewport edge when the anchor is off-screen (a tall/parallel
-      // column pushed past the edge) or absent (nothing visible). Without
-      // this, off-screen collapsed counts vanished with their off-screen
-      // anchor. cw===0 only on the first paint, before the ResizeObserver.
-      let badgeX: number;
-      if (anchorPos) {
-        const anchorOuterX = anchorPos.x + dir * (anchorPos.width / 2);
-        badgeX =
-          dir === -1
-            ? anchorOuterX - STUB_LENGTH - BADGE_RADIUS
-            : anchorOuterX + STUB_LENGTH + BADGE_RADIUS;
-      } else {
-        if (cw === 0) return [];
-        badgeX = dir === -1 ? vpLeftX : vpRightX;
-      }
-      if (cw > 0) {
-        badgeX = dir === -1 ? Math.max(badgeX, vpLeftX) : Math.min(badgeX, vpRightX);
-      }
-      return [{ key: g.key, d: "", badgeX, badgeY: sideY, pillTopY, pillBottomY, count: g.count }];
-    });
-  });
+  // Side "+N" boundary badges for collapsed columns — pure geometry (./geometry).
+  const boundaryBadges = createMemo(() =>
+    computeBoundaryBadges({
+      positions: layout().positions,
+      edges: layout().edges,
+      summaries: layout().summaries,
+      centerCol: props.centerCol ?? 0,
+      containerWidth: containerWidth(),
+      hPadding: H_PADDING_PX,
+      badgeRadius: BADGE_RADIUS,
+      stubLength: STUB_LENGTH,
+      sideBadges: sideBadgePositions(),
+    }),
+  );
 
   // Keyed-store mirror so badge SVG elements (path, circle, text) retain
   // their identity and can CSS-transition their attribute values when
   // the simulation advances.
-  type BoundaryBadge = {
-    key: string;
-    d: string;
-    badgeX: number;
-    badgeY: number;
-    pillTopY: number;
-    pillBottomY: number;
-    count: number;
-  };
   const [badgesStore, setBadgesStore] = createStore<BoundaryBadge[]>([]);
   createEffect(() => {
     setBadgesStore(reconcile(boundaryBadges(), { key: "key" }));
@@ -583,40 +399,16 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // get clipped at the chart's top/bottom edge. Matches the
   // orthogonal router's OBSTACLE_MARGIN (~32) plus a few px of slack.
   const EDGE_GUTTER = 40;
-  const viewBounds = createMemo(() => {
-    const positions = layout().positions;
-    if (positions.size === 0) {
-      return { minX: 0, maxX: 0, minY: 0, maxY: 0, centerX: 0, centerY: 0, width: 0, height: 0 };
-    }
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const p of positions.values()) {
-      minX = Math.min(minX, p.x - p.width / 2);
-      maxX = Math.max(maxX, p.x + p.width / 2);
-      minY = Math.min(minY, p.y - p.height / 2);
-      maxY = Math.max(maxY, p.y + p.height / 2);
-    }
-    for (const b of boundaryBadges()) {
-      minX = Math.min(minX, b.badgeX - BADGE_RADIUS);
-      maxX = Math.max(maxX, b.badgeX + BADGE_RADIUS);
-      minY = Math.min(minY, b.pillTopY);
-      maxY = Math.max(maxY, b.pillBottomY);
-    }
-    for (const b of bottomBadges()) {
-      minX = Math.min(minX, b.x - BADGE_RADIUS);
-      maxX = Math.max(maxX, b.x + BADGE_RADIUS);
-      maxY = Math.max(maxY, b.y + BADGE_RADIUS);
-    }
-    // Extend vertically so corridor routes above/below have room.
-    minY -= EDGE_GUTTER;
-    maxY += EDGE_GUTTER;
-    return {
-      minX, maxX, minY, maxY,
-      centerX: (minX + maxX) / 2,
-      centerY: (minY + maxY) / 2,
-      width: maxX - minX,
-      height: maxY - minY,
-    };
-  });
+  // Content bounding box (nodes + badges) — pure geometry (see ./geometry).
+  const viewBounds = createMemo(() =>
+    computeViewBounds({
+      positions: layout().positions,
+      boundaryBadges: boundaryBadges(),
+      bottomBadges: bottomBadges(),
+      badgeRadius: BADGE_RADIUS,
+      edgeGutter: EDGE_GUTTER,
+    }),
+  );
 
   // Always pin DOING (x=0) to the viewport horizontal center at scale 1.
   // Node sizes are bounded below by their natural dimensions — we never
