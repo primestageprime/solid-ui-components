@@ -207,7 +207,10 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
           "sui-sql__row--focused": isFocused(),
           "sui-sql__row--selected": isSelected(),
         }}
-        style={{ "min-height": `${rowHeightProp()}px` }}
+        // Use the MEASURED row height so a row's reserved slot matches what the
+        // layout math sizes the panes from (the raw prop is only the pre-measure
+        // seed); keeps rows and pane heights consistent, avoiding the clip bug.
+        style={{ "min-height": `${rowHeight()}px` }}
         // Clicking a row only SELECTS it (emits onSelect) — it no longer resolves.
         // Resolve/unresolve are driven by the consumer mutating the arrays.
         onClick={() => props.onSelect?.(key)}

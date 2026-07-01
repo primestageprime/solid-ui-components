@@ -242,8 +242,6 @@ export function createFlightController(deps: FlightDeps): FlightController {
     // reads as passing up through the seam in one synchronized motion.
     const exitMs = deps.animationMs();
 
-    const newFocusedContent = nowEl.innerHTML;
-
     // ---- Phase 2 (enter): the TOP panel GROWS to reveal a STATIONARY, full-size
     // card — the same mechanism the topOnly column uses, now applied to the full
     // two-panel layout.
@@ -354,7 +352,7 @@ export function createFlightController(deps: FlightDeps): FlightController {
         innerClass: "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused",
         markerGlyph: "▸", // focused glyph, not ✓
         pin: "bottom",
-        contentHTML: newFocusedContent,
+        sourceRow: nowEl,
       });
 
       // Insert at the resolved card's original index. After the swap the rows are
@@ -503,7 +501,7 @@ export function createFlightController(deps: FlightDeps): FlightController {
       innerClass: "sui-sql__row sui-sql__row--resolved",
       markerGlyph: "✓",
       pin: "top", // pinned to TOP → clipped from the BOTTOM as it shrinks
-      contentHTML: nowEl.innerHTML, // same content; carries the ✓ marker
+      sourceRow: nowEl, // same content; carries the ✓ marker
     });
 
     // Append at the done list's TAIL (after the last resolved row, or after the

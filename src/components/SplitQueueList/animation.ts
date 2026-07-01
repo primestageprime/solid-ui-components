@@ -83,13 +83,19 @@ export const animateOnce = (
  * edge (`pin: "bottom"` clips from the TOP as it collapses — the forward
  * head-collapse; `pin: "top"` clips from the BOTTOM — the reverse tail-collapse).
  * Returns the placeholder ready to insert; the caller animates its height→0.
+ *
+ * The inner card's content is DEEP-CLONED from `sourceRow` (the real row being
+ * collapsed) rather than round-tripped through innerHTML — so nodes are copied
+ * exactly, nothing is re-parsed (no injection surface), and richer `renderItem`
+ * output survives intact. `markerGlyph` overrides the cloned marker (e.g. the
+ * resolved ✓ becomes the focused ▸ on the forward collapse).
  */
 export const buildCollapsePlaceholder = (opts: {
   rowH: number;
   innerClass: string;
   markerGlyph: string;
   pin: "top" | "bottom";
-  contentHTML: string;
+  sourceRow: HTMLElement;
 }): HTMLLIElement => {
   const placeholder = document.createElement("li");
   placeholder.className = "sui-sql__collapse";
@@ -106,7 +112,11 @@ export const buildCollapsePlaceholder = (opts: {
   // so as the placeholder shrinks the opposite edge clips it away.
   const inner = document.createElement("div");
   inner.className = opts.innerClass;
-  inner.innerHTML = opts.contentHTML;
+  // Move the source row's deep-cloned children (marker + content) into `inner`.
+  // Cloning the <li> and hoisting its children copies the nodes verbatim without
+  // re-serializing to an HTML string.
+  const clone = opts.sourceRow.cloneNode(true) as HTMLElement;
+  while (clone.firstChild) inner.appendChild(clone.firstChild);
   const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
   if (marker) marker.textContent = opts.markerGlyph;
   inner.style.position = "absolute";

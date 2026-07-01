@@ -730,6 +730,33 @@ describe("SplitQueueList — resolved row background fades in on arrival", () =>
   });
 });
 
+describe("SplitQueueList — collapse clones row content (no innerHTML round-trip)", () => {
+  it("forward collapse placeholder deep-clones the resolved row's content", async () => {
+    const c = mountConsumer(3, 400);
+    await tick(); // rAF capture so the flight doesn't bail
+    const list = c.container.querySelector(".sui-sql__list--bottom")!;
+    let placeholder: Element | null = null;
+    const obs = new MutationObserver((records) => {
+      for (const r of records)
+        r.addedNodes.forEach((n) => {
+          if (n instanceof Element && n.classList.contains("sui-sql__collapse"))
+            placeholder = n;
+        });
+    });
+    obs.observe(list, { childList: true });
+    c.resolve("k1");
+    await tick(40);
+    obs.disconnect();
+    expect(placeholder).toBeTruthy();
+    // Content span cloned from the real row — carries the rendered id text
+    // (proves the clone copied nodes, not an empty/re-parsed shell).
+    expect(placeholder!.querySelector(".sui-sql__content")?.textContent).toBe("k1");
+    // Marker overridden to the focused glyph on the forward collapse.
+    expect(placeholder!.querySelector(".sui-sql__marker")?.textContent).toBe("▸");
+    await tick(500); // settle
+  });
+});
+
 describe("SplitQueueList — keyboard & ARIA", () => {
   // Mount with resolved + unresolved so both panes render interactive rows.
   function mountA11y(selected?: string) {
