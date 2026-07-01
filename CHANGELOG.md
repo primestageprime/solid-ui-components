@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.83.0
+
+### Added
+
+- **`Dropdown`** — full listbox keyboard navigation and ARIA semantics (no API change). The trigger now exposes `aria-haspopup="listbox"` / `aria-expanded` / `aria-controls`; the menu is a `role="listbox"` of `role="option"` items with `aria-selected`. A **roving tabindex** keeps one tab stop; **Arrow Up/Down · Home/End** move focus, **Enter/Space** select, **Escape** closes and refocuses the trigger, and **Tab** leaves the widget. Opening focuses the selected option (or first); selecting or closing returns focus to the trigger. Rendering is unchanged.
+
 ## 0.82.1
 
 ### Changed
