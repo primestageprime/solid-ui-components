@@ -69,7 +69,7 @@ export function StaticSplitLayout<T>(
     // overflow, position, font/colour) stays in `.sui-sql`.
     <Surface
       ref={rootEl}
-      class={`sui-sql sui-sql--static${props.class ? " " + props.class : ""}`}
+      class={`sui-sql sui-sql--static${props.class ? ` ${props.class}` : ""}`}
       padding="none"
       radius="none"
       bg="var(--sui-bg-secondary)"

@@ -14,7 +14,7 @@ export const BaselineDot: Component<BaselineDotProps> = (props) => {
   const [local, others] = splitProps(props, ["class"]);
   return (
     <span
-      class={`baseline-dot${local.class ? " " + local.class : ""}`}
+      class={`baseline-dot${local.class ? ` ${local.class}` : ""}`}
       {...others}
     />
   );

@@ -78,7 +78,7 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
         return (
           <g clip-path={ctx.clip.plotPathUrl()}>
             <rect
-              class={`sui-chart__drag-range${merged.class ? " " + merged.class : ""}`}
+              class={`sui-chart__drag-range${merged.class ? ` ${merged.class}` : ""}`}
               x={x()}
               y={0}
               width={w()}

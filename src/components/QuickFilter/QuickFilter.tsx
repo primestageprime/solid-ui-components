@@ -81,7 +81,7 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
 
   return (
     <div
-      class={`sui-quickfilter${local.class ? " " + local.class : ""}`}
+      class={`sui-quickfilter${local.class ? ` ${local.class}` : ""}`}
       {...(others as JSX.HTMLAttributes<HTMLDivElement>)}
     >
       <ThemedInput

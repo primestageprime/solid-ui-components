@@ -197,7 +197,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   return (
     <>
       <g
-        class={`sui-chart__timeline${merged.class ? " " + merged.class : ""}`}
+        class={`sui-chart__timeline${merged.class ? ` ${merged.class}` : ""}`}
         clip-path={activeClipPathUrl()}
       >
         <Show when={merged.bandHeight != null}>

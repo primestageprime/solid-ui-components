@@ -61,7 +61,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
 
   const mergedStyle = (): JSX.CSSProperties | undefined => {
     const custom: JSX.CSSProperties = {};
-    if (local.bg) custom["background"] = local.bg;
+    if (local.bg) custom.background = local.bg;
     if (local.borderColor) custom["border-color"] = local.borderColor;
     if (local.minWidth) custom["min-width"] = local.minWidth;
     if (local.maxWidth) custom["max-width"] = local.maxWidth;

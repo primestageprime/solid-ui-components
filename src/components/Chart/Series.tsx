@@ -68,7 +68,7 @@ export function LineSeries<T>(props: LineSeriesProps<T>) {
   return (
     <g clip-path={ctx.clip.plotPathUrl()}>
       <path
-        class={`sui-chart__line${props.class ? " " + props.class : ""}`}
+        class={`sui-chart__line${props.class ? ` ${props.class}` : ""}`}
         d={d()}
         stroke={props.stroke}
         stroke-width={props.strokeWidth ?? 2}
@@ -122,7 +122,7 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
   return (
     <g clip-path={ctx.clip.plotPathUrl()}>
       <path
-        class={`sui-chart__area${props.class ? " " + props.class : ""}`}
+        class={`sui-chart__area${props.class ? ` ${props.class}` : ""}`}
         d={d()}
         fill={props.fill}
         fill-opacity={props.fillOpacity ?? 0.18}
@@ -264,7 +264,7 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
   const baseline = () => props.baseline ?? 0;
   return (
     <g
-      class={`sui-chart__bars${props.class ? " " + props.class : ""}`}
+      class={`sui-chart__bars${props.class ? ` ${props.class}` : ""}`}
       clip-path={ctx.clip.plotPathUrl()}
     >
       <For each={props.data}>

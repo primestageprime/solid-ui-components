@@ -133,7 +133,7 @@ export const GhostArc: Component<GhostArcProps> = (props) => {
           <g clip-path={clip()}>
             {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <path> has no tabindex/handlers and is not actually focusable */}
             <path
-              class={`sui-chart__ghost-arc${merged.class ? " " + merged.class : ""}`}
+              class={`sui-chart__ghost-arc${merged.class ? ` ${merged.class}` : ""}`}
               d={d()}
               fill="none"
               stroke={merged.color}

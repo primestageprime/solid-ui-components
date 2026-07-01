@@ -44,7 +44,7 @@ export const CurrentValueIndicator: Component<CurrentValueIndicatorProps> = (
     <Show when={merged.point}>
       {(p) => (
         <g
-          class={`sui-chart__current-value${merged.class ? " " + merged.class : ""}`}
+          class={`sui-chart__current-value${merged.class ? ` ${merged.class}` : ""}`}
           clip-path={ctx.clip.plotPathUrl()}
         >
           <circle

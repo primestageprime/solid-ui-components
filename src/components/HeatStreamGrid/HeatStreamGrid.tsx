@@ -170,10 +170,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                   tabIndex={selectable() ? 0 : undefined}
                   onClick={() => selectable() && toggleRow(row)}
                   onKeyDown={(e) => {
-                    if (
-                      selectable() &&
-                      (e.key === "Enter" || e.key === " ")
-                    ) {
+                    if (selectable() && (e.key === "Enter" || e.key === " ")) {
                       e.preventDefault();
                       toggleRow(row);
                     }

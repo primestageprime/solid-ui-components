@@ -167,7 +167,11 @@ export function Treemap<
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         e.stopPropagation();
-                        p.onInnerClick?.(cell, inner, e as unknown as MouseEvent);
+                        p.onInnerClick?.(
+                          cell,
+                          inner,
+                          e as unknown as MouseEvent,
+                        );
                       }
                     }}
                   >

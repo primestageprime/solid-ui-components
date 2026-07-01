@@ -26,7 +26,7 @@
   z-index: 2;
   /* The visible line. */
   background: linear-gradient(
-    to var(--sidebar-handle-dir, right),
+    to right,
     transparent 0,
     transparent calc(50% - 0.5px),
     var(--sui-border) calc(50% - 0.5px),
@@ -38,18 +38,16 @@
 
 .sidebar__handle--right {
   right: -4px;
-  --sidebar-handle-dir: right;
 }
 
 .sidebar__handle--left {
   left: -4px;
-  --sidebar-handle-dir: left;
 }
 
 .sidebar__handle:hover,
 .sidebar__handle:active {
   background: linear-gradient(
-    to var(--sidebar-handle-dir, right),
+    to right,
     transparent 0,
     transparent calc(50% - 1px),
     var(--sui-accent) calc(50% - 1px),

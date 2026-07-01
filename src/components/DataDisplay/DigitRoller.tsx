@@ -85,10 +85,10 @@ function alignOnDecimal(a: string, b: string): [string, string] {
 
   const padA =
     aInt.padStart(maxInt, "0") +
-    (maxDec > 0 ? "." + aDec.padEnd(maxDec, "0") : "");
+    (maxDec > 0 ? `.${aDec.padEnd(maxDec, "0")}` : "");
   const padB =
     bInt.padStart(maxInt, "0") +
-    (maxDec > 0 ? "." + bDec.padEnd(maxDec, "0") : "");
+    (maxDec > 0 ? `.${bDec.padEnd(maxDec, "0")}` : "");
   return [padA, padB];
 }
 

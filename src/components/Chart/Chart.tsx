@@ -260,7 +260,7 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div
-        class={`sui-chart${local.class ? " " + local.class : ""}`}
+        class={`sui-chart${local.class ? ` ${local.class}` : ""}`}
         style={local.style as JSX.CSSProperties}
       >
         <Show when={local.title}>

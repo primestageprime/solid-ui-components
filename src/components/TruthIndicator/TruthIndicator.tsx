@@ -6,7 +6,13 @@
 // Boolean indicator: green check for true, red prohibition (circle-with-slash)
 // for false. Read-only by default; click handler optional.
 // ============================================
-import { type Component, type JSX, Show, splitProps, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  splitProps,
+  mergeProps,
+} from "solid-js";
 import "./TruthIndicator.css";
 
 export type TruthIndicatorSize = "sm" | "md" | "lg";

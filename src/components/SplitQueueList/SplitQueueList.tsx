@@ -248,7 +248,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // is unchanged for the FLIP's measurement/queries.
     <Surface
       ref={rootEl}
-      class={`sui-sql${props.class ? " " + props.class : ""}`}
+      class={`sui-sql${props.class ? ` ${props.class}` : ""}`}
       padding="none"
       radius="none"
       bg="var(--sui-bg-secondary)"

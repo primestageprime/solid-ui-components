@@ -91,8 +91,8 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
         : {};
     const out: JSX.CSSProperties = { ...base };
     if (local.bg) out["background-color"] = local.bg;
-    if (local.textColor) out["color"] = local.textColor;
-    if (local.onClick) out["cursor"] = "pointer";
+    if (local.textColor) out.color = local.textColor;
+    if (local.onClick) out.cursor = "pointer";
     return out;
   };
 

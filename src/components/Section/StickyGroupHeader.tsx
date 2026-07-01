@@ -29,7 +29,7 @@ export const StickyGroupHeader: Component<StickyGroupHeaderProps> = (props) => {
   });
   return (
     <div
-      class={`sui-sticky-group-header${local.class ? " " + local.class : ""}`}
+      class={`sui-sticky-group-header${local.class ? ` ${local.class}` : ""}`}
       style={
         typeof local.style === "string"
           ? local.style
@@ -49,7 +49,7 @@ export const SectionLabel: Component<SectionLabelProps> = (props) => {
   const [local, others] = splitProps(props, ["class", "children"]);
   return (
     <span
-      class={`sui-section-label${local.class ? " " + local.class : ""}`}
+      class={`sui-section-label${local.class ? ` ${local.class}` : ""}`}
       {...others}
     >
       {local.children}

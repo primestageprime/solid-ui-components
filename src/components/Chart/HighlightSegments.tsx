@@ -93,7 +93,7 @@ export function HighlightSegments<
 
   return (
     <g
-      class={`sui-chart__highlight-segments${merged.class ? " " + merged.class : ""}`}
+      class={`sui-chart__highlight-segments${merged.class ? ` ${merged.class}` : ""}`}
       clip-path={ctx.clip.plotPathUrl()}
     >
       <For each={merged.data}>

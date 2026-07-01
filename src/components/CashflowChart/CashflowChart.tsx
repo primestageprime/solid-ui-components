@@ -106,7 +106,7 @@ function formatDollarsLong(cents: number): string {
 
 /** Format "Mar 3 – Mar 9, 2026" from a week_start YYYY-MM-DD; also returns week end. */
 function formatWeekRange(weekStart: string): { label: string; end: string } {
-  const s = new Date(weekStart + "T00:00:00");
+  const s = new Date(`${weekStart}T00:00:00`);
   const e = new Date(s);
   e.setDate(e.getDate() + 6);
   const sMonth = MONTH_NAMES[s.getMonth()];

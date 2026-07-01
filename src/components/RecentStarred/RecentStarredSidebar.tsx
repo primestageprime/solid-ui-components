@@ -47,7 +47,7 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
     props.renderItem ? props.renderItem(item) : item.label;
 
   return (
-    <div class={`sui-recent-starred${props.class ? " " + props.class : ""}`}>
+    <div class={`sui-recent-starred${props.class ? ` ${props.class}` : ""}`}>
       <section class="sui-recent-starred__section">
         <div class="sui-recent-starred__header">
           <span>{props.starredTitle ?? "Starred"}</span>

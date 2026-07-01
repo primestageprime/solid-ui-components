@@ -101,7 +101,7 @@ function parse(raw: string): number {
       cleaned.slice(0, firstDot + 1) +
       cleaned.slice(firstDot + 1).replace(/\./g, "");
   }
-  if (negative) cleaned = "-" + cleaned;
+  if (negative) cleaned = `-${cleaned}`;
   if (cleaned === "" || cleaned === "-" || cleaned === ".") return 0;
   const n = Number(cleaned);
   return Number.isNaN(n) ? 0 : n;

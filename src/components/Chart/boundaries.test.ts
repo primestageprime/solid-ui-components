@@ -44,7 +44,7 @@ describe("Chart slot boundaries — no amygdala-domain leakage", () => {
         lines.forEach((line, i) => {
           if (rx.test(line)) {
             offenders.push({
-              file: file.replace(CHART_DIR + "/", ""),
+              file: file.replace(`${CHART_DIR}/`, ""),
               line: i + 1,
               text: line.trim(),
             });
@@ -73,7 +73,7 @@ describe("Chart slot boundaries — no amygdala-domain leakage", () => {
       lines.forEach((line, i) => {
         if (HEX_RX.test(line)) {
           offenders.push({
-            file: file.replace(CHART_DIR + "/", ""),
+            file: file.replace(`${CHART_DIR}/`, ""),
             line: i + 1,
             text: line.trim(),
           });

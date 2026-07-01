@@ -208,7 +208,7 @@ const renderSingle = (
               height={14}
               viewBox="0 0 16 16"
               fill="none"
-              innerHTML={ICON_PATHS["check"].outline}
+              innerHTML={ICON_PATHS.check.outline}
             />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
@@ -240,7 +240,7 @@ const renderSingle = (
                   height={12}
                   viewBox="0 0 16 16"
                   fill="none"
-                  innerHTML={ICON_PATHS["close"].outline}
+                  innerHTML={ICON_PATHS.close.outline}
                 />
               </button>
             </Show>
@@ -431,7 +431,7 @@ const renderMulti = (
               height={14}
               viewBox="0 0 16 16"
               fill="none"
-              innerHTML={ICON_PATHS["check"].outline}
+              innerHTML={ICON_PATHS.check.outline}
             />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
@@ -485,7 +485,7 @@ const renderMulti = (
                             height={12}
                             viewBox="0 0 16 16"
                             fill="none"
-                            innerHTML={ICON_PATHS["close"].outline}
+                            innerHTML={ICON_PATHS.close.outline}
                           />
                         </button>
                       </span>

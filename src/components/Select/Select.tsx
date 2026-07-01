@@ -121,7 +121,7 @@ export const Select: Component<SelectProps> = (props) => {
               height={14}
               viewBox="0 0 16 16"
               fill="none"
-              innerHTML={ICON_PATHS["check"].outline}
+              innerHTML={ICON_PATHS.check.outline}
             />
           </KobalteSelect.ItemIndicator>
         </KobalteSelect.Item>
@@ -203,7 +203,7 @@ const renderValue = (
           height={12}
           viewBox="0 0 16 16"
           fill="none"
-          innerHTML={ICON_PATHS["close"].outline}
+          innerHTML={ICON_PATHS.close.outline}
         />
       </button>
     </>
