@@ -6,7 +6,7 @@
 // Table with rowspan grouping for merged cells.
 // ============================================
 import { type JSX, For, Show, createMemo } from "solid-js";
-import { getCellValue, tableContainerStyle } from "./types";
+import { type TableRow, getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
 
 /**
@@ -51,9 +51,7 @@ interface ProcessedRow<T> {
   groupSize: number;
 }
 
-export function GroupedTable<T extends Record<string, any>>(
-  props: GroupedTableProps<T>,
-) {
+export function GroupedTable<T extends TableRow>(props: GroupedTableProps<T>) {
   // Process rows to calculate rowspan info
   const processedRows = createMemo((): ProcessedRow<T>[] => {
     const result: ProcessedRow<T>[] = [];

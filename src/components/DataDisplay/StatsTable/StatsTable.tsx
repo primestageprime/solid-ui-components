@@ -8,7 +8,7 @@
 import { type JSX, splitProps, For, Show } from "solid-js";
 import "./StatsTable.css";
 
-export interface StatsColumn<T = any> {
+export interface StatsColumn<T = Record<string, unknown>> {
   header: string;
   accessor:
     | keyof T
@@ -17,7 +17,7 @@ export interface StatsColumn<T = any> {
   width?: string;
 }
 
-export interface StatsTableProps<T = any>
+export interface StatsTableProps<T = Record<string, unknown>>
   extends JSX.HTMLAttributes<HTMLDivElement> {
   columns: StatsColumn<T>[];
   rows: T[];
@@ -25,9 +25,7 @@ export interface StatsTableProps<T = any>
   caption?: string;
 }
 
-export function StatsTable<T extends Record<string, any>>(
-  props: StatsTableProps<T>,
-) {
+export function StatsTable<T extends object>(props: StatsTableProps<T>) {
   const [local, others] = splitProps(props, [
     "columns",
     "rows",
@@ -42,11 +40,11 @@ export function StatsTable<T extends Record<string, any>>(
     return classList.join(" ");
   };
 
-  const getCellValue = (row: T, column: StatsColumn<T>) => {
+  const getCellValue = (row: T, column: StatsColumn<T>): JSX.Element => {
     if (typeof column.accessor === "function") {
       return column.accessor(row);
     }
-    return row[column.accessor as keyof T];
+    return row[column.accessor as keyof T] as JSX.Element;
   };
 
   return (

@@ -34,11 +34,16 @@ function makeDataTransfer() {
   };
 }
 
-function fireDrag(el: Element, type: string, clientX: number, dt: any) {
-  const ev: any = new Event(type, { bubbles: true, cancelable: true });
-  ev.clientX = clientX;
-  ev.clientY = 12;
-  ev.dataTransfer = dt;
+function fireDrag(
+  el: Element,
+  type: string,
+  clientX: number,
+  dt: ReturnType<typeof makeDataTransfer>,
+) {
+  const ev = Object.assign(
+    new Event(type, { bubbles: true, cancelable: true }),
+    { clientX, clientY: 12, dataTransfer: dt },
+  );
   el.dispatchEvent(ev);
 }
 

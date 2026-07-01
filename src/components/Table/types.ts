@@ -1,5 +1,13 @@
 import type { JSX, Accessor, Setter } from "solid-js";
 
+/**
+ * Constraint for a table row. `object` admits any object shape — including
+ * interface-typed rows, which (unlike `Record<string, unknown>`) carry no
+ * implicit index signature and so would be rejected by a `Record` constraint.
+ * This is the `any`-free replacement for the old `Record<string, any>` bound.
+ */
+export type TableRow = object;
+
 export interface TableColumn<T> {
   id: string;
   /** Header content — plain text or any JSX (e.g. a select-all checkbox). Rendered directly by every table renderer. */
@@ -89,15 +97,20 @@ export interface SelectableTableProps<T> extends BaseTableProps<T> {
   resultCount?: { shown: number; total: number };
 }
 
-/** Shared accessor helper used by BaseTable, GroupedTable, SelectableTable */
+/**
+ * Shared accessor helper used by BaseTable, GroupedTable, SelectableTable.
+ * The result is always rendered directly as a table cell's content, so the
+ * raw keyed value is surfaced as a `JSX.Element` (Solid renders strings,
+ * numbers, and nullish values as-is at runtime).
+ */
 export function getCellValue<
   T,
-  C extends { accessor: keyof T | ((row: T) => any) },
->(row: T, column: C) {
+  C extends { accessor: keyof T | ((row: T) => JSX.Element | string | number) },
+>(row: T, column: C): JSX.Element {
   if (typeof column.accessor === "function") {
     return column.accessor(row);
   }
-  return row[column.accessor];
+  return row[column.accessor] as JSX.Element;
 }
 
 /**

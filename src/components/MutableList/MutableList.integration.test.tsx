@@ -32,10 +32,14 @@ function fireDrag(
     dataTransfer: ReturnType<typeof makeDataTransfer>;
   },
 ) {
-  const ev: any = new Event(type, { bubbles: true, cancelable: true });
-  ev.clientX = opts.clientX ?? 0;
-  ev.clientY = opts.clientY ?? 0;
-  ev.dataTransfer = opts.dataTransfer;
+  const ev = Object.assign(
+    new Event(type, { bubbles: true, cancelable: true }),
+    {
+      clientX: opts.clientX ?? 0,
+      clientY: opts.clientY ?? 0,
+      dataTransfer: opts.dataTransfer,
+    },
+  );
   el.dispatchEvent(ev);
   return ev;
 }

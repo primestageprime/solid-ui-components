@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { render, fireEvent } from "@solidjs/testing-library";
 import { BaseTable } from "./BaseTable";
 import type { TableColumn, TableRowSpan } from "./types";
 
@@ -105,5 +105,86 @@ describe("BaseTable spanRow (tail-collapse)", () => {
     const rows = bodyRows(container);
     expect(rows[1].querySelectorAll("td").length).toBe(5);
     expect(container.querySelector(".hud-table__cell--span")).toBeNull();
+  });
+});
+
+describe("BaseTable sorting", () => {
+  interface SRow {
+    name: string;
+    score: number;
+    when: Date;
+    note: string | null;
+  }
+
+  const SCOLUMNS: TableColumn<SRow>[] = [
+    { id: "name", header: "Name", accessor: "name", sortable: true },
+    { id: "score", header: "Score", accessor: "score", sortable: true },
+    { id: "when", header: "When", accessor: "when", sortable: true },
+    { id: "note", header: "Note", accessor: "note", sortable: true },
+  ];
+
+  const SDATA: SRow[] = [
+    { name: "Charlie", score: 20, when: new Date("2021-01-01"), note: "z" },
+    { name: "alice", score: 5, when: new Date("2020-06-01"), note: null },
+    { name: "Bob", score: 12, when: new Date("2022-03-01"), note: "a" },
+  ];
+
+  // Rows are identified by their first cell (the `name` column) regardless of
+  // which column is sorted, so the order of names is the observable outcome.
+  const names = (container: HTMLElement) =>
+    bodyRows(container).map((r) => r.querySelector("td")?.textContent);
+
+  const clickHeader = (container: HTMLElement, label: string) => {
+    const th = Array.from(container.querySelectorAll("th")).find((el) =>
+      el.textContent?.includes(label),
+    );
+    if (!th) throw new Error(`no header matching ${label}`);
+    fireEvent.click(th);
+  };
+
+  it("sorts strings case-insensitively via localeCompare", () => {
+    const { container } = render(() => (
+      <BaseTable data={SDATA} columns={SCOLUMNS} />
+    ));
+    clickHeader(container, "Name");
+    expect(names(container)).toEqual(["alice", "Bob", "Charlie"]);
+    clickHeader(container, "Name"); // desc
+    expect(names(container)).toEqual(["Charlie", "Bob", "alice"]);
+  });
+
+  it("sorts numbers ascending and descending", () => {
+    const { container } = render(() => (
+      <BaseTable data={SDATA} columns={SCOLUMNS} />
+    ));
+    clickHeader(container, "Score");
+    expect(names(container)).toEqual(["alice", "Bob", "Charlie"]);
+    clickHeader(container, "Score");
+    expect(names(container)).toEqual(["Charlie", "Bob", "alice"]);
+  });
+
+  it("sorts Date values chronologically", () => {
+    const { container } = render(() => (
+      <BaseTable data={SDATA} columns={SCOLUMNS} />
+    ));
+    clickHeader(container, "When");
+    expect(names(container)).toEqual(["alice", "Charlie", "Bob"]);
+  });
+
+  it("keeps null values last on ascending sort", () => {
+    const { container } = render(() => (
+      <BaseTable data={SDATA} columns={SCOLUMNS} />
+    ));
+    clickHeader(container, "Note");
+    expect(names(container)).toEqual(["Bob", "Charlie", "alice"]);
+  });
+
+  it("returns to original order on the third click", () => {
+    const { container } = render(() => (
+      <BaseTable data={SDATA} columns={SCOLUMNS} />
+    ));
+    clickHeader(container, "Score"); // asc
+    clickHeader(container, "Score"); // desc
+    clickHeader(container, "Score"); // cleared
+    expect(names(container)).toEqual(["Charlie", "alice", "Bob"]);
   });
 });

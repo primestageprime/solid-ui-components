@@ -7,7 +7,7 @@
 // ============================================
 import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { BaseTable } from "./BaseTable";
-import type { BaseTableProps } from "./types";
+import type { BaseTableProps, TableRow } from "./types";
 
 export interface FilterableTableProps<T> extends BaseTableProps<T> {
   /** Placeholder text for the filter input */
@@ -49,11 +49,11 @@ function createFilterPattern(filter: string): RegExp | null {
 /**
  * Extracts all searchable text from a row
  */
-function getRowSearchText<T extends Record<string, any>>(row: T): string {
+function getRowSearchText<T extends TableRow>(row: T): string {
   return Object.values(row).map(normalizeValue).join(" ");
 }
 
-export function FilterableTable<T extends Record<string, any>>(
+export function FilterableTable<T extends TableRow>(
   props: FilterableTableProps<T>,
 ) {
   const [local, tableProps] = splitProps(props, ["filterPlaceholder"]);

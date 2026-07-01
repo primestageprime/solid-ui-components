@@ -1,4 +1,4 @@
-import { graphStratify, sugiyama } from "d3-dag";
+import { type Layering, graphStratify, sugiyama } from "d3-dag";
 import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
 
 /**
@@ -100,8 +100,10 @@ export function computeLayout<T>(
   void nodeRank;
 
   const layout = sugiyama()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .layering(layeringSourcesFirst as any)
+    // d3-dag's `.layering()` wants a branded `Layering` operator; our custom
+    // function is structurally compatible but not nominally, so cast to the
+    // exact type the API expects rather than to `any`.
+    .layering(layeringSourcesFirst as unknown as Layering)
     .nodeSize((dagNode: { data: { id: string } }) => {
       const [w, h] = sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
       return direction === "horizontal" ? [h, w] : [w, h];

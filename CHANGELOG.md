@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## 0.84.1
+
+### Changed
+
+- **Tooling / types** — no component API or runtime behavior change. Burned down lint and typing debt surfaced by Biome:
+  - Eliminated every `noExplicitAny` warning in `src` (22 → 0). The `Table` components and `StatsTable` now bound their row generic with `object` (new exported `TableRow` type) instead of `Record<string, any>` — this still admits interface-typed rows, which a `Record<string, unknown>` bound would reject for lacking an index signature. `DagChart`'s d3-dag layering cast is now `as unknown as Layering` (the library's own exported operator type) rather than `as any`; `TabbedSidePanel` dropped an unnecessary `as any` on `style`; and the drag-and-drop test helpers (`DnDHierarchySortBar`, `SortableList`, `MutableList`) build typed synthetic events via `Object.assign(new Event(…), …)`.
+  - **`BaseTable`** sort comparator refactored into a typed `sortKey` helper — no `any`, no bare `<`/`>` on `unknown`. Ordering is preserved (strings via `localeCompare`, numbers/Dates/booleans numerically, nulls last) and is now covered by new tests exercising each branch plus the asc → desc → cleared click cycle. The sort path previously had no test coverage.
+  - Applied safe Biome autofixes across `src` (string concatenation → template literals, bracket → dot member access) and fixed two nonstandard `linear-gradient` directions in `Layout/Sidebar.css`: the `--sidebar-handle-dir` custom property was a no-op (the gradient is symmetric about its midpoint, so `to left` and `to right` render an identical centered line) and is replaced by a plain `to right`.
+
 ## 0.84.0
 
 ### Added / Changed

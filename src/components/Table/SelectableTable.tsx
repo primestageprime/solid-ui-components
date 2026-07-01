@@ -18,12 +18,13 @@ import {
 } from "solid-js";
 import {
   type SelectableTableProps,
+  type TableRow,
   getCellValue,
   tableContainerStyle,
 } from "./types";
 import { Button } from "../Button/Button";
 
-export function SelectableTable<T extends Record<string, any>>(
+export function SelectableTable<T extends TableRow>(
   props: SelectableTableProps<T>,
 ) {
   // Track shift key state globally for shift-select

@@ -15,7 +15,7 @@ import {
   mergeProps,
 } from "solid-js";
 import type { JSX } from "solid-js";
-import type { TableColumn } from "./types";
+import type { TableColumn, TableRow } from "./types";
 import {
   type BaseTableProps,
   getCellValue,
@@ -75,9 +75,20 @@ function sortIndicator(
   );
 }
 
-export function BaseTable<T extends Record<string, any>>(
-  props: BaseTableProps<T>,
-) {
+/**
+ * Reduce an arbitrary cell value to a number usable for relational sorting.
+ * Strings are handled separately (via `localeCompare`); everything else — Dates,
+ * booleans, numeric strings — collapses to a number here so the comparator never
+ * relies on `any` or bare `<`/`>` on `unknown`.
+ */
+function sortKey(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === "boolean") return value ? 1 : 0;
+  return Number(value);
+}
+
+export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
   const [local, others] = splitProps(props, [
     "data",
     "columns",
@@ -125,16 +136,10 @@ export function BaseTable<T extends Record<string, any>>(
 
     return [...local.data].sort((a, b) => {
       const accessor = column.accessor;
-      let aVal: any;
-      let bVal: any;
-
-      if (typeof accessor === "function") {
-        aVal = accessor(a);
-        bVal = accessor(b);
-      } else {
-        aVal = a[accessor];
-        bVal = b[accessor];
-      }
+      const aVal: unknown =
+        typeof accessor === "function" ? accessor(a) : a[accessor];
+      const bVal: unknown =
+        typeof accessor === "function" ? accessor(b) : b[accessor];
 
       if (aVal == null) return dir === "asc" ? 1 : -1;
       if (bVal == null) return dir === "asc" ? -1 : 1;
@@ -145,9 +150,8 @@ export function BaseTable<T extends Record<string, any>>(
           : bVal.localeCompare(aVal);
       }
 
-      if (aVal < bVal) return dir === "asc" ? -1 : 1;
-      if (aVal > bVal) return dir === "asc" ? 1 : -1;
-      return 0;
+      const diff = sortKey(aVal) - sortKey(bVal);
+      return dir === "asc" ? diff : -diff;
     });
   };
 
@@ -374,9 +378,11 @@ export function BaseTable<T extends Record<string, any>>(
 }
 
 export function createBaseTable(
-  defaults: Partial<Omit<BaseTableProps<any>, "data" | "columns" | "children">>,
+  defaults: Partial<
+    Omit<BaseTableProps<TableRow>, "data" | "columns" | "children">
+  >,
 ) {
-  return <T extends Record<string, any>>(props: BaseTableProps<T>) => (
+  return <T extends TableRow>(props: BaseTableProps<T>) => (
     <BaseTable {...mergeProps(defaults, props)} />
   );
 }

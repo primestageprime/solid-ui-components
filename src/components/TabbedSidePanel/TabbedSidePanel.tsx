@@ -125,7 +125,7 @@ export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
   };
 
   return (
-    <Row class={classes()} style={props.style as any}>
+    <Row class={classes()} style={props.style}>
       <Show when={props.side === "left" && props.isOpen}>
         {(() => {
           const c = activeContent();
