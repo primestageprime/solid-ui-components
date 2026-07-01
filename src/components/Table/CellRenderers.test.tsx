@@ -116,7 +116,9 @@ describe("CellRenderers — styling HOCs and column factory", () => {
   });
 
   it("withValueColor wraps a base cell", () => {
-    const Colored = withValueColor(FloatCell, (v) => (v > 1 ? "red" : undefined));
+    const Colored = withValueColor(FloatCell, (v: number | null | undefined) =>
+      v != null && v > 1 ? "red" : undefined,
+    );
     const { container } = render(() => <Colored value={2} />);
     expect(container.querySelector(".cell-float")?.textContent).toBe("2.00");
   });
