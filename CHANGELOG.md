@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## 0.82.0
+
+### Added
+
+- **`StaticSplitLayout`** — the non-animated "two stacked labeled sections with a seam" layout is now its own public component, replacing the `static` flag on `SplitQueueList`. It renders a read-only TOP list of recent items over an arbitrary BOTTOM block you compose, sharing SplitQueueList's chrome but none of its queue/animation/selection/keyboard machinery. Clean, self-contained props (`items`, `renderItem`, `bottomContent`, `label`, `emptyLabel`, `capRows`, `rowHeight`, `height`, `class`) so the queue-only and static-only props can't be mixed — invalid combinations are unrepresentable.
+
+  ```tsx
+  <StaticSplitLayout items={recent()} renderItem={(r) => <Row {...r} />} bottomContent={<Picker />} />
+  ```
+
+### Deprecated
+
+- **`SplitQueueList`** — the `static` prop (and its `topItems` / `renderTop` / `bottomContent` companions) is deprecated in favor of the standalone `StaticSplitLayout`. It still works — it maps the old prop names onto the new component and delegates — but will be removed in the next major.
+
 ## 0.81.1
 
 ### Fixed
