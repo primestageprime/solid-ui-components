@@ -54,6 +54,7 @@
 }
 
 /* KaTeX base styling for dark theme */
+/* biome-ignore lint/style/noDescendingSpecificity: kept in the KaTeX-override group; the more-specific `--wrap`/`katex-display` rules above set disjoint or identical values, so order is immaterial. */
 .math-formula .katex {
   font-size: 1.1em;
   color: var(--sui-text-secondary);

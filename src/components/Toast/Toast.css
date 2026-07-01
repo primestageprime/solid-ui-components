@@ -190,6 +190,7 @@
   border-radius: 2px;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: kept grouped with progress-track; the per-variant `.sui-toast--x .sui-toast__progress-fill` colours above win by specificity regardless of order. */
 .sui-toast__progress-fill {
   background-color: var(--sui-accent);
   border-radius: 2px;

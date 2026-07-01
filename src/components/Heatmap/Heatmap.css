@@ -202,10 +202,6 @@
   transform: scale(1.05);
 }
 
-.jtf-heatmap-multi__cell:hover .jtf-heatmap-multi__tooltip {
-  display: block;
-}
-
 /* Tooltip */
 .jtf-heatmap-multi__tooltip {
   position: absolute;
@@ -222,6 +218,10 @@
   display: none;
   pointer-events: none;
   font-size: 12px;
+}
+
+.jtf-heatmap-multi__cell:hover .jtf-heatmap-multi__tooltip {
+  display: block;
 }
 
 .jtf-heatmap-multi__tooltip-arrow {

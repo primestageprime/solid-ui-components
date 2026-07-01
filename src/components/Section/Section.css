@@ -84,6 +84,7 @@
  * constraint chain). Safe for non-flex parents: flex column with no
  * height constraint behaves like display: block (children just stack).
  */
+/* biome-ignore lint/style/noDescendingSpecificity: kept with its documented flex-chain rationale; the `--indent-*`/`--collapsed` modifiers above set disjoint properties (padding/display) and win by specificity regardless of order. */
 .sui-section__content {
   position: relative;
   flex: 1;

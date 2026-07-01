@@ -60,6 +60,7 @@
  * neither grow nor shrink on their own — they scroll internally when their
  * content exceeds the allotted height. The top is content-driven (1–3 row band,
  * absorbing slack); the bottom takes the remainder. */
+/* biome-ignore lint/style/noDescendingSpecificity: order here is load-bearing — see the `.sui-sql--static .sui-sql__static-bottom` rule above, whose comment documents why the static-scoped rules must precede this generic one. */
 .sui-sql__list--top,
 .sui-sql__list--bottom {
   flex: 0 0 auto;

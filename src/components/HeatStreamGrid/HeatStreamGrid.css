@@ -25,10 +25,6 @@
   background-color: rgba(var(--sui-accent-rgb), 0.1);
 }
 
-.jtf-heatstream-grid__table tbody tr:hover .jtf-heatstream-grid__row-label {
-  color: var(--sui-accent);
-}
-
 .jtf-heatstream-grid__header {
   font-size: 11px;
   font-weight: 600;
@@ -78,6 +74,12 @@
 .jtf-heatstream-grid__row-label--all-selected {
   color: var(--sui-accent);
   font-weight: 700;
+}
+
+/* Row-hover accent on the label — highest-specificity row-label rule, so it
+   sits last to keep selector specificity ascending. */
+.jtf-heatstream-grid__table tbody tr:hover .jtf-heatstream-grid__row-label {
+  color: var(--sui-accent);
 }
 
 /* Dim unselected cells only when something is selected */
