@@ -52,6 +52,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sui-batch-bar__stripe-fill {
-    transition: none !important;
+    transition: none;
   }
 }

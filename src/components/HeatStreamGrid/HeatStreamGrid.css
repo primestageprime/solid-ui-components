@@ -71,12 +71,12 @@
 }
 
 .jtf-heatstream-grid__header--all-selected {
-  color: var(--sui-accent) !important;
+  color: var(--sui-accent);
   font-weight: 700;
 }
 
 .jtf-heatstream-grid__row-label--all-selected {
-  color: var(--sui-accent) !important;
+  color: var(--sui-accent);
   font-weight: 700;
 }
 

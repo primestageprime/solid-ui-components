@@ -99,10 +99,12 @@
    ============================================ */
 
 .formula-row-highlight {
+  /* biome-ignore lint/complexity/noImportantStyles: must win over the host data-table's own row background, whose striping selectors are more specific than this class. */
   background: rgba(var(--sui-success-rgb), 0.15) !important;
 }
 
 .formula-row-highlight td {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides the host table cell colour, set by more-specific row selectors. */
   color: var(--sui-success) !important;
 }
 
@@ -125,6 +127,7 @@
 
 .math-formula .katex .formula-var:hover,
 .math-formula .katex .formula-var-highlight {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides KaTeX's own colour rules on `.katex` spans, which we do not control. */
   color: var(--sui-success) !important;
   text-shadow: 0 0 8px rgba(var(--sui-success-rgb), 0.5);
 }
@@ -132,5 +135,6 @@
 /* Make sure all children of the highlighted var also get the color */
 .math-formula .katex .formula-var-highlight *,
 .math-formula .katex .formula-var:hover * {
+  /* biome-ignore lint/complexity/noImportantStyles: KaTeX colours nested spans directly; only !important reaches every descendant. */
   color: var(--sui-success) !important;
 }

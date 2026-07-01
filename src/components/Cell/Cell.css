@@ -11,6 +11,7 @@
 }
 
 .cell-table tr {
+  /* biome-ignore lint/complexity/noImportantStyles: keeps rows transparent regardless of theme-level `tr` background rules, which can be more specific than this selector. */
   background: transparent !important;
 }
 

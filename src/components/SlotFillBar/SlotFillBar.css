@@ -25,6 +25,7 @@
 @media (prefers-reduced-motion: reduce) {
   .sui-slot-fill-bar__static,
   .sui-slot-fill-bar__overlay {
+    /* biome-ignore lint/complexity/noImportantStyles: the per-instance transition is an inline style, so only !important can cancel it for reduced-motion. */
     transition: none !important;
   }
 }
