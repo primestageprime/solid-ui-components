@@ -11,7 +11,8 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./Dot.css";
 
-export interface DotProps extends Omit<JSX.HTMLAttributes<HTMLSpanElement>, "color"> {
+export interface DotProps
+  extends Omit<JSX.HTMLAttributes<HTMLSpanElement>, "color"> {
   /** Any CSS color value (hex, rgb, var(--…), named color). */
   color: string;
   /** Pixel size, or any CSS length. Default 8px. */
@@ -24,7 +25,12 @@ const toLength = (size: number | string | undefined): string => {
 };
 
 export const Dot: Component<DotProps> = (props) => {
-  const [local, others] = splitProps(props, ["color", "size", "class", "style"]);
+  const [local, others] = splitProps(props, [
+    "color",
+    "size",
+    "class",
+    "style",
+  ]);
 
   const cls = () => {
     const classList = ["sui-dot"];
@@ -42,5 +48,7 @@ export const Dot: Component<DotProps> = (props) => {
     };
   };
 
-  return <span class={cls()} style={inlineStyle()} aria-hidden="true" {...others} />;
+  return (
+    <span class={cls()} style={inlineStyle()} aria-hidden="true" {...others} />
+  );
 };

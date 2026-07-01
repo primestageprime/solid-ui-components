@@ -54,7 +54,10 @@ export const ChartCanvas: Component<ChartCanvasProps> = (props) => {
 export type ChartCanvasOverrides = Pick<ChartCanvasProps, "height">;
 
 /** Props that remain available to consumers of a curried ChartCanvas variant. */
-export type ChartCanvasDataProps = Omit<ChartCanvasProps, keyof ChartCanvasOverrides>;
+export type ChartCanvasDataProps = Omit<
+  ChartCanvasProps,
+  keyof ChartCanvasOverrides
+>;
 
 /**
  * Factory: freeze the chart-area `height` to produce a data-only curried

@@ -11,9 +11,11 @@ import type {
 } from "./HighlightSegments";
 
 /** Faint band (default opacity 0.12) — for non-emphatic backdrop highlights. */
-export const FaintHighlightSegments: Component<HighlightSegmentsDataProps<HighlightSegment>> =
-  createHighlightSegments<HighlightSegment>({ fillOpacity: 0.12 });
+export const FaintHighlightSegments: Component<
+  HighlightSegmentsDataProps<HighlightSegment>
+> = createHighlightSegments<HighlightSegment>({ fillOpacity: 0.12 });
 
 /** Accent band (opacity 0.22) — for the primary in-bounds highlight use. */
-export const AccentHighlightSegments: Component<HighlightSegmentsDataProps<HighlightSegment>> =
-  createHighlightSegments<HighlightSegment>({ fillOpacity: 0.22 });
+export const AccentHighlightSegments: Component<
+  HighlightSegmentsDataProps<HighlightSegment>
+> = createHighlightSegments<HighlightSegment>({ fillOpacity: 0.22 });

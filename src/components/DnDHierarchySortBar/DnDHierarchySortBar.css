@@ -53,22 +53,14 @@
 .sui-dnd-hierarchy-sort-bar__placeholder {
   border-style: dashed;
   border-color: var(--sui-accent, #00a8cc);
-  background: color-mix(
-    in srgb,
-    var(--sui-accent, #00a8cc) 12%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);
   cursor: grabbing;
 }
 
 .sui-dnd-hierarchy-sort-bar__placeholder:hover {
   /* Keep the placeholder visually stable while hovered. */
   border-color: var(--sui-accent, #00a8cc);
-  background: color-mix(
-    in srgb,
-    var(--sui-accent, #00a8cc) 12%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 12%, transparent);
 }
 
 .sui-dnd-hierarchy-sort-bar__grip {

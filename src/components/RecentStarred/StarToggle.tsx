@@ -40,7 +40,9 @@ export const StarToggle: Component<StarToggleProps> = (props) => {
       class="sui-star-toggle"
       data-starred={isOn() ? "true" : "false"}
       aria-pressed={isOn()}
-      aria-label={props.ariaLabel?.(isOn()) ?? (isOn() ? "Starred" : "Not starred")}
+      aria-label={
+        props.ariaLabel?.(isOn()) ?? (isOn() ? "Starred" : "Not starred")
+      }
       title={props.title}
       onClick={onClick}
     >

@@ -14,7 +14,9 @@
 @import "./_baseline.css";
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -54,34 +56,34 @@ body {
 
 :root {
   /* ---- Accent ---- */
-  --sui-accent:     #E07A4F;
+  --sui-accent: #e07a4f;
   --sui-accent-rgb: 224, 122, 79;
-  --sui-accent-dim: #B85F38;
+  --sui-accent-dim: #b85f38;
 
   /* ---- Semantic ---- */
-  --sui-danger:      #D4584E;
-  --sui-danger-rgb:  212, 88, 78;
-  --sui-warning:     #E0A040;
+  --sui-danger: #d4584e;
+  --sui-danger-rgb: 212, 88, 78;
+  --sui-warning: #e0a040;
   --sui-warning-rgb: 224, 160, 64;
-  --sui-success:     #7BA67B;
+  --sui-success: #7ba67b;
   --sui-success-rgb: 123, 166, 123;
 
   /* ---- Backgrounds — warm walnut family ---- */
-  --sui-bg-deep:      #0F0A06;
-  --sui-bg-primary:   #1A120A;
+  --sui-bg-deep: #0f0a06;
+  --sui-bg-primary: #1a120a;
   --sui-bg-secondary: #221710;
-  --sui-bg-tertiary:  #2D1F14;
-  --sui-bg-elevated:  #382617;
+  --sui-bg-tertiary: #2d1f14;
+  --sui-bg-elevated: #382617;
 
   /* ---- Text ---- */
-  --sui-text-primary:   #F4ECD8;
-  --sui-text-secondary: #C8B89A;
-  --sui-text-muted:     #8C7861;
+  --sui-text-primary: #f4ecd8;
+  --sui-text-secondary: #c8b89a;
+  --sui-text-muted: #8c7861;
 
   /* ---- Borders ---- */
-  --sui-border:        #4A3625;
-  --sui-border-bright: #6B4F33;
-  --sui-border-focus:  #E07A4F;
+  --sui-border: #4a3625;
+  --sui-border-bright: #6b4f33;
+  --sui-border-focus: #e07a4f;
 
   /* ---- Radii — subtle round (matches light Bronze) ---- */
   --sui-radius-sm: 4px;
@@ -89,7 +91,7 @@ body {
   --sui-radius-lg: 10px;
 
   /* ---- Clip sizes ---- */
-  --sui-clip-sm:  8px;
+  --sui-clip-sm: 8px;
   --sui-clip-md: 12px;
   --sui-clip-lg: 16px;
   --sui-clip-xl: 24px;
@@ -108,35 +110,35 @@ body {
   --sui-space-6: 24px;
 
   /* ---- Typography (unchanged from light Bronze) ---- */
-  --sui-font-family:  "Lora", Georgia, "Times New Roman", serif;
+  --sui-font-family: "Lora", Georgia, "Times New Roman", serif;
   --sui-font-utility: "Inter", system-ui, -apple-system, sans-serif;
-  --sui-font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sui-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* ---- Chart status colors — warm mapping lifted for dark ---- */
-  --status-full:    #7BA67B;
-  --status-partial: #E0A040;
-  --status-sparse:  #E07A4F;
-  --status-missing: #D4584E;
+  --status-full: #7ba67b;
+  --status-partial: #e0a040;
+  --status-sparse: #e07a4f;
+  --status-missing: #d4584e;
 
   /* ---- Chart chrome ----
      Axis tick + label colour. Reuses --sui-text-muted (#8C7861) which on
      dark walnut reads as quietly-warm chrome — the same hex Bronze light
      uses for --sui-text-secondary, but in dark mode it lands as "muted". */
-  --sui-chart-tick-color: #8C7861;
+  --sui-chart-tick-color: #8c7861;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css. Warm-mapped to the bronze-dark palette. */
   --chart-violation-band: rgba(200, 90, 80, 0.16);
   --chart-violation-band-border: rgba(200, 90, 80, 0.42);
-  --chart-threshold: #C85A50;
+  --chart-threshold: #c85a50;
   --chart-warmup: rgba(140, 120, 97, 0.16);
   --chart-warmup-border: rgba(140, 120, 97, 0.38);
   --chart-shutdown: rgba(140, 120, 97, 0.16);
   --chart-shutdown-border: rgba(140, 120, 97, 0.38);
-  --chart-series-1: #6FA5D4;
-  --chart-series-2: #D4A04C;
-  --chart-series-3: #7C9C7C;
-  --chart-series-4: #D48462;
-  --chart-series-5: #A07CB4;
-  --chart-series-6: #4C9CAC;
+  --chart-series-1: #6fa5d4;
+  --chart-series-2: #d4a04c;
+  --chart-series-3: #7c9c7c;
+  --chart-series-4: #d48462;
+  --chart-series-5: #a07cb4;
+  --chart-series-6: #4c9cac;
 }

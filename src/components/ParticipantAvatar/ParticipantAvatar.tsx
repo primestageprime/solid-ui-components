@@ -35,9 +35,7 @@ export interface ParticipantAvatarProps
 const clsx = (...parts: (string | false | undefined)[]): string =>
   parts.filter((p): p is string => Boolean(p)).join(" ");
 
-export const ParticipantAvatar: Component<ParticipantAvatarProps> = (
-  props,
-) => {
+export const ParticipantAvatar: Component<ParticipantAvatarProps> = (props) => {
   const [local, others] = splitProps(props, [
     "initials",
     "imageSrc",

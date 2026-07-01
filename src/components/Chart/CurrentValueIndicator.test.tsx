@@ -23,14 +23,20 @@ describe("CurrentValueIndicator — render", () => {
 
   it("renders a dot at the point position when set", () => {
     const point: CurrentValue = { x: 5, y: 50 };
-    const { container } = wrapper(() => <CurrentValueIndicator point={point} />);
+    const { container } = wrapper(() => (
+      <CurrentValueIndicator point={point} />
+    ));
     expect(container.querySelector(".sui-chart__current-value")).toBeTruthy();
   });
 
   it("renders an optional label", () => {
     const point: CurrentValue = { x: 5, y: 50, label: "now" };
-    const { container } = wrapper(() => <CurrentValueIndicator point={point} />);
-    expect(container.querySelector(".sui-chart__current-value-label")!.textContent).toBe("now");
+    const { container } = wrapper(() => (
+      <CurrentValueIndicator point={point} />
+    ));
+    expect(
+      container.querySelector(".sui-chart__current-value-label")!.textContent,
+    ).toBe("now");
   });
 });
 
@@ -71,7 +77,9 @@ describe("CurrentValueIndicator — labelOffset", () => {
 describe("CurrentValueIndicator — curried variants", () => {
   it("AccentCurrentValueIndicator uses accent color + radius 5", () => {
     const point: CurrentValue = { x: 5, y: 50 };
-    const { container } = wrapper(() => <AccentCurrentValueIndicator point={point} />);
+    const { container } = wrapper(() => (
+      <AccentCurrentValueIndicator point={point} />
+    ));
     const circle = container.querySelector("circle")!;
     expect(circle.getAttribute("r")).toBe("5");
     expect(circle.getAttribute("fill")).toBe("var(--sui-accent)");

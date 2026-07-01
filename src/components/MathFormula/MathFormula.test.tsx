@@ -32,7 +32,9 @@ describe("MathFormula", () => {
   });
 
   it("wrap with no top-level operator falls back to a single block", () => {
-    const { container } = render(() => <MathFormula wrap latex={"\\frac{a}{b}"} />);
+    const { container } = render(() => (
+      <MathFormula wrap latex={"\\frac{a}{b}"} />
+    ));
     const root = container.querySelector(".math-formula")!;
     expect(root.classList.contains("math-formula--wrap")).toBe(false);
     expect(root.querySelector(".math-formula-row")).toBeNull();

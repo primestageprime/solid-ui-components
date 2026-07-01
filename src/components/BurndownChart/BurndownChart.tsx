@@ -105,7 +105,9 @@ export function BurndownChart(props: BurndownChartProps) {
 
   const xDomain = createMemo<[number, number]>(() => {
     const t = trend();
-    const max = t ? Math.max(props.bars.length - 0.5, t.xEnd + 0.5) : props.bars.length - 0.5;
+    const max = t
+      ? Math.max(props.bars.length - 0.5, t.xEnd + 0.5)
+      : props.bars.length - 0.5;
     return [-0.5, max];
   });
 
@@ -139,19 +141,43 @@ export function BurndownChart(props: BurndownChartProps) {
           tickFormat={(v) => props.bars[Math.round(v)]?.label ?? ""}
         />
       )}
-      <ReferenceLine orientation="horizontal" value={0} stroke="currentColor" strokeDasharray="" />
+      <ReferenceLine
+        orientation="horizontal"
+        value={0}
+        stroke="currentColor"
+        strokeDasharray=""
+      />
       <BarSeries
         data={props.bars}
         x={(_b, i) => i}
         bandWidth={xs() ? 0.85 : 0.65}
         segments={(b) => [
-          { value: b.planned_incomplete, fill: COLOR.pi, key: "planned_incomplete" },
-          { value: b.planned_complete, fill: COLOR.pc, key: "planned_complete" },
-          { value: -b.unplanned_complete, fill: COLOR.uc, key: "unplanned_complete" },
-          { value: -b.unplanned_incomplete, fill: COLOR.ui, key: "unplanned_incomplete" },
+          {
+            value: b.planned_incomplete,
+            fill: COLOR.pi,
+            key: "planned_incomplete",
+          },
+          {
+            value: b.planned_complete,
+            fill: COLOR.pc,
+            key: "planned_complete",
+          },
+          {
+            value: -b.unplanned_complete,
+            fill: COLOR.uc,
+            key: "unplanned_complete",
+          },
+          {
+            value: -b.unplanned_incomplete,
+            fill: COLOR.ui,
+            key: "unplanned_incomplete",
+          },
         ]}
         onSegmentClick={(bar, seg) =>
-          props.onSegmentClick?.(props.bars.indexOf(bar), seg.key as BurndownSegmentKind)
+          props.onSegmentClick?.(
+            props.bars.indexOf(bar),
+            seg.key as BurndownSegmentKind,
+          )
         }
       />
       {trend() && (

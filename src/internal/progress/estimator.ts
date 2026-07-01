@@ -55,7 +55,11 @@ export function createModel(): RegressionModel {
 }
 
 /** Fold one observed `(rows, durationMs)` sample into the model. */
-export function foldSample(m: RegressionModel, rows: number, durMs: number): void {
+export function foldSample(
+  m: RegressionModel,
+  rows: number,
+  durMs: number,
+): void {
   m.n += 1;
   m.sx += rows;
   m.sy += durMs;
@@ -113,7 +117,11 @@ export function residualStd(m: RegressionModel): number {
  * NEVER reaches 1.0 on its own — the creep asymptotes below it, so a real
  * `done` event (the snap) is always required to complete the bar.
  */
-export function easeRunning(elapsedMs: number, estMs: number, sigmaMs: number): number {
+export function easeRunning(
+  elapsedMs: number,
+  estMs: number,
+  sigmaMs: number,
+): number {
   const e = Math.max(0, elapsedMs);
   const T = Math.max(1, estMs);
   if (e <= T) {

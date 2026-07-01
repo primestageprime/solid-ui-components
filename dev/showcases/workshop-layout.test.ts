@@ -30,9 +30,7 @@ const linearChain = (statuses: Record<string, string>): StatusFlowNode[] =>
     status: statuses[`c${i + 1}`] ?? "TODO",
     parentId: "p",
     dependsOn: i === 0 ? undefined : [`c${i}`],
-  })).concat([
-    { id: "p", title: "Parent", status: "TODO" } as StatusFlowNode,
-  ]);
+  })).concat([{ id: "p", title: "Parent", status: "TODO" } as StatusFlowNode]);
 
 const broom = (statuses: Record<string, string>): StatusFlowNode[] => {
   const set = (id: string, deps?: string[]): StatusFlowNode => ({
@@ -67,14 +65,28 @@ describe("topoSortAlpha", () => {
   it("returns a strict linear chain in chain order", () => {
     const nodes = linearChain({}).filter((n) => n.parentId);
     expect(topoSortAlpha(nodes)).toEqual([
-      "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "c6",
+      "c7",
+      "c8",
     ]);
   });
 
   it("sorts broom with alpha tiebreaker among same-ready siblings", () => {
     const nodes = broom({}).filter((n) => n.parentId);
     expect(topoSortAlpha(nodes)).toEqual([
-      "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8",
+      "b1",
+      "b2",
+      "b3",
+      "b4",
+      "b5",
+      "b6",
+      "b7",
+      "b8",
     ]);
   });
 
@@ -103,7 +115,10 @@ describe("computeColFor — linear chain", () => {
   it("c5 DOING: DONE ranks left, DOING centered, TODO ranks right", () => {
     const r = colsFor(
       linearChain({
-        c1: "DONE", c2: "DONE", c3: "DONE", c4: "DONE",
+        c1: "DONE",
+        c2: "DONE",
+        c3: "DONE",
+        c4: "DONE",
         c5: "DOING",
       }),
     );
@@ -127,8 +142,13 @@ describe("computeColFor — broom", () => {
   it("b8 DOING, b1..b7 DONE: DONE ranks by depth, siblings stack", () => {
     const r = colsFor(
       broom({
-        b1: "DONE", b2: "DONE", b3: "DONE",
-        b4: "DONE", b5: "DONE", b6: "DONE", b7: "DONE",
+        b1: "DONE",
+        b2: "DONE",
+        b3: "DONE",
+        b4: "DONE",
+        b5: "DONE",
+        b6: "DONE",
+        b7: "DONE",
         b8: "DOING",
       }),
     );
@@ -158,9 +178,7 @@ describe("computeColFor — broom", () => {
   });
 
   it("siblings DOING simultaneously all stack at col 0", () => {
-    const r = colsFor(
-      broom({ b1: "DOING", b2: "DOING", b3: "DOING" }),
-    );
+    const r = colsFor(broom({ b1: "DOING", b2: "DOING", b3: "DOING" }));
     expect(r.b1).toBe(0);
     expect(r.b2).toBe(0);
     expect(r.b3).toBe(0);
@@ -260,14 +278,25 @@ describe("computeChartHeight", () => {
   });
 
   it("adds parentChartGap only when parent + visible children both present", () => {
-    const c1: StatusFlowNode = { id: "c1", title: "C1", status: "DOING", parentId: "p" };
+    const c1: StatusFlowNode = {
+      id: "c1",
+      title: "C1",
+      status: "DOING",
+      parentId: "p",
+    };
     // cfg.padding=16, parentHeader=56, nodeHeight=56, gap=16:
     //   parent + child: 56 + 16 + 16 + 56 = 144
-    expect(computeChartHeight([c1], () => 0, { ...cfg, parentChartGap: 16 }, true)).toBe(144);
+    expect(
+      computeChartHeight([c1], () => 0, { ...cfg, parentChartGap: 16 }, true),
+    ).toBe(144);
     //   parent only (children collapsed): 16 + 56 = 72 (no gap, no chart row)
-    expect(computeChartHeight([], () => 0, { ...cfg, parentChartGap: 16 }, true)).toBe(72);
+    expect(
+      computeChartHeight([], () => 0, { ...cfg, parentChartGap: 16 }, true),
+    ).toBe(72);
     //   no parent, with child: 16 + 56 = 72 (no parent header, no gap)
-    expect(computeChartHeight([c1], () => 0, { ...cfg, parentChartGap: 16 }, false)).toBe(72);
+    expect(
+      computeChartHeight([c1], () => 0, { ...cfg, parentChartGap: 16 }, false),
+    ).toBe(72);
   });
 
   it("ignores leaves whose col is beyond the visible window", () => {

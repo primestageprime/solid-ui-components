@@ -6,7 +6,12 @@ export const MetricCardShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>MetricCard — Composed (Depth 2)</h2>
-      <p class="text-meta">Owns CSS (MetricCard.css); no library-component imports. Labeled value card with optional units and status color variants. When `units` is supplied the value uses the same monospace face as the sibling NumberWithUnits Primitive.</p>
+      <p class="text-meta">
+        Owns CSS (MetricCard.css); no library-component imports. Labeled value
+        card with optional units and status color variants. When `units` is
+        supplied the value uses the same monospace face as the sibling
+        NumberWithUnits Primitive.
+      </p>
 
       <h3>Color variants</h3>
       <Row gap="sm" wrap>
@@ -25,8 +30,18 @@ export const MetricCardShowcase: Component = () => {
 
       <h3 style={{ "margin-top": "24px" }}>Color + units</h3>
       <Row gap="sm" wrap>
-        <MetricCard label="Compliant" value={0.42} units="ppm" color="success" />
-        <MetricCard label="Over Limit" value={12.7} units="ppm" color="danger" />
+        <MetricCard
+          label="Compliant"
+          value={0.42}
+          units="ppm"
+          color="success"
+        />
+        <MetricCard
+          label="Over Limit"
+          value={12.7}
+          units="ppm"
+          color="danger"
+        />
       </Row>
 
       <h3 style={{ "margin-top": "24px" }}>Dashboard row</h3>

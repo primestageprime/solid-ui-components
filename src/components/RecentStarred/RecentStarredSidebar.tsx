@@ -40,7 +40,9 @@ export interface RecentStarredSidebarProps {
   class?: string;
 }
 
-export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (props) => {
+export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
+  props,
+) => {
   const renderLabel = (item: RecentStarredItem) =>
     props.renderItem ? props.renderItem(item) : item.label;
 

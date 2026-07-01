@@ -67,7 +67,10 @@ export interface OverflowNavProps {
 const KEBAB_RESERVE_PX = 48;
 
 export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
-  const props = mergeProps({ gap: "sm" as const, align: "center" as const }, rawProps);
+  const props = mergeProps(
+    { gap: "sm" as const, align: "center" as const },
+    rawProps,
+  );
 
   let containerRef: HTMLDivElement | undefined;
   // Per-item refs, indexed in lock-step with props.items.
@@ -75,14 +78,19 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   // Cached natural widths (offsetWidth at measurement time), indexed alongside items.
   const [naturalWidths, setNaturalWidths] = createSignal<number[]>([]);
   // How many leading items are rendered inline (the rest are in the overflow menu).
-  const [visibleCount, setVisibleCount] = createSignal<number>(rawProps.items.length);
+  const [visibleCount, setVisibleCount] = createSignal<number>(
+    rawProps.items.length,
+  );
 
   // Approximate gap-in-pixels for the Row gap token — used in the budget math.
   const gapPx = () => {
     switch (props.gap) {
-      case "xs": return 4;
-      case "sm": return 8;
-      default: return 8;
+      case "xs":
+        return 4;
+      case "sm":
+        return 8;
+      default:
+        return 8;
     }
   };
 
@@ -213,7 +221,9 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
             active={item.active}
             color={item.color}
             badge={item.badge}
-            onClick={item.onClick ? ((e: MouseEvent) => item.onClick!(e)) : undefined}
+            onClick={
+              item.onClick ? (e: MouseEvent) => item.onClick!(e) : undefined
+            }
           >
             {item.label}
           </NavLink>
@@ -257,7 +267,10 @@ const KebabGlyph: Component = () => (
 export type OverflowNavOverrides = Pick<OverflowNavProps, "gap" | "align">;
 
 /** Props available to consumers of a curried OverflowNav variant (`items` is runtime data). */
-export type OverflowNavDataProps = Omit<OverflowNavProps, keyof OverflowNavOverrides>;
+export type OverflowNavDataProps = Omit<
+  OverflowNavProps,
+  keyof OverflowNavOverrides
+>;
 
 export function createOverflowNav(
   defaults: Partial<OverflowNavProps>,

@@ -37,8 +37,7 @@ const LOZENGES: LozengeRects = {
 };
 
 // Small ε for floating-point comparison.
-const _NEAR = (a: number, b: number, eps = 1e-3) =>
-  Math.abs(a - b) <= eps;
+const _NEAR = (a: number, b: number, eps = 1e-3) => Math.abs(a - b) <= eps;
 
 // ─── math helpers ───────────────────────────────────────────────────────────
 
@@ -92,8 +91,11 @@ describe("snapshotFrame — linear chain", () => {
 
   it("after a DONE — visible nodes shift toward the LEFT lozenge", () => {
     const advanced: StatusFlowNode[] = chain.map((n) =>
-      n.id === "a" ? { ...n, status: "DONE" } :
-      n.id === "b" ? { ...n, status: "DOING" } : n,
+      n.id === "a"
+        ? { ...n, status: "DONE" }
+        : n.id === "b"
+          ? { ...n, status: "DOING" }
+          : n,
     );
     const snap = snapshotFrame(advanced, PARAMS);
     const a = snap.byId.get("a")!;
@@ -271,7 +273,10 @@ describe("buildLaneTrajectory — arriving cards", () => {
     });
     const nextSnap = snapshotFrame(next, PARAMS);
     const arrivingId = Array.from(nextSnap.byId.keys()).find((id) => {
-      return nextSnap.byId.get(id)!.visible && !snapshotFrame(prev, PARAMS).byId.get(id)!.visible;
+      return (
+        nextSnap.byId.get(id)!.visible &&
+        !snapshotFrame(prev, PARAMS).byId.get(id)!.visible
+      );
     })!;
     const card = traj.cards.get(arrivingId)!;
     // Sample within the leading-edge window (local-t in [0, 0.55] of
@@ -375,8 +380,10 @@ describe("buildLaneTrajectory — hiddennessAt + dashedness fade", () => {
 
   it("staying cards have hiddenness 0 always", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const a = traj.cards.get("a")!;
     expect(a.hiddennessAt(0)).toBe(0);
@@ -386,8 +393,10 @@ describe("buildLaneTrajectory — hiddennessAt + dashedness fade", () => {
 
   it("arriving card hiddenness is 1 before the morph and 0 after", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     expect(b.hiddennessAt(0)).toBe(1);
@@ -397,8 +406,10 @@ describe("buildLaneTrajectory — hiddennessAt + dashedness fade", () => {
 
   it("arriving card hiddenness decreases monotonically during slurp-out", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const tEarly = PHASE_MOVE_END + (1 - PHASE_MOVE_END) * 0.1;
@@ -410,8 +421,10 @@ describe("buildLaneTrajectory — hiddennessAt + dashedness fade", () => {
 
   it("arrow dashedness fades smoothly as arriving target slurps out", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const arrow = traj.arrows[0]; // a → b
     // Before the slurp-out window, b is hidden → dashed.
@@ -489,13 +502,14 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
     { id: "a", title: "A", status: "DOING" },
     { id: "b", title: "B", status: "TODO", dependsOn: ["a"] },
   ];
-  const tAt = (local: number) =>
-    PHASE_MOVE_END + (1 - PHASE_MOVE_END) * local;
+  const tAt = (local: number) => PHASE_MOVE_END + (1 - PHASE_MOVE_END) * local;
 
   it("arriving card anchor moves monotonically toward the card", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const xs = [0.1, 0.3, 0.5, 0.7, 0.9].map((l) => b.anchorAt(tAt(l)).x);
@@ -513,8 +527,10 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
     // side="left"). Arrows from cards left of the morph clip to the
     // bbox's left edge, which equals leadingX.
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
@@ -535,8 +551,10 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
     // bbox's right edge = trailingX. So they don't traverse THROUGH
     // the morph shape on their way to the lozenge.
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const lozInnerEdge = LOZENGES.right.x - LOZENGES.right.width / 2;
@@ -554,8 +572,10 @@ describe("buildLaneTrajectory — anchor progresses with the morph", () => {
 
   it("anchor settles at card.rect at t=1 (full rect for router clipping)", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const nextSnap = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
@@ -580,8 +600,10 @@ describe("buildLaneTrajectory — hidden→hidden arrow suppression", () => {
     // concern, not a data concern. (Other consumers may want to
     // know about them for debugging / inspection.)
     const traj = buildLaneTrajectory({
-      prevFrame: chain, nextFrame: chain,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: chain,
+      nextFrame: chain,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     expect(traj.arrows.length).toBe(4);
   });
@@ -591,8 +613,10 @@ describe("buildLaneTrajectory — hidden→hidden arrow suppression", () => {
     // Verify the trajectory reports both endpoints as "gone" at any t
     // for a stays-hidden→stays-hidden edge (the suppression criterion).
     const traj = buildLaneTrajectory({
-      prevFrame: chain, nextFrame: chain,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: chain,
+      nextFrame: chain,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const bToC = traj.arrows.find((a) => a.fromId === "b" && a.toId === "c")!;
     const from = traj.cards.get(bToC.fromId)!;
@@ -671,7 +695,7 @@ describe("buildLaneTrajectory — broom topology", () => {
 
 // ─── lozenge count derivation ───────────────────────────────────────────────
 
-describe("buildLaneTrajectory — lozenge counts (mode === \"gone\")", () => {
+describe('buildLaneTrajectory — lozenge counts (mode === "gone")', () => {
   // 4-node chain: at all-TODO, only a is visible (col +1); b/c/d are
   // hidden at +2/+3/+4. Lozenge count should be 3 at every t.
   const allTodo: StatusFlowNode[] = [
@@ -739,8 +763,11 @@ describe("buildLaneTrajectory — mid-flight rebuild (stability)", () => {
     n.id === "a" ? { ...n, status: "DOING" } : n,
   );
   const tick2: StatusFlowNode[] = tick1.map((n) =>
-    n.id === "a" ? { ...n, status: "DONE" } :
-    n.id === "b" ? { ...n, status: "DOING" } : n,
+    n.id === "a"
+      ? { ...n, status: "DONE" }
+      : n.id === "b"
+        ? { ...n, status: "DOING" }
+        : n,
   );
 
   it("can rebuild a fresh trajectory from a partially-elapsed one", () => {
@@ -790,13 +817,25 @@ describe("buildLaneTrajectoryFromSnapshots — generic frame input", () => {
   // col +3 outside the visible window. After "tick": positions stay the
   // same — pure parity test that the builder runs end-to-end and
   // produces card trajectories for every id, including the hidden one.
-  const rect = (x: number, y = 0): { x: number; y: number; width: number; height: number } => ({
-    x, y, width: 140, height: 60,
+  const rect = (
+    x: number,
+    y = 0,
+  ): { x: number; y: number; width: number; height: number } => ({
+    x,
+    y,
+    width: 140,
+    height: 60,
   });
   const prev = {
     byId: new Map([
-      ["a", { id: "a", col: -1, visible: true, isParent: false, rect: rect(-200) }],
-      ["b", { id: "b", col: 1, visible: true, isParent: false, rect: rect(200) }],
+      [
+        "a",
+        { id: "a", col: -1, visible: true, isParent: false, rect: rect(-200) },
+      ],
+      [
+        "b",
+        { id: "b", col: 1, visible: true, isParent: false, rect: rect(200) },
+      ],
       ["c", { id: "c", col: 3, visible: false, isParent: false }],
     ]),
   };
@@ -807,7 +846,10 @@ describe("buildLaneTrajectoryFromSnapshots — generic frame input", () => {
       prev,
       next,
       lozengeRects: LOZENGES,
-      edges: [["a", "b"], ["b", "c"]],
+      edges: [
+        ["a", "b"],
+        ["b", "c"],
+      ],
     });
     expect(traj.cards.get("a")).toBeDefined();
     expect(traj.cards.get("b")).toBeDefined();
@@ -844,7 +886,11 @@ describe("buildLaneTrajectoryFromSnapshots — generic frame input", () => {
       prev,
       next,
       lozengeRects: LOZENGES,
-      edges: [["a", "b"], ["a", "b"], ["b", "c"]],
+      edges: [
+        ["a", "b"],
+        ["a", "b"],
+        ["b", "c"],
+      ],
     });
     expect(traj.arrows.length).toBe(2);
   });
@@ -881,12 +927,8 @@ describe("LaneTimingConfig — phases derive from timing", () => {
 });
 
 describe("buildLaneTrajectory — durationMs updates when timing knobs change", () => {
-  const prev: StatusFlowNode[] = [
-    { id: "a", title: "A", status: "TODO" },
-  ];
-  const next: StatusFlowNode[] = [
-    { id: "a", title: "A", status: "DOING" },
-  ];
+  const prev: StatusFlowNode[] = [{ id: "a", title: "A", status: "TODO" }];
+  const next: StatusFlowNode[] = [{ id: "a", title: "A", status: "DOING" }];
 
   const dur = (timing: LaneTimingConfig) =>
     buildLaneTrajectory({
@@ -898,22 +940,28 @@ describe("buildLaneTrajectory — durationMs updates when timing knobs change", 
     }).durationMs;
 
   it("durationMs is slurp + move + settle + slurp", () => {
-    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 0 }))
-      .toBe(600 + 450 + 0 + 600);
-    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 }))
-      .toBe(600 + 450 + 200 + 600);
-    expect(dur({ slurpMs: 1000, moveMs: 800, arrowSettleMs: 300 }))
-      .toBe(1000 + 800 + 300 + 1000);
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 0 })).toBe(
+      600 + 450 + 0 + 600,
+    );
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 })).toBe(
+      600 + 450 + 200 + 600,
+    );
+    expect(dur({ slurpMs: 1000, moveMs: 800, arrowSettleMs: 300 })).toBe(
+      1000 + 800 + 300 + 1000,
+    );
   });
 
   it("durationMs responds independently to each knob", () => {
     const base = dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 200 });
-    expect(dur({ slurpMs: 700, moveMs: 450, arrowSettleMs: 200 }))
-      .toBe(base + 200); // slurp adds to both ends
-    expect(dur({ slurpMs: 600, moveMs: 500, arrowSettleMs: 200 }))
-      .toBe(base + 50);
-    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 350 }))
-      .toBe(base + 150);
+    expect(dur({ slurpMs: 700, moveMs: 450, arrowSettleMs: 200 })).toBe(
+      base + 200,
+    ); // slurp adds to both ends
+    expect(dur({ slurpMs: 600, moveMs: 500, arrowSettleMs: 200 })).toBe(
+      base + 50,
+    );
+    expect(dur({ slurpMs: 600, moveMs: 450, arrowSettleMs: 350 })).toBe(
+      base + 150,
+    );
   });
 });
 
@@ -940,14 +988,15 @@ describe("buildLaneTrajectory — arrow-settle window placement", () => {
     expect(phases.moveEnd).toBeLessThan(phases.settleEnd);
     expect(phases.settleEnd).toBeLessThan(1);
     // settle width matches the configured fraction.
-    expect(phases.settleEnd - phases.moveEnd)
-      .toBeCloseTo(200 / phases.total);
+    expect(phases.settleEnd - phases.moveEnd).toBeCloseTo(200 / phases.total);
   });
 
   it("arriving card stays gone (no morph) until settleEnd", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
       timing,
     });
     const b = traj.cards.get("b")!;
@@ -962,8 +1011,10 @@ describe("buildLaneTrajectory — arrow-settle window placement", () => {
 
   it("arriving card anchor lerps from lozenge to next rect across the settle window", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
       timing,
     });
     const b = traj.cards.get("b")!;
@@ -974,15 +1025,18 @@ describe("buildLaneTrajectory — arrow-settle window placement", () => {
     const mid = (phases.moveEnd + phases.settleEnd) / 2;
     const midX = b.anchorAt(mid).x;
     const lozX = LOZENGES.right.x;
-    const [lo, hi] = lozX < nextRect.x ? [lozX, nextRect.x] : [nextRect.x, lozX];
+    const [lo, hi] =
+      lozX < nextRect.x ? [lozX, nextRect.x] : [nextRect.x, lozX];
     expect(midX).toBeGreaterThan(lo);
     expect(midX).toBeLessThan(hi);
   });
 
   it("arriving card anchor is parked at next rect during slurp-out (settle enabled)", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
       timing,
     });
     const b = traj.cards.get("b")!;
@@ -998,8 +1052,10 @@ describe("buildLaneTrajectory — arrow-settle window placement", () => {
     // Default config: no settle window. Arrow anchor reverts to
     // pre-knob behaviour — tracks the morph bbox throughout slurp-out.
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const b = traj.cards.get("b")!;
     const nextRect = snapshotFrame(next, PARAMS).byId.get("b")!.rect!;
@@ -1032,20 +1088,26 @@ describe("buildLaneTrajectory — default behaviour matches pre-knob system", ()
 
   it("durationMs equals MS_PHASE_TOTAL with no timing arg", () => {
     const traj = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     expect(traj.durationMs).toBe(MS_PHASE_TOTAL);
   });
 
   it("explicit DEFAULT_TIMING produces same anchor + mode sequence as no arg", () => {
     const trajA = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
     });
     const trajB = buildLaneTrajectory({
-      prevFrame: prev, nextFrame: next,
-      layoutParams: PARAMS, lozengeRects: LOZENGES,
+      prevFrame: prev,
+      nextFrame: next,
+      layoutParams: PARAMS,
+      lozengeRects: LOZENGES,
       timing: DEFAULT_TIMING,
     });
     expect(trajB.durationMs).toBe(trajA.durationMs);

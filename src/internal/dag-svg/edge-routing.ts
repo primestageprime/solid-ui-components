@@ -29,8 +29,10 @@ export type ObstacleRect = EdgeRect & { id: string };
  * the axis-aligned rect `r`, expanded by `pad` on every side.
  */
 function segmentIntersectsRect(
-  ax: number, ay: number,
-  bx: number, by: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
   r: EdgeRect,
   pad: number,
 ): boolean {
@@ -107,7 +109,9 @@ export function bezierAvoidingObstacles(
     ? obsEdgeY - OBSTACLE_MARGIN * 2.5
     : obsEdgeY + OBSTACLE_MARGIN * 2.5;
   const goingLeftToRight = toX >= fromX;
-  const toCornerX = goingLeftToRight ? to.x - to.width / 2 : to.x + to.width / 2;
+  const toCornerX = goingLeftToRight
+    ? to.x - to.width / 2
+    : to.x + to.width / 2;
   const toCornerY = above ? to.y - to.height / 2 : to.y + to.height / 2;
   const c1x = goingLeftToRight
     ? o.x - o.width / 2 - OBSTACLE_MARGIN
@@ -138,9 +142,7 @@ export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
     const fromAnchorX = channelOnLeft
       ? from.x - from.width / 2
       : from.x + from.width / 2;
-    const toAnchorX = channelOnLeft
-      ? to.x - to.width / 2
-      : to.x + to.width / 2;
+    const toAnchorX = channelOnLeft ? to.x - to.width / 2 : to.x + to.width / 2;
     const channelDelta = channelOnLeft ? -SAME_COL_OFFSET : SAME_COL_OFFSET;
     const channelX = fromAnchorX + channelDelta;
     return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
@@ -148,7 +150,9 @@ export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
 
   // Different columns: anchor on inner side, controls in the channel.
   const goingRight = dx > 0;
-  const fromAnchorX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const fromAnchorX = goingRight
+    ? from.x + from.width / 2
+    : from.x - from.width / 2;
   const toAnchorX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
   const channelX = (fromAnchorX + toAnchorX) / 2;
 
@@ -172,12 +176,23 @@ export function orthogonalStepPath(from: EdgeRect, to: EdgeRect): string {
     const fromAnchorX = from.x + from.width / 2;
     const toAnchorX = to.x + to.width / 2;
     const channelX = Math.max(fromAnchorX, toAnchorX) + SAME_COL_OFFSET;
-    return roundedStep(fromAnchorX, from.y, channelX, from.y, channelX, to.y, toAnchorX, to.y);
+    return roundedStep(
+      fromAnchorX,
+      from.y,
+      channelX,
+      from.y,
+      channelX,
+      to.y,
+      toAnchorX,
+      to.y,
+    );
   }
 
   // Different columns: anchor on the inner side, channel midway.
   const goingRight = dx > 0;
-  const fromAnchorX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const fromAnchorX = goingRight
+    ? from.x + from.width / 2
+    : from.x - from.width / 2;
   const toAnchorX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
   const channelX = (fromAnchorX + toAnchorX) / 2;
 
@@ -185,7 +200,16 @@ export function orthogonalStepPath(from: EdgeRect, to: EdgeRect): string {
     return `M ${fromAnchorX} ${from.y} L ${toAnchorX} ${to.y}`;
   }
 
-  return roundedStep(fromAnchorX, from.y, channelX, from.y, channelX, to.y, toAnchorX, to.y);
+  return roundedStep(
+    fromAnchorX,
+    from.y,
+    channelX,
+    from.y,
+    channelX,
+    to.y,
+    toAnchorX,
+    to.y,
+  );
 }
 
 /**
@@ -194,10 +218,14 @@ export function orthogonalStepPath(from: EdgeRect, to: EdgeRect): string {
  * Corner radius is clamped so it never exceeds half of the shortest leg.
  */
 function roundedStep(
-  p1x: number, p1y: number,
-  p2x: number, p2y: number,
-  p3x: number, p3y: number,
-  p4x: number, p4y: number,
+  p1x: number,
+  p1y: number,
+  p2x: number,
+  p2y: number,
+  p3x: number,
+  p3y: number,
+  p4x: number,
+  p4y: number,
 ): string {
   const r = Math.min(
     CORNER_RADIUS,

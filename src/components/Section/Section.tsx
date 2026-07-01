@@ -7,7 +7,14 @@
 // Collapsible section with title, subtitle, corner decorations.
 // Panel and Divider have been moved to their own directories.
 // ============================================
-import { type Component, type JSX, splitProps, Show, mergeProps, createSignal } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  Show,
+  mergeProps,
+  createSignal,
+} from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Section.css";
 
@@ -89,7 +96,8 @@ export const Section: Component<SectionProps> = (props) => {
     return classList.join(" ");
   };
 
-  const showHeader = () => local.showHeader !== false && (local.title || local.headerAction);
+  const showHeader = () =>
+    local.showHeader !== false && (local.title || local.headerAction);
 
   return (
     <section class={classes()} {...others}>
@@ -106,29 +114,35 @@ export const Section: Component<SectionProps> = (props) => {
           <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
             {local.headerAction}
             <Show when={local.collapsible}>
-              <button
-                class="sui-section__collapse-btn"
-                onClick={handleToggle}
-              >
+              <button class="sui-section__collapse-btn" onClick={handleToggle}>
                 {isCollapsed() ? "+" : "\u2212"}
               </button>
             </Show>
           </div>
         </div>
       </Show>
-      <div class="sui-section__content">
-        {local.children}
-      </div>
+      <div class="sui-section__content">{local.children}</div>
     </section>
   );
 };
 
 /** Props that are visual/behavioral overrides — locked at variant-definition time. */
-export type SectionOverrides = Pick<SectionProps, "variant" | "corners" | "fill" | "collapsible" | "defaultExpanded" | "compact" | "indent">;
+export type SectionOverrides = Pick<
+  SectionProps,
+  | "variant"
+  | "corners"
+  | "fill"
+  | "collapsible"
+  | "defaultExpanded"
+  | "compact"
+  | "indent"
+>;
 
 /** Props that remain available to consumers of a curried Section variant. */
 export type SectionDataProps = Omit<SectionProps, keyof SectionOverrides>;
 
-export function createSection(defaults: Partial<Omit<SectionProps, "children">>): Component<SectionDataProps> {
+export function createSection(
+  defaults: Partial<Omit<SectionProps, "children">>,
+): Component<SectionDataProps> {
   return (props) => <Section {...mergeProps(defaults, props)} />;
 }

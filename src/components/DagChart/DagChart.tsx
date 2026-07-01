@@ -1,6 +1,15 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { createMemo, createEffect, createSignal, on, For, Show, onMount, onCleanup } from "solid-js";
+import {
+  createMemo,
+  createEffect,
+  createSignal,
+  on,
+  For,
+  Show,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import type { DAGProps, PositionedNode } from "./types";
 import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
@@ -51,7 +60,11 @@ function clipPolyline(
   }
   if (targetRect) {
     const center = { x: targetRect.x, y: targetRect.y };
-    pts[pts.length - 1] = clipToRectBoundary(center, pts[pts.length - 2], targetRect);
+    pts[pts.length - 1] = clipToRectBoundary(
+      center,
+      pts[pts.length - 2],
+      targetRect,
+    );
   }
 
   // Degenerate-polyline guard: if the clipped start and end coincide (or
@@ -123,18 +136,37 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [containerHeight, setContainerHeight] = createSignal(0);
-  const [autoDirection, setAutoDirection] = createSignal<"horizontal" | "vertical">("vertical");
+  const [autoDirection, setAutoDirection] = createSignal<
+    "horizontal" | "vertical"
+  >("vertical");
 
   const direction = createMemo(() => props.direction ?? autoDirection());
 
-  const { transformString, fitToView, centerOnPoint, pointerHandlers, onWheel } = createPanZoom();
+  const {
+    transformString,
+    fitToView,
+    centerOnPoint,
+    pointerHandlers,
+    onWheel,
+  } = createPanZoom();
 
   // Always layout the FULL graph to preserve node ordering across focus changes
-  const EMPTY: LayoutResult = { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0 };
+  const EMPTY: LayoutResult = {
+    positions: new Map(),
+    edges: [],
+    totalWidth: 0,
+    totalHeight: 0,
+  };
 
   const fullLayout = createMemo(() => {
     try {
-      return computeLayout(props.nodes, props.edges, direction(), props.nodeSize, props.nodeRank);
+      return computeLayout(
+        props.nodes,
+        props.edges,
+        direction(),
+        props.nodeSize,
+        props.nodeRank,
+      );
     } catch (err) {
       console.error("[DagChart] fullLayout memo failed:", err);
       return EMPTY;
@@ -146,8 +178,8 @@ export function DagChart<T>(props: DAGProps<T>) {
     collapseGraph(props.nodes, props.edges, props.focusedNodeId),
   );
 
-  const _stateMap = createMemo(() =>
-    new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
+  const _stateMap = createMemo(
+    () => new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
   );
 
   // Merge full-graph positions with collapse state.
@@ -160,14 +192,34 @@ export function DagChart<T>(props: DAGProps<T>) {
     return collapsed().visibleNodes.flatMap(({ node, state }) => {
       const pos = positions.get(node.id);
       if (pos) {
-        return [{ node, x: pos.x, y: pos.y, width: pos.width, height: pos.height, state }];
+        return [
+          {
+            node,
+            x: pos.x,
+            y: pos.y,
+            width: pos.width,
+            height: pos.height,
+            state,
+          },
+        ];
       }
       // Summary node: extract beyondId from __collapsed_<beyondId> and use its position
-      const beyondId = node.id.startsWith("__collapsed_") ? node.id.slice(12) : null;
+      const beyondId = node.id.startsWith("__collapsed_")
+        ? node.id.slice(12)
+        : null;
       const fallbackPos = beyondId ? positions.get(beyondId) : undefined;
       if (fallbackPos) {
         const size = props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
-        return [{ node, x: fallbackPos.x, y: fallbackPos.y, width: size[0], height: size[1], state }];
+        return [
+          {
+            node,
+            x: fallbackPos.x,
+            y: fallbackPos.y,
+            width: size[0],
+            height: size[1],
+            state,
+          },
+        ];
       }
       return [];
     });
@@ -178,10 +230,18 @@ export function DagChart<T>(props: DAGProps<T>) {
     const map = new Map(fullLayout().positions);
     for (const pn of positionedNodes()) {
       if (!map.has(pn.node.id)) {
-        map.set(pn.node.id, { x: pn.x, y: pn.y, width: pn.width, height: pn.height });
+        map.set(pn.node.id, {
+          x: pn.x,
+          y: pn.y,
+          width: pn.width,
+          height: pn.height,
+        });
       }
     }
-    return map as ReadonlyMap<string, { x: number; y: number; width: number; height: number }>;
+    return map as ReadonlyMap<
+      string,
+      { x: number; y: number; width: number; height: number }
+    >;
   });
 
   // Precompute edge SVG path strings reactively (depends on both visibleEdges and layout positions)
@@ -204,7 +264,10 @@ export function DagChart<T>(props: DAGProps<T>) {
       );
       const rawPoints = fullEdge
         ? fullEdge.points
-        : [{ x: sourceRect.x, y: sourceRect.y }, { x: targetRect.x, y: targetRect.y }];
+        : [
+            { x: sourceRect.x, y: sourceRect.y },
+            { x: targetRect.x, y: targetRect.y },
+          ];
 
       // Clip the polyline to the node boundaries so the midpoint (used for
       // both labels and the delete badge) lives in the free space between
@@ -212,46 +275,72 @@ export function DagChart<T>(props: DAGProps<T>) {
       const clipped = clipPolyline(rawPoints, sourceRect, targetRect);
       const label = labelByPair.get(`${edge.source}|${edge.target}`);
       const mid = polylineMidpoint(clipped);
-      return [{
-        d: buildEdgePath(clipped),
-        label,
-        midX: mid.x,
-        midY: mid.y,
-        source: edge.source,
-        target: edge.target,
-      }];
+      return [
+        {
+          d: buildEdgePath(clipped),
+          label,
+          midX: mid.x,
+          midY: mid.y,
+          source: edge.source,
+          target: edge.target,
+        },
+      ];
     });
   });
 
   // Fit to view: center on focused node if one exists, otherwise fit all visible nodes
   const viewBounds = createMemo(() => {
     const nodes = positionedNodes();
-    if (nodes.length === 0) return { width: 0, height: 0, centerX: 0, centerY: 0 };
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    if (nodes.length === 0)
+      return { width: 0, height: 0, centerX: 0, centerY: 0 };
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.x - n.width / 2);
       minY = Math.min(minY, n.y - n.height / 2);
       maxX = Math.max(maxX, n.x + n.width / 2);
       maxY = Math.max(maxY, n.y + n.height / 2);
     }
-    return { width: maxX - minX, height: maxY - minY, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2 };
+    return {
+      width: maxX - minX,
+      height: maxY - minY,
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+    };
   });
 
   // Find the focused node's position for centering
   const focusedPosition = createMemo(() => {
     if (!props.focusedNodeId) return null;
-    const node = positionedNodes().find((n) => n.node.id === props.focusedNodeId);
+    const node = positionedNodes().find(
+      (n) => n.node.id === props.focusedNodeId,
+    );
     return node ? { x: node.x, y: node.y } : null;
   });
 
   createEffect(
     on(
-      () => [viewBounds(), focusedPosition(), containerWidth(), containerHeight()] as const,
+      () =>
+        [
+          viewBounds(),
+          focusedPosition(),
+          containerWidth(),
+          containerHeight(),
+        ] as const,
       ([bounds, focused, cw, ch]) => {
         if (focused) {
           centerOnPoint(focused.x, focused.y, cw, ch);
         } else {
-          fitToView(bounds.width, bounds.height, cw, ch, bounds.centerX, bounds.centerY);
+          fitToView(
+            bounds.width,
+            bounds.height,
+            cw,
+            ch,
+            bounds.centerX,
+            bounds.centerY,
+          );
         }
       },
     ),
@@ -304,8 +393,12 @@ export function DagChart<T>(props: DAGProps<T>) {
       <svg
         ref={svgRef}
         class="sui-dag"
-        onPointerDown={interactive() ? pointerHandlers.onPointerDown : undefined}
-        onPointerMove={interactive() ? pointerHandlers.onPointerMove : undefined}
+        onPointerDown={
+          interactive() ? pointerHandlers.onPointerDown : undefined
+        }
+        onPointerMove={
+          interactive() ? pointerHandlers.onPointerMove : undefined
+        }
         onPointerUp={interactive() ? pointerHandlers.onPointerUp : undefined}
       >
         <defs>
@@ -332,18 +425,25 @@ export function DagChart<T>(props: DAGProps<T>) {
                       onPointerLeave={() =>
                         setHoveredEdge((h) => (h === edgeKey ? null : h))
                       }
-                      onClick={() => props.onEdgeClick?.(edge.source, edge.target)}
+                      onClick={() =>
+                        props.onEdgeClick?.(edge.source, edge.target)
+                      }
                     />
                   </Show>
                   <DagSvgEdge
                     class={`sui-dag__edge${
-                      props.highlightedEdges?.has(edgeKey) ? " sui-dag__edge--highlighted" : ""
+                      props.highlightedEdges?.has(edgeKey)
+                        ? " sui-dag__edge--highlighted"
+                        : ""
                     }`}
                     d={edge.d}
                     arrowMarkerId={arrows() ? "sui-dag-arrow" : undefined}
                   />
                   <Show when={edge.label}>
-                    <g class="sui-dag__edge-label-wrap" transform={`translate(${edge.midX}, ${edge.midY})`}>
+                    <g
+                      class="sui-dag__edge-label-wrap"
+                      transform={`translate(${edge.midX}, ${edge.midY})`}
+                    >
                       <rect
                         class="sui-dag__edge-label-bg"
                         x={-(edge.label!.length * 3.5 + 6)}
@@ -352,7 +452,11 @@ export function DagChart<T>(props: DAGProps<T>) {
                         height={18}
                         rx={9}
                       />
-                      <text class="sui-dag__edge-label" text-anchor="middle" dominant-baseline="middle">
+                      <text
+                        class="sui-dag__edge-label"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                      >
                         {edge.label}
                       </text>
                     </g>
@@ -409,7 +513,9 @@ export function DagChart<T>(props: DAGProps<T>) {
                         clickable area even when its visual opacity is 0. */}
                     <circle r={12} fill="transparent" />
                     <circle r={9} stroke-width={1.5} />
-                    <text text-anchor="middle" dominant-baseline="central">×</text>
+                    <text text-anchor="middle" dominant-baseline="central">
+                      ×
+                    </text>
                   </g>
                 </Show>
               );

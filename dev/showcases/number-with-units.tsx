@@ -10,7 +10,10 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>NumberWithUnits — Depth 2 (zero CSS)</h2>
-      <p class="text-meta">Composes Text (curried: MonoValue + TextUnits). Monospace value paired with units label.</p>
+      <p class="text-meta">
+        Composes Text (curried: MonoValue + TextUnits). Monospace value paired
+        with units label.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Emissions</h3>
@@ -32,8 +35,18 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Color-Coded</h3>
           <Stack gap="sm">
-            <NumberWithUnits value={0.42} units="ppm" precision={2} color="var(--sui-success)" />
-            <NumberWithUnits value={12.7} units="ppm" precision={1} color="var(--sui-danger)" />
+            <NumberWithUnits
+              value={0.42}
+              units="ppm"
+              precision={2}
+              color="var(--sui-success)"
+            />
+            <NumberWithUnits
+              value={12.7}
+              units="ppm"
+              precision={1}
+              color="var(--sui-danger)"
+            />
           </Stack>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Null Fallback</h3>
@@ -46,11 +59,17 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
           <h3>Curried Variants Used</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Text</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("text")}
+            >
               <div class="depth2-atom__label">MonoValue</div>
               <div class="text-meta">monospace, 1.5rem / 600 weight</div>
             </div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("text")}
+            >
               <div class="depth2-atom__label">TextUnits</div>
               <div class="text-meta">sans-serif, 0.9rem, normal weight</div>
             </div>

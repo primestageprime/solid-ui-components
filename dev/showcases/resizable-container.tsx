@@ -23,8 +23,9 @@ export const ResizableContainerShowcase: Component = () => {
     <div class="component-section">
       <h2>ResizableContainer — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Owns CSS (ResizableContainer.css). Container with draggable edge handles for manual resize.
-        Drag the edges to resize. Callback receives `{'{ width, height }'}`.
+        Owns CSS (ResizableContainer.css). Container with draggable edge handles
+        for manual resize. Drag the edges to resize. Callback receives `
+        {"{ width, height }"}`.
       </p>
 
       <div class="example-group">
@@ -32,7 +33,11 @@ export const ResizableContainerShowcase: Component = () => {
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           directions: ["right", "bottom"] — drag the right or bottom edge
         </div>
-        <ResizableContainer initialWidth={320} initialHeight={200} onResize={setDims}>
+        <ResizableContainer
+          initialWidth={320}
+          initialHeight={200}
+          onResize={setDims}
+        >
           <DemoContent label={`${dims().width}px × ${dims().height}px`} />
         </ResizableContainer>
       </div>

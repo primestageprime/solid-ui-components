@@ -16,7 +16,8 @@ import "./TitledTimeRangeHeader.css";
 // Omit the DOM `title` attribute (typed `string`) so our richer heading prop
 // (string | JSX.Element) doesn't conflict with it — `title` is consumed into
 // the heading content, never spread onto the div.
-export interface TitledTimeRangeHeaderProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "title"> {
+export interface TitledTimeRangeHeaderProps
+  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "title"> {
   /** Heading content — a plain string, or rich JSX (e.g. an icon + name). */
   title: string | JSX.Element;
   start: string;
@@ -49,7 +50,9 @@ function formatElapsed(startIso: string, endIso?: string | null): string {
   return `${hours}h ${minutes}m`;
 }
 
-export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (props) => {
+export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (
+  props,
+) => {
   const [local, others] = splitProps(props, [
     "title",
     "start",
@@ -81,7 +84,9 @@ export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (pro
         ({formatElapsed(local.start, local.end)})
       </span>
       <Show when={local.assetLabel}>
-        <span class="sui-titled-time-range-header__asset">{local.assetLabel}</span>
+        <span class="sui-titled-time-range-header__asset">
+          {local.assetLabel}
+        </span>
       </Show>
     </>
   );
@@ -90,7 +95,9 @@ export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (pro
     <div class={rootClass()} {...others}>
       <Show
         when={local.href}
-        fallback={<div class="sui-titled-time-range-header__main">{mainContent()}</div>}
+        fallback={
+          <div class="sui-titled-time-range-header__main">{mainContent()}</div>
+        }
       >
         <a
           href={local.href}

@@ -114,20 +114,35 @@ export function deriveCardBar(input: CardProgressInput): CardBar {
       return emptyBar();
     case "DOING":
       return {
-        segments: fillSegments(estimate, actual, CARD_BAR_COLOR.fillActive, CARD_BAR_COLOR.remainder),
+        segments: fillSegments(
+          estimate,
+          actual,
+          CARD_BAR_COLOR.fillActive,
+          CARD_BAR_COLOR.remainder,
+        ),
         sign: null,
       };
     case "DONE":
       // Complete: fill turns green; leftover budget is grey, overrun crimson.
       return {
-        segments: fillSegments(estimate, actual, CARD_BAR_COLOR.fillDone, CARD_BAR_COLOR.unused),
+        segments: fillSegments(
+          estimate,
+          actual,
+          CARD_BAR_COLOR.fillDone,
+          CARD_BAR_COLOR.unused,
+        ),
         sign: null,
       };
     case "BLOCKED":
     case "QUESTION":
       // Stalled: show work done so far, dim remainder, with a sign over the bar.
       return {
-        segments: fillSegments(estimate, actual, CARD_BAR_COLOR.fillActive, CARD_BAR_COLOR.empty),
+        segments: fillSegments(
+          estimate,
+          actual,
+          CARD_BAR_COLOR.fillActive,
+          CARD_BAR_COLOR.empty,
+        ),
         sign: status === "BLOCKED" ? "yield" : "question",
       };
     default:
@@ -154,7 +169,10 @@ export interface WorkSegment {
  *
  * A span that hasn't started yet (start > its end/now) contributes 0.
  */
-export function actualFromSegments(segments: WorkSegment[], now: number): number {
+export function actualFromSegments(
+  segments: WorkSegment[],
+  now: number,
+): number {
   let total = 0;
   for (const s of segments) {
     total += Math.max(0, (s.end ?? now) - s.start);

@@ -19,15 +19,18 @@ export const DurationShowcase: Component = () => (
     <h2>Duration — Primitive (Depth 0)</h2>
     <p class="text-meta">
       Renders a span with a human-friendly duration. <code>ms</code> ≤ 1s →
-      <code>123ms</code>; 1–10s → <code>12.3s</code>; minutes → <code>4m 8s</code>;
-      hours → <code>2h 13m</code>. <code>null</code>/<code>undefined</code> → <code>--</code>.
+      <code>123ms</code>; 1–10s → <code>12.3s</code>; minutes →{" "}
+      <code>4m 8s</code>; hours → <code>2h 13m</code>. <code>null</code>/
+      <code>undefined</code> → <code>--</code>.
     </p>
     <div class="example-group">
       <Stack gap="xs">
         <For each={SAMPLES}>
           {(s) => (
             <Row gap="sm">
-              <span style={{ "min-width": "10rem" }} class="text-meta">{s.label}</span>
+              <span style={{ "min-width": "10rem" }} class="text-meta">
+                {s.label}
+              </span>
               <Duration ms={s.ms ?? null} verbose={s.verbose} />
             </Row>
           )}

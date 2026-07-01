@@ -5,8 +5,10 @@
    colour transition. The .worker-card / .worker-card--<status> / --overdue
    classes remain as public BEM hooks for consumers. */
 .worker-card {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  transition: border-color 0.3s ease, background 0.3s ease;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
 }
 
 /* Row 1: Identity */
@@ -47,7 +49,10 @@
 /* Row 3: Plan (animated) */
 .worker-card__plan {
   overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.4s ease;
+  transition:
+    max-height 0.4s ease,
+    opacity 0.3s ease,
+    margin-top 0.4s ease;
 }
 
 .worker-card__plan--visible {
@@ -72,7 +77,10 @@
 /* Row 4: Progress (animated) */
 .worker-card__progress {
   overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.4s ease;
+  transition:
+    max-height 0.4s ease,
+    opacity 0.3s ease,
+    margin-top 0.4s ease;
 }
 
 .worker-card__progress--visible {
@@ -97,13 +105,18 @@
 .worker-card__bar-fill {
   height: 100%;
   border-radius: 2px;
-  transition: width 1s linear, background 0.3s ease;
+  transition:
+    width 1s linear,
+    background 0.3s ease;
 }
 
 .worker-card__bar-fill--extracting {
   background-image: repeating-linear-gradient(
-    -45deg, transparent, transparent 8px,
-    var(--sui-border) 8px, var(--sui-border) 16px
+    -45deg,
+    transparent,
+    transparent 8px,
+    var(--sui-border) 8px,
+    var(--sui-border) 16px
   );
   background-size: 32px 32px;
   animation: worker-card-stripe 1s linear infinite;
@@ -123,6 +136,10 @@
 }
 
 @keyframes worker-card-stripe {
-  0% { background-position: 0 0; }
-  100% { background-position: 32px 0; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 32px 0;
+  }
 }

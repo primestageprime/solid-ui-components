@@ -127,15 +127,21 @@ function RateChart(props: ThroughputChartProps) {
       .sort((a, b) => a.timestamp - b.timestamp);
   });
 
-  const yMax = createMemo(() => niceMax(Math.max(0, ...points().map((p) => p.rowsPerMinute))));
+  const yMax = createMemo(() =>
+    niceMax(Math.max(0, ...points().map((p) => p.rowsPerMinute))),
+  );
   const avg = createMemo(() => {
     const pts = points();
     if (pts.length === 0) return 0;
-    return Math.round(pts.reduce((s, p) => s + p.rowsPerMinute, 0) / pts.length);
+    return Math.round(
+      pts.reduce((s, p) => s + p.rowsPerMinute, 0) / pts.length,
+    );
   });
   const peak = createMemo(() => {
     const pts = points();
-    return pts.length === 0 ? 0 : Math.round(Math.max(...pts.map((p) => p.rowsPerMinute)));
+    return pts.length === 0
+      ? 0
+      : Math.round(Math.max(...pts.map((p) => p.rowsPerMinute)));
   });
 
   const hourTicks = createMemo(() => {
@@ -178,14 +184,40 @@ function RateChart(props: ThroughputChartProps) {
         <Grid />
         <YAxis tickCount={4} tickFormat={fmtNum} />
         <XAxis tickValues={hourTicks()} tickFormat={fmtTime} />
-        <AreaSeries data={points()} x={(p) => p.timestamp} y={(p) => p.rowsPerMinute} fillOpacity={0.08} />
-        {avg() > 0 && <ReferenceLine orientation="horizontal" value={avg()} label="avg" strokeDasharray="4 4" />}
-        <LineSeries data={points()} x={(p) => p.timestamp} y={(p) => p.rowsPerMinute} strokeWidth={2} />
-        <Crosshair series={[{ data: points(), x: (p) => p.timestamp, y: (p) => p.rowsPerMinute }]} />
+        <AreaSeries
+          data={points()}
+          x={(p) => p.timestamp}
+          y={(p) => p.rowsPerMinute}
+          fillOpacity={0.08}
+        />
+        {avg() > 0 && (
+          <ReferenceLine
+            orientation="horizontal"
+            value={avg()}
+            label="avg"
+            strokeDasharray="4 4"
+          />
+        )}
+        <LineSeries
+          data={points()}
+          x={(p) => p.timestamp}
+          y={(p) => p.rowsPerMinute}
+          strokeWidth={2}
+        />
+        <Crosshair
+          series={[
+            {
+              data: points(),
+              x: (p) => p.timestamp,
+              y: (p) => p.rowsPerMinute,
+            },
+          ]}
+        />
         <ChartTooltip data={points()} x={(p) => p.timestamp}>
           {(p) => (
             <span>
-              {fmtTime(p.timestamp)} — <strong>{fmtNum(p.rowsPerMinute)}</strong> rows/min
+              {fmtTime(p.timestamp)} —{" "}
+              <strong>{fmtNum(p.rowsPerMinute)}</strong> rows/min
             </span>
           )}
         </ChartTooltip>
@@ -259,7 +291,10 @@ function CompletionView(props: ThroughputChartProps) {
     }
     // Scale the bars onto the shared 0–100 axis (busiest bucket → full height).
     const max = Math.max(1, ...raw.map((b) => b.completedCount));
-    return raw.map((b) => ({ ...b, barScaled: (b.completedCount / max) * 100 }));
+    return raw.map((b) => ({
+      ...b,
+      barScaled: (b.completedCount / max) * 100,
+    }));
   });
 
   const xDomain = (): [number, number] => [0, windowHours() - 1];
@@ -275,11 +310,17 @@ function CompletionView(props: ThroughputChartProps) {
   };
 
   return (
-    <div class="sui-throughput-chart sui-throughput-chart--completion" ref={containerRef}>
+    <div
+      class="sui-throughput-chart sui-throughput-chart--completion"
+      ref={containerRef}
+    >
       <Legend
         items={[
           { color: BAR_FILL, label: props.barsLabel ?? "Completed / hr" },
-          { color: LINE_STROKE, label: props.cumulativeLabel ?? "Cumulative %" },
+          {
+            color: LINE_STROKE,
+            label: props.cumulativeLabel ?? "Cumulative %",
+          },
         ]}
         orientation="horizontal"
       />
@@ -305,7 +346,11 @@ function CompletionView(props: ThroughputChartProps) {
           stroke={LINE_STROKE}
           strokeWidth={2}
         />
-        <XAxis tickValues={tickValues()} tickFormat={tickFormat} rotateLabels={false} />
+        <XAxis
+          tickValues={tickValues()}
+          tickFormat={tickFormat}
+          rotateLabels={false}
+        />
         <YAxis tickCount={5} tickFormat={(v) => `${v}%`} label="% complete" />
       </Chart>
     </div>

@@ -10,7 +10,11 @@ import {
 
 // Asserts a single segment's color + width (width compared with tolerance to
 // dodge floating-point noise from the over-budget ratios).
-const seg = (s: { width: number; color: string }, color: string, width: number) => {
+const seg = (
+  s: { width: number; color: string },
+  color: string,
+  width: number,
+) => {
   expect(s.color).toBe(color);
   expect(s.width).toBeCloseTo(width, 5);
 };
@@ -24,46 +28,74 @@ describe("deriveCardBar", () => {
   });
 
   it("B — in progress 40%: blue fill + faded remainder", () => {
-    const { segments, sign } = deriveCardBar({ status: "DOING", estimate: 5, actual: 2 });
+    const { segments, sign } = deriveCardBar({
+      status: "DOING",
+      estimate: 5,
+      actual: 2,
+    });
     expect(sign).toBeNull();
     seg(segments[0], C.fillActive, 0.4);
     seg(segments[1], C.remainder, 0.6);
   });
 
   it("C — in progress over budget 120%: blue est-share + crimson overrun (reproportioned)", () => {
-    const { segments } = deriveCardBar({ status: "DOING", estimate: 5, actual: 6 });
+    const { segments } = deriveCardBar({
+      status: "DOING",
+      estimate: 5,
+      actual: 6,
+    });
     seg(segments[0], C.fillActive, 5 / 6);
     seg(segments[1], C.overrun, 1 / 6);
   });
 
   it("D — done on-time (95%): green + dark-grey unused", () => {
-    const { segments, sign } = deriveCardBar({ status: "DONE", estimate: 100, actual: 95 });
+    const { segments, sign } = deriveCardBar({
+      status: "DONE",
+      estimate: 100,
+      actual: 95,
+    });
     expect(sign).toBeNull();
     seg(segments[0], C.fillDone, 0.95);
     seg(segments[1], C.unused, 0.05);
   });
 
   it("E — done under budget (60%): green + dark-grey unused", () => {
-    const { segments } = deriveCardBar({ status: "DONE", estimate: 5, actual: 3 });
+    const { segments } = deriveCardBar({
+      status: "DONE",
+      estimate: 5,
+      actual: 3,
+    });
     seg(segments[0], C.fillDone, 0.6);
     seg(segments[1], C.unused, 0.4);
   });
 
   it("F — done over budget: green est-share + crimson overrun", () => {
-    const { segments } = deriveCardBar({ status: "DONE", estimate: 5, actual: 6 });
+    const { segments } = deriveCardBar({
+      status: "DONE",
+      estimate: 5,
+      actual: 6,
+    });
     seg(segments[0], C.fillDone, 5 / 6);
     seg(segments[1], C.overrun, 1 / 6);
   });
 
   it("G — blocked: blue fill + dim remainder + yield sign", () => {
-    const { segments, sign } = deriveCardBar({ status: "BLOCKED", estimate: 5, actual: 2 });
+    const { segments, sign } = deriveCardBar({
+      status: "BLOCKED",
+      estimate: 5,
+      actual: 2,
+    });
     expect(sign).toBe("yield");
     seg(segments[0], C.fillActive, 0.4);
     seg(segments[1], C.empty, 0.6);
   });
 
   it("H — question: same bar as blocked + question sign", () => {
-    const { segments, sign } = deriveCardBar({ status: "QUESTION", estimate: 5, actual: 2 });
+    const { segments, sign } = deriveCardBar({
+      status: "QUESTION",
+      estimate: 5,
+      actual: 2,
+    });
     expect(sign).toBe("question");
     seg(segments[0], C.fillActive, 0.4);
     seg(segments[1], C.empty, 0.6);
@@ -95,7 +127,8 @@ describe("deriveCardBar", () => {
   it("never produces a negative or >1 segment width", () => {
     for (const actual of [0, 1, 5, 6, 50]) {
       for (const status of ["DOING", "DONE", "BLOCKED"] as const) {
-        for (const s of deriveCardBar({ status, estimate: 5, actual }).segments) {
+        for (const s of deriveCardBar({ status, estimate: 5, actual })
+          .segments) {
           expect(s.width).toBeGreaterThanOrEqual(0);
           expect(s.width).toBeLessThanOrEqual(1);
         }
@@ -105,12 +138,20 @@ describe("deriveCardBar", () => {
 
   it("handles a missing/zero estimate without throwing or dividing by zero", () => {
     expect(() => deriveCardBar({ status: "DOING" })).not.toThrow();
-    const { segments } = deriveCardBar({ status: "DOING", estimate: 0, actual: 3 });
+    const { segments } = deriveCardBar({
+      status: "DOING",
+      estimate: 0,
+      actual: 3,
+    });
     seg(segments[0], C.remainder, 1);
   });
 
   it("clamps a negative actual to no progress", () => {
-    const { segments } = deriveCardBar({ status: "DOING", estimate: 5, actual: -2 });
+    const { segments } = deriveCardBar({
+      status: "DOING",
+      estimate: 5,
+      actual: -2,
+    });
     seg(segments[0], C.fillActive, 0);
     seg(segments[1], C.remainder, 1);
   });
@@ -134,7 +175,9 @@ describe("actualFromSegments", () => {
 
   it("a not-yet-started span contributes 0 (no negatives)", () => {
     expect(actualFromSegments([{ start: 10 }], 5)).toBe(0);
-    expect(actualFromSegments([{ start: 0, end: 4 }, { start: 20 }], 8)).toBe(4);
+    expect(actualFromSegments([{ start: 0, end: 4 }, { start: 20 }], 8)).toBe(
+      4,
+    );
   });
 
   it("isRunning is true iff some segment is open", () => {

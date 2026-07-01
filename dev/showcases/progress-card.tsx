@@ -1,5 +1,8 @@
 import { type Component, For } from "solid-js";
-import { ProgressCard, type ProgressStep } from "../../src/components/ProgressCard";
+import {
+  ProgressCard,
+  type ProgressStep,
+} from "../../src/components/ProgressCard";
 import { CacheProgressCard } from "../../src/components/ProgressCard/variants";
 import { Icon } from "../../src/components/Icon";
 import type { IconName } from "../../src/components/Icon";
@@ -41,7 +44,10 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>ProgressCard — Depth 1</h2>
-      <p class="text-meta">Owns CSS (ProgressCard.css). Composes Icon (Primitive/Depth 0) via ICON_PATHS in variants. Step icons with title, subtitle, message.</p>
+      <p class="text-meta">
+        Owns CSS (ProgressCard.css). Composes Icon (Primitive/Depth 0) via
+        ICON_PATHS in variants. Step icons with title, subtitle, message.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — In Progress</h3>
@@ -68,7 +74,9 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Import successful."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>CacheProgressCard — Active at minute_level</h3>
+          <h3 style={{ "margin-top": "24px" }}>
+            CacheProgressCard — Active at minute_level
+          </h3>
           <CacheProgressCard
             title="Shanghai Highway"
             subtitle="a1b2c3"
@@ -77,7 +85,9 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Fetching minute-level data..."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>CacheProgressCard — Active at statistics</h3>
+          <h3 style={{ "margin-top": "24px" }}>
+            CacheProgressCard — Active at statistics
+          </h3>
           <CacheProgressCard
             title="Cape Cosmos"
             subtitle="d4e5f6"
@@ -86,7 +96,9 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Computing statistics..."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>CacheProgressCard — Completed</h3>
+          <h3 style={{ "margin-top": "24px" }}>
+            CacheProgressCard — Completed
+          </h3>
           <CacheProgressCard
             title="Grand Aurora"
             subtitle="g7h8i9"
@@ -95,7 +107,9 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Cache complete."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>CacheProgressCard — Error at hour_level</h3>
+          <h3 style={{ "margin-top": "24px" }}>
+            CacheProgressCard — Error at hour_level
+          </h3>
           <CacheProgressCard
             title="Pacific Voyager"
             subtitle="j0k1l2"
@@ -110,9 +124,18 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             <div class="depth2-atom-group__label">Icon — Cache Stage Icons</div>
             <For each={CACHE_ICONS}>
               {(icon) => (
-                <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("icon")}>
+                <div
+                  class="depth2-atom depth2-atom--link"
+                  onClick={() => props.onNavigate?.("icon")}
+                >
                   <div class="depth2-atom__label">{icon.name}</div>
-                  <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      "align-items": "center",
+                      gap: "8px",
+                    }}
+                  >
                     <Icon name={icon.name} variant="outline" size="lg" />
                     <Icon name={icon.name} variant="solid" size="lg" />
                     <span class="text-meta">{icon.label}</span>
@@ -122,25 +145,39 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             </For>
           </div>
           <div class="depth2-atom-group">
-            <div class="depth2-atom-group__label">Icon — Default Step Icons</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("icon")}>
+            <div class="depth2-atom-group__label">
+              Icon — Default Step Icons
+            </div>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("icon")}
+            >
               <div class="depth2-atom__label">Built-in SVG</div>
-              <div class="text-meta">pending (circle), active (spinner), completed (check), error (cross)</div>
+              <div class="text-meta">
+                pending (circle), active (spinner), completed (check), error
+                (cross)
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">ProgressCard CSS</div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">Card shell</div>
-              <div class="text-meta">jtf-progress-card — container with header, steps, message</div>
+              <div class="text-meta">
+                jtf-progress-card — container with header, steps, message
+              </div>
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">Step circle</div>
-              <div class="text-meta">background fill + spinner ring + icon overlay</div>
+              <div class="text-meta">
+                background fill + spinner ring + icon overlay
+              </div>
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">Connector</div>
-              <div class="text-meta">arrow between steps, colored when previous step completed</div>
+              <div class="text-meta">
+                arrow between steps, colored when previous step completed
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
@@ -151,7 +188,9 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">createWorkflowProgressCard</div>
-              <div class="text-meta">currentStep + status → derived step statuses</div>
+              <div class="text-meta">
+                currentStep + status → derived step statuses
+              </div>
             </div>
           </div>
         </div>

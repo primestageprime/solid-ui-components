@@ -27,7 +27,11 @@ function makeDataTransfer() {
 function fireDrag(
   el: Element,
   type: string,
-  opts: { clientX?: number; clientY?: number; dataTransfer: ReturnType<typeof makeDataTransfer> },
+  opts: {
+    clientX?: number;
+    clientY?: number;
+    dataTransfer: ReturnType<typeof makeDataTransfer>;
+  },
 ) {
   const ev: any = new Event(type, { bubbles: true, cancelable: true });
   ev.clientX = opts.clientX ?? 0;
@@ -49,30 +53,32 @@ interface Task {
 function installVerticalLayout(ids: string[]) {
   const H = 100;
   const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
-    this: Element,
-  ) {
-    const id = (this as HTMLElement).getAttribute?.("data-dnd-id");
-    if (id && ids.includes(id)) {
-      const top = ids.indexOf(id) * H;
-      return {
-        left: 0,
-        top,
-        width: 300,
-        height: H,
-        right: 300,
-        bottom: top + H,
-        x: 0,
-        y: top,
-        toJSON() {},
-      } as DOMRect;
-    }
-    return orig.call(this);
-  });
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: Element) {
+      const id = (this as HTMLElement).getAttribute?.("data-dnd-id");
+      if (id && ids.includes(id)) {
+        const top = ids.indexOf(id) * H;
+        return {
+          left: 0,
+          top,
+          width: 300,
+          height: H,
+          right: 300,
+          bottom: top + H,
+          x: 0,
+          y: top,
+          toJSON() {},
+        } as DOMRect;
+      }
+      return orig.call(this);
+    },
+  );
 }
 
 function findRow(container: HTMLElement, id: string): HTMLElement {
-  const row = container.querySelector(`[data-dnd-id="${id}"]`) as HTMLElement | null;
+  const row = container.querySelector(
+    `[data-dnd-id="${id}"]`,
+  ) as HTMLElement | null;
   if (!row) throw new Error(`row ${id} not found`);
   return row;
 }
@@ -117,10 +123,16 @@ describe("SortableList — drag lifecycle", () => {
     const root = container as HTMLElement;
     const dt = makeDataTransfer();
 
-    fireDrag(findRow(root, "b"), "dragstart", { clientX: 0, clientY: 150, dataTransfer: dt });
+    fireDrag(findRow(root, "b"), "dragstart", {
+      clientX: 0,
+      clientY: 150,
+      dataTransfer: dt,
+    });
     await flush(); // let the deferred setDragId run → placeholder takes over
 
-    const ph = root.querySelector(".sui-sortable-list__placeholder") as HTMLElement;
+    const ph = root.querySelector(
+      ".sui-sortable-list__placeholder",
+    ) as HTMLElement;
     expect(ph).toBeTruthy();
     // The dragged row's slot is now the placeholder, carrying its id.
     expect(ph.getAttribute("data-dnd-id")).toBe("b");
@@ -193,12 +205,19 @@ describe("SortableList integration — full drag commits the reordered ids", () 
       // dragover the target row at the requested half (top vs bottom of its 100px box)
       const over = findRow(root, c.over);
       const rect = over.getBoundingClientRect();
-      const y = c.half === "after" ? rect.top + rect.height * 0.75 : rect.top + rect.height * 0.25;
+      const y =
+        c.half === "after"
+          ? rect.top + rect.height * 0.75
+          : rect.top + rect.height * 0.25;
       // Hit-testing lives on the container; dispatch dragover so it bubbles to it.
       fireDrag(over, "dragover", { clientX: 0, clientY: y, dataTransfer: dt });
 
       // drop commits the previewed order
-      fireDrag(findRow(root, c.over), "drop", { clientX: 0, clientY: y, dataTransfer: dt });
+      fireDrag(findRow(root, c.over), "drop", {
+        clientX: 0,
+        clientY: y,
+        dataTransfer: dt,
+      });
 
       expect(onReorder).toHaveBeenCalled();
       const last = onReorder.mock.calls.at(-1)![0];

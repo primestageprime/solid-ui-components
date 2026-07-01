@@ -17,8 +17,16 @@ const wrapper = (slot: () => JSX.Element) =>
 describe("PinMarkers — render", () => {
   it("renders one glyph group per pin", () => {
     const pins: Pin[] = [
-      { id: slotId("a"), x: 2, descriptor: { color: "var(--sui-warning)", shape: "pin" } },
-      { id: slotId("b"), x: 5, descriptor: { color: "var(--sui-accent)", shape: "circle" } },
+      {
+        id: slotId("a"),
+        x: 2,
+        descriptor: { color: "var(--sui-warning)", shape: "pin" },
+      },
+      {
+        id: slotId("b"),
+        x: 5,
+        descriptor: { color: "var(--sui-accent)", shape: "circle" },
+      },
     ];
     const { container } = wrapper(() => <PinMarkers data={pins} />);
     expect(container.querySelectorAll(".sui-chart__pin-marker").length).toBe(2);
@@ -28,33 +36,61 @@ describe("PinMarkers — render", () => {
 describe("PinMarkers — reactivity", () => {
   it("toggling selectedId flips data-selected on the matched pin", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const pins: Pin[] = [{ id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } }];
-    const { container } = wrapper(() => <PinMarkers data={pins} selectedId={sel()} />);
-    expect(container.querySelector(".sui-chart__pin-marker")!.getAttribute("data-selected")).toBeNull();
+    const pins: Pin[] = [
+      { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } },
+    ];
+    const { container } = wrapper(() => (
+      <PinMarkers data={pins} selectedId={sel()} />
+    ));
+    expect(
+      container
+        .querySelector(".sui-chart__pin-marker")!
+        .getAttribute("data-selected"),
+    ).toBeNull();
     setSel(slotId("a"));
-    expect(container.querySelector(".sui-chart__pin-marker")!.getAttribute("data-selected")).toBe("true");
+    expect(
+      container
+        .querySelector(".sui-chart__pin-marker")!
+        .getAttribute("data-selected"),
+    ).toBe("true");
   });
 });
 
 describe("PinMarkers — callbacks", () => {
   it("onClick fires on pointerdown with pin + event", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const calls: Pin[] = [];
-    const { container } = wrapper(() => <PinMarkers data={[pin]} onClick={(p) => calls.push(p)} />);
+    const { container } = wrapper(() => (
+      <PinMarkers data={[pin]} onClick={(p) => calls.push(p)} />
+    ));
     fireEvent.pointerDown(container.querySelector(".sui-chart__pin-marker")!);
     expect(calls).toEqual([pin]);
   });
 
   it("onDelete fires on dblclick", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const calls: Pin[] = [];
-    const { container } = wrapper(() => <PinMarkers data={[pin]} onDelete={(p) => calls.push(p)} />);
+    const { container } = wrapper(() => (
+      <PinMarkers data={[pin]} onDelete={(p) => calls.push(p)} />
+    ));
     fireEvent.dblClick(container.querySelector(".sui-chart__pin-marker")!);
     expect(calls).toEqual([pin]);
   });
 
   it("onHover fires with pin on pointerenter and null on pointerleave", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const calls: Array<Pin | null> = [];
     const { container } = wrapper(() => (
       <PinMarkers data={[pin]} onHover={(p) => calls.push(p)} />
@@ -69,15 +105,29 @@ describe("PinMarkers — callbacks", () => {
 describe("PinMarkers — renderPin escape hatch", () => {
   it("invokes renderPin with pin + render context including selection state", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
-    const calls: Array<{ id: Id; selected: boolean; cx: number; cy: number }> = [];
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
+    const calls: Array<{ id: Id; selected: boolean; cx: number; cy: number }> =
+      [];
     const { container } = wrapper(() => (
       <PinMarkers
         data={[pin]}
         selectedId={sel()}
         renderPin={(p, rctx) => {
-          calls.push({ id: p.id, selected: rctx.selected, cx: rctx.cx, cy: rctx.cy });
-          return <text class="ghost-pin-test-sentinel" x={rctx.cx} y={rctx.cy}>X</text>;
+          calls.push({
+            id: p.id,
+            selected: rctx.selected,
+            cx: rctx.cx,
+            cy: rctx.cy,
+          });
+          return (
+            <text class="ghost-pin-test-sentinel" x={rctx.cx} y={rctx.cy}>
+              X
+            </text>
+          );
         }}
       />
     ));
@@ -108,7 +158,9 @@ describe("PinMarkers — emphasizeNearestX", () => {
     const { container } = wrapper(() => (
       <PinMarkers data={pins} emphasizeNearestX />
     ));
-    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(
+      0,
+    );
   });
 
   it("flags exactly one pin as emphasized when hoverX is set", () => {
@@ -150,13 +202,19 @@ describe("PinMarkers — emphasizedIds", () => {
     const { container } = wrapper(() => (
       <PinMarkers data={pins} emphasizedIds={new Set([slotId("a")])} />
     ));
-    const markers = container.querySelectorAll<SVGGElement>(".sui-chart__pin-marker");
+    const markers = container.querySelectorAll<SVGGElement>(
+      ".sui-chart__pin-marker",
+    );
     expect(markers[0]?.getAttribute("data-emphasized")).toBe("true");
     expect(markers[1]?.getAttribute("data-emphasized")).toBeNull();
   });
 
   it("emphasizedIds is independent of selectedId (both can apply)", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const { container } = wrapper(() => (
       <PinMarkers
         data={[pin]}
@@ -186,13 +244,20 @@ describe("PinMarkers — emphasizedIds", () => {
       parseFloat(
         root.querySelector(".sui-chart__pin-marker circle")!.getAttribute("r")!,
       );
-    expect(radius(emphasized.container)).toBeCloseTo(radius(baseline.container), 5);
+    expect(radius(emphasized.container)).toBeCloseTo(
+      radius(baseline.container),
+      5,
+    );
   });
 });
 
 describe("PinMarkers — lane prop", () => {
   it("defaults to plot-data lane: group uses plot clip-path", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const { container } = wrapper(() => <PinMarkers data={[pin]} />);
     const group = container.querySelector(".sui-chart__pin-markers")!;
     expect(group.getAttribute("data-lane")).toBe("plot-data");
@@ -200,7 +265,11 @@ describe("PinMarkers — lane prop", () => {
   });
 
   it("lane='annotation' uses the annotation-lane clip-path", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "pin" },
+    };
     const { container } = render(() => (
       <Chart
         width={200}
@@ -215,7 +284,9 @@ describe("PinMarkers — lane prop", () => {
     ));
     const group = container.querySelector(".sui-chart__pin-markers")!;
     expect(group.getAttribute("data-lane")).toBe("annotation");
-    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-annotation-lane-clip-/);
+    expect(group.getAttribute("clip-path")).toMatch(
+      /^url\(#sui-chart-annotation-lane-clip-/,
+    );
   });
 
   // ShapeGlyph positions via `<g transform="translate(cx, cy)">` so we
@@ -228,7 +299,12 @@ describe("PinMarkers — lane prop", () => {
   };
 
   it("lane='annotation' centers glyph at -annotationLaneHeight/2 (ignores pin.y)", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      y: 50,
+      descriptor: { color: "#fff", shape: "circle" },
+    };
     const { container } = render(() => (
       <Chart
         width={200}
@@ -249,7 +325,12 @@ describe("PinMarkers — lane prop", () => {
   it("lane='annotation' falls back to cy=0 when chart has no lane configured", () => {
     // When a consumer asks for annotation lane but the Chart didn't reserve
     // one, glyphs collapse to y=0 (plot-top) — safe degrade, no off-canvas.
-    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      y: 50,
+      descriptor: { color: "#fff", shape: "circle" },
+    };
     const { container } = wrapper(() => (
       <PinMarkers data={[pin]} lane="annotation" />
     ));
@@ -261,7 +342,12 @@ describe("PinMarkers — lane prop", () => {
     // Baseline sanity check that the new prop didn't break the existing
     // y-scale path. innerHeight = 100 - 8 - 28 = 64; y-scale linear over
     // [64, 0]. y=50 with domain [0,100] → 64 * (1 - 50/100) = 32.
-    const pin: Pin = { id: slotId("a"), x: 5, y: 50, descriptor: { color: "#fff", shape: "circle" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      y: 50,
+      descriptor: { color: "#fff", shape: "circle" },
+    };
     const { container } = wrapper(() => <PinMarkers data={[pin]} />);
     const glyph = container.querySelector(".sui-chart__pin-marker > g")!;
     expect(cyFromTransform(glyph)).toBeCloseTo(32, 1);
@@ -270,9 +356,15 @@ describe("PinMarkers — lane prop", () => {
 
 describe("PinMarkers — curried variants", () => {
   it("WarningPinMarkers attaches the warning class", () => {
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "var(--sui-warning)", shape: "pin" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "var(--sui-warning)", shape: "pin" },
+    };
     const { container } = wrapper(() => <WarningPinMarkers data={[pin]} />);
-    expect(container.querySelector(".sui-chart__pin-markers--warning")).toBeTruthy();
+    expect(
+      container.querySelector(".sui-chart__pin-markers--warning"),
+    ).toBeTruthy();
   });
 
   it("Warning renders a larger glyph than Compact for identical input", () => {
@@ -281,15 +373,19 @@ describe("PinMarkers — curried variants", () => {
     // shape so size flows directly to the rendered radius — independent of
     // path scaling. If anyone later swaps the baked `size` defaults this
     // test catches it.
-    const pin: Pin = { id: slotId("a"), x: 5, descriptor: { color: "#fff", shape: "circle" } };
+    const pin: Pin = {
+      id: slotId("a"),
+      x: 5,
+      descriptor: { color: "#fff", shape: "circle" },
+    };
     const radiusOf = (root: ParentNode): number =>
       parseFloat(
-        root
-          .querySelector(".sui-chart__pin-marker circle")!
-          .getAttribute("r")!,
+        root.querySelector(".sui-chart__pin-marker circle")!.getAttribute("r")!,
       );
     const warning = wrapper(() => <WarningPinMarkers data={[pin]} />);
     const compact = wrapper(() => <CompactPinMarkers data={[pin]} />);
-    expect(radiusOf(warning.container)).toBeGreaterThan(radiusOf(compact.container));
+    expect(radiusOf(warning.container)).toBeGreaterThan(
+      radiusOf(compact.container),
+    );
   });
 });

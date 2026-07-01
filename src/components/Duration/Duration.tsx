@@ -1,5 +1,3 @@
-
-
 export interface DurationProps {
   /** Duration in milliseconds */
   ms: number | null | undefined;

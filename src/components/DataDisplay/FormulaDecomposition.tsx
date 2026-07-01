@@ -11,7 +11,12 @@
 // depending on the deepest child each factory ends up composing.
 // ============================================
 import { type Component, For, type JSX } from "solid-js";
-import { FormulaProvider, MathFormula, FormulaVarRow, useFormulaHighlight } from "../MathFormula/MathFormula";
+import {
+  FormulaProvider,
+  MathFormula,
+  FormulaVarRow,
+  useFormulaHighlight,
+} from "../MathFormula/MathFormula";
 import { ResultDisplay } from "./ResultDisplay";
 import { NumberWithUnits } from "./NumberWithUnits";
 import { DTable, DT, DD } from "../DataList/DataList";
@@ -70,7 +75,10 @@ interface FormulaValuesProps {
   values: Record<string, number>;
 }
 
-function computeResult(config: FormulaConfig, values: Record<string, number>): string {
+function computeResult(
+  config: FormulaConfig,
+  values: Record<string, number>,
+): string {
   const precision = config.resultPrecision ?? 4;
   return config.compute(values).toFixed(precision);
 }
@@ -78,10 +86,14 @@ function computeResult(config: FormulaConfig, values: Record<string, number>): s
 function isCompliant(config: FormulaConfig, resultValue: number): boolean {
   const cmp = config.comparison ?? "lte";
   switch (cmp) {
-    case "lt": return resultValue < config.threshold;
-    case "lte": return resultValue <= config.threshold;
-    case "gt": return resultValue > config.threshold;
-    case "gte": return resultValue >= config.threshold;
+    case "lt":
+      return resultValue < config.threshold;
+    case "lte":
+      return resultValue <= config.threshold;
+    case "gt":
+      return resultValue > config.threshold;
+    case "gte":
+      return resultValue >= config.threshold;
   }
 }
 
@@ -89,7 +101,9 @@ function isCompliant(config: FormulaConfig, resultValue: number): boolean {
 // createFormulaResult
 // ============================================
 
-export function createFormulaResult(config: FormulaConfig): Component<FormulaValuesProps> {
+export function createFormulaResult(
+  config: FormulaConfig,
+): Component<FormulaValuesProps> {
   return (props) => {
     const ctx = useFormulaHighlight();
     const resultStr = () => computeResult(config, props.values);
@@ -121,7 +135,9 @@ export function createFormulaResult(config: FormulaConfig): Component<FormulaVal
 // createGivens
 // ============================================
 
-export function createGivens(config: FormulaConfig): Component<FormulaValuesProps> {
+export function createGivens(
+  config: FormulaConfig,
+): Component<FormulaValuesProps> {
   return (props) => {
     return (
       <DTable>
@@ -133,9 +149,13 @@ export function createGivens(config: FormulaConfig): Component<FormulaValuesProp
                 <DT>{v.label}</DT>
                 <DD highlight>
                   {v.units ? (
-                    <NumberWithUnits value={props.values[v.id]} units={v.units} precision={precision} />
+                    <NumberWithUnits
+                      value={props.values[v.id]}
+                      units={v.units}
+                      precision={precision}
+                    />
                   ) : (
-                    props.values[v.id]?.toFixed(precision) ?? "\u2014"
+                    (props.values[v.id]?.toFixed(precision) ?? "\u2014")
                   )}
                 </DD>
               </FormulaVarRow>
@@ -151,7 +171,9 @@ export function createGivens(config: FormulaConfig): Component<FormulaValuesProp
 // createFormula
 // ============================================
 
-export function createFormula(config: FormulaConfig): Component<FormulaValuesProps> {
+export function createFormula(
+  config: FormulaConfig,
+): Component<FormulaValuesProps> {
   return (props) => {
     const resultStr = () => computeResult(config, props.values);
     const latex = () => config.latex(resultStr());
@@ -167,7 +189,9 @@ interface FormulaPanelBundle {
   Result: Component<FormulaValuesProps>;
   Givens: Component<FormulaValuesProps>;
   Formula: Component<FormulaValuesProps>;
-  Panel: Component<FormulaValuesProps & { class?: string; style?: JSX.CSSProperties }>;
+  Panel: Component<
+    FormulaValuesProps & { class?: string; style?: JSX.CSSProperties }
+  >;
 }
 
 export function createFormulaPanel(config: FormulaConfig): FormulaPanelBundle {
@@ -175,10 +199,18 @@ export function createFormulaPanel(config: FormulaConfig): FormulaPanelBundle {
   const Givens = createGivens(config);
   const Formula = createFormula(config);
 
-  const Panel: Component<FormulaValuesProps & { class?: string; style?: JSX.CSSProperties }> = (props) => {
+  const Panel: Component<
+    FormulaValuesProps & { class?: string; style?: JSX.CSSProperties }
+  > = (props) => {
     return (
       <FormulaProvider>
-        <Surface padding="md" radius="md" borderColor={config.borderColor} class={props.class} style={props.style}>
+        <Surface
+          padding="md"
+          radius="md"
+          borderColor={config.borderColor}
+          class={props.class}
+          style={props.style}
+        >
           <NarrowStack>
             <Result values={props.values} />
             <Givens values={props.values} />

@@ -58,8 +58,7 @@ function seedTables(): BoardTable[] {
     // Multi-batch tables split into ~10k-row chunks, all `pending` to start.
     // Small tables omit `batches` — the board drives one synthetic whole-table
     // batch off `status` doing → done.
-    batches:
-      totalRows > 10_000 ? chunkBatches(totalRows) : undefined,
+    batches: totalRows > 10_000 ? chunkBatches(totalRows) : undefined,
   });
   return [
     mk("DIM_CURRENCY", "lookup", 180, { int: 2, text: 3 }),

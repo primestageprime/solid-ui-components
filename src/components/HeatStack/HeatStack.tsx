@@ -6,7 +6,14 @@
 // Vertical stack of items with status cells per key.
 // Earliest items at bottom, latest on top.
 // ============================================
-import { type Component, type JSX, splitProps, For, Show, createSignal } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  For,
+  Show,
+  createSignal,
+} from "solid-js";
 import "./HeatStack.css";
 
 export type HeatStackStatus = "missing" | "partial" | "full" | "unknown";
@@ -101,9 +108,7 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
         </Show>
         <div class="jtf-heatstack__cells">
           <For each={keys()}>
-            {(key) => (
-              <div class="jtf-heatstack__key-label">{key}</div>
-            )}
+            {(key) => <div class="jtf-heatstack__key-label">{key}</div>}
           </For>
         </div>
       </div>
@@ -125,7 +130,9 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
                         class={`jtf-heatstack__cell jtf-heatstack__cell--${status}`}
                         title={`${item.name} — ${key}: ${status}`}
                         onClick={() => local.onItemClick?.(item.name, key)}
-                        style={local.onItemClick ? { cursor: "pointer" } : undefined}
+                        style={
+                          local.onItemClick ? { cursor: "pointer" } : undefined
+                        }
                       />
                     );
                   }}
@@ -157,7 +164,9 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
                       {(key) => {
                         const status = item.statuses[key] || "missing";
                         return (
-                          <div class={`jtf-heatstack__cell jtf-heatstack__cell--${status}`} />
+                          <div
+                            class={`jtf-heatstack__cell jtf-heatstack__cell--${status}`}
+                          />
                         );
                       }}
                     </For>

@@ -25,11 +25,26 @@ describe("previewOrder", () => {
   it("splices the dragged item out and re-inserts it at insertPos (removed space)", () => {
     const base = items("a", "b", "c", "d");
     // drag "a" (removed → [b,c,d]); insert at 2 → [b,c,a,d]
-    expect(ids(previewOrder(base, getId, "a", 2))).toEqual(["b", "c", "a", "d"]);
+    expect(ids(previewOrder(base, getId, "a", 2))).toEqual([
+      "b",
+      "c",
+      "a",
+      "d",
+    ]);
     // drag "d" (removed → [a,b,c]); insert at 0 → [d,a,b,c]
-    expect(ids(previewOrder(base, getId, "d", 0))).toEqual(["d", "a", "b", "c"]);
+    expect(ids(previewOrder(base, getId, "d", 0))).toEqual([
+      "d",
+      "a",
+      "b",
+      "c",
+    ]);
     // drag "b" (removed → [a,c,d]); insert at end (3) → [a,c,d,b]
-    expect(ids(previewOrder(base, getId, "b", 3))).toEqual(["a", "c", "d", "b"]);
+    expect(ids(previewOrder(base, getId, "b", 3))).toEqual([
+      "a",
+      "c",
+      "d",
+      "b",
+    ]);
   });
 
   it("clamps insertPos into the dragged-removed range", () => {

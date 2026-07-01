@@ -11,22 +11,46 @@ import { createPanel } from "./Panel";
 export const InfoPanel = createPanel({ corners: "clip", glow: "subtle" });
 
 // Accent panel — primary color, medium glow, bracket corners
-export const AccentPanel = createPanel({ variant: "primary", corners: "bracket", glow: "medium" });
+export const AccentPanel = createPanel({
+  variant: "primary",
+  corners: "bracket",
+  glow: "medium",
+});
 
 // Danger panel — danger color, strong glow, clipped corners
-export const DangerPanel = createPanel({ variant: "danger", corners: "clip", glow: "strong" });
+export const DangerPanel = createPanel({
+  variant: "danger",
+  corners: "clip",
+  glow: "strong",
+});
 
 // Warning panel — warning color, subtle glow, clipped corners
-export const WarningPanel = createPanel({ variant: "warning", corners: "clip", glow: "subtle" });
+export const WarningPanel = createPanel({
+  variant: "warning",
+  corners: "clip",
+  glow: "subtle",
+});
 
 // Success panel — success color, subtle glow, clipped corners
-export const SuccessPanel = createPanel({ variant: "success", corners: "clip", glow: "subtle" });
+export const SuccessPanel = createPanel({
+  variant: "success",
+  corners: "clip",
+  glow: "subtle",
+});
 
 // Compact info panel — small size, no glow, clipped corners
-export const CompactPanel = createPanel({ size: "sm", corners: "clip", glow: "none" });
+export const CompactPanel = createPanel({
+  size: "sm",
+  corners: "clip",
+  glow: "none",
+});
 
 // Decorated panel — bracket corners with edge accents and medium glow
-export const DecoratedPanel = createPanel({ corners: "bracket", edgeAccents: true, glow: "medium" });
+export const DecoratedPanel = createPanel({
+  corners: "bracket",
+  edgeAccents: true,
+  glow: "medium",
+});
 
 // --- Variants from generic Panel ---
 

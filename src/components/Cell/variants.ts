@@ -20,23 +20,63 @@ export const KVTable: ParentComponent<CellTableProps> = createCellTable({});
 
 // ── Row ──────────────────────────────────────────────────────────────
 
-export const BorderRow: ParentComponent<CellRowProps> = createCellRow({ border: true });
+export const BorderRow: ParentComponent<CellRowProps> = createCellRow({
+  border: true,
+});
 
 // ── Term cells (label column) ────────────────────────────────────────
 
-export const DataTerm: Component<CellProps> = createCell({ color: "var(--sui-text-primary)" });
-export const DataTermMuted: Component<CellProps> = createCell({ color: "var(--sui-text-muted)" });
+export const DataTerm: Component<CellProps> = createCell({
+  color: "var(--sui-text-primary)",
+});
+export const DataTermMuted: Component<CellProps> = createCell({
+  color: "var(--sui-text-muted)",
+});
 
 // ── Value cells (data column) ────────────────────────────────────────
 
-export const DataValue: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-text-secondary)" });
-export const DataValueHighlight: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-warning)" });
-export const DataValueSuccess: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-success)" });
-export const DataValuePrimary: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-text-primary)" });
-export const DataValueMuted: Component<CellProps> = createCell({ align: "right", weight: "semibold", color: "var(--sui-text-muted)" });
+export const DataValue: Component<CellProps> = createCell({
+  align: "right",
+  weight: "semibold",
+  color: "var(--sui-text-secondary)",
+});
+export const DataValueHighlight: Component<CellProps> = createCell({
+  align: "right",
+  weight: "semibold",
+  color: "var(--sui-warning)",
+});
+export const DataValueSuccess: Component<CellProps> = createCell({
+  align: "right",
+  weight: "semibold",
+  color: "var(--sui-success)",
+});
+export const DataValuePrimary: Component<CellProps> = createCell({
+  align: "right",
+  weight: "semibold",
+  color: "var(--sui-text-primary)",
+});
+export const DataValueMuted: Component<CellProps> = createCell({
+  align: "right",
+  weight: "semibold",
+  color: "var(--sui-text-muted)",
+});
 
 // ── Header cells ─────────────────────────────────────────────────────
 
-export const DataHeader: Component<CellProps> = createCell({ as: "th", weight: "medium", color: "var(--sui-text-muted)" });
-export const DataHeaderRight: Component<CellProps> = createCell({ as: "th", align: "right", weight: "medium", color: "var(--sui-text-muted)" });
-export const DataHeaderCenter: Component<CellProps> = createCell({ as: "th", align: "center", weight: "medium", color: "var(--sui-text-muted)" });
+export const DataHeader: Component<CellProps> = createCell({
+  as: "th",
+  weight: "medium",
+  color: "var(--sui-text-muted)",
+});
+export const DataHeaderRight: Component<CellProps> = createCell({
+  as: "th",
+  align: "right",
+  weight: "medium",
+  color: "var(--sui-text-muted)",
+});
+export const DataHeaderCenter: Component<CellProps> = createCell({
+  as: "th",
+  align: "center",
+  weight: "medium",
+  color: "var(--sui-text-muted)",
+});

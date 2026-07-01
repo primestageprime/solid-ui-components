@@ -31,7 +31,9 @@
 @import "./_baseline.css";
 
 /* Box-sizing reset */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -124,17 +126,19 @@ body {
   --sui-space-6: 24px;
 
   /* ---- Typography ---- */
-  --sui-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --sui-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sui-font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sui-font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* ---- Status Colors (heatmap cells) — CB-safe ramp ----
      Avoids the red↔green endpoints. Uses a blue→amber→vermilion ramp where
      "missing" (worst) is vermilion and "full" (best) is blue, mirroring the
      danger/success remap above. Lightness also varies so the steps survive
      greyscale. */
-  --status-full:    #3b82f6; /* best  — blue */
+  --status-full: #3b82f6; /* best  — blue */
   --status-partial: #6fa8dc; /* light blue */
-  --status-sparse:  #e6a700; /* amber */
+  --status-sparse: #e6a700; /* amber */
   --status-missing: #e66100; /* worst — vermilion */
 
   /* ---- Chart chrome ---- */
@@ -185,9 +189,9 @@ html[data-colorblind="true"] {
   --sui-warning-rgb: 230, 167, 0;
 
   /* Heatmap status ramp (blue→amber→vermilion). */
-  --status-full:    #3b82f6;
+  --status-full: #3b82f6;
   --status-partial: #6fa8dc;
-  --status-sparse:  #e6a700;
+  --status-sparse: #e6a700;
   --status-missing: #e66100;
 
   /* Chart semantics. */

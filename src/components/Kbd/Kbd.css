@@ -4,7 +4,13 @@
 .sui-kbd {
   display: inline-flex;
   align-items: center;
-  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-family: var(
+    --sui-font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
   font-size: 0.95em;
   line-height: 1;
   padding: 2px 6px;

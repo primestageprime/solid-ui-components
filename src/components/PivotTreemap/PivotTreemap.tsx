@@ -24,13 +24,14 @@
 import { type Component, Show } from "solid-js";
 import { SlotFillBar } from "../SlotFillBar";
 import { Treemap, type TreemapSidebar } from "../Treemap";
-import {
-  ChipLabel,
-  CountText,
-  EllipsizedChipLabel,
-} from "../Text/variants";
+import { ChipLabel, CountText, EllipsizedChipLabel } from "../Text/variants";
 import { TightSpreadRow } from "../Layout/variants";
-import { bucketByDims, type PivotAccessors, type PivotBucket, type PivotMetrics } from "./bucketByDims";
+import {
+  bucketByDims,
+  type PivotAccessors,
+  type PivotBucket,
+  type PivotMetrics,
+} from "./bucketByDims";
 
 export interface PivotSelection {
   outerKey: string;
@@ -89,7 +90,9 @@ export function PivotTreemap<T, Dim extends string>(
   p: PivotTreemapProps<T, Dim>,
 ): ReturnType<Component> {
   const buckets = () =>
-    bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics).map(toWeighted);
+    bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics).map(
+      toWeighted,
+    );
   const untagged = () => p.untaggedCount ?? 0;
 
   const isLeafSelected = (ok: string, ik: string): boolean =>

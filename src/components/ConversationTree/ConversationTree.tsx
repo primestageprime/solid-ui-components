@@ -68,7 +68,8 @@ export interface ConversationTreeProps {
   maxLines?: number;
 }
 
-const toMs = (t: number | Date): number => (t instanceof Date ? t.getTime() : t);
+const toMs = (t: number | Date): number =>
+  t instanceof Date ? t.getTime() : t;
 
 // Deterministic color from id — muted cool palette (cyan → indigo).
 // Hue 185..260, low saturation, mid-high lightness for a calm, readable feel.
@@ -102,10 +103,16 @@ const sameDay = (a: number, b: number): boolean => {
 const formatAbsolute = (t: number, now: number): string => {
   const d = new Date(t);
   const todayLike = sameDay(t, now);
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const time = d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
   if (todayLike) return `Today, ${time}`;
   if (sameDay(t, now - 86_400_000)) return `Yesterday, ${time}`;
-  const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const date = d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
   return `${date}, ${time}`;
 };
 

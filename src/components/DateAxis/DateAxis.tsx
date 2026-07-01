@@ -141,10 +141,7 @@ export const DateAxis = <C extends Cell = Cell>(
     if (w <= 0 || vw === 0 || props.cells.length === 0) return leftVisibleIdx();
     return Math.max(
       0,
-      Math.min(
-        props.cells.length - 1,
-        Math.floor((scrollLeft() + vw - 1) / w),
-      ),
+      Math.min(props.cells.length - 1, Math.floor((scrollLeft() + vw - 1) / w)),
     );
   });
   const leftMonthLabel = createMemo(() =>
@@ -228,9 +225,12 @@ export const DateAxis = <C extends Cell = Cell>(
   // don't lose pan-to-scroll. Tap-to-select still works on touch via the
   // per-cell onClick below.
   const PAN_THRESHOLD_PX = 4;
-  let panState:
-    | { startClientX: number; startScrollLeft: number; pointerId: number; active: boolean }
-    | null = null;
+  let panState: {
+    startClientX: number;
+    startScrollLeft: number;
+    pointerId: number;
+    active: boolean;
+  } | null = null;
 
   const handleAxisPointerDown = (e: PointerEvent) => {
     if (!scrollEl || e.pointerType === "touch" || e.button !== 0) return;
@@ -286,82 +286,85 @@ export const DateAxis = <C extends Cell = Cell>(
           {rightMonthLabel()}
         </div>
       </Show>
-    <div
-      class="sui-date-axis"
-      style={{ "--sui-date-axis-cell-width": `${cellW()}px` }}
-      role="row"
-      aria-label="Date axis"
-      ref={(el) => {
-        scrollEl = el;
-        setScrollLeft(el.scrollLeft);
-        setViewportWidth(el.clientWidth);
-        el.addEventListener("scroll", onScrollListener, { passive: true });
-        el.addEventListener("pointerdown", handleAxisPointerDown);
-        el.addEventListener("pointermove", handleAxisPointerMove);
-        el.addEventListener("pointerup", handleAxisPointerUp);
-        el.addEventListener("pointercancel", handleAxisPointerUp);
-        if (typeof ResizeObserver !== "undefined") {
-          const ro = new ResizeObserver(() => setViewportWidth(el.clientWidth));
-          ro.observe(el);
-          onCleanup(() => ro.disconnect());
-        }
-        onCleanup(() => {
-          el.removeEventListener("scroll", onScrollListener);
-          el.removeEventListener("pointerdown", handleAxisPointerDown);
-          el.removeEventListener("pointermove", handleAxisPointerMove);
-          el.removeEventListener("pointerup", handleAxisPointerUp);
-          el.removeEventListener("pointercancel", handleAxisPointerUp);
-          endProgrammaticScroll();
-        });
-      }}
-    >
-      <div class="sui-date-axis__track">
-        <For each={props.cells}>
-          {(cell, idx) => {
-            const isToday = () =>
-              props.today !== undefined && cellContainsTime(cell, props.today);
-            const isSelected = () => props.selected === idx();
-            const ctx = (): DateAxisCellContext => ({
-              isToday: isToday(),
-              isSelected: isSelected(),
-              index: idx(),
-            });
-            const activate = () => props.onCellClick?.(idx(), cell);
-
-            return (
-              <div
-                class={[
-                  "sui-date-axis__cell",
-                  "sui-date-axis__cell--custom",
-                  isToday() ? "sui-date-axis__cell--today" : "",
-                  isSelected() ? "sui-date-axis__cell--selected" : "",
-                  clickable() ? "sui-date-axis__cell--clickable" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                role={clickable() ? "button" : "columnheader"}
-                tabindex={clickable() ? 0 : undefined}
-                aria-current={isToday() ? "date" : undefined}
-                aria-pressed={clickable() ? isSelected() : undefined}
-                onClick={clickable() ? activate : undefined}
-                onKeyDown={
-                  clickable()
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          activate();
-                        }
-                      }
-                    : undefined
-                }
-              >
-                {props.renderCell(cell, ctx())}
-              </div>
+      <div
+        class="sui-date-axis"
+        style={{ "--sui-date-axis-cell-width": `${cellW()}px` }}
+        role="row"
+        aria-label="Date axis"
+        ref={(el) => {
+          scrollEl = el;
+          setScrollLeft(el.scrollLeft);
+          setViewportWidth(el.clientWidth);
+          el.addEventListener("scroll", onScrollListener, { passive: true });
+          el.addEventListener("pointerdown", handleAxisPointerDown);
+          el.addEventListener("pointermove", handleAxisPointerMove);
+          el.addEventListener("pointerup", handleAxisPointerUp);
+          el.addEventListener("pointercancel", handleAxisPointerUp);
+          if (typeof ResizeObserver !== "undefined") {
+            const ro = new ResizeObserver(() =>
+              setViewportWidth(el.clientWidth),
             );
-          }}
-        </For>
+            ro.observe(el);
+            onCleanup(() => ro.disconnect());
+          }
+          onCleanup(() => {
+            el.removeEventListener("scroll", onScrollListener);
+            el.removeEventListener("pointerdown", handleAxisPointerDown);
+            el.removeEventListener("pointermove", handleAxisPointerMove);
+            el.removeEventListener("pointerup", handleAxisPointerUp);
+            el.removeEventListener("pointercancel", handleAxisPointerUp);
+            endProgrammaticScroll();
+          });
+        }}
+      >
+        <div class="sui-date-axis__track">
+          <For each={props.cells}>
+            {(cell, idx) => {
+              const isToday = () =>
+                props.today !== undefined &&
+                cellContainsTime(cell, props.today);
+              const isSelected = () => props.selected === idx();
+              const ctx = (): DateAxisCellContext => ({
+                isToday: isToday(),
+                isSelected: isSelected(),
+                index: idx(),
+              });
+              const activate = () => props.onCellClick?.(idx(), cell);
+
+              return (
+                <div
+                  class={[
+                    "sui-date-axis__cell",
+                    "sui-date-axis__cell--custom",
+                    isToday() ? "sui-date-axis__cell--today" : "",
+                    isSelected() ? "sui-date-axis__cell--selected" : "",
+                    clickable() ? "sui-date-axis__cell--clickable" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  role={clickable() ? "button" : "columnheader"}
+                  tabindex={clickable() ? 0 : undefined}
+                  aria-current={isToday() ? "date" : undefined}
+                  aria-pressed={clickable() ? isSelected() : undefined}
+                  onClick={clickable() ? activate : undefined}
+                  onKeyDown={
+                    clickable()
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            activate();
+                          }
+                        }
+                      : undefined
+                  }
+                >
+                  {props.renderCell(cell, ctx())}
+                </div>
+              );
+            }}
+          </For>
+        </div>
       </div>
-    </div>
     </div>
   );
 };

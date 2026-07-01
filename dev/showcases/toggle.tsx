@@ -9,12 +9,18 @@ export const ToggleShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Toggle — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Toggle.css), no component imports. Checkbox toggle switch with label positioning.</p>
+      <p class="text-meta">
+        Owns CSS (Toggle.css), no component imports. Checkbox toggle switch with
+        label positioning.
+      </p>
 
       <div class="example-group">
         <h3>Basic Toggle</h3>
         <div class="example-column">
-          <Toggle checked={enabled1()} onChange={() => setEnabled1(!enabled1())} />
+          <Toggle
+            checked={enabled1()}
+            onChange={() => setEnabled1(!enabled1())}
+          />
           <span style={{ color: "var(--sui-text-secondary)" }}>
             State: {enabled1() ? "ON" : "OFF"}
           </span>
@@ -24,8 +30,17 @@ export const ToggleShowcase: Component = () => {
       <div class="example-group">
         <h3>With Label</h3>
         <div class="example-column">
-          <Toggle label="Enable notifications" checked={enabled2()} onChange={() => setEnabled2(!enabled2())} />
-          <Toggle label="Dark mode" labelPosition="left" checked={enabled3()} onChange={() => setEnabled3(!enabled3())} />
+          <Toggle
+            label="Enable notifications"
+            checked={enabled2()}
+            onChange={() => setEnabled2(!enabled2())}
+          />
+          <Toggle
+            label="Dark mode"
+            labelPosition="left"
+            checked={enabled3()}
+            onChange={() => setEnabled3(!enabled3())}
+          />
         </div>
       </div>
 

@@ -16,7 +16,9 @@ const baseProps = {
   columns: ["cA", "cB"] as const,
   rowLabel: (r: RowId) => `Row ${r}`,
   colLabel: (c: ColId) => `Col ${c}`,
-  cell: (r: RowId, c: ColId): Cell | null => ({ value: r.charCodeAt(1) + c.charCodeAt(1) }),
+  cell: (r: RowId, c: ColId): Cell | null => ({
+    value: r.charCodeAt(1) + c.charCodeAt(1),
+  }),
   renderCell: (cell: Cell) => <span>{cell.value}</span>,
 };
 
@@ -67,11 +69,7 @@ describe("PivotGrid rendering", () => {
 
   it("uses a custom emptyCell when provided", () => {
     const { container } = render(() => (
-      <PivotGrid
-        {...baseProps}
-        cell={() => null}
-        emptyCell={<i>n/a</i>}
-      />
+      <PivotGrid {...baseProps} cell={() => null} emptyCell={<i>n/a</i>} />
     ));
     const bodyCells = container.querySelectorAll("tbody td");
     bodyCells.forEach((td) => {
@@ -190,11 +188,7 @@ describe("PivotGrid heat coloring", () => {
   it("uses a linear ramp when heatRamp={(v) => v} is passed (heat 0.5 → alpha 0.35)", () => {
     // linear(0.5) = 0.5 → alpha = 0.1 + 0.5 * 0.5 = 0.35
     const { container } = render(() => (
-      <PivotGrid
-        {...baseProps}
-        getCellHeat={() => 0.5}
-        heatRamp={(v) => v}
-      />
+      <PivotGrid {...baseProps} getCellHeat={() => 0.5} heatRamp={(v) => v} />
     ));
     const td = container.querySelector("tbody td");
     const inline = td?.getAttribute("style") ?? "";
@@ -203,11 +197,7 @@ describe("PivotGrid heat coloring", () => {
 
   it("respects the custom heatRgb prop in the rgba() string", () => {
     const { container } = render(() => (
-      <PivotGrid
-        {...baseProps}
-        getCellHeat={() => 1.0}
-        heatRgb="0, 128, 255"
-      />
+      <PivotGrid {...baseProps} getCellHeat={() => 1.0} heatRgb="0, 128, 255" />
     ));
     const td = container.querySelector("tbody td");
     const inline = td?.getAttribute("style") ?? "";
@@ -217,9 +207,7 @@ describe("PivotGrid heat coloring", () => {
 
 describe("PivotGrid layout modifiers", () => {
   it("adds the compact class when compact={true}", () => {
-    const { container } = render(() => (
-      <PivotGrid {...baseProps} compact />
-    ));
+    const { container } = render(() => <PivotGrid {...baseProps} compact />);
     const wrapper = container.firstElementChild;
     expect(wrapper?.className).toMatch(/sui-pivot-grid/);
     expect(wrapper?.className).toMatch(/sui-pivot-grid--compact/);

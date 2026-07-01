@@ -36,8 +36,11 @@ export interface SidebarSelectorProps<T> {
   label?: string;
 }
 
-export function SidebarSelector<T>(props: SidebarSelectorProps<T>): JSX.Element {
-  const selectedItem = () => props.items.find((item) => item.id === props.selectedId);
+export function SidebarSelector<T>(
+  props: SidebarSelectorProps<T>,
+): JSX.Element {
+  const selectedItem = () =>
+    props.items.find((item) => item.id === props.selectedId);
 
   const containerClass = () => {
     const classes = ["sidebar-selector"];
@@ -254,8 +257,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       primaryCharacter: "Aang",
       characterColor: "#ffcc00",
       airDate: "Jul 19, 2008",
-      synopsis:
-        "The final battle. Aang faces Fire Lord Ozai to end the war.",
+      synopsis: "The final battle. Aang faces Fire Lord Ozai to end the war.",
     },
   },
 ];
@@ -293,4 +295,3 @@ export function SidebarSelectorDemo(): JSX.Element {
     </div>
   );
 }
-

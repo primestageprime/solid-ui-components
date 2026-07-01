@@ -32,7 +32,9 @@
   /* When a node's col or row changes (e.g. an animation shifts the whole
      chart to keep DOING centered), animate the move instead of snapping.
      SVG attribute transitions work in modern browsers. */
-  transition: x 0.55s ease-out, y 0.55s ease-out;
+  transition:
+    x 0.55s ease-out,
+    y 0.55s ease-out;
   /* foreignObject clips to its width/height by default, so a leaving
      node's compress-and-slide animation would be cut off at the box
      edge. Let the inner div spill out so the full shrink + translation
@@ -55,17 +57,13 @@
     opacity: 1;
   }
   50% {
-    transform:
-      translateX(calc(var(--sui-leave-x, 0px) * 0.5))
-      scale(0.4, 0.7)
+    transform: translateX(calc(var(--sui-leave-x, 0px) * 0.5)) scale(0.4, 0.7)
       skewX(calc(var(--sui-leave-dir, -1) * 10deg));
     border-radius: 24px;
     opacity: 0.7;
   }
   100% {
-    transform:
-      translateX(var(--sui-leave-x, 0px))
-      scale(0.12, 0.4)
+    transform: translateX(var(--sui-leave-x, 0px)) scale(0.12, 0.4)
       skewX(calc(var(--sui-leave-dir, -1) * 20deg));
     border-radius: 50%;
     opacity: 0;
@@ -91,17 +89,13 @@
    --sui-enter-x) flips transform-origin and skew direction. */
 @keyframes sui-swimlane-node-enter {
   0% {
-    transform:
-      translateX(var(--sui-enter-x, 0px))
-      scale(0.12, 0.4)
+    transform: translateX(var(--sui-enter-x, 0px)) scale(0.12, 0.4)
       skewX(calc(var(--sui-enter-dir, 1) * 20deg));
     border-radius: 50%;
     opacity: 0;
   }
   50% {
-    transform:
-      translateX(calc(var(--sui-enter-x, 0px) * 0.5))
-      scale(0.4, 0.7)
+    transform: translateX(calc(var(--sui-enter-x, 0px) * 0.5)) scale(0.4, 0.7)
       skewX(calc(var(--sui-enter-dir, 1) * 10deg));
     border-radius: 24px;
     opacity: 0.7;
@@ -124,14 +118,19 @@
   fill: var(--sui-bg-elevated);
   stroke: var(--sui-border);
   stroke-width: 1.5;
-  transition: cx 0.55s ease-out, cy 0.55s ease-out;
+  transition:
+    cx 0.55s ease-out,
+    cy 0.55s ease-out;
 }
 
 .sui-swimlane__boundary-badge-text {
   fill: var(--sui-text, #e6ecf5);
   font-size: 11px;
   font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   pointer-events: none;
-  transition: x 0.55s ease-out, y 0.55s ease-out;
+  transition:
+    x 0.55s ease-out,
+    y 0.55s ease-out;
 }

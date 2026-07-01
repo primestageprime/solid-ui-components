@@ -10,10 +10,26 @@ interface Task {
 }
 
 const INITIAL_TASKS: Task[] = [
-  { id: "spec", title: "Write the spec", detail: "Draft the API surface + edge cases" },
-  { id: "build", title: "Build the component", detail: "Reuse the headless DnD hook" },
-  { id: "test", title: "Add tests", detail: "Integration drag + placeholder coverage" },
-  { id: "showcase", title: "Wire the showcase", detail: "Register it in the dev gallery" },
+  {
+    id: "spec",
+    title: "Write the spec",
+    detail: "Draft the API surface + edge cases",
+  },
+  {
+    id: "build",
+    title: "Build the component",
+    detail: "Reuse the headless DnD hook",
+  },
+  {
+    id: "test",
+    title: "Add tests",
+    detail: "Integration drag + placeholder coverage",
+  },
+  {
+    id: "showcase",
+    title: "Wire the showcase",
+    detail: "Register it in the dev gallery",
+  },
   { id: "ship", title: "Ship it", detail: "Bump, tag, publish" },
 ];
 
@@ -42,7 +58,14 @@ const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
     >
       Current order
     </span>
-    <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        "align-items": "center",
+        "flex-wrap": "wrap",
+      }}
+    >
       <For each={props.tasks}>
         {(t, idx) => (
           <>
@@ -56,7 +79,11 @@ const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
               {idx() + 1}. {t.id}
             </span>
             {idx() < props.tasks.length - 1 && (
-              <span style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}>→</span>
+              <span
+                style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}
+              >
+                →
+              </span>
             )}
           </>
         )}
@@ -74,33 +101,35 @@ export const SortableListShowcase: Component = () => {
     <div class="component-section">
       <h2>SortableList — Composed (Depth 1)</h2>
       <p class="text-meta">
-        Owns CSS (<code>SortableList.css</code>), no component imports. A controlled
-        vertical drag-to-reorder list of full-width rows — the SUI equivalent of
-        dside's todo/BrainstormPane reorder, and the vertical sibling of{" "}
-        <code>DnDHierarchySortBar</code>. Built on the shared headless{" "}
-        <code>createDnDReorder</code> hook (axis <code>"y"</code>): as you drag a row,
-        a full-width dashed placeholder opens a gap in the slot the row will land in
-        and the whole column reflows live to preview the reordered state; the drop
-        commits it. The floating row under the cursor is the browser's native drag
-        image. The caller owns the order via <code>items</code> + <code>onReorder</code>,
-        and supplies row content via <code>renderItem</code>.
+        Owns CSS (<code>SortableList.css</code>), no component imports. A
+        controlled vertical drag-to-reorder list of full-width rows — the SUI
+        equivalent of dside's todo/BrainstormPane reorder, and the vertical
+        sibling of <code>DnDHierarchySortBar</code>. Built on the shared
+        headless <code>createDnDReorder</code> hook (axis <code>"y"</code>): as
+        you drag a row, a full-width dashed placeholder opens a gap in the slot
+        the row will land in and the whole column reflows live to preview the
+        reordered state; the drop commits it. The floating row under the cursor
+        is the browser's native drag image. The caller owns the order via{" "}
+        <code>items</code> + <code>onReorder</code>, and supplies row content
+        via <code>renderItem</code>.
       </p>
       <p class="text-meta">
         No curried variant — intentional. Every prop is data or a callback (
         <code>items</code> / <code>getId</code> / <code>onReorder</code> /{" "}
-        <code>renderItem</code> / <code>label</code>); there are no presentational
-        props to freeze. Like <code>DnDHierarchySortBar</code> and{" "}
-        <code>SplitQueueList</code>, it's already zero-config at the call site. See
-        STYLE_GUIDE.md "Variant Surface: keep it minimal".
+        <code>renderItem</code> / <code>label</code>); there are no
+        presentational props to freeze. Like <code>DnDHierarchySortBar</code>{" "}
+        and <code>SplitQueueList</code>, it's already zero-config at the call
+        site. See STYLE_GUIDE.md "Variant Surface: keep it minimal".
       </p>
 
       <div class="example-group">
         <h3>Drag to reorder a task list</h3>
         <p class="text-meta">
-          Grab a row by anywhere (the <code>⠿</code> grip signals it's draggable) and
-          drag it up or down: a dashed gap opens where it will land and the other rows
-          reflow live around it (the placeholder reserves the dragged row's height).
-          Release to commit — the order readout below updates on drop.
+          Grab a row by anywhere (the <code>⠿</code> grip signals it's
+          draggable) and drag it up or down: a dashed gap opens where it will
+          land and the other rows reflow live around it (the placeholder
+          reserves the dragged row's height). Release to commit — the order
+          readout below updates on drop.
         </p>
         <div
           style={{
@@ -119,9 +148,22 @@ export const SortableListShowcase: Component = () => {
             getId={(t) => t.id}
             onReorder={(nextIds) => setTasks(applyReorder(tasks(), nextIds))}
             renderItem={(t) => (
-              <div style={{ display: "flex", "flex-direction": "column", gap: "2px" }}>
-                <span style={{ "font-weight": 600, "font-size": "13px" }}>{t.title}</span>
-                <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  "flex-direction": "column",
+                  gap: "2px",
+                }}
+              >
+                <span style={{ "font-weight": 600, "font-size": "13px" }}>
+                  {t.title}
+                </span>
+                <span
+                  style={{
+                    "font-size": "11px",
+                    color: "var(--sui-text-muted)",
+                  }}
+                >
                   {t.detail}
                 </span>
               </div>
@@ -133,7 +175,9 @@ export const SortableListShowcase: Component = () => {
         <div class="text-meta">
           Call site:{" "}
           <code>
-            {"<SortableList items={tasks()} getId={t => t.id} onReorder={handleReorder} renderItem={renderRow} />"}
+            {
+              "<SortableList items={tasks()} getId={t => t.id} onReorder={handleReorder} renderItem={renderRow} />"
+            }
           </code>
         </div>
       </div>

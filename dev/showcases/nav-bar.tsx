@@ -9,14 +9,28 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>NavBar — Primitive (Depth 0)</h2>
-      <p class="text-meta">Composes NavLink (Atomic). Horizontal navigation bar with active state and badges.</p>
+      <p class="text-meta">
+        Composes NavLink (Atomic). Horizontal navigation bar with active state
+        and badges.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--sui-border)", "padding-bottom": "2px" }}>
-            <NavLink href="#" active>Dashboard</NavLink>
+          <div
+            style={{
+              display: "flex",
+              gap: "4px",
+              "border-bottom": "1px solid var(--sui-border)",
+              "padding-bottom": "2px",
+            }}
+          >
+            <NavLink href="#" active>
+              Dashboard
+            </NavLink>
             <NavLink href="#">Reports</NavLink>
-            <NavLink href="#" color="warning" badge={3}>Alerts</NavLink>
+            <NavLink href="#" color="warning" badge={3}>
+              Alerts
+            </NavLink>
             <NavLink href="#">Settings</NavLink>
           </div>
         </div>
@@ -27,10 +41,20 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("nav-item")}
           >
             <div class="depth2-atom__label">NavItem</div>
-            <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-              <NavLink href="#" active>Active</NavLink>
+            <div
+              style={{
+                display: "flex",
+                "flex-direction": "column",
+                gap: "8px",
+              }}
+            >
+              <NavLink href="#" active>
+                Active
+              </NavLink>
               <NavLink href="#">Inactive</NavLink>
-              <NavLink href="#" color="warning" badge={3}>With Badge</NavLink>
+              <NavLink href="#" color="warning" badge={3}>
+                With Badge
+              </NavLink>
             </div>
           </div>
         </div>

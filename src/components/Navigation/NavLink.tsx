@@ -10,7 +10,8 @@ import "./NavLink.css";
 
 export type NavLinkColor = "accent" | "warning" | "danger" | "success";
 
-export interface NavLinkProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface NavLinkProps
+  extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {
   active?: boolean;
   color?: NavLinkColor;
   badge?: string | number;
@@ -36,7 +37,9 @@ export const NavLink: Component<NavLinkProps> = (props) => {
   return (
     <a class={classes()} {...others}>
       {local.children}
-      {local.badge !== undefined && <span class="nav-link__badge">{local.badge}</span>}
+      {local.badge !== undefined && (
+        <span class="nav-link__badge">{local.badge}</span>
+      )}
     </a>
   );
 };

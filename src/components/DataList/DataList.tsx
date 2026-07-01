@@ -33,8 +33,13 @@ export const DTable: ParentComponent<{ class?: string }> = (props) => (
 );
 
 /** Data table with thead support */
-export const DTableWithHeader: ParentComponent<{ class?: string; header?: JSX.Element }> = (props) => (
-  <CellTable header={props.header} class={props.class}>{props.children}</CellTable>
+export const DTableWithHeader: ParentComponent<{
+  class?: string;
+  header?: JSX.Element;
+}> = (props) => (
+  <CellTable header={props.header} class={props.class}>
+    {props.children}
+  </CellTable>
 );
 
 /** Header row */
@@ -71,7 +76,11 @@ export interface DRowProps {
 }
 
 export const DRow: ParentComponent<DRowProps> = (props) => (
-  <CellRow border={props.border} highlight={props.highlight} class={props.class}>
+  <CellRow
+    border={props.border}
+    highlight={props.highlight}
+    class={props.class}
+  >
     {props.children}
   </CellRow>
 );
@@ -88,7 +97,8 @@ const dtVariants = {
 } as const;
 
 export const DT: ParentComponent<DTProps> = (props) => {
-  const variant = () => (props.muted ? "muted" : "default") as keyof typeof dtVariants;
+  const variant = () =>
+    (props.muted ? "muted" : "default") as keyof typeof dtVariants;
   return (
     <Dynamic component={dtVariants[variant()]} class={props.class}>
       {props.children}
@@ -145,7 +155,10 @@ export interface BadgeProps {
   class?: string;
 }
 
-const badgeVariantMap: Record<string, "compliant" | "violation" | "warning" | "pending" | "info"> = {
+const badgeVariantMap: Record<
+  string,
+  "compliant" | "violation" | "warning" | "pending" | "info"
+> = {
   default: "info",
   high: "info",
   success: "compliant",
@@ -154,7 +167,11 @@ const badgeVariantMap: Record<string, "compliant" | "violation" | "warning" | "p
 };
 
 export const Badge: ParentComponent<BadgeProps> = (props) => (
-  <StatusBadge variant={badgeVariantMap[props.variant ?? "default"]} size="sm" class={props.class}>
+  <StatusBadge
+    variant={badgeVariantMap[props.variant ?? "default"]}
+    size="sm"
+    class={props.class}
+  >
     {props.children}
   </StatusBadge>
 );

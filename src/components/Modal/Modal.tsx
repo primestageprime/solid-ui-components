@@ -5,7 +5,14 @@
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
 // ============================================
-import { type Component, type JSX, Show, createEffect, onCleanup, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createEffect,
+  onCleanup,
+  mergeProps,
+} from "solid-js";
 import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Modal.css";
@@ -68,7 +75,9 @@ export const Modal: Component<ModalProps> = (props) => {
       <Portal>
         <div class="sui-modal-overlay" onClick={handleOverlayClick}>
           <div class={modalClasses()} role="dialog" aria-modal="true">
-            <Show when={props.header || props.title || props.showClose !== false}>
+            <Show
+              when={props.header || props.title || props.showClose !== false}
+            >
               <div class="sui-modal__header">
                 <Show
                   when={props.header}
@@ -97,14 +106,10 @@ export const Modal: Component<ModalProps> = (props) => {
               </div>
             </Show>
 
-            <div class="sui-modal__body">
-              {props.children}
-            </div>
+            <div class="sui-modal__body">{props.children}</div>
 
             <Show when={props.footer}>
-              <div class="sui-modal__footer">
-                {props.footer}
-              </div>
+              <div class="sui-modal__footer">{props.footer}</div>
             </Show>
           </div>
         </div>
@@ -119,6 +124,8 @@ export type ModalOverrides = Pick<ModalProps, "corners" | "variant" | "size">;
 /** Props available to consumers of a curried Modal variant. */
 export type ModalDataProps = Omit<ModalProps, keyof ModalOverrides>;
 
-export function createModal(defaults: Partial<ModalProps>): Component<ModalDataProps> {
+export function createModal(
+  defaults: Partial<ModalProps>,
+): Component<ModalDataProps> {
   return (props) => <Modal {...mergeProps(defaults, props)} />;
 }

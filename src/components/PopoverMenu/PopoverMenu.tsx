@@ -6,7 +6,14 @@
 // Only data/type imports from sibling Primitives (ICON_PATHS, IconName).
 // Trigger button with positioned action menu.
 // ============================================
-import { For, Show, type JSX, createSignal, onCleanup, mergeProps } from "solid-js";
+import {
+  For,
+  Show,
+  type JSX,
+  createSignal,
+  onCleanup,
+  mergeProps,
+} from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import type { IconName } from "../Icon/Icon";
 import "./PopoverMenu.css";
@@ -48,7 +55,10 @@ const ICON_SIZE_PX: Record<"xs" | "sm" | "md" | "lg" | "xl", number> = {
 };
 
 /** Inline an outline SVG glyph from ICON_PATHS — replaces <Icon> for Primitive purity. */
-const InlineIcon = (props: { name: IconName; size: "xs" | "sm" | "md" | "lg" | "xl" }) => {
+const InlineIcon = (props: {
+  name: IconName;
+  size: "xs" | "sm" | "md" | "lg" | "xl";
+}) => {
   const px = () => ICON_SIZE_PX[props.size];
   return (
     <svg
@@ -62,8 +72,13 @@ const InlineIcon = (props: { name: IconName; size: "xs" | "sm" | "md" | "lg" | "
   );
 };
 
-export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<Id>) => {
-  const merged = mergeProps({ align: "right" as const, size: "md" as const }, props);
+export const PopoverMenu = <Id extends string = string>(
+  props: PopoverMenuProps<Id>,
+) => {
+  const merged = mergeProps(
+    { align: "right" as const, size: "md" as const },
+    props,
+  );
   const [open, setOpen] = createSignal(false);
   let containerRef: HTMLDivElement | undefined;
 
@@ -172,6 +187,9 @@ export const PopoverMenu = <Id extends string = string>(props: PopoverMenuProps<
 export const RightPopoverMenu = <Id extends string = string>(
   props: Omit<PopoverMenuProps<Id>, "align" | "size">,
 ) => {
-  const merged = mergeProps({ align: "right" as const, size: "sm" as const }, props);
+  const merged = mergeProps(
+    { align: "right" as const, size: "sm" as const },
+    props,
+  );
   return <PopoverMenu {...merged} />;
 };

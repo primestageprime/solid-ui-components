@@ -1,6 +1,10 @@
 import type { Component } from "solid-js";
 import { Section } from "../../src/components/Section/Section";
-import { CollapsibleSection, DecoratedSection, BorderedSection } from "../../src/components/Section";
+import {
+  CollapsibleSection,
+  DecoratedSection,
+  BorderedSection,
+} from "../../src/components/Section";
 import { Button } from "../../src/components/Button/Button";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -12,7 +16,10 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>Section — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Section.css), no component imports. Section with header/subtitle/action, decorated corners.</p>
+      <p class="text-meta">
+        Owns CSS (Section.css), no component imports. Section with
+        header/subtitle/action, decorated corners.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
@@ -21,7 +28,13 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             subtitle="Summary of key metrics"
             headerAction={<Button size="sm">Export</Button>}
           >
-            <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
+            <p
+              style={{
+                margin: "0",
+                color: "var(--sui-text-secondary)",
+                "font-size": "0.875rem",
+              }}
+            >
               Section content goes here.
             </p>
           </Section>
@@ -29,24 +42,50 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
           <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
           <Stack gap="sm">
             <div>
-              <CollapsibleSection title="CollapsibleSection" subtitle="Click header to collapse">
-                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
+              <CollapsibleSection
+                title="CollapsibleSection"
+                subtitle="Click header to collapse"
+              >
+                <p
+                  style={{
+                    margin: "0",
+                    color: "var(--sui-text-secondary)",
+                    "font-size": "0.875rem",
+                  }}
+                >
                   Bordered section with collapse support, default expanded.
                 </p>
               </CollapsibleSection>
-              <div class="text-meta">CollapsibleSection — variant: "bordered", collapsible, defaultExpanded</div>
+              <div class="text-meta">
+                CollapsibleSection — variant: "bordered", collapsible,
+                defaultExpanded
+              </div>
             </div>
             <div>
               <DecoratedSection title="DecoratedSection">
-                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
+                <p
+                  style={{
+                    margin: "0",
+                    color: "var(--sui-text-secondary)",
+                    "font-size": "0.875rem",
+                  }}
+                >
                   Decorated section with corner brackets, fills parent.
                 </p>
               </DecoratedSection>
-              <div class="text-meta">DecoratedSection — variant: "decorated", fill</div>
+              <div class="text-meta">
+                DecoratedSection — variant: "decorated", fill
+              </div>
             </div>
             <div>
               <BorderedSection title="BorderedSection">
-                <p style={{ margin: "0", color: "var(--sui-text-secondary)", "font-size": "0.875rem" }}>
+                <p
+                  style={{
+                    margin: "0",
+                    color: "var(--sui-text-secondary)",
+                    "font-size": "0.875rem",
+                  }}
+                >
                   Simple bordered container.
                 </p>
               </BorderedSection>
@@ -61,14 +100,30 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Title</div>
-            <h2 style={{ margin: "0", "font-size": "1.125rem", "font-weight": "600" }}>Overview</h2>
+            <h2
+              style={{
+                margin: "0",
+                "font-size": "1.125rem",
+                "font-weight": "600",
+              }}
+            >
+              Overview
+            </h2>
           </div>
           <div
             class="depth2-atom depth2-atom--link"
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Sublabel</div>
-            <p style={{ margin: "0", "font-size": "0.75rem", color: "var(--sui-text-muted)" }}>Summary of key metrics</p>
+            <p
+              style={{
+                margin: "0",
+                "font-size": "0.75rem",
+                color: "var(--sui-text-muted)",
+              }}
+            >
+              Summary of key metrics
+            </p>
           </div>
           <div
             class="depth2-atom depth2-atom--link"

@@ -17,9 +17,10 @@ export const TooltipShowcase: Component = () => {
     <div class="component-section">
       <h2>Tooltip — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Owns CSS (Tooltip.css). Kobalte-backed hover/focus tooltip with arrow and fade animation.
-        Accepts either a value or an accessor for `content`. Defaults to 100ms open/close delay;
-        pass `openDelay={1000}` for the "cell" semantics used in dense table UIs.
+        Owns CSS (Tooltip.css). Kobalte-backed hover/focus tooltip with arrow
+        and fade animation. Accepts either a value or an accessor for `content`.
+        Defaults to 100ms open/close delay; pass `openDelay={1000}` for the
+        "cell" semantics used in dense table UIs.
       </p>
 
       <div class="example-group">
@@ -41,7 +42,9 @@ export const TooltipShowcase: Component = () => {
           content={
             <Stack gap="xs">
               <Text variant="label">Keyboard shortcut</Text>
-              <Text variant="body">Press <kbd>Cmd</kbd> + <kbd>K</kbd> to open the palette.</Text>
+              <Text variant="body">
+                Press <kbd>Cmd</kbd> + <kbd>K</kbd> to open the palette.
+              </Text>
             </Stack>
           }
         >
@@ -67,8 +70,9 @@ export const TooltipShowcase: Component = () => {
       <div class="example-group">
         <h3>Cell semantics (openDelay=1000)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          The old TooltipCell variant is just `openDelay=1000` with the `cell` trigger class —
-          downstream Phase 8 inlines this instead of a separate component.
+          The old TooltipCell variant is just `openDelay=1000` with the `cell`
+          trigger class — downstream Phase 8 inlines this instead of a separate
+          component.
         </div>
         <Tooltip
           content="Full text: Lorem ipsum dolor sit amet, consectetur adipiscing elit."
@@ -84,7 +88,8 @@ export const TooltipShowcase: Component = () => {
       <div class="example-group">
         <h3>Placement via TooltipRootProps passthrough</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Any `TooltipRootProps` field (placement, gutter, etc.) is forwarded to Kobalte's Tooltip.Root.
+          Any `TooltipRootProps` field (placement, gutter, etc.) is forwarded to
+          Kobalte's Tooltip.Root.
         </div>
         <Row gap="sm">
           <Tooltip content="Anchored to the top" placement="top" gutter={8}>
@@ -93,7 +98,11 @@ export const TooltipShowcase: Component = () => {
           <Tooltip content="Anchored to the right" placement="right" gutter={8}>
             <GhostButton>Right</GhostButton>
           </Tooltip>
-          <Tooltip content="Anchored to the bottom" placement="bottom" gutter={8}>
+          <Tooltip
+            content="Anchored to the bottom"
+            placement="bottom"
+            gutter={8}
+          >
             <GhostButton>Bottom</GhostButton>
           </Tooltip>
           <Tooltip content="Anchored to the left" placement="left" gutter={8}>

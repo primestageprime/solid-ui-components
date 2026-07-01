@@ -5,7 +5,8 @@ import type { CellRendererProps } from "./cellStyle";
 // ============================================
 // Tag Renderer
 // ============================================
-export interface TagCellProps extends CellRendererProps<string | null | undefined> {
+export interface TagCellProps
+  extends CellRendererProps<string | null | undefined> {
   variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
 }
 
@@ -13,7 +14,10 @@ export const TagCell: Component<TagCellProps> = (props) => {
   const variant = () => props.variant || "default";
 
   return (
-    <Show when={props.value != null && props.value !== ""} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null && props.value !== ""}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class={`cell-tag cell-tag--${variant()}`}>{props.value}</span>
     </Show>
   );
@@ -22,12 +26,37 @@ export const TagCell: Component<TagCellProps> = (props) => {
 // ============================================
 // Status Renderer
 // ============================================
-export interface StatusCellProps extends CellRendererProps<string | null | undefined> {
-  statusMap?: Record<string, { label?: string; variant: "active" | "success" | "warning" | "error" | "inactive" | "pending" }>;
+export interface StatusCellProps
+  extends CellRendererProps<string | null | undefined> {
+  statusMap?: Record<
+    string,
+    {
+      label?: string;
+      variant:
+        | "active"
+        | "success"
+        | "warning"
+        | "error"
+        | "inactive"
+        | "pending";
+    }
+  >;
   href?: string;
 }
 
-const DEFAULT_STATUS_MAP: Record<string, { label?: string; variant: "active" | "success" | "warning" | "error" | "inactive" | "pending" }> = {
+const DEFAULT_STATUS_MAP: Record<
+  string,
+  {
+    label?: string;
+    variant:
+      | "active"
+      | "success"
+      | "warning"
+      | "error"
+      | "inactive"
+      | "pending";
+  }
+> = {
   active: { variant: "active" },
   online: { variant: "active" },
   running: { variant: "active" },
@@ -61,14 +90,24 @@ export const StatusCell: Component<StatusCellProps> = (props) => {
   const inner = () => (
     <span class={`cell-status cell-status--${statusInfo()?.variant}`}>
       <span class="cell-status__indicator" />
-      <span class="cell-status__label">{statusInfo()?.label || props.value}</span>
+      <span class="cell-status__label">
+        {statusInfo()?.label || props.value}
+      </span>
     </span>
   );
 
   return (
-    <Show when={props.value != null && props.value !== ""} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null && props.value !== ""}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <Show when={props.href} fallback={inner()}>
-        <a href={props.href} target="_blank" rel="noopener noreferrer" style={{ "text-decoration": "none" }}>
+        <a
+          href={props.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ "text-decoration": "none" }}
+        >
           {inner()}
         </a>
       </Show>
@@ -79,14 +118,18 @@ export const StatusCell: Component<StatusCellProps> = (props) => {
 // ============================================
 // Checkbox Renderer
 // ============================================
-export interface CheckboxCellProps extends CellRendererProps<boolean | null | undefined> {
+export interface CheckboxCellProps
+  extends CellRendererProps<boolean | null | undefined> {
   onChange?: (value: boolean) => void;
   disabled?: boolean;
 }
 
 export const CheckboxCell: Component<CheckboxCellProps> = (props) => {
   return (
-    <Show when={props.value != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <label class="cell-checkbox">
         <input
           type="checkbox"

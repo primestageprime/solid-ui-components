@@ -28,7 +28,9 @@ const FIXTURE: StatusFlowNode[] = [
 
 describe("AnimatedSwimlaneChart (status-driven)", () => {
   it("renders an SVG with no required props besides nodes", () => {
-    const { container } = render(() => <AnimatedSwimlaneChart nodes={FIXTURE} />);
+    const { container } = render(() => (
+      <AnimatedSwimlaneChart nodes={FIXTURE} />
+    ));
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
   });
@@ -37,7 +39,9 @@ describe("AnimatedSwimlaneChart (status-driven)", () => {
     // maxDepth={1} ensures all three fixture nodes (DOING/TODO/DONE at depths
     // 0/+1/-1) are in the visible window. Without it, the responsive default
     // at jsdom's 800px width computes maxDepth=0 and hides depth-1 columns.
-    const { container } = render(() => <AnimatedSwimlaneChart nodes={FIXTURE} maxDepth={1} />);
+    const { container } = render(() => (
+      <AnimatedSwimlaneChart nodes={FIXTURE} maxDepth={1} />
+    ));
     const cards = container.querySelectorAll(".sui-asc__card");
     expect(cards.length).toBe(FIXTURE.length);
   });
@@ -64,7 +68,9 @@ describe("AnimatedSwimlaneChart (status-driven)", () => {
         renderNode={(n) => <div class="custom-card">{n.id}</div>}
       />
     ));
-    expect(container.querySelectorAll(".custom-card").length).toBe(FIXTURE.length);
+    expect(container.querySelectorAll(".custom-card").length).toBe(
+      FIXTURE.length,
+    );
     expect(container.querySelectorAll(".sui-asc__card").length).toBe(0);
   });
 

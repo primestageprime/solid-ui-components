@@ -11,7 +11,13 @@
 // inside its Panel as Text. There are no raw inline-styled colored divs — the
 // color of a region is a Panel `variant`, never a hand-rolled background.
 import { type Component, Show, createSignal } from "solid-js";
-import {ProportionalStack, ProportionalItem, SidebarPanel, SpreadRow, ClusterRow} from "../../src/components/Layout";
+import {
+  ProportionalStack,
+  ProportionalItem,
+  SidebarPanel,
+  SpreadRow,
+  ClusterRow,
+} from "../../src/components/Layout";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Row } from "../../src/components/Layout/Row";
 import { Box } from "../../src/components/Layout/Box";
@@ -151,18 +157,28 @@ const ItemsTabbed: Component = () => {
       />
       <Panel variant={tab() === "revenue" ? "success" : "danger"} size="sm">
         <Text variant="body">
-          Active tab — list of {tab() === "revenue" ? "revenue" : "expense"} items.
+          Active tab — list of {tab() === "revenue" ? "revenue" : "expense"}{" "}
+          items.
         </Text>
       </Panel>
     </Stack>
   );
 };
 
-const ItemsRegion: Component<{ mobile: boolean; showDetailSheet: boolean }> = (props) => (
-  <Panel variant="default" title="Items" fill style={{ position: "relative", overflow: "hidden" }}>
+const ItemsRegion: Component<{ mobile: boolean; showDetailSheet: boolean }> = (
+  props,
+) => (
+  <Panel
+    variant="default"
+    title="Items"
+    fill
+    style={{ position: "relative", overflow: "hidden" }}
+  >
     <Stack gap="sm">
       <Text variant="sublabel">
-        {props.mobile ? "→ tabbed Revenue / Expenses < 768px" : "ratio 2 : 1 with Observation"}
+        {props.mobile
+          ? "→ tabbed Revenue / Expenses < 768px"
+          : "ratio 2 : 1 with Observation"}
       </Text>
       <Show when={props.mobile} fallback={<ItemsTwoColumn />}>
         <ItemsTabbed />
@@ -262,7 +278,11 @@ export const StructuralLayout: Component = () => {
     <Show
       when={!mobile()}
       fallback={
-        <ThreePanelLayout height="100%" topBar={<MobileHeader />} centerPanel={<MobileCenter />} />
+        <ThreePanelLayout
+          height="100%"
+          topBar={<MobileHeader />}
+          centerPanel={<MobileCenter />}
+        />
       }
     >
       <ThreePanelLayout

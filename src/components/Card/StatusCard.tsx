@@ -113,8 +113,14 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
   // (spread last) — preserving the previous behaviour where `style` landed on
   // the root element.
   const cardStyle = (): JSX.CSSProperties => {
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
-    return { padding: "8px 10px", "border-radius": "var(--sui-radius-md, 6px)", ...base };
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
+    return {
+      padding: "8px 10px",
+      "border-radius": "var(--sui-radius-md, 6px)",
+      ...base,
+    };
   };
 
   const hasMeta = () =>

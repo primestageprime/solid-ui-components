@@ -41,7 +41,14 @@ const StateReadout: Component<{ tags: Tag[] }> = (props) => (
     >
       Live state
     </span>
-    <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        "align-items": "center",
+        "flex-wrap": "wrap",
+      }}
+    >
       <For
         each={props.tags}
         fallback={
@@ -62,7 +69,11 @@ const StateReadout: Component<{ tags: Tag[] }> = (props) => (
               {idx() + 1}. {t.id}="{t.name}"
             </span>
             {idx() < props.tags.length - 1 && (
-              <span style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}>→</span>
+              <span
+                style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}
+              >
+                →
+              </span>
             )}
           </>
         )}
@@ -79,36 +90,40 @@ export const MutableListShowcase: Component = () => {
   const handleRename = (id: string, name: string) =>
     setTags((prev) => prev.map((t) => (t.id === id ? { ...t, name } : t)));
 
-  const handleDelete = (id: string) => setTags((prev) => prev.filter((t) => t.id !== id));
+  const handleDelete = (id: string) =>
+    setTags((prev) => prev.filter((t) => t.id !== id));
 
   return (
     <div class="component-section">
       <h2>MutableList — Composite (Depth 2)</h2>
       <p class="text-meta">
-        Owns CSS (<code>MutableList.css</code>). A <code>SortableList</code> specialized
-        into editable, deletable cards: it COMPOSES <code>SortableList</code> and supplies
-        a <code>renderItem</code> whose card shows an inline-editable NAME on the left and a
-        DELETE button (curried <code>IconOnlyButton</code>) on the right that is hidden until
-        you hover the row. All drag-reorder mechanics — grip, placeholder gap, live reflow —
-        are inherited from <code>SortableList</code> (the headless <code>createDnDReorder</code>{" "}
-        hook). Click a name to rename inline (Enter / blur commits, Escape reverts); the
-        delete button fires <code>onDelete</code> directly — the consumer owns any
-        confirmation.
+        Owns CSS (<code>MutableList.css</code>). A <code>SortableList</code>{" "}
+        specialized into editable, deletable cards: it COMPOSES{" "}
+        <code>SortableList</code> and supplies a <code>renderItem</code> whose
+        card shows an inline-editable NAME on the left and a DELETE button
+        (curried <code>IconOnlyButton</code>) on the right that is hidden until
+        you hover the row. All drag-reorder mechanics — grip, placeholder gap,
+        live reflow — are inherited from <code>SortableList</code> (the headless{" "}
+        <code>createDnDReorder</code> hook). Click a name to rename inline
+        (Enter / blur commits, Escape reverts); the delete button fires{" "}
+        <code>onDelete</code> directly — the consumer owns any confirmation.
       </p>
       <p class="text-meta">
-        No curried variant — intentional. Every prop is data or a callback (<code>items</code> /{" "}
-        <code>getId</code> / <code>getName</code> / <code>onReorder</code> /{" "}
-        <code>onRename</code> / <code>onDelete</code> / <code>label</code> /{" "}
-        <code>renderDetail</code>); there are no presentational props to freeze, exactly like{" "}
-        <code>SortableList</code>. See STYLE_GUIDE.md "Variant Surface: keep it minimal".
+        No curried variant — intentional. Every prop is data or a callback (
+        <code>items</code> / <code>getId</code> / <code>getName</code> /{" "}
+        <code>onReorder</code> / <code>onRename</code> / <code>onDelete</code> /{" "}
+        <code>label</code> / <code>renderDetail</code>); there are no
+        presentational props to freeze, exactly like <code>SortableList</code>.
+        See STYLE_GUIDE.md "Variant Surface: keep it minimal".
       </p>
 
       <div class="example-group">
         <h3>Edit a list of tags — reorder, rename, delete</h3>
         <p class="text-meta">
-          Drag a row to reorder. Click a tag name to rename it inline (Enter or click away
-          to save, Escape to cancel). Hover a row to reveal its <code>×</code> button, then
-          click to delete. Every action updates the live state below.
+          Drag a row to reorder. Click a tag name to rename it inline (Enter or
+          click away to save, Escape to cancel). Hover a row to reveal its{" "}
+          <code>×</code> button, then click to delete. Every action updates the
+          live state below.
         </p>
         <div
           style={{

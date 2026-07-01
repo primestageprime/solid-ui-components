@@ -6,10 +6,16 @@
 import { createSection } from "./Section";
 
 // Collapsible section — with collapse support
-export const CollapsibleSection = createSection({ collapsible: true, defaultExpanded: true });
+export const CollapsibleSection = createSection({
+  collapsible: true,
+  defaultExpanded: true,
+});
 
 // Decorated section — bracket corner brackets, fills parent
-export const DecoratedSection = createSection({ corners: "bracket", fill: true });
+export const DecoratedSection = createSection({
+  corners: "bracket",
+  fill: true,
+});
 
 // Bordered section — simple bordered container (now uses round corners)
 export const BorderedSection = createSection({ corners: "round" });

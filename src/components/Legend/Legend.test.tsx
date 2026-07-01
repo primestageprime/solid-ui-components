@@ -8,7 +8,8 @@ const SERIES_ITEMS: LegendItem[] = [
   { color: "#f59e0b", label: "Costs" },
 ];
 
-const styleOf = (el: Element) => (el as HTMLElement).getAttribute("style") ?? "";
+const styleOf = (el: Element) =>
+  (el as HTMLElement).getAttribute("style") ?? "";
 
 describe("Legend", () => {
   it("renders with the expected root class", () => {
@@ -18,7 +19,9 @@ describe("Legend", () => {
   });
 
   it("renders one item per entry with label text", () => {
-    const { container, getByText } = render(() => <Legend items={SERIES_ITEMS} />);
+    const { container, getByText } = render(() => (
+      <Legend items={SERIES_ITEMS} />
+    ));
     const items = container.querySelectorAll(".sui-legend__item");
     expect(items.length).toBe(SERIES_ITEMS.length);
     expect(getByText("Revenue")).toBeTruthy();
@@ -29,8 +32,12 @@ describe("Legend", () => {
   it("applies the item color as inline background-color on the swatch", () => {
     const { container } = render(() => <Legend items={SERIES_ITEMS} />);
     const swatches = container.querySelectorAll(".sui-legend__swatch");
-    expect(styleOf(swatches[0]!)).toMatch(/background-color:\s*(?:#3b82f6|rgb\(59,\s*130,\s*246\))/i);
-    expect(styleOf(swatches[2]!)).toMatch(/background-color:\s*(?:#f59e0b|rgb\(245,\s*158,\s*11\))/i);
+    expect(styleOf(swatches[0]!)).toMatch(
+      /background-color:\s*(?:#3b82f6|rgb\(59,\s*130,\s*246\))/i,
+    );
+    expect(styleOf(swatches[2]!)).toMatch(
+      /background-color:\s*(?:#f59e0b|rgb\(245,\s*158,\s*11\))/i,
+    );
   });
 
   it("defaults to horizontal orientation", () => {
@@ -48,7 +55,9 @@ describe("Legend", () => {
   });
 
   it("forwards numeric swatchSize as a CSS custom property in px", () => {
-    const { container } = render(() => <Legend items={SERIES_ITEMS} swatchSize={20} />);
+    const { container } = render(() => (
+      <Legend items={SERIES_ITEMS} swatchSize={20} />
+    ));
     const root = container.firstElementChild as HTMLElement;
     expect(styleOf(root)).toMatch(/--sui-legend-swatch-size:\s*20px/);
   });

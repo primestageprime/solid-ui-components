@@ -50,10 +50,12 @@ function mountChain(
   return { container };
 }
 
-const edgePaths = (c: Element) =>
-  [...c.querySelectorAll<SVGPathElement>("path.sui-swimlane__edge")];
-const nodeWrappers = (c: Element) =>
-  [...c.querySelectorAll<SVGForeignObjectElement>(".sui-swimlane__node-wrapper")];
+const edgePaths = (c: Element) => [
+  ...c.querySelectorAll<SVGPathElement>("path.sui-swimlane__edge"),
+];
+const nodeWrappers = (c: Element) => [
+  ...c.querySelectorAll<SVGForeignObjectElement>(".sui-swimlane__node-wrapper"),
+];
 const wrapperFor = (c: Element, id: string) =>
   nodeWrappers(c).find((w) => w.textContent?.includes(id))!;
 
@@ -62,11 +64,9 @@ describe("SwimlaneChart — geometry", () => {
     const { container } = mountChain();
     await tick();
     expect(nodeWrappers(container).length).toBe(3);
-    expect([...nodeWrappers(container)].map((w) => w.textContent).sort()).toEqual([
-      "a",
-      "b",
-      "c",
-    ]);
+    expect(
+      [...nodeWrappers(container)].map((w) => w.textContent).sort(),
+    ).toEqual(["a", "b", "c"]);
     expect(edgePaths(container).length).toBe(2);
   });
 
@@ -119,7 +119,10 @@ describe("SwimlaneChart — geometry", () => {
   });
 
   it("produces stable edge path geometry (characterization lock)", async () => {
-    const { container } = mountChain({ routingStyle: "orthogonal", columnGap: 260 });
+    const { container } = mountChain({
+      routingStyle: "orthogonal",
+      columnGap: 260,
+    });
     await tick();
     const ds = edgePaths(container).map((p) => p.getAttribute("d"));
     expect(ds).toMatchInlineSnapshot(`
@@ -162,18 +165,17 @@ describe("SwimlaneChart — collapse into summary badges", () => {
     return { container };
   }
 
-  const badges = (c: Element) =>
-    [...c.querySelectorAll<SVGGElement>(".sui-swimlane__boundary")];
+  const badges = (c: Element) => [
+    ...c.querySelectorAll<SVGGElement>(".sui-swimlane__boundary"),
+  ];
 
   it("shows only the within-depth nodes and one badge per collapsed side", async () => {
     const { container } = mountCollapsed();
     await tick();
     // Center c ± depth 1 → b, c, d visible; a and e collapse.
-    expect([...nodeWrappers(container)].map((w) => w.textContent).sort()).toEqual([
-      "b",
-      "c",
-      "d",
-    ]);
+    expect(
+      [...nodeWrappers(container)].map((w) => w.textContent).sort(),
+    ).toEqual(["b", "c", "d"]);
     expect(badges(container).length).toBe(2);
   });
 
@@ -190,7 +192,9 @@ describe("SwimlaneChart — collapse into summary badges", () => {
     const { container } = mountCollapsed();
     await tick();
     const xs = [
-      ...container.querySelectorAll<SVGRectElement>(".sui-swimlane__boundary-badge"),
+      ...container.querySelectorAll<SVGRectElement>(
+        ".sui-swimlane__boundary-badge",
+      ),
     ]
       .map((r) => parseFloat(r.getAttribute("x") ?? "NaN"))
       .sort((a, b) => a - b);
@@ -202,7 +206,9 @@ describe("SwimlaneChart — collapse into summary badges", () => {
     const { container } = mountCollapsed();
     await tick();
     const summaryDs = [
-      ...container.querySelectorAll<SVGPathElement>("path.sui-swimlane__edge--summary"),
+      ...container.querySelectorAll<SVGPathElement>(
+        "path.sui-swimlane__edge--summary",
+      ),
     ].map((p) => p.getAttribute("d"));
     expect(summaryDs.length).toBe(2);
     expect(summaryDs).toMatchInlineSnapshot(`

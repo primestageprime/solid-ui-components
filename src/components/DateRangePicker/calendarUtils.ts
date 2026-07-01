@@ -50,11 +50,7 @@ export const getDateParts = (
 };
 
 /** True when both dates fall on the same calendar day in the given TZ (ignores time-of-day). */
-export const isSameDay = (
-  a: Date,
-  b: Date,
-  timeZone?: string,
-): boolean => {
+export const isSameDay = (a: Date, b: Date, timeZone?: string): boolean => {
   const pa = getDateParts(a, timeZone);
   const pb = getDateParts(b, timeZone);
   return pa.year === pb.year && pa.month === pb.month && pa.day === pb.day;
@@ -97,8 +93,14 @@ export const isInRange = (
   rangeEnd: Date,
   timeZone?: string,
 ): boolean => {
-  const lo = Math.min(stripTime(rangeStart, timeZone), stripTime(rangeEnd, timeZone));
-  const hi = Math.max(stripTime(rangeStart, timeZone), stripTime(rangeEnd, timeZone));
+  const lo = Math.min(
+    stripTime(rangeStart, timeZone),
+    stripTime(rangeEnd, timeZone),
+  );
+  const hi = Math.max(
+    stripTime(rangeStart, timeZone),
+    stripTime(rangeEnd, timeZone),
+  );
   const d = stripTime(day, timeZone);
   return d >= lo && d <= hi;
 };
@@ -139,7 +141,12 @@ export const getCalendarDays = (year: number, month: number): Date[] => {
   const gridStart = new Date(year, month, 1 - startOffset);
   return Array.from(
     { length: 42 },
-    (_, i) => new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i),
+    (_, i) =>
+      new Date(
+        gridStart.getFullYear(),
+        gridStart.getMonth(),
+        gridStart.getDate() + i,
+      ),
   );
 };
 
@@ -211,7 +218,11 @@ export const clampRange = (
 };
 
 /** Add whole months to a numeric (year, month) pair. TZ does not apply. */
-export const addMonths = (year: number, month: number, delta: number): { year: number; month: number } => {
+export const addMonths = (
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } => {
   const total = year * 12 + month + delta;
   return { year: Math.floor(total / 12), month: ((total % 12) + 12) % 12 };
 };
@@ -234,8 +245,9 @@ export const formatShortDate = (
 
 /** Format `MMMM yyyy`, e.g. `April 2026`. Purely calendar-coordinate — no TZ needed. */
 export const formatMonthYear = (year: number, month: number): string =>
-  new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" })
-    .format(new Date(year, month, 1));
+  new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(
+    new Date(year, month, 1),
+  );
 
 /**
  * Format a committed range as a single trigger-label string.
@@ -318,8 +330,5 @@ const zonedDateTimeToInstant = (
 };
 
 /** Return the pair in ascending order. */
-export const orderDates = (
-  a: Date,
-  b: Date,
-): { start: Date; end: Date } =>
+export const orderDates = (a: Date, b: Date): { start: Date; end: Date } =>
   a.getTime() <= b.getTime() ? { start: a, end: b } : { start: b, end: a };

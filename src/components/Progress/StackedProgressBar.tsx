@@ -13,14 +13,17 @@ export interface StackedSegment {
   color: string;
 }
 
-export interface StackedProgressBarProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface StackedProgressBarProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   segments: StackedSegment[];
   direction?: "horizontal" | "vertical";
   label?: JSX.Element;
   background?: string;
 }
 
-export const StackedProgressBar: Component<StackedProgressBarProps> = (props) => {
+export const StackedProgressBar: Component<StackedProgressBarProps> = (
+  props,
+) => {
   const [local, others] = splitProps(props, [
     "segments",
     "direction",

@@ -9,7 +9,8 @@
 import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./Button.css";
 
-export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | "default"
     | "primary"
@@ -74,6 +75,8 @@ export type ButtonOverrides = Pick<ButtonProps, "variant" | "size">;
 /** Props that remain available to consumers of a curried Button variant. */
 export type ButtonDataProps = Omit<ButtonProps, keyof ButtonOverrides>;
 
-export function createButton(defaults: Partial<Omit<ButtonProps, "children">>): Component<ButtonDataProps> {
+export function createButton(
+  defaults: Partial<Omit<ButtonProps, "children">>,
+): Component<ButtonDataProps> {
   return (props) => <Button {...mergeProps(defaults, props)} />;
 }

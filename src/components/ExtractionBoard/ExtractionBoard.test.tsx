@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import {
-  ExtractionBoard,
-  createExtractionBoard,
-} from "./ExtractionBoard";
+import { ExtractionBoard, createExtractionBoard } from "./ExtractionBoard";
 import type { ExtractionBoardConfig, BoardTable } from "./types";
 
 // A minimal two-category, two-data-type config reused across the cases. The
@@ -21,7 +18,9 @@ const config: ExtractionBoardConfig = {
   multiBatchAbove: 10_000,
 };
 
-const mk = (over: Partial<BoardTable> & Pick<BoardTable, "name" | "category">): BoardTable => ({
+const mk = (
+  over: Partial<BoardTable> & Pick<BoardTable, "name" | "category">,
+): BoardTable => ({
   status: "todo",
   totalRows: 100,
   transferredRows: 0,
@@ -57,8 +56,18 @@ describe("ExtractionBoard", () => {
 
   it("derives a complete Summary status when every table in a category is done", () => {
     const tables: BoardTable[] = [
-      mk({ name: "DIM_A", category: "lookup", status: "done", transferredRows: 100 }),
-      mk({ name: "DIM_B", category: "lookup", status: "done", transferredRows: 100 }),
+      mk({
+        name: "DIM_A",
+        category: "lookup",
+        status: "done",
+        transferredRows: 100,
+      }),
+      mk({
+        name: "DIM_B",
+        category: "lookup",
+        status: "done",
+        transferredRows: 100,
+      }),
     ];
     const { container } = render(() => (
       <ExtractionBoard config={config} tables={tables} />
@@ -69,8 +78,18 @@ describe("ExtractionBoard", () => {
 
   it("shows the latest done table (last resolved in array order) in the Done column", () => {
     const tables: BoardTable[] = [
-      mk({ name: "DIM_OLD", category: "lookup", status: "done", transferredRows: 100 }),
-      mk({ name: "DIM_NEW", category: "lookup", status: "done", transferredRows: 100 }),
+      mk({
+        name: "DIM_OLD",
+        category: "lookup",
+        status: "done",
+        transferredRows: 100,
+      }),
+      mk({
+        name: "DIM_NEW",
+        category: "lookup",
+        status: "done",
+        transferredRows: 100,
+      }),
       mk({ name: "DIM_TODO", category: "lookup", status: "todo" }),
     ];
     const { container } = render(() => (
@@ -82,7 +101,12 @@ describe("ExtractionBoard", () => {
 
   it("renders a SKIPPED badge for an empty (skipped) source", () => {
     const tables: BoardTable[] = [
-      mk({ name: "DIM_EMPTY", category: "lookup", status: "skipped", totalRows: 0 }),
+      mk({
+        name: "DIM_EMPTY",
+        category: "lookup",
+        status: "skipped",
+        totalRows: 0,
+      }),
     ];
     const { container } = render(() => (
       <ExtractionBoard config={config} tables={tables} />
@@ -153,7 +177,12 @@ describe("ExtractionBoard", () => {
   it("createExtractionBoard bakes the config and takes data props only", () => {
     const Board = createExtractionBoard(config);
     const tables: BoardTable[] = [
-      mk({ name: "DIM_A", category: "lookup", status: "doing", transferredRows: 50 }),
+      mk({
+        name: "DIM_A",
+        category: "lookup",
+        status: "doing",
+        transferredRows: 50,
+      }),
     ];
     const { container } = render(() => <Board tables={tables} />);
     expect(container.querySelector(".sui-xb")).not.toBeNull();

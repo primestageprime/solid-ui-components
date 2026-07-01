@@ -6,10 +6,21 @@
 // Compliance-themed status badge with 5 variants.
 // When href is provided, renders as an anchor tag.
 // ============================================
-import { type Component, type JSX, Show, splitProps, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  splitProps,
+  mergeProps,
+} from "solid-js";
 import "./StatusBadge.css";
 
-export type StatusBadgeVariant = "compliant" | "violation" | "warning" | "pending" | "info";
+export type StatusBadgeVariant =
+  | "compliant"
+  | "violation"
+  | "warning"
+  | "pending"
+  | "info";
 export type StatusBadgeSize = "sm" | "md";
 
 export interface StatusBadgeProps extends JSX.HTMLAttributes<HTMLSpanElement> {
@@ -45,11 +56,14 @@ export const StatusBadge: Component<StatusBadgeProps> = (props) => {
   const content = () => local.children ?? local.label;
 
   return (
-    <Show when={local.href} fallback={
-      <span class={classes()} {...others}>
-        {content()}
-      </span>
-    }>
+    <Show
+      when={local.href}
+      fallback={
+        <span class={classes()} {...others}>
+          {content()}
+        </span>
+      }
+    >
       <a
         class={classes()}
         href={local.href}
@@ -69,7 +83,10 @@ export const StatusBadge: Component<StatusBadgeProps> = (props) => {
 export type StatusBadgeOverrides = Pick<StatusBadgeProps, "size">;
 
 /** Props that remain available to consumers of a curried StatusBadge variant. */
-export type StatusBadgeDataProps = Omit<StatusBadgeProps, keyof StatusBadgeOverrides>;
+export type StatusBadgeDataProps = Omit<
+  StatusBadgeProps,
+  keyof StatusBadgeOverrides
+>;
 
 export function createStatusBadge(
   defaults: Partial<Omit<StatusBadgeProps, "children">>,

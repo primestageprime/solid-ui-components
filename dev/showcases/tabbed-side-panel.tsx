@@ -8,15 +8,31 @@ import {
 } from "../../src/components/TabbedSidePanel";
 
 const placeholderBody = (label: string) => () => (
-  <div style={{ padding: "16px", color: "var(--sui-text-muted)", "font-size": "13px" }}>
+  <div
+    style={{
+      padding: "16px",
+      color: "var(--sui-text-muted)",
+      "font-size": "13px",
+    }}
+  >
     {label} body — replace with real content in consumer.
   </div>
 );
 
 const baseTabs: TabbedPanelTab[] = [
   { id: "details", label: "Details", content: placeholderBody("Details") },
-  { id: "status", label: "Status", hint: "⌥S", content: placeholderBody("Status") },
-  { id: "raw", label: "Raw", status: "warning", content: placeholderBody("Raw") },
+  {
+    id: "status",
+    label: "Status",
+    hint: "⌥S",
+    content: placeholderBody("Status"),
+  },
+  {
+    id: "raw",
+    label: "Raw",
+    status: "warning",
+    content: placeholderBody("Raw"),
+  },
 ];
 
 interface InstanceRenderProps {
@@ -39,12 +55,21 @@ function Instance(props: {
     <div style={{ flex: 1, "min-width": "320px" }}>
       <h3 style={{ "margin-bottom": "8px" }}>{props.title}</h3>
       <button
-        style={{ "margin-bottom": "12px", padding: "4px 10px", "font-size": "12px" }}
+        style={{
+          "margin-bottom": "12px",
+          padding: "4px 10px",
+          "font-size": "12px",
+        }}
         onClick={() => setOpen((v) => !v)}
       >
         {open() ? "Close panel" : "Open panel"}
       </button>
-      <div style={{ "min-height": "260px", border: "1px dashed var(--sui-border)" }}>
+      <div
+        style={{
+          "min-height": "260px",
+          border: "1px dashed var(--sui-border)",
+        }}
+      >
         {props.render({
           tabs: baseTabs,
           active,
@@ -71,15 +96,46 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
   });
   return (
     <div style={{ flex: 1, "min-width": "320px" }}>
-      <h3 style={{ "margin-bottom": "8px" }}>Filtered tabs (consumer pre-filters)</h3>
-      <div style={{ "margin-bottom": "12px", display: "flex", gap: "12px", "font-size": "12px" }}>
-        <label><input type="checkbox" checked={showStatus()} onChange={(e) => setShowStatus(e.currentTarget.checked)} /> Status</label>
-        <label><input type="checkbox" checked={showRaw()} onChange={(e) => setShowRaw(e.currentTarget.checked)} /> Raw</label>
-        <button style={{ "margin-left": "auto", padding: "2px 8px" }} onClick={() => setOpen((v) => !v)}>
+      <h3 style={{ "margin-bottom": "8px" }}>
+        Filtered tabs (consumer pre-filters)
+      </h3>
+      <div
+        style={{
+          "margin-bottom": "12px",
+          display: "flex",
+          gap: "12px",
+          "font-size": "12px",
+        }}
+      >
+        <label>
+          <input
+            type="checkbox"
+            checked={showStatus()}
+            onChange={(e) => setShowStatus(e.currentTarget.checked)}
+          />{" "}
+          Status
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={showRaw()}
+            onChange={(e) => setShowRaw(e.currentTarget.checked)}
+          />{" "}
+          Raw
+        </label>
+        <button
+          style={{ "margin-left": "auto", padding: "2px 8px" }}
+          onClick={() => setOpen((v) => !v)}
+        >
           {open() ? "Close" : "Open"}
         </button>
       </div>
-      <div style={{ "min-height": "260px", border: "1px dashed var(--sui-border)" }}>
+      <div
+        style={{
+          "min-height": "260px",
+          border: "1px dashed var(--sui-border)",
+        }}
+      >
         <RightDetailTabbedPanel
           tabs={visibleTabs()}
           activeTab={active()}
@@ -103,18 +159,35 @@ export const TabbedSidePanelShowcase: Component = () => {
         active tab's content renders inboard only when isOpen=true. Clicking the
         active tab toggles isOpen.
       </p>
-      <div style={{ padding: "12px 24px 0", display: "flex", gap: "12px", "align-items": "center", "font-size": "13px" }}>
+      <div
+        style={{
+          padding: "12px 24px 0",
+          display: "flex",
+          gap: "12px",
+          "align-items": "center",
+          "font-size": "13px",
+        }}
+      >
         <label>contentPadding:</label>
         <select
           value={padding()}
-          onChange={(e) => setPadding(e.currentTarget.value as ContentPaddingValue)}
+          onChange={(e) =>
+            setPadding(e.currentTarget.value as ContentPaddingValue)
+          }
         >
           <option value="none">none</option>
           <option value="sm">sm (default)</option>
           <option value="md">md</option>
         </select>
       </div>
-      <div style={{ display: "flex", gap: "24px", padding: "24px", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "24px",
+          padding: "24px",
+          "flex-wrap": "wrap",
+        }}
+      >
         <Instance
           title="RightDetailTabbedPanel"
           padding={padding}

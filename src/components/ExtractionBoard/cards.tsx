@@ -79,7 +79,9 @@ function Muted(props: { children: JSX.Element }) {
 
 /** A card shell — a Surface that fills its column and never drops below the
  *  minimum width. Forwards data-flip-* attributes for the motion engine. */
-function Card(props: { children: JSX.Element } & JSX.HTMLAttributes<HTMLDivElement>) {
+function Card(
+  props: { children: JSX.Element } & JSX.HTMLAttributes<HTMLDivElement>,
+) {
   const [local, others] = splitProps(props, ["children"]);
   return (
     <Surface
@@ -193,9 +195,18 @@ export function SummaryCard(props: { summary: CategorySummary } & StatProps) {
   return (
     <Card data-flip-anchor={s().category}>
       <div class="sui-xb__card-head">
-        <Show when={s().description} fallback={<Text variant="label" as="div">{s().label}</Text>}>
+        <Show
+          when={s().description}
+          fallback={
+            <Text variant="label" as="div">
+              {s().label}
+            </Text>
+          }
+        >
           <Tooltip content={s().description!}>
-            <Text variant="label" as="div">{s().label}</Text>
+            <Text variant="label" as="div">
+              {s().label}
+            </Text>
           </Tooltip>
         </Show>
         <SummaryBadge status={s().status} />
@@ -239,10 +250,14 @@ export function DoneCard(props: { item: DoneItem | null } & StatProps) {
       {(item) => (
         <Card data-flip-key={item.name} data-flip-cat={item.category}>
           <div class="sui-xb__card-head">
-            <Text variant="label" as="div">{item.name}</Text>
+            <Text variant="label" as="div">
+              {item.name}
+            </Text>
             <Show
               when={item.skipped}
-              fallback={<StatusBadge variant="compliant" size="sm" label="Done" />}
+              fallback={
+                <StatusBadge variant="compliant" size="sm" label="Done" />
+              }
             >
               <StatusBadge variant="warning" size="sm" label="Skipped" />
             </Show>
@@ -254,7 +269,9 @@ export function DoneCard(props: { item: DoneItem | null } & StatProps) {
           />
           <div class="sui-xb__totals">
             <Muted>
-              {item.skipped ? "Empty" : `${compact.format(item.totalRows)} Rows`}
+              {item.skipped
+                ? "Empty"
+                : `${compact.format(item.totalRows)} Rows`}
             </Muted>
           </div>
         </Card>
@@ -283,12 +300,19 @@ export function DoingCard(
   const batches = (): BatchSpec[] =>
     multi()
       ? d().batches!
-      : [{ rows: Math.max(0, d().totalRows - d().transferredRows), state: "running" }];
+      : [
+          {
+            rows: Math.max(0, d().totalRows - d().transferredRows),
+            state: "running",
+          },
+        ];
 
   return (
     <Card data-flip-key={d().name} data-flip-cat={d().category}>
       <div class="sui-xb__card-head">
-        <Text variant="label" as="div">{d().name}</Text>
+        <Text variant="label" as="div">
+          {d().name}
+        </Text>
         <StatusBadge variant="info" size="sm" label="Doing" />
       </div>
       <ColTypes
@@ -330,7 +354,9 @@ export function TodoCard(props: { item: TodoItem | null } & StatProps) {
       {(item) => (
         <Card data-flip-key={item.name} data-flip-cat={item.category}>
           <div class="sui-xb__card-head">
-            <Text variant="label" as="div">{item.name}</Text>
+            <Text variant="label" as="div">
+              {item.name}
+            </Text>
             <StatusBadge variant="pending" size="sm" label="Todo" />
           </div>
           <ColTypes

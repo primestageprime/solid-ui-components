@@ -1,7 +1,13 @@
 // /layouts — a gallery of saved default layouts. Left panel shows each layout
 // as a live, scaled-down thumbnail; clicking one opens it in the main stage.
 // Reached via hash route #/layouts (and #/layouts/{id}).
-import { type Component, For, createSignal, onMount, onCleanup } from "solid-js";
+import {
+  type Component,
+  For,
+  createSignal,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { layouts } from "./layouts/registry";
 import "./layouts-gallery.css";
@@ -60,7 +66,9 @@ export const LayoutsGallery: Component = () => {
     >
       <nav class="layouts-gallery__sidebar">
         <div class="layouts-gallery__sidebar-header">
-          <a class="layouts-gallery__back" href="#/">← Components</a>
+          <a class="layouts-gallery__back" href="#/">
+            ← Components
+          </a>
           <button
             type="button"
             class="layouts-gallery__toggle"

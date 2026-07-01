@@ -40,7 +40,8 @@
 .sui-group-bracket__stub {
   position: absolute;
   right: calc(
-    var(--sui-group-bracket-spine-offset) + var(--sui-group-bracket-stroke)
+    var(--sui-group-bracket-spine-offset) +
+    var(--sui-group-bracket-stroke)
   );
   width: var(--sui-group-bracket-stub);
   height: var(--sui-group-bracket-stroke);
@@ -60,7 +61,8 @@
   top: var(--sui-group-bracket-badge-top);
   right: calc(
     var(--sui-group-bracket-spine-offset) +
-      var(--sui-group-bracket-stroke) / 2
+    var(--sui-group-bracket-stroke) /
+    2
   );
   transform: translate(50%, -50%);
   padding: 1px 6px;

@@ -5,7 +5,10 @@ export const NavItemShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>NavLink — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (NavLink.css), no component imports. Anchor link with active state, color variants, badge.</p>
+      <p class="text-meta">
+        Owns CSS (NavLink.css), no component imports. Anchor link with active
+        state, color variants, badge.
+      </p>
 
       <div class="example-group">
         <h3>Inactive</h3>
@@ -14,12 +17,16 @@ export const NavItemShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Active</h3>
-        <NavLink href="#" active>Dashboard</NavLink>
+        <NavLink href="#" active>
+          Dashboard
+        </NavLink>
       </div>
 
       <div class="example-group">
         <h3>With Badge</h3>
-        <NavLink href="#" color="warning" badge={3}>Alerts</NavLink>
+        <NavLink href="#" color="warning" badge={3}>
+          Alerts
+        </NavLink>
       </div>
     </div>
   );

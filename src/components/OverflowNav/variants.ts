@@ -7,4 +7,6 @@ import type { OverflowNavDataProps } from "./OverflowNav";
 import type { Component } from "solid-js";
 
 /** Default auto-collapsing nav. */
-export const OverflowNav: Component<OverflowNavDataProps> = createOverflowNav({});
+export const OverflowNav: Component<OverflowNavDataProps> = createOverflowNav(
+  {},
+);

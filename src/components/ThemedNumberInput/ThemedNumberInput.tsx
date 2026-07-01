@@ -15,12 +15,7 @@ import {
   NumberField as KobalteNumberField,
   type NumberFieldRootProps as KobalteNumberFieldRootProps,
 } from "@kobalte/core/number-field";
-import {
-  type Accessor,
-  type Component,
-  Show,
-  splitProps,
-} from "solid-js";
+import { type Accessor, type Component, Show, splitProps } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import "./ThemedNumberInput.css";
 
@@ -136,13 +131,25 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
             aria-label="Increment"
             class="sui-number-input__trigger sui-number-input__trigger--increment"
           >
-            <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-up"].outline} />
+            <svg
+              width={12}
+              height={12}
+              viewBox="0 0 16 16"
+              fill="none"
+              innerHTML={ICON_PATHS["chevron-up"].outline}
+            />
           </KobalteNumberField.IncrementTrigger>
           <KobalteNumberField.DecrementTrigger
             aria-label="Decrement"
             class="sui-number-input__trigger sui-number-input__trigger--decrement"
           >
-            <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
+            <svg
+              width={12}
+              height={12}
+              viewBox="0 0 16 16"
+              fill="none"
+              innerHTML={ICON_PATHS["chevron-down"].outline}
+            />
           </KobalteNumberField.DecrementTrigger>
         </div>
       </div>

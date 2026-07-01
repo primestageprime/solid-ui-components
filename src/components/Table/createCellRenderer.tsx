@@ -8,12 +8,11 @@ import type { CellRendererProps } from "./cellStyle";
 export function createCellRenderer<T, V>(
   Component: Component<CellRendererProps<V>>,
   accessor: keyof T | ((row: T) => V),
-  extraProps?: Partial<CellRendererProps<V>>
+  extraProps?: Partial<CellRendererProps<V>>,
 ): (row: T) => JSX.Element {
   return (row: T) => {
-    const value = typeof accessor === "function"
-      ? accessor(row)
-      : row[accessor] as V;
+    const value =
+      typeof accessor === "function" ? accessor(row) : (row[accessor] as V);
     return <Component value={value} row={row} {...extraProps} />;
   };
 }

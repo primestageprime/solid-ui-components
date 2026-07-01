@@ -25,7 +25,10 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
 export const Surface: Component<SurfaceProps> = (rawProps) => {
   // Default to md padding so content is offset from the surface edge without
   // consumers needing to hand-roll it. Pass padding="none" to suppress.
-  const props = mergeProps({ padding: "md" as const, radius: "sm" as const }, rawProps);
+  const props = mergeProps(
+    { padding: "md" as const, radius: "sm" as const },
+    rawProps,
+  );
   const [local, others] = splitProps(props, [
     "padding",
     "radius",
@@ -62,8 +65,11 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     if (local.borderColor) custom["border-color"] = local.borderColor;
     if (local.minWidth) custom["min-width"] = local.minWidth;
     if (local.maxWidth) custom["max-width"] = local.maxWidth;
-    if (!local.bg && !local.borderColor && !local.minWidth && !local.maxWidth) return local.style as JSX.CSSProperties | undefined;
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    if (!local.bg && !local.borderColor && !local.minWidth && !local.maxWidth)
+      return local.style as JSX.CSSProperties | undefined;
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
     return { ...base, ...custom };
   };
 
@@ -75,14 +81,25 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
 };
 
 /** Props that are visual/layout overrides — locked at variant-definition time. */
-export type SurfaceOverrides = Pick<SurfaceProps,
-  "padding" | "radius" | "bg" | "borderColor" | "interactive" |
-  "direction" | "align" | "gap" | "minWidth" | "maxWidth"
+export type SurfaceOverrides = Pick<
+  SurfaceProps,
+  | "padding"
+  | "radius"
+  | "bg"
+  | "borderColor"
+  | "interactive"
+  | "direction"
+  | "align"
+  | "gap"
+  | "minWidth"
+  | "maxWidth"
 >;
 
 /** Props that remain available to consumers of a curried Surface variant. */
 export type SurfaceDataProps = Omit<SurfaceProps, keyof SurfaceOverrides>;
 
-export function createSurface(defaults: Partial<Omit<SurfaceProps, "children">>): Component<SurfaceDataProps> {
+export function createSurface(
+  defaults: Partial<Omit<SurfaceProps, "children">>,
+): Component<SurfaceDataProps> {
   return (props) => <Surface {...mergeProps(defaults, props)} />;
 }

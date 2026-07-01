@@ -47,8 +47,8 @@ const InteractiveLegendExample: Component = () => {
       <TextSublabel>
         Two-way binding: hover the Legend OR the colored boxes — both sides
         highlight the matching item via a shared <code>hovered</code> signal,
-        wired through <code>highlightedLabel</code> and{" "}
-        <code>onItemHover</code>.
+        wired through <code>highlightedLabel</code> and <code>onItemHover</code>
+        .
       </TextSublabel>
       <Legend
         items={CHART_SERIES}
@@ -98,23 +98,24 @@ export const LegendShowcase: Component = () => (
   <div class="component-section">
     <h2>Legend — Primitive (Depth 0)</h2>
     <p class="text-meta">
-      Data-driven row (or column) of color-swatch + label pairs. Use to
-      explain a color encoding in a chart, heatmap, or any other
-      visualisation. Each item is a <code>{"{ color, label }"}</code> pair —
-      <code>color</code> is any valid CSS color, applied as the swatch's
-      background. The component is domain-agnostic; the alarm-severity
-      example below is purely illustrative.
+      Data-driven row (or column) of color-swatch + label pairs. Use to explain
+      a color encoding in a chart, heatmap, or any other visualisation. Each
+      item is a <code>{"{ color, label }"}</code> pair —<code>color</code> is
+      any valid CSS color, applied as the swatch's background. The component is
+      domain-agnostic; the alarm-severity example below is purely illustrative.
     </p>
 
     <div class="example-group">
       <h3>Chart series — horizontal (default)</h3>
       <TightStack>
         <TextSublabel>
-          The canonical "this color means this line" legend — the everyday
-          case for any chart library.
+          The canonical "this color means this line" legend — the everyday case
+          for any chart library.
         </TextSublabel>
         <Legend items={CHART_SERIES} />
-        <MutedBody>Zero-config: pass only <code>items</code>.</MutedBody>
+        <MutedBody>
+          Zero-config: pass only <code>items</code>.
+        </MutedBody>
       </TightStack>
     </div>
 
@@ -146,7 +147,13 @@ export const LegendShowcase: Component = () => (
           Horizontal orientation uses <code>flex-wrap</code>, so long legends
           break onto multiple rows in narrow containers.
         </TextSublabel>
-        <div style={{ "max-width": "320px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+        <div
+          style={{
+            "max-width": "320px",
+            border: "1px dashed var(--sui-border)",
+            padding: "8px",
+          }}
+        >
           <Legend items={MANY_ITEMS} />
         </div>
       </NarrowStack>

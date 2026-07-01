@@ -8,10 +8,17 @@ export { createBox } from "./Box";
 export type { BoxDataProps } from "./Box";
 // No-config structural shell components — re-exported as-is.
 export { ProportionalStack, ProportionalItem } from "./ProportionalStack";
-export type { ProportionalStackProps, ProportionalItemProps } from "./ProportionalStack";
+export type {
+  ProportionalStackProps,
+  ProportionalItemProps,
+} from "./ProportionalStack";
 // AppShell/AppMain have no design-config — re-exported as-is. AppHeader (size/inline) is curried.
 export { AppShell, AppMain, createAppHeader } from "./AppShell";
-export type { AppShellProps, AppMainProps, AppHeaderDataProps } from "./AppShell";
+export type {
+  AppShellProps,
+  AppMainProps,
+  AppHeaderDataProps,
+} from "./AppShell";
 export { AppNavLink } from "./AppNavLink";
 export type { AppNavLinkProps } from "./AppNavLink";
 export { SidebarPanel } from "./SidebarPanel";

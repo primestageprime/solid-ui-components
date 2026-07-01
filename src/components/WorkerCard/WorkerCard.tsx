@@ -13,7 +13,12 @@ import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import "./WorkerCard.css";
 
-export type WorkerStatus = "idle" | "claimed" | "extracting" | "writing" | "complete";
+export type WorkerStatus =
+  | "idle"
+  | "claimed"
+  | "extracting"
+  | "writing"
+  | "complete";
 
 export interface WorkerCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Worker slot number (1-4) */
@@ -70,8 +75,11 @@ function fmtNum(n: number): string {
 }
 
 const STATUS_LABELS: Record<WorkerStatus, string> = {
-  idle: "IDLE", claimed: "CLAIMED", extracting: "EXTRACTING",
-  writing: "WRITING", complete: "DONE",
+  idle: "IDLE",
+  claimed: "CLAIMED",
+  extracting: "EXTRACTING",
+  writing: "WRITING",
+  complete: "DONE",
 };
 
 const CYAN = "var(--sui-accent)";
@@ -87,26 +95,50 @@ const DANGER_BG = "rgba(var(--sui-danger-rgb), 0.04)";
 
 function statusColor(s: WorkerStatus): string {
   switch (s) {
-    case "idle": return MUTED;
-    case "claimed": case "extracting": return CYAN;
-    case "writing": case "complete": return GREEN;
+    case "idle":
+      return MUTED;
+    case "claimed":
+    case "extracting":
+      return CYAN;
+    case "writing":
+    case "complete":
+      return GREEN;
   }
 }
 
 export const WorkerCard: Component<WorkerCardProps> = (props) => {
   const [local, others] = splitProps(props, [
-    "slotId", "status", "now", "startedAt", "extractStartedAt",
-    "jobsCompleted", "avgRatePerSec", "estimatedS", "elapsedS", "overdue",
-    "rows", "pkStart", "pkEnd", "batchSize", "totalRecords", "columnCount",
-    "currentJob", "class", "children", "style",
+    "slotId",
+    "status",
+    "now",
+    "startedAt",
+    "extractStartedAt",
+    "jobsCompleted",
+    "avgRatePerSec",
+    "estimatedS",
+    "elapsedS",
+    "overdue",
+    "rows",
+    "pkStart",
+    "pkEnd",
+    "batchSize",
+    "totalRecords",
+    "columnCount",
+    "currentJob",
+    "class",
+    "children",
+    "style",
   ]);
 
-  const isActive = () => local.status === "extracting" || local.status === "writing";
+  const isActive = () =>
+    local.status === "extracting" || local.status === "writing";
   const showPlan = () => local.status === "claimed" || isActive();
 
   const elapsed = () => {
-    if (local.status === "complete" || local.status === "idle") return local.elapsedS ?? 0;
-    if (local.startedAt > 0) return Math.floor((local.now - local.startedAt) / 1000);
+    if (local.status === "complete" || local.status === "idle")
+      return local.elapsedS ?? 0;
+    if (local.startedAt > 0)
+      return Math.floor((local.now - local.startedAt) / 1000);
     return 0;
   };
 
@@ -122,9 +154,11 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
     return extractElapsed() / local.estimatedS;
   };
 
-  const effectiveColor = () => local.overdue ? RED : statusColor(local.status);
-  const effectiveLabel = () => local.overdue ? "OVERDUE" : STATUS_LABELS[local.status];
-  const barColor = () => progress() > 1 ? RED : CYAN;
+  const effectiveColor = () =>
+    local.overdue ? RED : statusColor(local.status);
+  const effectiveLabel = () =>
+    local.overdue ? "OVERDUE" : STATUS_LABELS[local.status];
+  const barColor = () => (progress() > 1 ? RED : CYAN);
 
   const isBatchMode = () => !!(local.pkStart && local.pkEnd);
 
@@ -141,15 +175,20 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
   const cardBorderColor = () => {
     switch (local.status) {
       case "claimed":
-      case "extracting": return CYAN;
-      case "writing": return GREEN;
-      case "complete": return local.overdue ? RED : GREEN;
-      case "idle": return local.overdue ? RED : MUTED;
+      case "extracting":
+        return CYAN;
+      case "writing":
+        return GREEN;
+      case "complete":
+        return local.overdue ? RED : GREEN;
+      case "idle":
+        return local.overdue ? RED : MUTED;
     }
   };
 
   const cardBg = () => {
-    if (local.status === "complete") return local.overdue ? DANGER_BG : SUCCESS_BG;
+    if (local.status === "complete")
+      return local.overdue ? DANGER_BG : SUCCESS_BG;
     if (local.overdue) return DANGER_BG;
     return BASE_BG;
   };
@@ -159,7 +198,9 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
   // style still wins (spread last) to preserve the previous behaviour where
   // `style` landed on the root div.
   const cardStyle = (): JSX.CSSProperties => {
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
     return { padding: "10px 14px", ...base };
   };
 
@@ -179,17 +220,22 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
           <Text as="span" class="worker-card__name" color={effectiveColor()}>
             W{local.slotId}
           </Text>
-          <span class="worker-card__badge" style={{
-            background: `${effectiveColor()}22`,
-            color: effectiveColor(),
-          }}>
+          <span
+            class="worker-card__badge"
+            style={{
+              background: `${effectiveColor()}22`,
+              color: effectiveColor(),
+            }}
+          >
             {effectiveLabel()}
           </span>
         </div>
         <Text
           as="span"
           class="worker-card__timer"
-          color={local.overdue ? RED : local.status === "complete" ? GREEN : DIM}
+          color={
+            local.overdue ? RED : local.status === "complete" ? GREEN : DIM
+          }
         >
           {formatTime(elapsed())}
         </Text>
@@ -199,18 +245,30 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
       <div class="worker-card__history">
         <Text as="span">{local.jobsCompleted} jobs done</Text>
         <Show when={local.currentJob}>
-          <Text as="span" color={CYAN}>· {local.currentJob}</Text>
+          <Text as="span" color={CYAN}>
+            · {local.currentJob}
+          </Text>
         </Show>
         <Show when={local.avgRatePerSec > 0}>
-          <Text as="span" color={DIM}>{fmtNum(local.avgRatePerSec)} rec/s avg</Text>
+          <Text as="span" color={DIM}>
+            {fmtNum(local.avgRatePerSec)} rec/s avg
+          </Text>
         </Show>
       </div>
 
       {/* Row 3: Plan (animated expand/collapse) */}
-      <div class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}>
+      <div
+        class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}
+      >
         <div class="worker-card__plan-inner">
-          <Show when={isBatchMode()} fallback={<Text as="span">single stream</Text>}>
-            <Text as="span">PK: {fmtNum(Number(local.pkStart))} – {fmtNum(Number(local.pkEnd))}</Text>
+          <Show
+            when={isBatchMode()}
+            fallback={<Text as="span">single stream</Text>}
+          >
+            <Text as="span">
+              PK: {fmtNum(Number(local.pkStart))} –{" "}
+              {fmtNum(Number(local.pkEnd))}
+            </Text>
           </Show>
           <Text as="span" color={MUTED}>
             <Show when={isBatchMode()}>
@@ -225,7 +283,9 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
       </div>
 
       {/* Row 4: Progress (animated expand/collapse) */}
-      <div class={`worker-card__progress ${isActive() ? "worker-card__progress--visible" : "worker-card__progress--hidden"}`}>
+      <div
+        class={`worker-card__progress ${isActive() ? "worker-card__progress--visible" : "worker-card__progress--hidden"}`}
+      >
         <div class="worker-card__bar-track">
           <div
             class={`worker-card__bar-fill ${local.status === "extracting" ? "worker-card__bar-fill--extracting" : ""}`}
@@ -238,8 +298,13 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
         <Show when={local.rows != null}>
           <Text as="div" class="worker-card__rows" color={CYAN}>
             {fmtNum(local.rows!)} rows
-            <Show when={!isBatchMode() && local.totalRecords && local.totalRecords > 0}>
-              {" "}({(local.rows! / local.totalRecords! * 100).toFixed(1)}%)
+            <Show
+              when={
+                !isBatchMode() && local.totalRecords && local.totalRecords > 0
+              }
+            >
+              {" "}
+              ({((local.rows! / local.totalRecords!) * 100).toFixed(1)}%)
             </Show>
           </Text>
         </Show>

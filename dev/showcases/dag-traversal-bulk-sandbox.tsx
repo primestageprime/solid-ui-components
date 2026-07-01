@@ -5,7 +5,15 @@
 // layout modes: horizontal, vertical, snake. Auto-play is biased so
 // "implement" takes 4–10s while every other step is ~1s.
 // ============================================
-import { type Component, For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { DigitRoller } from "../../src/components/DataDisplay/DigitRoller";
 
 type Stage = { id: string; label: string; owner?: string };
@@ -21,26 +29,74 @@ type Transition = {
 type LayoutMode = "horizontal" | "vertical" | "snake";
 
 const STAGES: Stage[] = [
-  { id: "plan",      label: "Plan",      owner: "Human" },
-  { id: "design",    label: "Design",    owner: "Agent" },
+  { id: "plan", label: "Plan", owner: "Human" },
+  { id: "design", label: "Design", owner: "Agent" },
   { id: "implement", label: "Implement", owner: "Agent" },
-  { id: "review",    label: "Review",    owner: "Human" },
-  { id: "test",      label: "Test",      owner: "Agent" },
-  { id: "deploy",    label: "Deploy",    owner: "Agent" },
-  { id: "done",      label: "Done" },
+  { id: "review", label: "Review", owner: "Human" },
+  { id: "test", label: "Test", owner: "Agent" },
+  { id: "deploy", label: "Deploy", owner: "Agent" },
+  { id: "done", label: "Done" },
 ];
 
 const STAGE_BY_ID = new Map(STAGES.map((s) => [s.id, s]));
 
 const TRANSITIONS: Transition[] = [
-  { id: "plan-design",       from: "plan",      to: "design",    label: "Approve",      kind: "forward"  },
-  { id: "design-implement",  from: "design",    to: "implement", label: "Designed",     kind: "forward"  },
-  { id: "implement-review",  from: "implement", to: "review",    label: "Submit",       kind: "forward"  },
-  { id: "review-test",       from: "review",    to: "test",      label: "Looks good",   kind: "forward"  },
-  { id: "review-implement",  from: "review",    to: "implement", label: "Needs work",   kind: "backward" },
-  { id: "test-deploy",       from: "test",      to: "deploy",    label: "Pass",         kind: "forward"  },
-  { id: "test-implement",    from: "test",      to: "implement", label: "Fail",         kind: "backward" },
-  { id: "deploy-done",       from: "deploy",    to: "done",      label: "Live",         kind: "forward"  },
+  {
+    id: "plan-design",
+    from: "plan",
+    to: "design",
+    label: "Approve",
+    kind: "forward",
+  },
+  {
+    id: "design-implement",
+    from: "design",
+    to: "implement",
+    label: "Designed",
+    kind: "forward",
+  },
+  {
+    id: "implement-review",
+    from: "implement",
+    to: "review",
+    label: "Submit",
+    kind: "forward",
+  },
+  {
+    id: "review-test",
+    from: "review",
+    to: "test",
+    label: "Looks good",
+    kind: "forward",
+  },
+  {
+    id: "review-implement",
+    from: "review",
+    to: "implement",
+    label: "Needs work",
+    kind: "backward",
+  },
+  {
+    id: "test-deploy",
+    from: "test",
+    to: "deploy",
+    label: "Pass",
+    kind: "forward",
+  },
+  {
+    id: "test-implement",
+    from: "test",
+    to: "implement",
+    label: "Fail",
+    kind: "backward",
+  },
+  {
+    id: "deploy-done",
+    from: "deploy",
+    to: "done",
+    label: "Live",
+    kind: "forward",
+  },
 ];
 
 const FORWARD = TRANSITIONS.filter((t) => t.kind === "forward");
@@ -48,14 +104,14 @@ const BACKWARD = TRANSITIONS.filter((t) => t.kind === "backward");
 
 const NODE_W = 90;
 const NODE_H = 76;
-const HGAP = 100;        // gap BETWEEN cards horizontally → arrow length ≥ 100
-const VGAP = 70;         // gap between rows in snake / between cards in vertical
-const PAD = 30;          // canvas padding around the cards
+const HGAP = 100; // gap BETWEEN cards horizontally → arrow length ≥ 100
+const VGAP = 70; // gap between rows in snake / between cards in vertical
+const PAD = 30; // canvas padding around the cards
 const SNAKE_PER_ROW = 4;
 
 const INITIAL_PLAN_COUNT = 50;
 const MIN_STROKE = 1.5;
-const MAX_STROKE = 6;       // ~half the previous peak
+const MAX_STROKE = 6; // ~half the previous peak
 const EDGE_PULSE_MS = 1400; // slower so the elastic ring is readable
 const NUMBER_DURATION_MS = 500;
 
@@ -80,8 +136,19 @@ const QTY_OPTIONS = [1, 3, 5, 10];
 
 type Pos = { x: number; y: number };
 type CountState = { count: number; prevCount: number };
-type EdgePulse = { startedAt: number; size: number; kind: "forward" | "backward" };
-type LogEntry = { ts: number; from: string; to: string; label: string; kind: "forward" | "backward"; size: number };
+type EdgePulse = {
+  startedAt: number;
+  size: number;
+  kind: "forward" | "backward";
+};
+type LogEntry = {
+  ts: number;
+  from: string;
+  to: string;
+  label: string;
+  kind: "forward" | "backward";
+  size: number;
+};
 
 const buildInitial = (): Record<string, CountState> =>
   STAGES.reduce(
@@ -96,11 +163,18 @@ const buildInitial = (): Record<string, CountState> =>
 const edgeKey = (from: string, to: string) => `${from}-${to}`;
 
 /** Compute card-center positions for the chosen layout mode. */
-function computePositions(mode: LayoutMode): { positions: Map<string, Pos>; width: number; height: number } {
+function computePositions(mode: LayoutMode): {
+  positions: Map<string, Pos>;
+  width: number;
+  height: number;
+} {
   const positions = new Map<string, Pos>();
   if (mode === "horizontal") {
     STAGES.forEach((s, i) => {
-      positions.set(s.id, { x: PAD + i * (NODE_W + HGAP) + NODE_W / 2, y: PAD + NODE_H / 2 });
+      positions.set(s.id, {
+        x: PAD + i * (NODE_W + HGAP) + NODE_W / 2,
+        y: PAD + NODE_H / 2,
+      });
     });
     return {
       positions,
@@ -110,7 +184,10 @@ function computePositions(mode: LayoutMode): { positions: Map<string, Pos>; widt
   }
   if (mode === "vertical") {
     STAGES.forEach((s, i) => {
-      positions.set(s.id, { x: PAD + NODE_W / 2 + 80, y: PAD + i * (NODE_H + VGAP) + NODE_H / 2 });
+      positions.set(s.id, {
+        x: PAD + NODE_W / 2 + 80,
+        y: PAD + i * (NODE_H + VGAP) + NODE_H / 2,
+      });
     });
     return {
       positions,
@@ -138,7 +215,12 @@ function computePositions(mode: LayoutMode): { positions: Map<string, Pos>; widt
 }
 
 /** Find where the line from `center` toward `target` exits the rect at `center`. */
-function clipToRect(center: Pos, target: Pos, halfW: number, halfH: number): Pos {
+function clipToRect(
+  center: Pos,
+  target: Pos,
+  halfW: number,
+  halfH: number,
+): Pos {
   const dx = target.x - center.x;
   const dy = target.y - center.y;
   if (dx === 0 && dy === 0) return center;
@@ -201,14 +283,31 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
 
     setCounts((prev) => ({
       ...prev,
-      [t.from]: { count: prev[t.from].count - moveK, prevCount: prev[t.from].count },
-      [t.to]:   { count: prev[t.to].count + moveK,   prevCount: prev[t.to].count },
+      [t.from]: {
+        count: prev[t.from].count - moveK,
+        prevCount: prev[t.from].count,
+      },
+      [t.to]: { count: prev[t.to].count + moveK, prevCount: prev[t.to].count },
     }));
     setPulses((prev) => ({
       ...prev,
-      [edgeKey(t.from, t.to)]: { startedAt: performance.now(), size: moveK, kind: t.kind },
+      [edgeKey(t.from, t.to)]: {
+        startedAt: performance.now(),
+        size: moveK,
+        kind: t.kind,
+      },
     }));
-    setLog((prev) => [...prev.slice(-19), { ts: Date.now(), from: t.from, to: t.to, label: t.label, kind: t.kind, size: moveK }]);
+    setLog((prev) => [
+      ...prev.slice(-19),
+      {
+        ts: Date.now(),
+        from: t.from,
+        to: t.to,
+        label: t.label,
+        kind: t.kind,
+        size: moveK,
+      },
+    ]);
 
     if (rafId === undefined) rafId = requestAnimationFrame(tick);
   };
@@ -223,7 +322,9 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
   let autoTimer: number | undefined;
   const scheduleAuto = () => {
     if (!autoPlay()) return;
-    const candidates = TRANSITIONS.filter((t) => (counts()[t.from]?.count ?? 0) > 0);
+    const candidates = TRANSITIONS.filter(
+      (t) => (counts()[t.from]?.count ?? 0) > 0,
+    );
     if (candidates.length === 0) {
       setAutoPlay(false);
       return;
@@ -231,12 +332,18 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
     const forwards = candidates.filter((t) => t.kind === "forward");
     const backwards = candidates.filter((t) => t.kind === "backward");
     const pickForward = backwards.length === 0 || Math.random() < 0.7;
-    const pool = pickForward && forwards.length > 0 ? forwards : (backwards.length > 0 ? backwards : forwards);
+    const pool =
+      pickForward && forwards.length > 0
+        ? forwards
+        : backwards.length > 0
+          ? backwards
+          : forwards;
     const t = pool[Math.floor(Math.random() * pool.length)];
     const k = QTY_OPTIONS[Math.floor(Math.random() * QTY_OPTIONS.length)];
-    const delay = t.from === "implement"
-      ? 4000 + Math.random() * 6000  // 4–10s
-      : 1000;
+    const delay =
+      t.from === "implement"
+        ? 4000 + Math.random() * 6000 // 4–10s
+        : 1000;
     autoTimer = window.setTimeout(() => {
       fire(t.id, k);
       scheduleAuto();
@@ -269,14 +376,22 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
     if (elapsed >= EDGE_PULSE_MS) return MIN_STROKE;
     const t = elapsed / EDGE_PULSE_MS;
     const intensity = Math.min(1, p.size / 10);
-    return MIN_STROKE + (MAX_STROKE - MIN_STROKE) * elasticBurst(t) * (0.6 + 0.4 * intensity);
+    return (
+      MIN_STROKE +
+      (MAX_STROKE - MIN_STROKE) * elasticBurst(t) * (0.6 + 0.4 * intensity)
+    );
   };
   const isEdgePulsing = (key: string) => {
     tickNow();
     return !!pulses()[key];
   };
 
-  const fmtTime = (ts: number) => new Date(ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const fmtTime = (ts: number) =>
+    new Date(ts).toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
   const halfW = NODE_W / 2;
   const halfH = NODE_H / 2;
@@ -285,10 +400,11 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
     <div class="component-section dtb-root">
       <h2>DAG Traversal — Bulk (sandbox)</h2>
       <p class="text-meta">
-        Each stage holds a count; pick a quantity, then click a transition to move that
-        many items. The big number rolls (up for increases, down for decreases) and the
-        edge between them swells like a hose under load. Try the layout modes — Snake
-        wraps the row when there are too many stages to fit horizontally.
+        Each stage holds a count; pick a quantity, then click a transition to
+        move that many items. The big number rolls (up for increases, down for
+        decreases) and the edge between them swells like a hose under load. Try
+        the layout modes — Snake wraps the row when there are too many stages to
+        fit horizontally.
       </p>
 
       <div class="dtb-toolbar">
@@ -329,7 +445,9 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
           Auto-play
           <span class="dtb-autoplay-hint">(implement: 4–10s)</span>
         </label>
-        <button type="button" class="dtb-btn dtb-btn--ghost" onClick={reset}>Reset</button>
+        <button type="button" class="dtb-btn dtb-btn--ghost" onClick={reset}>
+          Reset
+        </button>
       </div>
 
       {/* DAG canvas */}
@@ -340,13 +458,40 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
           style={{ width: "100%", height: "auto", "max-height": "70vh" }}
         >
           <defs>
-            <marker id="dtb-arrow-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-text-secondary)" />
+            <marker
+              id="dtb-arrow-fwd"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path
+                d="M 0 0 L 10 5 L 0 10 z"
+                fill="var(--sui-text-secondary)"
+              />
             </marker>
-            <marker id="dtb-arrow-fwd-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <marker
+              id="dtb-arrow-fwd-active"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-accent)" />
             </marker>
-            <marker id="dtb-arrow-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker
+              id="dtb-arrow-back"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-warning)" />
             </marker>
           </defs>
@@ -391,7 +536,11 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
                   y2={b.y}
                   class={`dtb-edge dtb-edge--forward ${active ? "dtb-edge--active" : ""}`}
                   stroke-width={edgeStrokeWidth(k)}
-                  marker-end={active ? "url(#dtb-arrow-fwd-active)" : "url(#dtb-arrow-fwd)"}
+                  marker-end={
+                    active
+                      ? "url(#dtb-arrow-fwd-active)"
+                      : "url(#dtb-arrow-fwd)"
+                  }
                   stroke-linecap="round"
                 />
               );
@@ -450,8 +599,12 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
                 onClick={() => fire(t.id, quantity())}
                 title={`${t.from} → ${t.to}`}
               >
-                <span class="dtb-btn-from">{STAGE_BY_ID.get(t.from)?.label}</span>
-                <span class="dtb-btn-arrow">{t.kind === "forward" ? "→" : "↩"}</span>
+                <span class="dtb-btn-from">
+                  {STAGE_BY_ID.get(t.from)?.label}
+                </span>
+                <span class="dtb-btn-arrow">
+                  {t.kind === "forward" ? "→" : "↩"}
+                </span>
                 <span class="dtb-btn-to">{STAGE_BY_ID.get(t.to)?.label}</span>
                 <span class="dtb-btn-label">{t.label}</span>
                 <span class="dtb-btn-qty">×{movable()}</span>
@@ -463,17 +616,26 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
 
       <div class="dtb-log">
         <div class="dtb-log-label">Activity</div>
-        <Show when={log().length > 0} fallback={<div class="dtb-log-empty">No moves yet.</div>}>
+        <Show
+          when={log().length > 0}
+          fallback={<div class="dtb-log-empty">No moves yet.</div>}
+        >
           <ul class="dtb-log-list">
             <For each={[...log()].reverse()}>
               {(entry) => (
                 <li class={`dtb-log-entry dtb-log-entry--${entry.kind}`}>
                   <span class="dtb-log-time">{fmtTime(entry.ts)}</span>
                   <span class="dtb-log-size">×{entry.size}</span>
-                  <span class="dtb-log-arrow">{entry.kind === "forward" ? "→" : "↩"}</span>
-                  <span class="dtb-log-from">{STAGE_BY_ID.get(entry.from)?.label}</span>
+                  <span class="dtb-log-arrow">
+                    {entry.kind === "forward" ? "→" : "↩"}
+                  </span>
+                  <span class="dtb-log-from">
+                    {STAGE_BY_ID.get(entry.from)?.label}
+                  </span>
                   <span class="dtb-log-sep">→</span>
-                  <span class="dtb-log-to">{STAGE_BY_ID.get(entry.to)?.label}</span>
+                  <span class="dtb-log-to">
+                    {STAGE_BY_ID.get(entry.to)?.label}
+                  </span>
                   <span class="dtb-log-label-text">{entry.label}</span>
                 </li>
               )}

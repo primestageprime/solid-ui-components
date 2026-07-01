@@ -52,7 +52,7 @@ interface ProcessedRow<T> {
 }
 
 export function GroupedTable<T extends Record<string, any>>(
-  props: GroupedTableProps<T>
+  props: GroupedTableProps<T>,
 ) {
   // Process rows to calculate rowspan info
   const processedRows = createMemo((): ProcessedRow<T>[] => {
@@ -163,9 +163,15 @@ export function GroupedTable<T extends Record<string, any>>(
                           class={`hud-table__cell ${column.rowspan ? "hud-grouped-table__rowspan-cell" : ""}`}
                           style={{
                             "text-align": column.align || "left",
-                            "vertical-align": column.rowspan ? "middle" : undefined,
+                            "vertical-align": column.rowspan
+                              ? "middle"
+                              : undefined,
                           }}
-                          rowSpan={column.rowspan && row.isFirstInGroup ? row.groupSize : undefined}
+                          rowSpan={
+                            column.rowspan && row.isFirstInGroup
+                              ? row.groupSize
+                              : undefined
+                          }
                         >
                           {getCellValue(row.data, column)}
                         </td>
@@ -287,7 +293,9 @@ export function GroupedTableDemo() {
     {
       id: "vessel",
       header: "Vessel",
-      accessor: (row) => <span style={{ "font-weight": "600" }}>{row.vessel_name}</span>,
+      accessor: (row) => (
+        <span style={{ "font-weight": "600" }}>{row.vessel_name}</span>
+      ),
       rowspan: true,
       width: "180px",
     },
@@ -321,7 +329,9 @@ export function GroupedTableDemo() {
       id: "nox",
       header: "NOx",
       accessor: (row) => (
-        <span style={{ color: row.nox_emissions > 2.8 ? "#ff6b6b" : undefined }}>
+        <span
+          style={{ color: row.nox_emissions > 2.8 ? "#ff6b6b" : undefined }}
+        >
           {row.nox_emissions.toFixed(2)}
         </span>
       ),
@@ -332,7 +342,9 @@ export function GroupedTableDemo() {
       id: "rog",
       header: "ROG",
       accessor: (row) => (
-        <span style={{ color: row.rog_emissions > 0.125 ? "#ff6b6b" : undefined }}>
+        <span
+          style={{ color: row.rog_emissions > 0.125 ? "#ff6b6b" : undefined }}
+        >
           {row.rog_emissions.toFixed(2)}
         </span>
       ),
@@ -346,11 +358,7 @@ export function GroupedTableDemo() {
       <h3 style={{ color: "var(--sui-accent)", "margin-bottom": "16px" }}>
         Vessel Call Details (Rowspan Grouped)
       </h3>
-      <GroupedTable
-        rows={DEMO_DATA}
-        columns={columns}
-        compact
-      />
+      <GroupedTable rows={DEMO_DATA} columns={columns} compact />
     </div>
   );
 }

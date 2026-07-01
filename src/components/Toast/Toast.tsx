@@ -16,13 +16,7 @@ import {
   type ToastRegionProps as KobalteToastRegionProps,
   type ToastListProps as KobalteToastListProps,
 } from "@kobalte/core/toast";
-import {
-  type Component,
-  type JSX,
-  For,
-  Show,
-  splitProps,
-} from "solid-js";
+import { type Component, type JSX, For, Show, splitProps } from "solid-js";
 import "./Toast.css";
 
 /** Action button rendered in the toast's action row. */
@@ -123,7 +117,10 @@ export const Toast: Component<ToastProps> = (props) => {
             </div>
           </Show>
         </div>
-        <KobalteToast.CloseButton class="sui-toast__close-button" aria-label="Close">
+        <KobalteToast.CloseButton
+          class="sui-toast__close-button"
+          aria-label="Close"
+        >
           <CloseGlyph />
         </KobalteToast.CloseButton>
       </div>

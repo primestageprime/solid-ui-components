@@ -24,7 +24,9 @@
   line-height: 1;
   padding: 8px 16px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 /* Ridged groove seam: a recessed dark line plus a bright inset ridge, so the
@@ -34,7 +36,9 @@
   box-shadow: inset 1px 0 0 var(--sui-border-bright);
 }
 
-.sui-segmented__seg:hover:not(.sui-segmented__seg--disabled):not(.sui-segmented__seg--selected) {
+.sui-segmented__seg:hover:not(.sui-segmented__seg--disabled):not(
+  .sui-segmented__seg--selected
+) {
   color: var(--sui-text-primary);
   background: rgba(var(--sui-accent-rgb), 0.06);
 }

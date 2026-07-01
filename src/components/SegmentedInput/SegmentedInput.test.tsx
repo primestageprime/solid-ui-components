@@ -63,7 +63,9 @@ describe("SegmentedInput", () => {
     const selected = container.querySelectorAll(
       ".sui-segmented__segment--selected",
     );
-    expect(container.querySelectorAll(".sui-segmented__segment").length).toBe(3);
+    expect(container.querySelectorAll(".sui-segmented__segment").length).toBe(
+      3,
+    );
     expect(selected[0].textContent).toBe("Day");
   });
 });
@@ -71,12 +73,17 @@ describe("SegmentedInput", () => {
 describe("SegmentedInput — compact (stepper) mode", () => {
   it("renders a stepper with current label and two chevrons, not the strip", () => {
     const { container } = render(() => (
-      <SegmentedInput options={OPTIONS} value="week" onChange={() => {}} compact />
+      <SegmentedInput
+        options={OPTIONS}
+        value="week"
+        onChange={() => {}}
+        compact
+      />
     ));
     // No full-strip segments.
-    expect(
-      container.querySelectorAll(".sui-segmented__segment").length,
-    ).toBe(0);
+    expect(container.querySelectorAll(".sui-segmented__segment").length).toBe(
+      0,
+    );
     const stepper = container.querySelector(".sui-segmented-stepper")!;
     expect(stepper).toBeTruthy();
     const chevrons = container.querySelectorAll(

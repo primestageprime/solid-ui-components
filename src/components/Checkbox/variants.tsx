@@ -4,7 +4,11 @@ import type { Component } from "solid-js";
 import { createCheckbox, type CheckboxDataProps } from "./Checkbox";
 
 /** Small primary checkbox — compact lists and dense rows. */
-export const SmallCheckbox: Component<CheckboxDataProps> = createCheckbox({ size: "sm" });
+export const SmallCheckbox: Component<CheckboxDataProps> = createCheckbox({
+  size: "sm",
+});
 
 /** Success-colored checkbox — "done"/completion semantics. */
-export const DoneCheckbox: Component<CheckboxDataProps> = createCheckbox({ color: "success" });
+export const DoneCheckbox: Component<CheckboxDataProps> = createCheckbox({
+  color: "success",
+});

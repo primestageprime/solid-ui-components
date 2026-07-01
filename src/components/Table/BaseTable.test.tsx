@@ -40,7 +40,9 @@ describe("BaseTable spanRow (tail-collapse)", () => {
 
   it("collapses the tail from fromColumnId into one spanning cell", () => {
     const spanRow = (row: Row): TableRowSpan | null =>
-      row.partial ? { fromColumnId: "a", content: <span>2 of 5 evaluated</span> } : null;
+      row.partial
+        ? { fromColumnId: "a", content: <span>2 of 5 evaluated</span> }
+        : null;
 
     const { container, getByText } = render(() => (
       <BaseTable data={DATA} columns={COLUMNS} spanRow={spanRow} />
@@ -54,7 +56,9 @@ describe("BaseTable spanRow (tail-collapse)", () => {
     // Partial row: 2 leading cells + 1 spanning cell = 3 <td>.
     const tds = rows[1].querySelectorAll("td");
     expect(tds.length).toBe(3);
-    const span = rows[1].querySelector(".hud-table__cell--span") as HTMLTableCellElement;
+    const span = rows[1].querySelector(
+      ".hud-table__cell--span",
+    ) as HTMLTableCellElement;
     expect(span).not.toBeNull();
     expect(span.colSpan).toBe(3); // columns.length(5) - fromIndex(2)
     expect(getByText("2 of 5 evaluated")).toBeTruthy();
@@ -84,12 +88,17 @@ describe("BaseTable spanRow (tail-collapse)", () => {
     const tds = rows[1].querySelectorAll("td");
     expect(tds.length).toBe(3);
     expect(rows[1].querySelector(".hud-table__actions-cell")).toBeNull();
-    const span = rows[1].querySelector(".hud-table__cell--span") as HTMLTableCellElement;
+    const span = rows[1].querySelector(
+      ".hud-table__cell--span",
+    ) as HTMLTableCellElement;
     expect(span.colSpan).toBe(4);
   });
 
   it("falls back to normal rendering when fromColumnId is unknown", () => {
-    const spanRow = (): TableRowSpan => ({ fromColumnId: "nope", content: <span>x</span> });
+    const spanRow = (): TableRowSpan => ({
+      fromColumnId: "nope",
+      content: <span>x</span>,
+    });
     const { container } = render(() => (
       <BaseTable data={DATA} columns={COLUMNS} spanRow={spanRow} />
     ));

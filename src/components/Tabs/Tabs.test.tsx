@@ -12,14 +12,23 @@ describe("Tabs orientation", () => {
     const { container } = render(() => (
       <Tabs tabs={TABS} activeTab="a" onTabChange={() => {}} />
     ));
-    expect(container.firstElementChild!.className).not.toMatch(/sui-tabs--vertical/);
+    expect(container.firstElementChild!.className).not.toMatch(
+      /sui-tabs--vertical/,
+    );
   });
 
   it("applies sui-tabs--vertical when orientation='vertical'", () => {
     const { container } = render(() => (
-      <Tabs tabs={TABS} activeTab="a" onTabChange={() => {}} orientation="vertical" />
+      <Tabs
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        orientation="vertical"
+      />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabs--vertical/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabs--vertical/,
+    );
   });
 
   it("keeps the variant class when orientation is set", () => {
@@ -39,8 +48,15 @@ describe("Tabs orientation", () => {
 
   it("does not apply vertical class when orientation='horizontal'", () => {
     const { container } = render(() => (
-      <Tabs tabs={TABS} activeTab="a" onTabChange={() => {}} orientation="horizontal" />
+      <Tabs
+        tabs={TABS}
+        activeTab="a"
+        onTabChange={() => {}}
+        orientation="horizontal"
+      />
     ));
-    expect(container.firstElementChild!.className).not.toMatch(/sui-tabs--vertical/);
+    expect(container.firstElementChild!.className).not.toMatch(
+      /sui-tabs--vertical/,
+    );
   });
 });

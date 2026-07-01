@@ -26,7 +26,9 @@ export interface TreemapInnerData {
 }
 
 /** One outer column of the treemap. */
-export interface TreemapCellData<Inner extends TreemapInnerData = TreemapInnerData> {
+export interface TreemapCellData<
+  Inner extends TreemapInnerData = TreemapInnerData,
+> {
   /** Stable identifier — passed back in callbacks. */
   key: string;
   /** Relative size driving this column's flex-grow within the treemap. */
@@ -82,17 +84,22 @@ export interface TreemapProps<
 const outerFlex = (weight: number): string =>
   weight <= 0 ? "0 0 auto" : `${weight} 1 0px`;
 
-const innerFlex = (weight: number): string =>
-  `${weight} 1 15ch`;
+const innerFlex = (weight: number): string => `${weight} 1 15ch`;
 
 const outerClass = (selected: boolean): string =>
-  selected ? "sui-treemap__outer sui-treemap__outer--selected" : "sui-treemap__outer";
+  selected
+    ? "sui-treemap__outer sui-treemap__outer--selected"
+    : "sui-treemap__outer";
 
 const innerClass = (selected: boolean): string =>
-  selected ? "sui-treemap__inner sui-treemap__inner--selected" : "sui-treemap__inner";
+  selected
+    ? "sui-treemap__inner sui-treemap__inner--selected"
+    : "sui-treemap__inner";
 
 const sidebarClass = (selected: boolean): string =>
-  selected ? "sui-treemap__sidebar sui-treemap__sidebar--selected" : "sui-treemap__sidebar";
+  selected
+    ? "sui-treemap__sidebar sui-treemap__sidebar--selected"
+    : "sui-treemap__sidebar";
 
 const rootClass = (extra: string | undefined): string =>
   extra ? `sui-treemap ${extra}` : "sui-treemap";
@@ -129,9 +136,7 @@ export function Treemap<
             </div>
             <Show when={p.renderOuterToolbar}>
               {(render) => (
-                <div class="sui-treemap__outer-toolbar">
-                  {render()(cell)}
-                </div>
+                <div class="sui-treemap__outer-toolbar">{render()(cell)}</div>
               )}
             </Show>
             <div class="sui-treemap__inner-list">

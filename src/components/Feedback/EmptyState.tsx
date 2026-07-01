@@ -7,7 +7,13 @@
 // ============================================
 import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { SmRegion, MdRegion, LgRegion, FadedBox, ConstrainedBox } from "../Layout";
+import {
+  SmRegion,
+  MdRegion,
+  LgRegion,
+  FadedBox,
+  ConstrainedBox,
+} from "../Layout";
 import { TextBody, MutedBody, AccentBody } from "../Text";
 
 export type EmptyStateVariant = "default" | "muted" | "accent";
@@ -51,8 +57,13 @@ export const EmptyState: Component<EmptyStateProps> = (props) => {
 export type EmptyStateOverrides = Pick<EmptyStateProps, "variant" | "size">;
 
 /** Props available to consumers of a curried EmptyState variant. */
-export type EmptyStateDataProps = Omit<EmptyStateProps, keyof EmptyStateOverrides>;
+export type EmptyStateDataProps = Omit<
+  EmptyStateProps,
+  keyof EmptyStateOverrides
+>;
 
-export function createEmptyState(defaults: Partial<EmptyStateProps>): Component<EmptyStateDataProps> {
+export function createEmptyState(
+  defaults: Partial<EmptyStateProps>,
+): Component<EmptyStateDataProps> {
   return (props) => <EmptyState {...mergeProps(defaults, props)} />;
 }

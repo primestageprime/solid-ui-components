@@ -42,7 +42,13 @@ describe("PointSeries — emphasizeNearestX", () => {
     const { container } = render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
         <Probe />
-        <PointSeries data={data} x={(d) => d.x} y={(d) => d.y} radius={3} emphasizeNearestX />
+        <PointSeries
+          data={data}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          radius={3}
+          emphasizeNearestX
+        />
       </Chart>
     ));
     // No emphasis until hoverX is set.
@@ -58,7 +64,9 @@ describe("PointSeries — emphasizeNearestX", () => {
 
     // Clearing hover removes emphasis.
     setHover!(null);
-    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(
+      0,
+    );
   });
 
   it("respects custom emphasisScale", () => {

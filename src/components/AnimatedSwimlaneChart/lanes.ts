@@ -1,6 +1,9 @@
 // src/components/AnimatedSwimlaneChart/lanes.ts
 import type { StatusFlowNode } from "../StatusFlowChart";
-import { computeColFor, resolveParentStatuses } from "../StatusFlowChart/columns";
+import {
+  computeColFor,
+  resolveParentStatuses,
+} from "../StatusFlowChart/columns";
 
 /**
  * How many child rows are VISIBLE right now in this lane's tallest column —

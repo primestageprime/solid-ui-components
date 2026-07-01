@@ -27,9 +27,9 @@ html[data-colorblind="true"] {
   --sui-warning-rgb: 230, 167, 0;
 
   /* Heatmap status ramp (blue→amber→vermilion). */
-  --status-full:    #3b82f6;
+  --status-full: #3b82f6;
   --status-partial: #6fa8dc;
-  --status-sparse:  #e6a700;
+  --status-sparse: #e6a700;
   --status-missing: #e66100;
 
   /* Chart semantics. */

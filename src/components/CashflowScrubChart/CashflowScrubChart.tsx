@@ -163,7 +163,6 @@ const fmtAxisDollars = (cents: number): string => {
   return dollars < 0 ? `−$${compact.replace(/^-/, "")}` : `$${compact}`;
 };
 
-
 const formatCornerLabel = (cell: CashflowCell): string => {
   const day = cell.start.getUTCDate();
   // First / last day of month gets a "Jun 30" / "Jul 1" style label so the
@@ -414,38 +413,38 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           </clipPath>
         </defs>
         <g clip-path={`url(#${clipId})`}>
-        <For each={bands}>
-          {(band) => (
-            <polygon
-              class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
-                band.sign
-              }${band.overrideClass ? ` ${band.overrideClass}` : ""}`}
-              points={band.points}
-            />
-          )}
-        </For>
-        <line
-          class="sui-cashflow-scrub-chart__zero-line"
-          x1={ctx.plotLeft}
-          x2={ctx.plotRight}
-          y1={zeroY}
-          y2={zeroY}
-        />
-        <For each={extraSeries}>
-          {(series) => (
-            <For each={series.segments}>
-              {(seg) => (
-                <polyline
-                  class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
-                    series.class ? ` ${series.class}` : ""
-                  }`}
-                  points={seg}
-                />
-              )}
-            </For>
-          )}
-        </For>
-        <polyline class="sui-cashflow-scrub-chart__line" points={points} />
+          <For each={bands}>
+            {(band) => (
+              <polygon
+                class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
+                  band.sign
+                }${band.overrideClass ? ` ${band.overrideClass}` : ""}`}
+                points={band.points}
+              />
+            )}
+          </For>
+          <line
+            class="sui-cashflow-scrub-chart__zero-line"
+            x1={ctx.plotLeft}
+            x2={ctx.plotRight}
+            y1={zeroY}
+            y2={zeroY}
+          />
+          <For each={extraSeries}>
+            {(series) => (
+              <For each={series.segments}>
+                {(seg) => (
+                  <polyline
+                    class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
+                      series.class ? ` ${series.class}` : ""
+                    }`}
+                    points={seg}
+                  />
+                )}
+              </For>
+            )}
+          </For>
+          <polyline class="sui-cashflow-scrub-chart__line" points={points} />
         </g>
         {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
             edge and the label stays fully visible. */}
@@ -498,7 +497,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
     const list = props.markers ?? [];
-    if (list.length === 0 || ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    if (list.length === 0 || ctx.cells.length === 0 || !ctx.yToPlot)
+      return null;
     const yToPlot = ctx.yToPlot;
     return (
       <svg
@@ -506,16 +506,22 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
-        <For each={list.filter((m) => m.index >= 0 && m.index < ctx.cells.length)}>
+        <For
+          each={list.filter((m) => m.index >= 0 && m.index < ctx.cells.length)}
+        >
           {(m) => {
             const x = ctx.cellToX(m.index);
             const y = yToPlot(ctx.cells[m.index].balanceCents);
             return (
               <g
                 class={`sui-cashflow-scrub-chart__marker${
-                  m.selected ? " sui-cashflow-scrub-chart__marker--selected" : ""
+                  m.selected
+                    ? " sui-cashflow-scrub-chart__marker--selected"
+                    : ""
                 }`}
-                onClick={() => props.onMarkerClick?.(m.index, ctx.cells[m.index])}
+                onClick={() =>
+                  props.onMarkerClick?.(m.index, ctx.cells[m.index])
+                }
               >
                 {/* generous invisible hit area so the thin rule is clickable */}
                 <rect
@@ -565,7 +571,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       onScrub={props.onScrub}
       scrub={props.scrub}
       centerOn={props.centerOn}
-      renderChartOverlay={(props.markers?.length ?? 0) > 0 ? renderMarkers : undefined}
+      renderChartOverlay={
+        (props.markers?.length ?? 0) > 0 ? renderMarkers : undefined
+      }
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}

@@ -14,7 +14,11 @@ import { isServer } from "solid-js/web";
  *   return <Show when={!isNarrow()} fallback={<Cards />}><Table /></Show>;
  */
 export function useMediaQuery(query: string): Accessor<boolean> {
-  if (isServer || typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (
+    isServer ||
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
     const [matches] = createSignal(false);
     return matches;
   }
@@ -29,9 +33,17 @@ export function useMediaQuery(query: string): Accessor<boolean> {
     onCleanup(() => mql.removeEventListener("change", handler));
   } else {
     // Legacy fallback
-    (mql as MediaQueryList & { addListener: (l: (e: MediaQueryListEvent) => void) => void }).addListener(handler);
+    (
+      mql as MediaQueryList & {
+        addListener: (l: (e: MediaQueryListEvent) => void) => void;
+      }
+    ).addListener(handler);
     onCleanup(() => {
-      (mql as MediaQueryList & { removeListener: (l: (e: MediaQueryListEvent) => void) => void }).removeListener(handler);
+      (
+        mql as MediaQueryList & {
+          removeListener: (l: (e: MediaQueryListEvent) => void) => void;
+        }
+      ).removeListener(handler);
     });
   }
 

@@ -4,4 +4,7 @@ export type { SectionDataProps } from "./Section";
 export * from "./variants";
 // No-config helpers — re-exported as-is.
 export { StickyGroupHeader, SectionLabel } from "./StickyGroupHeader";
-export type { StickyGroupHeaderProps, SectionLabelProps } from "./StickyGroupHeader";
+export type {
+  StickyGroupHeaderProps,
+  SectionLabelProps,
+} from "./StickyGroupHeader";

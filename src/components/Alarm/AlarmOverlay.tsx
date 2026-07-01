@@ -85,7 +85,11 @@ export const AlarmOverlay: Component<AlarmOverlayProps> = (props) => {
     const padFrac = props.padFraction ?? 0;
     const depth = props.depthThreshold ?? 5;
     return props.series.map((s) => {
-      const padded = padRanges(detectRanges(s.data, s.threshold), padFrac, width);
+      const padded = padRanges(
+        detectRanges(s.data, s.threshold),
+        padFrac,
+        width,
+      );
       const rawZones = findHotZones(padded, depth);
       return {
         bands: clampRanges(subtractZones(padded, rawZones), xMin, xMax),
@@ -102,7 +106,11 @@ export const AlarmOverlay: Component<AlarmOverlayProps> = (props) => {
        *  same lane (visually rare but possible at boundaries). */}
       <For each={perSeries()}>
         {(s, i) => (
-          <AlarmBands ranges={s.bands} laneIndex={i()} laneCount={props.series.length} />
+          <AlarmBands
+            ranges={s.bands}
+            laneIndex={i()}
+            laneCount={props.series.length}
+          />
         )}
       </For>
       <For each={perSeries()}>

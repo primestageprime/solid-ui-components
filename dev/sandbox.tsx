@@ -4,7 +4,14 @@
 // `dev/sandbox-steps/index.ts`. This file deliberately holds zero
 // step-specific data so steps can be added/removed in isolation.
 // ============================================
-import { type Component, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { getPersistedTheme, loadTheme } from "./load-theme";
 import { MockBaseline, SEED_STEPS, type SandboxStep } from "./sandbox-steps";
 
@@ -27,7 +34,8 @@ const stepIdFromHash = (h: string): string | null => {
 };
 
 export const Sandbox: Component = () => {
-  const seed = (): SandboxStep[] => (SEED_STEPS.length > 0 ? SEED_STEPS : [FALLBACK_STEP]);
+  const seed = (): SandboxStep[] =>
+    SEED_STEPS.length > 0 ? SEED_STEPS : [FALLBACK_STEP];
   const initial = stepIdFromHash(location.hash) ?? seed()[0].id;
   const [activeId, setActiveId] = createSignal(initial);
   const [extras, setExtras] = createSignal<SandboxStep[]>([]);
@@ -63,7 +71,8 @@ export const Sandbox: Component = () => {
   };
 
   onMount(() => {
-    if (!document.getElementById("sui-theme")?.textContent) loadTheme(getPersistedTheme());
+    if (!document.getElementById("sui-theme")?.textContent)
+      loadTheme(getPersistedTheme());
 
     const onHash = () => {
       const id = stepIdFromHash(location.hash);
@@ -87,7 +96,9 @@ export const Sandbox: Component = () => {
         <div class="sui-sandbox__brand">
           <h1>Sandbox</h1>
           <p>Ephemeral page mockups</p>
-          <a class="sui-sandbox__exit" href="#/atomic/base-table">← back to showcase</a>
+          <a class="sui-sandbox__exit" href="#/atomic/base-table">
+            ← back to showcase
+          </a>
         </div>
 
         <div class="sui-sandbox__steps">
@@ -98,7 +109,10 @@ export const Sandbox: Component = () => {
                 <div
                   class={`sui-sandbox__step${activeId() === step.id ? " sui-sandbox__step--active" : ""}`}
                 >
-                  <button class="sui-sandbox__step-button" onClick={() => goTo(step.id)}>
+                  <button
+                    class="sui-sandbox__step-button"
+                    onClick={() => goTo(step.id)}
+                  >
                     <span class="sui-sandbox__step-num">{i() + 1}</span>
                     <span class="sui-sandbox__step-body">
                       <span class="sui-sandbox__step-label">{step.label}</span>

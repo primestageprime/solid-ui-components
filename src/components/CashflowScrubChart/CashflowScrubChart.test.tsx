@@ -7,14 +7,15 @@ const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 
 const makeCells = (count: number): CashflowCell[] => {
   let running = 0;
-  return dailyCells(d("2026-05-01"), d(`2026-05-${String(count).padStart(2, "0")}`)).map(
-    (cell, i) => {
-      // Alternate +/- so both polarity branches render.
-      const cashflowCents = (i % 2 === 0 ? 50_000 : -30_000) + i * 100;
-      running += cashflowCents;
-      return { ...cell, cashflowCents, balanceCents: running };
-    },
-  );
+  return dailyCells(
+    d("2026-05-01"),
+    d(`2026-05-${String(count).padStart(2, "0")}`),
+  ).map((cell, i) => {
+    // Alternate +/- so both polarity branches render.
+    const cashflowCents = (i % 2 === 0 ? 50_000 : -30_000) + i * 100;
+    running += cashflowCents;
+    return { ...cell, cashflowCents, balanceCents: running };
+  });
 };
 
 describe("CashflowScrubChart", () => {
@@ -42,10 +43,18 @@ describe("CashflowScrubChart", () => {
     const { container } = render(() => (
       <CashflowScrubChart cells={cells} selected={4} onScrub={() => {}} />
     ));
-    expect(container.querySelector(".sui-cashflow-scrub-chart__line")).toBeTruthy();
-    expect(container.querySelector(".sui-cashflow-scrub-chart__zero-line")).toBeTruthy();
-    expect(container.querySelector(".sui-cashflow-scrub-chart__selected-dot")).toBeTruthy();
-    expect(container.querySelector(".sui-cashflow-scrub-chart__selected-rule")).toBeTruthy();
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__line"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__zero-line"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__selected-dot"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__selected-rule"),
+    ).toBeTruthy();
   });
 
   it("forwards onScrub when an axis cell is clicked", () => {
@@ -63,8 +72,16 @@ describe("CashflowScrubChart", () => {
 
   it("formats the dollar amount with thousands separators and a sign", () => {
     const cells: CashflowCell[] = [
-      { ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0], cashflowCents: 125_000, balanceCents: 125_000 },
-      { ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0], cashflowCents: -98_700, balanceCents: 26_300 },
+      {
+        ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0],
+        cashflowCents: 125_000,
+        balanceCents: 125_000,
+      },
+      {
+        ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0],
+        cashflowCents: -98_700,
+        balanceCents: 26_300,
+      },
     ];
     const { container } = render(() => (
       <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
@@ -78,9 +95,21 @@ describe("CashflowScrubChart", () => {
 
   it("renders zero-delta days as neutral — no amount label, no bar, midline kept", () => {
     const cells: CashflowCell[] = [
-      { ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0], cashflowCents: 50_000, balanceCents: 50_000 },
-      { ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0], cashflowCents: 0, balanceCents: 50_000 },
-      { ...dailyCells(d("2026-05-03"), d("2026-05-03"))[0], cashflowCents: -20_000, balanceCents: 30_000 },
+      {
+        ...dailyCells(d("2026-05-01"), d("2026-05-01"))[0],
+        cashflowCents: 50_000,
+        balanceCents: 50_000,
+      },
+      {
+        ...dailyCells(d("2026-05-02"), d("2026-05-02"))[0],
+        cashflowCents: 0,
+        balanceCents: 50_000,
+      },
+      {
+        ...dailyCells(d("2026-05-03"), d("2026-05-03"))[0],
+        cashflowCents: -20_000,
+        balanceCents: 30_000,
+      },
     ];
     const { container } = render(() => (
       <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
@@ -89,9 +118,15 @@ describe("CashflowScrubChart", () => {
     expect(allCells.length).toBe(3);
 
     // Zero-delta cell gets neutral modifier, not positive or negative.
-    expect(allCells[1].classList.contains("sui-cashflow-cell--neutral")).toBe(true);
-    expect(allCells[1].classList.contains("sui-cashflow-cell--positive")).toBe(false);
-    expect(allCells[1].classList.contains("sui-cashflow-cell--negative")).toBe(false);
+    expect(allCells[1].classList.contains("sui-cashflow-cell--neutral")).toBe(
+      true,
+    );
+    expect(allCells[1].classList.contains("sui-cashflow-cell--positive")).toBe(
+      false,
+    );
+    expect(allCells[1].classList.contains("sui-cashflow-cell--negative")).toBe(
+      false,
+    );
 
     // Zero-delta cell has no amount label.
     expect(allCells[1].querySelector(".sui-cashflow-cell__amount")).toBeNull();
@@ -117,8 +152,12 @@ describe("CashflowScrubChart", () => {
     ).toBeNull();
 
     // Non-zero cells still get their polarity classes.
-    expect(allCells[0].classList.contains("sui-cashflow-cell--positive")).toBe(true);
-    expect(allCells[2].classList.contains("sui-cashflow-cell--negative")).toBe(true);
+    expect(allCells[0].classList.contains("sui-cashflow-cell--positive")).toBe(
+      true,
+    );
+    expect(allCells[2].classList.contains("sui-cashflow-cell--negative")).toBe(
+      true,
+    );
   });
 
   describe("plain mode (scrub=false) — the same chart, scrub layer composed off", () => {
@@ -128,16 +167,24 @@ describe("CashflowScrubChart", () => {
         <CashflowScrubChart cells={cells} scrub={false} />
       ));
       // The series itself still draws: balance line + zero line.
-      expect(container.querySelector(".sui-cashflow-scrub-chart__line")).toBeTruthy();
-      expect(container.querySelector(".sui-cashflow-scrub-chart__zero-line")).toBeTruthy();
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__line"),
+      ).toBeTruthy();
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__zero-line"),
+      ).toBeTruthy();
       // Scrub layer is gone: no day-cell filmstrip, no window-band minimap,
       // no pointer overlay, no selected rule/dot.
       expect(container.querySelector(".sui-date-axis")).toBeNull();
       expect(container.querySelectorAll(".sui-cashflow-cell").length).toBe(0);
       expect(container.querySelector(".sui-scrub-chart__window")).toBeNull();
       expect(container.querySelector(".sui-scrub-chart__overlay")).toBeNull();
-      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-dot")).toBeNull();
-      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-rule")).toBeNull();
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__selected-dot"),
+      ).toBeNull();
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__selected-rule"),
+      ).toBeNull();
     });
 
     it("still draws overlay series + deviation bands (the cone composes in plain mode)", () => {
@@ -155,7 +202,8 @@ describe("CashflowScrubChart", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-cashflow-scrub-chart__line--series").length,
+        container.querySelectorAll(".sui-cashflow-scrub-chart__line--series")
+          .length,
       ).toBe(2);
       expect(
         container.querySelectorAll(".sui-cashflow-scrub-chart__band").length,
@@ -169,7 +217,9 @@ describe("CashflowScrubChart", () => {
       ));
       expect(container.querySelector(".sui-date-axis")).toBeTruthy();
       expect(container.querySelector(".sui-scrub-chart__window")).toBeTruthy();
-      expect(container.querySelector(".sui-cashflow-scrub-chart__selected-dot")).toBeTruthy();
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__selected-dot"),
+      ).toBeTruthy();
     });
   });
 
@@ -184,15 +234,31 @@ describe("CashflowScrubChart", () => {
           markers={[{ index: 2 }, { index: 6, selected: true }]}
         />
       ));
-      const groups = container.querySelectorAll(".sui-cashflow-scrub-chart__marker");
+      const groups = container.querySelectorAll(
+        ".sui-cashflow-scrub-chart__marker",
+      );
       expect(groups.length).toBe(2);
-      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-line").length).toBe(2);
-      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-dot").length).toBe(2);
-      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-flag").length).toBe(2);
-      // Only the chosen instance gets the ring (the whiteboard's circle).
-      expect(container.querySelectorAll(".sui-cashflow-scrub-chart__marker-ring").length).toBe(1);
       expect(
-        container.querySelectorAll(".sui-cashflow-scrub-chart__marker--selected").length,
+        container.querySelectorAll(".sui-cashflow-scrub-chart__marker-line")
+          .length,
+      ).toBe(2);
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__marker-dot")
+          .length,
+      ).toBe(2);
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__marker-flag")
+          .length,
+      ).toBe(2);
+      // Only the chosen instance gets the ring (the whiteboard's circle).
+      expect(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__marker-ring")
+          .length,
+      ).toBe(1);
+      expect(
+        container.querySelectorAll(
+          ".sui-cashflow-scrub-chart__marker--selected",
+        ).length,
       ).toBe(1);
     });
 
@@ -220,7 +286,9 @@ describe("CashflowScrubChart", () => {
       const none = render(() => (
         <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
       ));
-      expect(none.container.querySelector(".sui-cashflow-scrub-chart__markers")).toBeNull();
+      expect(
+        none.container.querySelector(".sui-cashflow-scrub-chart__markers"),
+      ).toBeNull();
       const ranged = render(() => (
         <CashflowScrubChart
           cells={cells}
@@ -230,7 +298,8 @@ describe("CashflowScrubChart", () => {
       ));
       // Out-of-range markers drop; the in-range one renders even in plain mode.
       expect(
-        ranged.container.querySelectorAll(".sui-cashflow-scrub-chart__marker").length,
+        ranged.container.querySelectorAll(".sui-cashflow-scrub-chart__marker")
+          .length,
       ).toBe(1);
     });
   });
@@ -260,9 +329,13 @@ describe("CashflowScrubChart", () => {
       ).map((t) => t.textContent ?? "");
       expect(tickLabels.some((t) => t.includes("M"))).toBe(false);
       // (b) the over-top indicator renders with the compact-formatted peak.
-      const overtop = container.querySelector(".sui-cashflow-scrub-chart__overtop");
+      const overtop = container.querySelector(
+        ".sui-cashflow-scrub-chart__overtop",
+      );
       expect(overtop).toBeTruthy();
-      const label = container.querySelector(".sui-cashflow-scrub-chart__overtop-label");
+      const label = container.querySelector(
+        ".sui-cashflow-scrub-chart__overtop-label",
+      );
       expect(label?.textContent).toBe("$4M");
       expect(
         container.querySelector(".sui-cashflow-scrub-chart__overtop-chevron"),
@@ -299,6 +372,8 @@ describe("CashflowScrubChart", () => {
     expect(container.querySelector(".sui-scrub-chart")).toBeTruthy();
     expect(container.querySelectorAll(".sui-cashflow-cell").length).toBe(0);
     // No chart svg when there's no data.
-    expect(container.querySelector(".sui-cashflow-scrub-chart__chart")).toBeNull();
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__chart"),
+    ).toBeNull();
   });
 });

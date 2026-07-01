@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { slugToTitle, buildWorkshopItems, type BenchModule } from "./workshop-benches";
+import {
+  slugToTitle,
+  buildWorkshopItems,
+  type BenchModule,
+} from "./workshop-benches";
 
 const stub = (): any => () => null; // stand-in Component
 
@@ -29,7 +33,10 @@ describe("buildWorkshopItems", () => {
 
   it("prefers meta.label over the slug", () => {
     const modules: Record<string, BenchModule> = {
-      "./showcases/workshop/sc.tsx": { default: stub(), meta: { label: "Scrub Chart" } },
+      "./showcases/workshop/sc.tsx": {
+        default: stub(),
+        meta: { label: "Scrub Chart" },
+      },
     };
     expect(buildWorkshopItems(modules)[0].label).toBe("Scrub Chart");
   });
@@ -38,7 +45,10 @@ describe("buildWorkshopItems", () => {
     const modules: Record<string, BenchModule> = {
       "./showcases/workshop/beta.tsx": { default: stub() },
       "./showcases/workshop/alpha.tsx": { default: stub() },
-      "./showcases/workshop/first.tsx": { default: stub(), meta: { order: -1 } },
+      "./showcases/workshop/first.tsx": {
+        default: stub(),
+        meta: { order: -1 },
+      },
     };
     expect(buildWorkshopItems(modules).map((i) => i.id)).toEqual([
       "workshop:first",

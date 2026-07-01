@@ -17,10 +17,14 @@ import { StatusLight } from "../StatusLight/StatusLight";
 // --- Tone baked (scalar — safe through the factory) ---
 
 /** Destructive-context row — danger tint. */
-export const DangerActionRow: Component<ActionRowDataProps> = createActionRow({ tone: "danger" });
+export const DangerActionRow: Component<ActionRowDataProps> = createActionRow({
+  tone: "danger",
+});
 
 /** Highlighted / selected-context row — accent tint. */
-export const AccentActionRow: Component<ActionRowDataProps> = createActionRow({ tone: "accent" });
+export const AccentActionRow: Component<ActionRowDataProps> = createActionRow({
+  tone: "accent",
+});
 
 // --- Leading status light baked (slot — fresh node required per render) ---
 

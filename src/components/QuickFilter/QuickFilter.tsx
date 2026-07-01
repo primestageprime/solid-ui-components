@@ -32,7 +32,8 @@ export interface QuickFilterProps<T> {
 const defaultExtract = (item: unknown): string => {
   if (item == null) return "";
   if (typeof item === "string") return item;
-  if (typeof item === "number" || typeof item === "boolean") return String(item);
+  if (typeof item === "number" || typeof item === "boolean")
+    return String(item);
   try {
     return JSON.stringify(item);
   } catch {
@@ -41,7 +42,11 @@ const defaultExtract = (item: unknown): string => {
 };
 
 const tokens = (q: string): string[] =>
-  q.toLowerCase().split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  q
+    .toLowerCase()
+    .split(/\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
   const [local, others] = splitProps(rawProps, [
@@ -55,7 +60,8 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
   ]);
 
   const [query, setQuery] = createSignal(local.initialQuery ?? "");
-  const extract = () => local.extract ?? (defaultExtract as (item: T) => string);
+  const extract = () =>
+    local.extract ?? (defaultExtract as (item: T) => string);
 
   const filtered = createMemo<readonly T[]>(() => {
     const q = query().trim();
@@ -74,7 +80,10 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
   };
 
   return (
-    <div class={`sui-quickfilter${local.class ? " " + local.class : ""}`} {...(others as JSX.HTMLAttributes<HTMLDivElement>)}>
+    <div
+      class={`sui-quickfilter${local.class ? " " + local.class : ""}`}
+      {...(others as JSX.HTMLAttributes<HTMLDivElement>)}
+    >
       <ThemedInput
         class="sui-quickfilter__input"
         type="search"

@@ -92,9 +92,15 @@ const CARD_H = 120;
 
 // Shared row renderer: label left, right-aligned tabular amount.
 const renderItem = (i: QueueItem): JSX.Element => (
-  <span style={{ display: "flex", "justify-content": "space-between", gap: "8px" }}>
-    <span style={{ overflow: "hidden", "text-overflow": "ellipsis" }}>{i.label}</span>
-    <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>{i.amount}</span>
+  <span
+    style={{ display: "flex", "justify-content": "space-between", gap: "8px" }}
+  >
+    <span style={{ overflow: "hidden", "text-overflow": "ellipsis" }}>
+      {i.label}
+    </span>
+    <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>
+      {i.amount}
+    </span>
   </span>
 );
 
@@ -117,7 +123,11 @@ function SelectionDemo() {
   const currentItem = createMemo(() => {
     const id = current();
     if (!id) return null;
-    return resolved().find((i) => i.id === id) ?? unresolved().find((i) => i.id === id) ?? null;
+    return (
+      resolved().find((i) => i.id === id) ??
+      unresolved().find((i) => i.id === id) ??
+      null
+    );
   });
   const currentIsResolved = createMemo(
     () => !!current() && resolved().some((i) => i.id === current()),
@@ -206,12 +216,27 @@ function SelectionDemo() {
 
   return (
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
-        <SmallGhostButton onClick={prev} disabled={resolved().length === 0}>◂ Prev</SmallGhostButton>
-        <SmallPrimaryButton onClick={resolveNext} disabled={unresolved().length === 0}>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          "align-items": "center",
+          "flex-wrap": "wrap",
+        }}
+      >
+        <SmallGhostButton onClick={prev} disabled={resolved().length === 0}>
+          ◂ Prev
+        </SmallGhostButton>
+        <SmallPrimaryButton
+          onClick={resolveNext}
+          disabled={unresolved().length === 0}
+        >
           Resolve next ▸
         </SmallPrimaryButton>
-        <SmallGhostButton onClick={toggleAuto} disabled={unresolved().length === 0 && !auto()}>
+        <SmallGhostButton
+          onClick={toggleAuto}
+          disabled={unresolved().length === 0 && !auto()}
+        >
           {auto() ? "Pause" : "Auto-play"}
         </SmallGhostButton>
         <SmallGhostButton onClick={reset}>Reset</SmallGhostButton>
@@ -226,7 +251,9 @@ function SelectionDemo() {
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: "24px", "align-items": "flex-start" }}>
+      <div
+        style={{ display: "flex", gap: "24px", "align-items": "flex-start" }}
+      >
         <div style={{ width: "340px" }}>
           <SplitQueueList<QueueItem>
             resolved={resolved()}
@@ -236,7 +263,9 @@ function SelectionDemo() {
             onFocusChange={setCurrent}
             // Ring only when the current card is on the done side — to-categorize
             // cards are indicated by the orange focus, so the two never double up.
-            selectedKey={currentIsResolved() ? (current() ?? undefined) : undefined}
+            selectedKey={
+              currentIsResolved() ? (current() ?? undefined) : undefined
+            }
             onSelect={setCurrent}
             height={600}
             rowHeight={CARD_H}
@@ -253,23 +282,30 @@ function SelectionDemo() {
           <CardSurface direction="column" gap="md">
             <Show
               when={currentItem()}
-              fallback={<MutedBody>Select a card to see its details.</MutedBody>}
+              fallback={
+                <MutedBody>Select a card to see its details.</MutedBody>
+              }
             >
               {(item) => (
                 <>
                   <TextTitle as="h3">{item().label}</TextTitle>
                   <MutedBody>
-                    {item().amount} · {currentIsResolved() ? "Categorized" : "To categorize"}
+                    {item().amount} ·{" "}
+                    {currentIsResolved() ? "Categorized" : "To categorize"}
                   </MutedBody>
                   <Show
                     when={currentIsResolved()}
                     fallback={
-                      <SmallPrimaryButton onClick={() => resolveSelected(item().id)}>
+                      <SmallPrimaryButton
+                        onClick={() => resolveSelected(item().id)}
+                      >
                         Resolve ▸
                       </SmallPrimaryButton>
                     }
                   >
-                    <SmallGhostButton onClick={() => unresolveSelected(item().id)}>
+                    <SmallGhostButton
+                      onClick={() => unresolveSelected(item().id)}
+                    >
                       ◂ Unresolve
                     </SmallGhostButton>
                   </Show>
@@ -292,7 +328,9 @@ function QueueDemo(props: { height: number }) {
 
   const [resolved, setResolved] = createSignal<QueueItem[]>([]);
   const [unresolved, setUnresolved] = createSignal<QueueItem[]>(seed());
-  const [focused, setFocused] = createSignal<string | null>(seed()[0]?.id ?? null);
+  const [focused, setFocused] = createSignal<string | null>(
+    seed()[0]?.id ?? null,
+  );
   const [auto, setAuto] = createSignal(false);
   const [speed, setSpeed] = createSignal(DEFAULT_SPEED);
 
@@ -337,7 +375,14 @@ function QueueDemo(props: { height: number }) {
 
   return (
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "16px", "align-items": "center", "flex-wrap": "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          "align-items": "center",
+          "flex-wrap": "wrap",
+        }}
+      >
         <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
           <span class="text-meta">Items</span>
           <SegmentedControl
@@ -355,11 +400,24 @@ function QueueDemo(props: { height: number }) {
           />
         </div>
       </div>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center", "flex-wrap": "wrap" }}>
-        <SmallPrimaryButton onClick={resolveNext} disabled={unresolved().length === 0}>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          "align-items": "center",
+          "flex-wrap": "wrap",
+        }}
+      >
+        <SmallPrimaryButton
+          onClick={resolveNext}
+          disabled={unresolved().length === 0}
+        >
           Resolve next ▸
         </SmallPrimaryButton>
-        <SmallGhostButton onClick={toggleAuto} disabled={unresolved().length === 0 && !auto()}>
+        <SmallGhostButton
+          onClick={toggleAuto}
+          disabled={unresolved().length === 0 && !auto()}
+        >
           {auto() ? "Pause" : "Auto-play"}
         </SmallGhostButton>
         <SmallGhostButton onClick={reset}>Reset</SmallGhostButton>
@@ -393,14 +451,17 @@ export const SplitQueueListShowcase: Component = () => {
     <div class="component-section">
       <h2>SplitQueueList — linked processing queue</h2>
       <p class="text-meta">
-        Two stacked lists sharing a fixed height. Top = categorized (solid accent
-        border + ✓), bottom = to-categorize (dashed muted border + ▸ focus). The
-        top is content-driven between a 1-row floor and a 3-row cap; at 4+ it
-        caps and scrolls so the newest sits at the seam. The bottom takes the
-        remaining space and scrolls when overfull; when the bottom is short it
-        shrinks and the top absorbs the slack. The consumer owns the data + card
-        content and drives everything by mutating the two arrays —{" "}
-        <strong>there is no <code>resolve()</code> method</strong>: a key moving
+        Two stacked lists sharing a fixed height. Top = categorized (solid
+        accent border + ✓), bottom = to-categorize (dashed muted border + ▸
+        focus). The top is content-driven between a 1-row floor and a 3-row cap;
+        at 4+ it caps and scrolls so the newest sits at the seam. The bottom
+        takes the remaining space and scrolls when overfull; when the bottom is
+        short it shrinks and the top absorbs the slack. The consumer owns the
+        data + card content and drives everything by mutating the two arrays —{" "}
+        <strong>
+          there is no <code>resolve()</code> method
+        </strong>
+        : a key moving
         <code> unresolved → resolved</code> plays the forward animation, and{" "}
         <code>resolved → unresolved</code> the mirrored reverse. Honors{" "}
         <code>prefers-reduced-motion</code>. Full usage:{" "}
@@ -414,9 +475,9 @@ export const SplitQueueListShowcase: Component = () => {
         opens (<code>selectedKey</code> + <code>onSelect</code>; clicking no
         longer auto-resolves). <strong>Resolve ▸</strong> sorts the card to the
         to-categorize head then animates it up; <strong>◂ Unresolve</strong>{" "}
-        sorts it to the done tail then mirrors it back down. <strong>Resolve
-        next ▸</strong> / <strong>◂ Prev</strong> step through the head. This is
-        the reference wiring for a triage/accept flow.
+        sorts it to the done tail then mirrors it back down.{" "}
+        <strong>Resolve next ▸</strong> / <strong>◂ Prev</strong> step through
+        the head. This is the reference wiring for a triage/accept flow.
       </p>
       <SelectionDemo />
 

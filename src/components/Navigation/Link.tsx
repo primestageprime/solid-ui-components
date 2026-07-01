@@ -8,7 +8,8 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./Link.css";
 
-export interface LinkProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {}
+export interface LinkProps
+  extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {}
 
 export const Link: Component<LinkProps> = (props) => {
   const [local, others] = splitProps(props, ["class", "children"]);

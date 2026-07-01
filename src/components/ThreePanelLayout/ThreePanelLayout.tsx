@@ -61,7 +61,10 @@ const DEFAULT_LEFT_WIDTH = "220px";
 const DEFAULT_RIGHT_WIDTH = "240px";
 const DEFAULT_ASIDE_MAX_HEIGHT = "200px";
 
-const resolveHeight = (height: string | undefined, fullHeight: boolean | undefined): string => {
+const resolveHeight = (
+  height: string | undefined,
+  fullHeight: boolean | undefined,
+): string => {
   if (height) return height;
   if (fullHeight) return "100%";
   return "100%";
@@ -87,7 +90,8 @@ export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
       props.leftPanelWidth ?? DEFAULT_LEFT_WIDTH,
       props.rightPanelWidth ?? DEFAULT_RIGHT_WIDTH,
     ),
-    "--sui-three-panel-aside-max": props.asideMaxHeight ?? DEFAULT_ASIDE_MAX_HEIGHT,
+    "--sui-three-panel-aside-max":
+      props.asideMaxHeight ?? DEFAULT_ASIDE_MAX_HEIGHT,
   });
 
   const rootClass = (): string => {

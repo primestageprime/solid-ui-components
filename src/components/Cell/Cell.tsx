@@ -6,7 +6,13 @@
 // with align/color/weight. Factories: createCell(),
 // createCellTable(), createCellRow().
 // ============================================
-import { type Component, type JSX, mergeProps, type ParentComponent, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  mergeProps,
+  type ParentComponent,
+  splitProps,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
 import "./Cell.css";
 
@@ -40,18 +46,27 @@ export const Cell: Component<CellProps> = (props) => {
 
   const mergedStyle = (): JSX.CSSProperties | undefined => {
     if (!local.color) return local.style as JSX.CSSProperties | undefined;
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
     return { ...base, color: local.color };
   };
 
   return (
-    <Dynamic component={local.as || "td"} class={classes()} style={mergedStyle()} {...others}>
+    <Dynamic
+      component={local.as || "td"}
+      class={classes()}
+      style={mergedStyle()}
+      {...others}
+    >
       {local.children}
     </Dynamic>
   );
 };
 
-export function createCell(defaults: Partial<Omit<CellProps, "children">>): Component<CellProps> {
+export function createCell(
+  defaults: Partial<Omit<CellProps, "children">>,
+): Component<CellProps> {
   return (props) => <Cell {...mergeProps(defaults, props)} />;
 }
 
@@ -72,7 +87,9 @@ export const CellTable: ParentComponent<CellTableProps> = (props) => {
   );
 };
 
-export function createCellTable(defaults: Partial<Omit<CellTableProps, "children">>): ParentComponent<CellTableProps> {
+export function createCellTable(
+  defaults: Partial<Omit<CellTableProps, "children">>,
+): ParentComponent<CellTableProps> {
   return (props) => <CellTable {...mergeProps(defaults, props)} />;
 }
 
@@ -84,7 +101,12 @@ export interface CellRowProps extends JSX.HTMLAttributes<HTMLTableRowElement> {
 }
 
 export const CellRow: ParentComponent<CellRowProps> = (props) => {
-  const [local, others] = splitProps(props, ["border", "highlight", "class", "children"]);
+  const [local, others] = splitProps(props, [
+    "border",
+    "highlight",
+    "class",
+    "children",
+  ]);
 
   const classes = () => {
     const classList = ["cell-row"];
@@ -101,6 +123,8 @@ export const CellRow: ParentComponent<CellRowProps> = (props) => {
   );
 };
 
-export function createCellRow(defaults: Partial<Omit<CellRowProps, "children">>): ParentComponent<CellRowProps> {
+export function createCellRow(
+  defaults: Partial<Omit<CellRowProps, "children">>,
+): ParentComponent<CellRowProps> {
   return (props) => <CellRow {...mergeProps(defaults, props)} />;
 }

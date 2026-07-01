@@ -37,15 +37,18 @@ export const ScrollRegionShowcase: Component = () => {
     <div class="component-section">
       <h2>ScrollRegion — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Owns CSS (ScrollRegion.css), no component imports. DYNAMIC top/bottom fade
-        scroll affordance: fades are computed at runtime from scroll position
-        (onScroll + ResizeObserver + MutationObserver), so a fade only paints when
-        there is genuinely more content in that direction. Height-agnostic — fills
-        its flex parent. Curry bounded presets with{" "}
+        Owns CSS (ScrollRegion.css), no component imports. DYNAMIC top/bottom
+        fade scroll affordance: fades are computed at runtime from scroll
+        position (onScroll + ResizeObserver + MutationObserver), so a fade only
+        paints when there is genuinely more content in that direction.
+        Height-agnostic — fills its flex parent. Curry bounded presets with{" "}
         <code>createScrollRegion(&#123; style &#125;)</code>.
       </p>
 
-      <div class="example-group" style={{ display: "flex", gap: "24px", "flex-wrap": "wrap" }}>
+      <div
+        class="example-group"
+        style={{ display: "flex", gap: "24px", "flex-wrap": "wrap" }}
+      >
         <div>
           <h3>Content fits — no fade</h3>
           <Box>
@@ -57,7 +60,9 @@ export const ScrollRegionShowcase: Component = () => {
 
         <div>
           <h3>Overflows — bottom fade</h3>
-          <p class="text-meta">Scroll down: the bottom fade clears, the top fade appears.</p>
+          <p class="text-meta">
+            Scroll down: the bottom fade clears, the top fade appears.
+          </p>
           <Box>
             <ScrollRegion style={{ height: "100%" }}>
               <For each={rows(30, "Overflow")}>{(r) => <Row>{r}</Row>}</For>

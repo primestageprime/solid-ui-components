@@ -22,7 +22,9 @@ describe("DateAxis rendering", () => {
     const { container } = render(() => (
       <DateAxis cells={cells} today={d("2026-05-03")} renderCell={noopRender} />
     ));
-    const todayCells = container.querySelectorAll(".sui-date-axis__cell--today");
+    const todayCells = container.querySelectorAll(
+      ".sui-date-axis__cell--today",
+    );
     expect(todayCells).toHaveLength(1);
     expect(todayCells[0].getAttribute("aria-current")).toBe("date");
   });
@@ -36,7 +38,11 @@ describe("DateAxis rendering", () => {
         today={d("2026-05-02")}
         selected={2}
         renderCell={(_cell, ctx) => {
-          seen.push({ index: ctx.index, isToday: ctx.isToday, isSelected: ctx.isSelected });
+          seen.push({
+            index: ctx.index,
+            isToday: ctx.isToday,
+            isSelected: ctx.isSelected,
+          });
           return <span />;
         }}
       />
@@ -64,7 +70,11 @@ describe("DateAxis interactivity", () => {
     const onCellClick = vi.fn();
     const cells = dailyCells(d("2026-05-01"), d("2026-05-03"));
     const { container } = render(() => (
-      <DateAxis cells={cells} renderCell={noopRender} onCellClick={onCellClick} />
+      <DateAxis
+        cells={cells}
+        renderCell={noopRender}
+        onCellClick={onCellClick}
+      />
     ));
     const firstCell = container.querySelector(".sui-date-axis__cell")!;
     fireEvent.click(firstCell);
@@ -80,19 +90,27 @@ describe("DateAxis interactivity", () => {
     const { container } = render(() => (
       <DateAxis cells={cells} selected={3} renderCell={noopRender} />
     ));
-    const selected = container.querySelectorAll(".sui-date-axis__cell--selected");
+    const selected = container.querySelectorAll(
+      ".sui-date-axis__cell--selected",
+    );
     expect(selected).toHaveLength(1);
-    expect(Array.from(container.querySelectorAll(".sui-date-axis__cell")).indexOf(selected[0])).toBe(3);
+    expect(
+      Array.from(container.querySelectorAll(".sui-date-axis__cell")).indexOf(
+        selected[0],
+      ),
+    ).toBe(3);
   });
 });
 
 describe("DateAxis with payload-carrying cells", () => {
   it("preserves consumer-attached cell properties through renderCell", () => {
     type Tagged = Cell & { tag: string };
-    const cells: Tagged[] = dailyCells(d("2026-05-01"), d("2026-05-03")).map((c, i) => ({
-      ...c,
-      tag: `t${i}`,
-    }));
+    const cells: Tagged[] = dailyCells(d("2026-05-01"), d("2026-05-03")).map(
+      (c, i) => ({
+        ...c,
+        tag: `t${i}`,
+      }),
+    );
     const tags: string[] = [];
     render(() => (
       <DateAxis<Tagged>
@@ -113,11 +131,19 @@ describe("DateAxis recentre takeover", () => {
     // ~90 daily cells so the viewport overflows and a target is computed.
     const cells = dailyCells(d("2026-01-01"), d("2026-03-31"));
     const { container } = render(() => (
-      <DateAxis cells={cells} selected={sel()} cellWidth={40} renderCell={noopRender} />
+      <DateAxis
+        cells={cells}
+        selected={sel()}
+        cellWidth={40}
+        renderCell={noopRender}
+      />
     ));
     const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
     // Give the element a viewport + overflow (JSDOM reports 0 otherwise).
-    Object.defineProperty(el, "clientWidth", { configurable: true, value: 200 });
+    Object.defineProperty(el, "clientWidth", {
+      configurable: true,
+      value: 200,
+    });
     Object.defineProperty(el, "scrollWidth", {
       configurable: true,
       value: cells.length * 40,

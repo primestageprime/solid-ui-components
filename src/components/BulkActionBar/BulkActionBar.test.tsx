@@ -62,7 +62,12 @@ describe("BulkActionBar", () => {
 
   it("omits Clear when onClear is absent", () => {
     const { queryByText } = render(() => (
-      <BulkActionBar count={2} noun="cell" actionLabel="Align" onAction={() => {}} />
+      <BulkActionBar
+        count={2}
+        noun="cell"
+        actionLabel="Align"
+        onAction={() => {}}
+      />
     ));
     expect(queryByText("Clear")).toBeNull();
   });

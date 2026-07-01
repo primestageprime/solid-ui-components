@@ -14,8 +14,8 @@ export const WorkshopShowcase: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Workshop</SectionTitle>
       <MutedBody>
-        Empty bench. Drop a prototype here when iterating on a new component, then
-        promote the keepers into a dedicated showcase and clear it again.
+        Empty bench. Drop a prototype here when iterating on a new component,
+        then promote the keepers into a dedicated showcase and clear it again.
       </MutedBody>
     </div>
   );

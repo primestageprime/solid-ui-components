@@ -87,10 +87,7 @@ export const CandlestickRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Large range values</h3>
-        <CandlestickRenderer
-          label="Trade volume"
-          candlestick={largeRange}
-        />
+        <CandlestickRenderer label="Trade volume" candlestick={largeRange} />
       </div>
 
       <div class="example-group">
@@ -112,7 +109,8 @@ export const CandlestickRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Empty state</h3>
         <Text variant="sublabel">
-          <code>null</code>/<code>undefined</code> renders an em-dash placeholder.
+          <code>null</code>/<code>undefined</code> renders an em-dash
+          placeholder.
         </Text>
         <Stack gap="sm">
           <CandlestickRenderer label="No data" candlestick={null} />

@@ -177,9 +177,7 @@ describe("PivotTreemap", () => {
         untaggedCount={0}
       />
     ));
-    expect(
-      noUntagged.querySelector(".sui-treemap__sidebar"),
-    ).toBeNull();
+    expect(noUntagged.querySelector(".sui-treemap__sidebar")).toBeNull();
 
     const { container: withUntagged } = render(() => (
       <PivotTreemap

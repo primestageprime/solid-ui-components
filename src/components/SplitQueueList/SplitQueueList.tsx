@@ -185,7 +185,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const focusedKey = createMemo(() => {
     if (flight.exitingKey()) return null;
     const keys = unresolvedItems().map(keyOf);
-    if (props.focusedKey && keys.includes(props.focusedKey)) return props.focusedKey;
+    if (props.focusedKey && keys.includes(props.focusedKey))
+      return props.focusedKey;
     return keys[0] ?? null;
   });
 
@@ -288,7 +289,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
           <span>{props.resolvedLabel ?? "Resolved"}</span>
           <span class="sui-sql__count">{resolvedItems().length}</span>
         </li>
-        <For each={resolvedItems()}>{(item) => renderRow(item, "resolved")}</For>
+        <For each={resolvedItems()}>
+          {(item) => renderRow(item, "resolved")}
+        </For>
       </ul>
 
       {/* Seam + BOTTOM panel are omitted in topOnly mode — the categorized list
@@ -302,7 +305,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
           class="sui-sql__list sui-sql__list--bottom"
           role="listbox"
           aria-label={props.unresolvedLabel ?? "Unresolved"}
-          classList={{ "sui-sql__list--collapsed": unresolvedItems().length === 0 }}
+          classList={{
+            "sui-sql__list--collapsed": unresolvedItems().length === 0,
+          }}
           style={{ height: `${layout().bottomHeight}px` }}
         >
           <Show

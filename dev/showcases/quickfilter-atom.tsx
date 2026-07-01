@@ -4,13 +4,33 @@ import { Stack } from "../../src/components/Layout/Stack";
 import { CompactCard } from "../../src/components/Surface";
 import { TextLabel, TextSublabel } from "../../src/components/Text";
 
-interface Item { id: string; name: string; tags: string[]; }
+interface Item {
+  id: string;
+  name: string;
+  tags: string[];
+}
 
 const ITEMS: Item[] = [
-  { id: "1", name: "us-east-1 latency p99", tags: ["us-east-1", "latency", "p99"] },
-  { id: "2", name: "us-west-2 latency p99", tags: ["us-west-2", "latency", "p99"] },
-  { id: "3", name: "eu-north-1 cascade resolve cost", tags: ["eu-north-1", "cascade", "regression"] },
-  { id: "4", name: "queue depth payments", tags: ["payments", "queue", "saturation"] },
+  {
+    id: "1",
+    name: "us-east-1 latency p99",
+    tags: ["us-east-1", "latency", "p99"],
+  },
+  {
+    id: "2",
+    name: "us-west-2 latency p99",
+    tags: ["us-west-2", "latency", "p99"],
+  },
+  {
+    id: "3",
+    name: "eu-north-1 cascade resolve cost",
+    tags: ["eu-north-1", "cascade", "regression"],
+  },
+  {
+    id: "4",
+    name: "queue depth payments",
+    tags: ["payments", "queue", "saturation"],
+  },
   { id: "5", name: "cache hit ratio peak hours", tags: ["cache", "hit-ratio"] },
   { id: "6", name: "compactor write volume", tags: ["compactor", "writes"] },
 ];
@@ -37,7 +57,10 @@ export const QuickFilterAtomShowcase: Component = () => {
         >
           {(filtered, q) => (
             <Stack gap="xs" style={{ "max-width": "480px" }}>
-              <TextSublabel>{filtered.length} of {ITEMS.length} matching {q ? `"${q}"` : "(none)"}</TextSublabel>
+              <TextSublabel>
+                {filtered.length} of {ITEMS.length} matching{" "}
+                {q ? `"${q}"` : "(none)"}
+              </TextSublabel>
               <For each={filtered}>
                 {(it) => (
                   <CompactCard>

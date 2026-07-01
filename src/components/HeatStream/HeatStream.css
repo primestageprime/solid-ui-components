@@ -203,7 +203,8 @@
 
 .jtf-heatstream--compact.jtf-heatstream--fill .jtf-heatstream__cell {
   width: calc(
-    (100% - var(--jtf-hs-max-count, 1) * var(--jtf-hs-gap, 1px)) / (var(--jtf-hs-max-count, 1) + 1)
+    (100% - var(--jtf-hs-max-count, 1) * var(--jtf-hs-gap, 1px)) /
+    (var(--jtf-hs-max-count, 1) + 1)
   );
 }
 
@@ -231,7 +232,8 @@
 /* Shown by JS after a 700ms hover-intent debounce (see HeatStream.tsx). The
    debounce arms only while an actual mark is under the pointer, so this also
    enforces "marks only" — not the empty space to the right of a sparse row. */
-.jtf-heatstream--compact.jtf-heatstream--preview-open > .jtf-heatstream__preview {
+.jtf-heatstream--compact.jtf-heatstream--preview-open
+> .jtf-heatstream__preview {
   display: flex;
 }
 

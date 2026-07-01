@@ -1,6 +1,12 @@
 import { type Component, Show, createSignal, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
-import {ToastList, ToastRegion, showToast, toaster, type ToastHandle} from "../../src/components/Toast";
+import {
+  ToastList,
+  ToastRegion,
+  showToast,
+  toaster,
+  type ToastHandle,
+} from "../../src/components/Toast";
 import { Toast } from "../../src/components/Toast/Toast";
 import {
   GhostButton,
@@ -130,7 +136,8 @@ export const ToastShowcase: Component = () => {
       <div class="example-group">
         <h3>Variants (show programmatically)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Each button calls <code>{`showToast({ variant, title, description })`}</code>.
+          Each button calls{" "}
+          <code>{`showToast({ variant, title, description })`}</code>.
         </div>
         <Row gap="sm" wrap="wrap">
           <PrimaryButton onClick={showInfo}>Info</PrimaryButton>
@@ -153,7 +160,9 @@ export const ToastShowcase: Component = () => {
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           Actions auto-dismiss the toast on click (unless `persistent`).
         </div>
-        <OutlinedButton onClick={showWithActions}>Show with actions</OutlinedButton>
+        <OutlinedButton onClick={showWithActions}>
+          Show with actions
+        </OutlinedButton>
       </div>
 
       <div class="example-group">
@@ -162,7 +171,9 @@ export const ToastShowcase: Component = () => {
           No auto-dismiss and no progress bar — user must close manually.
         </div>
         <Row gap="sm">
-          <OutlinedButton onClick={showPersistent}>Show persistent</OutlinedButton>
+          <OutlinedButton onClick={showPersistent}>
+            Show persistent
+          </OutlinedButton>
           <GhostButton onClick={dismissLast}>Dismiss last</GhostButton>
         </Row>
       </div>
@@ -172,7 +183,9 @@ export const ToastShowcase: Component = () => {
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           `duration: 20_000` overrides the region default.
         </div>
-        <OutlinedButton onClick={showLongDuration}>Show 20s toast</OutlinedButton>
+        <OutlinedButton onClick={showLongDuration}>
+          Show 20s toast
+        </OutlinedButton>
       </div>
 
       <div class="example-group">
@@ -200,12 +213,12 @@ export const ToastShowcase: Component = () => {
           <Text variant="body">
             These curried atomics ship with styling baked in. Mount once near
             the app root (inside a `Portal` so they escape clipped parents) and
-            call `showToast(...)` anywhere. Callers that genuinely need
-            `Root` / `Title` / `Description` directly can import
-            `@kobalte/core/toast` — already an installed peer.
+            call `showToast(...)` anywhere. Callers that genuinely need `Root` /
+            `Title` / `Description` directly can import `@kobalte/core/toast` —
+            already an installed peer.
           </Text>
           <pre class="code-block">
-{`import { Portal } from "solid-js/web";
+            {`import { Portal } from "solid-js/web";
 import { ToastRegion, ToastList } from "solid-ui-components";
 
 <Portal>
@@ -225,11 +238,11 @@ import { ToastRegion, ToastList } from "solid-ui-components";
             button under the list. The button calls `toaster.clear()` and is
             hidden by CSS (`:has(li)`) whenever the list is empty, so it never
             shows for a region with zero toasts. This region is what the
-            showcase actually mounts below — fire a few toasts above to see
-            the button surface.
+            showcase actually mounts below — fire a few toasts above to see the
+            button surface.
           </Text>
           <pre class="code-block">
-{`import { Portal } from "solid-js/web";
+            {`import { Portal } from "solid-js/web";
 import { ToastRegion, ToastList } from "solid-ui-components";
 
 <Portal>

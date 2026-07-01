@@ -11,7 +11,13 @@
 //   reloads and stays local to the machine (different screens keep their own
 //   preference). Double-click the handle to reset to the default.
 // ============================================
-import { type Component, type JSX, createSignal, onMount, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createSignal,
+  onMount,
+  splitProps,
+} from "solid-js";
 import { Stack } from "./Stack";
 import "./Sidebar.css";
 
@@ -22,7 +28,8 @@ const MAX_WIDTH = 720;
 const clampWidth = (n: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, n));
 const storageKey = (id: string) => `sui-sidebar-width:${id}`;
 
-export interface SidebarProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "id"> {
+export interface SidebarProps
+  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "id"> {
   /** Stable key for persisting the user-chosen width in localStorage. Required. */
   id: string;
   /**

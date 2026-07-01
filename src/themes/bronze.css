@@ -12,7 +12,9 @@
 @import "./_baseline.css";
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -52,34 +54,34 @@ body {
 
 :root {
   /* ---- Accent ---- */
-  --sui-accent:     #C96442;
+  --sui-accent: #c96442;
   --sui-accent-rgb: 201, 100, 66;
-  --sui-accent-dim: #A85234;
+  --sui-accent-dim: #a85234;
 
   /* ---- Semantic ---- */
-  --sui-danger:      #A8443A;
-  --sui-danger-rgb:  168, 68, 58;
-  --sui-warning:     #C58A2C;
+  --sui-danger: #a8443a;
+  --sui-danger-rgb: 168, 68, 58;
+  --sui-warning: #c58a2c;
   --sui-warning-rgb: 197, 138, 44;
-  --sui-success:     #5C7C5C;
+  --sui-success: #5c7c5c;
   --sui-success-rgb: 92, 124, 92;
 
   /* ---- Backgrounds — bone family ---- */
-  --sui-bg-deep:      #EFEAE0;
-  --sui-bg-primary:   #F6F2EB;
-  --sui-bg-secondary: #FCFAF5;
-  --sui-bg-tertiary:  #F0E7D6;
-  --sui-bg-elevated:  #FFFFFF;
+  --sui-bg-deep: #efeae0;
+  --sui-bg-primary: #f6f2eb;
+  --sui-bg-secondary: #fcfaf5;
+  --sui-bg-tertiary: #f0e7d6;
+  --sui-bg-elevated: #ffffff;
 
   /* ---- Text ---- */
-  --sui-text-primary:   #2B1D14;
-  --sui-text-secondary: #8C7861;
-  --sui-text-muted:     #B8A78C;
+  --sui-text-primary: #2b1d14;
+  --sui-text-secondary: #8c7861;
+  --sui-text-muted: #b8a78c;
 
   /* ---- Borders ---- */
-  --sui-border:        #E5DCC9;
-  --sui-border-bright: #D9CDB4;
-  --sui-border-focus:  #C96442;
+  --sui-border: #e5dcc9;
+  --sui-border-bright: #d9cdb4;
+  --sui-border-focus: #c96442;
 
   /* ---- Radii — subtle round ---- */
   --sui-radius-sm: 4px;
@@ -87,7 +89,7 @@ body {
   --sui-radius-lg: 10px;
 
   /* ---- Clip sizes ---- */
-  --sui-clip-sm:  8px;
+  --sui-clip-sm: 8px;
   --sui-clip-md: 12px;
   --sui-clip-lg: 16px;
   --sui-clip-xl: 24px;
@@ -106,37 +108,37 @@ body {
   --sui-space-6: 24px;
 
   /* ---- Typography ---- */
-  --sui-font-family:  "Lora", Georgia, "Times New Roman", serif;
+  --sui-font-family: "Lora", Georgia, "Times New Roman", serif;
   --sui-font-utility: "Inter", system-ui, -apple-system, sans-serif;
-  --sui-font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sui-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* ---- Chart status colors — warm mapping ---- */
-  --status-full:    #5C7C5C;
-  --status-partial: #C58A2C;
-  --status-sparse:  #C96442;
-  --status-missing: #A8443A;
+  --status-full: #5c7c5c;
+  --status-partial: #c58a2c;
+  --status-sparse: #c96442;
+  --status-missing: #a8443a;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, kept separate from `--sui-text-muted` so the
      chart's in-plot chrome can read as warm-muted against the bone bg
      without being tied to the broader surface/table muted hue. */
-  --sui-chart-tick-color: #8C7861;
+  --sui-chart-tick-color: #8c7861;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css. Warm-mapped to the bronze palette. */
   --chart-violation-band: rgba(168, 68, 58, 0.14);
-  --chart-violation-band-border: rgba(168, 68, 58, 0.40);
-  --chart-threshold: #A8443A;
+  --chart-violation-band-border: rgba(168, 68, 58, 0.4);
+  --chart-threshold: #a8443a;
   --chart-warmup: rgba(140, 120, 97, 0.14);
   --chart-warmup-border: rgba(140, 120, 97, 0.35);
   --chart-shutdown: rgba(140, 120, 97, 0.14);
   --chart-shutdown-border: rgba(140, 120, 97, 0.35);
-  --chart-series-1: #4A6FA5;
-  --chart-series-2: #C58A2C;
-  --chart-series-3: #5C7C5C;
-  --chart-series-4: #C96442;
-  --chart-series-5: #7A5C8C;
-  --chart-series-6: #2C7C8C;
+  --chart-series-1: #4a6fa5;
+  --chart-series-2: #c58a2c;
+  --chart-series-3: #5c7c5c;
+  --chart-series-4: #c96442;
+  --chart-series-5: #7a5c8c;
+  --chart-series-6: #2c7c8c;
 }
 
 /* ============================================
@@ -149,8 +151,8 @@ body {
    on white sits at 4.22:1 — just below WCAG AA. #6B5C48 is between text-secondary
    and text-primary in lightness; ~5.8:1 on white. */
 .sui-btn--secondary {
-  background: #6B5C48;
-  border-color: #6B5C48;
+  background: #6b5c48;
+  border-color: #6b5c48;
   color: var(--sui-bg-elevated);
 }
 .sui-btn--secondary:hover:not(:disabled) {
@@ -161,9 +163,15 @@ body {
 
 /* Panel glows: default.css uses rgba(0,0,0,0.2..0.3) which is
    too heavy on bone bg. Soften with warm-ink-tinted alphas. */
-.sui-panel--glow-subtle  { box-shadow: 0 1px 3px  rgba(43, 29, 20, 0.06); }
-.sui-panel--glow-medium  { box-shadow: 0 2px 8px  rgba(43, 29, 20, 0.10); }
-.sui-panel--glow-strong  { box-shadow: 0 4px 16px rgba(43, 29, 20, 0.14); }
+.sui-panel--glow-subtle {
+  box-shadow: 0 1px 3px rgba(43, 29, 20, 0.06);
+}
+.sui-panel--glow-medium {
+  box-shadow: 0 2px 8px rgba(43, 29, 20, 0.1);
+}
+.sui-panel--glow-strong {
+  box-shadow: 0 4px 16px rgba(43, 29, 20, 0.14);
+}
 
 /* DagChart nodes: baseline fills nodes with --sui-bg-elevated (white) and
    strokes with --sui-border (faint tan), which on a bone background reads

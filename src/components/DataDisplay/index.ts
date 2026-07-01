@@ -12,7 +12,12 @@ export { ResultPanel } from "./ResultPanel";
 export type { ResultPanelProps } from "./ResultPanel";
 export { StatsTable } from "./StatsTable";
 export type { StatsTableProps, StatsColumn } from "./StatsTable";
-export { createFormulaResult, createGivens, createFormula, createFormulaPanel } from "./FormulaDecomposition";
+export {
+  createFormulaResult,
+  createGivens,
+  createFormula,
+  createFormulaPanel,
+} from "./FormulaDecomposition";
 export type { VarDef, FormulaConfig } from "./FormulaDecomposition";
 export { NumberWithUnits } from "./NumberWithUnits";
 export type { NumberWithUnitsProps } from "./NumberWithUnits";

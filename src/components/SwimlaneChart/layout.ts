@@ -116,7 +116,9 @@ export function computeSwimlaneLayout<T>(
       // `colsBelowCenter`. Cols below it keep their negative ordinals
       // (idx - colsBelowCenter, all negative), cols at-or-above shift
       // by +1 to account for the reserved center slot.
-      return idx < colsBelowCenter ? idx - colsBelowCenter : idx + 1 - colsBelowCenter;
+      return idx < colsBelowCenter
+        ? idx - colsBelowCenter
+        : idx + 1 - colsBelowCenter;
     }
     // Off-graph col (shouldn't normally happen): fall back to natural distance.
     return col - centerCol;
@@ -292,7 +294,10 @@ export function computeSwimlaneLayout<T>(
       const overflowCount = realIds.length - keepReal.length;
       const placeholders = ids.filter((id) => id.startsWith("__collapsed_"));
       visibleCols.set(col, [...keepReal, ...placeholders]);
-      rowOverflowByCol.set(col, (rowOverflowByCol.get(col) ?? 0) + overflowCount);
+      rowOverflowByCol.set(
+        col,
+        (rowOverflowByCol.get(col) ?? 0) + overflowCount,
+      );
     }
   }
 
@@ -353,7 +358,10 @@ export function computeSwimlaneLayout<T>(
     layoutEdges.push({
       sourceId: src,
       targetId: tgt,
-      points: [{ x: a.x, y: a.y }, { x: b.x, y: b.y }],
+      points: [
+        { x: a.x, y: a.y },
+        { x: b.x, y: b.y },
+      ],
     });
   }
   for (const s of summaries) {
@@ -363,7 +371,10 @@ export function computeSwimlaneLayout<T>(
     layoutEdges.push({
       sourceId: s.anchorId,
       targetId: s.id,
-      points: [{ x: a.x, y: a.y }, { x: b.x, y: b.y }],
+      points: [
+        { x: a.x, y: a.y },
+        { x: b.x, y: b.y },
+      ],
       synthetic: true,
     });
   }

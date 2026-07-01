@@ -17,7 +17,14 @@
 // the only `style=` is the consumer pass-through on the root AreaFocusGrid.
 // All visual treatment lives in the Primitives' own CSS files.
 // ============================================
-import { type Component, createMemo, createSignal, For, type JSX, Show } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  createSignal,
+  For,
+  type JSX,
+  Show,
+} from "solid-js";
 import { StackedProgressBar } from "../Progress";
 import {
   AreaFocusGrid,
@@ -88,15 +95,28 @@ const SEGMENT_COLORS = {
 const workSegments = (w: ProductGridWorkCounts) => {
   const total = w.todo + w.doing + w.done || 1;
   return [
-    { percentage: (w.done / total) * 100,  color: SEGMENT_COLORS.done,  label: String(w.done) },
-    { percentage: (w.doing / total) * 100, color: SEGMENT_COLORS.doing, label: String(w.doing) },
-    { percentage: (w.todo / total) * 100,  color: SEGMENT_COLORS.todo,  label: String(w.todo) },
+    {
+      percentage: (w.done / total) * 100,
+      color: SEGMENT_COLORS.done,
+      label: String(w.done),
+    },
+    {
+      percentage: (w.doing / total) * 100,
+      color: SEGMENT_COLORS.doing,
+      label: String(w.doing),
+    },
+    {
+      percentage: (w.todo / total) * 100,
+      color: SEGMENT_COLORS.todo,
+      label: String(w.todo),
+    },
   ];
 };
 
 export const ProductGrid: Component<ProductGridProps> = (props) => {
   // ----- selection (controlled or uncontrolled) ------------------------------
-  const [internalSel, setInternalSel] = createSignal<ProductGridSelection>(null);
+  const [internalSel, setInternalSel] =
+    createSignal<ProductGridSelection>(null);
   const selection = (): ProductGridSelection =>
     props.selection !== undefined ? props.selection : internalSel();
   const updateSelection = (next: ProductGridSelection) => {
@@ -105,7 +125,9 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   };
   const toggleItem = (id: string) => {
     const cur = selection();
-    updateSelection(cur && cur.kind === "item" && cur.id === id ? null : { kind: "item", id });
+    updateSelection(
+      cur && cur.kind === "item" && cur.id === id ? null : { kind: "item", id },
+    );
   };
   const toggleFocus = (area: string, focus: string) => {
     const cur = selection();
@@ -124,11 +146,14 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   };
 
   // ----- derived state ------------------------------------------------------
-  const aboveItems = createMemo(() => props.items.filter((it) => it.position === "above"));
+  const aboveItems = createMemo(() =>
+    props.items.filter((it) => it.position === "above"),
+  );
 
   const satisfiedById = createMemo(() => {
     const m = new Map<string, boolean>();
-    for (const it of aboveItems()) m.set(it.id, isSolutionSatisfied(workOf(it.id)));
+    for (const it of aboveItems())
+      m.set(it.id, isSolutionSatisfied(workOf(it.id)));
     return m;
   });
 
@@ -155,7 +180,8 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
       for (const s of it.solvedBy ?? []) ids.add(s);
     } else {
       for (const x of props.items) {
-        if (x.position === "below" && x.solvedBy?.includes(sel.id)) ids.add(x.id);
+        if (x.position === "below" && x.solvedBy?.includes(sel.id))
+          ids.add(x.id);
       }
     }
     return ids;
@@ -183,14 +209,16 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     return props.areaOrder.flatMap<AreaFocusGridArea>((area) => {
       const focusMap = byArea.get(area)!;
       if (focusMap.size === 0) return [];
-      return [{
-        id: area,
-        label: area,
-        focuses: Array.from(focusMap.keys()).map((focus) => ({
-          id: `${area}:${focus}`,
-          label: focus,
-        })),
-      }];
+      return [
+        {
+          id: area,
+          label: area,
+          focuses: Array.from(focusMap.keys()).map((focus) => ({
+            id: `${area}:${focus}`,
+            label: focus,
+          })),
+        },
+      ];
     });
   });
 
@@ -198,10 +226,16 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const bucketFor = (key: AreaFocusCellKey): FocusBucket => {
     const empty: FocusBucket = { above: [], below: [] };
     const above = props.items.filter(
-      (it) => it.area === key.area.label && it.focus === key.focus.label && it.position === "above",
+      (it) =>
+        it.area === key.area.label &&
+        it.focus === key.focus.label &&
+        it.position === "above",
     );
     const below = props.items.filter(
-      (it) => it.area === key.area.label && it.focus === key.focus.label && it.position === "below",
+      (it) =>
+        it.area === key.area.label &&
+        it.focus === key.focus.label &&
+        it.position === "below",
     );
     return above.length === 0 && below.length === 0 ? empty : { above, below };
   };
@@ -226,7 +260,9 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         barTitle={barTitle()}
         bar={
           <Show when={w()}>
-            {(counts) => <StackedProgressBar segments={workSegments(counts())} />}
+            {(counts) => (
+              <StackedProgressBar segments={workSegments(counts())} />
+            )}
           </Show>
         }
       >
@@ -240,7 +276,12 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     const { above, below } = bucketFor(key);
     const sel = () => {
       const s = selection();
-      return !!s && s.kind === "focus" && s.area === key.area.label && s.focus === key.focus.label;
+      return (
+        !!s &&
+        s.kind === "focus" &&
+        s.area === key.area.label &&
+        s.focus === key.focus.label
+      );
     };
     const aboveTotals = () =>
       above.reduce(

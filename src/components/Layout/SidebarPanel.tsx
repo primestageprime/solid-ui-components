@@ -18,19 +18,33 @@ export interface SidebarPanelProps extends JSX.HTMLAttributes<HTMLElement> {
 }
 
 export const SidebarPanel: Component<SidebarPanelProps> = (rawProps) => {
-  const props = mergeProps({ width: 280 as number, side: "left" as const }, rawProps);
-  const [local, others] = splitProps(props, ["width", "side", "class", "style", "children"]);
+  const props = mergeProps(
+    { width: 280 as number, side: "left" as const },
+    rawProps,
+  );
+  const [local, others] = splitProps(props, [
+    "width",
+    "side",
+    "class",
+    "style",
+    "children",
+  ]);
   const cls = () => {
     const c = ["app-sidebar", `app-sidebar--${local.side}`];
     if (local.class) c.push(local.class);
     return c.join(" ");
   };
-  const baseStyle = () => ({ width: `${local.width}px`, "min-width": `${local.width}px` });
+  const baseStyle = () => ({
+    width: `${local.width}px`,
+    "min-width": `${local.width}px`,
+  });
   return (
     <aside
       class={cls()}
       style={
-        typeof local.style === "string" ? local.style : { ...baseStyle(), ...local.style }
+        typeof local.style === "string"
+          ? local.style
+          : { ...baseStyle(), ...local.style }
       }
       {...others}
     >

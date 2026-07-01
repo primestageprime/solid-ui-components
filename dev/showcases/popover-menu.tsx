@@ -8,8 +8,8 @@ export const PopoverMenuShowcase: Component = () => {
     <div class="component-section">
       <h2>PopoverMenu — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Click-to-open menu anchored to a trigger element. Generic over the
-        item id type.
+        Click-to-open menu anchored to a trigger element. Generic over the item
+        id type.
       </p>
       <div class="example-group">
         <Row gap="sm" align="center">

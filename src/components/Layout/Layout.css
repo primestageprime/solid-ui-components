@@ -4,23 +4,46 @@
   flex-direction: column;
 }
 
-.stack--gap-xs { gap: 4px; }
-.stack--gap-sm { gap: 8px; }
+.stack--gap-xs {
+  gap: 4px;
+}
+.stack--gap-sm {
+  gap: 8px;
+}
 
-.stack--align-start { align-items: flex-start; }
-.stack--align-center { align-items: center; }
-.stack--align-end { align-items: flex-end; }
-.stack--align-stretch { align-items: stretch; }
+.stack--align-start {
+  align-items: flex-start;
+}
+.stack--align-center {
+  align-items: center;
+}
+.stack--align-end {
+  align-items: flex-end;
+}
+.stack--align-stretch {
+  align-items: stretch;
+}
 
-.stack--justify-start { justify-content: flex-start; }
-.stack--justify-center { justify-content: center; }
-.stack--justify-end { justify-content: flex-end; }
-.stack--justify-between { justify-content: space-between; }
+.stack--justify-start {
+  justify-content: flex-start;
+}
+.stack--justify-center {
+  justify-content: center;
+}
+.stack--justify-end {
+  justify-content: flex-end;
+}
+.stack--justify-between {
+  justify-content: space-between;
+}
 
 /* Fill: forward height through so a scrolling descendant has concrete height.
    `min-height: 0` lets the flex child shrink below content size instead of
    collapsing the layout. */
-.stack--fill { height: 100%; min-height: 0; }
+.stack--fill {
+  height: 100%;
+  min-height: 0;
+}
 
 /* Row */
 .row {
@@ -28,28 +51,59 @@
   flex-direction: row;
 }
 
-.row--gap-xs { gap: 4px; }
-.row--gap-sm { gap: 8px; }
+.row--gap-xs {
+  gap: 4px;
+}
+.row--gap-sm {
+  gap: 8px;
+}
 
-.row--align-start { align-items: flex-start; }
-.row--align-center { align-items: center; }
-.row--align-end { align-items: flex-end; }
-.row--align-stretch { align-items: stretch; }
-.row--align-baseline { align-items: baseline; }
+.row--align-start {
+  align-items: flex-start;
+}
+.row--align-center {
+  align-items: center;
+}
+.row--align-end {
+  align-items: flex-end;
+}
+.row--align-stretch {
+  align-items: stretch;
+}
+.row--align-baseline {
+  align-items: baseline;
+}
 
-.row--justify-start { justify-content: flex-start; }
-.row--justify-center { justify-content: center; }
-.row--justify-end { justify-content: flex-end; }
-.row--justify-between { justify-content: space-between; }
+.row--justify-start {
+  justify-content: flex-start;
+}
+.row--justify-center {
+  justify-content: center;
+}
+.row--justify-end {
+  justify-content: flex-end;
+}
+.row--justify-between {
+  justify-content: space-between;
+}
 
-.row--wrap { flex-wrap: wrap; }
+.row--wrap {
+  flex-wrap: wrap;
+}
 
 /* Fill: forward width through (mirror of stack--fill on the horizontal axis). */
-.row--fill { width: 100%; min-width: 0; }
+.row--fill {
+  width: 100%;
+  min-width: 0;
+}
 
 /* Box */
-.box--grow { flex-grow: 1; }
-.box--no-shrink { flex-shrink: 0; }
+.box--grow {
+  flex-grow: 1;
+}
+.box--no-shrink {
+  flex-shrink: 0;
+}
 
 /* ProportionalStack — children share the container by weight when over-budget,
    shrink-wrap when under-budget. Always fills its parent on both axes. */
@@ -61,11 +115,19 @@
   min-height: 0;
   box-sizing: border-box;
 }
-.proportional-stack--column { flex-direction: column; }
-.proportional-stack--row    { flex-direction: row; }
+.proportional-stack--column {
+  flex-direction: column;
+}
+.proportional-stack--row {
+  flex-direction: row;
+}
 
-.proportional-stack--gap-xs { gap: 4px; }
-.proportional-stack--gap-sm { gap: 8px; }
+.proportional-stack--gap-xs {
+  gap: 4px;
+}
+.proportional-stack--gap-sm {
+  gap: 8px;
+}
 
 .proportional-item {
   /* `flex` itself is set inline to inject the per-instance weight. */
@@ -104,9 +166,15 @@
   flex-shrink: 0;
   border-bottom: 1px solid var(--sui-border);
 }
-.app-header--sm { padding: 8px 12px; }
-.app-header--md { padding: 12px 20px; }
-.app-header--lg { padding: 16px 24px; }
+.app-header--sm {
+  padding: 8px 12px;
+}
+.app-header--md {
+  padding: 12px 20px;
+}
+.app-header--lg {
+  padding: 16px 24px;
+}
 .app-header--inline {
   border-top: 1px solid var(--sui-border);
   border-bottom: 1px solid var(--sui-border);
@@ -154,5 +222,9 @@
   overflow-y: auto;
   background: var(--sui-bg-deep, transparent);
 }
-.app-sidebar--left  { border-right: 1px solid var(--sui-border); }
-.app-sidebar--right { border-left:  1px solid var(--sui-border); }
+.app-sidebar--left {
+  border-right: 1px solid var(--sui-border);
+}
+.app-sidebar--right {
+  border-left: 1px solid var(--sui-border);
+}

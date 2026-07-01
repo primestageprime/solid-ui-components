@@ -10,7 +10,8 @@ import type { CellRendererProps } from "./cellStyle";
 // ============================================
 // Money Renderer
 // ============================================
-export interface MoneyCellProps extends CellRendererProps<number | null | undefined> {
+export interface MoneyCellProps
+  extends CellRendererProps<number | null | undefined> {
   currency?: string;
   locale?: string;
   /**
@@ -45,12 +46,16 @@ export const MoneyCell: Component<MoneyCellProps> = (props) => {
   // Same width discipline as CurrencyInput: tabular figures + a cap derived
   // from the widest formatted value (unless explicitly opted out with null).
   const maxRem = () => {
-    const cap = props.maxValue === undefined ? CURRENCY_DEFAULT_MAX : props.maxValue;
+    const cap =
+      props.maxValue === undefined ? CURRENCY_DEFAULT_MAX : props.maxValue;
     return cap == null ? undefined : `${moneyCellWidthRem(cap)}rem`;
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-money" style={{ "max-width": maxRem() }}>
         {formatted()}
       </span>
@@ -61,7 +66,8 @@ export const MoneyCell: Component<MoneyCellProps> = (props) => {
 // ============================================
 // Duration Renderer
 // ============================================
-export interface DurationCellProps extends CellRendererProps<number | null | undefined> {
+export interface DurationCellProps
+  extends CellRendererProps<number | null | undefined> {
   /** Input unit: 'ms', 's', 'm', 'h' (default: 's') */
   unit?: "ms" | "s" | "m" | "h";
 }
@@ -73,9 +79,15 @@ export const DurationCell: Component<DurationCellProps> = (props) => {
     // Convert to seconds
     let seconds = props.value;
     switch (props.unit || "s") {
-      case "ms": seconds = props.value / 1000; break;
-      case "m": seconds = props.value * 60; break;
-      case "h": seconds = props.value * 3600; break;
+      case "ms":
+        seconds = props.value / 1000;
+        break;
+      case "m":
+        seconds = props.value * 60;
+        break;
+      case "h":
+        seconds = props.value * 3600;
+        break;
     }
 
     if (seconds < 60) {
@@ -96,7 +108,10 @@ export const DurationCell: Component<DurationCellProps> = (props) => {
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-duration">{formatted()}</span>
     </Show>
   );
@@ -105,7 +120,8 @@ export const DurationCell: Component<DurationCellProps> = (props) => {
 // ============================================
 // Float Renderer
 // ============================================
-export interface FloatCellProps extends CellRendererProps<number | null | undefined> {
+export interface FloatCellProps
+  extends CellRendererProps<number | null | undefined> {
   precision?: number;
   locale?: string;
 }
@@ -122,7 +138,10 @@ export const FloatCell: Component<FloatCellProps> = (props) => {
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-float">{formatted()}</span>
     </Show>
   );
@@ -131,7 +150,8 @@ export const FloatCell: Component<FloatCellProps> = (props) => {
 // ============================================
 // Int Renderer
 // ============================================
-export interface IntCellProps extends CellRendererProps<number | null | undefined> {
+export interface IntCellProps
+  extends CellRendererProps<number | null | undefined> {
   locale?: string;
 }
 
@@ -145,7 +165,10 @@ export const IntCell: Component<IntCellProps> = (props) => {
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-int">{formatted()}</span>
     </Show>
   );
@@ -154,7 +177,8 @@ export const IntCell: Component<IntCellProps> = (props) => {
 // ============================================
 // Metric Value Renderer (compliance-colored number)
 // ============================================
-export interface MetricValueCellProps extends CellRendererProps<number | null | undefined> {
+export interface MetricValueCellProps
+  extends CellRendererProps<number | null | undefined> {
   /** Whether the value is compliant — drives color */
   compliant?: boolean | null;
   /** Number precision via toPrecision() (default: 4) */
@@ -179,8 +203,13 @@ export const MetricValueCell: Component<MetricValueCellProps> = (props) => {
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
-      <span class="cell-metric-value" style={{ color: color() }}>{formatted()}</span>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
+      <span class="cell-metric-value" style={{ color: color() }}>
+        {formatted()}
+      </span>
     </Show>
   );
 };

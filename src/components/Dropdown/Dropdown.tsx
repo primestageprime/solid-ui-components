@@ -44,7 +44,10 @@ export interface DropdownProps {
 }
 
 export const Dropdown: Component<DropdownProps> = (props) => {
-  const merged = mergeProps({ size: "md" as const, placeholder: "Select..." }, props);
+  const merged = mergeProps(
+    { size: "md" as const, placeholder: "Select..." },
+    props,
+  );
   const [open, setOpen] = createSignal(false);
   // Which option currently holds the single tab stop / DOM focus (roving
   // tabindex). -1 while closed.
@@ -128,7 +131,9 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     // open and land focus on the first/last option.
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      open() ? focusOption(activeIndex() < 0 ? 0 : activeIndex()) : openMenu("first");
+      open()
+        ? focusOption(activeIndex() < 0 ? 0 : activeIndex())
+        : openMenu("first");
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       open() ? focusOption(activeIndex()) : openMenu("last");
@@ -185,12 +190,17 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         onKeyDown={onTriggerKeyDown}
       >
         <Show when={selected()?.color}>
-          <span class="sui-dropdown__dot" style={{ background: selected()!.color }} />
+          <span
+            class="sui-dropdown__dot"
+            style={{ background: selected()!.color }}
+          />
         </Show>
         <span class="sui-dropdown__label">
           {selected()?.label ?? merged.placeholder}
         </span>
-        <span class="sui-dropdown__caret" aria-hidden="true">&#9660;</span>
+        <span class="sui-dropdown__caret" aria-hidden="true">
+          &#9660;
+        </span>
       </button>
 
       <Show when={open()}>
@@ -213,16 +223,17 @@ export const Dropdown: Component<DropdownProps> = (props) => {
                 onKeyDown={(e) => onOptionKeyDown(e, index())}
               >
                 <Show when={item.color}>
-                  <span class="sui-dropdown__dot" style={{ background: item.color }} />
+                  <span
+                    class="sui-dropdown__dot"
+                    style={{ background: item.color }}
+                  />
                 </Show>
                 {item.label}
               </button>
             )}
           </For>
           <Show when={merged.footer}>
-            <div class="sui-dropdown__footer">
-              {merged.footer}
-            </div>
+            <div class="sui-dropdown__footer">{merged.footer}</div>
           </Show>
         </div>
       </Show>

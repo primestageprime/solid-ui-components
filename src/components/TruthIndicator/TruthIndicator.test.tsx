@@ -21,7 +21,9 @@ describe("TruthIndicator", () => {
   });
 
   it("size class applies", () => {
-    const { container } = render(() => <TruthIndicator value={true} size="lg" />);
+    const { container } = render(() => (
+      <TruthIndicator value={true} size="lg" />
+    ));
     expect(container.firstElementChild!.className).toMatch(/sui-truth--lg/);
   });
 

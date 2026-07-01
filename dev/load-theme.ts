@@ -44,7 +44,8 @@ export const persistTheme = (id: ThemeId): void => {
 };
 
 /** Injects the baseline once. Idempotent — safe to call repeatedly. */
-export const loadBaseline = (): void => upsertStyleTag(BASELINE_TAG_ID, baselineCss);
+export const loadBaseline = (): void =>
+  upsertStyleTag(BASELINE_TAG_ID, baselineCss);
 
 /** Ensures baseline is present, then swaps the active theme. */
 export const loadTheme = (id: ThemeId): void => {

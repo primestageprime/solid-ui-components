@@ -27,16 +27,23 @@ const formatMonth = (d: Date): string =>
  * the first / last day of each month, the day number, and a today pip on the
  * highlighted cell. Width comes from DateAxis's `cellWidth`.
  */
-export const dayCellContent = (cell: Cell, ctx: DayCellContext): JSX.Element => {
+export const dayCellContent = (
+  cell: Cell,
+  ctx: DayCellContext,
+): JSX.Element => {
   const monthLabel =
     isFirstOfMonth(cell.start) || isLastOfMonth(cell.start)
       ? formatMonth(cell.start)
       : "";
   return (
     <>
-      <span class="sui-date-axis__month" aria-hidden="true">{monthLabel}</span>
+      <span class="sui-date-axis__month" aria-hidden="true">
+        {monthLabel}
+      </span>
       <span class="sui-date-axis__label">{cell.start.getUTCDate()}</span>
-      {ctx.isToday && <span class="sui-date-axis__today-pip" aria-hidden="true" />}
+      {ctx.isToday && (
+        <span class="sui-date-axis__today-pip" aria-hidden="true" />
+      )}
     </>
   );
 };

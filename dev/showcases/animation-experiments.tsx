@@ -10,7 +10,18 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { type Component, createSignal, createEffect, For, type JSX, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  createEffect,
+  For,
+  type JSX,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+} from "solid-js";
 import {
   buildLaneTrajectory,
   dashednessAt,
@@ -109,13 +120,25 @@ function slurpOutGeometry(t: number): {
   const lozengeRightX = LOZENGE_X + LOZENGE_W;
   const leadingX0 = lozengeRightX;
   const leadingX1 = NODE_FINAL_LEFT_X + NODE_W;
-  const leadingX = lerp(leadingX0, leadingX1, ease(windowProgress(clamp, 0.0, 0.55)));
+  const leadingX = lerp(
+    leadingX0,
+    leadingX1,
+    ease(windowProgress(clamp, 0.0, 0.55)),
+  );
   const trailingX = Math.max(lozengeRightX, leadingX - NODE_W);
   return {
     leadingX,
-    leadingH: lerp(GENIE_SLIT_HEIGHT, NODE_H, ease(windowProgress(clamp, 0.0, 0.55))),
+    leadingH: lerp(
+      GENIE_SLIT_HEIGHT,
+      NODE_H,
+      ease(windowProgress(clamp, 0.0, 0.55)),
+    ),
     trailingX,
-    trailingH: lerp(GENIE_SLIT_HEIGHT, NODE_H, ease(windowProgress(clamp, 0.4, 0.88))),
+    trailingH: lerp(
+      GENIE_SLIT_HEIGHT,
+      NODE_H,
+      ease(windowProgress(clamp, 0.4, 0.88)),
+    ),
   };
 }
 
@@ -197,7 +220,8 @@ const TASKS: Record<string, TaskData> = {
     id: "fix-bucket",
     owner: "henry",
     status: "DOING",
-    title: "Fix the hole in the bucket — water keeps leaking out before we can use it",
+    title:
+      "Fix the hole in the bucket — water keeps leaking out before we can use it",
     est: "2h",
     actual: "1h 12m",
   },
@@ -205,7 +229,8 @@ const TASKS: Record<string, TaskData> = {
     id: "mend-hole",
     owner: "henry",
     status: "TODO",
-    title: "Mend the hole in the bucket with straw — dear Liza said straw should hold",
+    title:
+      "Mend the hole in the bucket with straw — dear Liza said straw should hold",
     est: "45m",
     actual: "—",
   },
@@ -213,7 +238,8 @@ const TASKS: Record<string, TaskData> = {
     id: "cut-straw",
     owner: "henry",
     status: "TODO",
-    title: "Cut the straw down to the right length with the axe before we can mend",
+    title:
+      "Cut the straw down to the right length with the axe before we can mend",
     est: "20m",
     actual: "—",
   },
@@ -221,7 +247,8 @@ const TASKS: Record<string, TaskData> = {
     id: "sharpen-axe",
     owner: "henry",
     status: "TODO",
-    title: "Sharpen the dull axe with the stone — the blade is too blunt to cut",
+    title:
+      "Sharpen the dull axe with the stone — the blade is too blunt to cut",
     est: "15m",
     actual: "—",
   },
@@ -237,7 +264,8 @@ const TASKS: Record<string, TaskData> = {
     id: "fetch-water",
     owner: "liza",
     status: "TODO",
-    title: "Fetch some water from the well in the bucket… wait, the bucket has a hole",
+    title:
+      "Fetch some water from the well in the bucket… wait, the bucket has a hole",
     est: "10m",
     actual: "—",
   },
@@ -362,7 +390,7 @@ function TaskCard(props: {
           "font-family": "ui-monospace, SFMono-Regular, monospace",
           color: "var(--sui-text, #e6ecf5)",
           cursor: props.visible ? "pointer" : "default",
-          opacity: (mounted() && props.visible) ? 1 : 0,
+          opacity: mounted() && props.visible ? 1 : 0,
           "pointer-events": props.visible ? "auto" : "none",
           transition: `opacity ${CARD_FADE_MS}ms ease-out`,
         }}
@@ -441,7 +469,8 @@ function TaskCard(props: {
               {props.task.title}
             </div>
             <div style={{ color: "rgba(255,255,255,0.55)" }}>
-              {props.task.owner} · {props.task.status} · est {props.task.est} · {props.task.actual}
+              {props.task.owner} · {props.task.status} · est {props.task.est} ·{" "}
+              {props.task.actual}
             </div>
           </div>
         </Show>
@@ -471,20 +500,23 @@ function SlurpStage(props: SlurpStageProps): JSX.Element {
   // TaskCard's hover popover can render outside the stage bbox.
   let pathRef: SVGPathElement | undefined;
   let raf: number | undefined;
-  const lozengeX = props.direction === "ltr" ? LOZENGE_X : STAGE_W - LOZENGE_X - LOZENGE_W;
+  const lozengeX =
+    props.direction === "ltr" ? LOZENGE_X : STAGE_W - LOZENGE_X - LOZENGE_W;
   // Pre-animation state is always t=0.
   const startT = 0;
   // Slurp-out starts with no card (the node hasn't arrived). Slurp-in
   // starts with the card visible (the node is sitting at rest).
   const [showCard, setShowCard] = createSignal(props.phase === "in");
   const geom = (t: number) => {
-    const base = props.phase === "out" ? slurpOutGeometry(t) : slurpInGeometry(t);
+    const base =
+      props.phase === "out" ? slurpOutGeometry(t) : slurpInGeometry(t);
     return props.direction === "ltr" ? base : mirrorGeometry(base);
   };
   // Where the TaskCard sits at rest, in stage coordinates.
-  const cardX = props.direction === "ltr"
-    ? NODE_FINAL_LEFT_X
-    : STAGE_W - NODE_FINAL_LEFT_X - NODE_W;
+  const cardX =
+    props.direction === "ltr"
+      ? NODE_FINAL_LEFT_X
+      : STAGE_W - NODE_FINAL_LEFT_X - NODE_W;
   const cardY = LOZENGE_CY - NODE_H / 2;
   const reset = () => {
     if (raf !== undefined) {
@@ -661,14 +693,26 @@ function slurpDepGeometry(t: number): {
   const leadingX1 = DEP_NODE_REST_LEFT_X;
   const trailingX0 = lozengeLeftX;
   const trailingX1 = DEP_NODE_REST_RIGHT_X;
-  const leadingX = lerp(leadingX0, leadingX1, ease(windowProgress(clamp, 0.0, 0.55)));
+  const leadingX = lerp(
+    leadingX0,
+    leadingX1,
+    ease(windowProgress(clamp, 0.0, 0.55)),
+  );
   // Width-cap: keep |trailingX − leadingX| ≤ NODE_W.
   const trailingX = Math.min(trailingX0, leadingX + NODE_W);
   return {
     leadingX,
-    leadingH: lerp(GENIE_SLIT_HEIGHT, DEP_NODE_H, ease(windowProgress(clamp, 0.0, 0.55))),
+    leadingH: lerp(
+      GENIE_SLIT_HEIGHT,
+      DEP_NODE_H,
+      ease(windowProgress(clamp, 0.0, 0.55)),
+    ),
     trailingX,
-    trailingH: lerp(GENIE_SLIT_HEIGHT, DEP_NODE_H, ease(windowProgress(clamp, 0.4, 0.88))),
+    trailingH: lerp(
+      GENIE_SLIT_HEIGHT,
+      DEP_NODE_H,
+      ease(windowProgress(clamp, 0.4, 0.88)),
+    ),
   };
   void trailingX1;
 }
@@ -688,7 +732,9 @@ const SlurpDep: Component = () => {
   // (no room for the new node) and widens on play. Slurp begins once
   // the container clears the threshold = source + arrow run + node +
   // gap + lozenge.
-  const [containerWidth, setContainerWidth] = createSignal(DEP_CONTAINER_NARROW_W);
+  const [containerWidth, setContainerWidth] = createSignal(
+    DEP_CONTAINER_NARROW_W,
+  );
   const lozengeX = () => lozengeXFor(containerWidth());
   const sourceRightX = DEP_SOURCE_X + DEP_SOURCE_W;
   const cy = DEP_STAGE_H / 2;
@@ -697,10 +743,11 @@ const SlurpDep: Component = () => {
     if (!pathRef || !arrowRef) return;
     pathRef.style.visibility = "visible";
     // The dashes "fill in" via WAAPI: tween dasharray gap 3 → 0.
-    arrowRef.animate(
-      [{ strokeDasharray: "4 3" }, { strokeDasharray: "4 0" }],
-      { duration: 280, easing: "ease-out", fill: "forwards" },
-    );
+    arrowRef.animate([{ strokeDasharray: "4 3" }, { strokeDasharray: "4 0" }], {
+      duration: 280,
+      easing: "ease-out",
+      fill: "forwards",
+    });
     setShowCard(false);
     const start = performance.now();
     const tick = (now: number) => {
@@ -946,9 +993,23 @@ function childToTask(c: ChartChild): TaskData {
 
 // Parent A — 3-child linear chain. a1 → a2 → a3.
 const MS_PARENT_A_CHILDREN: ChartChild[] = [
-  { id: "a1", title: "A child 1 — set up the bucket inventory", status: "TODO" },
-  { id: "a2", title: "A child 2 — patch any obvious holes", status: "TODO", dependsOn: ["a1"] },
-  { id: "a3", title: "A child 3 — verify the patch held overnight", status: "TODO", dependsOn: ["a2"] },
+  {
+    id: "a1",
+    title: "A child 1 — set up the bucket inventory",
+    status: "TODO",
+  },
+  {
+    id: "a2",
+    title: "A child 2 — patch any obvious holes",
+    status: "TODO",
+    dependsOn: ["a1"],
+  },
+  {
+    id: "a3",
+    title: "A child 3 — verify the patch held overnight",
+    status: "TODO",
+    dependsOn: ["a2"],
+  },
 ];
 
 // Parent B — 8-child broom (mirrors initParentB in workshop.tsx):
@@ -960,27 +1021,83 @@ const MS_PARENT_A_CHILDREN: ChartChild[] = [
 const MS_PARENT_B_CHILDREN: ChartChild[] = [
   { id: "b1", title: "B child 1 — wet the stone in the well", status: "TODO" },
   { id: "b2", title: "B child 2 — sharpen the dull axe", status: "TODO" },
-  { id: "b3", title: "B child 3 — cut straw to the right length", status: "TODO" },
-  { id: "b4", title: "B child 4 — mend the hole with the cut straw", status: "TODO", dependsOn: ["b1", "b2"] },
-  { id: "b5", title: "B child 5 — refill the patched bucket", status: "TODO", dependsOn: ["b4"] },
-  { id: "b6", title: "B child 6 — confirm no leaks", status: "TODO", dependsOn: ["b3", "b5"] },
-  { id: "b7", title: "B child 7 — bring bucket to the cattle", status: "TODO", dependsOn: ["b6"] },
-  { id: "b8", title: "B child 8 — log the day's water usage", status: "TODO", dependsOn: ["b6"] },
+  {
+    id: "b3",
+    title: "B child 3 — cut straw to the right length",
+    status: "TODO",
+  },
+  {
+    id: "b4",
+    title: "B child 4 — mend the hole with the cut straw",
+    status: "TODO",
+    dependsOn: ["b1", "b2"],
+  },
+  {
+    id: "b5",
+    title: "B child 5 — refill the patched bucket",
+    status: "TODO",
+    dependsOn: ["b4"],
+  },
+  {
+    id: "b6",
+    title: "B child 6 — confirm no leaks",
+    status: "TODO",
+    dependsOn: ["b3", "b5"],
+  },
+  {
+    id: "b7",
+    title: "B child 7 — bring bucket to the cattle",
+    status: "TODO",
+    dependsOn: ["b6"],
+  },
+  {
+    id: "b8",
+    title: "B child 8 — log the day's water usage",
+    status: "TODO",
+    dependsOn: ["b6"],
+  },
 ];
 
 // Standalone — 4-task linear chain, no parent.
 const MS_STANDALONE: ChartChild[] = [
   { id: "t1", title: "Task 1 — clean out the well's debris", status: "TODO" },
-  { id: "t2", title: "Task 2 — re-rope the well's pulley", status: "TODO", dependsOn: ["t1"] },
-  { id: "t3", title: "Task 3 — test the pulley with a weighted bucket", status: "TODO", dependsOn: ["t2"] },
-  { id: "t4", title: "Task 4 — repaint the well's signage for clarity", status: "TODO", dependsOn: ["t3"] },
+  {
+    id: "t2",
+    title: "Task 2 — re-rope the well's pulley",
+    status: "TODO",
+    dependsOn: ["t1"],
+  },
+  {
+    id: "t3",
+    title: "Task 3 — test the pulley with a weighted bucket",
+    status: "TODO",
+    dependsOn: ["t2"],
+  },
+  {
+    id: "t4",
+    title: "Task 4 — repaint the well's signage for clarity",
+    status: "TODO",
+    dependsOn: ["t3"],
+  },
 ];
 
 // Chores — 3 independent tasks, no parent, no deps.
 const MS_CHORES: ChartChild[] = [
-  { id: "ch1", title: "Chore 1 — feed the chickens before sunset", status: "TODO" },
-  { id: "ch2", title: "Chore 2 — split firewood for the evening cook", status: "TODO" },
-  { id: "ch3", title: "Chore 3 — close the barn door against the wind", status: "TODO" },
+  {
+    id: "ch1",
+    title: "Chore 1 — feed the chickens before sunset",
+    status: "TODO",
+  },
+  {
+    id: "ch2",
+    title: "Chore 2 — split firewood for the evening cook",
+    status: "TODO",
+  },
+  {
+    id: "ch3",
+    title: "Chore 3 — close the barn door against the wind",
+    status: "TODO",
+  },
 ];
 
 // ─── layout ─────────────────────────────────────────────────────────────────
@@ -999,7 +1116,6 @@ const MS_LOZENGE_GAP = 32;
 // overflow rolls into the side lozenges. Used as the fallback; the
 // row picks a wider value when there's more horizontal room.
 const MS_MAX_DEPTH = 1;
-
 
 /**
  * Map a ChartChild + parent spec into a StatusFlowNode[] (the format
@@ -1036,7 +1152,13 @@ interface MixedLaneSpec {
   children: ChartChild[];
 }
 
-type HoverInfo = { task: TaskData; x: number; y: number; width: number; height: number };
+type HoverInfo = {
+  task: TaskData;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 // childToTaskFromNode: build TaskData for the TaskCard from a state node.
 function nodeToTask(n: StatusFlowNode): TaskData {
   const owners = ["henry", "liza", "alex"];
@@ -1099,10 +1221,7 @@ const LayoutKnobsPanel: Component<{
     border: "1px solid rgba(255,255,255,0.18)",
     "border-radius": "3px",
   };
-  const knob = (
-    key: keyof LaneLayoutConfig,
-    label: string,
-  ): JSX.Element => (
+  const knob = (key: keyof LaneLayoutConfig, label: string): JSX.Element => (
     <label style={labelStyle}>
       {label}
       <input
@@ -1458,17 +1577,24 @@ const MixedShapesRow: Component = () => {
   return (
     <>
       <div class="workshop-grid__cell">
-        <SubsectionTitleLite>StatusFlowChart — mixed shapes (SVG primitives)</SubsectionTitleLite>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-          Same 4-lane dataset as the StatusFlowChart-based version
-          below, but rendered entirely from the SVG primitives we've
-          built — and driven by the same shared layout helpers
-          (<code>computeColFor</code>, <code>advanceChildren</code>,
-          <code>promoteReady</code>) so the rules stay in lockstep.
-          Click <strong>▶ play</strong> to tick the state machine
-          forward: one DOING leaf finishes per tick, ready TODOs are
-          promoted, cards animate between columns as their status
-          changes. The animation halts when every leaf is DONE.
+        <SubsectionTitleLite>
+          StatusFlowChart — mixed shapes (SVG primitives)
+        </SubsectionTitleLite>
+        <p
+          style={{
+            "font-size": "12px",
+            color: "rgba(255,255,255,0.6)",
+            margin: "8px 0",
+          }}
+        >
+          Same 4-lane dataset as the StatusFlowChart-based version below, but
+          rendered entirely from the SVG primitives we've built — and driven by
+          the same shared layout helpers (<code>computeColFor</code>,{" "}
+          <code>advanceChildren</code>,<code>promoteReady</code>) so the rules
+          stay in lockstep. Click <strong>▶ play</strong> to tick the state
+          machine forward: one DOING leaf finishes per tick, ready TODOs are
+          promoted, cards animate between columns as their status changes. The
+          animation halts when every leaf is DONE.
         </p>
         <div
           style={{
@@ -1498,7 +1624,9 @@ const MixedShapesRow: Component = () => {
             type="button"
             style={buttonStyle}
             onClick={next}
-            disabled={allLanesDone() && cursor() === histories[0][0]().length - 1}
+            disabled={
+              allLanesDone() && cursor() === histories[0][0]().length - 1
+            }
           >
             next →
           </button>
@@ -1595,7 +1723,14 @@ const MixedShapesRow: Component = () => {
                           overflow: "hidden",
                         }}
                       >
-                        <div style={{ "font-size": "10px", "margin-bottom": "4px" }}>{task.status}</div>
+                        <div
+                          style={{
+                            "font-size": "10px",
+                            "margin-bottom": "4px",
+                          }}
+                        >
+                          {task.status}
+                        </div>
                         <div>{task.title}</div>
                       </div>
                     );
@@ -1640,11 +1775,14 @@ const MixedShapesRow: Component = () => {
                         color: "var(--sui-text, #e6ecf5)",
                         "box-shadow": "0 4px 12px rgba(0,0,0,0.4)",
                         "pointer-events": "none",
-                        "font-family": "ui-monospace, SFMono-Regular, monospace",
+                        "font-family":
+                          "ui-monospace, SFMono-Regular, monospace",
                         "box-sizing": "border-box",
                       }}
                     >
-                      <div style={{ "font-weight": 600, "margin-bottom": "2px" }}>
+                      <div
+                        style={{ "font-weight": 600, "margin-bottom": "2px" }}
+                      >
                         {info().task.title}
                       </div>
                       <div style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -1707,8 +1845,10 @@ const CHAIN_CENTER_X = CHAIN_STAGE_W / 2;
 const CHAIN_COL_0_LEFT = CHAIN_CENTER_X - CHAIN_CARD_W / 2;
 const CHAIN_COL_MINUS_1_LEFT = CHAIN_COL_0_LEFT - CHAIN_COL_GAP - CHAIN_CARD_W;
 const CHAIN_COL_PLUS_1_LEFT = CHAIN_COL_0_LEFT + CHAIN_CARD_W + CHAIN_COL_GAP;
-const CHAIN_LEFT_LOZENGE_X = CHAIN_COL_MINUS_1_LEFT - CHAIN_LOZENGE_GAP - LOZENGE_W;
-const CHAIN_RIGHT_LOZENGE_X = CHAIN_COL_PLUS_1_LEFT + CHAIN_CARD_W + CHAIN_LOZENGE_GAP;
+const CHAIN_LEFT_LOZENGE_X =
+  CHAIN_COL_MINUS_1_LEFT - CHAIN_LOZENGE_GAP - LOZENGE_W;
+const CHAIN_RIGHT_LOZENGE_X =
+  CHAIN_COL_PLUS_1_LEFT + CHAIN_CARD_W + CHAIN_LOZENGE_GAP;
 
 interface ChainNode {
   task: TaskData;
@@ -1807,10 +1947,12 @@ const BucketChainChart: Component = () => {
           stroke-width="1"
         />
         {/* Side lozenges */}
-        <For each={[
-          { x: CHAIN_LEFT_LOZENGE_X, count: 1 },
-          { x: CHAIN_RIGHT_LOZENGE_X, count: 2 },
-        ]}>
+        <For
+          each={[
+            { x: CHAIN_LEFT_LOZENGE_X, count: 1 },
+            { x: CHAIN_RIGHT_LOZENGE_X, count: 2 },
+          ]}
+        >
           {(loz) => (
             <>
               <rect
@@ -1860,11 +2002,7 @@ const BucketChainChart: Component = () => {
         </For>
         {/* Visible→hidden dashed dep arrows to each lozenge */}
         <path
-          d={orthogonalAvoidingObstacles(
-            cards[0].rect,
-            leftLozengeAnchor,
-            [],
-          )}
+          d={orthogonalAvoidingObstacles(cards[0].rect, leftLozengeAnchor, [])}
           fill="none"
           stroke={greyColor}
           stroke-width="1.5"
@@ -1873,11 +2011,7 @@ const BucketChainChart: Component = () => {
           style={{ color: greyColor }}
         />
         <path
-          d={orthogonalAvoidingObstacles(
-            cards[2].rect,
-            rightLozengeAnchor,
-            [],
-          )}
+          d={orthogonalAvoidingObstacles(cards[2].rect, rightLozengeAnchor, [])}
           fill="none"
           stroke={greyColor}
           stroke-width="1.5"
@@ -1966,7 +2100,8 @@ const EXPERIMENTS: Experiment[] = [
   {
     id: "slurp-out-rtl",
     label: "slurp-out · right → left",
-    description: "Mirror of slurp-out: lozenge on the right, node extrudes leftward.",
+    description:
+      "Mirror of slurp-out: lozenge on the right, node extrudes leftward.",
     Demo: SlurpOutRtl,
   },
   {
@@ -1979,7 +2114,8 @@ const EXPERIMENTS: Experiment[] = [
   {
     id: "slurp-in-rtl",
     label: "slurp-in · left → right (into right lozenge)",
-    description: "Mirror of slurp-in: node retreats into the lozenge on the right.",
+    description:
+      "Mirror of slurp-in: node retreats into the lozenge on the right.",
     Demo: SlurpInRtl,
   },
   {
@@ -2025,7 +2161,10 @@ const TWO_FRAME_DEMO_NODES_B: StatusFlowNode[] = [
 ];
 
 const TwoFrameArrowDemoRow: Component = () => {
-  const FRAMES: StatusFlowNode[][] = [TWO_FRAME_DEMO_NODES_A, TWO_FRAME_DEMO_NODES_B];
+  const FRAMES: StatusFlowNode[][] = [
+    TWO_FRAME_DEMO_NODES_A,
+    TWO_FRAME_DEMO_NODES_B,
+  ];
   const [cursor, setCursor] = createSignal(0);
   const [playing, setPlaying] = createSignal(false);
   let toggleTimer: ReturnType<typeof setInterval> | undefined;
@@ -2075,19 +2214,33 @@ const TwoFrameArrowDemoRow: Component = () => {
   return (
     <>
       <div class="workshop-grid__cell">
-        <SubsectionTitleLite>Arrow smoothness · 2-frame demo</SubsectionTitleLite>
-        <p style={{ "font-size": "12px", color: "rgba(255,255,255,0.6)", margin: "8px 0" }}>
-          Toggle between two frames to inspect how the b1→b4 arrow
-          morphs as b1 moves from the col-0 stack out to col -1, and
-          b2/b3 re-stack. Goal: a smooth, snap-free transition.
+        <SubsectionTitleLite>
+          Arrow smoothness · 2-frame demo
+        </SubsectionTitleLite>
+        <p
+          style={{
+            "font-size": "12px",
+            color: "rgba(255,255,255,0.6)",
+            margin: "8px 0",
+          }}
+        >
+          Toggle between two frames to inspect how the b1→b4 arrow morphs as b1
+          moves from the col-0 stack out to col -1, and b2/b3 re-stack. Goal: a
+          smooth, snap-free transition.
         </p>
         <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
-          <button type="button" style={buttonStyle} onClick={prev}>← prev</button>
+          <button type="button" style={buttonStyle} onClick={prev}>
+            ← prev
+          </button>
           <button type="button" style={buttonStyle} onClick={play}>
             {playing() ? "⏸ pause" : "▶ play"}
           </button>
-          <button type="button" style={buttonStyle} onClick={next}>next →</button>
-          <button type="button" style={buttonStyle} onClick={reset}>↺ reset</button>
+          <button type="button" style={buttonStyle} onClick={next}>
+            next →
+          </button>
+          <button type="button" style={buttonStyle} onClick={reset}>
+            ↺ reset
+          </button>
           <span
             style={{
               "font-size": "11px",
@@ -2133,7 +2286,10 @@ const TwoFrameArrowDemoRow: Component = () => {
               spec={spec}
               nodes={FRAMES[cursor()]}
               laneY={laneY}
-              rowCount={Math.max(1, visibleChildRowCount(FRAMES[cursor()], maxDepth))}
+              rowCount={Math.max(
+                1,
+                visibleChildRowCount(FRAMES[cursor()], maxDepth),
+              )}
               stageWidth={stageWidth}
               maxDepth={maxDepth}
               layoutConfig={DEFAULT_LANE_LAYOUT_CONFIG}
@@ -2159,7 +2315,11 @@ const TwoFrameArrowDemoRow: Component = () => {
                       overflow: "hidden",
                     }}
                   >
-                    <div style={{ "font-size": "10px", "margin-bottom": "4px" }}>{task.status}</div>
+                    <div
+                      style={{ "font-size": "10px", "margin-bottom": "4px" }}
+                    >
+                      {task.status}
+                    </div>
                     <div>{task.title}</div>
                   </div>
                 );
@@ -2188,13 +2348,12 @@ export const AnimationExperimentsRow: Component = () => {
           }}
         >
           <p style={{ margin: "0 0 8px" }}>
-            Each experiment isolates one effect. Use the play button to
-            restart the animation. Once an effect feels right, we'll
-            name it and compose it into the SwimlaneChart pipeline.
+            Each experiment isolates one effect. Use the play button to restart
+            the animation. Once an effect feels right, we'll name it and compose
+            it into the SwimlaneChart pipeline.
           </p>
           <p style={{ margin: "0", color: "rgba(255,255,255,0.5)" }}>
-            Add more experiments by appending to{" "}
-            <code>EXPERIMENTS</code> in{" "}
+            Add more experiments by appending to <code>EXPERIMENTS</code> in{" "}
             <code>dev/showcases/animation-experiments.tsx</code>.
           </p>
         </div>

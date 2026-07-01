@@ -1,6 +1,14 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { type Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createUniqueId,
+  onCleanup,
+} from "solid-js";
 import { useChart } from "./context";
 import { slotId as brandSlotId } from "./slot-types";
 
@@ -90,7 +98,14 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
     const ys = ctx.yScale();
     const baselineValue = props.baseline ?? ys.domain[0];
     const baseY = ys(baselineValue);
-    const top = buildLine(props.data, props.x, props.y, xs, ys, props.skipMissing ?? true);
+    const top = buildLine(
+      props.data,
+      props.x,
+      props.y,
+      xs,
+      ys,
+      props.skipMissing ?? true,
+    );
     if (!top) return "";
     // Find first/last data x to close the area along the baseline.
     let first: number | null = null;
@@ -139,9 +154,11 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
   const ctx = useChart();
   const slotId = brandSlotId(createUniqueId());
   const baseRadius = (d: T) =>
-    typeof props.radius === "function" ? props.radius(d) : props.radius ?? 3;
-  const fill = (d: T) => (typeof props.fill === "function" ? props.fill(d) : props.fill);
-  const stroke = (d: T) => (typeof props.stroke === "function" ? props.stroke(d) : props.stroke);
+    typeof props.radius === "function" ? props.radius(d) : (props.radius ?? 3);
+  const fill = (d: T) =>
+    typeof props.fill === "function" ? props.fill(d) : props.fill;
+  const stroke = (d: T) =>
+    typeof props.stroke === "function" ? props.stroke(d) : props.stroke;
   // Nearest datum + its distance to hoverX (DATA-domain units). `null` when
   // emphasis is disabled, no hover, no data, or the nearest is invalid.
   const nearest = createMemo<{ idx: number; dist: number } | null>(() => {
@@ -178,10 +195,16 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
         {(d, i) => {
           const xv = props.x(d);
           const yv = props.y(d);
-          if ((props.skipMissing ?? true) && (Number.isNaN(xv) || Number.isNaN(yv))) return null;
+          if (
+            (props.skipMissing ?? true) &&
+            (Number.isNaN(xv) || Number.isNaN(yv))
+          )
+            return null;
           const isEmphasized = () => isWinner() && i() === nearestIdx();
           const r = () =>
-            isEmphasized() ? baseRadius(d) * (props.emphasisScale ?? 2) : baseRadius(d);
+            isEmphasized()
+              ? baseRadius(d) * (props.emphasisScale ?? 2)
+              : baseRadius(d);
           return (
             <circle
               cx={ctx.xScale()(xv)}
@@ -227,7 +250,11 @@ export interface BarSeriesProps<T> {
   /** Default fill when a segment doesn't specify one. */
   fill?: string;
   onBarClick?: (datum: T, index: number) => void;
-  onSegmentClick?: (datum: T, segment: BarSegment, segmentIndex: number) => void;
+  onSegmentClick?: (
+    datum: T,
+    segment: BarSegment,
+    segmentIndex: number,
+  ) => void;
   class?: string;
 }
 
@@ -246,7 +273,9 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
           const ys = ctx.yScale();
           const center = props.x(d, i());
           // Slot pixel width: distance to the next-integer center in data space.
-          const slotPx = Math.abs(xs(center + 1) - xs(center)) || (xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
+          const slotPx =
+            Math.abs(xs(center + 1) - xs(center)) ||
+            (xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
           const bw = slotPx * bandWidth();
           const xPx = xs(center) - bw / 2;
           const _baseY = ys(baseline());
@@ -263,7 +292,8 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
               {(seg, si) => {
                 if (seg.value === 0) return null;
                 const top = seg.value > 0 ? posCursor + seg.value : negCursor;
-                const bottom = seg.value > 0 ? posCursor : negCursor + seg.value;
+                const bottom =
+                  seg.value > 0 ? posCursor : negCursor + seg.value;
                 if (seg.value > 0) posCursor += seg.value;
                 else negCursor += seg.value;
                 const yPx = ys(top);
@@ -283,7 +313,10 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
                     fill={seg.fill ?? props.fill}
                     onClick={click}
                     style={{
-                      cursor: props.onBarClick || props.onSegmentClick ? "pointer" : undefined,
+                      cursor:
+                        props.onBarClick || props.onSegmentClick
+                          ? "pointer"
+                          : undefined,
                     }}
                   />
                 );

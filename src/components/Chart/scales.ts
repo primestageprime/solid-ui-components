@@ -88,7 +88,9 @@ export const scaleTime = (
   domain: readonly [Date, Date],
   range: readonly [number, number],
 ): TimeScale => {
-  const d3 = d3ScaleTime().domain([domain[0], domain[1]]).range([range[0], range[1]]);
+  const d3 = d3ScaleTime()
+    .domain([domain[0], domain[1]])
+    .range([range[0], range[1]]);
   const d0 = domain[0].getTime();
   const d1 = domain[1].getTime();
   const fn = ((v: number) => d3(new Date(v))) as TimeScale;

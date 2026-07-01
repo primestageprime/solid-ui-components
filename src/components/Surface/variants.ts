@@ -11,41 +11,87 @@ export const CardSurface = createSurface({ padding: "md", radius: "md" });
 export const CompactSurface = createSurface({ padding: "sm", radius: "sm" });
 
 // Interactive card surfaces (clickable with hover glow)
-export const InteractiveCard = createSurface({ padding: "sm", radius: "sm", interactive: true, bg: "rgba(var(--sui-accent-rgb), 0.05)", borderColor: "rgba(var(--sui-accent-rgb), 0.3)" });
+export const InteractiveCard = createSurface({
+  padding: "sm",
+  radius: "sm",
+  interactive: true,
+  bg: "rgba(var(--sui-accent-rgb), 0.05)",
+  borderColor: "rgba(var(--sui-accent-rgb), 0.3)",
+});
 
 // Status-colored surfaces (card shape + status colors)
-export const InfoSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(var(--sui-accent-rgb), 0.05)", borderColor: "rgba(var(--sui-accent-rgb), 0.3)" });
-export const WarningSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(255,204,0,0.1)", borderColor: "rgba(255,204,0,0.3)" });
-export const SuccessSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(var(--sui-success-rgb), 0.1)", borderColor: "rgba(var(--sui-success-rgb), 0.3)" });
-export const DangerSurface = createSurface({ padding: "md", radius: "md", bg: "rgba(var(--sui-danger-rgb), 0.1)", borderColor: "rgba(var(--sui-danger-rgb), 0.3)" });
+export const InfoSurface = createSurface({
+  padding: "md",
+  radius: "md",
+  bg: "rgba(var(--sui-accent-rgb), 0.05)",
+  borderColor: "rgba(var(--sui-accent-rgb), 0.3)",
+});
+export const WarningSurface = createSurface({
+  padding: "md",
+  radius: "md",
+  bg: "rgba(255,204,0,0.1)",
+  borderColor: "rgba(255,204,0,0.3)",
+});
+export const SuccessSurface = createSurface({
+  padding: "md",
+  radius: "md",
+  bg: "rgba(var(--sui-success-rgb), 0.1)",
+  borderColor: "rgba(var(--sui-success-rgb), 0.3)",
+});
+export const DangerSurface = createSurface({
+  padding: "md",
+  radius: "md",
+  bg: "rgba(var(--sui-danger-rgb), 0.1)",
+  borderColor: "rgba(var(--sui-danger-rgb), 0.3)",
+});
 
 // Card frame variants (responsive sizing via min/max-width)
 export const CompactCard = createSurface({
-  padding: "sm", radius: "sm",
-  direction: "row", align: "center", gap: "sm",
-  minWidth: "200px", maxWidth: "360px",
+  padding: "sm",
+  radius: "sm",
+  direction: "row",
+  align: "center",
+  gap: "sm",
+  minWidth: "200px",
+  maxWidth: "360px",
 });
 
 export const NoteCard = createSurface({
-  padding: "md", radius: "md",
-  direction: "column", align: "stretch", gap: "md",
-  minWidth: "260px", maxWidth: "400px",
+  padding: "md",
+  radius: "md",
+  direction: "column",
+  align: "stretch",
+  gap: "md",
+  minWidth: "260px",
+  maxWidth: "400px",
 });
 
 export const WideCard = createSurface({
-  padding: "md", radius: "md",
-  direction: "row", align: "start", gap: "md",
-  minWidth: "320px", maxWidth: "1000px",
+  padding: "md",
+  radius: "md",
+  direction: "row",
+  align: "start",
+  gap: "md",
+  minWidth: "320px",
+  maxWidth: "1000px",
 });
 
 export const SquareCard = createSurface({
-  padding: "md", radius: "md",
-  direction: "column", align: "center", gap: "sm",
-  minWidth: "180px", maxWidth: "260px",
+  padding: "md",
+  radius: "md",
+  direction: "column",
+  align: "center",
+  gap: "sm",
+  minWidth: "180px",
+  maxWidth: "260px",
 });
 
 /** Dark recessed container for formula/code displays */
-export const FormulaBlock = createSurface({ padding: "sm", radius: "sm", bg: "var(--sui-bg-inset)" });
+export const FormulaBlock = createSurface({
+  padding: "sm",
+  radius: "sm",
+  bg: "var(--sui-bg-inset)",
+});
 
 // Content-area surfaces — ergonomic defaults for the common "box of content"
 // pattern so consumers never need to hand-roll padding/gap/direction.

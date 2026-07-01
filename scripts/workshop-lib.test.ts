@@ -35,7 +35,10 @@ describe("slugToTitle / slugToPascal", () => {
 
 describe("renderBenchTemplate", () => {
   it("produces a default-exported bench with meta.label and matching names", () => {
-    const out = renderBenchTemplate({ slug: "scrub-chart", label: "Scrub Chart" });
+    const out = renderBenchTemplate({
+      slug: "scrub-chart",
+      label: "Scrub Chart",
+    });
     expect(out).toContain('export const meta = { label: "Scrub Chart" };');
     expect(out).toContain("const ScrubChartBench: Component");
     expect(out).toContain("export default ScrubChartBench;");
@@ -50,10 +53,15 @@ describe("extractBenchLabel", () => {
     expect(extractBenchLabel(src, "e2e-final")).toBe("E2E Final");
   });
   it("unescapes a label containing a quote", () => {
-    const src = renderBenchTemplate({ slug: "quotey", label: 'A "Quoted" Bench' });
+    const src = renderBenchTemplate({
+      slug: "quotey",
+      label: 'A "Quoted" Bench',
+    });
     expect(extractBenchLabel(src, "quotey")).toBe('A "Quoted" Bench');
   });
   it("falls back to slugToTitle when there is no meta.label", () => {
-    expect(extractBenchLabel("export default () => null;", "scrub-chart")).toBe("Scrub Chart");
+    expect(extractBenchLabel("export default () => null;", "scrub-chart")).toBe(
+      "Scrub Chart",
+    );
   });
 });

@@ -16,7 +16,10 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>RemovableItemCard — Depth 1 (zero CSS)</h2>
-      <p class="text-meta">Composes Surface + Layout + Text (curried) + Button (Atomic). Interactive card with title, details, remove action.</p>
+      <p class="text-meta">
+        Composes Surface + Layout + Text (curried) + Button (Atomic).
+        Interactive card with title, details, remove action.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Default</h3>
@@ -96,32 +99,51 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
           <h3>Curried Variants Used</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Surface</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("surface")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("surface")}
+            >
               <div class="depth2-atom__label">InteractiveCard</div>
-              <div class="text-meta">padding: sm, radius: sm, hover glow + active state</div>
+              <div class="text-meta">
+                padding: sm, radius: sm, hover glow + active state
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Text</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("text")}
+            >
               <div class="depth2-atom__label">FlexLabel</div>
               <div class="text-meta">card title, 600 weight, flex: 1</div>
             </div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("text")}
+            >
               <div class="depth2-atom__label">MutedBody</div>
               <div class="text-meta">detail values, muted color</div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Layout</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("row")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("row")}
+            >
               <div class="depth2-atom__label">SpreadRow</div>
-              <div class="text-meta">header + details: space-between alignment</div>
+              <div class="text-meta">
+                header + details: space-between alignment
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Button</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("button")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("button")}
+            >
               <div class="depth2-atom__label">Button</div>
               <div class="text-meta">ghost/sm — remove action</div>
             </div>

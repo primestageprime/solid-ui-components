@@ -35,7 +35,9 @@ const applyReorder = (
 // ── Sub-components ────────────────────────────────────────────────────────
 
 /** Order readout rendered beneath the sort bar. */
-const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (props) => (
+const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (
+  props,
+) => (
   <div
     style={{
       display: "flex",
@@ -92,7 +94,8 @@ const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (props) =>
 
 /** Isolated demo with its own independent order signal. */
 const CustomLabelDemo: Component = () => {
-  const [items, setItems] = createSignal<DnDHierarchySortBarItem[]>(DEMO_B_ITEMS);
+  const [items, setItems] =
+    createSignal<DnDHierarchySortBarItem[]>(DEMO_B_ITEMS);
 
   return (
     <div
@@ -116,20 +119,21 @@ const CustomLabelDemo: Component = () => {
 // ── Main showcase ─────────────────────────────────────────────────────────
 
 export const DnDHierarchySortBarShowcase: Component = () => {
-  const [items, setItems] = createSignal<DnDHierarchySortBarItem[]>(INITIAL_ITEMS);
+  const [items, setItems] =
+    createSignal<DnDHierarchySortBarItem[]>(INITIAL_ITEMS);
 
   return (
     <div class="component-section">
       <h2>DnDHierarchySortBar — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (<code>DnDHierarchySortBar.css</code>), no component imports. A
-        controlled N-pill drag-to-reorder row for tag/dimension hierarchies. Built
-        on the headless <code>createDnDReorder</code> hook (axis <code>"x"</code>):
-        as you drag, an explicit placeholder opens a gap in the slot the pill will
-        land in and the whole row reflows live to preview the reordered state; the
-        drop commits it. The floating pill under the cursor is the browser's native
-        drag image. The caller owns the order via <code>items</code> +{" "}
-        <code>onReorder</code>.
+        controlled N-pill drag-to-reorder row for tag/dimension hierarchies.
+        Built on the headless <code>createDnDReorder</code> hook (axis{" "}
+        <code>"x"</code>): as you drag, an explicit placeholder opens a gap in
+        the slot the pill will land in and the whole row reflows live to preview
+        the reordered state; the drop commits it. The floating pill under the
+        cursor is the browser's native drag image. The caller owns the order via{" "}
+        <code>items</code> + <code>onReorder</code>.
       </p>
       <p class="text-meta">
         No curried variant — intentional. Every prop is data or a callback (
@@ -166,7 +170,12 @@ export const DnDHierarchySortBarShowcase: Component = () => {
           <OrderReadout items={items()} />
         </div>
         <div class="text-meta">
-          Call site: <code>{"<DnDHierarchySortBar items={items()} onReorder={handleReorder} />"}</code>
+          Call site:{" "}
+          <code>
+            {
+              "<DnDHierarchySortBar items={items()} onReorder={handleReorder} />"
+            }
+          </code>
         </div>
       </div>
 
@@ -178,7 +187,12 @@ export const DnDHierarchySortBarShowcase: Component = () => {
         </p>
         <CustomLabelDemo />
         <div class="text-meta">
-          Call site: <code>{"<DnDHierarchySortBar items={items()} onReorder={fn} label=\"group by\" />"}</code>
+          Call site:{" "}
+          <code>
+            {
+              '<DnDHierarchySortBar items={items()} onReorder={fn} label="group by" />'
+            }
+          </code>
         </div>
       </div>
     </div>

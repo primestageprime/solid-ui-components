@@ -35,7 +35,8 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
 
   const classes = () => {
     const classList = ["sui-btn-group"];
-    if (local.orientation === "vertical") classList.push("sui-btn-group--vertical");
+    if (local.orientation === "vertical")
+      classList.push("sui-btn-group--vertical");
     classList.push(`sui-btn-group--gap-${local.gap || "md"}`);
     if (local.bordered) classList.push("sui-btn-group--bordered");
     if (local.tone) classList.push(`sui-btn-group--tone-${local.tone}`);
@@ -51,10 +52,16 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
 };
 
 /** Visual/layout overrides — locked at variant-definition time. */
-export type ButtonGroupOverrides = Pick<ButtonGroupProps, "orientation" | "gap" | "bordered" | "tone">;
+export type ButtonGroupOverrides = Pick<
+  ButtonGroupProps,
+  "orientation" | "gap" | "bordered" | "tone"
+>;
 
 /** Props available to consumers of a curried ButtonGroup variant. */
-export type ButtonGroupDataProps = Omit<ButtonGroupProps, keyof ButtonGroupOverrides>;
+export type ButtonGroupDataProps = Omit<
+  ButtonGroupProps,
+  keyof ButtonGroupOverrides
+>;
 
 export function createButtonGroup(
   defaults: Partial<Omit<ButtonGroupProps, "children">>,

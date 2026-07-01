@@ -8,7 +8,13 @@
 // value/d is 0=Sun .. 6=Sat. Factory:
 // createDayOfWeekPicker() for curried variants.
 // ============================================
-import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./DayOfWeekPicker.css";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;

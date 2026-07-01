@@ -32,9 +32,7 @@ const isDirectScrimClick = (e: MouseEvent): boolean =>
 
 export const BottomSheet: Component<BottomSheetProps> = (props) => {
   const sheetClass = () =>
-    props.open
-      ? "sui-bottom-sheet sui-bottom-sheet--open"
-      : "sui-bottom-sheet";
+    props.open ? "sui-bottom-sheet sui-bottom-sheet--open" : "sui-bottom-sheet";
 
   const handleScrimClick = (e: MouseEvent) => {
     if (isDirectScrimClick(e)) {

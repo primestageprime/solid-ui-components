@@ -17,7 +17,8 @@ describe("DragRangeSelect — render", () => {
   });
 
   it("renders a band reflecting context.drag.range", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -36,7 +37,8 @@ describe("DragRangeSelect — render", () => {
 
 describe("DragRangeSelect — reactivity", () => {
   it("band width updates when drag.range.end moves", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -49,18 +51,21 @@ describe("DragRangeSelect — reactivity", () => {
       </Chart>
     ));
     setDrag!({ start: 2, end: 4 });
-    const w1 = parseFloat(container.querySelector(".sui-chart__drag-range")!.getAttribute("width")!);
+    const w1 = parseFloat(
+      container.querySelector(".sui-chart__drag-range")!.getAttribute("width")!,
+    );
     setDrag!({ start: 2, end: 8 });
-    const w2 = parseFloat(container.querySelector(".sui-chart__drag-range")!.getAttribute("width")!);
+    const w2 = parseFloat(
+      container.querySelector(".sui-chart__drag-range")!.getAttribute("width")!,
+    );
     expect(w2).toBeGreaterThan(w1);
   });
 });
 
 describe("DragRangeSelect — callbacks", () => {
   it("onRange fires only when minPixelDelta is exceeded (commit semantics)", () => {
-    let setCommit:
-      | ((r: { start: number; end: number } | null) => void)
-      | null = null;
+    let setCommit: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setCommit = ctx.drag.setCommitted;
@@ -70,7 +75,10 @@ describe("DragRangeSelect — callbacks", () => {
     render(() => (
       <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
         <Probe />
-        <DragRangeSelect minPixelDelta={10} onRange={(a, b) => calls.push([a, b])} />
+        <DragRangeSelect
+          minPixelDelta={10}
+          onRange={(a, b) => calls.push([a, b])}
+        />
       </Chart>
     ));
     // A commit below the pixel threshold does NOT fire onRange.
@@ -82,12 +90,10 @@ describe("DragRangeSelect — callbacks", () => {
   });
 
   it("onRange does NOT fire during live drag; only when drag.committed is set", () => {
-    let setDrag:
-      | ((r: { start: number; end: number } | null) => void)
-      | null = null;
-    let setCommit:
-      | ((r: { start: number; end: number } | null) => void)
-      | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
+    let setCommit: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -98,7 +104,10 @@ describe("DragRangeSelect — callbacks", () => {
     render(() => (
       <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
         <Probe />
-        <DragRangeSelect minPixelDelta={5} onRange={(a, b) => calls.push([a, b])} />
+        <DragRangeSelect
+          minPixelDelta={5}
+          onRange={(a, b) => calls.push([a, b])}
+        />
       </Chart>
     ));
     // Simulating live pointer-move updates — onRange must stay silent.
@@ -112,7 +121,8 @@ describe("DragRangeSelect — callbacks", () => {
   });
 
   it("onRangePreview fires for every drag.range update", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -134,7 +144,8 @@ describe("DragRangeSelect — callbacks", () => {
 
 describe("DragRangeSelect — spec D3 invariant", () => {
   it("rendered band attaches NO pointer listeners (per spec D3)", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -147,7 +158,9 @@ describe("DragRangeSelect — spec D3 invariant", () => {
       </Chart>
     ));
     setDrag!({ start: 2, end: 5 });
-    const band = container.querySelector(".sui-chart__drag-range") as SVGRectElement;
+    const band = container.querySelector(
+      ".sui-chart__drag-range",
+    ) as SVGRectElement;
     // Solid renders onPointer* as `pointer-events` listeners on the element via the DOM API,
     // not as HTML attributes — so check pointer-events="none" is honored AND that no
     // attribute looks like a pointer handler.
@@ -191,7 +204,9 @@ describe("DragRangeSelect — curried variants", () => {
     render(() => (
       <Chart width={200} height={100} xDomain={[0, 100]} yDomain={[0, 100]}>
         <ProbeCommit />
-        <CommitOnReleaseDragRangeSelect onRange={(a, b) => commitCalls.push([a, b])} />
+        <CommitOnReleaseDragRangeSelect
+          onRange={(a, b) => commitCalls.push([a, b])}
+        />
       </Chart>
     ));
     // xDomain=[0,100], width=200 → 2px per data-unit. A 10→16 commit = 12px.
@@ -204,7 +219,8 @@ describe("DragRangeSelect — curried variants", () => {
   });
 
   it("CommitOnReleaseDragRangeSelect uses lower opacity", () => {
-    let setDrag: ((r: { start: number; end: number } | null) => void) | null = null;
+    let setDrag: ((r: { start: number; end: number } | null) => void) | null =
+      null;
     const Probe: Component = () => {
       const ctx = useChart();
       setDrag = ctx.drag.setRange;
@@ -218,7 +234,9 @@ describe("DragRangeSelect — curried variants", () => {
     ));
     setDrag!({ start: 2, end: 5 });
     const opacity = parseFloat(
-      container.querySelector(".sui-chart__drag-range")!.getAttribute("fill-opacity")!,
+      container
+        .querySelector(".sui-chart__drag-range")!
+        .getAttribute("fill-opacity")!,
     );
     expect(opacity).toBeCloseTo(0.12, 2);
   });

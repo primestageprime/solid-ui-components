@@ -93,15 +93,15 @@ export const ScrubChartShowcase: Component = () => {
       <h2>ScrubChart — Composite (Depth 1)</h2>
       <p class="text-meta">
         Linear-scale overview chart paired with a <code>DateAxis</code>. The
-        chart slot renders all {cells.length} cells at uniform pixel pitch
-        (<code>ctx.cellToX(i)</code> = <code>(i + 0.5) × dayPitch</code>); the
-        axis below scrolls horizontally at its own cell width. ScrubChart
-        draws a translucent <strong>window</strong> overlay across the slice
-        of cells currently visible in the axis viewport — classic overview +
-        detail. Click an axis cell or drag on the chart to scrub; the axis
-        auto-scrolls to keep the selected cell centred, so the window
-        follows the selection too. Generic over <code>C extends Cell</code>;
-        consumers attach payload directly.
+        chart slot renders all {cells.length} cells at uniform pixel pitch (
+        <code>ctx.cellToX(i)</code> = <code>(i + 0.5) × dayPitch</code>); the
+        axis below scrolls horizontally at its own cell width. ScrubChart draws
+        a translucent <strong>window</strong> overlay across the slice of cells
+        currently visible in the axis viewport — classic overview + detail.
+        Click an axis cell or drag on the chart to scrub; the axis auto-scrolls
+        to keep the selected cell centred, so the window follows the selection
+        too. Generic over <code>C extends Cell</code>; consumers attach payload
+        directly.
       </p>
 
       <div class="example-group">
@@ -147,10 +147,10 @@ export const ScrubChartShowcase: Component = () => {
         <p class="text-meta">
           The blue band on the chart spans the cells currently visible in the
           DateAxis below. Scrolling the axis horizontally slides the band;
-          clicking a cell or dragging on the chart scrubs the selection and
-          the axis auto-scrolls to centre it, so the band tracks the selection
-          too. The band is rendered by ScrubChart from the inner DateAxis's
-          scroll position; consumers don't need to wire it themselves.
+          clicking a cell or dragging on the chart scrubs the selection and the
+          axis auto-scrolls to centre it, so the band tracks the selection too.
+          The band is rendered by ScrubChart from the inner DateAxis's scroll
+          position; consumers don't need to wire it themselves.
         </p>
         <p class="text-meta">
           Per-day data inside the band is the consumer's responsibility — the

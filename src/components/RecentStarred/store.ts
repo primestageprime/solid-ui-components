@@ -73,7 +73,9 @@ export interface CreateRecentStarredOpts {
   recentLimit?: number;
 }
 
-export function createRecentStarredStore(opts: CreateRecentStarredOpts): RecentStarredStore {
+export function createRecentStarredStore(
+  opts: CreateRecentStarredOpts,
+): RecentStarredStore {
   const recentKey = `${opts.storageKey}.recent`;
   const starredKey = `${opts.storageKey}.starred`;
   const limit = Math.max(1, opts.recentLimit ?? 20);
@@ -91,7 +93,10 @@ export function createRecentStarredStore(opts: CreateRecentStarredOpts): RecentS
 
   function pushRecent(item: RecentStarredItem) {
     setRecent((cur) => {
-      const next = [item, ...cur.filter((x) => x.id !== item.id)].slice(0, limit);
+      const next = [item, ...cur.filter((x) => x.id !== item.id)].slice(
+        0,
+        limit,
+      );
       persist("recent", next);
       return next;
     });
@@ -100,7 +105,9 @@ export function createRecentStarredStore(opts: CreateRecentStarredOpts): RecentS
   function toggleStar(item: RecentStarredItem) {
     setStarred((cur) => {
       const exists = cur.some((x) => x.id === item.id);
-      const next = exists ? cur.filter((x) => x.id !== item.id) : [item, ...cur];
+      const next = exists
+        ? cur.filter((x) => x.id !== item.id)
+        : [item, ...cur];
       persist("starred", next);
       return next;
     });

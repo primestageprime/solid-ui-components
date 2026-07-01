@@ -26,7 +26,11 @@ function makeDataTransfer() {
 function fireDrag(
   el: Element,
   type: string,
-  opts: { clientX?: number; clientY?: number; dataTransfer: ReturnType<typeof makeDataTransfer> },
+  opts: {
+    clientX?: number;
+    clientY?: number;
+    dataTransfer: ReturnType<typeof makeDataTransfer>;
+  },
 ) {
   const ev: any = new Event(type, { bubbles: true, cancelable: true });
   ev.clientX = opts.clientX ?? 0;
@@ -41,26 +45,26 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
 function installVerticalLayout(ids: string[]) {
   const H = 100;
   const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
-    this: Element,
-  ) {
-    const id = (this as HTMLElement).getAttribute?.("data-dnd-id");
-    if (id && ids.includes(id)) {
-      const top = ids.indexOf(id) * H;
-      return {
-        left: 0,
-        top,
-        width: 300,
-        height: H,
-        right: 300,
-        bottom: top + H,
-        x: 0,
-        y: top,
-        toJSON() {},
-      } as DOMRect;
-    }
-    return orig.call(this);
-  });
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: Element) {
+      const id = (this as HTMLElement).getAttribute?.("data-dnd-id");
+      if (id && ids.includes(id)) {
+        const top = ids.indexOf(id) * H;
+        return {
+          left: 0,
+          top,
+          width: 300,
+          height: H,
+          right: 300,
+          bottom: top + H,
+          x: 0,
+          y: top,
+          toJSON() {},
+        } as DOMRect;
+      }
+      return orig.call(this);
+    },
+  );
 }
 
 interface Tag {

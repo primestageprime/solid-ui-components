@@ -1,9 +1,19 @@
 import type { Component } from "solid-js";
 import { Text } from "../../src/components/Text/Text";
 import {
-  TextValue, TextLabel, TextTitle, TextBody, TextUnits, TextSublabel,
-  NowrapBody, MutedBody, AccentBody,
-  InfoTitle, WarningTitle, SuccessTitle, DangerTitle,
+  TextValue,
+  TextLabel,
+  TextTitle,
+  TextBody,
+  TextUnits,
+  TextSublabel,
+  NowrapBody,
+  MutedBody,
+  AccentBody,
+  InfoTitle,
+  WarningTitle,
+  SuccessTitle,
+  DangerTitle,
 } from "../../src/components/Text";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -11,7 +21,10 @@ export const TextShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Text — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Text.css). Polymorphic text element with variant/color. Factory: createText().</p>
+      <p class="text-meta">
+        Owns CSS (Text.css). Polymorphic text element with variant/color.
+        Factory: createText().
+      </p>
 
       <div class="example-group">
         <h3>Base Component</h3>
@@ -29,16 +42,24 @@ export const TextShowcase: Component = () => {
             <div class="text-meta">title: 0.875rem / 600 / --text-primary</div>
           </div>
           <div>
-            <Text variant="body">A description providing additional context and details.</Text>
-            <div class="text-meta">body: 0.875rem / normal / --text-secondary</div>
+            <Text variant="body">
+              A description providing additional context and details.
+            </Text>
+            <div class="text-meta">
+              body: 0.875rem / normal / --text-secondary
+            </div>
           </div>
           <div>
             <Text variant="units">pts</Text>
-            <div class="text-meta">units: 0.9rem / normal / --text-secondary</div>
+            <div class="text-meta">
+              units: 0.9rem / normal / --text-secondary
+            </div>
           </div>
           <div>
             <Text variant="sublabel">Target: 85 pts</Text>
-            <div class="text-meta">sublabel: 0.75rem / normal / --text-muted</div>
+            <div class="text-meta">
+              sublabel: 0.75rem / normal / --text-muted
+            </div>
           </div>
         </Stack>
       </div>
@@ -46,9 +67,15 @@ export const TextShowcase: Component = () => {
       <div class="example-group">
         <h3>Semantic Elements (as prop)</h3>
         <Stack gap="sm">
-          <Text variant="label" as="h2">As h2</Text>
-          <Text variant="body" as="p">As paragraph</Text>
-          <Text variant="sublabel" as="div">As div</Text>
+          <Text variant="label" as="h2">
+            As h2
+          </Text>
+          <Text variant="body" as="p">
+            As paragraph
+          </Text>
+          <Text variant="sublabel" as="div">
+            As div
+          </Text>
         </Stack>
       </div>
 
@@ -81,7 +108,9 @@ export const TextShowcase: Component = () => {
           </div>
           <div>
             <NowrapBody>2026-02-13 08:30 — 14:15</NowrapBody>
-            <div class="text-meta">NowrapBody — body + as: "span" + white-space: nowrap</div>
+            <div class="text-meta">
+              NowrapBody — body + as: "span" + white-space: nowrap
+            </div>
           </div>
           <div>
             <MutedBody>Dimmed secondary content</MutedBody>

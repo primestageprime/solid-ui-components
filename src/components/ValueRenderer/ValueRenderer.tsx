@@ -20,13 +20,7 @@
 // from the override to defer to the default dispatcher; any other return
 // value (including `null`) is respected as the caller's chosen output.
 // ============================================
-import {
-  type Component,
-  type JSX,
-  For,
-  Show,
-  mergeProps,
-} from "solid-js";
+import { type Component, type JSX, For, Show, mergeProps } from "solid-js";
 import "./ValueRenderer.css";
 
 /**
@@ -56,9 +50,9 @@ export interface ValueRendererProps {
 const DEFAULT_NUMBER_PRECISION = 2;
 
 const isJSXElement = (value: unknown): value is JSX.Element =>
-  value !== null
-  && typeof value === "object"
-  && "$$typeof" in (value as Record<string, unknown>);
+  value !== null &&
+  typeof value === "object" &&
+  "$$typeof" in (value as Record<string, unknown>);
 
 /**
  * Plain object = object literal or `Object.create(null)`. Class instances,
@@ -103,7 +97,9 @@ const defaultDispatch = (
     return <span class="sui-value__text">{value}</span>;
   }
   if (typeof value === "number") {
-    return <span class="sui-value__number">{formatNumber(value, precision)}</span>;
+    return (
+      <span class="sui-value__number">{formatNumber(value, precision)}</span>
+    );
   }
   if (typeof value === "boolean") {
     return <span class="sui-value__text">{value ? "true" : "false"}</span>;
@@ -136,7 +132,9 @@ const defaultDispatch = (
             {([key, entryValue]) => (
               <div class="sui-value__entry">
                 <span class="sui-value__entry-key">{key}:</span>
-                <div class="sui-value__entry-value">{renderOne(entryValue)}</div>
+                <div class="sui-value__entry-value">
+                  {renderOne(entryValue)}
+                </div>
               </div>
             )}
           </For>

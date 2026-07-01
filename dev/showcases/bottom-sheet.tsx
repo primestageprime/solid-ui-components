@@ -8,23 +8,24 @@ export const BottomSheetShowcase: Component = () => {
     <div class="component-section">
       <h2>BottomSheet — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Owns CSS (BottomSheet.css), no component imports. A controlled sheet that
-        slides up from the bottom of its <em>parent container</em>. Unlike{" "}
-        <code>Modal</code> (viewport portal + fixed overlay), the scrim and sheet
-        are <code>position: absolute</code> inside a <code>position: relative</code>{" "}
-        parent, so the sheet is bounded to that container and can never cover a
-        sibling region above it. Open state is controlled via <code>open</code> +{" "}
-        <code>onClose</code>.
+        Owns CSS (BottomSheet.css), no component imports. A controlled sheet
+        that slides up from the bottom of its <em>parent container</em>. Unlike{" "}
+        <code>Modal</code> (viewport portal + fixed overlay), the scrim and
+        sheet are <code>position: absolute</code> inside a{" "}
+        <code>position: relative</code> parent, so the sheet is bounded to that
+        container and can never cover a sibling region above it. Open state is
+        controlled via <code>open</code> + <code>onClose</code>.
       </p>
 
       <div class="example-group">
         <h3>Bounded container demo</h3>
         <p class="text-meta">
           The phone-frame box below is{" "}
-          <code>{"position: relative; overflow: hidden"}</code>. The header strip
-          at the top is a sibling in normal flow. Open the sheet and observe: the
-          scrim and sheet stay inside the inner container and never reach the
-          header strip — the sheet caps at 60% of the inner container's height.
+          <code>{"position: relative; overflow: hidden"}</code>. The header
+          strip at the top is a sibling in normal flow. Open the sheet and
+          observe: the scrim and sheet stay inside the inner container and never
+          reach the header strip — the sheet caps at 60% of the inner
+          container's height.
         </p>
 
         {/*
@@ -94,10 +95,17 @@ export const BottomSheetShowcase: Component = () => {
                 gap: "10px",
               }}
             >
-              <span style={{ "font-size": "13px", color: "var(--sui-text-primary)" }}>
+              <span
+                style={{
+                  "font-size": "13px",
+                  color: "var(--sui-text-primary)",
+                }}
+              >
                 Page content area
               </span>
-              <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
+              <span
+                style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}
+              >
                 The scrim dims this region when the sheet is open, but it stays
                 within the inner container — it cannot reach the header above or
                 the page outside the frame.
@@ -121,7 +129,11 @@ export const BottomSheetShowcase: Component = () => {
               </button>
             </div>
 
-            <BottomSheet open={open()} onClose={() => setOpen(false)} label="Demo sheet">
+            <BottomSheet
+              open={open()}
+              onClose={() => setOpen(false)}
+              label="Demo sheet"
+            >
               <p
                 style={{
                   margin: "0 0 12px",

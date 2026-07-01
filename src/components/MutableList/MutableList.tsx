@@ -80,7 +80,8 @@ function MutableListCard(props: CardProps): JSX.Element {
   // The SortableList row our content is mounted into. We toggle its native
   // `draggable` off during editing so the input keeps the caret/selection.
   const rowEl = (): HTMLElement | null =>
-    (wrapperRef?.closest(".sui-sortable-list__row") as HTMLElement | null) ?? null;
+    (wrapperRef?.closest(".sui-sortable-list__row") as HTMLElement | null) ??
+    null;
 
   const setRowDraggable = (on: boolean) => {
     const row = rowEl();

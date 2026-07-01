@@ -1,8 +1,15 @@
 import { createSignal, type Component, type JSX } from "solid-js";
 import { Button } from "../../src/components/Button/Button";
 import {
-  DefaultButton, PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,
-  OutlinedButton, TextButton, IconOnlyButton,
+  DefaultButton,
+  PrimaryButton,
+  SecondaryButton,
+  DangerButton,
+  WarningButton,
+  GhostButton,
+  OutlinedButton,
+  TextButton,
+  IconOnlyButton,
 } from "../../src/components/Button";
 import { Stack } from "../../src/components/Layout/Stack";
 import { SpreadRow, ClusterRow, WrapRow } from "../../src/components/Layout";
@@ -12,7 +19,9 @@ import { Text } from "../../src/components/Text/Text";
 // One "when to use" row: the rendered button in a fixed-width column beside a
 // concise usage guideline. Keeps the buttons left-aligned in a tidy column so
 // the relative weight of each style is easy to compare at a glance.
-const GuidanceRow: Component<{ button: JSX.Element; children: JSX.Element }> = (props) => (
+const GuidanceRow: Component<{ button: JSX.Element; children: JSX.Element }> = (
+  props,
+) => (
   <ClusterRow style={{ "align-items": "flex-start", gap: "16px" }}>
     <div style={{ "min-width": "150px", display: "flex" }}>{props.button}</div>
     <Text variant="body">{props.children}</Text>
@@ -21,7 +30,11 @@ const GuidanceRow: Component<{ button: JSX.Element; children: JSX.Element }> = (
 
 // One practical example: a framed card with a title, a one-line caption that
 // explains the hierarchy choice, and the live composition underneath.
-const Example: Component<{ title: string; caption: string; children: JSX.Element }> = (props) => (
+const Example: Component<{
+  title: string;
+  caption: string;
+  children: JSX.Element;
+}> = (props) => (
   <Stack gap="xs" style={{ "max-width": "520px" }}>
     <Text variant="sublabel">{props.title}</Text>
     <CardSurface>{props.children}</CardSurface>
@@ -41,9 +54,10 @@ export const ButtonShowcase: Component = () => {
     <div class="component-section">
       <h2>Button — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Owns CSS (Button.css), no component imports. Multi-variant button with loading spinner.
-        Prefer the curried variants (PrimaryButton, GhostButton, …) at call sites so emphasis is
-        chosen by name, not by a `variant` prop.
+        Owns CSS (Button.css), no component imports. Multi-variant button with
+        loading spinner. Prefer the curried variants (PrimaryButton,
+        GhostButton, …) at call sites so emphasis is chosen by name, not by a
+        `variant` prop.
       </p>
 
       {/* ============================================================ */}
@@ -52,55 +66,67 @@ export const ButtonShowcase: Component = () => {
       <div class="example-group">
         <h3>When to use each style</h3>
         <p class="text-meta">
-          One emphasis per intent. Pick the style by the job the button does, not by how it looks —
-          a consistent hierarchy is what makes a screen readable.
+          One emphasis per intent. Pick the style by the job the button does,
+          not by how it looks — a consistent hierarchy is what makes a screen
+          readable.
         </p>
 
         <Stack gap="sm" style={{ "margin-top": "12px" }}>
           <GuidanceRow button={<PrimaryButton>Save changes</PrimaryButton>}>
-            <strong>primary</strong> — the single main affirmative action of a view or dialog
-            (submit / save / confirm). At most one per context; if everything is primary, nothing is.
+            <strong>primary</strong> — the single main affirmative action of a
+            view or dialog (submit / save / confirm). At most one per context;
+            if everything is primary, nothing is.
           </GuidanceRow>
 
           <GuidanceRow button={<SecondaryButton>Back</SecondaryButton>}>
-            <strong>secondary</strong> — a neutral, supporting action that sits next to a primary
-            (e.g. "Back" in a wizard). Visible, but clearly subordinate.
+            <strong>secondary</strong> — a neutral, supporting action that sits
+            next to a primary (e.g. "Back" in a wizard). Visible, but clearly
+            subordinate.
           </GuidanceRow>
 
           <GuidanceRow button={<DefaultButton>Edit</DefaultButton>}>
-            <strong>default</strong> — a standard action with no strong emphasis. Use when the
-            button is just one of several equals and none deserves the spotlight.
+            <strong>default</strong> — a standard action with no strong
+            emphasis. Use when the button is just one of several equals and none
+            deserves the spotlight.
           </GuidanceRow>
 
           <GuidanceRow button={<OutlinedButton>Filter</OutlinedButton>}>
-            <strong>outlined</strong> — secondary emphasis where you want a visible boundary but not
-            a filled fill: toolbar actions, "Cancel" next to a filled primary.
+            <strong>outlined</strong> — secondary emphasis where you want a
+            visible boundary but not a filled fill: toolbar actions, "Cancel"
+            next to a filled primary.
           </GuidanceRow>
 
           <GuidanceRow button={<GhostButton>Dismiss</GhostButton>}>
-            <strong>ghost</strong> — low-emphasis, tertiary action. The quiet "Cancel" / "Dismiss"
-            in a crowded UI where you don't want to compete with the primary.
+            <strong>ghost</strong> — low-emphasis, tertiary action. The quiet
+            "Cancel" / "Dismiss" in a crowded UI where you don't want to compete
+            with the primary.
           </GuidanceRow>
 
           <GuidanceRow button={<TextButton>Learn more</TextButton>}>
-            <strong>text</strong> — link-like, the lightest weight of all. Inline tertiary actions
-            and "Learn more" style affordances with no border or fill.
+            <strong>text</strong> — link-like, the lightest weight of all.
+            Inline tertiary actions and "Learn more" style affordances with no
+            border or fill.
           </GuidanceRow>
 
           <GuidanceRow button={<DangerButton>Delete</DangerButton>}>
-            <strong>danger</strong> — destructive or irreversible actions (delete, remove, revoke).
-            Red. Reserve it so red always means "this can't be undone".
+            <strong>danger</strong> — destructive or irreversible actions
+            (delete, remove, revoke). Red. Reserve it so red always means "this
+            can't be undone".
           </GuidanceRow>
 
           <GuidanceRow button={<WarningButton>Override</WarningButton>}>
-            <strong>warning</strong> — amber, for caution / attention that is <em>not</em>{" "}
-            destructive (e.g. "Override", "Proceed anyway"). Per the source note, distinct from
-            danger: amber-informational vs. red-destructive.
+            <strong>warning</strong> — amber, for caution / attention that is{" "}
+            <em>not</em> destructive (e.g. "Override", "Proceed anyway"). Per
+            the source note, distinct from danger: amber-informational vs.
+            red-destructive.
           </GuidanceRow>
 
-          <GuidanceRow button={<IconOnlyButton aria-label="Close">×</IconOnlyButton>}>
-            <strong>icon-only</strong> — a compact square action with no label. Always pass an
-            `aria-label`. Good for close / overflow affordances inside dense chrome.
+          <GuidanceRow
+            button={<IconOnlyButton aria-label="Close">×</IconOnlyButton>}
+          >
+            <strong>icon-only</strong> — a compact square action with no label.
+            Always pass an `aria-label`. Good for close / overflow affordances
+            inside dense chrome.
           </GuidanceRow>
         </Stack>
       </div>
@@ -111,8 +137,9 @@ export const ButtonShowcase: Component = () => {
       <div class="example-group">
         <h3>Practical examples</h3>
         <p class="text-meta">
-          Buttons rarely appear alone — hierarchy is established by how they sit together. Each
-          composition below pairs a quiet dismiss with exactly one emphasised action.
+          Buttons rarely appear alone — hierarchy is established by how they sit
+          together. Each composition below pairs a quiet dismiss with exactly
+          one emphasised action.
         </p>
 
         <Stack gap="sm" style={{ "margin-top": "12px" }}>
@@ -121,7 +148,9 @@ export const ButtonShowcase: Component = () => {
             caption="Ghost 'Cancel' recedes; one filled primary carries the affirmative action."
           >
             <Stack gap="sm">
-              <Text variant="body">You have unsaved changes. Save before closing?</Text>
+              <Text variant="body">
+                You have unsaved changes. Save before closing?
+              </Text>
               <SpreadRow>
                 <GhostButton>Cancel</GhostButton>
                 <PrimaryButton loading={saving()} onClick={handleSave}>
@@ -136,7 +165,9 @@ export const ButtonShowcase: Component = () => {
             caption="Same shape, but the affirmative slot is danger: red signals the action is irreversible."
           >
             <Stack gap="sm">
-              <Text variant="body">Delete this project? This can't be undone.</Text>
+              <Text variant="body">
+                Delete this project? This can't be undone.
+              </Text>
               <SpreadRow>
                 <GhostButton>Cancel</GhostButton>
                 <DangerButton>Delete permanently</DangerButton>
@@ -186,8 +217,9 @@ export const ButtonShowcase: Component = () => {
       <div class="example-group">
         <h3>Modifiers reference</h3>
         <p class="text-meta">
-          Size, shape, tone and state are orthogonal modifiers — they compose with any of the
-          styles above. Kept brief; the emphasis policy is the when-to-use guidance.
+          Size, shape, tone and state are orthogonal modifiers — they compose
+          with any of the styles above. Kept brief; the emphasis policy is the
+          when-to-use guidance.
         </p>
 
         <Stack gap="sm" style={{ "margin-top": "12px" }}>
@@ -202,13 +234,24 @@ export const ButtonShowcase: Component = () => {
 
           <div>
             <Text variant="sublabel">Pill shape + tone</Text>
-            <div class="text-meta">Pure shape variant; composes with size and the accent/outline/muted tone matrix.</div>
+            <div class="text-meta">
+              Pure shape variant; composes with size and the
+              accent/outline/muted tone matrix.
+            </div>
             <WrapRow style={{ "align-items": "center", "margin-top": "8px" }}>
               <Button variant="pill">Default</Button>
-              <Button variant="pill" size="sm">Small</Button>
-              <Button variant="pill" tone="accent">Accent</Button>
-              <Button variant="pill" tone="outline">Outline</Button>
-              <Button variant="pill" tone="muted">Muted</Button>
+              <Button variant="pill" size="sm">
+                Small
+              </Button>
+              <Button variant="pill" tone="accent">
+                Accent
+              </Button>
+              <Button variant="pill" tone="outline">
+                Outline
+              </Button>
+              <Button variant="pill" tone="muted">
+                Muted
+              </Button>
             </WrapRow>
           </div>
 
@@ -224,9 +267,10 @@ export const ButtonShowcase: Component = () => {
           </div>
 
           <div class="text-meta">
-            Curried variants (DefaultButton, PrimaryButton, SecondaryButton, DangerButton,
-            WarningButton, GhostButton, OutlinedButton, TextButton, IconOnlyButton, plus Small*/Large*
-            size-locked forms) are exported from the Button barrel and are the preferred call-site
+            Curried variants (DefaultButton, PrimaryButton, SecondaryButton,
+            DangerButton, WarningButton, GhostButton, OutlinedButton,
+            TextButton, IconOnlyButton, plus Small*/Large* size-locked forms)
+            are exported from the Button barrel and are the preferred call-site
             form — emphasis is chosen by name, never by a `variant` prop.
           </div>
         </Stack>

@@ -26,9 +26,16 @@ export const SprintSelector: Component<SprintSelectorProps> = (props) => {
   const [local] = splitProps(props, ["sprints", "selectedIndex", "onSelect"]);
 
   const maxTotal = createMemo(() =>
-    Math.max(1, ...local.sprints.map((s) =>
-      s.planned_complete + s.planned_incomplete + s.unplanned_complete + s.unplanned_incomplete
-    ))
+    Math.max(
+      1,
+      ...local.sprints.map(
+        (s) =>
+          s.planned_complete +
+          s.planned_incomplete +
+          s.unplanned_complete +
+          s.unplanned_incomplete,
+      ),
+    ),
   );
 
   return (
@@ -36,14 +43,20 @@ export const SprintSelector: Component<SprintSelectorProps> = (props) => {
       <For each={local.sprints}>
         {(sprint, i) => {
           const total = () =>
-            sprint.planned_complete + sprint.planned_incomplete +
-            sprint.unplanned_complete + sprint.unplanned_incomplete;
+            sprint.planned_complete +
+            sprint.planned_incomplete +
+            sprint.unplanned_complete +
+            sprint.unplanned_incomplete;
 
           const scale = () => total() / maxTotal();
-          const pcFrac = () => total() > 0 ? sprint.planned_complete / total() : 0;
-          const piFrac = () => total() > 0 ? sprint.planned_incomplete / total() : 0;
-          const ucFrac = () => total() > 0 ? sprint.unplanned_complete / total() : 0;
-          const uiFrac = () => total() > 0 ? sprint.unplanned_incomplete / total() : 0;
+          const pcFrac = () =>
+            total() > 0 ? sprint.planned_complete / total() : 0;
+          const piFrac = () =>
+            total() > 0 ? sprint.planned_incomplete / total() : 0;
+          const ucFrac = () =>
+            total() > 0 ? sprint.unplanned_complete / total() : 0;
+          const uiFrac = () =>
+            total() > 0 ? sprint.unplanned_incomplete / total() : 0;
 
           const barH = () => scale() * 100;
           const barY = () => 100 - barH();
@@ -65,20 +78,40 @@ export const SprintSelector: Component<SprintSelectorProps> = (props) => {
               <div class="sui-sprint-selector__bar-container">
                 <svg viewBox="0 0 20 100" preserveAspectRatio="none">
                   {sprint.planned_complete > 0 && (
-                    <rect x="0" y={pcY()} width="20" height={pcH()}
-                      class="sui-burndown__seg--pc" />
+                    <rect
+                      x="0"
+                      y={pcY()}
+                      width="20"
+                      height={pcH()}
+                      class="sui-burndown__seg--pc"
+                    />
                   )}
                   {sprint.planned_incomplete > 0 && (
-                    <rect x="0" y={piY()} width="20" height={piH()}
-                      class="sui-burndown__seg--pi" />
+                    <rect
+                      x="0"
+                      y={piY()}
+                      width="20"
+                      height={piH()}
+                      class="sui-burndown__seg--pi"
+                    />
                   )}
                   {sprint.unplanned_complete > 0 && (
-                    <rect x="0" y={ucY()} width="20" height={ucH()}
-                      class="sui-burndown__seg--uc" />
+                    <rect
+                      x="0"
+                      y={ucY()}
+                      width="20"
+                      height={ucH()}
+                      class="sui-burndown__seg--uc"
+                    />
                   )}
                   {sprint.unplanned_incomplete > 0 && (
-                    <rect x="0" y={uiY()} width="20" height={uiH()}
-                      class="sui-burndown__seg--ui" />
+                    <rect
+                      x="0"
+                      y={uiY()}
+                      width="20"
+                      height={uiH()}
+                      class="sui-burndown__seg--ui"
+                    />
                   )}
                 </svg>
               </div>

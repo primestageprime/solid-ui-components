@@ -6,16 +6,25 @@ export const DividerShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Divider — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Section.css), no component imports. Horizontal/vertical content separator.</p>
+      <p class="text-meta">
+        Owns CSS (Section.css), no component imports. Horizontal/vertical
+        content separator.
+      </p>
 
       <div class="example-group">
         <h3>Solid & Dashed</h3>
         <Panel>
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content above</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content above
+          </p>
           <Divider />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (solid)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content below (solid)
+          </p>
           <Divider variant="dashed" />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (dashed)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content below (dashed)
+          </p>
         </Panel>
       </div>
     </div>

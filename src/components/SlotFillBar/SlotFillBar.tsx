@@ -91,12 +91,15 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
 
   const slotCount = () => Math.max(1, local.slots);
   const slotPct = () => 100 / slotCount();
-  const committedFrac = () => Math.max(0, Math.min(1, local.done / slotCount()));
+  const committedFrac = () =>
+    Math.max(0, Math.min(1, local.done / slotCount()));
 
   const active = () => local.active ?? null;
   const overlayLeftPct = () => {
     const a = active();
-    return a == null ? 0 : Math.max(0, Math.min(slotCount() - 1, a.index)) * slotPct();
+    return a == null
+      ? 0
+      : Math.max(0, Math.min(slotCount() - 1, a.index)) * slotPct();
   };
   const overlayRightInsetPct = () => {
     const a = active();
@@ -115,8 +118,7 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
       ? "background-color 0.6s ease-in-out"
       : "background-color 0s";
 
-  const tipText = () =>
-    local.label ?? `${local.done}/${slotCount()} done`;
+  const tipText = () => local.label ?? `${local.done}/${slotCount()} done`;
 
   const wrapperClass = () => {
     const c = ["sui-slot-fill-bar"];
@@ -136,7 +138,12 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
   };
 
   return (
-    <div class={wrapperClass()} style={wrapperStyle()} title={tipText()} {...others}>
+    <div
+      class={wrapperClass()}
+      style={wrapperStyle()}
+      title={tipText()}
+      {...others}
+    >
       {/* Committed done — GPU fill from the left. */}
       <div
         class="sui-slot-fill-bar__static"

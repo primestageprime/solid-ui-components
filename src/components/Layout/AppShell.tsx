@@ -43,7 +43,12 @@ export interface AppHeaderProps extends JSX.HTMLAttributes<HTMLElement> {
 
 export const AppHeader: Component<AppHeaderProps> = (rawProps) => {
   const props = mergeProps({ size: "md" as const }, rawProps);
-  const [local, others] = splitProps(props, ["size", "inline", "class", "children"]);
+  const [local, others] = splitProps(props, [
+    "size",
+    "inline",
+    "class",
+    "children",
+  ]);
   const cls = () => {
     const c = ["app-header", `app-header--${local.size}`];
     if (local.inline) c.push("app-header--inline");
@@ -63,7 +68,9 @@ export type AppHeaderOverrides = Pick<AppHeaderProps, "size" | "inline">;
 /** Props available to consumers of a curried AppHeader variant. */
 export type AppHeaderDataProps = Omit<AppHeaderProps, keyof AppHeaderOverrides>;
 
-export function createAppHeader(defaults: Partial<AppHeaderProps>): Component<AppHeaderDataProps> {
+export function createAppHeader(
+  defaults: Partial<AppHeaderProps>,
+): Component<AppHeaderDataProps> {
   return (props) => <AppHeader {...mergeProps(defaults, props)} />;
 }
 

@@ -1,18 +1,36 @@
 import { createSignal, For, type Component } from "solid-js";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { DTable, DT, DD } from "../../src/components/DataList";
-import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
+import {
+  FormulaProvider,
+  FormulaVarRow,
+  MathFormula,
+} from "../../src/components/MathFormula";
 import { Button } from "../../src/components/Button/Button";
 import { NavLink } from "../../src/components/Navigation";
-import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, StatsTable, createFormulaPanel } from "../../src/components/DataDisplay";
-import {EmptyState} from "../../src/components/Feedback";
+import {
+  DigitRoller,
+  MetricCard,
+  NumberWithUnits,
+  ResultDisplay,
+  ResultPanel,
+  StatsTable,
+  createFormulaPanel,
+} from "../../src/components/DataDisplay";
+import { EmptyState } from "../../src/components/Feedback";
 import { AlertBox } from "../../src/components/Feedback/AlertBox";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, type IconName, ICON_GROUPS } from "../../src/components/Icon";
 import { Toggle } from "../../src/components/Toggle";
-import { ProgressCard, type ProgressStep } from "../../src/components/ProgressCard";
+import {
+  ProgressCard,
+  type ProgressStep,
+} from "../../src/components/ProgressCard";
 import { StackedProgressBar } from "../../src/components/Progress";
-import { HeatmapMulti, type HeatmapMultiRow } from "../../src/components/Heatmap";
+import {
+  HeatmapMulti,
+  type HeatmapMultiRow,
+} from "../../src/components/Heatmap";
 import {
   BaseTable,
   type TableColumn,
@@ -38,7 +56,7 @@ import { Page } from "../../src/components/Page";
 import { Modal } from "../../src/components/Modal";
 import { Tabs } from "../../src/components/Tabs";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
-import {ListItem} from "../../src/components/List";
+import { ListItem } from "../../src/components/List";
 import { List } from "../../src/components/List/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
 import { RemovableItemCard } from "../../src/components/Card";
@@ -66,58 +84,154 @@ const HUDShowcase: Component = () => {
   return (
     <Page gridPattern class="hud-showcase">
       <div style={{ padding: "24px" }}>
-        <h2 style={{ color: "var(--sui-accent)", "margin-bottom": "24px", "text-transform": "uppercase", "letter-spacing": "0.1em" }}>
+        <h2
+          style={{
+            color: "var(--sui-accent)",
+            "margin-bottom": "24px",
+            "text-transform": "uppercase",
+            "letter-spacing": "0.1em",
+          }}
+        >
           HUD Component System
         </h2>
-        <p style={{ color: "var(--sui-text-secondary)", "margin-bottom": "32px" }}>
-          Sci-fi inspired interface components with clipped corners, edge accents, and glowing effects.
+        <p
+          style={{
+            color: "var(--sui-text-secondary)",
+            "margin-bottom": "32px",
+          }}
+        >
+          Sci-fi inspired interface components with clipped corners, edge
+          accents, and glowing effects.
         </p>
 
-        <Section title="Navigation Tabs" subtitle="Tab Variants" variant="primary">
-          <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
+        <Section
+          title="Navigation Tabs"
+          subtitle="Tab Variants"
+          variant="primary"
+        >
+          <div
+            style={{ display: "flex", "flex-direction": "column", gap: "24px" }}
+          >
             <div>
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Default (Underline)</p>
-              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} />
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "12px",
+                  "margin-bottom": "8px",
+                }}
+              >
+                Default (Underline)
+              </p>
+              <Tabs
+                tabs={hudTabs}
+                activeTab={activeHudTab()}
+                onTabChange={setActiveHudTab}
+              />
             </div>
             <div>
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Boxed</p>
-              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="boxed" />
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "12px",
+                  "margin-bottom": "8px",
+                }}
+              >
+                Boxed
+              </p>
+              <Tabs
+                tabs={hudTabs}
+                activeTab={activeHudTab()}
+                onTabChange={setActiveHudTab}
+                variant="boxed"
+              />
             </div>
             <div>
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "12px", "margin-bottom": "8px" }}>Pill</p>
-              <Tabs tabs={hudTabs} activeTab={activeHudTab()} onTabChange={setActiveHudTab} variant="pill" />
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "12px",
+                  "margin-bottom": "8px",
+                }}
+              >
+                Pill
+              </p>
+              <Tabs
+                tabs={hudTabs}
+                activeTab={activeHudTab()}
+                onTabChange={setActiveHudTab}
+                variant="pill"
+              />
             </div>
           </div>
         </Section>
 
-        <Section title="Panel Variants" subtitle="Corner Styles & Glow Effects" variant="primary">
-          <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px" }}>
+        <Section
+          title="Panel Variants"
+          subtitle="Corner Styles & Glow Effects"
+          variant="primary"
+        >
+          <div
+            style={{
+              display: "grid",
+              "grid-template-columns": "repeat(3, 1fr)",
+              gap: "16px",
+            }}
+          >
             <Panel title="Clip Corners" corners="clip" glow="subtle">
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "13px",
+                  margin: 0,
+                }}
+              >
                 Angled corners using clip-path for a tech aesthetic.
               </p>
             </Panel>
             <Panel title="Bracket Corners" corners="bracket" glow="medium">
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "13px",
+                  margin: 0,
+                }}
+              >
                 L-shaped bracket decorations at each corner.
               </p>
             </Panel>
             <Panel title="Notch Corners" corners="notch" glow="strong">
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "13px", margin: 0 }}>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "13px",
+                  margin: 0,
+                }}
+              >
                 Asymmetric notch cut-outs for visual interest.
               </p>
             </Panel>
           </div>
 
-          <div style={{ display: "grid", "grid-template-columns": "repeat(3, 1fr)", gap: "16px", "margin-top": "16px" }}>
+          <div
+            style={{
+              display: "grid",
+              "grid-template-columns": "repeat(3, 1fr)",
+              gap: "16px",
+              "margin-top": "16px",
+            }}
+          >
             <Panel title="Primary" variant="primary" corners="clip" size="sm">
-              <span style={{ color: "var(--sui-accent)" }}>Accent color panel</span>
+              <span style={{ color: "var(--sui-accent)" }}>
+                Accent color panel
+              </span>
             </Panel>
             <Panel title="Danger" variant="danger" corners="clip" size="sm">
               <span style={{ color: "var(--sui-danger)" }}>Warning state</span>
             </Panel>
             <Panel title="Success" variant="success" corners="clip" size="sm">
-              <span style={{ color: "var(--sui-success)" }}>Positive state</span>
+              <span style={{ color: "var(--sui-success)" }}>
+                Positive state
+              </span>
             </Panel>
           </div>
         </Section>
@@ -130,10 +244,31 @@ const HUDShowcase: Component = () => {
           collapsed={sectionCollapsed()}
           onToggleCollapse={() => setSectionCollapsed(!sectionCollapsed())}
         >
-          <div style={{ display: "grid", "grid-template-columns": "repeat(2, 1fr)", gap: "24px" }}>
+          <div
+            style={{
+              display: "grid",
+              "grid-template-columns": "repeat(2, 1fr)",
+              gap: "24px",
+            }}
+          >
             <Panel corners="bracket">
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Default Style</p>
-              <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "11px",
+                  "text-transform": "uppercase",
+                  "margin-bottom": "16px",
+                }}
+              >
+                Default Style
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  "flex-direction": "column",
+                  gap: "16px",
+                }}
+              >
                 <Toggle
                   label="Primary Power"
                   checked={toggles().power}
@@ -155,20 +290,64 @@ const HUDShowcase: Component = () => {
             </Panel>
 
             <Panel corners="bracket">
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "16px" }}>Minimal Style</p>
-              <div style={{ display: "flex", gap: "24px", "align-items": "center" }}>
-                <Toggle variant="minimal" checked={toggles().power} onChange={(v) => setToggles({ ...toggles(), power: v })} />
-                <Toggle variant="minimal" checked={toggles().sensors} onChange={(v) => setToggles({ ...toggles(), sensors: v })} color="warning" />
-                <Toggle variant="minimal" checked={toggles().tracking} onChange={(v) => setToggles({ ...toggles(), tracking: v })} color="success" />
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "11px",
+                  "text-transform": "uppercase",
+                  "margin-bottom": "16px",
+                }}
+              >
+                Minimal Style
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "24px",
+                  "align-items": "center",
+                }}
+              >
+                <Toggle
+                  variant="minimal"
+                  checked={toggles().power}
+                  onChange={(v) => setToggles({ ...toggles(), power: v })}
+                />
+                <Toggle
+                  variant="minimal"
+                  checked={toggles().sensors}
+                  onChange={(v) => setToggles({ ...toggles(), sensors: v })}
+                  color="warning"
+                />
+                <Toggle
+                  variant="minimal"
+                  checked={toggles().tracking}
+                  onChange={(v) => setToggles({ ...toggles(), tracking: v })}
+                  color="success"
+                />
               </div>
             </Panel>
           </div>
         </Section>
 
-        <Section title="Action Controls" subtitle="Button Groups" variant="primary">
-          <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
+        <Section
+          title="Action Controls"
+          subtitle="Button Groups"
+          variant="primary"
+        >
+          <div
+            style={{ display: "flex", "flex-direction": "column", gap: "24px" }}
+          >
             <div>
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Horizontal Group</p>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "11px",
+                  "text-transform": "uppercase",
+                  "margin-bottom": "8px",
+                }}
+              >
+                Horizontal Group
+              </p>
               <ButtonGroup>
                 <Button>Scan</Button>
                 <Button>Analyze</Button>
@@ -178,7 +357,16 @@ const HUDShowcase: Component = () => {
             </div>
 
             <div>
-              <p style={{ color: "var(--sui-text-secondary)", "font-size": "11px", "text-transform": "uppercase", "margin-bottom": "8px" }}>Connected Buttons</p>
+              <p
+                style={{
+                  color: "var(--sui-text-secondary)",
+                  "font-size": "11px",
+                  "text-transform": "uppercase",
+                  "margin-bottom": "8px",
+                }}
+              >
+                Connected Buttons
+              </p>
               <ButtonGroup gap="none">
                 <Button active>Day</Button>
                 <Button>Week</Button>
@@ -189,14 +377,32 @@ const HUDShowcase: Component = () => {
           </div>
         </Section>
 
-        <Section title="Status Displays" subtitle="List Variants" variant="primary">
-          <div style={{ display: "grid", "grid-template-columns": "repeat(2, 1fr)", gap: "16px" }}>
+        <Section
+          title="Status Displays"
+          subtitle="List Variants"
+          variant="primary"
+        >
+          <div
+            style={{
+              display: "grid",
+              "grid-template-columns": "repeat(2, 1fr)",
+              gap: "16px",
+            }}
+          >
             <Panel title="System Status" corners="clip">
               <List variant="status" dividers>
-                <ListItem status="active" secondary="Nominal">Primary Systems</ListItem>
-                <ListItem status="success" secondary="100%">Shield Generator</ListItem>
-                <ListItem status="warning" secondary="72%">Fuel Reserves</ListItem>
-                <ListItem status="error" secondary="Offline">Communications</ListItem>
+                <ListItem status="active" secondary="Nominal">
+                  Primary Systems
+                </ListItem>
+                <ListItem status="success" secondary="100%">
+                  Shield Generator
+                </ListItem>
+                <ListItem status="warning" secondary="72%">
+                  Fuel Reserves
+                </ListItem>
+                <ListItem status="error" secondary="Offline">
+                  Communications
+                </ListItem>
               </List>
             </Panel>
 
@@ -211,7 +417,11 @@ const HUDShowcase: Component = () => {
           </div>
         </Section>
 
-        <Section title="Modal Dialog" subtitle="Overlay Panel" variant="primary">
+        <Section
+          title="Modal Dialog"
+          subtitle="Overlay Panel"
+          variant="primary"
+        >
           <ButtonGroup>
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               Open Modal
@@ -228,7 +438,9 @@ const HUDShowcase: Component = () => {
             footer={
               <>
                 <Button onClick={() => setModalOpen(false)}>Cancel</Button>
-                <Button variant="primary" onClick={() => setModalOpen(false)}>Confirm</Button>
+                <Button variant="primary" onClick={() => setModalOpen(false)}>
+                  Confirm
+                </Button>
               </>
             }
           >
@@ -236,7 +448,13 @@ const HUDShowcase: Component = () => {
               Incoming transmission detected from unknown source.
             </p>
             <Panel corners="bracket" variant="warning" size="sm">
-              <p style={{ color: "var(--sui-warning)", margin: 0, "font-size": "12px" }}>
+              <p
+                style={{
+                  color: "var(--sui-warning)",
+                  margin: 0,
+                  "font-size": "12px",
+                }}
+              >
                 Warning: Unauthorized access attempt logged
               </p>
             </Panel>
@@ -267,8 +485,13 @@ const HopperBadgesShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Sizes</h3>
-        <div class="example-row" style={{ "align-items": "center", gap: "12px" }}>
-          <StatusBadge variant="compliant" size="sm">Small</StatusBadge>
+        <div
+          class="example-row"
+          style={{ "align-items": "center", gap: "12px" }}
+        >
+          <StatusBadge variant="compliant" size="sm">
+            Small
+          </StatusBadge>
           <StatusBadge variant="compliant">Default</StatusBadge>
         </div>
       </div>
@@ -283,31 +506,81 @@ const HopperBadgesShowcase: Component = () => {
 
       <div class="example-group">
         <h3>In Context</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
           Typical usage: inline with a result value.
         </p>
         <div style={{ display: "flex", "align-items": "center", gap: "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
+          <span
+            style={{
+              "font-size": "1.5rem",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+            }}
+          >
             2.314
           </span>
-          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span
+            style={{
+              color: "var(--sui-text-secondary)",
+              "font-size": "0.9rem",
+            }}
+          >
+            g/kWh
+          </span>
           <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
         </div>
-        <div style={{ display: "flex", "align-items": "center", gap: "12px", "margin-top": "12px" }}>
-          <span style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-danger)" }}>
+        <div
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "12px",
+            "margin-top": "12px",
+          }}
+        >
+          <span
+            style={{
+              "font-size": "1.5rem",
+              "font-weight": "600",
+              color: "var(--sui-danger)",
+            }}
+          >
             4.821
           </span>
-          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span
+            style={{
+              color: "var(--sui-text-secondary)",
+              "font-size": "0.9rem",
+            }}
+          >
+            g/kWh
+          </span>
           <StatusBadge variant="violation">VIOLATION</StatusBadge>
         </div>
       </div>
 
       <div class="example-group">
         <h3>NavLink</h3>
-        <div style={{ display: "flex", gap: "4px", "border-bottom": "1px solid var(--sui-border)", "padding-bottom": "2px" }}>
-          <NavLink href="#" active>Vessel Calls</NavLink>
+        <div
+          style={{
+            display: "flex",
+            gap: "4px",
+            "border-bottom": "1px solid var(--sui-border)",
+            "padding-bottom": "2px",
+          }}
+        >
+          <NavLink href="#" active>
+            Vessel Calls
+          </NavLink>
           <NavLink href="#">Violations</NavLink>
-          <NavLink href="#" color="warning" badge={3}>Unresolved</NavLink>
+          <NavLink href="#" color="warning" badge={3}>
+            Unresolved
+          </NavLink>
           <NavLink href="#">Reports</NavLink>
         </div>
       </div>
@@ -324,51 +597,121 @@ const FeedbackShowcase: Component = () => {
 
       <div class="example-group">
         <h3>EmptyState — Variants</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
+        <div
+          style={{ display: "flex", "flex-direction": "column", gap: "16px" }}
+        >
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
             <EmptyState message="No data available for this time period." />
           </div>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
-            <EmptyState variant="muted" message="Select a vessel call to view details." />
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
+            <EmptyState
+              variant="muted"
+              message="Select a vessel call to view details."
+            />
           </div>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
-            <EmptyState variant="accent" message="Loading vessel call data..." />
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
+            <EmptyState
+              variant="accent"
+              message="Loading vessel call data..."
+            />
           </div>
         </div>
       </div>
 
       <div class="example-group">
         <h3>Sizes</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
+        <div
+          style={{ display: "flex", "flex-direction": "column", gap: "16px" }}
+        >
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
             <EmptyState size="sm" message="No rows." />
           </div>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
             <EmptyState message="Default size empty state." />
           </div>
-          <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
-            <EmptyState size="lg" message="No vessel calls found matching your criteria." />
+          <div
+            style={{
+              border: "1px dashed var(--sui-border)",
+              "border-radius": "8px",
+            }}
+          >
+            <EmptyState
+              size="lg"
+              message="No vessel calls found matching your criteria."
+            />
           </div>
         </div>
       </div>
 
       <div class="example-group">
         <h3>With Children</h3>
-        <div style={{ border: "1px dashed var(--sui-border)", "border-radius": "8px" }}>
+        <div
+          style={{
+            border: "1px dashed var(--sui-border)",
+            "border-radius": "8px",
+          }}
+        >
           <EmptyState>
-            <span style={{ color: "var(--sui-text-muted)" }}>No hourly data. </span>
-            <span style={{ color: "var(--sui-accent)" }}>Run the cache pipeline to generate it.</span>
+            <span style={{ color: "var(--sui-text-muted)" }}>
+              No hourly data.{" "}
+            </span>
+            <span style={{ color: "var(--sui-accent)" }}>
+              Run the cache pipeline to generate it.
+            </span>
           </EmptyState>
         </div>
       </div>
 
       <div class="example-group">
         <h3>AlertBox — Variants</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "12px" }}>
-          <AlertBox variant="info" title="Information" description="This vessel call has been processed successfully." />
-          <AlertBox variant="warning" title="Pending Approval" description="This non-compliant vessel call requires review and approval." />
-          <AlertBox variant="success" title="Approved" description="Approved on 2026-01-15 14:30. This vessel call has been reviewed." />
-          <AlertBox variant="danger" title="Error" description="Failed to submit approval. Please try again." />
+        <div
+          style={{ display: "flex", "flex-direction": "column", gap: "12px" }}
+        >
+          <AlertBox
+            variant="info"
+            title="Information"
+            description="This vessel call has been processed successfully."
+          />
+          <AlertBox
+            variant="warning"
+            title="Pending Approval"
+            description="This non-compliant vessel call requires review and approval."
+          />
+          <AlertBox
+            variant="success"
+            title="Approved"
+            description="Approved on 2026-01-15 14:30. This vessel call has been reviewed."
+          />
+          <AlertBox
+            variant="danger"
+            title="Error"
+            description="Failed to submit approval. Please try again."
+          />
         </div>
       </div>
 
@@ -378,7 +721,11 @@ const FeedbackShowcase: Component = () => {
           variant="warning"
           title="Pending Approval"
           description="This non-compliant vessel call requires review."
-          action={<Button variant="primary" size="sm">Approve</Button>}
+          action={
+            <Button variant="primary" size="sm">
+              Approve
+            </Button>
+          }
         />
       </div>
 
@@ -406,7 +753,8 @@ const Pythag = createFormulaPanel({
   threshold: 10,
   resultPrecision: 3,
   compute: (v) => Math.sqrt(v.a ** 2 + v.b ** 2),
-  latex: (r) => `c = \\sqrt{\\var{a}{a}^2 + \\var{b}{b}^2} = \\var{result}{${r}}`,
+  latex: (r) =>
+    `c = \\sqrt{\\var{a}{a}^2 + \\var{b}{b}^2} = \\var{result}{${r}}`,
 });
 
 const KineticEnergy = createFormulaPanel({
@@ -419,7 +767,8 @@ const KineticEnergy = createFormulaPanel({
   threshold: 1000,
   resultPrecision: 1,
   compute: (vals) => 0.5 * vals.m * vals.v ** 2,
-  latex: (r) => `KE = \\frac{1}{2} \\var{m}{m} \\cdot \\var{v}{v}^2 = \\var{result}{${r}}`,
+  latex: (r) =>
+    `KE = \\frac{1}{2} \\var{m}{m} \\cdot \\var{v}{v}^2 = \\var{result}{${r}}`,
 });
 
 const FormulaPanelDemo: Component = () => {
@@ -432,34 +781,106 @@ const FormulaPanelDemo: Component = () => {
     <>
       <div class="example-group">
         <h3>createFormulaPanel — Curried Factories</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Declarative formula panels from a single config object. Hover variables for bidirectional highlighting.
-          Drag sliders to see reactive updates and compliance badge changes.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Declarative formula panels from a single config object. Hover
+          variables for bidirectional highlighting. Drag sliders to see reactive
+          updates and compliance badge changes.
         </p>
-        <div style={{ display: "flex", gap: "20px", "flex-wrap": "wrap", "margin-bottom": "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "20px",
+            "flex-wrap": "wrap",
+            "margin-bottom": "16px",
+          }}
+        >
           <div style={{ flex: "1", "min-width": "300px" }}>
-            <div style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}>
-              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
+            <div
+              style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}
+            >
+              <label
+                style={{
+                  "font-size": "13px",
+                  color: "var(--sui-text-secondary)",
+                }}
+              >
                 a: {sideA()}
-                <input type="range" min="1" max="15" step="0.5" value={sideA()} onInput={(e) => setSideA(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
+                <input
+                  type="range"
+                  min="1"
+                  max="15"
+                  step="0.5"
+                  value={sideA()}
+                  onInput={(e) => setSideA(parseFloat(e.currentTarget.value))}
+                  style={{ "margin-left": "8px" }}
+                />
               </label>
-              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
+              <label
+                style={{
+                  "font-size": "13px",
+                  color: "var(--sui-text-secondary)",
+                }}
+              >
                 b: {sideB()}
-                <input type="range" min="1" max="15" step="0.5" value={sideB()} onInput={(e) => setSideB(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
+                <input
+                  type="range"
+                  min="1"
+                  max="15"
+                  step="0.5"
+                  value={sideB()}
+                  onInput={(e) => setSideB(parseFloat(e.currentTarget.value))}
+                  style={{ "margin-left": "8px" }}
+                />
               </label>
             </div>
             <Pythag.Panel values={{ a: sideA(), b: sideB() }} />
           </div>
 
           <div style={{ flex: "1", "min-width": "300px" }}>
-            <div style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}>
-              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
+            <div
+              style={{ display: "flex", gap: "16px", "margin-bottom": "12px" }}
+            >
+              <label
+                style={{
+                  "font-size": "13px",
+                  color: "var(--sui-text-secondary)",
+                }}
+              >
                 m: {mass()} kg
-                <input type="range" min="10" max="200" step="5" value={mass()} onInput={(e) => setMass(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
+                  step="5"
+                  value={mass()}
+                  onInput={(e) => setMass(parseFloat(e.currentTarget.value))}
+                  style={{ "margin-left": "8px" }}
+                />
               </label>
-              <label style={{ "font-size": "13px", color: "var(--sui-text-secondary)" }}>
+              <label
+                style={{
+                  "font-size": "13px",
+                  color: "var(--sui-text-secondary)",
+                }}
+              >
                 v: {velocity()} m/s
-                <input type="range" min="1" max="10" step="0.5" value={velocity()} onInput={(e) => setVelocity(parseFloat(e.currentTarget.value))} style={{ "margin-left": "8px" }} />
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="0.5"
+                  value={velocity()}
+                  onInput={(e) =>
+                    setVelocity(parseFloat(e.currentTarget.value))
+                  }
+                  style={{ "margin-left": "8px" }}
+                />
               </label>
             </div>
             <KineticEnergy.Panel values={{ m: mass(), v: velocity() }} />
@@ -469,11 +890,25 @@ const FormulaPanelDemo: Component = () => {
 
       <div class="example-group">
         <h3>createFormulaPanel — Individual Composition</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          The same config decomposed into individual components arranged in a custom layout.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          The same config decomposed into individual components arranged in a
+          custom layout.
         </p>
         <FormulaProvider>
-          <div class="section-container" style={{ display: "grid", "grid-template-columns": "1fr 1fr", gap: "16px" }}>
+          <div
+            class="section-container"
+            style={{
+              display: "grid",
+              "grid-template-columns": "1fr 1fr",
+              gap: "16px",
+            }}
+          >
             <div>
               <Pythag.Result values={{ a: sideA(), b: sideB() }} />
               <Pythag.Givens values={{ a: sideA(), b: sideB() }} />
@@ -496,7 +931,8 @@ const DataDisplayShowcase: Component = () => {
   const [rollerPrev, setRollerPrev] = createSignal<string | null>(null);
 
   const triggerRoll = () => {
-    const next = rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA();
+    const next =
+      rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA();
     setRollerPrev(rollerCurrent());
     setRollerCurrent(next);
     setRollerAnimating(true);
@@ -508,17 +944,26 @@ const DataDisplayShowcase: Component = () => {
 
       <div class="example-group">
         <h3>DigitRoller — Animated Value Transition</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Vertical digit rolling animation for transitioning between numeric values.
-          Used to animate NOx/ROG result changes after power log submission.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Vertical digit rolling animation for transitioning between numeric
+          values. Used to animate NOx/ROG result changes after power log
+          submission.
         </p>
         <div style={{ display: "flex", "align-items": "center", gap: "20px" }}>
-          <span style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-text-primary)",
-            "font-variant-numeric": "tabular-nums",
-          }}>
+          <span
+            style={{
+              "font-size": "1.5rem",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+              "font-variant-numeric": "tabular-nums",
+            }}
+          >
             <DigitRoller
               value={rollerCurrent()}
               previousValue={rollerPrev()}
@@ -526,21 +971,66 @@ const DataDisplayShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span
+            style={{
+              color: "var(--sui-text-secondary)",
+              "font-size": "0.9rem",
+            }}
+          >
+            g/kWh
+          </span>
           <button class="demo-btn" onClick={triggerRoll}>
-            Roll to {rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA()}
+            Roll to{" "}
+            {rollerCurrent() === rollerValueA()
+              ? rollerValueB()
+              : rollerValueA()}
           </button>
         </div>
-        <div style={{ "margin-top": "16px", display: "flex", gap: "24px", "align-items": "center" }}>
+        <div
+          style={{
+            "margin-top": "16px",
+            display: "flex",
+            gap: "24px",
+            "align-items": "center",
+          }}
+        >
           <div>
-            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)", "text-transform": "uppercase" }}>Static (no animation)</span>
-            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
+            <span
+              style={{
+                "font-size": "11px",
+                color: "var(--sui-text-muted)",
+                "text-transform": "uppercase",
+              }}
+            >
+              Static (no animation)
+            </span>
+            <div
+              style={{
+                "font-size": "1.5rem",
+                "font-weight": "600",
+                color: "var(--sui-text-primary)",
+              }}
+            >
               <DigitRoller value="0.1250" />
             </div>
           </div>
           <div>
-            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)", "text-transform": "uppercase" }}>Tabular digits</span>
-            <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-accent)" }}>
+            <span
+              style={{
+                "font-size": "11px",
+                color: "var(--sui-text-muted)",
+                "text-transform": "uppercase",
+              }}
+            >
+              Tabular digits
+            </span>
+            <div
+              style={{
+                "font-size": "1.5rem",
+                "font-weight": "600",
+                color: "var(--sui-accent)",
+              }}
+            >
               <DigitRoller value="42.00" />
             </div>
           </div>
@@ -577,7 +1067,9 @@ const DataDisplayShowcase: Component = () => {
 
       <div class="example-group">
         <h3>ResultDisplay — Value + Units + Badge</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "16px" }}>
+        <div
+          style={{ display: "flex", "flex-direction": "column", gap: "16px" }}
+        >
           <ResultDisplay
             label="NOx Result"
             sublabel="Limit: 2.8 g/kWh"
@@ -611,16 +1103,49 @@ const DataDisplayShowcase: Component = () => {
           columns={[
             { header: "Period", accessor: "period", align: "left" },
             { header: "Data Points", accessor: "count", align: "right" },
-            { header: "Avg NOx (ppm)", accessor: (r: any) => <span style={{ color: r.noxColor, "font-weight": "600" }}>{r.avgNox}</span>, align: "right" },
+            {
+              header: "Avg NOx (ppm)",
+              accessor: (r: any) => (
+                <span style={{ color: r.noxColor, "font-weight": "600" }}>
+                  {r.avgNox}
+                </span>
+              ),
+              align: "right",
+            },
             { header: "Avg NO (ppm)", accessor: "avgNO", align: "right" },
             { header: "Avg NO₂ (ppm)", accessor: "avgNO2", align: "right" },
           ]}
           rows={[
-            { period: "Before Control", count: 142, avgNox: "18.34", noxColor: "var(--sui-warning)", avgNO: "12.81", avgNO2: "5.53" },
-            { period: "During Control", count: 89, avgNox: "3.21", noxColor: "var(--sui-success)", avgNO: "2.14", avgNO2: "1.07" },
-            { period: "After Control", count: 56, avgNox: "16.92", noxColor: "var(--sui-warning)", avgNO: "11.44", avgNO2: "5.48" },
+            {
+              period: "Before Control",
+              count: 142,
+              avgNox: "18.34",
+              noxColor: "var(--sui-warning)",
+              avgNO: "12.81",
+              avgNO2: "5.53",
+            },
+            {
+              period: "During Control",
+              count: 89,
+              avgNox: "3.21",
+              noxColor: "var(--sui-success)",
+              avgNO: "2.14",
+              avgNO2: "1.07",
+            },
+            {
+              period: "After Control",
+              count: 56,
+              avgNox: "16.92",
+              noxColor: "var(--sui-warning)",
+              avgNO: "11.44",
+              avgNO2: "5.48",
+            },
           ]}
-          getRowClass={(row: any) => row.period === "During Control" ? "stats-table__row--highlight" : undefined}
+          getRowClass={(row: any) =>
+            row.period === "During Control"
+              ? "stats-table__row--highlight"
+              : undefined
+          }
         />
       </div>
 
@@ -637,15 +1162,28 @@ const DataDisplayShowcase: Component = () => {
             { status: "Warning", count: 32, rate: "12.3%" },
             { status: "Critical", count: 14, rate: "5.4%" },
           ]}
-          getRowClass={(_: any, i: number) => i === 1 ? "stats-table__row--warning" : i === 2 ? "stats-table__row--danger" : undefined}
+          getRowClass={(_: any, i: number) =>
+            i === 1
+              ? "stats-table__row--warning"
+              : i === 2
+                ? "stats-table__row--danger"
+                : undefined
+          }
         />
       </div>
 
       <div class="example-group">
         <h3>ResultPanel — Layout Shell with Formula</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Combines ResultDisplay header with a variables table and interactive formula.
-          Hover a table row to highlight the corresponding formula variable.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Combines ResultDisplay header with a variables table and interactive
+          formula. Hover a table row to highlight the corresponding formula
+          variable.
         </p>
         <div style={{ display: "flex", gap: "20px", "flex-wrap": "wrap" }}>
           <ResultPanel
@@ -657,13 +1195,42 @@ const DataDisplayShowcase: Component = () => {
             style={{ flex: "1", "min-width": "300px" }}
           >
             <DTable class="margin-bottom-12">
-              <FormulaVarRow varId="ce"><DT>CE Level</DT><DD highlight><NumberWithUnits value={90} units="%" /></DD></FormulaVarRow>
-              <FormulaVarRow varId="nox"><DT>NOx</DT><DD highlight><NumberWithUnits value={8.42} units="ppm" /></DD></FormulaVarRow>
-              <FormulaVarRow varId="f2"><DT>MSO_F2</DT><DD><NumberWithUnits value={2841.3} units="scfm" precision={1} /></DD></FormulaVarRow>
-              <FormulaVarRow varId="kw"><DT>Engine</DT><DD><NumberWithUnits value={1200} units="kW" precision={0} /></DD></FormulaVarRow>
-              <FormulaVarRow varId="amps"><DT>Amps</DT><DD><NumberWithUnits value={350} units="A" /></DD></FormulaVarRow>
+              <FormulaVarRow varId="ce">
+                <DT>CE Level</DT>
+                <DD highlight>
+                  <NumberWithUnits value={90} units="%" />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="nox">
+                <DT>NOx</DT>
+                <DD highlight>
+                  <NumberWithUnits value={8.42} units="ppm" />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="f2">
+                <DT>MSO_F2</DT>
+                <DD>
+                  <NumberWithUnits value={2841.3} units="scfm" precision={1} />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="kw">
+                <DT>Engine</DT>
+                <DD>
+                  <NumberWithUnits value={1200} units="kW" precision={0} />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="amps">
+                <DT>Amps</DT>
+                <DD>
+                  <NumberWithUnits value={350} units="A" />
+                </DD>
+              </FormulaVarRow>
             </DTable>
-            <MathFormula latex={"(1 - \\var{ce}{CE}) \\times 13.8 + \\frac{\\var{nox}{NOx} \\times \\var{f2}{F_2} \\times 2760}{836200 \\times \\var{kw}{kW}} + \\frac{0.1029 \\times \\var{amps}{A}}{\\var{kw}{kW}} = 2.314"} />
+            <MathFormula
+              latex={
+                "(1 - \\var{ce}{CE}) \\times 13.8 + \\frac{\\var{nox}{NOx} \\times \\var{f2}{F_2} \\times 2760}{836200 \\times \\var{kw}{kW}} + \\frac{0.1029 \\times \\var{amps}{A}}{\\var{kw}{kW}} = 2.314"
+              }
+            />
           </ResultPanel>
 
           <ResultPanel
@@ -676,13 +1243,42 @@ const DataDisplayShowcase: Component = () => {
             style={{ flex: "1", "min-width": "300px" }}
           >
             <DTable class="margin-bottom-12">
-              <FormulaVarRow varId="ce"><DT>CE Level</DT><DD highlight><NumberWithUnits value={90} units="%" /></DD></FormulaVarRow>
-              <FormulaVarRow varId="thc"><DT>FID THC</DT><DD><NumberWithUnits value={3.14} units="ppm" /></DD></FormulaVarRow>
-              <FormulaVarRow varId="f2"><DT>MSO_F2</DT><DD><NumberWithUnits value={2841.3} units="scfm" precision={1} /></DD></FormulaVarRow>
-              <FormulaVarRow varId="kw"><DT>Engine</DT><DD><NumberWithUnits value={1200} units="kW" precision={0} /></DD></FormulaVarRow>
-              <FormulaVarRow varId="amps"><DT>Amps</DT><DD><NumberWithUnits value={350} units="A" /></DD></FormulaVarRow>
+              <FormulaVarRow varId="ce">
+                <DT>CE Level</DT>
+                <DD highlight>
+                  <NumberWithUnits value={90} units="%" />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="thc">
+                <DT>FID THC</DT>
+                <DD>
+                  <NumberWithUnits value={3.14} units="ppm" />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="f2">
+                <DT>MSO_F2</DT>
+                <DD>
+                  <NumberWithUnits value={2841.3} units="scfm" precision={1} />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="kw">
+                <DT>Engine</DT>
+                <DD>
+                  <NumberWithUnits value={1200} units="kW" precision={0} />
+                </DD>
+              </FormulaVarRow>
+              <FormulaVarRow varId="amps">
+                <DT>Amps</DT>
+                <DD>
+                  <NumberWithUnits value={350} units="A" />
+                </DD>
+              </FormulaVarRow>
             </DTable>
-            <MathFormula latex={"(1 - \\var{ce}{CE}) \\times 0.52 + \\frac{\\var{thc}{THC} \\times \\var{f2}{F_2} \\times 821.76}{836200 \\times \\var{kw}{kW}} + \\frac{0.0137 \\times \\var{amps}{A}}{\\var{kw}{kW}} = 0.287"} />
+            <MathFormula
+              latex={
+                "(1 - \\var{ce}{CE}) \\times 0.52 + \\frac{\\var{thc}{THC} \\times \\var{f2}{F_2} \\times 821.76}{836200 \\times \\var{kw}{kW}} + \\frac{0.0137 \\times \\var{amps}{A}}{\\var{kw}{kW}} = 0.287"
+              }
+            />
           </ResultPanel>
         </div>
       </div>
@@ -699,9 +1295,24 @@ const DataDisplayShowcase: Component = () => {
           formulaProvider={false}
         >
           <DTable>
-            <FormulaVarRow varId="ce"><DT>CE Level</DT><DD highlight><NumberWithUnits value={95} units="%" /></DD></FormulaVarRow>
-            <FormulaVarRow varId="nox"><DT>NOx</DT><DD><NumberWithUnits value={12.7} units="ppm" /></DD></FormulaVarRow>
-            <FormulaVarRow varId="kw"><DT>Engine</DT><DD><NumberWithUnits value={1200} units="kW" precision={0} /></DD></FormulaVarRow>
+            <FormulaVarRow varId="ce">
+              <DT>CE Level</DT>
+              <DD highlight>
+                <NumberWithUnits value={95} units="%" />
+              </DD>
+            </FormulaVarRow>
+            <FormulaVarRow varId="nox">
+              <DT>NOx</DT>
+              <DD>
+                <NumberWithUnits value={12.7} units="ppm" />
+              </DD>
+            </FormulaVarRow>
+            <FormulaVarRow varId="kw">
+              <DT>Engine</DT>
+              <DD>
+                <NumberWithUnits value={1200} units="kW" precision={0} />
+              </DD>
+            </FormulaVarRow>
           </DTable>
         </ResultPanel>
       </div>
@@ -720,17 +1331,38 @@ const HopperInputsShowcase: Component = () => {
 
       <div class="example-group">
         <h3>ThemedInput</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "16px", "max-width": "400px" }}>
+        <div
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            gap: "16px",
+            "max-width": "400px",
+          }}
+        >
           <ThemedInput label="Vessel Name" placeholder="Enter vessel name..." />
-          <ThemedInput label="Engine Power (kW)" placeholder="1200" type="number" />
+          <ThemedInput
+            label="Engine Power (kW)"
+            placeholder="1200"
+            type="number"
+          />
           <ThemedInput placeholder="Without label..." />
         </div>
       </div>
 
       <div class="example-group">
         <h3>ThemedTextarea</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "16px", "max-width": "500px" }}>
-          <ThemedTextarea label="Note (optional)" placeholder="Add a note explaining the approval..." />
+        <div
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            gap: "16px",
+            "max-width": "500px",
+          }}
+        >
+          <ThemedTextarea
+            label="Note (optional)"
+            placeholder="Add a note explaining the approval..."
+          />
           <ThemedTextarea placeholder="Without label..." />
         </div>
       </div>
@@ -800,11 +1432,21 @@ const HopperIconShowcase: Component = () => {
     <div class="component-section">
       <h2>Icon Component</h2>
 
-      <For each={Object.entries(ICON_GROUPS) as [keyof typeof ICON_GROUPS, readonly IconName[]][]}>
+      <For
+        each={
+          Object.entries(ICON_GROUPS) as [
+            keyof typeof ICON_GROUPS,
+            readonly IconName[],
+          ][]
+        }
+      >
         {([groupKey, icons]) => (
           <div class="example-group">
             <h3>{groupLabels[groupKey]}</h3>
-            <div class="example-row" style={{ gap: "16px", "flex-wrap": "wrap" }}>
+            <div
+              class="example-row"
+              style={{ gap: "16px", "flex-wrap": "wrap" }}
+            >
               <For each={icons as IconName[]}>
                 {(name) => (
                   <div class="icon-item">
@@ -820,18 +1462,39 @@ const HopperIconShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Sizes</h3>
-        <div class="example-row" style={{ "align-items": "center", gap: "16px" }}>
-          <div class="icon-item"><Icon name="check" size="xs" /><span class="icon-label">xs</span></div>
-          <div class="icon-item"><Icon name="check" size="sm" /><span class="icon-label">sm</span></div>
-          <div class="icon-item"><Icon name="check" size="md" /><span class="icon-label">md</span></div>
-          <div class="icon-item"><Icon name="check" size="lg" /><span class="icon-label">lg</span></div>
-          <div class="icon-item"><Icon name="check" size="xl" /><span class="icon-label">xl</span></div>
+        <div
+          class="example-row"
+          style={{ "align-items": "center", gap: "16px" }}
+        >
+          <div class="icon-item">
+            <Icon name="check" size="xs" />
+            <span class="icon-label">xs</span>
+          </div>
+          <div class="icon-item">
+            <Icon name="check" size="sm" />
+            <span class="icon-label">sm</span>
+          </div>
+          <div class="icon-item">
+            <Icon name="check" size="md" />
+            <span class="icon-label">md</span>
+          </div>
+          <div class="icon-item">
+            <Icon name="check" size="lg" />
+            <span class="icon-label">lg</span>
+          </div>
+          <div class="icon-item">
+            <Icon name="check" size="xl" />
+            <span class="icon-label">xl</span>
+          </div>
         </div>
       </div>
 
       <div class="example-group">
         <h3>Spinner Animation</h3>
-        <div class="example-row" style={{ "align-items": "center", gap: "16px" }}>
+        <div
+          class="example-row"
+          style={{ "align-items": "center", gap: "16px" }}
+        >
           <Icon name="spinner" size="sm" />
           <Icon name="spinner" size="md" />
           <Icon name="spinner" size="lg" />
@@ -856,7 +1519,10 @@ const HopperToggleShowcase: Component = () => {
       <div class="example-group">
         <h3>Basic Toggle</h3>
         <div class="example-column">
-          <Toggle checked={enabled1()} onChange={() => setEnabled1(!enabled1())} />
+          <Toggle
+            checked={enabled1()}
+            onChange={() => setEnabled1(!enabled1())}
+          />
           <span style={{ color: "var(--sui-text-secondary)" }}>
             State: {enabled1() ? "ON" : "OFF"}
           </span>
@@ -866,8 +1532,17 @@ const HopperToggleShowcase: Component = () => {
       <div class="example-group">
         <h3>With Label</h3>
         <div class="example-column">
-          <Toggle label="Enable notifications" checked={enabled2()} onChange={() => setEnabled2(!enabled2())} />
-          <Toggle label="Dark mode" labelPosition="left" checked={enabled3()} onChange={() => setEnabled3(!enabled3())} />
+          <Toggle
+            label="Enable notifications"
+            checked={enabled2()}
+            onChange={() => setEnabled2(!enabled2())}
+          />
+          <Toggle
+            label="Dark mode"
+            labelPosition="left"
+            checked={enabled3()}
+            onChange={() => setEnabled3(!enabled3())}
+          />
         </div>
       </div>
 
@@ -920,11 +1595,61 @@ const ProgressShowcase: Component = () => {
   };
 
   const getWorkflowSteps = (): ProgressStep[] => [
-    { id: "1", label: "Raw", status: currentStep() > 1 ? "completed" : currentStep() === 1 ? "active" : "pending", icon: WORKFLOW_ICONS.raw_telemetry },
-    { id: "2", label: "Minute", status: currentStep() > 2 ? "completed" : currentStep() === 2 ? "active" : "pending", icon: WORKFLOW_ICONS.minute_level },
-    { id: "3", label: "Hour", status: currentStep() > 3 ? "completed" : currentStep() === 3 ? "active" : "pending", icon: WORKFLOW_ICONS.hour_level },
-    { id: "4", label: "Stats", status: currentStep() > 4 ? "completed" : currentStep() === 4 ? "active" : "pending", icon: WORKFLOW_ICONS.statistics },
-    { id: "5", label: "Done", status: currentStep() > 5 ? "completed" : currentStep() === 5 ? "active" : "pending", icon: WORKFLOW_ICONS.category },
+    {
+      id: "1",
+      label: "Raw",
+      status:
+        currentStep() > 1
+          ? "completed"
+          : currentStep() === 1
+            ? "active"
+            : "pending",
+      icon: WORKFLOW_ICONS.raw_telemetry,
+    },
+    {
+      id: "2",
+      label: "Minute",
+      status:
+        currentStep() > 2
+          ? "completed"
+          : currentStep() === 2
+            ? "active"
+            : "pending",
+      icon: WORKFLOW_ICONS.minute_level,
+    },
+    {
+      id: "3",
+      label: "Hour",
+      status:
+        currentStep() > 3
+          ? "completed"
+          : currentStep() === 3
+            ? "active"
+            : "pending",
+      icon: WORKFLOW_ICONS.hour_level,
+    },
+    {
+      id: "4",
+      label: "Stats",
+      status:
+        currentStep() > 4
+          ? "completed"
+          : currentStep() === 4
+            ? "active"
+            : "pending",
+      icon: WORKFLOW_ICONS.statistics,
+    },
+    {
+      id: "5",
+      label: "Done",
+      status:
+        currentStep() > 5
+          ? "completed"
+          : currentStep() === 5
+            ? "active"
+            : "pending",
+      icon: WORKFLOW_ICONS.category,
+    },
   ];
 
   return (
@@ -933,19 +1658,41 @@ const ProgressShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Cache Workflow (Custom Icons)</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
           5-stage caching workflow with custom icons per step.
         </p>
         <ProgressCard
           title="Pacific Voyager"
           subtitle="abc123"
           steps={getWorkflowSteps()}
-          message={currentStep() > 5 ? "Caching complete" : `Processing stage ${currentStep()} of 5...`}
+          message={
+            currentStep() > 5
+              ? "Caching complete"
+              : `Processing stage ${currentStep()} of 5...`
+          }
         />
         <div style={{ "margin-top": "12px", display: "flex", gap: "8px" }}>
-          <button class="demo-btn" onClick={() => setCurrentStep(s => Math.max(1, s - 1))}>Previous</button>
-          <button class="demo-btn" onClick={() => setCurrentStep(s => Math.min(6, s + 1))}>Next</button>
-          <button class="demo-btn" onClick={() => setCurrentStep(1)}>Reset</button>
+          <button
+            class="demo-btn"
+            onClick={() => setCurrentStep((s) => Math.max(1, s - 1))}
+          >
+            Previous
+          </button>
+          <button
+            class="demo-btn"
+            onClick={() => setCurrentStep((s) => Math.min(6, s + 1))}
+          >
+            Next
+          </button>
+          <button class="demo-btn" onClick={() => setCurrentStep(1)}>
+            Reset
+          </button>
         </div>
       </div>
 
@@ -955,11 +1702,36 @@ const ProgressShowcase: Component = () => {
           title="Southern Cross"
           subtitle="jkl222"
           steps={[
-            { id: "1", label: "Raw", status: "error", icon: WORKFLOW_ICONS.raw_telemetry },
-            { id: "2", label: "Minute", status: "pending", icon: WORKFLOW_ICONS.minute_level },
-            { id: "3", label: "Hour", status: "pending", icon: WORKFLOW_ICONS.hour_level },
-            { id: "4", label: "Stats", status: "pending", icon: WORKFLOW_ICONS.statistics },
-            { id: "5", label: "Done", status: "pending", icon: WORKFLOW_ICONS.category },
+            {
+              id: "1",
+              label: "Raw",
+              status: "error",
+              icon: WORKFLOW_ICONS.raw_telemetry,
+            },
+            {
+              id: "2",
+              label: "Minute",
+              status: "pending",
+              icon: WORKFLOW_ICONS.minute_level,
+            },
+            {
+              id: "3",
+              label: "Hour",
+              status: "pending",
+              icon: WORKFLOW_ICONS.hour_level,
+            },
+            {
+              id: "4",
+              label: "Stats",
+              status: "pending",
+              icon: WORKFLOW_ICONS.statistics,
+            },
+            {
+              id: "5",
+              label: "Done",
+              status: "pending",
+              icon: WORKFLOW_ICONS.category,
+            },
           ]}
           message="Connection timeout - retrying in 30s"
         />
@@ -969,8 +1741,15 @@ const ProgressShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Horizontal (default)</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Stacked colored segments fill left-to-right. Used for per-metric error bars.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Stacked colored segments fill left-to-right. Used for per-metric error
+          bars.
         </p>
         <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
           <StackedProgressBar
@@ -979,29 +1758,59 @@ const ProgressShowcase: Component = () => {
               { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={5}
-            style={{ width: "120px", height: "20px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
+            style={{
+              width: "120px",
+              height: "20px",
+              "font-size": "11px",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+            }}
           />
-          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>30% partial + 20% missing</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
+            30% partial + 20% missing
+          </span>
         </div>
-        <div style={{ display: "flex", gap: "8px", "align-items": "center", "margin-top": "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            "align-items": "center",
+            "margin-top": "8px",
+          }}
+        >
           <StackedProgressBar
             segments={[
               { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
               { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={0}
-            style={{ width: "120px", height: "20px", "font-size": "11px", color: "var(--sui-text-muted)" }}
+            style={{
+              width: "120px",
+              height: "20px",
+              "font-size": "11px",
+              color: "var(--sui-text-muted)",
+            }}
           />
-          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>Empty — no errors</span>
+          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
+            Empty — no errors
+          </span>
         </div>
       </div>
 
       <div class="example-group">
         <h3>Vertical</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
           Segments fill bottom-to-top. Used for total error count bars.
         </p>
-        <div style={{ display: "flex", gap: "12px", "align-items": "flex-end" }}>
+        <div
+          style={{ display: "flex", gap: "12px", "align-items": "flex-end" }}
+        >
           <StackedProgressBar
             direction="vertical"
             segments={[
@@ -1009,7 +1818,13 @@ const ProgressShowcase: Component = () => {
               { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
+            style={{
+              width: "24px",
+              height: "80px",
+              "font-size": "11px",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+            }}
           />
           <StackedProgressBar
             direction="vertical"
@@ -1018,7 +1833,13 @@ const ProgressShowcase: Component = () => {
               { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
-            style={{ width: "24px", height: "80px", "font-size": "11px", "font-weight": "600", color: "var(--sui-text-primary)" }}
+            style={{
+              width: "24px",
+              height: "80px",
+              "font-size": "11px",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+            }}
           />
         </div>
       </div>
@@ -1033,30 +1854,52 @@ const HeatmapShowcase: Component = () => {
 
   const threeDayVesselCall = (): HeatmapMultiRow[] => {
     return [
-      { id: "day1", label: "2024-01-15", cells: Array.from({ length: 24 }, (_, hour) => ({
-        id: `Hour ${hour}:00`,
-        categories: Object.fromEntries(categories.map(c => {
-          if (hour < 15) return [c, "empty" as const];
-          if (hour < 18 && (c === "FTIR_I" || c === "SCR")) return [c, "partial" as const];
-          return [c, "full" as const];
-        }))
-      }))},
-      { id: "day2", label: "2024-01-16", cells: Array.from({ length: 24 }, (_, hour) => ({
-        id: `Hour ${hour}:00`,
-        categories: Object.fromEntries(categories.map(c => {
-          if (hour >= 13 && hour < 15 && c === "FID") return [c, "missing" as const];
-          if (hour >= 12 && hour < 16 && c === "DP") return [c, "partial" as const];
-          return [c, "full" as const];
-        }))
-      }))},
-      { id: "day3", label: "2024-01-17", cells: Array.from({ length: 24 }, (_, hour) => ({
-        id: `Hour ${hour}:00`,
-        categories: Object.fromEntries(categories.map(c => {
-          if (hour > 7) return [c, "empty" as const];
-          if (hour >= 5 && (c === "MSI" || c === "MSO")) return [c, "partial" as const];
-          return [c, "full" as const];
-        }))
-      }))},
+      {
+        id: "day1",
+        label: "2024-01-15",
+        cells: Array.from({ length: 24 }, (_, hour) => ({
+          id: `Hour ${hour}:00`,
+          categories: Object.fromEntries(
+            categories.map((c) => {
+              if (hour < 15) return [c, "empty" as const];
+              if (hour < 18 && (c === "FTIR_I" || c === "SCR"))
+                return [c, "partial" as const];
+              return [c, "full" as const];
+            }),
+          ),
+        })),
+      },
+      {
+        id: "day2",
+        label: "2024-01-16",
+        cells: Array.from({ length: 24 }, (_, hour) => ({
+          id: `Hour ${hour}:00`,
+          categories: Object.fromEntries(
+            categories.map((c) => {
+              if (hour >= 13 && hour < 15 && c === "FID")
+                return [c, "missing" as const];
+              if (hour >= 12 && hour < 16 && c === "DP")
+                return [c, "partial" as const];
+              return [c, "full" as const];
+            }),
+          ),
+        })),
+      },
+      {
+        id: "day3",
+        label: "2024-01-17",
+        cells: Array.from({ length: 24 }, (_, hour) => ({
+          id: `Hour ${hour}:00`,
+          categories: Object.fromEntries(
+            categories.map((c) => {
+              if (hour > 7) return [c, "empty" as const];
+              if (hour >= 5 && (c === "MSI" || c === "MSO"))
+                return [c, "partial" as const];
+              return [c, "full" as const];
+            }),
+          ),
+        })),
+      },
     ];
   };
 
@@ -1064,8 +1907,11 @@ const HeatmapShowcase: Component = () => {
 
   const sparklineData = (): HeatmapMultiRow[] => {
     const days = threeDayVesselCall();
-    const allCells = days.flatMap(day => day.cells)
-      .filter(cell => !Object.values(cell.categories).every(s => s === "empty"));
+    const allCells = days
+      .flatMap((day) => day.cells)
+      .filter(
+        (cell) => !Object.values(cell.categories).every((s) => s === "empty"),
+      );
     return [{ id: "vessel-call", label: "", cells: allCells }];
   };
 
@@ -1075,8 +1921,15 @@ const HeatmapShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Expanded Variant</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Three-day vessel call. Connection started Day 1 15:00, ended Day 3 07:00.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Three-day vessel call. Connection started Day 1 15:00, ended Day 3
+          07:00.
         </p>
         <HeatmapMulti
           rows={threeDayVesselCall()}
@@ -1114,42 +1967,190 @@ const TableShowcase: Component = () => {
   }
 
   const data: TableRow[] = [
-    { id: "VES-001", name: "Pacific Voyager", status: "Active", progress: 85, amount: 12500.50, duration: 3600, date: "2024-01-15", category: "Cargo" },
-    { id: "VES-002", name: "Atlantic Runner", status: "Pending", progress: 45, amount: 8750.25, duration: 7200, date: "2024-01-14", category: "Tanker" },
-    { id: "VES-003", name: "Northern Star", status: "Complete", progress: 100, amount: 25000.00, duration: 86400, date: "2024-01-13", category: "Container" },
-    { id: "VES-004", name: "Southern Cross", status: "Error", progress: 23, amount: 4200.75, duration: 1800, date: "2024-01-12", category: "Bulk" },
-    { id: "VES-005", name: "Eastern Wind", status: "Active", progress: 67, amount: 18900.00, duration: 43200, date: "2024-01-11", category: "Cargo" },
-    { id: "VES-006", name: "Western Horizon", status: "Pending", progress: 12, amount: 6300.50, duration: 5400, date: "2024-01-10", category: "Tanker" },
-    { id: "VES-007", name: "Arctic Explorer", status: "Complete", progress: 100, amount: 31200.00, duration: 172800, date: "2024-01-09", category: "Research" },
-    { id: "VES-008", name: "Tropical Dawn", status: "Active", progress: 91, amount: 14800.25, duration: 28800, date: "2024-01-08", category: "Container" },
+    {
+      id: "VES-001",
+      name: "Pacific Voyager",
+      status: "Active",
+      progress: 85,
+      amount: 12500.5,
+      duration: 3600,
+      date: "2024-01-15",
+      category: "Cargo",
+    },
+    {
+      id: "VES-002",
+      name: "Atlantic Runner",
+      status: "Pending",
+      progress: 45,
+      amount: 8750.25,
+      duration: 7200,
+      date: "2024-01-14",
+      category: "Tanker",
+    },
+    {
+      id: "VES-003",
+      name: "Northern Star",
+      status: "Complete",
+      progress: 100,
+      amount: 25000.0,
+      duration: 86400,
+      date: "2024-01-13",
+      category: "Container",
+    },
+    {
+      id: "VES-004",
+      name: "Southern Cross",
+      status: "Error",
+      progress: 23,
+      amount: 4200.75,
+      duration: 1800,
+      date: "2024-01-12",
+      category: "Bulk",
+    },
+    {
+      id: "VES-005",
+      name: "Eastern Wind",
+      status: "Active",
+      progress: 67,
+      amount: 18900.0,
+      duration: 43200,
+      date: "2024-01-11",
+      category: "Cargo",
+    },
+    {
+      id: "VES-006",
+      name: "Western Horizon",
+      status: "Pending",
+      progress: 12,
+      amount: 6300.5,
+      duration: 5400,
+      date: "2024-01-10",
+      category: "Tanker",
+    },
+    {
+      id: "VES-007",
+      name: "Arctic Explorer",
+      status: "Complete",
+      progress: 100,
+      amount: 31200.0,
+      duration: 172800,
+      date: "2024-01-09",
+      category: "Research",
+    },
+    {
+      id: "VES-008",
+      name: "Tropical Dawn",
+      status: "Active",
+      progress: 91,
+      amount: 14800.25,
+      duration: 28800,
+      date: "2024-01-08",
+      category: "Container",
+    },
   ];
 
   const cellRendererColumns: TableColumn<TableRow>[] = [
-    { id: "id", header: "ID", accessor: (row) => <IdCell value={row.id} />, width: "100px" },
-    { id: "name", header: "Vessel", accessor: (row) => <StringCell value={row.name} />, sortable: true },
-    { id: "status", header: "Status", accessor: (row) => <StatusCell value={row.status} />, sortable: true },
-    { id: "category", header: "Type", accessor: (row) => <TagCell value={row.category} variant="primary" /> },
-    { id: "progress", header: "Progress", accessor: (row) => <IntCell value={row.progress} />, align: "right", sortable: true },
-    { id: "amount", header: "Revenue", accessor: (row) => <MoneyCell value={row.amount} />, align: "right", sortable: true },
-    { id: "duration", header: "Duration", accessor: (row) => <DurationCell value={row.duration} />, align: "right" },
-    { id: "date", header: "Date", accessor: (row) => <DateCell value={row.date} />, sortable: true },
+    {
+      id: "id",
+      header: "ID",
+      accessor: (row) => <IdCell value={row.id} />,
+      width: "100px",
+    },
+    {
+      id: "name",
+      header: "Vessel",
+      accessor: (row) => <StringCell value={row.name} />,
+      sortable: true,
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessor: (row) => <StatusCell value={row.status} />,
+      sortable: true,
+    },
+    {
+      id: "category",
+      header: "Type",
+      accessor: (row) => <TagCell value={row.category} variant="primary" />,
+    },
+    {
+      id: "progress",
+      header: "Progress",
+      accessor: (row) => <IntCell value={row.progress} />,
+      align: "right",
+      sortable: true,
+    },
+    {
+      id: "amount",
+      header: "Revenue",
+      accessor: (row) => <MoneyCell value={row.amount} />,
+      align: "right",
+      sortable: true,
+    },
+    {
+      id: "duration",
+      header: "Duration",
+      accessor: (row) => <DurationCell value={row.duration} />,
+      align: "right",
+    },
+    {
+      id: "date",
+      header: "Date",
+      accessor: (row) => <DateCell value={row.date} />,
+      sortable: true,
+    },
   ];
 
   const simpleColumns: TableColumn<TableRow>[] = [
-    { id: "id", header: "ID", accessor: (row) => <IdCell value={row.id} />, width: "100px" },
+    {
+      id: "id",
+      header: "ID",
+      accessor: (row) => <IdCell value={row.id} />,
+      width: "100px",
+    },
     { id: "name", header: "Vessel", accessor: "name", sortable: true },
-    { id: "status", header: "Status", accessor: (row) => <StatusCell value={row.status} /> },
-    { id: "category", header: "Type", accessor: (row) => <TagCell value={row.category} variant="info" /> },
-    { id: "date", header: "Date", accessor: (row) => <DateCell value={row.date} /> },
+    {
+      id: "status",
+      header: "Status",
+      accessor: (row) => <StatusCell value={row.status} />,
+    },
+    {
+      id: "category",
+      header: "Type",
+      accessor: (row) => <TagCell value={row.category} variant="info" />,
+    },
+    {
+      id: "date",
+      header: "Date",
+      accessor: (row) => <DateCell value={row.date} />,
+    },
   ];
 
   const selectionStore = createSelectionStore<string>();
 
   const selectableColumns: TableColumn<TableRow>[] = [
-    { id: "name", header: "Vessel", accessor: (row) => <StringCell value={row.name} />, sortable: true },
-    { id: "status", header: "Status", accessor: (row) => <StatusCell value={row.status} /> },
-    { id: "category", header: "Type", accessor: (row) => <TagCell value={row.category} variant="success" /> },
-    { id: "amount", header: "Revenue", accessor: (row) => <MoneyCell value={row.amount} />, align: "right" },
+    {
+      id: "name",
+      header: "Vessel",
+      accessor: (row) => <StringCell value={row.name} />,
+      sortable: true,
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessor: (row) => <StatusCell value={row.status} />,
+    },
+    {
+      id: "category",
+      header: "Type",
+      accessor: (row) => <TagCell value={row.category} variant="success" />,
+    },
+    {
+      id: "amount",
+      header: "Revenue",
+      accessor: (row) => <MoneyCell value={row.amount} />,
+      align: "right",
+    },
   ];
 
   return (
@@ -1158,16 +2159,34 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Cell Renderers</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          IdCell, StringCell, StatusCell, TagCell, IntCell, MoneyCell, DurationCell, DateCell
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          IdCell, StringCell, StatusCell, TagCell, IntCell, MoneyCell,
+          DurationCell, DateCell
         </p>
-        <BaseTable data={data.slice(0, 5)} columns={cellRendererColumns} hoverable />
+        <BaseTable
+          data={data.slice(0, 5)}
+          columns={cellRendererColumns}
+          hoverable
+        />
       </div>
 
       <div class="example-group">
         <h3>QuickFilter</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Type to filter across all columns. Try "cargo", "active", or "2024-01-1".
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Type to filter across all columns. Try "cargo", "active", or
+          "2024-01-1".
         </p>
         <QuickFilter
           data={data}
@@ -1180,8 +2199,15 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Selectable Table</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Checkbox selection with action bar. Select rows to see the action bar appear.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Checkbox selection with action bar. Select rows to see the action bar
+          appear.
         </p>
         <SelectableTable
           data={data.slice(0, 5)}
@@ -1189,9 +2215,21 @@ const TableShowcase: Component = () => {
           getRowId={(row) => row.id}
           selectionStore={selectionStore}
           selectionActions={[
-            { label: "Export", variant: "default", onClick: (ids) => console.log(`Exporting ${ids.size} items`) },
-            { label: "Archive", variant: "primary", onClick: (ids) => console.log(`Archiving ${ids.size} items`) },
-            { label: "Delete", variant: "danger", onClick: (ids) => console.log(`Deleting ${ids.size} items`) },
+            {
+              label: "Export",
+              variant: "default",
+              onClick: (ids) => console.log(`Exporting ${ids.size} items`),
+            },
+            {
+              label: "Archive",
+              variant: "primary",
+              onClick: (ids) => console.log(`Archiving ${ids.size} items`),
+            },
+            {
+              label: "Delete",
+              variant: "danger",
+              onClick: (ids) => console.log(`Deleting ${ids.size} items`),
+            },
           ]}
           hoverable
         />
@@ -1199,28 +2237,75 @@ const TableShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Compact with Sticky Header</h3>
-        <BaseTable data={data} columns={simpleColumns} maxHeight="200px" stickyHeader compact hoverable />
+        <BaseTable
+          data={data}
+          columns={simpleColumns}
+          maxHeight="200px"
+          stickyHeader
+          compact
+          hoverable
+        />
       </div>
 
       <div class="example-group">
         <h3>Grouped Table (Rowspan)</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Vessel, Barge, and Date columns are rowspanned when multiple assets share the same vessel call.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Vessel, Barge, and Date columns are rowspanned when multiple assets
+          share the same vessel call.
         </p>
         <GroupedTableDemo />
       </div>
 
       <div class="example-group">
         <h3>DataTableContainer</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Scrollable wrapper with max-height and overflow. Wraps any table content.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Scrollable wrapper with max-height and overflow. Wraps any table
+          content.
         </p>
         <DataTableContainer maxHeight="180px">
           <table class="sui-table__table" style={{ width: "100%" }}>
-            <thead><tr><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Row</th><th style={{ padding: "8px", "text-align": "left", "border-bottom": "1px solid var(--sui-border)" }}>Value</th></tr></thead>
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    padding: "8px",
+                    "text-align": "left",
+                    "border-bottom": "1px solid var(--sui-border)",
+                  }}
+                >
+                  Row
+                </th>
+                <th
+                  style={{
+                    padding: "8px",
+                    "text-align": "left",
+                    "border-bottom": "1px solid var(--sui-border)",
+                  }}
+                >
+                  Value
+                </th>
+              </tr>
+            </thead>
             <tbody>
               <For each={Array.from({ length: 20 }, (_, i) => i + 1)}>
-                {(n) => <tr><td style={{ padding: "6px 8px" }}>Row {n}</td><td style={{ padding: "6px 8px" }}>{(n * 17) % 100}</td></tr>}
+                {(n) => (
+                  <tr>
+                    <td style={{ padding: "6px 8px" }}>Row {n}</td>
+                    <td style={{ padding: "6px 8px" }}>{(n * 17) % 100}</td>
+                  </tr>
+                )}
               </For>
             </tbody>
           </table>
@@ -1239,7 +2324,10 @@ const SectionShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Default Section</h3>
-        <Section title="Section Title" subtitle="This is a subtitle with additional context">
+        <Section
+          title="Section Title"
+          subtitle="This is a subtitle with additional context"
+        >
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Section content goes here.
           </p>
@@ -1248,7 +2336,11 @@ const SectionShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Bordered Section</h3>
-        <Section title="Bordered Section" subtitle="With border and background" variant="bordered">
+        <Section
+          title="Bordered Section"
+          subtitle="With border and background"
+          variant="bordered"
+        >
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             This section has a border and background.
           </p>
@@ -1268,10 +2360,14 @@ const SectionShowcase: Component = () => {
         <h3>Panel</h3>
         <div class="example-row" style={{ gap: "16px" }}>
           <Panel title="Panel with Title" style={{ flex: 1 }}>
-            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Panel content</p>
+            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+              Panel content
+            </p>
           </Panel>
           <Panel padding="sm" style={{ flex: 1 }}>
-            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Small padding panel</p>
+            <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+              Small padding panel
+            </p>
           </Panel>
         </div>
       </div>
@@ -1279,11 +2375,17 @@ const SectionShowcase: Component = () => {
       <div class="example-group">
         <h3>Dividers</h3>
         <Panel>
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content above</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content above
+          </p>
           <Divider />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (solid)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content below (solid)
+          </p>
           <Divider variant="dashed" />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>Content below (dashed)</p>
+          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+            Content below (dashed)
+          </p>
         </Panel>
       </div>
     </div>
@@ -1299,9 +2401,16 @@ const SelectorShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Sidebar Selector</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
           A sidebar with selectable cards and an arbitrary content display area.
-          This demo shows Avatar: The Last Airbender episodes with character focus.
+          This demo shows Avatar: The Last Airbender episodes with character
+          focus.
         </p>
         <SidebarSelectorDemo />
       </div>
@@ -1326,10 +2435,24 @@ const CardShowcase: Component = () => {
 
       <div class="example-group">
         <h3>RemovableItemCard — States</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Click a card to set it active. Cards support title, details slot, remove button, and children.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Click a card to set it active. Cards support title, details slot,
+          remove button, and children.
         </p>
-        <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
+        <div
+          style={{
+            width: "220px",
+            display: "flex",
+            "flex-direction": "column",
+            gap: "10px",
+          }}
+        >
           <For each={items}>
             {(v) => (
               <div onClick={() => setActiveId(v.id)}>
@@ -1339,8 +2462,26 @@ const CardShowcase: Component = () => {
                   onRemove={() => setActiveId("")}
                   details={
                     <>
-                      <span style={{ "font-size": "12px", "font-weight": "600", color: "var(--sui-text-secondary)", background: "rgba(0,168,204,0.15)", padding: "2px 6px", "border-radius": "3px" }}>{v.asset}</span>
-                      <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>{v.date}</span>
+                      <span
+                        style={{
+                          "font-size": "12px",
+                          "font-weight": "600",
+                          color: "var(--sui-text-secondary)",
+                          background: "rgba(0,168,204,0.15)",
+                          padding: "2px 6px",
+                          "border-radius": "3px",
+                        }}
+                      >
+                        {v.asset}
+                      </span>
+                      <span
+                        style={{
+                          "font-size": "11px",
+                          color: "var(--sui-text-muted)",
+                        }}
+                      >
+                        {v.date}
+                      </span>
                     </>
                   }
                 />
@@ -1352,14 +2493,34 @@ const CardShowcase: Component = () => {
 
       <div class="example-group">
         <h3>RemovableItemCard — Minimal</h3>
-        <div style={{ width: "220px", display: "flex", "flex-direction": "column", gap: "10px" }}>
+        <div
+          style={{
+            width: "220px",
+            display: "flex",
+            "flex-direction": "column",
+            gap: "10px",
+          }}
+        >
           <RemovableItemCard title="Title Only" />
           <RemovableItemCard title="With Remove" onRemove={() => {}} />
           <RemovableItemCard
             title="With Children"
-            details={<span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>Detail text</span>}
+            details={
+              <span
+                style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}
+              >
+                Detail text
+              </span>
+            }
           >
-            <div style={{ "font-size": "11px", color: "var(--sui-text-muted)", "border-top": "1px solid rgba(0,168,204,0.2)", "padding-top": "8px" }}>
+            <div
+              style={{
+                "font-size": "11px",
+                color: "var(--sui-text-muted)",
+                "border-top": "1px solid rgba(0,168,204,0.2)",
+                "padding-top": "8px",
+              }}
+            >
               Footer content (heatmap, sparkline, etc.)
             </div>
           </RemovableItemCard>
@@ -1375,31 +2536,135 @@ export const HopperShowcase: Component = () => {
   return (
     <div class="component-section">
       <HUDShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Badges</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Badges
+      </h2>
       <HopperBadgesShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Feedback</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Feedback
+      </h2>
       <FeedbackShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Data Display</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Data Display
+      </h2>
       <DataDisplayShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Inputs</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Inputs
+      </h2>
       <HopperInputsShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Button</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Button
+      </h2>
       <HopperButtonShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Icon</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Icon
+      </h2>
       <HopperIconShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Toggle</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Toggle
+      </h2>
       <HopperToggleShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Progress</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Progress
+      </h2>
       <ProgressShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Heatmap</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Heatmap
+      </h2>
       <HeatmapShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Table</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Table
+      </h2>
       <TableShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Section</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Section
+      </h2>
       <SectionShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Selector</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Selector
+      </h2>
       <SelectorShowcase />
-      <h2 style={{ "margin-top": "48px", "padding-top": "32px", "border-top": "2px solid var(--sui-border)" }}>Card</h2>
+      <h2
+        style={{
+          "margin-top": "48px",
+          "padding-top": "32px",
+          "border-top": "2px solid var(--sui-border)",
+        }}
+      >
+        Card
+      </h2>
       <CardShowcase />
     </div>
   );

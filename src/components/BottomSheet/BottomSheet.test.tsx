@@ -65,8 +65,12 @@ describe("BottomSheet", () => {
     expect(container.querySelector(".sui-bottom-sheet--open")).toBeNull();
     unmount();
 
-    const reopened = render(() => <BottomSheet open={true} onClose={() => {}} />);
-    expect(reopened.container.querySelector(".sui-bottom-sheet--open")).toBeTruthy();
+    const reopened = render(() => (
+      <BottomSheet open={true} onClose={() => {}} />
+    ));
+    expect(
+      reopened.container.querySelector(".sui-bottom-sheet--open"),
+    ).toBeTruthy();
   });
 
   it("uses the label prop as the dialog aria-label", () => {

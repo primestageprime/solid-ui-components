@@ -116,7 +116,13 @@ export const Select: Component<SelectProps> = (props) => {
             {itemProps.item.textValue}
           </KobalteSelect.ItemLabel>
           <KobalteSelect.ItemIndicator class="sui-select__item-indicator">
-            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
+            <svg
+              width={14}
+              height={14}
+              viewBox="0 0 16 16"
+              fill="none"
+              innerHTML={ICON_PATHS["check"].outline}
+            />
           </KobalteSelect.ItemIndicator>
         </KobalteSelect.Item>
       )}
@@ -131,10 +137,18 @@ export const Select: Component<SelectProps> = (props) => {
         aria-label={local.label}
       >
         <KobalteSelect.Value<SelectOption> class="sui-select__value">
-          {(state) => renderValue(state, placeholder(), local.multiple === true)}
+          {(state) =>
+            renderValue(state, placeholder(), local.multiple === true)
+          }
         </KobalteSelect.Value>
         <KobalteSelect.Icon class="sui-select__icon">
-          <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
+          <svg
+            width={14}
+            height={14}
+            viewBox="0 0 16 16"
+            fill="none"
+            innerHTML={ICON_PATHS["chevron-down"].outline}
+          />
         </KobalteSelect.Icon>
       </KobalteSelect.Trigger>
       <Show when={local.description}>
@@ -184,7 +198,13 @@ const renderValue = (
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => state.clear()}
       >
-        <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
+        <svg
+          width={12}
+          height={12}
+          viewBox="0 0 16 16"
+          fill="none"
+          innerHTML={ICON_PATHS["close"].outline}
+        />
       </button>
     </>
   );

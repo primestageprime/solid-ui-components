@@ -11,7 +11,9 @@ const warnUnknownLane = (lane: string): null => {
   if (warnedLanes.has(lane)) return null;
   warnedLanes.add(lane);
   // eslint-disable-next-line no-console
-  console.warn(`TimelineBar: bar references unknown lane "${lane}" — bar skipped`);
+  console.warn(
+    `TimelineBar: bar references unknown lane "${lane}" — bar skipped`,
+  );
   return null;
 };
 
@@ -46,7 +48,9 @@ export type BandYAnchor =
   | { anchor: "margin-bottom"; gapPx?: number }
   | { y: number };
 
-export interface TimelineBarProps<T extends TimelineBarDatum = TimelineBarDatum> {
+export interface TimelineBarProps<
+  T extends TimelineBarDatum = TimelineBarDatum,
+> {
   data: readonly T[];
   /** Lane order (top-to-bottom). If omitted, inferred from data encounter order. */
   lanes?: readonly string[];
@@ -123,8 +127,9 @@ export interface TimelineBarOverrides {
   segmentStrokeWidth?: number;
   class?: string;
 }
-export type TimelineBarDataProps<T extends TimelineBarDatum = TimelineBarDatum> =
-  Omit<TimelineBarProps<T>, keyof TimelineBarOverrides>;
+export type TimelineBarDataProps<
+  T extends TimelineBarDatum = TimelineBarDatum,
+> = Omit<TimelineBarProps<T>, keyof TimelineBarOverrides>;
 
 export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   props: TimelineBarProps<T>,
@@ -219,10 +224,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               merged.highlightedState != null &&
               bar.state === merged.highlightedState;
             return (
-              <Show
-                when={laneIdx() >= 0}
-                fallback={warnUnknownLane(bar.lane)}
-              >
+              <Show when={laneIdx() >= 0} fallback={warnUnknownLane(bar.lane)}>
                 <rect
                   class="sui-chart__timeline-bar"
                   data-id={bar.id}
@@ -240,7 +242,12 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                   onPointerDown={(e) => merged.onBarClick?.(bar, e)}
                   onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
                   onPointerLeave={(e) => merged.onBarHover?.(null, e)}
-                  style={{ cursor: (merged.onBarClick || merged.onBarHover) ? "pointer" : undefined }}
+                  style={{
+                    cursor:
+                      merged.onBarClick || merged.onBarHover
+                        ? "pointer"
+                        : undefined,
+                  }}
                 />
               </Show>
             );
@@ -277,8 +284,12 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
   );
 }
 
-export function createTimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
+export function createTimelineBar<
+  T extends TimelineBarDatum = TimelineBarDatum,
+>(
   defaults: Partial<Omit<TimelineBarProps<T>, "children">>,
 ): Component<TimelineBarDataProps<T>> {
-  return (props) => <TimelineBar<T> {...mergeProps(defaults, props as TimelineBarProps<T>)} />;
+  return (props) => (
+    <TimelineBar<T> {...mergeProps(defaults, props as TimelineBarProps<T>)} />
+  );
 }

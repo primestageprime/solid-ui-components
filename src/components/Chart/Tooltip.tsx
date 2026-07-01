@@ -26,7 +26,11 @@ export interface ChartTooltipProps<T> {
   offset?: { x: number; y: number };
 }
 
-const nearest = <T,>(data: readonly T[], x: (d: T) => number, target: number): T | null => {
+const nearest = <T,>(
+  data: readonly T[],
+  x: (d: T) => number,
+  target: number,
+): T | null => {
   if (data.length === 0) return null;
   let best: T | null = null;
   let bestDist = Infinity;
@@ -54,7 +58,8 @@ export function ChartTooltip<T>(props: ChartTooltipProps<T>) {
   return (
     <Show when={point()}>
       {(pt) => {
-        const px = () => ctx.xScale()(props.x(pt().p)) + ctx.margin().left + offset().x;
+        const px = () =>
+          ctx.xScale()(props.x(pt().p)) + ctx.margin().left + offset().x;
         const py = () => {
           const baseTop = ctx.margin().top;
           if (!props.y) return baseTop + offset().y;

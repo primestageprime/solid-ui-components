@@ -48,7 +48,10 @@ describe("GhostPin — reactivity", () => {
   });
 
   it("hides when descriptor flips to null", () => {
-    const [desc, setDesc] = createSignal<Descriptor | null>({ color: "#fff", shape: "pin" });
+    const [desc, setDesc] = createSignal<Descriptor | null>({
+      color: "#fff",
+      shape: "pin",
+    });
     let setHover: ((x: number | null) => void) | null = null;
     const Probe: Component = () => {
       const ctx = useChart();
@@ -211,6 +214,8 @@ describe("GhostPin — curried variants", () => {
       </Chart>
     ));
     setHover!(5);
-    expect(container.querySelector(".sui-chart__ghost-pin--warning")).toBeTruthy();
+    expect(
+      container.querySelector(".sui-chart__ghost-pin--warning"),
+    ).toBeTruthy();
   });
 });

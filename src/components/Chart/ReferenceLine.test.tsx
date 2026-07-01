@@ -35,7 +35,6 @@ describe("ReferenceLine — orientation API", () => {
     ));
     expect(container.querySelector(".sui-chart__ref line")).toBeTruthy();
   });
-
 });
 
 describe("ReferenceLine — type-level enforcement", () => {
@@ -50,7 +49,11 @@ describe("ReferenceLine — type-level enforcement", () => {
     const _legacyY: ReferenceLineProps = { y: 50 };
     // Valid form compiles:
     const _ok: ReferenceLineProps = { orientation: "horizontal", value: 50 };
-    void _empty; void _partial; void _legacyX; void _legacyY; void _ok;
+    void _empty;
+    void _partial;
+    void _legacyX;
+    void _legacyY;
+    void _ok;
     expect(true).toBe(true);
   });
 });

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { MonthOfYearPicker, createMonthOfYearPicker } from "./MonthOfYearPicker";
+import {
+  MonthOfYearPicker,
+  createMonthOfYearPicker,
+} from "./MonthOfYearPicker";
 
 describe("MonthOfYearPicker", () => {
   it("renders the 12 month cells Jan–Dec", () => {
@@ -17,7 +20,9 @@ describe("MonthOfYearPicker", () => {
     const { container } = render(() => (
       <MonthOfYearPicker value={4} onChange={() => {}} />
     ));
-    const selected = container.querySelectorAll(".sui-moy-picker__cell--selected");
+    const selected = container.querySelectorAll(
+      ".sui-moy-picker__cell--selected",
+    );
     expect(selected.length).toBe(1);
     expect(selected[0].textContent).toBe("Apr");
     expect(selected[0].getAttribute("aria-selected")).toBe("true");
@@ -34,7 +39,9 @@ describe("MonthOfYearPicker", () => {
 
   it("createMonthOfYearPicker bakes defaults", () => {
     const Picker = createMonthOfYearPicker({ cellSize: "2rem" });
-    const { container } = render(() => <Picker value={null} onChange={() => {}} />);
+    const { container } = render(() => (
+      <Picker value={null} onChange={() => {}} />
+    ));
     const root = container.firstElementChild as HTMLElement;
     expect(root.style.getPropertyValue("--moy-cell-size")).toBe("2rem");
   });

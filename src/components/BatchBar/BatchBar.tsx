@@ -99,7 +99,9 @@ const clampPct = (n: number) => Math.max(0, Math.min(100, n));
 const clampFrac = (n: number) => Math.max(0, Math.min(1, n));
 
 /** A batches array uses the declarative API iff its entries are `{rows,state}` */
-function isDeclarative(b: BatchSpec[] | number[] | undefined): b is BatchSpec[] {
+function isDeclarative(
+  b: BatchSpec[] | number[] | undefined,
+): b is BatchSpec[] {
   return Array.isArray(b) && b.length > 0 && typeof b[0] === "object";
 }
 

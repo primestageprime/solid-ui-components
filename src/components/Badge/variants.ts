@@ -10,19 +10,29 @@ import type { StatusBadgeDataProps } from "./StatusBadge";
 import type { Component } from "solid-js";
 
 /** Small badge with size baked; variant supplied at the call site (data-driven). */
-export const SmStatusBadge: Component<StatusBadgeDataProps> = createStatusBadge({ size: "sm" });
+export const SmStatusBadge: Component<StatusBadgeDataProps> = createStatusBadge(
+  { size: "sm" },
+);
 
 /** Green compliance badge. */
-export const CompliantBadge: Component<StatusBadgeDataProps> = createStatusBadge({ variant: "compliant" });
+export const CompliantBadge: Component<StatusBadgeDataProps> =
+  createStatusBadge({ variant: "compliant" });
 
 /** Red violation badge. */
-export const ViolationBadge: Component<StatusBadgeDataProps> = createStatusBadge({ variant: "violation" });
+export const ViolationBadge: Component<StatusBadgeDataProps> =
+  createStatusBadge({ variant: "violation" });
 
 /** Amber warning badge. */
-export const WarningBadge: Component<StatusBadgeDataProps> = createStatusBadge({ variant: "warning" });
+export const WarningBadge: Component<StatusBadgeDataProps> = createStatusBadge({
+  variant: "warning",
+});
 
 /** Neutral pending badge. */
-export const PendingBadge: Component<StatusBadgeDataProps> = createStatusBadge({ variant: "pending" });
+export const PendingBadge: Component<StatusBadgeDataProps> = createStatusBadge({
+  variant: "pending",
+});
 
 /** Blue informational badge. */
-export const InfoBadge: Component<StatusBadgeDataProps> = createStatusBadge({ variant: "info" });
+export const InfoBadge: Component<StatusBadgeDataProps> = createStatusBadge({
+  variant: "info",
+});

@@ -1,20 +1,20 @@
 /* Alarm-overlay tokens. Override any of these in your theme to retint the
  * alarm treatments — single source of truth for fill / stroke / typography. */
 :root {
-  --sui-alarm-band-fill:        #ff4040;
+  --sui-alarm-band-fill: #ff4040;
   --sui-alarm-band-fill-opacity: 0.22;
 
-  --sui-alarm-zone-stroke:      #ff4040;
+  --sui-alarm-zone-stroke: #ff4040;
   --sui-alarm-zone-stroke-width: 2;
   --sui-alarm-zone-stripe-fill: #ff4040;
-  --sui-alarm-zone-stripe-bg-opacity:   0.30;
+  --sui-alarm-zone-stripe-bg-opacity: 0.3;
   --sui-alarm-zone-stripe-line-opacity: 0.55;
   /* Stripe geometry (spacing, line width) is set numerically via
    * `AlarmStripeDefs` props — SVG geometry attributes don't resolve
    * `var(...)`, so a CSS var here would collapse the pattern tile. */
 
-  --sui-alarm-count-fill:       #ffd0d0;
-  --sui-alarm-count-font:       "JetBrains Mono", monospace;
-  --sui-alarm-count-size:       11px;
-  --sui-alarm-count-weight:     600;
+  --sui-alarm-count-fill: #ffd0d0;
+  --sui-alarm-count-font: "JetBrains Mono", monospace;
+  --sui-alarm-count-size: 11px;
+  --sui-alarm-count-weight: 600;
 }

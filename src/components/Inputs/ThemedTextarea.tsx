@@ -8,7 +8,8 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./ThemedInputs.css";
 
-export interface ThemedTextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface ThemedTextareaProps
+  extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
 }
 

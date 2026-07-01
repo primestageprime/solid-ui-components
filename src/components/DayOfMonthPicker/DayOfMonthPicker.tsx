@@ -7,7 +7,13 @@
 //   <DayOfMonthPicker value={9} onChange={(d) => ...} />
 // Factory: createDayOfMonthPicker() for curried variants.
 // ============================================
-import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./DayOfMonthPicker.css";
 
 export interface DayOfMonthPickerProps
@@ -49,7 +55,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
   // lastOfMonth mode caps the numeric grid at 28 — the 29/30/31 slots are
   // replaced by the single wide "Last of month" cell.
   const max = () =>
-    local.lastOfMonth ? Math.min(local.max ?? 28, 28) : local.max ?? 31;
+    local.lastOfMonth ? Math.min(local.max ?? 28, 28) : (local.max ?? 31);
   const days = () => Array.from({ length: max() }, (_, i) => i + 1);
 
   const rootClass = () =>

@@ -6,10 +6,10 @@ import type { SelectionStore } from "./types";
  * Selection state resets on page reload.
  */
 export function createSelectionStore<Id = string>(
-  initialSelection?: Set<Id>
+  initialSelection?: Set<Id>,
 ): SelectionStore<Id> {
   const [selected, setSelected] = createSignal<Set<Id>>(
-    initialSelection ?? new Set()
+    initialSelection ?? new Set(),
   );
   return { selected, setSelected };
 }
@@ -25,7 +25,7 @@ export function createSelectionStore<Id = string>(
  */
 export function fromSignal<Id = string>(
   accessor: Accessor<Set<Id>>,
-  setter: Setter<Set<Id>>
+  setter: Setter<Set<Id>>,
 ): SelectionStore<Id> {
   return { selected: accessor, setSelected: setter };
 }

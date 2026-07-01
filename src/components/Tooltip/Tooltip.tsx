@@ -9,7 +9,13 @@ import {
   Tooltip as KobalteTooltip,
   type TooltipRootProps,
 } from "@kobalte/core/tooltip";
-import { type Accessor, type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Accessor,
+  type Component,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./Tooltip.css";
 
 /** Content accepted by `Tooltip.content` — a primitive, JSX, or an accessor of either. */
@@ -39,7 +45,11 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     { openDelay: DEFAULT_OPEN_DELAY, closeDelay: DEFAULT_CLOSE_DELAY },
     props,
   );
-  const [local, rest] = splitProps(withDefaults, ["content", "children", "class"]);
+  const [local, rest] = splitProps(withDefaults, [
+    "content",
+    "children",
+    "class",
+  ]);
 
   const triggerClass = () =>
     ["sui-tooltip__trigger", local.class].filter(Boolean).join(" ");

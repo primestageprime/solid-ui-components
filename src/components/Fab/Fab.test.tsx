@@ -22,7 +22,9 @@ describe("Fab", () => {
   });
 
   it("merges a consumer-supplied class", () => {
-    const { container } = render(() => <Fab icon="plus" label="Add" class="extra" />);
+    const { container } = render(() => (
+      <Fab icon="plus" label="Add" class="extra" />
+    ));
     const btn = container.querySelector("button")!;
     expect(btn.className).toMatch(/sui-fab/);
     expect(btn.className).toMatch(/extra/);
@@ -30,17 +32,23 @@ describe("Fab", () => {
 
   it("sets aria-label from label prop", () => {
     const { container } = render(() => <Fab icon="plus" label="Add item" />);
-    expect(container.querySelector("button")!.getAttribute("aria-label")).toBe("Add item");
+    expect(container.querySelector("button")!.getAttribute("aria-label")).toBe(
+      "Add item",
+    );
   });
 
   it("sets title from label prop", () => {
     const { container } = render(() => <Fab icon="plus" label="Add item" />);
-    expect(container.querySelector("button")!.getAttribute("title")).toBe("Add item");
+    expect(container.querySelector("button")!.getAttribute("title")).toBe(
+      "Add item",
+    );
   });
 
   it("fires onClick when clicked", () => {
     const handler = vi.fn();
-    const { container } = render(() => <Fab icon="plus" label="Add" onClick={handler} />);
+    const { container } = render(() => (
+      <Fab icon="plus" label="Add" onClick={handler} />
+    ));
     fireEvent.click(container.querySelector("button")!);
     expect(handler).toHaveBeenCalledTimes(1);
   });
@@ -60,7 +68,9 @@ describe("Fab", () => {
     const { container } = render(() => (
       <Fab icon="plus" label="Add" data-testid="my-fab" />
     ));
-    expect(container.querySelector("button")!.getAttribute("data-testid")).toBe("my-fab");
+    expect(container.querySelector("button")!.getAttribute("data-testid")).toBe(
+      "my-fab",
+    );
   });
 });
 
@@ -75,19 +85,25 @@ describe("AddFab (curried variant)", () => {
 
   it("passes label through as aria-label", () => {
     const { container } = render(() => <AddFab label="Add item" />);
-    expect(container.querySelector("button")!.getAttribute("aria-label")).toBe("Add item");
+    expect(container.querySelector("button")!.getAttribute("aria-label")).toBe(
+      "Add item",
+    );
   });
 
   it("passes onClick through to the underlying button", () => {
     const handler = vi.fn();
-    const { container } = render(() => <AddFab label="Add item" onClick={handler} />);
+    const { container } = render(() => (
+      <AddFab label="Add item" onClick={handler} />
+    ));
     fireEvent.click(container.querySelector("button")!);
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("respects the disabled prop", () => {
     const handler = vi.fn();
-    const { container } = render(() => <AddFab label="Add item" disabled onClick={handler} />);
+    const { container } = render(() => (
+      <AddFab label="Add item" disabled onClick={handler} />
+    ));
     const btn = container.querySelector("button")!;
     expect(btn.disabled).toBe(true);
     fireEvent.click(btn);

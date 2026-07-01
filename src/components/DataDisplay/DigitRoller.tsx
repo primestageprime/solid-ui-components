@@ -5,7 +5,14 @@
 // Owns CSS (DigitRoller.css), no component imports.
 // Animated digit-by-digit value transition.
 // ============================================
-import { type Component, For, Show, createEffect, createSignal, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createEffect,
+  createSignal,
+  splitProps,
+} from "solid-js";
 import "./DigitRoller.css";
 
 export interface DigitRollerProps {
@@ -42,7 +49,11 @@ type Direction = "up" | "down";
  * every column so cross-decade columns (e.g. units 9→0 when the whole number
  * goes 19→20) roll in the same direction as the rest.
  */
-function buildOdometerPath(from: number, to: number, direction: Direction): number[] {
+function buildOdometerPath(
+  from: number,
+  to: number,
+  direction: Direction,
+): number[] {
   if (from === to) return [from];
   const path: number[] = [from];
   let cur = from;
@@ -72,8 +83,12 @@ function alignOnDecimal(a: string, b: string): [string, string] {
   const maxInt = Math.max(aInt.length, bInt.length);
   const maxDec = Math.max(aDec.length, bDec.length);
 
-  const padA = aInt.padStart(maxInt, "0") + (maxDec > 0 ? "." + aDec.padEnd(maxDec, "0") : "");
-  const padB = bInt.padStart(maxInt, "0") + (maxDec > 0 ? "." + bDec.padEnd(maxDec, "0") : "");
+  const padA =
+    aInt.padStart(maxInt, "0") +
+    (maxDec > 0 ? "." + aDec.padEnd(maxDec, "0") : "");
+  const padB =
+    bInt.padStart(maxInt, "0") +
+    (maxDec > 0 ? "." + bDec.padEnd(maxDec, "0") : "");
   return [padA, padB];
 }
 
@@ -173,7 +188,10 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
 
   // If same value or no previous, fire immediately
   createEffect(() => {
-    if (local.animate && (local.previousValue == null || local.previousValue === local.value)) {
+    if (
+      local.animate &&
+      (local.previousValue == null || local.previousValue === local.value)
+    ) {
       local.onAnimationEnd?.();
     }
   });

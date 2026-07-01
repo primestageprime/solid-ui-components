@@ -28,7 +28,9 @@ const CARD_W = 300;
 const CARD_H = 108;
 
 const Slot: Component<{ children: any }> = (props) => (
-  <div style={{ width: `${CARD_W}px`, height: `${CARD_H}px` }}>{props.children}</div>
+  <div style={{ width: `${CARD_W}px`, height: `${CARD_H}px` }}>
+    {props.children}
+  </div>
 );
 
 const Grid: Component<{ children: any }> = (props) => (
@@ -46,18 +48,69 @@ const Grid: Component<{ children: any }> = (props) => (
 
 // ── states gallery ───────────────────────────────────────────────────────────
 const STATES: {
-  title: string; subtitle: string;
-  status: WorkStatus; estimate?: number; actual?: number;
+  title: string;
+  subtitle: string;
+  status: WorkStatus;
+  estimate?: number;
+  actual?: number;
 }[] = [
   { title: "A · new", subtitle: "0% — not started", status: "NEW" },
-  { title: "B · in progress", subtitle: "40% of estimate", status: "DOING", estimate: 5, actual: 2 },
-  { title: "C · in progress", subtitle: "120% — over budget", status: "DOING", estimate: 5, actual: 6 },
-  { title: "D · done", subtitle: "on time (~95%)", status: "DONE", estimate: 100, actual: 95 },
-  { title: "E · done", subtitle: "under budget (60%)", status: "DONE", estimate: 5, actual: 3 },
-  { title: "F · done", subtitle: "over budget (120%)", status: "DONE", estimate: 5, actual: 6 },
-  { title: "G · blocked", subtitle: "waiting on dependency", status: "BLOCKED", estimate: 5, actual: 2 },
-  { title: "H · question", subtitle: "awaiting an answer", status: "QUESTION", estimate: 5, actual: 2 },
-  { title: "I · closed", subtitle: "incomplete", status: "CLOSED", estimate: 5, actual: 3 },
+  {
+    title: "B · in progress",
+    subtitle: "40% of estimate",
+    status: "DOING",
+    estimate: 5,
+    actual: 2,
+  },
+  {
+    title: "C · in progress",
+    subtitle: "120% — over budget",
+    status: "DOING",
+    estimate: 5,
+    actual: 6,
+  },
+  {
+    title: "D · done",
+    subtitle: "on time (~95%)",
+    status: "DONE",
+    estimate: 100,
+    actual: 95,
+  },
+  {
+    title: "E · done",
+    subtitle: "under budget (60%)",
+    status: "DONE",
+    estimate: 5,
+    actual: 3,
+  },
+  {
+    title: "F · done",
+    subtitle: "over budget (120%)",
+    status: "DONE",
+    estimate: 5,
+    actual: 6,
+  },
+  {
+    title: "G · blocked",
+    subtitle: "waiting on dependency",
+    status: "BLOCKED",
+    estimate: 5,
+    actual: 2,
+  },
+  {
+    title: "H · question",
+    subtitle: "awaiting an answer",
+    status: "QUESTION",
+    estimate: 5,
+    actual: 2,
+  },
+  {
+    title: "I · closed",
+    subtitle: "incomplete",
+    status: "CLOSED",
+    estimate: 5,
+    actual: 3,
+  },
 ];
 
 // ── live simulation ──────────────────────────────────────────────────────────
@@ -107,16 +160,36 @@ const LiveTasks: Component = () => {
     now() >= endsAt ? [{ start: 0, end: endsAt }] : [{ start: 0 }];
 
   return (
-    <div style={{ "margin-top": "32px", display: "flex", "flex-direction": "column", gap: "12px" }}>
+    <div
+      style={{
+        "margin-top": "32px",
+        display: "flex",
+        "flex-direction": "column",
+        gap: "12px",
+      }}
+    >
       <div style={{ "font-size": "13px", color: "rgba(255,255,255,0.7)" }}>
-        Live — three tasks started together (10s estimate). Actual accrues from work
-        segments (<code>now − start</code>) while running and freezes when each ends.
+        Live — three tasks started together (10s estimate). Actual accrues from
+        work segments (<code>now − start</code>) while running and freezes when
+        each ends.
       </div>
       <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
-        <button type="button" onClick={play}>{playing() ? "⏸ Pause" : "▶ Play"}</button>
-        <button type="button" onClick={step} disabled={playing()}>Step →</button>
-        <button type="button" onClick={reset}>↺ Reset</button>
-        <span style={{ "font-family": "ui-monospace, monospace", color: "rgba(255,255,255,0.6)", "margin-left": "8px" }}>
+        <button type="button" onClick={play}>
+          {playing() ? "⏸ Pause" : "▶ Play"}
+        </button>
+        <button type="button" onClick={step} disabled={playing()}>
+          Step →
+        </button>
+        <button type="button" onClick={reset}>
+          ↺ Reset
+        </button>
+        <span
+          style={{
+            "font-family": "ui-monospace, monospace",
+            color: "rgba(255,255,255,0.6)",
+            "margin-left": "8px",
+          }}
+        >
           t = {now().toFixed(1)}s
         </span>
       </div>
@@ -125,7 +198,8 @@ const LiveTasks: Component = () => {
           {(task) => {
             const segs = () => segmentsFor(task.endsAt);
             const actual = () => actualFromSegments(segs(), now());
-            const status = (): WorkStatus => (isRunning(segs()) ? "DOING" : "DONE");
+            const status = (): WorkStatus =>
+              isRunning(segs()) ? "DOING" : "DONE";
             return (
               <Slot>
                 <WorkProgressCard
@@ -146,13 +220,27 @@ const LiveTasks: Component = () => {
 };
 
 export const WorkProgressCardShowcase: Component = () => (
-  <div class="component-section--full" style={{ padding: "24px", display: "flex", "flex-direction": "column", gap: "16px" }}>
-    <div style={{ "font-size": "14px", color: "rgba(255,255,255,0.7)", "max-width": "760px" }}>
+  <div
+    class="component-section--full"
+    style={{
+      padding: "24px",
+      display: "flex",
+      "flex-direction": "column",
+      gap: "16px",
+    }}
+  >
+    <div
+      style={{
+        "font-size": "14px",
+        color: "rgba(255,255,255,0.7)",
+        "max-width": "760px",
+      }}
+    >
       Data-only card — pass <code>status</code>, <code>estimate</code>, and{" "}
       <code>actual</code>; the library derives the bar (blue in-progress, green
       complete, crimson over-budget, grey unused, ⚠/? for blocked/question). The
-      nine states below are static; the live view drives <code>actual</code> from
-      work segments off a clock.
+      nine states below are static; the live view drives <code>actual</code>{" "}
+      from work segments off a clock.
     </div>
     <Grid>
       <For each={STATES}>

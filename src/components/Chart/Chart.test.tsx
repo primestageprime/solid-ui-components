@@ -60,8 +60,13 @@ describe("Chart", () => {
   it("throws on mixed-type xDomain", () => {
     expect(() =>
       render(() => (
-        // @ts-expect-error — testing the runtime guard
-        <Chart width={200} height={100} xDomain={[0, new Date(2026, 0, 1)]} yDomain={[0, 100]} />
+        <Chart
+          width={200}
+          height={100}
+          // @ts-expect-error — testing the runtime guard
+          xDomain={[0, new Date(2026, 0, 1)]}
+          yDomain={[0, 100]}
+        />
       )),
     ).toThrow(/mixed types/);
   });
@@ -200,7 +205,9 @@ describe("Chart — plot-area clip-path", () => {
         <Probe />
       </Chart>
     ));
-    const id = container.querySelector("svg > defs > clipPath")!.getAttribute("id")!;
+    const id = container
+      .querySelector("svg > defs > clipPath")!
+      .getAttribute("id")!;
     expect(captured!.clip.plotPathUrl()).toBe(`url(#${id})`);
   });
 });
@@ -214,8 +221,12 @@ describe("XAxis time-aware formatting", () => {
         <XAxis tickCount={3} />
       </Chart>
     ));
-    const labels = Array.from(container.querySelectorAll(".sui-chart__axis-label"));
-    const anyTimeFormatted = labels.some((el) => /[:a-zA-Z/]/.test(el.textContent ?? ""));
+    const labels = Array.from(
+      container.querySelectorAll(".sui-chart__axis-label"),
+    );
+    const anyTimeFormatted = labels.some((el) =>
+      /[:a-zA-Z/]/.test(el.textContent ?? ""),
+    );
     expect(anyTimeFormatted).toBe(true);
   });
 });
@@ -492,13 +503,13 @@ describe("Chart — global nearest emphasis coordinator", () => {
       </Chart>
     ));
     setHover!(5);
-    expect(
-      container.querySelectorAll('[data-emphasized="true"]').length,
-    ).toBe(1);
+    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(
+      1,
+    );
     setHover!(null);
-    expect(
-      container.querySelectorAll('[data-emphasized="true"]').length,
-    ).toBe(0);
+    expect(container.querySelectorAll('[data-emphasized="true"]').length).toBe(
+      0,
+    );
   });
 
   it("exposes emphasis.winnerId via context (null when no candidates)", () => {

@@ -23,11 +23,7 @@ import {
 import { createStore, reconcile } from "solid-js/store";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
-import {
-  DagArrowMarker,
-  DagSvgNode,
-  DagSvgEdge,
-} from "../../internal/dag-svg";
+import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
 import {
   computeBoundaryBadges,
@@ -100,7 +96,13 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [containerHeight, setContainerHeight] = createSignal(0);
 
-  const { transformString, centerOnPoint, fitToView, pointerHandlers, onWheel } = createPanZoom();
+  const {
+    transformString,
+    centerOnPoint,
+    fitToView,
+    pointerHandlers,
+    onWheel,
+  } = createPanZoom();
 
   const nodeSize = (node: DAGNode<T>): [number, number] =>
     props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
@@ -163,7 +165,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     // to outer-right node center. The remaining width pays for one
     // full node (the outer node's far half on each side adds to one
     // node width total) plus badge slots and padding.
-    const fittable = (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (2 * depth);
+    const fittable =
+      (cw - nw - 2 * BADGE_EXTENT - 2 * H_PADDING_PX) / (2 * depth);
     return Math.max(minGap, Math.min(fittable, userDefault));
   });
   // Retained for forward compat; not used in the new discrete algorithm.
@@ -205,7 +208,15 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       });
     } catch (err) {
       console.error("[SwimlaneChart] layout failed:", err);
-      return { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0, summaries: [], rowOverflows: [], centerCol: props.centerCol ?? 0 };
+      return {
+        positions: new Map(),
+        edges: [],
+        totalWidth: 0,
+        totalHeight: 0,
+        summaries: [],
+        rowOverflows: [],
+        centerCol: props.centerCol ?? 0,
+      };
     }
   });
 
@@ -258,9 +269,9 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // CSS animation runs from "outside" into place.
   const NODE_LEAVE_MS = 360; // matches the compress keyframe in CSS
   const NODE_ENTER_MS = 360; // mirror of leave — same duration so the two
-                              // animations run in sync (one node compresses
-                              // into its badge while another grows out of
-                              // the opposite-side badge).
+  // animations run in sync (one node compresses
+  // into its badge while another grows out of
+  // the opposite-side badge).
   const [leavingItems, setLeavingItems] = createSignal<Item[]>([]);
   const [enteringIds, setEnteringIds] = createSignal<Set<string>>(new Set());
 
@@ -388,7 +399,9 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       count: o.count,
     })),
   );
-  const [bottomBadgesStore, setBottomBadgesStore] = createStore<BottomBadge[]>([]);
+  const [bottomBadgesStore, setBottomBadgesStore] = createStore<BottomBadge[]>(
+    [],
+  );
   createEffect(() => {
     setBottomBadgesStore(reconcile(bottomBadges(), { key: "key" }));
   });
@@ -469,12 +482,19 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       <svg
         ref={svgRef}
         class="sui-swimlane"
-        onPointerDown={interactive() ? pointerHandlers.onPointerDown : undefined}
-        onPointerMove={interactive() ? pointerHandlers.onPointerMove : undefined}
+        onPointerDown={
+          interactive() ? pointerHandlers.onPointerDown : undefined
+        }
+        onPointerMove={
+          interactive() ? pointerHandlers.onPointerMove : undefined
+        }
         onPointerUp={interactive() ? pointerHandlers.onPointerUp : undefined}
       >
         <defs>
-          <DagArrowMarker id="sui-swimlane-arrow" pathClass="sui-swimlane__arrow" />
+          <DagArrowMarker
+            id="sui-swimlane-arrow"
+            pathClass="sui-swimlane__arrow"
+          />
         </defs>
         <g transform={transformString()}>
           {/* Edges */}
@@ -504,7 +524,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                   x={b.badgeX - BADGE_RADIUS}
                   y={b.pillTopY}
                   width={BADGE_RADIUS * 2}
-                  height={Math.max(BADGE_RADIUS * 2, b.pillBottomY - b.pillTopY)}
+                  height={Math.max(
+                    BADGE_RADIUS * 2,
+                    b.pillBottomY - b.pillTopY,
+                  )}
                   rx={BADGE_RADIUS}
                   ry={BADGE_RADIUS}
                 />
@@ -560,11 +583,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                  edge offset by -(STUB_LENGTH + BADGE_RADIUS). Right
                  side mirrors. Magnitude matches the leave reach so the
                  two animations trace the same path in opposite time. */
-              const enterOffsetX = item.x < 0
-                ? -(STUB_LENGTH + BADGE_RADIUS)
-                : item.x > 0
-                  ? STUB_LENGTH + BADGE_RADIUS
-                  : 0;
+              const enterOffsetX =
+                item.x < 0
+                  ? -(STUB_LENGTH + BADGE_RADIUS)
+                  : item.x > 0
+                    ? STUB_LENGTH + BADGE_RADIUS
+                    : 0;
               return (
                 <DagSvgNode
                   node={item.node}
@@ -593,11 +617,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
                  badge. Combined with transform-origin: outer-edge,
                  the rect collapses straight into the badge. */
               const reach = STUB_LENGTH + BADGE_RADIUS;
-              const leaveOffsetX = item.x < 0
-                ? -reach
-                : item.x > 0
-                  ? reach
-                  : 0;
+              const leaveOffsetX = item.x < 0 ? -reach : item.x > 0 ? reach : 0;
               return (
                 <DagSvgNode
                   node={item.node}
@@ -634,7 +654,10 @@ export type SwimlaneChartOverrides =
   | "responsiveCollapse";
 
 /** Props that remain available to consumers of a curried SwimlaneChart variant. */
-export type SwimlaneChartDataProps<T> = Omit<SwimlaneChartProps<T>, SwimlaneChartOverrides>;
+export type SwimlaneChartDataProps<T> = Omit<
+  SwimlaneChartProps<T>,
+  SwimlaneChartOverrides
+>;
 
 /**
  * Curried-variant factory for SwimlaneChart. Bakes layout/visual defaults
@@ -645,5 +668,9 @@ export type SwimlaneChartDataProps<T> = Omit<SwimlaneChartProps<T>, SwimlaneChar
 export function createSwimlaneChart<T>(
   defaults: Partial<Pick<SwimlaneChartProps<T>, SwimlaneChartOverrides>>,
 ): (props: SwimlaneChartDataProps<T>) => JSX.Element {
-  return (props) => <SwimlaneChart {...mergeProps(defaults, props) as SwimlaneChartProps<T>} />;
+  return (props) => (
+    <SwimlaneChart
+      {...(mergeProps(defaults, props) as SwimlaneChartProps<T>)}
+    />
+  );
 }

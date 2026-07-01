@@ -5,8 +5,17 @@
 // Composes HeartbeatSparkline (Atomic). Owns the sample buffer + tick timer
 // and derives connection state from the most recent heartbeat timestamp.
 // ============================================
-import { type Component, createSignal, onCleanup, onMount, createEffect } from "solid-js";
-import { HeartbeatSparkline, type ConnectionState } from "../HeartbeatSparkline";
+import {
+  type Component,
+  createSignal,
+  onCleanup,
+  onMount,
+  createEffect,
+} from "solid-js";
+import {
+  HeartbeatSparkline,
+  type ConnectionState,
+} from "../HeartbeatSparkline";
 
 export interface LiveHeartbeatTraceProps {
   /** Timestamp of the last received heartbeat. null/undefined → treated as never seen. */
@@ -34,7 +43,9 @@ const toMs = (t: number | Date | null | undefined): number | null => {
   return t instanceof Date ? t.getTime() : t;
 };
 
-export const LiveHeartbeatTrace: Component<LiveHeartbeatTraceProps> = (props) => {
+export const LiveHeartbeatTrace: Component<LiveHeartbeatTraceProps> = (
+  props,
+) => {
   const capacity = () => props.capacity ?? 60;
   const tickMs = () => props.tickMs ?? 1000;
 
@@ -50,7 +61,10 @@ export const LiveHeartbeatTrace: Component<LiveHeartbeatTraceProps> = (props) =>
 
   const pushSample = () => {
     setSamples((prev) => {
-      const next = prev.length >= capacity() ? prev.slice(prev.length - capacity() + 1) : prev.slice();
+      const next =
+        prev.length >= capacity()
+          ? prev.slice(prev.length - capacity() + 1)
+          : prev.slice();
       next.push(computeSample());
       return next;
     });
@@ -61,7 +75,10 @@ export const LiveHeartbeatTrace: Component<LiveHeartbeatTraceProps> = (props) =>
     const last = toMs(props.lastHeartbeatAt);
     if (last == null) return;
     setSamples((prev) => {
-      const next = prev.length >= capacity() ? prev.slice(prev.length - capacity() + 1) : prev.slice();
+      const next =
+        prev.length >= capacity()
+          ? prev.slice(prev.length - capacity() + 1)
+          : prev.slice();
       next.push(computeSample());
       return next;
     });
@@ -89,7 +106,9 @@ export const LiveHeartbeatTrace: Component<LiveHeartbeatTraceProps> = (props) =>
       capacity={capacity()}
       width={props.width}
       height={props.height}
-      pulse={(props.pulseWhenConnected ?? true) && derivedState() === "connected"}
+      pulse={
+        (props.pulseWhenConnected ?? true) && derivedState() === "connected"
+      }
     />
   );
 };

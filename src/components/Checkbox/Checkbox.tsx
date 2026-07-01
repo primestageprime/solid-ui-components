@@ -8,13 +8,20 @@
 // label/labelPosition, onCheckedChange, create* factory) so the two
 // boolean controls stay interchangeable at the call site.
 // ============================================
-import { type Component, type JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  mergeProps,
+  splitProps,
+  createUniqueId,
+} from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Checkbox.css";
 
 export type CheckboxSize = "sm" | "md" | "lg";
 
-export interface CheckboxProps extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
+export interface CheckboxProps
+  extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
   size?: CheckboxSize;
   label?: string;
   labelPosition?: "left" | "right";
@@ -47,8 +54,10 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
   const classes = () => {
     const classList = ["sui-checkbox"];
     classList.push(`sui-checkbox--${local.size || "md"}`);
-    if (local.labelPosition === "left") classList.push("sui-checkbox--label-left");
-    if (local.color && local.color !== "default") classList.push(`sui-checkbox--${local.color}`);
+    if (local.labelPosition === "left")
+      classList.push("sui-checkbox--label-left");
+    if (local.color && local.color !== "default")
+      classList.push(`sui-checkbox--${local.color}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -60,13 +69,18 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
     currentTarget: HTMLInputElement;
     target: HTMLInputElement;
   };
-  const handleChange: JSX.ChangeEventHandler<HTMLInputElement, Event> = (event) => {
+  const handleChange: JSX.ChangeEventHandler<HTMLInputElement, Event> = (
+    event,
+  ) => {
     const native = local.onChange;
     if (typeof native === "function") {
       native(event);
     } else if (Array.isArray(native)) {
       const [handler, data] = native;
-      (handler as (data: unknown, event: CheckboxChangeEvent) => void)(data, event);
+      (handler as (data: unknown, event: CheckboxChangeEvent) => void)(
+        data,
+        event,
+      );
     }
     local.onCheckedChange?.(event.currentTarget.checked);
   };
@@ -97,9 +111,14 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
   );
 };
 
-export type CheckboxOverrides = Pick<CheckboxProps, "size" | "color" | "labelPosition">;
+export type CheckboxOverrides = Pick<
+  CheckboxProps,
+  "size" | "color" | "labelPosition"
+>;
 export type CheckboxDataProps = Omit<CheckboxProps, keyof CheckboxOverrides>;
 
-export function createCheckbox(defaults: Partial<CheckboxProps>): Component<CheckboxDataProps> {
+export function createCheckbox(
+  defaults: Partial<CheckboxProps>,
+): Component<CheckboxDataProps> {
   return (props) => <Checkbox {...mergeProps(defaults, props)} />;
 }

@@ -29,8 +29,10 @@ const _EXIT_RUN = SOURCE_EXIT;
  * by `pad`. Used to test whether a routed leg crosses an unrelated node.
  */
 function axisSegmentHitsRect(
-  ax: number, ay: number,
-  bx: number, by: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
   r: EdgeRect,
   pad: number,
 ): boolean {
@@ -89,7 +91,9 @@ export function orthogonalAvoidingObstacles(
   opts: OrthogonalRouteOptions = {},
 ): string {
   const goingRight = to.x >= from.x;
-  const fromOuterX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const fromOuterX = goingRight
+    ? from.x + from.width / 2
+    : from.x - from.width / 2;
   const toOuterX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
   const fromPortY = opts.fromPortY ?? from.y;
   const toPortY = opts.toPortY ?? to.y;
@@ -105,7 +109,9 @@ export function orthogonalAvoidingObstacles(
   const xOverlap = !(toXMax < fromXMin || toXMin > fromXMax);
   if (xOverlap) {
     const sourceAbove = from.y < to.y;
-    const fromEdgeY = sourceAbove ? from.y + from.height / 2 : from.y - from.height / 2;
+    const fromEdgeY = sourceAbove
+      ? from.y + from.height / 2
+      : from.y - from.height / 2;
     const toEdgeY = sourceAbove ? to.y - to.height / 2 : to.y + to.height / 2;
     if (Math.abs(from.x - to.x) < 0.5) {
       // Aligned: single straight vertical.
@@ -187,27 +193,47 @@ export function orthogonalAvoidingObstacles(
   if (goingRight) {
     const liftLow = fromOuterX + 2;
     const liftHigh =
-      obsXLefts.length > 0 ? Math.min(...obsXLefts) - OBSTACLE_MARGIN : Infinity;
+      obsXLefts.length > 0
+        ? Math.min(...obsXLefts) - OBSTACLE_MARGIN
+        : Infinity;
     const liftIdeal = fromOuterX + SOURCE_EXIT;
-    liftX = liftLow > liftHigh ? liftLow : Math.max(liftLow, Math.min(liftIdeal, liftHigh));
+    liftX =
+      liftLow > liftHigh
+        ? liftLow
+        : Math.max(liftLow, Math.min(liftIdeal, liftHigh));
     const dropLow =
-      obsXRights.length > 0 ? Math.max(...obsXRights) + OBSTACLE_MARGIN : -Infinity;
+      obsXRights.length > 0
+        ? Math.max(...obsXRights) + OBSTACLE_MARGIN
+        : -Infinity;
     const dropHigh = toOuterX - 2;
     // dropX biased close to the target so the final horizontal run is
     // ~TARGET_APPROACH (≈5px clean line + 7px arrow).
     const dropIdeal = toOuterX - TARGET_APPROACH;
-    dropX = dropLow > dropHigh ? dropHigh : Math.min(dropHigh, Math.max(dropIdeal, dropLow));
+    dropX =
+      dropLow > dropHigh
+        ? dropHigh
+        : Math.min(dropHigh, Math.max(dropIdeal, dropLow));
   } else {
     const liftHigh = fromOuterX - 2;
     const liftLow =
-      obsXRights.length > 0 ? Math.max(...obsXRights) + OBSTACLE_MARGIN : -Infinity;
+      obsXRights.length > 0
+        ? Math.max(...obsXRights) + OBSTACLE_MARGIN
+        : -Infinity;
     const liftIdeal = fromOuterX - SOURCE_EXIT;
-    liftX = liftLow > liftHigh ? liftHigh : Math.min(liftHigh, Math.max(liftIdeal, liftLow));
+    liftX =
+      liftLow > liftHigh
+        ? liftHigh
+        : Math.min(liftHigh, Math.max(liftIdeal, liftLow));
     const dropHigh =
-      obsXLefts.length > 0 ? Math.min(...obsXLefts) - OBSTACLE_MARGIN : Infinity;
+      obsXLefts.length > 0
+        ? Math.min(...obsXLefts) - OBSTACLE_MARGIN
+        : Infinity;
     const dropLow = toOuterX + 2;
     const dropIdeal = toOuterX + TARGET_APPROACH;
-    dropX = dropLow > dropHigh ? dropLow : Math.max(dropLow, Math.min(dropIdeal, dropHigh));
+    dropX =
+      dropLow > dropHigh
+        ? dropLow
+        : Math.max(dropLow, Math.min(dropIdeal, dropHigh));
   }
 
   // 5-segment U.

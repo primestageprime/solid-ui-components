@@ -23,11 +23,11 @@ import {
   maxDepthForWidth,
   type LaneLayoutConfig,
 } from "../../internal/animation/breakpoints";
-import { phasesFor, type LaneTimingConfig } from "../../internal/animation/trajectories";
 import {
-  ANIMATED_SWIMLANE_DEFAULTS,
-  type RenderNodeContext,
-} from "./defaults";
+  phasesFor,
+  type LaneTimingConfig,
+} from "../../internal/animation/trajectories";
+import { ANIMATED_SWIMLANE_DEFAULTS, type RenderNodeContext } from "./defaults";
 import { groupIntoLanes, visibleChildRowCount } from "./lanes";
 import { SwimlaneAnimatedLane } from "./SwimlaneAnimatedLane";
 
@@ -85,9 +85,9 @@ export type AnimatedSwimlaneChartDataProps = Omit<
 // NOT re-exported by index.ts, so it never reaches the package surface.
 // Consumers use the curried `AnimatedSwimlaneChart` (data-only) or
 // `createAnimatedSwimlaneChart(defaults)` to bake overrides.
-export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = (
-  rawProps,
-) => {
+export const AnimatedSwimlaneChartBase: Component<
+  AnimatedSwimlaneChartProps
+> = (rawProps) => {
   const props = mergeProps(
     {
       columns: ANIMATED_SWIMLANE_DEFAULTS.columns,
@@ -139,7 +139,8 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
     let pendingWidth = 0;
     const flush = () => {
       rafId = null;
-      if (pendingWidth > 0) setStageWidth(Math.max(400, Math.floor(pendingWidth)));
+      if (pendingWidth > 0)
+        setStageWidth(Math.max(400, Math.floor(pendingWidth)));
     };
     const ro = new ResizeObserver((entries) => {
       for (const e of entries) pendingWidth = e.contentRect.width;
@@ -154,7 +155,8 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
     onCleanup(() => {
       ro.disconnect();
       if (rafId != null) {
-        if (typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(rafId);
+        if (typeof cancelAnimationFrame !== "undefined")
+          cancelAnimationFrame(rafId);
         else clearTimeout(rafId);
       }
     });
@@ -172,7 +174,8 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
   // is set and props.maxDepth is "responsive", use pickVisibleCols.
   const responsiveDepthFromBreakpoints = createMemo<number | null>(() => {
     if (props.maxDepth !== "responsive") return null;
-    if (props.breakpoints === ANIMATED_SWIMLANE_DEFAULTS.breakpoints) return null;
+    if (props.breakpoints === ANIMATED_SWIMLANE_DEFAULTS.breakpoints)
+      return null;
     const cols = pickVisibleCols(stageWidth(), props.breakpoints);
     return Math.max(0, Math.floor((cols - 1) / 2));
   });
@@ -378,7 +381,8 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
     const sorted = [...measured].sort(
       (a, b) =>
         a.band - b.band ||
-        (laneActivity.get(b.group.id) ?? 0) - (laneActivity.get(a.group.id) ?? 0) ||
+        (laneActivity.get(b.group.id) ?? 0) -
+          (laneActivity.get(a.group.id) ?? 0) ||
         a.inputIndex - b.inputIndex,
     );
 
@@ -410,7 +414,11 @@ export const AnimatedSwimlaneChartBase: Component<AnimatedSwimlaneChartProps> = 
   });
 
   return (
-    <div ref={containerRef} class="sui-animated-swimlane-chart" style={{ width: "100%" }}>
+    <div
+      ref={containerRef}
+      class="sui-animated-swimlane-chart"
+      style={{ width: "100%" }}
+    >
       <svg
         width={stageWidth()}
         height={lanesWithY().totalH}

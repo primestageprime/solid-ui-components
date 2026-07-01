@@ -36,11 +36,16 @@ export const Divider: Component<DividerProps> = (props) => {
 };
 
 /** Visual overrides — locked at variant-definition time. */
-export type DividerOverrides = Pick<DividerProps, "orientation" | "variant" | "spacing">;
+export type DividerOverrides = Pick<
+  DividerProps,
+  "orientation" | "variant" | "spacing"
+>;
 
 /** Props available to consumers of a curried Divider variant. */
 export type DividerDataProps = Omit<DividerProps, keyof DividerOverrides>;
 
-export function createDivider(defaults: Partial<DividerProps>): Component<DividerDataProps> {
+export function createDivider(
+  defaults: Partial<DividerProps>,
+): Component<DividerDataProps> {
   return (props) => <Divider {...mergeProps(defaults, props)} />;
 }

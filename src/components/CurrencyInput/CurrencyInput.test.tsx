@@ -37,7 +37,12 @@ describe("CurrencyInput", () => {
   it("honours a smaller maxValue in the inline cap", () => {
     const [v] = createSignal<number | undefined>(500);
     const { container } = render(() => (
-      <CurrencyInput name="fee" maxValue={1_000_000} value={v} onChange={() => {}} />
+      <CurrencyInput
+        name="fee"
+        maxValue={1_000_000}
+        value={v}
+        onChange={() => {}}
+      />
     ));
     expect(rootOf(container).style.maxWidth).toBe("12.06rem");
   });

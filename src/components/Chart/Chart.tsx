@@ -12,7 +12,12 @@ import {
   createUniqueId,
   splitProps,
 } from "solid-js";
-import { ChartContext, type ChartContextValue, type DragRange, type Margin } from "./context";
+import {
+  ChartContext,
+  type ChartContextValue,
+  type DragRange,
+  type Margin,
+} from "./context";
 import { linearScale, scaleTime, type Scale } from "./scales";
 import { DEFAULT_GLYPH_SIZE } from "./shapes";
 import type { Id } from "./slot-types";
@@ -103,8 +108,12 @@ export const Chart: Component<ChartProps> = (props) => {
   }));
   const width = createMemo(() => local.width);
   const height = createMemo(() => local.height);
-  const innerWidth = createMemo(() => Math.max(0, width() - margin().left - margin().right));
-  const innerHeight = createMemo(() => Math.max(0, height() - margin().top - margin().bottom));
+  const innerWidth = createMemo(() =>
+    Math.max(0, width() - margin().left - margin().right),
+  );
+  const innerHeight = createMemo(() =>
+    Math.max(0, height() - margin().top - margin().bottom),
+  );
   const annotationLaneHeight = createMemo(() =>
     Math.max(0, local.annotationLaneHeight ?? 0),
   );
@@ -115,12 +124,17 @@ export const Chart: Component<ChartProps> = (props) => {
       ? scaleTime(d, [0, innerWidth()])
       : linearScale(d, [0, innerWidth()]);
   });
-  const yScale = createMemo<Scale>(() => linearScale(local.yDomain, [innerHeight(), 0]));
+  const yScale = createMemo<Scale>(() =>
+    linearScale(local.yDomain, [innerHeight(), 0]),
+  );
 
   const [hoverX, setHoverX] = createSignal<number | null>(null);
   const [dragRange, setDragRange] = createSignal<DragRange | null>(null);
-  const [committedDragRange, setCommittedDragRange] = createSignal<DragRange | null>(null);
-  const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(null);
+  const [committedDragRange, setCommittedDragRange] =
+    createSignal<DragRange | null>(null);
+  const [tooltipMount, setTooltipMount] = createSignal<HTMLElement | null>(
+    null,
+  );
 
   // ---- Global "nearest emphasis" coordinator ----
   // Slots report their nearest-candidate distance (DATA-domain units). The
@@ -147,14 +161,15 @@ export const Chart: Component<ChartProps> = (props) => {
       return next;
     });
   };
-  const emphasisWinnerSlotId = createMemo<Id | null>(() =>
-    Array.from(emphasisCandidates().entries()).reduce<{
-      id: Id | null;
-      dist: number;
-    }>(
-      (best, [id, dist]) => (dist < best.dist ? { id, dist } : best),
-      { id: null, dist: Infinity },
-    ).id,
+  const emphasisWinnerSlotId = createMemo<Id | null>(
+    () =>
+      Array.from(emphasisCandidates().entries()).reduce<{
+        id: Id | null;
+        dist: number;
+      }>((best, [id, dist]) => (dist < best.dist ? { id, dist } : best), {
+        id: null,
+        dist: Infinity,
+      }).id,
   );
 
   // Per-instance clipPath ids — stable across renders, unique across charts.
@@ -163,7 +178,9 @@ export const Chart: Component<ChartProps> = (props) => {
   const axisStripClipId = `sui-chart-axis-strip-clip-${createUniqueId()}`;
   const axisStripClipPathUrl = createMemo(() => `url(#${axisStripClipId})`);
   const annotationLaneClipId = `sui-chart-annotation-lane-clip-${createUniqueId()}`;
-  const annotationLanePathUrl = createMemo(() => `url(#${annotationLaneClipId})`);
+  const annotationLanePathUrl = createMemo(
+    () => `url(#${annotationLaneClipId})`,
+  );
 
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
@@ -242,7 +259,10 @@ export const Chart: Component<ChartProps> = (props) => {
 
   return (
     <ChartContext.Provider value={ctx}>
-      <div class={`sui-chart${local.class ? " " + local.class : ""}`} style={local.style as JSX.CSSProperties}>
+      <div
+        class={`sui-chart${local.class ? " " + local.class : ""}`}
+        style={local.style as JSX.CSSProperties}
+      >
         <Show when={local.title}>
           <div class="sui-chart__title">{local.title}</div>
         </Show>
@@ -307,10 +327,7 @@ export const Chart: Component<ChartProps> = (props) => {
             {local.children}
           </g>
         </svg>
-        <div
-          ref={(el) => setTooltipMount(el)}
-          class="sui-chart__overlay"
-        />
+        <div ref={(el) => setTooltipMount(el)} class="sui-chart__overlay" />
       </div>
     </ChartContext.Provider>
   );

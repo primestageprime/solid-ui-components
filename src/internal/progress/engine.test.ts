@@ -83,8 +83,7 @@ describe("progress engine", () => {
     }
     // The model's perRow has been pulled toward 0.3 (away from the 0.25 prior).
     const denom = e.model.n * e.model.sxx - e.model.sx * e.model.sx;
-    const perRow =
-      (e.model.n * e.model.sxy - e.model.sx * e.model.sy) / denom;
+    const perRow = (e.model.n * e.model.sxy - e.model.sx * e.model.sy) / denom;
     expect(perRow).toBeGreaterThan(0.25);
   });
 });

@@ -73,7 +73,7 @@ function indexStatuses(columns: StatusFlowColumn[]): Map<string, number> {
       if (out.has(s)) {
         throw new Error(
           `Status "${s}" appears in two columns (${out.get(s)} and ${i}). ` +
-          `Each status must map to exactly one column.`,
+            `Each status must map to exactly one column.`,
         );
       }
       out.set(s, i);
@@ -108,11 +108,14 @@ export function assignColumns(
   for (const n of nodes) {
     const statusIdx = idx.get(n.status);
     if (statusIdx === undefined) {
-      throw new Error(`Node ${n.id} has status "${n.status}" not in any column.`);
+      throw new Error(
+        `Node ${n.id} has status "${n.status}" not in any column.`,
+      );
     }
     const col = statusIdx - centerIdx;
     const visible = Math.abs(col) <= halfWindow;
-    const side: ColAssignment["side"] = col < 0 ? "left" : col > 0 ? "right" : "center";
+    const side: ColAssignment["side"] =
+      col < 0 ? "left" : col > 0 ? "right" : "center";
     out.set(n.id, { col, visible, side });
   }
   return out;

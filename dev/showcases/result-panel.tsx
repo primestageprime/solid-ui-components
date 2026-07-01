@@ -5,7 +5,10 @@ export const ResultPanelShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>ResultPanel — Depth 2 (zero CSS)</h2>
-      <p class="text-meta">Composes ResultDisplay (Depth 2) + FormulaProvider (Atomic). Layout shell for result + formula content.</p>
+      <p class="text-meta">
+        Composes ResultDisplay (Depth 2) + FormulaProvider (Atomic). Layout
+        shell for result + formula content.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — NOx Result</h3>
@@ -16,7 +19,15 @@ export const ResultPanelShowcase: Component = () => {
             units="g/kWh"
             valueColor="var(--sui-success)"
           >
-            <div style={{ padding: "12px", border: "1px solid var(--sui-border)", "border-radius": "4px", color: "var(--sui-text-secondary)", "font-size": "13px" }}>
+            <div
+              style={{
+                padding: "12px",
+                border: "1px solid var(--sui-border)",
+                "border-radius": "4px",
+                color: "var(--sui-text-secondary)",
+                "font-size": "13px",
+              }}
+            >
               [Formula + variables table slot]
             </div>
           </ResultPanel>
@@ -29,7 +40,15 @@ export const ResultPanelShowcase: Component = () => {
             valueColor="#ffcc00"
             formulaProvider={false}
           >
-            <div style={{ padding: "12px", border: "1px solid var(--sui-border)", "border-radius": "4px", color: "var(--sui-text-secondary)", "font-size": "13px" }}>
+            <div
+              style={{
+                padding: "12px",
+                border: "1px solid var(--sui-border)",
+                "border-radius": "4px",
+                color: "var(--sui-text-secondary)",
+                "font-size": "13px",
+              }}
+            >
               [Variables table — no formula provider]
             </div>
           </ResultPanel>
@@ -38,20 +57,34 @@ export const ResultPanelShowcase: Component = () => {
           <h3>Sub-Components</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">ResultDisplay (Depth 3)</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">Large value + units + badge row</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                Large value + units + badge row
+              </div>
+            </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">FormulaProvider (Atomic)</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">Interactive formula highlighting context</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                Interactive formula highlighting context
+              </div>
+            </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">NarrowStack (curried)</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">Vertical layout wrapper</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">Vertical layout wrapper</div>
+            </div>
           </div>
           <h3>Props</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">formulaProvider</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">boolean (default: true) — wrap in FormulaProvider</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                boolean (default: true) — wrap in FormulaProvider
+              </div>
+            </div>
           </div>
         </div>
       </div>

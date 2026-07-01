@@ -33,25 +33,57 @@ const periodColumns: StatsColumn<PeriodRow>[] = [
   { header: "Data Points", accessor: "count", align: "right" },
   {
     header: "Avg NOx",
-    accessor: (r) => <NumberWithUnits value={r.avgNox} units="ppm" precision={2} color={r.noxColor} />,
+    accessor: (r) => (
+      <NumberWithUnits
+        value={r.avgNox}
+        units="ppm"
+        precision={2}
+        color={r.noxColor}
+      />
+    ),
     align: "right",
   },
   {
     header: "Avg NO",
-    accessor: (r) => <NumberWithUnits value={r.avgNO} units="ppm" precision={2} />,
+    accessor: (r) => (
+      <NumberWithUnits value={r.avgNO} units="ppm" precision={2} />
+    ),
     align: "right",
   },
   {
     header: "Avg NO\u2082",
-    accessor: (r) => <NumberWithUnits value={r.avgNO2} units="ppm" precision={2} />,
+    accessor: (r) => (
+      <NumberWithUnits value={r.avgNO2} units="ppm" precision={2} />
+    ),
     align: "right",
   },
 ];
 
 const periodRows: PeriodRow[] = [
-  { period: "Before Control", count: 142, avgNox: 18.34, noxColor: "var(--sui-warning)", avgNO: 12.81, avgNO2: 5.53 },
-  { period: "During Control", count: 89, avgNox: 3.21, noxColor: "var(--sui-success)", avgNO: 2.14, avgNO2: 1.07 },
-  { period: "After Control", count: 56, avgNox: 16.92, noxColor: "var(--sui-warning)", avgNO: 11.44, avgNO2: 5.48 },
+  {
+    period: "Before Control",
+    count: 142,
+    avgNox: 18.34,
+    noxColor: "var(--sui-warning)",
+    avgNO: 12.81,
+    avgNO2: 5.53,
+  },
+  {
+    period: "During Control",
+    count: 89,
+    avgNox: 3.21,
+    noxColor: "var(--sui-success)",
+    avgNO: 2.14,
+    avgNO2: 1.07,
+  },
+  {
+    period: "After Control",
+    count: 56,
+    avgNox: 16.92,
+    noxColor: "var(--sui-warning)",
+    avgNO: 11.44,
+    avgNO2: 5.48,
+  },
 ];
 
 const statusColumns: StatsColumn<StatusRow>[] = [
@@ -68,9 +100,25 @@ const statusRows: StatusRow[] = [
 
 const engineColumns: StatsColumn<EngineRow>[] = [
   { header: "Engine", accessor: "engine" },
-  { header: "Power", accessor: (r) => <NumberWithUnits value={r.power} units="kW" />, align: "right" },
-  { header: "NOx", accessor: (r) => <NumberWithUnits value={r.nox} units="g/kWh" precision={2} />, align: "right" },
-  { header: "ROG", accessor: (r) => <NumberWithUnits value={r.rog} units="g/kWh" precision={2} />, align: "right" },
+  {
+    header: "Power",
+    accessor: (r) => <NumberWithUnits value={r.power} units="kW" />,
+    align: "right",
+  },
+  {
+    header: "NOx",
+    accessor: (r) => (
+      <NumberWithUnits value={r.nox} units="g/kWh" precision={2} />
+    ),
+    align: "right",
+  },
+  {
+    header: "ROG",
+    accessor: (r) => (
+      <NumberWithUnits value={r.rog} units="g/kWh" precision={2} />
+    ),
+    align: "right",
+  },
 ];
 
 const engineRows: EngineRow[] = [
@@ -83,7 +131,10 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>StatsTable — Composed (Depth 2)</h2>
-      <p class="text-meta">Owns CSS (StatsTable.css), no component imports. Simple stats table with typed columns and row classes.</p>
+      <p class="text-meta">
+        Owns CSS (StatsTable.css), no component imports. Simple stats table with
+        typed columns and row classes.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Period Statistics</h3>
@@ -91,14 +142,24 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
             caption="NOx Statistics by Control Period"
             columns={periodColumns}
             rows={periodRows}
-            getRowClass={(row) => row.period === "During Control" ? "stats-table__row--highlight" : undefined}
+            getRowClass={(row) =>
+              row.period === "During Control"
+                ? "stats-table__row--highlight"
+                : undefined
+            }
           />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Row Variants</h3>
           <StatsTable
             columns={statusColumns}
             rows={statusRows}
-            getRowClass={(_, i) => i === 1 ? "stats-table__row--warning" : i === 2 ? "stats-table__row--danger" : undefined}
+            getRowClass={(_, i) =>
+              i === 1
+                ? "stats-table__row--warning"
+                : i === 2
+                  ? "stats-table__row--danger"
+                  : undefined
+            }
           />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Engine Data</h3>
@@ -114,11 +175,15 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
             <div class="depth2-atom-group__label">Table Primitives</div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">StatsTable</div>
-              <div class="text-meta">generic table with typed columns + rows</div>
+              <div class="text-meta">
+                generic table with typed columns + rows
+              </div>
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">StatsColumn&lt;T&gt;</div>
-              <div class="text-meta">header, accessor (key or function), align, width</div>
+              <div class="text-meta">
+                header, accessor (key or function), align, width
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
@@ -138,9 +203,14 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Depth 2</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("number-with-units")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("number-with-units")}
+            >
               <div class="depth2-atom__label">NumberWithUnits</div>
-              <div class="text-meta">used in cell accessors for formatted values</div>
+              <div class="text-meta">
+                used in cell accessors for formatted values
+              </div>
             </div>
           </div>
         </div>

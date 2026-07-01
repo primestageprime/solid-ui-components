@@ -9,7 +9,8 @@ export const DigitRollerShowcase: Component = () => {
   const [rollerPrev, setRollerPrev] = createSignal<string | null>(null);
 
   const triggerRoll = () => {
-    const next = rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA();
+    const next =
+      rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA();
     setRollerPrev(rollerCurrent());
     setRollerCurrent(next);
     setRollerAnimating(true);
@@ -18,20 +19,32 @@ export const DigitRollerShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>DigitRoller — Composed (Depth 2)</h2>
-      <p class="text-meta">Owns CSS (DigitRoller.css), no component imports. Animated digit-by-digit value transition.</p>
+      <p class="text-meta">
+        Owns CSS (DigitRoller.css), no component imports. Animated
+        digit-by-digit value transition.
+      </p>
 
       <div class="example-group">
         <h3>Animated Transition</h3>
-        <p style={{ color: "var(--sui-text-muted)", "font-size": "12px", margin: "0 0 12px" }}>
-          Vertical digit rolling animation for transitioning between numeric values.
+        <p
+          style={{
+            color: "var(--sui-text-muted)",
+            "font-size": "12px",
+            margin: "0 0 12px",
+          }}
+        >
+          Vertical digit rolling animation for transitioning between numeric
+          values.
         </p>
         <div style={{ display: "flex", "align-items": "center", gap: "20px" }}>
-          <span style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-text-primary)",
-            "font-variant-numeric": "tabular-nums",
-          }}>
+          <span
+            style={{
+              "font-size": "1.5rem",
+              "font-weight": "600",
+              color: "var(--sui-text-primary)",
+              "font-variant-numeric": "tabular-nums",
+            }}
+          >
             <DigitRoller
               value={rollerCurrent()}
               previousValue={rollerPrev()}
@@ -39,23 +52,45 @@ export const DigitRollerShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span style={{ color: "var(--sui-text-secondary)", "font-size": "0.9rem" }}>g/kWh</span>
+          <span
+            style={{
+              color: "var(--sui-text-secondary)",
+              "font-size": "0.9rem",
+            }}
+          >
+            g/kWh
+          </span>
           <button class="demo-btn" onClick={triggerRoll}>
-            Roll to {rollerCurrent() === rollerValueA() ? rollerValueB() : rollerValueA()}
+            Roll to{" "}
+            {rollerCurrent() === rollerValueA()
+              ? rollerValueB()
+              : rollerValueA()}
           </button>
         </div>
       </div>
 
       <div class="example-group">
         <h3>Static (no animation)</h3>
-        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-text-primary)" }}>
+        <div
+          style={{
+            "font-size": "1.5rem",
+            "font-weight": "600",
+            color: "var(--sui-text-primary)",
+          }}
+        >
           <DigitRoller value="0.1250" />
         </div>
       </div>
 
       <div class="example-group">
         <h3>Tabular digits</h3>
-        <div style={{ "font-size": "1.5rem", "font-weight": "600", color: "var(--sui-accent)" }}>
+        <div
+          style={{
+            "font-size": "1.5rem",
+            "font-weight": "600",
+            color: "var(--sui-accent)",
+          }}
+        >
           <DigitRoller value="42.00" />
         </div>
       </div>

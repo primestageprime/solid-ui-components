@@ -5,7 +5,7 @@
  * Same API as BaseTable but with virtual scrolling for large datasets.
  * Uses dynamic row measurement for correct behavior under browser zoom.
  */
-import { For, Show, type JSX, } from "solid-js";
+import { For, Show, type JSX } from "solid-js";
 import { splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import type { BaseTableProps, TableColumn } from "./types";
@@ -42,13 +42,15 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
   let scrollEl: HTMLDivElement | undefined;
 
   const virtualizer = createVirtualizer({
-    get count() { return local.data.length; },
+    get count() {
+      return local.data.length;
+    },
     getScrollElement: () => scrollEl ?? null,
     estimateSize: () => rowHeight(),
     overscan: overscan(),
   });
 
-  const cellPad = () => local.compact ? "4px 6px" : "6px 10px";
+  const cellPad = () => (local.compact ? "4px 6px" : "6px 10px");
 
   function headerCellStyle(col: TableColumn<T>): JSX.CSSProperties {
     return {
@@ -105,12 +107,14 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
             <tr
               style={{
                 "border-bottom": "1px solid var(--sui-border)",
-                ...(local.stickyHeader !== false ? {
-                  position: "sticky",
-                  top: "0",
-                  background: "var(--sui-bg-primary)",
-                  "z-index": "2",
-                } : {}),
+                ...(local.stickyHeader !== false
+                  ? {
+                      position: "sticky",
+                      top: "0",
+                      background: "var(--sui-bg-primary)",
+                      "z-index": "2",
+                    }
+                  : {}),
               }}
             >
               <For each={local.columns}>
@@ -121,28 +125,45 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
 
           {/* Virtual body */}
           <tbody>
-            <Show when={local.data.length > 0} fallback={
-              <tr>
+            <Show
+              when={local.data.length > 0}
+              fallback={
+                <tr>
+                  <td
+                    colspan={local.columns.length}
+                    style={{
+                      padding: "24px",
+                      "text-align": "center",
+                      color: "var(--sui-text-muted)",
+                    }}
+                  >
+                    {local.emptyMessage ?? "No data"}
+                  </td>
+                </tr>
+              }
+            >
+              {/* Spacer for rows above viewport */}
+              <tr
+                style={{
+                  height: `${virtualizer.getVirtualItems()[0]?.start ?? 0}px`,
+                }}
+              >
                 <td
                   colspan={local.columns.length}
-                  style={{ padding: "24px", "text-align": "center", color: "var(--sui-text-muted)" }}
-                >
-                  {local.emptyMessage ?? "No data"}
-                </td>
-              </tr>
-            }>
-              {/* Spacer for rows above viewport */}
-              <tr style={{ height: `${virtualizer.getVirtualItems()[0]?.start ?? 0}px` }}>
-                <td colspan={local.columns.length} style={{ padding: "0", border: "none" }} />
+                  style={{ padding: "0", border: "none" }}
+                />
               </tr>
 
               <For each={virtualizer.getVirtualItems()}>
                 {(virtualRow) => {
                   const row = () => local.data[virtualRow.index];
-                  const rowClass = () => local.getRowClass?.(row(), virtualRow.index) ?? "";
+                  const rowClass = () =>
+                    local.getRowClass?.(row(), virtualRow.index) ?? "";
                   return (
                     <tr
-                      ref={(el) => queueMicrotask(() => virtualizer.measureElement(el))}
+                      ref={(el) =>
+                        queueMicrotask(() => virtualizer.measureElement(el))
+                      }
                       data-index={virtualRow.index}
                       class={rowClass()}
                       style={{
@@ -153,9 +174,27 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                           ? { background: "rgba(var(--sui-accent-rgb), 0.02)" }
                           : {}),
                       }}
-                      onClick={() => local.onRowClick?.(row(), virtualRow.index)}
-                      onMouseEnter={local.hoverable ? (e) => { e.currentTarget.style.background = "rgba(var(--sui-accent-rgb), 0.04)"; } : undefined}
-                      onMouseLeave={local.hoverable ? (e) => { e.currentTarget.style.background = local.striped && virtualRow.index % 2 === 1 ? "rgba(var(--sui-accent-rgb), 0.02)" : ""; } : undefined}
+                      onClick={() =>
+                        local.onRowClick?.(row(), virtualRow.index)
+                      }
+                      onMouseEnter={
+                        local.hoverable
+                          ? (e) => {
+                              e.currentTarget.style.background =
+                                "rgba(var(--sui-accent-rgb), 0.04)";
+                            }
+                          : undefined
+                      }
+                      onMouseLeave={
+                        local.hoverable
+                          ? (e) => {
+                              e.currentTarget.style.background =
+                                local.striped && virtualRow.index % 2 === 1
+                                  ? "rgba(var(--sui-accent-rgb), 0.02)"
+                                  : "";
+                            }
+                          : undefined
+                      }
                     >
                       <For each={local.columns}>
                         {(col) => (
@@ -170,10 +209,15 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
               </For>
 
               {/* Spacer for rows below viewport */}
-              <tr style={{
-                height: `${virtualizer.getTotalSize() - (virtualizer.getVirtualItems().at(-1)?.end ?? 0)}px`,
-              }}>
-                <td colspan={local.columns.length} style={{ padding: "0", border: "none" }} />
+              <tr
+                style={{
+                  height: `${virtualizer.getTotalSize() - (virtualizer.getVirtualItems().at(-1)?.end ?? 0)}px`,
+                }}
+              >
+                <td
+                  colspan={local.columns.length}
+                  style={{ padding: "0", border: "none" }}
+                />
               </tr>
             </Show>
           </tbody>

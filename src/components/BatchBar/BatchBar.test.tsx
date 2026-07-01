@@ -5,7 +5,8 @@ import { BatchBar, createBatchBar } from "./BatchBar";
 import { useProgressEngine } from "../../internal/progress/useProgressEngine";
 import type { ProgressClock } from "../../internal/progress/useProgressEngine";
 
-const styleOf = (el: Element) => (el as HTMLElement).getAttribute("style") ?? "";
+const styleOf = (el: Element) =>
+  (el as HTMLElement).getAttribute("style") ?? "";
 
 /** A deterministic clock: `now()` reads `t`, frames fire when `flush()` is
  *  called (so tests step the rAF loop manually). */
@@ -91,7 +92,10 @@ describe("BatchBar — declarative API", () => {
 
   it("createBatchBar bakes visual defaults and still drives the declarative fill", () => {
     const fc = fakeClock();
-    const TableBatchBar = createBatchBar({ height: 12, doneColor: "rgb(0,255,0)" });
+    const TableBatchBar = createBatchBar({
+      height: 12,
+      doneColor: "rgb(0,255,0)",
+    });
     const { container } = render(() => (
       <TableBatchBar
         clock={fc.clock}

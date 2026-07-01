@@ -18,8 +18,13 @@ export interface CountChipProps extends JSX.HTMLAttributes<HTMLSpanElement> {
 }
 
 export const CountChip: Component<CountChipProps> = (props) => {
-  const [local, others] = splitProps(props, ["count", "label", "active", "class"]);
-  const isActive = () => (local.active ?? local.count > 0);
+  const [local, others] = splitProps(props, [
+    "count",
+    "label",
+    "active",
+    "class",
+  ]);
+  const isActive = () => local.active ?? local.count > 0;
   const cls = () => {
     const c = ["sui-count-chip"];
     if (isActive()) c.push("sui-count-chip--active");

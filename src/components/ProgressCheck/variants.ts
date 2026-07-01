@@ -7,7 +7,9 @@ import type { ProgressCheckDataProps } from "./ProgressCheck";
 import type { Component } from "solid-js";
 
 /** Default small three-state progress indicator. */
-export const ProgressCheck: Component<ProgressCheckDataProps> = createProgressCheck({});
+export const ProgressCheck: Component<ProgressCheckDataProps> =
+  createProgressCheck({});
 
 /** Large progress indicator — for prominent status rows. */
-export const LargeProgressCheck: Component<ProgressCheckDataProps> = createProgressCheck({ size: "lg" });
+export const LargeProgressCheck: Component<ProgressCheckDataProps> =
+  createProgressCheck({ size: "lg" });

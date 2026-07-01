@@ -5,7 +5,7 @@
 // Owns CSS (Heatmap.css), no component imports.
 // Grid cells with status colors, legends, tooltips.
 // ============================================
-import { type Component, type JSX, splitProps, For, Show, } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show } from "solid-js";
 import "./Heatmap.css";
 
 export type HeatmapCellStatus = "full" | "partial" | "missing" | "empty";
@@ -74,9 +74,7 @@ export const Heatmap: Component<HeatmapProps> = (props) => {
           <div class="jtf-heatmap__row-label" />
           <div class="jtf-heatmap__header-cells">
             <For each={local.columnLabels}>
-              {(label) => (
-                <div class="jtf-heatmap__header-cell">{label}</div>
-              )}
+              {(label) => <div class="jtf-heatmap__header-cell">{label}</div>}
             </For>
           </div>
         </div>
@@ -94,9 +92,15 @@ export const Heatmap: Component<HeatmapProps> = (props) => {
                   {(cell) => (
                     <div
                       class={`jtf-heatmap__cell jtf-heatmap__cell--${cell.status}`}
-                      title={local.showTooltips ? `${row.label}: ${cell.label || cell.value}` : undefined}
+                      title={
+                        local.showTooltips
+                          ? `${row.label}: ${cell.label || cell.value}`
+                          : undefined
+                      }
                       onClick={() => local.onCellClick?.(row.id, cell.id)}
-                      style={local.onCellClick ? { cursor: "pointer" } : undefined}
+                      style={
+                        local.onCellClick ? { cursor: "pointer" } : undefined
+                      }
                     />
                   )}
                 </For>
@@ -151,7 +155,8 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
   // Check if any category has non-full status (to dim the full bars)
   const hasErrors = (cell: HeatmapMultiCell) => {
     return local.categoryLabels.some(
-      cat => cell.categories[cat] !== 'full' && cell.categories[cat] !== undefined
+      (cat) =>
+        cell.categories[cat] !== "full" && cell.categories[cat] !== undefined,
     );
   };
 
@@ -202,14 +207,20 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
                       <div
                         class="jtf-heatmap-multi__cell"
                         onClick={() => local.onCellClick?.(row.id, cell.id)}
-                        style={local.onCellClick ? { cursor: "pointer" } : undefined}
+                        style={
+                          local.onCellClick ? { cursor: "pointer" } : undefined
+                        }
                       >
                         <For each={local.categoryLabels}>
                           {(category) => {
                             const status = cell.categories[category] || "empty";
                             // Dim full bars when there are errors to make error colors stand out
-                            const opacity = status === 'full' && cellHasErrors ? 0.4 :
-                                           status === 'missing' ? 0.9 : 1;
+                            const opacity =
+                              status === "full" && cellHasErrors
+                                ? 0.4
+                                : status === "missing"
+                                  ? 0.9
+                                  : 1;
                             return (
                               <div
                                 class={`jtf-heatmap-multi__bar jtf-heatmap-multi__bar--${status}`}
@@ -219,7 +230,9 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
                           }}
                         </For>
                         {/* Tooltip - only for default variant */}
-                        <Show when={!local.variant || local.variant === "default"}>
+                        <Show
+                          when={!local.variant || local.variant === "default"}
+                        >
                           <div class="jtf-heatmap-multi__tooltip">
                             <div class="jtf-heatmap-multi__tooltip-arrow" />
                             <div class="jtf-heatmap-multi__tooltip-arrow-inner" />
@@ -230,11 +243,16 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
                               <tbody>
                                 <For each={local.categoryLabels}>
                                   {(category) => {
-                                    const status = cell.categories[category] || "empty";
+                                    const status =
+                                      cell.categories[category] || "empty";
                                     return (
                                       <tr>
-                                        <td class="jtf-heatmap-multi__tooltip-label">{category}:</td>
-                                        <td class={`jtf-heatmap-multi__tooltip-value jtf-heatmap-multi__tooltip-value--${status}`}>
+                                        <td class="jtf-heatmap-multi__tooltip-label">
+                                          {category}:
+                                        </td>
+                                        <td
+                                          class={`jtf-heatmap-multi__tooltip-value jtf-heatmap-multi__tooltip-value--${status}`}
+                                        >
                                           {status}
                                         </td>
                                       </tr>

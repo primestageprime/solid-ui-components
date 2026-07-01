@@ -1,6 +1,12 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { FloatCell, IntCell, DateTimeCell, DateCell, StringCell } from "./CellRenderers";
+import {
+  FloatCell,
+  IntCell,
+  DateTimeCell,
+  DateCell,
+  StringCell,
+} from "./CellRenderers";
 import type { TableColumn } from "./types";
 
 interface ColOpts<T, V> {
@@ -9,7 +15,11 @@ interface ColOpts<T, V> {
   sortable?: boolean;
 }
 
-function resolve<T, V>(id: string, field: keyof T | ((row: T) => V) | undefined, row: T): V {
+function resolve<T, V>(
+  id: string,
+  field: keyof T | ((row: T) => V) | undefined,
+  row: T,
+): V {
   const accessor = field ?? (id as keyof T);
   return typeof accessor === "function" ? accessor(row) : (row[accessor] as V);
 }
@@ -28,7 +38,9 @@ export function floatCol<T>(
     align: "right",
     width: opts?.width,
     sortable: opts?.sortable,
-    accessor: (row) => <FloatCell value={resolve(id, opts?.field, row)} precision={precision} />,
+    accessor: (row) => (
+      <FloatCell value={resolve(id, opts?.field, row)} precision={precision} />
+    ),
   };
 }
 

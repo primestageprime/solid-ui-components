@@ -38,7 +38,13 @@ export interface TrendSparklineProps
 
 export const TrendSparkline: Component<TrendSparklineProps> = (props) => {
   const [local, others] = splitProps(props, [
-    "values", "trend", "width", "height", "capacity", "yDomain", "class",
+    "values",
+    "trend",
+    "width",
+    "height",
+    "capacity",
+    "yDomain",
+    "class",
   ]);
   const w = () => local.width ?? 120;
   const h = () => local.height ?? 24;

@@ -43,13 +43,21 @@ describe("Chart slot boundaries — no amygdala-domain leakage", () => {
         const lines = text.split("\n");
         lines.forEach((line, i) => {
           if (rx.test(line)) {
-            offenders.push({ file: file.replace(CHART_DIR + "/", ""), line: i + 1, text: line.trim() });
+            offenders.push({
+              file: file.replace(CHART_DIR + "/", ""),
+              line: i + 1,
+              text: line.trim(),
+            });
           }
         });
       }
       if (offenders.length > 0) {
-        const msg = offenders.map((o) => `  ${o.file}:${o.line} → ${o.text}`).join("\n");
-        throw new Error(`Found ${offenders.length} forbidden reference(s):\n${msg}`);
+        const msg = offenders
+          .map((o) => `  ${o.file}:${o.line} → ${o.text}`)
+          .join("\n");
+        throw new Error(
+          `Found ${offenders.length} forbidden reference(s):\n${msg}`,
+        );
       }
       expect(offenders.length).toBe(0);
     });
@@ -64,13 +72,21 @@ describe("Chart slot boundaries — no amygdala-domain leakage", () => {
       const lines = text.split("\n");
       lines.forEach((line, i) => {
         if (HEX_RX.test(line)) {
-          offenders.push({ file: file.replace(CHART_DIR + "/", ""), line: i + 1, text: line.trim() });
+          offenders.push({
+            file: file.replace(CHART_DIR + "/", ""),
+            line: i + 1,
+            text: line.trim(),
+          });
         }
       });
     }
     if (offenders.length > 0) {
-      const msg = offenders.map((o) => `  ${o.file}:${o.line} → ${o.text}`).join("\n");
-      throw new Error(`Found ${offenders.length} hex color literal(s) in source:\n${msg}`);
+      const msg = offenders
+        .map((o) => `  ${o.file}:${o.line} → ${o.text}`)
+        .join("\n");
+      throw new Error(
+        `Found ${offenders.length} hex color literal(s) in source:\n${msg}`,
+      );
     }
     expect(offenders.length).toBe(0);
   });

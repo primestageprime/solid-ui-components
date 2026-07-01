@@ -96,9 +96,7 @@ export {
   AnimatedSwimlaneChart as SwimlaneChart,
   createAnimatedSwimlaneChart as createSwimlaneChart,
 } from "./components/AnimatedSwimlaneChart";
-export type {
-  AnimatedSwimlaneChartDataProps as SwimlaneChartDataProps,
-} from "./components/AnimatedSwimlaneChart";
+export type { AnimatedSwimlaneChartDataProps as SwimlaneChartDataProps } from "./components/AnimatedSwimlaneChart";
 // Static variant under a distinct public name so the surface doesn't
 // collide. Internal callers may also import directly from the folder.
 export { SwimlaneChart as SwimlaneChartStatic } from "./components/SwimlaneChart/SwimlaneChart";

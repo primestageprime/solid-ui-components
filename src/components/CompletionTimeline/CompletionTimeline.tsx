@@ -7,14 +7,7 @@
 // preserved from the prior monolithic implementation.
 // ============================================
 import { createMemo } from "solid-js";
-import {
-  Chart,
-  Grid,
-  XAxis,
-  YAxis,
-  BarSeries,
-  ChartTooltip,
-} from "../Chart";
+import { Chart, Grid, XAxis, YAxis, BarSeries, ChartTooltip } from "../Chart";
 
 export interface CompletionEvent {
   tableName: string;
@@ -95,11 +88,18 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
     return out;
   });
 
-  const yMaxCount = createMemo(() => Math.max(1, ...buckets().map((b) => b.count)));
-  const _yMaxCumulative = createMemo(() => Math.max(1, ...buckets().map((b) => b.cumulative)));
+  const yMaxCount = createMemo(() =>
+    Math.max(1, ...buckets().map((b) => b.count)),
+  );
+  const _yMaxCumulative = createMemo(() =>
+    Math.max(1, ...buckets().map((b) => b.cumulative)),
+  );
 
   // X domain in bucket-index space; tick labels render the bucket start time.
-  const xDomain = createMemo<[number, number]>(() => [-0.5, buckets().length - 0.5]);
+  const xDomain = createMemo<[number, number]>(() => [
+    -0.5,
+    buckets().length - 0.5,
+  ]);
   // Show ~6 evenly-spaced hour ticks across the window.
   const tickValues = createMemo(() => {
     const bs = buckets();
@@ -157,7 +157,8 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
         >
           {(b) => (
             <span>
-              {fmtTime(b.startMs)} — <strong>{b.count}</strong> done · cumulative {b.cumulative}
+              {fmtTime(b.startMs)} — <strong>{b.count}</strong> done ·
+              cumulative {b.cumulative}
             </span>
           )}
         </ChartTooltip>

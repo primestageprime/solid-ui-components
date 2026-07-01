@@ -21,7 +21,9 @@ import type { Component } from "solid-js";
 
 // Stack variants — named by gap
 export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
-export const NarrowStack: Component<StackDataProps> = createStack({ gap: "sm" });
+export const NarrowStack: Component<StackDataProps> = createStack({
+  gap: "sm",
+});
 
 // Conversation root — capped reading width and conversation-typography for a
 // multi-participant chat tree. Width math: bubble max = 80ch, body width = 80%
@@ -49,31 +51,92 @@ export const SmallTightStack: Component<StackDataProps> = createStack({
 });
 
 // Stack variants — named by role / page layout
-export const PageStack = createStack({ gap: "sm", style: { padding: "24px", "max-width": "1000px" } });
-export const ContentStack: Component<StackDataProps> = createStack({ gap: "xs", style: { flex: "1", "min-width": "0" } });
-export const CenteredStack: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm" });
+export const PageStack = createStack({
+  gap: "sm",
+  style: { padding: "24px", "max-width": "1000px" },
+});
+export const ContentStack: Component<StackDataProps> = createStack({
+  gap: "xs",
+  style: { flex: "1", "min-width": "0" },
+});
+export const CenteredStack: Component<StackDataProps> = createStack({
+  align: "center",
+  justify: "center",
+  gap: "sm",
+});
 
 // Empty regions — centered stacks with size-specific padding and min-height
-export const SmRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "16px 12px", "min-height": "60px", "text-align": "center" } });
-export const MdRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "32px 16px", "min-height": "120px", "text-align": "center" } });
-export const LgRegion: Component<StackDataProps> = createStack({ align: "center", justify: "center", gap: "sm", style: { padding: "48px 24px", "min-height": "200px", "text-align": "center" } });
+export const SmRegion: Component<StackDataProps> = createStack({
+  align: "center",
+  justify: "center",
+  gap: "sm",
+  style: { padding: "16px 12px", "min-height": "60px", "text-align": "center" },
+});
+export const MdRegion: Component<StackDataProps> = createStack({
+  align: "center",
+  justify: "center",
+  gap: "sm",
+  style: {
+    padding: "32px 16px",
+    "min-height": "120px",
+    "text-align": "center",
+  },
+});
+export const LgRegion: Component<StackDataProps> = createStack({
+  align: "center",
+  justify: "center",
+  gap: "sm",
+  style: {
+    padding: "48px 24px",
+    "min-height": "200px",
+    "text-align": "center",
+  },
+});
 
 // Row variants — named by layout behavior
-export const SpreadRow: Component<RowDataProps> = createRow({ align: "center", justify: "between", gap: "sm" });
+export const SpreadRow: Component<RowDataProps> = createRow({
+  align: "center",
+  justify: "between",
+  gap: "sm",
+});
 /** Tight spread row — 4px gap, baseline-aligned key+count rows for compact
  *  data displays (pivot cells, legend rows, chip groupings). */
-export const TightSpreadRow: Component<RowDataProps> = createRow({ align: "baseline", justify: "between", gap: "xs" });
-export const ClusterRow: Component<RowDataProps> = createRow({ align: "center", gap: "sm" });
-export const TightClusterRow: Component<RowDataProps> = createRow({ gap: "xs", align: "center" });
-export const TopClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "start" });
-export const TagRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true, align: "center" });
-export const WrapRow: Component<RowDataProps> = createRow({ gap: "xs", wrap: true });
+export const TightSpreadRow: Component<RowDataProps> = createRow({
+  align: "baseline",
+  justify: "between",
+  gap: "xs",
+});
+export const ClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+});
+export const TightClusterRow: Component<RowDataProps> = createRow({
+  gap: "xs",
+  align: "center",
+});
+export const TopClusterRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  align: "start",
+});
+export const TagRow: Component<RowDataProps> = createRow({
+  gap: "xs",
+  wrap: true,
+  align: "center",
+});
+export const WrapRow: Component<RowDataProps> = createRow({
+  gap: "xs",
+  wrap: true,
+});
 export const FlexRow: Component<RowDataProps> = createRow({});
 
 // Wrapping center-aligned cluster — for header rows where a name + timestamp
 // pair must collapse onto a second line on narrow widths without forcing a
 // large vertical row-gap.
-export const WrappedClusterRow: Component<RowDataProps> = createRow({ gap: "sm", align: "center", wrap: true });
+export const WrappedClusterRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  align: "center",
+  wrap: true,
+});
 
 // Box variants — named by flex-child behavior
 export const ActionSlot: Component<BoxDataProps> = createBox({ shrink: false });
@@ -87,8 +150,12 @@ export const GrowBox: Component<BoxDataProps> = createBox({
   grow: true,
   style: { "flex-basis": "0%", "min-width": "0" },
 });
-export const FadedBox: Component<BoxDataProps> = createBox({ style: { opacity: "0.5" } });
-export const ConstrainedBox: Component<BoxDataProps> = createBox({ style: { "max-width": "400px" } });
+export const FadedBox: Component<BoxDataProps> = createBox({
+  style: { opacity: "0.5" },
+});
+export const ConstrainedBox: Component<BoxDataProps> = createBox({
+  style: { "max-width": "400px" },
+});
 
 // ScrollPanel — curried Box for a height-bounded, bordered, scrolling region.
 // Use to drop a long table/list/log into a detail area without letting it push
@@ -176,7 +243,11 @@ export const ScrollColumn: Component<StackDataProps> = createStack({
 export const AppHeader: Component<AppHeaderDataProps> = createAppHeader({});
 
 /** Compact page-top header (sm padding). */
-export const CompactAppHeader: Component<AppHeaderDataProps> = createAppHeader({ size: "sm" });
+export const CompactAppHeader: Component<AppHeaderDataProps> = createAppHeader({
+  size: "sm",
+});
 
 /** Inline header rendered inside AppMain rather than as the page-top bar. */
-export const InlineAppHeader: Component<AppHeaderDataProps> = createAppHeader({ inline: true });
+export const InlineAppHeader: Component<AppHeaderDataProps> = createAppHeader({
+  inline: true,
+});

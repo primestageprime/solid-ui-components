@@ -380,11 +380,9 @@ export const ScrubChart = <C extends Cell>(
     axisScrollEl = el;
     setAxisViewportWidth(el.clientWidth);
     setAxisScrollLeft(el.scrollLeft);
-    el.addEventListener(
-      "scroll",
-      () => setAxisScrollLeft(el.scrollLeft),
-      { passive: true },
-    );
+    el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
+      passive: true,
+    });
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => setAxisViewportWidth(el.clientWidth));
       ro.observe(el);
@@ -399,8 +397,7 @@ export const ScrubChart = <C extends Cell>(
     if (!req || !scrubOn()) return;
     const el = axisScrollEl;
     if (!el) return;
-    const target =
-      (req.index + 0.5) * cellWidth() - el.clientWidth / 2;
+    const target = (req.index + 0.5) * cellWidth() - el.clientWidth / 2;
     el.scrollTo({
       left: Math.max(0, target),
       behavior: "smooth",
@@ -476,14 +473,12 @@ export const ScrubChart = <C extends Cell>(
       Math.min(props.cells.length - 1, Math.floor(xInPlot / pitch)),
     );
   };
-  let chartGesture:
-    | {
-        startClientX: number;
-        startScrollLeft: number;
-        pointerId: number;
-        panActive: boolean;
-      }
-    | null = null;
+  let chartGesture: {
+    startClientX: number;
+    startScrollLeft: number;
+    pointerId: number;
+    panActive: boolean;
+  } | null = null;
   const handlePointerDown = (e: PointerEvent) => {
     if (!axisScrollEl || props.cells.length === 0 || e.button !== 0) return;
     chartGesture = {

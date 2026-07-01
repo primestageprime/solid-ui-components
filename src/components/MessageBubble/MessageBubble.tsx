@@ -85,9 +85,10 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
     clsx("sui-message-bubble", variantClass(), local.class);
 
   const mergedStyle = (): JSX.CSSProperties => {
-    const base = (typeof local.style === "object" && local.style)
-      ? (local.style as JSX.CSSProperties)
-      : {};
+    const base =
+      typeof local.style === "object" && local.style
+        ? (local.style as JSX.CSSProperties)
+        : {};
     const out: JSX.CSSProperties = { ...base };
     if (local.bg) out["background-color"] = local.bg;
     if (local.textColor) out["color"] = local.textColor;
@@ -95,10 +96,11 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
     return out;
   };
 
-  const textStyle = (): JSX.CSSProperties => ({
-    "--sui-message-bubble-clamp": String(local.clampLines ?? 5),
-    "--sui-message-bubble-max": String(local.maxLines ?? 20),
-  } as JSX.CSSProperties);
+  const textStyle = (): JSX.CSSProperties =>
+    ({
+      "--sui-message-bubble-clamp": String(local.clampLines ?? 5),
+      "--sui-message-bubble-max": String(local.maxLines ?? 20),
+    }) as JSX.CSSProperties;
 
   const textClass = () =>
     clsx(
@@ -111,7 +113,11 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
       class={rootClass()}
       style={mergedStyle()}
       title={local.title}
-      onClick={local.onClick as JSX.EventHandlerUnion<HTMLDivElement, MouseEvent> | undefined}
+      onClick={
+        local.onClick as
+          | JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
+          | undefined
+      }
       {...others}
     >
       <div ref={textRef} class={textClass()} style={textStyle()}>

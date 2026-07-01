@@ -76,13 +76,23 @@ function formatDatePatternFromParts(parts: DateParts, pattern: string): string {
     .replace("ss", parts.second);
 }
 
-function formatDatePattern(date: Date, pattern: string, timeZone?: string): string {
-  const parts = timeZone ? zonedDateParts(date, timeZone) : localDateParts(date);
+function formatDatePattern(
+  date: Date,
+  pattern: string,
+  timeZone?: string,
+): string {
+  const parts = timeZone
+    ? zonedDateParts(date, timeZone)
+    : localDateParts(date);
   return formatDatePatternFromParts(parts, pattern);
 }
 
 /** Extract the short time-zone abbreviation (e.g. "PDT") via Intl.DateTimeFormat. */
-function zoneAbbreviation(date: Date, timeZone: string | undefined, locale: string): string {
+function zoneAbbreviation(
+  date: Date,
+  timeZone: string | undefined,
+  locale: string,
+): string {
   const fmt = new Intl.DateTimeFormat(locale, {
     ...(timeZone ? { timeZone } : {}),
     timeZoneName: "short",
@@ -94,7 +104,8 @@ function zoneAbbreviation(date: Date, timeZone: string | undefined, locale: stri
 // ============================================
 // Date Renderer
 // ============================================
-export interface DateCellProps extends CellRendererProps<string | Date | null | undefined> {
+export interface DateCellProps
+  extends CellRendererProps<string | Date | null | undefined> {
   /** Preset format or custom pattern string (e.g., "YYYY-MM-DD") */
   format?: "short" | "medium" | "long" | "iso" | string;
   locale?: string;
@@ -103,7 +114,8 @@ export interface DateCellProps extends CellRendererProps<string | Date | null | 
 export const DateCell: Component<DateCellProps> = (props) => {
   const formatted = () => {
     if (props.value == null || props.value === "") return null;
-    const date = typeof props.value === "string" ? new Date(props.value) : props.value;
+    const date =
+      typeof props.value === "string" ? new Date(props.value) : props.value;
     if (Number.isNaN(date.getTime())) return null;
 
     const format = props.format || "iso";
@@ -114,7 +126,11 @@ export const DateCell: Component<DateCellProps> = (props) => {
     }
 
     // Handle custom pattern strings (contains YYYY, MM, DD, etc.)
-    if (format.includes("YYYY") || format.includes("MM") || format.includes("DD")) {
+    if (
+      format.includes("YYYY") ||
+      format.includes("MM") ||
+      format.includes("DD")
+    ) {
       return formatDatePattern(date, format);
     }
 
@@ -126,11 +142,17 @@ export const DateCell: Component<DateCellProps> = (props) => {
       long: { month: "long", day: "numeric", year: "numeric" },
     };
 
-    return new Intl.DateTimeFormat(locale, formatOptions[format] || formatOptions.medium).format(date);
+    return new Intl.DateTimeFormat(
+      locale,
+      formatOptions[format] || formatOptions.medium,
+    ).format(date);
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-date">{formatted()}</span>
     </Show>
   );
@@ -139,7 +161,8 @@ export const DateCell: Component<DateCellProps> = (props) => {
 // ============================================
 // DateTime Renderer
 // ============================================
-export interface DateTimeCellProps extends CellRendererProps<string | Date | null | undefined> {
+export interface DateTimeCellProps
+  extends CellRendererProps<string | Date | null | undefined> {
   /** Custom format pattern (e.g., "YYYY-MM-DD HH:mm:ss") or use showSeconds for Intl format */
   format?: "iso" | string;
   showSeconds?: boolean;
@@ -169,19 +192,29 @@ export interface DateTimeCellProps extends CellRendererProps<string | Date | nul
 export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
   const getDate = () => {
     if (props.value == null || props.value === "") return null;
-    const date = typeof props.value === "string" ? new Date(props.value) : props.value;
+    const date =
+      typeof props.value === "string" ? new Date(props.value) : props.value;
     if (Number.isNaN(date.getTime())) return null;
     return date;
   };
 
   const useCustomFormat = () => {
     const format = props.format || "iso";
-    return format === "iso" || format.includes("YYYY") || format.includes("MM") || format.includes("DD");
+    return (
+      format === "iso" ||
+      format.includes("YYYY") ||
+      format.includes("MM") ||
+      format.includes("DD")
+    );
   };
 
   const suffix = (date: Date) => {
     if (!props.showZoneAbbreviation) return "";
-    const abbr = zoneAbbreviation(date, props.timeZone, props.locale || "en-US");
+    const abbr = zoneAbbreviation(
+      date,
+      props.timeZone,
+      props.locale || "en-US",
+    );
     return abbr ? ` (${abbr})` : "";
   };
 
@@ -193,12 +226,19 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
 
     // Handle ISO format (default)
     if (format === "iso") {
-      const pattern = props.showSeconds !== false ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD HH:mm";
+      const pattern =
+        props.showSeconds !== false
+          ? "YYYY-MM-DD HH:mm:ss"
+          : "YYYY-MM-DD HH:mm";
       return formatDatePattern(date, pattern, props.timeZone) + suffix(date);
     }
 
     // Handle custom pattern strings
-    if (format.includes("YYYY") || format.includes("MM") || format.includes("DD")) {
+    if (
+      format.includes("YYYY") ||
+      format.includes("MM") ||
+      format.includes("DD")
+    ) {
       return formatDatePattern(date, format, props.timeZone) + suffix(date);
     }
 
@@ -231,19 +271,26 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
   const timeStr = () => {
     const date = getDate();
     if (!date) return null;
-    return new Intl.DateTimeFormat(props.locale || "en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      ...(props.showSeconds && { second: "2-digit" }),
-      ...(props.timeZone && { timeZone: props.timeZone }),
-    }).format(date) + suffix(date);
+    return (
+      new Intl.DateTimeFormat(props.locale || "en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        ...(props.showSeconds && { second: "2-digit" }),
+        ...(props.timeZone && { timeZone: props.timeZone }),
+      }).format(date) + suffix(date)
+    );
   };
 
   const emptyClass = () =>
-    props.emptyVariant === "plain" ? "cell-empty cell-empty--plain" : "cell-empty";
+    props.emptyVariant === "plain"
+      ? "cell-empty cell-empty--plain"
+      : "cell-empty";
 
   return (
-    <Show when={getDate() != null} fallback={<span class={emptyClass()}>—</span>}>
+    <Show
+      when={getDate() != null}
+      fallback={<span class={emptyClass()}>—</span>}
+    >
       <Show
         when={useCustomFormat()}
         fallback={
@@ -262,21 +309,28 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
 // ============================================
 // MinuteDateTime Renderer (YYYY-MM-DD HH:mm)
 // ============================================
-export interface MinuteDateTimeCellProps extends CellRendererProps<string | Date | null | undefined> {
+export interface MinuteDateTimeCellProps
+  extends CellRendererProps<string | Date | null | undefined> {
   locale?: string;
 }
 
 /** Convenience cell for minute-level timestamps: YYYY-MM-DD HH:mm */
-export const MinuteDateTimeCell: Component<MinuteDateTimeCellProps> = (props) => {
+export const MinuteDateTimeCell: Component<MinuteDateTimeCellProps> = (
+  props,
+) => {
   const formatted = () => {
     if (props.value == null || props.value === "") return null;
-    const date = typeof props.value === "string" ? new Date(props.value) : props.value;
+    const date =
+      typeof props.value === "string" ? new Date(props.value) : props.value;
     if (Number.isNaN(date.getTime())) return null;
     return formatDatePattern(date, "YYYY-MM-DD HH:mm");
   };
 
   return (
-    <Show when={formatted() != null} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={formatted() != null}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-datetime cell-datetime--single">{formatted()}</span>
     </Show>
   );

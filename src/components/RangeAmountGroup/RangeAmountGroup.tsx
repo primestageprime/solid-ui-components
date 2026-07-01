@@ -15,7 +15,14 @@
 // for arbitrary triple inputs (e.g. three date pickers).
 // Factory: createRangeAmountGroup() for curried variants.
 // ============================================
-import { type Component, Index, type JSX, Show, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  Index,
+  type JSX,
+  Show,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import { ThemedNumberInput } from "../ThemedNumberInput/ThemedNumberInput";
 import "./RangeAmountGroup.css";
 
@@ -57,7 +64,9 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
     "class",
   ]);
   const rootClass = () =>
-    local.class ? `sui-range-amount-group ${local.class}` : "sui-range-amount-group";
+    local.class
+      ? `sui-range-amount-group ${local.class}`
+      : "sui-range-amount-group";
   return (
     <div
       class={rootClass()}

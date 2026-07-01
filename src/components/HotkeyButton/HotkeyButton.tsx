@@ -112,7 +112,13 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       {/* Rendered tight on one line so the JSX compiler can't insert
           whitespace text nodes between the segments (which would show as a
           gap around the emphasized key, e.g. "D one" instead of "Done"). */}
-      <span class="sui-hotkey-btn__label">{segments().before}{segments().char && <span class="sui-hotkey-btn__key">{segments().char}</span>}{segments().after}</span>
+      <span class="sui-hotkey-btn__label">
+        {segments().before}
+        {segments().char && (
+          <span class="sui-hotkey-btn__key">{segments().char}</span>
+        )}
+        {segments().after}
+      </span>
       {segments().hint && (
         <span class="sui-hotkey-btn__hint">[{segments().hint}]</span>
       )}
@@ -123,7 +129,10 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
 /** Props locked at variant-definition time. */
 export type HotkeyButtonOverrides = Pick<HotkeyButtonProps, "variant" | "size">;
 /** Props that stay available to consumers of a curried HotkeyButton variant. */
-export type HotkeyButtonDataProps = Omit<HotkeyButtonProps, keyof HotkeyButtonOverrides>;
+export type HotkeyButtonDataProps = Omit<
+  HotkeyButtonProps,
+  keyof HotkeyButtonOverrides
+>;
 
 export function createHotkeyButton(
   defaults: Partial<Omit<HotkeyButtonProps, "children" | "hotkey">>,

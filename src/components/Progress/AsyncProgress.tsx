@@ -5,7 +5,14 @@
 // Time-based progress bar that estimates completion
 // from historical max durations stored in localStorage.
 // ============================================
-import { type Component, type JSX, splitProps, createSignal, createEffect, onCleanup } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  createSignal,
+  createEffect,
+  onCleanup,
+} from "solid-js";
 import "./AsyncProgress.css";
 
 export interface AsyncProgressProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -23,7 +30,9 @@ function getMaxDuration(processId: string): number {
   try {
     const v = localStorage.getItem(STORAGE_PREFIX + processId);
     return v ? parseFloat(v) : 0;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 }
 
 function saveMaxDuration(processId: string, durationSec: number): void {
@@ -43,10 +52,18 @@ function formatSeconds(s: number): string {
 }
 
 export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
-  const [local, others] = splitProps(props, ["processId", "label", "active", "class", "children"]);
+  const [local, others] = splitProps(props, [
+    "processId",
+    "label",
+    "active",
+    "class",
+    "children",
+  ]);
 
   const [elapsed, setElapsed] = createSignal(0);
-  const [maxDuration, setMaxDuration] = createSignal(getMaxDuration(local.processId));
+  const [maxDuration, setMaxDuration] = createSignal(
+    getMaxDuration(local.processId),
+  );
   let startTime = 0;
   let intervalId: ReturnType<typeof setInterval> | undefined;
 
@@ -105,7 +122,7 @@ export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
       <div class="async-progress__bar-track">
         {percent() !== null ? (
           <div
-            class={`async-progress__bar-fill${(percent()! > 1) ? " async-progress__bar-fill--overrun" : ""}`}
+            class={`async-progress__bar-fill${percent()! > 1 ? " async-progress__bar-fill--overrun" : ""}`}
             style={{ width: `${Math.min(percent()! * 100, 100)}%` }}
           />
         ) : (
@@ -113,7 +130,8 @@ export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
             class="async-progress__bar-fill"
             style={{
               width: "30%",
-              animation: "async-progress-indeterminate 1.5s ease-in-out infinite",
+              animation:
+                "async-progress-indeterminate 1.5s ease-in-out infinite",
             }}
           />
         )}

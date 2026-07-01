@@ -20,7 +20,9 @@ export function DagSvgEdge(props: DagSvgEdgeProps): JSX.Element {
     <path
       class={props.class}
       d={props.d}
-      marker-end={props.arrowMarkerId ? `url(#${props.arrowMarkerId})` : undefined}
+      marker-end={
+        props.arrowMarkerId ? `url(#${props.arrowMarkerId})` : undefined
+      }
       style={{ "pointer-events": "none" }}
     />
   );

@@ -122,7 +122,10 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
   // so the newest sits at the seam. (Also true exactly at the cap boundary.)
   const topScrollToBottom = topScrolls;
 
-  const bottomRowsFit = Math.max(0, Math.floor((bottomHeight - headerH) / rowH));
+  const bottomRowsFit = Math.max(
+    0,
+    Math.floor((bottomHeight - headerH) / rowH),
+  );
   const bottomScrolls = unresolvedCount > bottomRowsFit;
 
   return {

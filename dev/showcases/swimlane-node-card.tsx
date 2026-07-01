@@ -69,7 +69,11 @@ const HoverCardSlot: Component<{ node: StatusFlowNode }> = (props) => {
   const [hovered, setHovered] = createSignal(false);
   return (
     <div
-      style={{ position: "relative", width: `${NODE_W}px`, height: `${NODE_H}px` }}
+      style={{
+        position: "relative",
+        width: `${NODE_W}px`,
+        height: `${NODE_H}px`,
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -122,11 +126,11 @@ export const SwimlaneNodeCardShowcase: Component = () => (
         "max-width": "640px",
       }}
     >
-      The card the swimlane chart stamps into each slot, pinned to its real
-      size ({NODE_W}×{NODE_H}). The top line carries claimedBy (left) vs.
-      status (right); the title fills the middle (clamping to 3 lines); the
-      bottom line carries estimate (left) vs. actual (right). Long titles
-      spill their full text into the hover popover.
+      The card the swimlane chart stamps into each slot, pinned to its real size
+      ({NODE_W}×{NODE_H}). The top line carries claimedBy (left) vs. status
+      (right); the title fills the middle (clamping to 3 lines); the bottom line
+      carries estimate (left) vs. actual (right). Long titles spill their full
+      text into the hover popover.
     </div>
 
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
@@ -135,7 +139,9 @@ export const SwimlaneNodeCardShowcase: Component = () => (
     </div>
 
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <Caption>long title — clamps to 3 lines; hover to reveal the full text</Caption>
+      <Caption>
+        long title — clamps to 3 lines; hover to reveal the full text
+      </Caption>
       <HoverCardSlot node={LONG} />
     </div>
 
@@ -146,7 +152,10 @@ export const SwimlaneNodeCardShowcase: Component = () => (
 
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
       <Caption>parent row (DONE) — no estimate/actual</Caption>
-      <CardSlot node={{ id: "p", title: "Patch the roof", status: "DONE" }} parent />
+      <CardSlot
+        node={{ id: "p", title: "Patch the roof", status: "DONE" }}
+        parent
+      />
     </div>
   </div>
 );

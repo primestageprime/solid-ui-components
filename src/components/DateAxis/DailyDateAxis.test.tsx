@@ -7,13 +7,18 @@ const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 describe("DailyDateAxis", () => {
   it("renders one cell per day in [start, end] using the default day content", () => {
     const { container } = render(() => (
-      <DailyDateAxis start={d("2026-05-01")} end={d("2026-05-05")} today={d("2026-05-02")} />
+      <DailyDateAxis
+        start={d("2026-05-01")}
+        end={d("2026-05-05")}
+        today={d("2026-05-02")}
+      />
     ));
     const cells = container.querySelectorAll(".sui-date-axis__cell");
     expect(cells).toHaveLength(5);
     // Day labels: 1..5
-    const labels = Array.from(container.querySelectorAll(".sui-date-axis__label"))
-      .map((n) => n.textContent);
+    const labels = Array.from(
+      container.querySelectorAll(".sui-date-axis__label"),
+    ).map((n) => n.textContent);
     expect(labels).toEqual(["1", "2", "3", "4", "5"]);
   });
 
@@ -26,8 +31,12 @@ describe("DailyDateAxis", () => {
         selected={d("2026-05-04")}
       />
     ));
-    const cells = Array.from(container.querySelectorAll(".sui-date-axis__cell"));
-    expect(cells[3].classList.contains("sui-date-axis__cell--selected")).toBe(true);
+    const cells = Array.from(
+      container.querySelectorAll(".sui-date-axis__cell"),
+    );
+    expect(cells[3].classList.contains("sui-date-axis__cell--selected")).toBe(
+      true,
+    );
   });
 
   it("translates onCellClick back to onDayClick(day: Date)", () => {

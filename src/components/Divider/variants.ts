@@ -11,7 +11,11 @@ import type { Component } from "solid-js";
 export const Divider: Component<DividerDataProps> = createDivider({});
 
 /** Dashed horizontal rule. */
-export const DashedDivider: Component<DividerDataProps> = createDivider({ variant: "dashed" });
+export const DashedDivider: Component<DividerDataProps> = createDivider({
+  variant: "dashed",
+});
 
 /** Vertical rule for inline separation. */
-export const VerticalDivider: Component<DividerDataProps> = createDivider({ orientation: "vertical" });
+export const VerticalDivider: Component<DividerDataProps> = createDivider({
+  orientation: "vertical",
+});

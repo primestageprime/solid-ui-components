@@ -12,10 +12,17 @@
 //
 // Factory: createFocusLabelBand().
 // ============================================
-import { type Component, type JSX, mergeProps, Show, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  mergeProps,
+  Show,
+  splitProps,
+} from "solid-js";
 import "./FocusLabelBand.css";
 
-export interface FocusLabelBandProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface FocusLabelBandProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Highlights the band with the accent palette. */
   selected?: boolean;
   /** Click handler for the whole band. */
@@ -47,7 +54,9 @@ export const FocusLabelBand: Component<FocusLabelBandProps> = (props) => {
   ]);
 
   const rootClass = () =>
-    local.class ? `sui-focus-label-band ${local.class}` : "sui-focus-label-band";
+    local.class
+      ? `sui-focus-label-band ${local.class}`
+      : "sui-focus-label-band";
 
   return (
     <div
@@ -71,7 +80,10 @@ export const FocusLabelBand: Component<FocusLabelBandProps> = (props) => {
 export type FocusLabelBandOverrides = Pick<FocusLabelBandProps, "class">;
 
 /** Data props — what a Curried Variant publicly exposes. */
-export type FocusLabelBandDataProps = Omit<FocusLabelBandProps, keyof FocusLabelBandOverrides>;
+export type FocusLabelBandDataProps = Omit<
+  FocusLabelBandProps,
+  keyof FocusLabelBandOverrides
+>;
 
 /**
  * Factory: returns a FocusLabelBand pre-configured with override defaults.
@@ -79,7 +91,9 @@ export type FocusLabelBandDataProps = Omit<FocusLabelBandProps, keyof FocusLabel
  * belowBar/children + native div HTML attributes).
  */
 export function createFocusLabelBand(
-  defaults: Partial<Omit<FocusLabelBandProps, "children" | "aboveBar" | "belowBar">>,
+  defaults: Partial<
+    Omit<FocusLabelBandProps, "children" | "aboveBar" | "belowBar">
+  >,
 ): Component<FocusLabelBandDataProps> {
   return (props) => <FocusLabelBand {...mergeProps(defaults, props)} />;
 }

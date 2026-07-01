@@ -41,7 +41,7 @@ export interface CellStyleOptions {
  */
 export function withCellStyle<P extends CellRendererProps<unknown>>(
   BaseCell: Component<P>,
-  styleOptions: CellStyleOptions
+  styleOptions: CellStyleOptions,
 ): Component<P> {
   return (props: P) => {
     const style: JSX.CSSProperties = {
@@ -77,7 +77,7 @@ export function withCellStyle<P extends CellRendererProps<unknown>>(
 export function withValueColor<V, P extends CellRendererProps<V>>(
   BaseCell: Component<P>,
   colorFn: (value: V) => string | undefined,
-  baseStyles?: Omit<CellStyleOptions, "color">
+  baseStyles?: Omit<CellStyleOptions, "color">,
 ): Component<P> {
   return (props: P) => {
     const color = () => colorFn(props.value);

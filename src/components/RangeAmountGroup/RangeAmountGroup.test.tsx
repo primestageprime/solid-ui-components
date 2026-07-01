@@ -12,8 +12,14 @@ describe("RangeAmountGroup", () => {
     ));
     const labels = container.querySelectorAll(".sui-range-amount-group__label");
     expect(labels.length).toBe(3);
-    expect([...labels].map((l) => l.textContent)).toEqual(["Min", "p95", "Max"]);
-    expect(container.querySelectorAll("input").length).toBeGreaterThanOrEqual(3);
+    expect([...labels].map((l) => l.textContent)).toEqual([
+      "Min",
+      "p95",
+      "Max",
+    ]);
+    expect(container.querySelectorAll("input").length).toBeGreaterThanOrEqual(
+      3,
+    );
   });
 
   it("falls back to Min / Standard / Max for empty labels", () => {
@@ -21,7 +27,11 @@ describe("RangeAmountGroup", () => {
       <RangeAmountGroup slots={slots(["", "", ""])} />
     ));
     const labels = container.querySelectorAll(".sui-range-amount-group__label");
-    expect([...labels].map((l) => l.textContent)).toEqual(["Min", "Standard", "Max"]);
+    expect([...labels].map((l) => l.textContent)).toEqual([
+      "Min",
+      "Standard",
+      "Max",
+    ]);
   });
 
   it("sets the responsive break CSS var", () => {
@@ -41,13 +51,17 @@ describe("RangeAmountGroup", () => {
         <div class="d">3</div>
       </RangeAmountGroup>
     ));
-    expect(container.querySelectorAll(".sui-range-amount-group > .d").length).toBe(3);
+    expect(
+      container.querySelectorAll(".sui-range-amount-group > .d").length,
+    ).toBe(3);
     expect(container.querySelectorAll("input").length).toBe(0);
   });
 
   it("createRangeAmountGroup bakes defaults", () => {
     const Curried = createRangeAmountGroup({ breakWidth: "20rem" });
-    const { container } = render(() => <Curried slots={slots(["x", "y", "z"])} />);
+    const { container } = render(() => (
+      <Curried slots={slots(["x", "y", "z"])} />
+    ));
     const root = container.firstElementChild as HTMLElement;
     expect(root.style.getPropertyValue("--rag-break")).toBe("20rem");
   });

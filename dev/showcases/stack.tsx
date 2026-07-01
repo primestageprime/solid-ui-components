@@ -1,14 +1,24 @@
 import type { Component } from "solid-js";
 import { Stack } from "../../src/components/Layout/Stack";
 import {
-  TightStack, NarrowStack, ContentStack, CenteredStack,
-  SmRegion, MdRegion, LgRegion,
+  TightStack,
+  NarrowStack,
+  ContentStack,
+  CenteredStack,
+  SmRegion,
+  MdRegion,
+  LgRegion,
 } from "../../src/components/Layout";
 import { Surface } from "../../src/components/Surface/Surface";
 import { Text } from "../../src/components/Text/Text";
 
 const DemoBox: Component<{ label: string }> = (props) => (
-  <Surface padding="sm" radius="sm" bg="rgba(0,212,255,0.1)" borderColor="rgba(0,212,255,0.3)">
+  <Surface
+    padding="sm"
+    radius="sm"
+    bg="rgba(0,212,255,0.1)"
+    borderColor="rgba(0,212,255,0.3)"
+  >
     <Text variant="body">{props.label}</Text>
   </Surface>
 );
@@ -17,11 +27,17 @@ export const StackShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Stack — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Layout.css). Flex-column container with gap/align/justify. Factory: createStack().</p>
+      <p class="text-meta">
+        Owns CSS (Layout.css). Flex-column container with gap/align/justify.
+        Factory: createStack().
+      </p>
 
       <div class="example-group">
         <h3>Base Component — Gap Sizes</h3>
-        <div class="example-row" style={{ "align-items": "flex-start", gap: "32px" }}>
+        <div
+          class="example-row"
+          style={{ "align-items": "flex-start", gap: "32px" }}
+        >
           {(["xs", "sm"] as const).map((gap) => (
             <div>
               <Text variant="sublabel">{gap}</Text>
@@ -37,11 +53,23 @@ export const StackShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Alignment</h3>
-        <div class="example-row" style={{ "align-items": "flex-start", gap: "32px" }}>
+        <div
+          class="example-row"
+          style={{ "align-items": "flex-start", gap: "32px" }}
+        >
           {(["start", "center", "end", "stretch"] as const).map((align) => (
             <div>
               <Text variant="sublabel">{align}</Text>
-              <Stack gap="sm" align={align} style={{ "margin-top": "8px", width: "160px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+              <Stack
+                gap="sm"
+                align={align}
+                style={{
+                  "margin-top": "8px",
+                  width: "160px",
+                  border: "1px dashed var(--sui-border)",
+                  padding: "8px",
+                }}
+              >
                 <DemoBox label="Short" />
                 <DemoBox label="Medium item" />
                 <DemoBox label="A" />
@@ -53,7 +81,10 @@ export const StackShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants</h3>
-        <div class="example-row" style={{ "align-items": "flex-start", gap: "32px" }}>
+        <div
+          class="example-row"
+          style={{ "align-items": "flex-start", gap: "32px" }}
+        >
           <div>
             <Text variant="sublabel">TightStack</Text>
             <div class="text-meta">gap: "xs"</div>
@@ -75,7 +106,13 @@ export const StackShowcase: Component = () => {
           <div>
             <Text variant="sublabel">ContentStack</Text>
             <div class="text-meta">gap: "xs", flex: 1</div>
-            <ContentStack style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+            <ContentStack
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+                padding: "8px",
+              }}
+            >
               <DemoBox label="A" />
               <DemoBox label="B" />
             </ContentStack>
@@ -83,7 +120,14 @@ export const StackShowcase: Component = () => {
           <div>
             <Text variant="sublabel">CenteredStack</Text>
             <div class="text-meta">align/justify: center, gap: "sm"</div>
-            <CenteredStack style={{ "margin-top": "8px", height: "120px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+            <CenteredStack
+              style={{
+                "margin-top": "8px",
+                height: "120px",
+                border: "1px dashed var(--sui-border)",
+                padding: "8px",
+              }}
+            >
               <DemoBox label="Centered" />
             </CenteredStack>
           </div>
@@ -92,26 +136,43 @@ export const StackShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Region Variants</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>Centered stacks with size-specific padding and min-height</div>
+        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+          Centered stacks with size-specific padding and min-height
+        </div>
         <Stack gap="sm">
           <div>
             <Text variant="sublabel">SmRegion</Text>
             <div class="text-meta">padding: 16px 12px, min-height: 60px</div>
-            <SmRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
+            <SmRegion
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+              }}
+            >
               <Text variant="body">Small region</Text>
             </SmRegion>
           </div>
           <div>
             <Text variant="sublabel">MdRegion</Text>
             <div class="text-meta">padding: 32px 16px, min-height: 120px</div>
-            <MdRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
+            <MdRegion
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+              }}
+            >
               <Text variant="body">Medium region</Text>
             </MdRegion>
           </div>
           <div>
             <Text variant="sublabel">LgRegion</Text>
             <div class="text-meta">padding: 48px 24px, min-height: 200px</div>
-            <LgRegion style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)" }}>
+            <LgRegion
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+              }}
+            >
               <Text variant="body">Large region</Text>
             </LgRegion>
           </div>

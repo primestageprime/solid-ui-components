@@ -8,12 +8,7 @@
 //
 // Factory: createParticipantTimeLabel().
 // ============================================
-import {
-  type Component,
-  type JSX,
-  mergeProps,
-  splitProps,
-} from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./ParticipantTimeLabel.css";
 
 export interface ParticipantTimeLabelProps
@@ -29,11 +24,7 @@ const clsx = (...parts: (string | false | undefined)[]): string =>
 export const ParticipantTimeLabel: Component<ParticipantTimeLabelProps> = (
   props,
 ) => {
-  const [local, others] = splitProps(props, [
-    "title",
-    "class",
-    "children",
-  ]);
+  const [local, others] = splitProps(props, ["title", "class", "children"]);
 
   return (
     <span

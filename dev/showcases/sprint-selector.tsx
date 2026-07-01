@@ -4,9 +4,27 @@ import { SprintSelector } from "../../src/components/SprintSelector";
 export const SprintSelectorShowcase: Component = () => {
   const [idx, setIdx] = createSignal(2);
   const sprints = [
-    { label: "Sprint 22", startDate: new Date("2026-04-07"), endDate: new Date("2026-04-20"), pointsClosed: 28, pointsTotal: 30 },
-    { label: "Sprint 23", startDate: new Date("2026-04-21"), endDate: new Date("2026-05-04"), pointsClosed: 14, pointsTotal: 32 },
-    { label: "Sprint 24", startDate: new Date("2026-05-05"), endDate: new Date("2026-05-18"), pointsClosed: 0, pointsTotal: 25 },
+    {
+      label: "Sprint 22",
+      startDate: new Date("2026-04-07"),
+      endDate: new Date("2026-04-20"),
+      pointsClosed: 28,
+      pointsTotal: 30,
+    },
+    {
+      label: "Sprint 23",
+      startDate: new Date("2026-04-21"),
+      endDate: new Date("2026-05-04"),
+      pointsClosed: 14,
+      pointsTotal: 32,
+    },
+    {
+      label: "Sprint 24",
+      startDate: new Date("2026-05-05"),
+      endDate: new Date("2026-05-18"),
+      pointsClosed: 0,
+      pointsTotal: 25,
+    },
   ];
   return (
     <div class="component-section">

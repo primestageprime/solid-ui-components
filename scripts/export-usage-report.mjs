@@ -68,7 +68,9 @@ function collectFromFile(file) {
   }
 
   // export { A, B as C, type D } from "./x"   and   export { A, B }
-  for (const m of src.matchAll(/export\s+(type\s+)?\{([^}]*)\}(\s*from\s*["'][^"']+["'])?/g)) {
+  for (const m of src.matchAll(
+    /export\s+(type\s+)?\{([^}]*)\}(\s*from\s*["'][^"']+["'])?/g,
+  )) {
     const groupType = Boolean(m[1]);
     for (let part of m[2].split(",")) {
       part = part.trim();
@@ -86,14 +88,26 @@ function collectFromFile(file) {
   }
 
   // export const/let/var NAME ,  export function NAME , export class NAME
-  for (const m of src.matchAll(/export\s+(?:const|let|var)\s+([A-Za-z0-9_$]+)/g)) addExport(m[1], false);
-  for (const m of src.matchAll(/export\s+(?:async\s+)?function\s*\*?\s*([A-Za-z0-9_$]+)/g)) addExport(m[1], false);
-  for (const m of src.matchAll(/export\s+(?:abstract\s+)?class\s+([A-Za-z0-9_$]+)/g)) addExport(m[1], false);
+  for (const m of src.matchAll(
+    /export\s+(?:const|let|var)\s+([A-Za-z0-9_$]+)/g,
+  ))
+    addExport(m[1], false);
+  for (const m of src.matchAll(
+    /export\s+(?:async\s+)?function\s*\*?\s*([A-Za-z0-9_$]+)/g,
+  ))
+    addExport(m[1], false);
+  for (const m of src.matchAll(
+    /export\s+(?:abstract\s+)?class\s+([A-Za-z0-9_$]+)/g,
+  ))
+    addExport(m[1], false);
 
   // export type NAME = ... ,  export interface NAME , export enum NAME
-  for (const m of src.matchAll(/export\s+type\s+([A-Za-z0-9_$]+)\s*[=<]/g)) addExport(m[1], true);
-  for (const m of src.matchAll(/export\s+interface\s+([A-Za-z0-9_$]+)/g)) addExport(m[1], true);
-  for (const m of src.matchAll(/export\s+enum\s+([A-Za-z0-9_$]+)/g)) addExport(m[1], false);
+  for (const m of src.matchAll(/export\s+type\s+([A-Za-z0-9_$]+)\s*[=<]/g))
+    addExport(m[1], true);
+  for (const m of src.matchAll(/export\s+interface\s+([A-Za-z0-9_$]+)/g))
+    addExport(m[1], true);
+  for (const m of src.matchAll(/export\s+enum\s+([A-Za-z0-9_$]+)/g))
+    addExport(m[1], false);
 
   // export default — not a named import target; ignore.
 }
@@ -110,10 +124,15 @@ function dependsOnSui(pkgJsonPath) {
   try {
     const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
     if (pkg.name === "@primestageprime/solid-ui-components") return false; // skip self
-    for (const field of ["dependencies", "devDependencies", "peerDependencies"]) {
+    for (const field of [
+      "dependencies",
+      "devDependencies",
+      "peerDependencies",
+    ]) {
       const deps = pkg[field] || {};
       for (const key of Object.keys(deps)) {
-        if (key === PKG || key === "@primestageprime/solid-ui-components") return true;
+        if (key === PKG || key === "@primestageprime/solid-ui-components")
+          return true;
       }
     }
   } catch {
@@ -159,7 +178,8 @@ function walkSourceFiles(dir, out) {
   for (const e of entries) {
     const full = join(dir, e.name);
     if (e.isDirectory()) {
-      if (e.name === "node_modules" || e.name === "dist" || e.name === ".git") continue;
+      if (e.name === "node_modules" || e.name === "dist" || e.name === ".git")
+        continue;
       walkSourceFiles(full, out);
     } else if (/\.(ts|tsx|js|jsx|mts|cts)$/.test(e.name)) {
       out.push(full);
@@ -175,7 +195,8 @@ const usage = new Map();
 const broken = new Map();
 const namespaceImports = [];
 
-const importFromSui = /(?:import|export)\b((?:(?!\bfrom\b)[\s\S])*?)\bfrom\s*["']solid-ui-components["']/g;
+const importFromSui =
+  /(?:import|export)\b((?:(?!\bfrom\b)[\s\S])*?)\bfrom\s*["']solid-ui-components["']/g;
 
 function parseClause(clause, file, consumerName, rec) {
   // Namespace import: import * as Foo from "..."
@@ -224,7 +245,11 @@ for (const root of [...consumerRoots].sort()) {
     for (const m of src.matchAll(importFromSui)) {
       parseClause(m[1], file, name, rec);
     }
-    if (/import\s+\*\s+as\s+[A-Za-z0-9_$]+\s+from\s*["']solid-ui-components["']/.test(src)) {
+    if (
+      /import\s+\*\s+as\s+[A-Za-z0-9_$]+\s+from\s*["']solid-ui-components["']/.test(
+        src,
+      )
+    ) {
       nsFiles.push(file);
     }
   }
@@ -237,7 +262,8 @@ for (const root of [...consumerRoots].sort()) {
       usage.get(n).add(name);
     } else {
       if (!broken.has(n)) broken.set(n, []);
-      for (const file of detail.get(n)) broken.get(n).push({ consumer: name, file });
+      for (const file of detail.get(n))
+        broken.get(n).push({ consumer: name, file });
     }
   }
 }
@@ -247,7 +273,9 @@ for (const root of [...consumerRoots].sort()) {
 // ---------------------------------------------------------------------------
 
 const used = [...usage.keys()].sort();
-const unused = [...allExports].filter((n) => !usage.has(n)).sort((a, b) => a.localeCompare(b));
+const unused = [...allExports]
+  .filter((n) => !usage.has(n))
+  .sort((a, b) => a.localeCompare(b));
 const brokenNames = [...broken.keys()].sort();
 
 const rel = (f) => relative(umbrella, f);
@@ -264,12 +292,18 @@ if (asJson) {
       consumers: consumers.map((c) => c.name),
     },
     used: used
-      .map((n) => ({ name: n, count: usage.get(n).size, consumers: [...usage.get(n)].sort() }))
+      .map((n) => ({
+        name: n,
+        count: usage.get(n).size,
+        consumers: [...usage.get(n)].sort(),
+      }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
     unused,
     broken: brokenNames.map((n) => ({
       name: n,
-      sites: broken.get(n).map((s) => ({ consumer: s.consumer, file: rel(s.file) })),
+      sites: broken
+        .get(n)
+        .map((s) => ({ consumer: s.consumer, file: rel(s.file) })),
     })),
     namespaceImports: namespaceImports.map((s) => ({
       consumer: s.consumer,
@@ -295,11 +329,16 @@ const usedSorted = used
   .map((n) => ({ n, count: usage.get(n).size, who: [...usage.get(n)].sort() }))
   .sort((a, b) => b.count - a.count || a.n.localeCompare(b.n));
 for (const { n, count, who } of usedSorted) {
-  console.log(`  ${n.padEnd(34)} ${String(count).padStart(2)}  [${who.join(", ")}]`);
+  console.log(
+    `  ${n.padEnd(34)} ${String(count).padStart(2)}  [${who.join(", ")}]`,
+  );
 }
 console.log("");
 
-console.log(`-- (b) UNUSED EXPORTS / PRUNE CANDIDATES (${unused.length}) ` + "-".repeat(20));
+console.log(
+  `-- (b) UNUSED EXPORTS / PRUNE CANDIDATES (${unused.length}) ` +
+    "-".repeat(20),
+);
 for (const n of unused) {
   const kind = typeExports.has(n) && !valueExports.has(n) ? " (type)" : "";
   console.log(`  ${n}${kind}`);
@@ -308,20 +347,30 @@ console.log("");
 
 console.log(`-- (c) BROKEN IMPORTS (${brokenNames.length}) ` + "-".repeat(35));
 if (brokenNames.length === 0) {
-  console.log("  none — every imported identifier resolves to a current export.");
+  console.log(
+    "  none — every imported identifier resolves to a current export.",
+  );
 } else {
   for (const n of brokenNames) {
     console.log(`  ${n}`);
-    for (const s of broken.get(n)) console.log(`      <- ${s.consumer}: ${rel(s.file)}`);
+    for (const s of broken.get(n))
+      console.log(`      <- ${s.consumer}: ${rel(s.file)}`);
   }
 }
 console.log("");
 
-console.log(`-- (d) NAMESPACE-IMPORT FILES (${namespaceImports.length}) ` + "-".repeat(25));
+console.log(
+  `-- (d) NAMESPACE-IMPORT FILES (${namespaceImports.length}) ` +
+    "-".repeat(25),
+);
 if (namespaceImports.length === 0) {
-  console.log("  none — no `import * as` sites; per-symbol analysis is complete.");
+  console.log(
+    "  none — no `import * as` sites; per-symbol analysis is complete.",
+  );
 } else {
-  console.log("  These use `import * as` so per-symbol usage is UNDER-COUNTED for them:");
+  console.log(
+    "  These use `import * as` so per-symbol usage is UNDER-COUNTED for them:",
+  );
   for (const s of namespaceImports) {
     console.log(`  ${s.consumer}: ${rel(s.file)}  (as ${s.alias})`);
   }

@@ -7,13 +7,20 @@
 // Updated: absorbs HUDToggle features (variant, color).
 // Dropped: power and circuit variants.
 // ============================================
-import { type Component, type JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  mergeProps,
+  splitProps,
+  createUniqueId,
+} from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Toggle.css";
 
 export type ToggleSize = "sm" | "md" | "lg";
 
-export interface ToggleProps extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
+export interface ToggleProps
+  extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
   size?: ToggleSize;
   label?: string;
   labelPosition?: "left" | "right";
@@ -49,10 +56,12 @@ export const Toggle: Component<ToggleProps> = (props) => {
   const classes = () => {
     const classList = ["sui-toggle"];
     classList.push(`sui-toggle--${local.size || "md"}`);
-    if (local.labelPosition === "left") classList.push("sui-toggle--label-left");
+    if (local.labelPosition === "left")
+      classList.push("sui-toggle--label-left");
     if (local.variant === "minimal") classList.push("sui-toggle--minimal");
     if (local.variant === "thematic") classList.push("sui-toggle--thematic");
-    if (local.color && local.color !== "default") classList.push(`sui-toggle--${local.color}`);
+    if (local.color && local.color !== "default")
+      classList.push(`sui-toggle--${local.color}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -64,13 +73,18 @@ export const Toggle: Component<ToggleProps> = (props) => {
     currentTarget: HTMLInputElement;
     target: HTMLInputElement;
   };
-  const handleChange: JSX.ChangeEventHandler<HTMLInputElement, Event> = (event) => {
+  const handleChange: JSX.ChangeEventHandler<HTMLInputElement, Event> = (
+    event,
+  ) => {
     const native = local.onChange;
     if (typeof native === "function") {
       native(event);
     } else if (Array.isArray(native)) {
       const [handler, data] = native;
-      (handler as (data: unknown, event: ToggleChangeEvent) => void)(data, event);
+      (handler as (data: unknown, event: ToggleChangeEvent) => void)(
+        data,
+        event,
+      );
     }
     local.onCheckedChange?.(event.currentTarget.checked);
   };
@@ -101,9 +115,14 @@ export const Toggle: Component<ToggleProps> = (props) => {
   );
 };
 
-export type ToggleOverrides = Pick<ToggleProps, "size" | "variant" | "color" | "labelPosition">;
+export type ToggleOverrides = Pick<
+  ToggleProps,
+  "size" | "variant" | "color" | "labelPosition"
+>;
 export type ToggleDataProps = Omit<ToggleProps, keyof ToggleOverrides>;
 
-export function createToggle(defaults: Partial<ToggleProps>): Component<ToggleDataProps> {
+export function createToggle(
+  defaults: Partial<ToggleProps>,
+): Component<ToggleDataProps> {
   return (props) => <Toggle {...mergeProps(defaults, props)} />;
 }

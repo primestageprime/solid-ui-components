@@ -117,7 +117,9 @@
 
 .math-formula .katex .formula-var {
   cursor: pointer;
-  transition: color 0.15s ease, text-shadow 0.15s ease;
+  transition:
+    color 0.15s ease,
+    text-shadow 0.15s ease;
   border-radius: 2px;
 }
 

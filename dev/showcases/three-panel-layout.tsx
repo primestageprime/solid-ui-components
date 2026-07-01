@@ -22,11 +22,26 @@ const DemoTopBar = () => (
 
 const DemoList: Component<{ title: string; items: string[] }> = (props) => (
   <>
-    <h4 style={{ margin: "0 0 8px 0", color: "var(--sui-text-secondary)", "font-size": "12px", "text-transform": "uppercase", "letter-spacing": "0.08em" }}>
+    <h4
+      style={{
+        margin: "0 0 8px 0",
+        color: "var(--sui-text-secondary)",
+        "font-size": "12px",
+        "text-transform": "uppercase",
+        "letter-spacing": "0.08em",
+      }}
+    >
       {props.title}
     </h4>
     {props.items.map((item) => (
-      <div style={{ padding: "6px 8px", background: "var(--sui-bg-secondary)", "border-left": "2px solid var(--sui-accent)", "font-size": "13px" }}>
+      <div
+        style={{
+          padding: "6px 8px",
+          background: "var(--sui-bg-secondary)",
+          "border-left": "2px solid var(--sui-accent)",
+          "font-size": "13px",
+        }}
+      >
         {item}
       </div>
     ))}
@@ -54,8 +69,8 @@ export const ThreePanelLayoutShowcase: Component = () => {
         Owns CSS (ThreePanelLayout.css), no component imports. Top-bar +
         three-column (left / center / right) page scaffold. Zero-config:
         required slot is <code>centerPanel</code>; all other slots render
-        conditionally and the grid collapses automatically when a side panel
-        is omitted.
+        conditionally and the grid collapses automatically when a side panel is
+        omitted.
       </p>
 
       <div class="example-group">
@@ -63,9 +78,19 @@ export const ThreePanelLayoutShowcase: Component = () => {
         <Frame label="topBar + leftPanel + centerPanel + rightPanel">
           <ThreePanelLayout
             topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Assets" items={["Vessel A", "Vessel B", "Vessel C"]} />}
+            leftPanel={
+              <DemoList
+                title="Assets"
+                items={["Vessel A", "Vessel B", "Vessel C"]}
+              />
+            }
             centerPanel={<DemoCenter />}
-            rightPanel={<DemoList title="Context" items={["Engine #3", "Pacific TZ", "Alarm Id 1234"]} />}
+            rightPanel={
+              <DemoList
+                title="Context"
+                items={["Engine #3", "Pacific TZ", "Alarm Id 1234"]}
+              />
+            }
           />
         </Frame>
       </div>
@@ -81,7 +106,9 @@ export const ThreePanelLayoutShowcase: Component = () => {
         <h3>Without topBar</h3>
         <Frame label="leftPanel + centerPanel + rightPanel">
           <ThreePanelLayout
-            leftPanel={<DemoList title="Assets" items={["Vessel A", "Vessel B"]} />}
+            leftPanel={
+              <DemoList title="Assets" items={["Vessel A", "Vessel B"]} />
+            }
             centerPanel={<DemoCenter />}
             rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
           />
@@ -104,7 +131,9 @@ export const ThreePanelLayoutShowcase: Component = () => {
         <Frame label="topBar + leftPanel + centerPanel">
           <ThreePanelLayout
             topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Assets" items={["Vessel A", "Vessel B"]} />}
+            leftPanel={
+              <DemoList title="Assets" items={["Vessel A", "Vessel B"]} />
+            }
             centerPanel={<DemoCenter />}
           />
         </Frame>
@@ -112,7 +141,7 @@ export const ThreePanelLayoutShowcase: Component = () => {
 
       <div class="example-group">
         <h3>fullHeight alias (height = "100%")</h3>
-        <Frame label='<ThreePanelLayout fullHeight />'>
+        <Frame label="<ThreePanelLayout fullHeight />">
           <ThreePanelLayout
             fullHeight
             topBar={<DemoTopBar />}

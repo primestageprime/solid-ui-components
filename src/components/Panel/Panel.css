@@ -36,10 +36,18 @@
 }
 
 /* Panel sizes */
-.sui-panel--none { padding: 0; }
-.sui-panel--sm { padding: 8px 12px; }
-.sui-panel--md { padding: 16px; }
-.sui-panel--lg { padding: 24px; }
+.sui-panel--none {
+  padding: 0;
+}
+.sui-panel--sm {
+  padding: 8px 12px;
+}
+.sui-panel--md {
+  padding: 16px;
+}
+.sui-panel--lg {
+  padding: 24px;
+}
 
 /* Fill — panel grows to its flex parent's height and lays out as a column so the
    content region takes the space left after the (optional) title. Lets a

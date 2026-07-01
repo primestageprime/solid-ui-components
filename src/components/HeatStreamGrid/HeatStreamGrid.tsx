@@ -7,12 +7,20 @@
 // columns (e.g. time windows), each cell containing
 // a compact HeatStream.
 // ============================================
-import { type Component, type JSX, splitProps, For, Show, createMemo } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  For,
+  Show,
+  createMemo,
+} from "solid-js";
 import { HeatStream, type HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
 
-export interface HeatStreamGridProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface HeatStreamGridProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   rows: string[];
   columns: string[];
   keys: string[];
@@ -66,22 +74,28 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
     store.setSelected((prev) => {
       const next = new Set(prev);
       for (const k of keys) {
-        if (allSelected) next.delete(k); else next.add(k);
+        if (allSelected) next.delete(k);
+        else next.add(k);
       }
       return next;
     });
   };
 
   const nonEmptyKeysForRow = (row: string) =>
-    local.columns.filter((col) => local.data(row, col).length > 0).map((col) => cellKey(row, col));
+    local.columns
+      .filter((col) => local.data(row, col).length > 0)
+      .map((col) => cellKey(row, col));
 
   const nonEmptyKeysForCol = (col: string) =>
-    local.rows.filter((row) => local.data(row, col).length > 0).map((row) => cellKey(row, col));
+    local.rows
+      .filter((row) => local.data(row, col).length > 0)
+      .map((row) => cellKey(row, col));
 
   const allNonEmptyKeys = () =>
     local.rows.flatMap((row) => nonEmptyKeysForRow(row));
 
-  const toggleCell = (row: string, col: string) => toggleKeys([cellKey(row, col)]);
+  const toggleCell = (row: string, col: string) =>
+    toggleKeys([cellKey(row, col)]);
   const toggleRow = (row: string) => toggleKeys(nonEmptyKeysForRow(row));
   const toggleCol = (col: string) => toggleKeys(nonEmptyKeysForCol(col));
   const toggleAll = () => toggleKeys(allNonEmptyKeys());
@@ -91,12 +105,18 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
 
   const isRowAllSelected = (row: string) => {
     const keys = nonEmptyKeysForRow(row);
-    return keys.length > 0 && keys.every((k) => local.selectionStore!.selected().has(k));
+    return (
+      keys.length > 0 &&
+      keys.every((k) => local.selectionStore!.selected().has(k))
+    );
   };
 
   const isColAllSelected = (col: string) => {
     const keys = nonEmptyKeysForCol(col);
-    return keys.length > 0 && keys.every((k) => local.selectionStore!.selected().has(k));
+    return (
+      keys.length > 0 &&
+      keys.every((k) => local.selectionStore!.selected().has(k))
+    );
   };
 
   const selectable = () => !!local.selectionStore;
@@ -124,7 +144,10 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
               {(col) => (
                 <th
                   class="jtf-heatstream-grid__header"
-                  classList={{ "jtf-heatstream-grid__header--all-selected": selectable() && isColAllSelected(col) }}
+                  classList={{
+                    "jtf-heatstream-grid__header--all-selected":
+                      selectable() && isColAllSelected(col),
+                  }}
                   onClick={() => selectable() && toggleCol(col)}
                 >
                   {col}
@@ -139,7 +162,10 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
               <tr>
                 <td
                   class="jtf-heatstream-grid__row-label"
-                  classList={{ "jtf-heatstream-grid__row-label--all-selected": selectable() && isRowAllSelected(row) }}
+                  classList={{
+                    "jtf-heatstream-grid__row-label--all-selected":
+                      selectable() && isRowAllSelected(row),
+                  }}
                   onClick={() => selectable() && toggleRow(row)}
                 >
                   {row}
@@ -158,9 +184,17 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                     return (
                       <td
                         class="jtf-heatstream-grid__cell"
-                        classList={{ "jtf-heatstream-grid__cell--selected": selectable() && isSelected(row, col) }}
+                        classList={{
+                          "jtf-heatstream-grid__cell--selected":
+                            selectable() && isSelected(row, col),
+                        }}
                         onClick={handleClick}
-                        style={items().length > 0 && (selectable() || local.onCellClick) ? { cursor: "pointer" } : undefined}
+                        style={
+                          items().length > 0 &&
+                          (selectable() || local.onCellClick)
+                            ? { cursor: "pointer" }
+                            : undefined
+                        }
                       >
                         <Show when={items().length > 0}>
                           <HeatStream

@@ -12,7 +12,9 @@ import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
  * which is rarely what callers want for a DAG view.
  */
 function layeringSourcesFirst(
-  graph: { topological(): Iterable<{ y: number; parents(): Iterable<unknown> }> },
+  graph: {
+    topological(): Iterable<{ y: number; parents(): Iterable<unknown> }>;
+  },
   sep: (a: unknown, b: unknown) => number,
 ): number {
   let max = 0;
@@ -36,7 +38,10 @@ function layeringSourcesFirst(
 }
 
 export type LayoutResult = {
-  positions: ReadonlyMap<string, { x: number; y: number; width: number; height: number }>;
+  positions: ReadonlyMap<
+    string,
+    { x: number; y: number; width: number; height: number }
+  >;
   edges: LayoutEdge[];
   totalWidth: number;
   totalHeight: number;
@@ -44,7 +49,12 @@ export type LayoutResult = {
 
 const DEFAULT_NODE_SIZE: [number, number] = [180, 60];
 const DEFAULT_GAP: [number, number] = [40, 40];
-const EMPTY_RESULT: LayoutResult = { positions: new Map(), edges: [], totalWidth: 0, totalHeight: 0 };
+const EMPTY_RESULT: LayoutResult = {
+  positions: new Map(),
+  edges: [],
+  totalWidth: 0,
+  totalHeight: 0,
+};
 
 export function computeLayout<T>(
   nodes: DAGNode<T>[],
@@ -77,7 +87,10 @@ export function computeLayout<T>(
   try {
     dag = graphStratify()(stratifyData);
   } catch (err) {
-    console.error("[DagChart] graphStratify failed — graph may contain a cycle or duplicate IDs.", err);
+    console.error(
+      "[DagChart] graphStratify failed — graph may contain a cycle or duplicate IDs.",
+      err,
+    );
     return EMPTY_RESULT;
   }
 
@@ -106,16 +119,13 @@ export function computeLayout<T>(
       "[DagChart] Sugiyama layout failed; falling back to topological grid placement.",
       err,
     );
-    return fallbackGridLayout(
-      nodes,
-      edges,
-      direction,
-      sizeMap,
-      nodeRank,
-    );
+    return fallbackGridLayout(nodes, edges, direction, sizeMap, nodeRank);
   }
 
-  const positions = new Map<string, { x: number; y: number; width: number; height: number }>();
+  const positions = new Map<
+    string,
+    { x: number; y: number; width: number; height: number }
+  >();
   for (const dagNode of dag.nodes()) {
     const id = (dagNode.data as { id: string }).id;
     const size = sizeMap.get(id) ?? DEFAULT_NODE_SIZE;
@@ -244,18 +254,12 @@ function fallbackGridLayout<T>(
     for (const id of ids) {
       const [w, h] = sizeMap.get(id) ?? DEFAULT_NODE_SIZE;
       const depthCenter = cursorDepth + layerDepth / 2;
-      const breadthCenter = cursorBreadth + (direction === "horizontal" ? h : w) / 2;
-      const x =
-        direction === "horizontal"
-          ? depthCenter
-          : breadthCenter;
-      const y =
-        direction === "horizontal"
-          ? breadthCenter
-          : depthCenter;
+      const breadthCenter =
+        cursorBreadth + (direction === "horizontal" ? h : w) / 2;
+      const x = direction === "horizontal" ? depthCenter : breadthCenter;
+      const y = direction === "horizontal" ? breadthCenter : depthCenter;
       positions.set(id, { x, y, width: w, height: h });
-      cursorBreadth +=
-        (direction === "horizontal" ? h : w) + breadthGap;
+      cursorBreadth += (direction === "horizontal" ? h : w) + breadthGap;
     }
     if (cursorBreadth > maxLayerBreadthTotal) {
       maxLayerBreadthTotal = cursorBreadth;

@@ -12,15 +12,21 @@ describe("FormComposite", () => {
     ));
     const identity = container.querySelector(".sui-form-composite__identity")!;
     const schedule = container.querySelector(".sui-form-composite__schedule")!;
-    expect(identity.querySelector(".id-content")!.textContent).toBe("name + amount");
-    expect(schedule.querySelector(".sched-content")!.textContent).toBe("day picker");
+    expect(identity.querySelector(".id-content")!.textContent).toBe(
+      "name + amount",
+    );
+    expect(schedule.querySelector(".sched-content")!.textContent).toBe(
+      "day picker",
+    );
   });
 
   it("omits an empty slot's wrapper entirely", () => {
     const { container } = render(() => (
       <FormComposite identity={<span>only identity</span>} />
     ));
-    expect(container.querySelector(".sui-form-composite__identity")).toBeTruthy();
+    expect(
+      container.querySelector(".sui-form-composite__identity"),
+    ).toBeTruthy();
     expect(container.querySelector(".sui-form-composite__schedule")).toBeNull();
   });
 
@@ -57,7 +63,9 @@ describe("FormComposite amounts slot", () => {
       "sui-form-composite__amounts",
       "sui-form-composite__schedule",
     ]);
-    expect(root.querySelector(".sui-form-composite__amounts .trio")).toBeTruthy();
+    expect(
+      root.querySelector(".sui-form-composite__amounts .trio"),
+    ).toBeTruthy();
   });
 });
 

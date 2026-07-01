@@ -11,10 +11,16 @@ import type { Component } from "solid-js";
 export const Tabs: Component<TabsDataProps> = createTabs({});
 
 /** Underline-style tab bar. */
-export const UnderlineTabs: Component<TabsDataProps> = createTabs({ variant: "underline" });
+export const UnderlineTabs: Component<TabsDataProps> = createTabs({
+  variant: "underline",
+});
 
 /** Boxed tab bar. */
-export const BoxedTabs: Component<TabsDataProps> = createTabs({ variant: "boxed" });
+export const BoxedTabs: Component<TabsDataProps> = createTabs({
+  variant: "boxed",
+});
 
 /** Pill-style tab bar. */
-export const PillTabs: Component<TabsDataProps> = createTabs({ variant: "pill" });
+export const PillTabs: Component<TabsDataProps> = createTabs({
+  variant: "pill",
+});

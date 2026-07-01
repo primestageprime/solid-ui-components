@@ -9,7 +9,10 @@
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
 import { NowrapBody } from "../Text";
-import { formatDateTimeRange, type DateTimeRangeMode } from "./formatDateTimeRange";
+import {
+  formatDateTimeRange,
+  type DateTimeRangeMode,
+} from "./formatDateTimeRange";
 
 export interface DateTimeRangeProps extends JSX.HTMLAttributes<HTMLElement> {
   start: string;

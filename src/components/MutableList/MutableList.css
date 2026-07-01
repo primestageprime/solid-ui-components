@@ -70,7 +70,8 @@
 
 .sui-mutable-list__input:focus {
   border-color: var(--sui-accent, #00a8cc);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sui-accent, #00a8cc) 30%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--sui-accent, #00a8cc) 30%, transparent);
 }
 
 .sui-mutable-list__detail {

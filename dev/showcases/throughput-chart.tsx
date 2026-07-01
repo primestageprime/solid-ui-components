@@ -5,12 +5,15 @@ export const ThroughputChartShowcase: Component = () => {
   const now = Date.now();
   const HOUR = 3_600_000;
   let s = 17;
-  const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rand = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 
   // RATE mode (default): instantaneous rows/min over an 8h window.
   const points = Array.from({ length: 96 }, (_, i) => ({
     timestamp: now - (96 - i) * 5 * 60_000,
-    rowsPerMinute: Math.max(0, Math.round(2000 + Math.sin(i / 8) * 800 + (rand() - 0.5) * 600)),
+    rowsPerMinute: Math.max(
+      0,
+      Math.round(2000 + Math.sin(i / 8) * 800 + (rand() - 0.5) * 600),
+    ),
   }));
 
   // COMPLETION mode (opt-in via `completions`): per-hour completed-item bars +
@@ -29,10 +32,12 @@ export const ThroughputChartShowcase: Component = () => {
       <h2>ThroughputChart — Composed (Depth 1)</h2>
       <p class="text-meta">
         Two modes, one component. RATE (default): rows/min line + area + average
-        reference + crosshair tooltip — <code>{` { dataPoints, windowHours? } `}</code>.
-        COMPLETION (opt-in via <code>completions</code>): per-hour completed-item
-        bars + a cumulative-% line on a shared 0–100 axis; self-sizing —
-        <code>{` { completions, now, windowHours, totalCount, baselineCompleted? } `}</code>.
+        reference + crosshair tooltip —{" "}
+        <code>{` { dataPoints, windowHours? } `}</code>. COMPLETION (opt-in via{" "}
+        <code>completions</code>): per-hour completed-item bars + a cumulative-%
+        line on a shared 0–100 axis; self-sizing —
+        <code>{` { completions, now, windowHours, totalCount, baselineCompleted? } `}</code>
+        .
       </p>
       <div class="example-group">
         <ThroughputChart dataPoints={points} windowHours={8} />

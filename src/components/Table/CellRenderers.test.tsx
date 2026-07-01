@@ -41,7 +41,9 @@ describe("CellRenderers — value + empty rendering", () => {
   });
 
   it("TagCell renders a variant-classed tag", () => {
-    const { container } = render(() => <TagCell value="ok" variant="success" />);
+    const { container } = render(() => (
+      <TagCell value="ok" variant="success" />
+    ));
     const tag = container.querySelector(".cell-tag");
     expect(tag?.textContent).toBe("ok");
     expect(tag?.classList.contains("cell-tag--success")).toBe(true);
@@ -49,7 +51,9 @@ describe("CellRenderers — value + empty rendering", () => {
 
   it("MoneyCell formats as currency", () => {
     const { container } = render(() => <MoneyCell value={1234.5} />);
-    expect(container.querySelector(".cell-money")?.textContent).toBe("$1,234.50");
+    expect(container.querySelector(".cell-money")?.textContent).toBe(
+      "$1,234.50",
+    );
   });
 
   it("FloatCell honors precision; IntCell rounds", () => {
@@ -68,8 +72,12 @@ describe("CellRenderers — value + empty rendering", () => {
   it("DateCell iso, DateTimeCell, MinuteDateTimeCell format patterns", () => {
     // Use a local datetime (no trailing Z) so parsing is host-local — a
     // date-only "2026-01-15" would parse as UTC and shift a day in some zones.
-    const d = render(() => <DateCell value="2026-01-15T12:00:00" format="iso" />);
-    expect(d.container.querySelector(".cell-date")?.textContent).toBe("2026-01-15");
+    const d = render(() => (
+      <DateCell value="2026-01-15T12:00:00" format="iso" />
+    ));
+    expect(d.container.querySelector(".cell-date")?.textContent).toBe(
+      "2026-01-15",
+    );
     cleanup();
     const dt = render(() => <DateTimeCell value="2026-01-15T08:30:00" />);
     expect(dt.container.textContent).toContain("2026-01-15 08:30:00");
@@ -81,12 +89,16 @@ describe("CellRenderers — value + empty rendering", () => {
   it("StatusCell renders a status pill with a label", () => {
     const { container } = render(() => <StatusCell value="active" />);
     expect(container.querySelector(".cell-status")).toBeTruthy();
-    expect(container.querySelector(".cell-status__label")?.textContent).toBeTruthy();
+    expect(
+      container.querySelector(".cell-status__label")?.textContent,
+    ).toBeTruthy();
   });
 
   it("CheckboxCell renders a checkbox reflecting the value", () => {
     const { container } = render(() => <CheckboxCell value={true} />);
-    const box = container.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    const box = container.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
     expect(box?.checked).toBe(true);
   });
 
@@ -94,7 +106,9 @@ describe("CellRenderers — value + empty rendering", () => {
     const { container } = render(() => (
       <MetricValueCell value={2.5} compliant={true} />
     ));
-    expect(container.querySelector(".cell-metric-value")?.textContent).toBe("2.500");
+    expect(container.querySelector(".cell-metric-value")?.textContent).toBe(
+      "2.500",
+    );
   });
 
   it("LongTextCell truncates with an inline more… affordance", () => {
@@ -102,15 +116,18 @@ describe("CellRenderers — value + empty rendering", () => {
       <LongTextCell value={"x".repeat(80)} maxLength={50} />
     ));
     expect(container.querySelector(".cell-longtext")).toBeTruthy();
-    expect(container.querySelector(".cell-longtext__more")?.textContent).toContain(
-      "more",
-    );
+    expect(
+      container.querySelector(".cell-longtext__more")?.textContent,
+    ).toContain("more");
   });
 });
 
 describe("CellRenderers — styling HOCs and column factory", () => {
   it("withCellStyle wraps a base cell, preserving its output", () => {
-    const Styled = withCellStyle(StringCell, { color: "red", textAlign: "right" });
+    const Styled = withCellStyle(StringCell, {
+      color: "red",
+      textAlign: "right",
+    });
     const { container } = render(() => <Styled value="x" />);
     expect(container.querySelector(".cell-string")?.textContent).toBe("x");
   });
@@ -129,6 +146,8 @@ describe("CellRenderers — styling HOCs and column factory", () => {
       "name",
     );
     const { container } = render(() => renderName({ name: "row-value" }));
-    expect(container.querySelector(".cell-string")?.textContent).toBe("row-value");
+    expect(container.querySelector(".cell-string")?.textContent).toBe(
+      "row-value",
+    );
   });
 });

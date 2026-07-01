@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import {AppShell, AppHeader, AppMain} from "../../src/components/Layout";
+import { AppShell, AppHeader, AppMain } from "../../src/components/Layout";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
 import { CountChip } from "../../src/components/Badge";
@@ -28,7 +28,14 @@ export const AppShellShowcase: Component = () => (
 
     <div class="example-group">
       <h3>Live preview (200px tall window)</h3>
-      <div style={{ height: "320px", border: "1px solid var(--sui-border)", "border-radius": "4px", overflow: "hidden" }}>
+      <div
+        style={{
+          height: "320px",
+          border: "1px solid var(--sui-border)",
+          "border-radius": "4px",
+          overflow: "hidden",
+        }}
+      >
         <AppShell style={{ height: "100%" }}>
           <AppHeader>
             <strong>dside</strong>
@@ -61,7 +68,9 @@ export const AppShellShowcase: Component = () => (
                   <Stack gap="xs" style={{ padding: "4px 12px" }}>
                     {Array.from({ length: g.count }).map((_, i) => (
                       <Row gap="sm">
-                        <TextLabel>{g.tag.toLowerCase()} item #{i + 1}</TextLabel>
+                        <TextLabel>
+                          {g.tag.toLowerCase()} item #{i + 1}
+                        </TextLabel>
                         <TextSublabel>placeholder</TextSublabel>
                       </Row>
                     ))}

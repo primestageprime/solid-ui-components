@@ -8,7 +8,8 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./ThemedInputs.css";
 
-export interface ThemedInputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
+export interface ThemedInputProps
+  extends JSX.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
 }
 

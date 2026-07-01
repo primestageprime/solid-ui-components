@@ -29,7 +29,10 @@
   border-radius: var(--sui-radius-sm, 4px);
   background: transparent;
   color: var(--sui-text-secondary, #94a3b8);
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .sui-segmented__segment:hover {
@@ -92,7 +95,10 @@
   border-radius: var(--sui-radius-sm, 4px);
   background: transparent;
   color: var(--sui-text-secondary, #94a3b8);
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .sui-segmented-stepper__chevron:hover:not(:disabled) {

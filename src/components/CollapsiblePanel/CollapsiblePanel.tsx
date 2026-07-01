@@ -57,7 +57,10 @@ export const CollapsiblePanel: Component<CollapsiblePanelProps> = (props) => {
   });
 
   const expandedClass = () => {
-    const c = ["sui-collapsible-panel", `sui-collapsible-panel--${merged.side}`];
+    const c = [
+      "sui-collapsible-panel",
+      `sui-collapsible-panel--${merged.side}`,
+    ];
     if (merged.class) c.push(merged.class);
     return c.join(" ");
   };

@@ -14,13 +14,19 @@ const benches = existsSync(benchDir)
       .sort()
       .map((slug) => ({
         slug,
-        label: extractBenchLabel(readFileSync(join(benchDir, `${slug}.tsx`), "utf8"), slug),
+        label: extractBenchLabel(
+          readFileSync(join(benchDir, `${slug}.tsx`), "utf8"),
+          slug,
+        ),
       }))
   : [];
 
 if (benches.length === 0) {
-  console.log("No workshop benches. Create one: node scripts/workshop-new.mjs <slug>");
+  console.log(
+    "No workshop benches. Create one: node scripts/workshop-new.mjs <slug>",
+  );
 } else {
   console.log(`${benches.length} bench(es):`);
-  for (const { slug, label } of benches) console.log(`  workshop:${slug}  (${label})`);
+  for (const { slug, label } of benches)
+    console.log(`  workshop:${slug}  (${label})`);
 }

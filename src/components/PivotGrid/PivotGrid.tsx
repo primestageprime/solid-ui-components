@@ -33,7 +33,11 @@ export interface PivotGridProps<
    * external URLs, return a string that includes `target` / `rel` via
    * the consumer's own wrapper component — the grid does not set them.
    */
-  cellHref?: (row: RowKey, col: ColKey, cell: Cell | null) => string | undefined;
+  cellHref?: (
+    row: RowKey,
+    col: ColKey,
+    cell: Cell | null,
+  ) => string | undefined;
   /** Optional: imperative click handler. Ignored when `cellHref` returns a string. */
   onCellClick?: (row: RowKey, col: ColKey, cell: Cell | null) => void;
   /** Optional: continuous heat 0..1 → translucent background. Return `null` to skip. */
@@ -47,7 +51,11 @@ export interface PivotGridProps<
   /** Rendered in body cells where `cell()` returns `null`. Default `"—"`. */
   emptyCell?: JSX.Element;
   /** Optional title (native `title` attr) for a cell. */
-  cellTitle?: (row: RowKey, col: ColKey, cell: Cell | null) => string | undefined;
+  cellTitle?: (
+    row: RowKey,
+    col: ColKey,
+    cell: Cell | null,
+  ) => string | undefined;
   /** Tight rows (12px padding) vs default (16px). */
   compact?: boolean;
   class?: string;
@@ -57,19 +65,14 @@ const HEAT_ALPHA_MIN = 0.1;
 const HEAT_ALPHA_MAX = 0.6;
 const DEFAULT_HEAT_RGB_VAR = "var(--sui-pivot-heat-rgb, 248, 113, 113)";
 
-const heatBackground = (
-  rampedHeat: number,
-  rgb: string,
-): string => {
+const heatBackground = (rampedHeat: number, rgb: string): string => {
   const alpha = HEAT_ALPHA_MIN + rampedHeat * (HEAT_ALPHA_MAX - HEAT_ALPHA_MIN);
   return `rgba(${rgb}, ${alpha})`;
 };
 
-export function PivotGrid<
-  RowKey extends string,
-  ColKey extends string,
-  Cell,
->(props: PivotGridProps<RowKey, ColKey, Cell>): JSX.Element {
+export function PivotGrid<RowKey extends string, ColKey extends string, Cell>(
+  props: PivotGridProps<RowKey, ColKey, Cell>,
+): JSX.Element {
   const heatRamp = (v: number): number => (props.heatRamp ?? Math.sqrt)(v);
   const heatRgb = (): string => props.heatRgb ?? DEFAULT_HEAT_RGB_VAR;
 
@@ -127,7 +130,9 @@ export function PivotGrid<
                     const cellStyle = (): JSX.CSSProperties | undefined => {
                       const h = heat();
                       if (h === null) return undefined;
-                      return { "background-color": heatBackground(h, heatRgb()) };
+                      return {
+                        "background-color": heatBackground(h, heatRgb()),
+                      };
                     };
 
                     const renderInner = (): JSX.Element => {

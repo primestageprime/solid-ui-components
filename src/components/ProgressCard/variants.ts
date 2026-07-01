@@ -9,4 +9,6 @@ const CACHE_STEPS = [
   { id: "calculations", label: "Calcs", icon: ICON_PATHS["cache-calc"] },
 ];
 
-export const CacheProgressCard = createWorkflowProgressCard({ steps: CACHE_STEPS });
+export const CacheProgressCard = createWorkflowProgressCard({
+  steps: CACHE_STEPS,
+});

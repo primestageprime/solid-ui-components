@@ -24,11 +24,7 @@ const walk = (dir, out = []) => {
 // Extract `style={…}` blocks across multiple lines. Naive but adequate.
 const STYLE_RX = /style=\{([\s\S]*?)\}\s*[/>]/g;
 
-const normalize = (s) =>
-  s
-    .replace(/\s+/g, " ")
-    .replace(/['"`]/g, '"')
-    .trim();
+const normalize = (s) => s.replace(/\s+/g, " ").replace(/['"`]/g, '"').trim();
 
 const fileCounts = new Map();
 const fragmentCounts = new Map();
@@ -52,13 +48,20 @@ for (const file of walk(ROOT)) {
 
 const totalCount = [...fileCounts.values()].reduce((a, b) => a + b, 0);
 console.log(`# Inline style audit\n`);
-console.log(`Total \`style={…}\` occurrences: ${totalCount} across ${fileCounts.size} files\n`);
+console.log(
+  `Total \`style={…}\` occurrences: ${totalCount} across ${fileCounts.size} files\n`,
+);
 
 console.log(`## Top 15 files by inline style count\n`);
-const topFiles = [...fileCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
-for (const [f, n] of topFiles) console.log(`- ${n.toString().padStart(3)}  ${f}`);
+const topFiles = [...fileCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 15);
+for (const [f, n] of topFiles)
+  console.log(`- ${n.toString().padStart(3)}  ${f}`);
 
-console.log(`\n## Most repeated style fragments (candidates for curried variants)\n`);
+console.log(
+  `\n## Most repeated style fragments (candidates for curried variants)\n`,
+);
 const repeated = [...fragmentCounts.entries()]
   .filter(([, n]) => n >= 2)
   .sort((a, b) => b[1] - a[1])

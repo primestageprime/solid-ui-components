@@ -30,7 +30,8 @@ function reachableFrom(
     if (visited.has(id) || excluded.has(id)) continue;
     visited.add(id);
     for (const neighbor of adj.get(id) ?? []) {
-      if (!excluded.has(neighbor) && !visited.has(neighbor)) queue.push(neighbor);
+      if (!excluded.has(neighbor) && !visited.has(neighbor))
+        queue.push(neighbor);
     }
   }
   return visited;
@@ -43,17 +44,25 @@ export function collapseGraph<T>(
 ): CollapseResult<T> {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const knownIds = new Set(nodes.map((n) => n.id));
-  const validEdges = edges.filter((e) => knownIds.has(e.source) && knownIds.has(e.target));
+  const validEdges = edges.filter(
+    (e) => knownIds.has(e.source) && knownIds.has(e.target),
+  );
 
   const fullGraph = {
-    visibleNodes: nodes.map((n) => ({ node: n, state: { kind: "normal" as const } })),
+    visibleNodes: nodes.map((n) => ({
+      node: n,
+      state: { kind: "normal" as const },
+    })),
     visibleEdges: validEdges,
   };
 
   if (!focusedNodeId) return fullGraph;
 
   if (!nodeMap.has(focusedNodeId)) {
-    console.warn("[DagChart] focusedNodeId not found in nodes — showing full graph.", { focusedNodeId });
+    console.warn(
+      "[DagChart] focusedNodeId not found in nodes — showing full graph.",
+      { focusedNodeId },
+    );
     return fullGraph;
   }
 
@@ -74,7 +83,11 @@ export function collapseGraph<T>(
       // If this hidden node's subtree already has a summary, add an edge (if not duplicate)
       const existingSummary = hiddenToSummary.get(beyondId);
       if (existingSummary) {
-        if (!summaryEdges.some((se) => se.source === neighborId && se.target === existingSummary)) {
+        if (
+          !summaryEdges.some(
+            (se) => se.source === neighborId && se.target === existingSummary,
+          )
+        ) {
           summaryEdges.push({ source: neighborId, target: existingSummary });
         }
         continue;
@@ -96,21 +109,23 @@ export function collapseGraph<T>(
     }
   }
 
-  const primaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> = [...visibleIds]
-    .flatMap((id) => {
-      const node = nodeMap.get(id);
-      if (!node) return [];
-      const state: NodeRenderState = id === focusedNodeId
-        ? { kind: "focused" }
-        : { kind: "adjacent" };
-      return [{ node, state }];
-    });
+  const primaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> = [
+    ...visibleIds,
+  ].flatMap((id) => {
+    const node = nodeMap.get(id);
+    if (!node) return [];
+    const state: NodeRenderState =
+      id === focusedNodeId ? { kind: "focused" } : { kind: "adjacent" };
+    return [{ node, state }];
+  });
 
   const visibleNodes = [...primaryNodes, ...summaryNodes];
   const allVisibleIds = new Set(visibleNodes.map((v) => v.node.id));
 
   const visibleEdges = [
-    ...validEdges.filter((e) => allVisibleIds.has(e.source) && allVisibleIds.has(e.target)),
+    ...validEdges.filter(
+      (e) => allVisibleIds.has(e.source) && allVisibleIds.has(e.target),
+    ),
     ...summaryEdges,
   ];
 

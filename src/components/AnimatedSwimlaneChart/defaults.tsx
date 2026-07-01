@@ -2,9 +2,20 @@
 // lastReviewedBy: adlai.arnold
 // src/components/AnimatedSwimlaneChart/defaults.tsx
 import type { JSX } from "solid-js";
-import type { StatusFlowNode, StatusFlowColumn, StatusFlowBreakpoint } from "../StatusFlowChart";
-import { DEFAULT_LANE_LAYOUT_CONFIG, computeBreakpoints, type LaneLayoutConfig } from "../../internal/animation/breakpoints";
-import { DEFAULT_TIMING, type LaneTimingConfig } from "../../internal/animation/trajectories";
+import type {
+  StatusFlowNode,
+  StatusFlowColumn,
+  StatusFlowBreakpoint,
+} from "../StatusFlowChart";
+import {
+  DEFAULT_LANE_LAYOUT_CONFIG,
+  computeBreakpoints,
+  type LaneLayoutConfig,
+} from "../../internal/animation/breakpoints";
+import {
+  DEFAULT_TIMING,
+  type LaneTimingConfig,
+} from "../../internal/animation/trajectories";
 
 /**
  * What a card renderer is handed: the node plus animation-derived state
@@ -48,11 +59,13 @@ export const DEFAULT_COLUMNS: StatusFlowColumn[] = [
  * against the default layout config and capped at depth 4 (9 visible
  * cols) which is more than any realistic chart needs.
  */
-export const DEFAULT_BREAKPOINTS: StatusFlowBreakpoint[] =
-  computeBreakpoints(DEFAULT_LANE_LAYOUT_CONFIG, 4).map((b) => ({
-    minWidth: b.minWidth,
-    visibleCols: b.visibleCols,
-  }));
+export const DEFAULT_BREAKPOINTS: StatusFlowBreakpoint[] = computeBreakpoints(
+  DEFAULT_LANE_LAYOUT_CONFIG,
+  4,
+).map((b) => ({
+  minWidth: b.minWidth,
+  visibleCols: b.visibleCols,
+}));
 
 /**
  * Pre-knob default + an arrow-settle window. This mirrors the workshop's
@@ -103,7 +116,9 @@ export const defaultRenderPopover = (node: StatusFlowNode): JSX.Element => (
   <div class="sui-asc__popover">
     <div class="sui-asc__popover-status">{node.status}</div>
     <div class="sui-asc__popover-title">{node.title}</div>
-    {node.subtitle && <div class="sui-asc__popover-subtitle">{node.subtitle}</div>}
+    {node.subtitle && (
+      <div class="sui-asc__popover-subtitle">{node.subtitle}</div>
+    )}
   </div>
 );
 

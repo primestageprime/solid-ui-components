@@ -13,7 +13,15 @@
 // Trimmed from the original: the monthly `CashflowChart` variant, ghost-line
 // snapshots, and goal overlays. The WEEKLY chart — bars, balance line, now
 // marker, bankruptcy annotation, and hover popover — is preserved.
-import { type Component, For, Show, createSignal, createMemo, onMount, onCleanup } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createSignal,
+  createMemo,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { scaleBand, scaleLinear } from "d3-scale";
 import "./CashflowChart.css";
 
@@ -66,7 +74,20 @@ const MIN_CHART_HEIGHT = 160;
 
 // ── Formatting helpers ──
 
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 /** Compact cents → dollar label: 165799 → "$2k", -40000 → "-$400", 0 → "$0". */
 function formatDollars(cents: number): string {
@@ -92,9 +113,15 @@ function formatWeekRange(weekStart: string): { label: string; end: string } {
   const eMonth = MONTH_NAMES[e.getMonth()];
   const end = `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
   if (sMonth === eMonth) {
-    return { label: `${sMonth} ${s.getDate()} – ${e.getDate()}, ${e.getFullYear()}`, end };
+    return {
+      label: `${sMonth} ${s.getDate()} – ${e.getDate()}, ${e.getFullYear()}`,
+      end,
+    };
   }
-  return { label: `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}, ${e.getFullYear()}`, end };
+  return {
+    label: `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}, ${e.getFullYear()}`,
+    end,
+  };
 }
 
 /** Build an SVG polyline path "M x y L x y …" from a list of points. */
@@ -109,7 +136,11 @@ function linePath(points: { x: number; y: number }[]): string {
 
 const PAD = { top: 20, right: 20, bottom: 48, left: 64 };
 
-type WeeklySegmentKind = "revenue" | "expense" | "exp-recurring" | "exp-onetime";
+type WeeklySegmentKind =
+  | "revenue"
+  | "expense"
+  | "exp-recurring"
+  | "exp-onetime";
 
 const WEEKLY_SEGMENT_LABELS: Record<WeeklySegmentKind, string> = {
   revenue: "Revenue",
@@ -128,7 +159,9 @@ interface WeeklyHoverState {
   y: number;
 }
 
-export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) => {
+export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
+  props,
+) => {
   const [hover, setHover] = createSignal<WeeklyHoverState | null>(null);
   const [coffersHover, setCoffersHover] = createSignal<string | null>(null);
   // Measured container box (px). The viewBox is rendered to these exact
@@ -191,8 +224,12 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
 
     const maxRevenue = Math.max(0, ...bars.map((b) => b.revenue_cents));
     const maxExpense = Math.max(0, ...bars.map((b) => b.expense_cents));
-    const minBalance = bars.length ? Math.min(0, ...bars.map((b) => b.balance_cents)) : 0;
-    const maxBalance = bars.length ? Math.max(0, ...bars.map((b) => b.balance_cents)) : 0;
+    const minBalance = bars.length
+      ? Math.min(0, ...bars.map((b) => b.balance_cents))
+      : 0;
+    const maxBalance = bars.length
+      ? Math.max(0, ...bars.map((b) => b.balance_cents))
+      : 0;
     const FIXED_Y_MIN = -10_000_000; // -$100k in cents (manual/fixed-range floor)
     // Full rendered vertical extent: revenue bars rise from $0, expense bars drop
     // below $0, and the balance line can land on either side. Auto-scaling fits
@@ -244,7 +281,10 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
     const bw = xScale.bandwidth();
 
     const balancePoints = (subset: WeeklyChartBar[]) =>
-      subset.map((d) => ({ x: (xScale(d.week_start) ?? 0) + bw / 2, y: yScale(d.balance_cents) }));
+      subset.map((d) => ({
+        x: (xScale(d.week_start) ?? 0) + bw / 2,
+        y: yScale(d.balance_cents),
+      }));
 
     const todayWeek = props.data.todayWeek;
     const todayIdx = todayWeek ? weeks.indexOf(todayWeek) : -1;
@@ -252,18 +292,37 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
     const pastBars = todayIdx >= 0 ? bars.slice(0, todayIdx + 1) : bars;
     const futureBars = todayIdx >= 0 ? bars.slice(todayIdx) : [];
 
-    const solidPath = pastBars.length >= 2 ? linePath(balancePoints(pastBars)) : "";
-    const dashedPath = futureBars.length >= 2 ? linePath(balancePoints(futureBars)) : "";
-    const fullPath = pastBars.length < 2 && futureBars.length < 2 ? linePath(balancePoints(bars)) : "";
+    const solidPath =
+      pastBars.length >= 2 ? linePath(balancePoints(pastBars)) : "";
+    const dashedPath =
+      futureBars.length >= 2 ? linePath(balancePoints(futureBars)) : "";
+    const fullPath =
+      pastBars.length < 2 && futureBars.length < 2
+        ? linePath(balancePoints(bars))
+        : "";
 
-    const nowX = todayIdx >= 0 && todayWeek ? (xScale(todayWeek) ?? 0) + bw : -1;
+    const nowX =
+      todayIdx >= 0 && todayWeek ? (xScale(todayWeek) ?? 0) + bw : -1;
 
-    return { xScale, yScale, ticks, solidPath, dashedPath, fullPath, nowX, todayIdx };
+    return {
+      xScale,
+      yScale,
+      ticks,
+      solidPath,
+      dashedPath,
+      fullPath,
+      nowX,
+      todayIdx,
+    };
   });
 
   const zeroY = () => scales().yScale(0);
 
-  function clampPopover(clientX: number, clientY: number, rect: DOMRect): { x: number; y: number } {
+  function clampPopover(
+    clientX: number,
+    clientY: number,
+    rect: DOMRect,
+  ): { x: number; y: number } {
     const popoverW = 240;
     const popoverH = 300;
     let x = clientX - rect.left + 12;
@@ -274,7 +333,11 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
     return { x, y };
   }
 
-  function handleEnter(bar: WeeklyChartBar, kind: WeeklySegmentKind, e: MouseEvent) {
+  function handleEnter(
+    bar: WeeklyChartBar,
+    kind: WeeklySegmentKind,
+    e: MouseEvent,
+  ) {
     if (!containerRef) return;
     const rect = containerRef.getBoundingClientRect();
     let items: BarLineItem[];
@@ -299,7 +362,14 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
     }
     const pos = clampPopover(e.clientX, e.clientY, rect);
     const { end } = formatWeekRange(bar.week_start);
-    setHover({ kind, items, total_cents: total, week_start: bar.week_start, week_end: end, ...pos });
+    setHover({
+      kind,
+      items,
+      total_cents: total,
+      week_start: bar.week_start,
+      week_end: end,
+      ...pos,
+    });
   }
 
   function handleMove(e: MouseEvent) {
@@ -316,12 +386,28 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
 
   return (
     <div class="rc-cashflow-container" ref={containerRef}>
-      <svg class="rc-cashflow" viewBox={`0 0 ${VB_W()} ${h()}`} preserveAspectRatio="xMidYMid meet">
+      <svg
+        class="rc-cashflow"
+        viewBox={`0 0 ${VB_W()} ${h()}`}
+        preserveAspectRatio="xMidYMid meet"
+      >
         {/* Zero line */}
-        <line x1={PAD.left} y1={zeroY()} x2={VB_W() - PAD.right} y2={zeroY()} class="rc-cashflow__axis" />
+        <line
+          x1={PAD.left}
+          y1={zeroY()}
+          x2={VB_W() - PAD.right}
+          y2={zeroY()}
+          class="rc-cashflow__axis"
+        />
 
         {/* Y-axis line */}
-        <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={h() - PAD.bottom} class="rc-cashflow__axis" />
+        <line
+          x1={PAD.left}
+          y1={PAD.top}
+          x2={PAD.left}
+          y2={h() - PAD.bottom}
+          class="rc-cashflow__axis"
+        />
 
         {/* Y-axis ticks */}
         <For each={scales().ticks}>
@@ -329,11 +415,29 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
             const y = () => scales().yScale(tick);
             return (
               <>
-                <line x1={PAD.left - 4} y1={y()} x2={PAD.left} y2={y()} class="rc-cashflow__tick" />
+                <line
+                  x1={PAD.left - 4}
+                  y1={y()}
+                  x2={PAD.left}
+                  y2={y()}
+                  class="rc-cashflow__tick"
+                />
                 {tick !== 0 && (
-                  <line x1={PAD.left} y1={y()} x2={VB_W() - PAD.right} y2={y()} class="rc-cashflow__grid" />
+                  <line
+                    x1={PAD.left}
+                    y1={y()}
+                    x2={VB_W() - PAD.right}
+                    y2={y()}
+                    class="rc-cashflow__grid"
+                  />
                 )}
-                <text x={PAD.left - 8} y={y()} text-anchor="end" dominant-baseline="middle" class="rc-cashflow__label-y">
+                <text
+                  x={PAD.left - 8}
+                  y={y()}
+                  text-anchor="end"
+                  dominant-baseline="middle"
+                  class="rc-cashflow__label-y"
+                >
                   {formatDollars(tick)}
                 </text>
               </>
@@ -368,13 +472,18 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
             const bw = () => scales().xScale.bandwidth();
             const zero = () => scales().yScale(0);
 
-            const recurRevTop = () => scales().yScale(bar.recurring_revenue_cents);
+            const recurRevTop = () =>
+              scales().yScale(bar.recurring_revenue_cents);
             const recurRevH = () => zero() - recurRevTop();
             const projRevTop = () => scales().yScale(bar.revenue_cents);
             const projRevH = () => recurRevTop() - projRevTop();
-            const recurExpBot = () => scales().yScale(-bar.recurring_expense_cents);
+            const recurExpBot = () =>
+              scales().yScale(-bar.recurring_expense_cents);
             const recurExpH = () => recurExpBot() - zero();
-            const totalExpBot = () => scales().yScale(-(bar.recurring_expense_cents + bar.onetime_expense_cents));
+            const totalExpBot = () =>
+              scales().yScale(
+                -(bar.recurring_expense_cents + bar.onetime_expense_cents),
+              );
             const onetimeExpH = () => totalExpBot() - recurExpBot();
 
             return (
@@ -386,7 +495,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
                     width={bw()}
                     height={recurRevH()}
                     class="rc-cashflow__bar rc-cashflow__bar--rev-recurring"
-                    classList={{ "rc-cashflow__bar--projected": bar.isProjected }}
+                    classList={{
+                      "rc-cashflow__bar--projected": bar.isProjected,
+                    }}
                     onMouseEnter={(e) => handleEnter(bar, "revenue", e)}
                     onMouseMove={handleMove}
                     onMouseLeave={handleLeave}
@@ -399,7 +510,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
                     width={bw()}
                     height={projRevH()}
                     class="rc-cashflow__bar rc-cashflow__bar--rev-project"
-                    classList={{ "rc-cashflow__bar--projected": bar.isProjected }}
+                    classList={{
+                      "rc-cashflow__bar--projected": bar.isProjected,
+                    }}
                     onMouseEnter={(e) => handleEnter(bar, "revenue", e)}
                     onMouseMove={handleMove}
                     onMouseLeave={handleLeave}
@@ -412,7 +525,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
                     width={bw()}
                     height={recurExpH()}
                     class="rc-cashflow__bar rc-cashflow__bar--exp-recurring"
-                    classList={{ "rc-cashflow__bar--projected": bar.isProjected }}
+                    classList={{
+                      "rc-cashflow__bar--projected": bar.isProjected,
+                    }}
                     onMouseEnter={(e) => handleEnter(bar, "exp-recurring", e)}
                     onMouseMove={handleMove}
                     onMouseLeave={handleLeave}
@@ -425,7 +540,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
                     width={bw()}
                     height={onetimeExpH()}
                     class="rc-cashflow__bar rc-cashflow__bar--exp-onetime"
-                    classList={{ "rc-cashflow__bar--projected": bar.isProjected }}
+                    classList={{
+                      "rc-cashflow__bar--projected": bar.isProjected,
+                    }}
                     onMouseEnter={(e) => handleEnter(bar, "exp-onetime", e)}
                     onMouseMove={handleMove}
                     onMouseLeave={handleLeave}
@@ -451,15 +568,27 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
 
         {/* Coffers (balance) line */}
         <Show when={scales().solidPath || scales().fullPath}>
-          <path class="rc-cashflow__coffers" d={scales().solidPath || scales().fullPath} />
+          <path
+            class="rc-cashflow__coffers"
+            d={scales().solidPath || scales().fullPath}
+          />
         </Show>
         <Show when={scales().dashedPath}>
-          <path class="rc-cashflow__coffers rc-cashflow__coffers--dashed" d={scales().dashedPath} />
+          <path
+            class="rc-cashflow__coffers rc-cashflow__coffers--dashed"
+            d={scales().dashedPath}
+          />
         </Show>
 
         {/* Now marker */}
         <Show when={scales().nowX > 0}>
-          <line class="rc-cashflow__now" x1={scales().nowX} y1={PAD.top} x2={scales().nowX} y2={h() - PAD.bottom} />
+          <line
+            class="rc-cashflow__now"
+            x1={scales().nowX}
+            y1={PAD.top}
+            x2={scales().nowX}
+            y2={h() - PAD.bottom}
+          />
         </Show>
 
         {/* Bankruptcy annotation */}
@@ -472,8 +601,18 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
             const by = () => scales().yScale(0);
             return (
               <>
-                <circle cx={bx()} cy={by()} r={4} class="rc-cashflow__bankruptcy-marker" />
-                <text class="rc-cashflow__bankruptcy" x={bx()} y={by() - 10} text-anchor="middle">
+                <circle
+                  cx={bx()}
+                  cy={by()}
+                  r={4}
+                  class="rc-cashflow__bankruptcy-marker"
+                />
+                <text
+                  class="rc-cashflow__bankruptcy"
+                  x={bx()}
+                  y={by() - 10}
+                  text-anchor="middle"
+                >
                   Bankruptcy {props.data.bankruptcyDate ?? week()}
                 </text>
               </>
@@ -484,7 +623,10 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
         {/* Coffers indicator on hover (from bar hover or coffers overlay hover) */}
         {(() => {
           const activeWeek = () => hover()?.week_start ?? coffersHover();
-          const bar = () => (activeWeek() ? props.data.bars.find((b) => b.week_start === activeWeek()) : undefined);
+          const bar = () =>
+            activeWeek()
+              ? props.data.bars.find((b) => b.week_start === activeWeek())
+              : undefined;
           const cx = () => {
             const w = activeWeek();
             if (!w) return 0;
@@ -494,8 +636,18 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
           const cy = () => scales().yScale(bar()?.balance_cents ?? 0);
           return (
             <Show when={bar()}>
-              <circle cx={cx()} cy={cy()} r={5} class="rc-cashflow__coffers-dot" />
-              <text x={cx() + 8} y={cy() - 10} class="rc-cashflow__coffers-label" text-anchor="start">
+              <circle
+                cx={cx()}
+                cy={cy()}
+                r={5}
+                class="rc-cashflow__coffers-dot"
+              />
+              <text
+                x={cx() + 8}
+                y={cy() - 10}
+                class="rc-cashflow__coffers-label"
+                text-anchor="start"
+              >
                 {formatDollars(bar()!.balance_cents)}
               </text>
             </Show>
@@ -506,18 +658,26 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (props) 
       {/* Popover */}
       <Show when={hover()}>
         {(current) => (
-          <div class="rc-cashflow__popover" style={{ left: `${current().x}px`, top: `${current().y}px` }}>
+          <div
+            class="rc-cashflow__popover"
+            style={{ left: `${current().x}px`, top: `${current().y}px` }}
+          >
             <div class="rc-cashflow__popover-header">
-              {formatWeekRange(current().week_start).label} — {WEEKLY_SEGMENT_LABELS[current().kind]}
+              {formatWeekRange(current().week_start).label} —{" "}
+              {WEEKLY_SEGMENT_LABELS[current().kind]}
             </div>
-            <div class="rc-cashflow__popover-total">{formatDollarsLong(current().total_cents)}</div>
+            <div class="rc-cashflow__popover-total">
+              {formatDollarsLong(current().total_cents)}
+            </div>
             <Show when={current().items.length > 0}>
               <ul class="rc-cashflow__popover-items">
                 <For each={current().items}>
                   {(item) => (
                     <li class="rc-cashflow__popover-item">
                       <span class="rc-cashflow__popover-name">{item.name}</span>
-                      <span class="rc-cashflow__popover-amount">{formatDollarsLong(item.amount_cents)}</span>
+                      <span class="rc-cashflow__popover-amount">
+                        {formatDollarsLong(item.amount_cents)}
+                      </span>
                     </li>
                   )}
                 </For>

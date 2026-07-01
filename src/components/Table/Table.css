@@ -50,7 +50,11 @@
 
 /* Header */
 .hud-table__head {
-  background: linear-gradient(180deg, var(--sui-bg-elevated), var(--sui-bg-secondary));
+  background: linear-gradient(
+    180deg,
+    var(--sui-bg-elevated),
+    var(--sui-bg-secondary)
+  );
 }
 
 /* Sticky header requires the wrapper not to clip — `overflow: hidden` on an
@@ -274,7 +278,9 @@
   background-color: var(--sui-bg-primary);
   border: 1px solid var(--sui-border);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .hud-table-quickfilter__input::placeholder {
@@ -298,7 +304,13 @@
 }
 
 .hud-table-quickfilter .hud-table {
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%
+  );
 }
 
 /* ============================================
@@ -352,7 +364,14 @@
   align-items: center;
   justify-content: center;
   /* Small clip on corners */
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  clip-path: polygon(
+    3px 0,
+    100% 0,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    0 100%,
+    0 3px
+  );
 }
 
 .hud-table__checkbox input:checked + .hud-table__checkbox-indicator {
@@ -376,7 +395,9 @@
   box-shadow: 0 0 8px var(--sui-accent);
 }
 
-.hud-table__checkbox input:indeterminate + .hud-table__checkbox-indicator::after {
+.hud-table__checkbox
+  input:indeterminate
+  + .hud-table__checkbox-indicator::after {
   content: "";
   width: 8px;
   height: 2px;
@@ -414,7 +435,14 @@
   background: linear-gradient(90deg, var(--sui-accent), var(--sui-accent-dim));
   color: var(--sui-bg-deep);
   /* Clip top corners */
-  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%, 0 12px);
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% 100%,
+    0 100%,
+    0 12px
+  );
   position: relative;
 }
 
@@ -429,7 +457,13 @@
 }
 
 .hud-selection-action-bar + .hud-table {
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%
+  );
 }
 
 .hud-selection-action-bar__count {
@@ -451,7 +485,14 @@
   border: 1px solid rgba(0, 0, 0, 0.3);
   color: var(--sui-bg-deep);
   font-weight: 600;
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  clip-path: polygon(
+    4px 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%,
+    0 4px
+  );
 }
 
 .hud-selection-action-bar__actions .hud-button:hover {
@@ -546,7 +587,11 @@
 
 /* Rowspan cells - vertically centered and visually distinct */
 .hud-grouped-table__rowspan-cell {
-  background: linear-gradient(90deg, rgba(var(--sui-accent-rgb), 0.06), transparent);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--sui-accent-rgb), 0.06),
+    transparent
+  );
   border-right: 1px solid rgba(var(--sui-accent-rgb), 0.15);
   font-weight: 500;
 }

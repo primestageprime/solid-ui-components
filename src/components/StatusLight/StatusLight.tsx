@@ -61,7 +61,9 @@ export const StatusLight: Component<StatusLightProps> = (props) => {
   return (
     <span class={wrapperClass()} {...others}>
       <span class={dotClass()} aria-hidden="true" />
-      {content() ? <span class="sui-status-light__label">{content()}</span> : null}
+      {content() ? (
+        <span class="sui-status-light__label">{content()}</span>
+      ) : null}
     </span>
   );
 };
@@ -76,7 +78,10 @@ export type StatusLightOverrides = Pick<StatusLightProps, "size">;
  * a fixed visual choice. Curry only `size` (and any inline styling) at
  * variant-definition time.
  */
-export type StatusLightDataProps = Omit<StatusLightProps, keyof StatusLightOverrides>;
+export type StatusLightDataProps = Omit<
+  StatusLightProps,
+  keyof StatusLightOverrides
+>;
 
 export function createStatusLight(
   defaults: Partial<Omit<StatusLightProps, "children">>,

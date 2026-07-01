@@ -71,9 +71,7 @@ export function computeChartHeight(
     byCol.set(col, (byCol.get(col) ?? 0) + 1);
   }
   const hasVisibleChildren = byCol.size > 0;
-  const maxStack = hasVisibleChildren
-    ? Math.max(1, ...byCol.values())
-    : 0;
+  const maxStack = hasVisibleChildren ? Math.max(1, ...byCol.values()) : 0;
   const chartContent =
     maxStack > 0 ? (maxStack - 1) * cfg.rowGap + cfg.nodeHeight : 0;
   let total = chartContent + cfg.padding;
@@ -152,8 +150,8 @@ export function promoteReady(prev: StatusFlowNode[]): StatusFlowNode[] {
   const next = prev.map((n) => ({ ...n }));
   for (const n of next) {
     if (!isLeaf(n) || n.status !== "TODO") continue;
-    const ready = (n.dependsOn ?? []).every((d) =>
-      next.find((x) => x.id === d)?.status === "DONE",
+    const ready = (n.dependsOn ?? []).every(
+      (d) => next.find((x) => x.id === d)?.status === "DONE",
     );
     if (ready) n.status = "DOING";
   }

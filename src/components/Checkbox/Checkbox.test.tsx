@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { Checkbox, createCheckbox, CheckboxField, SmallCheckbox } from "./index";
+import {
+  Checkbox,
+  createCheckbox,
+  CheckboxField,
+  SmallCheckbox,
+} from "./index";
 
 describe("Checkbox", () => {
   it("renders an input[type=checkbox]", () => {
@@ -12,7 +17,9 @@ describe("Checkbox", () => {
 
   it("reflects the controlled checked prop", () => {
     const { container } = render(() => <Checkbox checked />);
-    expect(container.querySelector<HTMLInputElement>("input")!.checked).toBe(true);
+    expect(container.querySelector<HTMLInputElement>("input")!.checked).toBe(
+      true,
+    );
   });
 
   it("size applies as a class", () => {
@@ -22,7 +29,9 @@ describe("Checkbox", () => {
 
   it("onCheckedChange receives the new boolean", () => {
     let seen: boolean | undefined;
-    const { container } = render(() => <Checkbox onCheckedChange={(v) => (seen = v)} />);
+    const { container } = render(() => (
+      <Checkbox onCheckedChange={(v) => (seen = v)} />
+    ));
     fireEvent.click(container.querySelector("input")!);
     expect(seen).toBe(true);
   });
@@ -42,7 +51,12 @@ describe("Checkbox", () => {
 describe("CheckboxField", () => {
   it("renders label, hint, and a checkbox tied by id", () => {
     const { container, getByText } = render(() => (
-      <CheckboxField id="repo" label="Create the repo" hint="git init" checked />
+      <CheckboxField
+        id="repo"
+        label="Create the repo"
+        hint="git init"
+        checked
+      />
     ));
     expect(getByText("Create the repo")).toBeTruthy();
     expect(getByText("git init")).toBeTruthy();

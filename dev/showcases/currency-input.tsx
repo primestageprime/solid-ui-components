@@ -1,5 +1,8 @@
 import { type Component, createSignal } from "solid-js";
-import { CurrencyInput, currencyWidthRem } from "../../src/components/CurrencyInput";
+import {
+  CurrencyInput,
+  currencyWidthRem,
+} from "../../src/components/CurrencyInput";
 import { MoneyCell } from "../../src/components/Table/CellRenderers";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";
@@ -25,10 +28,16 @@ export const CurrencyInputShowcase: Component = () => {
       <div class="example-group">
         <h3>Default ($10B cap)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Placed in a wide container — the field caps at{" "}
-          {currencyWidthRem()}rem instead of stretching.
+          Placed in a wide container — the field caps at {currencyWidthRem()}rem
+          instead of stretching.
         </div>
-        <div style={{ width: "640px", border: "1px dashed var(--sui-border)", padding: "12px" }}>
+        <div
+          style={{
+            width: "640px",
+            border: "1px dashed var(--sui-border)",
+            padding: "12px",
+          }}
+        >
           <CurrencyInput
             name="amount"
             label="Amount ($)"
@@ -43,18 +52,38 @@ export const CurrencyInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Holds a near-$10B value without reflowing</h3>
-        <div style={{ width: "640px", border: "1px dashed var(--sui-border)", padding: "12px" }}>
+        <div
+          style={{
+            width: "640px",
+            border: "1px dashed var(--sui-border)",
+            padding: "12px",
+          }}
+        >
           <CurrencyInput name="big" value={big} onChange={setBig} step={1000} />
         </div>
       </div>
 
       <div class="example-group">
-        <h3>Smaller ceiling (maxValue = $1,000,000 → {currencyWidthRem(1_000_000)}rem)</h3>
+        <h3>
+          Smaller ceiling (maxValue = $1,000,000 → {currencyWidthRem(1_000_000)}
+          rem)
+        </h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           A tighter cap for a column that never holds more than a million.
         </div>
-        <div style={{ width: "640px", border: "1px dashed var(--sui-border)", padding: "12px" }}>
-          <CurrencyInput name="fee" maxValue={1_000_000} value={capped} onChange={setCapped} />
+        <div
+          style={{
+            width: "640px",
+            border: "1px dashed var(--sui-border)",
+            padding: "12px",
+          }}
+        >
+          <CurrencyInput
+            name="fee"
+            maxValue={1_000_000}
+            value={capped}
+            onChange={setCapped}
+          />
         </div>
       </div>
 

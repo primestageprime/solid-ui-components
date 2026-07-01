@@ -1,7 +1,15 @@
 /* @refresh reload */
 import "solid-devtools";
 import { render, Dynamic } from "solid-js/web";
-import { createSignal, createMemo, For, Show, type Component, onMount, onCleanup } from "solid-js";
+import {
+  createSignal,
+  createMemo,
+  For,
+  Show,
+  type Component,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -141,126 +149,670 @@ const workshopBenchItems = buildWorkshopItems(
 const items: Item[] = [
   // Workshop: standalone entry, surfaced via the dedicated sidebar link.
   // Tagged "workshop" so the depth-grouped list filters it out.
-  { id: "workshop", label: "Workshop", component: WorkshopShowcase, tags: ["workshop"] },
+  {
+    id: "workshop",
+    label: "Workshop",
+    component: WorkshopShowcase,
+    tags: ["workshop"],
+  },
   ...workshopBenchItems,
-  { id: "base-table", label: "BaseTable", component: BaseTableShowcase, tags: ["depth:1", "table", "data"] },
-  { id: "button", label: "Button", component: ButtonShowcase, tags: ["depth:0", "form"] },
-  { id: "dnd-hierarchy-sort-bar", label: "DnDHierarchySortBar", component: DnDHierarchySortBarShowcase, tags: ["depth:0", "form"] },
-  { id: "fab", label: "Fab", component: FabShowcase, tags: ["depth:1", "form"] },
-  { id: "hud-button-group", label: "ButtonGroup", component: ButtonGroupShowcase, tags: ["depth:0", "form"] },
-  { id: "candlestick-renderer", label: "CandlestickRenderer", component: CandlestickRendererShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "cell-renderers", label: "CellRenderers", component: CellRendererShowcase, tags: ["depth:1", "data"] },
-  { id: "combobox", label: "Combobox", component: ComboboxShowcase, tags: ["depth:0", "form"] },
-  { id: "dag-chart", label: "DagChart", component: DagChartShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "date-axis", label: "DateAxis", component: DateAxisShowcase, tags: ["depth:0", "chart", "time"] },
-  { id: "scrub-chart", label: "ScrubChart", component: ScrubChartShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "cashflow-scrub-chart", label: "CashflowScrubChart", component: CashflowScrubChartShowcase, tags: ["depth:2", "chart", "time", "data"] },
-  { id: "swimlane-chart", label: "SwimlaneChart", component: SwimlaneChartShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "animated-swimlane-chart", label: "AnimatedSwimlaneChart", component: AnimatedSwimlaneChartShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "swimlane-node-card", label: "SwimlaneNodeCard", component: SwimlaneNodeCardShowcase, tags: ["depth:0", "chart"] },
-  { id: "data-table-container", label: "DataTableContainer", component: DataTableContainerShowcase, tags: ["depth:1", "table", "data", "container"] },
-  { id: "digit-roller", label: "DigitRoller", component: DigitRollerShowcase, tags: ["depth:2", "indicator", "data"] },
-  { id: "divider", label: "Divider", component: DividerShowcase, tags: ["depth:0", "layout"] },
-  { id: "heatmap", label: "Heatmap", component: HeatmapShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "heatstream", label: "HeatStream", component: HeatStreamShowcase, tags: ["depth:0", "chart", "time", "data"] },
-  { id: "icon", label: "Icon", component: IconShowcase, tags: ["depth:0", "text"] },
-  { id: "inputs", label: "Inputs", component: InputsShowcase, tags: ["depth:0", "form"] },
-  { id: "hud-list", label: "List", component: ListShowcase, tags: ["depth:0", "list"] },
-  { id: "math-formula", label: "MathFormula", component: MathFormulaShowcase, tags: ["depth:0", "math", "text"] },
-  { id: "hud-modal", label: "Modal", component: ModalShowcase, tags: ["depth:1", "feedback"] },
-  { id: "bottom-sheet", label: "BottomSheet", component: BottomSheetShowcase, tags: ["depth:0", "feedback"] },
-  { id: "nav-item", label: "NavItem", component: NavItemShowcase, tags: ["depth:0", "navigation"] },
-  { id: "hud-page", label: "Page", component: PageShowcase, tags: ["depth:0", "layout"] },
-  { id: "hud-panel", label: "Panel", component: PanelShowcase, tags: ["depth:0", "container"] },
-  { id: "progress-bar", label: "ProgressBar", component: ProgressBarShowcase, tags: ["depth:0", "indicator"] },
-  { id: "scroll-region", label: "ScrollRegion", component: ScrollRegionShowcase, tags: ["depth:0", "container", "layout"] },
-  { id: "section", label: "Section", component: SectionShowcase, tags: ["depth:0", "container"] },
-  { id: "hud-section", label: "Section (Accent)", component: AccentSectionShowcase, tags: ["depth:0", "container"] },
-  { id: "select", label: "Select", component: SelectShowcase, tags: ["depth:0", "form"] },
-  { id: "sidebar-selector", label: "SidebarSelector", component: SidebarSelectorShowcase, tags: ["depth:0", "navigation", "form"] },
-  { id: "stats-table", label: "StatsTable", component: StatsTableShowcase, tags: ["depth:2", "table", "data"] },
-  { id: "status-badge", label: "StatusBadge", component: StatusBadgeShowcase, tags: ["depth:0", "indicator", "status"] },
-  { id: "hud-tabs", label: "Tabs", component: TabsShowcase, tags: ["depth:0", "navigation"] },
-  { id: "tabbed-side-panel", label: "TabbedSidePanel", component: TabbedSidePanelShowcase, tags: ["depth:1", "container", "navigation"] },
-  { id: "text", label: "Text", component: TextShowcase, tags: ["depth:0", "text"] },
-  { id: "themed-number-input", label: "ThemedNumberInput", component: ThemedNumberInputShowcase, tags: ["depth:0", "form"] },
-  { id: "currency-input", label: "CurrencyInput", component: CurrencyInputShowcase, tags: ["depth:1", "form"] },
-  { id: "app-shell", label: "AppShell", component: AppShellShowcase, tags: ["depth:0", "layout", "navigation"] },
-  { id: "burndown-chart", label: "BurndownChart", component: BurndownChartShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "completion-timeline", label: "CompletionTimeline", component: CompletionTimelineShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "dropdown", label: "Dropdown", component: DropdownShowcase, tags: ["depth:0", "form"] },
-  { id: "duration", label: "Duration", component: DurationShowcase, tags: ["depth:0", "time", "text"] },
-  { id: "popover-menu", label: "PopoverMenu", component: PopoverMenuShowcase, tags: ["depth:0", "navigation", "feedback"] },
-  { id: "progress-check", label: "ProgressCheck", component: ProgressCheckShowcase, tags: ["depth:0", "indicator"] },
-  { id: "quadrant-grid", label: "QuadrantGrid", component: QuadrantGridShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "ring-chart", label: "RingChart", component: RingChartShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "sprint-selector", label: "SprintSelector", component: SprintSelectorShowcase, tags: ["depth:0", "form", "time"] },
-  { id: "slot-fill-bar", label: "SlotFillBar", component: SlotFillBarShowcase, tags: ["depth:0", "indicator", "chart"] },
-  { id: "product-grid", label: "ProductGrid", component: ProductGridShowcase, tags: ["depth:1", "data", "chart"] },
-  { id: "pivot-treemap", label: "PivotTreemap", component: PivotTreemapShowcase, tags: ["depth:1", "chart", "data"] },
-  { id: "legend", label: "Legend", component: LegendShowcase, tags: ["depth:0", "indicator", "chart"] },
-  { id: "status-light", label: "StatusLight", component: StatusLightShowcase, tags: ["depth:0", "indicator", "status"] },
-  { id: "tag-input", label: "TagInput", component: TagInputShowcase, tags: ["depth:0", "form"] },
-  { id: "throughput-chart", label: "ThroughputChart", component: ThroughputChartShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "extraction-board", label: "ExtractionBoard", component: ExtractionBoardShowcase, tags: ["depth:1", "chart", "data", "container"] },
-  { id: "truth-indicator", label: "TruthIndicator", component: TruthIndicatorShowcase, tags: ["depth:0", "indicator"] },
-  { id: "quickfilter-atom", label: "QuickFilter (atom)", component: QuickFilterAtomShowcase, tags: ["depth:1", "form"] },
-  { id: "worker-card", label: "WorkerCard", component: WorkerCardShowcase, tags: ["depth:1", "container", "indicator"] },
-  { id: "work-progress-card", label: "WorkProgressCard", component: WorkProgressCardShowcase, tags: ["depth:1", "container", "indicator", "data", "time"] },
-  { id: "split-queue-list", label: "SplitQueueList", component: SplitQueueListShowcase, tags: ["depth:1", "list", "navigation", "container"] },
-  { id: "sortable-list", label: "SortableList", component: SortableListShowcase, tags: ["depth:1", "list", "form", "container"] },
-  { id: "mutable-list", label: "MutableList", component: MutableListShowcase, tags: ["depth:2", "list", "form", "container"] },
-  { id: "three-panel-layout", label: "ThreePanelLayout", component: ThreePanelLayoutShowcase, tags: ["depth:0", "layout"] },
-  { id: "toast", label: "Toast", component: ToastShowcase, tags: ["depth:0", "feedback"] },
-  { id: "toggle", label: "Toggle", component: ToggleShowcase, tags: ["depth:0", "form"] },
-  { id: "segmented-control", label: "SegmentedControl", component: SegmentedControlShowcase, tags: ["depth:0", "form"] },
-  { id: "tooltip", label: "Tooltip", component: TooltipShowcase, tags: ["depth:0", "feedback"] },
-  { id: "value-renderer", label: "ValueRenderer", component: ValueRendererShowcase, tags: ["depth:0", "data"] },
+  {
+    id: "base-table",
+    label: "BaseTable",
+    component: BaseTableShowcase,
+    tags: ["depth:1", "table", "data"],
+  },
+  {
+    id: "button",
+    label: "Button",
+    component: ButtonShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "dnd-hierarchy-sort-bar",
+    label: "DnDHierarchySortBar",
+    component: DnDHierarchySortBarShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "fab",
+    label: "Fab",
+    component: FabShowcase,
+    tags: ["depth:1", "form"],
+  },
+  {
+    id: "hud-button-group",
+    label: "ButtonGroup",
+    component: ButtonGroupShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "candlestick-renderer",
+    label: "CandlestickRenderer",
+    component: CandlestickRendererShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "cell-renderers",
+    label: "CellRenderers",
+    component: CellRendererShowcase,
+    tags: ["depth:1", "data"],
+  },
+  {
+    id: "combobox",
+    label: "Combobox",
+    component: ComboboxShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "dag-chart",
+    label: "DagChart",
+    component: DagChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "date-axis",
+    label: "DateAxis",
+    component: DateAxisShowcase,
+    tags: ["depth:0", "chart", "time"],
+  },
+  {
+    id: "scrub-chart",
+    label: "ScrubChart",
+    component: ScrubChartShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "cashflow-scrub-chart",
+    label: "CashflowScrubChart",
+    component: CashflowScrubChartShowcase,
+    tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "swimlane-chart",
+    label: "SwimlaneChart",
+    component: SwimlaneChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "animated-swimlane-chart",
+    label: "AnimatedSwimlaneChart",
+    component: AnimatedSwimlaneChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "swimlane-node-card",
+    label: "SwimlaneNodeCard",
+    component: SwimlaneNodeCardShowcase,
+    tags: ["depth:0", "chart"],
+  },
+  {
+    id: "data-table-container",
+    label: "DataTableContainer",
+    component: DataTableContainerShowcase,
+    tags: ["depth:1", "table", "data", "container"],
+  },
+  {
+    id: "digit-roller",
+    label: "DigitRoller",
+    component: DigitRollerShowcase,
+    tags: ["depth:2", "indicator", "data"],
+  },
+  {
+    id: "divider",
+    label: "Divider",
+    component: DividerShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "heatmap",
+    label: "Heatmap",
+    component: HeatmapShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "heatstream",
+    label: "HeatStream",
+    component: HeatStreamShowcase,
+    tags: ["depth:0", "chart", "time", "data"],
+  },
+  {
+    id: "icon",
+    label: "Icon",
+    component: IconShowcase,
+    tags: ["depth:0", "text"],
+  },
+  {
+    id: "inputs",
+    label: "Inputs",
+    component: InputsShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "hud-list",
+    label: "List",
+    component: ListShowcase,
+    tags: ["depth:0", "list"],
+  },
+  {
+    id: "math-formula",
+    label: "MathFormula",
+    component: MathFormulaShowcase,
+    tags: ["depth:0", "math", "text"],
+  },
+  {
+    id: "hud-modal",
+    label: "Modal",
+    component: ModalShowcase,
+    tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "bottom-sheet",
+    label: "BottomSheet",
+    component: BottomSheetShowcase,
+    tags: ["depth:0", "feedback"],
+  },
+  {
+    id: "nav-item",
+    label: "NavItem",
+    component: NavItemShowcase,
+    tags: ["depth:0", "navigation"],
+  },
+  {
+    id: "hud-page",
+    label: "Page",
+    component: PageShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "hud-panel",
+    label: "Panel",
+    component: PanelShowcase,
+    tags: ["depth:0", "container"],
+  },
+  {
+    id: "progress-bar",
+    label: "ProgressBar",
+    component: ProgressBarShowcase,
+    tags: ["depth:0", "indicator"],
+  },
+  {
+    id: "scroll-region",
+    label: "ScrollRegion",
+    component: ScrollRegionShowcase,
+    tags: ["depth:0", "container", "layout"],
+  },
+  {
+    id: "section",
+    label: "Section",
+    component: SectionShowcase,
+    tags: ["depth:0", "container"],
+  },
+  {
+    id: "hud-section",
+    label: "Section (Accent)",
+    component: AccentSectionShowcase,
+    tags: ["depth:0", "container"],
+  },
+  {
+    id: "select",
+    label: "Select",
+    component: SelectShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "sidebar-selector",
+    label: "SidebarSelector",
+    component: SidebarSelectorShowcase,
+    tags: ["depth:0", "navigation", "form"],
+  },
+  {
+    id: "stats-table",
+    label: "StatsTable",
+    component: StatsTableShowcase,
+    tags: ["depth:2", "table", "data"],
+  },
+  {
+    id: "status-badge",
+    label: "StatusBadge",
+    component: StatusBadgeShowcase,
+    tags: ["depth:0", "indicator", "status"],
+  },
+  {
+    id: "hud-tabs",
+    label: "Tabs",
+    component: TabsShowcase,
+    tags: ["depth:0", "navigation"],
+  },
+  {
+    id: "tabbed-side-panel",
+    label: "TabbedSidePanel",
+    component: TabbedSidePanelShowcase,
+    tags: ["depth:1", "container", "navigation"],
+  },
+  {
+    id: "text",
+    label: "Text",
+    component: TextShowcase,
+    tags: ["depth:0", "text"],
+  },
+  {
+    id: "themed-number-input",
+    label: "ThemedNumberInput",
+    component: ThemedNumberInputShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "currency-input",
+    label: "CurrencyInput",
+    component: CurrencyInputShowcase,
+    tags: ["depth:1", "form"],
+  },
+  {
+    id: "app-shell",
+    label: "AppShell",
+    component: AppShellShowcase,
+    tags: ["depth:0", "layout", "navigation"],
+  },
+  {
+    id: "burndown-chart",
+    label: "BurndownChart",
+    component: BurndownChartShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "completion-timeline",
+    label: "CompletionTimeline",
+    component: CompletionTimelineShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "dropdown",
+    label: "Dropdown",
+    component: DropdownShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "duration",
+    label: "Duration",
+    component: DurationShowcase,
+    tags: ["depth:0", "time", "text"],
+  },
+  {
+    id: "popover-menu",
+    label: "PopoverMenu",
+    component: PopoverMenuShowcase,
+    tags: ["depth:0", "navigation", "feedback"],
+  },
+  {
+    id: "progress-check",
+    label: "ProgressCheck",
+    component: ProgressCheckShowcase,
+    tags: ["depth:0", "indicator"],
+  },
+  {
+    id: "quadrant-grid",
+    label: "QuadrantGrid",
+    component: QuadrantGridShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "ring-chart",
+    label: "RingChart",
+    component: RingChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "sprint-selector",
+    label: "SprintSelector",
+    component: SprintSelectorShowcase,
+    tags: ["depth:0", "form", "time"],
+  },
+  {
+    id: "slot-fill-bar",
+    label: "SlotFillBar",
+    component: SlotFillBarShowcase,
+    tags: ["depth:0", "indicator", "chart"],
+  },
+  {
+    id: "product-grid",
+    label: "ProductGrid",
+    component: ProductGridShowcase,
+    tags: ["depth:1", "data", "chart"],
+  },
+  {
+    id: "pivot-treemap",
+    label: "PivotTreemap",
+    component: PivotTreemapShowcase,
+    tags: ["depth:1", "chart", "data"],
+  },
+  {
+    id: "legend",
+    label: "Legend",
+    component: LegendShowcase,
+    tags: ["depth:0", "indicator", "chart"],
+  },
+  {
+    id: "status-light",
+    label: "StatusLight",
+    component: StatusLightShowcase,
+    tags: ["depth:0", "indicator", "status"],
+  },
+  {
+    id: "tag-input",
+    label: "TagInput",
+    component: TagInputShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "throughput-chart",
+    label: "ThroughputChart",
+    component: ThroughputChartShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "extraction-board",
+    label: "ExtractionBoard",
+    component: ExtractionBoardShowcase,
+    tags: ["depth:1", "chart", "data", "container"],
+  },
+  {
+    id: "truth-indicator",
+    label: "TruthIndicator",
+    component: TruthIndicatorShowcase,
+    tags: ["depth:0", "indicator"],
+  },
+  {
+    id: "quickfilter-atom",
+    label: "QuickFilter (atom)",
+    component: QuickFilterAtomShowcase,
+    tags: ["depth:1", "form"],
+  },
+  {
+    id: "worker-card",
+    label: "WorkerCard",
+    component: WorkerCardShowcase,
+    tags: ["depth:1", "container", "indicator"],
+  },
+  {
+    id: "work-progress-card",
+    label: "WorkProgressCard",
+    component: WorkProgressCardShowcase,
+    tags: ["depth:1", "container", "indicator", "data", "time"],
+  },
+  {
+    id: "split-queue-list",
+    label: "SplitQueueList",
+    component: SplitQueueListShowcase,
+    tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
+    id: "sortable-list",
+    label: "SortableList",
+    component: SortableListShowcase,
+    tags: ["depth:1", "list", "form", "container"],
+  },
+  {
+    id: "mutable-list",
+    label: "MutableList",
+    component: MutableListShowcase,
+    tags: ["depth:2", "list", "form", "container"],
+  },
+  {
+    id: "three-panel-layout",
+    label: "ThreePanelLayout",
+    component: ThreePanelLayoutShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "toast",
+    label: "Toast",
+    component: ToastShowcase,
+    tags: ["depth:0", "feedback"],
+  },
+  {
+    id: "toggle",
+    label: "Toggle",
+    component: ToggleShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "segmented-control",
+    label: "SegmentedControl",
+    component: SegmentedControlShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "tooltip",
+    label: "Tooltip",
+    component: TooltipShowcase,
+    tags: ["depth:0", "feedback"],
+  },
+  {
+    id: "value-renderer",
+    label: "ValueRenderer",
+    component: ValueRendererShowcase,
+    tags: ["depth:0", "data"],
+  },
 
-  { id: "resizable-container", label: "ResizableContainer", component: ResizableContainerShowcase, tags: ["depth:0", "layout"] },
-  { id: "row", label: "Row", component: RowShowcase, tags: ["depth:0", "layout"] },
-  { id: "stack", label: "Stack", component: StackShowcase, tags: ["depth:0", "layout"] },
-  { id: "surface", label: "Surface", component: SurfaceShowcase, tags: ["depth:0", "layout", "container"] },
+  {
+    id: "resizable-container",
+    label: "ResizableContainer",
+    component: ResizableContainerShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "row",
+    label: "Row",
+    component: RowShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "stack",
+    label: "Stack",
+    component: StackShowcase,
+    tags: ["depth:0", "layout"],
+  },
+  {
+    id: "surface",
+    label: "Surface",
+    component: SurfaceShowcase,
+    tags: ["depth:0", "layout", "container"],
+  },
 
-  { id: "alert-box", label: "AlertBox", component: AlertBoxShowcase, tags: ["depth:1", "feedback"] },
-  { id: "chart", label: "Chart", component: ChartShowcase, tags: ["depth:0", "chart", "data"] },
-  { id: "dotchart", label: "DotChart (composition smoke)", component: DotchartShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "change-renderer", label: "ChangeRenderer", component: ChangeRendererShowcase, tags: ["depth:1", "data", "indicator"] },
-  { id: "hud-confirmation-modal", label: "ConfirmationModal", component: ConfirmationModalShowcase, tags: ["depth:1", "feedback"] },
-  { id: "date-range-picker", label: "DateRangePicker", component: DateRangePickerShowcase, tags: ["depth:0", "form", "time"] },
-  { id: "date-time-range", label: "DateTimeRange", component: DateTimeRangeShowcase, tags: ["depth:2", "time"] },
-  { id: "empty-state", label: "EmptyState", component: EmptyStateShowcase, tags: ["depth:1", "feedback"] },
-  { id: "heatstream-grid", label: "HeatStreamGrid", component: HeatStreamGridShowcase, tags: ["depth:1", "chart", "time", "data"] },
-  { id: "nav-bar", label: "NavBar", component: NavBarShowcase, tags: ["depth:0", "navigation"] },
-  { id: "number-with-units", label: "NumberWithUnits", component: NumberWithUnitsShowcase, tags: ["depth:2", "data"] },
-  { id: "progress-card", label: "ProgressCard", component: ProgressCardShowcase, tags: ["depth:1", "container", "indicator"] },
-  { id: "quick-filter", label: "QuickFilter", component: QuickFilterShowcase, tags: ["depth:1", "form"] },
-  { id: "selectable-table", label: "SelectableTable", component: SelectableTableShowcase, tags: ["depth:1", "table", "data", "form"] },
-  { id: "removable-item-card", label: "RemovableItemCard", component: RemovableItemCardShowcase, tags: ["depth:1", "container", "data"] },
+  {
+    id: "alert-box",
+    label: "AlertBox",
+    component: AlertBoxShowcase,
+    tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "chart",
+    label: "Chart",
+    component: ChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "dotchart",
+    label: "DotChart (composition smoke)",
+    component: DotchartShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "change-renderer",
+    label: "ChangeRenderer",
+    component: ChangeRendererShowcase,
+    tags: ["depth:1", "data", "indicator"],
+  },
+  {
+    id: "hud-confirmation-modal",
+    label: "ConfirmationModal",
+    component: ConfirmationModalShowcase,
+    tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "date-range-picker",
+    label: "DateRangePicker",
+    component: DateRangePickerShowcase,
+    tags: ["depth:0", "form", "time"],
+  },
+  {
+    id: "date-time-range",
+    label: "DateTimeRange",
+    component: DateTimeRangeShowcase,
+    tags: ["depth:2", "time"],
+  },
+  {
+    id: "empty-state",
+    label: "EmptyState",
+    component: EmptyStateShowcase,
+    tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "heatstream-grid",
+    label: "HeatStreamGrid",
+    component: HeatStreamGridShowcase,
+    tags: ["depth:1", "chart", "time", "data"],
+  },
+  {
+    id: "nav-bar",
+    label: "NavBar",
+    component: NavBarShowcase,
+    tags: ["depth:0", "navigation"],
+  },
+  {
+    id: "number-with-units",
+    label: "NumberWithUnits",
+    component: NumberWithUnitsShowcase,
+    tags: ["depth:2", "data"],
+  },
+  {
+    id: "progress-card",
+    label: "ProgressCard",
+    component: ProgressCardShowcase,
+    tags: ["depth:1", "container", "indicator"],
+  },
+  {
+    id: "quick-filter",
+    label: "QuickFilter",
+    component: QuickFilterShowcase,
+    tags: ["depth:1", "form"],
+  },
+  {
+    id: "selectable-table",
+    label: "SelectableTable",
+    component: SelectableTableShowcase,
+    tags: ["depth:1", "table", "data", "form"],
+  },
+  {
+    id: "removable-item-card",
+    label: "RemovableItemCard",
+    component: RemovableItemCardShowcase,
+    tags: ["depth:1", "container", "data"],
+  },
 
-  { id: "connection-status", label: "ConnectionStatus", component: ConnectionStatusShowcase, tags: ["depth:2", "indicator", "status"] },
-  { id: "conversation-tree", label: "ConversationTree", component: ConversationTreeShowcase, tags: ["depth:1", "list", "chat"] },
-  { id: "data-list", label: "DataList", component: DataListShowcase, tags: ["depth:1", "list", "data"] },
-  { id: "titled-time-range-header", label: "TitledTimeRangeHeader", component: TitledTimeRangeHeaderShowcase, tags: ["depth:0", "container", "data"] },
-  { id: "formula-panel", label: "FormulaPanel", component: FormulaPanelShowcase, tags: ["depth:2", "container", "math"] },
-  { id: "interactive-formula", label: "InteractiveFormula", component: InteractiveFormulaShowcase, tags: ["depth:3", "form", "math"] },
-  { id: "metric-card", label: "MetricCard", component: MetricCardShowcase, tags: ["depth:2", "container", "indicator", "data"] },
-  { id: "result-display", label: "ResultDisplay", component: ResultDisplayShowcase, tags: ["depth:2", "math", "data"] },
+  {
+    id: "connection-status",
+    label: "ConnectionStatus",
+    component: ConnectionStatusShowcase,
+    tags: ["depth:2", "indicator", "status"],
+  },
+  {
+    id: "conversation-tree",
+    label: "ConversationTree",
+    component: ConversationTreeShowcase,
+    tags: ["depth:1", "list", "chat"],
+  },
+  {
+    id: "data-list",
+    label: "DataList",
+    component: DataListShowcase,
+    tags: ["depth:1", "list", "data"],
+  },
+  {
+    id: "titled-time-range-header",
+    label: "TitledTimeRangeHeader",
+    component: TitledTimeRangeHeaderShowcase,
+    tags: ["depth:0", "container", "data"],
+  },
+  {
+    id: "formula-panel",
+    label: "FormulaPanel",
+    component: FormulaPanelShowcase,
+    tags: ["depth:2", "container", "math"],
+  },
+  {
+    id: "interactive-formula",
+    label: "InteractiveFormula",
+    component: InteractiveFormulaShowcase,
+    tags: ["depth:3", "form", "math"],
+  },
+  {
+    id: "metric-card",
+    label: "MetricCard",
+    component: MetricCardShowcase,
+    tags: ["depth:2", "container", "indicator", "data"],
+  },
+  {
+    id: "result-display",
+    label: "ResultDisplay",
+    component: ResultDisplayShowcase,
+    tags: ["depth:2", "math", "data"],
+  },
 
-  { id: "result-panel", label: "ResultPanel", component: ResultPanelShowcase, tags: ["depth:2", "container", "math", "data"] },
+  {
+    id: "result-panel",
+    label: "ResultPanel",
+    component: ResultPanelShowcase,
+    tags: ["depth:2", "container", "math", "data"],
+  },
 
-  { id: "hopper", label: "All Components", component: HopperShowcase, tags: [] },
+  {
+    id: "hopper",
+    label: "All Components",
+    component: HopperShowcase,
+    tags: [],
+  },
 
-  { id: "pill-variants", label: "Pill Variants (sandbox)", component: PillVariantsShowcase, tags: [] },
-  { id: "dag-traversal-detail", label: "DAG Traversal · Detail (sandbox)", component: DagTraversalSandboxShowcase, tags: [] },
-  { id: "dag-traversal-bulk", label: "DAG Traversal · Bulk (sandbox)", component: DagTraversalBulkSandboxShowcase, tags: [] },
+  {
+    id: "pill-variants",
+    label: "Pill Variants (sandbox)",
+    component: PillVariantsShowcase,
+    tags: [],
+  },
+  {
+    id: "dag-traversal-detail",
+    label: "DAG Traversal · Detail (sandbox)",
+    component: DagTraversalSandboxShowcase,
+    tags: [],
+  },
+  {
+    id: "dag-traversal-bulk",
+    label: "DAG Traversal · Bulk (sandbox)",
+    component: DagTraversalBulkSandboxShowcase,
+    tags: [],
+  },
 ];
 
 const TAG_CATEGORIES: { label: string; tags: string[] }[] = [
-  { label: "Depth", tags: ["depth:0", "depth:1", "depth:2", "depth:3", "depth:4"] },
+  {
+    label: "Depth",
+    tags: ["depth:0", "depth:1", "depth:2", "depth:3", "depth:4"],
+  },
   {
     label: "Shape",
-    tags: ["chart", "table", "list", "form", "layout", "feedback", "navigation", "indicator", "container", "text"],
+    tags: [
+      "chart",
+      "table",
+      "list",
+      "form",
+      "layout",
+      "feedback",
+      "navigation",
+      "indicator",
+      "container",
+      "text",
+    ],
   },
   { label: "Domain", tags: ["data", "time", "math", "status", "chat"] },
 ];
@@ -283,7 +835,11 @@ const parseHash = (hash: string): Route => {
   return { id, tags, query };
 };
 
-const buildHash = (id: string | null, tags: Set<string>, query: string): string => {
+const buildHash = (
+  id: string | null,
+  tags: Set<string>,
+  query: string,
+): string => {
   const path = id ?? "";
   const params = new URLSearchParams();
   if (tags.size > 0) params.set("tags", [...tags].sort().join(","));
@@ -296,7 +852,9 @@ const App: Component = () => {
   const initial = parseHash(location.hash);
   const fallbackId = items[0]?.id ?? "";
   const [activeId, setActiveId] = createSignal(initial.id ?? fallbackId);
-  const [selectedTags, setSelectedTags] = createSignal<Set<string>>(initial.tags);
+  const [selectedTags, setSelectedTags] = createSignal<Set<string>>(
+    initial.tags,
+  );
   const [query, setQuery] = createSignal(initial.query);
 
   const syncHash = () => {
@@ -342,7 +900,9 @@ const App: Component = () => {
     return items.filter((i) => matches(i, tags, q));
   });
 
-  const currentSetIds = createMemo(() => new Set(filteredItems().map((i) => i.id)));
+  const currentSetIds = createMemo(
+    () => new Set(filteredItems().map((i) => i.id)),
+  );
 
   const computeStatsFor = (tag: string): PillStats => {
     const sel = selectedTags();
@@ -351,20 +911,30 @@ const App: Component = () => {
     const next = new Set(sel);
     if (active) next.delete(tag);
     else next.add(tag);
-    const newSet = new Set(items.filter((i) => matches(i, next, q)).map((i) => i.id));
+    const newSet = new Set(
+      items.filter((i) => matches(i, next, q)).map((i) => i.id),
+    );
     const cur = currentSetIds();
     let added = 0;
     let removed = 0;
     for (const id of newSet) if (!cur.has(id)) added++;
     for (const id of cur) if (!newSet.has(id)) removed++;
-    return { active, currentCount: cur.size, newCount: newSet.size, added, removed };
+    return {
+      active,
+      currentCount: cur.size,
+      newCount: newSet.size,
+      added,
+      removed,
+    };
   };
 
   // Group filtered items by depth (depth:N or "Other" for untagged).
   // Items tagged "workshop" are surfaced via the dedicated sidebar link,
   // not in the depth-grouped list.
   const groupedItems = createMemo(() => {
-    const filtered = filteredItems().filter((i) => !i.tags.includes("workshop"));
+    const filtered = filteredItems().filter(
+      (i) => !i.tags.includes("workshop"),
+    );
     const groups: { label: string; items: Item[] }[] = [
       { label: "Depth 0 (primitive)", items: [] },
       { label: "Depth 1", items: [] },
@@ -382,7 +952,8 @@ const App: Component = () => {
       else if (depthTag === "depth:4") groups[4].items.push(item);
       else groups[5].items.push(item);
     }
-    for (const g of groups) g.items.sort((a, b) => a.label.localeCompare(b.label));
+    for (const g of groups)
+      g.items.sort((a, b) => a.label.localeCompare(b.label));
     return groups.filter((g) => g.items.length > 0);
   });
 
@@ -407,108 +978,111 @@ const App: Component = () => {
     <div class="showcase">
       <nav class="showcase__sidebar">
         <div class="showcase__sidebar-head">
-        <div class="showcase__brand">
-          <h1>Solid Components</h1>
-          <p>SolidJS Component Library</p>
-          <ThemeSwitcher />
+          <div class="showcase__brand">
+            <h1>Solid Components</h1>
+            <p>SolidJS Component Library</p>
+            <ThemeSwitcher />
+          </div>
+
+          <button
+            type="button"
+            class={`workshop-link ${activeId() === "workshop" ? "workshop-link--active" : ""}`}
+            onClick={() => navigate("workshop")}
+            title="Live focus area for whatever's being worked on"
+          >
+            Workshop
+          </button>
+
+          <For each={workshopBenchItems}>
+            {(bench) => (
+              <button
+                type="button"
+                class={`workshop-link workshop-link--bench ${activeId() === bench.id ? "workshop-link--active" : ""}`}
+                onClick={() => navigate(bench.id)}
+                title="Workshop bench (in-progress component)"
+              >
+                {bench.label}
+              </button>
+            )}
+          </For>
+
+          <button
+            type="button"
+            class="workshop-link"
+            onClick={() => {
+              location.hash = "#/layouts";
+            }}
+            title="Gallery of saved default layouts"
+          >
+            Layouts →
+          </button>
+
+          <div class="showcase__tags">
+            <For each={TAG_CATEGORIES}>
+              {(cat) => (
+                <div class="tag-category">
+                  <div class="tag-category__label">{cat.label}</div>
+                  <div class="tag-category__pills">
+                    <For each={cat.tags}>
+                      {(tag) => (
+                        <TagPill
+                          tag={tag}
+                          stats={computeStatsFor(tag)}
+                          onToggle={() => toggleTag(tag)}
+                          totalItems={TOTAL_ITEMS}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </div>
+              )}
+            </For>
+            <Show when={selectedTags().size > 0}>
+              <button type="button" class="tag-clear" onClick={clearTags}>
+                Clear filters ({matchCount()} match
+                {matchCount() === 1 ? "" : "es"})
+              </button>
+            </Show>
+          </div>
+
+          <div class="showcase__filter">
+            <input
+              type="search"
+              class="showcase__filter-input"
+              placeholder="Filter by name…"
+              value={query()}
+              onInput={(e) => {
+                setQuery(e.currentTarget.value);
+                syncHash();
+              }}
+            />
+          </div>
         </div>
 
-        <button
-          type="button"
-          class={`workshop-link ${activeId() === "workshop" ? "workshop-link--active" : ""}`}
-          onClick={() => navigate("workshop")}
-          title="Live focus area for whatever's being worked on"
-        >
-          Workshop
-        </button>
-
-        <For each={workshopBenchItems}>
-          {(bench) => (
-            <button
-              type="button"
-              class={`workshop-link workshop-link--bench ${activeId() === bench.id ? "workshop-link--active" : ""}`}
-              onClick={() => navigate(bench.id)}
-              title="Workshop bench (in-progress component)"
-            >
-              {bench.label}
-            </button>
-          )}
-        </For>
-
-        <button
-          type="button"
-          class="workshop-link"
-          onClick={() => { location.hash = "#/layouts"; }}
-          title="Gallery of saved default layouts"
-        >
-          Layouts →
-        </button>
-
-        <div class="showcase__tags">
-          <For each={TAG_CATEGORIES}>
-            {(cat) => (
-              <div class="tag-category">
-                <div class="tag-category__label">{cat.label}</div>
-                <div class="tag-category__pills">
-                  <For each={cat.tags}>
-                    {(tag) => (
-                      <TagPill
-                        tag={tag}
-                        stats={computeStatsFor(tag)}
-                        onToggle={() => toggleTag(tag)}
-                        totalItems={TOTAL_ITEMS}
-                      />
+        <div class="showcase__sidebar-list">
+          <For each={groupedItems()}>
+            {(group) => (
+              <div class="nav-group">
+                <div class="nav-group__toggle nav-group__toggle--static">
+                  {group.label}{" "}
+                  <span class="nav-group__count">{group.items.length}</span>
+                </div>
+                <div class="nav-group__items">
+                  <For each={group.items}>
+                    {(item) => (
+                      <button
+                        class={`nav-item ${activeId() === item.id ? "nav-item--active" : ""}`}
+                        onClick={() => navigate(item.id)}
+                        title={item.tags.join(" · ")}
+                      >
+                        {item.label}
+                      </button>
                     )}
                   </For>
                 </div>
               </div>
             )}
           </For>
-          <Show when={selectedTags().size > 0}>
-            <button type="button" class="tag-clear" onClick={clearTags}>
-              Clear filters ({matchCount()} match{matchCount() === 1 ? "" : "es"})
-            </button>
-          </Show>
-        </div>
-
-        <div class="showcase__filter">
-          <input
-            type="search"
-            class="showcase__filter-input"
-            placeholder="Filter by name…"
-            value={query()}
-            onInput={(e) => {
-              setQuery(e.currentTarget.value);
-              syncHash();
-            }}
-          />
-        </div>
-        </div>
-
-        <div class="showcase__sidebar-list">
-        <For each={groupedItems()}>
-          {(group) => (
-            <div class="nav-group">
-              <div class="nav-group__toggle nav-group__toggle--static">
-                {group.label}{" "}
-                <span class="nav-group__count">{group.items.length}</span>
-              </div>
-              <div class="nav-group__items">
-                <For each={group.items}>
-                  {(item) => (
-                    <button
-                      class={`nav-item ${activeId() === item.id ? "nav-item--active" : ""}`}
-                      onClick={() => navigate(item.id)}
-                      title={item.tags.join(" · ")}
-                    >
-                      {item.label}
-                    </button>
-                  )}
-                </For>
-              </div>
-            </div>
-          )}
-        </For>
         </div>
       </nav>
 
@@ -530,9 +1104,14 @@ const Root: Component = () => {
     onCleanup(() => window.removeEventListener("hashchange", onHash));
   });
   return (
-    <Show when={route().startsWith("#/layouts")} fallback={
-      <Show when={route().startsWith("#/sandbox")} fallback={<App />}><Sandbox /></Show>
-    }>
+    <Show
+      when={route().startsWith("#/layouts")}
+      fallback={
+        <Show when={route().startsWith("#/sandbox")} fallback={<App />}>
+          <Sandbox />
+        </Show>
+      }
+    >
       <LayoutsGallery />
     </Show>
   );

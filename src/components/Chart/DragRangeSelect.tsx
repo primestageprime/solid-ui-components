@@ -27,7 +27,10 @@ export interface DragRangeSelectOverrides {
   fillOpacity?: number;
   class?: string;
 }
-export type DragRangeSelectDataProps = Omit<DragRangeSelectProps, keyof DragRangeSelectOverrides>;
+export type DragRangeSelectDataProps = Omit<
+  DragRangeSelectProps,
+  keyof DragRangeSelectOverrides
+>;
 
 export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
   const ctx = useChart();
@@ -94,5 +97,7 @@ export const DragRangeSelect: Component<DragRangeSelectProps> = (props) => {
 export function createDragRangeSelect(
   defaults: Partial<Omit<DragRangeSelectProps, "children">>,
 ): Component<DragRangeSelectDataProps> {
-  return (props) => <DragRangeSelect {...mergeProps(defaults, props as DragRangeSelectProps)} />;
+  return (props) => (
+    <DragRangeSelect {...mergeProps(defaults, props as DragRangeSelectProps)} />
+  );
 }

@@ -12,7 +12,13 @@ describe("QuickFilter (atomic)", () => {
   it("renders all items with empty query", () => {
     const { container } = render(() => (
       <QuickFilter items={items} extract={(i) => i.name}>
-        {(filtered) => <ul>{filtered.map((i) => <li>{i.name}</li>)}</ul>}
+        {(filtered) => (
+          <ul>
+            {filtered.map((i) => (
+              <li>{i.name}</li>
+            ))}
+          </ul>
+        )}
       </QuickFilter>
     ));
     expect(container.querySelectorAll("li").length).toBe(3);
@@ -21,7 +27,13 @@ describe("QuickFilter (atomic)", () => {
   it("filters by single token (substring, case-insensitive)", () => {
     const { container } = render(() => (
       <QuickFilter items={items} extract={(i) => i.name}>
-        {(filtered) => <ul>{filtered.map((i) => <li>{i.name}</li>)}</ul>}
+        {(filtered) => (
+          <ul>
+            {filtered.map((i) => (
+              <li>{i.name}</li>
+            ))}
+          </ul>
+        )}
       </QuickFilter>
     ));
     const input = container.querySelector("input")!;
@@ -32,12 +44,20 @@ describe("QuickFilter (atomic)", () => {
   it("requires every whitespace-split token to match", () => {
     const { container } = render(() => (
       <QuickFilter items={items} extract={(i) => i.name}>
-        {(filtered) => <ul>{filtered.map((i) => <li>{i.name}</li>)}</ul>}
+        {(filtered) => (
+          <ul>
+            {filtered.map((i) => (
+              <li>{i.name}</li>
+            ))}
+          </ul>
+        )}
       </QuickFilter>
     ));
     const input = container.querySelector("input")!;
     fireEvent.input(input, { target: { value: "alpha char" } });
-    const matched = Array.from(container.querySelectorAll("li")).map((li) => li.textContent);
+    const matched = Array.from(container.querySelectorAll("li")).map(
+      (li) => li.textContent,
+    );
     expect(matched).toEqual(["alpha charlie"]);
   });
 });

@@ -10,19 +10,24 @@ import "./StatsTable.css";
 
 export interface StatsColumn<T = any> {
   header: string;
-  accessor: keyof T | ((row: T) => JSX.Element | string | number | null | undefined);
+  accessor:
+    | keyof T
+    | ((row: T) => JSX.Element | string | number | null | undefined);
   align?: "left" | "right" | "center";
   width?: string;
 }
 
-export interface StatsTableProps<T = any> extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface StatsTableProps<T = any>
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   columns: StatsColumn<T>[];
   rows: T[];
   getRowClass?: (row: T, index: number) => string | undefined;
   caption?: string;
 }
 
-export function StatsTable<T extends Record<string, any>>(props: StatsTableProps<T>) {
+export function StatsTable<T extends Record<string, any>>(
+  props: StatsTableProps<T>,
+) {
   const [local, others] = splitProps(props, [
     "columns",
     "rows",
@@ -71,7 +76,9 @@ export function StatsTable<T extends Record<string, any>>(props: StatsTableProps
           <tbody>
             <For each={local.rows}>
               {(row, i) => (
-                <tr class={`stats-table__row ${local.getRowClass?.(row, i()) ?? ""}`}>
+                <tr
+                  class={`stats-table__row ${local.getRowClass?.(row, i()) ?? ""}`}
+                >
                   <For each={local.columns}>
                     {(col) => (
                       <td

@@ -39,7 +39,12 @@ export const Fab: Component<FabProps> = (props) => {
   const classes = () => (local.class ? `sui-fab ${local.class}` : "sui-fab");
 
   return (
-    <Button class={classes()} aria-label={local.label} title={local.label} {...others}>
+    <Button
+      class={classes()}
+      aria-label={local.label}
+      title={local.label}
+      {...others}
+    >
       <Icon name={local.icon} size="md" />
     </Button>
   );
@@ -60,6 +65,8 @@ export type FabDataProps = Omit<FabProps, keyof FabOverrides>;
  * const AddFab = createFab({ icon: "plus" });
  * // call site: <AddFab label="Add item" onClick={handleAdd} />
  */
-export function createFab(defaults: Partial<Omit<FabProps, "children">>): Component<FabDataProps> {
+export function createFab(
+  defaults: Partial<Omit<FabProps, "children">>,
+): Component<FabDataProps> {
   return (props) => <Fab {...(mergeProps(defaults, props) as FabProps)} />;
 }

@@ -38,7 +38,9 @@ export interface HighlightSegment {
   lane?: string;
 }
 
-export interface HighlightSegmentsProps<T extends HighlightSegment = HighlightSegment> {
+export interface HighlightSegmentsProps<
+  T extends HighlightSegment = HighlightSegment,
+> {
   data: readonly T[];
   /**
    * Lane order (top-to-bottom) for vertical stacking. Omitting renders
@@ -67,12 +69,13 @@ export interface HighlightSegmentsOverrides {
   fillOpacity?: number;
   class?: string;
 }
-export type HighlightSegmentsDataProps<T extends HighlightSegment = HighlightSegment> =
-  Omit<HighlightSegmentsProps<T>, keyof HighlightSegmentsOverrides>;
+export type HighlightSegmentsDataProps<
+  T extends HighlightSegment = HighlightSegment,
+> = Omit<HighlightSegmentsProps<T>, keyof HighlightSegmentsOverrides>;
 
-export function HighlightSegments<T extends HighlightSegment = HighlightSegment>(
-  props: HighlightSegmentsProps<T>,
-) {
+export function HighlightSegments<
+  T extends HighlightSegment = HighlightSegment,
+>(props: HighlightSegmentsProps<T>) {
   const ctx = useChart();
   const merged = mergeProps({ fillOpacity: 0.18 }, props);
 
@@ -116,10 +119,7 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
           const y = () => (isLaned() ? laneIdx() * laneHeight() : 0);
           const h = () => (isLaned() ? laneHeight() : ctx.innerHeight());
           return (
-            <Show
-              when={!isUnknownLane()}
-              fallback={warnUnknownLane(seg.lane!)}
-            >
+            <Show when={!isUnknownLane()} fallback={warnUnknownLane(seg.lane!)}>
               <rect
                 class="sui-chart__highlight-segment"
                 data-id={seg.id}
@@ -134,7 +134,10 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
                 opacity={
                   seg.opacity ??
                   (isSelected()
-                    ? Math.min(1, merged.fillOpacity * SELECTED_OPACITY_MULTIPLIER)
+                    ? Math.min(
+                        1,
+                        merged.fillOpacity * SELECTED_OPACITY_MULTIPLIER,
+                      )
                     : merged.fillOpacity)
                 }
                 onPointerDown={(e) => merged.onClick?.(seg, e)}
@@ -150,8 +153,14 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
   );
 }
 
-export function createHighlightSegments<T extends HighlightSegment = HighlightSegment>(
+export function createHighlightSegments<
+  T extends HighlightSegment = HighlightSegment,
+>(
   defaults: Partial<Omit<HighlightSegmentsProps<T>, "children">>,
 ): Component<HighlightSegmentsDataProps<T>> {
-  return (props) => <HighlightSegments<T> {...mergeProps(defaults, props as HighlightSegmentsProps<T>)} />;
+  return (props) => (
+    <HighlightSegments<T>
+      {...mergeProps(defaults, props as HighlightSegmentsProps<T>)}
+    />
+  );
 }

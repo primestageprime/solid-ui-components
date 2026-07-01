@@ -12,7 +12,8 @@ import { SpreadRow } from "../Layout/variants";
 import { FlexLabel } from "../Text/variants";
 import { Button } from "../Button/Button";
 
-export interface RemovableItemCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface RemovableItemCardProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   title: string;
   active?: boolean;
   onRemove?: () => void;
@@ -51,9 +52,7 @@ export const RemovableItemCard: Component<RemovableItemCardProps> = (props) => {
       <Show when={local.details}>
         <SpreadRow>{local.details}</SpreadRow>
       </Show>
-      <Show when={local.children}>
-        {local.children}
-      </Show>
+      <Show when={local.children}>{local.children}</Show>
     </InteractiveCard>
   );
 };

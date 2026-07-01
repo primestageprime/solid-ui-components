@@ -14,7 +14,13 @@
 // is applied via inline style (on the swatch element's background-color).
 // All layout/spacing/typography is owned by the stylesheet.
 // ============================================
-import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./Legend.css";
 
 export interface LegendItem {
@@ -56,10 +62,7 @@ const toSizeValue = (size: number | string): string =>
   typeof size === "number" ? `${size}px` : size;
 
 export const Legend: Component<LegendProps> = (rawProps) => {
-  const props = mergeProps(
-    { orientation: "horizontal" as const },
-    rawProps,
-  );
+  const props = mergeProps({ orientation: "horizontal" as const }, rawProps);
   const [local, others] = splitProps(props, [
     "items",
     "orientation",
@@ -87,12 +90,7 @@ export const Legend: Component<LegendProps> = (rawProps) => {
   };
 
   return (
-    <div
-      class={wrapperClass()}
-      style={wrapperStyle()}
-      role="list"
-      {...others}
-    >
+    <div class={wrapperClass()} style={wrapperStyle()} role="list" {...others}>
       <For each={local.items}>
         {(item) => (
           <div

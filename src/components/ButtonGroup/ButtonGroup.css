@@ -10,10 +10,18 @@
   flex-direction: column;
 }
 
-.sui-btn-group--gap-none { gap: 0; }
-.sui-btn-group--gap-sm { gap: 4px; }
-.sui-btn-group--gap-md { gap: 8px; }
-.sui-btn-group--gap-lg { gap: 12px; }
+.sui-btn-group--gap-none {
+  gap: 0;
+}
+.sui-btn-group--gap-sm {
+  gap: 4px;
+}
+.sui-btn-group--gap-md {
+  gap: 8px;
+}
+.sui-btn-group--gap-lg {
+  gap: 12px;
+}
 
 .sui-btn-group--bordered {
   padding: 8px;

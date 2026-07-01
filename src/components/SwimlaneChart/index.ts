@@ -6,7 +6,11 @@ export type {
 } from "./SwimlaneChart";
 export * from "./variants";
 export { computeSwimlaneLayout } from "./layout";
-export type { SwimlaneLayoutResult, SwimlaneSummary, SwimlaneOptions } from "./layout";
+export type {
+  SwimlaneLayoutResult,
+  SwimlaneSummary,
+  SwimlaneOptions,
+} from "./layout";
 export { convertSwimlaneDagInput } from "./converter";
 export type {
   SwimlaneDagInput,

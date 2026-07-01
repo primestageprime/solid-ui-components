@@ -18,7 +18,8 @@ export const slugToTitle = (slug: string): string =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-const slugFromPath = (path: string): string => path.match(/\/([^/]+)\.tsx$/)![1];
+const slugFromPath = (path: string): string =>
+  path.match(/\/([^/]+)\.tsx$/)![1];
 
 /** Map `import.meta.glob` results to sorted, workshop-tagged nav items. */
 export const buildWorkshopItems = (
@@ -37,5 +38,7 @@ export const buildWorkshopItems = (
         order: mod.meta?.order ?? 0,
       };
     })
-    .sort((a, b) => a.order - b.order || a.item.label.localeCompare(b.item.label))
+    .sort(
+      (a, b) => a.order - b.order || a.item.label.localeCompare(b.item.label),
+    )
     .map((e) => e.item);

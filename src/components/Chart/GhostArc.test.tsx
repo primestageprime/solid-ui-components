@@ -14,12 +14,16 @@ const wrapper = (slot: () => JSX.Element) =>
 
 describe("GhostArc — render", () => {
   it("renders nothing when from is null", () => {
-    const { container } = wrapper(() => <GhostArc from={null} to={{ x: 5, y: 50 }} />);
+    const { container } = wrapper(() => (
+      <GhostArc from={null} to={{ x: 5, y: 50 }} />
+    ));
     expect(container.querySelector(".sui-chart__ghost-arc")).toBeNull();
   });
 
   it("renders nothing when to is null", () => {
-    const { container } = wrapper(() => <GhostArc from={{ x: 1, y: 10 }} to={null} />);
+    const { container } = wrapper(() => (
+      <GhostArc from={{ x: 1, y: 10 }} to={null} />
+    ));
     expect(container.querySelector(".sui-chart__ghost-arc")).toBeNull();
   });
 
@@ -29,7 +33,9 @@ describe("GhostArc — render", () => {
     ));
     const path = container.querySelector(".sui-chart__ghost-arc");
     expect(path).toBeTruthy();
-    expect(path!.getAttribute("d")).toMatch(/^M\s+[\d.-]+\s+[\d.-]+\s+Q\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+$/);
+    expect(path!.getAttribute("d")).toMatch(
+      /^M\s+[\d.-]+\s+[\d.-]+\s+Q\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+$/,
+    );
   });
 
   it("accepts Date endpoints when chart has a time domain", () => {
@@ -56,16 +62,24 @@ describe("GhostArc — render", () => {
 describe("GhostArc — reactivity", () => {
   it("path updates when endpoints change", () => {
     const [from, setFrom] = createSignal<ArcPoint | null>({ x: 1, y: 10 });
-    const { container } = wrapper(() => <GhostArc from={from()} to={{ x: 9, y: 90 }} />);
-    const d1 = container.querySelector(".sui-chart__ghost-arc")!.getAttribute("d");
+    const { container } = wrapper(() => (
+      <GhostArc from={from()} to={{ x: 9, y: 90 }} />
+    ));
+    const d1 = container
+      .querySelector(".sui-chart__ghost-arc")!
+      .getAttribute("d");
     setFrom({ x: 3, y: 30 });
-    const d2 = container.querySelector(".sui-chart__ghost-arc")!.getAttribute("d");
+    const d2 = container
+      .querySelector(".sui-chart__ghost-arc")!
+      .getAttribute("d");
     expect(d1).not.toBe(d2);
   });
 
   it("hides when from flips to null", () => {
     const [from, setFrom] = createSignal<ArcPoint | null>({ x: 1, y: 10 });
-    const { container } = wrapper(() => <GhostArc from={from()} to={{ x: 9, y: 90 }} />);
+    const { container } = wrapper(() => (
+      <GhostArc from={from()} to={{ x: 9, y: 90 }} />
+    ));
     expect(container.querySelector(".sui-chart__ghost-arc")).toBeTruthy();
     setFrom(null);
     expect(container.querySelector(".sui-chart__ghost-arc")).toBeNull();
@@ -96,7 +110,9 @@ describe("GhostArc — anchor mode", () => {
     ));
     const path = container.querySelector(".sui-chart__ghost-arc")!;
     // Path begins with "M ax 0 ..." — both endpoints sit at y=0 in plot coords.
-    expect(path.getAttribute("d")).toMatch(/^M\s+[\d.-]+\s+0\s+Q\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+\s+0$/);
+    expect(path.getAttribute("d")).toMatch(
+      /^M\s+[\d.-]+\s+0\s+Q\s+[\d.-]+\s+[\d.-]+\s+[\d.-]+\s+0$/,
+    );
   });
 
   it("anchor='above' produces identical path for different data-y values (y ignored)", () => {
@@ -106,16 +122,17 @@ describe("GhostArc — anchor mode", () => {
     const { container: b } = wrapper(() => (
       <GhostArc anchor="above" from={{ x: 2, y: 50 }} to={{ x: 8, y: 50 }} />
     ));
-    expect(
-      a.querySelector(".sui-chart__ghost-arc")!.getAttribute("d"),
-    ).toBe(b.querySelector(".sui-chart__ghost-arc")!.getAttribute("d"));
+    expect(a.querySelector(".sui-chart__ghost-arc")!.getAttribute("d")).toBe(
+      b.querySelector(".sui-chart__ghost-arc")!.getAttribute("d"),
+    );
   });
 
   it("anchor='above' bypasses the plot clip (so apex above y=0 is visible)", () => {
     const { container } = wrapper(() => (
       <GhostArc anchor="above" from={{ x: 1, y: 10 }} to={{ x: 9, y: 90 }} />
     ));
-    const group = container.querySelector(".sui-chart__ghost-arc")!.parentElement!;
+    const group = container.querySelector(".sui-chart__ghost-arc")!
+      .parentElement!;
     expect(group.hasAttribute("clip-path")).toBe(false);
   });
 
@@ -123,7 +140,9 @@ describe("GhostArc — anchor mode", () => {
     const { container } = wrapper(() => (
       <GhostArc anchor="above" from={{ x: 1, y: 0 }} to={{ x: 9, y: 0 }} />
     ));
-    const d = container.querySelector(".sui-chart__ghost-arc")!.getAttribute("d")!;
+    const d = container
+      .querySelector(".sui-chart__ghost-arc")!
+      .getAttribute("d")!;
     // Bezier control y (the second number after Q) should be negative.
     const match = d.match(/Q\s+[\d.-]+\s+(-?[\d.]+)/)!;
     expect(Number(match[1])).toBeLessThan(0);
@@ -144,9 +163,13 @@ describe("GhostArc — annotation-lane integration", () => {
         <GhostArc anchor="above" from={{ x: 2, y: 10 }} to={{ x: 8, y: 90 }} />
       </Chart>
     ));
-    const d = container.querySelector(".sui-chart__ghost-arc")!.getAttribute("d")!;
+    const d = container
+      .querySelector(".sui-chart__ghost-arc")!
+      .getAttribute("d")!;
     // "M ax ay ..." — ay should be -16 (lane center).
-    const m = d.match(/^M\s+[\d.-]+\s+(-?[\d.]+)\s+Q\s+[\d.-]+\s+(-?[\d.]+)\s+[\d.-]+\s+(-?[\d.]+)$/);
+    const m = d.match(
+      /^M\s+[\d.-]+\s+(-?[\d.]+)\s+Q\s+[\d.-]+\s+(-?[\d.]+)\s+[\d.-]+\s+(-?[\d.]+)$/,
+    );
     expect(m).not.toBeNull();
     expect(Number(m![1])).toBeCloseTo(-16, 1);
     // End-y also clamped to lane center.
@@ -170,10 +193,11 @@ describe("GhostArc — annotation-lane integration", () => {
         <GhostArc anchor="above" from={{ x: 2, y: 10 }} to={{ x: 8, y: 90 }} />
       </Chart>
     ));
-    const group = container
-      .querySelector(".sui-chart__ghost-arc")!
+    const group = container.querySelector(".sui-chart__ghost-arc")!
       .parentElement!;
-    expect(group.getAttribute("clip-path")).toMatch(/^url\(#sui-chart-annotation-lane-clip-/);
+    expect(group.getAttribute("clip-path")).toMatch(
+      /^url\(#sui-chart-annotation-lane-clip-/,
+    );
   });
 
   it("anchor='above' without a lane still uses the legacy y=0 anchor", () => {
@@ -193,6 +217,8 @@ describe("GhostArc — curried variants", () => {
     const { container } = wrapper(() => (
       <WarningGhostArc from={{ x: 1, y: 10 }} to={{ x: 9, y: 90 }} />
     ));
-    expect(container.querySelector(".sui-chart__ghost-arc")!.getAttribute("stroke")).toBe("var(--sui-warning)");
+    expect(
+      container.querySelector(".sui-chart__ghost-arc")!.getAttribute("stroke"),
+    ).toBe("var(--sui-warning)");
   });
 });

@@ -18,18 +18,12 @@
 //
 // Factory: createThreadGroup().
 // ============================================
-import {
-  type Component,
-  type JSX,
-  mergeProps,
-  splitProps,
-} from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./ThreadGroup.css";
 
 export type ThreadGroupVariant = "self" | "other";
 
-export interface ThreadGroupProps
-  extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface ThreadGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Reply nesting depth — `0` = top-level. Controls left padding when threaded. */
   depth: number;
   /** Accent color for the left border (and any consumer-driven tint). */
@@ -65,11 +59,7 @@ export const ThreadGroup: Component<ThreadGroupProps> = (props) => {
   const threaded = (): boolean => local.threaded ?? true;
 
   const rootClass = (): string =>
-    clsx(
-      "sui-thread-group",
-      `sui-thread-group--${local.variant}`,
-      local.class,
-    );
+    clsx("sui-thread-group", `sui-thread-group--${local.variant}`, local.class);
 
   const rootStyle = (): JSX.CSSProperties => {
     const base =

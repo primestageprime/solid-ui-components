@@ -113,17 +113,41 @@ describe("ScrubChart chart-frame drag", () => {
         renderChart={() => <svg />}
       />
     ));
-    const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
+    const overlay = container.querySelector(
+      ".sui-scrub-chart__overlay",
+    )! as HTMLDivElement;
     const axisEl = container.querySelector(".sui-date-axis")! as HTMLDivElement;
     overlay.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+      ({
+        left: 0,
+        top: 0,
+        width: 1200,
+        height: 200,
+        right: 1200,
+        bottom: 200,
+        x: 0,
+        y: 0,
+        toJSON: () => "",
+      }) as DOMRect;
     axisEl.scrollLeft = 0;
 
     // 31 cells across 1200 px → dayPitch ≈ 38.71. cellWidth = 60. So a 100-px
     // graph drag should scroll the axis by 100 * (60 / 38.71) ≈ 155 px.
-    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointermove", { clientX: 700, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointerup", { clientX: 700, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerdown", {
+      clientX: 600,
+      clientY: 100,
+      pointerId: 1,
+    });
+    firePointer(overlay, "pointermove", {
+      clientX: 700,
+      clientY: 100,
+      pointerId: 1,
+    });
+    firePointer(overlay, "pointerup", {
+      clientX: 700,
+      clientY: 100,
+      pointerId: 1,
+    });
 
     expect(onScrub).not.toHaveBeenCalled();
     expect(axisEl.scrollLeft).toBeGreaterThan(140);
@@ -144,18 +168,40 @@ describe("ScrubChart chart-frame click", () => {
         renderChart={() => <svg />}
       />
     ));
-    const frame = container.querySelector(".sui-scrub-chart__frame")! as HTMLDivElement;
-    const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
+    const frame = container.querySelector(
+      ".sui-scrub-chart__frame",
+    )! as HTMLDivElement;
+    const overlay = container.querySelector(
+      ".sui-scrub-chart__overlay",
+    )! as HTMLDivElement;
     // Stub the chart frame's bounding box (cellAtClientX measures from it,
     // not from the overlay).
     frame.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+      ({
+        left: 0,
+        top: 0,
+        width: 1200,
+        height: 200,
+        right: 1200,
+        bottom: 200,
+        x: 0,
+        y: 0,
+        toJSON: () => "",
+      }) as DOMRect;
 
     // 31 cells across 1200 px → dayPitch ≈ 38.71. Cell 15's centre sits at
     // x ≈ 600; the pointer barely moves so the gesture stays under the 4-px
     // pan threshold and resolves as a click.
-    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointerup", { clientX: 601, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerdown", {
+      clientX: 600,
+      clientY: 100,
+      pointerId: 1,
+    });
+    firePointer(overlay, "pointerup", {
+      clientX: 601,
+      clientY: 100,
+      pointerId: 1,
+    });
 
     expect(onScrub).toHaveBeenCalledTimes(1);
     expect(onScrub.mock.calls[0][0]).toBe(15);
@@ -173,16 +219,42 @@ describe("ScrubChart chart-frame click", () => {
         renderChart={() => <svg />}
       />
     ));
-    const frame = container.querySelector(".sui-scrub-chart__frame")! as HTMLDivElement;
-    const overlay = container.querySelector(".sui-scrub-chart__overlay")! as HTMLDivElement;
+    const frame = container.querySelector(
+      ".sui-scrub-chart__frame",
+    )! as HTMLDivElement;
+    const overlay = container.querySelector(
+      ".sui-scrub-chart__overlay",
+    )! as HTMLDivElement;
     frame.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, width: 1200, height: 200, right: 1200, bottom: 200, x: 0, y: 0, toJSON: () => "" }) as DOMRect;
+      ({
+        left: 0,
+        top: 0,
+        width: 1200,
+        height: 200,
+        right: 1200,
+        bottom: 200,
+        x: 0,
+        y: 0,
+        toJSON: () => "",
+      }) as DOMRect;
 
     // Drag well past threshold, then release. Even if the release x lands
     // back near the start (zero net displacement), the pan flag is sticky.
-    firePointer(overlay, "pointerdown", { clientX: 600, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointermove", { clientX: 700, clientY: 100, pointerId: 1 });
-    firePointer(overlay, "pointerup", { clientX: 600, clientY: 100, pointerId: 1 });
+    firePointer(overlay, "pointerdown", {
+      clientX: 600,
+      clientY: 100,
+      pointerId: 1,
+    });
+    firePointer(overlay, "pointermove", {
+      clientX: 700,
+      clientY: 100,
+      pointerId: 1,
+    });
+    firePointer(overlay, "pointerup", {
+      clientX: 600,
+      clientY: 100,
+      pointerId: 1,
+    });
 
     expect(onScrub).not.toHaveBeenCalled();
   });

@@ -9,7 +9,13 @@ import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import "./Text.css";
 
-export type TextVariant = "value" | "label" | "title" | "body" | "units" | "sublabel";
+export type TextVariant =
+  | "value"
+  | "label"
+  | "title"
+  | "body"
+  | "units"
+  | "sublabel";
 
 export interface TextProps extends JSX.HTMLAttributes<HTMLElement> {
   variant?: TextVariant;
@@ -36,12 +42,19 @@ export const Text: Component<TextProps> = (props) => {
 
   const mergedStyle = (): JSX.CSSProperties | undefined => {
     if (!local.color) return local.style as JSX.CSSProperties | undefined;
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
     return { ...base, color: local.color };
   };
 
   return (
-    <Dynamic component={local.as || "span"} class={classes()} style={mergedStyle()} {...others}>
+    <Dynamic
+      component={local.as || "span"}
+      class={classes()}
+      style={mergedStyle()}
+      {...others}
+    >
       {local.children}
     </Dynamic>
   );
@@ -53,6 +66,8 @@ export type TextOverrides = Pick<TextProps, "variant" | "color" | "as">;
 /** Props that remain available to consumers of a curried Text variant. */
 export type TextDataProps = Omit<TextProps, keyof TextOverrides>;
 
-export function createText(defaults: Partial<Omit<TextProps, "children">>): Component<TextDataProps> {
+export function createText(
+  defaults: Partial<Omit<TextProps, "children">>,
+): Component<TextDataProps> {
   return (props) => <Text {...mergeProps(defaults, props)} />;
 }

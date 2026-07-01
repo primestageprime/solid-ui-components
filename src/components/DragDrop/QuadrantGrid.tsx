@@ -21,7 +21,12 @@ export interface QuadrantCellConfig {
 
 export interface QuadrantGridProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Exactly 4 cell configs, rendered in order: top-left, top-right, bottom-left, bottom-right. */
-  cells: [QuadrantCellConfig, QuadrantCellConfig, QuadrantCellConfig, QuadrantCellConfig];
+  cells: [
+    QuadrantCellConfig,
+    QuadrantCellConfig,
+    QuadrantCellConfig,
+    QuadrantCellConfig,
+  ];
 }
 
 export const QuadrantGrid: Component<QuadrantGridProps> = (props) => {
@@ -37,7 +42,10 @@ export const QuadrantGrid: Component<QuadrantGridProps> = (props) => {
     <div class={classes()} {...others}>
       <For each={local.cells}>
         {(cell) => (
-          <div class="sui-quadrant-grid__cell" style={{ "--sui-quadrant-color": cell.color }}>
+          <div
+            class="sui-quadrant-grid__cell"
+            style={{ "--sui-quadrant-color": cell.color }}
+          >
             <div class="sui-quadrant-grid__label">{cell.label}</div>
             <div class="sui-quadrant-grid__content">{cell.children}</div>
           </div>

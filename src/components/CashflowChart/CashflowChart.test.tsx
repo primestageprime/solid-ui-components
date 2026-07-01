@@ -1,9 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { WeeklyCashflowChart, type WeeklyCashflowChartData, type WeeklyChartBar } from "./CashflowChart";
+import {
+  WeeklyCashflowChart,
+  type WeeklyCashflowChartData,
+  type WeeklyChartBar,
+} from "./CashflowChart";
 
 /** Build a chart bar, defaulting every numeric field to 0. */
-function bar(week_start: string, over: Partial<WeeklyChartBar> = {}): WeeklyChartBar {
+function bar(
+  week_start: string,
+  over: Partial<WeeklyChartBar> = {},
+): WeeklyChartBar {
   return {
     week_start,
     month_label: "",
@@ -26,7 +33,9 @@ function bar(week_start: string, over: Partial<WeeklyChartBar> = {}): WeeklyChar
 
 /** Read the rendered y-axis tick label texts. */
 function yTickLabels(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll(".rc-cashflow__label-y")).map((n) => n.textContent ?? "");
+  return Array.from(container.querySelectorAll(".rc-cashflow__label-y")).map(
+    (n) => n.textContent ?? "",
+  );
 }
 
 // Minimal mock ResizeObserver: jsdom has none, so we install one that captures
@@ -69,14 +78,18 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
     MockResizeObserver.observed = [];
     MockResizeObserver.disconnected = false;
     rafQueue = [];
-    vi.stubGlobal("ResizeObserver", MockResizeObserver as unknown as typeof ResizeObserver);
+    vi.stubGlobal(
+      "ResizeObserver",
+      MockResizeObserver as unknown as typeof ResizeObserver,
+    );
     vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
       rafQueue.push(cb);
       return rafQueue.length; // 1-based handle
     });
     vi.stubGlobal("cancelAnimationFrame", (handle: number) => {
       // handle is 1-based; clear the slot so a flush skips it.
-      if (handle >= 1 && handle <= rafQueue.length) rafQueue[handle - 1] = () => {};
+      if (handle >= 1 && handle <= rafQueue.length)
+        rafQueue[handle - 1] = () => {};
     });
   });
 
@@ -91,7 +104,9 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
   };
 
   it("does not update size synchronously inside the observer callback", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={EMPTY_DATA} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={EMPTY_DATA} />
+    ));
     const svg = container.querySelector("svg.rc-cashflow")!;
     const before = svg.getAttribute("viewBox");
 
@@ -106,7 +121,9 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
   });
 
   it("coalesces rapid resizes by cancelling the pending frame", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={EMPTY_DATA} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={EMPTY_DATA} />
+    ));
     const svg = container.querySelector("svg.rc-cashflow")!;
 
     MockResizeObserver.lastCallback!([entry(640, 480)], {} as ResizeObserver);
@@ -118,15 +135,22 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
   });
 
   it("rounds fractional box sizes to whole pixels", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={EMPTY_DATA} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={EMPTY_DATA} />
+    ));
     const svg = container.querySelector("svg.rc-cashflow")!;
-    MockResizeObserver.lastCallback!([entry(640.4, 480.6)], {} as ResizeObserver);
+    MockResizeObserver.lastCallback!(
+      [entry(640.4, 480.6)],
+      {} as ResizeObserver,
+    );
     flushRaf();
     expect(svg.getAttribute("viewBox")).toBe("0 0 640 481");
   });
 
   it("pins the height prop and only tracks width from the observer", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={EMPTY_DATA} height={300} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={EMPTY_DATA} height={300} />
+    ));
     const svg = container.querySelector("svg.rc-cashflow")!;
     expect(svg.getAttribute("viewBox")).toBe("0 0 1000 300");
     MockResizeObserver.lastCallback!([entry(640, 480)], {} as ResizeObserver);
@@ -139,10 +163,13 @@ describe("WeeklyCashflowChart ResizeObserver (loop-safe)", () => {
 describe("WeeklyCashflowChart y-domain (degenerate → $0-anchored)", () => {
   // formatDollars renders negatives with a leading "-" (e.g. "-$100k"). A
   // $0-anchored domain therefore produces NO label starting with "-".
-  const hasNegativeTick = (labels: string[]) => labels.some((t) => t.trim().startsWith("-"));
+  const hasNegativeTick = (labels: string[]) =>
+    labels.some((t) => t.trim().startsWith("-"));
 
   it("anchors the domain at $0 when there are no bars", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={{ bars: [] }} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={{ bars: [] }} />
+    ));
     const labels = yTickLabels(container);
     expect(labels.length).toBeGreaterThan(0);
     expect(hasNegativeTick(labels)).toBe(false);
@@ -164,7 +191,10 @@ describe("WeeklyCashflowChart y-domain (degenerate → $0-anchored)", () => {
       bars: [
         bar("2026-06-01", { revenue_cents: 500_000, balance_cents: 500_000 }),
         // A real, deep negative balance — the chart must show negative ticks.
-        bar("2026-06-08", { expense_cents: 9_000_000, balance_cents: -8_500_000 }),
+        bar("2026-06-08", {
+          expense_cents: 9_000_000,
+          balance_cents: -8_500_000,
+        }),
       ],
     };
     const { container } = render(() => <WeeklyCashflowChart data={data} />);
@@ -173,7 +203,9 @@ describe("WeeklyCashflowChart y-domain (degenerate → $0-anchored)", () => {
   });
 
   it("respects an explicit yMax even when data is degenerate", () => {
-    const { container } = render(() => <WeeklyCashflowChart data={{ bars: [] }} yMax={5_000_000} />);
+    const { container } = render(() => (
+      <WeeklyCashflowChart data={{ bars: [] }} yMax={5_000_000} />
+    ));
     const labels = yTickLabels(container);
     // $0-anchored bottom, but the top is driven by the manual yMax ($50k).
     expect(hasNegativeTick(labels)).toBe(false);

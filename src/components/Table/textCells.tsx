@@ -15,9 +15,14 @@ import type { CellRendererProps } from "./cellStyle";
 // ============================================
 // ID Renderer
 // ============================================
-export const IdCell: Component<CellRendererProps<string | number | null | undefined>> = (props) => {
+export const IdCell: Component<
+  CellRendererProps<string | number | null | undefined>
+> = (props) => {
   return (
-    <Show when={props.value != null && props.value !== ""} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null && props.value !== ""}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-id">{props.value}</span>
     </Show>
   );
@@ -26,9 +31,14 @@ export const IdCell: Component<CellRendererProps<string | number | null | undefi
 // ============================================
 // String Renderer
 // ============================================
-export const StringCell: Component<CellRendererProps<string | null | undefined>> = (props) => {
+export const StringCell: Component<
+  CellRendererProps<string | null | undefined>
+> = (props) => {
   return (
-    <Show when={props.value != null && props.value !== ""} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null && props.value !== ""}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <span class="cell-string">{props.value}</span>
     </Show>
   );
@@ -48,7 +58,8 @@ export const StringCell: Component<CellRendererProps<string | null | undefined>>
  */
 export type LongTextReveal = "inline" | "tooltip";
 
-export interface LongTextCellProps extends CellRendererProps<string | null | undefined> {
+export interface LongTextCellProps
+  extends CellRendererProps<string | null | undefined> {
   /**
    * Character-count truncation threshold. Applies only when `clampLines` is
    * not set. Defaults to 50.
@@ -94,7 +105,8 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
 
   // Combined truncation flag — char-count when clampLines unset, overflow
   // measurement when clampLines is set.
-  const isTruncated = () => (isClampMode() ? clampOverflow() : isCharTruncated());
+  const isTruncated = () =>
+    isClampMode() ? clampOverflow() : isCharTruncated();
 
   // Display text: in clamp mode we always render the full value and let CSS
   // handle the visual truncation. In char-count mode we slice on truncation.
@@ -116,7 +128,9 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
       setClampOverflow(false);
       return;
     }
-    const overflowed = el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+    const overflowed =
+      el.scrollHeight > el.clientHeight + 1 ||
+      el.scrollWidth > el.clientWidth + 1;
     setClampOverflow(overflowed);
   };
 
@@ -165,7 +179,10 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
   );
 
   return (
-    <Show when={props.value != null && props.value !== ""} fallback={<span class="cell-empty">—</span>}>
+    <Show
+      when={props.value != null && props.value !== ""}
+      fallback={<span class="cell-empty">—</span>}
+    >
       <Show
         when={revealMode() === "tooltip"}
         fallback={

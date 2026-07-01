@@ -11,7 +11,9 @@ describe("formatDateTimeRange", () => {
   it("datetime mode, cross-day, both endpoints — keeps both dates with both times", () => {
     expect(
       formatDateTimeRange("2026-02-13T08:30:00Z", "2026-02-15T14:15:00Z"),
-    ).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} — \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+    ).toMatch(
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2} — \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+    );
   });
 
   it("datetime mode, no end — appends 'ongoing' suffix", () => {
@@ -25,14 +27,18 @@ describe("formatDateTimeRange", () => {
 
   it("date mode, both endpoints — renders dates only, no times", () => {
     expect(
-      formatDateTimeRange("2026-02-13T08:30:00Z", "2026-02-15T14:15:00Z", "date"),
+      formatDateTimeRange(
+        "2026-02-13T08:30:00Z",
+        "2026-02-15T14:15:00Z",
+        "date",
+      ),
     ).toMatch(/^\d{4}-\d{2}-\d{2} — \d{4}-\d{2}-\d{2}$/);
   });
 
   it("date mode, no end — appends 'ongoing' suffix", () => {
-    expect(formatDateTimeRange("2026-02-13T08:30:00Z", undefined, "date")).toMatch(
-      /^\d{4}-\d{2}-\d{2} — ongoing$/,
-    );
+    expect(
+      formatDateTimeRange("2026-02-13T08:30:00Z", undefined, "date"),
+    ).toMatch(/^\d{4}-\d{2}-\d{2} — ongoing$/);
   });
 
   it("zero-pads single-digit month / day / hour / minute", () => {

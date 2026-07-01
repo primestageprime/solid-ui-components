@@ -118,7 +118,11 @@ export function clampRanges<T extends Range>(
   xMax: number,
 ): T[] {
   return ranges
-    .map((r) => ({ ...r, start: Math.max(xMin, r.start), end: Math.min(xMax, r.end) }))
+    .map((r) => ({
+      ...r,
+      start: Math.max(xMin, r.start),
+      end: Math.min(xMax, r.end),
+    }))
     .filter((r) => r.end > r.start);
 }
 
@@ -150,7 +154,11 @@ export function alarmPipeline(
   const ranges = detectRanges(data, opts.yThreshold);
   const padded = padRanges(ranges, opts.padFraction ?? 0, opts.xDomainWidth);
   const hotZones = findHotZones(padded, opts.depthThreshold ?? 0);
-  const visibleRanges = clampRanges(subtractZones(padded, hotZones), xMin, xMax);
+  const visibleRanges = clampRanges(
+    subtractZones(padded, hotZones),
+    xMin,
+    xMax,
+  );
   const visibleHotZones = clampRanges(hotZones, xMin, xMax);
   return { ranges, padded, hotZones, visibleRanges, visibleHotZones };
 }

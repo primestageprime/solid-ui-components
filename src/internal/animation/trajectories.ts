@@ -136,7 +136,8 @@ export interface LanePhases {
 
 /** Compute phase fractions for a timing config. */
 export function phasesFor(timing: LaneTimingConfig): LanePhases {
-  const total = timing.slurpMs + timing.moveMs + timing.arrowSettleMs + timing.slurpMs;
+  const total =
+    timing.slurpMs + timing.moveMs + timing.arrowSettleMs + timing.slurpMs;
   return {
     total,
     leaveEnd: timing.slurpMs / total,
@@ -150,8 +151,10 @@ export function phasesFor(timing: LaneTimingConfig): LanePhases {
 export const MS_SLURP_MS = DEFAULT_TIMING.slurpMs;
 export const MS_MOVE_MS = DEFAULT_TIMING.moveMs;
 export const MS_PHASE_TOTAL =
-  DEFAULT_TIMING.slurpMs + DEFAULT_TIMING.moveMs +
-  DEFAULT_TIMING.arrowSettleMs + DEFAULT_TIMING.slurpMs;
+  DEFAULT_TIMING.slurpMs +
+  DEFAULT_TIMING.moveMs +
+  DEFAULT_TIMING.arrowSettleMs +
+  DEFAULT_TIMING.slurpMs;
 export const PHASE_LEAVE_END = DEFAULT_TIMING.slurpMs / MS_PHASE_TOTAL;
 export const PHASE_MOVE_END =
   (DEFAULT_TIMING.slurpMs + DEFAULT_TIMING.moveMs) / MS_PHASE_TOTAL;
@@ -161,7 +164,11 @@ export const PHASE_MOVE_END =
 export const lerp = (a: number, b: number, t: number): number =>
   a + (b - a) * t;
 export const ease = (t: number): number => 1 - (1 - t) ** 3;
-export const windowProgress = (t: number, start: number, end: number): number => {
+export const windowProgress = (
+  t: number,
+  start: number,
+  end: number,
+): number => {
   if (t <= start) return 0;
   if (t >= end) return 1;
   return (t - start) / (end - start);
@@ -215,9 +222,10 @@ export function slurpRectMorph(
   const leadingX = lerp(lozNearEdgeX, leadingFarX, ease(leadingT));
   const leadingH = lerp(SLURP_SLIT_H, card.height, ease(leadingT));
   const trailingH = lerp(SLURP_SLIT_H, card.height, ease(trailingHT));
-  const trailingX = side === "left"
-    ? Math.min(lozNearEdgeX, leadingX + card.width)
-    : Math.max(lozNearEdgeX, leadingX - card.width);
+  const trailingX =
+    side === "left"
+      ? Math.min(lozNearEdgeX, leadingX + card.width)
+      : Math.max(lozNearEdgeX, leadingX - card.width);
 
   const yT = windowProgress(t, 0.0, 0.7);
   const morphCy = lerp(loz.y, card.y, ease(yT));
@@ -409,8 +417,10 @@ export interface LozengeRects {
 // trajectory — it just evaluates it at the current `t`.
 
 /** Shared status interpolation: prev until leaveEnd, then next. */
-const stayingStatusAt = (prev: CardStatus, next: CardStatus, leaveEnd: number) =>
-  (t: number): CardStatus => (t < leaveEnd ? prev : next);
+const stayingStatusAt =
+  (prev: CardStatus, next: CardStatus, leaveEnd: number) =>
+  (t: number): CardStatus =>
+    t < leaveEnd ? prev : next;
 
 function buildStayingTrajectory(
   id: string,
@@ -453,9 +463,8 @@ function buildLeavingTrajectory(
   // Single-pixel anchor at the lozenge's inner edge (where the morph
   // converges to). The arrow tip will track the morph's leading edge
   // throughout the slurp and land here.
-  const innerEdgeX = side === "left"
-    ? loz.x - loz.width / 2
-    : loz.x + loz.width / 2;
+  const innerEdgeX =
+    side === "left" ? loz.x - loz.width / 2 : loz.x + loz.width / 2;
   const _lozPixel: Rect = {
     x: innerEdgeX,
     y: loz.y,
@@ -524,9 +533,8 @@ function buildArrivingTrajectory(
   // Single-pixel anchor at the lozenge's inner edge (the edge facing
   // the visible cards). This is where the arrow attaches BEFORE the
   // slurp begins and where the morph's leading edge starts.
-  const innerEdgeX = side === "left"
-    ? loz.x - loz.width / 2
-    : loz.x + loz.width / 2;
+  const innerEdgeX =
+    side === "left" ? loz.x - loz.width / 2 : loz.x + loz.width / 2;
   const _lozPixel: Rect = {
     x: innerEdgeX,
     y: loz.y,
@@ -542,12 +550,7 @@ function buildArrivingTrajectory(
   return {
     id,
     isParent,
-    modeAt: (t) =>
-      t < slurpStart
-        ? "gone"
-        : t >= 1 - 1e-9
-          ? "card"
-          : "morph",
+    modeAt: (t) => (t < slurpStart ? "gone" : t >= 1 - 1e-9 ? "card" : "morph"),
     rectAt: (t) => (t >= 1 - 1e-9 ? nextRect : null),
     pathAt: (t) => {
       if (t < slurpStart || t >= 1 - 1e-9) return null;
@@ -594,9 +597,10 @@ function buildArrivingTrajectory(
       // leading + trailing X — same calculations as slurpRectMorph
       const leadingT = windowProgress(easedT, 0, 0.55);
       const leadingX = lerp(innerEdgeX, leadingFarX, ease(leadingT));
-      const trailingX = side === "left"
-        ? Math.min(innerEdgeX, leadingX + nextRect.width)
-        : Math.max(innerEdgeX, leadingX - nextRect.width);
+      const trailingX =
+        side === "left"
+          ? Math.min(innerEdgeX, leadingX + nextRect.width)
+          : Math.max(innerEdgeX, leadingX - nextRect.width);
       // vertical extent — max of leading + trailing heights
       const leadingH = lerp(SLURP_SLIT_H, nextRect.height, ease(leadingT));
       const trailingHT = windowProgress(easedT, 0.4, 0.88);
@@ -701,7 +705,7 @@ export function buildLaneTrajectory(
       return (effective.get(id) as CardStatus) ?? "TODO";
     }
     const n = frame.find((x) => x.id === id);
-    return ((n?.status as CardStatus) ?? "TODO");
+    return (n?.status as CardStatus) ?? "TODO";
   };
 
   // Edges: union of dep edges referenced in either frame.
@@ -768,8 +772,10 @@ export interface BuildFromSnapshotsArgs {
 export function buildLaneTrajectoryFromSnapshots(
   args: BuildFromSnapshotsArgs,
 ): LaneTrajectory {
-  const isParent = args.isParent ?? ((id) =>
-    !!(args.prev.byId.get(id)?.isParent || args.next.byId.get(id)?.isParent));
+  const isParent =
+    args.isParent ??
+    ((id) =>
+      !!(args.prev.byId.get(id)?.isParent || args.next.byId.get(id)?.isParent));
   const prevStatusOf = args.prevStatusOf ?? (() => "TODO" as CardStatus);
   const nextStatusOf = args.nextStatusOf ?? (() => "TODO" as CardStatus);
   const timing = args.timing ?? DEFAULT_TIMING;

@@ -28,7 +28,13 @@ describe("TrendSparkline", () => {
   it("downsamples long series to capacity, keeping the endpoints", () => {
     const values = Array.from({ length: 730 }, (_, i) => i);
     const { container } = render(() => (
-      <TrendSparkline values={values} trend="down" capacity={50} width={100} height={20} />
+      <TrendSparkline
+        values={values}
+        trend="down"
+        capacity={50}
+        width={100}
+        height={20}
+      />
     ));
     const pts = container
       .querySelector(".sui-trend-sparkline__line")!
@@ -41,9 +47,13 @@ describe("TrendSparkline", () => {
   });
 
   it("renders empty cleanly", () => {
-    const { container } = render(() => <TrendSparkline values={[]} trend="flat" />);
+    const { container } = render(() => (
+      <TrendSparkline values={[]} trend="flat" />
+    ));
     expect(
-      container.querySelector(".sui-trend-sparkline__line")!.getAttribute("points"),
+      container
+        .querySelector(".sui-trend-sparkline__line")!
+        .getAttribute("points"),
     ).toBe("");
   });
 });

@@ -11,7 +11,10 @@ export const DateTimeRangeShowcase: Component<Depth2Props> = (props) => {
   return (
     <div class="component-section">
       <h2>DateTimeRange — Depth 2 (zero CSS)</h2>
-      <p class="text-meta">Composes Text (curried: NowrapBody). ISO-formatted date/time range display.</p>
+      <p class="text-meta">
+        Composes Text (curried: NowrapBody). ISO-formatted date/time range
+        display.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
@@ -48,7 +51,10 @@ export const DateTimeRangeShowcase: Component<Depth2Props> = (props) => {
           <h3>Curried Variants Used</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Text</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("text")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("text")}
+            >
               <div class="depth2-atom__label">NowrapBody</div>
               <NowrapBody>body + as: span + white-space: nowrap</NowrapBody>
             </div>

@@ -32,9 +32,9 @@ const isStatusString = (v: unknown): v is string =>
   typeof v === "string" && v in STATUS_COLORS;
 
 const statusAwareDispatch = (v: unknown): JSX.Element | undefined =>
-  isStatusString(v)
-    ? <StatusPill label={v} color={STATUS_COLORS[v]} />
-    : undefined;
+  isStatusString(v) ? (
+    <StatusPill label={v} color={STATUS_COLORS[v]} />
+  ) : undefined;
 
 export const ValueRendererShowcase: Component = () => {
   return (
@@ -53,7 +53,11 @@ export const ValueRendererShowcase: Component = () => {
         <Stack gap="sm">
           <ValueRenderer label="String" value="Hello, world" />
           <ValueRenderer label="Number" value={1234.5678} />
-          <ValueRenderer label="Precision override" value={1234.5678} numberPrecision={4} />
+          <ValueRenderer
+            label="Precision override"
+            value={1234.5678}
+            numberPrecision={4}
+          />
           <ValueRenderer label="Boolean true" value={true} />
           <ValueRenderer label="Boolean false" value={false} />
           <ValueRenderer label="Null" value={null} />
@@ -70,7 +74,11 @@ export const ValueRendererShowcase: Component = () => {
         <Stack gap="sm">
           <ValueRenderer
             label="Pre-rendered"
-            value={<span style={{ color: "var(--sui-accent)" }}>pre-rendered JSX</span>}
+            value={
+              <span style={{ color: "var(--sui-accent)" }}>
+                pre-rendered JSX
+              </span>
+            }
           />
           <ValueRenderer
             label="Bold"
@@ -84,12 +92,20 @@ export const ValueRendererShowcase: Component = () => {
         <Text variant="sublabel">
           <code>Date</code>, <code>Map</code>, <code>Set</code>, class
           instances, and other non-plain-object types fall through to{" "}
-          <code>String(value)</code>. Supply a <code>renderValue</code>{" "}
-          override for nicer formatting.
+          <code>String(value)</code>. Supply a <code>renderValue</code> override
+          for nicer formatting.
         </Text>
         <Stack gap="sm">
           <ValueRenderer label="Date" value={new Date(1_700_000_000_000)} />
-          <ValueRenderer label="Map" value={new Map([["a", 1], ["b", 2]])} />
+          <ValueRenderer
+            label="Map"
+            value={
+              new Map([
+                ["a", 1],
+                ["b", 2],
+              ])
+            }
+          />
           <ValueRenderer label="Set" value={new Set([1, 2, 3])} />
         </Stack>
       </div>
@@ -97,14 +113,8 @@ export const ValueRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Arrays</h3>
         <Stack gap="sm">
-          <ValueRenderer
-            label="Numbers"
-            value={[1.1, 2.22, 3.333, 4.4444]}
-          />
-          <ValueRenderer
-            label="Strings"
-            value={["alpha", "beta", "gamma"]}
-          />
+          <ValueRenderer label="Numbers" value={[1.1, 2.22, 3.333, 4.4444]} />
+          <ValueRenderer label="Strings" value={["alpha", "beta", "gamma"]} />
         </Stack>
       </div>
 

@@ -52,8 +52,7 @@ export function PivotPills<Dim extends string>(
       <For each={p.order}>
         {(dim, idx) => {
           const active = () => idx() < 2;
-          const isDragOver = () =>
-            dragOver() === idx() && dragFrom() !== idx();
+          const isDragOver = () => dragOver() === idx() && dragFrom() !== idx();
           return (
             <div
               class={`sui-pivot-pills__slot${active() ? " sui-pivot-pills__slot--active" : ""}`}

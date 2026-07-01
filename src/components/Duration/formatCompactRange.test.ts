@@ -14,9 +14,7 @@ describe("formatCompactDuration", () => {
   });
 
   it("renders hours and minutes for spans under one day", () => {
-    expect(formatCompactDuration(2 * 60 * 60_000 + 15 * 60_000)).toBe(
-      "2h 15m",
-    );
+    expect(formatCompactDuration(2 * 60 * 60_000 + 15 * 60_000)).toBe("2h 15m");
   });
 
   it("drops the minute component when it's zero", () => {

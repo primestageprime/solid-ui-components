@@ -69,14 +69,18 @@ import type {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_MULTI_BATCH_ABOVE = 10_000;
-const DEFAULT_COLUMNS = { summary: "Summary", done: "Done", doing: "Doing", todo: "Todo" };
+const DEFAULT_COLUMNS = {
+  summary: "Summary",
+  done: "Done",
+  doing: "Doing",
+  todo: "Todo",
+};
 
 const STATUS_RANK: Record<CategoryStatus, number> = {
   active: 0,
   pending: 1,
   complete: 2,
 };
-
 
 /** Two items are the "same card" iff the same table — keeps card refs STABLE
  *  between renders so a card recreates ONLY on a real transition (firing the
@@ -90,7 +94,8 @@ const sameName = (
 // Public props.
 // ---------------------------------------------------------------------------
 
-export interface ExtractionBoardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface ExtractionBoardProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   config: ExtractionBoardConfig;
   /** The reactive table store. Pass `tables()` from a signal/store. */
   tables: BoardTable[];
@@ -195,8 +200,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
         colsByType: t.colsByType,
         totalRows: t.totalRows,
         transferredRows: t.transferredRows,
-        batches:
-          t.totalRows > multiBatchAbove() ? t.batches : undefined,
+        batches: t.totalRows > multiBatchAbove() ? t.batches : undefined,
       })),
   );
 
@@ -302,8 +306,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   // duration estimate sharpens across the whole extraction, not per-bar.
   const progress = useProgressEngine();
 
-  const rootClass = () =>
-    local.class ? `sui-xb ${local.class}` : "sui-xb";
+  const rootClass = () => (local.class ? `sui-xb ${local.class}` : "sui-xb");
 
   return (
     <div class={rootClass()} ref={flip.setRoot} {...others}>
@@ -406,4 +409,3 @@ export function createExtractionBoard(
 ): Component<ExtractionBoardDataProps> {
   return (props) => <ExtractionBoard {...mergeProps({ config }, props)} />;
 }
-

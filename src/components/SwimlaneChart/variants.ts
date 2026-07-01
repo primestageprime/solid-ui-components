@@ -3,7 +3,10 @@
 // definition time — consumers only pass data + render callbacks.
 
 import type { JSX } from "solid-js";
-import { createSwimlaneChart, type SwimlaneChartDataProps } from "./SwimlaneChart";
+import {
+  createSwimlaneChart,
+  type SwimlaneChartDataProps,
+} from "./SwimlaneChart";
 
 /**
  * LinearFlowSwimlaneChart — DOING-centered linear-progression view.

@@ -17,7 +17,9 @@ describe("AppShell / AppHeader / AppMain", () => {
 
   it("AppHeader inline mode adds inline class", () => {
     const { container } = render(() => <AppHeader inline>x</AppHeader>);
-    expect(container.firstElementChild!.className).toMatch(/app-header--inline/);
+    expect(container.firstElementChild!.className).toMatch(
+      /app-header--inline/,
+    );
   });
 
   it("AppMain padded adds padded class", () => {
@@ -37,7 +39,9 @@ describe("AppNavLink", () => {
 
   it("active=true adds active class", () => {
     const { container } = render(() => <AppNavLink active>Plan</AppNavLink>);
-    expect(container.firstElementChild!.className).toMatch(/app-nav-link--active/);
+    expect(container.firstElementChild!.className).toMatch(
+      /app-nav-link--active/,
+    );
   });
 });
 
@@ -51,12 +55,20 @@ describe("SidebarPanel", () => {
   });
 
   it("custom width applied inline", () => {
-    const { container } = render(() => <SidebarPanel width={420}>x</SidebarPanel>);
-    expect((container.firstElementChild as HTMLElement).style.width).toBe("420px");
+    const { container } = render(() => (
+      <SidebarPanel width={420}>x</SidebarPanel>
+    ));
+    expect((container.firstElementChild as HTMLElement).style.width).toBe(
+      "420px",
+    );
   });
 
   it("side='right' adds the right modifier", () => {
-    const { container } = render(() => <SidebarPanel side="right">x</SidebarPanel>);
-    expect(container.firstElementChild!.className).toMatch(/app-sidebar--right/);
+    const { container } = render(() => (
+      <SidebarPanel side="right">x</SidebarPanel>
+    ));
+    expect(container.firstElementChild!.className).toMatch(
+      /app-sidebar--right/,
+    );
   });
 });

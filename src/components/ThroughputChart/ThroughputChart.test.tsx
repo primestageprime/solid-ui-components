@@ -51,7 +51,10 @@ describe("ThroughputChart — COMPLETION mode (opt-in via `completions`)", () =>
   it("renders bars and a cumulative line when there are completions", () => {
     const { container } = render(() => (
       <ThroughputChart
-        completions={[{ completedAt: NOW - HOUR }, { completedAt: NOW - 2 * HOUR }]}
+        completions={[
+          { completedAt: NOW - HOUR },
+          { completedAt: NOW - 2 * HOUR },
+        ]}
         now={NOW}
         windowHours={48}
         totalCount={10}
@@ -78,7 +81,12 @@ describe("ThroughputChart — COMPLETION mode (opt-in via `completions`)", () =>
 
   it("guards against divide-by-zero when totalCount is 0", () => {
     const { container } = render(() => (
-      <ThroughputChart completions={[]} now={NOW} windowHours={48} totalCount={0} />
+      <ThroughputChart
+        completions={[]}
+        now={NOW}
+        windowHours={48}
+        totalCount={0}
+      />
     ));
     expect(container.querySelector("svg")).not.toBeNull();
   });

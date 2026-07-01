@@ -41,7 +41,9 @@ describe("Dropdown — listbox a11y", () => {
     expect(listbox).toBeTruthy();
     const options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBe(3);
-    const selected = container.querySelector('[role="option"][aria-selected="true"]');
+    const selected = container.querySelector(
+      '[role="option"][aria-selected="true"]',
+    );
     expect(selected?.textContent).toContain("Banana");
   });
 
@@ -49,7 +51,9 @@ describe("Dropdown — listbox a11y", () => {
     const { container, trigger } = mount(() => {}, "c");
     trigger.click();
     await tick();
-    const options = [...container.querySelectorAll<HTMLElement>('[role="option"]')];
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
     // The selected option (Cherry, index 2) is the single tab stop and focused.
     expect(options[2].getAttribute("tabindex")).toBe("0");
     expect(options[0].getAttribute("tabindex")).toBe("-1");
@@ -60,7 +64,9 @@ describe("Dropdown — listbox a11y", () => {
     const { container, trigger } = mount(() => {}, "a");
     trigger.click();
     await tick();
-    const options = [...container.querySelectorAll<HTMLElement>('[role="option"]')];
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
     expect(options[0].getAttribute("tabindex")).toBe("0"); // Apple focused
     key(options[0], "ArrowDown");
     expect(options[1].getAttribute("tabindex")).toBe("0"); // → Banana
@@ -74,7 +80,9 @@ describe("Dropdown — listbox a11y", () => {
     const { container, trigger } = mount((id) => picked.push(id), "a");
     trigger.click();
     await tick();
-    const banana = [...container.querySelectorAll<HTMLElement>('[role="option"]')][1];
+    const banana = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ][1];
     banana.click();
     expect(picked).toEqual(["b"]);
     expect(trigger.getAttribute("aria-expanded")).toBe("false");

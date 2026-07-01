@@ -39,7 +39,10 @@ export const AssigneeChips: Component<AssigneeChipsProps> = (rawProps) => {
 export type AssigneeChipsOverrides = Pick<AssigneeChipsProps, "size">;
 
 /** Props that remain available to consumers of a curried AssigneeChips variant. */
-export type AssigneeChipsDataProps = Omit<AssigneeChipsProps, keyof AssigneeChipsOverrides>;
+export type AssigneeChipsDataProps = Omit<
+  AssigneeChipsProps,
+  keyof AssigneeChipsOverrides
+>;
 
 export function createAssigneeChips(
   defaults: Partial<AssigneeChipsProps>,

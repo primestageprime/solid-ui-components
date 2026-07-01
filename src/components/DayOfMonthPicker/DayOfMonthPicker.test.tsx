@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import {
-  DayOfMonthPicker,
-  createDayOfMonthPicker,
-} from "./DayOfMonthPicker";
+import { DayOfMonthPicker, createDayOfMonthPicker } from "./DayOfMonthPicker";
 
 describe("DayOfMonthPicker", () => {
   it("renders 31 day cells by default", () => {
@@ -112,7 +109,11 @@ describe("DayOfMonthPicker", () => {
     it("numeric cells still call onChange and no day exceeds 28", () => {
       let got: number | null = null;
       const { container } = render(() => (
-        <DayOfMonthPicker value={null} lastOfMonth onChange={(d) => (got = d)} />
+        <DayOfMonthPicker
+          value={null}
+          lastOfMonth
+          onChange={(d) => (got = d)}
+        />
       ));
       const cells = container.querySelectorAll(".sui-dom-picker__cell");
       fireEvent.click(cells[27]);

@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { SlotFillBar } from "./SlotFillBar";
 
-const styleOf = (el: Element) => (el as HTMLElement).getAttribute("style") ?? "";
+const styleOf = (el: Element) =>
+  (el as HTMLElement).getAttribute("style") ?? "";
 
 describe("SlotFillBar", () => {
   it("renders with the expected class", () => {
@@ -65,11 +66,15 @@ describe("SlotFillBar", () => {
   });
 
   it("clamps committed fraction to [0, 1]", () => {
-    const { container: c1 } = render(() => <SlotFillBar slots={10} done={-5} />);
+    const { container: c1 } = render(() => (
+      <SlotFillBar slots={10} done={-5} />
+    ));
     expect(styleOf(c1.querySelector(".sui-slot-fill-bar__static")!)).toMatch(
       /scaleX\(0\)/,
     );
-    const { container: c2 } = render(() => <SlotFillBar slots={10} done={50} />);
+    const { container: c2 } = render(() => (
+      <SlotFillBar slots={10} done={50} />
+    ));
     expect(styleOf(c2.querySelector(".sui-slot-fill-bar__static")!)).toMatch(
       /scaleX\(1\)/,
     );

@@ -8,7 +8,13 @@
 // zero-config form-field role for checklists — the call site passes
 // only data (id, label, hint, checked) and a handler.
 // ============================================
-import { type Component, type JSX, Show, splitProps, createUniqueId } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  splitProps,
+  createUniqueId,
+} from "solid-js";
 import { Checkbox, type CheckboxSize } from "./Checkbox";
 import type { ColorVariant } from "../../types";
 import "./CheckboxField.css";

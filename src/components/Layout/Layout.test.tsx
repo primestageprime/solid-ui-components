@@ -21,7 +21,11 @@ describe("Layout primitives", () => {
   });
 
   it("Row applies align/justify classes", () => {
-    const { container } = render(() => <Row align="center" justify="between">x</Row>);
+    const { container } = render(() => (
+      <Row align="center" justify="between">
+        x
+      </Row>
+    ));
     const cls = container.firstElementChild!.className;
     expect(cls).toMatch(/row--align-center/);
     expect(cls).toMatch(/row--justify-between/);
@@ -47,7 +51,9 @@ describe("Layout curried variants", () => {
   });
 
   it("DelineatedSidebar produces a stack with min-width 400", () => {
-    const { container } = render(() => <DelineatedSidebar>x</DelineatedSidebar>);
+    const { container } = render(() => (
+      <DelineatedSidebar>x</DelineatedSidebar>
+    ));
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toMatch(/min-width: ?400px/);
   });

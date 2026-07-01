@@ -23,7 +23,10 @@
   border-radius: var(--sui-radius-sm, 4px);
   background: var(--sui-bg-elevated, #1e2a3e);
   color: var(--sui-text-primary, #f1f5f9);
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
   /* Dark-theme the native calendar popup. */
   color-scheme: dark;
 }

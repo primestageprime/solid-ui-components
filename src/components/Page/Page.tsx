@@ -42,9 +42,7 @@ export const Page: Component<PageProps> = (props) => {
 
   return (
     <div class={classes()} {...others}>
-      <div class="sui-page__content">
-        {local.children}
-      </div>
+      <div class="sui-page__content">{local.children}</div>
     </div>
   );
 };

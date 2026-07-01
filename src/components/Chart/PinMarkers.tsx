@@ -83,10 +83,14 @@ export interface PinMarkersOverrides {
   size?: number;
   class?: string;
 }
-export type PinMarkersDataProps<TPin extends Pin = Pin> =
-  Omit<PinMarkersProps<TPin>, keyof PinMarkersOverrides>;
+export type PinMarkersDataProps<TPin extends Pin = Pin> = Omit<
+  PinMarkersProps<TPin>,
+  keyof PinMarkersOverrides
+>;
 
-export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>) {
+export function PinMarkers<TPin extends Pin = Pin>(
+  props: PinMarkersProps<TPin>,
+) {
   const ctx = useChart();
   const slotId = brandSlotId(createUniqueId());
   const merged = mergeProps(
@@ -172,7 +176,9 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
             isNearestEmphasized() || isExternallyEmphasized();
           const glyphSize = () => {
             const base = pin.descriptor.size ?? merged.size;
-            return isNearestEmphasized() ? base * (merged.emphasisScale ?? 1.6) : base;
+            return isNearestEmphasized()
+              ? base * (merged.emphasisScale ?? 1.6)
+              : base;
           };
           return (
             <g
@@ -197,7 +203,13 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
                   />
                 }
               >
-                {(rp) => <>{() => rp()(pin, { cx: cx(), cy: cy(), selected: selected() })}</>}
+                {(rp) => (
+                  <>
+                    {() =>
+                      rp()(pin, { cx: cx(), cy: cy(), selected: selected() })
+                    }
+                  </>
+                )}
               </Show>
             </g>
           );
@@ -210,5 +222,9 @@ export function PinMarkers<TPin extends Pin = Pin>(props: PinMarkersProps<TPin>)
 export function createPinMarkers<TPin extends Pin = Pin>(
   defaults: Partial<Omit<PinMarkersProps<TPin>, "children">>,
 ): Component<PinMarkersDataProps<TPin>> {
-  return (props) => <PinMarkers<TPin> {...mergeProps(defaults, props as PinMarkersProps<TPin>)} />;
+  return (props) => (
+    <PinMarkers<TPin>
+      {...mergeProps(defaults, props as PinMarkersProps<TPin>)}
+    />
+  );
 }

@@ -26,7 +26,11 @@ function makeDataTransfer() {
 function fireDrag(
   el: Element,
   type: string,
-  opts: { clientX?: number; clientY?: number; dataTransfer: ReturnType<typeof makeDataTransfer> },
+  opts: {
+    clientX?: number;
+    clientY?: number;
+    dataTransfer: ReturnType<typeof makeDataTransfer>;
+  },
 ) {
   const ev: any = new Event(type, { bubbles: true, cancelable: true });
   ev.clientX = opts.clientX ?? 0;
@@ -48,16 +52,26 @@ function installLayout(labels: string[]) {
     xByLabel.set(l, i * PITCH);
   });
   const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
-    this: Element,
-  ) {
-    const txt = (this.textContent ?? "").replace(/[⋮\s]/g, "");
-    if (xByLabel.has(txt)) {
-      const left = xByLabel.get(txt)!;
-      return { left, top: 0, width: W, height: 24, right: left + W, bottom: 24, x: left, y: 0, toJSON() {} } as DOMRect;
-    }
-    return orig.call(this);
-  });
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: Element) {
+      const txt = (this.textContent ?? "").replace(/[⋮\s]/g, "");
+      if (xByLabel.has(txt)) {
+        const left = xByLabel.get(txt)!;
+        return {
+          left,
+          top: 0,
+          width: W,
+          height: 24,
+          right: left + W,
+          bottom: 24,
+          x: left,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
+      }
+      return orig.call(this);
+    },
+  );
 }
 
 function findPill(container: HTMLElement, label: string): HTMLElement {
@@ -168,12 +182,19 @@ describe("DnDHierarchySortBar integration — full drag drops at cursor intent",
       // dragover the target pill at the requested half
       const over = findPill(root, c.over);
       const rect = over.getBoundingClientRect();
-      const x = c.half === "after" ? rect.left + rect.width * 0.75 : rect.left + rect.width * 0.25;
+      const x =
+        c.half === "after"
+          ? rect.left + rect.width * 0.75
+          : rect.left + rect.width * 0.25;
       fireDrag(over, "dragover", { clientX: x, clientY: 12, dataTransfer: dt });
 
       // drop on whatever element is now under the cursor (re-query target)
       const dropTarget = findPill(root, c.over);
-      fireDrag(dropTarget, "drop", { clientX: x, clientY: 12, dataTransfer: dt });
+      fireDrag(dropTarget, "drop", {
+        clientX: x,
+        clientY: 12,
+        dataTransfer: dt,
+      });
 
       expect(onReorder).toHaveBeenCalled();
       const last = onReorder.mock.calls.at(-1)![0];

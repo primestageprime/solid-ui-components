@@ -24,17 +24,11 @@
 }
 
 .sui-cashflow-cell--positive {
-  background: var(
-    --sui-cashflow-cell-positive-bg,
-    rgba(0, 200, 120, 0.05)
-  );
+  background: var(--sui-cashflow-cell-positive-bg, rgba(0, 200, 120, 0.05));
 }
 
 .sui-cashflow-cell--negative {
-  background: var(
-    --sui-cashflow-cell-negative-bg,
-    rgba(230, 70, 70, 0.05)
-  );
+  background: var(--sui-cashflow-cell-negative-bg, rgba(230, 70, 70, 0.05));
 }
 
 /* Zero-delta days: neutral grey — no colour tint, no bar, no amount label. */
@@ -72,10 +66,7 @@
 
 .sui-cashflow-cell__bar--up {
   bottom: 50%;
-  background: var(
-    --sui-cashflow-positive,
-    rgba(0, 200, 120, 0.85)
-  );
+  background: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
   border-radius: 1px 1px 0 0;
 }
 
@@ -224,6 +215,7 @@
   stroke-width: 1.5;
 }
 
-.sui-cashflow-scrub-chart__marker--selected .sui-cashflow-scrub-chart__marker-line {
+.sui-cashflow-scrub-chart__marker--selected
+  .sui-cashflow-scrub-chart__marker-line {
   opacity: 1;
 }

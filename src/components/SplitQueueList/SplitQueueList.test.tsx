@@ -83,7 +83,8 @@ function mountConsumer(count: number, animationMs = 0, topOnly = false) {
     resolveFocused: () => {
       const list = unresolved();
       const f = focused();
-      const next = (f && list.some((i) => i.id === f) ? f : list[0]?.id) ?? null;
+      const next =
+        (f && list.some((i) => i.id === f) ? f : list[0]?.id) ?? null;
       if (next) resolveKey(next);
     },
   };
@@ -146,7 +147,9 @@ describe("SplitQueueList — full-component enter: TOP grows, panes sum to total
 
   it("starts COLLAPSED at 0 resolved (header only) and GROWS on the first resolve", async () => {
     const c = mountConsumer(6, 400, false); // 6 unresolved, 0 resolved
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
 
     // Floor 0: empty "done" panel is its header only — NOT a 1-row band. (jsdom
     // can't lay out, so the reactive height binding reflects the layout calc:
@@ -168,7 +171,9 @@ describe("SplitQueueList — full-component enter: TOP grows, panes sum to total
 
   it("keeps the resolved row at full rowHeight while the panes tween in lockstep", async () => {
     const c = mountConsumer(6, 400, false); // 6 unresolved, two-panel mode
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
     const bottomUl = c.container.querySelector(
       ".sui-sql__list--bottom",
     ) as HTMLElement;
@@ -252,7 +257,9 @@ describe("SplitQueueList — topOnly at cap: panel holds, list scrolls up", () =
   // at header + topCapRows*rowHeight; the enter animates scrollTop, not height.
   it("caps the panel height at header + topCapRows*rowHeight (never taller)", async () => {
     const c = mountConsumer(8, 0, true); // 8 items, instant anim, topOnly
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
     // Resolve 5 items (well past the 3-row cap).
     for (let i = 0; i < 5; i++) {
       c.resolveFocused();
@@ -267,15 +274,23 @@ describe("SplitQueueList — topOnly at cap: panel holds, list scrolls up", () =
 
   it("at cap, the enter animates scrollTop (monotonic) rather than height", async () => {
     const c = mountConsumer(8, 400, true);
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
     // Fill to the cap first (3 resolved) so the next resolve is AT cap.
     for (let i = 0; i < 3; i++) {
       c.resolveFocused();
       await tick(500);
     }
     // jsdom has no layout, so stub scroll metrics to make a scroll range exist.
-    Object.defineProperty(topUl, "clientHeight", { configurable: true, value: 388 });
-    Object.defineProperty(topUl, "scrollHeight", { configurable: true, value: 508 }); // +1 row
+    Object.defineProperty(topUl, "clientHeight", {
+      configurable: true,
+      value: 388,
+    });
+    Object.defineProperty(topUl, "scrollHeight", {
+      configurable: true,
+      value: 508,
+    }); // +1 row
     topUl.scrollTop = 0;
     const heightBefore = topUl.style.height;
 
@@ -309,11 +324,16 @@ describe("SplitQueueList — topOnly at cap: panel holds, list scrolls up", () =
     // bailed ("card just appears"). The fix guards the pin while a tween owns
     // scrollTop. This asserts resolves #4, #5, #6 each ANIMATE (not pre-snapped).
     const c = mountConsumer(10, 400, true);
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
 
     // clientHeight = cap; scrollHeight grows one row per resolved card, so once
     // past the cap there's always exactly one row of scroll range to animate.
-    Object.defineProperty(topUl, "clientHeight", { configurable: true, value: 388 });
+    Object.defineProperty(topUl, "clientHeight", {
+      configurable: true,
+      value: 388,
+    });
     Object.defineProperty(topUl, "scrollHeight", {
       configurable: true,
       get: () => 28 + c.resolved().length * 120,
@@ -346,8 +366,13 @@ describe("SplitQueueList — topOnly at cap: panel holds, list scrolls up", () =
   it("full two-panel column also animates scrollTop on every cap resolve (pin race)", async () => {
     // Same pin-race guard must hold for the full column's capped scroll-reveal.
     const c = mountConsumer(10, 400, false); // two-panel mode
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
-    Object.defineProperty(topUl, "clientHeight", { configurable: true, value: 388 });
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
+    Object.defineProperty(topUl, "clientHeight", {
+      configurable: true,
+      value: 388,
+    });
     Object.defineProperty(topUl, "scrollHeight", {
       configurable: true,
       get: () => 28 + c.resolved().length * 120,
@@ -405,9 +430,9 @@ describe("SplitQueueList — selection API (selectedKey / onSelect)", () => {
 
   it("no row is --selected when selectedKey is omitted", () => {
     const { container } = mountSelectable(undefined);
-    expect(
-      container.querySelectorAll(".sui-sql__row--selected").length,
-    ).toBe(0);
+    expect(container.querySelectorAll(".sui-sql__row--selected").length).toBe(
+      0,
+    );
   });
 
   it("clicking a resolved row fires onSelect with its key", () => {
@@ -507,7 +532,11 @@ describe("SplitQueueList — random-access exit: collapse lands at the resolved 
 
 describe("SplitQueueList — reverse (unresolve) animation mirrors resolve", () => {
   // Build a consumer that STARTS with some resolved items so we can unresolve.
-  function mountWithResolved(resolvedCount: number, unresolvedCount: number, ms = 400) {
+  function mountWithResolved(
+    resolvedCount: number,
+    unresolvedCount: number,
+    ms = 400,
+  ) {
     const [resolved, setResolved] = createSignal<Item[]>(
       Array.from({ length: resolvedCount }, (_, i) => ({ id: `r${i + 1}` })),
     );
@@ -542,7 +571,9 @@ describe("SplitQueueList — reverse (unresolve) animation mirrors resolve", () 
 
   it("unresolving the done tail animates: top shrinks, bottom grows, panes sum to total", async () => {
     const c = mountWithResolved(2, 2); // r1,r2 done · u1,u2 to-categorize
-    const topUl = c.container.querySelector(".sui-sql__list--top") as HTMLElement;
+    const topUl = c.container.querySelector(
+      ".sui-sql__list--top",
+    ) as HTMLElement;
     const bottomUl = c.container.querySelector(
       ".sui-sql__list--bottom",
     ) as HTMLElement;
@@ -743,14 +774,20 @@ describe("StaticSplitLayout — standalone non-animated layout", () => {
     ));
     const top = container.querySelector(".sui-sql__list--top")!;
     expect(top.getAttribute("aria-label")).toBe("Recent");
-    expect(top.querySelector(".sui-sql__header")?.textContent).toContain("Recent");
+    expect(top.querySelector(".sui-sql__header")?.textContent).toContain(
+      "Recent",
+    );
     expect(top.querySelector(".sui-sql__count")?.textContent).toBe("2");
-    const rows = container.querySelectorAll(".sui-sql__list--top .sui-sql__row");
+    const rows = container.querySelectorAll(
+      ".sui-sql__list--top .sui-sql__row",
+    );
     expect([...rows].map((r) => r.textContent?.replace(/\s/g, ""))).toEqual([
       "✓k1",
       "✓k2",
     ]);
-    expect(container.querySelector(".bottom-probe")?.textContent).toBe("picker");
+    expect(container.querySelector(".bottom-probe")?.textContent).toBe(
+      "picker",
+    );
   });
 
   it("shows the empty label when there are no items", () => {
@@ -782,9 +819,13 @@ describe("SplitQueueList — deprecated `static` delegates to StaticSplitLayout"
     // queue's listbox/option roles are absent (no queue machinery ran).
     expect(container.querySelector(".sui-sql--static")).toBeTruthy();
     expect(
-      container.querySelector(".sui-sql__list--top")?.getAttribute("aria-label"),
+      container
+        .querySelector(".sui-sql__list--top")
+        ?.getAttribute("aria-label"),
     ).toBe("Done");
-    expect(container.querySelectorAll(".sui-sql__list--top .sui-sql__row").length).toBe(2);
+    expect(
+      container.querySelectorAll(".sui-sql__list--top .sui-sql__row").length,
+    ).toBe(2);
     expect(container.querySelector(".legacy-bottom")?.textContent).toBe("form");
     expect(container.querySelector('[role="option"]')).toBeNull();
   });
@@ -810,9 +851,13 @@ describe("SplitQueueList — collapse clones row content (no innerHTML round-tri
     expect(placeholder).toBeTruthy();
     // Content span cloned from the real row — carries the rendered id text
     // (proves the clone copied nodes, not an empty/re-parsed shell).
-    expect(placeholder!.querySelector(".sui-sql__content")?.textContent).toBe("k1");
+    expect(placeholder!.querySelector(".sui-sql__content")?.textContent).toBe(
+      "k1",
+    );
     // Marker overridden to the focused glyph on the forward collapse.
-    expect(placeholder!.querySelector(".sui-sql__marker")?.textContent).toBe("▸");
+    expect(placeholder!.querySelector(".sui-sql__marker")?.textContent).toBe(
+      "▸",
+    );
     await tick(500); // settle
   });
 });
@@ -844,18 +889,16 @@ describe("SplitQueueList — keyboard & ARIA", () => {
     const lists = container.querySelectorAll('[role="listbox"]');
     expect(lists.length).toBe(2); // top (resolved) + bottom (unresolved)
     expect(
-      (container.querySelector(".sui-sql__list--top") as HTMLElement).getAttribute(
-        "aria-label",
-      ),
+      (
+        container.querySelector(".sui-sql__list--top") as HTMLElement
+      ).getAttribute("aria-label"),
     ).toBe("Resolved");
 
     const options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBe(4); // r1, r2, u1, u2
     // Headers are presentational, not options.
     expect(
-      container
-        .querySelector(".sui-sql__header--top")!
-        .getAttribute("role"),
+      container.querySelector(".sui-sql__header--top")!.getAttribute("role"),
     ).toBe("presentation");
   });
 

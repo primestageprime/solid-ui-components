@@ -25,7 +25,9 @@ export function InlineText(props: InlineTextProps) {
 
   const mergedStyle = (): JSX.CSSProperties | string | undefined => {
     if (!local.color) return local.style;
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
     return { ...base, color: local.color };
   };
 

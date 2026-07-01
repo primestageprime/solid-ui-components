@@ -69,7 +69,9 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   });
 
   const mode = createMemo<"bar" | "menu">(() =>
-    containerWidth() === 0 || containerWidth() >= requiredWidth() ? "bar" : "menu",
+    containerWidth() === 0 || containerWidth() >= requiredWidth()
+      ? "bar"
+      : "menu",
   );
 
   onMount(() => {
@@ -144,7 +146,9 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
                     <button
                       type="button"
                       class={`sui-msf__menu-item${
-                        isSelected(opt.value) ? " sui-msf__menu-item--active" : ""
+                        isSelected(opt.value)
+                          ? " sui-msf__menu-item--active"
+                          : ""
                       }`}
                       onClick={() => onChipClick(opt.value)}
                     >
@@ -180,4 +184,3 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
     </div>
   );
 };
-

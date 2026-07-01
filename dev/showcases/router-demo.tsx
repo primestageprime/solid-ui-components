@@ -37,15 +37,61 @@ const dy = 70;
 const cx = CELL_W / 2;
 const cy = CELL_H / 2;
 const CASES: Case[] = [
-  { id: "NW", label: "target up-left",   from: { x: cx, y: cy }, to: { x: cx - dx, y: cy - dy } },
-  { id: "N",  label: "target up",        from: { x: cx, y: cy }, to: { x: cx,      y: cy - dy } },
-  { id: "NE", label: "target up-right",  from: { x: cx, y: cy }, to: { x: cx + dx, y: cy - dy } },
-  { id: "W",  label: "target left",      from: { x: cx, y: cy }, to: { x: cx - dx, y: cy } },
-  { id: "C",  label: "target right + obstacle (Ma → T2a)", from: { x: cx - dx, y: cy }, to: { x: cx + dx, y: cy }, obstacles: [{ x: cx, y: cy }] },
-  { id: "E",  label: "target right",     from: { x: cx, y: cy }, to: { x: cx + dx, y: cy } },
-  { id: "SW", label: "target down-left", from: { x: cx, y: cy }, to: { x: cx - dx, y: cy + dy } },
-  { id: "S",  label: "target down",      from: { x: cx, y: cy }, to: { x: cx,      y: cy + dy } },
-  { id: "SE", label: "target down-right",from: { x: cx, y: cy }, to: { x: cx + dx, y: cy + dy } },
+  {
+    id: "NW",
+    label: "target up-left",
+    from: { x: cx, y: cy },
+    to: { x: cx - dx, y: cy - dy },
+  },
+  {
+    id: "N",
+    label: "target up",
+    from: { x: cx, y: cy },
+    to: { x: cx, y: cy - dy },
+  },
+  {
+    id: "NE",
+    label: "target up-right",
+    from: { x: cx, y: cy },
+    to: { x: cx + dx, y: cy - dy },
+  },
+  {
+    id: "W",
+    label: "target left",
+    from: { x: cx, y: cy },
+    to: { x: cx - dx, y: cy },
+  },
+  {
+    id: "C",
+    label: "target right + obstacle (Ma → T2a)",
+    from: { x: cx - dx, y: cy },
+    to: { x: cx + dx, y: cy },
+    obstacles: [{ x: cx, y: cy }],
+  },
+  {
+    id: "E",
+    label: "target right",
+    from: { x: cx, y: cy },
+    to: { x: cx + dx, y: cy },
+  },
+  {
+    id: "SW",
+    label: "target down-left",
+    from: { x: cx, y: cy },
+    to: { x: cx - dx, y: cy + dy },
+  },
+  {
+    id: "S",
+    label: "target down",
+    from: { x: cx, y: cy },
+    to: { x: cx, y: cy + dy },
+  },
+  {
+    id: "SE",
+    label: "target down-right",
+    from: { x: cx, y: cy },
+    to: { x: cx + dx, y: cy + dy },
+  },
 ];
 
 function rectOf(p: { x: number; y: number }) {
@@ -75,7 +121,7 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
         "flex-direction": "column",
         gap: "4px",
         padding: "8px",
-        "background": "var(--sui-bg-secondary)",
+        background: "var(--sui-bg-secondary)",
         border: "1px solid var(--sui-border)",
         "border-radius": "4px",
       }}
@@ -87,7 +133,8 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           color: "var(--sui-text-secondary)",
         }}
       >
-        <span style={{ color: "var(--sui-accent)" }}>{p.c.id}</span> · {p.c.label}
+        <span style={{ color: "var(--sui-accent)" }}>{p.c.id}</span> ·{" "}
+        {p.c.label}
       </div>
       <svg
         width={CELL_W}
@@ -179,7 +226,9 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
   );
 };
 
-export const RouterDemoGrid: Component<{ style: "orthogonal" | "bezier" }> = (p) => (
+export const RouterDemoGrid: Component<{ style: "orthogonal" | "bezier" }> = (
+  p,
+) => (
   <div
     style={{
       display: "grid",

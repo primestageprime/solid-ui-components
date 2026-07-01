@@ -7,9 +7,9 @@ describe("ThreePanelLayout", () => {
     const { container } = render(() => (
       <ThreePanelLayout centerPanel={<div>center</div>} />
     ));
-    expect(container.querySelector(".sui-three-panel__center")?.textContent).toBe(
-      "center",
-    );
+    expect(
+      container.querySelector(".sui-three-panel__center")?.textContent,
+    ).toBe("center");
   });
 
   it("writes the grid-columns custom property from leftPanelWidth", () => {
@@ -34,10 +34,7 @@ describe("ThreePanelLayout", () => {
 
   it("writes --sui-three-panel-aside-max from the asideMaxHeight prop", () => {
     const { container } = render(() => (
-      <ThreePanelLayout
-        asideMaxHeight="none"
-        centerPanel={<div>center</div>}
-      />
+      <ThreePanelLayout asideMaxHeight="none" centerPanel={<div>center</div>} />
     ));
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toMatch(/--sui-three-panel-aside-max: ?none/);
@@ -45,10 +42,7 @@ describe("ThreePanelLayout", () => {
 
   it("accepts an arbitrary CSS length for asideMaxHeight", () => {
     const { container } = render(() => (
-      <ThreePanelLayout
-        asideMaxHeight="60vh"
-        centerPanel={<div>center</div>}
-      />
+      <ThreePanelLayout asideMaxHeight="60vh" centerPanel={<div>center</div>} />
     ));
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toMatch(/--sui-three-panel-aside-max: ?60vh/);

@@ -10,9 +10,7 @@ import { dailyCells } from "../../src/components/DateAxis";
 // + `balanceCents` it gets in `cells`.
 const cashflowAt = (i: number): number =>
   Math.round(
-    Math.sin(i / 3.5) * 1100 +
-      Math.sin(i / 1.6) * 480 +
-      Math.sin(i / 13) * 260,
+    Math.sin(i / 3.5) * 1100 + Math.sin(i / 1.6) * 480 + Math.sin(i / 13) * 260,
   );
 
 const RANGE_START = new Date("2026-05-01");
@@ -101,13 +99,12 @@ export const CashflowScrubChartShowcase: Component = () => {
       <h2>CashflowScrubChart — Domain Composite (Depth 2)</h2>
       <p class="text-meta">
         Bundles <code>ScrubChart</code> with a baked-in cashflow day-cell
-        renderer (date corner + diverging green/red bar + dollar amount) and
-        a baked-in running-balance line drawing. Drop in with{" "}
-        <code>cells: CashflowCell[]</code> +{" "}
-        <code>selected</code> + <code>onScrub</code> — no{" "}
-        <code>renderChart</code> / <code>renderCell</code> boilerplate. For a
-        different visualisation on the same shape of data, drop down to bare{" "}
-        <code>ScrubChart</code>.
+        renderer (date corner + diverging green/red bar + dollar amount) and a
+        baked-in running-balance line drawing. Drop in with{" "}
+        <code>cells: CashflowCell[]</code> + <code>selected</code> +{" "}
+        <code>onScrub</code> — no <code>renderChart</code> /{" "}
+        <code>renderCell</code> boilerplate. For a different visualisation on
+        the same shape of data, drop down to bare <code>ScrubChart</code>.
       </p>
 
       <div class="example-group">
@@ -115,8 +112,8 @@ export const CashflowScrubChartShowcase: Component = () => {
         <p class="text-meta">
           The entire example below is just the JSX above — no render slots.
           Click an axis cell or drag on the chart to scrub; the translucent
-          window band tracks the slice of cells currently visible in the
-          axis viewport (inherited from ScrubChart).
+          window band tracks the slice of cells currently visible in the axis
+          viewport (inherited from ScrubChart).
         </p>
 
         <CashflowScrubChart
@@ -151,8 +148,9 @@ export const CashflowScrubChartShowcase: Component = () => {
         <h3>Auto x-tick cadence on a long range</h3>
         <p class="text-meta">
           The same component with {longCells.length} daily cells (
-          {LONG_RANGE_START.getUTCFullYear()}–{LONG_RANGE_END.getUTCFullYear()}).
-          Per-week ticks would render ~130 labels; <code>xTickCadence="auto"</code>
+          {LONG_RANGE_START.getUTCFullYear()}–{LONG_RANGE_END.getUTCFullYear()}
+          ). Per-week ticks would render ~130 labels;{" "}
+          <code>xTickCadence="auto"</code>
           walks the week→month→quarter→year ladder and picks the finest unit
           whose tick count fits under the default <code>xMaxTicks=12</code>.
           Here that lands on <strong>quarter</strong>.
@@ -169,14 +167,15 @@ export const CashflowScrubChartShowcase: Component = () => {
       <div class="example-group">
         <h3>Multiple balance lines (forecast scenarios)</h3>
         <p class="text-meta">
-          The same actual running-balance line, plus two projection lines
-          passed via <code>balanceSeries</code>. Each is a{" "}
+          The same actual running-balance line, plus two projection lines passed
+          via <code>balanceSeries</code>. Each is a{" "}
           <code>(cell, index) =&gt; number | null</code> accessor; both return{" "}
-          <code>null</code> before <strong>today</strong> so the forecasts
-          only render over the future region (the <code>null</code> gap breaks
-          the line). Styling is consumer-owned — each series carries a CSS{" "}
-          <code>class</code> defined below in a scoped <code>&lt;style&gt;</code>.
-          The y-domain auto-widens to keep the optimistic line in frame.
+          <code>null</code> before <strong>today</strong> so the forecasts only
+          render over the future region (the <code>null</code> gap breaks the
+          line). Styling is consumer-owned — each series carries a CSS{" "}
+          <code>class</code> defined below in a scoped{" "}
+          <code>&lt;style&gt;</code>. The y-domain auto-widens to keep the
+          optimistic line in frame.
         </p>
 
         {/* Consumer-owned series styling — exactly how a real caller would
@@ -319,8 +318,10 @@ export const CashflowScrubChartShowcase: Component = () => {
                 display: "inline-block",
                 width: "14px",
                 height: "10px",
-                background: "var(--sui-cashflow-band-positive, rgba(0,200,120,0.18))",
-                border: "1px solid var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
+                background:
+                  "var(--sui-cashflow-band-positive, rgba(0,200,120,0.18))",
+                border:
+                  "1px solid var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
                 "vertical-align": "middle",
                 "margin-right": "6px",
               }}
@@ -333,8 +334,10 @@ export const CashflowScrubChartShowcase: Component = () => {
                 display: "inline-block",
                 width: "14px",
                 height: "10px",
-                background: "var(--sui-cashflow-band-negative, rgba(230,70,70,0.18))",
-                border: "1px solid var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
+                background:
+                  "var(--sui-cashflow-band-negative, rgba(230,70,70,0.18))",
+                border:
+                  "1px solid var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
                 "vertical-align": "middle",
                 "margin-right": "6px",
               }}
@@ -346,7 +349,8 @@ export const CashflowScrubChartShowcase: Component = () => {
               style={{
                 display: "inline-block",
                 width: "18px",
-                "border-top": "2px dashed var(--sui-text-secondary, rgba(255,255,255,0.7))",
+                "border-top":
+                  "2px dashed var(--sui-text-secondary, rgba(255,255,255,0.7))",
                 "vertical-align": "middle",
                 "margin-right": "6px",
               }}

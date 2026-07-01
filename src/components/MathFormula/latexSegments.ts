@@ -31,7 +31,10 @@ const BREAK_OPS = new Set(["+", "-", "="]);
  * (depth-1) control sequence? Returns the delta and the number of extra
  * characters consumed (the command name + its delimiter), or `null`.
  */
-function leftRight(src: string, i: number): { delta: number; consumed: number } | null {
+function leftRight(
+  src: string,
+  i: number,
+): { delta: number; consumed: number } | null {
   if (src[i] !== "\\") return null;
   if (src.startsWith("\\left", i)) return { delta: 1, consumed: 5 };
   if (src.startsWith("\\right", i)) return { delta: -1, consumed: 6 };

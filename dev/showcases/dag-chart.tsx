@@ -1,6 +1,10 @@
 import { type Component, Show } from "solid-js";
 import { DagChart } from "../../src/components/DagChart";
-import type { DAGNode, DAGEdge, NodeRenderState } from "../../src/components/DagChart";
+import type {
+  DAGNode,
+  DAGEdge,
+  NodeRenderState,
+} from "../../src/components/DagChart";
 
 type TaskNode = {
   label: string;
@@ -28,7 +32,8 @@ const nodes: DAGNode<TaskNode>[] = [
       status: "warning",
       sublabel: "athena",
       estimate: "2h",
-      description: "Create the task input form with validation and loading states.",
+      description:
+        "Create the task input form with validation and loading states.",
     },
   },
   {
@@ -38,7 +43,8 @@ const nodes: DAGNode<TaskNode>[] = [
       status: "warning",
       sublabel: "jenn",
       estimate: "3h",
-      description: "CRUD reducers: create, update status, assign worker, soft-delete.",
+      description:
+        "CRUD reducers: create, update status, assign worker, soft-delete.",
     },
   },
   {
@@ -48,7 +54,8 @@ const nodes: DAGNode<TaskNode>[] = [
       status: "default",
       sublabel: "athena",
       estimate: "1h 30m",
-      description: "Connect form to live subscriptions; handle optimistic updates.",
+      description:
+        "Connect form to live subscriptions; handle optimistic updates.",
     },
   },
   {
@@ -152,7 +159,14 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
         </span>
       </div>
       <Show when={node.data.sublabel || node.data.estimate}>
-        <div style={{ display: "flex", gap: "8px", color: "var(--sui-text-secondary)", "font-size": "11px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            color: "var(--sui-text-secondary)",
+            "font-size": "11px",
+          }}
+        >
           <Show when={node.data.sublabel}>
             <span>{node.data.sublabel}</span>
           </Show>
@@ -170,14 +184,21 @@ export const DagChartShowcase: Component = () => {
     <div class="component-section">
       <h2>DagChart — Primitive (Depth 0)</h2>
       <p class="text-meta">
-        Generic DAG visualizer. Consumer supplies <code>renderNode</code>; supports
-        pan/zoom, focus-driven collapse, and horizontal/vertical layout.
+        Generic DAG visualizer. Consumer supplies <code>renderNode</code>;
+        supports pan/zoom, focus-driven collapse, and horizontal/vertical
+        layout.
       </p>
 
       <div class="example-group">
         <h3>Vertical layout</h3>
         <p class="text-meta">5-node task graph rendered top-to-bottom.</p>
-        <div style={{ height: "420px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
+        <div
+          style={{
+            height: "420px",
+            border: "1px solid var(--sui-border)",
+            "border-radius": "6px",
+          }}
+        >
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -191,7 +212,13 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Horizontal layout</h3>
-        <div style={{ height: "320px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
+        <div
+          style={{
+            height: "320px",
+            border: "1px solid var(--sui-border)",
+            "border-radius": "6px",
+          }}
+        >
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -205,7 +232,13 @@ export const DagChartShowcase: Component = () => {
 
       <div class="example-group" style={{ "margin-top": "32px" }}>
         <h3>Minimal (label + status only)</h3>
-        <div style={{ height: "260px", border: "1px solid var(--sui-border)", "border-radius": "6px" }}>
+        <div
+          style={{
+            height: "260px",
+            border: "1px solid var(--sui-border)",
+            "border-radius": "6px",
+          }}
+        >
           <DagChart
             nodes={minimalNodes}
             edges={minimalEdges}

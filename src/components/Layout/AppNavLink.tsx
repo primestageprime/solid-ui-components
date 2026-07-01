@@ -10,7 +10,8 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./Layout.css";
 
-export interface AppNavLinkProps extends Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
+export interface AppNavLinkProps
+  extends Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   active?: boolean;
 }
 

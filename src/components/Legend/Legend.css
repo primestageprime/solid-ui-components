@@ -28,8 +28,7 @@
 }
 
 .sui-legend__item--highlighted {
-  outline: 1px solid
-    var(--sui-text-secondary);
+  outline: 1px solid var(--sui-text-secondary);
   outline-offset: 2px;
   filter: brightness(1.2);
 }

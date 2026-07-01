@@ -8,13 +8,19 @@
 import { type JSX, splitProps } from "solid-js";
 import "./DataTableContainer.css";
 
-export interface DataTableContainerProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface DataTableContainerProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   maxHeight?: string;
   fill?: boolean;
 }
 
 export function DataTableContainer(props: DataTableContainerProps) {
-  const [local, others] = splitProps(props, ["maxHeight", "fill", "class", "children"]);
+  const [local, others] = splitProps(props, [
+    "maxHeight",
+    "fill",
+    "class",
+    "children",
+  ]);
 
   const classes = () => {
     const cls = ["data-table-container"];
@@ -26,7 +32,9 @@ export function DataTableContainer(props: DataTableContainerProps) {
   return (
     <div
       class={classes()}
-      style={local.fill ? undefined : { "max-height": local.maxHeight ?? "500px" }}
+      style={
+        local.fill ? undefined : { "max-height": local.maxHeight ?? "500px" }
+      }
       {...others}
     >
       {local.children}

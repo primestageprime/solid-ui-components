@@ -63,9 +63,18 @@ export const XAxis: Component<AxisProps> = (props) => {
   };
 
   return (
-    <g class="sui-chart__axis sui-chart__axis--x" transform={`translate(0, ${ctx.innerHeight()})`}>
+    <g
+      class="sui-chart__axis sui-chart__axis--x"
+      transform={`translate(0, ${ctx.innerHeight()})`}
+    >
       {!props.hideLine && (
-        <line class="sui-chart__axis-line" x1={0} x2={ctx.innerWidth()} y1={0} y2={0} />
+        <line
+          class="sui-chart__axis-line"
+          x1={0}
+          x2={ctx.innerWidth()}
+          y1={0}
+          y2={0}
+        />
       )}
       <For each={props.tickValues ?? ctx.xScale().ticks(tickCount())}>
         {(t) => (
@@ -120,13 +129,24 @@ export const YAxis: Component<AxisProps> = (props) => {
   return (
     <g class="sui-chart__axis sui-chart__axis--y">
       {!props.hideLine && (
-        <line class="sui-chart__axis-line" y1={0} y2={ctx.innerHeight()} x1={0} x2={0} />
+        <line
+          class="sui-chart__axis-line"
+          y1={0}
+          y2={ctx.innerHeight()}
+          x1={0}
+          x2={0}
+        />
       )}
       <For each={props.tickValues ?? ctx.yScale().ticks(tickCount())}>
         {(t) => (
           <g transform={`translate(0, ${ctx.yScale()(t)})`}>
             <line class="sui-chart__axis-tick" x1={-4} x2={0} />
-            <text class="sui-chart__axis-label" x={-8} dy="0.32em" text-anchor="end">
+            <text
+              class="sui-chart__axis-label"
+              x={-8}
+              dy="0.32em"
+              text-anchor="end"
+            >
               {fmt()(t)}
             </text>
           </g>

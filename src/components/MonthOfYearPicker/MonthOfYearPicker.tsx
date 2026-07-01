@@ -8,12 +8,28 @@
 //   <MonthOfYearPicker value={4} onChange={(m) => ...} />
 // Factory: createMonthOfYearPicker() for curried variants.
 // ============================================
-import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./MonthOfYearPicker.css";
 
 const MONTH_ABBR = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 export interface MonthOfYearPickerProps
@@ -30,7 +46,12 @@ export interface MonthOfYearPickerProps
 }
 
 export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
-  const [local, others] = splitProps(props, ["value", "onChange", "cellSize", "class"]);
+  const [local, others] = splitProps(props, [
+    "value",
+    "onChange",
+    "cellSize",
+    "class",
+  ]);
   const rootClass = () =>
     local.class ? `sui-moy-picker ${local.class}` : "sui-moy-picker";
   return (

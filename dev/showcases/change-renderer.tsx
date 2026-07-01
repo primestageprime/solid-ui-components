@@ -27,9 +27,9 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const statusAwareDispatch = (v: unknown): JSX.Element | undefined =>
-  typeof v === "string" && v in STATUS_COLORS
-    ? <StatusPill label={v} color={STATUS_COLORS[v]} />
-    : undefined;
+  typeof v === "string" && v in STATUS_COLORS ? (
+    <StatusPill label={v} color={STATUS_COLORS[v]} />
+  ) : undefined;
 
 export const ChangeRendererShowcase: Component = () => {
   return (
@@ -58,9 +58,9 @@ export const ChangeRendererShowcase: Component = () => {
         <h3>Object changes</h3>
         <Text variant="sublabel">
           Each side renders through <code>ValueRenderer</code>'s default
-          key/value entry list. Per-key aligned diff (added / removed /
-          changed / unchanged highlighting) is NOT shown — that's a domain
-          concern. Callers needing per-key diff build it on top via a{" "}
+          key/value entry list. Per-key aligned diff (added / removed / changed
+          / unchanged highlighting) is NOT shown — that's a domain concern.
+          Callers needing per-key diff build it on top via a{" "}
           <code>renderValue</code> override or a wrapping component.
         </Text>
         <Stack gap="sm">
@@ -114,7 +114,12 @@ export const ChangeRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Custom arrow</h3>
         <Stack gap="sm">
-          <ChangeRenderer label="Transition" before="draft" after="published" arrow={"\u21D2"} />
+          <ChangeRenderer
+            label="Transition"
+            before="draft"
+            after="published"
+            arrow={"\u21D2"}
+          />
           <ChangeRenderer label="Flow" before={1} after={2} arrow={"\u2794"} />
         </Stack>
       </div>

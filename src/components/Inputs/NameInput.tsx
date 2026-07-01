@@ -16,11 +16,20 @@
 //     field is focused (including via autofocus), so typing is unaffected.
 // Owns no CSS of its own — reuses ThemedInputs.css for visual parity.
 // ============================================
-import { type Component, type JSX, splitProps, createSignal, createUniqueId } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  createSignal,
+  createUniqueId,
+} from "solid-js";
 import "./ThemedInputs.css";
 
 export interface NameInputProps
-  extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "autocomplete" | "name"> {
+  extends Omit<
+    JSX.InputHTMLAttributes<HTMLInputElement>,
+    "autocomplete" | "name"
+  > {
   label?: string;
 }
 
@@ -29,8 +38,7 @@ export const NameInput: Component<NameInputProps> = (props) => {
   const [readOnly, setReadOnly] = createSignal(true);
   const fieldName = `nm-${createUniqueId()}`;
 
-  const classes = () =>
-    ["themed-input", local.class].filter(Boolean).join(" ");
+  const classes = () => ["themed-input", local.class].filter(Boolean).join(" ");
 
   return (
     <div class="themed-input-group">

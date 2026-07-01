@@ -6,7 +6,13 @@
 // Container panel with title, corner brackets, glow.
 // Merged from HUDPanel + generic Panel.
 // ============================================
-import { type Component, type JSX, splitProps, Show, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  Show,
+  mergeProps,
+} from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Panel.css";
 
@@ -49,7 +55,8 @@ export const Panel: Component<PanelProps> = (props) => {
     if (local.corners) classList.push(`sui-panel--corners-${local.corners}`);
     if (local.variant) classList.push(`sui-panel--${local.variant}`);
     if (local.size) classList.push(`sui-panel--${local.size}`);
-    if (local.glow && local.glow !== "none") classList.push(`sui-panel--glow-${local.glow}`);
+    if (local.glow && local.glow !== "none")
+      classList.push(`sui-panel--glow-${local.glow}`);
     if (local.edgeAccents) classList.push("sui-panel--edge-accents");
     if (local.fill) classList.push("sui-panel--fill");
     if (local.class) classList.push(local.class);
@@ -83,11 +90,16 @@ export const Panel: Component<PanelProps> = (props) => {
 };
 
 /** Props that are visual overrides — locked at variant-definition time. */
-export type PanelOverrides = Pick<PanelProps, "corners" | "variant" | "size" | "glow" | "edgeAccents">;
+export type PanelOverrides = Pick<
+  PanelProps,
+  "corners" | "variant" | "size" | "glow" | "edgeAccents"
+>;
 
 /** Props that remain available to consumers of a curried Panel variant. */
 export type PanelDataProps = Omit<PanelProps, keyof PanelOverrides>;
 
-export function createPanel(defaults: Partial<Omit<PanelProps, "children">>): Component<PanelDataProps> {
+export function createPanel(
+  defaults: Partial<Omit<PanelProps, "children">>,
+): Component<PanelDataProps> {
   return (props) => <Panel {...mergeProps(defaults, props)} />;
 }

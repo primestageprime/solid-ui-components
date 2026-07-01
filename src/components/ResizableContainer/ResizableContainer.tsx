@@ -58,16 +58,23 @@ const DEFAULTS = {
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 
-export const ResizableContainer: Component<ResizableContainerProps> = (props) => {
+export const ResizableContainer: Component<ResizableContainerProps> = (
+  props,
+) => {
   const directions = () => props.directions ?? DEFAULTS.directions;
   const minWidth = () => props.minWidth ?? DEFAULTS.minWidth;
   const maxWidth = () => props.maxWidth ?? DEFAULTS.maxWidth;
   const minHeight = () => props.minHeight ?? DEFAULTS.minHeight;
   const maxHeight = () => props.maxHeight ?? DEFAULTS.maxHeight;
 
-  const [width, setWidth] = createSignal(props.initialWidth ?? DEFAULTS.initialWidth);
-  const [height, setHeight] = createSignal(props.initialHeight ?? DEFAULTS.initialHeight);
-  const [activeDirection, setActiveDirection] = createSignal<ResizeDirection | null>(null);
+  const [width, setWidth] = createSignal(
+    props.initialWidth ?? DEFAULTS.initialWidth,
+  );
+  const [height, setHeight] = createSignal(
+    props.initialHeight ?? DEFAULTS.initialHeight,
+  );
+  const [activeDirection, setActiveDirection] =
+    createSignal<ResizeDirection | null>(null);
   const [isClient, setIsClient] = createSignal(false);
 
   createEffect(() => {
@@ -80,19 +87,29 @@ export const ResizableContainer: Component<ResizableContainerProps> = (props) =>
   let startWidth = 0;
   let startHeight = 0;
 
-  const applyDelta = (direction: ResizeDirection, deltaX: number, deltaY: number) => {
+  const applyDelta = (
+    direction: ResizeDirection,
+    deltaX: number,
+    deltaY: number,
+  ) => {
     const nextWidth = (() => {
       switch (direction) {
-        case "right": return clamp(startWidth + deltaX, minWidth(), maxWidth());
-        case "left":  return clamp(startWidth - deltaX, minWidth(), maxWidth());
-        default:      return width();
+        case "right":
+          return clamp(startWidth + deltaX, minWidth(), maxWidth());
+        case "left":
+          return clamp(startWidth - deltaX, minWidth(), maxWidth());
+        default:
+          return width();
       }
     })();
     const nextHeight = (() => {
       switch (direction) {
-        case "bottom": return clamp(startHeight + deltaY, minHeight(), maxHeight());
-        case "top":    return clamp(startHeight - deltaY, minHeight(), maxHeight());
-        default:       return height();
+        case "bottom":
+          return clamp(startHeight + deltaY, minHeight(), maxHeight());
+        case "top":
+          return clamp(startHeight - deltaY, minHeight(), maxHeight());
+        default:
+          return height();
       }
     })();
     setWidth(nextWidth);
@@ -161,7 +178,9 @@ export const ResizableContainer: Component<ResizableContainerProps> = (props) =>
           {(direction) => (
             <div
               class={`sui-resizable__handle sui-resizable__handle--${direction} ${
-                activeDirection() === direction ? "sui-resizable__handle--active" : ""
+                activeDirection() === direction
+                  ? "sui-resizable__handle--active"
+                  : ""
               }`}
               onMouseDown={(e) => startResize(e, direction)}
             />

@@ -74,7 +74,11 @@ export function RingChart(props: RingChartProps) {
               stroke-dasharray={`${arc.dashLen} ${arc.dashGap}`}
               stroke-dashoffset={arc.dashOffset}
               stroke-linecap="butt"
-              style={arc.animate ? { animation: "ring-pulse 2s ease-in-out infinite" } : {}}
+              style={
+                arc.animate
+                  ? { animation: "ring-pulse 2s ease-in-out infinite" }
+                  : {}
+              }
             />
           )}
         </For>
@@ -94,7 +98,7 @@ export function RingChart(props: RingChartProps) {
           style={{
             ...monoStyle,
             color: "var(--sui-text-primary)",
-            "font-size": `${Math.max(10, Math.min(size() / 5, (size() * 0.7) / Math.max(1, props.label.length) * 1.6))}px`,
+            "font-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
             "font-weight": "700",
             "line-height": "1.1",
           }}

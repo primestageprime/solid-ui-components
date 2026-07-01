@@ -14,14 +14,14 @@ describe("ChartCanvas", () => {
 
   it("bakes the variant height as an inline style (Md → 240px, Lg → 300px)", () => {
     const md = render(() => <ChartCanvasMd />);
-    expect(
-      (md.container.firstElementChild as HTMLElement).style.height,
-    ).toBe("240px");
+    expect((md.container.firstElementChild as HTMLElement).style.height).toBe(
+      "240px",
+    );
 
     const lg = render(() => <ChartCanvasLg />);
-    expect(
-      (lg.container.firstElementChild as HTMLElement).style.height,
-    ).toBe("300px");
+    expect((lg.container.firstElementChild as HTMLElement).style.height).toBe(
+      "300px",
+    );
   });
 
   it("forwards the ref to the canvas element", () => {
@@ -44,6 +44,8 @@ describe("ChartCanvas", () => {
   it("createChartCanvas accepts a custom string height verbatim", () => {
     const Custom = createChartCanvas({ height: "50vh" });
     const { container } = render(() => <Custom />);
-    expect((container.firstElementChild as HTMLElement).style.height).toBe("50vh");
+    expect((container.firstElementChild as HTMLElement).style.height).toBe(
+      "50vh",
+    );
   });
 });

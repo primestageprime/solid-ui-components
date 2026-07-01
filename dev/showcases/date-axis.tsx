@@ -127,15 +127,18 @@ export const DateAxisShowcase: Component = () => {
           </div>
         </div>
 
-        {demoBox("DailyDateAxis · clickable · start=2026-05-01  end=2026-07-14", () => (
-          <DailyDateAxis
-            start={RANGE_START}
-            end={RANGE_END}
-            today={PINNED_TODAY}
-            selected={selected()}
-            onDayClick={setSelected}
-          />
-        ))}
+        {demoBox(
+          "DailyDateAxis · clickable · start=2026-05-01  end=2026-07-14",
+          () => (
+            <DailyDateAxis
+              start={RANGE_START}
+              end={RANGE_END}
+              today={PINNED_TODAY}
+              selected={selected()}
+              onDayClick={setSelected}
+            />
+          ),
+        )}
 
         {demoBox("DailyDateAxis · clickable · 3-week · cellWidth=56", () => (
           <DailyDateAxis
@@ -153,20 +156,24 @@ export const DateAxisShowcase: Component = () => {
         <h3>Custom cell renderer — cashflow heatmap (bare DateAxis)</h3>
         <p class="text-meta">
           Drop the curry: <code>DateAxis</code> with <code>cells</code> from
-          <code>dailyCells(...)</code> and a custom <code>renderCell</code>.
-          The renderer sizes each cell; the axis grows to respect it and the
+          <code>dailyCells(...)</code> and a custom <code>renderCell</code>. The
+          renderer sizes each cell; the axis grows to respect it and the
           scrollbar stays entirely below the cells.
         </p>
-        {demoBox("DateAxis · custom renderCell — date corner + diverging bar + $", () => (
-          <DateAxis
-            cells={customCells}
-            today={PINNED_TODAY}
-            renderCell={cashflowDayCell}
-          />
-        ))}
+        {demoBox(
+          "DateAxis · custom renderCell — date corner + diverging bar + $",
+          () => (
+            <DateAxis
+              cells={customCells}
+              today={PINNED_TODAY}
+              renderCell={cashflowDayCell}
+            />
+          ),
+        )}
         <div class="text-meta">
-          DateAxis owns the cell wrapper (click handling, today / selected highlight);
-          your <code>renderCell</code> controls what's inside and the cell's own size.
+          DateAxis owns the cell wrapper (click handling, today / selected
+          highlight); your <code>renderCell</code> controls what's inside and
+          the cell's own size.
         </div>
       </div>
     </div>

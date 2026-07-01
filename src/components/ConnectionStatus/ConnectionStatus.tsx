@@ -67,9 +67,17 @@ export const ConnectionStatus: Component<ConnectionStatusProps> = (props) => {
         fallback={
           <SmallStatusLight
             pulse={
-              stateToLight(props.lastHeartbeatAt, props.timeoutMs, props.errorAt) === "success"
+              stateToLight(
+                props.lastHeartbeatAt,
+                props.timeoutMs,
+                props.errorAt,
+              ) === "success"
             }
-            variant={stateToLight(props.lastHeartbeatAt, props.timeoutMs, props.errorAt)}
+            variant={stateToLight(
+              props.lastHeartbeatAt,
+              props.timeoutMs,
+              props.errorAt,
+            )}
           />
         }
       >

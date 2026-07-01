@@ -43,7 +43,11 @@ describe("computeBreakpoints", () => {
   });
 
   it("very-narrow cards admit more depths at the same stage width", () => {
-    const narrow: LaneLayoutConfig = { ...DEFAULT_CFG, cardWidth: 40, cardGap: 10 };
+    const narrow: LaneLayoutConfig = {
+      ...DEFAULT_CFG,
+      cardWidth: 40,
+      cardGap: 10,
+    };
     // colCenterGap = 50; baseContent = 2*(20+32+16)=136; pad=64
     // minWidth(d) = 200 + 100 d
     const rows = computeBreakpoints(narrow, 3);
@@ -82,7 +86,11 @@ describe("maxDepthForWidth", () => {
   });
 
   it("narrower cards fit more depths in the same width", () => {
-    const narrow: LaneLayoutConfig = { ...DEFAULT_CFG, cardWidth: 40, cardGap: 10 };
+    const narrow: LaneLayoutConfig = {
+      ...DEFAULT_CFG,
+      cardWidth: 40,
+      cardGap: 10,
+    };
     // step = 100, base = 200 → at 700px: depth = (700-200)/100 = 5
     expect(maxDepthForWidth(700, narrow)).toBe(5);
     // vs default at 700px → depth 1
@@ -113,9 +121,9 @@ describe("maxDepthForWidth", () => {
   it("breakpoint row minWidth is the exact threshold for that depth", () => {
     const rows = computeBreakpoints(DEFAULT_CFG, 4);
     for (const row of rows) {
-      expect(maxDepthForWidth(row.minWidth, DEFAULT_CFG)).toBeGreaterThanOrEqual(
-        row.depth,
-      );
+      expect(
+        maxDepthForWidth(row.minWidth, DEFAULT_CFG),
+      ).toBeGreaterThanOrEqual(row.depth);
       if (row.depth > 0) {
         expect(maxDepthForWidth(row.minWidth - 1, DEFAULT_CFG)).toBe(
           row.depth - 1,

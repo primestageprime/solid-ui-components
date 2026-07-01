@@ -47,7 +47,7 @@ function widthOf(el: HTMLElement, draggedLabel: string): number {
   const isPlaceholder = el.classList.contains(
     "sui-dnd-hierarchy-sort-bar__placeholder",
   );
-  return isPlaceholder ? WIDTH[draggedLabel] : WIDTH[labelOf(el)] ?? 40;
+  return isPlaceholder ? WIDTH[draggedLabel] : (WIDTH[labelOf(el)] ?? 40);
 }
 function layout(root: HTMLElement, draggedLabel: string) {
   let x = 0;
@@ -119,7 +119,11 @@ async function sweepDrag(opts: {
   // Continuous monotonic sweep from the grab point to the drop point — exactly
   // how a real pointer moves (it does not teleport to x=0 first).
   const step = opts.finalX >= startX ? 4 : -4;
-  for (let cx = startX; step > 0 ? cx <= opts.finalX : cx >= opts.finalX; cx += step) {
+  for (
+    let cx = startX;
+    step > 0 ? cx <= opts.finalX : cx >= opts.finalX;
+    cx += step
+  ) {
     const hit = elementUnderX(root, opts.drag, cx);
     if (hit) fireDrag(hit.el, "dragover", cx, dt);
   }
@@ -134,18 +138,30 @@ describe("DnDHierarchySortBar — cursor-sweep drag commits the slot under the c
   //   A: 0..40   B: 48..128   C: 136..176   D: 184..264
   // Dropping with the cursor near the FAR RIGHT must land the dragged item last.
   it("drag A all the way right → A lands last [B,C,D,A]", async () => {
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "A", finalX: 260 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "A",
+      finalX: 260,
+    });
     expect(out).toEqual(["B", "C", "D", "A"]);
   });
 
   it("drag A to just past C's midpoint → A lands after C [B,C,A,D]", async () => {
     // C midpoint in original layout ≈ 156. Stop at 160 (just right of it).
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "A", finalX: 160 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "A",
+      finalX: 160,
+    });
     expect(out).toEqual(["B", "C", "A", "D"]);
   });
 
   it("drag D all the way left → D lands first [D,A,B,C]", async () => {
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "D", finalX: 4 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "D",
+      finalX: 4,
+    });
     expect(out).toEqual(["D", "A", "B", "C"]);
   });
 
@@ -153,23 +169,39 @@ describe("DnDHierarchySortBar — cursor-sweep drag commits the slot under the c
   // exact case where a coordinate-space off-by-one would surface.
   it("drag B rightward past C → [A,C,B,D]", async () => {
     // Drop just right of C's midpoint.
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "B", finalX: 165 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "B",
+      finalX: 165,
+    });
     expect(out).toEqual(["A", "C", "B", "D"]);
   });
 
   it("drag B all the way right → [A,C,D,B]", async () => {
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "B", finalX: 260 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "B",
+      finalX: 260,
+    });
     expect(out).toEqual(["A", "C", "D", "B"]);
   });
 
   it("drag C leftward before B → [A,C,B,D]", async () => {
     // Drop in B's left half.
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "C", finalX: 60 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "C",
+      finalX: 60,
+    });
     expect(out).toEqual(["A", "C", "B", "D"]);
   });
 
   it("drag C all the way left → [C,A,B,D]", async () => {
-    const out = await sweepDrag({ initial: ["A", "B", "C", "D"], drag: "C", finalX: 4 });
+    const out = await sweepDrag({
+      initial: ["A", "B", "C", "D"],
+      drag: "C",
+      finalX: 4,
+    });
     expect(out).toEqual(["C", "A", "B", "D"]);
   });
 });

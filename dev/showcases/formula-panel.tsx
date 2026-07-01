@@ -1,5 +1,8 @@
 import type { Component } from "solid-js";
-import { createFormulaPanel, type FormulaConfig } from "../../src/components/DataDisplay";
+import {
+  createFormulaPanel,
+  type FormulaConfig,
+} from "../../src/components/DataDisplay";
 
 interface Depth3Props {
   onNavigate?: (id: string) => void;
@@ -61,36 +64,53 @@ export const FormulaPanelShowcase: Component<Depth3Props> = (props) => {
           <ViolationPanel.Panel values={violationValues} />
 
           <h3 style={{ "margin-top": "24px" }}>Individual Sub-Components</h3>
-          <p class="text-meta">Result, Givens, and Formula can be used separately.</p>
+          <p class="text-meta">
+            Result, Givens, and Formula can be used separately.
+          </p>
           <NoxPanel.Result values={compliantValues} />
         </div>
         <div class="depth2-atoms">
           <h3>Sub-Components</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Depth 3</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("result-display")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("result-display")}
+            >
               <div class="depth2-atom__label">ResultDisplay</div>
               <div class="text-meta">Large value + units + badge row</div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Depth 2</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("data-list")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("data-list")}
+            >
               <div class="depth2-atom__label">DTable / DT / DD</div>
               <div class="text-meta">Key-value givens table</div>
             </div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("number-with-units")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("number-with-units")}
+            >
               <div class="depth2-atom__label">NumberWithUnits</div>
               <div class="text-meta">Monospace value + sans-serif units</div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Atomic</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("math-formula")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("math-formula")}
+            >
               <div class="depth2-atom__label">MathFormula</div>
               <div class="text-meta">KaTeX renderer with \var highlighting</div>
             </div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("status-badge")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("status-badge")}
+            >
               <div class="depth2-atom__label">StatusBadge</div>
               <div class="text-meta">COMPLIANT / VIOLATION badge</div>
             </div>
@@ -99,23 +119,44 @@ export const FormulaPanelShowcase: Component<Depth3Props> = (props) => {
             <div class="depth2-atom-group__label">Context</div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">FormulaProvider</div>
-              <div class="text-meta">Shared hover state for interactive highlighting</div>
+              <div class="text-meta">
+                Shared hover state for interactive highlighting
+              </div>
             </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Layout</div>
-            <div class="depth2-atom depth2-atom--link" onClick={() => props.onNavigate?.("stack")}>
+            <div
+              class="depth2-atom depth2-atom--link"
+              onClick={() => props.onNavigate?.("stack")}
+            >
               <div class="depth2-atom__label">NarrowStack (curried)</div>
               <div class="text-meta">Vertical layout wrapper</div>
             </div>
           </div>
           <h3>Bundle API</h3>
           <div class="depth2-atom-group">
-            <div class="depth2-atom-group__label">createFormulaPanel(config)</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">.Panel — Full composed panel</div></div>
-            <div class="depth2-atom"><div class="depth2-atom__label">.Result — ResultDisplay with compliance</div></div>
-            <div class="depth2-atom"><div class="depth2-atom__label">.Givens — DTable with variable rows</div></div>
-            <div class="depth2-atom"><div class="depth2-atom__label">.Formula — MathFormula with computed LaTeX</div></div>
+            <div class="depth2-atom-group__label">
+              createFormulaPanel(config)
+            </div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">.Panel — Full composed panel</div>
+            </div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                .Result — ResultDisplay with compliance
+              </div>
+            </div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                .Givens — DTable with variable rows
+              </div>
+            </div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                .Formula — MathFormula with computed LaTeX
+              </div>
+            </div>
           </div>
         </div>
       </div>

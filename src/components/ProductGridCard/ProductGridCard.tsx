@@ -12,10 +12,17 @@
 //
 // Factory: createProductGridCard().
 // ============================================
-import { type Component, type JSX, mergeProps, Show, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  mergeProps,
+  Show,
+  splitProps,
+} from "solid-js";
 import "./ProductGridCard.css";
 
-export interface ProductGridCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface ProductGridCardProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Highlights the card with the accent palette. Wins over `met`. */
   selected?: boolean;
   /** Marks the card as satisfied (e.g. a need whose solutions are all done). */
@@ -46,7 +53,9 @@ export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
   ]);
 
   const rootClass = () =>
-    local.class ? `sui-product-grid-card ${local.class}` : "sui-product-grid-card";
+    local.class
+      ? `sui-product-grid-card ${local.class}`
+      : "sui-product-grid-card";
 
   return (
     <div
@@ -71,7 +80,10 @@ export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
 export type ProductGridCardOverrides = Pick<ProductGridCardProps, "class">;
 
 /** Data props — what a Curried Variant publicly exposes. */
-export type ProductGridCardDataProps = Omit<ProductGridCardProps, keyof ProductGridCardOverrides>;
+export type ProductGridCardDataProps = Omit<
+  ProductGridCardProps,
+  keyof ProductGridCardOverrides
+>;
 
 /**
  * Factory: returns a ProductGridCard pre-configured with override defaults.

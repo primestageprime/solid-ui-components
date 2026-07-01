@@ -25,10 +25,7 @@ export const Kbd: Component<KbdProps> = (props) => {
   };
   return (
     <kbd class={cls()}>
-      <Show
-        when={props.letter !== undefined}
-        fallback={props.children}
-      >
+      <Show when={props.letter !== undefined} fallback={props.children}>
         <span class="sui-kbd__letter">{props.letter}</span>
         <Show when={props.rest}>
           <span class="sui-kbd__rest">{props.rest}</span>

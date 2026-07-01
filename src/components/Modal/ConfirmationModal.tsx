@@ -5,7 +5,13 @@
 // Composes Modal (Atomic) + Button (Atomic).
 // Confirmation dialog with Cancel/Confirm footer.
 // ============================================
-import { type Component, type JSX, splitProps, Show, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  Show,
+  mergeProps,
+} from "solid-js";
 import { Modal } from "./Modal";
 import { Button } from "../Button/Button";
 import type { ColorVariant, CornerStyle } from "../../types";
@@ -77,12 +83,14 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
       corners={local.corners ?? "clip"}
       variant={local.variant ?? "primary"}
       footer={
-        <div style={{ display: "flex", gap: "12px", "justify-content": "flex-end" }}>
-          <Button
-            size="sm"
-            onClick={local.onClose}
-            disabled={local.loading}
-          >
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            "justify-content": "flex-end",
+          }}
+        >
+          <Button size="sm" onClick={local.onClose} disabled={local.loading}>
             {local.cancelLabel ?? "Cancel"}
           </Button>
           <Button
@@ -98,11 +106,13 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
     >
       <div style={{ "max-height": "60vh", overflow: "auto" }}>
         <Show when={local.description}>
-          <p style={{
-            margin: "0 0 16px",
-            color: "var(--sui-text-secondary)",
-            "font-size": "0.875rem",
-          }}>
+          <p
+            style={{
+              margin: "0 0 16px",
+              color: "var(--sui-text-secondary)",
+              "font-size": "0.875rem",
+            }}
+          >
             {local.description}
           </p>
         </Show>
@@ -119,7 +129,10 @@ export type ConfirmationModalOverrides = Pick<
 >;
 
 /** Props available to consumers of a curried ConfirmationModal variant. */
-export type ConfirmationModalDataProps = Omit<ConfirmationModalProps, keyof ConfirmationModalOverrides>;
+export type ConfirmationModalDataProps = Omit<
+  ConfirmationModalProps,
+  keyof ConfirmationModalOverrides
+>;
 
 export function createConfirmationModal(
   defaults: Partial<ConfirmationModalProps>,

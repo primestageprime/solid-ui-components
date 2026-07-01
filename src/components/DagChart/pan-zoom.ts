@@ -9,7 +9,11 @@ const ZOOM_OUT_FACTOR = 0.9;
 const FIT_PADDING = 40;
 
 export function createPanZoom() {
-  const [transform, setTransform] = createSignal<Transform>({ x: 0, y: 0, scale: 1 });
+  const [transform, setTransform] = createSignal<Transform>({
+    x: 0,
+    y: 0,
+    scale: 1,
+  });
 
   let dragging = false;
   let lastPointer = { x: 0, y: 0 };
@@ -22,7 +26,9 @@ export function createPanZoom() {
       try {
         el.setPointerCapture(e.pointerId);
       } catch (err) {
-        if (!(err instanceof DOMException && err.name === "InvalidStateError")) {
+        if (
+          !(err instanceof DOMException && err.name === "InvalidStateError")
+        ) {
           console.warn("[DagChart] setPointerCapture threw:", err);
         }
       }
@@ -51,9 +57,16 @@ export function createPanZoom() {
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
     setTransform((t) => {
-      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor));
+      const newScale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, t.scale * factor),
+      );
       const ds = newScale / t.scale;
-      return { x: cx - ds * (cx - t.x), y: cy - ds * (cy - t.y), scale: newScale };
+      return {
+        x: cx - ds * (cx - t.x),
+        y: cy - ds * (cy - t.y),
+        scale: newScale,
+      };
     });
   };
 
@@ -67,7 +80,9 @@ export function createPanZoom() {
   ) => {
     if (graphWidth === 0 || graphHeight === 0) return;
     if (containerWidth === 0 || containerHeight === 0) {
-      console.warn("[DagChart] fitToView skipped — container has zero dimensions.");
+      console.warn(
+        "[DagChart] fitToView skipped — container has zero dimensions.",
+      );
       return;
     }
 
@@ -99,7 +114,10 @@ export function createPanZoom() {
     if (containerWidth === 0 || containerHeight === 0) return;
 
     // Use current scale or default to 1
-    const scale = Math.max(MIN_SCALE, Math.min(transform().scale || 1, MAX_SCALE));
+    const scale = Math.max(
+      MIN_SCALE,
+      Math.min(transform().scale || 1, MAX_SCALE),
+    );
     const x = containerWidth / 2 - pointX * scale;
     const y = containerHeight / 2 - pointY * scale;
 

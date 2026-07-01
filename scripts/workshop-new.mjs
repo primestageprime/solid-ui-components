@@ -2,7 +2,11 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { isValidSlug, slugToTitle, renderBenchTemplate } from "./workshop-lib.mjs";
+import {
+  isValidSlug,
+  slugToTitle,
+  renderBenchTemplate,
+} from "./workshop-lib.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const benchDir = join(repoRoot, "dev/showcases/workshop");
@@ -14,19 +18,29 @@ const label = labelIdx !== -1 ? argv[labelIdx + 1] : undefined;
 
 const fail = (msg) => {
   console.error(`workshop-new: ${msg}`);
-  console.error("usage: node scripts/workshop-new.mjs <kebab-slug> [--label \"Nice Label\"]");
+  console.error(
+    'usage: node scripts/workshop-new.mjs <kebab-slug> [--label "Nice Label"]',
+  );
   process.exit(1);
 };
 
 if (!slug) fail("missing <slug>");
-if (!isValidSlug(slug)) fail(`"${slug}" is not a kebab-case slug (kebab-case, must start with a letter)`);
+if (!isValidSlug(slug))
+  fail(
+    `"${slug}" is not a kebab-case slug (kebab-case, must start with a letter)`,
+  );
 
 mkdirSync(benchDir, { recursive: true });
 const filePath = join(benchDir, `${slug}.tsx`);
 if (existsSync(filePath)) {
-  fail(`bench already exists at dev/showcases/workshop/${slug}.tsx — refusing to overwrite`);
+  fail(
+    `bench already exists at dev/showcases/workshop/${slug}.tsx — refusing to overwrite`,
+  );
 }
 
-writeFileSync(filePath, renderBenchTemplate({ slug, label: label ?? slugToTitle(slug) }));
+writeFileSync(
+  filePath,
+  renderBenchTemplate({ slug, label: label ?? slugToTitle(slug) }),
+);
 console.log(`Created dev/showcases/workshop/${slug}.tsx`);
 console.log(`Nav id: workshop:${slug}`);

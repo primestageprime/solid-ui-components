@@ -15,7 +15,9 @@ if (!slug || !isValidSlug(slug)) {
 
 const filePath = join(benchDir, `${slug}.tsx`);
 if (!existsSync(filePath)) {
-  console.warn(`workshop-remove: no bench at dev/showcases/workshop/${slug}.tsx (nothing to do)`);
+  console.warn(
+    `workshop-remove: no bench at dev/showcases/workshop/${slug}.tsx (nothing to do)`,
+  );
   process.exit(0);
 }
 

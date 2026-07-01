@@ -217,7 +217,10 @@
   border: 1px solid var(--sui-border);
   background-color: var(--sui-bg-tertiary);
   color: var(--sui-text-primary);
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 .sui-toast__action:hover {
   background-color: var(--sui-bg-secondary);

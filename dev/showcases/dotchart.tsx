@@ -59,26 +59,70 @@ export const DotchartShowcase: Component = () => {
   const t1 = new Date(2026, 4, 15, 8, 0).getTime();
 
   const segments: HighlightSegment[] = [
-    { id: "s1", start: t0 + 1 * 3600_000, end: t0 + 3 * 3600_000, color: "var(--sui-accent)" },
+    {
+      id: "s1",
+      start: t0 + 1 * 3600_000,
+      end: t0 + 3 * 3600_000,
+      color: "var(--sui-accent)",
+    },
   ];
   const scheduledBars: TimelineBarDatum[] = [
-    { id: "sched-1", start: t0 + 0.5 * 3600_000, end: t0 + 2.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)", state: "OK" },
-    { id: "sched-2", start: t0 + 5 * 3600_000, end: t0 + 6.5 * 3600_000, lane: "scheduled", color: "var(--sui-accent)", state: "WARNING" },
+    {
+      id: "sched-1",
+      start: t0 + 0.5 * 3600_000,
+      end: t0 + 2.5 * 3600_000,
+      lane: "scheduled",
+      color: "var(--sui-accent)",
+      state: "OK",
+    },
+    {
+      id: "sched-2",
+      start: t0 + 5 * 3600_000,
+      end: t0 + 6.5 * 3600_000,
+      lane: "scheduled",
+      color: "var(--sui-accent)",
+      state: "WARNING",
+    },
   ];
   const detectedBars: TimelineBarDatum[] = [
-    { id: "det-1", start: t0 + 3 * 3600_000, end: t0 + 4 * 3600_000, lane: "detected", color: "var(--sui-warning)", state: "WARNING" },
-    { id: "det-2", start: t0 + 6 * 3600_000, end: t0 + 7 * 3600_000, lane: "detected", color: "var(--sui-warning)", state: "ALARM" },
+    {
+      id: "det-1",
+      start: t0 + 3 * 3600_000,
+      end: t0 + 4 * 3600_000,
+      lane: "detected",
+      color: "var(--sui-warning)",
+      state: "WARNING",
+    },
+    {
+      id: "det-2",
+      start: t0 + 6 * 3600_000,
+      end: t0 + 7 * 3600_000,
+      lane: "detected",
+      color: "var(--sui-warning)",
+      state: "ALARM",
+    },
   ];
   const [pins, setPins] = createSignal<Pin[]>([
     { id: "p1", x: t0 + 1.5 * 3600_000, descriptor: warningPin },
   ]);
   const [selectedPin, setSelectedPin] = createSignal<string | null>(null);
   const [currentX, setCurrentX] = createSignal(t0 + 5 * 3600_000);
-  const currentPoint = createMemo(() => ({ x: currentX(), y: 50, label: "now" }));
+  const currentPoint = createMemo(() => ({
+    x: currentX(),
+    y: 50,
+    label: "now",
+  }));
 
-  const [hoveredBarId, setHoveredBarId] = createSignal<string | number | null>(null);
-  const [highlightedState, setHighlightedState] = createSignal<string | null>(null);
-  const allBars = createMemo<TimelineBarDatum[]>(() => [...scheduledBars, ...detectedBars]);
+  const [hoveredBarId, setHoveredBarId] = createSignal<string | number | null>(
+    null,
+  );
+  const [highlightedState, setHighlightedState] = createSignal<string | null>(
+    null,
+  );
+  const allBars = createMemo<TimelineBarDatum[]>(() => [
+    ...scheduledBars,
+    ...detectedBars,
+  ]);
   const hoveredBar = createMemo<TimelineBarDatum | null>(
     () => allBars().find((b) => b.id === hoveredBarId()) ?? null,
   );
@@ -87,14 +131,23 @@ export const DotchartShowcase: Component = () => {
     <div class="component-section">
       <h2>DotChart Composition Smoke</h2>
       <p class="text-meta">
-        Smoke test for the dotchart slot unification: HighlightSegments + PinMarkers +
-        GhostPin + DragRangeSelect + CurrentValueIndicator + ReferenceLine composed
-        under a single &lt;Chart&gt; with a time domain. Two stacked TimelineBar strips
-        sit along the bottom of the x-axis (scheduled, then detected), matching the
-        amygdala-ui dotchart layout — strips anchored in <code>margin-bottom</code>,
-        with x-axis ticks pushed below.
+        Smoke test for the dotchart slot unification: HighlightSegments +
+        PinMarkers + GhostPin + DragRangeSelect + CurrentValueIndicator +
+        ReferenceLine composed under a single &lt;Chart&gt; with a time domain.
+        Two stacked TimelineBar strips sit along the bottom of the x-axis
+        (scheduled, then detected), matching the amygdala-ui dotchart layout —
+        strips anchored in <code>margin-bottom</code>, with x-axis ticks pushed
+        below.
       </p>
-      <div class="text-meta" style={{ display: "flex", "align-items": "center", gap: "8px", "margin-bottom": "8px" }}>
+      <div
+        class="text-meta"
+        style={{
+          display: "flex",
+          "align-items": "center",
+          gap: "8px",
+          "margin-bottom": "8px",
+        }}
+      >
         <span>Highlight status:</span>
         <For each={["OK", "WARNING", "ALARM"]}>
           {(status) => (
@@ -107,12 +160,14 @@ export const DotchartShowcase: Component = () => {
               style={{
                 padding: "2px 10px",
                 "border-radius": "12px",
-                border: highlightedState() === status
-                  ? "1px solid var(--sui-accent, #5b8def)"
-                  : "1px solid var(--sui-border, #333)",
-                background: highlightedState() === status
-                  ? "var(--sui-accent, #5b8def)"
-                  : "transparent",
+                border:
+                  highlightedState() === status
+                    ? "1px solid var(--sui-accent, #5b8def)"
+                    : "1px solid var(--sui-border, #333)",
+                background:
+                  highlightedState() === status
+                    ? "var(--sui-accent, #5b8def)"
+                    : "transparent",
                 color: "inherit",
                 cursor: "pointer",
                 "font-family": "var(--sui-font-mono, monospace)",
@@ -123,7 +178,9 @@ export const DotchartShowcase: Component = () => {
             </button>
           )}
         </For>
-        <span style={{ opacity: 0.6 }}>← hover a chip; every bar with that state glows</span>
+        <span style={{ opacity: 0.6 }}>
+          ← hover a chip; every bar with that state glows
+        </span>
       </div>
       <Chart
         width={800}
@@ -134,7 +191,11 @@ export const DotchartShowcase: Component = () => {
       >
         <Grid />
         <ReferenceLine orientation="horizontal" value={50} label="threshold" />
-        <ReferenceLine orientation="vertical" value={new Date(t0 + 6 * 3600_000)} color="var(--sui-warning)" />
+        <ReferenceLine
+          orientation="vertical"
+          value={new Date(t0 + 6 * 3600_000)}
+          color="var(--sui-warning)"
+        />
         <AccentHighlightSegments data={segments} />
         <TimelineBar
           data={scheduledBars}
@@ -178,7 +239,11 @@ export const DotchartShowcase: Component = () => {
             </>
           )}
         </Show>
-        <XAxis tickCount={6} tickOffset={TICK_OFFSET} labelOffset={LABEL_OFFSET} />
+        <XAxis
+          tickCount={6}
+          tickOffset={TICK_OFFSET}
+          labelOffset={LABEL_OFFSET}
+        />
         <YAxis />
         <WarningPinMarkers
           data={pins()}
@@ -204,21 +269,41 @@ export const DotchartShowcase: Component = () => {
           is downstream.
         </p>
         <div class="text-meta" style={{ "margin-bottom": "8px" }}>
-          Domain: <code>{fmtClock(t0)}</code> → <code>{fmtClock(t1)}</code>
-          {" "}({fmtDuration(t0, t1)}, t0 = <code>{t0}</code>)
+          Domain: <code>{fmtClock(t0)}</code> → <code>{fmtClock(t1)}</code> (
+          {fmtDuration(t0, t1)}, t0 = <code>{t0}</code>)
         </div>
-        <table style={{ "border-collapse": "collapse", "font-size": "12px", "font-family": "var(--sui-font-mono, monospace)" }}>
+        <table
+          style={{
+            "border-collapse": "collapse",
+            "font-size": "12px",
+            "font-family": "var(--sui-font-mono, monospace)",
+          }}
+        >
           <thead>
             <tr>
               <th style={{ "text-align": "left", padding: "4px 8px" }}>id</th>
               <th style={{ "text-align": "left", padding: "4px 8px" }}>lane</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>start (clock)</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>start (offset)</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>end (clock)</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>end (offset)</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>duration</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>start (ms)</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>end (ms)</th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                start (clock)
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                start (offset)
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                end (clock)
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                end (offset)
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                duration
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                start (ms)
+              </th>
+              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+                end (ms)
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -230,20 +315,34 @@ export const DotchartShowcase: Component = () => {
                     onPointerEnter={() => setHoveredBarId(bar.id)}
                     onPointerLeave={() => setHoveredBarId(null)}
                     style={{
-                      background: isHovered() ? "var(--sui-bg-hover, rgba(255,255,255,0.06))" : "transparent",
+                      background: isHovered()
+                        ? "var(--sui-bg-hover, rgba(255,255,255,0.06))"
+                        : "transparent",
                       "border-left": `3px solid ${bar.color}`,
                       cursor: "pointer",
                     }}
                   >
                     <td style={{ padding: "4px 8px" }}>{bar.id}</td>
                     <td style={{ padding: "4px 8px" }}>{bar.lane}</td>
-                    <td style={{ padding: "4px 8px" }}>{fmtClock(bar.start)}</td>
-                    <td style={{ padding: "4px 8px" }}>{fmtOffset(bar.start, t0)}</td>
+                    <td style={{ padding: "4px 8px" }}>
+                      {fmtClock(bar.start)}
+                    </td>
+                    <td style={{ padding: "4px 8px" }}>
+                      {fmtOffset(bar.start, t0)}
+                    </td>
                     <td style={{ padding: "4px 8px" }}>{fmtClock(bar.end)}</td>
-                    <td style={{ padding: "4px 8px" }}>{fmtOffset(bar.end, t0)}</td>
-                    <td style={{ padding: "4px 8px" }}>{fmtDuration(bar.start, bar.end)}</td>
-                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>{bar.start}</td>
-                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>{bar.end}</td>
+                    <td style={{ padding: "4px 8px" }}>
+                      {fmtOffset(bar.end, t0)}
+                    </td>
+                    <td style={{ padding: "4px 8px" }}>
+                      {fmtDuration(bar.start, bar.end)}
+                    </td>
+                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>
+                      {bar.start}
+                    </td>
+                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>
+                      {bar.end}
+                    </td>
                   </tr>
                 );
               }}

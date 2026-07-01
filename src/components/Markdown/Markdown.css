@@ -17,9 +17,15 @@
   line-height: 1.25;
 }
 
-.sui-markdown h1 { font-size: 1.5em; }
-.sui-markdown h2 { font-size: 1.25em; }
-.sui-markdown h3 { font-size: 1.1em; }
+.sui-markdown h1 {
+  font-size: 1.5em;
+}
+.sui-markdown h2 {
+  font-size: 1.25em;
+}
+.sui-markdown h3 {
+  font-size: 1.1em;
+}
 
 .sui-markdown p {
   margin: 0 0 0.8em 0;
@@ -35,7 +41,13 @@
 }
 
 .sui-markdown code {
-  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-family: var(
+    --sui-font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
   font-size: 0.9em;
   padding: 1px 5px;
   border-radius: 3px;
@@ -43,8 +55,12 @@
   color: var(--sui-text-primary, inherit);
 }
 
-.sui-markdown strong { font-weight: 700; }
-.sui-markdown em { font-style: italic; }
+.sui-markdown strong {
+  font-weight: 700;
+}
+.sui-markdown em {
+  font-style: italic;
+}
 
 /* ============================================
    MarkdownEditor — Composed
@@ -66,7 +82,13 @@
   border-radius: 4px;
   background: var(--sui-bg-deep, rgba(0, 0, 0, 0.4));
   color: var(--sui-text-primary, inherit);
-  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-family: var(
+    --sui-font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
   font-size: 13px;
   line-height: 1.5;
   box-sizing: border-box;

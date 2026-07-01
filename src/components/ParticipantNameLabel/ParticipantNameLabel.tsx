@@ -12,12 +12,7 @@
 //
 // Factory: createParticipantNameLabel().
 // ============================================
-import {
-  type Component,
-  type JSX,
-  mergeProps,
-  splitProps,
-} from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./ParticipantNameLabel.css";
 
 export interface ParticipantNameLabelProps

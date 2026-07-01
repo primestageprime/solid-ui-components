@@ -63,9 +63,9 @@ export const DateRangePickerShowcase: Component = () => {
         Owns CSS (DateRangePicker.css). Wraps `@kobalte/core/popover` (matches
         the Combobox/Select/Tooltip/Toast/ThemedNumberInput Kobalte-wrapping
         pattern). Internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`,
-        `TimeInputs` live as private files under the component directory and
-        are NOT re-exported. Date math uses vanilla `Date` +
-        `Intl.DateTimeFormat` — no Luxon / date-fns dependency.
+        `TimeInputs` live as private files under the component directory and are
+        NOT re-exported. Date math uses vanilla `Date` + `Intl.DateTimeFormat` —
+        no Luxon / date-fns dependency.
       </p>
 
       <div class="example-group">
@@ -132,8 +132,8 @@ export const DateRangePickerShowcase: Component = () => {
         <h3>Pinned timezone — America/Los_Angeles</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           `timeZone="America/Los_Angeles"` pins the trigger label, month header,
-          calendar-day highlighting, and committed time-of-day selections to
-          LA — regardless of the browser's local TZ. Useful when the host app
+          calendar-day highlighting, and committed time-of-day selections to LA
+          — regardless of the browser's local TZ. Useful when the host app
           renders all other timestamps in a fixed TZ.
         </div>
         <Stack>
@@ -151,9 +151,9 @@ export const DateRangePickerShowcase: Component = () => {
         <h3>Pinned timezone — America/New_York</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
           Same component, `timeZone="America/New_York"`. Viewed side-by-side
-          with the LA picker above, the trigger labels and highlighted cells
-          may differ by one calendar day at TZ boundaries — this is the
-          correctness guarantee the prop provides.
+          with the LA picker above, the trigger labels and highlighted cells may
+          differ by one calendar day at TZ boundaries — this is the correctness
+          guarantee the prop provides.
         </div>
         <Stack>
           <DateRangePicker

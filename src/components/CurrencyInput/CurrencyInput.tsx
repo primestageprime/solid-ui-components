@@ -70,10 +70,7 @@ export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
   // the wrapper (not threaded through the Primitive's hardcoded class) leaves
   // ThemedNumberInput untouched.
   return (
-    <div
-      class="sui-currency-input"
-      style={{ "max-width": `${widthRem()}rem` }}
-    >
+    <div class="sui-currency-input" style={{ "max-width": `${widthRem()}rem` }}>
       <ThemedNumberInput
         {...(rest as ThemedNumberInputProps)}
         // USD currency masking via kobalte's native Intl formatting.

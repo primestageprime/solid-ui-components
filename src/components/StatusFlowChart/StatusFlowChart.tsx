@@ -65,7 +65,10 @@ export type StatusFlowChartProps = {
    *  symmetric around the center column. */
   breakpoints: StatusFlowBreakpoint[];
   /** Custom node renderer. Defaults to a title + subtitle + status pill. */
-  renderNode?: (node: StatusFlowNode, ctx: StatusFlowRenderContext) => JSX.Element;
+  renderNode?: (
+    node: StatusFlowNode,
+    ctx: StatusFlowRenderContext,
+  ) => JSX.Element;
   /**
    * Optional per-node column override. When provided, overrides the
    * default status-based column assignment. Returning `undefined` falls
@@ -85,11 +88,20 @@ type EnrichedNode = StatusFlowNode & {
   isParent: boolean;
 };
 
-const defaultRender = (node: StatusFlowNode, ctx: StatusFlowRenderContext): JSX.Element => (
-  <div class="sui-statusflow__card" data-status={ctx.effectiveStatus} data-parent={ctx.isParent ? "" : undefined}>
+const defaultRender = (
+  node: StatusFlowNode,
+  ctx: StatusFlowRenderContext,
+): JSX.Element => (
+  <div
+    class="sui-statusflow__card"
+    data-status={ctx.effectiveStatus}
+    data-parent={ctx.isParent ? "" : undefined}
+  >
     <div class="sui-statusflow__card-status">{ctx.effectiveStatus}</div>
     <div class="sui-statusflow__card-title">{node.title}</div>
-    {node.subtitle && <div class="sui-statusflow__card-subtitle">{node.subtitle}</div>}
+    {node.subtitle && (
+      <div class="sui-statusflow__card-subtitle">{node.subtitle}</div>
+    )}
     {ctx.collapsedChildCount !== undefined && (
       <div class="sui-statusflow__badge">+{ctx.collapsedChildCount}</div>
     )}
@@ -122,8 +134,12 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // visibleCols → maxDepth (symmetric, so maxDepth = (visibleCols - 1) / 2).
   // SwimlaneChart's internal responsiveCollapse is OFF — the breakpoints
   // drive collapse directly, not the chart's width-budget formula.
-  const visibleCols = createMemo(() => pickVisibleCols(width(), props.breakpoints));
-  const maxDepth = createMemo(() => Math.max(0, Math.floor((visibleCols() - 1) / 2)));
+  const visibleCols = createMemo(() =>
+    pickVisibleCols(width(), props.breakpoints),
+  );
+  const maxDepth = createMemo(() =>
+    Math.max(0, Math.floor((visibleCols() - 1) / 2)),
+  );
 
   // Effective statuses + collapsed-parent map. Computed together so we
   // only sweep the children index once per render cycle.
@@ -172,7 +188,12 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // (an `undefined` from colFor falls back to status-based).
   const cols = createMemo(() => {
     const ns = visibleNodes().map((n) => ({ ...n, status: n.effectiveStatus }));
-    const base = assignColumns(ns, props.columns, props.centerStatus, visibleCols());
+    const base = assignColumns(
+      ns,
+      props.columns,
+      props.centerStatus,
+      visibleCols(),
+    );
     if (!props.colFor) return base;
     const out = new Map(base);
     const halfWindow = Math.floor(visibleCols() / 2);
@@ -240,13 +261,23 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
       collapsedChildCount: data.collapsedChildCount,
       isParent: data.isParent,
     };
-    const { effectiveStatus: _e, collapsedChildCount: _c, isParent: _p, ...pure } = data;
-    void _e; void _c; void _p;
+    const {
+      effectiveStatus: _e,
+      collapsedChildCount: _c,
+      isParent: _p,
+      ...pure
+    } = data;
+    void _e;
+    void _c;
+    void _p;
     const render = props.renderNode ?? defaultRender;
     return render(pure as StatusFlowNode, ctx);
   };
 
-  const renderInner = (node: DAGNode<EnrichedNode>, state: NodeRenderState): JSX.Element => {
+  const renderInner = (
+    node: DAGNode<EnrichedNode>,
+    state: NodeRenderState,
+  ): JSX.Element => {
     if (state.kind === "collapsed") {
       return (
         <div class="sui-statusflow__card sui-statusflow__card--depth-collapsed">

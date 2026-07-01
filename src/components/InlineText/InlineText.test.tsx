@@ -27,7 +27,9 @@ describe("InlineText", () => {
 
   it("passes through standard span attributes", () => {
     const { container } = render(() => (
-      <InlineText title="tip" data-testid="cell">x</InlineText>
+      <InlineText title="tip" data-testid="cell">
+        x
+      </InlineText>
     ));
     const span = container.firstElementChild as HTMLElement;
     expect(span.getAttribute("title")).toBe("tip");

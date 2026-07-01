@@ -8,7 +8,13 @@ type Item = { status: 0 | 1 | 2 };
 // so col=0 is always the chart's center under the new convention.
 const swimlaneFor = (n: DAGNode<Item>) => n.data.status - 1;
 const nodeSize = () => [180, 60] as [number, number];
-const defaults = { swimlaneFor, nodeSize, maxDepth: 2, columnGap: 260, rowGap: 80 };
+const defaults = {
+  swimlaneFor,
+  nodeSize,
+  maxDepth: 2,
+  columnGap: 260,
+  rowGap: 80,
+};
 
 describe("computeSwimlaneLayout — column bucketing", () => {
   it("places nodes in column X by status (-columnGap, 0, +columnGap)", () => {
@@ -38,7 +44,9 @@ describe("computeSwimlaneLayout — Y coordinates", () => {
       { id: "c", data: { status: 1 } },
     ];
     const result = computeSwimlaneLayout(nodes, [], defaults);
-    const ys = ["a", "b", "c"].map((id) => result.positions.get(id)!.y).sort((x, y) => x - y);
+    const ys = ["a", "b", "c"]
+      .map((id) => result.positions.get(id)!.y)
+      .sort((x, y) => x - y);
     expect(ys).toEqual([-80, 0, 80]);
   });
 
@@ -188,7 +196,9 @@ describe("computeSwimlaneLayout — falloff and collapse", () => {
     ];
     const result = computeSwimlaneLayout(nodes, edges, opts);
     expect(result.summaries).toHaveLength(2);
-    expect(result.summaries.every((s) => s.column === -2 && s.collapsedCount === 1)).toBe(true);
+    expect(
+      result.summaries.every((s) => s.column === -2 && s.collapsedCount === 1),
+    ).toBe(true);
   });
 });
 
@@ -202,7 +212,10 @@ describe("computeSwimlaneLayout — orphan summaries (anchorless hidden nodes)",
       { id: "a", data: { status: 0 } }, // col -1
       { id: "c", data: { status: 2 } }, // col +1
     ];
-    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
+    const result = computeSwimlaneLayout(nodes, [], {
+      ...defaults,
+      maxDepth: 0,
+    });
     expect(result.positions.size).toBe(0); // nothing visible
     const left = result.summaries.find((s) => s.column === -1);
     const right = result.summaries.find((s) => s.column === 1);
@@ -223,7 +236,10 @@ describe("computeSwimlaneLayout — orphan summaries (anchorless hidden nodes)",
       { id: "b", data: { status: 1 } }, // col 0, visible
       { id: "c", data: { status: 2 } }, // col +1, hidden, no edge to b
     ];
-    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxDepth: 0 });
+    const result = computeSwimlaneLayout(nodes, [], {
+      ...defaults,
+      maxDepth: 0,
+    });
     expect(result.positions.has("b")).toBe(true);
     const orphan = result.summaries.find((s) => s.column === 1);
     expect(orphan).toBeDefined();
@@ -238,13 +254,20 @@ describe("computeSwimlaneLayout — vertical row overflow (maxRows)", () => {
       id: `n${i}`,
       data: { status: 1 as const }, // all in the center column
     }));
-    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxRows: 2 });
+    const result = computeSwimlaneLayout(nodes, [], {
+      ...defaults,
+      maxRows: 2,
+    });
     // Only 2 of the 5 center-col nodes are positioned.
-    const positionedCenter = [...result.positions.keys()].filter((id) => !id.startsWith("__"));
+    const positionedCenter = [...result.positions.keys()].filter(
+      (id) => !id.startsWith("__"),
+    );
     expect(positionedCenter.length).toBe(2);
     // The other 3 surface as a per-column ROW overflow (bottom placeholder),
     // NOT as a side summary lozenge.
-    expect(result.summaries.find((s) => s.id.startsWith("__rowoverflow"))).toBeUndefined();
+    expect(
+      result.summaries.find((s) => s.id.startsWith("__rowoverflow")),
+    ).toBeUndefined();
     const overflow = result.rowOverflows.find((o) => o.column === 0);
     expect(overflow).toBeDefined();
     expect(overflow!.count).toBe(3);
@@ -256,7 +279,10 @@ describe("computeSwimlaneLayout — vertical row overflow (maxRows)", () => {
       { id: "a", data: { status: 1 } },
       { id: "b", data: { status: 1 } },
     ];
-    const result = computeSwimlaneLayout(nodes, [], { ...defaults, maxRows: 5 });
+    const result = computeSwimlaneLayout(nodes, [], {
+      ...defaults,
+      maxRows: 5,
+    });
     expect(result.positions.size).toBe(2);
     expect(result.rowOverflows.length).toBe(0);
   });

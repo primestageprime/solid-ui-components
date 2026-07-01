@@ -8,7 +8,8 @@
 import { type JSX, Show, splitProps } from "solid-js";
 import "./InlineChartErrorOverlay.css";
 
-export interface InlineChartErrorOverlayProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface InlineChartErrorOverlayProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   title: string;
   subtitle?: string;
 }
@@ -27,7 +28,9 @@ export function InlineChartErrorOverlay(props: InlineChartErrorOverlayProps) {
       <div class="inline-chart-error-overlay__content">
         <div class="inline-chart-error-overlay__title">{local.title}</div>
         <Show when={local.subtitle}>
-          <div class="inline-chart-error-overlay__subtitle">{local.subtitle}</div>
+          <div class="inline-chart-error-overlay__subtitle">
+            {local.subtitle}
+          </div>
         </Show>
       </div>
     </div>

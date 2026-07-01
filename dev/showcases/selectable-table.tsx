@@ -20,7 +20,10 @@ export const SelectableTableShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>SelectableTable — Depth 1 (zero CSS)</h2>
-      <p class="text-meta">Composes Button (Primitive/Depth 0). Table + checkbox selection + action bar.</p>
+      <p class="text-meta">
+        Composes Button (Primitive/Depth 0). Table + checkbox selection + action
+        bar.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — With Selection Actions</h3>
@@ -46,12 +49,18 @@ export const SelectableTableShowcase: Component = () => {
           <h3>Sub-Components</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Button (Atomic)</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">Used in action bar</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">Used in action bar</div>
+            </div>
           </div>
           <h3>Props</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Selection</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">selectionStore / selectionActions / getRowId</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                selectionStore / selectionActions / getRowId
+              </div>
+            </div>
           </div>
         </div>
       </div>

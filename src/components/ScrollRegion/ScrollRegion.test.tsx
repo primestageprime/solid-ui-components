@@ -29,9 +29,18 @@ const setGeometry = (
   el: HTMLElement,
   geom: { scrollTop: number; clientHeight: number; scrollHeight: number },
 ) => {
-  Object.defineProperty(el, "scrollTop", { value: geom.scrollTop, configurable: true });
-  Object.defineProperty(el, "clientHeight", { value: geom.clientHeight, configurable: true });
-  Object.defineProperty(el, "scrollHeight", { value: geom.scrollHeight, configurable: true });
+  Object.defineProperty(el, "scrollTop", {
+    value: geom.scrollTop,
+    configurable: true,
+  });
+  Object.defineProperty(el, "clientHeight", {
+    value: geom.clientHeight,
+    configurable: true,
+  });
+  Object.defineProperty(el, "scrollHeight", {
+    value: geom.scrollHeight,
+    configurable: true,
+  });
   el.dispatchEvent(new Event("scroll"));
 };
 
@@ -44,8 +53,12 @@ describe("ScrollRegion", () => {
     ));
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).toMatch(/sui-scroll-region/);
-    expect(container.querySelector(".sui-scroll-region__viewport")).not.toBeNull();
-    expect(container.querySelector(".sui-scroll-region__content")).not.toBeNull();
+    expect(
+      container.querySelector(".sui-scroll-region__viewport"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".sui-scroll-region__content"),
+    ).not.toBeNull();
     expect(topFade(container)).not.toBeNull();
     expect(bottomFade(container)).not.toBeNull();
   });

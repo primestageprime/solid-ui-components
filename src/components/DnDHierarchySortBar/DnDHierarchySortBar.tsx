@@ -46,7 +46,9 @@ export interface DnDHierarchySortBarProps {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) => {
+export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
+  props,
+) => {
   const label = () => props.label ?? "nest by";
 
   // axis "x": this is a horizontal flex-wrap row, so the before/after hit-test
@@ -118,7 +120,10 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (props) 
                 onDragStart={handlers().onDragStart}
                 onDragEnd={handlers().onDragEnd}
               >
-                <span class="sui-dnd-hierarchy-sort-bar__grip" aria-hidden="true">
+                <span
+                  class="sui-dnd-hierarchy-sort-bar__grip"
+                  aria-hidden="true"
+                >
                   ⋮⋮
                 </span>
                 {item.label}

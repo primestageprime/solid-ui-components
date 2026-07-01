@@ -9,7 +9,8 @@ import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import type { IconSize } from "../Icon/Icon";
 import "./ProgressCheck.css";
 
-export interface ProgressCheckProps extends JSX.HTMLAttributes<HTMLSpanElement> {
+export interface ProgressCheckProps
+  extends JSX.HTMLAttributes<HTMLSpanElement> {
   /** 0 to 1. 0 = empty checkbox, 0<x<1 = partial fill, 1 = green check. */
   progress: number;
   size?: IconSize;
@@ -59,7 +60,10 @@ export const ProgressCheck: Component<ProgressCheckProps> = (props) => {
 export type ProgressCheckOverrides = Pick<ProgressCheckProps, "size">;
 
 /** Props available to consumers of a curried ProgressCheck variant (`progress` is runtime data). */
-export type ProgressCheckDataProps = Omit<ProgressCheckProps, keyof ProgressCheckOverrides>;
+export type ProgressCheckDataProps = Omit<
+  ProgressCheckProps,
+  keyof ProgressCheckOverrides
+>;
 
 export function createProgressCheck(
   defaults: Partial<ProgressCheckProps>,

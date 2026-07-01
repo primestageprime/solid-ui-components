@@ -91,8 +91,12 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   };
 
   const commitRange = (start: Date, end: Date) => {
-    const s = showTime() ? applyTimeToDate(start, startTime(), props.timeZone) : start;
-    const e = showTime() ? applyTimeToDate(end, endTime(), props.timeZone) : end;
+    const s = showTime()
+      ? applyTimeToDate(start, startTime(), props.timeZone)
+      : start;
+    const e = showTime()
+      ? applyTimeToDate(end, endTime(), props.timeZone)
+      : end;
     const ordered = orderDates(s, e);
     props.onChange(clampRange(ordered.start, ordered.end, maxRangeDays()));
   };

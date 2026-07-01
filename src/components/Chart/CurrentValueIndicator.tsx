@@ -27,10 +27,14 @@ export interface CurrentValueIndicatorOverrides {
   labelOffset?: { x: number; y: number };
   class?: string;
 }
-export type CurrentValueIndicatorDataProps =
-  Omit<CurrentValueIndicatorProps, keyof CurrentValueIndicatorOverrides>;
+export type CurrentValueIndicatorDataProps = Omit<
+  CurrentValueIndicatorProps,
+  keyof CurrentValueIndicatorOverrides
+>;
 
-export const CurrentValueIndicator: Component<CurrentValueIndicatorProps> = (props) => {
+export const CurrentValueIndicator: Component<CurrentValueIndicatorProps> = (
+  props,
+) => {
   const ctx = useChart();
   const merged = mergeProps(
     { radius: 4, color: "var(--sui-accent)", labelOffset: { x: 8, y: -4 } },
@@ -68,6 +72,8 @@ export function createCurrentValueIndicator(
   defaults: Partial<Omit<CurrentValueIndicatorProps, "children">>,
 ): Component<CurrentValueIndicatorDataProps> {
   return (props) => (
-    <CurrentValueIndicator {...mergeProps(defaults, props as CurrentValueIndicatorProps)} />
+    <CurrentValueIndicator
+      {...mergeProps(defaults, props as CurrentValueIndicatorProps)}
+    />
   );
 }

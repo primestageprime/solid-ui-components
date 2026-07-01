@@ -7,7 +7,13 @@
 // content renders inboard only when isOpen=true.
 // Clicking the active tab toggles isOpen.
 // ============================================
-import { type Component, type JSX, Show, createMemo, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createMemo,
+  mergeProps,
+} from "solid-js";
 import { Tabs, type Tab } from "../Tabs/Tabs";
 import { Row } from "../Layout/Row";
 import type { ColorVariant } from "../../types";
@@ -110,7 +116,10 @@ export const TabbedSidePanel: Component<TabbedSidePanelProps> = (rawProps) => {
   };
 
   const classes = () => {
-    const cs = ["sui-tabbed-side-panel", `sui-tabbed-side-panel--${props.side}`];
+    const cs = [
+      "sui-tabbed-side-panel",
+      `sui-tabbed-side-panel--${props.side}`,
+    ];
     if (props.class) cs.push(props.class);
     return cs.join(" ");
   };

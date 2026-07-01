@@ -44,7 +44,8 @@ describe("regression model", () => {
 
   it("residualStd is ~0 for a perfectly linear dataset and grows with noise", () => {
     const clean = createModel();
-    for (let r = 1000; r <= 10000; r += 1000) foldSample(clean, r, 2000 + 0.3 * r);
+    for (let r = 1000; r <= 10000; r += 1000)
+      foldSample(clean, r, 2000 + 0.3 * r);
     const noisy = createModel();
     for (let r = 1000; r <= 10000; r += 1000) {
       foldSample(noisy, r, 2000 + 0.3 * r + (r % 2 ? 800 : -800));

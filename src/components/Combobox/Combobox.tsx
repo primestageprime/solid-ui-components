@@ -170,9 +170,9 @@ const renderSingle = (
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
-    const exists = local.options().some(
-      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
-    );
+    const exists = local
+      .options()
+      .some((opt) => opt.label.toLowerCase() === text.toLowerCase());
     if (exists) return;
     e.preventDefault();
     local.onCreate(text);
@@ -203,7 +203,13 @@ const renderSingle = (
             </KobalteCombobox.ItemLabel>
           </span>
           <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
+            <svg
+              width={14}
+              height={14}
+              viewBox="0 0 16 16"
+              fill="none"
+              innerHTML={ICON_PATHS["check"].outline}
+            />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
       )}
@@ -229,7 +235,13 @@ const renderSingle = (
                 aria-label="Clear selection"
                 onClick={handleClear}
               >
-                <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
+                <svg
+                  width={12}
+                  height={12}
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  innerHTML={ICON_PATHS["close"].outline}
+                />
               </button>
             </Show>
             <KobalteCombobox.Trigger
@@ -237,7 +249,13 @@ const renderSingle = (
               disabled={local.disabled}
             >
               <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
-                <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
+                <svg
+                  width={14}
+                  height={14}
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  innerHTML={ICON_PATHS["chevron-down"].outline}
+                />
               </KobalteCombobox.Icon>
             </KobalteCombobox.Trigger>
           </>
@@ -370,9 +388,9 @@ const renderMulti = (
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
-    const existsInOptions = local.options().some(
-      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
-    );
+    const existsInOptions = local
+      .options()
+      .some((opt) => opt.label.toLowerCase() === text.toLowerCase());
     const existsInValue = (local.value?.() ?? []).some(
       (opt) => opt.label.toLowerCase() === text.toLowerCase(),
     );
@@ -408,7 +426,13 @@ const renderMulti = (
             </KobalteCombobox.ItemLabel>
           </span>
           <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["check"].outline} />
+            <svg
+              width={14}
+              height={14}
+              viewBox="0 0 16 16"
+              fill="none"
+              innerHTML={ICON_PATHS["check"].outline}
+            />
           </KobalteCombobox.ItemIndicator>
         </KobalteCombobox.Item>
       )}
@@ -456,7 +480,13 @@ const renderMulti = (
                           aria-label={`Remove ${option.label}`}
                           onClick={() => state.remove(option)}
                         >
-                          <svg width={12} height={12} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["close"].outline} />
+                          <svg
+                            width={12}
+                            height={12}
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            innerHTML={ICON_PATHS["close"].outline}
+                          />
                         </button>
                       </span>
                     )}
@@ -478,7 +508,13 @@ const renderMulti = (
                 disabled={local.disabled}
               >
                 <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" innerHTML={ICON_PATHS["chevron-down"].outline} />
+                  <svg
+                    width={14}
+                    height={14}
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    innerHTML={ICON_PATHS["chevron-down"].outline}
+                  />
                 </KobalteCombobox.Icon>
               </KobalteCombobox.Trigger>
             </div>
@@ -493,4 +529,3 @@ const renderMulti = (
     </KobalteCombobox>
   );
 };
-

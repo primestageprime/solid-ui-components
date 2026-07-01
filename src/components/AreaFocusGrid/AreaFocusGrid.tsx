@@ -14,7 +14,13 @@
 // Content is supplied via render callbacks so the layout is reusable: the
 // caller decides what an area header, focus label, or cell looks like.
 // ============================================
-import { type Component, createMemo, For, type JSX, mergeProps } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  For,
+  type JSX,
+  mergeProps,
+} from "solid-js";
 import "./AreaFocusGrid.css";
 
 /** One focus sub-column within an area. */
@@ -67,7 +73,11 @@ interface AreaFocusGridLayout {
   /** Flattened sub-columns in display order. */
   subCols: readonly AreaFocusCellKey[];
   /** Per-area placement: first sub-column index (1-based) + span. */
-  areaSpans: readonly { area: AreaFocusGridArea; startSubCol: number; span: number }[];
+  areaSpans: readonly {
+    area: AreaFocusGridArea;
+    startSubCol: number;
+    span: number;
+  }[];
   /** Grid-column indices (1-based) of vertical separators between areas. */
   areaBoundaryCols: readonly number[];
   /** Grid-column indices (1-based) of vertical separators between every pair of sub-columns. */
@@ -79,7 +89,9 @@ interface AreaFocusGridLayout {
  * the grid-column indices of the two flavors of vertical separator.
  * Pure: derived only from `areas`.
  */
-const buildLayout = (areas: readonly AreaFocusGridArea[]): AreaFocusGridLayout => {
+const buildLayout = (
+  areas: readonly AreaFocusGridArea[],
+): AreaFocusGridLayout => {
   const occupied = areas.filter((a) => a.focuses.length > 0);
 
   const subCols: AreaFocusCellKey[] = occupied.flatMap((area) =>
@@ -140,7 +152,9 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
   const layout = createMemo(() => buildLayout(props.areas));
   const subColMinW = () => props.subColumnMinWidth ?? "120px";
   const rowMinH = () => props.cellRowMinHeight ?? "80px";
-  const inlineGrid = createMemo(() => gridTemplate(layout(), subColMinW(), rowMinH()));
+  const inlineGrid = createMemo(() =>
+    gridTemplate(layout(), subColMinW(), rowMinH()),
+  );
   const areaBoundarySet = createMemo(() => new Set(layout().areaBoundaryCols));
 
   const rootClass = () =>
@@ -161,7 +175,10 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
           return (
             <div
               class="sui-area-focus-grid__area-header"
-              style={{ "grid-row": "1", "grid-column": `${startCol} / span ${colSpan}` }}
+              style={{
+                "grid-row": "1",
+                "grid-column": `${startCol} / span ${colSpan}`,
+              }}
             >
               {props.renderAreaHeader(a.area)}
             </div>
@@ -260,7 +277,10 @@ export type AreaFocusGridOverrides = Pick<
 >;
 
 /** Data props — what a Curried Variant publicly exposes. */
-export type AreaFocusGridDataProps = Omit<AreaFocusGridProps, keyof AreaFocusGridOverrides>;
+export type AreaFocusGridDataProps = Omit<
+  AreaFocusGridProps,
+  keyof AreaFocusGridOverrides
+>;
 
 /**
  * Factory: returns an AreaFocusGrid pre-configured with sizing overrides.

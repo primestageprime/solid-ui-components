@@ -6,10 +6,24 @@
 // Transposed stream: keys flow top-to-bottom (rows),
 // items flow left-to-right (columns, earliest left, latest right).
 // ============================================
-import { type Component, type JSX, splitProps, For, Show, createSignal, onCleanup } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  For,
+  Show,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import "./HeatStream.css";
 
-export type HeatStreamStatus = "missing" | "partial" | "full" | "unknown" | "empty" | "info";
+export type HeatStreamStatus =
+  | "missing"
+  | "partial"
+  | "full"
+  | "unknown"
+  | "empty"
+  | "info";
 
 export interface HeatStreamItem {
   name: string;
@@ -116,7 +130,9 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
   };
 
   const markHovered = () =>
-    !!rootRef?.querySelector(".jtf-heatstream__rows .jtf-heatstream__cell:hover");
+    !!rootRef?.querySelector(
+      ".jtf-heatstream__rows .jtf-heatstream__cell:hover",
+    );
 
   const handleMouseMove = () => {
     if (markHovered()) {
@@ -177,9 +193,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
         </Show>
         <div class="jtf-heatstream__cells">
           <For each={orderedItems()}>
-            {(item) => (
-              <div class="jtf-heatstream__col-label">{item.name}</div>
-            )}
+            {(item) => <div class="jtf-heatstream__col-label">{item.name}</div>}
           </For>
         </div>
       </div>
@@ -203,7 +217,9 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
                         class={`jtf-heatstream__cell jtf-heatstream__cell--${status}`}
                         title={`${item.name} — ${key}: ${status}`}
                         onClick={() => local.onItemClick?.(item.name, key)}
-                        style={local.onItemClick ? { cursor: "pointer" } : undefined}
+                        style={
+                          local.onItemClick ? { cursor: "pointer" } : undefined
+                        }
                       />
                     );
                   }}
@@ -217,7 +233,11 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
       {/* Hover preview for compact variant */}
       <Show when={local.variant === "compact" && local.items.length > 0}>
         <div class="jtf-heatstream__preview" style={previewStyle()}>
-          <div class="jtf-heatstream__preview-heading">{local.previewLabel ? `${local.previewLabel} — ` : ""}{local.items.length} vessel call{local.items.length !== 1 ? "s" : ""}</div>
+          <div class="jtf-heatstream__preview-heading">
+            {local.previewLabel ? `${local.previewLabel} — ` : ""}
+            {local.items.length} vessel call
+            {local.items.length !== 1 ? "s" : ""}
+          </div>
           <div class="jtf-heatstream__preview-rows">
             <For each={keys()}>
               {(key) => (
@@ -228,7 +248,9 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
                       {(item) => {
                         const status = item.statuses[key] || "missing";
                         return (
-                          <div class={`jtf-heatstream__cell jtf-heatstream__cell--${status}`} />
+                          <div
+                            class={`jtf-heatstream__cell jtf-heatstream__cell--${status}`}
+                          />
                         );
                       }}
                     </For>

@@ -25,11 +25,7 @@ const labelAsString = (label: JSX.Element | undefined): string | undefined =>
   typeof label === "string" ? label : undefined;
 
 export const LabeledDivider: Component<LabeledDividerProps> = (props) => {
-  const [local, others] = splitProps(props, [
-    "label",
-    "class",
-    "aria-label",
-  ]);
+  const [local, others] = splitProps(props, ["label", "class", "aria-label"]);
 
   return (
     <div

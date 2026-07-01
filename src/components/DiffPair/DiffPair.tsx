@@ -13,7 +13,13 @@
 // Factory: createDiffPair() — locks in label/arrow defaults for Curried
 // Variants (e.g. LabeledDiffPair, BulletDiffPair).
 // ============================================
-import { type Component, type JSX, Show, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./DiffPair.css";
 
 export interface DiffPairProps {

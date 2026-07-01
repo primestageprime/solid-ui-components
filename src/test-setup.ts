@@ -12,7 +12,7 @@
 const measureText = (text: string) =>
   // Rough monospace-ish estimate: good enough for layout math under test,
   // deterministic, and non-zero so callers don't fall back to their own guess.
-  ({ width: (text?.length ?? 0) * 7 } as TextMetrics);
+  ({ width: (text?.length ?? 0) * 7 }) as TextMetrics;
 
 const stubContext2d = () =>
   new Proxy(

@@ -80,5 +80,7 @@ export const GhostPin: Component<GhostPinProps> = (props) => {
 export function createGhostPin(
   defaults: Partial<Omit<GhostPinProps, "children">>,
 ): Component<GhostPinDataProps> {
-  return (props) => <GhostPin {...mergeProps(defaults, props as GhostPinProps)} />;
+  return (props) => (
+    <GhostPin {...mergeProps(defaults, props as GhostPinProps)} />
+  );
 }

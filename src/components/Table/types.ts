@@ -12,7 +12,8 @@ export interface TableColumn<T> {
   group?: string;
 }
 
-export interface BaseTableProps<T> extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "children"> {
+export interface BaseTableProps<T>
+  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "children"> {
   data: T[];
   columns: TableColumn<T>[];
   maxHeight?: string;
@@ -89,10 +90,10 @@ export interface SelectableTableProps<T> extends BaseTableProps<T> {
 }
 
 /** Shared accessor helper used by BaseTable, GroupedTable, SelectableTable */
-export function getCellValue<T, C extends { accessor: keyof T | ((row: T) => any) }>(
-  row: T,
-  column: C,
-) {
+export function getCellValue<
+  T,
+  C extends { accessor: keyof T | ((row: T) => any) },
+>(row: T, column: C) {
   if (typeof column.accessor === "function") {
     return column.accessor(row);
   }

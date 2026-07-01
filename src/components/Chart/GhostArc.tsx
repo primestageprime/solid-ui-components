@@ -56,7 +56,8 @@ export interface GhostArcOverrides {
 }
 export type GhostArcDataProps = Omit<GhostArcProps, keyof GhostArcOverrides>;
 
-const toScalar = (v: number | Date): number => (v instanceof Date ? v.getTime() : v);
+const toScalar = (v: number | Date): number =>
+  v instanceof Date ? v.getTime() : v;
 
 export const GhostArc: Component<GhostArcProps> = (props) => {
   const ctx = useChart();
@@ -151,5 +152,7 @@ export const GhostArc: Component<GhostArcProps> = (props) => {
 export function createGhostArc(
   defaults: Partial<Omit<GhostArcProps, "children">>,
 ): Component<GhostArcDataProps> {
-  return (props) => <GhostArc {...mergeProps(defaults, props as GhostArcProps)} />;
+  return (props) => (
+    <GhostArc {...mergeProps(defaults, props as GhostArcProps)} />
+  );
 }

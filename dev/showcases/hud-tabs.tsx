@@ -13,17 +13,29 @@ export const TabsShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Tabs — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (HUD.css), no component imports. Tab bar with variant styles.</p>
+      <p class="text-meta">
+        Owns CSS (HUD.css), no component imports. Tab bar with variant styles.
+      </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Default (Underline)</h3>
           <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Boxed</h3>
-          <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="boxed" />
+          <Tabs
+            tabs={tabs}
+            activeTab={active()}
+            onTabChange={setActive}
+            variant="boxed"
+          />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Pill</h3>
-          <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} variant="pill" />
+          <Tabs
+            tabs={tabs}
+            activeTab={active()}
+            onTabChange={setActive}
+            variant="pill"
+          />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — With Status</h3>
           <Tabs
@@ -36,18 +48,55 @@ export const TabsShowcase: Component = () => {
             onTabChange={() => {}}
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Default)</h3>
-          <div style={{ display: "flex", "min-height": "180px", border: "1px dashed var(--sui-border)" }}>
-            <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} orientation="vertical" />
-            <div style={{ flex: 1, padding: "16px", color: "var(--sui-text-muted)" }}>
+          <h3 style={{ "margin-top": "24px" }}>
+            Composed — Vertical (Default)
+          </h3>
+          <div
+            style={{
+              display: "flex",
+              "min-height": "180px",
+              border: "1px dashed var(--sui-border)",
+            }}
+          >
+            <Tabs
+              tabs={tabs}
+              activeTab={active()}
+              onTabChange={setActive}
+              orientation="vertical"
+            />
+            <div
+              style={{
+                flex: 1,
+                padding: "16px",
+                color: "var(--sui-text-muted)",
+              }}
+            >
               Active tab: <strong>{active()}</strong>
             </div>
           </div>
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Boxed)</h3>
-          <div style={{ display: "flex", "min-height": "180px", border: "1px dashed var(--sui-border)" }}>
-            <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} orientation="vertical" variant="boxed" />
-            <div style={{ flex: 1, padding: "16px", color: "var(--sui-text-muted)" }}>
+          <div
+            style={{
+              display: "flex",
+              "min-height": "180px",
+              border: "1px dashed var(--sui-border)",
+            }}
+          >
+            <Tabs
+              tabs={tabs}
+              activeTab={active()}
+              onTabChange={setActive}
+              orientation="vertical"
+              variant="boxed"
+            />
+            <div
+              style={{
+                flex: 1,
+                padding: "16px",
+                color: "var(--sui-text-muted)",
+              }}
+            >
               Active tab: <strong>{active()}</strong>
             </div>
           </div>
@@ -56,19 +105,33 @@ export const TabsShowcase: Component = () => {
           <h3>Props</h3>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Variant</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">default / underline / boxed / pill</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                default / underline / boxed / pill
+              </div>
+            </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Orientation</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">horizontal (default) / vertical</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                horizontal (default) / vertical
+              </div>
+            </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Color</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">default / primary / danger / warning / success</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">
+                default / primary / danger / warning / success
+              </div>
+            </div>
           </div>
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Tab Status</div>
-            <div class="depth2-atom"><div class="depth2-atom__label">warning / error</div></div>
+            <div class="depth2-atom">
+              <div class="depth2-atom__label">warning / error</div>
+            </div>
           </div>
         </div>
       </div>

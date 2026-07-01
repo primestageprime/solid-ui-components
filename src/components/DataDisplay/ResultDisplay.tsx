@@ -44,7 +44,8 @@ export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
 
   const rootClass = () => {
     const classList = ["sui-result-display"];
-    if (local.highlightable) classList.push("sui-result-display--highlightable");
+    if (local.highlightable)
+      classList.push("sui-result-display--highlightable");
     if (local.highlighted) classList.push("sui-result-display--highlighted");
     if (local.class) classList.push(local.class);
     return classList.join(" ");

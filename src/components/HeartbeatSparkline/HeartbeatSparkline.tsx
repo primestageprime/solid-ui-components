@@ -29,7 +29,9 @@ export interface HeartbeatSparklineProps
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 
-export const HeartbeatSparkline: Component<HeartbeatSparklineProps> = (props) => {
+export const HeartbeatSparkline: Component<HeartbeatSparklineProps> = (
+  props,
+) => {
   const [local, others] = splitProps(props, [
     "state",
     "samples",

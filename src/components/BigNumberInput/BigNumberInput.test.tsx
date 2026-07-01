@@ -224,7 +224,9 @@ describe("BigNumberInput", () => {
 
   it("createBigNumberInput bakes defaults", () => {
     const Euro = createBigNumberInput({ locale: "de-DE", currency: "EUR" });
-    const { container } = render(() => <Euro value={1000} onChange={() => {}} />);
+    const { container } = render(() => (
+      <Euro value={1000} onChange={() => {}} />
+    ));
     const v = inputOf(container).value;
     expect(v).toContain("1.000,00");
     expect(v).toContain("€");

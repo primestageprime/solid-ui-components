@@ -14,13 +14,24 @@
  *
  * MUST be called synchronously during component setup: it registers effects and
  * an onCleanup in the caller's reactive owner. */
-import { type Accessor, createEffect, createSignal, on, onCleanup } from "solid-js";
+import {
+  type Accessor,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 import {
   computeEnterFrame,
   computeSplitLayout,
   type SplitLayout,
 } from "./layout";
-import { animateOnce, buildCollapsePlaceholder, cssEscape, tweenOverTime } from "./animation";
+import {
+  animateOnce,
+  buildCollapsePlaceholder,
+  cssEscape,
+  tweenOverTime,
+} from "./animation";
 
 export interface FlightDeps {
   getRootEl: () => HTMLElement | undefined;
@@ -149,7 +160,9 @@ export function createFlightController(deps: FlightDeps): FlightController {
     const nowEl = rootEl.querySelector<HTMLElement>(
       `[data-sql-key="${cssEscape(key)}"]`,
     );
-    const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
+    const bottomList = rootEl.querySelector<HTMLElement>(
+      ".sui-sql__list--bottom",
+    );
     const topList = deps.getTopListEl();
 
     // topOnly enter: the PANEL adjusts to the card, not the card to the panel.
@@ -341,7 +354,8 @@ export function createFlightController(deps: FlightDeps): FlightController {
     // together, with no card sliding over another and no instant jump. The
     // placeholder clips its content from the TOP (content pinned to the bottom of
     // the shrinking box, overflow:hidden), keeping its orange bg until it hits 0.
-    const bottomHeader = bottomList?.querySelector<HTMLElement>(".sui-sql__header");
+    const bottomHeader =
+      bottomList?.querySelector<HTMLElement>(".sui-sql__header");
     if (bottomList && bottomHeader) {
       const rowH = first.height;
 
@@ -349,7 +363,8 @@ export function createFlightController(deps: FlightDeps): FlightController {
       // to the bottom edge) — it disappears beneath the "to categorize" header.
       const placeholder = buildCollapsePlaceholder({
         rowH,
-        innerClass: "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused",
+        innerClass:
+          "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused",
         markerGlyph: "▸", // focused glyph, not ✓
         pin: "bottom",
         sourceRow: nowEl,
@@ -421,7 +436,9 @@ export function createFlightController(deps: FlightDeps): FlightController {
     };
     if (!rootEl) return bail();
     const topList = deps.getTopListEl();
-    const bottomList = rootEl.querySelector<HTMLElement>(".sui-sql__list--bottom");
+    const bottomList = rootEl.querySelector<HTMLElement>(
+      ".sui-sql__list--bottom",
+    );
     // The arrived card now lives at the head of the bottom list.
     const nowEl = rootEl.querySelector<HTMLElement>(
       `.sui-sql__list--bottom [data-sql-key="${cssEscape(key)}"]`,
@@ -468,7 +485,11 @@ export function createFlightController(deps: FlightDeps): FlightController {
     };
 
     const runReverseEnter = () => {
-      if (newTop >= oldTop - 0.5 || total <= 0 || typeof setTimeout !== "function") {
+      if (
+        newTop >= oldTop - 0.5 ||
+        total <= 0 ||
+        typeof setTimeout !== "function"
+      ) {
         // No height delta to animate (capped/floor) — just release.
         releaseHeights();
         return;
@@ -510,7 +531,10 @@ export function createFlightController(deps: FlightDeps): FlightController {
       ...topList.querySelectorAll<HTMLElement>(":scope > .sui-sql__row"),
     ];
     if (doneRows.length > 0) {
-      doneRows[doneRows.length - 1].insertAdjacentElement("afterend", placeholder);
+      doneRows[doneRows.length - 1].insertAdjacentElement(
+        "afterend",
+        placeholder,
+      );
     } else if (topHeader) {
       topHeader.insertAdjacentElement("afterend", placeholder);
     } else {

@@ -18,18 +18,33 @@
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
-export interface ProportionalStackProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface ProportionalStackProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Lay children out vertically (column) or horizontally (row). Default `column`. */
   direction?: "column" | "row";
   /** Gap between items. Default `sm` (8px). */
   gap?: "xs" | "sm";
 }
 
-export const ProportionalStack: Component<ProportionalStackProps> = (rawProps) => {
-  const props = mergeProps({ direction: "column" as const, gap: "sm" as const }, rawProps);
-  const [local, others] = splitProps(props, ["direction", "gap", "class", "children"]);
+export const ProportionalStack: Component<ProportionalStackProps> = (
+  rawProps,
+) => {
+  const props = mergeProps(
+    { direction: "column" as const, gap: "sm" as const },
+    rawProps,
+  );
+  const [local, others] = splitProps(props, [
+    "direction",
+    "gap",
+    "class",
+    "children",
+  ]);
   const classes = () => {
-    const cls = ["proportional-stack", `proportional-stack--${local.direction}`, `proportional-stack--gap-${local.gap}`];
+    const cls = [
+      "proportional-stack",
+      `proportional-stack--${local.direction}`,
+      `proportional-stack--gap-${local.gap}`,
+    ];
     if (local.class) cls.push(local.class);
     return cls.join(" ");
   };
@@ -40,7 +55,8 @@ export const ProportionalStack: Component<ProportionalStackProps> = (rawProps) =
   );
 };
 
-export interface ProportionalItemProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface ProportionalItemProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Relative weight. The proportions of weights determine how items share the
    *  container when over-allocated. Default 1. */
   weight?: number;
@@ -48,9 +64,17 @@ export interface ProportionalItemProps extends JSX.HTMLAttributes<HTMLDivElement
   scrollWhenSmall?: boolean;
 }
 
-export const ProportionalItem: Component<ProportionalItemProps> = (rawProps) => {
+export const ProportionalItem: Component<ProportionalItemProps> = (
+  rawProps,
+) => {
   const props = mergeProps({ weight: 1, scrollWhenSmall: true }, rawProps);
-  const [local, others] = splitProps(props, ["weight", "scrollWhenSmall", "class", "style", "children"]);
+  const [local, others] = splitProps(props, [
+    "weight",
+    "scrollWhenSmall",
+    "class",
+    "style",
+    "children",
+  ]);
   const classes = () => {
     const cls = ["proportional-item"];
     if (local.scrollWhenSmall) cls.push("proportional-item--scroll");
@@ -65,7 +89,15 @@ export const ProportionalItem: Component<ProportionalItemProps> = (rawProps) => 
     local.weight === 0 ? "0 0 auto" : `${local.weight} 1 0px`;
   const baseStyle: JSX.CSSProperties = { flex: flex() };
   return (
-    <div class={classes()} style={typeof local.style === "string" ? local.style : { ...baseStyle, ...local.style }} {...others}>
+    <div
+      class={classes()}
+      style={
+        typeof local.style === "string"
+          ? local.style
+          : { ...baseStyle, ...local.style }
+      }
+      {...others}
+    >
       {local.children}
     </div>
   );

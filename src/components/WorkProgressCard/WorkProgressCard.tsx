@@ -34,7 +34,11 @@ export interface WorkProgressCardProps {
 export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
   const accent = () => statusAccent(props.status);
   const bar = () =>
-    deriveCardBar({ status: props.status, estimate: props.estimate, actual: props.actual });
+    deriveCardBar({
+      status: props.status,
+      estimate: props.estimate,
+      actual: props.actual,
+    });
   // Padding (8px 12px) and radius (6px) sit off Surface's padding/radius scale
   // (sm=8/md=16, sm=4/md=8), so they're supplied inline at the composition
   // site. The status accent drives the border color, matching the previous
@@ -55,24 +59,46 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
       style={cardStyle()}
     >
       <div class="sui-wpc__header">
-        <Text variant="sublabel" as="span" class="sui-wpc__claimed">{props.claimedBy}</Text>
-        <Text variant="label" as="span" class="sui-wpc__status" color={accent()}>{props.status}</Text>
+        <Text variant="sublabel" as="span" class="sui-wpc__claimed">
+          {props.claimedBy}
+        </Text>
+        <Text
+          variant="label"
+          as="span"
+          class="sui-wpc__status"
+          color={accent()}
+        >
+          {props.status}
+        </Text>
       </div>
-      <Text variant="title" as="div" class="sui-wpc__title">{props.title}</Text>
+      <Text variant="title" as="div" class="sui-wpc__title">
+        {props.title}
+      </Text>
       <Show when={props.subtitle}>
-        <Text variant="sublabel" as="div" class="sui-wpc__subtitle">{props.subtitle}</Text>
+        <Text variant="sublabel" as="div" class="sui-wpc__subtitle">
+          {props.subtitle}
+        </Text>
       </Show>
       <div class="sui-wpc__bar-wrap">
         <div class="sui-wpc__bar">
           <For each={bar().segments}>
             {(seg) => (
-              <div class="sui-wpc__seg" style={{ width: `${seg.width * 100}%`, background: seg.color }} />
+              <div
+                class="sui-wpc__seg"
+                style={{ width: `${seg.width * 100}%`, background: seg.color }}
+              />
             )}
           </For>
         </div>
         <Show when={bar().sign}>
           {(sign) => (
-            <div class="sui-wpc__sign" style={{ border: `1px solid ${CARD_SIGN_COLOR}`, color: CARD_SIGN_COLOR }}>
+            <div
+              class="sui-wpc__sign"
+              style={{
+                border: `1px solid ${CARD_SIGN_COLOR}`,
+                color: CARD_SIGN_COLOR,
+              }}
+            >
               {sign() === "yield" ? "⚠︎" : "?"}
             </div>
           )}

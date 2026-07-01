@@ -61,9 +61,7 @@ export function ResultPanel(props: ResultPanelProps) {
 
   return (
     <Show when={useFormulaProvider()} fallback={content()}>
-      <FormulaProvider>
-        {content()}
-      </FormulaProvider>
+      <FormulaProvider>{content()}</FormulaProvider>
     </Show>
   );
 }

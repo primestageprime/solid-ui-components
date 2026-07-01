@@ -55,7 +55,11 @@ export const TagInput: Component<TagInputProps> = (props) => {
         e.preventDefault();
         commitTag(text());
       }
-    } else if (e.key === "Backspace" && text() === "" && props.tags.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      text() === "" &&
+      props.tags.length > 0
+    ) {
       e.preventDefault();
       props.onRemove(props.tags[props.tags.length - 1]);
     }
@@ -73,7 +77,9 @@ export const TagInput: Component<TagInputProps> = (props) => {
                 class="tag-input__chip-remove"
                 onClick={() => props.onRemove(tag)}
                 aria-label={`Remove tag ${tag}`}
-              >×</button>
+              >
+                ×
+              </button>
             </span>
           )}
         </For>
@@ -104,7 +110,9 @@ export const TagInput: Component<TagInputProps> = (props) => {
                   e.preventDefault();
                   commitTag(s);
                 }}
-              >{s}</button>
+              >
+                {s}
+              </button>
             )}
           </For>
         </div>

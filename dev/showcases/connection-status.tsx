@@ -1,4 +1,10 @@
-import { type Component, createSignal, onCleanup, onMount, For } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  onCleanup,
+  onMount,
+  For,
+} from "solid-js";
 import { HeartbeatSparkline } from "../../src/components/HeartbeatSparkline";
 import { LiveHeartbeatTrace } from "../../src/components/LiveHeartbeatTrace";
 import { ConnectionStatus } from "../../src/components/ConnectionStatus";
@@ -49,24 +55,48 @@ export const ConnectionStatusShowcase: Component = () => {
         <div class="depth2-composed">
           <h3>Four states</h3>
           <Row gap="sm" align="start" wrap>
-            <ConnectionStatus name="worker-bee" lastHeartbeatAt={healthyBeat()} timeoutMs={5000} />
-            <ConnectionStatus name="idle" lastHeartbeatAt={idleBeat()} timeoutMs={4000} />
+            <ConnectionStatus
+              name="worker-bee"
+              lastHeartbeatAt={healthyBeat()}
+              timeoutMs={5000}
+            />
+            <ConnectionStatus
+              name="idle"
+              lastHeartbeatAt={idleBeat()}
+              timeoutMs={4000}
+            />
             <ConnectionStatus
               name="problem"
               lastHeartbeatAt={errorBeat()}
               errorAt={errorAt()}
               timeoutMs={5000}
             />
-            <ConnectionStatus name="off" lastHeartbeatAt={null} timeoutMs={5000} />
+            <ConnectionStatus
+              name="off"
+              lastHeartbeatAt={null}
+              timeoutMs={5000}
+            />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>LiveHeartbeatTrace — Depth 1 (raw)</h3>
+          <h3 style={{ "margin-top": "32px" }}>
+            LiveHeartbeatTrace — Depth 1 (raw)
+          </h3>
           <p class="text-meta">
             Same four states, without the surrounding label.
           </p>
           <Row gap="sm" align="center" wrap>
-            <LiveHeartbeatTrace lastHeartbeatAt={healthyBeat()} timeoutMs={5000} width={120} height={20} />
-            <LiveHeartbeatTrace lastHeartbeatAt={idleBeat()} timeoutMs={4000} width={120} height={20} />
+            <LiveHeartbeatTrace
+              lastHeartbeatAt={healthyBeat()}
+              timeoutMs={5000}
+              width={120}
+              height={20}
+            />
+            <LiveHeartbeatTrace
+              lastHeartbeatAt={idleBeat()}
+              timeoutMs={4000}
+              width={120}
+              height={20}
+            />
             <LiveHeartbeatTrace
               lastHeartbeatAt={errorBeat()}
               errorAt={errorAt()}
@@ -74,28 +104,61 @@ export const ConnectionStatusShowcase: Component = () => {
               width={120}
               height={20}
             />
-            <LiveHeartbeatTrace lastHeartbeatAt={null} timeoutMs={5000} width={120} height={20} />
+            <LiveHeartbeatTrace
+              lastHeartbeatAt={null}
+              timeoutMs={5000}
+              width={120}
+              height={20}
+            />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>HeartbeatSparkline — Primitive (Depth 0, hand-fed)</h3>
+          <h3 style={{ "margin-top": "32px" }}>
+            HeartbeatSparkline — Primitive (Depth 0, hand-fed)
+          </h3>
           <p class="text-meta">
-            Pure SVG. Caller feeds samples (0..1 = fraction of timeout consumed).
+            Pure SVG. Caller feeds samples (0..1 = fraction of timeout
+            consumed).
           </p>
           <For
-            each={
-              [
-                { label: "connected · flat low (active)", state: "connected" as const, samples: flatLow(60) },
-                { label: "connected · sawtooth peaking 75% (idle)", state: "connected" as const, samples: sawtooth75(60) },
-                { label: "connected · sawtooth 100% (drifting)", state: "connected" as const, samples: sawtooth(60) },
-                { label: "disconnected · flat top (off / timeout)", state: "disconnected" as const, samples: flatTop(60) },
-                { label: "error · sawtooth (blinks)", state: "error" as const, samples: sawtooth75(60) },
-              ]
-            }
+            each={[
+              {
+                label: "connected · flat low (active)",
+                state: "connected" as const,
+                samples: flatLow(60),
+              },
+              {
+                label: "connected · sawtooth peaking 75% (idle)",
+                state: "connected" as const,
+                samples: sawtooth75(60),
+              },
+              {
+                label: "connected · sawtooth 100% (drifting)",
+                state: "connected" as const,
+                samples: sawtooth(60),
+              },
+              {
+                label: "disconnected · flat top (off / timeout)",
+                state: "disconnected" as const,
+                samples: flatTop(60),
+              },
+              {
+                label: "error · sawtooth (blinks)",
+                state: "error" as const,
+                samples: sawtooth75(60),
+              },
+            ]}
           >
             {(row) => (
               <Row gap="sm" align="center">
-                <span style={{ "min-width": "22rem", "font-size": "0.8rem" }}>{row.label}</span>
-                <HeartbeatSparkline state={row.state} samples={row.samples} width={160} height={20} />
+                <span style={{ "min-width": "22rem", "font-size": "0.8rem" }}>
+                  {row.label}
+                </span>
+                <HeartbeatSparkline
+                  state={row.state}
+                  samples={row.samples}
+                  width={160}
+                  height={20}
+                />
               </Row>
             )}
           </For>
@@ -109,7 +172,8 @@ export const ConnectionStatusShowcase: Component = () => {
             <div class="depth2-atom">
               <div class="depth2-atom__label">LiveHeartbeatTrace</div>
               <div class="text-meta">
-                tick timer + sample buffer + state derivation; wraps HeartbeatSparkline
+                tick timer + sample buffer + state derivation; wraps
+                HeartbeatSparkline
               </div>
             </div>
           </div>
@@ -119,7 +183,8 @@ export const ConnectionStatusShowcase: Component = () => {
             <div class="depth2-atom">
               <div class="depth2-atom__label">HeartbeatSparkline</div>
               <div class="text-meta">
-                pure SVG rect sparkline; connected / disconnected / error variants
+                pure SVG rect sparkline; connected / disconnected / error
+                variants
               </div>
             </div>
             <div class="depth2-atom">
@@ -132,7 +197,9 @@ export const ConnectionStatusShowcase: Component = () => {
             <div class="depth2-atom-group__label">Layout (Depth 1)</div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">Stack</div>
-              <div class="text-meta">label-on-top / sparkline-beneath column</div>
+              <div class="text-meta">
+                label-on-top / sparkline-beneath column
+              </div>
             </div>
           </div>
 
@@ -149,16 +216,21 @@ export const ConnectionStatusShowcase: Component = () => {
             <div class="depth2-atom">
               <div class="depth2-atom__label">connected</div>
               <div class="text-meta">
-                lastHeartbeatAt set, now − last &lt; timeoutMs, no fresher errorAt
+                lastHeartbeatAt set, now − last &lt; timeoutMs, no fresher
+                errorAt
               </div>
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">disconnected</div>
-              <div class="text-meta">lastHeartbeatAt null OR now − last ≥ timeoutMs</div>
+              <div class="text-meta">
+                lastHeartbeatAt null OR now − last ≥ timeoutMs
+              </div>
             </div>
             <div class="depth2-atom">
               <div class="depth2-atom__label">error</div>
-              <div class="text-meta">errorAt ≥ lastHeartbeatAt (or no heartbeat yet)</div>
+              <div class="text-meta">
+                errorAt ≥ lastHeartbeatAt (or no heartbeat yet)
+              </div>
             </div>
           </div>
         </div>

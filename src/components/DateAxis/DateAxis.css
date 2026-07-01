@@ -158,11 +158,7 @@
 /* ── Today cell ───────────────────────────────────────────────────── */
 
 .sui-date-axis__cell--today {
-  background: color-mix(
-    in srgb,
-    var(--sui-accent, #00a8cc) 14%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--sui-accent, #00a8cc) 14%, transparent);
   border-right-color: var(--sui-accent, #00a8cc);
   border-left-color: var(--sui-accent, #00a8cc);
 }

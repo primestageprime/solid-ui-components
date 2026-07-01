@@ -21,10 +21,18 @@
 }
 
 /* Modal sizes */
-.sui-modal--sm { width: 360px; }
-.sui-modal--md { width: 520px; }
-.sui-modal--lg { width: 720px; }
-.sui-modal--xl { width: 960px; }
+.sui-modal--sm {
+  width: 360px;
+}
+.sui-modal--md {
+  width: 520px;
+}
+.sui-modal--lg {
+  width: 720px;
+}
+.sui-modal--xl {
+  width: 960px;
+}
 .sui-modal--fullscreen {
   width: 90vw;
   height: 90vh;

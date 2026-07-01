@@ -5,7 +5,13 @@
 // Owns CSS (List.css), no component imports.
 // Status/menu list with dividers, icons, status dots.
 // ============================================
-import { type Component, splitProps, Show, type JSX, mergeProps } from "solid-js";
+import {
+  type Component,
+  splitProps,
+  Show,
+  type JSX,
+  mergeProps,
+} from "solid-js";
 import "./List.css";
 
 export interface ListProps extends JSX.HTMLAttributes<HTMLUListElement> {
@@ -64,7 +70,10 @@ export const List: Component<ListProps> = (props) => {
 };
 
 /** Props that are layout overrides — locked at variant-definition time. */
-export type ListOverrides = Pick<ListProps, "variant" | "dividers" | "compact" | "scroll">;
+export type ListOverrides = Pick<
+  ListProps,
+  "variant" | "dividers" | "compact" | "scroll"
+>;
 
 /** Props that remain available to consumers of a curried List variant. */
 export type ListDataProps = Omit<ListProps, keyof ListOverrides>;
@@ -81,7 +90,9 @@ export function createList(
  * (e.g. a panel with `display: flex; flex-direction: column`) when the
  * list may grow beyond the available space.
  */
-export const ScrollList: Component<ListDataProps> = createList({ scroll: true });
+export const ScrollList: Component<ListDataProps> = createList({
+  scroll: true,
+});
 
 export const ListItem: Component<ListItemProps> = (props) => {
   const [local, others] = splitProps(props, [

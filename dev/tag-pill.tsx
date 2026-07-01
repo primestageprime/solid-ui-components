@@ -23,7 +23,8 @@ export interface PillProps {
 const shortTag = (tag: string) => tag.replace(/^depth:/, "d");
 
 export const TagPill: Component<PillProps> = (props) => {
-  const fillFraction = () => props.stats.newCount / Math.max(1, props.totalItems);
+  const fillFraction = () =>
+    props.stats.newCount / Math.max(1, props.totalItems);
   const isActive = () => props.stats.active;
 
   return (
@@ -65,7 +66,9 @@ export const TagPill: Component<PillProps> = (props) => {
             position: "absolute",
             inset: "0",
             width: `${fillFraction() * 100}%`,
-            background: isActive() ? "rgba(0, 168, 204, 0.12)" : "rgba(255, 255, 255, 0.04)",
+            background: isActive()
+              ? "rgba(0, 168, 204, 0.12)"
+              : "rgba(255, 255, 255, 0.04)",
             "border-radius": "999px 0 0 999px",
             "pointer-events": "none",
             transition: "width 0.15s ease",

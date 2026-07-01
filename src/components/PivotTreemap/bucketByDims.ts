@@ -39,7 +39,7 @@ export interface PivotBucket {
 /** Bucket label used when a row has no value for the inner dim. */
 export const EMPTY_INNER_KEY = "—";
 
-const tally = <T,>(rows: readonly T[], metrics: PivotMetrics<T> | undefined) => {
+const tally = <T>(rows: readonly T[], metrics: PivotMetrics<T> | undefined) => {
   if (!metrics) return undefined;
   let done = 0;
   let doing = 0;

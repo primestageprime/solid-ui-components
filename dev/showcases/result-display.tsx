@@ -6,7 +6,12 @@ export const ResultDisplayShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>ResultDisplay — Composed (Depth 2)</h2>
-      <p class="text-meta">Owns CSS (ResultDisplay.css); no library-component imports. Header (label + sublabel) over a value+units row with optional badge slot. Data-driven `valueColor` flows as inline style on the value span (allowed inside a Primitive).</p>
+      <p class="text-meta">
+        Owns CSS (ResultDisplay.css); no library-component imports. Header
+        (label + sublabel) over a value+units row with optional badge slot.
+        Data-driven `valueColor` flows as inline style on the value span
+        (allowed inside a Primitive).
+      </p>
 
       <h3>Pass case</h3>
       <ResultDisplay
@@ -17,7 +22,9 @@ export const ResultDisplayShowcase: Component = () => {
         badge={<StatusBadge variant="compliant">PASSING</StatusBadge>}
       />
 
-      <h3 style={{ "margin-top": "24px" }}>Violation (data-driven `valueColor`)</h3>
+      <h3 style={{ "margin-top": "24px" }}>
+        Violation (data-driven `valueColor`)
+      </h3>
       <ResultDisplay
         label="NOx Emissions"
         sublabel="Threshold: 3.5 g/kWh"
@@ -30,8 +37,15 @@ export const ResultDisplayShowcase: Component = () => {
       <h3 style={{ "margin-top": "24px" }}>No units</h3>
       <ResultDisplay label="Count" value={42} />
 
-      <h3 style={{ "margin-top": "24px" }}>Highlightable + highlighted (FormulaDecomposition affordance)</h3>
-      <p class="text-meta">The `highlightable` prop opts into the hover-target chrome (cursor, padding, transition). `highlighted` paints the active tint. Used by `createFormulaResult` to coordinate hover between a formula variable and its result row.</p>
+      <h3 style={{ "margin-top": "24px" }}>
+        Highlightable + highlighted (FormulaDecomposition affordance)
+      </h3>
+      <p class="text-meta">
+        The `highlightable` prop opts into the hover-target chrome (cursor,
+        padding, transition). `highlighted` paints the active tint. Used by
+        `createFormulaResult` to coordinate hover between a formula variable and
+        its result row.
+      </p>
       <ResultDisplay
         label="Highlightable (hover-affordance only)"
         value="0.123"

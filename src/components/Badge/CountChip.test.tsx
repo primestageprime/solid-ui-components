@@ -21,7 +21,9 @@ describe("CountChip", () => {
   });
 
   it("force active=true overrides count=0", () => {
-    const { container } = render(() => <CountChip count={0} label="x" active />);
+    const { container } = render(() => (
+      <CountChip count={0} label="x" active />
+    ));
     expect(container.firstElementChild!.className).toMatch(/--active/);
   });
 });

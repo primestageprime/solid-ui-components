@@ -35,6 +35,12 @@
 }
 
 /* Padding for interactive hit target — preserves visual size of the icon. */
-.sui-truth--interactive.sui-truth--sm { padding: 4px; }
-.sui-truth--interactive.sui-truth--md { padding: 5px; }
-.sui-truth--interactive.sui-truth--lg { padding: 6px; }
+.sui-truth--interactive.sui-truth--sm {
+  padding: 4px;
+}
+.sui-truth--interactive.sui-truth--md {
+  padding: 5px;
+}
+.sui-truth--interactive.sui-truth--lg {
+  padding: 6px;
+}

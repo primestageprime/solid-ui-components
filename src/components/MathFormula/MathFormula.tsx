@@ -5,7 +5,17 @@
 // Owns CSS (MathFormula.css), no component imports.
 // KaTeX renderer with interactive variable highlighting.
 // ============================================
-import { createContext, useContext, createSignal, createEffect, on, type ParentComponent, type Component, type JSX, type Accessor } from "solid-js";
+import {
+  createContext,
+  useContext,
+  createSignal,
+  createEffect,
+  on,
+  type ParentComponent,
+  type Component,
+  type JSX,
+  type Accessor,
+} from "solid-js";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import "./MathFormula.css";
@@ -94,19 +104,21 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     if (!containerRef || !ctx) return;
 
     // Find all elements with formula-var class
-    const varElements = containerRef.querySelectorAll('.formula-var');
+    const varElements = containerRef.querySelectorAll(".formula-var");
 
     varElements.forEach((el) => {
       // Extract varId from class list (formula-var-{id})
       const classes = Array.from(el.classList);
-      const varClass = classes.find(c => c.startsWith('formula-var-') && c !== 'formula-var');
+      const varClass = classes.find(
+        (c) => c.startsWith("formula-var-") && c !== "formula-var",
+      );
       if (!varClass) return;
 
-      const varId = varClass.replace('formula-var-', '');
+      const varId = varClass.replace("formula-var-", "");
       (el as HTMLElement).dataset.formulaVar = varId;
 
-      el.addEventListener('mouseenter', () => ctx.setHoveredVar(varId));
-      el.addEventListener('mouseleave', () => ctx.setHoveredVar(null));
+      el.addEventListener("mouseenter", () => ctx.setHoveredVar(varId));
+      el.addEventListener("mouseleave", () => ctx.setHoveredVar(null));
     });
   };
 
@@ -146,36 +158,39 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     if (!containerRef) return;
 
     try {
-      const useWrap = (props.wrap ?? false) && hasSplittableOperators(props.latex);
+      const useWrap =
+        (props.wrap ?? false) && hasSplittableOperators(props.latex);
       containerRef.innerHTML = useWrap ? renderWrapped() : renderSingleBlock();
       containerRef.classList.toggle("math-formula--wrap", useWrap);
 
       addInteractivity();
     } catch (e) {
-      console.error('KaTeX render error:', e);
+      console.error("KaTeX render error:", e);
       containerRef.textContent = props.latex;
     }
   };
 
   // Render on mount and whenever the latex / wrap / displayMode inputs change.
-  createEffect(on(
-    () => [props.latex, props.wrap, props.displayMode] as const,
-    () => renderFormula(),
-  ));
+  createEffect(
+    on(
+      () => [props.latex, props.wrap, props.displayMode] as const,
+      () => renderFormula(),
+    ),
+  );
 
   // Update highlighting when hoveredVar changes
   createEffect(() => {
     if (!containerRef || !ctx) return;
 
     const hoveredId = ctx.hoveredVar();
-    const varElements = containerRef.querySelectorAll('.formula-var');
+    const varElements = containerRef.querySelectorAll(".formula-var");
 
     varElements.forEach((el) => {
       const elVarId = (el as HTMLElement).dataset.formulaVar;
       if (elVarId === hoveredId) {
-        el.classList.add('formula-var-highlight');
+        el.classList.add("formula-var-highlight");
       } else {
-        el.classList.remove('formula-var-highlight');
+        el.classList.remove("formula-var-highlight");
       }
     });
   });
@@ -217,7 +232,7 @@ export const FormulaVarRow: ParentComponent<FormulaVarRowProps> = (props) => {
 
   return (
     <tr
-      class={`data-row ${isHighlighted() ? 'formula-row-highlight' : ''} ${props.class ?? ''}`}
+      class={`data-row ${isHighlighted() ? "formula-row-highlight" : ""} ${props.class ?? ""}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

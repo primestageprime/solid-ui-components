@@ -11,7 +11,10 @@ const ITEMS: ItemMeta[] = [
   { id: "cell-renderers", tags: ["depth:1", "data"] },
   { id: "combobox", tags: ["depth:1", "form"] },
   { id: "dag-chart", tags: ["depth:1", "chart", "data"] },
-  { id: "data-table-container", tags: ["depth:1", "table", "data", "container"] },
+  {
+    id: "data-table-container",
+    tags: ["depth:1", "table", "data", "container"],
+  },
   { id: "digit-roller", tags: ["depth:1", "indicator", "data"] },
   { id: "divider", tags: ["depth:1", "layout"] },
   { id: "heatmap", tags: ["depth:1", "chart", "data"] },
@@ -85,10 +88,24 @@ const ITEMS: ItemMeta[] = [
 ];
 
 const TAG_CATEGORIES: { label: string; tags: string[] }[] = [
-  { label: "Depth", tags: ["depth:0", "depth:1", "depth:2", "depth:3", "depth:4"] },
+  {
+    label: "Depth",
+    tags: ["depth:0", "depth:1", "depth:2", "depth:3", "depth:4"],
+  },
   {
     label: "Shape",
-    tags: ["chart", "table", "list", "form", "layout", "feedback", "navigation", "indicator", "container", "text"],
+    tags: [
+      "chart",
+      "table",
+      "list",
+      "form",
+      "layout",
+      "feedback",
+      "navigation",
+      "indicator",
+      "container",
+      "text",
+    ],
   },
   { label: "Domain", tags: ["data", "time", "math", "status", "chat"] },
 ];
@@ -161,10 +178,11 @@ export const PillVariantsShowcase: Component = () => {
     <div class="component-section">
       <h2>Pill Sandbox — Variant D (dynamic deltas)</h2>
       <p class="text-meta">
-        Each pill shows: <code style={{ color: "#3ecf8e" }}>+N</code> additions and{" "}
-        <code style={{ color: "#e57373" }}>−N</code> removals if toggled. Internal fill bar is the
-        projected result count if you toggled this pill, as a fraction of all {TOTAL_ITEMS} items.
-        Click pills to interact — this sandbox has its own state, separate from the sidebar.
+        Each pill shows: <code style={{ color: "#3ecf8e" }}>+N</code> additions
+        and <code style={{ color: "#e57373" }}>−N</code> removals if toggled.
+        Internal fill bar is the projected result count if you toggled this
+        pill, as a fraction of all {TOTAL_ITEMS} items. Click pills to interact
+        — this sandbox has its own state, separate from the sidebar.
       </p>
 
       <div
@@ -181,8 +199,13 @@ export const PillVariantsShowcase: Component = () => {
         }}
       >
         <span style={{ "font-size": "13px", color: "var(--sui-text-primary)" }}>
-          <strong style={{ "font-feature-settings": '"tnum"' }}>{currentItems().length}</strong>
-          <span style={{ color: "var(--sui-text-muted)" }}> / {TOTAL_ITEMS} matching</span>
+          <strong style={{ "font-feature-settings": '"tnum"' }}>
+            {currentItems().length}
+          </strong>
+          <span style={{ color: "var(--sui-text-muted)" }}>
+            {" "}
+            / {TOTAL_ITEMS} matching
+          </span>
         </span>
         <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
           Selected:{" "}
@@ -251,21 +274,26 @@ export const PillVariantsShowcase: Component = () => {
           "line-height": 1.6,
         }}
       >
-        <div><strong>Reading the deltas:</strong></div>
         <div>
-          • Inactive pill in a fresh facet → toggling adds an AND constraint → shows{" "}
-          <code style={{ color: "#e57373" }}>−N</code> (items lost).
+          <strong>Reading the deltas:</strong>
         </div>
         <div>
-          • Inactive pill in a facet that already has selections → toggling widens the OR set → shows{" "}
-          <code style={{ color: "#3ecf8e" }}>+N</code> (items gained).
+          • Inactive pill in a fresh facet → toggling adds an AND constraint →
+          shows <code style={{ color: "#e57373" }}>−N</code> (items lost).
         </div>
         <div>
-          • Active pill that's the only one in its facet → toggling off removes the constraint → shows{" "}
-          <code style={{ color: "#3ecf8e" }}>+N</code> (items gained).
+          • Inactive pill in a facet that already has selections → toggling
+          widens the OR set → shows <code style={{ color: "#3ecf8e" }}>+N</code>{" "}
+          (items gained).
         </div>
         <div>
-          • Active pill alongside others in the same facet → toggling off narrows the OR set → shows{" "}
+          • Active pill that's the only one in its facet → toggling off removes
+          the constraint → shows <code style={{ color: "#3ecf8e" }}>+N</code>{" "}
+          (items gained).
+        </div>
+        <div>
+          • Active pill alongside others in the same facet → toggling off
+          narrows the OR set → shows{" "}
           <code style={{ color: "#e57373" }}>−N</code> (items lost).
         </div>
       </div>

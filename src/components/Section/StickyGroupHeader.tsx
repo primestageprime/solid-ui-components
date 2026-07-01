@@ -11,13 +11,19 @@
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./StickyGroupHeader.css";
 
-export interface StickyGroupHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface StickyGroupHeaderProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Vertical offset (px) from the scroll container's top. Default 0. */
   offset?: number;
 }
 
 export const StickyGroupHeader: Component<StickyGroupHeaderProps> = (props) => {
-  const [local, others] = splitProps(props, ["offset", "class", "style", "children"]);
+  const [local, others] = splitProps(props, [
+    "offset",
+    "class",
+    "style",
+    "children",
+  ]);
   const baseStyle = () => ({
     top: `${local.offset ?? 0}px`,
   });
@@ -36,12 +42,16 @@ export const StickyGroupHeader: Component<StickyGroupHeaderProps> = (props) => {
   );
 };
 
-export interface SectionLabelProps extends JSX.HTMLAttributes<HTMLSpanElement> {}
+export interface SectionLabelProps
+  extends JSX.HTMLAttributes<HTMLSpanElement> {}
 
 export const SectionLabel: Component<SectionLabelProps> = (props) => {
   const [local, others] = splitProps(props, ["class", "children"]);
   return (
-    <span class={`sui-section-label${local.class ? " " + local.class : ""}`} {...others}>
+    <span
+      class={`sui-section-label${local.class ? " " + local.class : ""}`}
+      {...others}
+    >
       {local.children}
     </span>
   );

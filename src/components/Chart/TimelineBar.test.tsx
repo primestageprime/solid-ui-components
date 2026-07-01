@@ -16,11 +16,25 @@ const wrapper = (slot: () => JSX.Element) =>
 describe("TimelineBar — render", () => {
   it("renders one rect per datum", () => {
     const bars: TimelineBarDatum[] = [
-      { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "var(--sui-accent)" },
-      { id: slotId("b"), start: 3, end: 5, lane: "detected", color: "var(--sui-warning)" },
+      {
+        id: slotId("a"),
+        start: 0,
+        end: 2,
+        lane: "scheduled",
+        color: "var(--sui-accent)",
+      },
+      {
+        id: slotId("b"),
+        start: 3,
+        end: 5,
+        lane: "detected",
+        color: "var(--sui-warning)",
+      },
     ];
     const { container } = wrapper(() => <TimelineBar data={bars} />);
-    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
+    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(
+      2,
+    );
   });
 
   it("places each lane at a distinct y position", () => {
@@ -28,8 +42,12 @@ describe("TimelineBar — render", () => {
       { id: slotId("a"), start: 0, end: 2, lane: "scheduled", color: "#fff" },
       { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
     ];
-    const { container } = wrapper(() => <TimelineBar data={bars} lanes={["scheduled", "detected"]} />);
-    const rects = Array.from(container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"));
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
+    ));
+    const rects = Array.from(
+      container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"),
+    );
     expect(rects[0].getAttribute("y")).not.toBe(rects[1].getAttribute("y"));
   });
 
@@ -40,7 +58,9 @@ describe("TimelineBar — render", () => {
     const { container } = wrapper(() => (
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
     ));
-    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(0);
+    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(
+      0,
+    );
   });
 
   it("unknown-lane drop is silent + warns once (mirrors HighlightSegments posture)", () => {
@@ -52,18 +72,33 @@ describe("TimelineBar — render", () => {
     const bars: TimelineBarDatum[] = [
       // Use a lane name unique to this test so the module-level dedupe set
       // from earlier tests doesn't swallow our warning.
-      { id: slotId("a"), start: 1, end: 3, lane: "phantom-zone-1", color: "#fff" },
-      { id: slotId("b"), start: 4, end: 6, lane: "phantom-zone-1", color: "#fff" },
+      {
+        id: slotId("a"),
+        start: 1,
+        end: 3,
+        lane: "phantom-zone-1",
+        color: "#fff",
+      },
+      {
+        id: slotId("b"),
+        start: 4,
+        end: 6,
+        lane: "phantom-zone-1",
+        color: "#fff",
+      },
     ];
     const { container } = wrapper(() => (
       <TimelineBar data={bars} lanes={["scheduled", "detected"]} />
     ));
     // Bars silently dropped.
-    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(0);
+    expect(container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(
+      0,
+    );
     // Warned at least once for the unknown lane.
     expect(warn).toHaveBeenCalled();
-    const matchingCalls = warn.mock.calls.filter((args) =>
-      typeof args[0] === "string" && args[0].includes("phantom-zone-1"),
+    const matchingCalls = warn.mock.calls.filter(
+      (args) =>
+        typeof args[0] === "string" && args[0].includes("phantom-zone-1"),
     );
     // Warn-once: only one warning emitted regardless of how many bars use the lane.
     expect(matchingCalls.length).toBe(1);
@@ -74,11 +109,27 @@ describe("TimelineBar — render", () => {
 describe("TimelineBar — reactivity", () => {
   it("toggling selectedId updates data-selected", () => {
     const [sel, setSel] = createSignal<Id | null>(null);
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
-    const { container } = wrapper(() => <TimelineBar data={[bar]} selectedId={sel()} />);
-    expect(container.querySelector(".sui-chart__timeline-bar")!.getAttribute("data-selected")).toBeNull();
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} selectedId={sel()} />
+    ));
+    expect(
+      container
+        .querySelector(".sui-chart__timeline-bar")!
+        .getAttribute("data-selected"),
+    ).toBeNull();
     setSel(slotId("a"));
-    expect(container.querySelector(".sui-chart__timeline-bar")!.getAttribute("data-selected")).toBe("true");
+    expect(
+      container
+        .querySelector(".sui-chart__timeline-bar")!
+        .getAttribute("data-selected"),
+    ).toBe("true");
   });
 
   it("highlightedState marks every bar whose state matches with data-highlighted", () => {
@@ -87,26 +138,65 @@ describe("TimelineBar — reactivity", () => {
     // just one id (contrast with selectedId/hoveredId which are single-bar).
     const [hl, setHl] = createSignal<string | null>(null);
     const bars: TimelineBarDatum[] = [
-      { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff", state: "WARNING" },
-      { id: slotId("b"), start: 3, end: 5, lane: "x", color: "#fff", state: "ALARM" },
-      { id: slotId("c"), start: 6, end: 8, lane: "x", color: "#fff", state: "WARNING" },
+      {
+        id: slotId("a"),
+        start: 0,
+        end: 2,
+        lane: "x",
+        color: "#fff",
+        state: "WARNING",
+      },
+      {
+        id: slotId("b"),
+        start: 3,
+        end: 5,
+        lane: "x",
+        color: "#fff",
+        state: "ALARM",
+      },
+      {
+        id: slotId("c"),
+        start: 6,
+        end: 8,
+        lane: "x",
+        color: "#fff",
+        state: "WARNING",
+      },
     ];
-    const { container } = wrapper(() => <TimelineBar data={bars} highlightedState={hl()} />);
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} highlightedState={hl()} />
+    ));
     const rects = () =>
-      Array.from(container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"));
+      Array.from(
+        container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"),
+      );
 
     // Unset: no bar is highlighted.
-    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual([null, null, null]);
+    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual([
+      null,
+      null,
+      null,
+    ]);
 
     // Set to WARNING: both WARNING bars flagged, the ALARM bar untouched.
     setHl("WARNING");
-    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual(["true", null, "true"]);
+    expect(rects().map((r) => r.getAttribute("data-highlighted"))).toEqual([
+      "true",
+      null,
+      "true",
+    ]);
   });
 });
 
 describe("TimelineBar — callbacks", () => {
   it("onBarClick fires with domain item + event", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const calls: TimelineBarDatum[] = [];
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} onBarClick={(b) => calls.push(b)} />
@@ -116,7 +206,13 @@ describe("TimelineBar — callbacks", () => {
   });
 
   it("onBarHover fires with bar on pointerenter and null on pointerleave", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const calls: Array<TimelineBarDatum | null> = [];
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} onBarHover={(b) => calls.push(b)} />
@@ -130,9 +226,17 @@ describe("TimelineBar — callbacks", () => {
 
 describe("TimelineBar — curried variants", () => {
   it("DenseTimelineBar renders bars at 90% lane height", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => <DenseTimelineBar data={[bar]} />);
-    const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
+    const rect = container.querySelector(
+      ".sui-chart__timeline-bar",
+    ) as SVGRectElement;
     expect(parseFloat(rect.getAttribute("height")!)).toBeGreaterThan(60);
   });
 
@@ -146,19 +250,34 @@ describe("TimelineBar — curried variants", () => {
     ];
     const lanes = ["scheduled", "detected"] as const;
     const totalRectArea = (root: ParentNode): number =>
-      Array.from(root.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"))
-        .map((r) => parseFloat(r.getAttribute("height")!) * parseFloat(r.getAttribute("width")!))
+      Array.from(
+        root.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"),
+      )
+        .map(
+          (r) =>
+            parseFloat(r.getAttribute("height")!) *
+            parseFloat(r.getAttribute("width")!),
+        )
         .reduce((sum, a) => sum + a, 0);
 
-    const denseRender = wrapper(() => <DenseTimelineBar data={bars} lanes={lanes} />);
-    const sparseRender = wrapper(() => <SparseTimelineBar data={bars} lanes={lanes} />);
+    const denseRender = wrapper(() => (
+      <DenseTimelineBar data={bars} lanes={lanes} />
+    ));
+    const sparseRender = wrapper(() => (
+      <SparseTimelineBar data={bars} lanes={lanes} />
+    ));
 
     const denseArea = totalRectArea(denseRender.container);
     const sparseArea = totalRectArea(sparseRender.container);
 
     // Same count (input is identical).
-    expect(denseRender.container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
-    expect(sparseRender.container.querySelectorAll(".sui-chart__timeline-bar").length).toBe(2);
+    expect(
+      denseRender.container.querySelectorAll(".sui-chart__timeline-bar").length,
+    ).toBe(2);
+    expect(
+      sparseRender.container.querySelectorAll(".sui-chart__timeline-bar")
+        .length,
+    ).toBe(2);
     // Sparse < Dense (visual density: 0.4 vs 0.9 of lane height).
     expect(sparseArea).toBeLessThan(denseArea);
   });
@@ -166,9 +285,20 @@ describe("TimelineBar — curried variants", () => {
 
 describe("TimelineBar — label", () => {
   it("renders a label text element when `label` is set", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => (
-      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom" }} label="Scheduled" />
+      <TimelineBar
+        data={[bar]}
+        bandHeight={12}
+        bandY={{ anchor: "margin-bottom" }}
+        label="Scheduled"
+      />
     ));
     const labels = container.querySelectorAll(".sui-chart__timeline-bar-label");
     expect(labels.length).toBe(1);
@@ -179,11 +309,23 @@ describe("TimelineBar — label", () => {
   });
 
   it("omits the label element entirely when `label` is not set", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => (
-      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom" }} />
+      <TimelineBar
+        data={[bar]}
+        bandHeight={12}
+        bandY={{ anchor: "margin-bottom" }}
+      />
     ));
-    expect(container.querySelectorAll(".sui-chart__timeline-bar-label").length).toBe(0);
+    expect(
+      container.querySelectorAll(".sui-chart__timeline-bar-label").length,
+    ).toBe(0);
   });
 });
 
@@ -319,7 +461,13 @@ describe("TimelineBar — segmentStroke", () => {
 
 describe("TimelineBar — clip-path", () => {
   it("wraps bars in a group with clip-path set to ctx.clip.plotPathUrl()", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => <TimelineBar data={[bar]} />);
     const group = container.querySelector(".sui-chart__timeline");
     expect(group).toBeTruthy();
@@ -338,7 +486,11 @@ describe("TimelineBar — bandHeight + bandY", () => {
       { id: slotId("b"), start: 0, end: 2, lane: "detected", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} lanes={["scheduled", "detected"]} barHeight={0.6} />
+      <TimelineBar
+        data={bars}
+        lanes={["scheduled", "detected"]}
+        barHeight={0.6}
+      />
     ));
     const rects = Array.from(
       container.querySelectorAll<SVGRectElement>(".sui-chart__timeline-bar"),
@@ -348,7 +500,9 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(heights[0]).toBeCloseTo(25.2, 1);
     expect(heights[1]).toBeCloseTo(25.2, 1);
     // First lane sits in the top half (y < INNER_HEIGHT / 2).
-    expect(parseFloat(rects[0].getAttribute("y")!)).toBeLessThan(INNER_HEIGHT / 2);
+    expect(parseFloat(rects[0].getAttribute("y")!)).toBeLessThan(
+      INNER_HEIGHT / 2,
+    );
   });
 
   it("bandHeight=40 + bandY={anchor:'bottom'} places bars in the bottom 40px strip", () => {
@@ -379,34 +533,62 @@ describe("TimelineBar — bandHeight + bandY", () => {
     expect(parseFloat(rects[1].getAttribute("y")!)).toBeCloseTo(68, 1);
     // Bars sit BELOW the chart midline.
     rects.forEach((r) => {
-      expect(parseFloat(r.getAttribute("y")!)).toBeGreaterThan(INNER_HEIGHT / 2);
+      expect(parseFloat(r.getAttribute("y")!)).toBeGreaterThan(
+        INNER_HEIGHT / 2,
+      );
     });
   });
 
   it("bandHeight=40 defaults bandY to { anchor: 'bottom' } when bandY is omitted", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
-    const { container } = wrapper(() => <TimelineBar data={[bar]} bandHeight={40} />);
-    const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 0,
+      end: 2,
+      lane: "x",
+      color: "#fff",
+    };
+    const { container } = wrapper(() => (
+      <TimelineBar data={[bar]} bandHeight={40} />
+    ));
+    const rect = container.querySelector<SVGRectElement>(
+      ".sui-chart__timeline-bar",
+    )!;
     // 1 lane → laneHeight = 40; band top = 84 - 40 = 44; yTop = 44 + (40 - 24)/2 = 52.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(52, 1);
   });
 
   it("bandHeight=40 + bandY={anchor:'top'} places bars in the top 40px strip", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 0,
+      end: 2,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} bandHeight={40} bandY={{ anchor: "top" }} />
     ));
-    const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
+    const rect = container.querySelector<SVGRectElement>(
+      ".sui-chart__timeline-bar",
+    )!;
     // bandTop = 0; lane 0 yTop = (40 - 24)/2 = 8.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(8, 1);
   });
 
   it("bandHeight=30 + bandY={y:10} places bars at the given pixel anchor", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 0,
+      end: 2,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => (
       <TimelineBar data={[bar]} bandHeight={30} bandY={{ y: 10 }} />
     ));
-    const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
+    const rect = container.querySelector<SVGRectElement>(
+      ".sui-chart__timeline-bar",
+    )!;
     // bandTop = 10; lane 0 yTop = 10 + (30 - 18)/2 = 16.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(16, 1);
   });
@@ -416,9 +598,15 @@ describe("TimelineBar — bandHeight + bandY", () => {
       { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} bandHeight={20} bandY={{ anchor: "margin-bottom" }} />
+      <TimelineBar
+        data={bars}
+        bandHeight={20}
+        bandY={{ anchor: "margin-bottom" }}
+      />
     ));
-    const rect = container.querySelector(".sui-chart__timeline-bar") as SVGRectElement;
+    const rect = container.querySelector(
+      ".sui-chart__timeline-bar",
+    ) as SVGRectElement;
     const y = parseFloat(rect.getAttribute("y")!);
     // innerHeight = 84; bandTop = 84 + 0 = 84 (flush with axis line);
     // lane 0 yTop = 84 + (20 - 12)/2 = 88.
@@ -432,7 +620,11 @@ describe("TimelineBar — bandHeight + bandY", () => {
       { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" },
     ];
     const { container } = wrapper(() => (
-      <TimelineBar data={bars} bandHeight={12} bandY={{ anchor: "margin-bottom" }} />
+      <TimelineBar
+        data={bars}
+        bandHeight={12}
+        bandY={{ anchor: "margin-bottom" }}
+      />
     ));
     const g = container.querySelector(".sui-chart__timeline");
     const clipAttr = g?.getAttribute("clip-path");
@@ -443,11 +635,23 @@ describe("TimelineBar — bandHeight + bandY", () => {
   });
 
   it("bandY={anchor:'margin-bottom', gapPx} honors the gap below the x-axis", () => {
-    const bar: TimelineBarDatum = { id: slotId("a"), start: 1, end: 3, lane: "x", color: "#fff" };
+    const bar: TimelineBarDatum = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      lane: "x",
+      color: "#fff",
+    };
     const { container } = wrapper(() => (
-      <TimelineBar data={[bar]} bandHeight={12} bandY={{ anchor: "margin-bottom", gapPx: 6 }} />
+      <TimelineBar
+        data={[bar]}
+        bandHeight={12}
+        bandY={{ anchor: "margin-bottom", gapPx: 6 }}
+      />
     ));
-    const rect = container.querySelector<SVGRectElement>(".sui-chart__timeline-bar")!;
+    const rect = container.querySelector<SVGRectElement>(
+      ".sui-chart__timeline-bar",
+    )!;
     // innerHeight=84, gapPx=6 → bandTop=90. laneHeight=12, barHeight=0.6*12=7.2,
     // yTop = 90 + (12 - 7.2)/2 = 90 + 2.4 = 92.4.
     expect(parseFloat(rect.getAttribute("y")!)).toBeCloseTo(92.4, 1);

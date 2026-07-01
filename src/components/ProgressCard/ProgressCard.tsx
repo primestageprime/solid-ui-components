@@ -7,7 +7,14 @@
 // in variants (CacheProgressCard).
 // Step icons with title, subtitle, message.
 // ============================================
-import { type Component, type JSX, splitProps, For, Show, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  splitProps,
+  For,
+  Show,
+  mergeProps,
+} from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import "./ProgressCard.css";
@@ -65,8 +72,14 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
   // composition site. Consumer-provided style still wins (spread last) to
   // preserve the previous behaviour where `style` landed on the root div.
   const cardStyle = (): JSX.CSSProperties => {
-    const base = (typeof local.style === "object" ? local.style : {}) as JSX.CSSProperties;
-    return { padding: "12px", "border-radius": "var(--sui-radius-lg)", ...base };
+    const base = (
+      typeof local.style === "object" ? local.style : {}
+    ) as JSX.CSSProperties;
+    return {
+      padding: "12px",
+      "border-radius": "var(--sui-radius-lg)",
+      ...base,
+    };
   };
 
   const getStepIcon = (step: ProgressStep) => {
@@ -168,7 +181,8 @@ export interface StepTemplate {
   icon?: { outline: string; solid: string };
 }
 
-export interface WorkflowProgressCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
+export interface WorkflowProgressCardProps
+  extends JSX.HTMLAttributes<HTMLDivElement> {
   title: string;
   subtitle?: string;
   currentStep: string;
@@ -201,7 +215,9 @@ export function createWorkflowProgressCard(config: {
         }));
       }
 
-      const currentIdx = config.steps.findIndex((s) => s.id === local.currentStep);
+      const currentIdx = config.steps.findIndex(
+        (s) => s.id === local.currentStep,
+      );
 
       return config.steps.map((template, idx) => {
         let stepStatus: ProgressStatus;

@@ -15,7 +15,13 @@
 //   <SegmentedInput ... compact />
 // Factory: createSegmentedInput() for curried variants.
 // ============================================
-import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import "./SegmentedInput.css";
 
 export interface SegmentedInputOption {
@@ -61,16 +67,15 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
   const step = (delta: number) => {
     const idx = currentIndex();
     const from = idx < 0 ? 0 : idx;
-    const next = Math.min(
-      Math.max(from + delta, 0),
-      local.options.length - 1,
-    );
+    const next = Math.min(Math.max(from + delta, 0), local.options.length - 1);
     if (next !== idx) local.onChange(local.options[next].id);
   };
 
   if (local.compact) {
     const compactClass = () =>
-      local.class ? `sui-segmented-stepper ${local.class}` : "sui-segmented-stepper";
+      local.class
+        ? `sui-segmented-stepper ${local.class}`
+        : "sui-segmented-stepper";
 
     const current = () => {
       const idx = currentIndex();

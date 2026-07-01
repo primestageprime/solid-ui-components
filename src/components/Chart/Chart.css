@@ -103,7 +103,9 @@
 
 /* Highlight segments — :hover bumps alpha + adds a thin stroke. */
 .sui-chart__highlight-segment {
-  transition: opacity 120ms ease, stroke-width 120ms ease;
+  transition:
+    opacity 120ms ease,
+    stroke-width 120ms ease;
 }
 .sui-chart__highlight-segment:hover {
   opacity: 1;
@@ -153,7 +155,9 @@
 
 /* Timeline bars — same affordance, slightly thinner stroke. */
 .sui-chart__timeline-bar {
-  transition: opacity 120ms ease, stroke-width 120ms ease;
+  transition:
+    opacity 120ms ease,
+    stroke-width 120ms ease;
 }
 .sui-chart__timeline-bar:hover {
   opacity: 1;

@@ -1,5 +1,15 @@
-import { type Component, For, type JSX, createEffect, createSignal, onCleanup } from "solid-js";
-import { SwimlaneChart, LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
+import {
+  type Component,
+  For,
+  type JSX,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from "solid-js";
+import {
+  SwimlaneChart,
+  LinearFlowSwimlaneChart,
+} from "../../src/components/SwimlaneChart";
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface/Surface";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -11,7 +21,8 @@ import {
 } from "../../src/components/Text";
 
 // ─── JSON syntax highlighter ──────────────────────────────────────────────
-const JSON_TOKEN = /("(?:\\.|[^"\\])*"\s*:|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],])/;
+const JSON_TOKEN =
+  /("(?:\\.|[^"\\])*"\s*:|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],])/;
 
 function highlightJson(json: string): JSX.Element {
   const parts = json.split(JSON_TOKEN);
@@ -20,7 +31,8 @@ function highlightJson(json: string): JSX.Element {
       {(part, i) => {
         if (i() % 2 === 0) return <>{part}</>;
         if (part.endsWith(":")) return <span class="json-key">{part}</span>;
-        if (part.startsWith('"')) return <span class="json-string">{part}</span>;
+        if (part.startsWith('"'))
+          return <span class="json-string">{part}</span>;
         if (part === "true" || part === "false")
           return <span class="json-bool">{part}</span>;
         if (part === "null") return <span class="json-null">{part}</span>;
@@ -171,9 +183,17 @@ const colLabel = (col: number): string =>
   col < 0 ? "COMPLETED" : col > 0 ? "TODO" : "DOING";
 
 const colTint = (col: number): { bg: string; border: string } => {
-  if (col < 0) return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }; // DONE → green
-  if (col > 0) return { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }; // TODO → grey
-  return { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" }; // DOING → cyan
+  if (col < 0)
+    return { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }; // DONE → green
+  if (col > 0)
+    return {
+      bg: "var(--sui-bg-secondary)",
+      border: "var(--sui-border-bright)",
+    }; // TODO → grey
+  return {
+    bg: "rgba(var(--sui-accent-rgb),0.10)",
+    border: "var(--sui-accent)",
+  }; // DOING → cyan
 };
 
 export const renderStubNode = (
@@ -196,7 +216,8 @@ export const renderStubNode = (
           "border-style": "dashed",
         }}
       >
-        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}…)
+        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}
+        …)
       </Surface>
     );
   }
@@ -271,7 +292,10 @@ const ANIM_STATUS_LABEL: Record<AnimStatus, string> = {
 };
 const ANIM_STATUS_TINT: Record<AnimStatus, { bg: string; border: string }> = {
   todo: { bg: "var(--sui-bg-secondary)", border: "var(--sui-border-bright)" }, // grey
-  doing: { bg: "rgba(var(--sui-accent-rgb),0.10)", border: "var(--sui-accent)" },
+  doing: {
+    bg: "rgba(var(--sui-accent-rgb),0.10)",
+    border: "var(--sui-accent)",
+  },
   done: { bg: "rgba(95,179,124,0.10)", border: "rgba(95,179,124,0.5)" }, // green
 };
 
@@ -297,7 +321,8 @@ const renderAnimNode = (
           "border-style": "dashed",
         }}
       >
-        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}…)
+        ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}
+        …)
       </Surface>
     );
   }
@@ -330,7 +355,9 @@ const AnimatedChain: Component = () => {
     s.n1 = "doing";
     return s;
   };
-  const nextStatuses = (prev: Record<string, AnimStatus>): Record<string, AnimStatus> => {
+  const nextStatuses = (
+    prev: Record<string, AnimStatus>,
+  ): Record<string, AnimStatus> => {
     const next = { ...prev };
     const doingIdx = ANIM_CHAIN_NODES.findIndex((n) => next[n.id] === "doing");
     if (doingIdx < 0) return initStatuses();
@@ -340,7 +367,9 @@ const AnimatedChain: Component = () => {
     else return initStatuses();
     return next;
   };
-  const colByStatus = (s: Record<string, AnimStatus>): Record<string, number> => {
+  const colByStatus = (
+    s: Record<string, AnimStatus>,
+  ): Record<string, number> => {
     const doingIdx = ANIM_CHAIN_NODES.findIndex((n) => s[n.id] === "doing");
     const cols: Record<string, number> = {};
     for (let i = 0; i < ANIM_CHAIN_NODES.length; i++) {
@@ -349,7 +378,9 @@ const AnimatedChain: Component = () => {
     return cols;
   };
 
-  const [history, setHistory] = createSignal<Record<string, AnimStatus>[]>([initStatuses()]);
+  const [history, setHistory] = createSignal<Record<string, AnimStatus>[]>([
+    initStatuses(),
+  ]);
   const [idx, setIdx] = createSignal(0);
   const [playing, setPlaying] = createSignal(false);
   const current = () => history()[idx()];
@@ -393,11 +424,24 @@ const AnimatedChain: Component = () => {
   return (
     <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
       <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
-        <button type="button" style={btnStyle} onClick={goBack} disabled={idx() === 0}>← Prev</button>
-        <button type="button" style={btnStyle} onClick={() => setPlaying((p) => !p)}>
+        <button
+          type="button"
+          style={btnStyle}
+          onClick={goBack}
+          disabled={idx() === 0}
+        >
+          ← Prev
+        </button>
+        <button
+          type="button"
+          style={btnStyle}
+          onClick={() => setPlaying((p) => !p)}
+        >
           {playing() ? "⏸ Pause" : "▶ Play"}
         </button>
-        <button type="button" style={btnStyle} onClick={advance}>Next →</button>
+        <button type="button" style={btnStyle} onClick={advance}>
+          Next →
+        </button>
         <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
           frame {idx() + 1} / {history().length}
         </span>
@@ -429,14 +473,12 @@ export const SwimlaneChartShowcase: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>SwimlaneChart — Primitive (Depth 0)</SectionTitle>
       <p class="text-meta">
-        DAG visualizer where each node's signed{" "}
-        <code>col</code> determines its column relative to center
-        (0 = DOING). Edges are independent of status — backward and
-        skip-lane edges are first-class. The chart picks how many depth
-        rings to show based on container width; nodes beyond the
-        threshold collapse into boundary badges (per-side count).
-        Nodes slide in/out toward center when the depth ring boundary
-        crosses them.
+        DAG visualizer where each node's signed <code>col</code> determines its
+        column relative to center (0 = DOING). Edges are independent of status —
+        backward and skip-lane edges are first-class. The chart picks how many
+        depth rings to show based on container width; nodes beyond the threshold
+        collapse into boundary badges (per-side count). Nodes slide in/out
+        toward center when the depth ring boundary crosses them.
       </p>
 
       <div class="workshop-grid">
@@ -489,7 +531,9 @@ export const SwimlaneChartShowcase: Component = () => {
         </div>
 
         <div class="workshop-grid__cell">
-          <SubsectionTitle>7 · 2 layers — variable width (resize the browser)</SubsectionTitle>
+          <SubsectionTitle>
+            7 · 2 layers — variable width (resize the browser)
+          </SubsectionTitle>
           <JsonPanel value={TWO_LAYERS} heightLines={10} />
         </div>
         <div class="workshop-grid__cell">
@@ -497,7 +541,9 @@ export const SwimlaneChartShowcase: Component = () => {
         </div>
 
         <div class="workshop-grid__cell">
-          <SubsectionTitle>8 · multi-dep subtree — variable width (8 left · 5 right)</SubsectionTitle>
+          <SubsectionTitle>
+            8 · multi-dep subtree — variable width (8 left · 5 right)
+          </SubsectionTitle>
           <JsonPanel value={MULTI_DEPS} heightLines={10} />
         </div>
         <div class="workshop-grid__cell">
@@ -506,13 +552,19 @@ export const SwimlaneChartShowcase: Component = () => {
 
         <div class="workshop-grid__cell">
           <SubsectionTitle>9 · animated linear chain (live)</SubsectionTitle>
-          <p style={{ "font-size": "12px", color: "var(--sui-text-secondary)", margin: "8px 0" }}>
-            8-node chain ticking through TODO → DOING → DONE. Col is the
-            signed graph distance from the current DOING node, so the
-            whole chain slides horizontally as work progresses. Resize
-            the window to see the depth ring compress: overflow nodes
-            collapse into per-side boundary badges. Uses{" "}
-            <code>LinearFlowSwimlaneChart</code> (the curried variant).
+          <p
+            style={{
+              "font-size": "12px",
+              color: "var(--sui-text-secondary)",
+              margin: "8px 0",
+            }}
+          >
+            8-node chain ticking through TODO → DOING → DONE. Col is the signed
+            graph distance from the current DOING node, so the whole chain
+            slides horizontally as work progresses. Resize the window to see the
+            depth ring compress: overflow nodes collapse into per-side boundary
+            badges. Uses <code>LinearFlowSwimlaneChart</code> (the curried
+            variant).
           </p>
           <JsonPanel
             value={{ nodes: ANIM_CHAIN_NODES, edges: ANIM_CHAIN_EDGES }}

@@ -102,10 +102,7 @@ export const formatCompactDuration = (ms: number): string => {
  * `end === null` is the ongoing sentinel — matches the
  * "alarm-period.end" convention used by typical consumers.
  */
-export const formatCompactRange = (
-  start: Date,
-  end: Date | null,
-): string => {
+export const formatCompactRange = (start: Date, end: Date | null): string => {
   const startLabel = formatStartTimestamp(start);
 
   if (end === null) {

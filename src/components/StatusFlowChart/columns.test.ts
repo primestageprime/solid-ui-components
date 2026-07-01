@@ -30,7 +30,10 @@ describe("pickVisibleCols", () => {
   });
 
   it("falls back to smallest visibleCols below all breakpoints", () => {
-    const high = [{ minWidth: 500, visibleCols: 3 }, { minWidth: 1000, visibleCols: 5 }];
+    const high = [
+      { minWidth: 500, visibleCols: 3 },
+      { minWidth: 1000, visibleCols: 5 },
+    ];
     expect(pickVisibleCols(100, high)).toBe(3);
   });
 
@@ -116,12 +119,16 @@ describe("assignColumns", () => {
   });
 
   it("throws on unknown centerStatus", () => {
-    expect(() => assignColumns([], COLUMNS, "GHOST", 1)).toThrow(/centerStatus/);
+    expect(() => assignColumns([], COLUMNS, "GHOST", 1)).toThrow(
+      /centerStatus/,
+    );
   });
 
   it("throws on unknown node status", () => {
     const bad: StatusFlowNode[] = [{ id: "z", title: "Z", status: "MYSTERY" }];
-    expect(() => assignColumns(bad, COLUMNS, "DOING", 1)).toThrow(/not in any column/);
+    expect(() => assignColumns(bad, COLUMNS, "DOING", 1)).toThrow(
+      /not in any column/,
+    );
   });
 });
 

@@ -55,7 +55,10 @@ export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
     <div class={cls()} role="toolbar" {...others}>
       <CountChip count={local.count} label={label()} active />
       <div class="sui-bulk-action-bar__actions">
-        <PrimaryButton onClick={() => local.onAction()} disabled={local.disabled}>
+        <PrimaryButton
+          onClick={() => local.onAction()}
+          disabled={local.disabled}
+        >
           {local.actionLabel}
         </PrimaryButton>
         <Show when={local.onClear}>

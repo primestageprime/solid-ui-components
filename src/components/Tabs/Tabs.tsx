@@ -61,7 +61,10 @@ export const Tabs: Component<TabsProps> = (props) => {
               <span class="sui-tab__hint">{tab.hint}</span>
             </Show>
             <Show when={tab.status}>
-              <span class={`sui-tab__status sui-tab__status--${tab.status}`} title={tab.status === "error" ? "Missing data" : "Partial data"}>
+              <span
+                class={`sui-tab__status sui-tab__status--${tab.status}`}
+                title={tab.status === "error" ? "Missing data" : "Partial data"}
+              >
                 !
               </span>
             </Show>
@@ -73,11 +76,16 @@ export const Tabs: Component<TabsProps> = (props) => {
 };
 
 /** Visual overrides — locked at variant-definition time. */
-export type TabsOverrides = Pick<TabsProps, "variant" | "orientation" | "color">;
+export type TabsOverrides = Pick<
+  TabsProps,
+  "variant" | "orientation" | "color"
+>;
 
 /** Props available to consumers of a curried Tabs variant (tabs/activeTab/onTabChange are runtime). */
 export type TabsDataProps = Omit<TabsProps, keyof TabsOverrides>;
 
-export function createTabs(defaults: Partial<TabsProps>): Component<TabsDataProps> {
+export function createTabs(
+  defaults: Partial<TabsProps>,
+): Component<TabsDataProps> {
   return (props) => <Tabs {...mergeProps(defaults, props)} />;
 }

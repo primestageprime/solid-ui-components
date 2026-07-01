@@ -4,7 +4,7 @@ import { CompletionTimeline } from "../../src/components/CompletionTimeline";
 export const CompletionTimelineShowcase: Component = () => {
   const now = Date.now();
   let s = 31;
-  const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rand = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   const completions = Array.from({ length: 80 }, (_, i) => ({
     tableName: `events_shard_${(i % 8) + 1}`,
     completedAt: now - rand() * 8 * 60 * 60 * 1000,

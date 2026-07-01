@@ -7,7 +7,15 @@
 // edge. Active stage glows; previous stage briefly tags as "from".
 // Pure Solid signals + requestAnimationFrame + CSS — no D3.
 // ============================================
-import { type Component, createEffect, createMemo, createSignal, For, Show, onCleanup } from "solid-js";
+import {
+  type Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+  onCleanup,
+} from "solid-js";
 
 type Stage = {
   id: string;
@@ -27,26 +35,74 @@ type Transition = {
 };
 
 const STAGES: Stage[] = [
-  { id: "plan",      label: "Plan",      owner: "Human", x: 80,  y: 60 },
-  { id: "design",    label: "Design",    owner: "Agent", x: 220, y: 60 },
+  { id: "plan", label: "Plan", owner: "Human", x: 80, y: 60 },
+  { id: "design", label: "Design", owner: "Agent", x: 220, y: 60 },
   { id: "implement", label: "Implement", owner: "Agent", x: 360, y: 60 },
-  { id: "review",    label: "Review",    owner: "Human", x: 500, y: 60 },
-  { id: "test",      label: "Test",      owner: "Agent", x: 640, y: 60 },
-  { id: "deploy",    label: "Deploy",    owner: "Agent", x: 780, y: 60 },
-  { id: "done",      label: "Done",                      x: 920, y: 60 },
+  { id: "review", label: "Review", owner: "Human", x: 500, y: 60 },
+  { id: "test", label: "Test", owner: "Agent", x: 640, y: 60 },
+  { id: "deploy", label: "Deploy", owner: "Agent", x: 780, y: 60 },
+  { id: "done", label: "Done", x: 920, y: 60 },
 ];
 
 const STAGE_BY_ID = new Map(STAGES.map((s) => [s.id, s]));
 
 const TRANSITIONS: Transition[] = [
-  { id: "plan-design",       from: "plan",      to: "design",    label: "Approve plan", kind: "forward"  },
-  { id: "design-implement",  from: "design",    to: "implement", label: "Design done",  kind: "forward"  },
-  { id: "implement-review",  from: "implement", to: "review",    label: "Submit",       kind: "forward"  },
-  { id: "review-test",       from: "review",    to: "test",      label: "Looks good",   kind: "forward"  },
-  { id: "review-implement",  from: "review",    to: "implement", label: "Needs work",   kind: "backward" },
-  { id: "test-deploy",       from: "test",      to: "deploy",    label: "Pass",         kind: "forward"  },
-  { id: "test-implement",    from: "test",      to: "implement", label: "Fail",         kind: "backward" },
-  { id: "deploy-done",       from: "deploy",    to: "done",      label: "Live",         kind: "forward"  },
+  {
+    id: "plan-design",
+    from: "plan",
+    to: "design",
+    label: "Approve plan",
+    kind: "forward",
+  },
+  {
+    id: "design-implement",
+    from: "design",
+    to: "implement",
+    label: "Design done",
+    kind: "forward",
+  },
+  {
+    id: "implement-review",
+    from: "implement",
+    to: "review",
+    label: "Submit",
+    kind: "forward",
+  },
+  {
+    id: "review-test",
+    from: "review",
+    to: "test",
+    label: "Looks good",
+    kind: "forward",
+  },
+  {
+    id: "review-implement",
+    from: "review",
+    to: "implement",
+    label: "Needs work",
+    kind: "backward",
+  },
+  {
+    id: "test-deploy",
+    from: "test",
+    to: "deploy",
+    label: "Pass",
+    kind: "forward",
+  },
+  {
+    id: "test-implement",
+    from: "test",
+    to: "implement",
+    label: "Fail",
+    kind: "backward",
+  },
+  {
+    id: "deploy-done",
+    from: "deploy",
+    to: "done",
+    label: "Live",
+    kind: "forward",
+  },
 ];
 
 const FORWARD = TRANSITIONS.filter((t) => t.kind === "forward");
@@ -81,7 +137,9 @@ export const DagTraversalSandboxShowcase: Component = () => {
   const [log, setLog] = createSignal<LogEntry[]>([]);
   const [autoPlay, setAutoPlay] = createSignal(false);
   const [visited, setVisited] = createSignal<Set<string>>(new Set(["plan"]));
-  const [reworkCount, setReworkCount] = createSignal<Record<string, number>>({});
+  const [reworkCount, setReworkCount] = createSignal<Record<string, number>>(
+    {},
+  );
 
   let rafId: number | undefined;
   const tickAnim = () => {
@@ -109,9 +167,17 @@ export const DagTraversalSandboxShowcase: Component = () => {
     if (t.kind === "backward") {
       setReworkCount((prev) => ({ ...prev, [t.to]: (prev[t.to] ?? 0) + 1 }));
     }
-    setAnim({ from: t.from, to: t.to, kind: t.kind, startedAt: performance.now() });
+    setAnim({
+      from: t.from,
+      to: t.to,
+      kind: t.kind,
+      startedAt: performance.now(),
+    });
     setProgress(0);
-    setLog((prev) => [...prev.slice(-19), { ts: Date.now(), from: t.from, to: t.to, label: t.label, kind: t.kind }]);
+    setLog((prev) => [
+      ...prev.slice(-19),
+      { ts: Date.now(), from: t.from, to: t.to, label: t.label, kind: t.kind },
+    ]);
     rafId = requestAnimationFrame(tickAnim);
   };
 
@@ -144,9 +210,10 @@ export const DagTraversalSandboxShowcase: Component = () => {
       const forwards = valid.filter((t) => t.kind === "forward");
       const backwards = valid.filter((t) => t.kind === "backward");
       const pickForward = backwards.length === 0 || Math.random() < 0.7;
-      const choice = pickForward && forwards.length > 0
-        ? forwards[Math.floor(Math.random() * forwards.length)]
-        : backwards[Math.floor(Math.random() * backwards.length)];
+      const choice =
+        pickForward && forwards.length > 0
+          ? forwards[Math.floor(Math.random() * forwards.length)]
+          : backwards[Math.floor(Math.random() * backwards.length)];
       fire(choice.id);
       autoTimer = window.setTimeout(tick, ANIMATION_MS + 500);
     };
@@ -167,7 +234,9 @@ export const DagTraversalSandboxShowcase: Component = () => {
     setReworkCount({});
   };
 
-  const validTransitions = createMemo(() => TRANSITIONS.filter((t) => t.from === currentId()));
+  const validTransitions = createMemo(() =>
+    TRANSITIONS.filter((t) => t.from === currentId()),
+  );
 
   // Puck position (lerp between from and to). For backward edges we follow
   // the curved arc beneath; for forward we go straight along the edge.
@@ -203,28 +272,60 @@ export const DagTraversalSandboxShowcase: Component = () => {
     return a && a.from === from && a.to === to;
   };
 
-  const fmtTime = (ts: number) => new Date(ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const fmtTime = (ts: number) =>
+    new Date(ts).toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
   return (
     <div class="component-section dts-root">
       <h2>DAG Traversal — Sandbox</h2>
       <p class="text-meta">
-        A small workflow state machine. Click a transition button to advance — or toggle
-        auto-play. Forward transitions slide right along the edge; backward transitions
-        loop back along the orange arc below.
+        A small workflow state machine. Click a transition button to advance —
+        or toggle auto-play. Forward transitions slide right along the edge;
+        backward transitions loop back along the orange arc below.
       </p>
 
       {/* DAG visualization */}
       <div class="dts-canvas">
         <svg viewBox="0 0 1000 220" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <marker id="dts-arrow-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-text-secondary)" />
+            <marker
+              id="dts-arrow-fwd"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
+              <path
+                d="M 0 0 L 10 5 L 0 10 z"
+                fill="var(--sui-text-secondary)"
+              />
             </marker>
-            <marker id="dts-arrow-fwd-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <marker
+              id="dts-arrow-fwd-active"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-accent)" />
             </marker>
-            <marker id="dts-arrow-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <marker
+              id="dts-arrow-back"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--sui-warning)" />
             </marker>
           </defs>
@@ -265,7 +366,11 @@ export const DagTraversalSandboxShowcase: Component = () => {
                   x2={x2}
                   y2={to.y}
                   class={`dts-edge dts-edge--forward ${active ? "dts-edge--active" : ""}`}
-                  marker-end={active ? "url(#dts-arrow-fwd-active)" : "url(#dts-arrow-fwd)"}
+                  marker-end={
+                    active
+                      ? "url(#dts-arrow-fwd-active)"
+                      : "url(#dts-arrow-fwd)"
+                  }
                 />
               );
             }}
@@ -277,7 +382,11 @@ export const DagTraversalSandboxShowcase: Component = () => {
               const isCurrent = () => currentId() === stage.id;
               const isFrom = () => {
                 const a = anim();
-                return !!a && a.from === stage.id && performance.now() - a.startedAt < FROM_FLASH_MS;
+                return (
+                  !!a &&
+                  a.from === stage.id &&
+                  performance.now() - a.startedAt < FROM_FLASH_MS
+                );
               };
               const wasVisited = () => visited().has(stage.id);
               const rework = () => reworkCount()[stage.id] ?? 0;
@@ -297,18 +406,32 @@ export const DagTraversalSandboxShowcase: Component = () => {
                     rx="8"
                     class="dts-stage-rect"
                   />
-                  <text x={NODE_W / 2} y={stage.owner ? NODE_H / 2 - 2 : NODE_H / 2 + 4} text-anchor="middle" class="dts-stage-label">
+                  <text
+                    x={NODE_W / 2}
+                    y={stage.owner ? NODE_H / 2 - 2 : NODE_H / 2 + 4}
+                    text-anchor="middle"
+                    class="dts-stage-label"
+                  >
                     {stage.label}
                   </text>
                   <Show when={stage.owner}>
-                    <text x={NODE_W / 2} y={NODE_H / 2 + 13} text-anchor="middle" class="dts-stage-owner">
+                    <text
+                      x={NODE_W / 2}
+                      y={NODE_H / 2 + 13}
+                      text-anchor="middle"
+                      class="dts-stage-owner"
+                    >
                       {stage.owner}
                     </text>
                   </Show>
                   <Show when={rework() > 0}>
                     <g transform={`translate(${NODE_W - 6}, -6)`}>
                       <circle r="9" class="dts-stage-rework" />
-                      <text text-anchor="middle" dominant-baseline="central" class="dts-stage-rework-text">
+                      <text
+                        text-anchor="middle"
+                        dominant-baseline="central"
+                        class="dts-stage-rework-text"
+                      >
                         {rework()}
                       </text>
                     </g>
@@ -334,7 +457,10 @@ export const DagTraversalSandboxShowcase: Component = () => {
       <div class="dts-controls">
         <div class="dts-control-row">
           <span class="dts-current">
-            Current: <strong>{STAGE_BY_ID.get(currentId())?.label ?? currentId()}</strong>
+            Current:{" "}
+            <strong>
+              {STAGE_BY_ID.get(currentId())?.label ?? currentId()}
+            </strong>
           </span>
           <label class="dts-autoplay">
             <input
@@ -344,13 +470,19 @@ export const DagTraversalSandboxShowcase: Component = () => {
             />
             Auto-play
           </label>
-          <button type="button" class="dts-btn dts-btn--ghost" onClick={reset}>Reset</button>
+          <button type="button" class="dts-btn dts-btn--ghost" onClick={reset}>
+            Reset
+          </button>
         </div>
 
         <div class="dts-transitions">
           <Show
             when={validTransitions().length > 0}
-            fallback={<span class="dts-no-actions">Terminal — no further transitions.</span>}
+            fallback={
+              <span class="dts-no-actions">
+                Terminal — no further transitions.
+              </span>
+            }
           >
             <For each={validTransitions()}>
               {(t) => (
@@ -362,7 +494,9 @@ export const DagTraversalSandboxShowcase: Component = () => {
                   title={`${t.from} → ${t.to}`}
                 >
                   {t.label}
-                  <span class="dts-btn-arrow">{t.kind === "forward" ? "→" : "↩"}</span>
+                  <span class="dts-btn-arrow">
+                    {t.kind === "forward" ? "→" : "↩"}
+                  </span>
                 </button>
               )}
             </For>
@@ -382,10 +516,16 @@ export const DagTraversalSandboxShowcase: Component = () => {
               {(entry) => (
                 <li class={`dts-log-entry dts-log-entry--${entry.kind}`}>
                   <span class="dts-log-time">{fmtTime(entry.ts)}</span>
-                  <span class="dts-log-arrow">{entry.kind === "forward" ? "→" : "↩"}</span>
-                  <span class="dts-log-from">{STAGE_BY_ID.get(entry.from)?.label ?? entry.from}</span>
+                  <span class="dts-log-arrow">
+                    {entry.kind === "forward" ? "→" : "↩"}
+                  </span>
+                  <span class="dts-log-from">
+                    {STAGE_BY_ID.get(entry.from)?.label ?? entry.from}
+                  </span>
                   <span class="dts-log-sep">→</span>
-                  <span class="dts-log-to">{STAGE_BY_ID.get(entry.to)?.label ?? entry.to}</span>
+                  <span class="dts-log-to">
+                    {STAGE_BY_ID.get(entry.to)?.label ?? entry.to}
+                  </span>
                   <span class="dts-log-label-text">{entry.label}</span>
                 </li>
               )}

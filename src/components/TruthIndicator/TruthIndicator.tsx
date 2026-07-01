@@ -36,7 +36,8 @@ export const TruthIndicator: Component<TruthIndicatorProps> = (rawProps) => {
   ]);
 
   const px = () => SIZE_PX[local.size!];
-  const variantClass = () => (local.value ? "sui-truth--true" : "sui-truth--false");
+  const variantClass = () =>
+    local.value ? "sui-truth--true" : "sui-truth--false";
   const ariaLabel = () => local.label ?? (local.value ? "true" : "false");
   const wrapperClass = () => {
     const cls = ["sui-truth", variantClass(), `sui-truth--${local.size}`];
@@ -72,7 +73,13 @@ export const TruthIndicator: Component<TruthIndicatorProps> = (rawProps) => {
             stroke-linejoin="round"
           />
         ) : (
-          <g class="sui-truth__no" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <g
+            class="sui-truth__no"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          >
             <circle cx="12" cy="12" r="9" />
             <line x1="6" y1="18" x2="18" y2="6" />
           </g>
@@ -83,7 +90,10 @@ export const TruthIndicator: Component<TruthIndicatorProps> = (rawProps) => {
 };
 
 export type TruthIndicatorOverrides = Pick<TruthIndicatorProps, "size">;
-export type TruthIndicatorDataProps = Omit<TruthIndicatorProps, keyof TruthIndicatorOverrides>;
+export type TruthIndicatorDataProps = Omit<
+  TruthIndicatorProps,
+  keyof TruthIndicatorOverrides
+>;
 
 export function createTruthIndicator(
   defaults: Partial<TruthIndicatorProps>,

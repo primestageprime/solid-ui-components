@@ -234,7 +234,11 @@ export function createDnDReorder<T>(
       // rendered normally (before the placeholder takes over).
       if (rowEl) {
         const r = rowEl.getBoundingClientRect();
-        e.dataTransfer.setDragImage(rowEl, e.clientX - r.left, e.clientY - r.top);
+        e.dataTransfer.setDragImage(
+          rowEl,
+          e.clientX - r.left,
+          e.clientY - r.top,
+        );
       }
     }
     if (rowEl) {
@@ -269,7 +273,12 @@ export function createDnDReorder<T>(
     container.querySelectorAll<HTMLElement>("[data-dnd-id]").forEach((el) => {
       if (el.getAttribute("data-dnd-id") === current) return;
       const r = el.getBoundingClientRect();
-      rects.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      rects.push({
+        left: r.left,
+        right: r.right,
+        top: r.top,
+        bottom: r.bottom,
+      });
     });
     const next = pointerToInsertIndex(rects, coord, axis);
     if (insertPos() !== next) setInsertPos(next);

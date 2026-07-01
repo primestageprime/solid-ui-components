@@ -86,17 +86,16 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
     visibleRows() > 0
       ? visibleRows() * props.cardHeight + (visibleRows() - 1) * props.rowGap
       : 0;
-  const parentRowH = () => (hasParent() ? props.cardHeight + props.parentGap : 0);
-  const laneHeight = () =>
-    props.lanePadding * 2 + parentRowH() + childRowH();
+  const parentRowH = () =>
+    hasParent() ? props.cardHeight + props.parentGap : 0;
+  const laneHeight = () => props.lanePadding * 2 + parentRowH() + childRowH();
 
   // Internal coordinates are lane-relative (origin at the lane's own top).
   // The lane's absolute vertical position comes from a CSS-transitioned
   // group transform (translateY(props.laneY)) below, so the whole lane
   // *slides* when it's re-sorted into a new status band — without rebuilding
   // the card trajectory (which is laneY-independent).
-  const parentRowCenterY = () =>
-    props.lanePadding + props.cardHeight / 2;
+  const parentRowCenterY = () => props.lanePadding + props.cardHeight / 2;
   const childRowCenterY = () =>
     props.lanePadding + parentRowH() + childRowH() / 2;
   // Center Y of the first (top) child row — children stack downward from here.
@@ -106,7 +105,11 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
   const colBottomY = () => childRowCenterY() + childRowH() / 2;
   const lozMidY = () => childRowCenterY();
   const leftLozengeX = () =>
-    centerX() - props.maxDepth * colCenterGap() - cardW() / 2 - lozGap() - lozW();
+    centerX() -
+    props.maxDepth * colCenterGap() -
+    cardW() / 2 -
+    lozGap() -
+    lozW();
   const rightLozengeX = () =>
     centerX() + props.maxDepth * colCenterGap() + cardW() / 2 + lozGap();
 
@@ -304,14 +307,17 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
       </Show>
       <For each={traj().arrows}>
         {(arrow) => {
-          const fromCard = (): CardTrajectory | undefined => traj().cards.get(arrow.fromId);
-          const toCard = (): CardTrajectory | undefined => traj().cards.get(arrow.toId);
+          const fromCard = (): CardTrajectory | undefined =>
+            traj().cards.get(arrow.fromId);
+          const toCard = (): CardTrajectory | undefined =>
+            traj().cards.get(arrow.toId);
           const bothHidden = () =>
             fromCard()?.modeAt(currentT()) === "gone" &&
             toCard()?.modeAt(currentT()) === "gone";
           const src = () => fromCard()?.anchorAt(currentT());
           const tgt = () => toCard()?.anchorAt(currentT());
-          const dashedness = () => dashednessAt(arrow, traj().cards, currentT());
+          const dashedness = () =>
+            dashednessAt(arrow, traj().cards, currentT());
           const dashArray = () => {
             const d = dashedness();
             if (d <= 0.001) return undefined;
@@ -319,7 +325,9 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
           };
           const stroke = () => (dashedness() < 0.5 ? accentStroke : greyStroke);
           const obstacles = () => {
-            const list: Array<{ id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>> = [];
+            const list: Array<
+              { id: string } & ReturnType<NonNullable<CardTrajectory["rectAt"]>>
+            > = [];
             for (const [id, c] of traj().cards) {
               if (id === arrow.fromId || id === arrow.toId) continue;
               if (c.isParent) continue;
@@ -335,8 +343,12 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
             const tg = tgt()!;
             if (currentT() < 1) {
               const goingRight = tg.x >= s.x;
-              const fromOuterX = goingRight ? s.x + s.width / 2 : s.x - s.width / 2;
-              const toOuterX = goingRight ? tg.x - tg.width / 2 : tg.x + tg.width / 2;
+              const fromOuterX = goingRight
+                ? s.x + s.width / 2
+                : s.x - s.width / 2;
+              const toOuterX = goingRight
+                ? tg.x - tg.width / 2
+                : tg.x + tg.width / 2;
               const channelX = goingRight
                 ? Math.max(fromOuterX + 4, toOuterX - 15)
                 : Math.min(fromOuterX - 4, toOuterX + 15);
@@ -377,7 +389,12 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
           const node = (): StatusFlowNode | undefined =>
             props.nodes.find((n) => n.id === id) ??
             (props.spec.parentTitle && id === props.spec.id
-              ? { id, title: props.spec.parentTitle!, subtitle: props.spec.parentSubtitle, status: status() }
+              ? {
+                  id,
+                  title: props.spec.parentTitle!,
+                  subtitle: props.spec.parentSubtitle,
+                  status: status(),
+                }
               : undefined);
           return (
             <Switch>

@@ -32,7 +32,9 @@ export const SelectShowcase: Component = () => {
     STATUS_OPTIONS[0],
     STATUS_OPTIONS[2],
   ]);
-  const [lockedPriority] = createSignal<SelectOption | null>(PRIORITY_OPTIONS[3]);
+  const [lockedPriority] = createSignal<SelectOption | null>(
+    PRIORITY_OPTIONS[3],
+  );
   const [asset, setAsset] = createSignal<SelectOption | null>(null);
 
   return (
@@ -40,9 +42,8 @@ export const SelectShowcase: Component = () => {
       <h2>Select — Primitive (Depth 0)</h2>
       <p class="text-meta">
         Owns CSS (Select.css). Unified single + multi built on
-        `@kobalte/core/select`. `multiple` literal narrows `value` /
-        `onChange`. Kobalte passthrough via spread — e.g. `placement`,
-        `gutter`, `open`.
+        `@kobalte/core/select`. `multiple` literal narrows `value` / `onChange`.
+        Kobalte passthrough via spread — e.g. `placement`, `gutter`, `open`.
       </p>
 
       <div class="example-group">
@@ -81,11 +82,12 @@ export const SelectShowcase: Component = () => {
           />
         </div>
         <Stack gap="xs">
+          <Text variant="sublabel">Selected count: {statuses().length}</Text>
           <Text variant="sublabel">
-            Selected count: {statuses().length}
-          </Text>
-          <Text variant="sublabel">
-            Labels: {statuses().map((o) => o.label).join(", ") || "(none)"}
+            Labels:{" "}
+            {statuses()
+              .map((o) => o.label)
+              .join(", ") || "(none)"}
           </Text>
         </Stack>
       </div>
@@ -109,8 +111,8 @@ export const SelectShowcase: Component = () => {
       <div class="example-group">
         <h3>Long option list (30 items — scrolling)</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Validates the listbox `max-height: 280px` overflow rule — the
-          popup should scroll, the trigger should not grow.
+          Validates the listbox `max-height: 280px` overflow rule — the popup
+          should scroll, the trigger should not grow.
         </div>
         <div style={{ "max-width": "280px" }}>
           <Select
@@ -121,9 +123,7 @@ export const SelectShowcase: Component = () => {
             onChange={setAsset}
           />
         </div>
-        <Text variant="sublabel">
-          Selected: {asset()?.label ?? "(none)"}
-        </Text>
+        <Text variant="sublabel">Selected: {asset()?.label ?? "(none)"}</Text>
       </div>
     </div>
   );

@@ -2,9 +2,13 @@ import { describe, it, expect } from "vitest";
 import { splitLatexSegments, hasSplittableOperators } from "./latexSegments";
 
 const terms = (latex: string) =>
-  splitLatexSegments(latex).filter((s) => s.kind === "term").map((s) => s.latex);
+  splitLatexSegments(latex)
+    .filter((s) => s.kind === "term")
+    .map((s) => s.latex);
 const ops = (latex: string) =>
-  splitLatexSegments(latex).filter((s) => s.kind === "op").map((s) => s.latex);
+  splitLatexSegments(latex)
+    .filter((s) => s.kind === "op")
+    .map((s) => s.latex);
 
 describe("splitLatexSegments", () => {
   it("returns a single term when there is no top-level operator", () => {

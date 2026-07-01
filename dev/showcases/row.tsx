@@ -6,7 +6,12 @@ import { Text } from "../../src/components/Text/Text";
 import { Stack } from "../../src/components/Layout/Stack";
 
 const DemoBox: Component<{ label: string }> = (props) => (
-  <Surface padding="sm" radius="sm" bg="rgba(0,255,136,0.1)" borderColor="rgba(0,255,136,0.3)">
+  <Surface
+    padding="sm"
+    radius="sm"
+    bg="rgba(0,255,136,0.1)"
+    borderColor="rgba(0,255,136,0.3)"
+  >
     <Text variant="body">{props.label}</Text>
   </Surface>
 );
@@ -15,7 +20,10 @@ export const RowShowcase: Component = () => {
   return (
     <div class="component-section">
       <h2>Row — Primitive (Depth 0)</h2>
-      <p class="text-meta">Owns CSS (Layout.css). Flex-row container with gap/align/justify/wrap. Factory: createRow().</p>
+      <p class="text-meta">
+        Owns CSS (Layout.css). Flex-row container with gap/align/justify/wrap.
+        Factory: createRow().
+      </p>
 
       <div class="example-group">
         <h3>Base Component — Gap Sizes</h3>
@@ -39,7 +47,15 @@ export const RowShowcase: Component = () => {
           {(["start", "center", "end", "between"] as const).map((justify) => (
             <div>
               <Text variant="sublabel">{justify}</Text>
-              <Row gap="sm" justify={justify} style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+              <Row
+                gap="sm"
+                justify={justify}
+                style={{
+                  "margin-top": "8px",
+                  border: "1px dashed var(--sui-border)",
+                  padding: "8px",
+                }}
+              >
                 <DemoBox label="A" />
                 <DemoBox label="B" />
                 <DemoBox label="C" />
@@ -54,8 +70,16 @@ export const RowShowcase: Component = () => {
         <Stack gap="sm">
           <div>
             <Text variant="sublabel">SpreadRow</Text>
-            <div class="text-meta">align: "center", justify: "between", gap: "sm"</div>
-            <SpreadRow style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+            <div class="text-meta">
+              align: "center", justify: "between", gap: "sm"
+            </div>
+            <SpreadRow
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+                padding: "8px",
+              }}
+            >
               <DemoBox label="Left" />
               <DemoBox label="Right" />
             </SpreadRow>
@@ -63,7 +87,13 @@ export const RowShowcase: Component = () => {
           <div>
             <Text variant="sublabel">ClusterRow</Text>
             <div class="text-meta">align: "center", gap: "sm"</div>
-            <ClusterRow style={{ "margin-top": "8px", border: "1px dashed var(--sui-border)", padding: "8px" }}>
+            <ClusterRow
+              style={{
+                "margin-top": "8px",
+                border: "1px dashed var(--sui-border)",
+                padding: "8px",
+              }}
+            >
               <DemoBox label="A" />
               <DemoBox label="B" />
               <DemoBox label="C" />

@@ -21,7 +21,9 @@
   background: var(--sui-bg-elevated);
   border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .sui-combobox__control:focus-within {
@@ -75,7 +77,9 @@
   color: var(--sui-text-secondary);
   cursor: pointer;
   border-radius: var(--sui-radius-sm, 0);
-  transition: color 120ms ease, background 120ms ease;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
 }
 
 .sui-combobox__clear:hover {

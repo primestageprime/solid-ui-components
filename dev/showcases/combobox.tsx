@@ -1,8 +1,5 @@
 import { type Component, createMemo, createSignal } from "solid-js";
-import {
-  Combobox,
-  type ComboboxOption,
-} from "../../src/components/Combobox";
+import { Combobox, type ComboboxOption } from "../../src/components/Combobox";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";
 
@@ -47,11 +44,15 @@ const CATALOG: ComboboxOption[] = [
 
 export const ComboboxShowcase: Component = () => {
   // Single-mode
-  const [countries, setCountries] = createSignal<ComboboxOption[]>(INITIAL_COUNTRIES);
+  const [countries, setCountries] =
+    createSignal<ComboboxOption[]>(INITIAL_COUNTRIES);
   const [country, setCountry] = createSignal<ComboboxOption | null>(null);
 
   const addCountry = (label: string) => {
-    const created: ComboboxOption = { value: label.toLowerCase().replace(/\s+/g, "-"), label };
+    const created: ComboboxOption = {
+      value: label.toLowerCase().replace(/\s+/g, "-"),
+      label,
+    };
     setCountries([...countries(), created]);
     setCountry(created);
   };
@@ -63,13 +64,18 @@ export const ComboboxShowcase: Component = () => {
   ]);
 
   const addTag = (label: string) => {
-    const created: ComboboxOption = { value: label.toLowerCase().replace(/\s+/g, "-"), label };
+    const created: ComboboxOption = {
+      value: label.toLowerCase().replace(/\s+/g, "-"),
+      label,
+    };
     setTags([...tags(), created]);
     setSelectedTags([...selectedTags(), created]);
   };
 
   // Disabled demo — a pre-selected, read-only combobox.
-  const [lockedCountry] = createSignal<ComboboxOption | null>(INITIAL_COUNTRIES[0]);
+  const [lockedCountry] = createSignal<ComboboxOption | null>(
+    INITIAL_COUNTRIES[0],
+  );
 
   // onInputChange demo — parent-side filter against a catalog.
   const [query, setQuery] = createSignal("");
@@ -86,15 +92,15 @@ export const ComboboxShowcase: Component = () => {
       <p class="text-meta">
         Owns CSS (Combobox.css). Unified single + multi built on
         `@kobalte/core/combobox`. Supports freeform creation via `onCreate`
-        (Enter key on a non-matching input). Multi-mode renders a chip list
-        with per-chip removal and a Clear-all control.
+        (Enter key on a non-matching input). Multi-mode renders a chip list with
+        per-chip removal and a Clear-all control.
       </p>
 
       <div class="example-group">
         <h3>Single-mode with create-on-Enter</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Type a country and press Enter — the parent appends to `options`
-          and selects it.
+          Type a country and press Enter — the parent appends to `options` and
+          selects it.
         </div>
         <div style={{ "max-width": "320px" }}>
           <Combobox
@@ -111,8 +117,8 @@ export const ComboboxShowcase: Component = () => {
       <div class="example-group">
         <h3>Multi-mode with chips + create</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `multiple` flips to chip list. `showChips` defaults to `true`; set
-          to `false` to hide the chip header and rely on the inline listbox
+          `multiple` flips to chip list. `showChips` defaults to `true`; set to
+          `false` to hide the chip header and rely on the inline listbox
           indicators.
         </div>
         <div style={{ "max-width": "420px" }}>
@@ -127,9 +133,14 @@ export const ComboboxShowcase: Component = () => {
           />
         </div>
         <Stack gap="xs">
-          <Text variant="sublabel">Selected count: {selectedTags().length}</Text>
           <Text variant="sublabel">
-            Labels: {selectedTags().map((o) => o.label).join(", ") || "(none)"}
+            Selected count: {selectedTags().length}
+          </Text>
+          <Text variant="sublabel">
+            Labels:{" "}
+            {selectedTags()
+              .map((o) => o.label)
+              .join(", ") || "(none)"}
           </Text>
         </Stack>
       </div>
@@ -137,8 +148,8 @@ export const ComboboxShowcase: Component = () => {
       <div class="example-group">
         <h3>Multi-mode, showChips=false</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          No chip list — selected state is indicated via the listbox
-          check marks only.
+          No chip list — selected state is indicated via the listbox check marks
+          only.
         </div>
         <div style={{ "max-width": "420px" }}>
           <Combobox
@@ -155,8 +166,8 @@ export const ComboboxShowcase: Component = () => {
       <div class="example-group">
         <h3>Disabled</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `disabled` is forwarded to both the input and the trigger.
-          Opacity drops and pointer events are suppressed.
+          `disabled` is forwarded to both the input and the trigger. Opacity
+          drops and pointer events are suppressed.
         </div>
         <div style={{ "max-width": "320px" }}>
           <Combobox
@@ -171,8 +182,8 @@ export const ComboboxShowcase: Component = () => {
       <div class="example-group">
         <h3>onInputChange — parent-side filtering</h3>
         <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `onInputChange` fires on every keystroke. Here the parent derives
-          a filtered option list via `createMemo` — type "st" to see only
+          `onInputChange` fires on every keystroke. Here the parent derives a
+          filtered option list via `createMemo` — type "st" to see only
           Stainless Steel.
         </div>
         <div style={{ "max-width": "320px" }}>

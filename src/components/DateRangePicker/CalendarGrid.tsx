@@ -72,7 +72,11 @@ const buildDayClass = (
     classes.push("sui-drp__day--range-end");
 
   const effectiveEnd = rangeEnd ?? clampedHover;
-  if (rangeStart && effectiveEnd && cellInRange(day, rangeStart, effectiveEnd, timeZone))
+  if (
+    rangeStart &&
+    effectiveEnd &&
+    cellInRange(day, rangeStart, effectiveEnd, timeZone)
+  )
     classes.push("sui-drp__day--in-range");
 
   if (isSameDay(day, today)) classes.push("sui-drp__day--today");

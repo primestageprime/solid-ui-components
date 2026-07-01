@@ -1,12 +1,24 @@
 import { describe, it, expect } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { TabbedSidePanel, createTabbedSidePanel, type TabbedPanelTab } from "./TabbedSidePanel";
+import {
+  TabbedSidePanel,
+  createTabbedSidePanel,
+  type TabbedPanelTab,
+} from "./TabbedSidePanel";
 import { RightDetailTabbedPanel, LeftNavTabbedPanel } from "./variants";
 
 const TABS: TabbedPanelTab[] = [
-  { id: "a", label: "Alpha", content: () => <div data-testid="a-body">A body</div> },
-  { id: "b", label: "Beta",  content: () => <div data-testid="b-body">B body</div> },
+  {
+    id: "a",
+    label: "Alpha",
+    content: () => <div data-testid="a-body">A body</div>,
+  },
+  {
+    id: "b",
+    label: "Beta",
+    content: () => <div data-testid="b-body">B body</div>,
+  },
 ];
 
 describe("TabbedSidePanel — basic render", () => {
@@ -47,7 +59,9 @@ describe("TabbedSidePanel — basic render", () => {
         onOpenChange={() => {}}
       />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--right/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabbed-side-panel--right/,
+    );
   });
 });
 
@@ -115,8 +129,22 @@ describe("TabbedSidePanel — behavior", () => {
     let aCalls = 0;
     let bCalls = 0;
     const tabs: TabbedPanelTab[] = [
-      { id: "a", label: "Alpha", content: () => { aCalls++; return <div>A</div>; } },
-      { id: "b", label: "Beta",  content: () => { bCalls++; return <div>B</div>; } },
+      {
+        id: "a",
+        label: "Alpha",
+        content: () => {
+          aCalls++;
+          return <div>A</div>;
+        },
+      },
+      {
+        id: "b",
+        label: "Beta",
+        content: () => {
+          bCalls++;
+          return <div>B</div>;
+        },
+      },
     ];
     render(() => (
       <TabbedSidePanel
@@ -167,7 +195,9 @@ describe("TabbedSidePanel — side positioning", () => {
     expect(children[0].getAttribute("role")).toBe("tablist");
     const lastChild = children[children.length - 1];
     expect(lastChild.getAttribute("data-sui-content-padding")).toBe("sm");
-    expect(lastChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
+    expect(lastChild.firstElementChild!.getAttribute("data-testid")).toBe(
+      "a-body",
+    );
   });
 
   it("side='left' renders content before strip (DOM order)", () => {
@@ -185,7 +215,9 @@ describe("TabbedSidePanel — side positioning", () => {
     // First child is the PaddedBody wrapper; the testid is inside it.
     const firstChild = children[0];
     expect(firstChild.getAttribute("data-sui-content-padding")).toBe("sm");
-    expect(firstChild.firstElementChild!.getAttribute("data-testid")).toBe("a-body");
+    expect(firstChild.firstElementChild!.getAttribute("data-testid")).toBe(
+      "a-body",
+    );
     expect(children[children.length - 1].getAttribute("role")).toBe("tablist");
   });
 
@@ -200,7 +232,9 @@ describe("TabbedSidePanel — side positioning", () => {
         side="left"
       />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabbed-side-panel--left/,
+    );
   });
 });
 
@@ -216,7 +250,9 @@ describe("createTabbedSidePanel factory", () => {
         onOpenChange={() => {}}
       />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabbed-side-panel--left/,
+    );
   });
 
   it("applies the curried tabsVariant default", () => {
@@ -246,7 +282,9 @@ describe("Named variants", () => {
         onOpenChange={() => {}}
       />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--right/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabbed-side-panel--right/,
+    );
   });
 
   it("LeftNavTabbedPanel applies side='left'", () => {
@@ -259,7 +297,9 @@ describe("Named variants", () => {
         onOpenChange={() => {}}
       />
     ));
-    expect(container.firstElementChild!.className).toMatch(/sui-tabbed-side-panel--left/);
+    expect(container.firstElementChild!.className).toMatch(
+      /sui-tabbed-side-panel--left/,
+    );
   });
 });
 

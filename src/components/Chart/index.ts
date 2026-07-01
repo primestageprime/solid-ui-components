@@ -4,7 +4,13 @@ export { Grid } from "./Grid";
 export type { GridProps } from "./Grid";
 export { XAxis, YAxis } from "./Axes";
 export type { AxisProps } from "./Axes";
-export { LineSeries, AreaSeries, PointSeries, BarSeries, ReferenceLine } from "./Series";
+export {
+  LineSeries,
+  AreaSeries,
+  PointSeries,
+  BarSeries,
+  ReferenceLine,
+} from "./Series";
 export type {
   LineSeriesProps,
   AreaSeriesProps,
@@ -24,7 +30,12 @@ export type { Scale, TimeScale } from "./scales";
 
 // Shared slot pointer types.
 export { slotId } from "./slot-types";
-export type { Id, ClickHandler, HoverHandler, DblClickHandler } from "./slot-types";
+export type {
+  Id,
+  ClickHandler,
+  HoverHandler,
+  DblClickHandler,
+} from "./slot-types";
 
 // Shape primitives.
 export { ShapeGlyph, DEFAULT_GLYPH_SIZE } from "./shapes";

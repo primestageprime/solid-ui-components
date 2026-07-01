@@ -41,7 +41,9 @@ const isKnownShape = (s: unknown): boolean =>
   s === "chevron" ||
   s === "chevron-down" ||
   s === "pin" ||
-  (typeof s === "object" && s !== null && typeof (s as { path?: unknown }).path === "string");
+  (typeof s === "object" &&
+    s !== null &&
+    typeof (s as { path?: unknown }).path === "string");
 
 // Module-level dedupe set for unknown-shape warnings. Keeps warn-once invariant
 // across all ShapeGlyph instances without coupling to component lifecycle.
@@ -157,7 +159,11 @@ const PathScaled: Component<{
       fill={props.fillRule === "none" ? "none" : props.color}
       fill-rule={props.fillRule === "evenodd" ? "evenodd" : undefined}
       stroke={props.fillRule === "none" ? props.color : props.stroke}
-      stroke-width={props.fillRule === "none" ? Math.max(2, props.strokeWidth) : props.strokeWidth}
+      stroke-width={
+        props.fillRule === "none"
+          ? Math.max(2, props.strokeWidth)
+          : props.strokeWidth
+      }
       stroke-linejoin="round"
       stroke-linecap="round"
     />
