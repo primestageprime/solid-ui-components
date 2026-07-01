@@ -19,7 +19,7 @@
 // or the day changes, otherwise relative; full
 // timestamp via tooltip on hover.
 // ============================================
-import { Component, For, Show, createMemo } from "solid-js";
+import { type Component, For, Show, createMemo } from "solid-js";
 import { ConversationStack } from "../Layout";
 import { Duration } from "../Duration";
 import { MessageBubble } from "../MessageBubble/MessageBubble";
@@ -126,7 +126,9 @@ interface TreeNode {
 
 const buildTree = (msgs: ConversationMessage[]): TreeNode[] => {
   const byId = new Map<string, TreeNode>();
-  msgs.forEach((m) => byId.set(m.id, { msg: m, children: [], depth: 0 }));
+  msgs.forEach((m) => {
+    byId.set(m.id, { msg: m, children: [], depth: 0 });
+  });
   const roots: TreeNode[] = [];
   msgs.forEach((m) => {
     const node = byId.get(m.id)!;
@@ -141,7 +143,9 @@ const buildTree = (msgs: ConversationMessage[]): TreeNode[] => {
   // Sort children by timestamp at every level.
   const sortRec = (nodes: TreeNode[]) => {
     nodes.sort((a, b) => toMs(a.msg.timestamp) - toMs(b.msg.timestamp));
-    nodes.forEach((n) => sortRec(n.children));
+    nodes.forEach((n) => {
+      sortRec(n.children);
+    });
   };
   sortRec(roots);
   return roots;
@@ -230,13 +234,17 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
 
   const participantById = createMemo(() => {
     const m = new Map<string, Participant>();
-    props.participants.forEach((p) => m.set(p.id, p));
+    props.participants.forEach((p) => {
+      m.set(p.id, p);
+    });
     return m;
   });
 
   const colorById = createMemo(() => {
     const m = new Map<string, string>();
-    props.participants.forEach((p) => m.set(p.id, p.color ?? colorForId(p.id)));
+    props.participants.forEach((p) => {
+      m.set(p.id, p.color ?? colorForId(p.id));
+    });
     return m;
   });
 

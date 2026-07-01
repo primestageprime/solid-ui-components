@@ -7,7 +7,7 @@
 // (e.g. `TitledTimeRangeHeader`) can reuse the rule without composing
 // this Composite.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import { NowrapBody } from "../Text";
 import { formatDateTimeRange, type DateTimeRangeMode } from "./formatDateTimeRange";
 

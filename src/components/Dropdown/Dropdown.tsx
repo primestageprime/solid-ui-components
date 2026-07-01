@@ -6,10 +6,10 @@
 // Trigger button with popover listbox for single selection.
 // ============================================
 import {
-  Component,
+  type Component,
   For,
   Show,
-  JSX,
+  type JSX,
   createSignal,
   createUniqueId,
   onCleanup,

@@ -1,5 +1,5 @@
-import { createSignal, Accessor, Setter } from "solid-js";
-import { SelectionStore } from "./types";
+import { createSignal, type Accessor, type Setter } from "solid-js";
+import type { SelectionStore } from "./types";
 
 /**
  * Creates an ephemeral selection store using a regular signal.

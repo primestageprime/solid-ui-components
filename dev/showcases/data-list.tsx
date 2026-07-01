@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { DTable, DTableWithHeader, DHeader, DH, DRow, DT, DD, Units, Val, SigFig } from "../../src/components/DataList";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";

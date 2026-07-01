@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
   BarSeries,
-  LineSeries,
   ChartTooltip,
 } from "../Chart";
 
@@ -97,7 +96,7 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
   });
 
   const yMaxCount = createMemo(() => Math.max(1, ...buckets().map((b) => b.count)));
-  const yMaxCumulative = createMemo(() => Math.max(1, ...buckets().map((b) => b.cumulative)));
+  const _yMaxCumulative = createMemo(() => Math.max(1, ...buckets().map((b) => b.cumulative)));
 
   // X domain in bucket-index space; tick labels render the bucket start time.
   const xDomain = createMemo<[number, number]>(() => [-0.5, buckets().length - 0.5]);

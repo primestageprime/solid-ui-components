@@ -5,7 +5,7 @@
 // Owns CSS (MathFormula.css), no component imports.
 // KaTeX renderer with interactive variable highlighting.
 // ============================================
-import { createContext, useContext, createSignal, createEffect, on, ParentComponent, Component, JSX, Accessor } from "solid-js";
+import { createContext, useContext, createSignal, createEffect, on, type ParentComponent, type Component, type JSX, type Accessor } from "solid-js";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import "./MathFormula.css";

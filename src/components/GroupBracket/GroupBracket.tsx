@@ -7,7 +7,7 @@
 // same contiguous run of a group. Stack N members → one unbroken
 // `]`-shape. Optional badge on run leaders.
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import "./GroupBracket.css";
 
 /**

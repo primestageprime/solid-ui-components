@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Page } from "../../src/components/Page";
 import { Stack } from "../../src/components/Layout/Stack";
 

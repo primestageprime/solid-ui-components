@@ -5,7 +5,7 @@
 // Owns CSS (StatsTable.css), no component imports.
 // Simple stats table with typed columns and row classes.
 // ============================================
-import { Component, JSX, splitProps, For, Show } from "solid-js";
+import { type JSX, splitProps, For, Show } from "solid-js";
 import "./StatsTable.css";
 
 export interface StatsColumn<T = any> {

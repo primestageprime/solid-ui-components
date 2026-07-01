@@ -1,4 +1,4 @@
-import { Component, createSignal, For } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 import { MutableList } from "../../src/components/MutableList";
 
 // ── Sample data ───────────────────────────────────────────────────────────

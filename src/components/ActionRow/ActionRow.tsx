@@ -7,7 +7,7 @@
 // bar. Actions stay layout-stable via `visibility` toggling.
 // Extracted from dside-ui DesignView (CarryoverRow + focus-mode rows).
 // ============================================
-import { Component, For, JSX, Show, mergeProps } from "solid-js";
+import { type Component, For, type JSX, Show, mergeProps } from "solid-js";
 import "./ActionRow.css";
 
 export type ActionRowTone = "default" | "danger" | "accent";

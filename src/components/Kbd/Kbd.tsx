@@ -7,7 +7,7 @@
 //   <Kbd letter="C" rest="onfirm" /> — letter underlined, rest plain.
 //   <Kbd>Esc</Kbd> — literal children.
 // ============================================
-import { Component, JSX, mergeProps, Show } from "solid-js";
+import { type Component, type JSX, mergeProps, Show } from "solid-js";
 import "./Kbd.css";
 
 export interface KbdProps {

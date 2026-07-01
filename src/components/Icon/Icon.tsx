@@ -5,7 +5,7 @@
 // Owns CSS (Icon.css), no component imports.
 // SVG icon set with outline/solid variants, 5 sizes.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./Icon.css";
 
 // Icon groups for organization and documentation

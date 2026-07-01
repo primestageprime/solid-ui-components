@@ -6,7 +6,7 @@
 // FormulaProvider (from MathFormula, Atomic) + NarrowStack
 // (Layout Curried Variant).
 // ============================================
-import { JSX, splitProps, Show } from "solid-js";
+import { type JSX, splitProps, Show } from "solid-js";
 import { FormulaProvider } from "../MathFormula/MathFormula";
 import { ResultDisplay } from "./ResultDisplay";
 import { NarrowStack } from "../Layout/variants";

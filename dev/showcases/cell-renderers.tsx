@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import {
   IdCell, StringCell, TagCell, MoneyCell, DateCell, DateTimeCell,
   MinuteDateTimeCell, DurationCell, StatusCell, CheckboxCell,

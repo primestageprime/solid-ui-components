@@ -9,7 +9,7 @@
 // through `ValueRenderer`, so any `renderValue` override applies to both
 // sides and honors nested object rendering consistently.
 // ============================================
-import { type Component, type JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 import { ValueRenderer, type RenderValueFn } from "../ValueRenderer";
 import { DiffPair } from "../DiffPair";
 

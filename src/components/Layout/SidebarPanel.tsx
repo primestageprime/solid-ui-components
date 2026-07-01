@@ -7,7 +7,7 @@
 // (which is pinned at 400px for drafting); SidebarPanel takes a `width` prop
 // so app callers can size it for production layouts.
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface SidebarPanelProps extends JSX.HTMLAttributes<HTMLElement> {

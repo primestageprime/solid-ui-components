@@ -9,7 +9,7 @@
 // props (`tone`, `leading`) are not accepted at call sites — only runtime
 // data (`children`, `trailing`, `actions`) remains.
 // ============================================
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { ActionRow, createActionRow } from "./ActionRow";
 import type { ActionRowDataProps } from "./ActionRow";
 import { StatusLight } from "../StatusLight/StatusLight";

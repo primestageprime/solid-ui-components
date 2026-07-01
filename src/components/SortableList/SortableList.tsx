@@ -27,7 +27,7 @@
 // site, so a curried drop-in would add no value.
 // ============================================
 
-import { For, JSX, Show } from "solid-js";
+import { For, type JSX, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
 import { Surface } from "../Surface/Surface";
 import "./SortableList.css";

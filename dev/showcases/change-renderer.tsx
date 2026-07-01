@@ -1,4 +1,4 @@
-import { type Component, type JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 import { ChangeRenderer } from "../../src/components/ChangeRenderer";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";

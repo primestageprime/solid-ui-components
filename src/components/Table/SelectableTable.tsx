@@ -8,14 +8,14 @@
 // BaseTable's shared stylesheet.
 // ============================================
 import { splitProps, For, createMemo, Show, createEffect, onMount, onCleanup } from "solid-js";
-import { SelectableTableProps, getCellValue, tableContainerStyle } from "./types";
+import { type SelectableTableProps, getCellValue, tableContainerStyle } from "./types";
 import { Button } from "../Button/Button";
 
 export function SelectableTable<T extends Record<string, any>>(props: SelectableTableProps<T>) {
   // Track shift key state globally for shift-select
-  let shiftHeld = false;
-  const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Shift") shiftHeld = true; };
-  const onKeyUp = (e: KeyboardEvent) => { if (e.key === "Shift") shiftHeld = false; };
+  let _shiftHeld = false;
+  const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Shift") _shiftHeld = true; };
+  const onKeyUp = (e: KeyboardEvent) => { if (e.key === "Shift") _shiftHeld = false; };
   onMount(() => {
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);

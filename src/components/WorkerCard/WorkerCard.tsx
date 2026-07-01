@@ -8,7 +8,7 @@
 // Displays the status of an extraction worker with
 // animated expand/collapse for plan and progress rows.
 // ============================================
-import { Component, JSX, splitProps, Show } from "solid-js";
+import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import "./WorkerCard.css";

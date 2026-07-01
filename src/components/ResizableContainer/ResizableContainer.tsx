@@ -6,10 +6,10 @@
 // Container with draggable edge handles for manual resize.
 // ============================================
 import {
-  Accessor,
-  Component,
+  type Accessor,
+  type Component,
   For,
-  JSX,
+  type JSX,
   Show,
   createEffect,
   createSignal,

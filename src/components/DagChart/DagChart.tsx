@@ -8,7 +8,7 @@ import { createPanZoom } from "./pan-zoom";
 import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import "./DagChart.css";
 
-const RESPONSIVE_BREAKPOINT = 640;
+const _RESPONSIVE_BREAKPOINT = 640;
 
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
@@ -146,7 +146,7 @@ export function DagChart<T>(props: DAGProps<T>) {
     collapseGraph(props.nodes, props.edges, props.focusedNodeId),
   );
 
-  const stateMap = createMemo(() =>
+  const _stateMap = createMemo(() =>
     new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
   );
 

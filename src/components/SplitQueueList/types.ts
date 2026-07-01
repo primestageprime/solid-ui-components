@@ -1,6 +1,6 @@
 /* SplitQueueList — public props. Shared by the animated queue (./SplitQueueList)
  * and the static layout (./StaticSplitLayout) so neither imports the other. */
-import { JSX } from "solid-js";
+import type { JSX } from "solid-js";
 
 export interface SplitQueueListProps<T> {
   /** Resolved (processed) items — rendered top list, oldest first. Required for

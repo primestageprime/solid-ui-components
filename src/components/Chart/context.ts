@@ -1,8 +1,8 @@
 // ============================================
 // Chart context — shared scales/dims for slot children.
 // ============================================
-import { Accessor, createContext, useContext } from "solid-js";
-import { Scale } from "./scales";
+import { type Accessor, createContext, useContext } from "solid-js";
+import type { Scale } from "./scales";
 import type { Id } from "./slot-types";
 
 export interface Margin {

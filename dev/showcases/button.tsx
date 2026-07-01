@@ -1,4 +1,4 @@
-import { createSignal, Component, JSX } from "solid-js";
+import { createSignal, type Component, type JSX } from "solid-js";
 import { Button } from "../../src/components/Button/Button";
 import {
   DefaultButton, PrimaryButton, SecondaryButton, DangerButton, WarningButton, GhostButton,

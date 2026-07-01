@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { EmptyState } from "../../src/components/Feedback";
 import { Icon } from "../../src/components/Icon";
 import { Stack } from "../../src/components/Layout/Stack";

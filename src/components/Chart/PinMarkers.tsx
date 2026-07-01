@@ -3,9 +3,9 @@
 // `renderPin` is an escape hatch when the descriptor cannot express what
 // the consumer needs (otherwise the slot renders one ShapeGlyph per pin).
 import {
-  Component,
+  type Component,
   For,
-  JSX,
+  type JSX,
   Show,
   createEffect,
   createMemo,

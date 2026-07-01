@@ -8,8 +8,8 @@
 // Factory: createParticipantAvatar().
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   mergeProps,
   splitProps,

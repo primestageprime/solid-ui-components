@@ -1,7 +1,7 @@
-import { Component, createSignal, For } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 import {
   DnDHierarchySortBar,
-  DnDHierarchySortBarItem,
+  type DnDHierarchySortBarItem,
 } from "../../src/components/DnDHierarchySortBar";
 
 // ── Sample data ───────────────────────────────────────────────────────────

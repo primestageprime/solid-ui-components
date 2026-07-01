@@ -11,7 +11,7 @@
 //   reloads and stays local to the machine (different screens keep their own
 //   preference). Double-click the handle to reset to the default.
 // ============================================
-import { Component, JSX, createSignal, onMount, splitProps } from "solid-js";
+import { type Component, type JSX, createSignal, onMount, splitProps } from "solid-js";
 import { Stack } from "./Stack";
 import "./Sidebar.css";
 

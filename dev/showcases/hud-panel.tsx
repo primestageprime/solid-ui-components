@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import {InfoPanel, AccentPanel, DangerPanel, WarningPanel, SuccessPanel, CompactPanel, DecoratedPanel} from "../../src/components/Panel";
 import { Panel } from "../../src/components/Panel/Panel";
 import { Stack } from "../../src/components/Layout/Stack";

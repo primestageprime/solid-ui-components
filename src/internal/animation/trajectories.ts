@@ -160,7 +160,7 @@ export const PHASE_MOVE_END =
 
 export const lerp = (a: number, b: number, t: number): number =>
   a + (b - a) * t;
-export const ease = (t: number): number => 1 - Math.pow(1 - t, 3);
+export const ease = (t: number): number => 1 - (1 - t) ** 3;
 export const windowProgress = (t: number, start: number, end: number): number => {
   if (t <= start) return 0;
   if (t >= end) return 1;
@@ -456,7 +456,7 @@ function buildLeavingTrajectory(
   const innerEdgeX = side === "left"
     ? loz.x - loz.width / 2
     : loz.x + loz.width / 2;
-  const lozPixel: Rect = {
+  const _lozPixel: Rect = {
     x: innerEdgeX,
     y: loz.y,
     width: 0,
@@ -527,7 +527,7 @@ function buildArrivingTrajectory(
   const innerEdgeX = side === "left"
     ? loz.x - loz.width / 2
     : loz.x + loz.width / 2;
-  const lozPixel: Rect = {
+  const _lozPixel: Rect = {
     x: innerEdgeX,
     y: loz.y,
     width: 0,

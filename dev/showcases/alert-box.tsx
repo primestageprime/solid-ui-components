@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { AlertBox } from "../../src/components/Feedback/AlertBox";
 import { Button } from "../../src/components/Button/Button";
 import { Stack } from "../../src/components/Layout/Stack";

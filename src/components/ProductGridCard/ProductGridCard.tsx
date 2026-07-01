@@ -12,7 +12,7 @@
 //
 // Factory: createProductGridCard().
 // ============================================
-import { Component, JSX, mergeProps, Show, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, Show, splitProps } from "solid-js";
 import "./ProductGridCard.css";
 
 export interface ProductGridCardProps extends JSX.HTMLAttributes<HTMLDivElement> {

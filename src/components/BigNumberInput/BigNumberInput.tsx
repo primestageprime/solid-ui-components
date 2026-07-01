@@ -31,8 +31,8 @@
 // in currency masking and are ignored for the parsed value.
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   createSignal,
   createEffect,
@@ -90,7 +90,7 @@ export interface BigNumberInputProps
  */
 function parse(raw: string): number {
   // Strip everything except digits, dot and minus.
-  let cleaned = raw.replace(/[^0-9.\-]/g, "");
+  let cleaned = raw.replace(/[^0-9.-]/g, "");
   // Keep only a leading minus.
   const negative = cleaned.startsWith("-");
   cleaned = cleaned.replace(/-/g, "");

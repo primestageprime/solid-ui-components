@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
 import { Stack } from "../../src/components/Layout/Stack";
 

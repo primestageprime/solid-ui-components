@@ -7,7 +7,7 @@
 // dispatches navigation through a router callback (onClick) rather than via
 // an <a href>.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface AppNavLinkProps extends Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {

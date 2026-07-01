@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js";
+import { type Component, For } from "solid-js";
 import { ScrollRegion } from "../../src/components/ScrollRegion";
 
 const rows = (n: number, label: string) =>

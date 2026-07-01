@@ -1,4 +1,4 @@
-import { Component, For, JSX, createEffect, createSignal, onCleanup } from "solid-js";
+import { type Component, For, type JSX, createEffect, createSignal, onCleanup } from "solid-js";
 import { SwimlaneChart, LinearFlowSwimlaneChart } from "../../src/components/SwimlaneChart";
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface/Surface";
@@ -11,7 +11,7 @@ import {
 } from "../../src/components/Text";
 
 // ─── JSON syntax highlighter ──────────────────────────────────────────────
-const JSON_TOKEN = /("(?:\\.|[^"\\])*"\s*:|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}\[\],])/;
+const JSON_TOKEN = /("(?:\\.|[^"\\])*"\s*:|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],])/;
 
 function highlightJson(json: string): JSX.Element {
   const parts = json.split(JSON_TOKEN);

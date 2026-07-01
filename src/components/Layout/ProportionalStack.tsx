@@ -15,7 +15,7 @@
 //     <ProportionalItem weight={2}>...</ProportionalItem>
 //   </ProportionalStack>
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface ProportionalStackProps extends JSX.HTMLAttributes<HTMLDivElement> {

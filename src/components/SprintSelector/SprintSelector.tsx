@@ -5,7 +5,7 @@
 // Owns CSS (SprintSelector.css), no component imports.
 // Horizontal row of mini stacked bars for week selection.
 // ============================================
-import { Component, splitProps, For, createMemo } from "solid-js";
+import { type Component, splitProps, For, createMemo } from "solid-js";
 import "./SprintSelector.css";
 
 export interface SprintSummary {

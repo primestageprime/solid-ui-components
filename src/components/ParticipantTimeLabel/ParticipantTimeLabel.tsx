@@ -9,8 +9,8 @@
 // Factory: createParticipantTimeLabel().
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   mergeProps,
   splitProps,
 } from "solid-js";

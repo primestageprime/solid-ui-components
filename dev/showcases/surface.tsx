@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Surface } from "../../src/components/Surface/Surface";
 import {
   CardSurface, CompactSurface,

@@ -44,7 +44,9 @@ function installLayout(labels: string[]) {
   const PITCH = 48;
   const W = 40;
   const xByLabel = new Map<string, number>();
-  labels.forEach((l, i) => xByLabel.set(l, i * PITCH));
+  labels.forEach((l, i) => {
+    xByLabel.set(l, i * PITCH);
+  });
   const orig = Element.prototype.getBoundingClientRect;
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
     this: Element,

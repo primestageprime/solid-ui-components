@@ -21,7 +21,7 @@
 //   - props are never mutated; reorder is reported via `onReorder(orderedIds)`.
 // ============================================
 
-import { Accessor, createMemo, createSignal } from "solid-js";
+import { type Accessor, createMemo, createSignal } from "solid-js";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 

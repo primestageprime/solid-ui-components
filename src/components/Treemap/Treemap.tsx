@@ -14,7 +14,7 @@
 // Primitive only paints the selection ring and forwards click events with
 // stopPropagation handled correctly.
 // ============================================
-import { Component, For, JSX, Show } from "solid-js";
+import { type Component, For, type JSX, Show } from "solid-js";
 import "./Treemap.css";
 
 /** One inner (leaf) cell of an outer column. */

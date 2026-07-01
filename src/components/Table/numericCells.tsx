@@ -1,11 +1,11 @@
 /* Table cell renderers — numeric cells (Money, Duration, Float, Int, MetricValue). */
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import {
   CURRENCY_DEFAULT_MAX,
   currencyMaxChars,
   fieldWidthForChars,
 } from "../../internal/fieldWidth/fieldWidth";
-import { CellRendererProps } from "./cellStyle";
+import type { CellRendererProps } from "./cellStyle";
 
 // ============================================
 // Money Renderer

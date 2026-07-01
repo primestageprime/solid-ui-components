@@ -7,7 +7,7 @@
 // and paragraph breaks. Extracted from the inline SimpleMarkdown in
 // dside-ui DesignView.
 // ============================================
-import { Component, mergeProps } from "solid-js";
+import { type Component, mergeProps } from "solid-js";
 import "./Markdown.css";
 
 export interface MarkdownProps {

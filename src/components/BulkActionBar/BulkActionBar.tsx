@@ -15,7 +15,7 @@
 // Zero-config call site: pass only data + callbacks. The verb, the noun, and
 // all visual decisions are the consumer's data, never presentational config.
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import { CountChip } from "../Badge";
 import { PrimaryButton, GhostButton } from "../Button";
 import "./BulkActionBar.css";

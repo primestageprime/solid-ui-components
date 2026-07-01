@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { ButtonGroup } from "../../src/components/ButtonGroup";
 import { Button } from "../../src/components/Button/Button";
 

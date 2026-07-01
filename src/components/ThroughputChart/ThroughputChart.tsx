@@ -91,7 +91,7 @@ const fmtNum = (n: number): string => {
 
 const niceMax = (val: number): number => {
   if (val <= 0) return 100;
-  const mag = Math.pow(10, Math.floor(Math.log10(val)));
+  const mag = 10 ** Math.floor(Math.log10(val));
   for (const c of [1, 2, 2.5, 5, 10]) if (c * mag >= val) return c * mag;
   return 10 * mag;
 };

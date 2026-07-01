@@ -15,7 +15,7 @@
 //   <DatePicker value="2026-06-02" onChange={(iso) => ...} />
 // Factory: createDatePicker() for curried variants.
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./DatePicker.css";
 
 export interface DatePickerProps

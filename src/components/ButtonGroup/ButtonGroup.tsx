@@ -5,7 +5,7 @@
 // Owns CSS (ButtonGroup.css), no component imports.
 // Button arrangement with orientation + gap.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./ButtonGroup.css";
 
 export interface ButtonGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {

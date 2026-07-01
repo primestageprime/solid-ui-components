@@ -6,7 +6,7 @@
 // Tab bar with horizontal or vertical orientation,
 // and underline/boxed/pill variants.
 // ============================================
-import { Component, For, JSX, Show, mergeProps } from "solid-js";
+import { type Component, For, type JSX, Show, mergeProps } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Tabs.css";
 

@@ -1,5 +1,5 @@
 // dev/theme-switcher.tsx
-import { Component, createSignal, createEffect, For } from "solid-js";
+import { type Component, createSignal, createEffect, For } from "solid-js";
 import {
   getPersistedTheme,
   loadTheme,

@@ -6,7 +6,7 @@
 // Top-bar + three-column (left / center / right) layout scaffold
 // for alarm-lab / analysis-style pages.
 // ============================================
-import { Component, JSX, Show } from "solid-js";
+import { type Component, type JSX, Show } from "solid-js";
 import "./ThreePanelLayout.css";
 
 export interface ThreePanelLayoutProps {

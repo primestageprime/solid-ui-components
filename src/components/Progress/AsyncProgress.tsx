@@ -5,7 +5,7 @@
 // Time-based progress bar that estimates completion
 // from historical max durations stored in localStorage.
 // ============================================
-import { Component, JSX, splitProps, createSignal, createEffect, onCleanup } from "solid-js";
+import { type Component, type JSX, splitProps, createSignal, createEffect, onCleanup } from "solid-js";
 import "./AsyncProgress.css";
 
 export interface AsyncProgressProps extends JSX.HTMLAttributes<HTMLDivElement> {

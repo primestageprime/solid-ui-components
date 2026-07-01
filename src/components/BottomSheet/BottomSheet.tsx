@@ -12,7 +12,7 @@
 //
 // Controlled: open state is managed externally via `open` + `onClose`.
 // ============================================
-import { Component, JSX, Show } from "solid-js";
+import { type Component, type JSX, Show } from "solid-js";
 import "./BottomSheet.css";
 
 export interface BottomSheetProps {

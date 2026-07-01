@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount, createMemo } from "solid-js";
+import { type Component, createSignal, onCleanup, onMount, createMemo } from "solid-js";
 import {
   Chart,
   Grid,

@@ -1,7 +1,7 @@
 /* @refresh reload */
 import "solid-devtools";
 import { render, Dynamic } from "solid-js/web";
-import { createSignal, createMemo, For, Show, Component, onMount, onCleanup } from "solid-js";
+import { createSignal, createMemo, For, Show, type Component, onMount, onCleanup } from "solid-js";
 import "../src/styles/global.css";
 import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";

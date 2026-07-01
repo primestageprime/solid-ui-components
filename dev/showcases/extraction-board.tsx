@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount } from "solid-js";
+import { type Component, createSignal, onCleanup, onMount } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import {
   ExtractionBoard,

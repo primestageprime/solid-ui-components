@@ -8,7 +8,7 @@
 // (HeartbeatSparkline is the 0..1 connection-health strip; this one plots
 // arbitrary values — projected balances, totals, …)
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./TrendSparkline.css";
 
 export type SparklineTrend = "up" | "down" | "flat";

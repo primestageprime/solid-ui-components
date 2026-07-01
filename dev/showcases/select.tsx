@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Select, type SelectOption } from "../../src/components/Select";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";

@@ -13,7 +13,9 @@ function makeDataTransfer() {
   return {
     effectAllowed: "",
     dropEffect: "",
-    setData: (k: string, v: string) => void (store[k] = v),
+    setData: (k: string, v: string) => {
+      store[k] = v;
+    },
     getData: (k: string) => store[k] ?? "",
     setDragImage: () => {},
   };

@@ -1,4 +1,4 @@
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { DagChart } from "../../src/components/DagChart";
 import type { DAGNode, DAGEdge, NodeRenderState } from "../../src/components/DagChart";
 

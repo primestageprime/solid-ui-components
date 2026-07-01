@@ -6,7 +6,7 @@
 // Only data/type imports from sibling Primitives (ICON_PATHS, IconName).
 // Trigger button with positioned action menu.
 // ============================================
-import { For, Show, JSX, createSignal, onCleanup, mergeProps } from "solid-js";
+import { For, Show, type JSX, createSignal, onCleanup, mergeProps } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import type { IconName } from "../Icon/Icon";
 import "./PopoverMenu.css";

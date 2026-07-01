@@ -1,6 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import type { RecentStarredItem, RecentStarredStore } from "./store";
 import "./RecentStarred.css";
 

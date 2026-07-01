@@ -4,7 +4,7 @@
 // `dev/sandbox-steps/index.ts`. This file deliberately holds zero
 // step-specific data so steps can be added/removed in isolation.
 // ============================================
-import { Component, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { type Component, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { getPersistedTheme, loadTheme } from "./load-theme";
 import { MockBaseline, SEED_STEPS, type SandboxStep } from "./sandbox-steps";
 

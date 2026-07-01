@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { RemovableItemCard } from "../../src/components/Card";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { Stack } from "../../src/components/Layout/Stack";

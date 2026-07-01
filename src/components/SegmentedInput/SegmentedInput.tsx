@@ -15,7 +15,7 @@
 //   <SegmentedInput ... compact />
 // Factory: createSegmentedInput() for curried variants.
 // ============================================
-import { Component, For, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
 import "./SegmentedInput.css";
 
 export interface SegmentedInputOption {

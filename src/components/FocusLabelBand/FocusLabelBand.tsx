@@ -12,7 +12,7 @@
 //
 // Factory: createFocusLabelBand().
 // ============================================
-import { Component, JSX, mergeProps, Show, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, Show, splitProps } from "solid-js";
 import "./FocusLabelBand.css";
 
 export interface FocusLabelBandProps extends JSX.HTMLAttributes<HTMLDivElement> {

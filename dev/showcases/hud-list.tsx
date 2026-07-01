@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import {ListItem} from "../../src/components/List";
 import { List } from "../../src/components/List/List";
 

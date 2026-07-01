@@ -3,7 +3,7 @@
 // Config-only consumer of context.drag.range — the root <Chart> owns the
 // pointer listener, so this slot deliberately attaches none of its own
 // (would clobber dispatch).
-import { Component, Show, createEffect, mergeProps } from "solid-js";
+import { type Component, Show, createEffect, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { DragRange } from "./context";
 

@@ -18,7 +18,7 @@
 // empty-as-all state.
 // ============================================
 import {
-  Component,
+  type Component,
   For,
   Show,
   createMemo,

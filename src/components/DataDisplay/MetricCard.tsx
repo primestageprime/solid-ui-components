@@ -7,7 +7,7 @@
 // When `units` is supplied the value uses the same monospace face as
 // the sibling `NumberWithUnits` Primitive so numeric readouts line up.
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import "./MetricCard.css";
 
 export type MetricCardColor = "default" | "success" | "warning" | "danger";

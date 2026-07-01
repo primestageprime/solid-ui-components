@@ -8,7 +8,7 @@
 // label/labelPosition, onCheckedChange, create* factory) so the two
 // boolean controls stay interchangeable at the call site.
 // ============================================
-import { Component, JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Checkbox.css";
 

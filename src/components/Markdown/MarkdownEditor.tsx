@@ -4,7 +4,7 @@
 // MarkdownEditor — Composed (Depth 2)
 // Composes Markdown for preview. 50/50 split: textarea | preview.
 // ============================================
-import { Component, mergeProps } from "solid-js";
+import { type Component, mergeProps } from "solid-js";
 import { Markdown } from "./Markdown";
 
 export interface MarkdownEditorProps {

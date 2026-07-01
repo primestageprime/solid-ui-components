@@ -7,7 +7,7 @@
 // edge. Active stage glows; previous stage briefly tags as "from".
 // Pure Solid signals + requestAnimationFrame + CSS — no D3.
 // ============================================
-import { Component, createEffect, createMemo, createSignal, For, Show, onCleanup } from "solid-js";
+import { type Component, createEffect, createMemo, createSignal, For, Show, onCleanup } from "solid-js";
 
 type Stage = {
   id: string;
@@ -57,7 +57,7 @@ const NODE_H = 50;
 const ANIMATION_MS = 700;
 const FROM_FLASH_MS = 350;
 
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 type Anim = {
   from: string;

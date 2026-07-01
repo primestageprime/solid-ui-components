@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount, For } from "solid-js";
+import { type Component, createSignal, onCleanup, onMount, For } from "solid-js";
 import { HeartbeatSparkline } from "../../src/components/HeartbeatSparkline";
 import { LiveHeartbeatTrace } from "../../src/components/LiveHeartbeatTrace";
 import { ConnectionStatus } from "../../src/components/ConnectionStatus";

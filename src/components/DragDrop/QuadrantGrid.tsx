@@ -5,7 +5,7 @@
 // Owns CSS (QuadrantGrid.css).
 // Generic 2x2 grid with labeled, colored drop zones.
 // ============================================
-import { Component, For, JSX, splitProps } from "solid-js";
+import { type Component, For, type JSX, splitProps } from "solid-js";
 import "./QuadrantGrid.css";
 
 export interface QuadrantCellConfig {

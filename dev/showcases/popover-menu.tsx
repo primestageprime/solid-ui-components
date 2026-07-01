@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { PopoverMenu } from "../../src/components/PopoverMenu";
 import { Row } from "../../src/components/Layout/Row";
 

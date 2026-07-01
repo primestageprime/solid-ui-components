@@ -37,7 +37,7 @@ export const linearScale = (
 
 const niceStep = (raw: number): number => {
   if (raw <= 0) return 1;
-  const exp = Math.pow(10, Math.floor(Math.log10(raw)));
+  const exp = 10 ** Math.floor(Math.log10(raw));
   const norm = raw / exp;
   if (norm < 1.5) return 1 * exp;
   if (norm < 3) return 2 * exp;

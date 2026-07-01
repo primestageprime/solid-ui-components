@@ -9,7 +9,7 @@
 export const EASE = "cubic-bezier(.22,.61,.36,1)";
 
 /** Cubic ease-out used by the time-driven tween. */
-export const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
+export const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3;
 
 /**
  * A TIME-DRIVEN tween: progress is computed from ELAPSED time (not rAF/WAAPI),

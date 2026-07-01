@@ -2,16 +2,17 @@
 // lastReviewedBy: adlai.arnold
 // Lanes are inferred from data in first-encounter order when `lanes` is
 // omitted (otherwise the caller-supplied order wins, top-to-bottom).
-import { Component, For, Show, createMemo, mergeProps } from "solid-js";
+import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
 const warnedLanes = new Set<string>();
-const warnUnknownLane = (lane: string): void => {
-  if (warnedLanes.has(lane)) return;
+const warnUnknownLane = (lane: string): null => {
+  if (warnedLanes.has(lane)) return null;
   warnedLanes.add(lane);
   // eslint-disable-next-line no-console
   console.warn(`TimelineBar: bar references unknown lane "${lane}" — bar skipped`);
+  return null;
 };
 
 export interface TimelineBarDatum {
@@ -220,7 +221,7 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
             return (
               <Show
                 when={laneIdx() >= 0}
-                fallback={(warnUnknownLane(bar.lane), null)}
+                fallback={warnUnknownLane(bar.lane)}
               >
                 <rect
                   class="sui-chart__timeline-bar"

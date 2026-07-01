@@ -6,7 +6,7 @@
 // Position 0 = outer, position 1 = inner, position 2+ = unused. Drag any
 // pill onto another to swap their slot positions.
 // ============================================
-import { Component, createSignal, For } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 import "./PivotPills.css";
 
 export interface PivotPillsProps<Dim extends string> {

@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { ResultPanel } from "../../src/components/DataDisplay";
 
 export const ResultPanelShowcase: Component = () => {

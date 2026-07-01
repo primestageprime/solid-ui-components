@@ -11,7 +11,7 @@
 // Stacked indicator: label on top, sparkline beneath.
 // Reassuring when healthy: no time-since text, just the trace.
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { LiveHeartbeatTrace } from "../LiveHeartbeatTrace";
 import type { StatusLightVariant } from "../StatusLight/StatusLight";
 import { SmallStatusLight } from "../StatusLight/variants";

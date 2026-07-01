@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import { HeatStack, HeatStackItem } from "../../src/components/HeatStack";
+import type { Component } from "solid-js";
+import { HeatStack, type HeatStackItem } from "../../src/components/HeatStack";
 
 const KEYS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 

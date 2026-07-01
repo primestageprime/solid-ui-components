@@ -14,7 +14,7 @@
 // on container resize.
 // ============================================
 import {
-  Component,
+  type Component,
   For,
   Show,
   createSignal,
@@ -22,7 +22,7 @@ import {
   onCleanup,
   onMount,
   mergeProps,
-  JSX,
+  type JSX,
 } from "solid-js";
 import { isServer } from "solid-js/web";
 import { Row } from "../Layout/Row";

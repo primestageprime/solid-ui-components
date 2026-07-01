@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import { createFormulaPanel, FormulaConfig } from "../../src/components/DataDisplay";
+import type { Component } from "solid-js";
+import { createFormulaPanel, type FormulaConfig } from "../../src/components/DataDisplay";
 
 interface Depth3Props {
   onNavigate?: (id: string) => void;

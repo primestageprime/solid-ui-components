@@ -9,7 +9,7 @@
 // Time parsing follows the dside convention: 1..8 are PM hours.
 // Extracted from dside-ui DesignView (PerDayGrid + parseTime).
 // ============================================
-import { Component, For, JSX, mergeProps } from "solid-js";
+import { type Component, For, type JSX, mergeProps } from "solid-js";
 import "./WeekCalendar.css";
 
 export interface WeekCalendarBlock {

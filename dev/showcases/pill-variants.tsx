@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo, createSignal } from "solid-js";
+import { type Component, For, Show, createMemo, createSignal } from "solid-js";
 import { TagPill, type PillStats } from "../tag-pill";
 
 // Mirror of items[] in main.tsx — only id+tags needed. Keep in sync.

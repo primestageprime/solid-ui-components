@@ -7,7 +7,7 @@
 // and dims it when count is zero. Use in dashboards / status strips where
 // you want "12 IN PROGRESS · 4 BLOCKED" inline summaries.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./CountChip.css";
 
 export interface CountChipProps extends JSX.HTMLAttributes<HTMLSpanElement> {

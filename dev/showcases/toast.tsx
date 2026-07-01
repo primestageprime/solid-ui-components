@@ -1,4 +1,4 @@
-import { Component, Show, createSignal, onMount } from "solid-js";
+import { type Component, Show, createSignal, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 import {ToastList, ToastRegion, showToast, toaster, type ToastHandle} from "../../src/components/Toast";
 import { Toast } from "../../src/components/Toast/Toast";

@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { SegmentedControl, createSegmentedControl } from "../../src/components/SegmentedControl";
 import { Stack } from "../../src/components/Layout/Stack";
 

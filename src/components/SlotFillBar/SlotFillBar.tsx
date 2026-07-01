@@ -26,7 +26,7 @@
 //   to perceive as a recolouring rather than a movement.
 // * Honours `prefers-reduced-motion: reduce` — all transitions go to 0s.
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./SlotFillBar.css";
 
 export type SlotPhase = "doing" | "done";

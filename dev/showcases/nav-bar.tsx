@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { NavLink } from "../../src/components/Navigation";
 
 interface Depth2Props {

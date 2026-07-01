@@ -9,7 +9,7 @@
 // — sharing the rule with the sibling `DateTimeRange` Composite
 // without forcing this Primitive to import a library component.
 // ============================================
-import { Component, JSX, splitProps, Show } from "solid-js";
+import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
 import "./TitledTimeRangeHeader.css";
 

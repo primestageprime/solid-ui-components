@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { CurrencyInput, currencyWidthRem } from "../../src/components/CurrencyInput";
 import { MoneyCell } from "../../src/components/Table/CellRenderers";
 import { Stack } from "../../src/components/Layout/Stack";

@@ -6,7 +6,7 @@
 // Vertical stack of items with status cells per key.
 // Earliest items at bottom, latest on top.
 // ============================================
-import { Component, JSX, splitProps, For, Show, createSignal } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show, createSignal } from "solid-js";
 import "./HeatStack.css";
 
 export type HeatStackStatus = "missing" | "partial" | "full" | "unknown";

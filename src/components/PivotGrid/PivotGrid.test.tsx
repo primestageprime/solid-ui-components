@@ -35,7 +35,7 @@ describe("PivotGrid rendering", () => {
   it("calls colLabel + rowLabel + cell + renderCell for each axis", () => {
     const rowLabel = vi.fn((r: RowId) => `R-${r}`);
     const colLabel = vi.fn((c: ColId) => `C-${c}`);
-    const cell = vi.fn((r: RowId, c: ColId): Cell | null => ({ value: 1 }));
+    const cell = vi.fn((_r: RowId, _c: ColId): Cell | null => ({ value: 1 }));
     const renderCell = vi.fn((c: Cell) => <span>{c.value}</span>);
 
     render(() => (
@@ -60,7 +60,9 @@ describe("PivotGrid rendering", () => {
       <PivotGrid {...baseProps} cell={() => null} />
     ));
     const bodyCells = container.querySelectorAll("tbody td");
-    bodyCells.forEach((td) => expect(td.textContent).toBe("—"));
+    bodyCells.forEach((td) => {
+      expect(td.textContent).toBe("—");
+    });
   });
 
   it("uses a custom emptyCell when provided", () => {
@@ -72,7 +74,9 @@ describe("PivotGrid rendering", () => {
       />
     ));
     const bodyCells = container.querySelectorAll("tbody td");
-    bodyCells.forEach((td) => expect(td.textContent).toBe("n/a"));
+    bodyCells.forEach((td) => {
+      expect(td.textContent).toBe("n/a");
+    });
   });
 
   it("renders the cornerLabel (default empty string)", () => {

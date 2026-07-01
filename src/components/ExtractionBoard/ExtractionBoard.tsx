@@ -42,7 +42,6 @@ import { createStore, reconcile } from "solid-js/store";
 import "./ExtractionBoard.css";
 
 import { useProgressEngine } from "../../internal/progress/useProgressEngine";
-import type { ProgressController } from "../../internal/progress/useProgressEngine";
 
 import {
   CellBox,
@@ -233,7 +232,10 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   const doingByCategory = createMemo(() => {
     const out: Record<string, DoingItem[]> = {};
     for (const c of catOrder()) out[c] = [];
-    for (const item of doing) (out[item.category] ??= []).push(item);
+    for (const item of doing) {
+      out[item.category] ??= [];
+      out[item.category].push(item);
+    }
     return out;
   });
 

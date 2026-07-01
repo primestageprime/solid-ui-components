@@ -5,7 +5,7 @@
 // Owns CSS (DigitRoller.css), no component imports.
 // Animated digit-by-digit value transition.
 // ============================================
-import { Component, For, Show, createEffect, createSignal, splitProps } from "solid-js";
+import { type Component, For, Show, createEffect, createSignal, splitProps } from "solid-js";
 import "./DigitRoller.css";
 
 export interface DigitRollerProps {

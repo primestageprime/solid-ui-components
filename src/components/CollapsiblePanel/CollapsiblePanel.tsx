@@ -8,8 +8,8 @@
 // Extracted from dside-ui DesignView (CollapsedStrip + CollapseTab).
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   createEffect,
   createSignal,

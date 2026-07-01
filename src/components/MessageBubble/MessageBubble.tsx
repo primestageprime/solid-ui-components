@@ -8,8 +8,8 @@
 // Factory: createMessageBubble().
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   createSignal,
   mergeProps,

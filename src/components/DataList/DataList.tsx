@@ -6,7 +6,7 @@
 // StatusBadge (Atomic). Semantic data table
 // with DTable, DT, DD, DRow, Badge, Val, etc.
 // ============================================
-import { Component, JSX, ParentComponent } from "solid-js";
+import type { Component, JSX, ParentComponent } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import {
   CellTable,

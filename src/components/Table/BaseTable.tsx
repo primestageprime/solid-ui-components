@@ -9,7 +9,7 @@
 import { splitProps, For, Show, createSignal, createMemo, mergeProps } from "solid-js";
 import type { JSX } from "solid-js";
 import type { TableColumn } from "./types";
-import { BaseTableProps, getCellValue, tableContainerStyle } from "./types";
+import { type BaseTableProps, getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
 
 export type SortDirection = "asc" | "desc" | null;
@@ -317,7 +317,5 @@ export function BaseTable<T extends Record<string, any>>(props: BaseTableProps<T
 export function createBaseTable(
   defaults: Partial<Omit<BaseTableProps<any>, "data" | "columns" | "children">>
 ) {
-  return function <T extends Record<string, any>>(props: BaseTableProps<T>) {
-    return <BaseTable {...mergeProps(defaults, props)} />;
-  };
+  return <T extends Record<string, any>,>(props: BaseTableProps<T>) => <BaseTable {...mergeProps(defaults, props)} />;
 }

@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import { HeatStream, HeatStreamItem } from "../../src/components/HeatStream";
+import type { Component } from "solid-js";
+import { HeatStream, type HeatStreamItem } from "../../src/components/HeatStream";
 
 const KEYS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 

@@ -5,9 +5,9 @@
 // Composes BaseTable (Atomic/Depth 1).
 // Filter input + table passthrough.
 // ============================================
-import { JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { BaseTable } from "./BaseTable";
-import { BaseTableProps } from "./types";
+import type { BaseTableProps } from "./types";
 
 export interface FilterableTableProps<T> extends BaseTableProps<T> {
   /** Placeholder text for the filter input */
@@ -24,7 +24,7 @@ function normalizeValue(value: unknown): string {
   if (value == null) return "";
   const str = String(value);
   // Remove . , $ and lowercase
-  return str.replace(/[.,\$]/g, "").toLowerCase();
+  return str.replace(/[.,$]/g, "").toLowerCase();
 }
 
 /**

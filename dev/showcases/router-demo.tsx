@@ -7,7 +7,7 @@
  * we can verify the routing logic per-case without all the layout,
  * port-assignment, and badge plumbing in between.
  */
-import { Component, For, JSX } from "solid-js";
+import { type Component, For, JSX } from "solid-js";
 import {
   orthogonalAvoidingObstacles,
   bezierAvoidingObstacles,

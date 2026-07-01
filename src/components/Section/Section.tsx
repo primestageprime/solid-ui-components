@@ -7,7 +7,7 @@
 // Collapsible section with title, subtitle, corner decorations.
 // Panel and Divider have been moved to their own directories.
 // ============================================
-import { Component, JSX, splitProps, Show, mergeProps, createSignal } from "solid-js";
+import { type Component, type JSX, splitProps, Show, mergeProps, createSignal } from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Section.css";
 

@@ -5,7 +5,7 @@
 // Composes Surface (curried) + Layout (curried) +
 // Text (curried). Status-colored alert with action.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { InfoSurface, WarningSurface, SuccessSurface, DangerSurface } from "../Surface";
 import { SpreadRow, ContentStack, ActionSlot } from "../Layout";

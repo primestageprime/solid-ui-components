@@ -1,4 +1,4 @@
-import { Component, For, createSignal } from "solid-js";
+import { type Component, For, createSignal } from "solid-js";
 import { Legend, type LegendItem } from "../../src/components/Legend";
 import { NarrowStack, TightStack } from "../../src/components/Layout";
 import { TextSublabel, MutedBody } from "../../src/components/Text";

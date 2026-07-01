@@ -5,7 +5,7 @@
 // Composes Layout (curried) + Text (curried).
 // Centered placeholder with icon, message, size variants.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { SmRegion, MdRegion, LgRegion, FadedBox, ConstrainedBox } from "../Layout";
 import { TextBody, MutedBody, AccentBody } from "../Text";

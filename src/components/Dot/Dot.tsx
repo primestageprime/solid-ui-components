@@ -8,7 +8,7 @@
 // in `StatusLight` doesn't fit (e.g., severity palettes mapped to
 // arbitrary hex colors from a caller-supplied scheme).
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./Dot.css";
 
 export interface DotProps extends Omit<JSX.HTMLAttributes<HTMLSpanElement>, "color"> {

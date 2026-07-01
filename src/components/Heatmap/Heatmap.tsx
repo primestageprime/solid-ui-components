@@ -5,7 +5,7 @@
 // Owns CSS (Heatmap.css), no component imports.
 // Grid cells with status colors, legends, tooltips.
 // ============================================
-import { Component, JSX, splitProps, For, Show, createMemo } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show, } from "solid-js";
 import "./Heatmap.css";
 
 export type HeatmapCellStatus = "full" | "partial" | "missing" | "empty";

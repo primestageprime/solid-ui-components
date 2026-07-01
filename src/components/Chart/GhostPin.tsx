@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // Anchored to context.hoverX; `descriptor=null` hides the ghost.
-import { Component, Show, mergeProps } from "solid-js";
+import { type Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import { ShapeGlyph, type Descriptor } from "./shapes";
 import type { AnnotationLane } from "./slot-types";

@@ -73,6 +73,13 @@
     "prepare": "npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint src",
+    "lint:fix": "biome lint --write src",
+    "lint:all": "biome lint",
+    "format": "biome format",
+    "format:write": "biome format --write",
+    "check": "biome lint src && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -93,6 +100,7 @@
     "solid-js": "^1.9.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.2",
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^25.9.1",

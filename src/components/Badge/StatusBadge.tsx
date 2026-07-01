@@ -6,7 +6,7 @@
 // Compliance-themed status badge with 5 variants.
 // When href is provided, renders as an anchor tag.
 // ============================================
-import { Component, JSX, Show, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps, mergeProps } from "solid-js";
 import "./StatusBadge.css";
 
 export type StatusBadgeVariant = "compliant" | "violation" | "warning" | "pending" | "info";

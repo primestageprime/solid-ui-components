@@ -5,7 +5,7 @@
 // Owns CSS (DataTableContainer.css), no component imports.
 // Scrollable container with max-height or flex-fill mode.
 // ============================================
-import { JSX, splitProps } from "solid-js";
+import { type JSX, splitProps } from "solid-js";
 import "./DataTableContainer.css";
 
 export interface DataTableContainerProps extends JSX.HTMLAttributes<HTMLDivElement> {

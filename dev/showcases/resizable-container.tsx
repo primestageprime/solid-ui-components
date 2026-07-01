@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { ResizableContainer } from "../../src/components/ResizableContainer";
 import { Surface } from "../../src/components/Surface/Surface";
 import { Text } from "../../src/components/Text/Text";

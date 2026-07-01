@@ -1,5 +1,5 @@
-import { Component, JSX } from "solid-js";
-import { StatsTable, StatsColumn } from "../../src/components/DataDisplay";
+import { type Component, JSX } from "solid-js";
+import { StatsTable, type StatsColumn } from "../../src/components/DataDisplay";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
 
 interface Depth2Props {

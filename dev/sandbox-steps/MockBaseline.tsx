@@ -2,7 +2,7 @@
 // thematic PageCanvas around a FlexRow with a DelineatedSidebar + detail
 // SimplePanel. Pass `sidebar`/`detail` JSX (typically curried layout
 // components) or fall back to the empty hints.
-import { Component, JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 import {
   FlexRow,
   LgRegion,

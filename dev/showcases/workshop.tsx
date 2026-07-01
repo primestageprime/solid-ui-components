@@ -1,4 +1,4 @@
-import { type Component } from "solid-js";
+import type { Component } from "solid-js";
 import { SectionTitle, MutedBody } from "../../src/components/Text";
 
 // Workshop bench — the iteration surface for whatever component is currently

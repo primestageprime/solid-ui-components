@@ -10,7 +10,7 @@
 // Layout/Text Curried Variants. Resulting Composites are Depth 2–3
 // depending on the deepest child each factory ends up composing.
 // ============================================
-import { Component, For, JSX } from "solid-js";
+import { type Component, For, type JSX } from "solid-js";
 import { FormulaProvider, MathFormula, FormulaVarRow, useFormulaHighlight } from "../MathFormula/MathFormula";
 import { ResultDisplay } from "./ResultDisplay";
 import { NumberWithUnits } from "./NumberWithUnits";

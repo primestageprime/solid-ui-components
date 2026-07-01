@@ -10,7 +10,7 @@
 // The descriptive label + the "rule badge" annotation for each region live
 // inside its Panel as Text. There are no raw inline-styled colored divs — the
 // color of a region is a Panel `variant`, never a hand-rolled background.
-import { Component, Show, createSignal } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import {ProportionalStack, ProportionalItem, SidebarPanel, SpreadRow, ClusterRow} from "../../src/components/Layout";
 import { Stack } from "../../src/components/Layout/Stack";
 import { Row } from "../../src/components/Layout/Row";

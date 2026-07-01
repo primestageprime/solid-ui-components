@@ -33,9 +33,9 @@
 //   (it is itself the "motion", and is cheap / compositor-friendly).
 // ============================================
 import {
-  Component,
+  type Component,
   For,
-  JSX,
+  type JSX,
   Show,
   createEffect,
   createMemo,

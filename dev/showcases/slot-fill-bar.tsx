@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { type Component, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { SlotFillBar } from "../../src/components/SlotFillBar";
 import { NarrowStack, TightStack, ClusterRow } from "../../src/components/Layout";
 import { TextLabel, TextSublabel, MutedBody } from "../../src/components/Text";

@@ -8,7 +8,7 @@
 // group label visible as the user scrolls past its rows.
 // SectionLabel: an uppercased, dimmed label used as section-divider typography.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./StickyGroupHeader.css";
 
 export interface StickyGroupHeaderProps extends JSX.HTMLAttributes<HTMLDivElement> {

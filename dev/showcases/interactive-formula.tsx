@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
 import { DTable, DT, DD } from "../../src/components/DataList";

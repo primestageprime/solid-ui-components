@@ -6,7 +6,7 @@
 // Small colored indicator dot, optionally pulsing for liveness/keepalive.
 // Factory: createStatusLight().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./StatusLight.css";
 
 export type StatusLightVariant =

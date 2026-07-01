@@ -1,6 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
+import { type Component, For, Show, createEffect, createMemo, createUniqueId, onCleanup } from "solid-js";
 import { useChart } from "./context";
 import { slotId as brandSlotId } from "./slot-types";
 
@@ -249,7 +249,7 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
           const slotPx = Math.abs(xs(center + 1) - xs(center)) || (xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
           const bw = slotPx * bandWidth();
           const xPx = xs(center) - bw / 2;
-          const baseY = ys(baseline());
+          const _baseY = ys(baseline());
 
           const segs: readonly BarSegment[] = props.segments
             ? props.segments(d)

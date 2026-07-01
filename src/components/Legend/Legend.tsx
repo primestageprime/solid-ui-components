@@ -14,7 +14,7 @@
 // is applied via inline style (on the swatch element's background-color).
 // All layout/spacing/typography is owned by the stylesheet.
 // ============================================
-import { Component, For, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Legend.css";
 
 export interface LegendItem {

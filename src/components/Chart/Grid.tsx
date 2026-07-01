@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // Chart slot: Grid — horizontal/vertical reference lines at scale ticks.
-import { Component, For, Show } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { useChart } from "./context";
 
 export interface GridProps {

@@ -15,7 +15,7 @@
 // for arbitrary triple inputs (e.g. three date pickers).
 // Factory: createRangeAmountGroup() for curried variants.
 // ============================================
-import { Component, Index, JSX, Show, mergeProps, splitProps } from "solid-js";
+import { type Component, Index, type JSX, Show, mergeProps, splitProps } from "solid-js";
 import { ThemedNumberInput } from "../ThemedNumberInput/ThemedNumberInput";
 import "./RangeAmountGroup.css";
 

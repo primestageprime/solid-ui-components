@@ -312,7 +312,9 @@ const renderMulti = (
     const removed = prevValue().filter(
       (prev) => !next.some((n) => n.value === prev.value),
     );
-    removed.forEach((opt) => local.onRemove?.(opt));
+    removed.forEach((opt) => {
+      local.onRemove?.(opt);
+    });
     setPrevValue(next);
     local.onChange?.(next);
   };

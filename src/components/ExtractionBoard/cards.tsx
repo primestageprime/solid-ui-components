@@ -5,7 +5,7 @@
 // the exported pieces (CellBox, ColHeading, the four cards, LozengeCell,
 // PlaceholderCard). Owns none of the board's data/derivation/motion.
 // ============================================
-import { JSX, Show, For, splitProps } from "solid-js";
+import { type JSX, Show, For, splitProps } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import { StatusBadge } from "../Badge/StatusBadge";

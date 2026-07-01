@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Text } from "../../src/components/Text/Text";
 import {
   TextValue, TextLabel, TextTitle, TextBody, TextUnits, TextSublabel,

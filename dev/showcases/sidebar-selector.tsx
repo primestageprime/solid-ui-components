@@ -1,5 +1,5 @@
-import { Component, createSignal } from "solid-js";
-import { SidebarSelector, SidebarSelectorItem } from "../../src/components/Selector";
+import { type Component, createSignal } from "solid-js";
+import { SidebarSelector, type SidebarSelectorItem } from "../../src/components/Selector";
 
 interface DemoItem {
   title: string;

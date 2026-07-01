@@ -24,7 +24,7 @@
 
 import { type Component, For, createMemo } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
-import { type Cell } from "../DateAxis";
+import type { Cell } from "../DateAxis";
 import { buildDeviationBand } from "./deviationBand";
 import "./CashflowScrubChart.css";
 

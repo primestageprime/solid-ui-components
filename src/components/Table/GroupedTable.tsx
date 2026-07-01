@@ -5,7 +5,7 @@
 // Owns CSS (Table.css), no component imports.
 // Table with rowspan grouping for merged cells.
 // ============================================
-import { JSX, For, Show, createMemo } from "solid-js";
+import { type JSX, For, Show, createMemo } from "solid-js";
 import { getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
 

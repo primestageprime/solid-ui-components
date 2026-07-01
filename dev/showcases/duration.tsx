@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js";
+import { type Component, For } from "solid-js";
 import { Duration } from "../../src/components/Duration";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";

@@ -2,7 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // pointer-events=none so the arc (a preview-only affordance) never
 // intercepts clicks intended for the slots beneath it.
-import { Component, Show, mergeProps } from "solid-js";
+import { type Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";
 
 export interface ArcPoint {

@@ -21,7 +21,7 @@ const SOURCE_EXIT = 8;
 const TARGET_APPROACH = 15;
 /** Legacy alias used by older code paths that haven't been split into
  *  source/target halves. */
-const EXIT_RUN = SOURCE_EXIT;
+const _EXIT_RUN = SOURCE_EXIT;
 
 /**
  * Returns true if the axis-aligned segment from (ax, ay) to (bx, by) —

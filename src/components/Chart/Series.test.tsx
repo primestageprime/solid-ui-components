@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { type Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Chart } from "./Chart";
 import { PointSeries } from "./Series";
 import { useChart } from "./context";

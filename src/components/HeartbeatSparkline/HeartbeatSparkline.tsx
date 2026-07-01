@@ -6,7 +6,7 @@
 // Rectangular sparkline showing % of heartbeat-timeout used over time.
 // 0 = fresh heartbeat, 1 = timeout reached.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./HeartbeatSparkline.css";
 
 export type ConnectionState = "connected" | "disconnected" | "error";

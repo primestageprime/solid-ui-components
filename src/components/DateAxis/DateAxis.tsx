@@ -11,7 +11,7 @@
 // ============================================
 
 import {
-  Component,
+  type Component,
   For,
   type JSX,
   Show,

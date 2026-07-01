@@ -6,7 +6,7 @@
 // Layout (curried: SpreadRow) + Text (curried:
 // FlexLabel) + Button (Atomic/Depth 1).
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import { InteractiveCard } from "../Surface";
 import { SpreadRow } from "../Layout/variants";
 import { FlexLabel } from "../Text/variants";

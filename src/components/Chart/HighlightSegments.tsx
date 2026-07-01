@@ -2,7 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
-import { Component, For, Show, createMemo, mergeProps } from "solid-js";
+import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
@@ -17,13 +17,14 @@ const SELECTED_OPACITY_MULTIPLIER = 2.5;
 // warn-once invariant across all HighlightSegments instances without coupling
 // to component lifecycle. Same pattern as TimelineBar.
 const warnedLanes = new Set<string>();
-const warnUnknownLane = (lane: string): void => {
-  if (warnedLanes.has(lane)) return;
+const warnUnknownLane = (lane: string): null => {
+  if (warnedLanes.has(lane)) return null;
   warnedLanes.add(lane);
   // eslint-disable-next-line no-console
   console.warn(
     `HighlightSegments: segment references unknown lane "${lane}" — segment skipped`,
   );
+  return null;
 };
 
 export interface HighlightSegment {
@@ -117,7 +118,7 @@ export function HighlightSegments<T extends HighlightSegment = HighlightSegment>
           return (
             <Show
               when={!isUnknownLane()}
-              fallback={(warnUnknownLane(seg.lane!), null)}
+              fallback={warnUnknownLane(seg.lane!)}
             >
               <rect
                 class="sui-chart__highlight-segment"

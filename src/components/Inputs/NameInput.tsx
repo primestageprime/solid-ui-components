@@ -16,7 +16,7 @@
 //     field is focused (including via autofocus), so typing is unaffected.
 // Owns no CSS of its own — reuses ThemedInputs.css for visual parity.
 // ============================================
-import { Component, JSX, splitProps, createSignal, createUniqueId } from "solid-js";
+import { type Component, type JSX, splitProps, createSignal, createUniqueId } from "solid-js";
 import "./ThemedInputs.css";
 
 export interface NameInputProps

@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { TruthIndicator, createTruthIndicator } from "../../src/components/TruthIndicator";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";

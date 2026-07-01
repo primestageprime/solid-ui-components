@@ -1,6 +1,6 @@
 /* Table cell renderers — status-style cells (Tag, Status, Checkbox). */
-import { Component, Show } from "solid-js";
-import { CellRendererProps } from "./cellStyle";
+import { type Component, Show } from "solid-js";
+import type { CellRendererProps } from "./cellStyle";
 
 // ============================================
 // Tag Renderer

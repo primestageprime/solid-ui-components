@@ -7,7 +7,7 @@
 // in variants (CacheProgressCard).
 // Step icons with title, subtitle, message.
 // ============================================
-import { Component, JSX, splitProps, For, Show, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show, mergeProps } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import "./ProgressCard.css";

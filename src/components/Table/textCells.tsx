@@ -1,7 +1,7 @@
 /* Table cell renderers — text cells (Id, String, LongText). */
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   createSignal,
   createEffect,
@@ -10,7 +10,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { Tooltip } from "../Tooltip";
-import { CellRendererProps } from "./cellStyle";
+import type { CellRendererProps } from "./cellStyle";
 
 // ============================================
 // ID Renderer

@@ -7,7 +7,7 @@
 // lines on either side via ::before/::after.
 // Factory: createLabeledDivider().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./LabeledDivider.css";
 
 export interface LabeledDividerProps

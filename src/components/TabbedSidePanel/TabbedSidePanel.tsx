@@ -7,7 +7,7 @@
 // content renders inboard only when isOpen=true.
 // Clicking the active tab toggles isOpen.
 // ============================================
-import { Component, JSX, Show, createMemo, mergeProps } from "solid-js";
+import { type Component, type JSX, Show, createMemo, mergeProps } from "solid-js";
 import { Tabs, type Tab } from "../Tabs/Tabs";
 import { Row } from "../Layout/Row";
 import type { ColorVariant } from "../../types";

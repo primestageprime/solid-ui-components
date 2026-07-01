@@ -18,7 +18,7 @@
 //     previews the reordered state on every hover. Matches dside's reorder().
 // ============================================
 
-import { Component, For, Show } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
 import "./DnDHierarchySortBar.css";
 

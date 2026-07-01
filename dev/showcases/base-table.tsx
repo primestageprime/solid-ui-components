@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { BaseTable } from "../../src/components/Table";
 import { CompactTable, StripedTable, StickyTable, DataTable } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";

@@ -21,16 +21,16 @@
 // Selection lifts to the caller via `selection` + `onSelect`. Filtering
 // the underlying table from a selection stays in the consumer.
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { SlotFillBar } from "../SlotFillBar";
-import { Treemap, TreemapSidebar } from "../Treemap";
+import { Treemap, type TreemapSidebar } from "../Treemap";
 import {
   ChipLabel,
   CountText,
   EllipsizedChipLabel,
 } from "../Text/variants";
 import { TightSpreadRow } from "../Layout/variants";
-import { bucketByDims, PivotAccessors, PivotBucket, PivotMetrics } from "./bucketByDims";
+import { bucketByDims, type PivotAccessors, type PivotBucket, type PivotMetrics } from "./bucketByDims";
 
 export interface PivotSelection {
   outerKey: string;

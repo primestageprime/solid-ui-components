@@ -5,7 +5,7 @@
 // chart draws as its blue running-balance line. Colour matches --sui-primary
 // so it reads as the same series the chart line uses.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./BaselineDot.css";
 
 export interface BaselineDotProps extends JSX.HTMLAttributes<HTMLSpanElement> {}

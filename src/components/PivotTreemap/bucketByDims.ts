@@ -45,7 +45,7 @@ const tally = <T,>(rows: readonly T[], metrics: PivotMetrics<T> | undefined) => 
   let doing = 0;
   for (const r of rows) {
     if (metrics.done(r)) done += 1;
-    if (metrics.doing && metrics.doing(r)) doing += 1;
+    if (metrics.doing?.(r)) doing += 1;
   }
   return { done, doing };
 };

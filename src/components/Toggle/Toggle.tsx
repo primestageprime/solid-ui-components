@@ -7,7 +7,7 @@
 // Updated: absorbs HUDToggle features (variant, color).
 // Dropped: power and circuit variants.
 // ============================================
-import { Component, JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps, createUniqueId } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./Toggle.css";
 

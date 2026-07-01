@@ -5,7 +5,7 @@
  * Same API as BaseTable but with virtual scrolling for large datasets.
  * Uses dynamic row measurement for correct behavior under browser zoom.
  */
-import { createSignal, For, Show, type JSX, type Component } from "solid-js";
+import { For, Show, type JSX, } from "solid-js";
 import { splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import type { BaseTableProps, TableColumn } from "./types";

@@ -8,7 +8,7 @@
 //   <MonthOfYearPicker value={4} onChange={(m) => ...} />
 // Factory: createMonthOfYearPicker() for curried variants.
 // ============================================
-import { Component, For, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, For, type JSX, mergeProps, splitProps } from "solid-js";
 import "./MonthOfYearPicker.css";
 
 const MONTH_ABBR = [

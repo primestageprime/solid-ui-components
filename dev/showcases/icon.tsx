@@ -1,5 +1,5 @@
-import { For, Component } from "solid-js";
-import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
+import { For, type Component } from "solid-js";
+import { Icon, type IconName, ICON_GROUPS } from "../../src/components/Icon";
 
 export const IconShowcase: Component = () => {
   const groupLabels: Record<keyof typeof ICON_GROUPS, string> = {

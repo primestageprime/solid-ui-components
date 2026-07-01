@@ -11,8 +11,8 @@
 // focused and no modifier held) fires onTrigger.
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   splitProps,
   mergeProps,
   onCleanup,

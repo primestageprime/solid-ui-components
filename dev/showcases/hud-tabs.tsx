@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Tabs } from "../../src/components/Tabs";
 
 export const TabsShowcase: Component = () => {

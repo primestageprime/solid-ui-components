@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { RingChart } from "../../src/components/RingChart";
 import { Row } from "../../src/components/Layout/Row";
 

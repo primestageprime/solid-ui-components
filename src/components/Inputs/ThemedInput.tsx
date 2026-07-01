@@ -5,7 +5,7 @@
 // Owns CSS (ThemedInputs.css), no component imports.
 // Styled text input with optional label.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./ThemedInputs.css";
 
 export interface ThemedInputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {

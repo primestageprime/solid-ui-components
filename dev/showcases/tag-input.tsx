@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { TagInput } from "../../src/components/TagInput";
 
 export const TagInputShowcase: Component = () => {

@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { TitledTimeRangeHeader } from "../../src/components/TitledTimeRangeHeader";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { Button } from "../../src/components/Button/Button";

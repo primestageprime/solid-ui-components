@@ -14,7 +14,7 @@
  *
  * MUST be called synchronously during component setup: it registers effects and
  * an onCleanup in the caller's reactive owner. */
-import { Accessor, createEffect, createSignal, on, onCleanup } from "solid-js";
+import { type Accessor, createEffect, createSignal, on, onCleanup } from "solid-js";
 import {
   computeEnterFrame,
   computeSplitLayout,

@@ -1,4 +1,4 @@
-import { createSignal, Component } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import { BottomSheet } from "../../src/components/BottomSheet";
 
 export const BottomSheetShowcase: Component = () => {

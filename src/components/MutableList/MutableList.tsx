@@ -31,7 +31,7 @@
 // single click never starts a drag; only the grip/row body does.
 // ============================================
 
-import { createSignal, JSX, Show } from "solid-js";
+import { createSignal, type JSX, Show } from "solid-js";
 import { SortableList } from "../SortableList";
 import { IconOnlyButton } from "../Button";
 import "./MutableList.css";

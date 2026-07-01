@@ -1,4 +1,4 @@
-import { createSignal, For, Component } from "solid-js";
+import { createSignal, For, type Component } from "solid-js";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { DTable, DT, DD } from "../../src/components/DataList";
 import { FormulaProvider, FormulaVarRow, MathFormula } from "../../src/components/MathFormula";
@@ -8,14 +8,14 @@ import { DigitRoller, MetricCard, NumberWithUnits, ResultDisplay, ResultPanel, S
 import {EmptyState} from "../../src/components/Feedback";
 import { AlertBox } from "../../src/components/Feedback/AlertBox";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
-import { Icon, IconName, ICON_GROUPS } from "../../src/components/Icon";
+import { Icon, type IconName, ICON_GROUPS } from "../../src/components/Icon";
 import { Toggle } from "../../src/components/Toggle";
-import { ProgressCard, ProgressStep } from "../../src/components/ProgressCard";
+import { ProgressCard, type ProgressStep } from "../../src/components/ProgressCard";
 import { StackedProgressBar } from "../../src/components/Progress";
-import { HeatmapMulti, HeatmapMultiRow } from "../../src/components/Heatmap";
+import { HeatmapMulti, type HeatmapMultiRow } from "../../src/components/Heatmap";
 import {
   BaseTable,
-  TableColumn,
+  type TableColumn,
   FilterableTable as QuickFilter,
   SelectableTable,
   createSelectionStore,

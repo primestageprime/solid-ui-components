@@ -19,8 +19,8 @@
 // Factory: createThreadGroup().
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   mergeProps,
   splitProps,
 } from "solid-js";

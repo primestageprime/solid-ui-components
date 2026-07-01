@@ -14,7 +14,7 @@
 // Content is supplied via render callbacks so the layout is reusable: the
 // caller decides what an area header, focus label, or cell looks like.
 // ============================================
-import { Component, createMemo, For, JSX, mergeProps } from "solid-js";
+import { type Component, createMemo, For, type JSX, mergeProps } from "solid-js";
 import "./AreaFocusGrid.css";
 
 /** One focus sub-column within an area. */
@@ -91,7 +91,8 @@ const buildLayout = (areas: readonly AreaFocusGridArea[]): AreaFocusGridLayout =
   >((acc, area) => {
     const prev = acc[acc.length - 1];
     const startSubCol = prev ? prev.startSubCol + prev.span : 1;
-    return [...acc, { area, startSubCol, span: area.focuses.length }];
+    acc.push({ area, startSubCol, span: area.focuses.length });
+    return acc;
   }, []);
 
   // The vsep between the last sub-col of area i and the first of area i+1

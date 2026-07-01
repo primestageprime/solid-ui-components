@@ -10,7 +10,7 @@
 // target chrome (cursor + padding + transition); `highlighted` paints the
 // active tint.
 // ============================================
-import { Component, JSX, Show, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import "./ResultDisplay.css";
 
 export interface ResultDisplayProps extends JSX.HTMLAttributes<HTMLDivElement> {

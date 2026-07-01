@@ -21,7 +21,7 @@
 //   />
 // Factory: createFormComposite() for curried variants.
 // ============================================
-import { Component, JSX, Show, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, Show, mergeProps, splitProps } from "solid-js";
 import "./FormComposite.css";
 
 export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {

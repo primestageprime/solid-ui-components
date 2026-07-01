@@ -5,7 +5,7 @@
 // Owns CSS (Surface.css). Themed container with
 // padding/radius/bg/border. Factory: createSurface().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Surface.css";
 
 export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {

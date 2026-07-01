@@ -1,5 +1,5 @@
-import { Component, For } from "solid-js";
-import {StatusLightVariant} from "../../src/components/StatusLight";
+import { type Component, For } from "solid-js";
+import type {StatusLightVariant} from "../../src/components/StatusLight";
 import { StatusLight } from "../../src/components/StatusLight/StatusLight";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";

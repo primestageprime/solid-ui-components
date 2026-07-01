@@ -5,7 +5,7 @@
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
 // ============================================
-import { Component, JSX, Show, createEffect, onCleanup, mergeProps } from "solid-js";
+import { type Component, type JSX, Show, createEffect, onCleanup, mergeProps } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Modal.css";

@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { ThroughputChart } from "../../src/components/ThroughputChart";
 
 export const ThroughputChartShowcase: Component = () => {

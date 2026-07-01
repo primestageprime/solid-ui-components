@@ -9,7 +9,7 @@
 // other collection — caller renders the filtered result via a render-prop
 // child, OR caller listens to onQueryChange and filters externally.
 // ============================================
-import { JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { ThemedInput } from "../Inputs";
 import "./QuickFilter.css";
 

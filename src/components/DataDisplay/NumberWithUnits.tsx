@@ -9,7 +9,7 @@
 // Primitive owns the styling rule; this is the "truly dynamic
 // per-instance value" carve-out).
 // ============================================
-import { Component, splitProps } from "solid-js";
+import { type Component, splitProps } from "solid-js";
 import "./NumberWithUnits.css";
 
 export interface NumberWithUnitsProps {

@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { CompletionTimeline } from "../../src/components/CompletionTimeline";
 
 export const CompletionTimelineShowcase: Component = () => {

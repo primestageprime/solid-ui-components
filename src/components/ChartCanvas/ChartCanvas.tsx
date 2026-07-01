@@ -1,4 +1,4 @@
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./ChartCanvas.css";
 
 /**

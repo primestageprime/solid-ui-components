@@ -1,6 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { Component, For, Show } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { useChart } from "./context";
 import type { Scale } from "./scales";
 

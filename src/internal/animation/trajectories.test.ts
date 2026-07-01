@@ -37,7 +37,7 @@ const LOZENGES: LozengeRects = {
 };
 
 // Small ε for floating-point comparison.
-const NEAR = (a: number, b: number, eps = 1e-3) =>
+const _NEAR = (a: number, b: number, eps = 1e-3) =>
   Math.abs(a - b) <= eps;
 
 // ─── math helpers ───────────────────────────────────────────────────────────

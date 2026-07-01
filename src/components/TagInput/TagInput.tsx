@@ -5,7 +5,7 @@
 // Owns CSS (TagInput.css), no component imports.
 // Chip row + autocomplete text input for tag editing.
 // ============================================
-import { Component, For, Show, createSignal, createMemo } from "solid-js";
+import { type Component, For, Show, createSignal, createMemo } from "solid-js";
 import "./TagInput.css";
 
 export interface TagInputProps {

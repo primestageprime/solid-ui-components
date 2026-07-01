@@ -6,7 +6,7 @@
 // Multi-variant button with loading spinner.
 // Updated: absorbs HUDButton's active prop.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./Button.css";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {

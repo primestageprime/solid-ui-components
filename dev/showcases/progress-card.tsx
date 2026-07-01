@@ -1,5 +1,5 @@
-import { Component, For } from "solid-js";
-import { ProgressCard, ProgressStep } from "../../src/components/ProgressCard";
+import { type Component, For } from "solid-js";
+import { ProgressCard, type ProgressStep } from "../../src/components/ProgressCard";
 import { CacheProgressCard } from "../../src/components/ProgressCard/variants";
 import { Icon } from "../../src/components/Icon";
 import type { IconName } from "../../src/components/Icon";

@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import {AppShell, AppHeader, AppMain} from "../../src/components/Layout";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";

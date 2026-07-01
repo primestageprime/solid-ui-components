@@ -1,7 +1,7 @@
 /* Table cell renderers — date/time cells (Date, DateTime, MinuteDateTime) plus
  * the shared date-formatting helpers. */
-import { Component, Show } from "solid-js";
-import { CellRendererProps } from "./cellStyle";
+import { type Component, Show } from "solid-js";
+import type { CellRendererProps } from "./cellStyle";
 
 // ============================================
 // Date Format Helpers
@@ -104,7 +104,7 @@ export const DateCell: Component<DateCellProps> = (props) => {
   const formatted = () => {
     if (props.value == null || props.value === "") return null;
     const date = typeof props.value === "string" ? new Date(props.value) : props.value;
-    if (isNaN(date.getTime())) return null;
+    if (Number.isNaN(date.getTime())) return null;
 
     const format = props.format || "iso";
 
@@ -170,7 +170,7 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
   const getDate = () => {
     if (props.value == null || props.value === "") return null;
     const date = typeof props.value === "string" ? new Date(props.value) : props.value;
-    if (isNaN(date.getTime())) return null;
+    if (Number.isNaN(date.getTime())) return null;
     return date;
   };
 
@@ -271,7 +271,7 @@ export const MinuteDateTimeCell: Component<MinuteDateTimeCellProps> = (props) =>
   const formatted = () => {
     if (props.value == null || props.value === "") return null;
     const date = typeof props.value === "string" ? new Date(props.value) : props.value;
-    if (isNaN(date.getTime())) return null;
+    if (Number.isNaN(date.getTime())) return null;
     return formatDatePattern(date, "YYYY-MM-DD HH:mm");
   };
 

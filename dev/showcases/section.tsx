@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Section } from "../../src/components/Section/Section";
 import { CollapsibleSection, DecoratedSection, BorderedSection } from "../../src/components/Section";
 import { Button } from "../../src/components/Button/Button";

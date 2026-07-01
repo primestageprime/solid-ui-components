@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js";
+import { type Component, For } from "solid-js";
 import { DataTableContainer } from "../../src/components/Table";
 import { Stack } from "../../src/components/Layout/Stack";
 

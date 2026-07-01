@@ -5,8 +5,8 @@
 // Composes HeartbeatSparkline (Atomic). Owns the sample buffer + tick timer
 // and derives connection state from the most recent heartbeat timestamp.
 // ============================================
-import { Component, createSignal, onCleanup, onMount, createEffect } from "solid-js";
-import { HeartbeatSparkline, ConnectionState } from "../HeartbeatSparkline";
+import { type Component, createSignal, onCleanup, onMount, createEffect } from "solid-js";
+import { HeartbeatSparkline, type ConnectionState } from "../HeartbeatSparkline";
 
 export interface LiveHeartbeatTraceProps {
   /** Timestamp of the last received heartbeat. null/undefined → treated as never seen. */

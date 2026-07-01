@@ -6,7 +6,7 @@
 // Generic single-select segmented control with grouped (divider-separated)
 // states, per-state color, and radio-group keyboard semantics.
 // ============================================
-import { Component, JSX, For, Show, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, For, Show, splitProps, mergeProps } from "solid-js";
 import type { ColorVariant } from "../../types";
 import "./SegmentedControl.css";
 

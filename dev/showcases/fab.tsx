@@ -1,4 +1,4 @@
-import { createSignal, Component } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import { Fab } from "../../src/components/Fab";
 import { AddFab } from "../../src/components/Fab";
 

@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { SelectableTable } from "../../src/components/Table";
 
 const sampleData = [

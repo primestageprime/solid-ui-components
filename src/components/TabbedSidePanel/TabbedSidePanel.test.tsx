@@ -68,7 +68,7 @@ describe("TabbedSidePanel — behavior", () => {
   });
 
   it("clicking an inactive tab while closed also opens the panel", () => {
-    let openChanges: boolean[] = [];
+    const openChanges: boolean[] = [];
     const { getByText } = render(() => (
       <TabbedSidePanel
         tabs={TABS}
@@ -83,7 +83,7 @@ describe("TabbedSidePanel — behavior", () => {
   });
 
   it("clicking the active tab toggles isOpen", () => {
-    let openChanges: boolean[] = [];
+    const openChanges: boolean[] = [];
     const { getByText } = render(() => (
       <TabbedSidePanel
         tabs={TABS}

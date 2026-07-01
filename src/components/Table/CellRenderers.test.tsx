@@ -53,7 +53,7 @@ describe("CellRenderers — value + empty rendering", () => {
   });
 
   it("FloatCell honors precision; IntCell rounds", () => {
-    const f = render(() => <FloatCell value={3.14159} precision={2} />);
+    const f = render(() => <FloatCell value={Math.PI} precision={2} />);
     expect(f.container.querySelector(".cell-float")?.textContent).toBe("3.14");
     cleanup();
     const i = render(() => <IntCell value={42.7} />);

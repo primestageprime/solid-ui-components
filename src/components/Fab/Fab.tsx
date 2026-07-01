@@ -17,7 +17,7 @@
 // props only when a real use case needs them (see STYLE_GUIDE.md
 // "Variant surface: keep it minimal").
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import { Button } from "../Button/Button";
 import { Icon } from "../Icon/Icon";
 import type { IconName } from "../Icon/Icon";

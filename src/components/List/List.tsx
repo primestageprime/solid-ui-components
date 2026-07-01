@@ -5,7 +5,7 @@
 // Owns CSS (List.css), no component imports.
 // Status/menu list with dividers, icons, status dots.
 // ============================================
-import { Component, splitProps, Show, JSX, mergeProps } from "solid-js";
+import { type Component, splitProps, Show, type JSX, mergeProps } from "solid-js";
 import "./List.css";
 
 export interface ListProps extends JSX.HTMLAttributes<HTMLUListElement> {

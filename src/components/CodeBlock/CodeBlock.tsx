@@ -6,7 +6,7 @@
 // Preserves whitespace/newlines, scrolls horizontally on
 // overflow. Factory: createCodeBlock() for curried variants.
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./CodeBlock.css";
 
 export interface CodeBlockProps extends JSX.HTMLAttributes<HTMLPreElement> {

@@ -5,7 +5,7 @@
 // Owns CSS (Link.css), no component imports.
 // Minimal anchor wrapper with accent color.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./Link.css";
 
 export interface LinkProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {}

@@ -5,7 +5,7 @@
 // layout modes: horizontal, vertical, snake. Auto-play is biased so
 // "implement" takes 4–10s while every other step is ~1s.
 // ============================================
-import { Component, For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { type Component, For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { DigitRoller } from "../../src/components/DataDisplay/DigitRoller";
 
 type Stage = { id: string; label: string; owner?: string };

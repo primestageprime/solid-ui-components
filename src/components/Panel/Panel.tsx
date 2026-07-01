@@ -6,7 +6,7 @@
 // Container panel with title, corner brackets, glow.
 // Merged from HUDPanel + generic Panel.
 // ============================================
-import { Component, JSX, splitProps, Show, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, Show, mergeProps } from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
 import "./Panel.css";
 

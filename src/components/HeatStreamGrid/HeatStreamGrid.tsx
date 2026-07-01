@@ -7,8 +7,8 @@
 // columns (e.g. time windows), each cell containing
 // a compact HeatStream.
 // ============================================
-import { Component, JSX, splitProps, For, Show, createMemo } from "solid-js";
-import { HeatStream, HeatStreamItem } from "../HeatStream";
+import { type Component, type JSX, splitProps, For, Show, createMemo } from "solid-js";
+import { HeatStream, type HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
 

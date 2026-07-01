@@ -5,7 +5,7 @@
 // Owns CSS (Layout.css). Flex-row container
 // with gap/align/justify/wrap. Factory: createRow().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {

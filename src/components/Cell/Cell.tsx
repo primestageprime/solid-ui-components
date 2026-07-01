@@ -6,7 +6,7 @@
 // with align/color/weight. Factories: createCell(),
 // createCellTable(), createCellRow().
 // ============================================
-import { Component, JSX, mergeProps, ParentComponent, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, type ParentComponent, splitProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import "./Cell.css";
 

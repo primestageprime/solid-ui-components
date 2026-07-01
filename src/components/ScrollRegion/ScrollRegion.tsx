@@ -1,6 +1,6 @@
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   createSignal,
   mergeProps,
   onCleanup,

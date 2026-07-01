@@ -17,7 +17,7 @@
 // the only `style=` is the consumer pass-through on the root AreaFocusGrid.
 // All visual treatment lives in the Primitives' own CSS files.
 // ============================================
-import { Component, createMemo, createSignal, For, JSX, Show } from "solid-js";
+import { type Component, createMemo, createSignal, For, type JSX, Show } from "solid-js";
 import { StackedProgressBar } from "../Progress";
 import {
   AreaFocusGrid,

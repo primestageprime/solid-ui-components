@@ -5,7 +5,7 @@
 // Owns CSS (Page.css), no component imports.
 // Page container with scanline and grid overlays.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./Page.css";
 
 export interface PageProps extends JSX.HTMLAttributes<HTMLDivElement> {

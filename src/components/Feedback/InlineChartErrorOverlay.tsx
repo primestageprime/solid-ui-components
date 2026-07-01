@@ -5,7 +5,7 @@
 // Owns CSS (InlineChartErrorOverlay.css), no component imports.
 // Overlay for chart areas with title and subtitle.
 // ============================================
-import { JSX, Show, splitProps } from "solid-js";
+import { type JSX, Show, splitProps } from "solid-js";
 import "./InlineChartErrorOverlay.css";
 
 export interface InlineChartErrorOverlayProps extends JSX.HTMLAttributes<HTMLDivElement> {

@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js";
+import { type Component, For } from "solid-js";
 import { QuickFilter } from "../../src/components/QuickFilter";
 import { Stack } from "../../src/components/Layout/Stack";
 import { CompactCard } from "../../src/components/Surface";

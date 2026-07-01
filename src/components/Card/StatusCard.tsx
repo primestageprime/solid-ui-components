@@ -16,8 +16,8 @@
 // curried-only convention.
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   splitProps,
   mergeProps,

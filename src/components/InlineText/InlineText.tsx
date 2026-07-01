@@ -12,7 +12,7 @@
 // size-baking Text variant (TextValue / MutedBody / TextSublabel …) fits.
 // No factory / no variants: colour is the only input and it's data-driven.
 // ============================================
-import { JSX, splitProps } from "solid-js";
+import { type JSX, splitProps } from "solid-js";
 
 export interface InlineTextProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   /** Data-driven text colour, applied inline. Omit to inherit the parent's colour. */

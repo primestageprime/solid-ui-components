@@ -6,7 +6,7 @@
 // Content separator with orientation variants.
 // Moved from Section.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./Divider.css";
 
 export interface DividerProps extends JSX.HTMLAttributes<HTMLHRElement> {

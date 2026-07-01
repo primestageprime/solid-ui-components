@@ -5,7 +5,7 @@
 // Owns CSS (ProgressCheck.css), imports Icon types.
 // Three-state progress indicator: empty, partial, complete.
 // ============================================
-import { Component, JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import type { IconSize } from "../Icon/Icon";
 import "./ProgressCheck.css";
 

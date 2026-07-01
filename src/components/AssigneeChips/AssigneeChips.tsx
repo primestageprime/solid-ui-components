@@ -6,7 +6,7 @@
 // Renders a filled cyan pill per id, applying a caller-supplied
 // resolveName to display each label. Promoted from dside-ui.
 // ============================================
-import { Component, For, Show, mergeProps } from "solid-js";
+import { type Component, For, Show, mergeProps } from "solid-js";
 import "./AssigneeChips.css";
 
 export interface AssigneeChipsProps {

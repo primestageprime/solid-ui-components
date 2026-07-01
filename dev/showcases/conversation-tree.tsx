@@ -1,8 +1,8 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import {
   ConversationTree,
-  Participant,
-  ConversationMessage,
+  type Participant,
+  type ConversationMessage,
 } from "../../src/components/ConversationTree";
 
 const NOW = Date.now();

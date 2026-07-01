@@ -241,7 +241,9 @@ export function computeSwimlaneLayout<T>(
   // 9. Initial rank = current order within each col.
   const rank = new Map<string, number>();
   for (const col of orderedCols) {
-    visibleCols.get(col)!.forEach((id, i) => rank.set(id, i));
+    visibleCols.get(col)!.forEach((id, i) => {
+      rank.set(id, i);
+    });
   }
 
   // 10. Barycentric sweep. Alternate L→R and R→L per pass.
@@ -266,7 +268,9 @@ export function computeSwimlaneLayout<T>(
       if (da !== db) return da - db;
       return rank.get(a)! - rank.get(b)!;
     });
-    ids.forEach((id, i) => rank.set(id, i));
+    ids.forEach((id, i) => {
+      rank.set(id, i);
+    });
   };
   for (let sweep = 0; sweep < SWEEPS; sweep++) {
     const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
@@ -299,7 +303,9 @@ export function computeSwimlaneLayout<T>(
     if (ids.length === 0) continue;
     const span = (ids.length - 1) * opts.rowGap;
     const start = -span / 2;
-    ids.forEach((id, i) => y.set(id, start + i * opts.rowGap));
+    ids.forEach((id, i) => {
+      y.set(id, start + i * opts.rowGap);
+    });
   }
 
   // 12. Positions map.

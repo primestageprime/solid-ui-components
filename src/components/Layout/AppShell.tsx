@@ -7,7 +7,7 @@
 // "full-page app" frame. Use AppShell as the root, AppHeader as the top bar,
 // AppMain (or any flex child with min-height: 0) as the body.
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface AppShellProps extends JSX.HTMLAttributes<HTMLDivElement> {

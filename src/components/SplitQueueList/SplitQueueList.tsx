@@ -1,7 +1,7 @@
 import {
   For,
   Show,
-  JSX,
+  type JSX,
   createMemo,
   createSignal,
   onMount,

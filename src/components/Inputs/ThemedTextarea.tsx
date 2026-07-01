@@ -5,7 +5,7 @@
 // Owns CSS (ThemedInputs.css), no component imports.
 // Styled textarea with optional label.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./ThemedInputs.css";
 
 export interface ThemedTextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {

@@ -1,4 +1,4 @@
-import { JSX, Accessor, Setter } from "solid-js";
+import type { JSX, Accessor, Setter } from "solid-js";
 
 export interface TableColumn<T> {
   id: string;

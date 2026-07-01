@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
 
 // A single frame inside the showcase so each variant renders at a bounded

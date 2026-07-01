@@ -5,7 +5,7 @@
 // Owns CSS (Layout.css). Flex child with
 // grow/shrink control. Factory: createBox().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface BoxProps extends JSX.HTMLAttributes<HTMLDivElement> {

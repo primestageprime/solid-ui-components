@@ -5,7 +5,7 @@
 // Composes Modal (Atomic) + Button (Atomic).
 // Confirmation dialog with Cancel/Confirm footer.
 // ============================================
-import { Component, JSX, splitProps, Show, mergeProps } from "solid-js";
+import { type Component, type JSX, splitProps, Show, mergeProps } from "solid-js";
 import { Modal } from "./Modal";
 import { Button } from "../Button/Button";
 import type { ColorVariant, CornerStyle } from "../../types";
@@ -44,7 +44,7 @@ export interface ConfirmationModalProps {
 }
 
 export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
-  const [local, others] = splitProps(props, [
+  const [local, _others] = splitProps(props, [
     "open",
     "onClose",
     "onConfirm",

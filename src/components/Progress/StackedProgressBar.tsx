@@ -5,7 +5,7 @@
 // Owns CSS (StackedProgressBar.css), no component imports.
 // Multi-segment progress bar with horizontal/vertical orientation.
 // ============================================
-import { Component, JSX, splitProps, For, Show } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show } from "solid-js";
 import "./StackedProgressBar.css";
 
 export interface StackedSegment {

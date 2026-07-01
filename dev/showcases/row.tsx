@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { Row } from "../../src/components/Layout/Row";
 import { SpreadRow, ClusterRow } from "../../src/components/Layout";
 import { Surface } from "../../src/components/Surface/Surface";

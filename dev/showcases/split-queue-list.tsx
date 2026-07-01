@@ -1,5 +1,5 @@
 import {
-  Component,
+  type Component,
   type JSX,
   createSignal,
   createMemo,

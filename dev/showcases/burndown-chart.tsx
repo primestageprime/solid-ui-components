@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { BurndownChart } from "../../src/components/BurndownChart";
 
 export const BurndownChartShowcase: Component = () => {

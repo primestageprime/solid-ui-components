@@ -5,7 +5,7 @@
 // Owns CSS (SidebarSelector.css), no component imports.
 // Sidebar card list + selection content area.
 // ============================================
-import { Component, JSX, For, Show, splitProps, createSignal } from "solid-js";
+import { type Component, type JSX, For, Show, createSignal } from "solid-js";
 import "./SidebarSelector.css";
 
 export interface SidebarSelectorItem<T = unknown> {

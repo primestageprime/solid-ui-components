@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 0.83.2
+
+### Changed
+
+- **Tooling / repo** — no component API or runtime behavior change. Adopted **Biome** as the lint/format/typecheck gate for the published library, tuned to existing conventions (`noNonNullAssertion` off; cosmetic rules as warnings; correctness rules as errors). Added `lint`, `lint:fix`, `lint:all`, `format`, `format:write`, `typecheck`, and `check` scripts. Applied a one-time safe baseline: `import type` conversions and unused import/variable removal across `src`, plus hand-fixed correctness items (`isNaN` → `Number.isNaN`, optional chaining, an O(n²) `reduce`-spread in `AreaFocusGrid`, JSX comma-operator removal in the `Chart` unknown-lane warnings, `forEach` side-effect callbacks wrapped in blocks, and dead duplicate CSS declarations in `Treemap`). The 117 pre-existing accessibility findings are baselined as warnings — a tracked backlog to burn down and promote back to `error`.
+- **Test setup** — `test-setup.ts` installs a minimal functional canvas 2D context, removing the per-run "getContext not implemented" jsdom spam and letting `ScrubChart` exercise its real label-measurement path. All 1193 tests pass.
+
 ## 0.83.1
 
 ### Changed

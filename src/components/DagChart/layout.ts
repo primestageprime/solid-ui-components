@@ -73,7 +73,7 @@ export function computeLayout<T>(
     parentIds: parentMap.get(n.id) ?? [],
   }));
 
-  let dag;
+  let dag: ReturnType<ReturnType<typeof graphStratify>>;
   try {
     dag = graphStratify()(stratifyData);
   } catch (err) {

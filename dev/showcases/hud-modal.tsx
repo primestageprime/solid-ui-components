@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Modal } from "../../src/components/Modal";
 import { Button } from "../../src/components/Button/Button";
 

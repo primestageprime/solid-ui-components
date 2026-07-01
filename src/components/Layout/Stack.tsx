@@ -5,7 +5,7 @@
 // Owns CSS (Layout.css). Flex-column container
 // with gap/align/justify. Factory: createStack().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Layout.css";
 
 export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {

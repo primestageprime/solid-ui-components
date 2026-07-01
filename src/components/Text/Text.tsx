@@ -5,7 +5,7 @@
 // Owns CSS (Text.css). Polymorphic text element
 // with variant/color. Factory: createText().
 // ============================================
-import { Component, JSX, mergeProps, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import "./Text.css";
 

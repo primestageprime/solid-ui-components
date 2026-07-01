@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import { Heatmap, HeatmapMulti, HeatmapRow, HeatmapMultiRow } from "../../src/components/Heatmap";
+import type { Component } from "solid-js";
+import { Heatmap, HeatmapMulti, type HeatmapRow, type HeatmapMultiRow } from "../../src/components/Heatmap";
 
 const singleRows: HeatmapRow[] = [
   {

@@ -4,16 +4,16 @@
 // (so per-slot listeners would clobber dispatch); slots read scales +
 // pointer state via context.
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   Show,
   createMemo,
   createSignal,
   createUniqueId,
   splitProps,
 } from "solid-js";
-import { ChartContext, ChartContextValue, DragRange, Margin } from "./context";
-import { linearScale, scaleTime, Scale } from "./scales";
+import { ChartContext, type ChartContextValue, type DragRange, type Margin } from "./context";
+import { linearScale, scaleTime, type Scale } from "./scales";
 import { DEFAULT_GLYPH_SIZE } from "./shapes";
 import type { Id } from "./slot-types";
 import "./Chart.css";

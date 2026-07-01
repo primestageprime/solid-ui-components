@@ -13,7 +13,7 @@
 // Trimmed from the original: the monthly `CashflowChart` variant, ghost-line
 // snapshots, and goal overlays. The WEEKLY chart — bars, balance line, now
 // marker, bankruptcy annotation, and hover popover — is preserved.
-import { Component, For, Show, createSignal, createMemo, onMount, onCleanup } from "solid-js";
+import { type Component, For, Show, createSignal, createMemo, onMount, onCleanup } from "solid-js";
 import { scaleBand, scaleLinear } from "d3-scale";
 import "./CashflowChart.css";
 

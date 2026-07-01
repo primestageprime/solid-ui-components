@@ -5,7 +5,7 @@
 // Owns CSS (NavLink.css), no component imports.
 // Anchor link with active state, color variants, badge.
 // ============================================
-import { Component, JSX, splitProps } from "solid-js";
+import { type Component, type JSX, splitProps } from "solid-js";
 import "./NavLink.css";
 
 export type NavLinkColor = "accent" | "warning" | "danger" | "success";

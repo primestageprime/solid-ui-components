@@ -2,7 +2,7 @@
  *
  * The base CellRendererProps type, style options, and the two styling HOCs
  * (withCellStyle, withValueColor) shared by every cell renderer module. */
-import { Component, JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
 // ============================================
 // Cell Renderer Types

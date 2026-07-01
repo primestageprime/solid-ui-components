@@ -13,8 +13,8 @@
 // Factory: createParticipantNameLabel().
 // ============================================
 import {
-  Component,
-  JSX,
+  type Component,
+  type JSX,
   mergeProps,
   splitProps,
 } from "solid-js";

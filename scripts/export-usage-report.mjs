@@ -175,13 +175,7 @@ const usage = new Map();
 const broken = new Map();
 const namespaceImports = [];
 
-const importFromSui = new RegExp(
-  // import ... from "solid-ui-components"  | export { ... } from "solid-ui-components"
-  // The clause is a tempered match that may NOT contain its own `from` keyword,
-  // so it can't bleed across a preceding import statement (e.g. from "solid-js").
-  String.raw`(?:import|export)\b((?:(?!\bfrom\b)[\s\S])*?)\bfrom\s*["']solid-ui-components["']`,
-  "g",
-);
+const importFromSui = /(?:import|export)\b((?:(?!\bfrom\b)[\s\S])*?)\bfrom\s*["']solid-ui-components["']/g;
 
 function parseClause(clause, file, consumerName, rec) {
   // Namespace import: import * as Foo from "..."

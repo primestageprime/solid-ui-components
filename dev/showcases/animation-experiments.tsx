@@ -10,7 +10,7 @@
  * Add new experiments by appending to EXPERIMENTS — they render in a
  * 2-column grid below the description.
  */
-import { Component, createSignal, createEffect, For, JSX, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { type Component, createSignal, createEffect, For, type JSX, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import {
   buildLaneTrajectory,
   dashednessAt,
@@ -147,7 +147,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 function ease(t: number): number {
   // Cubic ease-out: leading edge moves fast, settles slow.
-  return 1 - Math.pow(1 - t, 3);
+  return 1 - (1 - t) ** 3;
 }
 
 function geometryToPath(g: {
@@ -731,7 +731,7 @@ const SlurpDep: Component = () => {
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / DEP_WIDEN_DURATION_MS);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = 1 - (1 - t) ** 3;
       const w = lerp(startW, endW, eased);
       setContainerWidth(w);
       if (arrowRef) arrowRef.setAttribute("x2", String(lozengeXFor(w)));

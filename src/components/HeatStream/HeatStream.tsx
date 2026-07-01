@@ -6,7 +6,7 @@
 // Transposed stream: keys flow top-to-bottom (rows),
 // items flow left-to-right (columns, earliest left, latest right).
 // ============================================
-import { Component, JSX, splitProps, For, Show, createSignal, onCleanup } from "solid-js";
+import { type Component, type JSX, splitProps, For, Show, createSignal, onCleanup } from "solid-js";
 import "./HeatStream.css";
 
 export type HeatStreamStatus = "missing" | "partial" | "full" | "unknown" | "empty" | "info";

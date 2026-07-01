@@ -1,4 +1,4 @@
-import { createSignal, Component } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import { Toggle } from "../../src/components/Toggle";
 
 export const ToggleShowcase: Component = () => {

@@ -7,7 +7,7 @@ import { render, fireEvent } from "@solidjs/testing-library";
 import {
   bucketByDims,
   EMPTY_INNER_KEY,
-  PivotAccessors,
+  type PivotAccessors,
 } from "./bucketByDims";
 import { PivotTreemap } from "./PivotTreemap";
 import { PivotPills } from "./PivotPills";

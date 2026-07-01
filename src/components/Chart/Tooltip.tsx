@@ -5,7 +5,7 @@
 // HTML inside <svg><g> has zero layout (needs <foreignObject>), so the tooltip
 // would be invisible. The overlay div is a position:absolute sibling of the SVG
 // inside .sui-chart, so absolute coords (left/top) resolve against the chart.
-import { JSX, Show, createMemo } from "solid-js";
+import { type JSX, Show, createMemo } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useChart } from "./context";
 

@@ -7,7 +7,7 @@
  * scroll-pin, no keyboard/selection. It's a genuinely separate concern, so it's
  * its own component; SplitQueueList delegates here when `static` is set, before
  * the flight engine ever spins up. */
-import { For, JSX, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { For, type JSX, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import type { StaticSplitLayoutProps } from "./types";
 import "./SplitQueueList.css";

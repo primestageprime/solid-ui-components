@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { HeatStreamGrid } from "../../src/components/HeatStreamGrid";
 import { createSelectionStore } from "../../src/components/Table/createSelectionStore";
 import type { HeatStreamItem, HeatStreamStatus } from "../../src/components/HeatStream";

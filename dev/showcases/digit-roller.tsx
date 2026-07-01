@@ -1,4 +1,4 @@
-import { createSignal, Component } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import { DigitRoller } from "../../src/components/DataDisplay";
 
 export const DigitRollerShowcase: Component = () => {
