@@ -143,6 +143,25 @@ export const ResizableContainer: Component<ResizableContainerProps> = (
     window.addEventListener("mouseup", stopResize);
   };
 
+  // Keyboard resize: arrow keys nudge the focused edge by STEP (Shift = ×5).
+  // Left/right handles adjust width; top/bottom adjust height — matching each
+  // handle's pointer-drag axis. Seeds start* from current size then reuses the
+  // same clamped applyDelta path as the drag.
+  const STEP = 16;
+  const isHorizontal = (direction: ResizeDirection) =>
+    direction === "left" || direction === "right";
+  const onHandleKeyDown = (e: KeyboardEvent, direction: ResizeDirection) => {
+    const horizontal = isHorizontal(direction);
+    const decrease = horizontal ? "ArrowLeft" : "ArrowUp";
+    const increase = horizontal ? "ArrowRight" : "ArrowDown";
+    if (e.key !== decrease && e.key !== increase) return;
+    e.preventDefault();
+    const step = (e.shiftKey ? STEP * 5 : STEP) * (e.key === increase ? 1 : -1);
+    startWidth = width();
+    startHeight = height();
+    applyDelta(direction, horizontal ? step : 0, horizontal ? 0 : step);
+  };
+
   onMount(() => setIsClient(true));
   onCleanup(stopResize);
 
@@ -176,13 +195,24 @@ export const ResizableContainer: Component<ResizableContainerProps> = (
       <Show when={isClient()}>
         <For each={directions()}>
           {(direction) => (
+            // biome-ignore lint/a11y/useSemanticElements: interactive resize splitter (focusable, keyboard-adjustable) — <hr> is a non-interactive presentational separator and cannot carry the drag/resize affordance.
             <div
               class={`sui-resizable__handle sui-resizable__handle--${direction} ${
                 activeDirection() === direction
                   ? "sui-resizable__handle--active"
                   : ""
               }`}
+              role="separator"
+              aria-orientation={
+                isHorizontal(direction) ? "vertical" : "horizontal"
+              }
+              aria-label={`Resize ${direction} edge`}
+              aria-valuenow={isHorizontal(direction) ? width() : height()}
+              aria-valuemin={isHorizontal(direction) ? minWidth() : minHeight()}
+              aria-valuemax={isHorizontal(direction) ? maxWidth() : maxHeight()}
+              tabIndex={0}
               onMouseDown={(e) => startResize(e, direction)}
+              onKeyDown={(e) => onHandleKeyDown(e, direction)}
             />
           )}
         </For>

@@ -399,11 +399,14 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
           return (
             <Switch>
               <Match when={mode() === "card" && rect() && node()}>
+                {/* biome-ignore lint/a11y/useSemanticElements: native <button> is not valid inside SVG; role="button" on <foreignObject> is the correct affordance */}
                 <foreignObject
                   x={rect()!.x - cardW() / 2}
                   y={rect()!.y - props.cardHeight / 2}
                   width={cardW()}
                   height={props.cardHeight}
+                  role="button"
+                  tabIndex={0}
                   onMouseEnter={() => {
                     if (!props.renderPopover) return;
                     setHover({
@@ -416,6 +419,12 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
                   }}
                   onMouseLeave={() => setHover(null)}
                   onClick={() => props.onCardClick?.(id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      props.onCardClick?.(id);
+                    }
+                  }}
                 >
                   {props.renderNode(node()!, {
                     effectiveStatus: status(),

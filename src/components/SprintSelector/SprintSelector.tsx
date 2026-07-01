@@ -70,13 +70,28 @@ export const SprintSelector: Component<SprintSelectorProps> = (props) => {
           const ucY = () => piY() + piH();
           const uiY = () => ucY() + ucH();
 
+          const select = () => local.onSelect?.(i());
+
           return (
+            // biome-ignore lint/a11y/useSemanticElements: native <button> carries default UA styling (border/background/box-model) that would alter this styled flex bar-group's visual output; role="button" + tabIndex + Enter/Space onKeyDown gives equivalent semantics without changing rendering
             <div
               class={`sui-sprint-selector__bar-group${local.selectedIndex === i() ? " sui-sprint-selector__bar-group--selected" : ""}`}
-              onClick={() => local.onSelect?.(i())}
+              role="button"
+              tabIndex={0}
+              onClick={select}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  select();
+                }
+              }}
             >
               <div class="sui-sprint-selector__bar-container">
-                <svg viewBox="0 0 20 100" preserveAspectRatio="none">
+                <svg
+                  viewBox="0 0 20 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
                   {sprint.planned_complete > 0 && (
                     <rect
                       x="0"

@@ -114,7 +114,11 @@ export const Section: Component<SectionProps> = (props) => {
           <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
             {local.headerAction}
             <Show when={local.collapsible}>
-              <button class="sui-section__collapse-btn" onClick={handleToggle}>
+              <button
+                type="button"
+                class="sui-section__collapse-btn"
+                onClick={handleToggle}
+              >
                 {isCollapsed() ? "+" : "\u2212"}
               </button>
             </Show>

@@ -540,6 +540,8 @@ export const ScrubChart = <C extends Cell>(
         <Show when={chartWidth() > 0 && (yScale() || xTicks().length > 0)}>
           <svg
             class="sui-scrub-chart__axes"
+            role="img"
+            aria-label="Chart axes"
             viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
             preserveAspectRatio="none"
           >
@@ -614,6 +616,8 @@ export const ScrubChart = <C extends Cell>(
         <Show when={scrubOn() && props.cells.length > 0}>
           <svg
             class="sui-scrub-chart__window"
+            role="img"
+            aria-label="Scrub window"
             viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
             preserveAspectRatio="none"
           >

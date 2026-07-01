@@ -393,6 +393,8 @@ export function DagChart<T>(props: DAGProps<T>) {
       <svg
         ref={svgRef}
         class="sui-dag"
+        role="img"
+        aria-label="Dependency graph"
         onPointerDown={
           interactive() ? pointerHandlers.onPointerDown : undefined
         }
@@ -412,22 +414,32 @@ export function DagChart<T>(props: DAGProps<T>) {
             {(edge) => {
               const edgeKey = `${edge.source}|${edge.target}`;
               const deletable = () => !!props.onEdgeClick;
+              const deleteEdge = () =>
+                props.onEdgeClick?.(edge.source, edge.target);
               return (
                 <>
                   <Show when={deletable()}>
+                    {/* biome-ignore lint/a11y/useSemanticElements: role="button" on an SVG <path>; a native <button> cannot live inside the SVG coordinate space */}
                     <path
                       class="sui-dag__edge-hitarea"
                       d={edge.d}
                       stroke="transparent"
                       stroke-width="14"
                       fill="none"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Delete edge from ${edge.source} to ${edge.target}`}
                       onPointerEnter={() => setHoveredEdge(edgeKey)}
                       onPointerLeave={() =>
                         setHoveredEdge((h) => (h === edgeKey ? null : h))
                       }
-                      onClick={() =>
-                        props.onEdgeClick?.(edge.source, edge.target)
-                      }
+                      onClick={deleteEdge}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          deleteEdge();
+                        }
+                      }}
                     />
                   </Show>
                   <DagSvgEdge
@@ -491,10 +503,14 @@ export function DagChart<T>(props: DAGProps<T>) {
               const edgeKey = `${edge.source}|${edge.target}`;
               return (
                 <Show when={!!props.onEdgeClick}>
+                  {/* biome-ignore lint/a11y/useSemanticElements: role="button" on an SVG <g> badge; a native <button> cannot live inside the SVG coordinate space */}
                   <g
                     class="sui-dag__edge-delete"
                     transform={`translate(${edge.midX}, ${edge.midY})`}
                     pointer-events="all"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Delete edge from ${edge.source} to ${edge.target}`}
                     onPointerEnter={() => setHoveredEdge(edgeKey)}
                     onPointerLeave={() =>
                       setHoveredEdge((h) => (h === edgeKey ? null : h))
@@ -502,6 +518,13 @@ export function DagChart<T>(props: DAGProps<T>) {
                     onClick={(e) => {
                       e.stopPropagation();
                       props.onEdgeClick?.(edge.source, edge.target);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        props.onEdgeClick?.(edge.source, edge.target);
+                      }
                     }}
                     style={{
                       cursor: "pointer",

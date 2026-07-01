@@ -27,13 +27,22 @@ describe("TruthIndicator", () => {
     expect(container.firstElementChild!.className).toMatch(/sui-truth--lg/);
   });
 
-  it("onClick promotes the element to a button (role + tabindex)", () => {
+  it("onClick promotes the element to a native button (focusable, click + keyboard)", () => {
     const { container } = render(() => (
       <TruthIndicator value={true} onClick={() => {}} />
     ));
+    const root = container.firstElementChild! as HTMLButtonElement;
+    // A native <button> carries an implicit button role and is focusable
+    // without an explicit tabindex, and activates on Enter/Space for free.
+    expect(root.tagName).toBe("BUTTON");
+    expect(root.type).toBe("button");
+  });
+
+  it("read-only (no onClick) renders a span with role=img", () => {
+    const { container } = render(() => <TruthIndicator value={true} />);
     const root = container.firstElementChild!;
-    expect(root.getAttribute("role")).toBe("button");
-    expect(root.getAttribute("tabindex")).toBe("0");
+    expect(root.tagName).toBe("SPAN");
+    expect(root.getAttribute("role")).toBe("img");
   });
 
   it("createTruthIndicator yields a curried component", () => {

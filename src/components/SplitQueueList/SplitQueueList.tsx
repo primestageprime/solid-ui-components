@@ -210,8 +210,10 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
     const isSelected = () => props.selectedKey === key;
     return (
+      // biome-ignore lint/a11y/useFocusableInteractive: option rows carry a roving tabindex (0/-1) driven by createRowKeyboard; they are focusable.
       <li
         data-sql-key={key}
+        // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA <listbox/option> pattern — the option role belongs on the <li> row.
         role="option"
         aria-selected={isSelected()}
         tabindex={keyboard.tabbableKey() === key ? 0 : -1}
@@ -273,6 +275,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
+        // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA <listbox/option> pattern — the listbox role belongs on the <ul> owning the option rows.
         role="listbox"
         aria-label={props.resolvedLabel ?? "Resolved"}
         style={{
@@ -303,6 +306,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
             scrolls when overfull; collapses to the "all clear" strip when empty. */}
         <ul
           class="sui-sql__list sui-sql__list--bottom"
+          // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA <listbox/option> pattern — the listbox role belongs on the <ul> owning the option rows.
           role="listbox"
           aria-label={props.unresolvedLabel ?? "Unresolved"}
           classList={{

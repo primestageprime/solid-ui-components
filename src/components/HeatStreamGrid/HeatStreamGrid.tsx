@@ -166,7 +166,18 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                     "jtf-heatstream-grid__row-label--all-selected":
                       selectable() && isRowAllSelected(row),
                   }}
+                  role={selectable() ? "button" : undefined}
+                  tabIndex={selectable() ? 0 : undefined}
                   onClick={() => selectable() && toggleRow(row)}
+                  onKeyDown={(e) => {
+                    if (
+                      selectable() &&
+                      (e.key === "Enter" || e.key === " ")
+                    ) {
+                      e.preventDefault();
+                      toggleRow(row);
+                    }
+                  }}
                 >
                   {row}
                 </td>
@@ -188,7 +199,25 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                           "jtf-heatstream-grid__cell--selected":
                             selectable() && isSelected(row, col),
                         }}
+                        role={
+                          items().length > 0 &&
+                          (selectable() || local.onCellClick)
+                            ? "button"
+                            : undefined
+                        }
+                        tabIndex={
+                          items().length > 0 &&
+                          (selectable() || local.onCellClick)
+                            ? 0
+                            : undefined
+                        }
                         onClick={handleClick}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleClick();
+                          }
+                        }}
                         style={
                           items().length > 0 &&
                           (selectable() || local.onCellClick)

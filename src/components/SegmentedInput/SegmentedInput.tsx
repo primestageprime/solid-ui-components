@@ -109,6 +109,7 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
     };
 
     return (
+      // biome-ignore lint/a11y/useSemanticElements: intentional ARIA segmented/stepper group pattern
       <div
         class={compactClass()}
         role="group"
@@ -153,6 +154,7 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
         {(option) => {
           const selected = () => local.value === option.id;
           return (
+            // biome-ignore lint/a11y/useSemanticElements: intentional ARIA radiogroup/segmented pattern
             <button
               type="button"
               role="radio"

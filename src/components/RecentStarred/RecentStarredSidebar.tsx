@@ -68,6 +68,7 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
               {(item) => (
                 <li>
                   <button
+                    type="button"
                     class="sui-recent-starred__item"
                     title={item.label}
                     onClick={() => props.onPick(item)}
@@ -101,6 +102,7 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
               {(item) => (
                 <li>
                   <button
+                    type="button"
                     class="sui-recent-starred__item"
                     title={item.label}
                     onClick={() => props.onPick(item)}

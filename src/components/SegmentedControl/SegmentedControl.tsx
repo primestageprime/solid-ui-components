@@ -153,6 +153,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
               <Show when={showDivider()}>
                 <span class="sui-segmented__divider" aria-hidden="true" />
               </Show>
+              {/* biome-ignore lint/a11y/useSemanticElements: intentional ARIA radiogroup/segmented pattern */}
               <button
                 type="button"
                 role="radio"

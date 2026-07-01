@@ -298,25 +298,33 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
                 else negCursor += seg.value;
                 const yPx = ys(top);
                 const hPx = Math.abs(ys(bottom) - ys(top));
+                const interactive = () =>
+                  props.onBarClick != null || props.onSegmentClick != null;
                 const click = (e: MouseEvent) => {
                   e.stopPropagation();
                   props.onSegmentClick?.(d, seg, si());
                   props.onBarClick?.(d, i());
                 };
                 return (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: interactive role/tabIndex + Enter/Space keyboard parity are wired dynamically when a click handler is provided; the analyzer can't see the conditional role
                   <rect
                     class="sui-chart__bar"
+                    role={interactive() ? "button" : undefined}
+                    tabIndex={interactive() ? 0 : undefined}
                     x={xPx}
                     y={yPx}
                     width={bw}
                     height={hPx}
                     fill={seg.fill ?? props.fill}
                     onClick={click}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        click(e as unknown as MouseEvent);
+                      }
+                    }}
                     style={{
-                      cursor:
-                        props.onBarClick || props.onSegmentClick
-                          ? "pointer"
-                          : undefined,
+                      cursor: interactive() ? "pointer" : undefined,
                     }}
                   />
                 );

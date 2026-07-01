@@ -48,6 +48,7 @@ export const Tabs: Component<TabsProps> = (props) => {
       <For each={props.tabs}>
         {(tab) => (
           <button
+            type="button"
             class={`sui-tab ${props.activeTab === tab.id ? "sui-tab--active" : ""} ${tab.status ? `sui-tab--${tab.status}` : ""}`}
             role="tab"
             aria-selected={props.activeTab === tab.id}

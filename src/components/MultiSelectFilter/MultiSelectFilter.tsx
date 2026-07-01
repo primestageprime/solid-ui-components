@@ -164,6 +164,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
           </div>
         }
       >
+        {/* biome-ignore lint/a11y/useSemanticElements: native <fieldset> carries default border/margin/padding and its own layout box, which would alter this styled chip-bar's visual output; role="group" preserves the grouping semantics without changing rendering */}
         <div class="sui-msf__bar" role="group">
           <For each={props.options}>
             {(opt) => (

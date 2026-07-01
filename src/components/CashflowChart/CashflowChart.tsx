@@ -388,6 +388,8 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
     <div class="rc-cashflow-container" ref={containerRef}>
       <svg
         class="rc-cashflow"
+        role="img"
+        aria-label="Cashflow chart"
         viewBox={`0 0 ${VB_W()} ${h()}`}
         preserveAspectRatio="xMidYMid meet"
       >
@@ -451,6 +453,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
             const ox = () => scales().xScale(bar.week_start)!;
             const obw = () => scales().xScale.bandwidth();
             return (
+              // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
               <rect
                 x={ox()}
                 y={PAD.top}
@@ -489,6 +492,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
             return (
               <>
                 {bar.recurring_revenue_cents > 0 && (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
                   <rect
                     x={x()}
                     y={recurRevTop()}
@@ -504,6 +508,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
                   />
                 )}
                 {bar.project_revenue_cents > 0 && (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
                   <rect
                     x={x()}
                     y={projRevTop()}
@@ -519,6 +524,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
                   />
                 )}
                 {bar.recurring_expense_cents > 0 && (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
                   <rect
                     x={x()}
                     y={zero()}
@@ -534,6 +540,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
                   />
                 )}
                 {bar.onetime_expense_cents > 0 && (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
                   <rect
                     x={x()}
                     y={recurExpBot()}

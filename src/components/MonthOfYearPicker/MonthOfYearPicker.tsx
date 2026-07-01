@@ -55,6 +55,7 @@ export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
   const rootClass = () =>
     local.class ? `sui-moy-picker ${local.class}` : "sui-moy-picker";
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the month cell layout
     <div
       class={rootClass()}
       role="grid"
@@ -66,6 +67,7 @@ export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
           const month = () => i() + 1;
           const selected = () => local.value === month();
           return (
+            // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the month cell layout
             <button
               type="button"
               role="gridcell"

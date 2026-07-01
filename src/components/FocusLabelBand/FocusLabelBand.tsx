@@ -58,10 +58,26 @@ export const FocusLabelBand: Component<FocusLabelBandProps> = (props) => {
       ? `sui-focus-label-band ${local.class}`
       : "sui-focus-label-band";
 
+  const interactive = () => local.onClick !== undefined;
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: dual-mode band — role/tabIndex/onKeyDown resolve to "button"-shaped values exactly when onClick is supplied (interactive()); a plain non-interactive band otherwise
     <div
       class={rootClass()}
       onClick={local.onClick}
+      role={interactive() ? "button" : undefined}
+      tabIndex={interactive() ? 0 : undefined}
+      onKeyDown={
+        interactive()
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                // Replay the click so `onClick` fires with identical semantics.
+                e.currentTarget.click();
+              }
+            }
+          : undefined
+      }
       data-selected={local.selected ? "" : undefined}
       {...others}
     >

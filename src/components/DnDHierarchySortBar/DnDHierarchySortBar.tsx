@@ -66,6 +66,7 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
     // the label, and the empty space past the last pill — where a per-pill
     // dragover never fires. The handler reads each item's live geometry via the
     // `data-dnd-id` stamps below.
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ol>/<ul> would require <li> children, but the pills are <span>s in a flex row — swapping would break the drag layout.
     <div
       class="sui-dnd-hierarchy-sort-bar"
       role="list"
@@ -94,7 +95,7 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
                    hit-test can exclude this slot from the geometry. */
                 <span
                   class="sui-dnd-hierarchy-sort-bar__pill sui-dnd-hierarchy-sort-bar__placeholder"
-                  aria-label="Drop position"
+                  aria-hidden="true"
                   data-dnd-id={item.id}
                   draggable={handlers().draggable}
                   onDragEnd={handlers().onDragEnd}
@@ -110,6 +111,7 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
                 />
               }
             >
+              {/* biome-ignore lint/a11y/useSemanticElements: intentional ARIA <listitem> inside the ARIA <list> above; a native <li> would require a list parent and change the pill's inline-flex layout. */}
               <span
                 class="sui-dnd-hierarchy-sort-bar__pill"
                 role="listitem"

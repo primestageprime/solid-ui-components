@@ -59,6 +59,7 @@ export function Crosshair<T>(props: CrosshairProps<T>) {
 
   return (
     <Show when={ctx.hoverX() != null}>
+      {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <g> has no tabindex/handlers and is not actually focusable */}
       <g class="sui-chart__crosshair" aria-hidden="true">
         <Show when={guide()}>
           <line

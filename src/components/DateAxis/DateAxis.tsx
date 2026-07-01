@@ -286,10 +286,13 @@ export const DateAxis = <C extends Cell = Cell>(
           {rightMonthLabel()}
         </div>
       </Show>
+      {/* biome-ignore lint/a11y/useSemanticElements: intentional ARIA row of columnheaders; native <tr> would break the flex scroll-container layout */}
       <div
         class="sui-date-axis"
         style={{ "--sui-date-axis-cell-width": `${cellW()}px` }}
         role="row"
+        // -1 keeps the scroll container programmatically focusable without adding a tab stop; the cells are the keyboard-activated targets.
+        tabIndex={-1}
         aria-label="Date axis"
         ref={(el) => {
           scrollEl = el;
@@ -332,6 +335,8 @@ export const DateAxis = <C extends Cell = Cell>(
               const activate = () => props.onCellClick?.(idx(), cell);
 
               return (
+                // biome-ignore lint/a11y/noStaticElementInteractions: dual-mode cell — role resolves to "button" exactly when the click/key handlers are attached (clickable()); "columnheader" otherwise carries no handlers
+                // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-pressed is emitted only when clickable(), i.e. only when role is "button" (which supports it); it is undefined under the "columnheader" role
                 <div
                   class={[
                     "sui-date-axis__cell",

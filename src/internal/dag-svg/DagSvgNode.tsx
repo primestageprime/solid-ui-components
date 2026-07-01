@@ -46,6 +46,7 @@ export type DagSvgNodeProps<T> = {
  * the node id when clicked.
  */
 export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
+  const activate = () => !props.leaving && props.onClick?.(props.node.id);
   return (
     <foreignObject
       x={props.x - props.width / 2}
@@ -55,9 +56,19 @@ export function DagSvgNode<T>(props: DagSvgNodeProps<T>): JSX.Element {
       class={props.wrapperClass}
       overflow="visible"
     >
+      {/* biome-ignore lint/a11y/useSemanticElements: role="button" wrapper around consumer-rendered node content (which may itself contain interactive elements); a native <button> cannot nest interactive descendants */}
       <div
+        role="button"
+        tabIndex={props.leaving ? -1 : 0}
+        aria-label={props.node.id}
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => !props.leaving && props.onClick?.(props.node.id)}
+        onClick={activate}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            activate();
+          }
+        }}
         data-leaving={props.leaving ? "true" : undefined}
         data-entering={props.entering ? "true" : undefined}
         style={{

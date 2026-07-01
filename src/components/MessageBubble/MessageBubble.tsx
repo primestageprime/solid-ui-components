@@ -108,16 +108,32 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
       expanded() && "sui-message-bubble__text--expanded",
     );
 
+  // When the bubble is clickable, Enter/Space must activate it exactly like a
+  // pointer click. Delegating to the element's own `.click()` replays the same
+  // onClick binding SolidJS attached, so the keyboard path can't drift from it.
+  const isClickable = () => Boolean(local.onClick);
+
+  const onKeyDown: JSX.EventHandler<HTMLDivElement, KeyboardEvent> = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.currentTarget.click();
+    }
+  };
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: onClick is optional; when present the bubble gains role="button", tabindex, and Enter/Space keyboard activation (below) — biome can't see through the runtime isClickable() guard.
     <div
       class={rootClass()}
       style={mergedStyle()}
       title={local.title}
+      role={isClickable() ? "button" : undefined}
+      tabindex={isClickable() ? 0 : undefined}
       onClick={
         local.onClick as
           | JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
           | undefined
       }
+      onKeyDown={isClickable() ? onKeyDown : undefined}
       {...others}
     >
       <div ref={textRef} class={textClass()} style={textStyle()}>

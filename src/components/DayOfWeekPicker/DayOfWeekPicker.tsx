@@ -45,6 +45,7 @@ export const DayOfWeekPicker: Component<DayOfWeekPickerProps> = (props) => {
     local.class ? `sui-dow-picker ${local.class}` : "sui-dow-picker";
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the day-of-week cell layout
     <div
       class={rootClass()}
       role="grid"
@@ -56,6 +57,7 @@ export const DayOfWeekPicker: Component<DayOfWeekPickerProps> = (props) => {
           const day = index();
           const selected = () => local.value === day;
           return (
+            // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the day-of-week cell layout
             <button
               type="button"
               role="gridcell"

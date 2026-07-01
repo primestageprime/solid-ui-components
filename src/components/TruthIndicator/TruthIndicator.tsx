@@ -6,7 +6,7 @@
 // Boolean indicator: green check for true, red prohibition (circle-with-slash)
 // for false. Read-only by default; click handler optional.
 // ============================================
-import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps, mergeProps } from "solid-js";
 import "./TruthIndicator.css";
 
 export type TruthIndicatorSize = "sm" | "md" | "lg";
@@ -46,46 +46,74 @@ export const TruthIndicator: Component<TruthIndicatorProps> = (rawProps) => {
     return cls.join(" ");
   };
 
-  return (
-    <span
-      class={wrapperClass()}
-      role={local.onClick ? "button" : "img"}
-      aria-label={ariaLabel()}
-      tabindex={local.onClick ? 0 : undefined}
-      onClick={local.onClick}
-      {...others}
+  const icon = () => (
+    <svg
+      class="sui-truth__svg"
+      viewBox="0 0 24 24"
+      width={px()}
+      height={px()}
+      aria-hidden="true"
     >
-      <svg
-        class="sui-truth__svg"
-        viewBox="0 0 24 24"
-        width={px()}
-        height={px()}
-        aria-hidden="true"
+      {local.value ? (
+        <path
+          class="sui-truth__check"
+          d="M5 12.5 L10 17.5 L19 7.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      ) : (
+        <g
+          class="sui-truth__no"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <line x1="6" y1="18" x2="18" y2="6" />
+        </g>
+      )}
+    </svg>
+  );
+
+  // Interactive → a real <button> (native click + keyboard activation, and a
+  // static role so aria-label is valid). Read-only → a <span role="img">.
+  // Button chrome is reset inline so the existing .sui-truth* classes fully
+  // govern appearance, preserving the prior visual output exactly.
+  return (
+    <Show
+      when={local.onClick}
+      fallback={
+        <span
+          class={wrapperClass()}
+          role="img"
+          aria-label={ariaLabel()}
+          {...others}
+        >
+          {icon()}
+        </span>
+      }
+    >
+      <button
+        type="button"
+        class={wrapperClass()}
+        aria-label={ariaLabel()}
+        onClick={local.onClick}
+        style={{
+          appearance: "none",
+          background: "transparent",
+          border: "none",
+          color: "inherit",
+          font: "inherit",
+        }}
+        {...(others as JSX.ButtonHTMLAttributes<HTMLButtonElement>)}
       >
-        {local.value ? (
-          <path
-            class="sui-truth__check"
-            d="M5 12.5 L10 17.5 L19 7.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        ) : (
-          <g
-            class="sui-truth__no"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <line x1="6" y1="18" x2="18" y2="6" />
-          </g>
-        )}
-      </svg>
-    </span>
+        {icon()}
+      </button>
+    </Show>
   );
 };
 

@@ -82,7 +82,6 @@ export function StaticSplitLayout<T>(
       {/* TOP — read-only list, capped to topCapRows then scrolls. */}
       <ul
         class="sui-sql__list sui-sql__list--top"
-        role="list"
         aria-label={props.label ?? "Resolved"}
         style={{
           "max-height": `${headerHeight() + topCapRows() * rowHeight()}px`,
@@ -106,7 +105,7 @@ export function StaticSplitLayout<T>(
         >
           <For each={topItems()}>
             {(item) => (
-              <li role="listitem" class="sui-sql__row sui-sql__row--resolved">
+              <li class="sui-sql__row sui-sql__row--resolved">
                 <span class="sui-sql__marker" aria-hidden="true">
                   ✓
                 </span>

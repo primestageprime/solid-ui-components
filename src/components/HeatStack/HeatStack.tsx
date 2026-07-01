@@ -74,6 +74,7 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip affordance; no activating action
     <div
       class={classes()}
       ref={rootRef}
@@ -126,10 +127,19 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
                   {(key) => {
                     const status = item.statuses[key] || "missing";
                     return (
+                      // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onItemClick is provided; static usage stays non-interactive
                       <div
                         class={`jtf-heatstack__cell jtf-heatstack__cell--${status}`}
                         title={`${item.name} — ${key}: ${status}`}
+                        role={local.onItemClick ? "button" : undefined}
+                        tabIndex={local.onItemClick ? 0 : undefined}
                         onClick={() => local.onItemClick?.(item.name, key)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            local.onItemClick?.(item.name, key);
+                          }
+                        }}
                         style={
                           local.onItemClick ? { cursor: "pointer" } : undefined
                         }

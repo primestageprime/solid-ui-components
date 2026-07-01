@@ -105,6 +105,38 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     persist(DEFAULT_WIDTH);
   };
 
+  // Keyboard resize for the splitter: arrow keys nudge by STEP (Shift = ×5),
+  // Home/End jump to the clamp bounds. Direction is mirrored for a left-docked
+  // sidebar so the key that visually grows the column always grows it — matching
+  // the pointer-drag `delta` sign.
+  const STEP = 16;
+  const onHandleKeyDown = (e: KeyboardEvent) => {
+    const step = e.shiftKey ? STEP * 5 : STEP;
+    const grow = side() === "right" ? 1 : -1;
+    const nudge = (dir: number) => {
+      e.preventDefault();
+      const next = clampWidth(width() + dir * step);
+      setWidth(next);
+      persist(next);
+    };
+    switch (e.key) {
+      case "ArrowRight":
+        return nudge(grow);
+      case "ArrowLeft":
+        return nudge(-grow);
+      case "Home":
+        e.preventDefault();
+        setWidth(MIN_WIDTH);
+        return persist(MIN_WIDTH);
+      case "End":
+        e.preventDefault();
+        setWidth(MAX_WIDTH);
+        return persist(MAX_WIDTH);
+      default:
+        return;
+    }
+  };
+
   const classes = () => ["sidebar", local.class].filter(Boolean).join(" ");
 
   return (
@@ -116,12 +148,19 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       <Stack gap={local.gap ?? "sm"} class="sidebar__content">
         {local.children}
       </Stack>
+      {/* biome-ignore lint/a11y/useSemanticElements: this is an interactive window-splitter (focusable, keyboard-resizable) — <hr> is a non-interactive presentational separator and cannot carry the drag/resize affordance. */}
       <div
         class={`sidebar__handle sidebar__handle--${side()}`}
         role="separator"
         aria-orientation="vertical"
+        aria-valuenow={width()}
+        aria-valuemin={MIN_WIDTH}
+        aria-valuemax={MAX_WIDTH}
+        aria-label="Resize sidebar"
+        tabIndex={0}
         onPointerDown={onHandlePointerDown}
         onDblClick={onHandleDblClick}
+        onKeyDown={onHandleKeyDown}
       />
     </div>
   );

@@ -90,9 +90,11 @@ export const Legend: Component<LegendProps> = (rawProps) => {
   };
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA list; native <ul> would inject default UA margin/padding and break the flex legend layout
     <div class={wrapperClass()} style={wrapperStyle()} role="list" {...others}>
       <For each={local.items}>
         {(item) => (
+          // biome-ignore lint/a11y/useSemanticElements: intentional ARIA listitem; native <li> would add a list marker and default spacing, breaking the inline-flex swatch/label row
           <div
             class="sui-legend__item"
             classList={{

@@ -157,6 +157,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
   onCleanup(clearHoverTimer);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: hover-intent tooltip affordance; no activating action
     <div
       class={classes()}
       ref={rootRef}
@@ -213,10 +214,19 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
                     // stream where each item lights only the keys it sets.
                     const status = item.statuses[key] || "empty";
                     return (
+                      // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onItemClick is provided; static usage stays non-interactive
                       <div
                         class={`jtf-heatstream__cell jtf-heatstream__cell--${status}`}
                         title={`${item.name} — ${key}: ${status}`}
+                        role={local.onItemClick ? "button" : undefined}
+                        tabIndex={local.onItemClick ? 0 : undefined}
                         onClick={() => local.onItemClick?.(item.name, key)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            local.onItemClick?.(item.name, key);
+                          }
+                        }}
                         style={
                           local.onItemClick ? { cursor: "pointer" } : undefined
                         }

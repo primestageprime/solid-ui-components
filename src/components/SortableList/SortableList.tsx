@@ -69,6 +69,7 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // placeholder tracks the cursor through the row gaps too, where a per-row
     // dragover never fires. The handler reads each row's live geometry via the
     // `data-dnd-id` stamps below.
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
     <div
       class="sui-sortable-list"
       role="list"

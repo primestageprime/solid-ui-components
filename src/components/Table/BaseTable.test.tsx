@@ -76,7 +76,7 @@ describe("BaseTable spanRow (tail-collapse)", () => {
         data={DATA}
         columns={COLUMNS}
         spanRow={spanRow}
-        rowActions={() => <button>Run</button>}
+        rowActions={() => <button type="button">Run</button>}
       />
     ));
     const rows = bodyRows(container);

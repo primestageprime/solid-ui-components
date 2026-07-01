@@ -31,20 +31,6 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "a11y": {
-        "noAriaHiddenOnFocusable": "warn",
-        "noLabelWithoutControl": "warn",
-        "noNoninteractiveElementToInteractiveRole": "warn",
-        "noRedundantRoles": "warn",
-        "noStaticElementInteractions": "warn",
-        "noSvgWithoutTitle": "warn",
-        "useAriaPropsForRole": "warn",
-        "useAriaPropsSupportedByRole": "warn",
-        "useButtonType": "warn",
-        "useFocusableInteractive": "warn",
-        "useKeyWithClickEvents": "warn",
-        "useSemanticElements": "warn"
-      },
       "style": {
         "noNonNullAssertion": "off",
         "useImportType": "warn",
@@ -64,5 +50,17 @@
         "noFocusedTests": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["dev/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "recommended": false
+          }
+        }
+      }
+    }
+  ]
 }

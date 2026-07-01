@@ -178,6 +178,8 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
             </div>
           </Show>
           <Show when={local.actions != null}>
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so action clicks don't bubble to the card onSelect; not an interactive control. */}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only calls stopPropagation — there is no action to mirror on the keyboard (keyboard events don't bubble as clicks to the card). */}
             <div
               class="sui-status-card__actions"
               onClick={(e) => e.stopPropagation()}
@@ -186,6 +188,8 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
             </div>
           </Show>
           <Show when={moreOpen()}>
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so popover clicks don't bubble to the card onSelect; not an interactive control. */}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only calls stopPropagation — there is no action to mirror on the keyboard (keyboard events don't bubble as clicks to the card). */}
             <div
               class="sui-status-card__popover"
               onClick={(e) => e.stopPropagation()}

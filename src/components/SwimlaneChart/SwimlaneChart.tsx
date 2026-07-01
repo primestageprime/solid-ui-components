@@ -482,6 +482,8 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       <svg
         ref={svgRef}
         class="sui-swimlane"
+        role="img"
+        aria-label="Swimlane chart"
         onPointerDown={
           interactive() ? pointerHandlers.onPointerDown : undefined
         }

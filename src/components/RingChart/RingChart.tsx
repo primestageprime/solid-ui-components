@@ -48,6 +48,8 @@ export function RingChart(props: RingChartProps) {
       }}
     >
       <svg
+        role="img"
+        aria-label={props.label}
         width={size()}
         height={size()}
         viewBox={`0 0 ${size()} ${size()}`}

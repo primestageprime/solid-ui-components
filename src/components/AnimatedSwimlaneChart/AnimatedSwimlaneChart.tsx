@@ -422,6 +422,8 @@ export const AnimatedSwimlaneChartBase: Component<
       <svg
         width={stageWidth()}
         height={lanesWithY().totalH}
+        role="img"
+        aria-label="Swimlane chart"
         viewBox={`0 0 ${stageWidth()} ${lanesWithY().totalH}`}
         style={{ display: "block", overflow: "visible" }}
       >

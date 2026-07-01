@@ -34,17 +34,24 @@ export interface NameInputProps
 }
 
 export const NameInput: Component<NameInputProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class"]);
+  const [local, others] = splitProps(props, ["label", "class", "id"]);
   const [readOnly, setReadOnly] = createSignal(true);
   const fieldName = `nm-${createUniqueId()}`;
+  const generatedId = createUniqueId();
+  const inputId = () => local.id ?? generatedId;
 
   const classes = () => ["themed-input", local.class].filter(Boolean).join(" ");
 
   return (
     <div class="themed-input-group">
-      {local.label && <label class="themed-input-label">{local.label}</label>}
+      {local.label && (
+        <label class="themed-input-label" for={inputId()}>
+          {local.label}
+        </label>
+      )}
       <input
         {...others}
+        id={inputId()}
         class={classes()}
         name={fieldName}
         autocomplete="off"

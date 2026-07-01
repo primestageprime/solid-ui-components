@@ -5,7 +5,7 @@ import { ShapeGlyph, type Descriptor, type Shape } from "./shapes";
 
 const renderSvg = (descriptor: Descriptor, x = 10, y = 10) =>
   render(() => (
-    <svg>
+    <svg role="img" aria-label="test">
       <ShapeGlyph descriptor={descriptor} cx={x} cy={y} />
     </svg>
   ));
@@ -96,7 +96,7 @@ describe("ShapeGlyph", () => {
       shape: shape(),
     });
     const { container } = render(() => (
-      <svg>
+      <svg role="img" aria-label="test">
         <ShapeGlyph descriptor={descriptor()} cx={10} cy={10} />
       </svg>
     ));
@@ -132,7 +132,7 @@ describe("ShapeGlyph", () => {
       shape: shape(),
     });
     const { container } = render(() => (
-      <svg>
+      <svg role="img" aria-label="test">
         <ShapeGlyph descriptor={descriptor()} cx={10} cy={10} />
       </svg>
     ));

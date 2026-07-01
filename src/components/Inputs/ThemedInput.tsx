@@ -5,7 +5,12 @@
 // Owns CSS (ThemedInputs.css), no component imports.
 // Styled text input with optional label.
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createUniqueId,
+  splitProps,
+} from "solid-js";
 import "./ThemedInputs.css";
 
 export interface ThemedInputProps
@@ -14,7 +19,10 @@ export interface ThemedInputProps
 }
 
 export const ThemedInput: Component<ThemedInputProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class"]);
+  const [local, others] = splitProps(props, ["label", "class", "id"]);
+
+  const generatedId = createUniqueId();
+  const inputId = () => local.id ?? generatedId;
 
   const classes = () => {
     const classList = ["themed-input"];
@@ -24,8 +32,12 @@ export const ThemedInput: Component<ThemedInputProps> = (props) => {
 
   return (
     <div class="themed-input-group">
-      {local.label && <label class="themed-input-label">{local.label}</label>}
-      <input class={classes()} {...others} />
+      {local.label && (
+        <label class="themed-input-label" for={inputId()}>
+          {local.label}
+        </label>
+      )}
+      <input id={inputId()} class={classes()} {...others} />
     </div>
   );
 };

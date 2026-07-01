@@ -396,6 +396,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart"
+        role="img"
+        aria-label="Cashflow chart"
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
@@ -503,6 +505,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__markers"
+        role="img"
+        aria-label="Cashflow chart markers"
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
@@ -512,16 +516,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           {(m) => {
             const x = ctx.cellToX(m.index);
             const y = yToPlot(ctx.cells[m.index].balanceCents);
+            const activate = () =>
+              props.onMarkerClick?.(m.index, ctx.cells[m.index]);
             return (
+              // biome-ignore lint/a11y/useSemanticElements: native <button> is not valid inside SVG; role="button" on <g> is the correct affordance
               <g
                 class={`sui-cashflow-scrub-chart__marker${
                   m.selected
                     ? " sui-cashflow-scrub-chart__marker--selected"
                     : ""
                 }`}
-                onClick={() =>
-                  props.onMarkerClick?.(m.index, ctx.cells[m.index])
-                }
+                role="button"
+                tabIndex={0}
+                onClick={activate}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    activate();
+                  }
+                }}
               >
                 {/* generous invisible hit area so the thin rule is clickable */}
                 <rect

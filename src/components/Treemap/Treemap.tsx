@@ -124,12 +124,22 @@ export function Treemap<
             class={outerClass(cellSelected(cell))}
             style={{ flex: outerFlex(cell.weight) }}
           >
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onOuterClick is provided; static usage stays non-interactive */}
             <div
               class="sui-treemap__outer-header"
               title={p.outerTitle?.(cell)}
+              role={p.onOuterClick ? "button" : undefined}
+              tabIndex={p.onOuterClick ? 0 : undefined}
               onClick={(e) => {
                 e.stopPropagation();
                 p.onOuterClick?.(cell, e);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  p.onOuterClick?.(cell, e as unknown as MouseEvent);
+                }
               }}
             >
               {p.renderOuterHeader(cell)}
@@ -142,13 +152,23 @@ export function Treemap<
             <div class="sui-treemap__inner-list">
               <For each={cell.children}>
                 {(inner) => (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onInnerClick is provided; static usage stays non-interactive
                   <div
                     class={innerClass(innerSelected(cell, inner))}
                     style={{ flex: innerFlex(inner.weight) }}
                     title={p.innerTitle?.(cell, inner)}
+                    role={p.onInnerClick ? "button" : undefined}
+                    tabIndex={p.onInnerClick ? 0 : undefined}
                     onClick={(e) => {
                       e.stopPropagation();
                       p.onInnerClick?.(cell, inner, e);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        p.onInnerClick?.(cell, inner, e as unknown as MouseEvent);
+                      }
                     }}
                   >
                     {p.renderInnerContent(cell, inner)}
@@ -161,13 +181,23 @@ export function Treemap<
       </For>
       <Show when={p.sidebar}>
         {(sb) => (
+          // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when sidebar.onClick is provided; static usage stays non-interactive
           <div
             class={sidebarClass(sb().selected ?? false)}
             style={{ flex: outerFlex(sb().weight) }}
             title={sb().title}
+            role={sb().onClick ? "button" : undefined}
+            tabIndex={sb().onClick ? 0 : undefined}
             onClick={(e) => {
               e.stopPropagation();
               sb().onClick?.(e);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                sb().onClick?.(e as unknown as MouseEvent);
+              }
             }}
           >
             {sb().content}

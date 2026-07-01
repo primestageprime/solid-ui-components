@@ -45,6 +45,7 @@ export const ButtonGroup: Component<ButtonGroupProps> = (props) => {
   };
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA group pattern; native <fieldset> requires a <legend> and imposes layout that would break the button arrangement
     <div class={classes()} role="group" {...others}>
       {local.children}
     </div>

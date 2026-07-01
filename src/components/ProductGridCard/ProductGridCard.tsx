@@ -57,11 +57,26 @@ export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
       ? `sui-product-grid-card ${local.class}`
       : "sui-product-grid-card";
 
+  // Keyboard activation replicates the click exactly by dispatching the
+  // element's native click, which invokes whatever `onClick` handler form
+  // (function or bound tuple) was supplied. Only wired up when the card is
+  // actually clickable so non-interactive cards stay out of the tab order.
+  const onKeyDown = (e: KeyboardEvent & { currentTarget: HTMLDivElement }) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.currentTarget.click();
+    }
+  };
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: interactivity is conditional per-consumer — when onClick is supplied the div is promoted to role="button" + tabIndex + Enter/Space onKeyDown (below); Biome can't see through the dynamic role expression. Non-clickable cards intentionally stay static/out of tab order.
     <div
       class={rootClass()}
       title={local.title}
       onClick={local.onClick}
+      role={local.onClick ? "button" : undefined}
+      tabIndex={local.onClick ? 0 : undefined}
+      onKeyDown={local.onClick ? onKeyDown : undefined}
       data-selected={local.selected ? "" : undefined}
       data-met={local.met ? "" : undefined}
       {...others}

@@ -229,10 +229,7 @@ export function BaseTable<T extends Record<string, any>>(
                       {(column) => renderColumnTh(column)}
                     </For>
                     <Show when={local.rowActions}>
-                      <th
-                        class="hud-table__header-cell hud-table__actions-header"
-                        aria-hidden="true"
-                      />
+                      <th class="hud-table__header-cell hud-table__actions-header" />
                     </Show>
                   </tr>
                 </thead>
@@ -270,7 +267,6 @@ export function BaseTable<T extends Record<string, any>>(
                     <Show when={local.rowActions}>
                       <th
                         class="hud-table__header-cell hud-table__actions-header hud-table__header-cell--rowspan"
-                        aria-hidden="true"
                         rowspan={2}
                       />
                     </Show>
@@ -328,6 +324,7 @@ export function BaseTable<T extends Record<string, any>>(
                             </For>
                             <Show when={local.rowActions}>
                               {(rowActions) => (
+                                // biome-ignore lint/a11y/useKeyWithClickEvents: onClick only stops mouse-click propagation to the row; it triggers no action, so no keyboard equivalent applies (keyboard activation fires on the inner buttons directly)
                                 <td
                                   class="hud-table__cell hud-table__actions-cell"
                                   onClick={(e) => e.stopPropagation()}

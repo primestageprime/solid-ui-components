@@ -5,7 +5,12 @@
 // Owns CSS (ThemedInputs.css), no component imports.
 // Styled textarea with optional label.
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createUniqueId,
+  splitProps,
+} from "solid-js";
 import "./ThemedInputs.css";
 
 export interface ThemedTextareaProps
@@ -14,7 +19,10 @@ export interface ThemedTextareaProps
 }
 
 export const ThemedTextarea: Component<ThemedTextareaProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class"]);
+  const [local, others] = splitProps(props, ["label", "class", "id"]);
+
+  const generatedId = createUniqueId();
+  const textareaId = () => local.id ?? generatedId;
 
   const classes = () => {
     const classList = ["themed-textarea"];
@@ -24,8 +32,12 @@ export const ThemedTextarea: Component<ThemedTextareaProps> = (props) => {
 
   return (
     <div class="themed-input-group">
-      {local.label && <label class="themed-input-label">{local.label}</label>}
-      <textarea class={classes()} {...others} />
+      {local.label && (
+        <label class="themed-input-label" for={textareaId()}>
+          {local.label}
+        </label>
+      )}
+      <textarea id={textareaId()} class={classes()} {...others} />
     </div>
   );
 };

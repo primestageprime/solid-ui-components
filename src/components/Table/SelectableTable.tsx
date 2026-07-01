@@ -178,6 +178,7 @@ export function SelectableTable<T extends Record<string, any>>(
             </For>
           </div>
           <button
+            type="button"
             class="hud-selection-action-bar__clear"
             onClick={() => setSelected(new Set())}
             title="Clear selection"

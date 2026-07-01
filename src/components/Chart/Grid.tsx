@@ -20,6 +20,7 @@ export const Grid: Component<GridProps> = (props) => {
   const showV = () => props.vertical ?? false;
 
   return (
+    // biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <g> has no tabindex/handlers and is not actually focusable
     <g class="sui-chart__grid" aria-hidden="true">
       <Show when={showH()}>
         <For each={ctx.yScale().ticks(tickCount())}>

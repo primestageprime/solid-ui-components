@@ -28,6 +28,7 @@ export const LabeledDivider: Component<LabeledDividerProps> = (props) => {
   const [local, others] = splitProps(props, ["label", "class", "aria-label"]);
 
   return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: decorative titled divider — aria-label gives AT a name when `label` is non-text JSX; role="separator" is rejected because Biome treats every separator as an adjustable window-splitter (forcing focus + aria-valuenow), which this non-interactive divider is not.
     <div
       class={clsx("sui-labeled-divider", local.class)}
       aria-label={local["aria-label"] ?? labelAsString(local.label)}

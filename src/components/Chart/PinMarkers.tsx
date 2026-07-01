@@ -181,12 +181,21 @@ export function PinMarkers<TPin extends Pin = Pin>(
               : base;
           };
           return (
+            // biome-ignore lint/a11y/noStaticElementInteractions: interactive role/tabIndex + Enter/Space keyboard parity are wired dynamically when onClick is provided; the analyzer can't see the conditional role
             <g
               class="sui-chart__pin-marker"
+              role={merged.onClick ? "button" : undefined}
+              tabIndex={merged.onClick ? 0 : undefined}
               data-id={pin.id}
               data-selected={selected() ? "true" : undefined}
               data-emphasized={isEmphasized() ? "true" : undefined}
               onPointerDown={(e) => merged.onClick?.(pin, e)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  merged.onClick?.(pin, e as unknown as PointerEvent);
+                }
+              }}
               onDblClick={(e) => merged.onDelete?.(pin, e)}
               onPointerEnter={(e) => merged.onHover?.(pin, e)}
               onPointerLeave={(e) => merged.onHover?.(null, e)}

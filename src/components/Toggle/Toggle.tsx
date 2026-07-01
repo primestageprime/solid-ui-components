@@ -104,6 +104,7 @@ export const Toggle: Component<ToggleProps> = (props) => {
           onChange={handleChange}
           {...others}
         />
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: the slider is the visual toggle knob, associated with the checkbox via `for`; it must stay a sibling <label> for the CSS `:checked + .slider` selector and click-to-toggle, its accessible name comes from the separate text labels */}
         <label class="sui-toggle__slider" for={toggleId()} />
       </div>
       {local.label && local.labelPosition !== "left" && (

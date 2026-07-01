@@ -90,6 +90,7 @@ export const Heatmap: Component<HeatmapProps> = (props) => {
               <div class="jtf-heatmap__cells">
                 <For each={row.cells}>
                   {(cell) => (
+                    // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onCellClick is provided; static usage stays non-interactive
                     <div
                       class={`jtf-heatmap__cell jtf-heatmap__cell--${cell.status}`}
                       title={
@@ -97,7 +98,15 @@ export const Heatmap: Component<HeatmapProps> = (props) => {
                           ? `${row.label}: ${cell.label || cell.value}`
                           : undefined
                       }
+                      role={local.onCellClick ? "button" : undefined}
+                      tabIndex={local.onCellClick ? 0 : undefined}
                       onClick={() => local.onCellClick?.(row.id, cell.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          local.onCellClick?.(row.id, cell.id);
+                        }
+                      }}
                       style={
                         local.onCellClick ? { cursor: "pointer" } : undefined
                       }
@@ -204,9 +213,18 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
                   {(cell) => {
                     const cellHasErrors = hasErrors(cell);
                     return (
+                      // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role/tabIndex/onKeyDown added when onCellClick is provided; static usage stays non-interactive
                       <div
                         class="jtf-heatmap-multi__cell"
+                        role={local.onCellClick ? "button" : undefined}
+                        tabIndex={local.onCellClick ? 0 : undefined}
                         onClick={() => local.onCellClick?.(row.id, cell.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            local.onCellClick?.(row.id, cell.id);
+                          }
+                        }}
                         style={
                           local.onCellClick ? { cursor: "pointer" } : undefined
                         }

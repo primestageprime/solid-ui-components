@@ -73,6 +73,8 @@ export const Modal: Component<ModalProps> = (props) => {
   return (
     <Show when={props.open}>
       <Portal>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
         <div class="sui-modal-overlay" onClick={handleOverlayClick}>
           <div class={modalClasses()} role="dialog" aria-modal="true">
             <Show
@@ -96,6 +98,7 @@ export const Modal: Component<ModalProps> = (props) => {
                 </Show>
                 <Show when={props.showClose !== false}>
                   <button
+                    type="button"
                     class="sui-modal__close"
                     onClick={props.onClose}
                     aria-label="Close modal"

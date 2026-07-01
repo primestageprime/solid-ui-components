@@ -61,6 +61,7 @@ export function PivotPills<Dim extends string>(
                 {slotLabel(idx())}
                 {idx() === 0 ? " ›" : ""}
               </span>
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-to-reorder affordance; no click activation, only native drag events */}
               <span
                 class={`sui-pivot-pills__pill${active() ? " sui-pivot-pills__pill--active" : ""}${isDragOver() ? " sui-pivot-pills__pill--drag-over" : ""}`}
                 draggable={true}

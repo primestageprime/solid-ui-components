@@ -58,6 +58,7 @@ export const GhostPin: Component<GhostPinProps> = (props) => {
   };
   return (
     <Show when={merged.descriptor != null && ctx.hoverX() != null}>
+      {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <g> has no tabindex/handlers and is not actually focusable */}
       <g
         class={`sui-chart__ghost-pin${merged.class ? " " + merged.class : ""}`}
         opacity={merged.opacity}

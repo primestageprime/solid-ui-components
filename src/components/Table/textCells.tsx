@@ -190,6 +190,7 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
             {renderText()}
             <Show when={!isClampMode() && isTruncated() && !expanded()}>
               <button
+                type="button"
                 class="cell-longtext__more"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -201,6 +202,7 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
             </Show>
             <Show when={!isClampMode() && expanded()}>
               <button
+                type="button"
                 class="cell-longtext__less"
                 onClick={(e) => {
                   e.stopPropagation();

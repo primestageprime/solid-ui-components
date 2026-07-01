@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 0.84.0
+
+### Added / Changed
+
+- **Accessibility** — keyboard and ARIA support across ~50 components; the Biome `a11y` rule group is now enforced at **error** for `src` (the `dev/` gallery stays exempt), so regressions fail the lint gate. Highlights, all behavior-preserving unless noted:
+  - **Keyboard activation** for clickable elements that were mouse-only: heat/treemap cells (`Treemap`, `Heatmap`, `HeatStream`, `HeatStack`, `HeatStreamGrid`), cards/rows (`Card/StatusCard`, `ProductGridCard`, `SprintSelector`, `MessageBubble`), chart controls (`Chart` pins/series, `CashflowScrubChart` markers, `AnimatedSwimlaneChart` cards, `DagChart` edge actions), and axis cells. Each adds `role="button"`, `tabindex`, and an `onKeyDown` (Enter/Space) that fires the exact same action as the click — gated on the relevant callback prop so non-interactive instances stay out of the tab order.
+  - **New keyboard resize** (feature): `Layout/Sidebar` and `ResizableContainer` drag handles now implement the window-splitter/separator pattern — focusable, with `aria-valuenow/min/max` and arrow-key resize (Shift = larger step, Home/End to bounds), persisted like the pointer drag.
+  - **Form labels** associated with their controls via `createUniqueId()` (`Inputs/NameInput`, `ThemedInput`, `ThemedTextarea`); a consumer-supplied `id` still wins.
+  - **`TruthIndicator`** now renders a native `<button>` when interactive (was a `<span role="button">`), gaining native focus/activation; read-only stays a `<span role="img">`.
+  - `type="button"` added to action buttons (`Modal`, `Tabs`, `Section`, `RecentStarred`, several `Table` buttons); decorative chart SVGs get `role="img"` + `aria-label` or `aria-hidden`; redundant roles removed. Legitimate ARIA composites (calendar `grid` pickers, segmented `radiogroup`, `listbox`/`menu`, decorative SVG chrome) are documented with scoped `biome-ignore` rationale rather than altered.
+
 ## 0.83.2
 
 ### Changed

@@ -62,6 +62,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
     local.class ? `sui-dom-picker ${local.class}` : "sui-dom-picker";
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the calendar cell layout
     <div
       class={rootClass()}
       role="grid"
@@ -72,6 +73,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
         {(day) => {
           const selected = () => local.value === day;
           return (
+            // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the calendar cell layout
             <button
               type="button"
               role="gridcell"
@@ -90,6 +92,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
         }}
       </For>
       {local.lastOfMonth && (
+        // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the calendar cell layout
         <button
           type="button"
           role="gridcell"

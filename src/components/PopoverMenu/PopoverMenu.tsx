@@ -158,6 +158,7 @@ export const PopoverMenu = <Id extends string = string>(
             {(item) => (
               <li
                 class="sui-popover-menu__item"
+                // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA menu composite — <ul> panel with role="menuitem" <li>s; full keyboard support (tabIndex + Enter/Space onKeyDown) provided below
                 role="menuitem"
                 tabIndex={0}
                 onClick={() => select(item.id)}
