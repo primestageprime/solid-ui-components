@@ -730,6 +730,103 @@ describe("SplitQueueList — resolved row background fades in on arrival", () =>
   });
 });
 
+describe("SplitQueueList — keyboard & ARIA", () => {
+  // Mount with resolved + unresolved so both panes render interactive rows.
+  function mountA11y(selected?: string) {
+    const onSelect: string[] = [];
+    const { container } = render(() => (
+      <SplitQueueList<Item>
+        resolved={[{ id: "r1" }, { id: "r2" }]}
+        unresolved={[{ id: "u1" }, { id: "u2" }]}
+        keyOf={(i) => i.id}
+        selectedKey={selected}
+        onSelect={(k) => onSelect.push(k)}
+        renderItem={(i) => <span>{i.id}</span>}
+        animationMs={0}
+        rowHeight={120}
+      />
+    ));
+    return { container, onSelect };
+  }
+
+  const key = (el: Element, k: string) =>
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+
+  it("exposes each pane as a listbox and each row as an option", () => {
+    const { container } = mountA11y();
+    const lists = container.querySelectorAll('[role="listbox"]');
+    expect(lists.length).toBe(2); // top (resolved) + bottom (unresolved)
+    expect(
+      (container.querySelector(".sui-sql__list--top") as HTMLElement).getAttribute(
+        "aria-label",
+      ),
+    ).toBe("Resolved");
+
+    const options = container.querySelectorAll('[role="option"]');
+    expect(options.length).toBe(4); // r1, r2, u1, u2
+    // Headers are presentational, not options.
+    expect(
+      container
+        .querySelector(".sui-sql__header--top")!
+        .getAttribute("role"),
+    ).toBe("presentation");
+  });
+
+  it("reflects selectedKey via aria-selected", () => {
+    const { container } = mountA11y("u1");
+    const sel = container.querySelector('[data-sql-key="u1"]')!;
+    const other = container.querySelector('[data-sql-key="u2"]')!;
+    expect(sel.getAttribute("aria-selected")).toBe("true");
+    expect(other.getAttribute("aria-selected")).toBe("false");
+  });
+
+  it("keeps exactly one row in the tab order (roving tabindex)", () => {
+    const { container } = mountA11y();
+    const rows = [...container.querySelectorAll<HTMLElement>("[data-sql-key]")];
+    const tabbable = rows.filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable.length).toBe(1);
+    // With no selection, the focused unresolved head (u1) holds the tab stop.
+    expect(tabbable[0].dataset.sqlKey).toBe("u1");
+  });
+
+  it("Enter and Space select the focused row (like a click)", () => {
+    const { container, onSelect } = mountA11y();
+    const row = container.querySelector('[data-sql-key="r2"]')!;
+    key(row, "Enter");
+    expect(onSelect).toEqual(["r2"]);
+    key(row, " ");
+    expect(onSelect).toEqual(["r2", "r2"]);
+  });
+
+  it("ArrowDown/ArrowUp move the tab stop across both panes", () => {
+    const { container } = mountA11y();
+    const at = (k: string) =>
+      container.querySelector<HTMLElement>(`[data-sql-key="${k}"]`)!;
+
+    // From the top pane's first row, ArrowDown walks r1 → r2 → (across seam) u1.
+    key(at("r1"), "ArrowDown");
+    expect(at("r2").getAttribute("tabindex")).toBe("0");
+    key(at("r2"), "ArrowDown");
+    expect(at("u1").getAttribute("tabindex")).toBe("0");
+    // ArrowUp walks back into the top pane.
+    key(at("u1"), "ArrowUp");
+    expect(at("r2").getAttribute("tabindex")).toBe("0");
+
+    // Home/End jump to the first/last row overall.
+    key(at("r2"), "End");
+    expect(at("u2").getAttribute("tabindex")).toBe("0");
+    key(at("u2"), "Home");
+    expect(at("r1").getAttribute("tabindex")).toBe("0");
+  });
+
+  it("renders an aria-live status region reporting the counts", () => {
+    const { container } = mountA11y();
+    const status = container.querySelector(".sui-sql__sr-status")!;
+    expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(status.textContent).toBe("2 Resolved, 2 Unresolved");
+  });
+});
+
 describe("SplitQueueList — reduced-motion advances focus synchronously", () => {
   it("with prefers-reduced-motion, focus advances immediately (no phases)", () => {
     // Force reduced-motion so the component takes the no-animation path.

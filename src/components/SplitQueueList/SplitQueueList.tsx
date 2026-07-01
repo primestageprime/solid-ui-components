@@ -409,6 +409,80 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // animationMs is split ~50/50 across the phases so the knob controls total time.
   const EASE = "cubic-bezier(.22,.61,.36,1)";
 
+  // Fire onFocusChange with the current head of the unresolved list (null when
+  // the queue is empty). The single source of truth for "advance focus", shared
+  // by both flights' settle/bail paths so they can't drift apart.
+  const focusHead = () =>
+    props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+
+  // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
+  // finish/cancel OR a timeout fallback (WAAPI events don't fire in a hidden tab;
+  // without the fallback a phase could stall and strand state). If WAAPI is
+  // unavailable entirely (e.g. jsdom, where Element.animate is missing), skip the
+  // motion and settle on the next microtask so `then` still runs. Shared by the
+  // forward and reverse flights (identical mechanics, mirrored keyframes).
+  const animateOnce = (
+    el: HTMLElement,
+    keyframes: Keyframe[],
+    ms: number,
+    then: () => void,
+  ) => {
+    let done = false;
+    const fire = () => {
+      if (done) return;
+      done = true;
+      then();
+    };
+    if (typeof el.animate !== "function") {
+      queueMicrotask(fire);
+      return;
+    }
+    const anim = el.animate(keyframes, { duration: ms, easing: EASE });
+    anim.onfinish = fire;
+    anim.oncancel = fire;
+    setTimeout(fire, ms + 80);
+  };
+
+  // Build the exit-collapse placeholder shared by both flights: an in-flow <li>
+  // that shrinks its height to 0, clipping a full-height inner clone pinned to
+  // one edge (`pin: "bottom"` clips from the TOP as it collapses — the forward
+  // head-collapse; `pin: "top"` clips from the BOTTOM — the reverse tail-collapse).
+  // Returns the placeholder ready to insert; the caller animates its height→0.
+  const buildCollapsePlaceholder = (opts: {
+    rowH: number;
+    innerClass: string;
+    markerGlyph: string;
+    pin: "top" | "bottom";
+    contentHTML: string;
+  }): HTMLLIElement => {
+    const placeholder = document.createElement("li");
+    placeholder.className = "sui-sql__collapse";
+    placeholder.style.height = `${opts.rowH}px`;
+    // CRITICAL: min-height:0 — real rows carry an inline min-height, and without
+    // overriding it here the height animation can't reach 0 (the collapse would
+    // jam at the row's min-height). This is the "fight" between the JS height
+    // animation and the CSS row sizing.
+    placeholder.style.minHeight = "0";
+    placeholder.style.overflow = "hidden";
+    placeholder.style.position = "relative";
+
+    // Inner card pinned to one edge of the placeholder, fixed at full row height,
+    // so as the placeholder shrinks the opposite edge clips it away.
+    const inner = document.createElement("div");
+    inner.className = opts.innerClass;
+    inner.innerHTML = opts.contentHTML;
+    const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
+    if (marker) marker.textContent = opts.markerGlyph;
+    inner.style.position = "absolute";
+    inner.style.left = "0";
+    inner.style.right = "0";
+    inner.style[opts.pin] = "0";
+    inner.style.height = `${opts.rowH}px`;
+    inner.style.margin = "0";
+    placeholder.appendChild(inner);
+    return placeholder;
+  };
+
   const playFlight = (key: string, exitIndex = 0) => {
     // If we can't run the flight (missing refs / no captured rect — e.g. the
     // tab was hidden so rAF capture didn't run), don't strand focus: clear the
@@ -416,7 +490,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bail = () => {
       scrollAnimating = false;
       setExitingKey(null);
-      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+      focusHead();
     };
     if (!rootEl) return bail();
     const first = prevRects.get(key);
@@ -455,7 +529,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       const advance = () => {
         scrollAnimating = false;
         setExitingKey(null);
-        props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+        focusHead();
       };
       // Instant settle for reduced-motion / zero-duration / no timer.
       if (total <= 0 || typeof setTimeout !== "function") {
@@ -513,33 +587,6 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const exitMs = animationMs();
 
     const newFocusedContent = nowEl.innerHTML;
-
-    // Animate `el` through `keyframes` and fire `then` exactly once — on WAAPI
-    // finish/cancel OR a timeout fallback (WAAPI events don't fire in a hidden
-    // tab; without the fallback a phase could stall and strand state). If WAAPI
-    // is unavailable entirely (e.g. jsdom, where Element.animate is missing), we
-    // skip the motion and settle on the next microtask so `then` still runs.
-    const animateOnce = (
-      el: HTMLElement,
-      keyframes: Keyframe[],
-      ms: number,
-      then: () => void,
-    ) => {
-      let done = false;
-      const fire = () => {
-        if (done) return;
-        done = true;
-        then();
-      };
-      if (typeof el.animate !== "function") {
-        queueMicrotask(fire);
-        return;
-      }
-      const anim = el.animate(keyframes, { duration: ms, easing: EASE });
-      anim.onfinish = fire;
-      anim.oncancel = fire;
-      setTimeout(fire, ms + 80);
-    };
 
     // ---- Phase 2 (enter): the TOP panel GROWS to reveal a STATIONARY, full-size
     // card — the same mechanism the topOnly column uses, now applied to the full
@@ -644,32 +691,15 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     if (bottomList && bottomHeader) {
       const rowH = first.height;
 
-      const placeholder = document.createElement("li");
-      placeholder.className = "sui-sql__collapse";
-      placeholder.style.height = `${rowH}px`;
-      // CRITICAL: min-height:0 — real rows carry an inline min-height:120px, and
-      // without overriding it here the height animation can't actually reach 0
-      // (the collapse would jam at the row's min-height). This is the "fight"
-      // between the JS height animation and the CSS row sizing.
-      placeholder.style.minHeight = "0";
-      placeholder.style.overflow = "hidden";
-      placeholder.style.position = "relative";
-
-      // Inner card pinned to the bottom of the placeholder, fixed at full row
-      // height, so as the placeholder shrinks the TOP edge clips it away.
-      const inner = document.createElement("div");
-      inner.className =
-        "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused";
-      inner.innerHTML = newFocusedContent;
-      const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
-      if (marker) marker.textContent = "▸"; // focused glyph, not ✓
-      inner.style.position = "absolute";
-      inner.style.left = "0";
-      inner.style.right = "0";
-      inner.style.bottom = "0";
-      inner.style.height = `${rowH}px`;
-      inner.style.margin = "0";
-      placeholder.appendChild(inner);
+      // Orange focused-styled clone, clipped from the TOP as it collapses (pinned
+      // to the bottom edge) — it disappears beneath the "to categorize" header.
+      const placeholder = buildCollapsePlaceholder({
+        rowH,
+        innerClass: "sui-sql__row sui-sql__row--unresolved sui-sql__row--focused",
+        markerGlyph: "▸", // focused glyph, not ✓
+        pin: "bottom",
+        contentHTML: newFocusedContent,
+      });
 
       // Insert at the resolved card's original index. After the swap the rows are
       // the post-removal set; the row now at index `exitIndex` is the one that sat
@@ -732,7 +762,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const bail = () => {
       scrollAnimating = false;
       setExitingKey(null);
-      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+      focusHead();
     };
     if (!rootEl) return bail();
     const topList = topListEl;
@@ -747,35 +777,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const total = animationMs();
     const rowH = first.height;
 
-    const animateOnce = (
-      el: HTMLElement,
-      keyframes: Keyframe[],
-      ms: number,
-      then: () => void,
-    ) => {
-      let done = false;
-      const fire = () => {
-        if (done) return;
-        done = true;
-        then();
-      };
-      if (typeof el.animate !== "function") {
-        queueMicrotask(fire);
-        return;
-      }
-      const anim = el.animate(keyframes, { duration: ms, easing: EASE });
-      anim.onfinish = fire;
-      anim.oncancel = fire;
-      setTimeout(fire, ms + 80);
-    };
-
     // The just-arrived to-categorize card fades its bg in and focus advances when
     // the transfer completes. Fire exactly once (whichever phase finishes last is
     // the full duration, so either is fine; we drive it from the exit collapse).
     const settleReverse = () => {
       setExitingKey(null);
       markArrived(key, "bottom");
-      props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+      focusHead();
     };
 
     // ---- Phase 2 (enter): pane heights tween — top SHRINKS, bottom GROWS. Pre-
@@ -833,25 +841,13 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     // ---- Phase 1 (exit): collapse a placeholder at the DONE (top) list TAIL,
     // clipped from the BOTTOM (content pinned to the TOP of the shrinking box).
     const topHeader = topList.querySelector<HTMLElement>(".sui-sql__header");
-    const placeholder = document.createElement("li");
-    placeholder.className = "sui-sql__collapse";
-    placeholder.style.height = `${rowH}px`;
-    placeholder.style.minHeight = "0";
-    placeholder.style.overflow = "hidden";
-    placeholder.style.position = "relative";
-
-    const inner = document.createElement("div");
-    inner.className = "sui-sql__row sui-sql__row--resolved";
-    inner.innerHTML = nowEl.innerHTML; // same content; carries the ✓ marker
-    const marker = inner.querySelector<HTMLElement>(".sui-sql__marker");
-    if (marker) marker.textContent = "✓";
-    inner.style.position = "absolute";
-    inner.style.left = "0";
-    inner.style.right = "0";
-    inner.style.top = "0"; // pinned to TOP → clipped from the BOTTOM as it shrinks
-    inner.style.height = `${rowH}px`;
-    inner.style.margin = "0";
-    placeholder.appendChild(inner);
+    const placeholder = buildCollapsePlaceholder({
+      rowH,
+      innerClass: "sui-sql__row sui-sql__row--resolved",
+      markerGlyph: "✓",
+      pin: "top", // pinned to TOP → clipped from the BOTTOM as it shrinks
+      contentHTML: nowEl.innerHTML, // same content; carries the ✓ marker
+    });
 
     // Append at the done list's TAIL (after the last resolved row, or after the
     // header if the done list is now empty).
@@ -911,7 +907,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const advanceFocusAfterExit = (key?: string) => {
     setExitingKey(null);
     if (key) markArrived(key);
-    props.onFocusChange?.(unresolvedItems().map(keyOf)[0] ?? null);
+    focusHead();
   };
 
   // When the top pane is capped/scrolling, pin it to the bottom so the newest
@@ -936,6 +932,82 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
 
   onCleanup(() => prevRects.clear());
 
+  // ---- Keyboard / ARIA -----------------------------------------------------
+  // The two panes are exposed as `role="listbox"`es of `role="option"` rows so
+  // assistive tech announces them as a selectable list and reads each row's
+  // selected state. Rows are reachable and actionable from the keyboard via a
+  // ROVING TABINDEX: exactly one row is in the tab order (tabindex 0) and the
+  // rest are -1; Arrow/Home/End move DOM focus between rows (treating the two
+  // panes as one top→bottom sequence), and Enter/Space select the focused row
+  // (mirroring a click). This keeps the whole queue operable without a mouse.
+  const [activeKey, setActiveKey] = createSignal<string | null>(null);
+
+  // Which row currently holds the tab stop. Prefer the row the user last focused
+  // (`activeKey`), then the controlled selection, then the focused unresolved
+  // head, then the first row overall — so there's always exactly one tab stop and
+  // it lands somewhere sensible before any interaction. Falls back cleanly as
+  // rows come and go (a stale key that's no longer rendered is ignored).
+  const tabbableKey = createMemo(() => {
+    const allKeys = [
+      ...resolvedItems().map(keyOf),
+      ...unresolvedItems().map(keyOf),
+    ];
+    const active = activeKey();
+    if (active && allKeys.includes(active)) return active;
+    if (props.selectedKey && allKeys.includes(props.selectedKey))
+      return props.selectedKey;
+    const fk = focusedKey();
+    if (fk && allKeys.includes(fk)) return fk;
+    return allKeys[0] ?? null;
+  });
+
+  // Move DOM focus to the previous/next row (or the first/last), across BOTH
+  // panes as one sequence. Driven off the live DOM order so it tracks the
+  // rendered rows without threading indices through state.
+  const moveFocus = (fromKey: string, dir: 1 | -1 | "home" | "end") => {
+    if (!rootEl) return;
+    const rows = [
+      ...rootEl.querySelectorAll<HTMLElement>("[data-sql-key]"),
+    ];
+    if (rows.length === 0) return;
+    const idx = rows.findIndex((r) => r.dataset.sqlKey === fromKey);
+    const target =
+      dir === "home"
+        ? rows[0]
+        : dir === "end"
+          ? rows[rows.length - 1]
+          : rows[Math.min(rows.length - 1, Math.max(0, idx + dir))];
+    if (!target) return;
+    setActiveKey(target.dataset.sqlKey ?? null);
+    target.focus();
+  };
+
+  const onRowKeyDown = (e: KeyboardEvent, key: string) => {
+    switch (e.key) {
+      case "Enter":
+      case " ":
+        e.preventDefault(); // Space would otherwise scroll the pane
+        props.onSelect?.(key);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        moveFocus(key, 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        moveFocus(key, -1);
+        break;
+      case "Home":
+        e.preventDefault();
+        moveFocus(key, "home");
+        break;
+      case "End":
+        e.preventDefault();
+        moveFocus(key, "end");
+        break;
+    }
+  };
+
   const renderRow = (item: T, kind: "resolved" | "unresolved") => {
     const key = keyOf(item);
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
@@ -943,6 +1015,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     return (
       <li
         data-sql-key={key}
+        role="option"
+        aria-selected={isSelected()}
+        tabindex={tabbableKey() === key ? 0 : -1}
         class={`sui-sql__row sui-sql__row--${kind}`}
         classList={{
           "sui-sql__row--focused": isFocused(),
@@ -952,6 +1027,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         // Clicking a row only SELECTS it (emits onSelect) — it no longer resolves.
         // Resolve/unresolve are driven by the consumer mutating the arrays.
         onClick={() => props.onSelect?.(key)}
+        onKeyDown={(e) => onRowKeyDown(e, key)}
+        onFocus={() => setActiveKey(key)}
       >
         <span class="sui-sql__marker" aria-hidden="true">
           {kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
@@ -1057,19 +1134,32 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         height: props.topOnly ? undefined : `${height()}px`,
       }}
     >
+      {/* Off-screen live region: announces the queue counts to assistive tech as
+          items resolve/unresolve (the visual counts are otherwise silent). */}
+      <div class="sui-sql__sr-status" aria-live="polite" aria-atomic="true">
+        {`${resolvedItems().length} ${props.resolvedLabel ?? "Resolved"}, ` +
+          `${unresolvedItems().length} ${props.unresolvedLabel ?? "Unresolved"}`}
+      </div>
+
       {/* TOP — resolved ("categorized"). Content-driven height between a 1-row
           floor and a 3-row cap; absorbs slack when the bottom is short. Sized
           explicitly from the JS layout (each pane includes its own header). */}
       <ul
         ref={topListEl}
         class="sui-sql__list sui-sql__list--top"
+        role="listbox"
+        aria-label={props.resolvedLabel ?? "Resolved"}
         style={{
           height: props.topOnly
             ? `${topOnlyHeight()}px`
             : `${layout().topHeight}px`,
         }}
       >
-        <li ref={headerProbeEl} class="sui-sql__header sui-sql__header--top">
+        <li
+          ref={headerProbeEl}
+          role="presentation"
+          class="sui-sql__header sui-sql__header--top"
+        >
           <span>{props.resolvedLabel ?? "Resolved"}</span>
           <span class="sui-sql__count">{resolvedItems().length}</span>
         </li>
@@ -1085,18 +1175,23 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
             scrolls when overfull; collapses to the "all clear" strip when empty. */}
         <ul
           class="sui-sql__list sui-sql__list--bottom"
+          role="listbox"
+          aria-label={props.unresolvedLabel ?? "Unresolved"}
           classList={{ "sui-sql__list--collapsed": unresolvedItems().length === 0 }}
           style={{ height: `${layout().bottomHeight}px` }}
         >
           <Show
             when={unresolvedItems().length > 0}
             fallback={
-              <li class="sui-sql__clear">
+              <li role="presentation" class="sui-sql__clear">
                 {props.allClearLabel ?? "All clear — nothing to process"}
               </li>
             }
           >
-            <li class="sui-sql__header sui-sql__header--bottom">
+            <li
+              role="presentation"
+              class="sui-sql__header sui-sql__header--bottom"
+            >
               <span>{props.unresolvedLabel ?? "Unresolved"}</span>
               <span class="sui-sql__count">{unresolvedItems().length}</span>
             </li>
