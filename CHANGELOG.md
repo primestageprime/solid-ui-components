@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.81.0
+
+### Added
+
+- **`SplitQueueList`** — full keyboard operation and screen-reader semantics, with no API changes (existing consumers get this for free). Each pane is now a `role="listbox"` of `role="option"` rows with `aria-selected` reflecting `selectedKey`; a **roving tabindex** keeps exactly one tab stop at a time, **Enter/Space** select the focused row (mirroring a click), and **Arrow Up/Down · Home/End** move focus across both panes as one top-to-bottom sequence. A visually-hidden `aria-live` region announces the resolved/unresolved counts as the queue changes, and rows show a `:focus-visible` ring.
+
+### Changed
+
+- **`SplitQueueList`** — internal refactor, no behavior change. The ~1.2k-line component was split by concern into `flight.ts` (the resolve/unresolve animation engine), `animation.ts` (pure helpers), `keyboard.ts` (roving-tabindex state machine), `types.ts`, and a dedicated `StaticSplitLayout` component (down to a 316-line reactive shell). Forward/reverse flights now share deduped helpers, and `static` mode no longer spins up the FLIP/animation machinery it never used.
+
 ## 0.80.2
 
 ### Fixed
