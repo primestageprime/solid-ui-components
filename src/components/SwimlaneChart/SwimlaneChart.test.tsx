@@ -130,3 +130,86 @@ describe("SwimlaneChart — geometry", () => {
     `);
   });
 });
+
+describe("SwimlaneChart — collapse into summary badges", () => {
+  // A 5-node chain a→b→c→d→e centered on c (col 2) with maxDepth=1 collapses the
+  // two ends (a on the left, e on the right) into side "boundary badges", drawing
+  // dashed summary edges to the pills. Exercises sideBadgePositions (badge
+  // geometry), boundaryBadges (the pill rendering), and the badge-routing
+  // branches of computeEdgeViews.
+  function mountCollapsed() {
+    const ids = ["a", "b", "c", "d", "e"];
+    const nodes = ids.map((id) => ({ id, data: {} }));
+    const edges = [
+      { source: "a", target: "b" },
+      { source: "b", target: "c" },
+      { source: "c", target: "d" },
+      { source: "d", target: "e" },
+    ];
+    const col: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4 };
+    const { container } = render(() => (
+      <SwimlaneChart
+        nodes={nodes}
+        edges={edges}
+        swimlaneFor={(n) => col[n.id]}
+        renderNode={(n) => <div class="probe-node">{n.id}</div>}
+        responsiveCollapse={false}
+        interactive={false}
+        maxDepth={1}
+        centerCol={2}
+      />
+    ));
+    return { container };
+  }
+
+  const badges = (c: Element) =>
+    [...c.querySelectorAll<SVGGElement>(".sui-swimlane__boundary")];
+
+  it("shows only the within-depth nodes and one badge per collapsed side", async () => {
+    const { container } = mountCollapsed();
+    await tick();
+    // Center c ± depth 1 → b, c, d visible; a and e collapse.
+    expect([...nodeWrappers(container)].map((w) => w.textContent).sort()).toEqual([
+      "b",
+      "c",
+      "d",
+    ]);
+    expect(badges(container).length).toBe(2);
+  });
+
+  it("labels each badge with its collapsed count", async () => {
+    const { container } = mountCollapsed();
+    await tick();
+    const texts = [
+      ...container.querySelectorAll(".sui-swimlane__boundary-badge-text"),
+    ].map((t) => t.textContent);
+    expect(texts.sort()).toEqual(["+1", "+1"]); // a on the left, e on the right
+  });
+
+  it("places the two badges on opposite sides of center", async () => {
+    const { container } = mountCollapsed();
+    await tick();
+    const xs = [
+      ...container.querySelectorAll<SVGRectElement>(".sui-swimlane__boundary-badge"),
+    ]
+      .map((r) => parseFloat(r.getAttribute("x") ?? "NaN"))
+      .sort((a, b) => a - b);
+    expect(xs[0]).toBeLessThan(0); // left badge
+    expect(xs[1]).toBeGreaterThan(0); // right badge
+  });
+
+  it("draws dashed summary edges to the badges (characterization lock)", async () => {
+    const { container } = mountCollapsed();
+    await tick();
+    const summaryDs = [
+      ...container.querySelectorAll<SVGPathElement>("path.sui-swimlane__edge--summary"),
+    ].map((p) => p.getAttribute("d"));
+    expect(summaryDs.length).toBe(2);
+    expect(summaryDs).toMatchInlineSnapshot(`
+      [
+        "M -378 0 L -350 0",
+        "M 350 0 L 378 0",
+      ]
+    `);
+  });
+});
