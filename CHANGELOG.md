@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 0.82.1
+
+### Changed
+
+- **`Table` cell renderers** — internal refactor, no API change. The 880-line `CellRenderers.tsx` was split by concern into sibling modules (`cellStyle`, `textCells`, `numericCells`, `dateCells`, `statusCells`, `createCellRenderer`) re-exported through an unchanged barrel, so every import keeps working. Added direct smoke-test coverage for all cell renderers, the styling HOCs, and the column factory (previously untested).
+- **`ExtractionBoard`** — internal refactor, no API change. The presentational card vocabulary (columns, cards, bars, badges) moved out of the 737-line component into a self-contained `cards.tsx`, leaving the orchestrator at 407 lines.
+
 ## 0.82.0
 
 ### Added
