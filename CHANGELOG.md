@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.83.1
+
+### Changed
+
+- **`SwimlaneChart`** — internal refactor, no API change. All the chart's pure geometry (edge routing, side/boundary badges, per-edge ports, and the content-bounds/viewBox aggregation) moved out of the 1000-line component into a dedicated, independently-tested `geometry.ts`; each component memo is now a thin wrapper. Adds the component's first test coverage — headless characterization suites (node/edge geometry, column positioning, routing styles, collapse-into-summary badges) plus direct unit tests for the bounds math. Component 1013 → 649 lines; behavior is unchanged (edge-path geometry is byte-identical under snapshot).
+
 ## 0.83.0
 
 ### Added
