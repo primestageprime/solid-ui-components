@@ -4,5 +4,8 @@
 export { SplitQueueList } from "./SplitQueueList";
 export type { SplitQueueListProps } from "./SplitQueueList";
 
+export { StaticSplitLayout } from "./StaticSplitLayout";
+export type { StaticSplitLayoutProps } from "./types";
+
 export { computeSplitLayout } from "./layout";
 export type { SplitLayout, SplitLayoutInput } from "./layout";

@@ -38,24 +38,23 @@ export interface SplitQueueListProps<T> {
   unresolvedLabel?: string;
   /** Copy for the collapsed strip when nothing is left to process. */
   allClearLabel?: JSX.Element;
-  /** STATIC mode — a non-animated "two stacked labeled sections with a seam"
-   * layout. There is no processing queue, no resolve/unresolve animation, and no
-   * array diffing: the TOP section is a read-only list rendered from `topItems`
-   * via `renderTop` (falls back to `resolved`/`renderItem` when omitted), and the
-   * BOTTOM section is arbitrary `bottomContent` children. Use this when you want
-   * SplitQueueList's framing (labeled top section + seam + bottom section, all in
-   * the house style) around a top list of recent items and a bottom block you
-   * compose yourself. The top section scrolls within `topCapRows`; the bottom
-   * takes the remaining space and scrolls. Default false (the animated queue). */
+  /**
+   * @deprecated Use the standalone {@link StaticSplitLayoutProps | StaticSplitLayout}
+   * component instead. `static` gates a completely different, non-animated layout
+   * behind a boolean, leaving the queue-only and static-only props all optional and
+   * mutually mixable; the dedicated component makes the invalid combinations
+   * unrepresentable. This flag still works (it delegates to StaticSplitLayout) and
+   * will be removed in the next major.
+   */
   static?: boolean;
-  /** STATIC mode only — items for the read-only TOP section. Falls back to
-   * `resolved` when omitted. */
+  /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Items for
+   * the read-only TOP section; falls back to `resolved` when omitted. */
   topItems?: T[];
-  /** STATIC mode only — render a TOP item's content. Falls back to `renderItem`
-   * when omitted. */
+  /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Renders a
+   * TOP item's content; falls back to `renderItem` when omitted. */
   renderTop?: (item: T) => JSX.Element;
-  /** STATIC mode only — arbitrary content for the BOTTOM section (nested as-is
-   * below the seam). */
+  /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Arbitrary
+   * content for the BOTTOM section (nested as-is below the seam). */
   bottomContent?: JSX.Element;
   /** Soft cap on the top (resolved) pane, in rows. Beyond this the top pane
    * scrolls with the newest row pinned at the seam. Default 3. */
@@ -76,5 +75,37 @@ export interface SplitQueueListProps<T> {
    * skipped (there is no bottom list). Default false (full two-panel layout,
    * baseline behavior unchanged). */
   topOnly?: boolean;
+  class?: string;
+}
+
+/**
+ * Props for {@link StaticSplitLayout} — a non-animated "two stacked labeled
+ * sections with a seam" layout: a read-only TOP list of recent items over an
+ * arbitrary BOTTOM block you compose. It shares SplitQueueList's chrome (labeled
+ * top section + seam + bottom section, house style) but none of the queue
+ * machinery — no resolve/unresolve animation, no selection, no keyboard. Use it
+ * when you want that framing around a list of recent items and a bottom block.
+ *
+ * A dedicated component (rather than a `static` flag on SplitQueueList) so the
+ * queue-only and static-only props can't be mixed — invalid combinations are
+ * unrepresentable.
+ */
+export interface StaticSplitLayoutProps<T> {
+  /** Items for the read-only TOP section (recent / done), oldest first. */
+  items?: T[];
+  /** Render a TOP item's content. */
+  renderItem?: (item: T) => JSX.Element;
+  /** Arbitrary content for the BOTTOM section, nested as-is below the seam. */
+  bottomContent?: JSX.Element;
+  /** Header label for the TOP section. Default "Resolved". */
+  label?: string;
+  /** Copy shown in the TOP section when `items` is empty. Default "Nothing yet". */
+  emptyLabel?: JSX.Element;
+  /** Soft cap on the TOP section, in rows; beyond it the section scrolls. Default 3. */
+  capRows?: number;
+  /** Per-row height in px (initial estimate; the real height is measured). Default 40. */
+  rowHeight?: number;
+  /** Total height in px. Omit to fill the parent. */
+  height?: number;
   class?: string;
 }

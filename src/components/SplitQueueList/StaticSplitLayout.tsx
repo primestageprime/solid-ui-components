@@ -9,20 +9,19 @@
  * the flight engine ever spins up. */
 import { For, JSX, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { Surface } from "../Surface/Surface";
-import type { SplitQueueListProps } from "./types";
+import type { StaticSplitLayoutProps } from "./types";
 import "./SplitQueueList.css";
 
 const DEFAULT_HEADER_HEIGHT = 28;
 
-export function StaticSplitLayout<T>(props: SplitQueueListProps<T>): JSX.Element {
+export function StaticSplitLayout<T>(
+  props: StaticSplitLayoutProps<T>,
+): JSX.Element {
   const rowHeightProp = () => props.rowHeight ?? 40;
-  const topCapRows = () => props.topCapRows ?? 3;
-  const resolvedItems = (): T[] => props.resolved ?? [];
-  const topItems = (): T[] => props.topItems ?? resolvedItems();
-  const renderItemFn = (item: T): JSX.Element =>
+  const topCapRows = () => props.capRows ?? 3;
+  const topItems = (): T[] => props.items ?? [];
+  const renderItem = (item: T): JSX.Element =>
     (props.renderItem ?? (() => null))(item);
-  const renderTop = (item: T): JSX.Element =>
-    (props.renderTop ?? renderItemFn)(item);
 
   let rootEl: HTMLDivElement | undefined;
   let headerProbeEl: HTMLLIElement | undefined;
@@ -77,7 +76,7 @@ export function StaticSplitLayout<T>(props: SplitQueueListProps<T>): JSX.Element
       <ul
         class="sui-sql__list sui-sql__list--top"
         role="list"
-        aria-label={props.resolvedLabel ?? "Resolved"}
+        aria-label={props.label ?? "Resolved"}
         style={{
           "max-height": `${headerHeight() + topCapRows() * rowHeight()}px`,
         }}
@@ -87,14 +86,14 @@ export function StaticSplitLayout<T>(props: SplitQueueListProps<T>): JSX.Element
           role="presentation"
           class="sui-sql__header sui-sql__header--top"
         >
-          <span>{props.resolvedLabel ?? "Resolved"}</span>
+          <span>{props.label ?? "Resolved"}</span>
           <span class="sui-sql__count">{topItems().length}</span>
         </li>
         <Show
           when={topItems().length > 0}
           fallback={
             <li role="presentation" class="sui-sql__clear">
-              {props.allClearLabel ?? "Nothing yet"}
+              {props.emptyLabel ?? "Nothing yet"}
             </li>
           }
         >
@@ -104,7 +103,7 @@ export function StaticSplitLayout<T>(props: SplitQueueListProps<T>): JSX.Element
                 <span class="sui-sql__marker" aria-hidden="true">
                   ✓
                 </span>
-                <span class="sui-sql__content">{renderTop(item)}</span>
+                <span class="sui-sql__content">{renderItem(item)}</span>
               </li>
             )}
           </For>

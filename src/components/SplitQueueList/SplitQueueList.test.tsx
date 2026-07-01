@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { SplitQueueList } from "./SplitQueueList";
+import { StaticSplitLayout } from "./StaticSplitLayout";
 
 afterEach(cleanup);
 
@@ -727,6 +728,65 @@ describe("SplitQueueList — resolved row background fades in on arrival", () =>
       ".sui-sql__list--top .sui-sql__row--arriving",
     );
     expect(rows.length).toBe(0);
+  });
+});
+
+describe("StaticSplitLayout — standalone non-animated layout", () => {
+  it("renders the labeled top list, bottom content, and count", () => {
+    const { container } = render(() => (
+      <StaticSplitLayout<Item>
+        items={seed(2)}
+        renderItem={(i) => <span>{i.id}</span>}
+        label="Recent"
+        bottomContent={<div class="bottom-probe">picker</div>}
+      />
+    ));
+    const top = container.querySelector(".sui-sql__list--top")!;
+    expect(top.getAttribute("aria-label")).toBe("Recent");
+    expect(top.querySelector(".sui-sql__header")?.textContent).toContain("Recent");
+    expect(top.querySelector(".sui-sql__count")?.textContent).toBe("2");
+    const rows = container.querySelectorAll(".sui-sql__list--top .sui-sql__row");
+    expect([...rows].map((r) => r.textContent?.replace(/\s/g, ""))).toEqual([
+      "✓k1",
+      "✓k2",
+    ]);
+    expect(container.querySelector(".bottom-probe")?.textContent).toBe("picker");
+  });
+
+  it("shows the empty label when there are no items", () => {
+    const { container } = render(() => (
+      <StaticSplitLayout<Item>
+        items={[]}
+        renderItem={(i) => <span>{i.id}</span>}
+        emptyLabel="All caught up"
+      />
+    ));
+    expect(container.querySelector(".sui-sql__clear")?.textContent).toBe(
+      "All caught up",
+    );
+  });
+});
+
+describe("SplitQueueList — deprecated `static` delegates to StaticSplitLayout", () => {
+  it("renders the static layout (mapping topItems/renderTop/bottomContent)", () => {
+    const { container } = render(() => (
+      <SplitQueueList<Item>
+        static
+        topItems={seed(2)}
+        renderTop={(i) => <span>{i.id}</span>}
+        resolvedLabel="Done"
+        bottomContent={<div class="legacy-bottom">form</div>}
+      />
+    ));
+    // The static chrome renders (top list + seam + static bottom); the animated
+    // queue's listbox/option roles are absent (no queue machinery ran).
+    expect(container.querySelector(".sui-sql--static")).toBeTruthy();
+    expect(
+      container.querySelector(".sui-sql__list--top")?.getAttribute("aria-label"),
+    ).toBe("Done");
+    expect(container.querySelectorAll(".sui-sql__list--top .sui-sql__row").length).toBe(2);
+    expect(container.querySelector(".legacy-bottom")?.textContent).toBe("form");
+    expect(container.querySelector('[role="option"]')).toBeNull();
   });
 });
 

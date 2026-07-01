@@ -54,9 +54,21 @@ const SEAM_HEIGHT = 2;
  * two-section layout) before any of the queue machinery below is set up.
  */
 export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
-  // STATIC mode is a separate concern (no queue, no animation); hand off before
-  // the flight engine / keyboard / measurement below ever run.
-  if (props.static) return StaticSplitLayout(props);
+  // STATIC mode is a separate concern (no queue, no animation) and now a
+  // standalone component; the deprecated `static` flag maps the old prop names
+  // onto it and hands off before the flight engine / keyboard / measurement run.
+  if (props.static)
+    return StaticSplitLayout({
+      items: props.topItems ?? props.resolved,
+      renderItem: props.renderTop ?? props.renderItem,
+      bottomContent: props.bottomContent,
+      label: props.resolvedLabel,
+      emptyLabel: props.allClearLabel,
+      capRows: props.topCapRows,
+      rowHeight: props.rowHeight,
+      height: props.height,
+      class: props.class,
+    });
 
   // Internal accessors so the animated queue can read the (now optional) data
   // props safely. The animated path requires them; `static` mode ignores them.
