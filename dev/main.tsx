@@ -78,6 +78,7 @@ import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
+import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
@@ -551,6 +552,12 @@ const items: Item[] = [
     label: "SortableList",
     component: SortableListShowcase,
     tags: ["depth:1", "list", "form", "container"],
+  },
+  {
+    id: "action-list",
+    label: "ActionList",
+    component: ActionListShowcase,
+    tags: ["depth:3", "list", "data"],
   },
   {
     id: "mutable-list",

@@ -635,6 +635,30 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
     />
     ```
 
+## ActionList
+The ActionList family — a drop-in editable action-row list, graduated from the ListItem workshop bench. Bench visuals/behavior are final; extraction is pixel-faithful. Depth 3 `ActionList` composes SortableList + the Depth-2 `ActionListItem`, which composes four Depth-1 primitives. All row text rides one thematic foreground (`--sui-accent` / `currentColor`).
+
+- **ActionList** — Composite (Depth 3). Owns no CSS; composes `SortableList` (`rowChrome="bare"`, `gap={1}`) + `ActionListItem`. A data-driven list of editable rows (todo queues, filter results, work items). Curried via `createActionList` with a single presentational override `statusTones` (the status→row-tone map), following the `createButton`/`createPanel` Overrides/DataProps split; the exported **`ActionList`** variant bakes the default tones (`{ DONE: "dim", DOING: "highlight" }`, neutral fallback) so app call sites are data-only. Each callback opts a behavior in: `onSort` → drag reorder, `onDelete` → the × cap, `onRename` → inline title edit, `onStatusChange` → chip edit/select; omit one and that affordance is inert. Key data props: `items: ActionListItemData[]` (`{ id, name, status?, assignee?, tags? }`), `statusOptions?`, `onSort?`, `onDelete?`, `onRename?`, `onStatusChange?`, `label?`. Types: `ActionListTag` (`{ label, active? }` where a `":"` in the label splits, or `{ key, value, active? }`), `ActionListAssignee` (`{ initials, kind?: "person"|"ai", active? }`). Use for: dense editable item lists where each row carries a status, assignee, tags, and inline rename.
+  - Example:
+    ```tsx
+    import { ActionList } from "solid-ui-components";
+
+    <ActionList
+      items={tasks()}                                  // { id, name, status?, assignee?, tags? }[]
+      statusOptions={["TODO", "DOING", "BLOCKED", "DONE"]}
+      onSort={(ids) => setTasks(reorder(tasks(), ids))}
+      onDelete={(id) => setTasks((t) => t.filter((x) => x.id !== id))}
+      onRename={(id, name) => setTasks((t) => t.map((x) => x.id === id ? { ...x, name } : x))}
+      onStatusChange={(id, status) => setTasks((t) => t.map((x) => x.id === id ? { ...x, status } : x))}
+      label="Task list"
+    />
+    ```
+- **ActionListItem** — Composite (Depth 2). Owns `ActionListItem.css` as a deliberate Depth-2 exception (structural row geometry only: flex layout, transparent-border hover outline that lights with zero geometry shift, tone opacity, the flipped semicircle dismiss cap with negative margins). The row `[StatusChip][EditableTitle][meta: AssigneeIcon, TagPills, dismiss ×]`. `tone` (`"dim"`/0.25 | `"neutral"`/0.5 | `"highlight"`/1 + chip fill) is a presentational prop supplied by ActionList from its `statusTones` map. INVARIANT: hover reveals via opacity only — never geometry. Key props: `title`, `status?`, `statusOptions?`, `assignee?`, `tags?`, `tone?`, `onStatusChange?`, `onTitleChange?`, `onDismiss?`.
+- **StatusChip** — Atomic Primitive (Depth 1). Owns `StatusChip.css`. Fixed-width (ch of the longest option) editable status chip: centered text, click-text-to-edit inline input, hover-revealed caret opening a select menu, Escape-cancels-without-commit, `highlight` accent fill for the active status. The **editable sibling of `StatusBadge`** (display-only compliance enum) — use StatusBadge to show a status, StatusChip to edit one. Data-only, no curried variant (SortableList exemption). Key props: `status`, `options?`, `onChange?`, `highlight?`, `title`.
+- **EditableTitle** — Atomic Primitive (Depth 1). Owns `EditableTitle.css`. Inert text or hover-underlined click-to-edit title whose inline input is fitted to the rendered text via a hidden inline-grid replica (`::after { content: attr(data-value) }`); Enter/blur commit, Escape cancels via the `cancelled` flag. **Separate from `InlineText`** (a styleless, non-editable `<span>` that only recolors inherited text) because it adds the click-to-edit input + commit/cancel lifecycle. Data-only, no curried variant. Key props: `title`, `onChange?`.
+- **AssigneeIcon** — Atomic Primitive (Depth 1). Owns `AssigneeIcon.css`. The **outline sibling of `ParticipantAvatar`**: where ParticipantAvatar is a filled circular disc for showing who is present, AssigneeIcon is a `currentColor`-driven outline glyph (person silhouette or antennaed robot head) with up-to-2-char centered initials, for showing person/AI assignment. Do NOT modify ParticipantAvatar; the two are distinct roles. `active` is a data class hook. Data-only, no curried variant. Key props: `initials`, `kind?: "person"|"ai"`, `active?`.
+- **TagPill** — Atomic Primitive (Depth 1). Owns `TagPill.css`. Pill tag; a `":"` in the label (or the explicit `{ key, value }` shape) renders as a split lozenge (bold namespace segment, hairline divider, value segment, same colors both sides); `active` adds the accent tint. The **free-text, filter-oriented sibling of `StatusBadge`/`CountChip`** in the Badge family (those encode a fixed enum / a count; TagPill carries an arbitrary label or namespace:value pair). Data-only, no curried variant. Key prop: `tag` (`TagPillData`).
+
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.
