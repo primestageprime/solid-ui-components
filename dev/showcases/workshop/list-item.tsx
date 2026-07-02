@@ -374,6 +374,18 @@ const benchCss = `
   border-color: var(--sui-danger);
   color: var(--sui-danger);
 }
+/* PROMOTION NOTE: SortableList's row wrapper (Surface: 8px 12px padding,
+   border, elevated bg) must not add chrome around ListItem — the row IS the
+   ListItem, so the wrapper would double it. Zero vertical growth; horizontal
+   growth only the grip's slot. !important beats the wrapper's inline padding.
+   Becomes a chromeless-row option on SortableList when this graduates. */
+.ws-bench-stack .sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
+  padding: 0 !important;
+  border: none;
+  background: transparent;
+  gap: 6px;
+}
+
 /* PROMOTION NOTE: grip hover-reveal belongs to SortableList (or a row option)
    when this graduates; bench-scoped override for now. */
 .ws-bench-stack .sui-sortable-list__grip {
