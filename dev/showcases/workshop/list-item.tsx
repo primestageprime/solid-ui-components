@@ -246,6 +246,9 @@ const benchCss = `
   color: var(--sui-text-muted);
   background: var(--sui-bg-tertiary);
   border-right: 1px solid var(--sui-border);
+  /* The namespace acts as the lozenge's heading: same colors, strong weight
+     so it stays legible on the accent-tinted active background. */
+  font-weight: 700;
 }
 .ws-list-item__tag--split.ws-list-item__tag--active .ws-list-item__tag-ns {
   border-right-color: var(--sui-accent);

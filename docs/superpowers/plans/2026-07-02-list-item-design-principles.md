@@ -403,6 +403,12 @@ git commit -m "workshop(list-item): composite company:product tags render as spl
 
 ### Task 6: Status left of the title, fixed width, hover-editable (text edit + select)
 
+> **AMENDMENT (2026-07-02, Peter):** status text must be centered vertically AND
+> horizontally in the chip. Deviations from Step 3's CSS: slot drops
+> `justify-content: space-between`; text/input use `text-align: center`; the
+> caret is absolutely positioned at the chip's right edge (`right: 4px`,
+> vertically centered via transform) so it doesn't skew the centering.
+
 **Files:**
 - Modify: `dev/showcases/workshop/list-item.tsx`
 
