@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## 0.85.1
+
+### Changed
+
+- **Toolchain / dependencies** — no component API or runtime behavior change. Upgraded the build/test toolchain and bumped dependencies:
+  - **TypeScript 5.9 → 6.0.** The config was already modern (`target`/`module` ESNext, `moduleResolution` bundler, `strict`), so only two `tsconfig.json` adjustments were needed: dropped the deprecated `baseUrl` (the unused `~/*` alias still resolves via `paths` under bundler resolution), and added `"types": ["node"]` since 6.0 changed the `types` default from "all `@types/*`" to none. Emitted declarations are byte-identical to the 5.9 output (535 `.d.ts` files).
+  - **vite-plugin-dts 4 → 5**, **katex 0.16 → 0.17**, **@types/node 25 → 26**, plus minor bumps (`solid-js` 1.9.14, `vite` 6.4.3, `vitest` 4.1.9, `@kobalte/core` 0.13.12, `@tanstack/solid-virtual` 3.13.32, `d3-dag` 1.2.1, `vite-plugin-solid` 2.11.12). `jsdom` is intentionally held at 26 — 27 ships an ESM-only CSS engine that breaks vitest's forks pool.
+  - **`katex` is now declared only as a direct `dependency`**, no longer duplicated in `peerDependencies` (it was in both). No action needed by consumers — it remains bundled as before.
+
+### Internal
+
+- **`clamp` helper** consolidated into `src/internal/math/clamp.ts` — replaced two identical local definitions and several inline `Math.max(min, Math.min(max, x))` sites across Dropdown, ScrubChart, SlotFillBar, SplitQueueList, Alarm, BatchBar, and Sidebar. No behavior change.
+- **Test coverage** — added tests for two previously-untested interactive primitives: **Modal** (portal render/teardown, Escape/backdrop/close-button dismissal, body-scroll lock, size/variant classes, `createModal` curry) and **Select** (single/multi value rendering, placeholder, clear button, reactive updates).
+
 ## 0.85.0
 
 ### Changed
