@@ -75,6 +75,9 @@ const ListItem: Component<ListItemProps> = (props) => (
 
 // Scratch CSS for the bench. Graduates to ListItem.css on /promote.
 const benchCss = `
+/* INVARIANT (principle 3): hover reveals via opacity only — never display,
+   width, padding, border-width, or font changes. Row geometry is identical
+   at rest and on hover. */
 .ws-list-item {
   display: flex;
   align-items: center;
