@@ -137,10 +137,25 @@ const benchCss = `
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.ws-list-item:hover .ws-list-item__dismiss,
+.ws-list-item__dismiss:focus-visible {
+  opacity: 1;
 }
 .ws-list-item__dismiss:hover {
   border-color: var(--sui-danger);
   color: var(--sui-danger);
+}
+/* PROMOTION NOTE: grip hover-reveal belongs to SortableList (or a row option)
+   when this graduates; bench-scoped override for now. */
+.ws-bench-stack .sui-sortable-list__grip {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.ws-bench-stack .sui-sortable-list__row:hover .sui-sortable-list__grip {
+  opacity: 0.45;
 }
 .ws-bench-stack {
   display: flex;
