@@ -143,6 +143,11 @@ const StatusChip: Component<{
   return (
     <span
       class="ws-list-item__status-slot"
+      classList={{
+        // Tone follows the VALUE (data-driven): DONE recedes, DOING pops.
+        "ws-list-item__status-slot--dim": props.status === "DONE",
+        "ws-list-item__status-slot--highlight": props.status === "DOING",
+      }}
       style={{ width: `${widthCh()}ch` }}
     >
       <Show
@@ -478,6 +483,15 @@ const benchCss = `
   color: var(--sui-text-muted);
   line-height: 1.5;
   white-space: nowrap;
+}
+/* Value-driven tones: DONE recedes, TODO stays neutral, DOING pops. */
+.ws-list-item__status-slot--dim {
+  opacity: 0.45;
+}
+.ws-list-item__status-slot--highlight {
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+  background: rgba(var(--sui-accent-rgb), 0.12);
 }
 .ws-list-item__status-text,
 .ws-list-item__status-input {
