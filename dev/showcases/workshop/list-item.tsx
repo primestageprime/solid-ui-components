@@ -12,9 +12,8 @@ export const meta = { label: "List Item" };
 // results, pick lists). Everything is a DATA prop — no size/variant/tone at
 // the call site. Slots, left → right:
 //
-//   [index.]  title ............... [avatar] [tag pills] [status] [dismiss ×]
+//   title ..................... [avatar] [tag pills] [status] [dismiss ×]
 //
-// - `index`    ordinal, muted; omit to hide.
 // - `title`    the one required prop.
 // - `avatar`   initials + optional color disc (SmAvatar underneath).
 // - `tags`     pills; `active` marks a pill as matched/highlighted (e.g. the
