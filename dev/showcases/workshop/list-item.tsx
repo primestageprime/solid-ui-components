@@ -82,6 +82,8 @@ const StatusChip: Component<{
 }> = (props) => {
   const [editing, setEditing] = createSignal(false);
   const [menuOpen, setMenuOpen] = createSignal(false);
+  // Escape cancels: the resulting blur must not commit the draft.
+  let cancelled = false;
   const options = () => props.options ?? [];
   // Fixed width: longest option (or current status), in ch of the mono font.
   const widthCh = () =>
@@ -104,10 +106,17 @@ const StatusChip: Component<{
             class="ws-list-item__status-input"
             value={props.status}
             ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
-            onBlur={(e) => commit(e.currentTarget.value)}
+            onBlur={(e) => {
+              if (!cancelled) commit(e.currentTarget.value);
+              cancelled = false;
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") commit(e.currentTarget.value);
-              if (e.key === "Escape") setEditing(false);
+              if (e.key === "Escape") {
+                cancelled = true;
+                e.currentTarget.blur();
+                setEditing(false);
+              }
             }}
           />
         }
@@ -165,6 +174,9 @@ const EditableTitle: Component<{
 }> = (props) => {
   const [editing, setEditing] = createSignal(false);
   const [draft, setDraft] = createSignal("");
+  // Escape cancels: blur must NOT commit the draft. The blur fired by the
+  // cancel's own focus-out (or the input unmounting) checks this flag.
+  let cancelled = false;
   const commit = (value: string) => {
     setEditing(false);
     const v = value.trim();
@@ -184,10 +196,17 @@ const EditableTitle: Component<{
               size={1}
               ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
               onInput={(e) => setDraft(e.currentTarget.value)}
-              onBlur={(e) => commit(e.currentTarget.value)}
+              onBlur={(e) => {
+                if (!cancelled) commit(e.currentTarget.value);
+                cancelled = false;
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") commit(e.currentTarget.value);
-                if (e.key === "Escape") setEditing(false);
+                if (e.key === "Escape") {
+                  cancelled = true;
+                  e.currentTarget.blur();
+                  setEditing(false);
+                }
               }}
             />
           </span>
