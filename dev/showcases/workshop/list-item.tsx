@@ -175,18 +175,22 @@ const EditableTitle: Component<{
       <Show
         when={!editing()}
         fallback={
-          <input
-            class="ws-list-item__title-input"
-            value={props.title}
-            style={{ width: `${Math.max(draft().length, 1) + 2}ch` }}
-            ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
-            onInput={(e) => setDraft(e.currentTarget.value)}
-            onBlur={(e) => commit(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit(e.currentTarget.value);
-              if (e.key === "Escape") setEditing(false);
-            }}
-          />
+          /* inline-grid + hidden ::after replica of the draft — the input is
+             fitted to the text's true rendered width, not a ch estimate. */
+          <span class="ws-list-item__title-editor" data-value={draft()}>
+            <input
+              class="ws-list-item__title-input"
+              value={props.title}
+              size={1}
+              ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
+              onInput={(e) => setDraft(e.currentTarget.value)}
+              onBlur={(e) => commit(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commit(e.currentTarget.value);
+                if (e.key === "Escape") setEditing(false);
+              }}
+            />
+          </span>
         }
       >
         <button
@@ -285,17 +289,33 @@ const benchCss = `
   text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
+/* Fitted editor: a hidden replica of the draft text sizes the grid cell, so
+   the input is exactly as wide as its content (same font, live per keystroke). */
+.ws-list-item__title-editor {
+  display: inline-grid;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.ws-list-item__title-editor::after {
+  content: attr(data-value) " ";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+  overflow: hidden;
+}
 .ws-list-item__title-input {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 1ch;
   font: inherit;
   color: inherit;
   background: transparent;
   border: none;
   padding: 0;
-  max-width: 100%;
   outline: 1px solid var(--sui-accent);
   outline-offset: 1px;
   border-radius: 2px;
-  vertical-align: middle;
 }
 .ws-list-item__meta {
   display: flex;
