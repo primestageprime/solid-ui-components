@@ -281,7 +281,15 @@ const EditableTitle: Component<{
 };
 
 const ListItem: Component<ListItemProps> = (props) => (
-  <div class="ws-list-item" role="listitem">
+  <div
+    class="ws-list-item"
+    classList={{
+      // Row tone mirrors the status: DONE recedes, DOING pops, TODO neutral.
+      "ws-list-item--dim": props.status === "DONE",
+      "ws-list-item--highlight": props.status === "DOING",
+    }}
+    role="listitem"
+  >
     <Show when={props.status}>
       <StatusChip
         status={props.status!}
@@ -625,6 +633,32 @@ const benchCss = `
 }
 .ws-bench-stack .sui-sortable-list__row:hover .sui-sortable-list__grip {
   opacity: 0.45;
+}
+/* Row tone mirrors the status chip: DONE dims the text and right-side chips,
+   DOING lights them accent, TODO stays neutral. */
+.ws-list-item--dim .ws-list-item__title,
+.ws-list-item--dim .ws-list-item__meta {
+  opacity: 0.45;
+}
+.ws-list-item--highlight .ws-list-item__title {
+  color: var(--sui-accent);
+}
+.ws-list-item--highlight .ws-list-item__tag {
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+  background: rgba(var(--sui-accent-rgb), 0.12);
+}
+.ws-list-item--highlight .ws-list-item__tag-ns {
+  border-right-color: var(--sui-accent);
+}
+.ws-list-item--highlight .ws-list-item__assignee svg {
+  stroke: var(--sui-accent);
+}
+.ws-list-item--highlight .ws-list-item__assignee svg circle.dot {
+  fill: var(--sui-accent);
+}
+.ws-list-item--highlight .ws-list-item__assignee svg text {
+  fill: var(--sui-accent);
 }
 .ws-bench-stack {
   display: flex;
