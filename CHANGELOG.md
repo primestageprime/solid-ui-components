@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.85.2
+
+### Internal
+
+- **Test coverage** — no component API or runtime behavior change; a sweep adding tests to previously-untested components (149 new tests across the 0.85.x line; suite now 1351). Newly covered: **Modal**, **Select**, **TagInput**, **DateRangePicker** (+ its `calendarUtils` TZ-aware date math), **MultiSelectFilter**, **Heatmap**/**HeatmapMulti**, **WeekCalendar** (+ `parseWeekCalendarTime`), **Treemap**, **ProductGrid** (+ `isSolutionSatisfied` and the solution→need cross-highlighting), **ConversationTree** (grouping/threading/dividers), **HeatStream**, and **SidebarSelector** (+ `EpisodeCard`/`EpisodeSelection`). Also added a unit test for the shared `clamp` helper.
+
 ## 0.85.1
 
 ### Changed
