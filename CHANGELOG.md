@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## 0.85.3
+
+### Fixed
+
+- **CashflowScrubChart** — the per-instance SVG `clipPath` id is now generated with Solid's `createUniqueId` (the mechanism **Chart** already uses) instead of `Math.random`, making it deterministic across server/client renders (no hydration-mismatch risk). No visual change.
+
+### Internal
+
+- **Shared chart helpers** — duplicated chart arithmetic consolidated into `src/internal/` (not re-exported from the public barrel; `dist/index.d.ts` byte-identical):
+  - `internal/geometry/insetSpan` — the 1D "inset a total extent by leading/trailing amounts" plot-region identity previously recomputed by hand in **Chart** (`innerWidth`/`innerHeight`), **ScrubChart** (both plot-span triples), and **CashflowChart** (all `PAD` edge arithmetic, now routed through two span accessors).
+  - `internal/format/number` — `formatGroupedNumber` + `formatCompactNumber` ("3.4k" / "1.2M"), the en-US grouping policy that appeared verbatim five times across the **ScrubChart** / **CashflowScrubChart** helpers (`defaultFormatY`, `fmtDollars`, `fmtAxisDollars`). Near-miss formatters with observably different output (**ThroughputChart**, **CompletionTimeline**, **CashflowChart**'s `formatDollars`) were deliberately left untouched — unifying them would be a visual change; they're catalogued in the module header.
+- **Oversized-module splits** — no import-specifier, API, or behavior change; `src` now has no file over the repo's ~500-line guideline:
+  - `internal/animation/trajectories.ts` (883 lines) → a `trajectories/` directory of 8 concern-sized modules (primitives, timing, math, slurp morph, layout snapshot, per-card builders, top-level builders, barrel).
+  - `SwimlaneChart/geometry.ts` (643) → a `geometry/` directory with one module per `compute*` function (edge views, side badges, port assignments, boundary badges, view bounds) plus shared input types.
+  - `SplitQueueList/flight.ts` (690) → a 229-line reactive controller plus `play.ts` (the forward/reverse flight orchestrators), `flip.ts` (FLIP snapshot), and `arrival.ts` (arrival bg-fade), split along the file's existing reactive-shell vs imperative-engine seam; the controller keeps sole ownership of the shared scroll lock (flights write it only through an injected setter).
+
 ## 0.85.2
 
 ### Internal
