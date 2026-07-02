@@ -108,8 +108,9 @@ export const ScrubChartShowcase: Component = () => {
         <h3>Base ScrubChart — daily cashflow line</h3>
         <p class="text-meta">
           Chart shows the full {cells.length}-day running-balance curve; the
-          axis below is scrollable at 40-px cells. The amber dot anchors the
-          selected day's exact balance value inside the window.
+          axis below is horizontally scrollable, one content-sized day-cell per
+          day. The amber dot anchors the selected day's exact balance value
+          inside the window.
         </p>
 
         <ScrubChart<CashflowCell>

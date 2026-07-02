@@ -45,8 +45,9 @@ export interface DateAxisProps<C extends Cell = Cell> {
   cells: C[];
   /**
    * Index of the selected cell. When provided, the axis scrolls smoothly so
-   * the selected cell sits at the centre of the viewport (unless the user is
-   * actively panning manually).
+   * the selected cell sits at the centre of the viewport — clamped at the
+   * range ends, so the first/last cell pins to the left/right edge rather than
+   * centring. Suppressed while the user is actively panning manually.
    */
   selected?: number;
   /**
@@ -55,8 +56,13 @@ export interface DateAxisProps<C extends Cell = Cell> {
    */
   today?: Date;
   /**
-   * Width in pixels of each default cell. Default 40. Ignored when `renderCell`
-   * returns a self-sized element.
+   * Width in pixels of the DEFAULT cell chrome only. Default 40. Custom
+   * `renderCell` content is self-sized (`width: auto`), so the rendered cell
+   * may be wider or narrower than this — that is expected and supported. The
+   * axis never trusts `cellWidth` for scroll math: it measures the real
+   * per-cell width from its own layout (scrollWidth / cell count) to drive
+   * recentre-on-select and the sticky month/year labels. So `cellWidth` and the
+   * actual rendered width can diverge safely.
    */
   cellWidth?: number;
   /** Called when a cell is clicked or activated via Enter / Space. */
