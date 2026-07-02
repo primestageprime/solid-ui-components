@@ -7,6 +7,7 @@
  */
 import { For, Show, type JSX } from "solid-js";
 import { splitProps } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import type { BaseTableProps, TableColumn } from "./types";
 import { getCellValue } from "./types";
@@ -169,7 +170,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                       style={{
                         "min-height": `${rowHeight()}px`,
                         "border-bottom": "1px solid rgba(74,106,128,0.15)",
-                        cursor: local.onRowClick ? "pointer" : undefined,
+                        ...clickableCursor(!!local.onRowClick),
                         ...(local.striped && virtualRow.index % 2 === 1
                           ? { background: "rgba(var(--sui-accent-rgb), 0.02)" }
                           : {}),

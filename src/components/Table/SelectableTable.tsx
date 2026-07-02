@@ -16,6 +16,7 @@ import {
   onMount,
   onCleanup,
 } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import {
   type SelectableTableProps,
   type TableRow,
@@ -240,7 +241,7 @@ export function SelectableTable<T extends TableRow>(
                 <tr
                   class={`hud-table__row ${isRowSelected(row) ? "hud-table__row--selected" : ""} ${local.getRowClass?.(row, rowIndex()) || ""}`}
                   onClick={(e) => handleRowClick(row, rowIndex(), e)}
-                  style={local.onRowClick ? { cursor: "pointer" } : undefined}
+                  style={clickableCursor(!!local.onRowClick)}
                 >
                   <td class="hud-table__cell hud-table__cell--checkbox">
                     <label

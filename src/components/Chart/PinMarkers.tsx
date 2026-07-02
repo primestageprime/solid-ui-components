@@ -13,6 +13,7 @@ import {
   mergeProps,
   onCleanup,
 } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import { useChart } from "./context";
 import { DEFAULT_GLYPH_SIZE, ShapeGlyph, type Descriptor } from "./shapes";
 import {
@@ -199,7 +200,7 @@ export function PinMarkers<TPin extends Pin = Pin>(
               onDblClick={(e) => merged.onDelete?.(pin, e)}
               onPointerEnter={(e) => merged.onHover?.(pin, e)}
               onPointerLeave={(e) => merged.onHover?.(null, e)}
-              style={{ cursor: merged.onClick ? "pointer" : undefined }}
+              style={clickableCursor(!!merged.onClick)}
             >
               <Show
                 when={merged.renderPin}

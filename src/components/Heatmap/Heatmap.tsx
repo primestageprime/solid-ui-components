@@ -6,6 +6,7 @@
 // Grid cells with status colors, legends, tooltips.
 // ============================================
 import { type Component, type JSX, splitProps, For, Show } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import "./Heatmap.css";
 
 export type HeatmapCellStatus = "full" | "partial" | "missing" | "empty";
@@ -107,9 +108,7 @@ export const Heatmap: Component<HeatmapProps> = (props) => {
                           local.onCellClick?.(row.id, cell.id);
                         }
                       }}
-                      style={
-                        local.onCellClick ? { cursor: "pointer" } : undefined
-                      }
+                      style={clickableCursor(!!local.onCellClick)}
                     />
                   )}
                 </For>
@@ -225,9 +224,7 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
                             local.onCellClick?.(row.id, cell.id);
                           }
                         }}
-                        style={
-                          local.onCellClick ? { cursor: "pointer" } : undefined
-                        }
+                        style={clickableCursor(!!local.onCellClick)}
                       >
                         <For each={local.categoryLabels}>
                           {(category) => {

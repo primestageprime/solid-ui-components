@@ -3,6 +3,7 @@
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
 import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
 
@@ -143,7 +144,7 @@ export function HighlightSegments<
                 onPointerDown={(e) => merged.onClick?.(seg, e)}
                 onPointerEnter={(e) => merged.onHover?.(seg, e)}
                 onPointerLeave={(e) => merged.onHover?.(null, e)}
-                style={{ cursor: merged.onClick ? "pointer" : undefined }}
+                style={clickableCursor(!!merged.onClick)}
               />
             </Show>
           );

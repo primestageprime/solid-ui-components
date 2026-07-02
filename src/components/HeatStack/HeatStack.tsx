@@ -14,6 +14,7 @@ import {
   Show,
   createSignal,
 } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import "./HeatStack.css";
 
 export type HeatStackStatus = "missing" | "partial" | "full" | "unknown";
@@ -140,9 +141,7 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
                             local.onItemClick?.(item.name, key);
                           }
                         }}
-                        style={
-                          local.onItemClick ? { cursor: "pointer" } : undefined
-                        }
+                        style={clickableCursor(!!local.onItemClick)}
                       />
                     );
                   }}

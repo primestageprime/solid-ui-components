@@ -15,6 +15,7 @@ import {
   mergeProps,
 } from "solid-js";
 import type { JSX } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import type { TableColumn, TableRow } from "./types";
 import {
   type BaseTableProps,
@@ -308,9 +309,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                     <tr
                       class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
                       onClick={() => local.onRowClick?.(row, rowIndex())}
-                      style={
-                        local.onRowClick ? { cursor: "pointer" } : undefined
-                      }
+                      style={clickableCursor(!!local.onRowClick)}
                     >
                       <Show
                         when={spanFromIndex() >= 0}

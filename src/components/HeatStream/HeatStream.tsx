@@ -15,6 +15,7 @@ import {
   createSignal,
   onCleanup,
 } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import "./HeatStream.css";
 
 export type HeatStreamStatus =
@@ -227,9 +228,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
                             local.onItemClick?.(item.name, key);
                           }
                         }}
-                        style={
-                          local.onItemClick ? { cursor: "pointer" } : undefined
-                        }
+                        style={clickableCursor(!!local.onItemClick)}
                       />
                     );
                   }}

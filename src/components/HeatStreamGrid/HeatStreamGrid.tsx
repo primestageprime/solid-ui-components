@@ -15,6 +15,7 @@ import {
   Show,
   createMemo,
 } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import { HeatStream, type HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
@@ -215,12 +216,10 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
                             handleClick();
                           }
                         }}
-                        style={
+                        style={clickableCursor(
                           items().length > 0 &&
-                          (selectable() || local.onCellClick)
-                            ? { cursor: "pointer" }
-                            : undefined
-                        }
+                            (selectable() || !!local.onCellClick),
+                        )}
                       >
                         <Show when={items().length > 0}>
                           <HeatStream

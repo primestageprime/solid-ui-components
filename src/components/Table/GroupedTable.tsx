@@ -6,6 +6,7 @@
 // Table with rowspan grouping for merged cells.
 // ============================================
 import { type JSX, For, Show, createMemo } from "solid-js";
+import { clickableCursor } from "../../internal/style/clickable";
 import { type TableRow, getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
 
@@ -147,7 +148,7 @@ export function GroupedTable<T extends TableRow>(props: GroupedTableProps<T>) {
                 <tr
                   class={`hud-table__row ${props.getRowClass?.(row.data, rowIndex()) || ""}`}
                   onClick={() => props.onRowClick?.(row.data, rowIndex())}
-                  style={props.onRowClick ? { cursor: "pointer" } : undefined}
+                  style={clickableCursor(!!props.onRowClick)}
                 >
                   <For each={props.columns}>
                     {(column) => {
