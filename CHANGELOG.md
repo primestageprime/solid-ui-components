@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.86.0
+
 ### Added
 
 - **CashflowScrubChart** — `CashflowChartMarker` gains `variant?: "flag" | "rule"` and `label?: string`. The default `"flag"` is the existing clickable instance marker (flag + dashed drop-rule + dot). The new `"rule"` renders a non-interactive full-height dotted reference rule with its label always visible at the plot top — for marking a date like "Today" rather than a selectable instance. No change for existing callers.
