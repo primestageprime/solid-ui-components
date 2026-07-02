@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`ActionList`** — multi-select. Passing `actions: ActionListAction[]` (`{ hotkey, label, onApply(selectedIds) }`) turns each row's non-interactive area into a click-to-toggle selection target and reveals an actions bar while the selection is non-empty. Clicks on a row's inner controls (title editor, status chip, dismiss ×) never toggle, so selection doesn't fight inline editing or drag-to-reorder. Selected rows light a persistent accent border + subtle accent wash (colour-only — geometry-stable, like hover). Each action renders as a reused `HotkeyButton` (the `[c]laim` affordance); pressing the bracketed hotkey or clicking the button applies it to the selected ids and then clears the selection. Escape clears the selection (unless an inline editor is focused). Selection is uncontrolled and observed via `onSelectionChange`. `ActionListItem` gains `selected?` / `onSelect?`; `HotkeyButton` now exports `isEditableTarget`.
+
 ## 0.87.0
 
 ### Added

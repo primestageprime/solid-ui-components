@@ -97,6 +97,22 @@ export const ActionListShowcase: Component = () => {
   const rename = (id: string, name: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, name } : t)));
 
+  // Multi-select batch actions. Claim assigns the row to a person (P); release
+  // clears the assignee. Both operate on the current selection; ActionList
+  // clears the selection after either fires.
+  const claim = (ids: string[]) =>
+    setTasks((ts) =>
+      ts.map((t) =>
+        ids.includes(t.id)
+          ? { ...t, assignee: { initials: "P", kind: "person", active: true } }
+          : t,
+      ),
+    );
+  const release = (ids: string[]) =>
+    setTasks((ts) =>
+      ts.map((t) => (ids.includes(t.id) ? { ...t, assignee: undefined } : t)),
+    );
+
   return (
     <div class="component-section component-section--full">
       <SectionTitle>ActionList — Composite (Depth 3)</SectionTitle>
@@ -157,12 +173,17 @@ export const ActionListShowcase: Component = () => {
         />
       </div>
 
-      <SectionTitle>Working list (drag to reorder, click to edit, × to dismiss)</SectionTitle>
+      <SectionTitle>Working list (drag to reorder, click to edit, × to dismiss, click a row to select)</SectionTitle>
       <MutedBody>
         The 7-task seed (1 DONE, 2 DOING, 4 TODO) inside a sortable ActionList — every
         callback wired to local state. Drag a row to reorder, click the title to
         rename, click the status text to edit or its caret to pick, hover the right
-        edge for the × cap.
+        edge for the × cap. Passing <code>actions</code> also turns each row's
+        non-interactive area into a selection toggle: click rows to select them
+        (clicks on the title, status chip, or × still do their own thing), then use
+        the actions bar — <b>[c]laim</b> assigns them to P, <b>[r]elease</b> clears
+        the assignee. Press the bracketed hotkey to apply, or Escape to clear the
+        selection. Applying an action clears the selection.
       </MutedBody>
       <div style={stackStyle}>
         <ActionList
@@ -172,6 +193,10 @@ export const ActionListShowcase: Component = () => {
           onDelete={del}
           onRename={rename}
           onStatusChange={setStatus}
+          actions={[
+            { hotkey: "c", label: "claim", onApply: claim },
+            { hotkey: "r", label: "release", onApply: release },
+          ]}
           label="Showcase task list"
         />
       </div>
