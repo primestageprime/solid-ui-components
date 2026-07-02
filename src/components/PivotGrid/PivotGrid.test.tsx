@@ -132,7 +132,10 @@ describe("PivotGrid interactivity", () => {
     const { container } = render(() => (
       <PivotGrid
         {...baseProps}
-        cellHref={() => "/x"}
+        // Hash href: this test clicks the anchor, and jsdom throws
+        // "Not implemented: navigation" for non-hash hrefs it tries to follow.
+        // A hash href exercises the same <a>-precedence path without navigating.
+        cellHref={() => "#/x"}
         onCellClick={onCellClick}
       />
     ));
