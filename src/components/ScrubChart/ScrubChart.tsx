@@ -26,7 +26,6 @@
 import {
   type Component,
   type JSX,
-  For,
   Show,
   createEffect,
   createMemo,
@@ -36,212 +35,39 @@ import {
   onMount,
 } from "solid-js";
 import { scaleLinear } from "d3-scale";
-import { DateAxis, type Cell, type DateAxisCellContext } from "../DateAxis";
+import { DateAxis, type Cell } from "../DateAxis";
+import { ScrubChartAxes } from "./ScrubChartAxes";
+import {
+  CADENCE_LADDER,
+  DEFAULT_CELL_WIDTH,
+  DEFAULT_CHART_HEIGHT,
+  DEFAULT_CHART_WIDTH,
+  DEFAULT_X_AXIS_HEIGHT,
+  DEFAULT_X_MAX_TICKS,
+  DEFAULT_Y_TICK_COUNT,
+  Y_LABEL_GAP,
+  defaultFormatX,
+  defaultFormatY,
+  matchesCadence,
+  measureLabelWidth,
+} from "./helpers";
+import type {
+  ResolvedXTickCadence,
+  ScrubChartContext,
+  ScrubChartDataProps,
+  ScrubChartOverrides,
+  ScrubChartProps,
+} from "./types";
 import "./ScrubChart.css";
 
-/** Cadence at which to emit x-axis ticks. Cells whose `start` matches the
- *  cadence's anchor get a labelled tick. `"auto"` picks the finest cadence
- *  whose candidate count fits under `xMaxTicks` — week → month → quarter →
- *  year, falling back to a strided coarsest cadence for very long ranges. */
-export type ScrubChartXTickCadence =
-  | "none"
-  | "auto"
-  | "week"
-  | "month"
-  | "quarter"
-  | "year";
-
-/** Context passed to the consumer's `renderChart`. */
-export interface ScrubChartContext<C extends Cell> {
-  /** Centre x in chart pixels for the cell at `index`. Linear, offset by `plotLeft`. */
-  cellToX(index: number): number;
-  /** [leftX, rightX] in chart pixels for the cell at `index`, offset by `plotLeft`. */
-  cellBounds(index: number): [number, number];
-  /** Width of one cell in chart pixels (`plotWidth / cells.length`). */
-  dayPitch: number;
-  /** Selected cell's index. */
-  selected: number;
-  /** Full cell array, for iteration + payload access. */
-  cells: C[];
-  /** [firstIndex, lastIndex] of cells currently visible in the axis viewport. */
-  windowCells: [number, number];
-  /** [leftX, rightX] in chart pixels covering the visible-window cells, offset by `plotLeft`. */
-  windowBounds: [number, number];
-  /** Full chart frame width in px (includes y-axis margin). */
-  width: number;
-  /** Full chart frame height in px (includes x-axis margin). */
-  height: number;
-  /** Inner plot region — area where the chart series should be drawn. */
-  plotLeft: number;
-  plotTop: number;
-  plotRight: number;
-  plotBottom: number;
-  plotWidth: number;
-  plotHeight: number;
-  /** Maps a y-domain value to a pixel y inside the plot region. Present
-   *  only when `yDomain` was supplied. */
-  yToPlot: ((value: number) => number) | null;
-}
-
-export interface ScrubChartProps<C extends Cell> {
-  cells: C[];
-  /** Selected cell index. Optional in plain (scrub=false) mode. */
-  selected?: number;
-  /** Selection callback. Optional in plain (scrub=false) mode. */
-  onScrub?: (index: number, cell: C) => void;
-  renderChart: (ctx: ScrubChartContext<C>) => JSX.Element;
-  /** Optional layer rendered ABOVE the gesture overlay — pointer events reach
-   *  it, so it can host clickable decorations (e.g. CashflowScrubChart's
-   *  plotline markers). Off by default; same ctx as `renderChart`. */
-  renderChartOverlay?: (ctx: ScrubChartContext<C>) => JSX.Element;
-  renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
-
-  /** When set (a fresh object per request), scroll the detail ribbon so the
-   *  cell at `index` is CENTERED in the axis viewport — "recenter the scrub".
-   *  Object identity is the trigger, so re-centering on the same index works.
-   *  Scrub mode only (plain mode has no ribbon). */
-  centerOn?: { index: number } | null;
-
-  /**
-   * Scrub layer toggle. Default `true` — the full overview+detail pairing:
-   * the DateAxis cell ribbon below the chart, the window-band minimap
-   * overlay, and the pointer pan / click-to-scrub gestures. Set `false` for
-   * a PLAIN time series: the same chart frame, axes, and `renderChart`
-   * series with the entire scrub layer composed off (no ribbon, no window
-   * band, no pointer interaction, no selection). One codebase — pages that
-   * need scrubbing and pages that just need the series share everything
-   * but this flag.
-   */
-  scrub?: boolean;
-
-  /** Chart drawing-area height in px. Default 200. Includes any reserved
-   *  x-axis margin. */
-  chartHeight?: number;
-  /** Width of one axis cell in px. Default 40. */
-  cellWidth?: number;
-  /** `today` Date forwarded to the inner DateAxis. */
-  today?: Date;
-
-  // ── Y-axis (optional) ────────────────────────────────────────────────
-
-  /** Domain (data-units) of the y-axis. When set, ScrubChart reserves a
-   *  left margin, draws ticks + labels, and exposes `yToPlot` in the ctx. */
-  yDomain?: [number, number];
-  /** Format y-axis tick values for display. Default: locale number. */
-  formatYLabel?: (value: number) => string;
-  /** Approximate number of y-axis ticks. Default 5. d3-scale picks the
-   *  nearest "nice" count. */
-  yTickCount?: number;
-  /** Distance in px from the container's left edge to the y-axis line.
-   *  Defaults to the narrowest width that fits the longest formatted label
-   *  (computed via canvas text measurement, with an 8px gap to the axis
-   *  line). Set explicitly only when you need two charts' y-axes to align
-   *  to the same column. No effect unless `yDomain` is set. */
-  yAxisWidth?: number;
-
-  // ── X-axis (optional) ────────────────────────────────────────────────
-
-  /** Cadence at which to emit labelled x-axis ticks. Default "none". */
-  xTickCadence?: ScrubChartXTickCadence;
-  /** Maximum number of x-axis ticks to render. Default 12. Used by the
-   *  `"auto"` cadence to pick a coarse-enough unit, and to stride non-auto
-   *  cadences whose raw candidate count is too high. */
-  xMaxTicks?: number;
-  /** Format an x-axis tick label. Receives the anchor cell and the cadence
-   *  finally chosen (useful when `xTickCadence="auto"` — formatter can vary
-   *  output by unit). Default: per-cadence sensible label. */
-  formatXLabel?: (cell: C, cadence: ResolvedXTickCadence) => string;
-  /** Pixel height reserved at the bottom for x-axis labels. Default 22
-   *  when `xTickCadence !== "none"`; otherwise 0. */
-  xAxisHeight?: number;
-}
-
-/** Resolved cadence — never `"auto"` or `"none"`, just the unit actually used. */
-export type ResolvedXTickCadence = "week" | "month" | "quarter" | "year";
-
-const DEFAULT_CHART_WIDTH = 1200;
-const DEFAULT_CHART_HEIGHT = 200;
-const DEFAULT_CELL_WIDTH = 40;
-const DEFAULT_X_AXIS_HEIGHT = 22;
-const DEFAULT_Y_TICK_COUNT = 5;
-const DEFAULT_X_MAX_TICKS = 12;
-const Y_LABEL_GAP = 8; // px between the longest label and the axis line
-const Y_LABEL_FONT = "10px system-ui, -apple-system, sans-serif";
-
-// Reuse a single offscreen 2D context for label-width measurement. Falls
-// back to a per-character estimate when canvas is unavailable (SSR / test
-// stubs).
-let _measureCtx: CanvasRenderingContext2D | null | undefined;
-const measureLabelWidth = (text: string): number => {
-  if (_measureCtx === undefined) {
-    _measureCtx = null;
-    if (typeof document !== "undefined") {
-      try {
-        const c = document.createElement("canvas");
-        const ctx = c.getContext("2d");
-        if (ctx) {
-          ctx.font = Y_LABEL_FONT;
-          _measureCtx = ctx;
-        }
-      } catch {
-        // jsdom etc. — canvas unavailable; fall through to the estimate.
-      }
-    }
-  }
-  if (_measureCtx) {
-    const w = _measureCtx.measureText(text).width;
-    if (w > 0) return w;
-  }
-  return text.length * 6.5; // sans-serif-ish digit estimate
-};
-
-const defaultFormatY = (v: number): string =>
-  v.toLocaleString("en-US", { maximumFractionDigits: 0 });
-
-// Per-cadence default labels chosen to stay short enough to fit on a
-// ~60-100px tick column without clipping.
-const defaultFormatX = <C extends Cell>(
-  c: C,
-  cadence: ResolvedXTickCadence,
-): string => {
-  const start = c.start;
-  const yyShort = String(start.getUTCFullYear()).slice(-2);
-  if (cadence === "year") return String(start.getUTCFullYear());
-  if (cadence === "quarter") {
-    const q = Math.floor(start.getUTCMonth() / 3) + 1;
-    return `Q${q} '${yyShort}`;
-  }
-  if (cadence === "month") {
-    const mon = start.toLocaleDateString("en-US", {
-      month: "short",
-      timeZone: "UTC",
-    });
-    // January gets the year so the reader can pin down which year we're in
-    // when the axis spans multiple years.
-    return start.getUTCMonth() === 0 ? `${mon} '${yyShort}` : mon;
-  }
-  // week
-  return start.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-};
-
-const matchesCadence = (d: Date, cadence: ResolvedXTickCadence): boolean => {
-  if (cadence === "week") return d.getUTCDay() === 1; // Monday
-  const dom1 = d.getUTCDate() === 1;
-  if (cadence === "month") return dom1;
-  if (cadence === "quarter") return dom1 && d.getUTCMonth() % 3 === 0;
-  return dom1 && d.getUTCMonth() === 0; // year
-};
-
-const CADENCE_LADDER: ResolvedXTickCadence[] = [
-  "week",
-  "month",
-  "quarter",
-  "year",
-];
+export type {
+  ScrubChartContext,
+  ScrubChartProps,
+  ScrubChartOverrides,
+  ScrubChartDataProps,
+  ScrubChartXTickCadence,
+  ResolvedXTickCadence,
+} from "./types";
 
 export const ScrubChart = <C extends Cell>(
   props: ScrubChartProps<C>,
@@ -538,76 +364,18 @@ export const ScrubChart = <C extends Cell>(
             plot region by the consumer. Pointer-events disabled so the
             gesture overlay above still captures clicks/drags. */}
         <Show when={chartWidth() > 0 && (yScale() || xTicks().length > 0)}>
-          <svg
-            class="sui-scrub-chart__axes"
-            role="img"
-            aria-label="Chart axes"
-            viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
-            preserveAspectRatio="none"
-          >
-            <Show when={yScale()}>
-              <line
-                class="sui-scrub-chart__axis-line"
-                x1={plotLeft()}
-                x2={plotLeft()}
-                y1={plotTop()}
-                y2={plotBottom()}
-              />
-              <For each={yTicks()}>
-                {(tick) => (
-                  <>
-                    <line
-                      class="sui-scrub-chart__tick"
-                      x1={plotLeft() - 4}
-                      x2={plotLeft()}
-                      y1={tick.y}
-                      y2={tick.y}
-                    />
-                    <text
-                      class="sui-scrub-chart__label sui-scrub-chart__label--y"
-                      x={plotLeft() - 6}
-                      y={tick.y}
-                      text-anchor="end"
-                      dominant-baseline="central"
-                    >
-                      {fmtY()(tick.value)}
-                    </text>
-                  </>
-                )}
-              </For>
-            </Show>
-            <Show when={xTicks().length > 0}>
-              <line
-                class="sui-scrub-chart__axis-line"
-                x1={plotLeft()}
-                x2={plotRight()}
-                y1={plotBottom()}
-                y2={plotBottom()}
-              />
-              <For each={xTicks()}>
-                {(tick) => (
-                  <>
-                    <line
-                      class="sui-scrub-chart__tick"
-                      x1={tick.x}
-                      x2={tick.x}
-                      y1={plotBottom()}
-                      y2={plotBottom() + 4}
-                    />
-                    <text
-                      class="sui-scrub-chart__label sui-scrub-chart__label--x"
-                      x={tick.x}
-                      y={plotBottom() + 6}
-                      text-anchor="middle"
-                      dominant-baseline="hanging"
-                    >
-                      {tick.label}
-                    </text>
-                  </>
-                )}
-              </For>
-            </Show>
-          </svg>
+          <ScrubChartAxes
+            chartWidth={chartWidth}
+            chartHeight={chartHeight}
+            plotLeft={plotLeft}
+            plotTop={plotTop}
+            plotRight={plotRight}
+            plotBottom={plotBottom}
+            yScaleActive={() => yScale() != null}
+            yTicks={yTicks}
+            xTicks={xTicks}
+            formatY={fmtY}
+          />
         </Show>
         {/* Window-band overlay — owned by ScrubChart so consumers don't
             have to draw it themselves. Translucent rect over the slice of
@@ -666,22 +434,10 @@ export const ScrubChart = <C extends Cell>(
   );
 };
 
-// ── Override / Data split + factory ───────────────────────────────────────
-
-/**
- * Props that are visual / structural overrides — locked at variant-definition
- * time. Just the sizing knobs; everything else is data or a callback.
- */
-export type ScrubChartOverrides<C extends Cell> = Pick<
-  ScrubChartProps<C>,
-  "chartHeight" | "cellWidth" | "yAxisWidth" | "xAxisHeight"
->;
-
-/** Props that remain available to consumers of a curried ScrubChart variant. */
-export type ScrubChartDataProps<C extends Cell> = Omit<
-  ScrubChartProps<C>,
-  keyof ScrubChartOverrides<C>
->;
+// ── Factory ───────────────────────────────────────────────────────────────
+// The ScrubChartOverrides / ScrubChartDataProps types this factory relies on
+// live in ./types (and are re-exported above so the public surface is
+// unchanged).
 
 /**
  * Factory that returns a curried ScrubChart with the sizing knobs baked in.

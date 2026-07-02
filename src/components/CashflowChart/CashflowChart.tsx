@@ -24,140 +24,31 @@ import {
 } from "solid-js";
 import { scaleBand, scaleLinear } from "d3-scale";
 import "./CashflowChart.css";
+import type {
+  BarLineItem,
+  WeeklyCashflowChartProps,
+  WeeklyChartBar,
+  WeeklyHoverState,
+  WeeklySegmentKind,
+} from "./types";
+import {
+  MIN_CHART_HEIGHT,
+  PAD,
+  formatDollars,
+  formatWeekRange,
+  linePath,
+} from "./format";
+import { CashflowBars } from "./CashflowBars";
+import { CashflowPopover } from "./CashflowPopover";
 
-// ── Data shapes (self-contained; no external chartData module) ──
-
-export interface BarLineItem {
-  name: string;
-  amount_cents: number;
-}
-
-export interface WeeklyChartBar {
-  week_start: string; // YYYY-MM-DD (Monday)
-  month_label: string; // e.g. "Mar '26" on first week of month, "" otherwise
-  revenue_cents: number;
-  recurring_revenue_cents: number;
-  project_revenue_cents: number;
-  product_revenue_cents: number;
-  expense_cents: number;
-  recurring_expense_cents: number;
-  onetime_expense_cents: number;
-  balance_cents: number;
-  revenue_items: BarLineItem[];
-  expense_items: BarLineItem[];
-  recurring_expense_items: BarLineItem[];
-  onetime_expense_items: BarLineItem[];
-  isProjected: boolean;
-}
-
-export interface WeeklyCashflowChartData {
-  bars: WeeklyChartBar[];
-  todayWeek?: string | null;
-  bankruptcyWeek?: string | null;
-  bankruptcyDate?: string | null;
-}
-
-export interface WeeklyCashflowChartProps {
-  data: WeeklyCashflowChartData;
-  /**
-   * Explicit viewBox height in px. When omitted (the common case), the chart
-   * measures its container via a ResizeObserver and renders to that height, so
-   * it fills the vertical space its layout box allots it. Pass a number only to
-   * pin a fixed height regardless of the container.
-   */
-  height?: number;
-  yMax?: number | null;
-}
-
-/** Floor for the measured container height so the chart never collapses to nothing. */
-const MIN_CHART_HEIGHT = 160;
-
-// ── Formatting helpers ──
-
-const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-/** Compact cents → dollar label: 165799 → "$2k", -40000 → "-$400", 0 → "$0". */
-function formatDollars(cents: number): string {
-  const sign = cents < 0 ? "-" : "";
-  const dollars = Math.abs(cents) / 100;
-  if (dollars >= 1000) return `${sign}$${(dollars / 1000).toFixed(0)}k`;
-  return `${sign}$${Math.round(dollars)}`;
-}
-
-/** Full cents → dollar label with cents: 165799 → "$1,657.99". */
-function formatDollarsLong(cents: number): string {
-  const sign = cents < 0 ? "-" : "";
-  const dollars = Math.abs(cents) / 100;
-  return `${sign}$${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-/** Format "Mar 3 – Mar 9, 2026" from a week_start YYYY-MM-DD; also returns week end. */
-function formatWeekRange(weekStart: string): { label: string; end: string } {
-  const s = new Date(`${weekStart}T00:00:00`);
-  const e = new Date(s);
-  e.setDate(e.getDate() + 6);
-  const sMonth = MONTH_NAMES[s.getMonth()];
-  const eMonth = MONTH_NAMES[e.getMonth()];
-  const end = `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
-  if (sMonth === eMonth) {
-    return {
-      label: `${sMonth} ${s.getDate()} – ${e.getDate()}, ${e.getFullYear()}`,
-      end,
-    };
-  }
-  return {
-    label: `${sMonth} ${s.getDate()} – ${eMonth} ${e.getDate()}, ${e.getFullYear()}`,
-    end,
-  };
-}
-
-/** Build an SVG polyline path "M x y L x y …" from a list of points. */
-function linePath(points: { x: number; y: number }[]): string {
-  if (points.length < 2) return "";
-  return points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
-}
-
-// ── Layout constants ──
-
-const PAD = { top: 20, right: 20, bottom: 48, left: 64 };
-
-type WeeklySegmentKind =
-  | "revenue"
-  | "expense"
-  | "exp-recurring"
-  | "exp-onetime";
-
-const WEEKLY_SEGMENT_LABELS: Record<WeeklySegmentKind, string> = {
-  revenue: "Revenue",
-  expense: "Expenses",
-  "exp-recurring": "Recurring Expenses",
-  "exp-onetime": "One-Time Expenses",
-};
-
-interface WeeklyHoverState {
-  kind: WeeklySegmentKind;
-  items: BarLineItem[];
-  total_cents: number;
-  week_start: string;
-  week_end: string;
-  x: number;
-  y: number;
-}
+// Public data shapes live in `./types`; re-exported here so consumers (and the
+// folder barrel) keep importing them from CashflowChart unchanged.
+export type {
+  BarLineItem,
+  WeeklyChartBar,
+  WeeklyCashflowChartData,
+  WeeklyCashflowChartProps,
+} from "./types";
 
 export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
   props,
@@ -469,109 +360,15 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
         </For>
 
         {/* Weekly bars */}
-        <For each={props.data.bars}>
-          {(bar) => {
-            const x = () => scales().xScale(bar.week_start)!;
-            const bw = () => scales().xScale.bandwidth();
-            const zero = () => scales().yScale(0);
-
-            const recurRevTop = () =>
-              scales().yScale(bar.recurring_revenue_cents);
-            const recurRevH = () => zero() - recurRevTop();
-            const projRevTop = () => scales().yScale(bar.revenue_cents);
-            const projRevH = () => recurRevTop() - projRevTop();
-            const recurExpBot = () =>
-              scales().yScale(-bar.recurring_expense_cents);
-            const recurExpH = () => recurExpBot() - zero();
-            const totalExpBot = () =>
-              scales().yScale(
-                -(bar.recurring_expense_cents + bar.onetime_expense_cents),
-              );
-            const onetimeExpH = () => totalExpBot() - recurExpBot();
-
-            return (
-              <>
-                {bar.recurring_revenue_cents > 0 && (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
-                  <rect
-                    x={x()}
-                    y={recurRevTop()}
-                    width={bw()}
-                    height={recurRevH()}
-                    class="rc-cashflow__bar rc-cashflow__bar--rev-recurring"
-                    classList={{
-                      "rc-cashflow__bar--projected": bar.isProjected,
-                    }}
-                    onMouseEnter={(e) => handleEnter(bar, "revenue", e)}
-                    onMouseMove={handleMove}
-                    onMouseLeave={handleLeave}
-                  />
-                )}
-                {bar.project_revenue_cents > 0 && (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
-                  <rect
-                    x={x()}
-                    y={projRevTop()}
-                    width={bw()}
-                    height={projRevH()}
-                    class="rc-cashflow__bar rc-cashflow__bar--rev-project"
-                    classList={{
-                      "rc-cashflow__bar--projected": bar.isProjected,
-                    }}
-                    onMouseEnter={(e) => handleEnter(bar, "revenue", e)}
-                    onMouseMove={handleMove}
-                    onMouseLeave={handleLeave}
-                  />
-                )}
-                {bar.recurring_expense_cents > 0 && (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
-                  <rect
-                    x={x()}
-                    y={zero()}
-                    width={bw()}
-                    height={recurExpH()}
-                    class="rc-cashflow__bar rc-cashflow__bar--exp-recurring"
-                    classList={{
-                      "rc-cashflow__bar--projected": bar.isProjected,
-                    }}
-                    onMouseEnter={(e) => handleEnter(bar, "exp-recurring", e)}
-                    onMouseMove={handleMove}
-                    onMouseLeave={handleLeave}
-                  />
-                )}
-                {bar.onetime_expense_cents > 0 && (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
-                  <rect
-                    x={x()}
-                    y={recurExpBot()}
-                    width={bw()}
-                    height={onetimeExpH()}
-                    class="rc-cashflow__bar rc-cashflow__bar--exp-onetime"
-                    classList={{
-                      "rc-cashflow__bar--projected": bar.isProjected,
-                    }}
-                    onMouseEnter={(e) => handleEnter(bar, "exp-onetime", e)}
-                    onMouseMove={handleMove}
-                    onMouseLeave={handleLeave}
-                  />
-                )}
-
-                {/* X-axis label — only on month boundaries */}
-                <Show when={bar.month_label}>
-                  <text
-                    x={x() + bw() / 2}
-                    y={h() - PAD.bottom + 10}
-                    text-anchor="end"
-                    transform={`rotate(-45, ${x() + bw() / 2}, ${h() - PAD.bottom + 10})`}
-                    class="rc-cashflow__label-x"
-                  >
-                    {bar.month_label}
-                  </text>
-                </Show>
-              </>
-            );
-          }}
-        </For>
+        <CashflowBars
+          bars={() => props.data.bars}
+          xScale={() => scales().xScale}
+          yScale={() => scales().yScale}
+          h={h}
+          onEnter={handleEnter}
+          onMove={handleMove}
+          onLeave={handleLeave}
+        />
 
         {/* Coffers (balance) line */}
         <Show when={scales().solidPath || scales().fullPath}>
@@ -663,36 +460,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
       </svg>
 
       {/* Popover */}
-      <Show when={hover()}>
-        {(current) => (
-          <div
-            class="rc-cashflow__popover"
-            style={{ left: `${current().x}px`, top: `${current().y}px` }}
-          >
-            <div class="rc-cashflow__popover-header">
-              {formatWeekRange(current().week_start).label} —{" "}
-              {WEEKLY_SEGMENT_LABELS[current().kind]}
-            </div>
-            <div class="rc-cashflow__popover-total">
-              {formatDollarsLong(current().total_cents)}
-            </div>
-            <Show when={current().items.length > 0}>
-              <ul class="rc-cashflow__popover-items">
-                <For each={current().items}>
-                  {(item) => (
-                    <li class="rc-cashflow__popover-item">
-                      <span class="rc-cashflow__popover-name">{item.name}</span>
-                      <span class="rc-cashflow__popover-amount">
-                        {formatDollarsLong(item.amount_cents)}
-                      </span>
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
-          </div>
-        )}
-      </Show>
+      <CashflowPopover hover={hover} />
     </div>
   );
 };
