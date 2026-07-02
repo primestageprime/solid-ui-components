@@ -1,0 +1,112 @@
+/* ============================================
+   StatusChip — Atomic Primitive (Depth 1). Fixed-width editable status chip
+   with an inline text-edit region and a hover-revealed select caret. Owns all
+   of its visuals; no sibling component imports. Colours ride `currentColor`, so
+   the chip inherits its context's foreground. Extracted verbatim from the
+   ListItem workshop bench.
+
+   The caret + text-underline reveal on the chip's OWN hover here so the chip is
+   self-sufficient standalone; ActionListItem additionally reveals them on whole-
+   ROW hover (a superset) to match the bench, so nothing looks different in a row.
+   ============================================ */
+
+.sui-status-chip {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: content-box;
+  padding: 1px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--sui-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: inherit;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+/* Row opacity carries the tone; the highlighted chip keeps its fill so the
+   active state still reads at a glance. */
+.sui-status-chip--highlight {
+  background: rgba(var(--sui-accent-rgb), 0.12);
+}
+.sui-status-chip__text,
+.sui-status-chip__input {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: center;
+  cursor: text;
+}
+.sui-status-chip__text:disabled {
+  cursor: default;
+}
+.sui-status-chip:hover .sui-status-chip__text:not(:disabled) {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.sui-status-chip__input {
+  outline: 1px solid var(--sui-accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+.sui-status-chip__caret {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.2ch;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: 0.6875rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.sui-status-chip:hover .sui-status-chip__caret,
+.sui-status-chip__caret:focus-visible {
+  opacity: 1;
+}
+.sui-status-chip__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border-bright, var(--sui-border));
+  border-radius: var(--sui-radius-sm, 4px);
+  padding: 2px;
+}
+.sui-status-chip__option {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  padding: 3px 8px;
+  color: var(--sui-text-secondary);
+  cursor: pointer;
+}
+.sui-status-chip__option:hover {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-text-primary);
+}
+.sui-status-chip__option--current {
+  color: var(--sui-accent);
+}
