@@ -39,6 +39,35 @@ interface ListItemProps {
   onDismiss?: () => void;
 }
 
+const TagPill: Component<{ tag: ListItemTag }> = (props) => {
+  const splitAt = () => props.tag.label.indexOf(":");
+  return (
+    <Show
+      when={splitAt() > 0}
+      fallback={
+        <span
+          class="ws-list-item__tag"
+          classList={{ "ws-list-item__tag--active": props.tag.active }}
+        >
+          {props.tag.label}
+        </span>
+      }
+    >
+      <span
+        class="ws-list-item__tag ws-list-item__tag--split"
+        classList={{ "ws-list-item__tag--active": props.tag.active }}
+      >
+        <span class="ws-list-item__tag-ns">
+          {props.tag.label.slice(0, splitAt())}
+        </span>
+        <span class="ws-list-item__tag-val">
+          {props.tag.label.slice(splitAt() + 1)}
+        </span>
+      </span>
+    </Show>
+  );
+};
+
 const ListItem: Component<ListItemProps> = (props) => (
   <div class="ws-list-item" role="listitem">
     <span class="ws-list-item__title">{props.title}</span>
@@ -47,14 +76,7 @@ const ListItem: Component<ListItemProps> = (props) => (
         {(a) => <SmAvatar initials={a().initials} color={a().color} />}
       </Show>
       <For each={props.tags ?? []}>
-        {(tag) => (
-          <span
-            class="ws-list-item__tag"
-            classList={{ "ws-list-item__tag--active": tag.active }}
-          >
-            {tag.label}
-          </span>
-        )}
+        {(tag) => <TagPill tag={tag} />}
       </For>
       <Show when={props.status}>
         <span class="ws-list-item__status">{props.status}</span>
@@ -119,6 +141,25 @@ const benchCss = `
   border-color: var(--sui-accent);
   color: var(--sui-accent);
   background: rgba(var(--sui-accent-rgb), 0.12);
+}
+.ws-list-item__tag--split {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.ws-list-item__tag-ns,
+.ws-list-item__tag-val {
+  padding: 1px 8px;
+}
+.ws-list-item__tag-ns {
+  color: var(--sui-text-muted);
+  background: var(--sui-bg-tertiary);
+  border-right: 1px solid var(--sui-border);
+}
+.ws-list-item__tag--split.ws-list-item__tag--active .ws-list-item__tag-ns {
+  border-right-color: var(--sui-accent);
+  background: rgba(var(--sui-accent-rgb), 0.2);
 }
 .ws-list-item__status {
   font-family: var(--sui-font-mono);
@@ -248,6 +289,16 @@ const ListItemBench: Component = () => {
           title="with a very long title that should truncate with an ellipsis rather than wrap or push the trailing meta cluster out of the row, no matter how long it gets"
           avatar={{ initials: "P", color: "#3b5bdb" }}
           tags={[{ label: "primestage" }]}
+          status="TODO"
+          onDismiss={() => {}}
+        />
+        <ListItem
+          title="composite tag — company:product split lozenge"
+          tags={[
+            { label: "primestage:thorcasting", active: true },
+            { label: "primestage:dside" },
+            { label: "stax" },
+          ]}
           status="TODO"
           onDismiss={() => {}}
         />
