@@ -12,3 +12,4 @@ worktrees/
 # MemPalace per-project runtime artifacts
 mempalace.yaml
 entities.json
+.claude/scheduled_tasks.lock
