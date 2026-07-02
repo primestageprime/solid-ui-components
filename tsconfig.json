@@ -14,7 +14,11 @@
     "declaration": true,
     "declarationDir": "./dist",
     "outDir": "./dist",
-    "baseUrl": ".",
+    // TS 6.0 changed the `types` default from "every @types/* package" to none.
+    // Node builtins (node:fs / __dirname) are used by test + theme-contract
+    // files; list `node` explicitly so they keep resolving. vite/client types
+    // come in via src/vite-env.d.ts's triple-slash reference.
+    "types": ["node"],
     "paths": {
       "~/*": ["./src/*"]
     }
