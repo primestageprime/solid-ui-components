@@ -27,6 +27,7 @@
 // * Honours `prefers-reduced-motion: reduce` — all transitions go to 0s.
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import "./SlotFillBar.css";
 
 export type SlotPhase = "doing" | "done";
@@ -91,20 +92,17 @@ export const SlotFillBar: Component<SlotFillBarProps> = (rawProps) => {
 
   const slotCount = () => Math.max(1, local.slots);
   const slotPct = () => 100 / slotCount();
-  const committedFrac = () =>
-    Math.max(0, Math.min(1, local.done / slotCount()));
+  const committedFrac = () => clamp(local.done / slotCount(), 0, 1);
 
   const active = () => local.active ?? null;
   const overlayLeftPct = () => {
     const a = active();
-    return a == null
-      ? 0
-      : Math.max(0, Math.min(slotCount() - 1, a.index)) * slotPct();
+    return a == null ? 0 : clamp(a.index, 0, slotCount() - 1) * slotPct();
   };
   const overlayRightInsetPct = () => {
     const a = active();
     if (a == null) return 100;
-    const idx = Math.max(0, Math.min(slotCount() - 1, a.index));
+    const idx = clamp(a.index, 0, slotCount() - 1);
     return 100 - (idx + 1) * slotPct();
   };
   const overlayColor = () =>

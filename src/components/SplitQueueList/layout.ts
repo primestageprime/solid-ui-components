@@ -20,6 +20,8 @@
  * pane is always sized to whole rows + its header, so the last row never clips.
  */
 
+import { clamp } from "../../internal/math/clamp";
+
 export interface SplitLayoutInput {
   /** Total inner height available to both panes + seam, in px. */
   totalHeight: number;
@@ -137,10 +139,6 @@ export function computeSplitLayout(input: SplitLayoutInput): SplitLayout {
     bottomScrolls,
     topAbsorbedSlack,
   };
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
 }
 
 export interface EnterFrameInput {

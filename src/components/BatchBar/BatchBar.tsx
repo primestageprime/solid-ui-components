@@ -42,6 +42,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import "./BatchBar.css";
 import {
   useProgressEngine,
@@ -95,8 +96,8 @@ export interface BatchBarProps extends JSX.HTMLAttributes<HTMLDivElement> {
   label?: string;
 }
 
-const clampPct = (n: number) => Math.max(0, Math.min(100, n));
-const clampFrac = (n: number) => Math.max(0, Math.min(1, n));
+const clampPct = (n: number) => clamp(n, 0, 100);
+const clampFrac = (n: number) => clamp(n, 0, 1);
 
 /** A batches array uses the declarative API iff its entries are `{rows,state}` */
 function isDeclarative(

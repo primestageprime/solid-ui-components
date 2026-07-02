@@ -12,6 +12,7 @@
  * machine is testable in isolation; it reads the live DOM order for movement and
  * takes the rest of its inputs as accessors. */
 import { createMemo, createSignal } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 
 export interface RowKeyboardDeps {
   /** The component root the rows are queried within (may be undefined pre-mount). */
@@ -68,7 +69,7 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
         ? rows[0]
         : dir === "end"
           ? rows[rows.length - 1]
-          : rows[Math.min(rows.length - 1, Math.max(0, idx + dir))];
+          : rows[clamp(idx + dir, 0, rows.length - 1)];
     if (!target) return;
     setActiveKey(target.dataset.sqlKey ?? null);
     target.focus();

@@ -15,6 +15,7 @@ import {
   onCleanup,
   mergeProps,
 } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import "./Dropdown.css";
 
 export interface DropdownItem {
@@ -87,7 +88,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   const focusOption = (i: number) => {
     const opts = menuRef?.querySelectorAll<HTMLElement>('[role="option"]');
     if (!opts || opts.length === 0) return;
-    const idx = Math.max(0, Math.min(opts.length - 1, i));
+    const idx = clamp(i, 0, opts.length - 1);
     setActiveIndex(idx);
     opts[idx]?.focus();
   };

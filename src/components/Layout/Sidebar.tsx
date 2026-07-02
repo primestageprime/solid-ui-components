@@ -18,6 +18,7 @@ import {
   onMount,
   splitProps,
 } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import { Stack } from "./Stack";
 import "./Sidebar.css";
 
@@ -25,7 +26,7 @@ const DEFAULT_WIDTH = 300;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 720;
 
-const clampWidth = (n: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, n));
+const clampWidth = (n: number) => clamp(n, MIN_WIDTH, MAX_WIDTH);
 const storageKey = (id: string) => `sui-sidebar-width:${id}`;
 
 export interface SidebarProps

@@ -6,6 +6,7 @@
 // PlaceholderCard). Owns none of the board's data/derivation/motion.
 // ============================================
 import { type JSX, Show, For, splitProps } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import { StatusBadge } from "../Badge/StatusBadge";
@@ -153,8 +154,7 @@ function SummaryBadge(props: { status: CategoryStatus }) {
 
 /** A left-filling percentage bar (SlotFillBar with a fixed slot count). */
 function PctBar(props: { pct: number }) {
-  const done = () =>
-    Math.round((Math.max(0, Math.min(100, props.pct)) / 100) * PCT_SLOTS);
+  const done = () => Math.round((clamp(props.pct, 0, 100) / 100) * PCT_SLOTS);
   return (
     <SlotFillBar
       slots={PCT_SLOTS}

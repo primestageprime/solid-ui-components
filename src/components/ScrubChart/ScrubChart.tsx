@@ -35,6 +35,7 @@ import {
   onMount,
 } from "solid-js";
 import { scaleLinear } from "d3-scale";
+import { clamp } from "../../internal/math/clamp";
 import { DateAxis, type Cell } from "../DateAxis";
 import { ScrubChartAxes } from "./ScrubChartAxes";
 import {
@@ -257,10 +258,11 @@ export const ScrubChart = <C extends Cell>(
     // before first layout (scrollWidth === 0).
     const w = scrollWidth > 0 ? scrollWidth / n : cellWidth();
     if (w <= 0) return [0, n - 1];
-    const first = Math.min(n - 1, Math.max(0, Math.floor(scrollLeft / w)));
-    const last = Math.min(
+    const first = clamp(Math.floor(scrollLeft / w), 0, n - 1);
+    const last = clamp(
+      Math.ceil((scrollLeft + viewport) / w) - 1,
+      first,
       n - 1,
-      Math.max(first, Math.ceil((scrollLeft + viewport) / w) - 1),
     );
     return [first, last];
   });

@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 import { type Component, For } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import { useChart } from "../Chart/context";
 import type { Range } from "./alarm";
 import "./Alarm.css";
@@ -53,7 +54,7 @@ export const AlarmBands: Component<AlarmBandsProps> = (props) => {
         const x = xs(r.start);
         const w = Math.max(1, xs(r.end) - x);
         const lanes = Math.max(1, props.laneCount ?? 1);
-        const idx = Math.min(lanes - 1, Math.max(0, props.laneIndex ?? 0));
+        const idx = clamp(props.laneIndex ?? 0, 0, lanes - 1);
         const laneH = ctx.innerHeight() / lanes;
         return (
           <rect

@@ -16,6 +16,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
 import "./ResizableContainer.css";
 
 export type ResizeDirection = "top" | "right" | "bottom" | "left";
@@ -54,9 +55,6 @@ const DEFAULTS = {
   initialWidth: 300,
   initialHeight: 200,
 };
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value));
 
 export const ResizableContainer: Component<ResizableContainerProps> = (
   props,
