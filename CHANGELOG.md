@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## 0.87.0
+
+### Added
+
+- **`ActionList`** (Depth 3) — drop-in, data-driven list of editable action rows, graduated from the list-item workshop bench. Curried via `createActionList` with a single Override (`statusTones`, default `{ DONE: "dim", DOING: "highlight" }`, neutral fallback); the exported `ActionList` variant takes only data + callbacks: `items` (`{ id, name, status?, assignee?, tags? }`), `statusOptions`, `onSort`, `onDelete`, `onRename`, `onStatusChange`. Tone = whole-row opacity (dim 25%, neutral 50%, highlight 100%) over an all-accent foreground.
+- **`ActionListItem`** (Depth 2) — the row composite: status chip, editable title, assignee icon, tag pills, and a hover-revealed semi-circular dismiss cap flush with the row edge. Hover never shifts geometry (opacity-only reveals over a transparent border).
+- **`StatusChip`** (Depth 1, Badge family) — fixed-width editable status chip (width = longest option in ch, text centered): click the text to edit inline, click the hover-revealed caret to pick from `options`; Escape cancels without committing. The editable sibling of `StatusBadge`.
+- **`TagPill`** (Depth 1, Badge family) — pill tag; `label` containing `:` (or the explicit `{ key, value }` form) renders a split lozenge with a bold namespace segment; `active` adds the accent fill. The free-text sibling of `StatusBadge`/`CountChip`.
+- **`AssigneeIcon`** (Depth 1, ParticipantAvatar family) — person-silhouette / antennaed-robot-head outline glyph holding up to 2 centered initials, `currentColor`-driven; the outline sibling of `ParticipantAvatar`.
+- **`EditableTitle`** (Depth 1) — hover-underlined click-to-edit text whose inline input is fitted to the rendered text via a hidden-replica grid; Enter/blur commits, Escape cancels.
+
+### Changed
+
+- **`SortableList`** — new optional `rowChrome?: "surface" | "bare"` (default `"surface"`, unchanged) and `gap?: number` (default `8`). `"bare"` strips the row wrapper's Surface chrome and hides the grip until row hover, for self-styled row content like `ActionListItem`.
+
 ## 0.86.0
 
 ### Added
