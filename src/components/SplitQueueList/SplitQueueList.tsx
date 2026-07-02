@@ -19,10 +19,17 @@ export type { SplitQueueListProps } from "./types";
 
 const SEAM_HEIGHT = 2;
 
+// Pre-measure seed and floor for the self-measured total height (used only when
+// `height` is omitted). Before the first measurement — and in environments like
+// jsdom where getBoundingClientRect returns 0 — the layout falls back to this.
+const MEASURE_FLOOR_HEIGHT = 420;
+
 /**
  * SplitQueueList — a linked two-list "processing queue" sidebar.
  *
- * One sidebar, two stacked lists sharing a fixed height. The TOP list holds
+ * One sidebar, two stacked lists sharing a total height — a fixed px value when
+ * `height` is passed, otherwise the parent-allotted height (the panel fills its
+ * parent and measures it). The TOP list holds
  * *resolved* (processed) items; the BOTTOM list holds *unresolved* (to-process)
  * items. The user works the bottom; resolving an item appends it to the BOTTOM
  * of the top list (at the seam between the two), so the most-recent work sits
@@ -81,7 +88,14 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const rowHeightProp = () => props.rowHeight ?? 40;
   const topCapRows = () => props.topCapRows ?? 3;
   const topFloorRows = () => props.topFloorRows ?? 0;
-  const height = () => props.height ?? 420;
+  // Self-measured parent height, filled in by `measure()` below from the root's
+  // rendered box. Seeded with the floor so the first paint (pre-measure) is sane.
+  const [measuredHeight, setMeasuredHeight] = createSignal(MEASURE_FLOOR_HEIGHT);
+  // Total height feeding the layout math. When `height` is provided it wins (fixed
+  // px, as before); when omitted the panel fills its parent, so the layout total is
+  // the *measured* parent height (never below the floor).
+  const height = () =>
+    props.height ?? Math.max(MEASURE_FLOOR_HEIGHT, measuredHeight());
   const animationMs = () => props.animationMs ?? 800;
 
   let topListEl: HTMLUListElement | undefined;
@@ -110,6 +124,16 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     if (row) {
       const rh = row.getBoundingClientRect().height;
       if (rh > 0) setRowHeight(rh);
+    }
+    // Learn the parent-allotted height so the (omitted-`height`) fill mode can
+    // size its panes from the real available space. No new observer is needed —
+    // `rootEl` is already observed below. The root itself is height:100% in fill
+    // mode (parent-driven), so reading its box here is not circular: only the
+    // *panes* are sized from this value. The `h > 0` guard keeps the seed in
+    // jsdom (which reports 0), so fixed-height tests are unaffected.
+    if (rootEl) {
+      const h = rootEl.getBoundingClientRect().height;
+      if (h > 0) setMeasuredHeight(h);
     }
   };
   // Measure after mount (fonts/borders applied), and on every container resize
@@ -255,11 +279,18 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       borderColor="var(--sui-border)"
       // In topOnly the root hugs its single (top) panel so the container follows
       // the panel's content-driven / animated height — "one line" when empty,
-      // growing with the panel as it reveals each card. The normal two-panel
-      // layout keeps the fixed total height.
+      // growing with the panel as it reveals each card. Otherwise: with an
+      // explicit `height` the root pins that fixed px; with `height` omitted the
+      // root fills its parent (100%) and `measure()` reads that back as the layout
+      // total — the root's own height stays parent-driven, so there's no feedback
+      // loop (only the panes are sized from the measured value).
       style={{
         "border-radius": "var(--sui-radius-md)",
-        height: props.topOnly ? undefined : `${height()}px`,
+        height: props.topOnly
+          ? undefined
+          : props.height != null
+            ? `${height()}px`
+            : "100%",
       }}
     >
       {/* Off-screen live region: announces the queue counts to assistive tech as

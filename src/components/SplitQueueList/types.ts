@@ -65,7 +65,10 @@ export interface SplitQueueListProps<T> {
   /** Per-row height in px. Used as the initial estimate; the component measures
    * the real rendered row height and sizes from that. Default 40. */
   rowHeight?: number;
-  /** Total height of the sidebar in px. Default 420. */
+  /** Total height of the sidebar in px. Optional — when omitted, the sidebar
+   * fills its parent (root is `height:100%`) and measures the parent-allotted
+   * height as its layout total, stretching to the bottom of a flex / `height:100%`
+   * container. 420 is only the pre-measure / unmeasurable floor (e.g. jsdom). */
   height?: number;
   /** Slide duration in ms. Default 800. */
   animationMs?: number;
