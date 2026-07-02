@@ -170,6 +170,10 @@ git commit -m "workshop(list-item): lock hover-stability invariant — opacity-o
 
 ### Task 4: Tags follow 1, 2, many — collapse the tail into (+N)
 
+> **SKIPPED (2026-07-02, Peter):** doesn't apply yet. Was implemented and then
+> reverted (commit ab4d99a dropped). If revived, Task 5's `TagPill` will already
+> exist — apply the grouping around it instead of the plain span.
+
 **Files:**
 - Modify: `dev/showcases/workshop/list-item.tsx`
 
