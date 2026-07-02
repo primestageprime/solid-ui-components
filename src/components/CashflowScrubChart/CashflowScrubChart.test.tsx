@@ -281,6 +281,33 @@ describe("CashflowScrubChart", () => {
       expect(onMarkerClick.mock.calls[0][1]).toBe(cells[5]);
     });
 
+    it("renders a rule-variant marker as a labelled reference rule, not a clickable flag", () => {
+      const onMarkerClick = vi.fn();
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 4, variant: "rule", label: "Today" }]}
+          onMarkerClick={onMarkerClick}
+        />
+      ));
+      const g = container.querySelector(
+        ".sui-cashflow-scrub-chart__marker--rule",
+      )!;
+      expect(g).toBeTruthy();
+      const label = g.querySelector(".sui-cashflow-scrub-chart__rule-label")!;
+      expect(label.textContent).toBe("Today");
+      expect(g.querySelector(".sui-cashflow-scrub-chart__rule-line")).toBeTruthy();
+      // None of the instance-marker anatomy, and no click affordance.
+      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-flag")).toBeNull();
+      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-dot")).toBeNull();
+      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-hit")).toBeNull();
+      expect(g.getAttribute("role")).toBeNull();
+      g.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(onMarkerClick).not.toHaveBeenCalled();
+    });
+
     it("renders no marker layer by default, drops out-of-range indices, and composes in plain mode", () => {
       const cells = makeCells(5);
       const none = render(() => (

@@ -79,6 +79,17 @@ export interface CashflowBalanceSeries {
 export interface CashflowChartMarker {
   index: number;
   selected?: boolean;
+  /**
+   * Visual treatment. `"flag"` (default) is the instance marker: a dashed
+   * rule dropping from a flag at the plot top to a dot on the balance line,
+   * clickable via `onMarkerClick`. `"rule"` is a reference line: a full-height
+   * dotted rule with its `label` always visible at the top — non-interactive
+   * (no flag, no dot, no click) — for marking a date like "Today" rather than
+   * a selectable instance.
+   */
+  variant?: "flag" | "rule";
+  /** Small caption rendered at the top of a `"rule"` marker. */
+  label?: string;
 }
 
 export interface CashflowScrubChartProps {
@@ -103,6 +114,8 @@ export interface CashflowScrubChartProps {
    * chosen config fires. `selected` circles that instance. Rendered in the
    * overlay layer (above the scrub gestures) so the dots are CLICKABLE:
    * `onMarkerClick` fires with the marker's cell index. Off by default.
+   * A marker with `variant: "rule"` renders instead as a non-interactive
+   * labelled reference rule (see `CashflowChartMarker.variant`).
    */
   markers?: CashflowChartMarker[];
   onMarkerClick?: (index: number, cell: CashflowCell) => void;

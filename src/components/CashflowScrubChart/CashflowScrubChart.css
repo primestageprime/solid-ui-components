@@ -219,3 +219,29 @@
   .sui-cashflow-scrub-chart__marker-line {
   opacity: 1;
 }
+
+/* ── Reference rule (marker variant: "rule") ──────────────────────── */
+/* A labelled full-height dotted rule ("Today"). Non-interactive: unlike
+   instance markers it must not capture clicks or show a pointer cursor. */
+
+.sui-cashflow-scrub-chart__marker--rule {
+  pointer-events: none;
+  cursor: default;
+}
+
+.sui-cashflow-scrub-chart__rule-line {
+  stroke: var(--sui-text, #fff);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 1 4;
+  opacity: 0.5;
+}
+
+.sui-cashflow-scrub-chart__rule-label {
+  fill: var(--sui-text-muted, rgba(255, 255, 255, 0.65));
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  dominant-baseline: middle;
+}

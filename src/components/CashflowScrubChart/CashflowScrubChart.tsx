@@ -353,6 +353,38 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         >
           {(m) => {
             const x = ctx.cellToX(m.index);
+            // Reference rule ("Today" etc.): a full-height dotted rule with an
+            // always-visible caption at the top. Non-interactive — no hit
+            // area, no flag, no dot. The label is clamped inside the plot's
+            // horizontal span (same policy as the over-top label) and the rule
+            // starts below it so the two don't overlap.
+            if (m.variant === "rule") {
+              const labelX = Math.min(
+                Math.max(x, ctx.plotLeft + 18),
+                ctx.plotRight - 18,
+              );
+              return (
+                <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--rule">
+                  {m.label && (
+                    <text
+                      class="sui-cashflow-scrub-chart__rule-label"
+                      x={labelX}
+                      y={ctx.plotTop + 8}
+                      text-anchor="middle"
+                    >
+                      {m.label}
+                    </text>
+                  )}
+                  <line
+                    class="sui-cashflow-scrub-chart__rule-line"
+                    x1={x}
+                    x2={x}
+                    y1={ctx.plotTop + (m.label ? 15 : 0)}
+                    y2={ctx.plotBottom}
+                  />
+                </g>
+              );
+            }
             const y = yToPlot(ctx.cells[m.index].balanceCents);
             const activate = () =>
               props.onMarkerClick?.(m.index, ctx.cells[m.index]);
