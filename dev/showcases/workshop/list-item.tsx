@@ -1,6 +1,5 @@
 import { Component, For, Show, createSignal } from "solid-js";
 import { SectionTitle, MutedBody } from "../../../src/components/Text";
-import { SmAvatar } from "../../../src/components/ParticipantAvatar";
 import { SortableList } from "../../../src/components/SortableList";
 
 export const meta = { label: "List Item" };
@@ -12,10 +11,11 @@ export const meta = { label: "List Item" };
 // results, pick lists). Everything is a DATA prop — no size/variant/tone at
 // the call site. Slots, left → right:
 //
-//   title ..................... [avatar] [tag pills] [status] [dismiss ×]
+//   title ................... [assignee] [tag pills] [status] [dismiss ×]
 //
 // - `title`    the one required prop.
-// - `avatar`   initials + optional color disc (SmAvatar underneath).
+// - `assignee` initials inside a person silhouette or an antennaed robot head
+//              (kind: "person" | "ai"); `active` highlights the border.
 // - `tags`     pills; `active` marks a pill as matched/highlighted (e.g. the
 //              tag that matched the current filter) — data, not styling.
 // - `status`   trailing outlined chip ("TODO", "DONE", ...).
@@ -31,9 +31,18 @@ interface ListItemTag {
   active?: boolean;
 }
 
+interface ListItemAssignee {
+  /** Up to 2 characters, centered in the icon. */
+  initials: string;
+  /** Person silhouette or antennaed robot head. Default "person". */
+  kind?: "person" | "ai";
+  /** Highlighted border (e.g. matched the active filter). Data-driven. */
+  active?: boolean;
+}
+
 interface ListItemProps {
   title: string;
-  avatar?: { initials: string; color?: string };
+  assignee?: ListItemAssignee;
   tags?: ListItemTag[];
   status?: string;
   /** Known statuses; drives the select menu AND the fixed chip width (longest option). */
@@ -44,6 +53,41 @@ interface ListItemProps {
   onTitleChange?: (title: string) => void;
   onDismiss?: () => void;
 }
+
+/** Assignment icon: initials (max 2 chars, centered) inside a person
+ * silhouette or an antennaed robot head. Outline-only; `active` lights the
+ * border. Replaces the old circular avatar. */
+const AssigneeIcon: Component<ListItemAssignee> = (props) => {
+  const chars = () => props.initials.slice(0, 2);
+  return (
+    <span
+      class="ws-list-item__assignee"
+      classList={{ "ws-list-item__assignee--active": props.active }}
+      title={props.initials}
+    >
+      <Show
+        when={props.kind === "ai"}
+        fallback={
+          /* Person: head bubble merging into shoulders, one silhouette path. */
+          <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (person)`}>
+            <path d="M4 25 L8.5 12 A6.2 6.2 0 1 1 19.5 12 L24 25 Z" />
+            <text x="14" y="20">{chars()}</text>
+          </svg>
+        }
+      >
+        {/* AI: robot head with two antennae. */}
+        <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (AI)`}>
+          <line x1="9" y1="10" x2="7" y2="4" />
+          <circle cx="6.7" cy="3" r="1.6" />
+          <line x1="19" y1="10" x2="21" y2="4" />
+          <circle cx="21.3" cy="3" r="1.6" />
+          <rect x="4" y="10" width="20" height="14" rx="2" />
+          <text x="14" y="20.5">{chars()}</text>
+        </svg>
+      </Show>
+    </span>
+  );
+};
 
 const TagPill: Component<{ tag: ListItemTag }> = (props) => {
   const splitAt = () => props.tag.label.indexOf(":");
@@ -241,8 +285,8 @@ const ListItem: Component<ListItemProps> = (props) => (
     </Show>
     <EditableTitle title={props.title} onChange={props.onTitleChange} />
     <span class="ws-list-item__meta">
-      <Show when={props.avatar}>
-        {(a) => <SmAvatar initials={a().initials} color={a().color} />}
+      <Show when={props.assignee}>
+        {(a) => <AssigneeIcon {...a()} />}
       </Show>
       <For each={props.tags ?? []}>
         {(tag) => <TagPill tag={tag} />}
@@ -273,12 +317,18 @@ const benchCss = `
   width: 100%;
   min-height: 40px;
   padding: var(--sui-space-sm, 8px) var(--sui-space-md, 12px);
+  /* Resting rows read as a subtly different background, not an outline; the
+     border exists (transparent) so hover can light it with zero geometry
+     shift (principle 3). */
   background: var(--sui-bg-secondary);
-  border: 1px solid var(--sui-border);
+  border: 1px solid transparent;
   border-radius: var(--sui-radius-md, 8px);
   color: var(--sui-text-primary);
   font-family: var(--sui-font-family);
   font-size: 0.875rem;
+}
+.ws-list-item:hover {
+  border-color: var(--sui-border-bright, var(--sui-border));
 }
 .ws-list-item__title {
   flex: 1 1 auto;
@@ -341,6 +391,41 @@ const benchCss = `
   align-items: center;
   gap: var(--sui-space-xs, 6px);
   flex: none;
+}
+/* Assignment icon: outline shapes; --active lights the border + initials. */
+.ws-list-item__assignee {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+.ws-list-item__assignee svg {
+  width: 25px;
+  height: 23px;
+  fill: none;
+  stroke: var(--sui-border-bright, var(--sui-border));
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ws-list-item__assignee svg circle {
+  fill: var(--sui-border-bright, var(--sui-border));
+  stroke: none;
+}
+.ws-list-item__assignee svg text {
+  stroke: none;
+  fill: var(--sui-text-secondary);
+  font-family: var(--sui-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+.ws-list-item__assignee--active svg {
+  stroke: var(--sui-accent);
+}
+.ws-list-item__assignee--active svg circle {
+  fill: var(--sui-accent);
+}
+.ws-list-item__assignee--active svg text {
+  fill: var(--sui-accent);
 }
 .ws-list-item__tag {
   padding: 1px 10px;
@@ -483,7 +568,7 @@ const benchCss = `
   align-items: center;
   justify-content: center;
   border: 1px solid var(--sui-border);
-  border-radius: 0 999px 999px 0;
+  border-radius: 999px 0 0 999px;
   background: transparent;
   color: var(--sui-text-secondary);
   font-size: 1rem;
@@ -505,9 +590,9 @@ const benchCss = `
    ListItem, so the wrapper would double it. Zero vertical growth; horizontal
    growth only the grip's slot. !important beats the wrapper's inline padding.
    Becomes a chromeless-row option on SortableList when this graduates. */
-/* Trying flush rows — no margin space between them (Peter, 2026-07-02). */
+/* Near-flush rows — 1px of space between them (Peter, 2026-07-02). */
 .ws-bench-stack .sui-sortable-list {
-  gap: 0;
+  gap: 1px;
 }
 .ws-bench-stack .sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
   padding: 0 !important;
@@ -540,7 +625,7 @@ const STATUS_OPTIONS = ["TODO", "DOING", "BLOCKED", "DONE"];
 interface Task {
   id: string;
   title: string;
-  avatar?: { initials: string; color?: string };
+  assignee?: ListItemAssignee;
   tags: ListItemTag[];
   status: string;
 }
@@ -549,28 +634,48 @@ const seedTasks: Task[] = [
   {
     id: "t1",
     title: "deploy minute-level-hover",
-    avatar: { initials: "P", color: "#3b5bdb" },
+    assignee: { initials: "P", kind: "person", active: true },
     tags: [{ label: "stax:jtf", active: true }],
-    status: "TODO",
+    status: "DONE",
   },
   {
     id: "t2",
     title: "Get creds to connect to sync spreadsheet",
     tags: [{ label: "stax:jtf", active: true }],
-    status: "TODO",
+    status: "DOING",
   },
   {
     id: "t3",
     title: "Initial user flow — how to add account?",
-    avatar: { initials: "A", color: "#5f3dc4" },
+    assignee: { initials: "A", kind: "ai" },
     tags: [{ label: "primestage:thorcasting", active: true }],
-    status: "TODO",
+    status: "DOING",
   },
   {
     id: "t4",
     title: 'stray "today" indicator on chart',
-    avatar: { initials: "A", color: "#5f3dc4" },
+    assignee: { initials: "A", kind: "ai" },
     tags: [{ label: "primestage:thorcasting", active: true }],
+    status: "TODO",
+  },
+  {
+    id: "t5",
+    title: "wire showcase filter to tag facets",
+    assignee: { initials: "DA", kind: "ai" },
+    tags: [{ label: "primestage:dside" }],
+    status: "TODO",
+  },
+  {
+    id: "t6",
+    title: "backfill June hours into the STAX sheet",
+    assignee: { initials: "P", kind: "person" },
+    tags: [{ label: "stax" }],
+    status: "TODO",
+  },
+  {
+    id: "t7",
+    title: "sketch swimlane card hover states",
+    tags: [{ label: "primestage:thorcasting" }],
     status: "TODO",
   },
 ];
@@ -599,12 +704,12 @@ const ListItemBench: Component = () => {
       <style>{benchCss}</style>
       <SectionTitle>List Item — anatomy</SectionTitle>
       <MutedBody>
-        All slots: title, avatar, tags (one active), status, dismiss.
+        All slots: title, assignee, tags (one active), status, dismiss.
       </MutedBody>
       <div class="ws-bench-stack">
         <ListItem
           title="deploy minute-level-hover"
-          avatar={{ initials: "P", color: "#3b5bdb" }}
+          assignee={{ initials: "P", kind: "person", active: true }}
           tags={[{ label: "stax", active: true }, { label: "jtf" }]}
           status="TODO"
           statusOptions={STATUS_OPTIONS}
@@ -622,7 +727,7 @@ const ListItemBench: Component = () => {
         <ListItem title="with status" status="DONE" />
         <ListItem
           title="with a very long title that should truncate with an ellipsis rather than wrap or push the trailing meta cluster out of the row, no matter how long it gets"
-          avatar={{ initials: "P", color: "#3b5bdb" }}
+          assignee={{ initials: "P", kind: "person", active: true }}
           tags={[{ label: "primestage" }]}
           status="TODO"
           onDismiss={() => {}}
@@ -652,7 +757,7 @@ const ListItemBench: Component = () => {
           renderItem={(t) => (
             <ListItem
               title={t.title}
-              avatar={t.avatar}
+              assignee={t.assignee}
               tags={t.tags}
               status={t.status}
               statusOptions={STATUS_OPTIONS}
