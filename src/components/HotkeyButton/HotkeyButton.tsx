@@ -39,7 +39,10 @@ export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
   children: string;
 }
 
-function isEditableTarget(el: EventTarget | null): boolean {
+/** True when the event target is a text-editing surface (input / textarea /
+ *  select / contentEditable). Exported so other keyboard-shortcut owners (e.g.
+ *  ActionList's Escape-clears-selection) can defer to an active inline editor. */
+export function isEditableTarget(el: EventTarget | null): boolean {
   if (!el || !(el instanceof HTMLElement)) return false;
   const tag = el.tagName;
   return (

@@ -1,4 +1,4 @@
-export { HotkeyButton, createHotkeyButton } from "./HotkeyButton";
+export { HotkeyButton, createHotkeyButton, isEditableTarget } from "./HotkeyButton";
 export type {
   HotkeyButtonProps,
   HotkeyButtonOverrides,
