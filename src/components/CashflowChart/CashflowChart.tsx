@@ -23,6 +23,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { scaleBand, scaleLinear } from "d3-scale";
+import { insetSpan } from "../../internal/geometry/insetSpan";
 import "./CashflowChart.css";
 import type {
   BarLineItem,
@@ -71,6 +72,11 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
   // measured container, floored so a tiny share never collapses the chart.
   const h = () => props.height ?? Math.max(MIN_CHART_HEIGHT, measuredHeight());
 
+  // Plot-region spans — every left/right/top/bottom edge coordinate below is
+  // derived from these two, so the PAD inset arithmetic lives in one place.
+  const plotX = () => insetSpan(VB_W(), PAD.left, PAD.right);
+  const plotY = () => insetSpan(h(), PAD.top, PAD.bottom);
+
   onMount(() => {
     if (!containerRef) return;
     if (typeof ResizeObserver === "undefined") return;
@@ -110,7 +116,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
 
     const xScale = scaleBand<string>()
       .domain(weeks)
-      .range([PAD.left, VB_W() - PAD.right])
+      .range([plotX().start, plotX().end])
       .padding(0.15);
 
     const maxRevenue = Math.max(0, ...bars.map((b) => b.revenue_cents));
@@ -164,7 +170,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
 
     const yScale = scaleLinear()
       .domain([domainMin, domainMax])
-      .range([h() - PAD.bottom, PAD.top]);
+      .range([plotY().end, plotY().start]);
     // No .nice() in auto mode — rounding the domain outward would reintroduce the
     // empty margins the 10% fit is meant to remove.
 
@@ -286,19 +292,19 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
       >
         {/* Zero line */}
         <line
-          x1={PAD.left}
+          x1={plotX().start}
           y1={zeroY()}
-          x2={VB_W() - PAD.right}
+          x2={plotX().end}
           y2={zeroY()}
           class="rc-cashflow__axis"
         />
 
         {/* Y-axis line */}
         <line
-          x1={PAD.left}
-          y1={PAD.top}
-          x2={PAD.left}
-          y2={h() - PAD.bottom}
+          x1={plotX().start}
+          y1={plotY().start}
+          x2={plotX().start}
+          y2={plotY().end}
           class="rc-cashflow__axis"
         />
 
@@ -309,23 +315,23 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
             return (
               <>
                 <line
-                  x1={PAD.left - 4}
+                  x1={plotX().start - 4}
                   y1={y()}
-                  x2={PAD.left}
+                  x2={plotX().start}
                   y2={y()}
                   class="rc-cashflow__tick"
                 />
                 {tick !== 0 && (
                   <line
-                    x1={PAD.left}
+                    x1={plotX().start}
                     y1={y()}
-                    x2={VB_W() - PAD.right}
+                    x2={plotX().end}
                     y2={y()}
                     class="rc-cashflow__grid"
                   />
                 )}
                 <text
-                  x={PAD.left - 8}
+                  x={plotX().start - 8}
                   y={y()}
                   text-anchor="end"
                   dominant-baseline="middle"
@@ -347,9 +353,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
               // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip/popover affordance on SVG data-viz; no activating action
               <rect
                 x={ox()}
-                y={PAD.top}
+                y={plotY().start}
                 width={obw()}
-                height={h() - PAD.top - PAD.bottom}
+                height={plotY().size}
                 fill="transparent"
                 onMouseEnter={() => setCoffersHover(bar.week_start)}
                 onMouseMove={() => setCoffersHover(bar.week_start)}
@@ -389,9 +395,9 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
           <line
             class="rc-cashflow__now"
             x1={scales().nowX}
-            y1={PAD.top}
+            y1={plotY().start}
             x2={scales().nowX}
-            y2={h() - PAD.bottom}
+            y2={plotY().end}
           />
         </Show>
 

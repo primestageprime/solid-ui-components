@@ -12,6 +12,7 @@ import {
   createUniqueId,
   splitProps,
 } from "solid-js";
+import { insetSpan } from "../../internal/geometry/insetSpan";
 import {
   ChartContext,
   type ChartContextValue,
@@ -108,11 +109,11 @@ export const Chart: Component<ChartProps> = (props) => {
   }));
   const width = createMemo(() => local.width);
   const height = createMemo(() => local.height);
-  const innerWidth = createMemo(() =>
-    Math.max(0, width() - margin().left - margin().right),
+  const innerWidth = createMemo(
+    () => insetSpan(width(), margin().left, margin().right).size,
   );
-  const innerHeight = createMemo(() =>
-    Math.max(0, height() - margin().top - margin().bottom),
+  const innerHeight = createMemo(
+    () => insetSpan(height(), margin().top, margin().bottom).size,
   );
   const annotationLaneHeight = createMemo(() =>
     Math.max(0, local.annotationLaneHeight ?? 0),

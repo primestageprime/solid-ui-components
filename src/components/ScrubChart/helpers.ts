@@ -23,6 +23,7 @@
 // Extracted verbatim from ScrubChart.tsx — no behaviour change.
 // ============================================
 
+import { formatGroupedNumber } from "../../internal/format/number";
 import type { Cell } from "../DateAxis";
 import type { ResolvedXTickCadence } from "./types";
 
@@ -62,8 +63,7 @@ export const measureLabelWidth = (text: string): number => {
   return text.length * 6.5; // sans-serif-ish digit estimate
 };
 
-export const defaultFormatY = (v: number): string =>
-  v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+export const defaultFormatY = (v: number): string => formatGroupedNumber(v);
 
 // Per-cadence default labels chosen to stay short enough to fit on a
 // ~60-100px tick column without clipping.

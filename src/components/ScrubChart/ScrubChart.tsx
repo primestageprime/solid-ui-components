@@ -35,6 +35,7 @@ import {
   onMount,
 } from "solid-js";
 import { scaleLinear } from "d3-scale";
+import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { DateAxis, type Cell } from "../DateAxis";
 import { ScrubChartAxes } from "./ScrubChartAxes";
@@ -102,9 +103,10 @@ export const ScrubChart = <C extends Cell>(
   });
 
   // Vertical plot region — independent of y-axis width.
-  const plotTop = () => 0;
-  const plotBottom = () => chartHeight() - xAxisHeight();
-  const plotHeight = () => Math.max(0, plotBottom() - plotTop());
+  const vSpan = () => insetSpan(chartHeight(), 0, xAxisHeight());
+  const plotTop = () => vSpan().start;
+  const plotBottom = () => vSpan().end;
+  const plotHeight = () => vSpan().size;
 
   // ── Y-scale + ticks (defined before plotLeft because the y-axis column
   //    width is derived from the formatted tick label widths). ────────────
@@ -139,9 +141,10 @@ export const ScrubChart = <C extends Cell>(
   });
 
   // Horizontal plot region — depends on the auto-sized y-axis column.
-  const plotLeft = () => yAxisWidth();
-  const plotRight = () => chartWidth();
-  const plotWidth = () => Math.max(0, plotRight() - plotLeft());
+  const hSpan = () => insetSpan(chartWidth(), yAxisWidth(), 0);
+  const plotLeft = () => hSpan().start;
+  const plotRight = () => hSpan().end;
+  const plotWidth = () => hSpan().size;
 
   // Linear day pitch — cells span the plot region only.
   const dayPitch = createMemo(() =>

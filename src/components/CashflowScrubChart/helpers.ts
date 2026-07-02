@@ -13,31 +13,24 @@
 // same arguments it returns the same value and mutates nothing the caller owns.
 // ============================================
 
+import {
+  formatCompactNumber,
+  formatGroupedNumber,
+} from "../../internal/format/number";
 import type { CashflowCell } from "./types";
 
 /** Signed dollar label — `+$1,234` / `−$1,234` — for the per-day amount row. */
 export const fmtDollars = (cents: number): string => {
   const sign = cents < 0 ? "−" : "+";
-  const dollars = Math.abs(cents) / 100;
-  return `${sign}$${dollars.toLocaleString("en-US", {
-    maximumFractionDigits: 0,
-  })}`;
+  return `${sign}$${formatGroupedNumber(Math.abs(cents) / 100)}`;
 };
 
-// Y-axis labels — unsigned dollars with `$` prefix and a `−` for negatives.
+// Y-axis labels — unsigned compact dollars ("$3.4k" / "$1.2M") with a `−`
+// prefix for negatives (the minus the compact core emits is swapped for the
+// typographic one used across the ribbon).
 export const fmtAxisDollars = (cents: number): string => {
   const dollars = cents / 100;
-  const abs = Math.abs(dollars);
-  const compact =
-    abs >= 1_000_000
-      ? `${(dollars / 1_000_000).toLocaleString("en-US", {
-          maximumFractionDigits: 1,
-        })}M`
-      : abs >= 1_000
-        ? `${(dollars / 1_000).toLocaleString("en-US", {
-            maximumFractionDigits: 1,
-          })}k`
-        : dollars.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const compact = formatCompactNumber(dollars);
   return dollars < 0 ? `−$${compact.replace(/^-/, "")}` : `$${compact}`;
 };
 
