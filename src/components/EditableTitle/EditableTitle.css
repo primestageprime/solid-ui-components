@@ -1,0 +1,68 @@
+/* ============================================
+   EditableTitle — Atomic Primitive (Depth 1). Inert-or-editable title whose
+   inline input is fitted to the rendered text via a hidden inline-grid replica.
+   Owns all of its visuals; no sibling component imports. Typography rides
+   `inherit`, so the title matches wherever it sits. Extracted verbatim from the
+   ListItem workshop bench.
+
+   The dotted underline reveals on the title's OWN hover here so it is self-
+   sufficient standalone; ActionListItem additionally reveals it on whole-ROW
+   hover (a superset) to match the bench.
+   ============================================ */
+
+.sui-editable-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* The edit target covers ONLY the text itself — a shrink-wrapped button; the
+   slot's leftover width stays inert (free for drag in a row). */
+.sui-editable-title__text {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+  vertical-align: middle;
+}
+.sui-editable-title__text:disabled {
+  cursor: default;
+}
+.sui-editable-title:hover .sui-editable-title__text:not(:disabled) {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+/* Fitted editor: a hidden replica of the draft text sizes the grid cell, so the
+   input is exactly as wide as its content (same font, live per keystroke). */
+.sui-editable-title__editor {
+  display: inline-grid;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.sui-editable-title__editor::after {
+  content: attr(data-value) " ";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+  overflow: hidden;
+}
+.sui-editable-title__input {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 1ch;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  outline: 1px solid var(--sui-accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
