@@ -12,6 +12,28 @@
   font-size: 12px;
 }
 
+/* "bare" row chrome — strips the Surface border / bg / padding so a self-styled
+   row content (e.g. ActionListItem) is the row's only surface, tightens the
+   grip↔content gap, and hides the grip until the row is hovered. Graduated from
+   the ListItem workshop bench's SortableList overrides. The placeholder keeps
+   its dashed chrome (it is excluded below), so the drop gap still reads. */
+.sui-sortable-list--bare
+  .sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  gap: 6px;
+}
+.sui-sortable-list--bare .sui-sortable-list__grip {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.sui-sortable-list--bare
+  .sui-sortable-list__row:hover
+  .sui-sortable-list__grip {
+  opacity: 0.45;
+}
+
 /* Row chrome — the 1px border, the md radius, the padding box-model and the
    elevated background — is composed from the Surface primitive (see
    SortableList.tsx), which previously lived hand-rolled here. This rule keeps

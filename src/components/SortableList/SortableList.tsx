@@ -19,12 +19,14 @@
 // drag image. Hit-testing lives on the CONTAINER so the placeholder tracks the
 // cursor through the gaps between rows too (the dead zones).
 //
-// NO curried variant — intentional, and by rule. Every prop is data or a
-// callback (`items` / `getId` / `onReorder` / `renderItem` / `label`); there is
-// nothing presentational (size/variant/tone) to freeze. Per the "curried set"
-// rule the exception is data-only components, exactly like DnDHierarchySortBar
-// and SplitQueueList: the base component is already zero-config at the call
-// site, so a curried drop-in would add no value.
+// NO curried variant — intentional, and by rule. The core props are all data or
+// callbacks (`items` / `getId` / `onReorder` / `renderItem` / `label`). The two
+// presentational knobs it does carry — `rowChrome` and `gap` — both DEFAULT to
+// the original behaviour ("surface" chrome, 8px gap), so the base is still
+// zero-config at the call site; consumers that want the chromeless look (e.g.
+// ActionList) opt in with rowChrome="bare". Per the "curried set" rule the
+// exception is data-only-by-default components, exactly like DnDHierarchySortBar
+// and SplitQueueList: a curried drop-in would add no value.
 // ============================================
 
 import { For, type JSX, Show } from "solid-js";
@@ -48,12 +50,23 @@ export interface SortableListProps<T> {
   renderItem: (item: T) => JSX.Element;
   /** Accessible label for the list region. Defaults to "Sortable list". */
   label?: string;
+  /**
+   * Row chrome. "surface" (default) wraps each row in the Surface primitive
+   * (border / elevated bg / 8px 12px padding) with the grip always visible —
+   * the original behaviour. "bare" strips that chrome (no border, transparent
+   * bg, zero padding) and hides the grip until the row is hovered, so a
+   * self-styled row content (e.g. ActionListItem) IS the row's only surface.
+   */
+  rowChrome?: "surface" | "bare";
+  /** Vertical gap between rows, in px. Default 8. */
+  gap?: number;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────
 
 export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
   const label = () => props.label ?? "Sortable list";
+  const bare = () => props.rowChrome === "bare";
 
   // axis "y": a vertical column, so the before/after hit-test compares the
   // cursor's Y against each row's vertical midpoint (above / below).
@@ -72,8 +85,10 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
     <div
       class="sui-sortable-list"
+      classList={{ "sui-sortable-list--bare": bare() }}
       role="list"
       aria-label={label()}
+      style={{ gap: `${props.gap ?? 8}px` }}
       onDragOver={dnd.containerHandlers.onDragOver}
       onDrop={dnd.containerHandlers.onDrop}
     >
@@ -133,8 +148,10 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
                 onDragEnd={handlers().onDragEnd}
                 padding="none"
                 radius="md"
-                bg="var(--sui-bg-elevated)"
-                style={{ padding: "8px 12px" }}
+                /* "bare" drops the inline bg + padding so the CSS below can
+                   strip the chrome; the row content becomes the only surface. */
+                bg={bare() ? undefined : "var(--sui-bg-elevated)"}
+                style={bare() ? undefined : { padding: "8px 12px" }}
               >
                 <span class="sui-sortable-list__grip" aria-hidden="true">
                   ⠿
