@@ -338,7 +338,9 @@ const benchCss = `
   background: var(--sui-bg-secondary);
   border: 1px solid transparent;
   border-radius: var(--sui-radius-md, 8px);
-  color: var(--sui-text-primary);
+  /* All row text sits in the thematic foreground (cyan in HUD) — never the
+     near-white text-primary. */
+  color: var(--sui-accent);
   font-family: var(--sui-font-family);
   font-size: 0.875rem;
 }
@@ -639,9 +641,6 @@ const benchCss = `
 .ws-list-item--dim .ws-list-item__title,
 .ws-list-item--dim .ws-list-item__meta {
   opacity: 0.45;
-}
-.ws-list-item--highlight .ws-list-item__title {
-  color: var(--sui-accent);
 }
 .ws-list-item--highlight .ws-list-item__tag {
   border-color: var(--sui-accent);
