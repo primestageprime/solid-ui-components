@@ -23,10 +23,10 @@
 //    to the row's right edge via negative margins.
 // ============================================
 import { Component, For, Show } from "solid-js";
-import { StatusChip } from "../StatusChip/StatusChip";
+import { StatusChip } from "../Badge/StatusChip";
 import { EditableTitle } from "../EditableTitle/EditableTitle";
-import { AssigneeIcon, type AssigneeIconProps } from "../AssigneeIcon/AssigneeIcon";
-import { TagPill, type TagPillData } from "../TagPill/TagPill";
+import { AssigneeIcon, type AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
+import { TagPill, type TagPillData } from "../Badge/TagPill";
 import "./ActionListItem.css";
 
 export type ActionListItemTone = "dim" | "neutral" | "highlight";

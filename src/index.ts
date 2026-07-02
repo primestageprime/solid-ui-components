@@ -100,7 +100,7 @@ export type { AnimatedSwimlaneChartDataProps as SwimlaneChartDataProps } from ".
 // Static variant under a distinct public name so the surface doesn't
 // collide. Internal callers may also import directly from the folder.
 export { SwimlaneChart as SwimlaneChartStatic } from "./components/SwimlaneChart/SwimlaneChart";
-// Layout/converter/variants from the SwimlaneChart folder — these are
+// Layout/converter/variants from the SwimlaneChart folder â these are
 // component-independent and remain part of the public surface.
 export {
   computeSwimlaneLayout,
@@ -148,7 +148,7 @@ export * from "./components/DiffPair";
 export * from "./components/ChangeRenderer";
 export * from "./components/CandlestickRenderer";
 export * from "./components/DateRangePicker";
-// DateAxis re-exports — `Cell` (time-bucket type) collides with the existing
+// DateAxis re-exports â `Cell` (time-bucket type) collides with the existing
 // `Cell` table component at the root surface, so we list each export
 // explicitly and alias the type to `DateAxisCell` for root-level consumers.
 // Consumers who prefer the bare `Cell` name can still import it from
@@ -192,17 +192,17 @@ export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
 export * from "./components/SortableList";
 export * from "./components/MutableList";
-// ActionList family — the ActionList Depth-3 list and its constituent parts.
-export * from "./components/AssigneeIcon";
-export * from "./components/TagPill";
-export * from "./components/StatusChip";
+// ActionList family — the ActionList Depth-3 list and its Depth-2 row. The
+// four Depth-1 primitives ship inside existing families: AssigneeIcon via
+// ParticipantAvatar, TagPill + StatusChip via Badge; EditableTitle is standalone
+// (InlineText is styleless and non-editable, so genuinely different).
 export * from "./components/EditableTitle";
 export * from "./components/ActionListItem";
 export * from "./components/ActionList";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
-// Backward compatibility — will be removed in a future version
+// Backward compatibility â will be removed in a future version
 export { Page as HUDPage } from "./components/Page";
 export { Modal as HUDModal } from "./components/Modal";
 export { ConfirmationModal as HUDConfirmationModal } from "./components/Modal";

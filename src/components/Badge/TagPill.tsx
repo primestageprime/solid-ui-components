@@ -1,6 +1,9 @@
 // ============================================
 // TagPill — Atomic Primitive (Depth 1)
 // Owns CSS (TagPill.css), no component imports.
+// Placement: lives in src/components/Badge/ as a sibling of CountChip (a separate
+// pill primitive, NOT a StatusBadge variant — different data model), to keep
+// pill/lozenge indicators in one family.
 //
 // A pill tag. A plain label renders as a single lozenge; a label containing a
 // ":" (or the explicit `{ key, value }` form) renders as a SPLIT lozenge — a

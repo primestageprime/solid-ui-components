@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { AssigneeIcon } from "./index";
+import { AssigneeIcon } from "./AssigneeIcon";
 
 describe("AssigneeIcon", () => {
   it("renders up to 2 centered initials", () => {

@@ -18,8 +18,8 @@
 import { Component, mergeProps } from "solid-js";
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
-import type { AssigneeIconProps } from "../AssigneeIcon/AssigneeIcon";
-import type { TagPillData } from "../TagPill/TagPill";
+import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
+import type { TagPillData } from "../Badge/TagPill";
 
 /** A tag — a plain/`"ns:value"` label, or the explicit `{ key, value }` form. */
 export type ActionListTag = TagPillData;

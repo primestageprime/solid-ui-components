@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { TagPill } from "./index";
+import { TagPill } from "./TagPill";
 
 describe("TagPill", () => {
   it("renders a plain label as a single lozenge", () => {

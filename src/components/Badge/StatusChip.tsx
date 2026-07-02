@@ -1,6 +1,9 @@
 // ============================================
 // StatusChip — Atomic Primitive (Depth 1)
 // Owns CSS (StatusChip.css), no component imports.
+// Placement: lives in src/components/Badge/ as the EDITABLE sibling of StatusBadge
+// (a separate primitive, NOT a StatusBadge variant — it adds inline editing +
+// different markup).
 //
 // A fixed-width, editable status chip. The width is frozen to the longest
 // option (in `ch` of the mono font) so neither hover, editing, nor a shorter

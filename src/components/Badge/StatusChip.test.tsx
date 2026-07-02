@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
-import { StatusChip } from "./index";
+import { StatusChip } from "./StatusChip";
 
 afterEach(cleanup);
 

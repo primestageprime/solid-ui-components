@@ -1,6 +1,9 @@
 // ============================================
 // AssigneeIcon — Atomic Primitive (Depth 1)
 // Owns CSS (AssigneeIcon.css), no component imports.
+// Placement: lives in src/components/ParticipantAvatar/ as a sibling of the
+// filled avatar (a separate primitive, NOT a createParticipantAvatar variant —
+// different rendering), to keep person-representation glyphs in one family.
 //
 // The outline sibling of ParticipantAvatar. Where ParticipantAvatar is a
 // FILLED circular disc (image or tinted initials) for showing WHO is present,
