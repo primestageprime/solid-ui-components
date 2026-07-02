@@ -342,12 +342,12 @@ const benchCss = `
   color: var(--sui-accent);
   font-family: var(--sui-font-family);
   font-size: 0.875rem;
-  /* Tone = row opacity, everything cyan: TODO/neutral 75%, DONE 50%,
+  /* Tone = row opacity, everything cyan: TODO/neutral 50%, DONE 25%,
      DOING 100% (the --dim/--highlight overrides below). */
-  opacity: 0.75;
+  opacity: 0.5;
 }
 .ws-list-item--dim {
-  opacity: 0.5;
+  opacity: 0.25;
 }
 .ws-list-item--highlight {
   opacity: 1;
