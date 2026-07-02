@@ -68,19 +68,21 @@ const AssigneeIcon: Component<ListItemAssignee> = (props) => {
       <Show
         when={props.kind === "ai"}
         fallback={
-          /* Person: head bubble merging into shoulders, one silhouette path. */
+          /* Person: classic user icon — head circle (holds the initials) above
+             rounded shoulders. */
           <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (person)`}>
-            <path d="M4 25 L8.5 12 A6.2 6.2 0 1 1 19.5 12 L24 25 Z" />
-            <text x="14" y="20">{chars()}</text>
+            <circle cx="14" cy="10" r="8.75" />
+            <path d="M5 25 v-0.5 a9 4.5 0 0 1 18 0 v0.5 z" />
+            <text x="14" y="13">{chars()}</text>
           </svg>
         }
       >
         {/* AI: robot head with two antennae. */}
         <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (AI)`}>
           <line x1="9" y1="10" x2="7" y2="4" />
-          <circle cx="6.7" cy="3" r="1.6" />
+          <circle class="dot" cx="6.7" cy="3" r="1.6" />
           <line x1="19" y1="10" x2="21" y2="4" />
-          <circle cx="21.3" cy="3" r="1.6" />
+          <circle class="dot" cx="21.3" cy="3" r="1.6" />
           <rect x="4" y="10" width="20" height="14" rx="2" />
           <text x="14" y="20.5">{chars()}</text>
         </svg>
@@ -406,7 +408,7 @@ const benchCss = `
   stroke-width: 1.5;
   stroke-linejoin: round;
 }
-.ws-list-item__assignee svg circle {
+.ws-list-item__assignee svg circle.dot {
   fill: var(--sui-border-bright, var(--sui-border));
   stroke: none;
 }
@@ -421,7 +423,7 @@ const benchCss = `
 .ws-list-item__assignee--active svg {
   stroke: var(--sui-accent);
 }
-.ws-list-item__assignee--active svg circle {
+.ws-list-item__assignee--active svg circle.dot {
   fill: var(--sui-accent);
 }
 .ws-list-item__assignee--active svg text {
