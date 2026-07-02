@@ -50,18 +50,40 @@ export interface ActionListItemProps {
   onTitleChange?: (title: string) => void;
   /** Called on dismiss. When absent the × cap is hidden. */
   onDismiss?: () => void;
+  /** Whether the row is currently selected. Lights a persistent accent border +
+   *  subtle accent fill (geometry-safe — the border already exists transparent). */
+  selected?: boolean;
+  /** Toggle selection. When present the row's non-interactive area becomes a
+   *  click target; clicks that land on an inner control (the title button/input,
+   *  the status chip text/caret/menu, the dismiss ×) do NOT toggle. When absent
+   *  the row is not selectable. */
+  onSelect?: () => void;
 }
 
 export const ActionListItem: Component<ActionListItemProps> = (props) => {
   const tone = () => props.tone ?? "neutral";
+  // Toggle selection only for clicks on the row's non-interactive area. Every
+  // inner affordance (EditableTitle, StatusChip, dismiss) renders a <button> or
+  // <input>, so a single `closest` guard excludes all of them at once — clicks
+  // on the plain row body, the assignee glyph, or a tag pill still toggle.
+  const onRowClick = (e: MouseEvent) => {
+    if (!props.onSelect) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("button, input, select, textarea, [role='listbox']")) return;
+    props.onSelect();
+  };
   return (
     <div
       class="sui-action-list-item"
       classList={{
         "sui-action-list-item--dim": tone() === "dim",
         "sui-action-list-item--highlight": tone() === "highlight",
+        "sui-action-list-item--selectable": !!props.onSelect,
+        "sui-action-list-item--selected": !!props.selected,
       }}
       role="listitem"
+      aria-selected={props.onSelect ? !!props.selected : undefined}
+      onClick={onRowClick}
     >
       <Show when={props.status}>
         <StatusChip

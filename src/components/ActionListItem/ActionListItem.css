@@ -43,6 +43,21 @@
   border-color: var(--sui-border-bright, var(--sui-border));
 }
 
+/* Selectable rows: the whole non-interactive body is a click target. */
+.sui-action-list-item--selectable {
+  cursor: pointer;
+}
+
+/* Selected: light the (already-present, transparent) accent border and lay a
+   subtle accent wash over the row bg. Both are colour-only changes to existing
+   box-model — zero geometry shift (principle 3), same guarantee as hover. The
+   accent border outranks the hover border via source order + specificity. */
+.sui-action-list-item--selected,
+.sui-action-list-item--selected:hover {
+  border-color: var(--sui-accent);
+  background: color-mix(in srgb, var(--sui-accent) 12%, var(--sui-bg-secondary));
+}
+
 /* Row-hover reveals for the child primitives — these mirror the bench, where
    hovering ANYWHERE on the row (not just the child) reveals the affordance. The
    primitives also self-reveal on their own hover for standalone use; within a
