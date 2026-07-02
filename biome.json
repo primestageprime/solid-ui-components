@@ -34,19 +34,19 @@
       "style": {
         "noNonNullAssertion": "off",
         "useImportType": "warn",
-        "useTemplate": "warn",
+        "useTemplate": "error",
         "useExponentiationOperator": "warn",
-        "noDescendingSpecificity": "warn"
+        "noDescendingSpecificity": "error"
       },
       "complexity": {
-        "useLiteralKeys": "warn",
-        "noImportantStyles": "warn"
+        "useLiteralKeys": "error",
+        "noImportantStyles": "error"
       },
       "correctness": {
         "noInvalidDirectionInLinearGradient": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noFocusedTests": "off"
       }
     }
@@ -58,6 +58,15 @@
         "rules": {
           "a11y": {
             "recommended": false
+          },
+          "style": {
+            "useTemplate": "warn"
+          },
+          "complexity": {
+            "useLiteralKeys": "warn"
+          },
+          "suspicious": {
+            "noExplicitAny": "warn"
           }
         }
       }

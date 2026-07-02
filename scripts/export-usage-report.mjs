@@ -324,7 +324,7 @@ console.log(
 );
 console.log("");
 
-console.log(`-- (a) USED EXPORTS (${used.length}) ` + "-".repeat(40));
+console.log(`-- (a) USED EXPORTS (${used.length}) ${"-".repeat(40)}`);
 const usedSorted = used
   .map((n) => ({ n, count: usage.get(n).size, who: [...usage.get(n)].sort() }))
   .sort((a, b) => b.count - a.count || a.n.localeCompare(b.n));
@@ -345,7 +345,7 @@ for (const n of unused) {
 }
 console.log("");
 
-console.log(`-- (c) BROKEN IMPORTS (${brokenNames.length}) ` + "-".repeat(35));
+console.log(`-- (c) BROKEN IMPORTS (${brokenNames.length}) ${"-".repeat(35)}`);
 if (brokenNames.length === 0) {
   console.log(
     "  none — every imported identifier resolves to a current export.",
