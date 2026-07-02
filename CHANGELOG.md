@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.85.0
+
+### Changed
+
+- **SplitQueueList** — the animated queue now **fills its parent's height when `height` is omitted**, instead of collapsing to a hardcoded 420px. The root renders at `height: 100%` and self-measures its parent-allotted box (reusing the existing `rootEl` `ResizeObserver` — no new observer), feeding that measured height into the pane layout so the panel stretches to the bottom of a flex / `height:100%` container and re-flows on resize. Passing an explicit `height` keeps the prior fixed-px behavior unchanged; 420 is now only the pre-measure / unmeasurable floor (e.g. jsdom, which reports 0 from `getBoundingClientRect`). Consumers that dropped the panel into a sized parent and relied on the 420 fallback should either pass an explicit `height` or ensure the parent is height-constrained. (`StaticSplitLayout` already had this fill behavior.)
+
 ## 0.84.2
 
 ### Changed
