@@ -1,0 +1,35 @@
+/* ============================================
+   TagPill — Atomic Primitive (Depth 1). Pill tag / split namespace:value
+   lozenge. Owns all of its visuals; no sibling component imports. Colours ride
+   `currentColor`, so the pill inherits its context's foreground. Extracted
+   verbatim from the ListItem workshop bench.
+   ============================================ */
+
+.sui-tag-pill {
+  padding: 1px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.sui-tag-pill--active {
+  background: rgba(var(--sui-accent-rgb), 0.12);
+}
+.sui-tag-pill--split {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.sui-tag-pill__ns,
+.sui-tag-pill__val {
+  padding: 1px 8px;
+}
+.sui-tag-pill__ns {
+  /* The namespace is the lozenge's heading: SAME background and font color as
+     the value side — strong type is the only differentiator. */
+  border-right: 1px solid currentColor;
+  font-weight: 700;
+}
