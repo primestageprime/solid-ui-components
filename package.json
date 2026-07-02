@@ -102,7 +102,7 @@
     "@biomejs/biome": "2.5.2",
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.1.0",
     "d3-scale": "^4.0.2",
     "jsdom": "^26.1.0",
     "solid-devtools": "^0.34.5",
@@ -117,6 +117,6 @@
     "@kobalte/core": "^0.13.12",
     "@tanstack/solid-virtual": "^3.13.32",
     "d3-dag": "^1.2.1",
-    "katex": "^0.16.47"
+    "katex": "^0.17.0"
   }
 }
