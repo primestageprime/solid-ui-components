@@ -34,7 +34,6 @@ interface ListItemTag {
 
 interface ListItemProps {
   title: string;
-  index?: number;
   avatar?: { initials: string; color?: string };
   tags?: ListItemTag[];
   status?: string;
@@ -43,9 +42,6 @@ interface ListItemProps {
 
 const ListItem: Component<ListItemProps> = (props) => (
   <div class="ws-list-item" role="listitem">
-    <Show when={props.index != null}>
-      <span class="ws-list-item__index">{props.index}.</span>
-    </Show>
     <span class="ws-list-item__title">{props.title}</span>
     <span class="ws-list-item__meta">
       <Show when={props.avatar}>
@@ -93,13 +89,6 @@ const benchCss = `
   color: var(--sui-text-primary);
   font-family: var(--sui-font-family);
   font-size: 0.875rem;
-}
-.ws-list-item__index {
-  min-width: 1.5em;
-  text-align: right;
-  color: var(--sui-text-muted);
-  font-variant-numeric: tabular-nums;
-  flex: none;
 }
 .ws-list-item__title {
   flex: 1 1 auto;
@@ -220,11 +209,10 @@ const ListItemBench: Component = () => {
       <style>{benchCss}</style>
       <SectionTitle>List Item — anatomy</SectionTitle>
       <MutedBody>
-        All slots: index, title, avatar, tags (one active), status, dismiss.
+        All slots: title, avatar, tags (one active), status, dismiss.
       </MutedBody>
       <div class="ws-bench-stack">
         <ListItem
-          index={1}
           title="deploy minute-level-hover"
           avatar={{ initials: "P", color: "#3b5bdb" }}
           tags={[{ label: "stax", active: true }, { label: "jtf" }]}
@@ -237,11 +225,9 @@ const ListItemBench: Component = () => {
       <MutedBody>Every prop except title is optional — rows degrade gracefully.</MutedBody>
       <div class="ws-bench-stack">
         <ListItem title="title only" />
-        <ListItem index={2} title="with index" />
-        <ListItem index={3} title="with tags" tags={[{ label: "jtf" }, { label: "stax", active: true }]} />
-        <ListItem index={4} title="with status" status="DONE" />
+        <ListItem title="with tags" tags={[{ label: "jtf" }, { label: "stax", active: true }]} />
+        <ListItem title="with status" status="DONE" />
         <ListItem
-          index={5}
           title="with a very long title that should truncate with an ellipsis rather than wrap or push the trailing meta cluster out of the row, no matter how long it gets"
           avatar={{ initials: "P", color: "#3b5bdb" }}
           tags={[{ label: "primestage" }]}
@@ -262,7 +248,6 @@ const ListItemBench: Component = () => {
           onReorder={reorder}
           renderItem={(t) => (
             <ListItem
-              index={tasks().findIndex((x) => x.id === t.id) + 1}
               title={t.title}
               avatar={t.avatar}
               tags={t.tags}
