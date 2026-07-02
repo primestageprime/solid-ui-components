@@ -36,6 +36,10 @@ interface ListItemProps {
   avatar?: { initials: string; color?: string };
   tags?: ListItemTag[];
   status?: string;
+  /** Known statuses; drives the select menu AND the fixed chip width (longest option). */
+  statusOptions?: string[];
+  /** Called when the user edits (free text) or selects a status. When absent the chip is inert. */
+  onStatusChange?: (status: string) => void;
   onDismiss?: () => void;
 }
 
@@ -68,8 +72,98 @@ const TagPill: Component<{ tag: ListItemTag }> = (props) => {
   );
 };
 
+const StatusChip: Component<{
+  status: string;
+  options?: string[];
+  onChange?: (s: string) => void;
+  title: string;
+}> = (props) => {
+  const [editing, setEditing] = createSignal(false);
+  const [menuOpen, setMenuOpen] = createSignal(false);
+  const options = () => props.options ?? [];
+  // Fixed width: longest option (or current status), in ch of the mono font.
+  const widthCh = () =>
+    Math.max(props.status.length, ...options().map((o) => o.length)) + 1;
+  const commit = (value: string) => {
+    setEditing(false);
+    setMenuOpen(false);
+    const v = value.trim();
+    if (v && v !== props.status) props.onChange?.(v);
+  };
+  return (
+    <span
+      class="ws-list-item__status-slot"
+      style={{ width: `${widthCh()}ch` }}
+    >
+      <Show
+        when={!editing()}
+        fallback={
+          <input
+            class="ws-list-item__status-input"
+            value={props.status}
+            ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
+            onBlur={(e) => commit(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit(e.currentTarget.value);
+              if (e.key === "Escape") setEditing(false);
+            }}
+          />
+        }
+      >
+        <button
+          type="button"
+          class="ws-list-item__status-text"
+          aria-label={`Edit status of ${props.title}`}
+          disabled={!props.onChange}
+          onClick={() => setEditing(true)}
+        >
+          {props.status}
+        </button>
+      </Show>
+      <Show when={props.onChange && options().length > 0}>
+        <button
+          type="button"
+          class="ws-list-item__status-caret"
+          aria-label={`Select status of ${props.title}`}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          ▾
+        </button>
+        <Show when={menuOpen()}>
+          <div class="ws-list-item__status-menu" role="listbox">
+            <For each={options()}>
+              {(opt) => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={opt === props.status}
+                  class="ws-list-item__status-option"
+                  classList={{
+                    "ws-list-item__status-option--current": opt === props.status,
+                  }}
+                  onClick={() => commit(opt)}
+                >
+                  {opt}
+                </button>
+              )}
+            </For>
+          </div>
+        </Show>
+      </Show>
+    </span>
+  );
+};
+
 const ListItem: Component<ListItemProps> = (props) => (
   <div class="ws-list-item" role="listitem">
+    <Show when={props.status}>
+      <StatusChip
+        status={props.status!}
+        options={props.statusOptions}
+        onChange={props.onStatusChange}
+        title={props.title}
+      />
+    </Show>
     <span class="ws-list-item__title">{props.title}</span>
     <span class="ws-list-item__meta">
       <Show when={props.avatar}>
@@ -78,9 +172,6 @@ const ListItem: Component<ListItemProps> = (props) => (
       <For each={props.tags ?? []}>
         {(tag) => <TagPill tag={tag} />}
       </For>
-      <Show when={props.status}>
-        <span class="ws-list-item__status">{props.status}</span>
-      </Show>
       <Show when={props.onDismiss}>
         <button
           type="button"
@@ -127,8 +218,7 @@ const benchCss = `
   gap: var(--sui-space-xs, 6px);
   flex: none;
 }
-.ws-list-item__tag,
-.ws-list-item__status {
+.ws-list-item__tag {
   padding: 1px 10px;
   border-radius: 999px;
   border: 1px solid var(--sui-border);
@@ -161,11 +251,100 @@ const benchCss = `
   border-right-color: var(--sui-accent);
   background: rgba(var(--sui-accent-rgb), 0.2);
 }
-.ws-list-item__status {
+.ws-list-item__status-slot {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: content-box;
+  padding: 1px 10px;
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
   font-family: var(--sui-font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: var(--sui-text-muted);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.ws-list-item__status-text,
+.ws-list-item__status-input {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: center;
+  cursor: text;
+}
+.ws-list-item__status-text:disabled {
+  cursor: default;
+}
+.ws-list-item:hover .ws-list-item__status-text:not(:disabled) {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.ws-list-item__status-input {
+  outline: 1px solid var(--sui-accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+.ws-list-item__status-caret {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.2ch;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--sui-text-secondary);
+  font-size: 0.6875rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.ws-list-item:hover .ws-list-item__status-caret,
+.ws-list-item__status-caret:focus-visible {
+  opacity: 1;
+}
+.ws-list-item__status-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border-bright, var(--sui-border));
+  border-radius: var(--sui-radius-sm, 4px);
+  padding: 2px;
+}
+.ws-list-item__status-option {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  padding: 3px 8px;
+  color: var(--sui-text-secondary);
+  cursor: pointer;
+}
+.ws-list-item__status-option:hover {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-text-primary);
+}
+.ws-list-item__status-option--current {
+  color: var(--sui-accent);
 }
 .ws-list-item__dismiss {
   flex: none;
@@ -210,6 +389,8 @@ const benchCss = `
 `;
 
 // ── Bench data ──────────────────────────────────────────────────────────────
+
+const STATUS_OPTIONS = ["TODO", "DOING", "BLOCKED", "DONE"];
 
 interface Task {
   id: string;
@@ -262,6 +443,9 @@ const ListItemBench: Component = () => {
   const dismiss = (id: string) =>
     setTasks((ts) => ts.filter((t) => t.id !== id));
 
+  const setStatus = (id: string, status: string) =>
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t)));
+
   return (
     <div class="component-section component-section--full">
       <style>{benchCss}</style>
@@ -275,6 +459,8 @@ const ListItemBench: Component = () => {
           avatar={{ initials: "P", color: "#3b5bdb" }}
           tags={[{ label: "stax", active: true }, { label: "jtf" }]}
           status="TODO"
+          statusOptions={STATUS_OPTIONS}
+          onStatusChange={() => {}}
           onDismiss={() => {}}
         />
       </div>
@@ -320,6 +506,8 @@ const ListItemBench: Component = () => {
               avatar={t.avatar}
               tags={t.tags}
               status={t.status}
+              statusOptions={STATUS_OPTIONS}
+              onStatusChange={(s) => setStatus(t.id, s)}
               onDismiss={() => dismiss(t.id)}
             />
           )}
