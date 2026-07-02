@@ -18,12 +18,3 @@ export type { TagPillProps, TagPillData, TagPillLabel, TagPillKeyValue } from ".
 // A separate Badge-family primitive, not a StatusBadge variant. Data-only.
 export { StatusChip } from "./StatusChip";
 export type { StatusChipProps } from "./StatusChip";
-// TagPill — free-text / split-lozenge tag; a Badge-family sibling of CountChip
-// (a separate pill primitive in this folder, not a StatusBadge variant, because
-// its data model differs). Data-only, re-exported as-is.
-export { TagPill } from "./TagPill";
-export type { TagPillProps, TagPillData, TagPillLabel, TagPillKeyValue } from "./TagPill";
-// StatusChip — the EDITABLE sibling of StatusBadge (inline text edit + select).
-// A separate Badge-family primitive, not a StatusBadge variant. Data-only.
-export { StatusChip } from "./StatusChip";
-export type { StatusChipProps } from "./StatusChip";

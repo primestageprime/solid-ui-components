@@ -7,8 +7,3 @@ export * from "./variants";
 // createParticipantAvatar variant (different rendering). Data-only.
 export { AssigneeIcon } from "./AssigneeIcon";
 export type { AssigneeIconProps } from "./AssigneeIcon";
-// AssigneeIcon — the OUTLINE sibling of ParticipantAvatar (currentColor person /
-// AI glyph vs the filled disc). A separate primitive in this folder, not a
-// createParticipantAvatar variant (different rendering). Data-only.
-export { AssigneeIcon } from "./AssigneeIcon";
-export type { AssigneeIconProps } from "./AssigneeIcon";
