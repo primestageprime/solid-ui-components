@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 0.84.2
+
+### Changed
+
+- **CSS lint** — no runtime or visual change; takes `src` to zero Biome diagnostics (from 78 at the start of the 0.84.x cleanup). Resolved the remaining CSS warnings case-by-case:
+  - **`noImportantStyles`** — removed five `!important` declarations that were provably unnecessary (the rule already won by source order): `Surface --active` background/border-color, `BatchBar` and reduced-motion `transition`, and `HeatStreamGrid --all-selected` colours. Kept six with scoped `biome-ignore` + rationale where genuinely load-bearing: `MathFormula` (overrides KaTeX's own `.katex` span colours and host table row styling), `SlotFillBar` (cancels a per-instance **inline** transition, which only `!important` can beat), and `Cell` (keeps rows transparent regardless of theme-level `tr` rules).
+  - **`noDescendingSpecificity`** — reordered six rules render-neutrally so a base rule precedes its modifier(s) (`List`, `Heatmap`, `Table` ×2, `HeatStreamGrid`); documented four with `biome-ignore` where reordering would fragment an intentional grouping or a load-bearing cascade (`SplitQueueList`, `Section`, `Toast`, `MathFormula`).
+
 ## 0.84.1
 
 ### Changed
