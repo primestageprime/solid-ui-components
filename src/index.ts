@@ -192,6 +192,13 @@ export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
 export * from "./components/SortableList";
 export * from "./components/MutableList";
+// ActionList family — the ActionList Depth-3 list and its constituent parts.
+export * from "./components/AssigneeIcon";
+export * from "./components/TagPill";
+export * from "./components/StatusChip";
+export * from "./components/EditableTitle";
+export * from "./components/ActionListItem";
+export * from "./components/ActionList";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
