@@ -367,16 +367,13 @@ const benchCss = `
   padding: 1px 8px;
 }
 .ws-list-item__tag-ns {
-  color: var(--sui-text-muted);
-  background: var(--sui-bg-tertiary);
+  /* The namespace is the lozenge's heading: SAME background and font color
+     as the value side — strong type is the only differentiator. */
   border-right: 1px solid var(--sui-border);
-  /* The namespace acts as the lozenge's heading: same colors, strong weight
-     so it stays legible on the accent-tinted active background. */
   font-weight: 700;
 }
 .ws-list-item__tag--split.ws-list-item__tag--active .ws-list-item__tag-ns {
   border-right-color: var(--sui-accent);
-  background: rgba(var(--sui-accent-rgb), 0.2);
 }
 .ws-list-item__status-slot {
   position: relative;
@@ -474,14 +471,19 @@ const benchCss = `
   color: var(--sui-accent);
 }
 .ws-list-item__dismiss {
+  /* Semi-circular cap, flush against the row's right edge: stretches the full
+     row height and eats the row's padding with negative margins. */
   flex: none;
-  width: 24px;
-  height: 24px;
+  align-self: stretch;
+  width: 22px;
+  margin: calc(-1 * var(--sui-space-sm, 8px))
+    calc(-1 * var(--sui-space-md, 12px))
+    calc(-1 * var(--sui-space-sm, 8px)) 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--sui-border);
-  border-radius: var(--sui-radius-sm, 4px);
+  border-radius: 0 999px 999px 0;
   background: transparent;
   color: var(--sui-text-secondary);
   font-size: 1rem;
