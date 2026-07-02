@@ -167,3 +167,41 @@ describe("DateAxis recentre takeover", () => {
     expect(targets[1]).toBeGreaterThan(targets[0]); // redirected to the later cell
   });
 });
+
+describe("DateAxis recentre uses measured cell width (regression)", () => {
+  it("scrolls fully to the end for the last cell when cells render wider than cellWidth", async () => {
+    const [sel, setSel] = createSignal(0);
+    const cells = dailyCells(d("2026-01-01"), d("2026-03-31")); // 90 cells
+    const { container } = render(() => (
+      <DateAxis
+        cells={cells}
+        selected={sel()}
+        cellWidth={40} // hint only — the real cells below render at 60px
+        renderCell={noopRender}
+      />
+    ));
+    const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
+    Object.defineProperty(el, "clientWidth", { configurable: true, value: 200 });
+    // Content-sized cells 60px wide — wider than the 40px cellWidth hint. The
+    // old math (idx * cellWidth) targeted ~67% of maxScroll; the fix measures
+    // the real per-cell width (scrollWidth / count) and reaches the end.
+    Object.defineProperty(el, "scrollWidth", {
+      configurable: true,
+      value: cells.length * 60,
+    });
+    const targets: number[] = [];
+    el.scrollTo = ((opts: ScrollToOptions) => {
+      targets.push(opts.left as number);
+    }) as typeof el.scrollTo;
+
+    setSel(cells.length - 1); // select the last cell
+    await Promise.resolve();
+
+    const maxScroll = cells.length * 60 - 200; // real geometry
+    expect(targets).toHaveLength(1);
+    // Pins the last cell to the right edge (clamped to maxScroll)…
+    expect(targets[0]).toBe(maxScroll);
+    // …not the old cellWidth(40)-based target that stopped short of the end.
+    expect(targets[0]).toBeGreaterThan(cells.length * 40);
+  });
+});

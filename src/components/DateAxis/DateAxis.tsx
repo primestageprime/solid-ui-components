@@ -98,6 +98,18 @@ export const DateAxis = <C extends Cell = Cell>(
   const cellW = () => props.cellWidth ?? 40;
   const clickable = () => props.onCellClick !== undefined;
   let scrollEl: HTMLDivElement | undefined;
+  // Scroll↔index math must use the cells' REAL rendered width, not the
+  // `cellWidth` prop. Custom (renderCell) cells are content-sized
+  // (`width: auto`), so the prop is only a hint for the default cell chrome —
+  // trusting it made recentre-on-select and the sticky labels land on the
+  // wrong cell whenever the rendered width differed. Cells tile uniformly, so
+  // scrollWidth / count is the true per-cell width; fall back to the prop
+  // before first layout (scrollWidth === 0).
+  const measuredCellW = (): number => {
+    const n = props.cells.length;
+    const sw = scrollEl ? scrollEl.scrollWidth : 0;
+    return n > 0 && sw > 0 ? sw / n : cellW();
+  };
   // Tracks the timestamp of the most recent user-initiated scroll so we can
   // suppress programmatic scroll-into-view when the user is actively panning.
   let lastUserScrollAt = 0;
@@ -128,7 +140,7 @@ export const DateAxis = <C extends Cell = Cell>(
   const [viewportWidth, setViewportWidth] = createSignal(0);
 
   const leftVisibleIdx = createMemo(() => {
-    const w = cellW();
+    const w = measuredCellW();
     if (w <= 0 || props.cells.length === 0) return 0;
     return Math.max(
       0,
@@ -136,7 +148,7 @@ export const DateAxis = <C extends Cell = Cell>(
     );
   });
   const rightVisibleIdx = createMemo(() => {
-    const w = cellW();
+    const w = measuredCellW();
     const vw = viewportWidth();
     if (w <= 0 || vw === 0 || props.cells.length === 0) return leftVisibleIdx();
     return Math.max(
@@ -174,11 +186,12 @@ export const DateAxis = <C extends Cell = Cell>(
     // A genuine user scroll/pan within the grace window wins — don't fight it.
     // (Our own in-flight programmatic frames no longer count, see onScrollListener.)
     if (Date.now() - lastUserScrollAt < USER_SCROLL_GRACE_MS) return;
-    const cellLeft = idx * cellW();
+    const w = measuredCellW();
+    const cellLeft = idx * w;
     const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
     const target = Math.max(
       0,
-      Math.min(maxScroll, cellLeft + cellW() / 2 - el.clientWidth / 2),
+      Math.min(maxScroll, cellLeft + w / 2 - el.clientWidth / 2),
     );
     // Already centred (within 1px) — nothing to animate, and arming the flag
     // for a no-op scroll could leave it stuck.
