@@ -144,8 +144,7 @@ const StatusChip: Component<{
     <span
       class="ws-list-item__status-slot"
       classList={{
-        // Tone follows the VALUE (data-driven): DONE recedes, DOING pops.
-        "ws-list-item__status-slot--dim": props.status === "DONE",
+        // The DOING chip keeps a fill; row opacity handles the rest.
         "ws-list-item__status-slot--highlight": props.status === "DOING",
       }}
       style={{ width: `${widthCh()}ch` }}
@@ -343,6 +342,15 @@ const benchCss = `
   color: var(--sui-accent);
   font-family: var(--sui-font-family);
   font-size: 0.875rem;
+  /* Tone = row opacity, everything cyan: TODO/neutral 75%, DONE 50%,
+     DOING 100% (the --dim/--highlight overrides below). */
+  opacity: 0.75;
+}
+.ws-list-item--dim {
+  opacity: 0.5;
+}
+.ws-list-item--highlight {
+  opacity: 1;
 }
 .ws-list-item:hover {
   border-color: var(--sui-border-bright, var(--sui-border));
@@ -419,43 +427,32 @@ const benchCss = `
   width: 25px;
   height: 23px;
   fill: none;
-  stroke: var(--sui-border-bright, var(--sui-border));
+  stroke: currentColor;
   stroke-width: 1.5;
   stroke-linejoin: round;
 }
 .ws-list-item__assignee svg circle.dot {
-  fill: var(--sui-border-bright, var(--sui-border));
+  fill: currentColor;
   stroke: none;
 }
 .ws-list-item__assignee svg text {
   stroke: none;
-  fill: var(--sui-text-secondary);
+  fill: currentColor;
   font-family: var(--sui-font-mono);
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
 }
-.ws-list-item__assignee--active svg {
-  stroke: var(--sui-accent);
-}
-.ws-list-item__assignee--active svg circle.dot {
-  fill: var(--sui-accent);
-}
-.ws-list-item__assignee--active svg text {
-  fill: var(--sui-accent);
-}
 .ws-list-item__tag {
   padding: 1px 10px;
   border-radius: 999px;
-  border: 1px solid var(--sui-border);
-  color: var(--sui-text-muted);
+  border: 1px solid currentColor;
+  color: inherit;
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: nowrap;
 }
 .ws-list-item__tag--active {
-  border-color: var(--sui-accent);
-  color: var(--sui-accent);
   background: rgba(var(--sui-accent-rgb), 0.12);
 }
 .ws-list-item__tag--split {
@@ -471,11 +468,8 @@ const benchCss = `
 .ws-list-item__tag-ns {
   /* The namespace is the lozenge's heading: SAME background and font color
      as the value side — strong type is the only differentiator. */
-  border-right: 1px solid var(--sui-border);
+  border-right: 1px solid currentColor;
   font-weight: 700;
-}
-.ws-list-item__tag--split.ws-list-item__tag--active .ws-list-item__tag-ns {
-  border-right-color: var(--sui-accent);
 }
 .ws-list-item__status-slot {
   position: relative;
@@ -484,23 +478,19 @@ const benchCss = `
   align-items: center;
   box-sizing: content-box;
   padding: 1px 10px;
-  border: 1px solid var(--sui-border);
+  border: 1px solid currentColor;
   border-radius: 999px;
   font-family: var(--sui-font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--sui-text-muted);
+  color: inherit;
   line-height: 1.5;
   white-space: nowrap;
 }
-/* Value-driven tones: DONE recedes, TODO stays neutral, DOING pops. */
-.ws-list-item__status-slot--dim {
-  opacity: 0.45;
-}
+/* Row opacity carries the tone; the DOING chip keeps its fill so the active
+   state still reads at a glance. */
 .ws-list-item__status-slot--highlight {
-  border-color: var(--sui-accent);
-  color: var(--sui-accent);
   background: rgba(var(--sui-accent-rgb), 0.12);
 }
 .ws-list-item__status-text,
@@ -538,7 +528,7 @@ const benchCss = `
   background: transparent;
   border: none;
   padding: 0;
-  color: var(--sui-text-secondary);
+  color: inherit;
   font-size: 0.6875rem;
   line-height: 1;
   cursor: pointer;
@@ -635,29 +625,6 @@ const benchCss = `
 }
 .ws-bench-stack .sui-sortable-list__row:hover .sui-sortable-list__grip {
   opacity: 0.45;
-}
-/* Row tone mirrors the status chip: DONE dims the text and right-side chips,
-   DOING lights them accent, TODO stays neutral. */
-.ws-list-item--dim .ws-list-item__title,
-.ws-list-item--dim .ws-list-item__meta {
-  opacity: 0.45;
-}
-.ws-list-item--highlight .ws-list-item__tag {
-  border-color: var(--sui-accent);
-  color: var(--sui-accent);
-  background: rgba(var(--sui-accent-rgb), 0.12);
-}
-.ws-list-item--highlight .ws-list-item__tag-ns {
-  border-right-color: var(--sui-accent);
-}
-.ws-list-item--highlight .ws-list-item__assignee svg {
-  stroke: var(--sui-accent);
-}
-.ws-list-item--highlight .ws-list-item__assignee svg circle.dot {
-  fill: var(--sui-accent);
-}
-.ws-list-item--highlight .ws-list-item__assignee svg text {
-  fill: var(--sui-accent);
 }
 .ws-bench-stack {
   display: flex;
