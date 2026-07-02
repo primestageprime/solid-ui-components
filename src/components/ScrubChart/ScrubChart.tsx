@@ -223,24 +223,46 @@ export const ScrubChart = <C extends Cell>(
     if (!req || !scrubOn()) return;
     const el = axisScrollEl;
     if (!el) return;
-    const target = (req.index + 0.5) * cellWidth() - el.clientWidth / 2;
-    el.scrollTo({
-      left: Math.max(0, target),
-      behavior: "smooth",
-    });
+    const n = props.cells.length;
+    // Use the measured per-cell width (see windowCells) and clamp the target to
+    // the scrollable range, so centering on the last cell pins it to the right
+    // edge instead of overshooting.
+    const w = n > 0 && el.scrollWidth > 0 ? el.scrollWidth / n : cellWidth();
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const target = Math.min(
+      maxScroll,
+      Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
+    );
+    el.scrollTo({ left: target, behavior: "smooth" });
   });
 
+  // Map the axis's scroll window onto cell indices using the axis's ACTUAL
+  // rendered geometry (scrollWidth), not the `cellWidth` prop. Custom cells
+  // render content-sized, so the real per-cell width can differ from
+  // `cellWidth`; trusting the prop let `first` overrun the last index and the
+  // window band slid past the right edge. Both ends are clamped to the valid
+  // index range, so the band is always within [plotLeft, plotRight] and the
+  // last cell pins the band's right edge to plotRight.
   const windowCells = createMemo<[number, number]>(() => {
-    const w = cellWidth();
-    if (w <= 0 || props.cells.length === 0) return [0, 0];
+    const n = props.cells.length;
+    if (n === 0) return [0, 0];
     // Plain mode has no axis viewport — the whole range counts as visible.
-    if (!scrubOn()) return [0, props.cells.length - 1];
-    const first = Math.max(0, Math.floor(axisScrollLeft() / w));
+    if (!scrubOn()) return [0, n - 1];
+    // Read the tracked scroll/viewport signals so this re-runs on scroll and
+    // resize; measure the live scroll content width off the same element.
+    const scrollLeft = axisScrollLeft();
+    const viewport = axisViewportWidth();
+    const scrollWidth = axisScrollEl ? axisScrollEl.scrollWidth : 0;
+    // Real per-cell width from measured geometry; fall back to the prop hint
+    // before first layout (scrollWidth === 0).
+    const w = scrollWidth > 0 ? scrollWidth / n : cellWidth();
+    if (w <= 0) return [0, n - 1];
+    const first = Math.min(n - 1, Math.max(0, Math.floor(scrollLeft / w)));
     const last = Math.min(
-      props.cells.length - 1,
-      Math.ceil((axisScrollLeft() + axisViewportWidth()) / w) - 1,
+      n - 1,
+      Math.max(first, Math.ceil((scrollLeft + viewport) / w) - 1),
     );
-    return [first, Math.max(first, last)];
+    return [first, last];
   });
   const windowBounds = createMemo<[number, number]>(() => {
     const [first, last] = windowCells();
@@ -279,9 +301,9 @@ export const ScrubChart = <C extends Cell>(
   // pointer (the chart is the overview; pointing at a point on the line
   // is the natural way to ask "what day is that?"). Click + drag past
   // CHART_PAN_THRESHOLD_PX → pans the inner DateAxis viewport at a 1:1
-  // cell ratio (`axisScrollLeft += dx * cellWidth / dayPitch`), so the
-  // window-band slides under the user's finger and the cells under the
-  // axis slide with it.
+  // cell ratio (`scrollLeft += dx * axisCellWidth / dayPitch`, axisCellWidth
+  // measured from real geometry), so the window-band slides under the user's
+  // finger and the cells under the axis slide with it.
   //
   // Capture is deferred until the threshold is crossed; a pointerup that
   // never crossed it resolves as a click. Selection is unchanged by
@@ -324,8 +346,15 @@ export const ScrubChart = <C extends Cell>(
     }
     const pitch = dayPitch();
     if (pitch <= 0) return;
-    axisScrollEl.scrollLeft =
-      chartGesture.startScrollLeft + dx * (cellWidth() / pitch);
+    // Pan the axis at a 1:1 cell ratio using the measured per-cell width, so
+    // the window band tracks the pointer even when cells render wider or
+    // narrower than the `cellWidth` prop. scrollLeft is clamped by the browser.
+    const n = props.cells.length;
+    const w =
+      n > 0 && axisScrollEl.scrollWidth > 0
+        ? axisScrollEl.scrollWidth / n
+        : cellWidth();
+    axisScrollEl.scrollLeft = chartGesture.startScrollLeft + dx * (w / pitch);
   };
   const handlePointerUp = (e: PointerEvent) => {
     if (!chartGesture) return;

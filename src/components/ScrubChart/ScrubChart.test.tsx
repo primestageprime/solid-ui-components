@@ -99,6 +99,62 @@ describe("ScrubChart composition", () => {
   });
 });
 
+describe("ScrubChart window-band boundary (regression)", () => {
+  // Repro for the "window band scrolls off the right edge" bug: when the axis
+  // renders cells WIDER than the `cellWidth` prop, the old scroll→index math
+  // (`floor(scrollLeft / cellWidth)`, unclamped) let `first` overrun the last
+  // index, pushing the band past plotRight. The fix derives the per-cell width
+  // from the axis's real scrollWidth and clamps both ends to [0, n-1].
+  const setup = (scrollWidth: number) => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const cells = dailyCells(d("2026-05-01"), d("2026-05-31")); // 31 cells
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={0}
+        onScrub={() => {}}
+        cellWidth={60} // deliberately smaller than the real 90px/cell below
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+      />
+    ));
+    const axisEl = container.querySelector(".sui-date-axis") as HTMLDivElement;
+    // 31 cells × 90px = 2790: the real per-cell width (90) exceeds cellWidth(60).
+    Object.defineProperty(axisEl, "scrollWidth", {
+      value: scrollWidth,
+      configurable: true,
+    });
+    const scrollTo = (left: number) => {
+      axisEl.scrollLeft = left;
+      axisEl.dispatchEvent(new Event("scroll"));
+    };
+    return { cells, seen: () => seen!, plotRight: 1200, scrollTo };
+  };
+
+  it("keeps the window band within the chart when cells are wider than cellWidth", () => {
+    const { cells, seen, plotRight, scrollTo } = setup(31 * 90);
+    // A scroll offset that, under the old cellWidth(60) assumption, computes
+    // first = floor(2190 / 60) = 36 — well past the last index (30).
+    scrollTo(2190);
+    const [first, last] = seen().windowCells;
+    expect(first).toBeLessThanOrEqual(cells.length - 1);
+    expect(last).toBeLessThanOrEqual(cells.length - 1);
+    // Band right edge must never spill past the plot's right edge.
+    expect(seen().windowBounds[1]).toBeLessThanOrEqual(plotRight + 0.001);
+  });
+
+  it("pins the band's right edge to plotRight at max scroll (last cell)", () => {
+    const { cells, seen, plotRight, scrollTo } = setup(31 * 90);
+    scrollTo(31 * 90); // scroll fully right
+    const [, last] = seen().windowCells;
+    expect(last).toBe(cells.length - 1);
+    expect(seen().windowBounds[1]).toBeCloseTo(plotRight, 3);
+  });
+});
+
 describe("ScrubChart chart-frame drag", () => {
   it("pans the inner axis viewport instead of changing selection", () => {
     const onScrub = vi.fn();
