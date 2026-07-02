@@ -40,6 +40,8 @@ interface ListItemProps {
   statusOptions?: string[];
   /** Called when the user edits (free text) or selects a status. When absent the chip is inert. */
   onStatusChange?: (status: string) => void;
+  /** Called when the user renames the item. When absent the title is inert. */
+  onTitleChange?: (title: string) => void;
   onDismiss?: () => void;
 }
 
@@ -154,6 +156,56 @@ const StatusChip: Component<{
   );
 };
 
+/** The name: inert text, or (with onChange) a hover-revealed edit target that
+ * covers ONLY the text itself — the rest of the row stays free for drag. The
+ * inline input shrink-wraps the text too (width in ch, live while typing). */
+const EditableTitle: Component<{
+  title: string;
+  onChange?: (t: string) => void;
+}> = (props) => {
+  const [editing, setEditing] = createSignal(false);
+  const [draft, setDraft] = createSignal("");
+  const commit = (value: string) => {
+    setEditing(false);
+    const v = value.trim();
+    if (v && v !== props.title) props.onChange?.(v);
+  };
+  return (
+    <span class="ws-list-item__title">
+      <Show
+        when={!editing()}
+        fallback={
+          <input
+            class="ws-list-item__title-input"
+            value={props.title}
+            style={{ width: `${Math.max(draft().length, 1) + 2}ch` }}
+            ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
+            onInput={(e) => setDraft(e.currentTarget.value)}
+            onBlur={(e) => commit(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit(e.currentTarget.value);
+              if (e.key === "Escape") setEditing(false);
+            }}
+          />
+        }
+      >
+        <button
+          type="button"
+          class="ws-list-item__title-text"
+          disabled={!props.onChange}
+          aria-label={`Rename ${props.title}`}
+          onClick={() => {
+            setDraft(props.title);
+            setEditing(true);
+          }}
+        >
+          {props.title}
+        </button>
+      </Show>
+    </span>
+  );
+};
+
 const ListItem: Component<ListItemProps> = (props) => (
   <div class="ws-list-item" role="listitem">
     <Show when={props.status}>
@@ -164,7 +216,7 @@ const ListItem: Component<ListItemProps> = (props) => (
         title={props.title}
       />
     </Show>
-    <span class="ws-list-item__title">{props.title}</span>
+    <EditableTitle title={props.title} onChange={props.onTitleChange} />
     <span class="ws-list-item__meta">
       <Show when={props.avatar}>
         {(a) => <SmAvatar initials={a().initials} color={a().color} />}
@@ -209,8 +261,41 @@ const benchCss = `
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
+}
+/* The edit target covers ONLY the text itself — a shrink-wrapped button
+   inside the flexible title slot; the slot's leftover width stays inert. */
+.ws-list-item__title-text {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  max-width: 100%;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: text;
+  vertical-align: middle;
+}
+.ws-list-item__title-text:disabled {
+  cursor: default;
+}
+.ws-list-item:hover .ws-list-item__title-text:not(:disabled) {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.ws-list-item__title-input {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  max-width: 100%;
+  outline: 1px solid var(--sui-accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+  vertical-align: middle;
 }
 .ws-list-item__meta {
   display: flex;
@@ -465,6 +550,9 @@ const ListItemBench: Component = () => {
   const setStatus = (id: string, status: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t)));
 
+  const setTitle = (id: string, title: string) =>
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, title } : t)));
+
   return (
     <div class="component-section component-section--full">
       <style>{benchCss}</style>
@@ -480,6 +568,7 @@ const ListItemBench: Component = () => {
           status="TODO"
           statusOptions={STATUS_OPTIONS}
           onStatusChange={() => {}}
+          onTitleChange={() => {}}
           onDismiss={() => {}}
         />
       </div>
@@ -527,6 +616,7 @@ const ListItemBench: Component = () => {
               status={t.status}
               statusOptions={STATUS_OPTIONS}
               onStatusChange={(s) => setStatus(t.id, s)}
+              onTitleChange={(title) => setTitle(t.id, title)}
               onDismiss={() => dismiss(t.id)}
             />
           )}
