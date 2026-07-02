@@ -22,7 +22,7 @@
 // gap) plus a CSS class for styling; the y-domain widens to span them all.
 // ============================================
 
-import { type Component, For, createMemo } from "solid-js";
+import { type Component, For, createMemo, createUniqueId } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
 import {
@@ -57,8 +57,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
   // Unique clipPath id per instance — multiple charts on one page must not
-  // share a clip rect (each has its own plot geometry).
-  const clipId = `sui-cashflow-clip-${Math.random().toString(36).slice(2, 9)}`;
+  // share a clip rect (each has its own plot geometry). createUniqueId (the
+  // same mechanism Chart.tsx uses) keeps the id deterministic across
+  // server/client renders, unlike the Math.random id it replaces.
+  const clipId = `sui-cashflow-clip-${createUniqueId()}`;
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
