@@ -379,6 +379,10 @@ const benchCss = `
    ListItem, so the wrapper would double it. Zero vertical growth; horizontal
    growth only the grip's slot. !important beats the wrapper's inline padding.
    Becomes a chromeless-row option on SortableList when this graduates. */
+/* Trying flush rows — no margin space between them (Peter, 2026-07-02). */
+.ws-bench-stack .sui-sortable-list {
+  gap: 0;
+}
 .ws-bench-stack .sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
   padding: 0 !important;
   border: none;
