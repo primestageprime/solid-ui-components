@@ -6,6 +6,7 @@ export type {
   ActionListDataProps,
   ActionListOverrides,
   ActionListItemData,
+  ActionListAction,
   ActionListTag,
   ActionListAssignee,
 } from "./ActionList";

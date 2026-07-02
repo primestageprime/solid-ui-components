@@ -1,0 +1,36 @@
+/* ============================================
+   ActionList — Composite (Depth 3). Thin structural CSS: the wrapper column and
+   the multi-select actions bar. Row visuals live in ActionListItem.css; reorder
+   mechanics + gaps live in SortableList. This file exists ONLY because the
+   selection actions bar is a list-level element with no home in either — the
+   same deliberate own-CSS rationale as BulkActionBar / Fab.
+
+   Visual language matches the list: all foreground is the accent (cyan in HUD),
+   the bar is a flat accent-tinted strip (never an elevated floating toolbar), so
+   it reads as part of the same surface rather than hovering above it.
+   ============================================ */
+
+.sui-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-sm, 8px);
+}
+
+.sui-action-list__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sui-space-sm, 8px);
+  padding: var(--sui-space-xs, 6px) var(--sui-space-sm, 8px);
+  border: 1px solid var(--sui-accent);
+  border-radius: var(--sui-radius-md, 8px);
+  /* Flat accent wash over the list's own secondary bg — matches a selected row. */
+  background: color-mix(in srgb, var(--sui-accent) 10%, var(--sui-bg-secondary));
+  color: var(--sui-accent);
+}
+
+.sui-action-list__bar-count {
+  margin-right: auto;
+  font-family: var(--sui-font-family);
+  font-size: 0.8125rem;
+  opacity: 0.75;
+}
