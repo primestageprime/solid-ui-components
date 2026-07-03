@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.89.1
+
+### Changed
+
+- **`Chart` (`YAxis`)** — the y-axis title now tracks the tick labels instead of sitting at a fixed 28px offset. It measures the widest tick label's rendered width via SVG glyph metrics (`getComputedTextLength`) and places the rotated title just past it (`label-x + max-label-width + gap`), so wide labels no longer overlap the title and narrow labels no longer leave a gaping margin. Falls back to a character-count estimate when DOM text metrics are unavailable (SSR / jsdom).
+
 ## 0.89.0
 
 ### Added
