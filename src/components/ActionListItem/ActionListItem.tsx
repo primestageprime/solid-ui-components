@@ -40,6 +40,9 @@ export interface ActionListItemProps {
   statusOptions?: string[];
   /** Person / AI assignment glyph. */
   assignee?: AssigneeIconProps;
+  /** Person / AI assignment roster — rendered as a tight row of glyphs. When set,
+   *  it wins over the singular `assignee` (which is treated as a one-item roster). */
+  assignees?: AssigneeIconProps[];
   /** Tag pills (plain, "ns:value" split, or explicit { key, value }). */
   tags?: TagPillData[];
   /** Row opacity tone. Supplied by ActionList from its status→tone map. Default "neutral". */
@@ -56,21 +59,29 @@ export interface ActionListItemProps {
   /** Toggle selection. When present the row's non-interactive area becomes a
    *  click target; clicks that land on an inner control (the title button/input,
    *  the status chip text/caret/menu, the dismiss ×) do NOT toggle. When absent
-   *  the row is not selectable. */
-  onSelect?: () => void;
+   *  the row is not selectable. Receives the originating click so the parent can
+   *  branch on `shiftKey` (plain toggle vs. range select). */
+  onSelect?: (e: MouseEvent) => void;
+  /** When present, tag pills become buttons; clicking one fires this (with the
+   *  clicked tag) and never toggles row selection. When absent, tags stay inert. */
+  onTagClick?: (tag: TagPillData) => void;
 }
 
 export const ActionListItem: Component<ActionListItemProps> = (props) => {
   const tone = () => props.tone ?? "neutral";
+  // Plural roster wins; the singular assignee is a one-item roster; neither → [].
+  const assignees = () =>
+    props.assignees ?? (props.assignee ? [props.assignee] : []);
   // Toggle selection only for clicks on the row's non-interactive area. Every
-  // inner affordance (EditableTitle, StatusChip, dismiss) renders a <button> or
-  // <input>, so a single `closest` guard excludes all of them at once — clicks
-  // on the plain row body, the assignee glyph, or a tag pill still toggle.
+  // inner affordance (EditableTitle, StatusChip, dismiss, and — when wired — the
+  // clickable tags) renders a <button> or <input>, so a single `closest` guard
+  // excludes all of them at once. The event is passed through so the parent can
+  // branch on shiftKey for range selection.
   const onRowClick = (e: MouseEvent) => {
     if (!props.onSelect) return;
     const target = e.target as HTMLElement | null;
     if (target?.closest("button, input, select, textarea, [role='listbox']")) return;
-    props.onSelect();
+    props.onSelect(e);
   };
   return (
     <div
@@ -96,11 +107,28 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
       </Show>
       <EditableTitle title={props.title} onChange={props.onTitleChange} />
       <span class="sui-action-list-item__meta">
-        <Show when={props.assignee}>
-          {(a) => <AssigneeIcon {...a()} />}
+        <Show when={assignees().length > 0}>
+          <span class="sui-action-list-item__assignees">
+            <For each={assignees()}>
+              {(a) => <AssigneeIcon {...a} />}
+            </For>
+          </span>
         </Show>
         <For each={props.tags ?? []}>
-          {(tag) => <TagPill tag={tag} />}
+          {(tag) => (
+            <Show when={props.onTagClick} fallback={<TagPill tag={tag} />}>
+              <button
+                type="button"
+                class="sui-action-list-item__tag"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onTagClick!(tag);
+                }}
+              >
+                <TagPill tag={tag} />
+              </button>
+            </Show>
+          )}
         </For>
         <Show when={props.onDismiss}>
           <button

@@ -43,9 +43,12 @@
   border-color: var(--sui-border-bright, var(--sui-border));
 }
 
-/* Selectable rows: the whole non-interactive body is a click target. */
+/* Selectable rows: the whole non-interactive body is a click target.
+   user-select:none keeps a shift-click (range select) from smearing a native
+   text selection across rows; the inline editors re-enable selection on focus. */
 .sui-action-list-item--selectable {
   cursor: pointer;
+  user-select: none;
 }
 
 /* Selected: light the (already-present, transparent) accent border and lay a
@@ -79,6 +82,33 @@
   align-items: center;
   gap: var(--sui-space-xs, 6px);
   flex: none;
+}
+
+/* Assignee roster: a tight cluster of glyphs (each the same size as the lone
+   single-assignee icon), sitting a touch closer than the meta gap so the roster
+   reads as one unit. With a single assignee it is visually identical to before. */
+.sui-action-list-item__assignees {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Clickable tag (only when onTagClick is wired): a bare button wrapper so the
+   pill is a real interactive control. The row's closest("button") guard already
+   excludes it from selection; hover brightens the pill via filter only — no
+   geometry change, honouring the hover invariant. */
+.sui-action-list-item__tag {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sui-action-list-item__tag:hover,
+.sui-action-list-item__tag:focus-visible {
+  filter: brightness(1.35);
 }
 
 .sui-action-list-item__dismiss {
