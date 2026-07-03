@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`ActionList`** — closes the gaps found when dside adopted the list:
+  - **Controlled selection.** New `selectedIds?: string[]` makes selection fully controlled — the list ignores its internal state, renders exactly the passed ids as selected, and never mutates on its own; every interaction (toggle, shift-range, Escape, apply) is emitted as an intent via `onSelectionChange` for the consumer to honour. Uncontrolled mode (omit `selectedIds`) is unchanged.
+  - **Shift-click range select.** Shift-clicking a row applies the anchor row's (last plain-clicked) current selected state across the whole contiguous span between anchor and click — select the anchor then shift-click to select the span, deselect it to deselect the span; the anchor stays put so a further shift-click re-ranges. Restores the range-select dside lost when it moved off its hand-rolled list. Range math lives in a pure, unit-tested `idRange` helper.
+  - **`clearSelectionOnApply?: boolean`** (default `true`, today's behavior). Set `false` to keep the selection after an action fires — for in-place batch actions like claim/release.
+  - **Multi-assignee.** `ActionListItemData` gains `assignees?: ActionListAssignee[]`, rendered as a tight roster of glyphs; the singular `assignee?` still works and plural wins when both are given.
+  - **`onTagClick?: (item, tag) => void`.** When provided, tag pills become buttons — clicks fire the callback and never toggle row selection (`stopPropagation`), with a colour-only (geometry-stable) hover brighten. Without it, tags stay inert exactly as before.
+
+  `ActionListItem` gains `assignees?` / `onTagClick?`, and its `onSelect` now receives the originating `MouseEvent` (for `shiftKey`). All additions are backward compatible.
+
 ## 0.88.0
 
 ### Added
