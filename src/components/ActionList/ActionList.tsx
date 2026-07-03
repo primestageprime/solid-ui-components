@@ -21,11 +21,19 @@
 // targets and reveals an actions bar while the selection is non-empty. Each
 // action is a [hotkey]/label/onApply triple rendered as a REUSED `HotkeyButton`
 // (the exact "[c]laim" affordance — no new button component); pressing the
-// bracketed key applies it to the selection. Selection state is uncontrolled
-// (owned here), surfaced via `onSelectionChange`. Escape clears it (unless an
-// inline editor is focused — the editor's own Escape-cancel wins). Applying an
-// action CLEARS the selection: the batch is done, so the next click starts a
-// fresh set rather than silently re-applying to a stale selection.
+// bracketed key applies it to the selection. Escape clears it (unless an inline
+// editor is focused — the editor's own Escape-cancel wins). Applying an action
+// clears the selection by default (the batch is done) — set
+// `clearSelectionOnApply={false}` to keep it (e.g. in-place claim/release).
+// Shift-click range-selects: it applies the anchor row's (last plain-toggled)
+// selected state to the whole contiguous span between the anchor and the click.
+//
+// Selection is UNCONTROLLED by default (owned here, surfaced via
+// `onSelectionChange`). Passing `selectedIds` makes it fully CONTROLLED: the
+// internal state is ignored, the passed ids are rendered as selected, and the
+// list never mutates on its own — every interaction is emitted as an intent via
+// `onSelectionChange` for the consumer to honour (or not). `onTagClick` turns
+// tag pills into buttons whose clicks fire the callback and never toggle a row.
 //
 // Reuse decisions: HotkeyButton is reused verbatim for the action buttons.
 // BulkActionBar was NOT reused — it is a single-action, CountChip + elevated
@@ -47,6 +55,7 @@ import {
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
 import { HotkeyButton, isEditableTarget } from "../HotkeyButton";
+import { idRange } from "./selection";
 import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import type { TagPillData } from "../Badge/TagPill";
 import "./ActionList.css";
@@ -63,6 +72,9 @@ export interface ActionListItemData {
   name: string;
   status?: string;
   assignee?: ActionListAssignee;
+  /** Assignment roster. Wins over the singular `assignee` when both are given
+   *  (the singular is treated as a one-person roster). */
+  assignees?: ActionListAssignee[];
   tags?: ActionListTag[];
 }
 
@@ -92,7 +104,22 @@ export interface ActionListProps {
   /** Batch actions. Presence ENABLES multi-select: rows become click-to-toggle
    *  targets and an actions bar appears while the selection is non-empty. */
   actions?: ActionListAction[];
-  /** Observer fired whenever the (uncontrolled) selection changes. */
+  /** Controlled selection. When provided, selection is FULLY controlled: the
+   *  list ignores its internal state, renders exactly these ids as selected, and
+   *  never mutates on its own — every interaction (toggle, shift-range, Escape,
+   *  apply) is emitted as an intent via `onSelectionChange` for the consumer to
+   *  honour. Also enables selection on its own (no `actions` needed). Omit for
+   *  the uncontrolled default (the list owns selection). */
+  selectedIds?: string[];
+  /** Whether applying an action clears the selection. Default `true` (the batch
+   *  is done — the next click starts fresh). Set `false` to keep the selection
+   *  after an action fires (e.g. claim/release that operate in place). */
+  clearSelectionOnApply?: boolean;
+  /** When provided, tag pills become buttons; clicking one fires this (and does
+   *  NOT toggle row selection). Without it, tags stay inert. */
+  onTagClick?: (item: ActionListItemData, tag: ActionListTag) => void;
+  /** Observer fired whenever the selection changes (uncontrolled) or an intent
+   *  is emitted (controlled). */
   onSelectionChange?: (ids: string[]) => void;
   /** Accessible label for the list region. */
   label?: string;
@@ -118,28 +145,63 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   const toneFor = (status?: string): ActionListItemTone =>
     (status && tones()[status]) || "neutral";
 
-  // --- Multi-select (uncontrolled) ---------------------------------------
-  const selectionEnabled = () => (props.actions?.length ?? 0) > 0;
-  const [selectedIds, setSelectedIds] = createSignal<string[]>([]);
-  // Single write path so the observer fires on every real change.
-  const applySelection = (next: string[]) => {
-    setSelectedIds(next);
+  // --- Multi-select ------------------------------------------------------
+  // Controlled when `selectedIds` is supplied: the internal signal is then
+  // ignored and every mutation is emitted as an intent only (never applied here).
+  const controlled = () => props.selectedIds !== undefined;
+  const [internalIds, setInternalIds] = createSignal<string[]>([]);
+  const selection = () => props.selectedIds ?? internalIds();
+  const selectionEnabled = () => (props.actions?.length ?? 0) > 0 || controlled();
+  // Single write path: apply internally only when uncontrolled, always emit.
+  const emit = (next: string[]) => {
+    if (!controlled()) setInternalIds(next);
     props.onSelectionChange?.(next);
   };
-  const isSelected = (id: string) => selectedIds().includes(id);
-  const toggle = (id: string) =>
-    applySelection(
-      isSelected(id) ? selectedIds().filter((x) => x !== id) : [...selectedIds(), id],
-    );
+  const isSelected = (id: string) => selection().includes(id);
 
-  // Prune ids that leave the list (e.g. a selected row is deleted). Reacts to
+  // The anchor is the last plain-toggled row — pure interaction state (not part
+  // of the selection model), so it stays local even in controlled mode.
+  const [anchorId, setAnchorId] = createSignal<string | null>(null);
+  const plainToggle = (id: string) => {
+    setAnchorId(id);
+    const cur = selection();
+    emit(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  };
+  // Shift-click: apply the anchor row's current selected state to the whole
+  // contiguous span [anchor..target]. Selecting the anchor then shift-clicking
+  // selects the span; deselecting it deselects the span. Ids outside the span
+  // are untouched. The anchor stays put so a further shift-click re-ranges from
+  // it. With no usable anchor, falls back to a plain toggle.
+  const rangeToggle = (id: string) => {
+    const order = props.items.map((i) => i.id);
+    const anchor = anchorId();
+    const range = idRange(order, anchor, id);
+    if (!range) {
+      plainToggle(id);
+      return;
+    }
+    const cur = selection();
+    const select = anchor != null && cur.includes(anchor);
+    if (select) {
+      const merged = new Set([...cur, ...range]);
+      emit(order.filter((x) => merged.has(x)));
+    } else {
+      const drop = new Set(range);
+      emit(cur.filter((x) => !drop.has(x)));
+    }
+  };
+
+  // Prune ids that leave the list (e.g. a selected row is deleted). Uncontrolled
+  // only — a controlled consumer owns its selection and prunes it itself, so the
+  // list stays true to "never mutates on its own" when controlled. Reacts to
   // `items` only — untrack the selection read so this doesn't loop on toggle.
   createEffect(() => {
+    if (controlled()) return;
     const live = new Set(props.items.map((i) => i.id));
     untrack(() => {
-      const cur = selectedIds();
+      const cur = internalIds();
       const pruned = cur.filter((id) => live.has(id));
-      if (pruned.length !== cur.length) applySelection(pruned);
+      if (pruned.length !== cur.length) emit(pruned);
     });
   });
 
@@ -147,24 +209,24 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   // the EditableTitle / StatusChip Escape-cancel behaviour keeps precedence.
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key !== "Escape") return;
-    if (!selectionEnabled() || selectedIds().length === 0) return;
+    if (!selectionEnabled() || selection().length === 0) return;
     if (isEditableTarget(e.target)) return;
-    applySelection([]);
+    emit([]);
   };
   onMount(() => window.addEventListener("keydown", onKeyDown));
   onCleanup(() => window.removeEventListener("keydown", onKeyDown));
 
   const applyAction = (action: ActionListAction) => {
-    action.onApply(selectedIds());
-    applySelection([]); // batch done — start fresh next time
+    action.onApply(selection());
+    if (props.clearSelectionOnApply ?? true) emit([]); // batch done → start fresh
   };
 
   return (
     <div class="sui-action-list">
-      <Show when={selectionEnabled() && selectedIds().length > 0}>
+      <Show when={selectionEnabled() && selection().length > 0}>
         <div class="sui-action-list__bar" role="toolbar" aria-label="Selection actions">
           <span class="sui-action-list__bar-count">
-            {selectedIds().length} selected
+            {selection().length} selected
           </span>
           <For each={props.actions}>
             {(action) => (
@@ -194,10 +256,18 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
             status={d.status}
             statusOptions={props.statusOptions}
             assignee={d.assignee}
+            assignees={d.assignees}
             tags={d.tags}
             tone={toneFor(d.status)}
             selected={isSelected(d.id)}
-            onSelect={selectionEnabled() ? () => toggle(d.id) : undefined}
+            onSelect={
+              selectionEnabled()
+                ? (e) => (e.shiftKey ? rangeToggle(d.id) : plainToggle(d.id))
+                : undefined
+            }
+            onTagClick={
+              props.onTagClick ? (tag) => props.onTagClick!(d, tag) : undefined
+            }
             onStatusChange={
               props.onStatusChange ? (s) => props.onStatusChange!(d.id, s) : undefined
             }

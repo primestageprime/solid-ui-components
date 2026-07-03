@@ -154,3 +154,187 @@ describe("ActionList — multi-select", () => {
     expect(onSelectionChange).toHaveBeenLastCalledWith([]);
   });
 });
+
+describe("ActionList — shift-click range", () => {
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("range-selects the contiguous span from the anchor (last plain click)", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList items={items} actions={actions()} onSelectionChange={onSelectionChange} />
+    ));
+    fireEvent.click(row(container, 0)); // anchor "a", selected
+    fireEvent.click(row(container, 2), { shiftKey: true }); // shift → span a..c
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a", "b", "c"]);
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(3);
+  });
+
+  it("range-DEselects the span when the anchor is currently deselected", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList items={items} actions={actions()} onSelectionChange={onSelectionChange} />
+    ));
+    fireEvent.click(row(container, 0)); // anchor "a" selected → ["a"]
+    fireEvent.click(row(container, 2), { shiftKey: true }); // span → ["a","b","c"]
+    fireEvent.click(row(container, 0)); // plain toggle "a" off → ["b","c"], anchor "a" now off
+    fireEvent.click(row(container, 2), { shiftKey: true }); // span a..c, anchor off → drop all
+    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
+  });
+
+  it("falls back to a plain toggle with no usable anchor", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList items={items} actions={actions()} onSelectionChange={onSelectionChange} />
+    ));
+    // First interaction is a shift-click — no anchor yet, so it toggles just "b".
+    fireEvent.click(row(container, 1), { shiftKey: true });
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["b"]);
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(1);
+  });
+});
+
+describe("ActionList — controlled selection", () => {
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("renders exactly the passed ids and ignores internal toggles", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList
+        items={items}
+        selectedIds={["b"]}
+        actions={actions()}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    // DOM reflects only the prop.
+    expect(row(container, 1).className).toMatch(/--selected/);
+    expect(row(container, 0).className).not.toMatch(/--selected/);
+
+    // Clicking emits an intent but does NOT mutate the rendered selection.
+    fireEvent.click(row(container, 0));
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["b", "a"]);
+    expect(row(container, 0).className).not.toMatch(/--selected/); // still ignored
+    expect(row(container, 1).className).toMatch(/--selected/); // still from prop
+  });
+
+  it("emits [] on Escape without mutating internal state", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList items={items} selectedIds={["a", "c"]} onSelectionChange={onSelectionChange} />
+    ));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    // Still rendering the prop (parent hasn't honoured the intent).
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
+  });
+
+  it("round-trips when the parent honours the emitted intent (incl. shift-range)", () => {
+    const [sel, setSel] = createSignal<string[]>([]);
+    const { container } = render(() => (
+      <ActionList items={items} actions={actions()} selectedIds={sel()} onSelectionChange={setSel} />
+    ));
+    fireEvent.click(row(container, 0)); // parent stores ["a"]
+    expect(row(container, 0).className).toMatch(/--selected/);
+    fireEvent.click(row(container, 2), { shiftKey: true }); // range a..c
+    expect(sel()).toEqual(["a", "b", "c"]);
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(3);
+  });
+
+  it("does not auto-prune a controlled selection when items change", () => {
+    const onSelectionChange = vi.fn();
+    const [its, setIts] = createSignal(items);
+    render(() => (
+      <ActionList items={its()} selectedIds={["a"]} onSelectionChange={onSelectionChange} />
+    ));
+    setIts(items.filter((i) => i.id !== "a")); // remove the selected row
+    // Controlled mode never mutates on its own — no prune intent is emitted.
+    expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("ActionList — clearSelectionOnApply", () => {
+  it("keeps the selection after an action when clearSelectionOnApply is false", () => {
+    const onApply = vi.fn();
+    const { container, queryByRole } = render(() => (
+      <ActionList
+        items={items}
+        clearSelectionOnApply={false}
+        actions={[{ hotkey: "c", label: "claim", onApply }]}
+      />
+    ));
+    fireEvent.click(row(container, 0));
+    fireEvent.click(row(container, 2));
+    fireEvent.keyDown(document, { key: "c" }); // apply via hotkey
+    expect(onApply).toHaveBeenCalledWith(["a", "c"]);
+    // Selection kept — rows still selected, bar still present.
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
+    expect(queryByRole("toolbar")).toBeTruthy();
+  });
+});
+
+describe("ActionList — multi-assignee", () => {
+  it("renders a roster of assignee glyphs from `assignees`", () => {
+    const roster: ActionListItemData[] = [
+      {
+        id: "a",
+        name: "team task",
+        assignees: [
+          { initials: "P", kind: "person" },
+          { initials: "AI", kind: "ai" },
+        ],
+      },
+    ];
+    const { container } = render(() => <ActionList items={roster} />);
+    expect(container.querySelectorAll(".sui-assignee-icon").length).toBe(2);
+  });
+
+  it("lets plural `assignees` win over singular `assignee`", () => {
+    const both: ActionListItemData[] = [
+      {
+        id: "a",
+        name: "task",
+        assignee: { initials: "Z", kind: "person" },
+        assignees: [
+          { initials: "P", kind: "person" },
+          { initials: "AI", kind: "ai" },
+        ],
+      },
+    ];
+    const { container, queryByTitle } = render(() => <ActionList items={both} />);
+    expect(container.querySelectorAll(".sui-assignee-icon").length).toBe(2);
+    expect(queryByTitle("Z")).toBeNull(); // the singular assignee is not rendered
+  });
+});
+
+describe("ActionList — onTagClick", () => {
+  const tagged: ActionListItemData[] = [
+    { id: "a", name: "first", tags: [{ label: "stax:jtf", active: true }] },
+    { id: "b", name: "second", tags: [{ label: "primestage" }] },
+  ];
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("makes tags inert (plain pills) when onTagClick is absent", () => {
+    const { container } = render(() => <ActionList items={tagged} />);
+    expect(container.querySelector(".sui-action-list-item__tag")).toBeNull();
+    expect(container.querySelector(".sui-tag-pill")).toBeTruthy();
+  });
+
+  it("fires onTagClick with the item + tag and does NOT toggle the row", () => {
+    const onTagClick = vi.fn();
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList
+        items={tagged}
+        actions={actions()}
+        onTagClick={onTagClick}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    const tagBtn = row(container, 0).querySelector<HTMLElement>(".sui-action-list-item__tag");
+    fireEvent.click(tagBtn!);
+    expect(onTagClick).toHaveBeenCalledWith(tagged[0], tagged[0].tags![0]);
+    expect(onSelectionChange).not.toHaveBeenCalled(); // selection never toggled
+    expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
+  });
+});
