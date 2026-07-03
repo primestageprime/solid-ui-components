@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.89.0
+
 ### Added
 
 - **`ActionList`** — closes the gaps found when dside adopted the list:
