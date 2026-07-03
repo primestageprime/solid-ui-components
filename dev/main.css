@@ -855,14 +855,14 @@
 }
 
 /* TagPill — most styles inline in dev/tag-pill.tsx; badges hover-only. */
-.sui-tag-pill__badge {
+.dev-filter-pill__badge {
   opacity: 0;
   transition: opacity 0.12s ease;
   pointer-events: none;
 }
 
-.sui-tag-pill:hover .sui-tag-pill__badge,
-.sui-tag-pill:focus-within .sui-tag-pill__badge {
+.dev-filter-pill:hover .dev-filter-pill__badge,
+.dev-filter-pill:focus-within .dev-filter-pill__badge {
   opacity: 1;
 }
 
