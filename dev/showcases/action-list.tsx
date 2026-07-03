@@ -1,10 +1,11 @@
-import { Component, createSignal } from "solid-js";
+import { Component, createMemo, createSignal, Show } from "solid-js";
 import { SectionTitle, MutedBody } from "../../src/components/Text";
 import { ActionListItem, type ActionListItemTone } from "../../src/components/ActionListItem";
 import {
   ActionList,
   DEFAULT_STATUS_TONES,
   type ActionListItemData,
+  type ActionListTag,
 } from "../../src/components/ActionList";
 
 // ============================================================================
@@ -113,6 +114,86 @@ export const ActionListShowcase: Component = () => {
       ts.map((t) => (ids.includes(t.id) ? { ...t, assignee: undefined } : t)),
     );
 
+  // ── Controlled-selection + clickable-tag demo ───────────────────────────
+  // A separate list that OWNS its selection (selectedIds is driven by a signal
+  // the parent updates from onSelectionChange) and keeps the selection after an
+  // action (clearSelectionOnApply={false}), so [c]laim / [r]elease operate in
+  // place — the dside claim/release idiom. Clicking a tag drives a visible
+  // filter: the matching tag lights up and the list narrows to matching rows.
+  const [demoTasks, setDemoTasks] = createSignal<ActionListItemData[]>([
+    {
+      id: "d1",
+      name: "pair on the controlled-selection API",
+      assignees: [
+        { initials: "P", kind: "person", active: true },
+        { initials: "DA", kind: "ai" },
+      ],
+      tags: [{ key: "primestage", value: "dside", active: false }],
+      status: "DOING",
+    },
+    {
+      id: "d2",
+      name: "backfill STAX June hours",
+      assignee: { initials: "P", kind: "person" },
+      tags: [{ label: "stax" }],
+      status: "TODO",
+    },
+    {
+      id: "d3",
+      name: "thorcasting swimlane hovers",
+      assignee: { initials: "DA", kind: "ai" },
+      tags: [{ key: "primestage", value: "thorcasting" }],
+      status: "TODO",
+    },
+    {
+      id: "d4",
+      name: "wire showcase filter to tag facets",
+      tags: [{ key: "primestage", value: "dside" }],
+      status: "TODO",
+    },
+  ]);
+
+  const [demoSel, setDemoSel] = createSignal<string[]>([]);
+  const [tagFilter, setTagFilter] = createSignal<string | null>(null);
+  const tagLabel = (t: ActionListTag) =>
+    "key" in t ? `${t.key}:${t.value}` : t.label;
+
+  // Clicking a tag toggles the filter on that label (click the active one again
+  // to clear). onTagClick never toggles the row's selection.
+  const onTagClick = (_item: ActionListItemData, tag: ActionListTag) =>
+    setTagFilter((cur) => (cur === tagLabel(tag) ? null : tagLabel(tag)));
+
+  // Rows narrowed to the active tag, with the matching pill lit `active`.
+  const demoRows = createMemo<ActionListItemData[]>(() => {
+    const f = tagFilter();
+    const withActive = demoTasks().map((t) => ({
+      ...t,
+      tags: t.tags?.map((tg) => ({ ...tg, active: !!f && tagLabel(tg) === f })),
+    }));
+    return f
+      ? withActive.filter((t) => (t.tags ?? []).some((tg) => tagLabel(tg) === f))
+      : withActive;
+  });
+
+  const demoClaim = (ids: string[]) =>
+    setDemoTasks((ts) =>
+      ts.map((t) =>
+        ids.includes(t.id)
+          ? {
+              ...t,
+              assignees: undefined,
+              assignee: { initials: "P", kind: "person", active: true },
+            }
+          : t,
+      ),
+    );
+  const demoRelease = (ids: string[]) =>
+    setDemoTasks((ts) =>
+      ts.map((t) =>
+        ids.includes(t.id) ? { ...t, assignees: undefined, assignee: undefined } : t,
+      ),
+    );
+
   return (
     <div class="component-section component-section--full">
       <SectionTitle>ActionList — Composite (Depth 3)</SectionTitle>
@@ -171,6 +252,17 @@ export const ActionListShowcase: Component = () => {
           ]}
           onDismiss={() => {}}
         />
+        <ActionListItem
+          title="multi-assignee — a roster of glyphs (plural wins over singular)"
+          status="DOING"
+          tone={toneFor("DOING")}
+          assignees={[
+            { initials: "P", kind: "person", active: true },
+            { initials: "DA", kind: "ai" },
+            { initials: "AA", kind: "person" },
+          ]}
+          tags={[{ label: "primestage:dside", active: true }]}
+        />
       </div>
 
       <SectionTitle>Working list (drag to reorder, click to edit, × to dismiss, click a row to select)</SectionTitle>
@@ -182,8 +274,9 @@ export const ActionListShowcase: Component = () => {
         non-interactive area into a selection toggle: click rows to select them
         (clicks on the title, status chip, or × still do their own thing), then use
         the actions bar — <b>[c]laim</b> assigns them to P, <b>[r]elease</b> clears
-        the assignee. Press the bracketed hotkey to apply, or Escape to clear the
-        selection. Applying an action clears the selection.
+        the assignee. <b>Shift-click</b> a second row to range-select the whole span
+        from the last clicked row. Press the bracketed hotkey to apply, or Escape to
+        clear the selection. Applying an action clears the selection.
       </MutedBody>
       <div style={stackStyle}>
         <ActionList
@@ -198,6 +291,66 @@ export const ActionListShowcase: Component = () => {
             { hotkey: "r", label: "release", onApply: release },
           ]}
           label="Showcase task list"
+        />
+      </div>
+
+      <SectionTitle>Controlled selection, keep-on-apply &amp; clickable tags</SectionTitle>
+      <MutedBody>
+        This list OWNS its selection — <code>selectedIds</code> is driven by a signal
+        the page updates from <code>onSelectionChange</code>, so the list emits intents
+        and never mutates on its own. <code>clearSelectionOnApply=&#123;false&#125;</code>
+        keeps the selection after <b>[c]laim</b> / <b>[r]elease</b> so you can chain
+        actions on the same set (the dside idiom). <b>Click a tag</b> to filter: the
+        matching pill lights and the list narrows to matching rows; click the active
+        tag again (or the banner's ×) to clear. Tag clicks never toggle row selection.
+      </MutedBody>
+      <div style={stackStyle}>
+        <div
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "8px",
+            "min-height": "24px",
+            color: "var(--sui-accent)",
+            "font-size": "0.8125rem",
+          }}
+        >
+          <span style={{ opacity: 0.75 }}>{demoSel().length} selected</span>
+          <Show when={tagFilter()}>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span>
+              filtering <b>{tagFilter()}</b> ({demoRows().length} of {demoTasks().length})
+            </span>
+            <button
+              type="button"
+              onClick={() => setTagFilter(null)}
+              style={{
+                background: "transparent",
+                border: "1px solid var(--sui-border)",
+                "border-radius": "999px",
+                color: "inherit",
+                cursor: "pointer",
+                "line-height": 1,
+                padding: "0 6px",
+              }}
+              aria-label="Clear tag filter"
+            >
+              ×
+            </button>
+          </Show>
+        </div>
+        <ActionList
+          items={demoRows()}
+          statusOptions={STATUS_OPTIONS}
+          selectedIds={demoSel()}
+          onSelectionChange={setDemoSel}
+          clearSelectionOnApply={false}
+          onTagClick={onTagClick}
+          actions={[
+            { hotkey: "c", label: "claim", onApply: demoClaim },
+            { hotkey: "r", label: "release", onApply: demoRelease },
+          ]}
+          label="Controlled task list"
         />
       </div>
     </div>
