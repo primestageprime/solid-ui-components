@@ -404,3 +404,57 @@ describe("CashflowScrubChart", () => {
     ).toBeNull();
   });
 });
+
+describe("CashflowScrubChart hover", () => {
+  const hoverMove = (container: HTMLElement, clientX: number) => {
+    const ev = new MouseEvent("pointermove", {
+      bubbles: true,
+      cancelable: true,
+      clientX,
+      clientY: 30,
+    });
+    container.querySelector(".sui-scrub-chart__frame")!.dispatchEvent(ev);
+  };
+
+  it("draws a hover rule and a hollow dot per line, plus the tooltip body", () => {
+    const cells = makeCells(10);
+    const series = [
+      { id: "s1", balanceCents: (c: CashflowCell) => c.balanceCents + 5000 },
+    ];
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        hover
+        balanceSeries={series}
+        renderHoverTooltip={(_cell, index) => (
+          <div data-testid="tt">idx {index}</div>
+        )}
+      />
+    ));
+    // Nothing until hovering.
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
+    ).toBeNull();
+    hoverMove(container, 200);
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
+    ).toBeTruthy();
+    // One dot for the primary line + one per balanceSeries = 2.
+    expect(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__hover-dot").length,
+    ).toBe(2);
+    expect(container.querySelector("[data-testid=tt]")).toBeTruthy();
+  });
+
+  it("draws nothing on hover when hover is off", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart cells={cells} scrub={false} />
+    ));
+    hoverMove(container, 160);
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
+    ).toBeNull();
+  });
+});

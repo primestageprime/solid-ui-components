@@ -245,3 +245,41 @@
   text-transform: uppercase;
   dominant-baseline: middle;
 }
+
+/* ── Hover readout (the `hover` prop) ─────────────────────────────── */
+/* A transient crosshair + hollow per-line dots + a tooltip card, distinct
+   from the persistent selected-rule/dot and the dotted Today rule. */
+
+.sui-cashflow-scrub-chart__hover {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sui-cashflow-scrub-chart__hover-rule {
+  stroke: var(--sui-text, #fff);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+/* Hollow ring — "exact spot on this line", lighter than the filled
+   selected-dot. */
+.sui-cashflow-scrub-chart__hover-dot {
+  fill: var(--sui-bg-elevated, #1b1f27);
+  stroke: var(--sui-text, #fff);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.sui-cashflow-scrub-chart__hover-tooltip {
+  position: absolute;
+  min-width: 140px;
+  padding: 8px 10px;
+  background: var(--sui-bg-elevated, #1b1f27);
+  border: 1px solid var(--sui-border, rgba(255, 255, 255, 0.14));
+  border-radius: var(--sui-radius-md, 8px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+  font-family: var(--sui-font-family, inherit);
+  pointer-events: none;
+  z-index: 2;
+}
