@@ -90,6 +90,9 @@ export const ScrubChart = <C extends Cell>(
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
+  // Passive hover readout — the nearest cell under the pointer. Null unless
+  // `hover` is on and the pointer is over the frame (and not mid-pan).
+  const [hoverIndex, setHoverIndex] = createSignal<number | null>(null);
   let frameEl: HTMLDivElement | undefined;
   onMount(() => {
     if (!frameEl) return;
@@ -299,6 +302,7 @@ export const ScrubChart = <C extends Cell>(
     plotWidth: plotWidth(),
     plotHeight: plotHeight(),
     yToPlot: yScale() ? yToPlot : null,
+    hoverIndex: null,
   });
 
   // ── Pointer-driven pan / click on the chart frame ────────────────────
@@ -382,6 +386,19 @@ export const ScrubChart = <C extends Cell>(
     }
   };
 
+  const handleHoverMove = (e: PointerEvent) => {
+    if (!props.hover) return;
+    // A pan drag owns the pointer — don't fight it with a crosshair.
+    if (chartGesture?.panActive) {
+      setHoverIndex(null);
+      return;
+    }
+    setHoverIndex(cellAtClientX(e.clientX));
+  };
+  const handleHoverLeave = () => {
+    if (props.hover) setHoverIndex(null);
+  };
+
   const fmtY = (): ((v: number) => string) =>
     props.formatYLabel ?? defaultFormatY;
 
@@ -391,6 +408,8 @@ export const ScrubChart = <C extends Cell>(
         class="sui-scrub-chart__frame"
         style={{ height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
+        onPointerMove={handleHoverMove}
+        onPointerLeave={handleHoverLeave}
       >
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         {/* Axis chrome — drawn after the chart so labels sit on top of any
@@ -448,6 +467,21 @@ export const ScrubChart = <C extends Cell>(
             interactive decorations (plotline markers) receive clicks. */}
         <Show when={props.renderChartOverlay && chartWidth() > 0}>
           {props.renderChartOverlay!(ctx())}
+        </Show>
+        {/* Hover readout layer — above all chrome, pointer-events:none so it
+            never blocks the gesture overlay beneath. Only this slot gets the
+            live hoverIndex, so renderChart doesn't redraw on pointer move. */}
+        <Show
+          when={
+            props.hover &&
+            props.renderHoverOverlay &&
+            chartWidth() > 0 &&
+            hoverIndex() !== null
+          }
+        >
+          <div class="sui-scrub-chart__hover-layer">
+            {props.renderHoverOverlay!({ ...ctx(), hoverIndex: hoverIndex() })}
+          </div>
         </Show>
       </div>
 

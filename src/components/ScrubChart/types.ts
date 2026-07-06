@@ -67,6 +67,10 @@ export interface ScrubChartContext<C extends Cell> {
   /** Maps a y-domain value to a pixel y inside the plot region. Present
    *  only when `yDomain` was supplied. */
   yToPlot: ((value: number) => number) | null;
+  /** The hovered cell index, or `null` when not hovering. Populated only in
+   *  the `renderHoverOverlay` slot (it is `null` in `renderChart` /
+   *  `renderChartOverlay` so those don't re-run on every pointer move). */
+  hoverIndex: number | null;
 }
 
 export interface ScrubChartProps<C extends Cell> {
@@ -80,6 +84,15 @@ export interface ScrubChartProps<C extends Cell> {
    *  it, so it can host clickable decorations (e.g. CashflowScrubChart's
    *  plotline markers). Off by default; same ctx as `renderChart`. */
   renderChartOverlay?: (ctx: ScrubChartContext<C>) => JSX.Element;
+  /** Enable the passive hover readout: a pointer-move listener on the chart
+   *  frame tracks the nearest cell (`hoverIndex`), suppressed during an active
+   *  pan-drag and cleared on pointer-leave. Off by default — no other
+   *  consumer changes. */
+  hover?: boolean;
+  /** Rendered in a `pointer-events:none` layer above all chrome while
+   *  hovering (requires `hover`). Its `ctx.hoverIndex` carries the live
+   *  hovered index; return `null` to draw nothing. */
+  renderHoverOverlay?: (ctx: ScrubChartContext<C>) => JSX.Element;
   renderCell: (cell: C, ctx: DateAxisCellContext) => JSX.Element;
 
   /** When set (a fresh object per request), scroll the detail ribbon so the
