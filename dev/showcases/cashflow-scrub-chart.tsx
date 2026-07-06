@@ -145,6 +145,51 @@ export const CashflowScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Hover crosshair readout</h3>
+        <p class="text-meta">
+          Enable <code>hover</code> for a transient vertical crosshair that
+          follows the pointer, a hollow dot on every line at that day, and a
+          tooltip card whose body you supply via{" "}
+          <code>renderHoverTooltip</code>. Coexists with the persistent scrub
+          selection (click still selects). Move the mouse across the chart.
+        </p>
+        <style>{`
+          .demo-hover--optimistic {
+            stroke: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+            stroke-width: 1.6;
+            stroke-dasharray: 5 4;
+          }
+        `}</style>
+        <CashflowScrubChart
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          hover
+          balanceSeries={[
+            {
+              id: "optimistic",
+              label: "Optimistic",
+              class: "demo-hover--optimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000),
+            },
+          ]}
+          renderHoverTooltip={(c, i) => {
+            const opt = forecast(Math.max(0, todayIndex), 40_000)(c, i);
+            return (
+              <div style={{ "font-size": "12px", "line-height": 1.5 }}>
+                <div style={{ "font-weight": 600, "margin-bottom": "4px" }}>
+                  {fmtDate(c.start)}
+                </div>
+                <div>Baseline: {fmtDollars(c.balanceCents)}</div>
+                {opt != null && <div>Optimistic: {fmtDollars(opt)}</div>}
+              </div>
+            );
+          }}
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Auto x-tick cadence on a long range</h3>
         <p class="text-meta">
           The same component with {longCells.length} daily cells (
