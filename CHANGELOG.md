@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.90.0
+
+### Added
+
+- **`DagChart` (`gap`)** — new optional `gap?: [xGap, yGap]` prop controlling the spacing budgeted around each node, in screen axes (same orientation as `nodeSize`'s `[width, height]`). In a horizontal-flow DAG the inter-column corridor is `xGap`, so raise it when edges carry labels wide enough to collide with the node boxes (the corridor was previously pinned to the internal `[40, 40]` default and not configurable). Threaded through `computeLayout` and the fallback grid layout, and swapped into d3-dag's internal `[within-layer, between-layer]` axes exactly like `nodeSize`. Defaults to `[40, 40]` — no change for existing consumers.
+
 ## 0.89.1
 
 ### Changed
