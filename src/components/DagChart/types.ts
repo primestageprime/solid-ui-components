@@ -38,6 +38,15 @@ export type DAGProps<T = unknown> = {
    * d3-dag's `layeringSimplex().rank().group()`.
    */
   nodeRank?: (node: DAGNode<T>) => number | undefined;
+  /**
+   * Spacing budgeted around each node, in screen axes: `[xGap, yGap]`
+   * (same orientation as `nodeSize`'s `[width, height]`). `xGap` is the
+   * horizontal gap between neighbouring nodes, `yGap` the vertical gap.
+   * In a horizontal-flow DAG the inter-column corridor is `xGap`, so raise
+   * it when edges carry labels wide enough to collide with the node boxes.
+   * Defaults to `[40, 40]`.
+   */
+  gap?: [xGap: number, yGap: number];
   direction?: "horizontal" | "vertical";
   onNodeClick?: (nodeId: string) => void;
   focusedNodeId?: string;

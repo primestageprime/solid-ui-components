@@ -56,6 +56,7 @@ export function DagChart<T>(props: DAGProps<T>) {
         direction(),
         props.nodeSize,
         props.nodeRank,
+        props.gap,
       );
     } catch (err) {
       console.error("[DagChart] fullLayout memo failed:", err);
