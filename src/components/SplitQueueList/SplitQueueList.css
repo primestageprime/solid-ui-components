@@ -114,11 +114,19 @@
   background: var(--sui-bg-secondary);
 }
 
-/* RESOLVED rows: solid accent left-border + check tint — clearly "done". */
+/* RESOLVED rows: solid accent left-border + check tint — clearly "done".
+ * Still selectable (clicking re-opens the item in the consumer's detail panel,
+ * exactly like an unresolved row), so they carry the same pointer + hover
+ * affordance rather than reading as inert. */
 .sui-sql__row--resolved {
   border-left: 3px solid var(--sui-accent);
   color: var(--sui-text-secondary);
   background: var(--sui-bg-secondary);
+  cursor: pointer;
+}
+
+.sui-sql__row--resolved:hover {
+  background: var(--sui-bg-tertiary);
 }
 
 /* On arrival (the transfer just completed) the resolved row's BACKGROUND fades
