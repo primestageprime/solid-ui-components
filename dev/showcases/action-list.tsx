@@ -153,6 +153,25 @@ export const ActionListShowcase: Component = () => {
     },
   ]);
 
+  // ── Replace-mode range demo ─────────────────────────────────────────────
+  // An uncontrolled list whose shift-click uses rangeSelectMode="replace": each
+  // shift-click yields exactly the span from the anchor to the click, discarding
+  // any prior selection (classic file-list semantics). The header echoes the last
+  // selection + the meta ActionList now emits so the gesture is visible.
+  const [replaceSel, setReplaceSel] = createSignal<string[]>([]);
+  const [lastGesture, setLastGesture] = createSignal<string>("—");
+  const onReplaceChange = (
+    ids: string[],
+    meta?: { kind: string; clickedId?: string; shiftKey?: boolean },
+  ) => {
+    setReplaceSel(ids);
+    setLastGesture(
+      meta
+        ? `${meta.kind}${meta.clickedId ? ` @${meta.clickedId}` : ""}${meta.shiftKey ? " +shift" : ""}`
+        : "prune",
+    );
+  };
+
   const [demoSel, setDemoSel] = createSignal<string[]>([]);
   const [tagFilter, setTagFilter] = createSignal<string | null>(null);
   const tagLabel = (t: ActionListTag) =>
@@ -351,6 +370,46 @@ export const ActionListShowcase: Component = () => {
             { hotkey: "r", label: "release", onApply: demoRelease },
           ]}
           label="Controlled task list"
+        />
+      </div>
+
+      <SectionTitle>Replace-mode range &amp; selection metadata</SectionTitle>
+      <MutedBody>
+        <code>rangeSelectMode="replace"</code> makes each <b>shift-click</b> select
+        exactly the span from the anchor (last plain click) to the click, discarding
+        any prior selection — the classic file-list feel, versus the default
+        <code>"extend"</code> which merges the span into what's already selected. The
+        header echoes <code>onSelectionChange</code>'s new second argument
+        (<code>ActionListSelectionMeta</code>): the gesture <code>kind</code>, the
+        <code>clickedId</code>, and whether Shift was held — the hook a consumer uses
+        to keep a keyboard cursor in sync with mouse clicks.
+      </MutedBody>
+      <div style={stackStyle}>
+        <div
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "8px",
+            "min-height": "24px",
+            color: "var(--sui-accent)",
+            "font-size": "0.8125rem",
+          }}
+        >
+          <span style={{ opacity: 0.75 }}>
+            {replaceSel().length} selected [{replaceSel().join(", ")}]
+          </span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span>
+            last gesture: <b>{lastGesture()}</b>
+          </span>
+        </div>
+        <ActionList
+          items={seedTasks.slice(0, 5)}
+          statusOptions={STATUS_OPTIONS}
+          rangeSelectMode="replace"
+          onSelectionChange={onReplaceChange}
+          actions={[{ hotkey: "c", label: "claim", onApply: () => {} }]}
+          label="Replace-mode task list"
         />
       </div>
     </div>

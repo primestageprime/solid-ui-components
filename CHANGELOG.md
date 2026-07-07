@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`ActionList`** — selection-event metadata + range-select mode, closing two more gaps dside hit:
+  - **`onSelectionChange` gains an optional second argument**, `meta?: ActionListSelectionMeta` (`{ kind: "toggle" | "range" | "clear" | "apply"; clickedId?: string; shiftKey?: boolean }`). It describes the gesture that drove the change — `clickedId` is the row the user interacted with (toggle/range) and `shiftKey` reflects whether Shift was held — so a consumer can, e.g., keep a vim `j`/`k` cursor in sync with mouse clicks. `toggle`/`range`/`clear`/`apply` all carry meta; a prune (a selected row leaving `items`) emits none. **Existing single-arg consumers are untouched** — the extra argument is simply ignored.
+  - **`rangeSelectMode?: "extend" | "replace"`** (default `"extend"`, today's anchor-state-across-span merge). `"replace"` makes a shift-click produce exactly the `[anchor..clicked]` span, discarding any selection outside it (classic file-list semantics; dside's original behavior). Works in both controlled and uncontrolled modes. The fold logic lives in a pure, unit-tested `foldRange` helper alongside `idRange`.
+
+  All additions are backward compatible.
+
 ## 0.90.0
 
 ### Added
