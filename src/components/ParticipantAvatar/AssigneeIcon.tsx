@@ -19,6 +19,11 @@
 // already zero-config at the call site, so a curried drop-in would add no value.
 // The `active` class hook lights the icon for a filter match; it is a data flag,
 // not a style knob.
+//
+// `initials` is caller-supplied and truncated to 2 chars here. To pick initials
+// that DISAMBIGUATE across a roster (so two "Peter …" people don't both read
+// "P"), derive them once with `deriveInitials(names)` from ./initials and feed
+// the result in — this component does not disambiguate on its own.
 // ============================================
 import { Component, Show } from "solid-js";
 import "./AssigneeIcon.css";
