@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.93.0
+
 ### Added
 
 - **`ActionList`** — selection-event metadata + range-select mode, closing two more gaps dside hit:
