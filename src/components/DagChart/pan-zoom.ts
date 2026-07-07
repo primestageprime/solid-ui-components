@@ -80,9 +80,11 @@ export function createPanZoom() {
   ) => {
     if (graphWidth === 0 || graphHeight === 0) return;
     if (containerWidth === 0 || containerHeight === 0) {
-      console.warn(
-        "[DagChart] fitToView skipped — container has zero dimensions.",
-      );
+      // The fit effect can fire before the ResizeObserver delivers real
+      // container dimensions on mount (and on every remount — e.g. navigating
+      // to /focus or switching the focused statement). A not-yet-measured
+      // container is an expected transient state, not an error: skip silently.
+      // The next ResizeObserver callback re-runs fit with real dimensions.
       return;
     }
 
