@@ -67,11 +67,19 @@ describe("ActionList — multi-select", () => {
     fireEvent.click(row(container, 1));
     expect(row(container, 1).className).toMatch(/--selected/);
     expect(row(container, 1).getAttribute("aria-selected")).toBe("true");
-    expect(onSelectionChange).toHaveBeenLastCalledWith(["b"]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["b"], {
+      kind: "toggle",
+      clickedId: "b",
+      shiftKey: false,
+    });
 
     fireEvent.click(row(container, 1));
     expect(row(container, 1).className).not.toMatch(/--selected/);
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], {
+      kind: "toggle",
+      clickedId: "b",
+      shiftKey: false,
+    });
   });
 
   it("does NOT toggle when an inner control is clicked", () => {
@@ -116,7 +124,7 @@ describe("ActionList — multi-select", () => {
     expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], { kind: "clear" });
   });
 
   it("applies an action to the selected ids when its button is clicked, then clears", () => {
@@ -149,9 +157,14 @@ describe("ActionList — multi-select", () => {
       <ActionList items={its()} actions={actions()} onSelectionChange={onSelectionChange} />
     ));
     fireEvent.click(row(container, 0)); // select "a"
-    expect(onSelectionChange).toHaveBeenLastCalledWith(["a"]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a"], {
+      kind: "toggle",
+      clickedId: "a",
+      shiftKey: false,
+    });
     setIts(items.filter((i) => i.id !== "a")); // remove the selected row
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    // A prune is not a user gesture — it emits no meta.
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], undefined);
   });
 });
 
@@ -165,7 +178,11 @@ describe("ActionList — shift-click range", () => {
     ));
     fireEvent.click(row(container, 0)); // anchor "a", selected
     fireEvent.click(row(container, 2), { shiftKey: true }); // shift → span a..c
-    expect(onSelectionChange).toHaveBeenLastCalledWith(["a", "b", "c"]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a", "b", "c"], {
+      kind: "range",
+      clickedId: "c",
+      shiftKey: true,
+    });
     expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(3);
   });
 
@@ -178,7 +195,11 @@ describe("ActionList — shift-click range", () => {
     fireEvent.click(row(container, 2), { shiftKey: true }); // span → ["a","b","c"]
     fireEvent.click(row(container, 0)); // plain toggle "a" off → ["b","c"], anchor "a" now off
     fireEvent.click(row(container, 2), { shiftKey: true }); // span a..c, anchor off → drop all
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], {
+      kind: "range",
+      clickedId: "c",
+      shiftKey: true,
+    });
     expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
   });
 
@@ -188,8 +209,13 @@ describe("ActionList — shift-click range", () => {
       <ActionList items={items} actions={actions()} onSelectionChange={onSelectionChange} />
     ));
     // First interaction is a shift-click — no anchor yet, so it toggles just "b".
+    // The meta stays honest: kind "toggle" (it degraded) but shiftKey true.
     fireEvent.click(row(container, 1), { shiftKey: true });
-    expect(onSelectionChange).toHaveBeenLastCalledWith(["b"]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["b"], {
+      kind: "toggle",
+      clickedId: "b",
+      shiftKey: true,
+    });
     expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(1);
   });
 });
@@ -213,7 +239,11 @@ describe("ActionList — controlled selection", () => {
 
     // Clicking emits an intent but does NOT mutate the rendered selection.
     fireEvent.click(row(container, 0));
-    expect(onSelectionChange).toHaveBeenLastCalledWith(["b", "a"]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["b", "a"], {
+      kind: "toggle",
+      clickedId: "a",
+      shiftKey: false,
+    });
     expect(row(container, 0).className).not.toMatch(/--selected/); // still ignored
     expect(row(container, 1).className).toMatch(/--selected/); // still from prop
   });
@@ -224,7 +254,7 @@ describe("ActionList — controlled selection", () => {
       <ActionList items={items} selectedIds={["a", "c"]} onSelectionChange={onSelectionChange} />
     ));
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], { kind: "clear" });
     // Still rendering the prop (parent hasn't honoured the intent).
     expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
   });
@@ -270,6 +300,84 @@ describe("ActionList — clearSelectionOnApply", () => {
     // Selection kept — rows still selected, bar still present.
     expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
     expect(queryByRole("toolbar")).toBeTruthy();
+  });
+});
+
+describe("ActionList — selection meta (apply) & single-arg back-compat", () => {
+  it("emits an { kind: 'apply' } meta after an action clears the selection", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList
+        items={items}
+        actions={[{ hotkey: "c", label: "claim", onApply: vi.fn() }]}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(row(container, 0)); // select "a"
+    fireEvent.keyDown(document, { key: "c" }); // apply → clears
+    expect(onSelectionChange).toHaveBeenLastCalledWith([], { kind: "apply" });
+  });
+
+  it("still works for a single-arg onSelectionChange consumer (ignores the meta)", () => {
+    // A consumer whose callback only accepts the id set — the second arg is
+    // simply dropped, proving the added meta is backward compatible.
+    let seen: string[] | undefined;
+    const singleArg = (ids: string[]) => {
+      seen = ids;
+    };
+    const { container } = render(() => (
+      <ActionList
+        items={items}
+        actions={[{ hotkey: "c", label: "claim", onApply: vi.fn() }]}
+        onSelectionChange={singleArg}
+      />
+    ));
+    fireEvent.click(row(container, 1));
+    expect(seen).toEqual(["b"]);
+  });
+});
+
+describe("ActionList — rangeSelectMode='replace'", () => {
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("shift-click yields exactly the [anchor..click] span, discarding outside ids", () => {
+    const onSelectionChange = vi.fn();
+    const { container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        rangeSelectMode="replace"
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(row(container, 2)); // select "c" (outside the coming span)
+    fireEvent.click(row(container, 0)); // anchor "a"
+    fireEvent.click(row(container, 1), { shiftKey: true }); // span a..b → replace
+    // "c" is discarded — the selection is exactly the span.
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a", "b"], {
+      kind: "range",
+      clickedId: "b",
+      shiftKey: true,
+    });
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
+    expect(row(container, 2).className).not.toMatch(/--selected/); // "c" dropped
+  });
+
+  it("works in controlled mode too (parent honours the replace intent)", () => {
+    const [sel, setSel] = createSignal<string[]>(["c"]);
+    const { container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        rangeSelectMode="replace"
+        selectedIds={sel()}
+        onSelectionChange={setSel}
+      />
+    ));
+    fireEvent.click(row(container, 0)); // anchor "a" → parent stores ["c","a"]
+    fireEvent.click(row(container, 1), { shiftKey: true }); // span a..b replaces all
+    expect(sel()).toEqual(["a", "b"]);
+    expect(container.querySelectorAll(".sui-action-list-item--selected").length).toBe(2);
   });
 });
 

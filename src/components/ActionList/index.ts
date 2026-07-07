@@ -7,7 +7,9 @@ export type {
   ActionListOverrides,
   ActionListItemData,
   ActionListAction,
+  ActionListSelectionMeta,
   ActionListTag,
   ActionListAssignee,
 } from "./ActionList";
+export type { RangeSelectMode } from "./selection";
 export * from "./variants";

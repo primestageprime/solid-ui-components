@@ -55,7 +55,7 @@ import {
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
 import { HotkeyButton, isEditableTarget } from "../HotkeyButton";
-import { idRange } from "./selection";
+import { idRange, foldRange, type RangeSelectMode } from "./selection";
 import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import type { TagPillData } from "../Badge/TagPill";
 import "./ActionList.css";
@@ -76,6 +76,25 @@ export interface ActionListItemData {
    *  (the singular is treated as a one-person roster). */
   assignees?: ActionListAssignee[];
   tags?: ActionListTag[];
+}
+
+/** What drove a selection change, passed as the second arg to
+ *  `onSelectionChange`. Lets a consumer branch on the gesture — e.g. keep a vim
+ *  j/k cursor in sync with the `clickedId` of a mouse toggle, or honour
+ *  replace-vs-extend range semantics itself in controlled mode.
+ *  - `"toggle"`  — a single row was plain-clicked (`clickedId` set; `shiftKey`
+ *    is true only when a shift-click had no usable anchor and fell back to a
+ *    plain toggle).
+ *  - `"range"`   — a shift-click range select (`clickedId` is the clicked row).
+ *  - `"clear"`   — the whole selection was cleared (Escape).
+ *  - `"apply"`   — an action fired and cleared the selection.
+ *  A prune (a selected row leaving the list) emits no meta. */
+export interface ActionListSelectionMeta {
+  kind: "toggle" | "range" | "clear" | "apply";
+  /** The row the user interacted with (toggle / range). */
+  clickedId?: string;
+  /** Whether Shift was held for this interaction. */
+  shiftKey?: boolean;
 }
 
 /** A batch action shown in the selection actions bar. */
@@ -115,12 +134,20 @@ export interface ActionListProps {
    *  is done — the next click starts fresh). Set `false` to keep the selection
    *  after an action fires (e.g. claim/release that operate in place). */
   clearSelectionOnApply?: boolean;
+  /** How shift-click ranges fold into the selection. `"extend"` (default) applies
+   *  the anchor row's selected state across the span, leaving ids outside it
+   *  untouched. `"replace"` makes shift-click produce exactly the `[anchor..click]`
+   *  span, discarding any selection outside it (classic file-list semantics).
+   *  Works in both controlled and uncontrolled modes. */
+  rangeSelectMode?: RangeSelectMode;
   /** When provided, tag pills become buttons; clicking one fires this (and does
    *  NOT toggle row selection). Without it, tags stay inert. */
   onTagClick?: (item: ActionListItemData, tag: ActionListTag) => void;
   /** Observer fired whenever the selection changes (uncontrolled) or an intent
-   *  is emitted (controlled). */
-  onSelectionChange?: (ids: string[]) => void;
+   *  is emitted (controlled). The optional second argument describes the gesture
+   *  that drove the change (see `ActionListSelectionMeta`); single-arg consumers
+   *  can ignore it. A prune (selected row removed from `items`) emits no meta. */
+  onSelectionChange?: (ids: string[], meta?: ActionListSelectionMeta) => void;
   /** Accessible label for the list region. */
   label?: string;
 }
@@ -152,43 +179,39 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   const [internalIds, setInternalIds] = createSignal<string[]>([]);
   const selection = () => props.selectedIds ?? internalIds();
   const selectionEnabled = () => (props.actions?.length ?? 0) > 0 || controlled();
-  // Single write path: apply internally only when uncontrolled, always emit.
-  const emit = (next: string[]) => {
+  // Single write path: apply internally only when uncontrolled, always emit. The
+  // optional meta rides along to describe the gesture (omitted for a prune).
+  const emit = (next: string[], meta?: ActionListSelectionMeta) => {
     if (!controlled()) setInternalIds(next);
-    props.onSelectionChange?.(next);
+    props.onSelectionChange?.(next, meta);
   };
   const isSelected = (id: string) => selection().includes(id);
 
   // The anchor is the last plain-toggled row — pure interaction state (not part
   // of the selection model), so it stays local even in controlled mode.
   const [anchorId, setAnchorId] = createSignal<string | null>(null);
-  const plainToggle = (id: string) => {
+  const plainToggle = (id: string, shiftKey = false) => {
     setAnchorId(id);
     const cur = selection();
-    emit(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+    emit(next, { kind: "toggle", clickedId: id, shiftKey });
   };
-  // Shift-click: apply the anchor row's current selected state to the whole
-  // contiguous span [anchor..target]. Selecting the anchor then shift-clicking
-  // selects the span; deselecting it deselects the span. Ids outside the span
-  // are untouched. The anchor stays put so a further shift-click re-ranges from
-  // it. With no usable anchor, falls back to a plain toggle.
+  // Shift-click: fold the contiguous span [anchor..target] into the selection per
+  // `rangeSelectMode`. "extend" (default) applies the anchor row's current
+  // selected state across the span, leaving ids outside it untouched; "replace"
+  // makes the selection exactly the span. The anchor stays put so a further
+  // shift-click re-ranges from it. With no usable anchor, falls back to a plain
+  // toggle (carrying shiftKey through so the meta stays honest).
   const rangeToggle = (id: string) => {
     const order = props.items.map((i) => i.id);
     const anchor = anchorId();
     const range = idRange(order, anchor, id);
     if (!range) {
-      plainToggle(id);
+      plainToggle(id, true);
       return;
     }
-    const cur = selection();
-    const select = anchor != null && cur.includes(anchor);
-    if (select) {
-      const merged = new Set([...cur, ...range]);
-      emit(order.filter((x) => merged.has(x)));
-    } else {
-      const drop = new Set(range);
-      emit(cur.filter((x) => !drop.has(x)));
-    }
+    const next = foldRange(order, selection(), range, anchor, props.rangeSelectMode ?? "extend");
+    emit(next, { kind: "range", clickedId: id, shiftKey: true });
   };
 
   // Prune ids that leave the list (e.g. a selected row is deleted). Uncontrolled
@@ -211,14 +234,14 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
     if (e.key !== "Escape") return;
     if (!selectionEnabled() || selection().length === 0) return;
     if (isEditableTarget(e.target)) return;
-    emit([]);
+    emit([], { kind: "clear" });
   };
   onMount(() => window.addEventListener("keydown", onKeyDown));
   onCleanup(() => window.removeEventListener("keydown", onKeyDown));
 
   const applyAction = (action: ActionListAction) => {
     action.onApply(selection());
-    if (props.clearSelectionOnApply ?? true) emit([]); // batch done → start fresh
+    if (props.clearSelectionOnApply ?? true) emit([], { kind: "apply" }); // batch done → start fresh
   };
 
   return (
