@@ -96,7 +96,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     "step",
   ]);
 
-  const rawValue = (): number | undefined => local.value?.();
+  const rawValue = (): number => local.value?.() ?? NaN;
   const handleRawValueChange = (next: number): void => {
     // Kobalte emits `NaN` when the input is cleared; normalize to `undefined`
     // so callers never have to guard on NaN at the form layer.

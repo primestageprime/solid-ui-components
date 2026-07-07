@@ -21,6 +21,7 @@
 // has no runtime side effects, so importing it is cheap and cycle-free.
 // ============================================
 
+import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
 
 /**
@@ -142,4 +143,17 @@ export interface CashflowScrubChartProps {
    * than the actual peak balance simply clips the top of the line.
    */
   yMax?: number | null;
+  /**
+   * Enable the passive hover readout — a transient vertical crosshair at the
+   * hovered day, a hollow dot on every line, and (with `renderHoverTooltip`)
+   * a positioned tooltip card. Coexists with the persistent scrub selection.
+   * Off by default.
+   */
+  hover?: boolean;
+  /**
+   * Tooltip body for the hovered day. Receives the hovered `cell` and its
+   * `index`; return the rows to display. The card chrome + positioning are
+   * owned by the chart. When absent, the crosshair + dots draw with no card.
+   */
+  renderHoverTooltip?: (cell: CashflowCell, index: number) => JSX.Element;
 }

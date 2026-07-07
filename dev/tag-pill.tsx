@@ -29,7 +29,7 @@ export const TagPill: Component<PillProps> = (props) => {
 
   return (
     <div
-      class="sui-tag-pill"
+      class="dev-filter-pill"
       style={{
         position: "relative",
         display: "inline-block",
@@ -79,7 +79,7 @@ export const TagPill: Component<PillProps> = (props) => {
 
       <Show when={props.stats.added > 0}>
         <span
-          class="sui-tag-pill__badge"
+          class="dev-filter-pill__badge"
           style={{
             position: "absolute",
             top: "0",
@@ -103,7 +103,7 @@ export const TagPill: Component<PillProps> = (props) => {
 
       <Show when={props.stats.removed > 0}>
         <span
-          class="sui-tag-pill__badge"
+          class="dev-filter-pill__badge"
           style={{
             position: "absolute",
             top: "0",

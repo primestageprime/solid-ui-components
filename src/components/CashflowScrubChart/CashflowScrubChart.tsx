@@ -22,7 +22,13 @@
 // gap) plus a CSS class for styling; the y-domain widens to span them all.
 // ============================================
 
-import { type Component, For, createMemo, createUniqueId } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createMemo,
+  createUniqueId,
+} from "solid-js";
 import { ScrubChart } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
 import {
@@ -447,6 +453,68 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     );
   };
 
+  // ── Hover readout overlay ────────────────────────────────────────────
+  // A transient vertical crosshair + a hollow dot on every line at the
+  // hovered day, plus the consumer's tooltip card positioned beside it.
+  // Distinct from the persistent selected-rule/dot; coexists with it.
+  const renderHover = (
+    ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
+  ) => {
+    const idx = ctx.hoverIndex;
+    if (idx == null || ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    const yToPlot = ctx.yToPlot;
+    const cell = ctx.cells[idx];
+    const x = ctx.cellToX(idx);
+    // A hollow dot for the primary line + each overlay series with a value.
+    const dotYs = [yToPlot(cell.balanceCents)];
+    for (const s of props.balanceSeries ?? []) {
+      const v = s.balanceCents(cell, idx);
+      if (v != null) dotYs.push(yToPlot(v));
+    }
+    // Flip the card to the pointer's left in the right half so it never
+    // clips off the right edge; anchor its top at the plot top.
+    const flipLeft = x > (ctx.plotLeft + ctx.plotRight) / 2;
+    const cardStyle: import("solid-js").JSX.CSSProperties = flipLeft
+      ? { right: `${ctx.width - x + 12}px`, top: `${ctx.plotTop}px` }
+      : { left: `${x + 12}px`, top: `${ctx.plotTop}px` };
+    return (
+      <>
+        <svg
+          class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__hover"
+          role="presentation"
+          viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+          preserveAspectRatio="none"
+        >
+          <line
+            class="sui-cashflow-scrub-chart__hover-rule"
+            x1={x}
+            x2={x}
+            y1={ctx.plotTop}
+            y2={ctx.plotBottom}
+          />
+          <For each={dotYs}>
+            {(y) => (
+              <circle
+                class="sui-cashflow-scrub-chart__hover-dot"
+                cx={x}
+                cy={y}
+                r={3.5}
+              />
+            )}
+          </For>
+        </svg>
+        <Show when={props.renderHoverTooltip}>
+          <div
+            class="sui-cashflow-scrub-chart__hover-tooltip"
+            style={cardStyle}
+          >
+            {props.renderHoverTooltip!(cell, idx)}
+          </div>
+        </Show>
+      </>
+    );
+  };
+
   return (
     <ScrubChart<CashflowCell>
       cells={props.cells}
@@ -457,6 +525,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       renderChartOverlay={
         (props.markers?.length ?? 0) > 0 ? renderMarkers : undefined
       }
+      hover={props.hover}
+      renderHoverOverlay={props.hover ? renderHover : undefined}
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}

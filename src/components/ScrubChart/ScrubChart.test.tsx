@@ -315,3 +315,55 @@ describe("ScrubChart chart-frame click", () => {
     expect(onScrub).not.toHaveBeenCalled();
   });
 });
+
+describe("ScrubChart hover plumbing", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  it("renders the hover layer with the hovered index on pointer-move, clears on leave", () => {
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        hover
+        yDomain={[0, 100]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+        renderHoverOverlay={(ctx) => (
+          <div data-testid="hover" data-idx={String(ctx.hoverIndex)} />
+        )}
+      />
+    ));
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    // No hover layer before any pointer activity.
+    expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
+    firePointer(frame, "pointermove", { clientX: 200, clientY: 30 });
+    const layer = container.querySelector(".sui-scrub-chart__hover-layer");
+    expect(layer).toBeTruthy();
+    const idx = Number(
+      layer!.querySelector("[data-testid=hover]")!.getAttribute("data-idx"),
+    );
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(idx).toBeLessThan(10);
+    frame.dispatchEvent(new MouseEvent("pointerleave", { bubbles: true }));
+    expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
+  });
+
+  it("does not render the hover layer when hover is off", () => {
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        yDomain={[0, 100]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+        renderHoverOverlay={() => <div data-testid="hover" />}
+      />
+    ));
+    firePointer(
+      container.querySelector(".sui-scrub-chart__frame")!,
+      "pointermove",
+      { clientX: 200, clientY: 30 },
+    );
+    expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
+  });
+});

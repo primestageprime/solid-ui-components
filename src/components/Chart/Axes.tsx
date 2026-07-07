@@ -1,8 +1,46 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-import { type Component, For, Show } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js";
 import { useChart } from "./context";
 import type { Scale } from "./scales";
+
+// ---- Y-axis title placement ----
+// Tick labels sit at x=-8 (see YAxis `<text x={-8}>`); the rotated title is
+// placed this many px further left than the widest tick label so it clears
+// them without leaving a gaping margin when labels are narrow.
+const YAXIS_TICK_LABEL_X = 8;
+const YAXIS_TITLE_GAP = 10;
+// Fallback glyph width (px) per character at the 0.7rem tick-label size, used
+// when DOM text metrics are unavailable (SSR / jsdom returns no
+// getComputedTextLength). Digits at 0.7rem (~11.2px) run ~0.55em ≈ 6.2px.
+const APPROX_CHAR_PX = 6.2;
+
+/** Pure estimate of the widest label's rendered width from character counts. */
+const estimateMaxLabelWidth = (labels: readonly string[]): number =>
+  labels.reduce((max, l) => Math.max(max, l.length * APPROX_CHAR_PX), 0);
+
+/**
+ * Widest rendered tick-label width (px) inside `group`, measured via SVG glyph
+ * metrics. Returns 0 when metrics are unavailable (e.g. jsdom) so the caller
+ * can fall back to {@link estimateMaxLabelWidth}.
+ */
+const measureMaxLabelWidth = (group: SVGGElement): number =>
+  Array.from(
+    group.querySelectorAll<SVGTextElement>(".sui-chart__axis-label"),
+  ).reduce((max, node) => {
+    const len =
+      typeof node.getComputedTextLength === "function"
+        ? node.getComputedTextLength()
+        : 0;
+    return Math.max(max, len);
+  }, 0);
 
 export interface AxisProps {
   tickCount?: number;
@@ -125,9 +163,33 @@ export const YAxis: Component<AxisProps> = (props) => {
   const ctx = useChart();
   const tickCount = () => props.tickCount ?? 5;
   const fmt = () => props.tickFormat ?? defaultFormat;
+  const ticks = () => props.tickValues ?? ctx.yScale().ticks(tickCount());
+  const tickLabels = createMemo(() => ticks().map((t) => fmt()(t)));
+
+  // Widest tick label, in px. Seeded from a char-count estimate so SSR/jsdom
+  // still get a sane title offset, then refined to exact glyph metrics once
+  // the tick `<text>` nodes have mounted.
+  const [maxLabelWidth, setMaxLabelWidth] = createSignal(0);
+  let axisGroup: SVGGElement | undefined;
+  createEffect(() => {
+    const labels = tickLabels(); // track re-measures on tick/format changes
+    const measured = axisGroup ? measureMaxLabelWidth(axisGroup) : 0;
+    setMaxLabelWidth(measured > 0 ? measured : estimateMaxLabelWidth(labels));
+  });
+
+  // Distance (px) from the axis line to the rotated title's baseline: clear
+  // the tick labels (anchored at x=-8) plus the widest one, plus breathing
+  // room — so the title tracks the labels instead of a fixed offset.
+  const titleOffset = createMemo(
+    () =>
+      YAXIS_TICK_LABEL_X +
+      maxLabelWidth() +
+      YAXIS_TITLE_GAP +
+      (props.labelOffset ?? 0),
+  );
 
   return (
-    <g class="sui-chart__axis sui-chart__axis--y">
+    <g class="sui-chart__axis sui-chart__axis--y" ref={axisGroup}>
       {!props.hideLine && (
         <line
           class="sui-chart__axis-line"
@@ -137,13 +199,13 @@ export const YAxis: Component<AxisProps> = (props) => {
           x2={0}
         />
       )}
-      <For each={props.tickValues ?? ctx.yScale().ticks(tickCount())}>
+      <For each={ticks()}>
         {(t) => (
           <g transform={`translate(0, ${ctx.yScale()(t)})`}>
             <line class="sui-chart__axis-tick" x1={-4} x2={0} />
             <text
               class="sui-chart__axis-label"
-              x={-8}
+              x={-YAXIS_TICK_LABEL_X}
               dy="0.32em"
               text-anchor="end"
             >
@@ -156,7 +218,7 @@ export const YAxis: Component<AxisProps> = (props) => {
         {(label) => (
           <text
             class="sui-chart__axis-title sui-chart__axis-title--y"
-            transform={`rotate(-90) translate(${-ctx.innerHeight() / 2}, ${-(28 + (props.labelOffset ?? 0))})`}
+            transform={`rotate(-90) translate(${-ctx.innerHeight() / 2}, ${-titleOffset()})`}
             text-anchor="middle"
           >
             {label()}

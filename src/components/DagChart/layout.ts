@@ -62,8 +62,13 @@ export function computeLayout<T>(
   direction: "horizontal" | "vertical",
   nodeSize?: (node: DAGNode<T>) => [width: number, height: number],
   nodeRank?: (node: DAGNode<T>) => number | undefined,
+  gap?: [number, number],
 ): LayoutResult {
   if (nodes.length === 0) return EMPTY_RESULT;
+
+  // Display-oriented `[xGap, yGap]`. Swapped to d3-dag's internal
+  // `[within-layer, between-layer]` axes below, mirroring the nodeSize swap.
+  const displayGap = gap ?? DEFAULT_GAP;
 
   const sizeMap = new Map<string, [number, number]>(
     nodes.map((n) => [n.id, nodeSize ? nodeSize(n) : DEFAULT_NODE_SIZE]),
@@ -108,7 +113,11 @@ export function computeLayout<T>(
       const [w, h] = sizeMap.get(dagNode.data.id) ?? DEFAULT_NODE_SIZE;
       return direction === "horizontal" ? [h, w] : [w, h];
     })
-    .gap(DEFAULT_GAP);
+    .gap(
+      direction === "horizontal"
+        ? [displayGap[1], displayGap[0]]
+        : displayGap,
+    );
 
   let layoutWidth: number;
   let layoutHeight: number;
@@ -121,7 +130,14 @@ export function computeLayout<T>(
       "[DagChart] Sugiyama layout failed; falling back to topological grid placement.",
       err,
     );
-    return fallbackGridLayout(nodes, edges, direction, sizeMap, nodeRank);
+    return fallbackGridLayout(
+      nodes,
+      edges,
+      direction,
+      sizeMap,
+      nodeRank,
+      displayGap,
+    );
   }
 
   const positions = new Map<
@@ -164,6 +180,7 @@ function fallbackGridLayout<T>(
   direction: "horizontal" | "vertical",
   sizeMap: Map<string, [number, number]>,
   nodeRank?: (node: DAGNode<T>) => number | undefined,
+  gap: [number, number] = DEFAULT_GAP,
 ): LayoutResult {
   const idSet = new Set(nodes.map((n) => n.id));
   const parentMap = new Map<string, string[]>(nodes.map((n) => [n.id, []]));
@@ -234,8 +251,8 @@ function fallbackGridLayout<T>(
     if (size[breadthDim] > maxBreadth) maxBreadth = size[breadthDim];
   }
   if (maxBreadth === 0) maxBreadth = DEFAULT_NODE_SIZE[breadthDim];
-  const breadthGap = DEFAULT_GAP[breadthDim];
-  const depthGap = DEFAULT_GAP[depthDim];
+  const breadthGap = gap[breadthDim];
+  const depthGap = gap[depthDim];
 
   const positions = new Map<
     string,

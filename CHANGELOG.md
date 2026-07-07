@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.90.0
+
+### Added
+
+- **`DagChart` (`gap`)** — new optional `gap?: [xGap, yGap]` prop controlling the spacing budgeted around each node, in screen axes (same orientation as `nodeSize`'s `[width, height]`). In a horizontal-flow DAG the inter-column corridor is `xGap`, so raise it when edges carry labels wide enough to collide with the node boxes (the corridor was previously pinned to the internal `[40, 40]` default and not configurable). Threaded through `computeLayout` and the fallback grid layout, and swapped into d3-dag's internal `[within-layer, between-layer]` axes exactly like `nodeSize`. Defaults to `[40, 40]` — no change for existing consumers.
+
+## 0.89.1
+
+### Changed
+
+- **`Chart` (`YAxis`)** — the y-axis title now tracks the tick labels instead of sitting at a fixed 28px offset. It measures the widest tick label's rendered width via SVG glyph metrics (`getComputedTextLength`) and places the rotated title just past it (`label-x + max-label-width + gap`), so wide labels no longer overlap the title and narrow labels no longer leave a gaping margin. Falls back to a character-count estimate when DOM text metrics are unavailable (SSR / jsdom).
+
 ## 0.89.0
 
 ### Added
