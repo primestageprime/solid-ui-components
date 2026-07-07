@@ -432,13 +432,16 @@ export const ActionListShowcase: Component = () => {
       <MutedBody>
         The assignee glyphs above take pre-picked <code>initials</code>; on a real
         roster, derive them once with <code>deriveInitials(names)</code> so shared
-        letters disambiguate instead of collapsing to a wall of "P"s. Here
-        <b> Peter Stradinger</b> and <b>Peter Falk</b> resolve to <code>PS</code> /
-        <code>PF</code> (word initials), <b>Paula Falk</b> pushes the Falks into their
-        first-word letters (<code>Pe</code> / <code>Pa</code>), and
-        <b> Peter Strong</b> — indistinguishable from Peter Stradinger within two chars
-        — shares its longest common initials and leans on the hover title. Names that
-        never clash keep a single letter. Hover any glyph for the full name.
+        letters disambiguate instead of collapsing to a wall of "P"s. Each name uses
+        only as many letters as necessary: <b>Peter Falk</b> is globally unique at its
+        word initials <code>PF</code> and stays there, while <b>Paula Falk</b> — whose
+        <code>PF</code> is taken — drops to its first-word letters <code>Pa</code>.
+        <b> Peter Stradinger</b> and <b>Peter Strong</b> are indistinguishable within
+        two chars, so they share their longest common initials <code>Pe</code> and lean
+        on the hover title. Critically, Peter Falk is <i>not</i> dragged down to
+        <code>Pe</code> alongside them just because Paula had to move. Names that never
+        clash (<b>Ada Lovelace</b>, <b>Deep Agent</b>) keep a single letter. Hover any
+        glyph for the full name.
       </MutedBody>
       <div style={{ display: "flex", "align-items": "center", gap: "16px", "flex-wrap": "wrap" }}>
         {(() => {

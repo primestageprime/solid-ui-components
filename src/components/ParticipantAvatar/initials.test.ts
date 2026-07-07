@@ -46,6 +46,28 @@ describe("deriveInitials", () => {
     expect(m.get("Paula Falk")).toBe("Pa");
   });
 
+  it("does not drag a distinguishable name deeper just because a neighbour must", () => {
+    // The showcase roster. Peter Falk is globally unique at "PF" and must NOT be
+    // pulled to "Pe" (which the Stradinger/Strong pair own) merely because Paula
+    // needs to reach "Pa". Use only as many letters as NECESSARY, per name.
+    const m = deriveInitials([
+      "Peter Stradinger",
+      "Peter Falk",
+      "Paula Falk",
+      "Peter Strong",
+      "Ada Lovelace",
+      "Deep Agent",
+    ]);
+    expect(m.get("Peter Stradinger")).toBe("Pe"); // shares with Peter Strong
+    expect(m.get("Peter Strong")).toBe("Pe"); // indistinguishable within the cap
+    expect(m.get("Peter Falk")).toBe("PF"); // word initials suffice, and stay
+    expect(m.get("Paula Falk")).toBe("Pa"); // word initials taken → first-word letters
+    expect(m.get("Ada Lovelace")).toBe("A"); // unique first initial
+    expect(m.get("Deep Agent")).toBe("D"); // unique first initial
+    // Peter Falk is not merged with the Stradinger/Strong "Pe" bucket.
+    expect(m.get("Peter Falk")).not.toBe(m.get("Peter Stradinger"));
+  });
+
   it("distinguishes single-word names by their first two letters", () => {
     const m = deriveInitials(["Madonna", "Michael"]);
     expect(m.get("Madonna")).toBe("Ma");
