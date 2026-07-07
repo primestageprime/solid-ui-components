@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`deriveInitials(names)`** — pure, reusable helper in the ParticipantAvatar family (`src/components/ParticipantAvatar/initials.ts`, exported from the family index and root barrel). Returns a `Map<name, initials>` that disambiguates a roster instead of collapsing it to identical letters. Default is the first letter of the first word; colliding names extend **together** to the first rung where they diverge, preferring **word initials** (`Peter Stradinger` + `Peter Falk` → `PS` + `PF`) then **first-word letters** (`Peter Falk` + `Paula Falk` → `Pe` + `Pa`). Capped at 2 chars (AssigneeIcon's fit): names indistinguishable within the cap (`Peter Stradinger` + `Peter Strong`) share their longest common initials (`Pe`) and rely on the caller's `title`/tooltip for the full name. Deterministic and order-independent (a function of the name set); unicode-aware; identical full names get identical initials. Feed its values into `AssigneeIcon` / `ParticipantAvatar` `initials`.
+
 ## 0.93.0
 
 ### Added

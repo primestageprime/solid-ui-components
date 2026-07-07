@@ -7,6 +7,7 @@ import {
   type ActionListItemData,
   type ActionListTag,
 } from "../../src/components/ActionList";
+import { AssigneeIcon, deriveInitials } from "../../src/components/ParticipantAvatar";
 
 // ============================================================================
 // ActionList showcase — the promoted ListItem workshop bench.
@@ -34,6 +35,20 @@ const stackStyle = {
   gap: "8px",
   "max-width": "960px",
 } as const;
+
+/** A roster whose names deliberately collide, to exercise deriveInitials:
+ *  the verbatim PS/PF example, a three-way Falk push, an unresolvable twin
+ *  (Peter Strong shares Peter Stradinger's letters), plus a clash-free name and
+ *  an AI. */
+const roster: { name: string; kind: "person" | "ai" }[] = [
+  { name: "Peter Stradinger", kind: "person" },
+  { name: "Peter Falk", kind: "person" },
+  { name: "Paula Falk", kind: "person" },
+  { name: "Peter Strong", kind: "person" },
+  { name: "Ada Lovelace", kind: "person" },
+  { name: "Deep Agent", kind: "ai" },
+];
+const rosterNames = roster.map((p) => p.name);
 
 const seedTasks: ActionListItemData[] = [
   {
@@ -411,6 +426,39 @@ export const ActionListShowcase: Component = () => {
           actions={[{ hotkey: "c", label: "claim", onApply: () => {} }]}
           label="Replace-mode task list"
         />
+      </div>
+
+      <SectionTitle>Roster initials — deriveInitials</SectionTitle>
+      <MutedBody>
+        The assignee glyphs above take pre-picked <code>initials</code>; on a real
+        roster, derive them once with <code>deriveInitials(names)</code> so shared
+        letters disambiguate instead of collapsing to a wall of "P"s. Here
+        <b> Peter Stradinger</b> and <b>Peter Falk</b> resolve to <code>PS</code> /
+        <code>PF</code> (word initials), <b>Paula Falk</b> pushes the Falks into their
+        first-word letters (<code>Pe</code> / <code>Pa</code>), and
+        <b> Peter Strong</b> — indistinguishable from Peter Stradinger within two chars
+        — shares its longest common initials and leans on the hover title. Names that
+        never clash keep a single letter. Hover any glyph for the full name.
+      </MutedBody>
+      <div style={{ display: "flex", "align-items": "center", gap: "16px", "flex-wrap": "wrap" }}>
+        {(() => {
+          const initials = deriveInitials(rosterNames);
+          return roster.map((person) => (
+            <div
+              style={{
+                display: "flex",
+                "flex-direction": "column",
+                "align-items": "center",
+                gap: "4px",
+                color: "var(--sui-text)",
+              }}
+              title={person.name}
+            >
+              <AssigneeIcon initials={initials.get(person.name)!} kind={person.kind} />
+              <span style={{ "font-size": "0.75rem", opacity: 0.7 }}>{person.name}</span>
+            </div>
+          ));
+        })()}
       </div>
     </div>
   );
