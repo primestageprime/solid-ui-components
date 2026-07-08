@@ -415,6 +415,85 @@ describe("ActionList — multi-assignee", () => {
   });
 });
 
+describe("ActionList — editTrigger", () => {
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("singleClick (default): a click on the title edits and does NOT select", () => {
+    const onSelectionChange = vi.fn();
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(getByText("first task"));
+    expect(container.querySelector("input")).toBeTruthy(); // inline editor open
+    expect(onSelectionChange).not.toHaveBeenCalled(); // title click excluded from selection
+  });
+
+  it("doubleClick: a single click on the title selects the row and does NOT edit", () => {
+    const onSelectionChange = vi.fn();
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        editTrigger="doubleClick"
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(getByText("first task"));
+    expect(container.querySelector("input")).toBeNull(); // no editor
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a"], {
+      kind: "toggle",
+      clickedId: "a",
+      shiftKey: false,
+    });
+    expect(row(container, 0).className).toMatch(/--selected/);
+  });
+
+  it("doubleClick: a double click on the title opens the inline editor", () => {
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        editTrigger="doubleClick"
+      />
+    ));
+    fireEvent.dblClick(getByText("first task"));
+    expect(container.querySelector("input")).toBeTruthy();
+  });
+});
+
+describe("ActionList — onOpen", () => {
+  it("renders no open button when onOpen is absent", () => {
+    const { queryByLabelText } = render(() => <ActionList items={items} />);
+    expect(queryByLabelText("Open")).toBeNull();
+  });
+
+  it("fires onOpen with the row id and does not toggle selection", () => {
+    const onOpen = vi.fn();
+    const onSelectionChange = vi.fn();
+    const { container, getAllByLabelText } = render(() => (
+      <ActionList
+        items={items}
+        actions={[{ hotkey: "c", label: "claim", onApply: vi.fn() }]}
+        onOpen={onOpen}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    const openButtons = getAllByLabelText("Open");
+    expect(openButtons.length).toBe(items.length);
+    fireEvent.click(openButtons[1]); // the "b" row
+    expect(onOpen).toHaveBeenCalledWith("b");
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
+  });
+});
+
 describe("ActionList — onTagClick", () => {
   const tagged: ActionListItemData[] = [
     { id: "a", name: "first", tags: [{ label: "stax:jtf", active: true }] },

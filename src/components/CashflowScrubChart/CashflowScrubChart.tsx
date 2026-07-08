@@ -62,6 +62,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 ) => {
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
+  // Source for the PRIMARY balance line + its dots/markers. Defaults to the
+  // ribbon `cells`; when `balanceLineCells` is supplied the line is DECOUPLED
+  // from the ribbon (same geometry, different balances). Indexed positionally.
+  const lineCells = (): CashflowCell[] => props.balanceLineCells ?? props.cells;
   // Unique clipPath id per instance — multiple charts on one page must not
   // share a clip rect (each has its own plot geometry). createUniqueId (the
   // same mechanism Chart.tsx uses) keeps the id deterministic across
@@ -79,8 +83,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const hasManualMax = manualMax != null;
     if (props.cells.length === 0) return [0, hasManualMax ? manualMax : 1];
     const series = props.balanceSeries ?? [];
+    // Domain keys off the LINE (balanceLineCells when decoupled) plus the
+    // overlay series — NOT the ribbon `cells` — so the y-scale fits the drawn
+    // lines even when the ribbon shows a different scenario.
+    const line = lineCells();
     const values = props.cells.flatMap((c, i) => [
-      c.balanceCents,
+      ...(line[i] ? [line[i].balanceCents] : []),
       ...series
         .map((s) => s.balanceCents(c, i))
         .filter((v): v is number => v != null),
@@ -144,11 +152,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const yToPlot = ctx.yToPlot;
     const zeroY = yToPlot(0);
 
+    // The primary line reads its balance from lineCells (decoupled from the
+    // ribbon when balanceLineCells is set); geometry (x) stays from ctx.
+    const line = lineCells();
     const points = ctx.cells
-      .map(
-        (c, i) =>
-          `${ctx.cellToX(i).toFixed(1)},${yToPlot(c.balanceCents).toFixed(1)}`,
+      .map((_, i) =>
+        line[i]
+          ? `${ctx.cellToX(i).toFixed(1)},${yToPlot(line[i].balanceCents).toFixed(1)}`
+          : null,
       )
+      .filter((p): p is string => p !== null)
       .join(" ");
 
     // Extra balance lines (forecasts, prior periods, other accounts) drawn
@@ -197,7 +210,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const selectedCell =
       props.scrub !== false ? ctx.cells[ctx.selected] : undefined;
     const selectedX = selectedCell ? ctx.cellToX(ctx.selected) : 0;
-    const selectedY = selectedCell ? yToPlot(selectedCell.balanceCents) : 0;
+    // The selected dot sits ON the primary line → read from lineCells.
+    const selectedLineCell = selectedCell ? line[ctx.selected] : undefined;
+    const selectedY = selectedLineCell
+      ? yToPlot(selectedLineCell.balanceCents)
+      : 0;
 
     // ── Over-top indicator ───────────────────────────────────────────────
     // The y-axis scales to the LINES (consumer passes a line-based `yMax`); the
@@ -211,7 +228,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const overtopPeak = (() => {
       let best: { x: number; value: number } | null = null;
       ctx.cells.forEach((cell, i) => {
-        const candidates: number[] = [cell.balanceCents];
+        const candidates: number[] = line[i] ? [line[i].balanceCents] : [];
         for (const s of props.balanceSeries ?? []) {
           const v = s.balanceCents(cell, i);
           if (v != null) candidates.push(v);
@@ -391,7 +408,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                 </g>
               );
             }
-            const y = yToPlot(ctx.cells[m.index].balanceCents);
+            // Marker dots drop onto the primary line → read from lineCells.
+            const markerLineCell = lineCells()[m.index];
+            if (!markerLineCell) return null;
+            const y = yToPlot(markerLineCell.balanceCents);
             const activate = () =>
               props.onMarkerClick?.(m.index, ctx.cells[m.index]);
             return (
@@ -465,8 +485,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const yToPlot = ctx.yToPlot;
     const cell = ctx.cells[idx];
     const x = ctx.cellToX(idx);
-    // A hollow dot for the primary line + each overlay series with a value.
-    const dotYs = [yToPlot(cell.balanceCents)];
+    // A hollow dot for the primary line (from lineCells) + each overlay series
+    // with a value.
+    const primaryLineCell = lineCells()[idx];
+    const dotYs = primaryLineCell ? [yToPlot(primaryLineCell.balanceCents)] : [];
     for (const s of props.balanceSeries ?? []) {
       const v = s.balanceCents(cell, idx);
       if (v != null) dotYs.push(yToPlot(v));
@@ -527,6 +549,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       }
       hover={props.hover}
       renderHoverOverlay={props.hover ? renderHover : undefined}
+      ribbonAccent={props.stripAccent}
+      ribbonAccentDashed={props.stripAccentDashed}
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## 0.97.0
+
+### Added
+
+- **Cashflow / money primitives** — new `ScenarioDot` badge, `ResponsiveMoney`, and an internal `money` formatting helper, plus refinements to `CashflowScrubChart`, `ScrubChart`, and `SplitQueueList` (decoupled balance line, scenario dots, responsive money rendering). Bundled into this release.
+- **`EditableTitle` / `ActionListItem` / `ActionList` — `editTrigger: "clickSelected"`** (third mode; still strictly non-breaking). The file-list rename idiom: a click on the title opens the inline editor **only when the row is already selected** — the first click on an unselected row falls through to row selection, and a second click on the now-selected title edits. Modifier clicks (shift/ctrl/meta/alt) never edit (they stay selection gestures), and `stopPropagation` keeps the already-selected row from re-toggling. `ActionListItem` feeds the row's selection state to `EditableTitle` via the new `rowSelected?: boolean` prop; `ActionList` already threads `selected`, so consumers only opt in by passing `editTrigger="clickSelected"`. `"singleClick"` (default) and `"doubleClick"` are unchanged.
+
+## 0.96.0
+
+### Added
+
+- **`ActionList` / `ActionListItem` / `EditableTitle`** — two opt-in, strictly non-breaking row affordances (consumers that pass neither prop see byte-identical behavior):
+  - **`editTrigger?: "singleClick" | "doubleClick"`** (default `"singleClick"`, today's behavior), threaded `ActionList → ActionListItem → EditableTitle` (new exported type `EditTrigger`). In `"doubleClick"` mode the title renders as a non-`<button>` element (`<span role="button">`) so a **single click falls through to row selection** while a **double click opens the inline editor**; Enter/Space keep the editor keyboard-reachable, and the hover dotted-underline affordance plus Enter/blur-commit / Escape-cancel lifecycle are unchanged. In the default mode the title stays a `<button>` and a single click edits, exactly as before.
+  - **`onOpen?: (id: string) => void`** on `ActionList` (`onOpen?: () => void` on `ActionListItem`). When provided, each row renders a small magnifying-glass icon button (inline SVG riding `currentColor`, matching the `StarToggle` icon idiom) in the meta cluster just left of the dismiss cap; clicking it calls `onOpen(id)` and never toggles row selection or opens the editor (`stopPropagation` + it is a `<button>`, already excluded from the row click target). It reveals on row hover via opacity only, honoring the geometry-stable hover invariant. Absent → no button renders.
+
 ## 0.94.2
 
 ### Fixed

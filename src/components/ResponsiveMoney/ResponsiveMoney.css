@@ -1,0 +1,19 @@
+.sui-responsive-money {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Hidden measurement twin: same Text classes/font as the visible figure, but
+   off-flow so it never affects layout or paints. Re-used for every ladder
+   candidate in turn (see ResponsiveMoney.tsx), not one node per tier. */
+.sui-responsive-money__measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+}

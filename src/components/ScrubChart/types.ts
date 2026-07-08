@@ -118,6 +118,13 @@ export interface ScrubChartProps<C extends Cell> {
   chartHeight?: number;
   /** Width of one axis cell in px. Default 40. */
   cellWidth?: number;
+  /** Accent color for the detail ribbon — draws a 1px border around the ENTIRE
+   *  DateAxis ribbon element (scrub mode only). Omitted → default appearance,
+   *  no border. */
+  ribbonAccent?: string;
+  /** Dash the ribbon accent border (matches a dashed scenario line) instead of
+   *  a solid rule. Default false (solid). No effect without `ribbonAccent`. */
+  ribbonAccentDashed?: boolean;
   /** `today` Date forwarded to the inner DateAxis. */
   today?: Date;
 

@@ -2,6 +2,7 @@ import {
   For,
   Show,
   type JSX,
+  createEffect,
   createMemo,
   createSignal,
   onMount,
@@ -148,6 +149,22 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   });
   onCleanup(() => resizeObserver?.disconnect());
 
+  // Scroll a requested row into view. Reacts on `scrollToKey` change: when it
+  // names a row currently in the DOM, scroll that row into its scrollable pane.
+  // Deferred a frame so a row just added/selected has laid out first. No-op when
+  // undefined or absent — the default (no auto-scroll) is unchanged when omitted.
+  createEffect(() => {
+    const key = props.scrollToKey;
+    if (!key) return;
+    requestAnimationFrame(() => {
+      // Match by dataset rather than a `[data-sql-key="…"]` selector so arbitrary
+      // key strings (colons, quotes) need no escaping and no `CSS` global.
+      const rows = rootEl?.querySelectorAll<HTMLElement>("[data-sql-key]");
+      const match = rows && [...rows].find((n) => n.dataset.sqlKey === key);
+      match?.scrollIntoView?.({ block: "nearest" });
+    });
+  });
+
   const layout = createMemo(() =>
     computeSplitLayout({
       totalHeight: height(),
@@ -245,8 +262,10 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const key = keyOf(item);
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
     const isSelected = () => props.selectedKey === key;
-    const checkable = () =>
-      kind === "unresolved" && props.checkedKeys !== undefined;
+    // SELECT MODE (opt-in): only unresolved rows become selection targets, and
+    // only while the consumer turns it on. Off (the default), rows carry no
+    // selection affordance and click-to-open is unchanged.
+    const selecting = () => kind === "unresolved" && !!props.selectMode;
     const isChecked = () => !!props.checkedKeys?.has(key);
     return (
       // biome-ignore lint/a11y/useFocusableInteractive: option rows carry a roving tabindex (0/-1) driven by createRowKeyboard; they are focusable.
@@ -260,17 +279,18 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         classList={{
           "sui-sql__row--focused": isFocused(),
           "sui-sql__row--selected": isSelected(),
+          "sui-sql__row--checked": selecting() && isChecked(),
         }}
         // Use the MEASURED row height so a row's reserved slot matches what the
         // layout math sizes the panes from (the raw prop is only the pre-measure
         // seed); keeps rows and pane heights consistent, avoiding the clip bug.
         style={{ "min-height": `${rowHeight()}px` }}
-        // Clicking a row only SELECTS it (emits onSelect) — it no longer resolves.
-        // Resolve/unresolve are driven by the consumer mutating the arrays. A
-        // modifier (shift / ctrl / cmd) click on a checkable row toggles its
-        // membership in the multi-select pool instead of selecting.
+        // In SELECT MODE a click TOGGLES the row's pool membership (never opens),
+        // carrying the modifiers so the consumer can do shift=range / ctrl=toggle.
+        // Otherwise a click SELECTS/opens the item (emits onSelect); resolve /
+        // unresolve stay driven by the consumer mutating the arrays.
         onClick={(e) => {
-          if (checkable() && (e.shiftKey || e.metaKey || e.ctrlKey)) {
+          if (selecting()) {
             props.onToggleCheck?.(key, {
               shift: e.shiftKey,
               meta: e.metaKey || e.ctrlKey,
@@ -284,21 +304,15 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       >
         <span class="sui-sql__marker" aria-hidden="true">
           <Show
-            when={checkable()}
+            when={selecting()}
             fallback={kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
           >
-            <input
-              type="checkbox"
-              class="sui-sql__check"
-              checked={isChecked()}
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onToggleCheck?.(key, {
-                  shift: e.shiftKey,
-                  meta: e.metaKey || e.ctrlKey,
-                });
-              }}
-            />
+            <span
+              class="sui-sql__selectbox"
+              classList={{ "sui-sql__selectbox--checked": isChecked() }}
+            >
+              {isChecked() ? "✓" : ""}
+            </span>
           </Show>
         </span>
         <span class="sui-sql__content">{renderItemFn(item)}</span>

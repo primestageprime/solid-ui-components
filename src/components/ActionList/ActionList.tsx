@@ -55,6 +55,7 @@ import {
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
 import { HotkeyButton, isEditableTarget } from "../HotkeyButton";
+import type { EditTrigger } from "../EditableTitle/EditableTitle";
 import { idRange, foldRange, type RangeSelectMode } from "./selection";
 import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import type { TagPillData } from "../Badge/TagPill";
@@ -118,6 +119,15 @@ export interface ActionListProps {
   onDelete?: (id: string) => void;
   /** Enables inline title edit; called with the id + new name. */
   onRename?: (id: string, name: string) => void;
+  /** Which gesture opens a row's inline title editor. Default `"singleClick"`
+   *  (unchanged behavior). `"doubleClick"` makes a single click on the title
+   *  select the row (like clicking anywhere else on it) and a double click edit
+   *  — only meaningful alongside `onRename`. See {@link EditTrigger}. */
+  editTrigger?: EditTrigger;
+  /** Enables a per-row "open" affordance (a magnifying-glass icon button);
+   *  called with the row id. Clicking it never toggles row selection or opens
+   *  the inline editor. Omit and no button renders. */
+  onOpen?: (id: string) => void;
   /** Enables chip edit/select; called with the id + new status. */
   onStatusChange?: (id: string, status: string) => void;
   /** Batch actions. Presence ENABLES multi-select: rows become click-to-toggle
@@ -297,6 +307,8 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
             onTitleChange={
               props.onRename ? (name) => props.onRename!(d.id, name) : undefined
             }
+            editTrigger={props.editTrigger}
+            onOpen={props.onOpen ? () => props.onOpen!(d.id) : undefined}
             onDismiss={props.onDelete ? () => props.onDelete!(d.id) : undefined}
           />
         )}

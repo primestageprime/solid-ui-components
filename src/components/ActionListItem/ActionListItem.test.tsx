@@ -38,4 +38,20 @@ describe("ActionListItem", () => {
     const { queryByLabelText } = render(() => <ActionListItem title="task" />);
     expect(queryByLabelText("Dismiss task")).toBeNull();
   });
+
+  it("shows the open button only when onOpen is provided and fires it without selecting", () => {
+    const onOpen = vi.fn();
+    const onSelect = vi.fn();
+    const { getByLabelText } = render(() => (
+      <ActionListItem title="task" onOpen={onOpen} onSelect={onSelect} />
+    ));
+    fireEvent.click(getByLabelText("Open"));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled(); // stopPropagation + it's a <button>
+  });
+
+  it("hides the open button without onOpen", () => {
+    const { queryByLabelText } = render(() => <ActionListItem title="task" />);
+    expect(queryByLabelText("Open")).toBeNull();
+  });
 });
