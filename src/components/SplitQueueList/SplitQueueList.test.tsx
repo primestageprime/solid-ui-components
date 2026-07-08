@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { SplitQueueList } from "./SplitQueueList";
@@ -963,6 +963,60 @@ describe("SplitQueueList — keyboard & ARIA", () => {
     const status = container.querySelector(".sui-sql__sr-status")!;
     expect(status.getAttribute("aria-live")).toBe("polite");
     expect(status.textContent).toBe("2 Resolved, 2 Unresolved");
+  });
+});
+
+describe("SplitQueueList — opt-in multi-select checkboxes", () => {
+  it("renders a checkbox on unresolved rows when checkedKeys is provided", () => {
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        resolved={[]}
+        unresolved={["a", "b"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set(["a"])}
+        onToggleCheck={() => {}}
+      />
+    ));
+    const boxes = container.querySelectorAll<HTMLInputElement>(".sui-sql__check");
+    expect(boxes.length).toBe(2);
+    expect(boxes[0].checked).toBe(true);
+  });
+
+  it("checkbox click fires onToggleCheck and not onSelect", () => {
+    const onToggle = vi.fn();
+    const onSelect = vi.fn();
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        resolved={[]}
+        unresolved={["a"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set()}
+        onToggleCheck={onToggle}
+        onSelect={onSelect}
+      />
+    ));
+    container.querySelector<HTMLInputElement>(".sui-sql__check")!.click();
+    expect(onToggle).toHaveBeenCalledWith("a", { shift: false, meta: false });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("plain row click still fires onSelect", () => {
+    const onSelect = vi.fn();
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        resolved={[]}
+        unresolved={["a"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set()}
+        onToggleCheck={() => {}}
+        onSelect={onSelect}
+      />
+    ));
+    container.querySelector<HTMLElement>('[data-sql-key="a"]')!.click();
+    expect(onSelect).toHaveBeenCalledWith("a");
   });
 });
 

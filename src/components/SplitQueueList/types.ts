@@ -34,6 +34,13 @@ export interface SplitQueueListProps<T> {
   /** Fires when ANY row is clicked (resolved or unresolved), with its key. The
    * consumer typically sets `selectedKey` from this and opens a detail panel. */
   onSelect?: (key: string) => void;
+  /** When defined, unresolved rows render a checkbox in the marker slot reflecting
+   *  membership in this set (bag-of-stuff multi-select). Undefined = feature off
+   *  (existing callers unaffected). */
+  checkedKeys?: ReadonlySet<string>;
+  /** Fires from a checkbox click, or a modifier (shift / ctrl / cmd) click on an
+   *  unresolved row body. The consumer owns range/anchor semantics. */
+  onToggleCheck?: (key: string, modifiers: { shift: boolean; meta: boolean }) => void;
   /** Header label for the resolved (top) list. Default "Resolved". */
   resolvedLabel?: string;
   /** Header label for the unresolved (bottom) list. Default "Unresolved". */

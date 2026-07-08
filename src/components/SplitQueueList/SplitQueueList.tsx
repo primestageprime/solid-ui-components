@@ -245,6 +245,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const key = keyOf(item);
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
     const isSelected = () => props.selectedKey === key;
+    const checkable = () =>
+      kind === "unresolved" && props.checkedKeys !== undefined;
+    const isChecked = () => !!props.checkedKeys?.has(key);
     return (
       // biome-ignore lint/a11y/useFocusableInteractive: option rows carry a roving tabindex (0/-1) driven by createRowKeyboard; they are focusable.
       <li
@@ -263,13 +266,40 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         // seed); keeps rows and pane heights consistent, avoiding the clip bug.
         style={{ "min-height": `${rowHeight()}px` }}
         // Clicking a row only SELECTS it (emits onSelect) — it no longer resolves.
-        // Resolve/unresolve are driven by the consumer mutating the arrays.
-        onClick={() => props.onSelect?.(key)}
+        // Resolve/unresolve are driven by the consumer mutating the arrays. A
+        // modifier (shift / ctrl / cmd) click on a checkable row toggles its
+        // membership in the multi-select pool instead of selecting.
+        onClick={(e) => {
+          if (checkable() && (e.shiftKey || e.metaKey || e.ctrlKey)) {
+            props.onToggleCheck?.(key, {
+              shift: e.shiftKey,
+              meta: e.metaKey || e.ctrlKey,
+            });
+            return;
+          }
+          props.onSelect?.(key);
+        }}
         onKeyDown={(e) => keyboard.onRowKeyDown(e, key)}
         onFocus={() => keyboard.setActiveKey(key)}
       >
         <span class="sui-sql__marker" aria-hidden="true">
-          {kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
+          <Show
+            when={checkable()}
+            fallback={kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
+          >
+            <input
+              type="checkbox"
+              class="sui-sql__check"
+              checked={isChecked()}
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onToggleCheck?.(key, {
+                  shift: e.shiftKey,
+                  meta: e.metaKey || e.ctrlKey,
+                });
+              }}
+            />
+          </Show>
         </span>
         <span class="sui-sql__content">{renderItemFn(item)}</span>
       </li>

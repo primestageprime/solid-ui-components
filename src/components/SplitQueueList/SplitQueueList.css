@@ -244,6 +244,14 @@
   color: var(--sui-accent);
 }
 
+.sui-sql__check {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--sui-accent, #7c3aed);
+}
+
 .sui-sql__content {
   flex: 1 1 auto;
   min-width: 0;
