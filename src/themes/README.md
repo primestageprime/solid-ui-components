@@ -124,3 +124,30 @@ Themes that depend on a specific font face may either:
 - Document the font load as a consumer responsibility in this README.
 
 There is no bundled font-self-hosting today.
+
+## Caveat for vinxi/SolidStart consumers: don't `?url`-import theme CSS
+
+The `./themes/<id>.css` package export exists so a consumer can load a
+theme's CSS by URL (step 3 above). **Do not** do this by importing it with
+Vite's `?url` suffix (e.g. `import hudUrl from
+"solid-ui-components/themes/hud.css?url"`) in a vinxi/SolidStart app.
+
+In dev this works fine — vinxi serves a single runtime-managed `#sui-theme`
+link, matching the architecture described above. But in a **prod build**,
+vinxi's router treats any `?url`-imported CSS as *route* CSS: it gets
+statically linked into the prerendered HTML `<head>` AND re-injected by the
+client runtime, for every theme, in manifest order — all landing on the page
+*after* the runtime-managed `#sui-theme` link this README describes. The
+last theme in manifest order then always wins the `--sui-*` variable
+cascade, regardless of which theme the operator actually selected. This bug
+shipped to dside.dev (fixed 2026-07) before the pattern was documented.
+
+**Recommended fix for consumers**: don't let the bundler see theme CSS as an
+import at all. Copy `dist/themes/*.css` into your app's own `public/`
+directory (e.g. via a `predev`/`prebuild` script that runs on every install,
+copying from the resolved `solid-ui-components` package so it can't drift
+from the installed version) and reference the theme by a plain path like
+`/themes/hud.css` instead of a bundler-resolved URL. That keeps the CSS out
+of the route manifest entirely, so the single `#sui-theme` swap-on-change
+architecture works identically in dev and prod. See
+`dside-ui/scripts/sync-themes.mjs` for a reference implementation.
