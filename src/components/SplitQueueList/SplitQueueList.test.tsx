@@ -435,6 +435,15 @@ describe("SplitQueueList — selection API (selectedKey / onSelect)", () => {
     );
   });
 
+  it("paints NO --focused row when focusedKey is omitted (focus fill is opt-in)", () => {
+    // Selecting a resolved/categorized row (selectedKey set, focusedKey omitted)
+    // must NOT bleed an orange focus fill onto the top unresolved row — the head
+    // is only the keyboard tab stop, not a visual highlight. Regression: the
+    // fallback used to paint keys[0] as focused, reading as a second selection.
+    const { container } = mountSelectable("k1"); // a resolved key selected
+    expect(container.querySelectorAll(".sui-sql__row--focused").length).toBe(0);
+  });
+
   it("clicking a resolved row fires onSelect with its key", () => {
     const { container, onSelect } = mountSelectable();
     (container.querySelector('[data-sql-key="k2"]') as HTMLElement).click();

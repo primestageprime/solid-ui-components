@@ -15,8 +15,10 @@ export interface SplitQueueListProps<T> {
   /** Stable identity for an item — drives the resolve animation. Required for the
    * animated queue; optional in `static` mode. */
   keyOf?: (item: T) => string;
-  /** Key of the focused unresolved item (controlled). Falls back to the
-   * top of the unresolved list when omitted/stale. */
+  /** Key of the focused unresolved item (controlled) — the row painted with the
+   * orange ▸ fill. When omitted/stale NO row is painted focused (the highlight is
+   * strictly opt-in), though the keyboard's default tab stop still lands on the
+   * unresolved head. */
   focusedKey?: string;
   /** Fires when focus should move (e.g. after a resolve auto-advances). */
   onFocusChange?: (key: string | null) => void;

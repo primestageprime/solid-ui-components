@@ -202,17 +202,29 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     onFocusChange: (key) => props.onFocusChange?.(key),
   });
 
-  // The focused unresolved key — controlled prop, falling back to the head of
-  // the unresolved list so focus always lands on the next item to process.
-  // Returns null during the exit collapse so NO real bottom row shows the
-  // focused styling while the card is collapsing (only the orange clone does).
+  // The VISUALLY-focused unresolved key — the row that shows the orange ▸ fill.
+  // Strictly the controlled `focusedKey` prop (when it names a live unresolved
+  // row); it does NOT fall back to the head. Otherwise a consumer that supplies
+  // no focus (e.g. while the user is only INSPECTING a resolved/categorized row,
+  // nothing being "worked on") would still see the top to-process row painted as
+  // if it were focused/selected. Returns null during the exit collapse so no real
+  // bottom row shows the focused styling while the card collapses (only the clone).
   const focusedKey = createMemo(() => {
     if (flight.exitingKey()) return null;
     const keys = unresolvedItems().map(keyOf);
     if (props.focusedKey && keys.includes(props.focusedKey))
       return props.focusedKey;
-    return keys[0] ?? null;
+    return null;
   });
+
+  // The keyboard's DEFAULT tab stop when nothing is explicitly focused/selected:
+  // the head of the unresolved list, so the roving tabindex lands on the next
+  // item to process. This keeps the ARIA/keyboard default even though the visual
+  // `focusedKey` above no longer paints the head — the tab stop is not a
+  // highlight, so falling back here is safe and expected.
+  const tabStopFallbackKey = createMemo(
+    () => focusedKey() ?? unresolvedItems().map(keyOf)[0] ?? null,
+  );
 
   // ---- Keyboard / ARIA -----------------------------------------------------
   // Roving-tabindex + keyboard selection for the two listbox panes; see
@@ -224,7 +236,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       ...resolvedItems().map(keyOf),
       ...unresolvedItems().map(keyOf),
     ],
-    focusedKey: () => focusedKey(),
+    focusedKey: () => tabStopFallbackKey(),
     selectedKey: () => props.selectedKey,
     onSelect: (k) => props.onSelect?.(k),
   });

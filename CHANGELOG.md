@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.94.1
+
+### Fixed
+
+- **`SplitQueueList` (`focusedKey`)** — selecting a row while no explicit `focusedKey` is supplied no longer paints the head of the list as focused. The `focusedKey` memo fell back to `keys[0]`, so a consumer that drives focus for only part of its state (e.g. a `null` focus when a committed item is selected) saw the top "to-configure" row light up as if selected. The focus fill is now strictly the explicit `focusedKey` (`null` when omitted); the head-of-list fallback is retained purely for the keyboard roving-tabindex tab stop, so ARIA/keyboard behavior is unchanged.
+
 ## 0.94.0
 
 ### Added
