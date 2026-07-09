@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.97.1
+
+### Fixed
+
+- **`<Chart>` — drag that leaves the plot** — a click-drag range selection now (1) still ends and **commits** when the mouse button is released **outside** the chart, and (2) reads a drag past an edge as "dragged to the end of the chart" instead of freezing the selection at the last in-bounds pixel. The `<svg>` takes **pointer capture** on `pointerdown`, so `pointermove`/`pointerup` keep firing after the pointer leaves its bounds; `pointerleave` no longer cancels an in-progress drag while capture is held; and drag extension maps the pointer through a plot-**clamped** x (the crosshair keeps the nullable mapping, so hover still hides off-plot). All capture calls are optional-chained (jsdom implements none). Affects any chart composing `<DragRangeSelect>` / `<CommitOnReleaseDragRangeSelect>`.
+
 ## 0.97.0
 
 ### Added
