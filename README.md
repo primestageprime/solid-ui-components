@@ -16,6 +16,7 @@ npm run audit:styles # Reports inline `style={…}` repeats — candidates for v
 
 | Doc | What's in it | Read it when… |
 |---|---|---|
+| **`docs/BEST_PRACTICES.md`** | The distilled general expectations for how SUI components work: layers, curried variants, prop split, minimal surface, tokens, naming, lifecycle. | You want the rules on one page before diving into the deeper guides. |
 | **`COMPONENTS.md`** | Catalogue of every public component, its key props, and a usage example. | You need to find a component or remember its API. |
 | **`STYLE_GUIDE.md`** | Architecture: depth levels (Atomic / Depth 2 / Depth 3), curried-variant pattern, factory rules, when to compose vs extend. | You're authoring a new component. |
 | **`AGENT_GUIDE.md`** | Operating instructions for AI agents working in this repo: conventions, do/don'ts, how to add a component. | You're an AI assistant. |
