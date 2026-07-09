@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## 0.97.1
+
+### Fixed
+
+- **`<Chart>` — drag that leaves the plot** — a click-drag range selection now (1) still ends and **commits** when the mouse button is released **outside** the chart, and (2) reads a drag past an edge as "dragged to the end of the chart" instead of freezing the selection at the last in-bounds pixel. The `<svg>` takes **pointer capture** on `pointerdown`, so `pointermove`/`pointerup` keep firing after the pointer leaves its bounds; `pointerleave` no longer cancels an in-progress drag while capture is held; and drag extension maps the pointer through a plot-**clamped** x (the crosshair keeps the nullable mapping, so hover still hides off-plot). All capture calls are optional-chained (jsdom implements none). Affects any chart composing `<DragRangeSelect>` / `<CommitOnReleaseDragRangeSelect>`.
+
+## 0.97.0
+
+### Added
+
+- **Cashflow / money primitives** — new `ScenarioDot` badge, `ResponsiveMoney`, and an internal `money` formatting helper, plus refinements to `CashflowScrubChart`, `ScrubChart`, and `SplitQueueList` (decoupled balance line, scenario dots, responsive money rendering). Bundled into this release.
+- **`EditableTitle` / `ActionListItem` / `ActionList` — `editTrigger: "clickSelected"`** (third mode; still strictly non-breaking). The file-list rename idiom: a click on the title opens the inline editor **only when the row is already selected** — the first click on an unselected row falls through to row selection, and a second click on the now-selected title edits. Modifier clicks (shift/ctrl/meta/alt) never edit (they stay selection gestures), and `stopPropagation` keeps the already-selected row from re-toggling. `ActionListItem` feeds the row's selection state to `EditableTitle` via the new `rowSelected?: boolean` prop; `ActionList` already threads `selected`, so consumers only opt in by passing `editTrigger="clickSelected"`. `"singleClick"` (default) and `"doubleClick"` are unchanged.
+
+## 0.96.0
+
+### Added
+
+- **`ActionList` / `ActionListItem` / `EditableTitle`** — two opt-in, strictly non-breaking row affordances (consumers that pass neither prop see byte-identical behavior):
+  - **`editTrigger?: "singleClick" | "doubleClick"`** (default `"singleClick"`, today's behavior), threaded `ActionList → ActionListItem → EditableTitle` (new exported type `EditTrigger`). In `"doubleClick"` mode the title renders as a non-`<button>` element (`<span role="button">`) so a **single click falls through to row selection** while a **double click opens the inline editor**; Enter/Space keep the editor keyboard-reachable, and the hover dotted-underline affordance plus Enter/blur-commit / Escape-cancel lifecycle are unchanged. In the default mode the title stays a `<button>` and a single click edits, exactly as before.
+  - **`onOpen?: (id: string) => void`** on `ActionList` (`onOpen?: () => void` on `ActionListItem`). When provided, each row renders a small magnifying-glass icon button (inline SVG riding `currentColor`, matching the `StarToggle` icon idiom) in the meta cluster just left of the dismiss cap; clicking it calls `onOpen(id)` and never toggles row selection or opens the editor (`stopPropagation` + it is a `<button>`, already excluded from the row click target). It reveals on row hover via opacity only, honoring the geometry-stable hover invariant. Absent → no button renders.
+
+## 0.94.2
+
+### Fixed
+
+- **`SplitQueueList` (`focusedKey`)** — selecting a row while no explicit `focusedKey` is supplied no longer paints the head of the list as focused. The `focusedKey` memo fell back to `keys[0]`, so a consumer that drives focus for only part of its state (e.g. a `null` focus when a committed item is selected) saw the top "to-configure" row light up as if selected. The focus fill is now strictly the explicit `focusedKey` (`null` when omitted); the head-of-list fallback is retained purely for the keyboard roving-tabindex tab stop, so ARIA/keyboard behavior is unchanged.
+
 ## 0.94.0
 
 ### Added

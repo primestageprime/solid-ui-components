@@ -486,17 +486,33 @@ export const ScrubChart = <C extends Cell>(
       </div>
 
       {/* The detail ribbon (day-cell filmstrip) — scrub layer only. Plain
-          mode renders just the chart frame above. */}
+          mode renders just the chart frame above. An optional accent border
+          wraps the whole ribbon (identity cue) when `ribbonAccent` is set. */}
       <Show when={scrubOn()}>
-        <DateAxis<C>
-          cells={props.cells}
-          selected={selectedIdx()}
-          today={props.today}
-          cellWidth={cellWidth()}
-          onCellClick={(idx, cell) => emitScrub(idx, cell)}
-          renderCell={props.renderCell}
-          scrollableRef={handleAxisRef}
-        />
+        <div
+          class="sui-scrub-chart__ribbon"
+          style={
+            props.ribbonAccent
+              ? {
+                  border: `1px ${
+                    props.ribbonAccentDashed ? "dashed" : "solid"
+                  } ${props.ribbonAccent}`,
+                  "border-radius": "6px",
+                  overflow: "hidden",
+                }
+              : undefined
+          }
+        >
+          <DateAxis<C>
+            cells={props.cells}
+            selected={selectedIdx()}
+            today={props.today}
+            cellWidth={cellWidth()}
+            onCellClick={(idx, cell) => emitScrub(idx, cell)}
+            renderCell={props.renderCell}
+            scrollableRef={handleAxisRef}
+          />
+        </div>
       </Show>
     </div>
   );

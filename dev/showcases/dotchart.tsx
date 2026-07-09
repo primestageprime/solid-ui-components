@@ -113,6 +113,16 @@ export const DotchartShowcase: Component = () => {
     label: "now",
   }));
 
+  // Proof-of-fix readout: the last range committed by releasing a drag. The
+  // fix under test is that releasing OUTSIDE the chart (or dragging past an
+  // edge) still commits — and a drag off the right edge should land end === t1.
+  const [committedRange, setCommittedRange] = createSignal<{
+    start: number;
+    end: number;
+  } | null>(null);
+  const hitDomainMax = createMemo(() => committedRange()?.end === t1);
+  const hitDomainMin = createMemo(() => committedRange()?.start === t0);
+
   const [hoveredBarId, setHoveredBarId] = createSignal<string | number | null>(
     null,
   );
@@ -253,11 +263,83 @@ export const DotchartShowcase: Component = () => {
         />
         <WarningGhostPin descriptor={warningPin} />
         <CommitOnReleaseDragRangeSelect
-          onRange={(s, e) => console.log("range:", new Date(s), new Date(e))}
+          onRange={(s, e) => {
+            console.log("range:", new Date(s), new Date(e));
+            setCommittedRange({ start: s, end: e });
+          }}
         />
         <AccentCurrentValueIndicator point={currentPoint()} />
         <Crosshair />
       </Chart>
+
+      <div
+        class="example-group"
+        style={{ "margin-top": "16px", "max-width": "800px" }}
+      >
+        <h3 style={{ margin: "0 0 4px 0" }}>Drag-off-edge proof</h3>
+        <p class="text-meta" style={{ margin: "0 0 8px 0" }}>
+          Press inside the chart and drag. To prove the fix: (1) drag past the{" "}
+          <strong>right edge</strong> — the range should extend to the domain
+          max <code>{fmtClock(t1)}</code>, not freeze at the last in-bounds
+          pixel; (2) release the mouse button <strong>outside the chart</strong>{" "}
+          — the drag should still commit instead of getting stuck. Before the
+          fix, both cases failed.
+        </p>
+        <div
+          style={{
+            display: "flex",
+            "align-items": "center",
+            gap: "12px",
+            padding: "8px 12px",
+            "border-radius": "6px",
+            border: "1px solid var(--sui-border, #333)",
+            "font-family": "var(--sui-font-mono, monospace)",
+            "font-size": "13px",
+          }}
+        >
+          <span style={{ opacity: 0.6 }}>last committed range:</span>
+          <Show
+            when={committedRange()}
+            fallback={<span style={{ opacity: 0.5 }}>— none yet —</span>}
+          >
+            {(range) => (
+              <>
+                <span
+                  style={{
+                    padding: "1px 6px",
+                    "border-radius": "4px",
+                    background: hitDomainMin()
+                      ? "var(--sui-accent, #5b8def)"
+                      : "transparent",
+                  }}
+                >
+                  {fmtClock(range().start)}
+                </span>
+                <span style={{ opacity: 0.6 }}>→</span>
+                <span
+                  style={{
+                    padding: "1px 6px",
+                    "border-radius": "4px",
+                    background: hitDomainMax()
+                      ? "var(--sui-accent, #5b8def)"
+                      : "transparent",
+                  }}
+                >
+                  {fmtClock(range().end)}
+                </span>
+                <span style={{ opacity: 0.6 }}>
+                  ({fmtDuration(range().start, range().end)})
+                </span>
+                <Show when={hitDomainMax() || hitDomainMin()}>
+                  <span style={{ color: "var(--sui-accent, #5b8def)" }}>
+                    ✓ reached domain {hitDomainMax() ? "max" : "min"}
+                  </span>
+                </Show>
+              </>
+            )}
+          </Show>
+        </div>
+      </div>
 
       <div class="example-group" style={{ "margin-top": "16px" }}>
         <h3 style={{ margin: "0 0 4px 0" }}>Timeline-bar data check</h3>

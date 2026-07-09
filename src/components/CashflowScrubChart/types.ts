@@ -144,6 +144,29 @@ export interface CashflowScrubChartProps {
    */
   yMax?: number | null;
   /**
+   * Override source for the PRIMARY running-balance LINE (and the plotline
+   * markers/dots that sit on it), DECOUPLED from the ribbon. When provided, the
+   * solid balance polyline, the selected/hover dots, and the marker dots read
+   * their balance from these cells (indexed positionally, same geometry as
+   * `cells`), while the day-cell ribbon (bars, labels, scrub, selection) keeps
+   * deriving from `cells`. When omitted, everything derives from `cells`
+   * (backward-compatible). Use it to show one scenario's daily ribbon beneath a
+   * different scenario's balance line. Should be the same length as `cells`.
+   */
+  balanceLineCells?: CashflowCell[];
+  /**
+   * Accent color for the day-strip ribbon — draws a 1px border around the
+   * ENTIRE ribbon element so the filmstrip reads as belonging to a specific
+   * identity. When omitted, the ribbon keeps its default appearance (no
+   * border).
+   */
+  stripAccent?: string;
+  /**
+   * Dash the ribbon accent border so it matches a dashed scenario line (vs a
+   * solid rule). Default false (solid). No effect without `stripAccent`.
+   */
+  stripAccentDashed?: boolean;
+  /**
    * Enable the passive hover readout — a transient vertical crosshair at the
    * hovered day, a hollow dot on every line, and (with `renderHoverTooltip`)
    * a positioned tooltip card. Coexists with the persistent scrub selection.

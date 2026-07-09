@@ -111,6 +111,39 @@
   filter: brightness(1.35);
 }
 
+/* Open affordance (only when onOpen is wired): a small magnifying-glass icon
+   button sitting just left of the dismiss cap. Reveals on row hover via OPACITY
+   only, mirroring the dismiss cap — it always occupies its box, so hover never
+   shifts geometry (principle 3). Rides currentColor; brightens to accent on its
+   own hover. */
+.sui-action-list-item__open {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sui-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.sui-action-list-item__open svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+.sui-action-list-item:hover .sui-action-list-item__open,
+.sui-action-list-item__open:focus-visible {
+  opacity: 1;
+}
+.sui-action-list-item__open:hover {
+  color: var(--sui-accent);
+}
+
 .sui-action-list-item__dismiss {
   /* Semi-circular cap, flush against the row's right edge: stretches the full
      row height and eats the row's padding with negative margins. */

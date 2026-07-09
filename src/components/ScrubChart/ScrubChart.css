@@ -77,3 +77,13 @@
   inset: 0;
   pointer-events: none;
 }
+
+/* Ribbon (accent-bordered day-cell filmstrip). The DateAxis reserves 6px below
+   its cells for the horizontal scrollbar; inside the ribbon's border that reads
+   as an asymmetric gap under the day cells while the top meets the border flush.
+   Drop the reservation HERE so the bottom border meets the cells flush like the
+   top (the ribbon is drag-scrubbed, so the thin scrollbar strip isn't needed).
+   Scoped to the ribbon so other DateAxis consumers (e.g. heatmaps) keep it. */
+.sui-scrub-chart__ribbon .sui-date-axis {
+  padding-bottom: 0;
+}

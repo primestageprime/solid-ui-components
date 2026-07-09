@@ -15,8 +15,10 @@ export interface SplitQueueListProps<T> {
   /** Stable identity for an item — drives the resolve animation. Required for the
    * animated queue; optional in `static` mode. */
   keyOf?: (item: T) => string;
-  /** Key of the focused unresolved item (controlled). Falls back to the
-   * top of the unresolved list when omitted/stale. */
+  /** Key of the focused unresolved item (controlled) — the row painted with the
+   * orange ▸ fill. When omitted/stale NO row is painted focused (the highlight is
+   * strictly opt-in), though the keyboard's default tab stop still lands on the
+   * unresolved head. */
   focusedKey?: string;
   /** Fires when focus should move (e.g. after a resolve auto-advances). */
   onFocusChange?: (key: string | null) => void;
@@ -32,6 +34,25 @@ export interface SplitQueueListProps<T> {
   /** Fires when ANY row is clicked (resolved or unresolved), with its key. The
    * consumer typically sets `selectedKey` from this and opens a detail panel. */
   onSelect?: (key: string) => void;
+  /** When set to a key present in either list, that row is scrolled into view.
+   * Reacts on CHANGE — set it (or bump it) to request a scroll, then clear it.
+   * No-op when undefined or when no row carries the key. Default behavior (no
+   * auto-scroll) is unchanged when omitted. */
+  scrollToKey?: string;
+  /** Turns the unresolved list into a multi-SELECT surface (bag-of-stuff
+   *  grouping). Default false: no selection affordance is rendered and a row
+   *  click OPENS the item (`onSelect`) — the baseline behavior. When true, an
+   *  unresolved row shows a check indicator + highlight for its `checkedKeys`
+   *  membership and a row click TOGGLES selection (via `onToggleCheck`) instead
+   *  of opening. Callers that never pass it are unaffected. */
+  selectMode?: boolean;
+  /** Membership set the select-mode check indicator / highlight reflects. Read
+   *  only while `selectMode` is true; the consumer owns the set. */
+  checkedKeys?: ReadonlySet<string>;
+  /** Fires when an unresolved row is clicked WHILE `selectMode` is true, carrying
+   *  the click modifiers (shift = range, ctrl/cmd = toggle) — the consumer owns
+   *  range/anchor semantics. Never fires outside select mode. */
+  onToggleCheck?: (key: string, modifiers: { shift: boolean; meta: boolean }) => void;
   /** Header label for the resolved (top) list. Default "Resolved". */
   resolvedLabel?: string;
   /** Header label for the unresolved (bottom) list. Default "Unresolved". */

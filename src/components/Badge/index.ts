@@ -9,6 +9,9 @@ export type { CountChipProps } from "./CountChip";
 // BaselineDot has no design-config props — re-exported as-is.
 export { BaselineDot } from "./BaselineDot";
 export type { BaselineDotProps } from "./BaselineDot";
+// ScenarioDot — the accent-coloured, filled-or-hollow sibling of BaselineDot.
+export { ScenarioDot } from "./ScenarioDot";
+export type { ScenarioDotProps } from "./ScenarioDot";
 // TagPill — free-text / split-lozenge tag; a Badge-family sibling of CountChip
 // (a separate pill primitive in this folder, not a StatusBadge variant, because
 // its data model differs). Data-only, re-exported as-is.

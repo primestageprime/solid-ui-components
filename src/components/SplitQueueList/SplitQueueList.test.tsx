@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { SplitQueueList } from "./SplitQueueList";
@@ -433,6 +433,15 @@ describe("SplitQueueList — selection API (selectedKey / onSelect)", () => {
     expect(container.querySelectorAll(".sui-sql__row--selected").length).toBe(
       0,
     );
+  });
+
+  it("paints NO --focused row when focusedKey is omitted (focus fill is opt-in)", () => {
+    // Selecting a resolved/categorized row (selectedKey set, focusedKey omitted)
+    // must NOT bleed an orange focus fill onto the top unresolved row — the head
+    // is only the keyboard tab stop, not a visual highlight. Regression: the
+    // fallback used to paint keys[0] as focused, reading as a second selection.
+    const { container } = mountSelectable("k1"); // a resolved key selected
+    expect(container.querySelectorAll(".sui-sql__row--focused").length).toBe(0);
   });
 
   it("clicking a resolved row fires onSelect with its key", () => {
@@ -957,6 +966,71 @@ describe("SplitQueueList — keyboard & ARIA", () => {
   });
 });
 
+describe("SplitQueueList — select mode (bag-of-stuff grouping)", () => {
+  it("OFF (default): no selection affordance and a row click OPENS (onSelect)", () => {
+    const onSelect = vi.fn();
+    const onToggle = vi.fn();
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        resolved={[]}
+        unresolved={["a", "b"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set(["a"])}
+        onToggleCheck={onToggle}
+        onSelect={onSelect}
+      />
+    ));
+    // No select-box / highlight rendered even though checkedKeys is supplied —
+    // the affordance is gated on selectMode, not on the set's presence.
+    expect(container.querySelectorAll(".sui-sql__selectbox").length).toBe(0);
+    expect(container.querySelectorAll(".sui-sql__row--checked").length).toBe(0);
+    container.querySelector<HTMLElement>('[data-sql-key="a"]')!.click();
+    expect(onSelect).toHaveBeenCalledWith("a");
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it("ON: renders a check indicator + highlight for checked rows", () => {
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        selectMode
+        resolved={[]}
+        unresolved={["a", "b"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set(["a"])}
+        onToggleCheck={() => {}}
+      />
+    ));
+    const boxes = container.querySelectorAll(".sui-sql__selectbox");
+    expect(boxes.length).toBe(2);
+    expect(boxes[0].classList.contains("sui-sql__selectbox--checked")).toBe(true);
+    expect(boxes[1].classList.contains("sui-sql__selectbox--checked")).toBe(false);
+    const checkedRow = container.querySelector('[data-sql-key="a"]')!;
+    expect(checkedRow.classList.contains("sui-sql__row--checked")).toBe(true);
+  });
+
+  it("ON: a row click TOGGLES selection (onToggleCheck) and does NOT open", () => {
+    const onToggle = vi.fn();
+    const onSelect = vi.fn();
+    const { container } = render(() => (
+      <SplitQueueList<string>
+        selectMode
+        resolved={[]}
+        unresolved={["a"]}
+        keyOf={(x) => x}
+        renderItem={(x) => <span>{x}</span>}
+        checkedKeys={new Set()}
+        onToggleCheck={onToggle}
+        onSelect={onSelect}
+      />
+    ));
+    container.querySelector<HTMLElement>('[data-sql-key="a"]')!.click();
+    expect(onToggle).toHaveBeenCalledWith("a", { shift: false, meta: false });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+});
+
 describe("SplitQueueList — reduced-motion advances focus synchronously", () => {
   it("with prefers-reduced-motion, focus advances immediately (no phases)", () => {
     // Force reduced-motion so the component takes the no-animation path.
@@ -984,5 +1058,76 @@ describe("SplitQueueList — reduced-motion advances focus synchronously", () =>
     } finally {
       window.matchMedia = orig;
     }
+  });
+});
+
+describe("SplitQueueList — scrollToKey", () => {
+  // jsdom doesn't implement scrollIntoView; install a spy on the prototype and
+  // restore it after each case so the reactive scroll can be observed.
+  async function withScrollSpy(
+    body: (spy: ReturnType<typeof vi.fn>) => Promise<void>,
+  ): Promise<void> {
+    const spy = vi.fn();
+    const proto = Element.prototype as unknown as {
+      scrollIntoView?: () => void;
+    };
+    const orig = proto.scrollIntoView;
+    proto.scrollIntoView = spy;
+    try {
+      await body(spy);
+    } finally {
+      proto.scrollIntoView = orig;
+    }
+  }
+
+  it("scrolls the row with the requested key into view when scrollToKey changes", async () => {
+    await withScrollSpy(async (spy) => {
+      const [key, setKey] = createSignal<string | undefined>(undefined);
+      const { container } = render(() => (
+        <SplitQueueList<Item>
+          resolved={[]}
+          unresolved={seed(4)}
+          keyOf={(i) => i.id}
+          renderItem={(i) => <span>{i.id}</span>}
+          scrollToKey={key()}
+          animationMs={0}
+          rowHeight={120}
+        />
+      ));
+      await tick(); // ignore any mount-time scrolls
+      spy.mockClear();
+
+      setKey("k3");
+      await tick();
+
+      const row = container.querySelector('[data-sql-key="k3"]')!;
+      expect(spy).toHaveBeenCalled();
+      // Called AS the k3 row (this === the row element).
+      expect(spy.mock.instances[0]).toBe(row);
+    });
+  });
+
+  it("no-ops when scrollToKey names no present row", async () => {
+    await withScrollSpy(async (spy) => {
+      const [key, setKey] = createSignal<string | undefined>(undefined);
+      render(() => (
+        <SplitQueueList<Item>
+          resolved={[]}
+          unresolved={seed(2)}
+          keyOf={(i) => i.id}
+          renderItem={(i) => <span>{i.id}</span>}
+          scrollToKey={key()}
+          animationMs={0}
+          rowHeight={120}
+        />
+      ));
+      await tick();
+      spy.mockClear();
+
+      setKey("nope-not-here");
+      await tick();
+
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 });

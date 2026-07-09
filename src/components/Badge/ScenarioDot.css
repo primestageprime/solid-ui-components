@@ -1,0 +1,13 @@
+/* ScenarioDot — a small circular scenario-identity marker. The colour is the
+   scenario's accent (set inline by the consumer); this file owns only the
+   structural shape. A FILLED dot is a solid disc (the selected scenario); a
+   HOLLOW dot is a ring with a transparent centre (an unselected scenario).
+   box-sizing keeps filled + hollow the same outer diameter. Never shrinks in a
+   flex row. */
+.scenario-dot {
+  display: inline-block;
+  border-radius: 50%;
+  border-style: solid;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}

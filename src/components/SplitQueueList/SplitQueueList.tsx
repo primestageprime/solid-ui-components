@@ -2,6 +2,7 @@ import {
   For,
   Show,
   type JSX,
+  createEffect,
   createMemo,
   createSignal,
   onMount,
@@ -148,6 +149,22 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   });
   onCleanup(() => resizeObserver?.disconnect());
 
+  // Scroll a requested row into view. Reacts on `scrollToKey` change: when it
+  // names a row currently in the DOM, scroll that row into its scrollable pane.
+  // Deferred a frame so a row just added/selected has laid out first. No-op when
+  // undefined or absent — the default (no auto-scroll) is unchanged when omitted.
+  createEffect(() => {
+    const key = props.scrollToKey;
+    if (!key) return;
+    requestAnimationFrame(() => {
+      // Match by dataset rather than a `[data-sql-key="…"]` selector so arbitrary
+      // key strings (colons, quotes) need no escaping and no `CSS` global.
+      const rows = rootEl?.querySelectorAll<HTMLElement>("[data-sql-key]");
+      const match = rows && [...rows].find((n) => n.dataset.sqlKey === key);
+      match?.scrollIntoView?.({ block: "nearest" });
+    });
+  });
+
   const layout = createMemo(() =>
     computeSplitLayout({
       totalHeight: height(),
@@ -202,17 +219,29 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     onFocusChange: (key) => props.onFocusChange?.(key),
   });
 
-  // The focused unresolved key — controlled prop, falling back to the head of
-  // the unresolved list so focus always lands on the next item to process.
-  // Returns null during the exit collapse so NO real bottom row shows the
-  // focused styling while the card is collapsing (only the orange clone does).
+  // The VISUALLY-focused unresolved key — the row that shows the orange ▸ fill.
+  // Strictly the controlled `focusedKey` prop (when it names a live unresolved
+  // row); it does NOT fall back to the head. Otherwise a consumer that supplies
+  // no focus (e.g. while the user is only INSPECTING a resolved/categorized row,
+  // nothing being "worked on") would still see the top to-process row painted as
+  // if it were focused/selected. Returns null during the exit collapse so no real
+  // bottom row shows the focused styling while the card collapses (only the clone).
   const focusedKey = createMemo(() => {
     if (flight.exitingKey()) return null;
     const keys = unresolvedItems().map(keyOf);
     if (props.focusedKey && keys.includes(props.focusedKey))
       return props.focusedKey;
-    return keys[0] ?? null;
+    return null;
   });
+
+  // The keyboard's DEFAULT tab stop when nothing is explicitly focused/selected:
+  // the head of the unresolved list, so the roving tabindex lands on the next
+  // item to process. This keeps the ARIA/keyboard default even though the visual
+  // `focusedKey` above no longer paints the head — the tab stop is not a
+  // highlight, so falling back here is safe and expected.
+  const tabStopFallbackKey = createMemo(
+    () => focusedKey() ?? unresolvedItems().map(keyOf)[0] ?? null,
+  );
 
   // ---- Keyboard / ARIA -----------------------------------------------------
   // Roving-tabindex + keyboard selection for the two listbox panes; see
@@ -224,7 +253,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       ...resolvedItems().map(keyOf),
       ...unresolvedItems().map(keyOf),
     ],
-    focusedKey: () => focusedKey(),
+    focusedKey: () => tabStopFallbackKey(),
     selectedKey: () => props.selectedKey,
     onSelect: (k) => props.onSelect?.(k),
   });
@@ -233,6 +262,11 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     const key = keyOf(item);
     const isFocused = () => kind === "unresolved" && focusedKey() === key;
     const isSelected = () => props.selectedKey === key;
+    // SELECT MODE (opt-in): only unresolved rows become selection targets, and
+    // only while the consumer turns it on. Off (the default), rows carry no
+    // selection affordance and click-to-open is unchanged.
+    const selecting = () => kind === "unresolved" && !!props.selectMode;
+    const isChecked = () => !!props.checkedKeys?.has(key);
     return (
       // biome-ignore lint/a11y/useFocusableInteractive: option rows carry a roving tabindex (0/-1) driven by createRowKeyboard; they are focusable.
       <li
@@ -245,19 +279,41 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
         classList={{
           "sui-sql__row--focused": isFocused(),
           "sui-sql__row--selected": isSelected(),
+          "sui-sql__row--checked": selecting() && isChecked(),
         }}
         // Use the MEASURED row height so a row's reserved slot matches what the
         // layout math sizes the panes from (the raw prop is only the pre-measure
         // seed); keeps rows and pane heights consistent, avoiding the clip bug.
         style={{ "min-height": `${rowHeight()}px` }}
-        // Clicking a row only SELECTS it (emits onSelect) — it no longer resolves.
-        // Resolve/unresolve are driven by the consumer mutating the arrays.
-        onClick={() => props.onSelect?.(key)}
+        // In SELECT MODE a click TOGGLES the row's pool membership (never opens),
+        // carrying the modifiers so the consumer can do shift=range / ctrl=toggle.
+        // Otherwise a click SELECTS/opens the item (emits onSelect); resolve /
+        // unresolve stay driven by the consumer mutating the arrays.
+        onClick={(e) => {
+          if (selecting()) {
+            props.onToggleCheck?.(key, {
+              shift: e.shiftKey,
+              meta: e.metaKey || e.ctrlKey,
+            });
+            return;
+          }
+          props.onSelect?.(key);
+        }}
         onKeyDown={(e) => keyboard.onRowKeyDown(e, key)}
         onFocus={() => keyboard.setActiveKey(key)}
       >
         <span class="sui-sql__marker" aria-hidden="true">
-          {kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
+          <Show
+            when={selecting()}
+            fallback={kind === "resolved" ? "✓" : isFocused() ? "▸" : ""}
+          >
+            <span
+              class="sui-sql__selectbox"
+              classList={{ "sui-sql__selectbox--checked": isChecked() }}
+            >
+              {isChecked() ? "✓" : ""}
+            </span>
+          </Show>
         </span>
         <span class="sui-sql__content">{renderItemFn(item)}</span>
       </li>

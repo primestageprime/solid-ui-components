@@ -24,7 +24,7 @@
 // ============================================
 import { Component, For, Show } from "solid-js";
 import { StatusChip } from "../Badge/StatusChip";
-import { EditableTitle } from "../EditableTitle/EditableTitle";
+import { EditableTitle, type EditTrigger } from "../EditableTitle/EditableTitle";
 import { AssigneeIcon, type AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import { TagPill, type TagPillData } from "../Badge/TagPill";
 import "./ActionListItem.css";
@@ -51,8 +51,19 @@ export interface ActionListItemProps {
   onStatusChange?: (status: string) => void;
   /** Called when the user renames the row. When absent the title is inert. */
   onTitleChange?: (title: string) => void;
+  /** Which gesture opens the inline title editor. Default `"singleClick"`. In
+   *  `"doubleClick"` a single click on the title falls through to row selection
+   *  and a double click edits. In `"clickSelected"` a click edits only when the
+   *  row is already `selected` (else it falls through to selection) — the
+   *  file-list "click to select, click again to rename" idiom. See {@link EditTrigger}. */
+  editTrigger?: EditTrigger;
   /** Called on dismiss. When absent the × cap is hidden. */
   onDismiss?: () => void;
+  /** Called when the row's "open" affordance is clicked. When present a small
+   *  magnifying-glass button renders in the meta cluster; clicking it fires this
+   *  and never toggles row selection or opens the inline editor. When absent, no
+   *  button renders. */
+  onOpen?: () => void;
   /** Whether the row is currently selected. Lights a persistent accent border +
    *  subtle accent fill (geometry-safe — the border already exists transparent). */
   selected?: boolean;
@@ -105,7 +116,12 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
           title={props.title}
         />
       </Show>
-      <EditableTitle title={props.title} onChange={props.onTitleChange} />
+      <EditableTitle
+        title={props.title}
+        onChange={props.onTitleChange}
+        editTrigger={props.editTrigger}
+        rowSelected={props.selected}
+      />
       <span class="sui-action-list-item__meta">
         <Show when={assignees().length > 0}>
           <span class="sui-action-list-item__assignees">
@@ -130,6 +146,41 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
             </Show>
           )}
         </For>
+        <Show when={props.onOpen}>
+          <button
+            type="button"
+            class="sui-action-list-item__open"
+            aria-label="Open"
+            title="Open"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onOpen?.();
+            }}
+          >
+            {/* Magnifying glass — inline SVG riding currentColor, matching the
+                library's StarToggle icon idiom (not an emoji, so it inherits the
+                row's thematic accent). */}
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <line
+                x1="12.6"
+                y1="12.6"
+                x2="17"
+                y2="17"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </Show>
         <Show when={props.onDismiss}>
           <button
             type="button"

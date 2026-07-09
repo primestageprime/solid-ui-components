@@ -244,6 +244,34 @@
   color: var(--sui-accent);
 }
 
+/* SELECT MODE (bag-of-stuff grouping): a checked unresolved row gets a tinted
+ * highlight, and its marker slot shows a small box that fills with a check. The
+ * whole row is the click target (toggles), so the box is a non-interactive
+ * indicator, not an <input>. */
+.sui-sql__row--checked {
+  background: var(--sui-accent-dim);
+}
+
+.sui-sql__selectbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-sm);
+  font-size: 0.625rem;
+  line-height: 1;
+  background: var(--sui-bg-secondary);
+}
+
+.sui-sql__selectbox--checked {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+  color: var(--sui-bg-secondary);
+}
+
 .sui-sql__content {
   flex: 1 1 auto;
   min-width: 0;
