@@ -174,3 +174,15 @@
   border-color: var(--sui-danger);
   color: var(--sui-danger);
 }
+
+/* Armed (awaiting the confirming second click, opt-in via confirmDismiss): the
+   cap stays fully visible even off-hover and reads in the danger colour, so the
+   "click again to delete" state is unmistakable. Geometry is untouched — this
+   is the same cap, only its glyph (× → ✓) and colour change. */
+.sui-action-list-item__dismiss--armed,
+.sui-action-list-item:hover .sui-action-list-item__dismiss--armed {
+  opacity: 1;
+  border-color: var(--sui-danger);
+  color: var(--sui-danger);
+  background: color-mix(in srgb, var(--sui-danger) 14%, transparent);
+}

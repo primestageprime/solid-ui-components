@@ -117,6 +117,10 @@ export interface ActionListProps {
   onSort?: (orderedIds: string[]) => void;
   /** Enables the × cap; called with the removed id. */
   onDelete?: (id: string) => void;
+  /** Require a two-step confirm on the × cap before `onDelete` fires (the first
+   *  click arms, a second confirms). Off by default. See
+   *  {@link ActionListItemProps.confirmDismiss}. */
+  confirmDelete?: boolean;
   /** Enables inline title edit; called with the id + new name. */
   onRename?: (id: string, name: string) => void;
   /** Which gesture opens a row's inline title editor. Default `"singleClick"`
@@ -310,6 +314,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
             editTrigger={props.editTrigger}
             onOpen={props.onOpen ? () => props.onOpen!(d.id) : undefined}
             onDismiss={props.onDelete ? () => props.onDelete!(d.id) : undefined}
+            confirmDismiss={props.confirmDelete}
           />
         )}
       />

@@ -22,7 +22,7 @@
 //  - Dismiss is the flipped semicircle cap (border-radius 999px 0 0 999px) flush
 //    to the row's right edge via negative margins.
 // ============================================
-import { Component, For, Show } from "solid-js";
+import { Component, For, Show, createSignal, onCleanup } from "solid-js";
 import { StatusChip } from "../Badge/StatusChip";
 import { EditableTitle, type EditTrigger } from "../EditableTitle/EditableTitle";
 import { AssigneeIcon, type AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
@@ -59,6 +59,12 @@ export interface ActionListItemProps {
   editTrigger?: EditTrigger;
   /** Called on dismiss. When absent the × cap is hidden. */
   onDismiss?: () => void;
+  /** Require a two-step confirm before firing `onDismiss`. When true the first
+   *  click on the × cap ARMS it (the glyph flips to a danger-tinted ✓ and the
+   *  label becomes "Confirm delete"); a second click fires `onDismiss`. Arming
+   *  auto-cancels when the pointer leaves the row, on Escape, or after a few
+   *  seconds. Default false — the cap deletes on a single click, unchanged. */
+  confirmDismiss?: boolean;
   /** Called when the row's "open" affordance is clicked. When present a small
    *  magnifying-glass button renders in the meta cluster; clicking it fires this
    *  and never toggles row selection or opens the inline editor. When absent, no
@@ -94,6 +100,39 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
     if (target?.closest("button, input, select, textarea, [role='listbox']")) return;
     props.onSelect(e);
   };
+  // Two-step delete confirmation (opt-in via `confirmDismiss`). The first click
+  // arms; a second confirms. Arming auto-cancels when the pointer leaves the
+  // row, on Escape, or after AUTO_CANCEL_MS — so a stray arm never lingers. The
+  // cap keeps its exact geometry either way (only glyph/colour change), so the
+  // row's hover-geometry invariant is preserved.
+  const AUTO_CANCEL_MS = 4000;
+  const [armed, setArmed] = createSignal(false);
+  let cancelTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearTimer = () => {
+    if (cancelTimer !== undefined) {
+      clearTimeout(cancelTimer);
+      cancelTimer = undefined;
+    }
+  };
+  const disarm = () => {
+    clearTimer();
+    setArmed(false);
+  };
+  onCleanup(clearTimer);
+  const onDismissClick = () => {
+    if (!props.confirmDismiss) {
+      props.onDismiss?.();
+      return;
+    }
+    if (armed()) {
+      disarm();
+      props.onDismiss?.();
+    } else {
+      setArmed(true);
+      clearTimer();
+      cancelTimer = setTimeout(disarm, AUTO_CANCEL_MS);
+    }
+  };
   return (
     <div
       class="sui-action-list-item"
@@ -106,6 +145,9 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
       role="listitem"
       aria-selected={props.onSelect ? !!props.selected : undefined}
       onClick={onRowClick}
+      onMouseLeave={() => {
+        if (armed()) disarm();
+      }}
     >
       <Show when={props.status}>
         <StatusChip
@@ -185,10 +227,18 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
           <button
             type="button"
             class="sui-action-list-item__dismiss"
-            aria-label={`Dismiss ${props.title}`}
-            onClick={() => props.onDismiss?.()}
+            classList={{ "sui-action-list-item__dismiss--armed": armed() }}
+            aria-label={armed() ? `Confirm delete ${props.title}` : `Dismiss ${props.title}`}
+            title={armed() ? "Confirm delete" : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDismissClick();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && armed()) disarm();
+            }}
           >
-            ×
+            {armed() ? "✓" : "×"}
           </button>
         </Show>
       </span>
