@@ -57,6 +57,13 @@ export interface TimelineBarProps<
   selectedId?: Id | null;
   hoveredId?: Id | null;
   /**
+   * Like `hoveredId`, but flags EVERY bar whose id is in the set with
+   * `data-hovered="true"`. Use when one hover source maps to multiple bars
+   * (e.g. a list row that spans several detected segments). Unioned with
+   * `hoveredId`, so the two channels can coexist. Default `null` (no set).
+   */
+  hoveredIds?: ReadonlySet<Id> | null;
+  /**
    * Flags EVERY bar whose `state` equals this value with
    * `data-highlighted="true"`. Unlike `selectedId`/`hoveredId` (single-bar),
    * this is a group affordance for legend- or hover-linked "highlight all
@@ -219,7 +226,9 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               laneIdx() * laneHeight() +
               (laneHeight() * (1 - merged.barHeight)) / 2;
             const isSelected = () => merged.selectedId === bar.id;
-            const isHovered = () => merged.hoveredId === bar.id;
+            const isHovered = () =>
+              merged.hoveredId === bar.id ||
+              (merged.hoveredIds?.has(bar.id) ?? false);
             const isHighlighted = () =>
               merged.highlightedState != null &&
               bar.state === merged.highlightedState;

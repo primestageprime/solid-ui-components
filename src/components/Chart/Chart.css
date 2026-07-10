@@ -164,6 +164,16 @@
   stroke: var(--sui-text, #e8eef7);
   stroke-width: 1;
 }
+/* Externally hover-linked bar(s) — driven by `hoveredId` / `hoveredIds` rather
+   than a direct cursor :hover, so a consumer can mirror hover from a linked
+   surface (e.g. a list row) onto the matching bar(s). Same white stroke as
+   :hover plus an accent glow so it reads through an already-opaque fill. */
+.sui-chart__timeline-bar[data-hovered="true"] {
+  opacity: 1;
+  stroke: var(--sui-text, #e8eef7);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(var(--sui-accent-rgb, 59, 130, 246), 0.95));
+}
 /* Group highlight — every bar sharing the highlighted `state` lights up at
    once (legend-/hover-linked "highlight all segments of status X"). Consumer
    styling per the data attribute; this is the gallery's reference treatment. */

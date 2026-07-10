@@ -46,6 +46,34 @@ describe("ActionList", () => {
     const { queryByLabelText } = render(() => <ActionList items={items} />);
     expect(queryByLabelText("Dismiss first task")).toBeNull();
   });
+
+  it("with confirmDelete, arms on the first click and only deletes on the second", () => {
+    const onDelete = vi.fn();
+    const { getByLabelText, queryByLabelText } = render(() => (
+      <ActionList items={items} onDelete={onDelete} confirmDelete />
+    ));
+    // First click arms rather than deletes — the cap re-labels to "Confirm".
+    fireEvent.click(getByLabelText("Dismiss second task"));
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(queryByLabelText("Dismiss second task")).toBeNull();
+    // Second click on the now-armed cap confirms.
+    fireEvent.click(getByLabelText("Confirm delete second task"));
+    expect(onDelete).toHaveBeenCalledWith("b");
+  });
+
+  it("with confirmDelete, cancels the arm when the pointer leaves the row", () => {
+    const onDelete = vi.fn();
+    const { getByLabelText, queryByLabelText, container } = render(() => (
+      <ActionList items={items} onDelete={onDelete} confirmDelete />
+    ));
+    fireEvent.click(getByLabelText("Dismiss second task"));
+    expect(getByLabelText("Confirm delete second task")).toBeTruthy();
+    fireEvent.mouseLeave(row(container, 1));
+    // Back to the disarmed cap; nothing deleted.
+    expect(getByLabelText("Dismiss second task")).toBeTruthy();
+    expect(queryByLabelText("Confirm delete second task")).toBeNull();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
 });
 
 describe("ActionList — multi-select", () => {
