@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.99.0
+
 ### Added
 
 - **`AssigneeIcon` (`size` Override + `createAssigneeIcon`)** — the outline person/AI glyph gains its first presentational knob: `size` (glyph height in px; width keeps the 25:23 box, and the SVG viewBox scales stroke + initials with it). Per the currying rule it is an Override — freeze it with `createAssigneeIcon({ size })` (new factory, with `AssigneeIconOverrides`/`AssigneeIconDataProps` split); the bare `AssigneeIcon` export is unchanged: zero-config, 23px row default, data props only (`initials`/`kind`/`active`). Motivating caller: dside's navbar presence cluster, which needs the same glyphs as its ActionList rows, just bigger.
