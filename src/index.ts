@@ -29,7 +29,6 @@ export * from "./components/QuickFilter";
 export * from "./components/MultiSelectFilter";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
-export * from "./components/Sparkline";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";

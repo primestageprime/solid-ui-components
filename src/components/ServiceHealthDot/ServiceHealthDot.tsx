@@ -40,10 +40,11 @@ export const ServiceHealthDot: Component<ServiceHealthDotProps> = (props) => {
     props.ageMs != null && props.ageMs < threshold();
 
   // Opacity: decays 1 → 0.15 as ageMs approaches threshold; dead = 1 (full red).
+  // Upper clamp guards against negative ageMs from caller clock skew.
   const dotOpacity = () => {
     if (!isAlive()) return 1;
     const pct = (props.ageMs as number) / threshold();
-    return Math.max(0.15, 1 - pct * 0.85);
+    return Math.min(1, Math.max(0.15, 1 - pct * 0.85));
   };
 
   const ageLabel = () => {
@@ -64,6 +65,7 @@ export const ServiceHealthDot: Component<ServiceHealthDotProps> = (props) => {
         class="sui-service-health-dot__dot"
         style={{ opacity: dotOpacity() }}
       />
+      {/* Name label intentionally fades in lockstep with the dot. */}
       <span
         class="sui-service-health-dot__name"
         style={{ opacity: dotOpacity() }}

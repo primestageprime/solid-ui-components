@@ -52,7 +52,7 @@
   top: calc(100% + 6px);
   left: 0;
   z-index: 1000;
-  background: var(--sui-bg-primary, #0a1420);
+  background: var(--sui-bg-primary);
   border: 1px solid var(--sui-border);
   padding: 8px 10px;
   border-radius: 4px;
