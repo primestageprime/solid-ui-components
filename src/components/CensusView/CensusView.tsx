@@ -16,6 +16,7 @@ import {
   CENSUS_BUCKETS,
   bucketOf,
   type CensusBucketId,
+  type CensusColumn,
   type CensusTable,
   type CensusViewProps,
   type NormStatus,
@@ -114,8 +115,6 @@ function groupIntoBuckets(
   }));
 }
 
-import type { CensusColumn } from "./censusModel";
-
 /** Columns for the schema sub-table inside the detail panel. */
 const schemaColumns: TableColumn<CensusColumn>[] = [
   { id: "name", header: "Name", accessor: "name" },
@@ -144,16 +143,16 @@ const DetailContent: Component<{
       {/* Row counts */}
       <div style={{ display: "flex", gap: "var(--sui-space-3, 12px)", "flex-wrap": "wrap", "margin-bottom": "var(--sui-space-3, 12px)" }}>
         <div>
-          <div class="text-meta" style={{ "font-size": "var(--sui-font-size-xs, 11px)" }}>SOURCE</div>
+          <div class="text-meta" style={{ "font-size": "11px" }}>SOURCE</div>
           <NumberWithUnits value={t().sourceRows} units="rows" />
         </div>
         <div>
-          <div class="text-meta" style={{ "font-size": "var(--sui-font-size-xs, 11px)" }}>LOCAL</div>
+          <div class="text-meta" style={{ "font-size": "11px" }}>LOCAL</div>
           <NumberWithUnits value={t().localRows} units="rows" />
         </div>
         <Show when={t().fieldCount != null}>
           <div>
-            <div class="text-meta" style={{ "font-size": "var(--sui-font-size-xs, 11px)" }}>COLS</div>
+            <div class="text-meta" style={{ "font-size": "11px" }}>COLS</div>
             <NumberWithUnits value={t().fieldCount} units="fields" />
           </div>
         </Show>
@@ -199,7 +198,7 @@ const DetailContent: Component<{
       {/* Schema list */}
       <Show when={cols().length > 0}>
         <div style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
-          <div class="text-meta" style={{ "font-size": "var(--sui-font-size-xs, 11px)", "margin-bottom": "var(--sui-space-1, 4px)" }}>
+          <div class="text-meta" style={{ "font-size": "11px", "margin-bottom": "var(--sui-space-1, 4px)" }}>
             SCHEMA ({cols().length})
           </div>
           <BaseTable

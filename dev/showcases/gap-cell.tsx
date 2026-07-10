@@ -1,6 +1,5 @@
 import type { Component } from "solid-js";
 import { GapCell } from "../../src/components/Table";
-import { BaseTable } from "../../src/components/Table";
 
 export const GapCellShowcase: Component = () => (
   <div class="component-section">
