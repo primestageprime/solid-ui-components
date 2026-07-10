@@ -15,6 +15,12 @@ const SEED_TABLES: CensusTable[] = [
   { key: "terms",    entity: "Terms",          fieldCount: 6,  sourceRows: 22,          localRows: 22,    status: "done",    subtitle: "NS/Terms" },
   { key: "category", entity: "Category",       fieldCount: 8,  sourceRows: 45,          localRows: 40,    status: "partial", subtitle: "NS/Category", note: "5 rows still in flight" },
   { key: "taxcode",  entity: "TaxCode",        fieldCount: 5,  sourceRows: 80,          localRows: 0,     status: "todo",    subtitle: "NS/TaxCode" },
+  { key: "dept",     entity: "Department",     fieldCount: 7,  sourceRows: 18,          localRows: 18,    status: "done",    subtitle: "NS/Department" },
+  { key: "location", entity: "Location",       fieldCount: 9,  sourceRows: 31,          localRows: 31,    status: "done",    subtitle: "NS/Location" },
+  { key: "class",    entity: "Classification", fieldCount: 6,  sourceRows: 27,          localRows: 12,    status: "doing",   subtitle: "NS/Classification" },
+  { key: "subsid",   entity: "Subsidiary",     fieldCount: 14, sourceRows: 9,           localRows: 9,     status: "done",    subtitle: "NS/Subsidiary" },
+  { key: "payterm",  entity: "PaymentTerm",    fieldCount: 5,  sourceRows: 12,          localRows: 0,     status: "pending", subtitle: "NS/PaymentTerm" },
+  { key: "uom",      entity: "UnitOfMeasure",  fieldCount: 4,  sourceRows: 36,          localRows: 36,    status: "done",    subtitle: "NS/UnitOfMeasure" },
 
   // lt100k (< 100k rows)
   { key: "contact",  entity: "Contact",        fieldCount: 42, sourceRows: 18_420,      localRows: 18_420,status: "done",    subtitle: "NS/Contact", fieldCountByType: { string: 22, int: 8, datetime: 6, bool: 4, decimal: 2 } },
@@ -59,12 +65,12 @@ export const CensusViewShowcase: Component = () => {
             Last action: <code>{lastAction()}</code>
           </p>
         )}
-        {/* maxHeight on each bucket table is controlled by BaseTable maxHeight in the
-            component; the showcase demonstrates sticky-header scrolling via the overall
-            page scroll. The lt100 bucket has 5 rows so the table scrolls within its
-            maxHeight if the viewport is short. */}
+        {/* tableMaxHeight caps every bucket table at 200px; the "< 100 rows"
+            bucket is seeded with 11 rows so it scrolls internally with the
+            sticky header staying visible. */}
         <CensusView
           tables={SEED_TABLES}
+          tableMaxHeight="200px"
           actions={(t) => (
             <div style={{ display: "flex", gap: "8px", "margin-top": "12px", "flex-wrap": "wrap" }}>
               <GhostButton

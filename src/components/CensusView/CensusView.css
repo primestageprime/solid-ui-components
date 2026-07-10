@@ -22,16 +22,6 @@
   margin-bottom: var(--sui-space-1, 4px);
 }
 
-.sui-census-view__bucket-label {
-  font-size: var(--sui-font-size-sm, 13px);
-  font-weight: bold;
-}
-
-.sui-census-view__bucket-hint {
-  font-size: var(--sui-font-size-xs, 11px);
-  color: var(--sui-color-text-muted, #7aa8c0);
-}
-
 .sui-census-view__detail {
   width: 360px;
   flex-shrink: 0;

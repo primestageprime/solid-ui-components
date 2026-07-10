@@ -66,4 +66,6 @@ export interface CensusViewProps {
   selectedKey?: string | null;
   /** Source-specific actions rendered at the detail panel foot. */
   actions?: (t: CensusTable) => import("solid-js").JSX.Element | null;
+  /** Max height for each bucket table; taller buckets scroll under the sticky header. */
+  tableMaxHeight?: string;
 }

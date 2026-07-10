@@ -170,7 +170,7 @@ const DetailContent: Component<{
 
       {/* Error reason */}
       <Show when={(t().status === "error" || t().status === "noaccess") && t().error}>
-        <div style={{ "margin-bottom": "var(--sui-space-2, 8px)", color: "var(--sui-color-danger, #ff5577)" }}>
+        <div style={{ "margin-bottom": "var(--sui-space-2, 8px)", color: "var(--sui-danger)" }}>
           {t().error}
         </div>
       </Show>
@@ -240,15 +240,16 @@ export const CensusView: Component<CensusViewProps> = (props) => {
               {(b) => (
                 <section>
                   <div class="sui-census-view__bucket-header">
-                    <span class="sui-census-view__bucket-label">{b.label}</span>
+                    <strong>{b.label}</strong>
                     <Show when={b.hint}>
-                      <span class="sui-census-view__bucket-hint">{b.hint}</span>
+                      <span class="text-meta">{b.hint}</span>
                     </Show>
                   </div>
                   <BaseTable
                     stickyHeader
                     compact
                     hoverable
+                    maxHeight={props.tableMaxHeight}
                     data={b.tables}
                     columns={buildColumns(select)}
                     onRowClick={(t) => select(t)}
