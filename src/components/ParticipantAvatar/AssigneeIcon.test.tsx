@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { AssigneeIcon } from "./AssigneeIcon";
+import { AssigneeIcon, createAssigneeIcon } from "./AssigneeIcon";
 
 describe("AssigneeIcon", () => {
   it("renders up to 2 centered initials", () => {
@@ -28,5 +28,27 @@ describe("AssigneeIcon", () => {
   it("active flag adds the highlight class hook", () => {
     const { container } = render(() => <AssigneeIcon initials="P" active />);
     expect(container.firstElementChild!.className).toMatch(/--active/);
+  });
+
+  it("no size → no inline dimensions (stylesheet 25×23 default rules)", () => {
+    const { container } = render(() => <AssigneeIcon initials="P" />);
+    const svg = container.querySelector("svg")!;
+    expect(svg.style.width).toBe("");
+    expect(svg.style.height).toBe("");
+  });
+
+  it("size scales the box, height-authoritative, keeping the 25:23 ratio", () => {
+    const { container } = render(() => <AssigneeIcon initials="P" size={46} />);
+    const svg = container.querySelector("svg")!;
+    expect(svg.style.height).toBe("46px");
+    expect(svg.style.width).toBe("50px"); // round(46 * 25/23)
+  });
+
+  it("createAssigneeIcon freezes size; call site stays data-only", () => {
+    const Big = createAssigneeIcon({ size: 46 });
+    const { container } = render(() => <Big initials="Pe" kind="ai" />);
+    const svg = container.querySelector("svg")!;
+    expect(svg.style.height).toBe("46px");
+    expect(container.querySelector("text")?.textContent).toBe("Pe");
   });
 });
