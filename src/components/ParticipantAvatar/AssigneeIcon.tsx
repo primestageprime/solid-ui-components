@@ -38,6 +38,11 @@ export interface AssigneeIconProps {
   /** Highlighted (e.g. matched the active filter). Data-driven, not a style knob. */
   active?: boolean;
   /**
+   * Hover text — the FULL name (or richer status line) behind the ambient
+   * initials. Falls back to `initials` when omitted. Data, not styling.
+   */
+  title?: string;
+  /**
    * Override — glyph height in px (default 23; width keeps the 25:23 box).
    * Freeze it via createAssigneeIcon; never set it at a call site.
    */
@@ -59,7 +64,7 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
     <span
       class="sui-assignee-icon"
       classList={{ "sui-assignee-icon--active": props.active }}
-      title={props.initials}
+      title={props.title ?? props.initials}
     >
       <Show
         when={props.kind === "ai"}
@@ -69,7 +74,7 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
           <svg
             viewBox="0 0 28 26"
             style={svgStyle()}
-            aria-label={`Assigned to ${props.initials} (person)`}
+            aria-label={`Assigned to ${props.title ?? props.initials} (person)`}
           >
             <circle cx="14" cy="10" r="8.75" />
             <path d="M5 25 v-0.5 a9 4.5 0 0 1 18 0 v0.5 z" />
@@ -81,7 +86,7 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
         <svg
           viewBox="0 0 28 26"
           style={svgStyle()}
-          aria-label={`Assigned to ${props.initials} (AI)`}
+          aria-label={`Assigned to ${props.title ?? props.initials} (AI)`}
         >
           <line x1="9" y1="10" x2="7" y2="4" />
           <circle class="dot" cx="6.7" cy="3" r="1.6" />

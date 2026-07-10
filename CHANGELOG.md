@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.100.0
+
+### Added
+
+- **`AssigneeIcon` (`title` data prop)** — hover text carrying the FULL name (or a richer status line) behind the ambient initials; falls back to `initials` when omitted (previous behavior). Also feeds the `aria-label`. Initials are for the ambient display; `title` is for recovery — pass the full display name wherever a roster uses `deriveInitials`. Flows through `ActionListAssignee` (alias of `AssigneeIconProps`) with no ActionList change.
+
 ## 0.99.0
 
 ### Added

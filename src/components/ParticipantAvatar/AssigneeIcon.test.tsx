@@ -30,6 +30,17 @@ describe("AssigneeIcon", () => {
     expect(container.firstElementChild!.className).toMatch(/--active/);
   });
 
+  it("title carries the full name on hover; initials stay the ambient display", () => {
+    const { container } = render(() => <AssigneeIcon initials="Pe" title="Peter Stradinger" />);
+    expect(container.firstElementChild!.getAttribute("title")).toBe("Peter Stradinger");
+    expect(container.querySelector("text")?.textContent).toBe("Pe");
+  });
+
+  it("no title → hover falls back to the initials (previous behavior)", () => {
+    const { container } = render(() => <AssigneeIcon initials="Pe" />);
+    expect(container.firstElementChild!.getAttribute("title")).toBe("Pe");
+  });
+
   it("no size → no inline dimensions (stylesheet 25×23 default rules)", () => {
     const { container } = render(() => <AssigneeIcon initials="P" />);
     const svg = container.querySelector("svg")!;
