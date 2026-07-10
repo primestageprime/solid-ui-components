@@ -132,6 +132,44 @@ describe("TimelineBar — reactivity", () => {
     ).toBe("true");
   });
 
+  it("hoveredIds marks every bar in the set with data-hovered (multi-bar)", () => {
+    const [ids, setIds] = createSignal<ReadonlySet<Id> | null>(null);
+    const bars: TimelineBarDatum[] = [
+      { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" },
+      { id: slotId("b"), start: 3, end: 5, lane: "x", color: "#fff" },
+      { id: slotId("c"), start: 6, end: 8, lane: "x", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar data={bars} hoveredIds={ids()} />
+    ));
+    const hovered = () =>
+      [...container.querySelectorAll(".sui-chart__timeline-bar")].map((r) =>
+        r.getAttribute("data-hovered"),
+      );
+    expect(hovered()).toEqual([null, null, null]);
+    setIds(new Set([slotId("a"), slotId("c")]));
+    expect(hovered()).toEqual(["true", null, "true"]);
+  });
+
+  it("hoveredId and hoveredIds union (either channel flags a bar)", () => {
+    const bars: TimelineBarDatum[] = [
+      { id: slotId("a"), start: 0, end: 2, lane: "x", color: "#fff" },
+      { id: slotId("b"), start: 3, end: 5, lane: "x", color: "#fff" },
+    ];
+    const { container } = wrapper(() => (
+      <TimelineBar
+        data={bars}
+        hoveredId={slotId("a")}
+        hoveredIds={new Set([slotId("b")])}
+      />
+    ));
+    expect(
+      [...container.querySelectorAll(".sui-chart__timeline-bar")].map((r) =>
+        r.getAttribute("data-hovered"),
+      ),
+    ).toEqual(["true", "true"]);
+  });
+
   it("highlightedState marks every bar whose state matches with data-highlighted", () => {
     // Legend-/hover-linked "highlight all segments of status X" affordance:
     // a single highlightedState value flags ALL bars sharing that state, not
