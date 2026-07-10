@@ -210,6 +210,16 @@ State derivation:
     />
     ```
 
+## TrendSparkline
+- **TrendSparkline** — Atomic (Depth 1). Tiny value sparkline (no axes). Series scaled into a fixed rect, stroked by trajectory — UP green, DOWN red, FLAT grey. Exports `trendOf(initial, final)` as the pure color rule (`final > initial` → `"up"`, `< initial` → `"down"`, equal → `"flat"`). Distinct from `HeartbeatSparkline` (which plots 0..1 connection health): `TrendSparkline` plots arbitrary numeric series — projected balances, rolling totals, any "which direction is this heading?" micro-visual. Owns CSS. Key props: `values` (number[], oldest first), `trend` (`"up"`|`"down"`|`"flat"`), `width` (default 120), `height` (default 24), `capacity` (max points; longer series downsampled, default 80), `yDomain` ([min, max] — shared scale for groups of sparklines; omit for per-series auto-scale). Exported types: `SparklineTrend`, `TrendSparklineProps`. Exported helper: `trendOf`. Use for: projected balances, running totals, any compact "where is this heading?" indicator alongside a value.
+  - Example:
+    ```tsx
+    import { TrendSparkline, trendOf } from "solid-ui-components";
+
+    const values = [10, 18, 15, 25, 22, 30];
+    <TrendSparkline values={values} trend={trendOf(values[0], values[values.length - 1])} width={120} height={24} />
+    ```
+
 ## ConversationTree
 - **ConversationTree** — Pure Composite (Depth 2). Composes `ConversationStack` (Layout Curried Variant) + `LabeledDivider` (semantic alias `DateDivider` available) + `ThreadGroup` + `ParticipantAvatar` + `ParticipantNameLabel` + `ParticipantTimeLabel` + `MessageBubble` + `Duration`. Owns zero CSS and zero inline `style={}` — visual styling lives in the composed Primitives. Multi-participant message thread, optionally tree-structured via `replyToId`. Deterministic per-participant color (HSL hash from `id`, override with `Participant.color`); fallback initials avatar (override with `avatarUrl`); consecutive same-author messages within `groupWithinMs` (default 5min) fold into a single header+body block; day-change or gap > `absoluteAfterMs` (default 1h) inserts a `LabeledDivider` ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM"); per-bubble full timestamp on hover via native `title`. Threaded replies indent (`threaded`, default true) with a `ThreadGroup` left rail colored by the replying author. When `currentUserId` matches a participant, that participant's `ThreadGroup` + `MessageBubble` flip to `variant="self"` (right-aligned, accented). Long bubbles collapse behind a (more…) toggle (`clampLines` default 5; `maxLines` default 20). Key props: `participants` (`Participant[]`), `messages` (`ConversationMessage[]` with `id`, `participantId`, `text`, `timestamp`, optional `replyToId`), `groupWithinMs`, `absoluteAfterMs`, `threaded`, `now` (reference for relative time, default `Date.now()`), `currentUserId`, `clampLines`, `maxLines`, `onMessageClick`. Use for: code review threads, ops incident timelines, multi-actor decision logs, team status posts.
   - Example:
@@ -780,6 +790,24 @@ Where the constituents live (design decision — prefer siblings of existing fam
 ## BurndownChart
 - **BurndownChart** — SVG burndown bar chart with dual-axis stacked bars and trendline. Key props: `bars` (array of `BurndownBar` with `planned_complete`, `planned_incomplete`, `unplanned_complete`, `unplanned_incomplete`), `onSegmentClick` (callback with `barIndex` and `BurndownSegmentKind`), `height`. Above zero: green (planned complete) on grey (planned incomplete). Below zero: orange (unplanned complete) on red (unplanned incomplete). Trendline projects remaining planned work to zero with "+Nd" annotation. Uses `--sui-*` CSS variables. Use for: sprint burndown tracking, planned vs actual visualization.
 
+## RingChart
+- **RingChart** — Atomic (Depth 0). Radial donut gauge: stacked arc segments over a background track ring, with a bold auto-fitting center label and optional sublabel. Pure SVG — no library dependencies. Segment order is clockwise from the top (rotated -90deg). The center label font-size is auto-fitted to the ring diameter and the label's character count. Key props: `segments` (`{ value: number; color: string; animate?: boolean }[]` — animate adds a 2s pulse on the arc), `total` (denominator for all segments), `label` (bold center text, e.g. `"62%"`), `sublabel?` (secondary text below label), `size?` (diameter in px, default 100). Use for: completion gauges, category-breakdown donuts, any "N of total" ring indicator.
+  - Example:
+    ```tsx
+    import { RingChart } from "solid-ui-components";
+
+    <RingChart
+      size={140}
+      total={100}
+      label="62%"
+      sublabel="complete"
+      segments={[
+        { value: 62, color: "var(--sui-success)" },
+        { value: 38, color: "var(--sui-border-bright)" },
+      ]}
+    />
+    ```
+
 ## Progress
 - **StackedProgressBar** — Multi-segment progress bar. Key props: `segments` (array of `{percentage, color}`), `direction` (`horizontal`|`vertical`), `label`, `background`. Use for: multi-category progress visualization, stacked bar charts.
 
@@ -787,6 +815,9 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **ProgressCard** — Step-based progress indicator with icons and connectors. Key props: `title`, `subtitle`, `steps` (array of `ProgressStep` with `id`, `label`, `status`, `icon`), `message`. Use for: multi-step workflow status display.
 - **createWorkflowProgressCard** — Factory that derives step statuses from `currentStep` + `status`. Returns a component with props: `title`, `subtitle`, `currentStep`, `status` (`fetching`|`caching`|`completed`|`error`), `message`. Use for: automated workflow progress tracking.
 - **CacheProgressCard** — Pre-built 5-step cache workflow progress card (Minutes, Hours, Stats, Coverage, Calcs). Use for: data caching pipeline status.
+
+## WorkerCard
+- **WorkerCard** — Composed (Depth 1). Card visualizing a single extraction-worker slot. Composes `Surface` + `Text`; owns `WorkerCard.css`. Animated expand/collapse for the plan row (PK range or single-stream summary) and progress row (fill bar + row count). Border color and background tint derive from `status` + `overdue` — no visual props at the call site. Exports `WorkerStatus` type. Key props: `slotId` (1–4), `status` (`"idle"`|`"claimed"`|`"extracting"`|`"writing"`|`"complete"`), `now` (Date.now() — caller drives the clock), `startedAt` (ms when batch was claimed), `extractStartedAt` (ms when extraction began — drives the fill bar), `jobsCompleted`, `avgRatePerSec`, `estimatedS` (expected duration in seconds), `elapsedS?` (final elapsed, set on complete), `overdue?` (true → crimson badge + border), `rows?` (current row count). Batch-mode extras: `pkStart?`, `pkEnd?`, `batchSize?`. Single-stream extras: `totalRecords?`. Other: `columnCount?`, `currentJob?` (label for the in-flight job). Use for: a live ETL extraction dashboard showing per-worker slot state alongside `ExtractionBoard`.
 
 ## WorkProgressCard
 - **WorkProgressCard** — Status-aware work card (claimedBy · status / title / progress bar) whose bar is derived **entirely from metadata** — the caller never picks a color or proportion. Data-only props (no visual overrides, so re-exported directly, no factory): `status` (`NEW`|`TODO`|`DOING`|`DONE`|`BLOCKED`|`QUESTION`|`CLOSED`), `title`, `claimedBy?`, `subtitle?`, `estimate?` (number), `actual?` (number, same unit). The bar treatment: in-progress → blue fill to `actual/estimate` + faded-blue remainder; over budget → bar reproportioned so `actual` is full width, estimate's share filled + **crimson** overrun; complete → fill turns **forest green**, unused budget **dark grey**; `BLOCKED`/`QUESTION` → work-so-far in blue, dim remainder, with a ⚠/? sign over the bar; `NEW`/`CLOSED` → empty. Use for: monitor/sprint dashboards showing live task progress vs. estimate.

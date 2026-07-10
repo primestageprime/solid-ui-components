@@ -10,6 +10,10 @@
 
 - **`GapCell` / `gapSeverity`** — Remaining-work table cell for census/migration gap columns: bold count + percentage + a 40×4 completion bar, colored by severity ramp (0%→success, ≤50%→warning, >50%→danger). Blank when uncounted. Pure `gapSeverity()` function exported for tests/reuse.
 
+### Changed
+
+- **Docs/showcase coverage** — Added `TrendSparkline` showcase (up/down/flat fixtures, `yDomain` shared-scale example, live-appending signal demo) and registered it in the dev gallery. Added `COMPONENTS.md` entries for `RingChart`, `WorkerCard`, and `TrendSparkline` with APIs sourced directly from component source files.
+
 ## 0.100.0
 
 ### Added

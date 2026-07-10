@@ -83,6 +83,7 @@ import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
+import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
@@ -471,6 +472,12 @@ const items: Item[] = [
     label: "RingChart",
     component: RingChartShowcase,
     tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "trend-sparkline",
+    label: "TrendSparkline",
+    component: TrendSparklineShowcase,
+    tags: ["depth:1", "chart", "indicator"],
   },
   {
     id: "sprint-selector",
