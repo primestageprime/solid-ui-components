@@ -200,6 +200,7 @@ export * from "./components/MutableList";
 export * from "./components/EditableTitle";
 export * from "./components/ActionListItem";
 export * from "./components/ActionList";
+export * from "./components/CensusView";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 

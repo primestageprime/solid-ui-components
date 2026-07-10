@@ -1088,3 +1088,20 @@ The renderers family is a set of small, composable components for displaying fie
 
 ## TitledTimeRangeHeader
 - **TitledTimeRangeHeader** — Atomic Primitive (Depth 1). Owns `TitledTimeRangeHeader.css`; no library-component imports — the date formatting comes from the pure `formatDateTimeRange` helper. Title + optional badge + ISO date range + duration + optional asset chip + optional action slot, optionally wrapped in a link. Key props: `title`, `start`, `end`, `assetLabel`, `badge`, `action`, `href`. The `start` / `end` shape matches the sibling `DateTimeRange` Composite (both feed `formatDateTimeRange`). Use for: detail-page and list-item headers for titled records with a time range — sessions, runs, calls, jobs, events.
+
+## CensusView
+- **CensusView** — Composite (Depth 3). Composes `QuickFilter` + `BaseTable` (one per size bucket) + `InfoPanel` (sticky detail rail) + `GapCell` + `StatusBadge` + `NumberWithUnits` + `CountChip`. Renders a bucketed census of data-source tables: tables are grouped by size/access bucket (`< 100 rows`, `< 100k rows`, `< 1M rows`, `≥ 1M rows`, `Single row`, `Uncounted`, `Empty`, `No access`), each bucket shown as a compact sortable `BaseTable`. Clicking a row opens a sticky detail panel (InfoPanel) with row counts, field-type chips, schema list, and an optional source-specific `actions` slot. Key props: `tables` (`CensusTable[]`), `onSelect` (`(t: CensusTable | null) => void`), `selectedKey` (controlled selection; uncontrolled by default), `actions` (`(t: CensusTable) => JSX.Element | null`). Per-source adapters (`adaptNetSuite`, `adaptAcumatica`, etc.) stay in the consuming app — SUI ships only the normalized types + view.
+  - **Exported model types:** `CensusTable`, `CensusColumn`, `NormStatus`, `CensusBucketId`, `CensusViewProps`, `CENSUS_BUCKETS`.
+  - **Exported pure function:** `bucketOf(t: CensusTable): CensusBucketId` — deterministic bucket assignment; status buckets win over size buckets.
+  - **CSS exception:** `CensusView.css` — structural only (two-column grid + `position: sticky` detail rail). No color/spacing atoms.
+  - Example:
+    ```tsx
+    import { CensusView, type CensusTable } from "solid-ui-components";
+
+    const tables: CensusTable[] = [
+      { key: "acct", entity: "Account", fieldCount: 10, sourceRows: 50, localRows: 50, status: "done" },
+      { key: "inv",  entity: "Invoice", fieldCount: 48, sourceRows: 220_000, localRows: 218_500, status: "doing" },
+    ];
+
+    <CensusView tables={tables} onSelect={(t) => console.log(t?.key)} />
+    ```

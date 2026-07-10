@@ -116,6 +116,7 @@ import { SelectableTableShowcase } from "./showcases/selectable-table";
 import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
 
 // Depth 3
+import { CensusViewShowcase } from "./showcases/census-view";
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
 import { ConversationTreeShowcase } from "./showcases/conversation-tree";
 import { DataListShowcase } from "./showcases/data-list";
@@ -725,6 +726,12 @@ const items: Item[] = [
     tags: ["depth:1", "container", "data"],
   },
 
+  {
+    id: "census-view",
+    label: "CensusView",
+    component: CensusViewShowcase,
+    tags: ["depth:3", "table", "data"],
+  },
   {
     id: "connection-status",
     label: "ConnectionStatus",

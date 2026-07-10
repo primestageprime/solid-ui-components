@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`CensusView`** — Composite (Depth 3). Bucketed census composition: tables grouped by size/access bucket, each rendered as a compact sticky-header `BaseTable`. Click-to-select opens a sticky `InfoPanel` detail rail with row counts (`NumberWithUnits`), field-type chips (`CountChip`), schema list, and an optional `actions` slot. Quick-filter (`QuickFilter`) narrows all buckets simultaneously. Gap column uses `GapCell`. Status badges mapped from `NormStatus` → `StatusBadge` variant. Exports: `CensusView`, `CensusTable`, `CensusColumn`, `NormStatus`, `CensusBucketId`, `CensusViewProps`, `CENSUS_BUCKETS`, `bucketOf`.
+
 - **`GapCell` / `gapSeverity`** — Remaining-work table cell for census/migration gap columns: bold count + percentage + a 40×4 completion bar, colored by severity ramp (0%→success, ≤50%→warning, >50%→danger). Blank when uncounted. Pure `gapSeverity()` function exported for tests/reuse.
 
 ## 0.100.0
