@@ -24,6 +24,7 @@ import { DnDHierarchySortBarShowcase } from "./showcases/dnd-hierarchy-sort-bar"
 import { FabShowcase } from "./showcases/fab";
 import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
+import { GapCellShowcase } from "./showcases/gap-cell";
 import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
@@ -198,6 +199,12 @@ const items: Item[] = [
     label: "CellRenderers",
     component: CellRendererShowcase,
     tags: ["depth:1", "data"],
+  },
+  {
+    id: "gap-cell",
+    label: "GapCell",
+    component: GapCellShowcase,
+    tags: ["depth:2", "table", "data"],
   },
   {
     id: "combobox",

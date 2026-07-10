@@ -6,6 +6,8 @@ export type { FilterableTableProps } from "./FilterableTable";
 export * from "./SelectableTable";
 export * from "./createSelectionStore";
 export * from "./CellRenderers";
+export { GapCell, gapSeverity } from "./GapCell";
+export type { GapCellProps, GapSeverity } from "./GapCell";
 export * from "./DataTableContainer";
 export * from "./variants";
 export * from "./columnHelpers";
