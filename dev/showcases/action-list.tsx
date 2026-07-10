@@ -8,6 +8,11 @@ import {
   type ActionListTag,
 } from "../../src/components/ActionList";
 import { AssigneeIcon, deriveInitials } from "../../src/components/ParticipantAvatar";
+import {
+  composeTagPairs,
+  type SourceTag,
+  type TagDisplayConfig,
+} from "../../src/components/Badge";
 
 // ============================================================================
 // ActionList showcase — the promoted ListItem workshop bench.
@@ -49,6 +54,22 @@ const roster: { name: string; kind: "person" | "ai" }[] = [
   { name: "Deep Agent", kind: "ai" },
 ];
 const rosterNames = roster.map((p) => p.name);
+
+/** A flat tag set whose customer/project and owner/assignee dims pair up, plus a
+ *  lone `priority` that has no partner rule and stays labeled. */
+const tagSource: SourceTag[] = [
+  { dim: "customer", value: "stax" },
+  { dim: "project", value: "jtf" },
+  { dim: "owner", value: "peter" },
+  { dim: "assignee", value: "ada" },
+  { dim: "priority", value: "high" },
+];
+const tagConfig: TagDisplayConfig = {
+  pairs: [
+    { parent: "customer", child: "project" },
+    { parent: "owner", child: "assignee" },
+  ],
+};
 
 const seedTasks: ActionListItemData[] = [
   {
@@ -462,6 +483,51 @@ export const ActionListShowcase: Component = () => {
             </div>
           ));
         })()}
+      </div>
+
+      <SectionTitle>Composed tag pairs — composeTagPairs</SectionTitle>
+      <MutedBody>
+        Apps carry tags as flat <code>dim:value</code> facts; showing every one as a
+        labeled pill is noise. <code>composeTagPairs(tags, cfg)</code> collapses a
+        configured pair (both dims present) into ONE split lozenge of the two VALUES —
+        the dim names drop out but survive in the hover <code>title</code>. Here
+        <code>customer:stax + project:jtf</code> becomes <b>stax │ jtf</b> and
+        <code>owner:peter + assignee:ada</code> becomes <b>peter │ ada</b>, while the
+        partnerless <code>priority:high</code> falls through to its labeled form. The
+        composed output drops straight onto ActionList's <code>tags</code>.
+      </MutedBody>
+      <div style={stackStyle}>
+        <MutedBody>
+          Raw in:{" "}
+          <code>{tagSource.map((t) => `${t.dim}:${t.value}`).join(", ")}</code>
+        </MutedBody>
+        <ActionListItem
+          title="composed tags — two pairs collapse, one leftover stays labeled"
+          tone={toneFor()}
+          tags={composeTagPairs(tagSource, tagConfig).map((t) => ({
+            key: t.key,
+            value: t.value,
+          }))}
+        />
+        <div
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            gap: "2px",
+            "font-size": "0.75rem",
+            opacity: 0.7,
+            color: "var(--sui-text)",
+          }}
+        >
+          {composeTagPairs(tagSource, tagConfig).map((t) => (
+            <span>
+              <b>
+                {t.key} │ {t.value}
+              </b>{" "}
+              — <code>{t.title}</code>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

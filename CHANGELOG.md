@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`composeTagPairs(tags, cfg)`** — pure, reusable helper in the Badge family (`src/components/Badge/tagPairs.ts`, exported from the family index and root barrel). Turns a flat list of `SourceTag` (`{ dim, value }`) into presentation-ready `ComposedTag`s for TagPill / ActionList tags. A pair rule (`{ parent, child }`) whose **both** dims are present collapses those two tags into ONE split lozenge of the two VALUES — the dim names drop out of sight but survive in the `title` for hover recovery (`customer:stax` + `project:jtf` → key `stax`, value `jtf`, title `customer: stax · project: jtf`, `sources` = `[parent, child]`). A dim present **without** its partner is not abbreviated and falls through to the labeled form (`key = dim`, `value = value`, title `dim: value`). Deterministic: pairs emit first in rule order, then the remaining labeled tags in input order — or by `cfg.order` (unknown dims after, stable) when given. Each source tag is consumed at most once; a duplicated dim pairs on its first occurrence and extras stay labeled. Pure, no DOM; empty inputs return `[]`.
+
 ## 0.97.1
 
 ### Fixed

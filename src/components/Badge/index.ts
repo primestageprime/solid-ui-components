@@ -21,3 +21,8 @@ export type { TagPillProps, TagPillData, TagPillLabel, TagPillKeyValue } from ".
 // A separate Badge-family primitive, not a StatusBadge variant. Data-only.
 export { StatusChip } from "./StatusChip";
 export type { StatusChipProps } from "./StatusChip";
+// composeTagPairs — pure helper (no component) deciding HOW a flat dim:value tag
+// list becomes split/labeled lozenges. Feeds TagPill / ActionListTag call sites;
+// companion to the family the way deriveInitials is to ParticipantAvatar.
+export { composeTagPairs } from "./tagPairs";
+export type { TagPairRule, TagDisplayConfig, SourceTag, ComposedTag } from "./tagPairs";
