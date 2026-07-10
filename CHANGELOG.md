@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.101.0
+
 ### Added
 
 - **`ServiceHealthDot`** — Composite (Depth 2). 6px dot + name label for app-shell navbar liveness clusters. Alive: success color, opacity decays `max(0.15, 1 − (ageMs/staleThresholdMs) × 0.85)` toward the staleness horizon. Dead (`ageMs` null/undefined or ≥ threshold): danger color at full opacity with a 1s pulse animation. Hover reveals a popover with service name, age label, a `HeartbeatSparkline` (`state="connected"|"error"`), and a `Xs ago / now` footer. No internal clock — pure render of caller-supplied `ageMs` + `samples`; the 1 Hz tick and history accumulation live in the caller. No curried variant (all props are data). Key props: `name`, `ageMs`, `staleThresholdMs` (default 15 000), `samples`. Ports the hand-rolled `ServiceDot` from rhinotools/AppNav.tsx with inline hex colors swapped to `--sui-success` / `--sui-danger` / `--sui-text-muted` tokens.
