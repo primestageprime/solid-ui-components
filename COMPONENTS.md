@@ -178,6 +178,38 @@ State derivation:
     </Row>
     ```
 
+## ServiceHealthDot
+- **ServiceHealthDot** — Composite (Depth 2). 6px dot + name label for app-shell navbar liveness clusters. Alive: success color, opacity decays `max(0.15, 1 − (ageMs/staleThresholdMs) × 0.85)` as the heartbeat ages toward the staleness horizon. Dead (`ageMs` null/undefined or ≥ threshold): danger color at full opacity with a 1s pulse animation. Hover reveals a popover: service name + age label, a `HeartbeatSparkline` (state `"connected"` or `"error"`), and a `Xs ago / now` footer. **No internal clock** — pure render of caller-supplied `ageMs` + `samples`; the 1 Hz tick and history accumulation live in the caller. **No curried variant** — all props are data props. Key props: `name` (string), `ageMs` (number | null | undefined), `staleThresholdMs` (default 15 000), `samples` (number[] 0..1, oldest first). Uses `--sui-success`, `--sui-danger`, `--sui-text-muted`, `--sui-bg-primary`, `--sui-border`. Use for: navbar/app-shell service heartbeat indicators, dispatcher health clusters.
+  - Example:
+    ```tsx
+    import { ServiceHealthDot } from "solid-ui-components";
+    import { createSignal, onMount, onCleanup } from "solid-js";
+
+    const [ageMs, setAgeMs] = createSignal<number | null>(null);
+    const [samples, setSamples] = createSignal<number[]>([]);
+    const THRESHOLD = 15_000;
+
+    onMount(() => {
+      let lastBeat = Date.now();
+      // Simulate a heartbeat every 2s from an external source.
+      const beatId = setInterval(() => { lastBeat = Date.now(); }, 2_000);
+      // 1 Hz tick owned by the caller — push sample, update ageMs.
+      const tickId = setInterval(() => {
+        const age = Date.now() - lastBeat;
+        setAgeMs(age);
+        setSamples(prev => [...prev.slice(-29), Math.min(1, age / THRESHOLD)]);
+      }, 1_000);
+      onCleanup(() => { clearInterval(beatId); clearInterval(tickId); });
+    });
+
+    <ServiceHealthDot
+      name="broker"
+      ageMs={ageMs()}
+      staleThresholdMs={THRESHOLD}
+      samples={samples()}
+    />
+    ```
+
 ## ConversationTree
 - **ConversationTree** — Pure Composite (Depth 2). Composes `ConversationStack` (Layout Curried Variant) + `LabeledDivider` (semantic alias `DateDivider` available) + `ThreadGroup` + `ParticipantAvatar` + `ParticipantNameLabel` + `ParticipantTimeLabel` + `MessageBubble` + `Duration`. Owns zero CSS and zero inline `style={}` — visual styling lives in the composed Primitives. Multi-participant message thread, optionally tree-structured via `replyToId`. Deterministic per-participant color (HSL hash from `id`, override with `Participant.color`); fallback initials avatar (override with `avatarUrl`); consecutive same-author messages within `groupWithinMs` (default 5min) fold into a single header+body block; day-change or gap > `absoluteAfterMs` (default 1h) inserts a `LabeledDivider` ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM"); per-bubble full timestamp on hover via native `title`. Threaded replies indent (`threaded`, default true) with a `ThreadGroup` left rail colored by the replying author. When `currentUserId` matches a participant, that participant's `ThreadGroup` + `MessageBubble` flip to `variant="self"` (right-aligned, accented). Long bubbles collapse behind a (more…) toggle (`clampLines` default 5; `maxLines` default 20). Key props: `participants` (`Participant[]`), `messages` (`ConversationMessage[]` with `id`, `participantId`, `text`, `timestamp`, optional `replyToId`), `groupWithinMs`, `absoluteAfterMs`, `threaded`, `now` (reference for relative time, default `Date.now()`), `currentUserId`, `clampLines`, `maxLines`, `onMessageClick`. Use for: code review threads, ops incident timelines, multi-actor decision logs, team status posts.
   - Example:

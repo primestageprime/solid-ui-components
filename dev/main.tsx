@@ -83,6 +83,7 @@ import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
+import { SparklineShowcase } from "./showcases/sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
@@ -114,6 +115,7 @@ import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
 import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
+import { ServiceHealthDotShowcase } from "./showcases/service-health-dot";
 
 // Depth 3
 import { CensusViewShowcase } from "./showcases/census-view";
@@ -472,6 +474,12 @@ const items: Item[] = [
     tags: ["depth:0", "chart", "data"],
   },
   {
+    id: "sparkline",
+    label: "Sparkline",
+    component: SparklineShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
     id: "sprint-selector",
     label: "SprintSelector",
     component: SprintSelectorShowcase,
@@ -736,6 +744,12 @@ const items: Item[] = [
     id: "connection-status",
     label: "ConnectionStatus",
     component: ConnectionStatusShowcase,
+    tags: ["depth:2", "indicator", "status"],
+  },
+  {
+    id: "service-health-dot",
+    label: "ServiceHealthDot",
+    component: ServiceHealthDotShowcase,
     tags: ["depth:2", "indicator", "status"],
   },
   {

@@ -29,6 +29,7 @@ export * from "./components/QuickFilter";
 export * from "./components/MultiSelectFilter";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
+export * from "./components/Sparkline";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
@@ -192,6 +193,7 @@ export * from "./components/CashflowScrubChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
 export * from "./components/SortableList";
+export * from "./components/ServiceHealthDot";
 export * from "./components/MutableList";
 // ActionList family — the ActionList Depth-3 list and its Depth-2 row. The
 // four Depth-1 primitives ship inside existing families: AssigneeIcon via
