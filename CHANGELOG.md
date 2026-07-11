@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.102.0
+
+### Added
+
+- **`ScenarioGlyph`** — Atomic (Depth 1), Badge family. The accent-coloured, filled-or-hollow, **shaped** sibling of `ScenarioDot`: where `ScenarioDot` is always a circle, `ScenarioGlyph` renders any `ShapeGlyph` shape (`circle` / `chevron` / `diamond` / `square` / `pentagon` / …) so a scenario is recognisable by its **shape** as well as its colour — the same glyph on its chip, its calibrate column header, and its config-membership icons. `filled` → a solid glyph (the selected scenario / the drawn line); omitted → an outline only (unselected). Wraps the SVG-only `ShapeGlyph` primitive in an inline `<svg>` (with `overflow: visible` so a full-diameter hollow stroke never clips) so it drops into a text row exactly like `ScenarioDot`. Props: `color`, `shape`, `filled?`, `size?` (default 10), plus pass-through span attrs (`title` for hover). Data-only, no curried variant.
+
+### Changed
+
+- **`ShapeGlyph` — new built-in shapes + a `hollow` mode.** Added `diamond`, `square`, and `pentagon` to the built-in `Shape` union (centered in the 16×16 viewBox alongside `chevron`/`chevron-down`/`pin`). Added a `hollow?: boolean` prop that renders any shape — **including `circle`, which previously could not** — as an outline: no fill, the descriptor colour becomes a min-weight stroke. Strictly additive; existing filled call-sites (`PinMarkers`, `GhostPin`, chart markers) are unchanged.
+
 ## 0.101.0
 
 ### Added

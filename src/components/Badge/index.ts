@@ -12,6 +12,10 @@ export type { BaselineDotProps } from "./BaselineDot";
 // ScenarioDot — the accent-coloured, filled-or-hollow sibling of BaselineDot.
 export { ScenarioDot } from "./ScenarioDot";
 export type { ScenarioDotProps } from "./ScenarioDot";
+// ScenarioGlyph — the SHAPED sibling of ScenarioDot (any ShapeGlyph shape,
+// filled or hollow), so scenarios are recognisable by shape as well as colour.
+export { ScenarioGlyph } from "./ScenarioGlyph";
+export type { ScenarioGlyphProps } from "./ScenarioGlyph";
 // TagPill — free-text / split-lozenge tag; a Badge-family sibling of CountChip
 // (a separate pill primitive in this folder, not a StatusBadge variant, because
 // its data model differs). Data-only, re-exported as-is.
