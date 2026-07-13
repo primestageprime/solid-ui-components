@@ -3,6 +3,9 @@
 // (dside /designs/4102): a triage queue of eligible items that one-by-one get
 // Claimed / Blocked / made Dependent / deferred Later.
 //
+// LAYOUT: ThreePanelLayout — chosen via /design-options (over ResizableContainer
+// split, Page+Stack single-column, TabbedSidePanel).
+//
 // STAGE 2 (current): three-panel triage layout — cards (queue) in the left
 // rail, the selected card's detail in the center (title bar, prompt, workflow
 // DAG with click-to-move stage), and the categorical counts on the right
