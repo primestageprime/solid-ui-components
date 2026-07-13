@@ -37,10 +37,18 @@ start-minimal-confirm-with-Peter rule.
    - preview = a compact ASCII mockup of THIS page rendered with that option
      (previews are what make the choice real — always include them for
      layout/structure decisions).
-3. **Apply the choice** on the bench immediately, keeping everything else as
-   it was. Note the decision in the bench header comment
+3. **Apply the choice as a SKELETON — incremental refinement.** A structural
+   decision lands as bare bones first: render the chosen structure with
+   placeholder text in each region ("Queue — cards here", "Card detail",
+   "Counts") and NOTHING else, so Peter sees the skeleton before any region
+   is filled. Note the decision in the bench header comment
    (`// LAYOUT: ThreePanelLayout — chosen via /design-options`).
-4. **Log follow-on decisions** the choice surfaces (e.g. picking AppShell
+4. **Refine one region per decision.** Each subsequent /design-options round
+   picks ONE placeholder region, offers the candidates for it, and replaces
+   just that placeholder with the chosen component. Never fill multiple
+   regions in one step — the bench should visibly evolve skeleton → region
+   by region → complete.
+5. **Log follow-on decisions** the choice surfaces (e.g. picking AppShell
    raises "what goes in the nav?") and offer them as the next question when
    they become load-bearing — don't batch every future decision at once.
 
