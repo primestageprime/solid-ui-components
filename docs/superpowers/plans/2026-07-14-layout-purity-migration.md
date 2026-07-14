@@ -579,7 +579,15 @@ tick", not real arrangement migrations. Review each per skill step 4.
   row lays out the item's OWN prop-derived parts (status dot, icon slot, content
   column), and `.sui-list--scroll` is the `<ul>`'s own fill-scroll
   (`flex:1;min-height:0;overflow-y:auto`) — a semantic scrolling list. Left as-is.
-- [~ claimed: lp-5] Markdown (geo 4)
+- [x] Markdown (geo 4) — DONE (lp-5; showcase-first via f5a4a9c). Only banned
+  geometry is `MarkdownEditor`'s 50/50 split (`.sui-markdown-editor`:
+  `display:grid; grid-template-columns:1fr 1fr; gap:12px`) → the `Grid` primitive
+  `<Grid columns="1fr 1fr" gap="md">` (gap 12=md exact); only `width:100%;
+  min-height:200px` (non-geometry sizing) stay on the class. INTRINSIC (kept):
+  `.sui-markdown` is prose typography (no banned geometry); the
+  `__preview` `overflow-y:auto` is the preview panel's own content scroll (Select-
+  listbox precedent). Verified on the new markdown-editor showcase: two equal
+  columns, textarea | live preview, pixel-identical.
 - [x] MathFormula (geo 9) — AUDITED INTRINSIC (lp-5; data-derived + off-scale em
   gaps). `.math-formula-row` renders each top-level KaTeX term/operator as its own
   inline element (`<For>`-style data-derived segments) and wraps them with
