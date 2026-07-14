@@ -147,6 +147,14 @@ export const TopClusterRow: Component<RowDataProps> = createRow({
   gap: "sm",
   align: "start",
 });
+// Baseline-aligned cluster row (align:baseline, gap:sm, no justify). A left-
+// packed row whose items share a text baseline — e.g. a section header pairing a
+// bold label with a lighter hint that sit on the same baseline. The non-spread
+// sibling of BaselineSpreadRow (which pushes the pair to opposite ends).
+export const BaselineClusterRow: Component<RowDataProps> = createRow({
+  align: "baseline",
+  gap: "sm",
+});
 // Center cluster that refuses to be compressed by a flex parent (baked
 // `flex-shrink: 0`). For fixed leading/trailing slots (icons, badges) beside a
 // growing body, where the slot must keep its intrinsic width.
@@ -324,6 +332,16 @@ export const PaneRow: Component<RowDataProps> = createRow({
  *  field: a label with its own margin above a full-width input). For a
  *  form-field column that takes its share of a horizontal field row. */
 export const GrowColumn: Component<StackDataProps> = createStack({
+  style: { flex: "1", "min-width": "0" },
+});
+
+/** GrowStack — a column that grows to fill its share of a parent ROW and may
+ *  shrink past its content (`flex:1; min-width:0`) AND stacks its own children
+ *  with an `sm` gap. The gapped sibling of `GrowColumn` (which bakes no gap):
+ *  for a main content column that takes its share of a two-column row and
+ *  spaces its stacked sections. */
+export const GrowStack: Component<StackDataProps> = createStack({
+  gap: "sm",
   style: { flex: "1", "min-width": "0" },
 });
 

@@ -1,30 +1,16 @@
-/* CensusView — Composite (Depth 3). Zero CSS except CensusView.css structural
-   exception: the two-column grid + sticky detail rail geometry. */
-
-.sui-census-view {
-  display: flex;
-  gap: var(--sui-space-4, 16px);
-  align-items: flex-start;
-}
-
-.sui-census-view__buckets {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sui-space-3, 12px);
-}
+/* CensusView — Composite (Depth 3). Layout now composed from Layout variants
+   (TopClusterRow root, GrowStack buckets column, BaselineClusterRow bucket
+   header, ActionSlot detail rail). Only the non-geometry chrome — the detail
+   rail's fixed width + sticky pinning and the header's bottom margin — remains
+   here. */
 
 .sui-census-view__bucket-header {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sui-space-2, 6px);
   margin-bottom: var(--sui-space-1, 4px);
 }
 
 .sui-census-view__detail {
+  /* fixed-width sticky rail; no-shrink comes from ActionSlot */
   width: 360px;
-  flex-shrink: 0;
   position: sticky;
   top: 0;
 }

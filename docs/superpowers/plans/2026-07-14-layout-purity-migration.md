@@ -330,7 +330,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] ExtractionBoard (geo 44)
 - [ ] ThreadGroup (geo 24)
 - [ ] DataDisplay/DigitRoller (geo 5) · NumberWithUnits (geo 7) · ResultDisplay (geo 13) · StatsTable (geo 3)
-- [ ] CensusView (geo 11)
+- [x] CensusView (geo 11) — DONE. Root two-column layout → `TopClusterRow`
+  (align:start, gap 16→sm); buckets column (flex:1;min-width:0;column;gap:12) →
+  new `GrowStack` variant (grow column + sm gap — the gapped sibling of
+  GrowColumn); bucket-header (baseline row) → new `BaselineClusterRow`
+  (align:baseline, gap 6→sm); detail rail → `ActionSlot` (drops flex-shrink:0;
+  keeps width:360 + position:sticky/top:0). Also migrated two inline-style flex
+  rows in the detail panel: row-counts → `WrappedClusterRow` (gap 12→sm, wrap),
+  field-type chips → `TagRow` (gap 4=xs, wrap). The "structural exception" carve-
+  out comment is gone. Verified on the census-view showcase: two-column layout,
+  sticky detail rail, row-counts + chip flow all pixel-identical.
 - [ ] SortableList (geo 10)
 - [ ] MutableList (geo 13)
 - [ ] Tabs (geo 10)

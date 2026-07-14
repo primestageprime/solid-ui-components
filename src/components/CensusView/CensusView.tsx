@@ -10,6 +10,14 @@ import { StatusBadge } from "../Badge/StatusBadge";
 import type { StatusBadgeVariant } from "../Badge/StatusBadge";
 import { NumberWithUnits } from "../DataDisplay/NumberWithUnits";
 import { CountChip } from "../Badge/CountChip";
+import {
+  ActionSlot,
+  BaselineClusterRow,
+  GrowStack,
+  TagRow,
+  TopClusterRow,
+  WrappedClusterRow,
+} from "../Layout/variants";
 import "./CensusView.css";
 
 import {
@@ -141,7 +149,7 @@ const DetailContent: Component<{
       </Show>
 
       {/* Row counts */}
-      <div style={{ display: "flex", gap: "var(--sui-space-3, 12px)", "flex-wrap": "wrap", "margin-bottom": "var(--sui-space-3, 12px)" }}>
+      <WrappedClusterRow style={{ "margin-bottom": "var(--sui-space-3, 12px)" }}>
         <div>
           <div class="text-meta" style={{ "font-size": "11px" }}>SOURCE</div>
           <NumberWithUnits value={t().sourceRows} units="rows" />
@@ -156,7 +164,7 @@ const DetailContent: Component<{
             <NumberWithUnits value={t().fieldCount} units="fields" />
           </div>
         </Show>
-      </div>
+      </WrappedClusterRow>
 
       {/* Status badge */}
       <div style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
@@ -181,7 +189,7 @@ const DetailContent: Component<{
 
       {/* Field-type chips */}
       <Show when={Object.values(fbt()).some((v) => v > 0)}>
-        <div style={{ display: "flex", gap: "var(--sui-space-1, 4px)", "flex-wrap": "wrap", "margin-bottom": "var(--sui-space-2, 8px)" }}>
+        <TagRow style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
           <For each={Object.entries(fbt())}>
             {([k, v]) => (
               <Show when={v > 0}>
@@ -189,7 +197,7 @@ const DetailContent: Component<{
               </Show>
             )}
           </For>
-        </div>
+        </TagRow>
       </Show>
 
       {/* Arbitrary extra detail (from rhinotools adapter) */}
@@ -227,23 +235,23 @@ export const CensusView: Component<CensusViewProps> = (props) => {
     props.tables.find((t) => t.key === selKey()) ?? null;
 
   return (
-    <div class="sui-census-view">
+    <TopClusterRow class="sui-census-view">
       <QuickFilter
         items={props.tables}
         extract={(t) => `${t.entity} ${t.subtitle ?? ""}`}
         placeholder="Filter tables by name…"
       >
         {(filtered) => (
-          <div class="sui-census-view__buckets">
+          <GrowStack class="sui-census-view__buckets">
             <For each={groupIntoBuckets(filtered)}>
               {(b) => (
                 <section>
-                  <div class="sui-census-view__bucket-header">
+                  <BaselineClusterRow class="sui-census-view__bucket-header">
                     <strong>{b.label}</strong>
                     <Show when={b.hint}>
                       <span class="text-meta">{b.hint}</span>
                     </Show>
-                  </div>
+                  </BaselineClusterRow>
                   <BaseTable
                     stickyHeader
                     compact
@@ -259,19 +267,19 @@ export const CensusView: Component<CensusViewProps> = (props) => {
                 </section>
               )}
             </For>
-          </div>
+          </GrowStack>
         )}
       </QuickFilter>
 
       <Show when={selected()}>
         {(t) => (
-          <div class="sui-census-view__detail">
+          <ActionSlot class="sui-census-view__detail">
             <InfoPanel title={t().entity}>
               <DetailContent t={t()} actions={props.actions} />
             </InfoPanel>
-          </div>
+          </ActionSlot>
         )}
       </Show>
-    </div>
+    </TopClusterRow>
   );
 };
