@@ -22,10 +22,13 @@
   opacity: 0.55;
 }
 
+/* Header row's flex/spread/baseline arrangement is composed from the
+   `BaselineSpreadRow` Layout variant (claimed left, status right, shared
+   baseline); only the intrinsic font-size lives here. The bar strip below
+   (bar-wrap/bar/seg/sign) is an intrinsic single-widget internal — a progress
+   bar rendering its own data-derived fill segments plus a self-centering sign
+   badge — so its flex stays (standing ruling: single-widget internals stay). */
 .sui-wpc__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
   font-size: 10px;
 }
 .sui-wpc .sui-wpc__claimed {

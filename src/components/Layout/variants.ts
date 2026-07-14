@@ -120,6 +120,15 @@ export const ClusterRow: Component<RowDataProps> = createRow({
   align: "center",
   gap: "sm",
 });
+// Baseline-aligned spread row — a label on the left, a status/meta on the right,
+// sharing a text baseline, pushed to opposite ends (justify:between). For a card
+// header (name/claimed + status). gap:sm is a min-gap that only shows when the
+// two ends approach each other; with justify:between they normally sit apart.
+export const BaselineSpreadRow: Component<RowDataProps> = createRow({
+  align: "baseline",
+  justify: "between",
+  gap: "sm",
+});
 export const TightClusterRow: Component<RowDataProps> = createRow({
   gap: "xs",
   align: "center",

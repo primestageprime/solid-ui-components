@@ -112,7 +112,20 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   consumer-child arrangement). Per skill step 4 + Peter's "deeper components
   shouldn't think about styling," wrapping a pill's own text in a Layout Row is
   the absurd-wrapper anti-pattern. Ticked as intrinsic; left as-is.
-- [ ] Card/StatusCard (geo 41)
+- [ ] Card/StatusCard (geo 41) — DEFERRED (no showcase in dev/, so visual
+  verification is impossible here — the skill's re-screenshot gate can't run).
+  Outer column already handled by the composed Surface (direction="column"
+  gap="sm"). Remaining internal arrangement to migrate: row1 (name+status) →
+  `BaselineSpreadRow` (added); row2 detail column (flex:1;min-height:0;overflow:
+  hidden;gap:6→sm) → a `ClipFillColumn` (fill + overflow:hidden, NOT yet added);
+  desc-wrap (column-context grow+clip) same; row3 + meta-left/center/right
+  (grow/wrap/center/no-shrink clusters at gap:4) → grow/wrap cluster variants
+  (not yet added). name flex:1 can DROP (justify:between makes it identical; keep
+  min-width:0). The desc clamp measurement (scrollHeight−clientHeight on the desc
+  span) is load-bearing — keep the span's intrinsic overflow:hidden. Needs either
+  a StatusCard showcase added first, or a DOM-structure `.layout.test.tsx` guard
+  plus property-by-property CSS equivalence. Left for a focused follow-up rather
+  than shipped blind on the shared checkout.
 - [x] Panel (geo 17) — DONE. Frame `.sui-panel` (display:flex column + overflow:clip)
   → composed `ClipColumn`; header (flex/align-center/gap:8) → `ClusterRow` (gap 8=sm
   exact); content region (flex:1;min-height:0;overflow:auto) → new `ScrollFillColumn`.
@@ -144,7 +157,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   each step + connector→no-shrink ActionSlot. Step circle/icon keep their
   intrinsic glyph-centering flex (single-glyph badge, not child arrangement).
   Props unchanged.
-- [ ] WorkProgressCard (geo 14)
+- [x] WorkProgressCard (geo 14) — DONE. Outer column handled by the composed
+  Surface (direction="column"). Only consumer-facing arrangement is the header
+  (claimed + status) → new `BaselineSpreadRow` (align:baseline, justify:between;
+  header had no gap, +sm min-gap is invisible under space-between). The bar strip
+  (bar-wrap/bar/seg/sign) is an INTRINSIC single-widget internal — a progress bar
+  rendering its own data-derived fill segments + a self-centering sign badge — so
+  its flex stays (standing ruling: single-widget internals stay; ProgressCard
+  precedent). Title/subtitle/claimed keep intrinsic clamp/ellipsis. Verified on
+  the work-progress-card showcase (headers spread, bars pinned, signs centered).
 - [ ] BatchBar (geo 12)
 - [x] BulkActionBar (geo 7) — DONE. Sticky-bottom overlay anchoring kept in CSS;
   root spread → SpreadRow (gap 16→sm snap), actions → ClusterRow. Props unchanged.

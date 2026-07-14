@@ -5,6 +5,7 @@
 // so per the curried-only convention it's re-exported directly (no factory).
 import { For, Show, type Component, type JSX } from "solid-js";
 import { Surface } from "../Surface/Surface";
+import { BaselineSpreadRow } from "../Layout/variants";
 import { Text } from "../Text/Text";
 import {
   deriveCardBar,
@@ -58,7 +59,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
       borderColor={accent()}
       style={cardStyle()}
     >
-      <div class="sui-wpc__header">
+      <BaselineSpreadRow class="sui-wpc__header">
         <Text variant="sublabel" as="span" class="sui-wpc__claimed">
           {props.claimedBy}
         </Text>
@@ -70,7 +71,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
         >
           {props.status}
         </Text>
-      </div>
+      </BaselineSpreadRow>
       <Text variant="title" as="div" class="sui-wpc__title">
         {props.title}
       </Text>
