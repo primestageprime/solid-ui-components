@@ -325,18 +325,22 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P4 — big composites
 
-- [x] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2) — DONE-with-
-  EXEMPTION (team-lead ruling). **BaseTable `.hud-table` fill-chain = LAYOUT-EXEMPT** (deprecation-
-  style note). Rationale (two standing precedents at once): (1) the page-structure-family exemption
-  — a prop-conditional full-height scroll chain (`fill`/`stickyHeader`/`maxHeight` → clip flex
-  column + flex-grow scroll child / overflow toggle / capped scroll) IS scroll *plumbing*, the
-  thing the exempt layout family exists to own; (2) the ButtonGroup pattern — this legacy geometry
-  stays as-is; `FillColumnFlush` / `ClipFillColumnFlush` (+ a `ScrollYBox`-style vertical-cap box
-  if needed) are THE PURE PATH for any FUTURE table-like component, and a `<Dynamic>`-root
-  restructure of BaseTable remains a candidate ONLY IF the Table family is ever rewritten (the
-  regression surface on the library's MOST-USED component isn't worth purity today). NOTE: a
-  working 3-way-Dynamic restructure was built + verified across every mode (base-table showcase +
-  27 tests) but REVERTED per this ruling — kept out of the flagship's shipping path deliberately.
+- [x] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2) — DONE
+  (BaseTable fill-chain MIGRATED; exemption ruling formally SUPERSEDED after the team-lead
+  independently re-verified the restructure — tsc + typecheck:dev green, 27/27 Table tests,
+  base-table showcase correct in natural-height + scroll modes — as exactly the "pure path"
+  the exemption described, executed WITH the full verification the exemption's concern was
+  about). The frame + scroll region are composed via a 3-way `<Dynamic>` keyed on props:
+  root = `fill` ? `ClipFillColumnFlush` : non-sticky ? `ClipBox` : plain `div` (sticky leaves
+  overflow visible so the sticky <thead> isn't trapped); scroll = `fill` ? `ScrollFillColumn`
+  : `maxHeight` ? `ScrollYBox` (+ inline max-height *size*) : plain `div`. `tableContainerStyle`
+  returns only `max-height` (overflow composed). Table.css keeps only frame chrome (bg/border/
+  clip-path corners) + `.hud-table--fill { height/min-height }` sizes + the sticky-thead rule.
+  New variant: `ScrollYBox`. Verified across EVERY mode — natural-height, striped+maxHeight
+  scroll, compact+sticky+scroll (pinned header), fill DataTable (ClipFillColumnFlush +
+  ScrollFillColumn), empty state, grouped colspan headers, curried variants — all pixel-
+  identical; CensusView's BaseTables unaffected. (History: built 7a7b68b → reverted b1da0bf
+  under a stop-order → RESTORED after the lead accepted it on merits.)
   **CellRenderers (geo 14) + GapCell (geo 2): AUDITED INTRINSIC** — every cell renderer
   (`.cell-status`, `.cell-datetime`, `.cell-checkbox`, `.sui-gap-cell__meta` %+bar,
   `.sui-gap-cell__bar` fill-mask) is a self-contained DATA-DERIVED cell-content widget
@@ -825,14 +829,16 @@ recommendation to establish them WITH the primitive pass, not ad-hoc per card.
   or LAYOUT-EXEMPT — zero unchecked/claimed lines remain. Worked across 3 concurrent
   fresh-context sessions on a shared checkout (exact-path staging + `git pull --rebase
   --autostash`, no clobbering). P3 overlays (Combobox/DateRangePicker/MultiSelectFilter),
-  P4 big composites (Table exempt; Surface/Panel keystone; SidebarSelector,
+  P4 big composites (Table MIGRATED; Surface/Panel keystone; SidebarSelector,
   ExtractionBoard, CensusView, ThreadGroup, SortableList, MutableList, DataDisplay,
   DnDHierarchySortBar, RecentStarred), and P5 (real migrations ValueRenderer,
   TitledTimeRangeHeader, MarkdownEditor, AsyncProgress, RangeAmountGroup,
   InlineChartErrorOverlay, … + the intrinsic atom sweep) all landed. Table's
-  prop-conditional fill-chain was ruled **layout-exempt** (a verified Dynamic-root
-  restructure was built then reverted — the flagship's regression surface isn't worth
-  purity; the flush variants are the pure path for any future table-like).
+  prop-conditional fill-chain was first ruled layout-exempt, then **MIGRATED** — the
+  team-lead accepted the 3-way `<Dynamic>` restructure on merits after independent
+  verification (it's the "pure path" the exemption described, done with the full
+  verification regime that was the exemption's whole concern). The flush variants
+  (`FillColumnFlush`/`ClipFillColumnFlush`) remain the pure path for future table-likes.
 
 ## Migration complete
 
@@ -844,11 +850,12 @@ Every component in the inventory has reached a terminal disposition:
   parts (inline-level control, data-derived option/cell/segment, single-widget bar
   mask, leaf control) — wrapping it in a Layout Row would be the absurd-wrapper
   anti-pattern. Left as-is, with the reason recorded per component.
-- **EXEMPT-AS-LAYOUT** — the Layout family itself + genuine full-height scroll
-  plumbing (page-structure family; Table's `fill`/`stickyHeader`/`maxHeight` frame)
-  + genuine 2-D CSS-grid matrices with load-bearing off-scale/0-gap seams
-  (WeekCalendar, QuadrantGrid, the heat grids). These OWN the vocabulary or a
-  matrix geometry the token scale can't express.
+- **EXEMPT-AS-LAYOUT** — the Layout family itself + the page-structure full-height
+  scroll-plumbing family (AppShell/ThreePanelLayout/SplitQueueList/…) + genuine 2-D
+  CSS-grid matrices with load-bearing off-scale/0-gap seams (WeekCalendar,
+  QuadrantGrid, the heat grids). These OWN the vocabulary or a matrix geometry the
+  token scale can't express. (Table's prop-conditional fill-chain was a candidate for
+  this bucket but was ultimately MIGRATED — see its inventory line.)
 
 **Vocabulary the migration added** (Layout/variants.ts + primitives): the row/
 column cluster set (Cluster/Spread/Baseline/Top/GrowCluster/Wrapped/NoShrink/
