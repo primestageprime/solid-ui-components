@@ -125,7 +125,8 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] ProgressCard (geo 18)
 - [ ] WorkProgressCard (geo 14)
 - [ ] BatchBar (geo 12)
-- [ ] BulkActionBar (geo 7)
+- [x] BulkActionBar (geo 7) — DONE. Sticky-bottom overlay anchoring kept in CSS;
+  root spread → SpreadRow (gap 16→sm snap), actions → ClusterRow. Props unchanged.
 
 #### P3 — form / overlay controls
 

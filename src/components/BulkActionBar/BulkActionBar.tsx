@@ -18,6 +18,7 @@
 import { type Component, type JSX, Show, splitProps } from "solid-js";
 import { CountChip } from "../Badge";
 import { PrimaryButton, GhostButton } from "../Button";
+import { SpreadRow, ClusterRow } from "../Layout/variants";
 import "./BulkActionBar.css";
 
 export interface BulkActionBarProps
@@ -51,10 +52,12 @@ export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
   const label = () => (local.count === 1 ? local.noun : `${local.noun}s`);
   const cls = () =>
     local.class ? `sui-bulk-action-bar ${local.class}` : "sui-bulk-action-bar";
+  // Sticky-bottom anchoring stays in CSS (overlay control); the internal
+  // spread + action cluster are composed from Layout. Outer gap snapped 16->sm.
   return (
-    <div class={cls()} role="toolbar" {...others}>
+    <SpreadRow class={cls()} role="toolbar" {...others}>
       <CountChip count={local.count} label={label()} active />
-      <div class="sui-bulk-action-bar__actions">
+      <ClusterRow class="sui-bulk-action-bar__actions">
         <PrimaryButton
           onClick={() => local.onAction()}
           disabled={local.disabled}
@@ -64,7 +67,7 @@ export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
         <Show when={local.onClear}>
           <GhostButton onClick={() => local.onClear?.()}>Clear</GhostButton>
         </Show>
-      </div>
-    </div>
+      </ClusterRow>
+    </SpreadRow>
   );
 };
