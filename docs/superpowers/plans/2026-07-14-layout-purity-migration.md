@@ -439,7 +439,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   align:stretch. A clean migration would need a `<Dynamic>` row/stack switch plus
   several single-use no-align micro-gap variants — over-fitting start-minimal for a
   single control. Same category as SegmentedControl / SegmentedInput. Left as-is.
-- [ ] RecentStarred (geo 16)
+- [x] RecentStarred (geo 16) — DONE (with a semantic-element carve-out, ThreadGroup
+  precedent). Root panel column → `NarrowStack` (gap 12→sm; keeps bg/border/padding/
+  font/min-height:0); both `__header` → `BaselineSpreadRow` (title left, count right,
+  baseline; no gap → +sm min-gap invisible under space-between). INTRINSIC carve-out
+  (documented): `__section` is a semantic `<section>` whose flex-column + min-height:0
+  is load-bearing (establishes the bounded height its `<ul>` list scrolls within) —
+  Layout's Stack is div-only so composing it would drop the `<section>` landmark;
+  `__list` is a data-derived scrolling `<ul>` (ruling 4 + list-scroll, like a Select
+  listbox); `.sui-star-toggle` is an inline-flex icon button (intrinsic). Verified on
+  the recent-starred showcase: both sections' header/count + item lists pixel-identical.
 - [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
 - [x] DnDHierarchySortBar (geo 8) — DONE. The only consumer-arrangement is the
   root pill row (flex-wrap) → `WrappedClusterRow` (wrap, align:center, gap 8=sm

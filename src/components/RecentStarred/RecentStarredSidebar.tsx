@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 import { type Component, For, Show, type JSX } from "solid-js";
+import { BaselineSpreadRow, NarrowStack } from "../Layout/variants";
 import type { RecentStarredItem, RecentStarredStore } from "./store";
 import "./RecentStarred.css";
 
@@ -47,14 +48,14 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
     props.renderItem ? props.renderItem(item) : item.label;
 
   return (
-    <div class={`sui-recent-starred${props.class ? ` ${props.class}` : ""}`}>
+    <NarrowStack class={`sui-recent-starred${props.class ? ` ${props.class}` : ""}`}>
       <section class="sui-recent-starred__section">
-        <div class="sui-recent-starred__header">
+        <BaselineSpreadRow class="sui-recent-starred__header">
           <span>{props.starredTitle ?? "Starred"}</span>
           <Show when={props.store.starred().length > 0}>
             <span>{props.store.starred().length}</span>
           </Show>
-        </div>
+        </BaselineSpreadRow>
         <Show
           when={props.store.starred().length > 0}
           fallback={
@@ -83,12 +84,12 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
       </section>
 
       <section class="sui-recent-starred__section">
-        <div class="sui-recent-starred__header">
+        <BaselineSpreadRow class="sui-recent-starred__header">
           <span>{props.recentTitle ?? "Recent"}</span>
           <Show when={props.store.recent().length > 0}>
             <span>{props.store.recent().length}</span>
           </Show>
-        </div>
+        </BaselineSpreadRow>
         <Show
           when={props.store.recent().length > 0}
           fallback={
@@ -115,6 +116,6 @@ export const RecentStarredSidebar: Component<RecentStarredSidebarProps> = (
           </ul>
         </Show>
       </section>
-    </div>
+    </NarrowStack>
   );
 };

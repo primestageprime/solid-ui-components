@@ -42,10 +42,10 @@
   height: 100%;
 }
 
+/* Root panel column → NarrowStack; the two headers → BaselineSpreadRow. Only
+   the panel's non-geometry chrome (bg/border/padding/font) + the min-height:0
+   that lets the list scroll remain here. */
 .sui-recent-starred {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   background: var(--sui-recent-bg);
   border: 1px solid var(--sui-recent-border);
   border-radius: 6px;
@@ -56,6 +56,10 @@
   color: var(--sui-recent-item-fg);
   min-height: 0;
 }
+/* INTRINSIC carve-out: a semantic <section> whose flex-column + min-height:0 is
+   load-bearing — it establishes the bounded height its data-derived <ul> list
+   scrolls within. Layout's Stack is div-only, so composing it would drop the
+   <section>; kept as-is with the geometry documented (ThreadGroup-precedent). */
 .sui-recent-starred__section {
   display: flex;
   flex-direction: column;
@@ -68,10 +72,9 @@
   color: var(--sui-recent-section-fg);
   font-weight: 600;
   padding: 0 6px 4px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
 }
+/* INTRINSIC: a data-derived scrolling <ul> (ruling 4 + list-scroll like a
+   Select listbox). Semantic <ul> + own overflow scroll → left as-is. */
 .sui-recent-starred__list {
   display: flex;
   flex-direction: column;
