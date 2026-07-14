@@ -176,15 +176,35 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   its flex stays (standing ruling: single-widget internals stay; ProgressCard
   precedent). Title/subtitle/claimed keep intrinsic clamp/ellipsis. Verified on
   the work-progress-card showcase (headers spread, bars pinned, signs centered).
-- [ ] BatchBar (geo 12)
+- [x] BatchBar (geo 12) — AUDITED, INTRINSIC (no migration). BatchBar is a
+  self-contained progress-bar widget: every region it lays out (done / inflight /
+  per-batch stripe / eased fill) is DATA-derived from `batches`/`totalRows`/
+  `donePct`/`fillFrac`, never a consumer child. Its wrapper flex-row +
+  align:stretch + overflow:hidden mask and the inflight stripe column are the
+  widget rendering its own fill — a single-widget internal, same category as
+  WorkProgressCard's bar strip, ProgressCard's step circles, and the Badge
+  family. Per the standing ruling ("intrinsic single-widget internals stay —
+  don't build absurd wrappers") this is left as-is, ticked intrinsic.
 - [x] BulkActionBar (geo 7) — DONE. Sticky-bottom overlay anchoring kept in CSS;
   root spread → SpreadRow (gap 16→sm snap), actions → ClusterRow. Props unchanged.
 
 #### P3 — form / overlay controls
 
 - [ ] Inputs/ThemedInputs (geo 3)
-- [ ] Checkbox/Checkbox (geo 6) · Checkbox/CheckboxField (geo 6)
-- [ ] Toggle (geo 6)
+- [x] Checkbox/Checkbox (geo 6) — AUDITED, INTRINSIC. A self-contained inline
+  labeled control: its `inline-flex`/align/gap center its OWN painted box +
+  its OWN `<label>` (rendered from the `label` string prop + `labelPosition`,
+  never a consumer child). Same category as the Badge family / Toggle. Also it is
+  INLINE (`inline-flex`) — the Layout Row/Stack are all block-level `display:flex`,
+  so composing a Row would turn the control into a full-width block. Left as-is.
+- [ ] Checkbox/CheckboxField (geo 6) — TODO (block-level: control + a label/hint
+  text-column; could compose ClusterRow[align:start] + a NarrowStack[gap 2→xs].
+  Judgement call whether the label/hint column counts as intrinsic field parts vs
+  arrangement — left for a focused pass).
+- [x] Toggle (geo 6) — AUDITED, INTRINSIC. Same as Checkbox: an inline
+  (`inline-flex`) labeled switch centering its own track/slider + its own
+  `<label>` (from the `label` prop), plus a thematic pill variant that is itself a
+  self-contained control. Prop-derived parts, inline-level → intrinsic, left as-is.
 - [ ] SegmentedInput (geo 14)
 - [ ] SegmentedControl (geo 6)
 - [ ] DayOfWeekPicker (geo 6)
@@ -356,3 +376,16 @@ recommendation to establish them WITH the primitive pass, not ad-hoc per card.
   `BaselineWrapRow`, `LabelValueGrid` variants; `AutoStackRow`/`AutoStackItem`
   and `Grid` primitives. Each has a `*.layout.test.tsx` guard; full suite green
   (1547). Next: P2 high-traffic composites.
+- 2026-07-14 — KEYSTONE pass (fresh-context agent). Migrated **Surface** (3ea7bda),
+  **Panel** (23b3cd4), **WorkProgressCard** (74167dd), **ActionListItem** (0769d77);
+  each verified on the live gallery (Surface+Panel via the categorical-triage
+  canary — pixel-identical incl. the bright active-selection state; WPC on its
+  showcase; ActionListItem on action-list incl. a hover-revealed full-height
+  dismiss cap). Suite stayed green (1557) throughout; tsc + typecheck:dev clean.
+  **New Layout vocabulary:** `ScrollFillColumn`, `ClipColumn` (column-context
+  scroll/clip, for Panel), `BaselineSpreadRow` (card headers). **Audited INTRINSIC
+  (no migration):** BatchBar, Checkbox, Toggle (all self-contained widgets
+  arranging their own data/prop-derived parts — same category as the Badge family).
+  **Deferred:** StatusCard (no dev showcase → visually unverifiable here — needs a
+  showcase or a DOM-structure guard); CheckboxField + SegmentedControl (genuine
+  arrangement questions, own pass). Remaining P3/P4/P5 unstarted.
