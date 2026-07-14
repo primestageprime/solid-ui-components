@@ -655,7 +655,13 @@ tick", not real arrangement migrations. Review each per skill step 4.
   captured box-sizing footprint must not reflow mid-drag (DnDHierarchySortBar-pill
   precedent). No consumer-child multi-region arrangement expressible with reuse-first
   vocabulary. Left as-is.
-- [~ claimed: lp-5] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
+- [x] Feedback/InlineChartErrorOverlay (geo 3) — DONE (lp-5; overlay-partial;
+  showcase-first via f5a4a9c). The absolute overlay's flex-centering
+  (`display:flex; align-items:center; justify-content:center`) → `CenteredStack`
+  (align:center, justify:center; the +sm gap is inert with a single `__content`
+  child). Only the `position:absolute` inset anchoring + visual fill (background,
+  border-radius) stay in CSS. Verified on the new inline-chart-error-overlay
+  showcase: title+subtitle and title-only both centered pixel-identically.
 - [x] DragDrop/QuadrantGrid (geo 10) — AUDITED, INTRINSIC (genuine load-bearing 2-D
   matrix; the grid-exemption from the known-blockers list + skill 3b). The root
   `.sui-quadrant-grid` is a true 2-D grid (`grid-template-columns:1fr 1fr` AND

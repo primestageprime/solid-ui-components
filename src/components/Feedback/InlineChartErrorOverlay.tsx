@@ -6,6 +6,7 @@
 // Overlay for chart areas with title and subtitle.
 // ============================================
 import { type JSX, Show, splitProps } from "solid-js";
+import { CenteredStack } from "../Layout/variants";
 import "./InlineChartErrorOverlay.css";
 
 export interface InlineChartErrorOverlayProps
@@ -24,7 +25,7 @@ export function InlineChartErrorOverlay(props: InlineChartErrorOverlayProps) {
   };
 
   return (
-    <div class={classes()} {...others}>
+    <CenteredStack class={classes()} {...others}>
       <div class="inline-chart-error-overlay__content">
         <div class="inline-chart-error-overlay__title">{local.title}</div>
         <Show when={local.subtitle}>
@@ -33,6 +34,6 @@ export function InlineChartErrorOverlay(props: InlineChartErrorOverlayProps) {
           </div>
         </Show>
       </div>
-    </div>
+    </CenteredStack>
   );
 }
