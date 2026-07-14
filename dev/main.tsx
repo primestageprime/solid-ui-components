@@ -79,6 +79,7 @@ import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { StatusCardShowcase } from "./showcases/status-card";
 import { CheckboxShowcase } from "./showcases/checkbox";
+import { MultiSelectFilterShowcase } from "./showcases/multi-select-filter";
 import { PickersShowcase } from "./showcases/pickers";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
@@ -621,6 +622,12 @@ const items: Item[] = [
     label: "Checkbox",
     component: CheckboxShowcase,
     tags: ["depth:0", "form"],
+  },
+  {
+    id: "multi-select-filter",
+    label: "MultiSelectFilter",
+    component: MultiSelectFilterShowcase,
+    tags: ["depth:1", "form", "filter"],
   },
   {
     id: "pickers",
