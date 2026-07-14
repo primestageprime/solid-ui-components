@@ -17,7 +17,7 @@
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
 import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js";
-import { SectionTitle } from "../../../src/components/Text";
+import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
 import { SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
@@ -87,7 +87,7 @@ const FlashCount: Component<{ count: number }> = (props) => {
 
 const Placeholder: Component<{ label: string; hint: string }> = (props) => (
   <InfoPanel title={props.label}>
-    <span class="text-meta">{props.hint}</span>
+    <TextBody>{props.hint}</TextBody>
   </InfoPanel>
 );
 
@@ -125,7 +125,7 @@ const CategoricalTriageBench: Component = () => {
               {(it) => (
                 <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
                   <SpreadRow gap="sm">
-                    <span>{it.name}</span>
+                    <TextTitle>{it.name}</TextTitle>
                     <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
                   </SpreadRow>
                 </InteractiveCard>
@@ -145,7 +145,7 @@ const CategoricalTriageBench: Component = () => {
               {(cat) => (
                 <div>
                   <SpreadRow gap="sm">
-                    <strong>{cat.label}</strong>
+                    <TextLabel>{cat.label}</TextLabel>
                     <FlashCount count={cat.items.length} />
                   </SpreadRow>
                   <Show when={cat.mode === "children"}>
@@ -157,10 +157,10 @@ const CategoricalTriageBench: Component = () => {
                             onClick={() => setSelectedId(it.id)}
                           >
                             <SpreadRow gap="sm">
-                              <span class="text-meta">{it.name}</span>
-                              <span class="text-meta" style={{ "white-space": "nowrap" }}>
+                              <TextSublabel>{it.name}</TextSublabel>
+                              <TextSublabel style={{ "white-space": "nowrap" }}>
                                 {cat.glyph} {cat.childData(it)}
-                              </span>
+                              </TextSublabel>
                             </SpreadRow>
                           </div>
                         )}

@@ -21,6 +21,16 @@ discriminator — extend the tree in the same change that records the precedent.
 
 ---
 
+## Typography discipline (applies to EVERY decision below)
+
+All text renders through the `Text` family — `TextValue` / `TextLabel` /
+`TextTitle` / `TextBody` / `TextUnits` / `TextSublabel` (+ the curried
+specials in Text/variants.ts). Never raw `<span>`/`<strong>`/utility classes
+for content text, EVEN ON WORKSHOP BENCHES — benches drift into promotions,
+and un-thematic text is exactly the drift Peter watches for (2026-07-14).
+Emphasis is chosen by picking the variant (label > title > body > sublabel),
+not by bolding.
+
 ## Page layout
 
 Discriminators:
