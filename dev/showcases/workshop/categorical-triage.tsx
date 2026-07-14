@@ -306,26 +306,9 @@ const CategoricalTriageBench: Component = () => {
         setMode({ kind: "deps", id: selectedId() });
       },
     },
-    {
-      hotkey: "l",
-      label: "later",
-      // Later keeps the item unresolved but sends it to the queue bottom;
-      // selection moves to the item that followed it (wraps to the top).
-      apply: () => {
-        const q = unresolved();
-        const i = q.findIndex((it) => it.id === selectedId());
-        const next = q[i + 1] ?? q[0];
-        setItems((prev) => {
-          const at = prev.findIndex((it) => it.id === selectedId());
-          if (at < 0) return prev;
-          const out = [...prev];
-          const [moved] = out.splice(at, 1);
-          out.push(moved);
-          return out;
-        });
-        if (next) setSelectedId(next.id);
-      },
-    },
+    // No "later" action: deferring is just NOT categorizing — arrow-down
+    // skips without deciding, and priority ORDER belongs to the todo view's
+    // drag-sort, not to triage (Peter, 2026-07-14).
   ];
 
   return (
