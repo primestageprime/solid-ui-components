@@ -16,6 +16,7 @@ import {
   createUniqueId,
 } from "solid-js";
 import { Checkbox, type CheckboxSize } from "./Checkbox";
+import { TopClusterRow, TightStack } from "../Layout/variants";
 import type { ColorVariant } from "../../types";
 import "./CheckboxField.css";
 
@@ -62,8 +63,11 @@ export const CheckboxField: Component<CheckboxFieldProps> = (props) => {
     return cl.join(" ");
   };
 
+  // Field row composed from Layout variants (layout-purity): the control + text
+  // column are a TopClusterRow (align:start so the box aligns to the first text
+  // line, gap 10→sm); the label + hint stack in a TightStack (gap 2→xs).
   return (
-    <div class={classes()}>
+    <TopClusterRow class={classes()}>
       <Checkbox
         id={fieldId()}
         checked={local.checked}
@@ -73,14 +77,14 @@ export const CheckboxField: Component<CheckboxFieldProps> = (props) => {
         onChange={local.onChange}
         onCheckedChange={local.onCheckedChange}
       />
-      <div class="sui-checkbox-field__text">
+      <TightStack class="sui-checkbox-field__text">
         <label class="sui-checkbox-field__label" for={fieldId()}>
           {local.label}
         </label>
         <Show when={local.hint}>
           <span class="sui-checkbox-field__hint">{local.hint}</span>
         </Show>
-      </div>
-    </div>
+      </TightStack>
+    </TopClusterRow>
   );
 };

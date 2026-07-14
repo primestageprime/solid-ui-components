@@ -198,10 +198,13 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   never a consumer child). Same category as the Badge family / Toggle. Also it is
   INLINE (`inline-flex`) — the Layout Row/Stack are all block-level `display:flex`,
   so composing a Row would turn the control into a full-width block. Left as-is.
-- [ ] Checkbox/CheckboxField (geo 6) — TODO (block-level: control + a label/hint
-  text-column; could compose ClusterRow[align:start] + a NarrowStack[gap 2→xs].
-  Judgement call whether the label/hint column counts as intrinsic field parts vs
-  arrangement — left for a focused pass).
+- [x] Checkbox/CheckboxField (geo 6) — DONE (field-composition ⇒ migrate, per the
+  discriminator). A `dev/showcases/checkbox.tsx` was added first (4647dea — closes
+  the Checkbox-family showcase gap). Root row → `TopClusterRow` (align:start keeps
+  the box on the first text line, gap 10→sm); label/hint column → `TightStack`
+  (gap 2→xs). Only the text column's `min-width:0` remains in CSS. Verified on the
+  new showcase: pixel-identical box-to-text alignment and label/hint spacing
+  across checked/unchecked/no-hint/disabled.
 - [x] Toggle (geo 6) — AUDITED, INTRINSIC. Same as Checkbox: an inline
   (`inline-flex`) labeled switch centering its own track/slider + its own
   `<label>` (from the `label` prop), plus a thematic pill variant that is itself a
