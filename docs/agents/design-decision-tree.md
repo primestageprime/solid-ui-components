@@ -67,6 +67,48 @@ Secondary discriminators (each adds/changes a wrapper, not the core pick):
   rails truncate; only accept truncation when titles are previews and the
   detail panel shows the full text anyway.
 
+### Sizing a fixed-width column (order matters)
+
+1. **Decide the card/row FORMAT first** — what each row contains (pill?
+   title? indicator icons? second line?). Width is a consequence of format,
+   never the other way around.
+2. **Then size the column so TYPICAL data is untruncated** (Peter's rule:
+   "I usually want to see untruncated data if I can"). For a rail of cards:
+   width of a typical title (5–8 words) + the status pill + a 1rem spacer.
+   Truncation is for outlier data, not the median case.
+
+## Card formats (compose from SUI elements — never hand-rolled boxes)
+
+Peter's taxonomy (2026-07-14), confirmed by every card built so far
+(WorkProgressCard, ExtractionBoard cards, WorkerCard, dside Focus sidebar
+cards):
+
+- **One-line card** — only text + status. Identifying text LEFT, status
+  RIGHT. Compose: `Surface`/`CardSurface` box → `SpreadRow` → `Text` left,
+  `StatusBadge`/`StatusChip` right.
+- **Two-line card** — the one-line content + a meta line: OWNERSHIP left,
+  TIMING/SIZE right. Compose: box → `TightStack` → [SpreadRow(identity,
+  status), SpreadRow(AssigneeIcon/owner name, Duration | NumberWithUnits)].
+- **Three-line card** — the two-line card with a SANDWICH of detail text in
+  the middle. Compose: box → `TightStack` → [identity/status row, muted
+  detail `Text` (truncated preview), ownership/timing row]. Live example:
+  dside Focus sidebar card (title + DOING badge / description / "Peter S" +
+  "30m").
+
+Positioning generalizations (derived from the built cards):
+- Identity top-left; status top-right.
+- Ownership bottom-left; quantitative (time/size/progress) bottom-right.
+- Detail text is always the middle sandwich, muted, preview-truncated.
+- Progress bars sit at the card bottom, full width (WorkProgressCard,
+  ExtractionBoard, WorkerCard).
+
+DELIBERATE INVERSION — list rows are not cards: `ActionListItem` rows put the
+STATUS on the LEFT as a fixed-width scan column (chosen 2026-07-02). Reason:
+a vertical list is scanned down a status rail to filter, then read right for
+identity; a standalone card is identified first, then statused. Choose card
+format vs list row by asking "is this thing read alone or scanned in a
+column?"
+
 ## Detail container (the center "selected thing" region)
 
 - Sections of read-mostly fact → `InfoPanel` per section (title framing).
