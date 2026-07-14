@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Numeric counts roll by default.** `DigitRoller` now auto-tracks its previous value: a bare `<DigitRoller value={n}/>` rolls odometer-style (direction-aware) on every change — `previousValue` becomes an optional override for replaying a specific transition, and `animate` defaults to true (`animate={false}` opts out). `CountChip` and `TagPill` (purely-numeric plain labels) compose it internally, so every count in the library gets the roll with zero call-site changes. Caveat: the roll requires the component instance to SURVIVE the value change — lists that rebuild row objects each update must render with `<Index>`/stable keys, not `<For>` (see the new STYLE_GUIDE "List Identity" section).
+
 ## 0.103.0
 
 ### ⚠ BREAKING

@@ -30,7 +30,6 @@ import { QuickFilter } from "../../../src/components/QuickFilter";
 import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { DatePicker } from "../../../src/components/DatePicker";
-import { DigitRoller } from "../../../src/components/DataDisplay";
 import {
   choreograph,
   collapse,
@@ -137,29 +136,10 @@ const SEED: TriageItem[] = [
   })),
 ];
 
-/**
- * Count lozenge whose digits roll like an odometer on change — the
- * EXISTING DigitRoller (DataDisplay: mod-10 strips, direction-aware:
- * increases roll up, decreases roll down). Self-animating on value
- * change: the commit flips the count, the component owns the motion —
- * no choreography step needed. Supersedes FlashCount for rail counts.
- */
-const RollingCount: Component<{ count: number }> = (props) => {
-  const [pair, setPair] = createSignal({ prev: null as string | null, cur: String(props.count) });
-  createEffect<string>((prev) => {
-    const next = String(props.count);
-    if (prev !== undefined && next !== prev) setPair({ prev, cur: next });
-    return next;
-  });
-  return (
-    <span class="sui-tag-pill">
-      <DigitRoller value={pair().cur} previousValue={pair().prev} animate duration={300} stagger={40} />
-    </span>
-  );
-};
-
 /** De-emphasized count lozenge that briefly lights up when the value changes
- * (reuses TagPill's active state as the flash). */
+ * (reuses TagPill's active state as the flash). The digit ROLL is ambient:
+ * TagPill composes DigitRoller for numeric labels, so every count in the
+ * library rolls by default — nothing to specify here. */
 const FlashCount: Component<{ count: number }> = (props) => {
   const [flash, setFlash] = createSignal(false);
   let prev: number | undefined;
@@ -276,8 +256,8 @@ const CategoricalTriageBench: Component = () => {
         if (selectedId() === id && next) setSelectedId(next.id);
         setMode(null);
       }),
-      // No count effect here: RollingCount self-animates its changed digits
-      // on the commit (digital-clock roll) — motion owned by the component.
+      // No count effect here: counts roll ambiently (TagPill composes
+      // DigitRoller for numeric labels) — motion owned by the component.
       step(expand(`rail:${rail}:${id}`)),
       step(glowIn(next ? `unresolved:${next.id}` : "", ".surface")),
       step(slideDown("detail")),
@@ -627,7 +607,7 @@ const CategoricalTriageBench: Component = () => {
           <TightStack>
             {/* Index (not For): categories() rebuilds objects on every items
                 change — For would key by reference and REMOUNT each rail,
-                killing RollingCount's prev-value state (digits never rolled).
+                killing the count pill's roll history (digits never rolled).
                 Index keys by position; rails persist and props update. */}
             <Index each={categories()}>
               {(cat) => (
@@ -635,7 +615,7 @@ const CategoricalTriageBench: Component = () => {
                   <SpreadRow>
                     <TextLabel>{cat().label}</TextLabel>
                     <span data-anim={`count:${cat().key}`}>
-                      <RollingCount count={cat().items.length} />
+                      <FlashCount count={cat().items.length} />
                     </span>
                   </SpreadRow>
                   <Show when={cat().mode === "children"}>

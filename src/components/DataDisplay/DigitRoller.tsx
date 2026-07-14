@@ -10,6 +10,7 @@ import {
   For,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   splitProps,
 } from "solid-js";
@@ -18,9 +19,18 @@ import "./DigitRoller.css";
 export interface DigitRollerProps {
   /** The current value to display, e.g. "2.116" */
   value: string;
-  /** The previous value to animate from, e.g. "3.412" */
+  /**
+   * The previous value to animate from, e.g. "3.412". OPTIONAL — when
+   * omitted, the component tracks its own previous value and rolls
+   * automatically whenever `value` changes (the default for live counts).
+   * Pass explicitly only to replay a specific transition (showcases,
+   * externally-owned history). NOTE: auto-tracking requires the component
+   * instance to SURVIVE the value change — a list that remounts its rows
+   * (e.g. `<For>` over freshly-rebuilt objects) resets the history and the
+   * roller mounts static; render such lists with `<Index>` or stable keys.
+   */
   previousValue?: string | null;
-  /** Whether to play the roll animation */
+  /** Whether to play the roll animation. Default true. */
   animate?: boolean;
   /** Called when all digit animations have finished */
   onAnimationEnd?: () => void;
@@ -125,10 +135,30 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
   const duration = () => local.duration ?? 600;
   const stagger = () => local.stagger ?? 80;
 
+  // Memo boundary: props are getters, so upstream identity churn (a parent
+  // passing a freshly-built object whose derived string is EQUAL) re-fires
+  // every dependent effect — which replayed the previous roll even though
+  // the number hadn't changed. createMemo's equality check stops equal
+  // values from propagating, so effects below only fire on REAL changes.
+  const value = createMemo(() => local.value);
+  const previousValueProp = createMemo(() => local.previousValue);
+
+  // Auto-track the previous value so bare `<DigitRoller value={n}/>` rolls
+  // on every change (numeric counts roll by default — Peter, 2026-07-14).
+  // An explicit `previousValue` prop takes precedence.
+  const [autoPrev, setAutoPrev] = createSignal<string | null>(null);
+  createEffect<string | undefined>((last) => {
+    const v = value();
+    if (last !== undefined && last !== v) setAutoPrev(last);
+    return v;
+  });
+  const effectivePrev = () =>
+    previousValueProp() !== undefined ? previousValueProp() : autoPrev();
+
   const shouldAnimate = () =>
-    local.animate === true &&
-    local.previousValue != null &&
-    local.previousValue !== local.value;
+    (local.animate ?? true) === true &&
+    effectivePrev() != null &&
+    effectivePrev() !== value();
 
   /**
    * Overall direction is derived from the whole-number comparison so every
@@ -136,18 +166,18 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
    * goes 19→20) would be treated as a decrease and roll the wrong direction.
    */
   const overallDirection = (): Direction => {
-    const prev = parseFloat(local.previousValue ?? local.value);
-    const curr = parseFloat(local.value);
+    const prev = parseFloat(effectivePrev() ?? value());
+    const curr = parseFloat(value());
     if (Number.isNaN(prev) || Number.isNaN(curr)) return "up";
     return curr >= prev ? "up" : "down";
   };
 
   const columns = () => {
     if (shouldAnimate()) {
-      return buildColumns(local.previousValue!, local.value);
+      return buildColumns(effectivePrev()!, value());
     }
     // Static: just show the value characters
-    return [...local.value].map((ch) => {
+    return [...value()].map((ch) => {
       if (/\d/.test(ch)) {
         const d = parseInt(ch, 10);
         return { type: "digit" as const, from: d, to: d, char: ch };
@@ -189,8 +219,8 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
   // If same value or no previous, fire immediately
   createEffect(() => {
     if (
-      local.animate &&
-      (local.previousValue == null || local.previousValue === local.value)
+      (local.animate ?? true) &&
+      (effectivePrev() == null || effectivePrev() === value())
     ) {
       local.onAnimationEnd?.();
     }

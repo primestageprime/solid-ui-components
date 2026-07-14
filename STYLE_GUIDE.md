@@ -300,6 +300,39 @@ the set of variants/sizes/tokens/props requires confirming with Peter first
 demand** — only a shipped consumer does. This is why `Stack`/`Row` gaps were
 trimmed to `xs`/`sm` and `Surface` `padding`/`radius` to `none`/`sm`/`md`.
 
+## List Identity: For vs Index
+
+`<For>` keys by **object reference**. Iterating a derived memo that REBUILDS
+its objects on every source change (`createMemo(() => items().map(...))`,
+filter chains, grouping helpers) remounts every row on every change. For
+stateless rows that's invisible waste; for **stateful children it is a bug**:
+animations lose their history (DigitRoller mounts static and never rolls),
+inputs lose focus, timers reset. This shipped as a real defect on
+2026-07-14 — the triage rails rebuilt category objects, `<For>` remounted
+the count pills, and the odometer roll silently never played.
+
+Rules:
+
+- **`<For>` is for stable identities** — arrays whose elements are the same
+  objects across updates (signals of persistent rows, `SEED`-style stores).
+- **Derived/rebuilt arrays take `<Index>`** (keys by position) or a keyed
+  memo that preserves element identity.
+- A component whose value-on-screen depends on **surviving updates**
+  (DigitRoller, anything animating a transition from its own prior state)
+  must say so in its header comment, and its tests must assert node
+  identity across a change: `expect(after).toBe(before)` — same node, not
+  equal-looking node (see `DigitRoller.test.tsx`, "SURVIVAL CONTRACT").
+
+## Ambient Motion: counts roll by default
+
+Numeric counts are never static text: `DigitRoller` auto-tracks its previous
+value and rolls odometer-style (direction-aware) on every change, and the
+count-bearing components (`CountChip`, `TagPill` with a purely-numeric
+label) compose it internally. Callers get the motion with zero
+specification — the same currying principle as visual props: **the
+animation is baked into the component, not passed at the call site**.
+Opt out with `animate={false}`.
+
 ## Quality Checks
 
 After every commit, verify:
