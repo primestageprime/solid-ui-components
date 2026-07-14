@@ -14,6 +14,15 @@ import { CountChip } from "../Badge/CountChip";
 import { Icon } from "../Icon/Icon";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { ProportionalItem } from "../Layout/ProportionalStack";
+import {
+  ActionSlot,
+  CenteredWrapRow,
+  ClusterRow,
+  GrowBox,
+  TightCenteredColumn,
+  TightStack,
+  TopSpreadRow,
+} from "../Layout/variants";
 import { SlotFillBar } from "../SlotFillBar/SlotFillBar";
 import { BatchBar, type BatchSpec } from "../BatchBar/BatchBar";
 import type { ProgressController } from "../../internal/progress/useProgressEngine";
@@ -116,20 +125,20 @@ function ColTypes(props: { colsByType: Record<string, number> } & StatProps) {
   const nonZero = () =>
     props.dataTypes.filter((dt) => (props.colsByType[dt.id] ?? 0) > 0);
   return (
-    <div class="sui-xb__coltypes">
+    <CenteredWrapRow class="sui-xb__coltypes">
       <For each={nonZero()}>
         {(dt) => (
           <Tooltip content={dt.label}>
-            <div class="sui-xb__coltype">
+            <TightCenteredColumn class="sui-xb__coltype">
               <Icon name={dt.icon} size="sm" />
               <Text variant="sublabel" as="div">
                 {props.colsByType[dt.id]}
               </Text>
-            </div>
+            </TightCenteredColumn>
           </Tooltip>
         )}
       </For>
-    </div>
+    </CenteredWrapRow>
   );
 }
 
@@ -170,17 +179,17 @@ function PctBar(props: { pct: number }) {
 /** One status bar: [left #] · [══ fill ══] · [right #]. */
 function BarRow(props: { left: string; right: string; pct: number }) {
   return (
-    <div class="sui-xb__bar">
-      <div class="sui-xb__bar-num">
+    <ClusterRow class="sui-xb__bar">
+      <ActionSlot class="sui-xb__bar-num">
         <Muted>{props.left}</Muted>
-      </div>
-      <div class="sui-xb__bar-fill">
+      </ActionSlot>
+      <GrowBox class="sui-xb__bar-fill">
         <PctBar pct={props.pct} />
-      </div>
-      <div class="sui-xb__bar-num">
+      </GrowBox>
+      <ActionSlot class="sui-xb__bar-num">
         <Muted>{props.right}</Muted>
-      </div>
-    </div>
+      </ActionSlot>
+    </ClusterRow>
   );
 }
 
@@ -194,7 +203,7 @@ export function SummaryCard(props: { summary: CategorySummary } & StatProps) {
     s().totalRows > 0 ? (s().completedRows / s().totalRows) * 100 : 0;
   return (
     <Card data-flip-anchor={s().category}>
-      <div class="sui-xb__card-head">
+      <TopSpreadRow class="sui-xb__card-head">
         <Show
           when={s().description}
           fallback={
@@ -210,7 +219,7 @@ export function SummaryCard(props: { summary: CategorySummary } & StatProps) {
           </Tooltip>
         </Show>
         <SummaryBadge status={s().status} />
-      </div>
+      </TopSpreadRow>
       <ColTypes
         colsByType={s().colsByType}
         dataTypes={props.dataTypes}
@@ -219,13 +228,13 @@ export function SummaryCard(props: { summary: CategorySummary } & StatProps) {
       <Show
         when={s().status === "active"}
         fallback={
-          <div class="sui-xb__totals">
+          <TightCenteredColumn class="sui-xb__totals">
             <Muted>{s().totalTables} Tables</Muted>
             <Muted>{compact.format(s().totalRows)} Rows</Muted>
-          </div>
+          </TightCenteredColumn>
         }
       >
-        <div class="sui-xb__bars">
+        <TightStack class="sui-xb__bars">
           <BarRow
             left={`${s().completedTables}`}
             right={`${s().totalTables}`}
@@ -236,7 +245,7 @@ export function SummaryCard(props: { summary: CategorySummary } & StatProps) {
             right={compact.format(s().totalRows)}
             pct={rowsPct()}
           />
-        </div>
+        </TightStack>
       </Show>
     </Card>
   );
@@ -249,7 +258,7 @@ export function DoneCard(props: { item: DoneItem | null } & StatProps) {
     <Show when={props.item} fallback={<PlaceholderCard />} keyed>
       {(item) => (
         <Card data-flip-key={item.name} data-flip-cat={item.category}>
-          <div class="sui-xb__card-head">
+          <TopSpreadRow class="sui-xb__card-head">
             <Text variant="label" as="div">
               {item.name}
             </Text>
@@ -261,19 +270,19 @@ export function DoneCard(props: { item: DoneItem | null } & StatProps) {
             >
               <StatusBadge variant="warning" size="sm" label="Skipped" />
             </Show>
-          </div>
+          </TopSpreadRow>
           <ColTypes
             colsByType={item.colsByType}
             dataTypes={props.dataTypes}
             iconById={props.iconById}
           />
-          <div class="sui-xb__totals">
+          <TightCenteredColumn class="sui-xb__totals">
             <Muted>
               {item.skipped
                 ? "Empty"
                 : `${compact.format(item.totalRows)} Rows`}
             </Muted>
-          </div>
+          </TightCenteredColumn>
         </Card>
       )}
     </Show>
@@ -309,22 +318,22 @@ export function DoingCard(
 
   return (
     <Card data-flip-key={d().name} data-flip-cat={d().category}>
-      <div class="sui-xb__card-head">
+      <TopSpreadRow class="sui-xb__card-head">
         <Text variant="label" as="div">
           {d().name}
         </Text>
         <StatusBadge variant="info" size="sm" label="Doing" />
-      </div>
+      </TopSpreadRow>
       <ColTypes
         colsByType={d().colsByType}
         dataTypes={props.dataTypes}
         iconById={props.iconById}
       />
-      <div class="sui-xb__bar">
-        <div class="sui-xb__bar-num">
+      <ClusterRow class="sui-xb__bar">
+        <ActionSlot class="sui-xb__bar-num">
           <Muted>{compact.format(d().transferredRows)}</Muted>
-        </div>
-        <div class="sui-xb__bar-fill">
+        </ActionSlot>
+        <GrowBox class="sui-xb__bar-fill">
           <BatchBar
             id={`${d().category}:${d().name}`}
             controller={props.progress}
@@ -337,11 +346,11 @@ export function DoingCard(
             committedRows={d().transferredRows}
             batches={batches()}
           />
-        </div>
-        <div class="sui-xb__bar-num">
+        </GrowBox>
+        <ActionSlot class="sui-xb__bar-num">
           <Muted>{compact.format(d().totalRows)}</Muted>
-        </div>
-      </div>
+        </ActionSlot>
+      </ClusterRow>
     </Card>
   );
 }
@@ -353,20 +362,20 @@ export function TodoCard(props: { item: TodoItem | null } & StatProps) {
     <Show when={props.item} fallback={<PlaceholderCard />} keyed>
       {(item) => (
         <Card data-flip-key={item.name} data-flip-cat={item.category}>
-          <div class="sui-xb__card-head">
+          <TopSpreadRow class="sui-xb__card-head">
             <Text variant="label" as="div">
               {item.name}
             </Text>
             <StatusBadge variant="pending" size="sm" label="Todo" />
-          </div>
+          </TopSpreadRow>
           <ColTypes
             colsByType={item.colsByType}
             dataTypes={props.dataTypes}
             iconById={props.iconById}
           />
-          <div class="sui-xb__totals">
+          <TightCenteredColumn class="sui-xb__totals">
             <Muted>{compact.format(item.totalRows)} Rows</Muted>
-          </div>
+          </TightCenteredColumn>
         </Card>
       )}
     </Show>

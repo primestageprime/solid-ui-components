@@ -39,6 +39,7 @@ import {
   type JSX,
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
+import { CenteredStack, NarrowStack, StretchRow } from "../Layout/variants";
 import "./ExtractionBoard.css";
 
 import { useProgressEngine } from "../../internal/progress/useProgressEngine";
@@ -309,9 +310,9 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   const rootClass = () => (local.class ? `sui-xb ${local.class}` : "sui-xb");
 
   return (
-    <div class={rootClass()} ref={flip.setRoot} {...others}>
+    <NarrowStack class={rootClass()} ref={flip.setRoot} {...others}>
       {/* Column headers — equal-width columns that fill the row. */}
-      <div class="sui-xb__row">
+      <StretchRow class="sui-xb__row">
         <CellBox>
           <ColHeading>{labels().summary}</ColHeading>
         </CellBox>
@@ -324,8 +325,8 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
         <CellBox>
           <ColHeading>{labels().todo}</ColHeading>
         </CellBox>
-        <div class="sui-xb__lozenge" />
-      </div>
+        <CenteredStack class="sui-xb__lozenge" />
+      </StretchRow>
 
       <For each={rowOrder()}>
         {(cat) => {
@@ -344,7 +345,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
           const remaining = () => todoByCategory()[cat].remaining;
           const doingCards = () => doingByCategory()[cat] ?? [];
           return (
-            <div class="sui-xb__row">
+            <StretchRow class="sui-xb__row">
               <CellBox>
                 <SummaryCard
                   summary={summaryByCategory()[cat]}
@@ -364,7 +365,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                   when={doingCards().length > 0}
                   fallback={<PlaceholderCard />}
                 >
-                  <div class="sui-xb__doing-stack">
+                  <NarrowStack class="sui-xb__doing-stack">
                     <For each={doingCards()}>
                       {(d) => (
                         <DoingCard
@@ -376,7 +377,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                         />
                       )}
                     </For>
-                  </div>
+                  </NarrowStack>
                 </Show>
               </CellBox>
               <CellBox>
@@ -386,14 +387,14 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                   iconById={iconById()}
                 />
               </CellBox>
-              <div class="sui-xb__lozenge" data-flip-lozenge={cat}>
+              <CenteredStack class="sui-xb__lozenge" data-flip-lozenge={cat}>
                 <LozengeCell remaining={remaining()} />
-              </div>
-            </div>
+              </CenteredStack>
+            </StretchRow>
           );
         }}
       </For>
-    </div>
+    </NarrowStack>
   );
 };
 

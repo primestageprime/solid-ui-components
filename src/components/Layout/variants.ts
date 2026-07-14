@@ -79,6 +79,13 @@ export const CenteredColumn: Component<StackDataProps> = createStack({
   align: "center",
   gap: "sm",
 });
+// TightCenteredColumn — a horizontally-centered column with an xs gap (the tight
+// sibling of CenteredColumn). For a small centered stat cell (an icon over its
+// count, a totals label over its number).
+export const TightCenteredColumn: Component<StackDataProps> = createStack({
+  align: "center",
+  gap: "xs",
+});
 
 // Empty regions — centered stacks with size-specific padding and min-height
 export const SmRegion: Component<StackDataProps> = createStack({
@@ -123,6 +130,28 @@ export const TightSpreadRow: Component<RowDataProps> = createRow({
 });
 export const ClusterRow: Component<RowDataProps> = createRow({
   align: "center",
+  gap: "sm",
+});
+// StretchRow — a plain gapped row whose children STRETCH to equal height (the
+// flex default cross-axis). For a row of equal-height columns/cards where a
+// taller cell makes its neighbours grow to match (e.g. a swimlane of cards).
+export const StretchRow: Component<RowDataProps> = createRow({ gap: "sm" });
+// TopSpreadRow — a spread row pinned to the TOP (align:start) rather than
+// centered: a title on the left and a badge on the right that must sit at the
+// first text line even when the title wraps to two lines. The align:start
+// sibling of BaselineSpreadRow / SpreadRow.
+export const TopSpreadRow: Component<RowDataProps> = createRow({
+  align: "start",
+  justify: "between",
+  gap: "sm",
+});
+// CenteredWrapRow — a center-justified, wrapping, top-aligned cluster: for a
+// group of small stat cells that center under their card and wrap to a new line
+// on narrow widths, each cell hanging from the top of its row.
+export const CenteredWrapRow: Component<RowDataProps> = createRow({
+  align: "start",
+  justify: "center",
+  wrap: true,
   gap: "sm",
 });
 // Baseline-aligned spread row — a label on the left, a status/meta on the right,

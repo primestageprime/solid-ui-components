@@ -361,7 +361,22 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   gap the margin-spaced composites need (also unblocks Table's fill-chain if that
   gets a ruling). Verified on the sidebar-selector showcase: two-column layout +
   card selection pixel-identical.
-- [ ] ExtractionBoard (geo 44)
+- [x] ExtractionBoard (geo 44) — DONE. Clean flex scaffold, fully composed across
+  ExtractionBoard.tsx + cards.tsx: root → `NarrowStack` (gap 12→sm); swimlane
+  `__row` → new `StretchRow` (gap 12→sm, equal-height stretch); `__lozenge` →
+  `CenteredStack` (fixed 72px via min/max-width kept in CSS; data-flip-lozenge attr
+  preserved); `__doing-stack` → `NarrowStack` (gap 8→sm); `__card-head` → new
+  `TopSpreadRow` (name left/badge right, top-aligned); `__coltypes` → new
+  `CenteredWrapRow`, `__coltype` + `__totals` → new `TightCenteredColumn` (gap 4→xs);
+  `__bars` → `TightStack`; `__bar` → `ClusterRow` (gap 8=sm); `__bar-num` →
+  `ActionSlot` (fixed 56px + text-align:right replacing justify:flex-end);
+  `__bar-fill` → `GrowBox`. 4 new variants (StretchRow, TopSpreadRow,
+  CenteredWrapRow, TightCenteredColumn). MOTION-SAFE: the FLIP engine keys off
+  `data-flip-*` on the card `<Surface>` and measures bounding boxes — layout is
+  pixel-identical so the measurements are unchanged; `flip.setRoot` ref + all
+  data-flip attrs pass through the composed wrappers. Verified on the live
+  (auto-cycling) extraction-board showcase: swimlanes, card heads, coltypes, bars,
+  and the +N lozenge all render + animate identically.
 - [x] ThreadGroup (geo 24) — DONE (ruling 2, team-lead). Base arrangements migrated:
   `__row`→`TopClusterRow` (gap 8=sm exact), `__body`→`ContentStack` (existing:
   flex:1/min-width:0/gap:xs=4 exact), `__header`→`WrappedClusterRow` (gap 8=sm),
@@ -442,7 +457,20 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   centering its OWN icon + label (ruling 4). `__item-icon` is a self-contained
   inline glyph; `__item-label` (flex:1;min-width:0) is that item's own internal
   fill. No consumer-child multi-region composition → nothing to migrate.
-- [ ] Toast (geo 22) — overlay-partial
+- [x] Toast (geo 22) — overlay-partial; DONE (with a Kobalte carve-out). The
+  plain-div internal regions Toast itself owns were composed: `__content` (the
+  text-column + close-button row) → `TopClusterRow` (align:start, gap 8=sm exact);
+  `__text` (the growing title/description/actions column) → `GrowBox`
+  (flex-grow + min-width:0 — behaviourally identical to the old flex:1 1 auto);
+  `__actions` (the action-button row) → `WrapRow` (wrap, gap 6→xs=4 snap; only the
+  non-geometry margin-top:8px stays). CARVE-OUT (documented in the header): the
+  Kobalte parts — `KobalteToast` Root (`.sui-toast` flex column), `.sui-toast__list`
+  (the `<ol>` region), `.sui-toast__close-button` (inline icon button),
+  `__progress-track`/`__progress-fill` — keep their geometry (we can only pass
+  `class`, like the Combobox Kobalte carve-out). The action buttons + list toasts
+  are data-derived (ruling 4). Verified on the toast showcase (SHOW WITH ACTIONS):
+  pixel-identical title/close row, description, Save/Discard action row, progress
+  bar, left accent border.
 
 #### P5 — remainder (migrate, unprioritized)
 
