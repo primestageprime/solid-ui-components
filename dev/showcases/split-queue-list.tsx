@@ -12,8 +12,17 @@ import {
   SmallPrimaryButton,
   SmallGhostButton,
 } from "../../src/components/Button/variants";
-import { TextTitle, MutedBody } from "../../src/components/Text";
-import { CardSurface } from "../../src/components/Surface";
+import { SubsectionTitle, MutedBody } from "../../src/components/Text";
+import { createSurface } from "../../src/components/Surface";
+
+// Consumer-composed detail panel — a column card with md gap. App-specific
+// composition curried at module top so no visual config sits at the call site.
+const DetailCard = createSurface({
+  padding: "md",
+  radius: "md",
+  direction: "column",
+  gap: "md",
+});
 
 /* Demo item type — a small "transaction to categorize" record so the
  * resolved/unresolved framing reads naturally. */
@@ -279,7 +288,7 @@ function SelectionDemo() {
 
         {/* Detail panel — CONSUMER-composed; the component only emits selection. */}
         <div style={{ width: "260px", position: "sticky", top: "16px" }}>
-          <CardSurface direction="column" gap="md">
+          <DetailCard>
             <Show
               when={currentItem()}
               fallback={
@@ -288,7 +297,7 @@ function SelectionDemo() {
             >
               {(item) => (
                 <>
-                  <TextTitle as="h3">{item().label}</TextTitle>
+                  <SubsectionTitle>{item().label}</SubsectionTitle>
                   <MutedBody>
                     {item().amount} ·{" "}
                     {currentIsResolved() ? "Categorized" : "To categorize"}
@@ -312,7 +321,7 @@ function SelectionDemo() {
                 </>
               )}
             </Show>
-          </CardSurface>
+          </DetailCard>
         </div>
       </div>
     </div>

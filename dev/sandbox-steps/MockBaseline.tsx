@@ -4,14 +4,18 @@
 // components) or fall back to the empty hints.
 import type { Component, JSX } from "solid-js";
 import {
-  FlexRow,
   LgRegion,
   ContentStack,
   DelineatedSidebar,
   PageCanvas,
 } from "../../src/components/Layout";
+import { createRow } from "../../src/components/Layout/Row";
 import { HintText } from "../../src/components/Text";
 import { SimplePanel } from "../../src/components/Panel";
+
+// Full-height two-pane frame row — sm gap, stretched panes. Scaffold-specific
+// composition curried here so no layout config sits at the call site.
+const FrameRow = createRow({ gap: "sm", align: "stretch" });
 
 export interface MockBaselineProps {
   sidebar?: JSX.Element;
@@ -25,11 +29,7 @@ const DEFAULT_DETAIL_EMPTY = "nothing selected";
 
 export const MockBaseline: Component<MockBaselineProps> = (props) => (
   <PageCanvas>
-    <FlexRow
-      gap="sm"
-      align="stretch"
-      style={{ height: "100%", "min-height": "70vh" }}
-    >
+    <FrameRow style={{ height: "100%", "min-height": "70vh" }}>
       <DelineatedSidebar>
         {props.sidebar ?? (
           <LgRegion>
@@ -46,6 +46,6 @@ export const MockBaseline: Component<MockBaselineProps> = (props) => (
           )}
         </SimplePanel>
       </ContentStack>
-    </FlexRow>
+    </FrameRow>
   </PageCanvas>
 );

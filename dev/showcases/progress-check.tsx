@@ -1,5 +1,5 @@
 import { type Component, For } from "solid-js";
-import { ProgressCheck } from "../../src/components/ProgressCheck";
+import { LargeProgressCheck } from "../../src/components/ProgressCheck";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -16,7 +16,7 @@ export const ProgressCheckShowcase: Component = () => (
         <For each={[0, 0.25, 0.5, 0.75, 1]}>
           {(p) => (
             <Stack gap="xs" align="center">
-              <ProgressCheck progress={p} size="lg" />
+              <LargeProgressCheck progress={p} />
               <span class="text-meta">{Math.round(p * 100)}%</span>
             </Stack>
           )}

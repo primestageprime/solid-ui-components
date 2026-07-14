@@ -54,11 +54,7 @@ export const TruthIndicatorShowcase: Component = () => {
       <div class="example-group">
         <h3>Interactive (click to toggle)</h3>
         <Row gap="sm" align="center">
-          <TruthIndicator
-            value={v()}
-            size="lg"
-            onClick={() => setV((x) => !x)}
-          />
+          <LargeTruth value={v()} onClick={() => setV((x) => !x)} />
           <span class="text-meta">
             click the indicator — current: <strong>{String(v())}</strong>
           </span>

@@ -1,5 +1,10 @@
 import type { Component } from "solid-js";
-import { AppShell, AppHeader, AppMain } from "../../src/components/Layout";
+import {
+  AppShell,
+  AppHeader,
+  AppMain,
+  createAppHeader,
+} from "../../src/components/Layout";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
 import { CountChip } from "../../src/components/Badge";
@@ -7,6 +12,10 @@ import { StickyGroupHeader, SectionLabel } from "../../src/components/Section";
 import { TextLabel, TextSublabel, MutedBody } from "../../src/components/Text";
 import { Button } from "../../src/components/Button/Button";
 import { Icon } from "../../src/components/Icon";
+
+// Compact inline header — this showcase demonstrates the inline + sm
+// combination, which no shipped variant bakes. Factory-curried at module top.
+const CompactInlineAppHeader = createAppHeader({ inline: true, size: "sm" });
 
 const FAKE_GROUPS = [
   { tag: "AwaitingHuman", count: 3 },
@@ -48,7 +57,7 @@ export const AppShellShowcase: Component = () => (
               <Icon name="log-out" />
             </Button>
           </AppHeader>
-          <AppHeader inline size="sm">
+          <CompactInlineAppHeader>
             <Row gap="xs" wrap>
               <CountChip count={3} label="awaiting human" />
               <CountChip count={1} label="awaiting review" />
@@ -56,7 +65,7 @@ export const AppShellShowcase: Component = () => (
               <CountChip count={0} label="blocked" />
             </Row>
             <span class="text-meta">· 8 active</span>
-          </AppHeader>
+          </CompactInlineAppHeader>
           <AppMain style={{ "overflow-y": "auto" }}>
             <Stack gap="xs">
               {FAKE_GROUPS.map((g) => (
