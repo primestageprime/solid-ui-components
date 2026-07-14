@@ -16,13 +16,13 @@
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, For, createMemo, createSignal } from "solid-js";
+import { Component, For, Show, createMemo, createSignal } from "solid-js";
 import { SectionTitle } from "../../../src/components/Text";
 import { SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
-import { StatusChip } from "../../../src/components/Badge";
+import { CountChip, StatusChip } from "../../../src/components/Badge";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -62,6 +62,20 @@ const CategoricalTriageBench: Component = () => {
   const [selectedId, setSelectedId] = createSignal<string>(SEED[0].id);
   const selected = createMemo(() => items().find((it) => it.id === selectedId()));
 
+  // Categorized counts column: each category = label + count, and EITHER
+  // one-line children (click to select) OR count-only, per category.
+  const categories = createMemo(() => {
+    const all = items();
+    const isBlocked = (it: TriageItem) => !!it.blockedBy || !!it.blockedUntil || !!(it.deps && it.deps.length);
+    return [
+      { label: "CLAIMED", glyph: "◉", mode: "children" as const, items: all.filter((it) => !!it.claimedBy) },
+      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, items: all.filter((it) => !!it.blockedBy) },
+      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, items: all.filter((it) => !!it.blockedUntil) },
+      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { label: "ELIGIBLE", glyph: "▹", mode: "count" as const, items: all.filter((it) => !it.claimedBy && !isBlocked(it) && it.status !== "DONE") },
+    ];
+  });
+
   return (
     <div class="component-section component-section--full">
       <ThreePanelLayout
@@ -89,10 +103,33 @@ const CategoricalTriageBench: Component = () => {
           />
         }
         rightPanel={
-          <Placeholder
-            label="Counts"
-            hint="categorical counts go here — total / claimed / blocked·person / blocked·snooze / blocked·dependency / eligible"
-          />
+          <TightStack>
+            <For each={categories()}>
+              {(cat) => (
+                <div>
+                  <SpreadRow gap="sm">
+                    <span class="text-meta">{cat.label}</span>
+                    <CountChip count={cat.items.length} label="" active={cat.items.length > 0} />
+                  </SpreadRow>
+                  <Show when={cat.mode === "children"}>
+                    <TightStack>
+                      <For each={cat.items}>
+                        {(it) => (
+                          <span
+                            class="text-meta"
+                            style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
+                            onClick={() => setSelectedId(it.id)}
+                          >
+                            {cat.glyph} {it.name}
+                          </span>
+                        )}
+                      </For>
+                    </TightStack>
+                  </Show>
+                </div>
+              )}
+            </For>
+          </TightStack>
         }
       />
     </div>

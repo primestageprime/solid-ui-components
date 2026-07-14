@@ -138,6 +138,28 @@ established look, not a pattern to copy into new card/list designs.
 - Remaining-work emphasis with severity → `GapCell` (tabular) /
   `NumberWithUnits` + tone.
 
+## Categorized counts column (a rail of categories with counts and/or children)
+
+For a rail that breaks a collection into categories (blockage kinds, claim
+state, buckets): each category is a section —
+
+```
+CATEGORY LABEL                    [count]
+  ⏸ one-line child (click → select)
+  ⏸ one-line child
+NEXT CATEGORY                     [count]     ← count-only mode
+```
+
+- Header: category label left (muted), `CountChip` right (quantitative →
+  right, per the card canon).
+- Per category choose **children mode** (one-line, indented, glyph-prefixed,
+  click-to-select) or **count-only mode**. Children when the user acts on
+  individual members from the rail; count-only when the category is just a
+  gauge.
+- Compose: `TightStack` of sections; header `SpreadRow(label, CountChip)`;
+  children muted one-line rows. No new component until a second consumer
+  demands one.
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
@@ -171,3 +193,7 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   rule (5–8-word title untruncated + pill + 1rem; longer titles WRAP, never
   truncate). Supersedes the earlier ActionList pick for this rail — the card
   canon (title-first) outranked the ActionListItem status-left look.
+- **2026-07-14 · workshop:categorical-triage · counts rail** — categorized
+  column (claimed / blocked·person / blocked·snooze / blocked·dependency /
+  eligible), children mode for the actionable categories, count-only for
+  dependency + eligible; composed TightStack + SpreadRow + CountChip.
