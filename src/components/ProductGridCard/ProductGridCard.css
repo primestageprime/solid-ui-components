@@ -6,6 +6,8 @@
    `met` when both apply.
    ============================================ */
 
+/* The centered-column arrangement is composed from the CenteredColumn Layout
+   variant (see ProductGridCard.tsx); this rule owns only intrinsic card visuals. */
 .sui-product-grid-card {
   border: 1px dashed var(--sui-border);
   border-radius: 4px;
@@ -18,10 +20,6 @@
   max-width: 100%;
   cursor: pointer;
   user-select: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
   color: inherit;
 }
 

@@ -19,6 +19,7 @@ import {
   Show,
   splitProps,
 } from "solid-js";
+import { CenteredColumn } from "../Layout/variants";
 import "./ProductGridCard.css";
 
 export interface ProductGridCardProps
@@ -69,8 +70,10 @@ export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: interactivity is conditional per-consumer — when onClick is supplied the div is promoted to role="button" + tabIndex + Enter/Space onKeyDown (below); Biome can't see through the dynamic role expression. Non-clickable cards intentionally stay static/out of tab order.
-    <div
+    // The centered column arrangement (was display:flex;flex-direction:column;
+    // align-items:center;gap:6px) is composed from the CenteredColumn Layout
+    // variant; gap snapped 6px→8px (sm) per the layout-purity gap-scale ruling.
+    <CenteredColumn
       class={rootClass()}
       title={local.title}
       onClick={local.onClick}
@@ -87,7 +90,7 @@ export const ProductGridCard: Component<ProductGridCardProps> = (props) => {
           {local.bar}
         </div>
       </Show>
-    </div>
+    </CenteredColumn>
   );
 };
 

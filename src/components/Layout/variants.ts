@@ -64,6 +64,14 @@ export const CenteredStack: Component<StackDataProps> = createStack({
   justify: "center",
   gap: "sm",
 });
+// Horizontally-centered column (align:center, sm gap, NO vertical justify) — a
+// content-sized column whose children center on the cross axis. For small
+// centered cards/cells (label over a bar). Differs from CenteredStack, which
+// also justifies center (vertical distribution) for fixed-height regions.
+export const CenteredColumn: Component<StackDataProps> = createStack({
+  align: "center",
+  gap: "sm",
+});
 
 // Empty regions — centered stacks with size-specific padding and min-height
 export const SmRegion: Component<StackDataProps> = createStack({

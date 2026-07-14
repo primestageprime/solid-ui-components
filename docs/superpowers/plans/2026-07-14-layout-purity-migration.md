@@ -88,9 +88,9 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   with no Layout analogue. Faithful fix would need replacing the pseudo lines
   with real `<Box grow>` divider elements (DOM + visual change → redesign, not a
   byte-faithful migration). Needs a decision.
-- [ ] BLOCKED — ProductGridCard (geo 4): a centered column with **gap:6px**,
-  off the xs(4)/sm(8) scale. Otherwise a clean `Stack align=center` migration.
-  Blocked pending the gap-scale decision (snap to 8px? expand scale?).
+- [x] ProductGridCard (geo 4) — DONE. Centered column → new `CenteredColumn`
+  Layout variant (align:center, sm gap, no justify). Gap snapped 6px→8px (sm)
+  per ruling 2. Card visuals + data-state attrs + click/keyboard semantics kept.
 - [ ] BLOCKED — FormComposite (geo 10): the block row uses the bespoke
   "holy-albatross" responsive `flex-basis: calc((var(--fc-break) - 100%) * 999)`
   auto-stacking algorithm + **gap:12px** — no Layout analogue. This component is
