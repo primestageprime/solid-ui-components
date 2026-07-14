@@ -128,6 +128,21 @@ export const TopClusterRow: Component<RowDataProps> = createRow({
   gap: "sm",
   align: "start",
 });
+// Center cluster that refuses to be compressed by a flex parent (baked
+// `flex-shrink: 0`). For fixed leading/trailing slots (icons, badges) beside a
+// growing body, where the slot must keep its intrinsic width.
+export const NoShrinkClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { "flex-shrink": 0 },
+});
+// Right-aligned wrapping row — items pack to the end and wrap. For a trailing
+// action-button cluster that right-aligns and wraps on narrow widths.
+export const EndWrapRow: Component<RowDataProps> = createRow({
+  justify: "end",
+  wrap: true,
+  gap: "xs",
+});
 export const TagRow: Component<RowDataProps> = createRow({
   gap: "xs",
   wrap: true,

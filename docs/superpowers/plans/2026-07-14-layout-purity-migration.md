@@ -102,7 +102,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P2 — high-traffic
 
-- [ ] ActionRow (geo 15)
+- [x] ActionRow (geo 15) — DONE. Column→NarrowStack, main→ClusterRow,
+  leading/trailing→new NoShrinkClusterRow, body→GrowBox, actions→new EndWrapRow.
+  Gaps snapped (6→sm, 5→xs). Hover-reveal + BEM hooks kept. Two new variants
+  added (within standing authority).
 - [x] Badge family — AUDITED, INTRINSIC (no migration). StatusBadge, StatusChip,
   CountChip, TagPill are all self-contained pills whose `inline-flex`/`gap`
   center their OWN label/count/text/caret (single-widget internals, not
