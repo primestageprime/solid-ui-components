@@ -449,7 +449,18 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   `__list` is a data-derived scrolling `<ul>` (ruling 4 + list-scroll, like a Select
   listbox); `.sui-star-toggle` is an inline-flex icon button (intrinsic). Verified on
   the recent-starred showcase: both sections' header/count + item lists pixel-identical.
-- [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
+- [x] WeekCalendar (geo 6) — AUDITED INTRINSIC (data-derived calendar matrix; load-
+  bearing 0-gap grid). The root `display:grid` is a genuine day/hour MATRIX
+  (`grid-template-columns: {gutter}px repeat(N,1fr)`, dynamic per day count; implicit
+  rows) whose cells are separated by their OWN border-right/bottom lines — a 0 gap
+  that IS load-bearing. The Grid primitive forces a token gap (min xs=4), which would
+  add 4px seams and visibly break the border-grid → stays intrinsic per the load-
+  bearing-off-scale-grid-gap discriminator (Peter-precedent, same as the heat grids /
+  DayPickers-that-had-gap-4). The `__day-header` flex-centering is single-cell chrome
+  (centers its own label); `__gutter`/`__column`/`__hour-line`/`__block`/`__gutter-mark`
+  are `position:absolute` time-coordinate positioning (the calendar's own coordinate
+  system, not banned box-model arrangement); `overflow:hidden` is the frame clip.
+  Nothing to migrate.
 - [x] DnDHierarchySortBar (geo 8) — DONE. The only consumer-arrangement is the
   root pill row (flex-wrap) → `WrappedClusterRow` (wrap, align:center, gap 8=sm
   exact); only `font-size` remains on the class. Pills stay INTRINSIC — each is an
