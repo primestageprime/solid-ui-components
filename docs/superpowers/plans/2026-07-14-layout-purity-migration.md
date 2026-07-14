@@ -207,7 +207,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   `<label>` (from the `label` prop), plus a thematic pill variant that is itself a
   self-contained control. Prop-derived parts, inline-level → intrinsic, left as-is.
 - [ ] SegmentedInput (geo 14)
-- [ ] SegmentedControl (geo 6)
+- [x] SegmentedControl (geo 6) — AUDITED, INTRINSIC (no migration; Peter-precedent
+  via team-lead 2026-07-14). Its segments are DATA-derived (`<For each={options}>`
+  → `<button role=radio>`) with intrinsic groove-seam chrome — a single
+  self-contained control widget rendering its own strip, same category as
+  BatchBar / the Badge family. Decisively: the root is INLINE-LEVEL
+  (`inline-flex; width:fit-content; align-self:start`); our Layout Row/Stack are
+  all BLOCK-level `display:flex`, so composing one would break the content-width
+  inline placement, and spinning up an inline-row primitive for a single consumer
+  fails the start-minimal commandment (add it when a SECOND inline control demands
+  it). Left as-is. See the inline-level discriminator in the rulings section.
 - [ ] DayOfWeekPicker (geo 6)
 - [ ] DayOfMonthPicker (geo 7)
 - [ ] MonthOfYearPicker (geo 6)
@@ -305,6 +314,25 @@ tick", not real arrangement migrations. Review each per skill step 4.
   later. Ticked as exempt below.
 - **no-shrink cluster + justify-end wrap variants** — within standing authority;
   add as named variants when a migrating component needs them.
+
+## Component-classification discriminators (team-lead 2026-07-14)
+
+Two reusable tests for "migrate vs keep intrinsic", both settled by existing
+precedent (no Peter escalation needed):
+
+- **INLINE-LEVEL control widget ⇒ intrinsic, almost by construction.** If a
+  component's root is `inline-flex` / `inline-grid` with `width:fit-content`
+  (it sits inline and sizes to content — Checkbox, Toggle, SegmentedControl),
+  our block-level Layout Row/Stack/Grid cannot express it without turning it
+  full-width. Composing an inline-row primitive for a single such consumer fails
+  the start-minimal commandment — wait for a SECOND caller to demand it. Keep the
+  inline widget's flex intrinsic (it centers/arranges its OWN prop/data-derived
+  parts, like the Badge family).
+- **Leaf control ⇒ intrinsic; field-composition ⇒ migrate.** A leaf control that
+  renders its own label beside its own painted box (Checkbox, Toggle) is
+  intrinsic. A block-level FIELD that composes a control + a label/hint text
+  region (CheckboxField, ThemedInput) is a real two-region arrangement → migrate
+  (root `TopClusterRow`, text column a tight `Stack`; gaps snap normally).
 
 ## P2 sequencing finding — do the layout-owning primitives before the cards
 
