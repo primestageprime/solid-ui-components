@@ -5,21 +5,24 @@
 //
 // LAYOUT: ThreePanelLayout — chosen via /design-options (3 always-visible
 // regions, no trade-off, embedded view; dside Focus anatomy).
-// QUEUE: ActionList, fixed-width rail — via /design-options (multi-status
-// items = workflow surface → chips/tones/selection; no filter in triage v1;
-// derived shared-priority sort, defer via "Later" not drag; rail fixed —
-// titles are previews, detail shows the full title).
+// QUEUE: one-line cards (title left — the focus; status trailing right,
+// shown per-row because the queue is priority-sorted, NOT status-grouped),
+// per the card canon in docs/agents/design-decision-tree.md. Composed from
+// InteractiveCard + SpreadRow + StatusChip. Rail width per the sizing rule:
+// typical 5–8-word title untruncated + status pill + 1rem spacer.
 //
 // Incremental refinement:
 //   [x] left  — queue (ActionList, click row to select)
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, createMemo, createSignal } from "solid-js";
+import { Component, For, createMemo, createSignal } from "solid-js";
 import { SectionTitle } from "../../../src/components/Text";
+import { SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
-import { ActionList } from "../../../src/components/ActionList";
+import { InteractiveCard } from "../../../src/components/Surface";
+import { StatusChip } from "../../../src/components/Badge";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -64,15 +67,20 @@ const CategoricalTriageBench: Component = () => {
       <ThreePanelLayout
         height="78vh"
         topBar={<SectionTitle>Categorical Triage — refining: queue done</SectionTitle>}
+        leftPanelWidth="380px"
         leftPanel={
-          <ActionList
-            label="Triage queue"
-            items={items().map((it) => ({ id: it.id, name: it.name, status: it.status }))}
-            selectedIds={[selectedId()]}
-            onSelectionChange={(_ids, meta) => {
-              if (meta?.clickedId) setSelectedId(meta.clickedId);
-            }}
-          />
+          <TightStack>
+            <For each={items()}>
+              {(it) => (
+                <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
+                  <SpreadRow gap="sm">
+                    <span>{it.name}</span>
+                    <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
+                  </SpreadRow>
+                </InteractiveCard>
+              )}
+            </For>
+          </TightStack>
         }
         centerPanel={
           <Placeholder

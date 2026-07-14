@@ -95,19 +95,33 @@ cards):
   dside Focus sidebar card (title + DOING badge / description / "Peter S" +
   "30m").
 
-Positioning generalizations (derived from the built cards):
-- Identity top-left; status top-right.
+Positioning canon (Peter, 2026-07-14):
+- **The TITLE is the focus and owns the left edge — always.** Status is
+  usually a sort/group key, which makes it LESS important per-row, not more.
+- **Status per-row (trailing, right) only when the list is NOT grouped by
+  status** — there it marks where the grouping breaks / the exceptions.
+- **When the list IS sorted/grouped by status, don't repeat it per-row** —
+  show only the group BOUNDARIES, in preference order:
+  1. **Area** — separate lanes/sections per status (ExtractionBoard lanes,
+     dside's active vs done/won't-do split lists),
+  2. boundary markers — section headers / dividers,
+  3. per-row tags (last resort — redundant within a group).
 - Ownership bottom-left; quantitative (time/size/progress) bottom-right.
 - Detail text is always the middle sandwich, muted, preview-truncated.
 - Progress bars sit at the card bottom, full width (WorkProgressCard,
   ExtractionBoard, WorkerCard).
 
-DELIBERATE INVERSION — list rows are not cards: `ActionListItem` rows put the
-STATUS on the LEFT as a fixed-width scan column (chosen 2026-07-02). Reason:
-a vertical list is scanned down a status rail to filter, then read right for
-identity; a standalone card is identified first, then statused. Choose card
-format vs list row by asking "is this thing read alone or scanned in a
-column?"
+So the minimal set is ONE card family:
+
+```
+line 1:  title (the focus)          [status — only if list isn't status-grouped]
+mid:     detail sandwich            (optional)
+line n:  owner/claimant             timing · size   (optional)
+```
+
+Historical note: `ActionListItem` (2026-07-02) put a fixed-width status pill
+LEFT of the title. That predates this canon; treat it as that component's
+established look, not a pattern to copy into new card/list designs.
 
 ## Detail container (the center "selected thing" region)
 
@@ -150,3 +164,10 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   action, not drag, so no reorder affordance in the rail. Rail sizing:
   **fixed width** (Peter) — rail rows are previews and the detail panel
   shows the full title; matches dside Focus's fixed team rail.
+- **2026-07-14 · workshop:categorical-triage · queue card format** — cards
+  carry text + status only; queue is priority-sorted (not status-grouped) →
+  **one-line cards: title left (the focus), status trailing right**, composed
+  from InteractiveCard + SpreadRow + StatusChip; rail 380px per the sizing
+  rule (5–8-word title untruncated + pill + 1rem; longer titles WRAP, never
+  truncate). Supersedes the earlier ActionList pick for this rail — the card
+  canon (title-first) outranked the ActionListItem status-left look.
