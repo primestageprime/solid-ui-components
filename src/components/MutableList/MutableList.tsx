@@ -34,6 +34,7 @@
 import { createSignal, type JSX, Show } from "solid-js";
 import { SortableList } from "../SortableList";
 import { IconOnlyButton } from "../Button";
+import { ActionSlot, ClusterRow, ContentStack } from "../Layout/variants";
 import "./MutableList.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -126,8 +127,8 @@ function MutableListCard(props: CardProps): JSX.Element {
   };
 
   return (
-    <div class="sui-mutable-list__card" ref={wrapperRef}>
-      <div class="sui-mutable-list__main" draggable={false}>
+    <ClusterRow class="sui-mutable-list__card" ref={wrapperRef}>
+      <ContentStack class="sui-mutable-list__main" draggable={false}>
         <Show
           when={editing()}
           fallback={
@@ -156,17 +157,19 @@ function MutableListCard(props: CardProps): JSX.Element {
         <Show when={props.detail}>
           <div class="sui-mutable-list__detail">{props.detail}</div>
         </Show>
-      </div>
-      <IconOnlyButton
-        class="sui-mutable-list__delete"
-        aria-label={`Delete ${props.name}`}
-        title="Delete"
-        draggable={false}
-        onClick={() => props.onDelete(props.id)}
-      >
-        ×
-      </IconOnlyButton>
-    </div>
+      </ContentStack>
+      <ActionSlot>
+        <IconOnlyButton
+          class="sui-mutable-list__delete"
+          aria-label={`Delete ${props.name}`}
+          title="Delete"
+          draggable={false}
+          onClick={() => props.onDelete(props.id)}
+        >
+          ×
+        </IconOnlyButton>
+      </ActionSlot>
+    </ClusterRow>
   );
 }
 

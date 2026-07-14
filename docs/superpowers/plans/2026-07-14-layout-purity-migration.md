@@ -341,7 +341,14 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   out comment is gone. Verified on the census-view showcase: two-column layout,
   sticky detail rail, row-counts + chip flow all pixel-identical.
 - [ ] SortableList (geo 10)
-- [ ] MutableList (geo 13)
+- [x] MutableList (geo 13) — DONE. Card row (grip+content) → `ClusterRow`
+  (align:center, gap 8=sm exact; keeps width:100%/min-width:0 in CSS); name/detail
+  column → existing `ContentStack` (grow column, gap 2→xs); delete button → wrapped
+  in `ActionSlot` (no-shrink; the IconOnlyButton keeps `.sui-mutable-list__delete`
+  so its `:hover`/`:focus-visible` reveal still fires). No new variants. Intrinsic
+  kept: the name text-button, inline input, detail ellipsis, delete reveal
+  (opacity/pointer-events). Verified on the mutable-list showcase: card layout +
+  hover-revealed × identical.
 - [ ] Tabs (geo 10)
 - [ ] RecentStarred (geo 16)
 - [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
