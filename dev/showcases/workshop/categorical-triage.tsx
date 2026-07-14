@@ -16,7 +16,7 @@
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Component, For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
 import { FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
@@ -130,6 +130,22 @@ const CategoricalTriageBench: Component = () => {
     const i = all.findIndex((it) => it.id === selectedId());
     setSelectedId(all[(i + 1) % all.length].id);
   };
+  // Arrow keys walk the queue; selection CLAMPS at the top and bottom
+  // (no wrap — the edges are felt, matching list-navigation convention).
+  const move = (delta: number) => {
+    const all = items();
+    const i = all.findIndex((it) => it.id === selectedId());
+    if (i < 0) return;
+    setSelectedId(all[Math.min(all.length - 1, Math.max(0, i + delta))].id);
+  };
+  onMount(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+    };
+    window.addEventListener("keydown", onKey);
+    onCleanup(() => window.removeEventListener("keydown", onKey));
+  });
   const patchSelected = (patch: Partial<TriageItem>) => {
     setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
     advance();
