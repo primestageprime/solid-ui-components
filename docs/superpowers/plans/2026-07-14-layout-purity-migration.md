@@ -874,6 +874,21 @@ recommendation to establish them WITH the primitive pass, not ad-hoc per card.
   verification (it's the "pure path" the exemption described, done with the full
   verification regime that was the exemption's whole concern). The flush variants
   (`FillColumnFlush`/`ClipFillColumnFlush`) remain the pure path for future table-likes.
+- 2026-07-14 — **lp-5 tail: Table-family follow-ups + an infrastructure fix.** With
+  Table migrated (not exempt), its three Table.css-sharing siblings were migrated to
+  the same pattern: **DataTableContainer** (both-axis scroll → new `ScrollBox` /
+  `ScrollFillBox`), **SelectableTable** (Column + ClusterRow + GrowClusterRow; the
+  `.hud-table` wrapper → `ScrollYBox`, which also RESTORED a latent maxHeight-scroll
+  regression), **FilterableTable** (NarrowStack/FillColumn column + SpreadRow toolbar).
+  **Load-bearing bugfix (`fix(Layout)` 9795041):** `create{Box,Stack,Row}` now MERGE a
+  baked variant `style` with a caller-passed `style` instead of letting Solid's
+  `mergeProps` clobber it — this had silently dropped `ScrollYBox`'s baked `overflow-y`
+  whenever a caller passed `max-height`, breaking BaseTable's (and every ScrollYBox
+  consumer's) capped scroll. Full suite green (1557); BaseTable + all three siblings
+  verified scrolling on the live gallery. New variants: `ScrollBox`, `ScrollFillBox`.
+  Also in lp-5's slice: MarkdownEditor/AsyncProgress/InlineChartErrorOverlay migrations
+  (+ showcases) and the EditableTitle/List/MathFormula/SprintSelector/PivotPills
+  intrinsic audits.
 
 ## Migration complete
 
@@ -897,10 +912,18 @@ column cluster set (Cluster/Spread/Baseline/Top/GrowCluster/Wrapped/NoShrink/
 End/Tag/Wrap/Chip/Stretch/GrowWrap/GrowCenter/CenteredWrap rows; Tight/Narrow/
 Content/Centered/Grow/Fill/Column stacks), the column-context grow/clip/scroll set
 (FillColumn(+Flush), ClipFillColumn(+Flush/Box), ScrollFillColumn, ClipColumn,
-GrowColumn, GrowStack, ScrollX/Y boxes), the 2-D primitives (`Grid`/`LabelValueGrid`,
-`AutoStackRow`/`AutoStackItem`), and the Box slots (ActionSlot, GrowBox, ClipBox,
-NoShrinkScrollBox). The **no-gap flush set** (`FillColumnFlush`/`ClipFillColumnFlush`)
-is the pure path for margin-spaced full-height composites and any future table-like.
+GrowColumn, GrowStack, and the Box scroll family ScrollXBox/ScrollYBox/`ScrollBox`
+(both-axis)/`ScrollFillBox` (grow both-axis)), the 2-D primitives (`Grid`/
+`LabelValueGrid`, `AutoStackRow`/`AutoStackItem`), and the Box slots (ActionSlot,
+GrowBox, ClipBox, NoShrinkScrollBox). The **no-gap flush set** (`FillColumnFlush`/
+`ClipFillColumnFlush`) is the pure path for margin-spaced full-height composites and
+any future table-like.
+
+**Infrastructure:** `create{Box,Stack,Row}` deep-merge a baked variant `style` with
+a caller-passed `style` (`Layout/mergeStyle.ts`) so a baked geometry (e.g.
+`ScrollYBox`'s `overflow-y`) is never clobbered when a caller passes an orthogonal
+size (`max-height`). Without this, curried scroll variants silently lost their
+overflow — the class of bug that broke BaseTable's capped scroll.
 
 **Standing discriminators** (in SKILL.md §3b/4): inline-level control ⇒ intrinsic;
 data-derived cells/options/segments ⇒ intrinsic; leaf control vs field composition;
