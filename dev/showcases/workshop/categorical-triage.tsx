@@ -24,6 +24,7 @@ import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
 import { StatusChip, TagPill } from "../../../src/components/Badge";
 import { Icon, type IconName } from "../../../src/components/Icon";
+import { HotkeyButton } from "../../../src/components/HotkeyButton";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -93,7 +94,7 @@ const Placeholder: Component<{ label: string; hint: string }> = (props) => (
 );
 
 const CategoricalTriageBench: Component = () => {
-  const [items] = createSignal<TriageItem[]>(SEED);
+  const [items, setItems] = createSignal<TriageItem[]>(SEED);
   const [selectedId, setSelectedId] = createSignal<string>(SEED[0].id);
   const selected = createMemo(() => items().find((it) => it.id === selectedId()));
 
@@ -114,12 +115,45 @@ const CategoricalTriageBench: Component = () => {
     ];
   });
 
+  // Categorize the SELECTED item, then advance to the next — the center's
+  // whole activity. Keyboard-first: HotkeyButton arms window-level keys.
+  const advance = () => {
+    const all = items();
+    const i = all.findIndex((it) => it.id === selectedId());
+    setSelectedId(all[(i + 1) % all.length].id);
+  };
+  const patchSelected = (patch: Partial<TriageItem>) => {
+    setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
+    advance();
+  };
+  const CATEGORIZE = [
+    { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
+    { hotkey: "b", label: "block", apply: () => patchSelected({ blockedBy: "Ryan — follow up" }) },
+    { hotkey: "s", label: "snooze", apply: () => patchSelected({ blockedUntil: NOW + 26 * HOUR }) },
+    { hotkey: "d", label: "depends", apply: () => patchSelected({ deps: ["need category for salaries"] }) },
+    {
+      hotkey: "l",
+      label: "later",
+      apply: () =>
+        setItems((prev) => {
+          const i = prev.findIndex((it) => it.id === selectedId());
+          if (i < 0) return prev;
+          const next = [...prev];
+          const [moved] = next.splice(i, 1);
+          next.push(moved);
+          setSelectedId(next[Math.min(i, next.length - 1)].id);
+          return next;
+        }),
+    },
+  ];
+
   return (
     <div class="component-section component-section--full">
       <ThreePanelLayout
         height="78vh"
         topBar={<SectionTitle>Categorical Triage — refining: queue done</SectionTitle>}
         leftPanelWidth="380px"
+        rightPanelWidth="300px"
         leftPanel={
           <TightStack>
             <For each={items()}>
@@ -135,10 +169,32 @@ const CategoricalTriageBench: Component = () => {
           </TightStack>
         }
         centerPanel={
-          <Placeholder
-            label="Card detail"
-            hint={`selected card goes here — title bar, prompt, workflow DAG, blockages (currently selected: "${selected()?.name ?? "none"}")`}
-          />
+          <Show when={selected()} fallback={<Placeholder label="Triage" hint="empty queue — triage complete" />}>
+            {(it) => (
+              <TightStack>
+                <SpreadRow gap="sm">
+                  <TextLabel>{it().name}</TextLabel>
+                  <StatusChip status={it().status} options={["TODO", "DOING", "DONE"]} title={it().name} highlight={it().status === "DOING"} />
+                </SpreadRow>
+                <Show when={it().prompt}>
+                  <InfoPanel title="Prompt">
+                    <TextBody>{it().prompt}</TextBody>
+                  </InfoPanel>
+                </Show>
+                <InfoPanel title="Categorize">
+                  <SpreadRow gap="sm">
+                    <For each={CATEGORIZE}>
+                      {(a) => (
+                        <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
+                          {a.label}
+                        </HotkeyButton>
+                      )}
+                    </For>
+                  </SpreadRow>
+                </InfoPanel>
+              </TightStack>
+            )}
+          </Show>
         }
         rightPanel={
           <TightStack>

@@ -193,6 +193,21 @@ NEXT CATEGORY                     [count]     ← count-only mode
   children muted one-line rows. No new component until a second consumer
   demands one.
 
+## Buttons / actions
+
+The load-bearing discriminator is **whether the user is in a FOCUSED
+ACTIVITY** (working item-by-item through a queue: triage, review, grading):
+
+- **Focused activity → keyboard-driven.** Use `HotkeyButton` (armed
+  window-level key + click; the key is emphasized in the label, [c]laim) —
+  the button IS the hint for what to press to reach a category/action.
+  - **Letter keybindings by default** (mnemonic first letters).
+  - **Number keybindings when there are too many actions or the letters
+    conflict** (two categories starting with the same letter).
+- Casual/occasional actions → plain `Button` variants; no key chrome.
+- Batch actions over a selection → ActionList's built-in `actions` bar
+  (same HotkeyButton, list-scoped).
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
@@ -231,3 +246,9 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   blocked·snooze (children) → blocked·dependency (count) → claimed
   non-terminal (count); eligible removed from the rail (it's the queue);
   composed TightStack + SpreadRow + CountChip.
+- **2026-07-14 · workshop:categorical-triage · center (categorize surface)** —
+  focused activity → keyboard-driven: canon title bar (title left, StatusChip
+  right), Prompt InfoPanel, and a Categorize InfoPanel of HotkeyButtons
+  [c]laim [b]lock [s]nooze [d]epends [l]ater; applying a category advances
+  selection to the next item (the flow IS the loop). Letters don't conflict
+  at 5 actions. Right rail widened to 300px so category labels stay one line.
