@@ -14,6 +14,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { Grid } from "../Layout/Grid";
 import "./DayOfMonthPicker.css";
 
 export interface DayOfMonthPickerProps
@@ -61,9 +62,14 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
   const rootClass = () =>
     local.class ? `sui-dom-picker ${local.class}` : "sui-dom-picker";
 
+  // The 7-column calendar grid is composed from the Layout Grid primitive
+  // (columns + gap:xs); the cells (and the optional "last of month" cell) stay
+  // intrinsic. The --dom-cell-size var rides on the element so the track resolves.
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the calendar cell layout
-    <div
+    <Grid
+      columns="repeat(7, var(--dom-cell-size, 3.5rem))"
+      gap="xs"
       class={rootClass()}
       role="grid"
       style={{ "--dom-cell-size": local.cellSize ?? "3.5rem" }}
@@ -108,7 +114,7 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
           Last of month
         </button>
       )}
-    </div>
+    </Grid>
   );
 };
 

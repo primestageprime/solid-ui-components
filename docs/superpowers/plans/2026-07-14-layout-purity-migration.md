@@ -235,7 +235,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [x] DayOfWeekPicker (geo 6) — DONE (compose Grid, ruling 3). 7-col grid →
   `Grid` (`columns="repeat(7, var(--dom-cell-size,3.5rem))"`, gap:xs=4 exact);
   cells intrinsic; only `width:fit-content` remains. Verified pixel-identical.
-- [ ] DayOfMonthPicker (geo 7)
+- [x] DayOfMonthPicker (geo 7) — DONE (compose Grid, ruling 3). 7-col calendar
+  grid → `Grid` (`columns="repeat(7, var(--dom-cell-size,3.5rem))"`, gap:xs=4
+  exact); the day cells AND the optional "last of month" cell stay intrinsic;
+  only `width:fit-content` remains. Verified pixel-identical.
 - [x] MonthOfYearPicker (geo 6) — DONE (compose Grid, ruling 3; showcase-first via
   876cfa0). Grid container (`display:grid; repeat(4,cell); gap:4`) → `Grid`
   primitive (`columns="repeat(4, var(--moy-cell-size,3.5rem))"`, gap:xs=4 exact;
