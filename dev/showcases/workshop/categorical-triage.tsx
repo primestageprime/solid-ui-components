@@ -67,12 +67,15 @@ const CategoricalTriageBench: Component = () => {
   const categories = createMemo(() => {
     const all = items();
     const isBlocked = (it: TriageItem) => !!it.blockedBy || !!it.blockedUntil || !!(it.deps && it.deps.length);
+    void isBlocked;
+    // Ordered by ACTIONABILITY — how much you can do about them (Peter):
+    // person-blocked first (you can nudge), snooze (will self-clear),
+    // dependency (count only), claimed-but-non-terminal (count only).
     return [
-      { label: "CLAIMED", glyph: "◉", mode: "children" as const, items: all.filter((it) => !!it.claimedBy) },
       { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, items: all.filter((it) => !!it.blockedBy) },
       { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, items: all.filter((it) => !!it.blockedUntil) },
       { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, items: all.filter((it) => !!(it.deps && it.deps.length)) },
-      { label: "ELIGIBLE", glyph: "▹", mode: "count" as const, items: all.filter((it) => !it.claimedBy && !isBlocked(it) && it.status !== "DONE") },
+      { label: "CLAIMED", glyph: "◉", mode: "count" as const, items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
     ];
   });
 

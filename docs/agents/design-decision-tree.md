@@ -156,6 +156,14 @@ NEXT CATEGORY                     [count]     ← count-only mode
   click-to-select) or **count-only mode**. Children when the user acts on
   individual members from the rail; count-only when the category is just a
   gauge.
+- **Order categories by ACTIONABILITY** — the ones you can do the most
+  about at the top (Peter, 2026-07-14). For blockage rails: person-blocked
+  first (you can nudge them), snooze next (self-clears eventually),
+  dependency (count only), claimed-but-non-terminal last (count only —
+  someone else's to move). Actionable categories get children mode; the
+  rest count-only.
+- The "eligible" remainder does NOT belong in this rail — it IS the main
+  queue; surface its count in the top bar instead.
 - Compose: `TightStack` of sections; header `SpreadRow(label, CountChip)`;
   children muted one-line rows. No new component until a second consumer
   demands one.
@@ -194,6 +202,7 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   truncate). Supersedes the earlier ActionList pick for this rail — the card
   canon (title-first) outranked the ActionListItem status-left look.
 - **2026-07-14 · workshop:categorical-triage · counts rail** — categorized
-  column (claimed / blocked·person / blocked·snooze / blocked·dependency /
-  eligible), children mode for the actionable categories, count-only for
-  dependency + eligible; composed TightStack + SpreadRow + CountChip.
+  column ordered by actionability: blocked·person (children) →
+  blocked·snooze (children) → blocked·dependency (count) → claimed
+  non-terminal (count); eligible removed from the rail (it's the queue);
+  composed TightStack + SpreadRow + CountChip.
