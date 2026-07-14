@@ -36,6 +36,24 @@ currentColor (thematic) — never emoji glyphs (colored emoji break the theme;
 "the clock looks weird" — Peter, 2026-07-14). Gap noted: no chain/link icon
 for dependency semantics yet — add one to Icon when dependency children ship.
 
+## Layout purity (applies to EVERY decision below)
+
+All box-model geometry — rows, columns, gaps, alignment, spreads, fills,
+scrolls, pinned edges — is expressed by **composing Layout components**
+(`Stack`/`Row`/`Box` + their curried variants: `SpreadRow`, `ClusterRow`,
+`TightStack`, `GrowBox`, `FillColumn`, `ScrollColumn`, `TagRow`, …), never via
+`display:flex|grid`, `gap`, `justify-content`, `align-items`, `flex-*`, or
+`overflow` in a component's own CSS or inline style. When a card/list/panel
+decision below says "compose `SpreadRow` → …", that IS the layout-purity rule in
+action — the arrangement comes from the Layout vocabulary, and the only styling
+a Composite adds is via curried Atomic variants. Exempt: `layout`-tagged
+components (they ARE the vocabulary), SVG/canvas chart rendering, and the
+`position:absolute/fixed` anchoring of overlay controls (their internal
+rows/columns still compose Layout). If a geometry you need has no variant, add
+the named variant to `Layout/variants.ts` first, then compose it — the missing
+variant is the finding. Full statement: `STYLE_GUIDE.md` › *Layout Purity*;
+migration status: `docs/superpowers/plans/2026-07-14-layout-purity-migration.md`.
+
 ## Page layout
 
 Discriminators:

@@ -50,6 +50,71 @@ This applies at every level — individual components AND modules:
 
 **Example:** DataList defines `Badge` (wraps StatusBadge → Depth 2) and `DTable` (wraps KVTable → Depth 2). DataList module = Depth 3.
 
+## Layout Purity
+
+**No component may own box-model geometry.** Rows, columns, gaps, alignment,
+spreads, fills, scrolls, and pinned edges are expressed by **composing Layout
+components** (`src/components/Layout`: the `Stack`/`Row`/`Box` factories and
+their curried variants — `TightStack`, `SpreadRow`, `ClusterRow`, `GrowBox`,
+`FillColumn`, `ScrollColumn`, `TagRow`, and the rest of `variants.ts`) — **never**
+via `display: flex | grid`, `gap`, `justify-content`, `align-items`,
+`align-self`, `flex-*`, `place-*`, `row-gap`/`column-gap`, or `overflow` in a
+component's own CSS or inline `style={}`.
+
+The Layout family owns the arrangement vocabulary in one place. When a component
+hand-rolls its own flex/grid wrapper it forks that vocabulary: gaps drift off
+the 4px scale, alignment logic is duplicated, and a change to how the app spaces
+things means grepping every CSS file instead of editing one variant. This is the
+same single-place-ownership principle as [The #1 Rule](AGENT_GUIDE.md) (visual
+config lives in curried variants), applied to geometry.
+
+### Exemptions
+
+Three categories are exempt — everything else migrates:
+
+1. **`layout`-tagged components** — the Layout family itself (`Stack`, `Row`,
+   `Box`, `AppShell`) **plus** `ThreePanelLayout`, `Page`, `ScrollRegion`,
+   `SplitQueueList`, `Section`, `CollapsiblePanel`, `Modal`, and `BottomSheet`.
+   These components **are** the arrangement vocabulary — they are allowed (and
+   required) to declare flex/grid/overflow/positioning directly.
+2. **svg / canvas rendering** — charts and their render primitives may position
+   freely (the SVG coordinate system is their layout engine, not the box model).
+3. **overlay controls** — components that anchor a floating surface (`Toast`,
+   `PopoverMenu`, `Dropdown`, `Tooltip`, and the popover portions of `Select`,
+   `Combobox`, `DatePicker`, `DateRangePicker`, `MultiSelectFilter`) keep their
+   `position: absolute | fixed` anchoring **only**. Their internal rows and
+   columns still migrate to Layout compositions.
+
+### When a geometry has no Layout variant
+
+**Add the named variant to `Layout/variants.ts` first, then compose it.** A
+missing variant is the finding, not an excuse for an inline style. Each new
+variant gets a role-named export and a comment on when to use it (see the
+existing `FillColumn` / `ScrollColumn` / `PaneRow` entries for the idiom). Note
+the usual guardrail: expanding the underlying `Stack`/`Row` *scales* (new `gap`
+token, new `align` value) still requires Peter's sign-off per
+[The #2 Rule](AGENT_GUIDE.md) — a new *composed variant* over the existing scale
+does not.
+
+### Child arrangement vs intrinsic element styling
+
+Migrate **child arrangement** — a wrapper that lays out multiple children in a
+row/column/grid. Leave (but note) **intrinsic element styling** — a
+self-contained atom centering its *own* single label, e.g. a pill or icon
+button with `display: inline-flex; align-items: center` on the element that
+renders the glyph/text. Don't force an absurd one-child `<Row>` wrapper around a
+pill just to satisfy the letter of the rule; the target is duplicated
+*arrangement* vocabulary, not every `inline-flex`.
+
+### Migration posture
+
+Forward + opportunistic: new components must comply from the start; existing
+ones migrate via the `layout-purity-refactor` skill
+(`.claude/skills/layout-purity-refactor/SKILL.md`), one component per commit,
+each verified visually identical before moving on. The running inventory and
+status live in
+`docs/superpowers/plans/2026-07-14-layout-purity-migration.md`.
+
 ## Prop Architecture: Overrides vs Data
 
 Every component has two categories of props:
