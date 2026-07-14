@@ -6,6 +6,8 @@
 // padding/radius/bg/border. Factory: createSurface().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { Stack } from "../Layout/Stack";
+import { Row } from "../Layout/Row";
 import "./Surface.css";
 
 export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -76,9 +78,34 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     return { ...base, ...custom };
   };
 
+  // Layout is delegated to a composed Stack/Row so Surface owns no
+  // flex/gap/align geometry (layout-purity). The surface--dir-/align-/gap-
+  // classes stay as inert back-compat hooks; the actual geometry lives on the
+  // inner Layout wrapper, present only when `direction` is set (a bare Surface,
+  // like every idle card, stays a plain block div — no wrapper). Surface's gap
+  // scale snaps onto the Stack/Row scale (sm/md/lg → sm); `none` → no gap. The
+  // column wrapper fills the surface height so bottom-pinned meta rows
+  // (margin-top:auto) still reach the card's bottom edge.
+  const laidOut = (): JSX.Element => {
+    if (!local.direction) return local.children as JSX.Element;
+    const gap = local.gap && local.gap !== "none" ? ("sm" as const) : undefined;
+    if (local.direction === "row") {
+      return (
+        <Row gap={gap} align={local.align}>
+          {local.children}
+        </Row>
+      );
+    }
+    return (
+      <Stack gap={gap} align={local.align} fill>
+        {local.children}
+      </Stack>
+    );
+  };
+
   return (
     <div class={classes()} style={mergedStyle()} {...others}>
-      {local.children}
+      {laidOut()}
     </div>
   );
 };

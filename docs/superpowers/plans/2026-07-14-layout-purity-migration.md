@@ -114,7 +114,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   the absurd-wrapper anti-pattern. Ticked as intrinsic; left as-is.
 - [ ] Card/StatusCard (geo 41)
 - [ ] Panel (geo 17)
-- [ ] Surface (geo 11)
+- [x] Surface (geo 11) — DONE (keystone). direction/align/gap now delegate to a
+  composed inner `Stack`(column, `fill`)/`Row`(row) instead of flex/gap/align-items
+  on the surface div; the `surface--dir/align/gap` classes stay as inert
+  back-compat hooks (tests still assert them). Public props byte-identical; a bare
+  Surface (no direction) still renders a plain block div with NO wrapper, so every
+  idle/active InteractiveCard is untouched (canary pixel-identical incl. the bright
+  active-selection glow). Column wrapper `fill` preserves bottom-pinned meta rows
+  (StatusCard row3 margin-top:auto). Gap snaps sm(6)/md(12)/lg(20)→sm(8); only
+  live gap in the tree is `sm` (+2px). Active-state bg/border suppression (fbc65b0)
+  untouched. `text-align:center` on the stretch variant kept (non-geometry).
 - [ ] ActionListItem (geo 20)
 - [x] ActionList (geo 6) — DONE. Wrapper column → NarrowStack, selection bar →
   ClusterRow; bar's accent styling + margin-right:auto spacer kept. Props unchanged.

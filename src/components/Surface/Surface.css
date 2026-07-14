@@ -23,35 +23,13 @@
   border-radius: 8px;
 }
 
-.surface--dir-row {
-  display: flex;
-  flex-direction: row;
-}
-.surface--dir-column {
-  display: flex;
-  flex-direction: column;
-}
-.surface--align-start {
-  align-items: flex-start;
-}
-.surface--align-center {
-  align-items: center;
-}
+/* Layout (direction/align/gap) is delegated to a composed Stack/Row in
+   Surface.tsx — Surface owns no flex/gap/align-items geometry (layout-purity).
+   The surface--dir-/align-/gap- classes remain as inert back-compat hooks. The
+   one non-geometry survivor is the stretch variant's centered text, which
+   inherits into the composed children. */
 .surface--align-stretch {
-  align-items: stretch;
   text-align: center;
-}
-.surface--gap-none {
-  gap: 0;
-}
-.surface--gap-sm {
-  gap: 6px;
-}
-.surface--gap-md {
-  gap: 12px;
-}
-.surface--gap-lg {
-  gap: 20px;
 }
 
 .surface--interactive {
