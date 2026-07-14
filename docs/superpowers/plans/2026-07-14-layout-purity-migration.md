@@ -534,7 +534,14 @@ tick", not real arrangement migrations. Review each per skill step 4.
   titled-time-range-header showcase: all 3 headers (active/ongoing/link+asset)
   pixel-identical, VIEW action right-aligned.
 - [ ] SprintSelector (geo 8)
-- [ ] Legend (geo 12) — HTML swatch/label rows (chart-adjacent but box-model → migrates)
+- [x] Legend (geo 12) — AUDITED INTRINSIC (Tabs/SegmentedControl category, ruling 3).
+  A block-level, ORIENTATION-FLIPPING strip of DATA-DERIVED legend items
+  (`<For each={items}>` → swatch+label): `.sui-legend--horizontal` is a wrap row,
+  `.sui-legend--vertical` a column, with per-orientation micro-gaps (12 vs 6). Same
+  shape as Tabs — a clean migration needs a `<Dynamic>` row/stack switch + single-use
+  micro-gap variants that over-fit start-minimal, and the items are ruling-4
+  data-content. `.sui-legend__item` is inline-flex (swatch+label, inline-level
+  intrinsic); `__swatch` flex-shrink:0 is part of the item. Left as-is.
 - [ ] PivotTreemap/PivotPills (geo 12) — HTML pill rows
 - [ ] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
 - [x] DragDrop/QuadrantGrid (geo 10) — AUDITED, INTRINSIC (genuine load-bearing 2-D
