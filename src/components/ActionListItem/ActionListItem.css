@@ -12,9 +12,8 @@
    ============================================ */
 
 .sui-action-list-item {
-  display: flex;
-  align-items: center;
-  gap: var(--sui-space-sm, 8px);
+  /* Row arrangement (flex/align:center/gap:sm) is composed from the ClusterRow
+     Layout variant; only the row chrome + sizing lives here. */
   width: 100%;
   min-height: 40px;
   padding: var(--sui-space-sm, 8px) var(--sui-space-md, 12px);
@@ -77,21 +76,13 @@
   opacity: 1;
 }
 
-.sui-action-list-item__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--sui-space-xs, 6px);
-  flex: none;
-}
+/* Meta cluster arrangement (flex:none / align:center / gap) is composed from the
+   NoShrinkClusterRow Layout variant (gap 6→sm). No box-model geometry here. */
 
 /* Assignee roster: a tight cluster of glyphs (each the same size as the lone
    single-assignee icon), sitting a touch closer than the meta gap so the roster
-   reads as one unit. With a single assignee it is visually identical to before. */
-.sui-action-list-item__assignees {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
+   reads as one unit. Arrangement is composed from the TightClusterRow Layout
+   variant (gap 3→xs); with a single assignee it is visually identical. */
 
 /* Clickable tag (only when onTagClick is wired): a bare button wrapper so the
    pill is a real interactive control. The row's closest("button") guard already

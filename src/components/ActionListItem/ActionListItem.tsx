@@ -23,6 +23,11 @@
 //    to the row's right edge via negative margins.
 // ============================================
 import { Component, For, Show, createSignal, onCleanup } from "solid-js";
+import {
+  ClusterRow,
+  NoShrinkClusterRow,
+  TightClusterRow,
+} from "../Layout/variants";
 import { StatusChip } from "../Badge/StatusChip";
 import { EditableTitle, type EditTrigger } from "../EditableTitle/EditableTitle";
 import { AssigneeIcon, type AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
@@ -133,8 +138,17 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
       cancelTimer = setTimeout(disarm, AUTO_CANCEL_MS);
     }
   };
+  // Row layout is composed from Layout variants (layout-purity): the row is a
+  // ClusterRow (align:center, gap:sm — [chip, title, meta]), the meta cluster a
+  // NoShrinkClusterRow (flex:none, gap 6→sm), the assignee roster a
+  // TightClusterRow (gap 3→xs). The self-contained icon-button caps (open,
+  // dismiss) keep their intrinsic single-widget geometry — flex:none sizing and
+  // the dismiss cap's align-self:stretch + negative-margin semicircle are
+  // deliberately-local to this row (see the header note), not consumer-child
+  // arrangement. The hover-geometry invariant is untouched (only flex/gap/align
+  // moved to Layout classes; hover still changes colour/opacity only).
   return (
-    <div
+    <ClusterRow
       class="sui-action-list-item"
       classList={{
         "sui-action-list-item--dim": tone() === "dim",
@@ -164,13 +178,13 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
         editTrigger={props.editTrigger}
         rowSelected={props.selected}
       />
-      <span class="sui-action-list-item__meta">
+      <NoShrinkClusterRow class="sui-action-list-item__meta">
         <Show when={assignees().length > 0}>
-          <span class="sui-action-list-item__assignees">
+          <TightClusterRow class="sui-action-list-item__assignees">
             <For each={assignees()}>
               {(a) => <AssigneeIcon {...a} />}
             </For>
-          </span>
+          </TightClusterRow>
         </Show>
         <For each={props.tags ?? []}>
           {(tag) => (
@@ -241,7 +255,7 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
             {armed() ? "✓" : "×"}
           </button>
         </Show>
-      </span>
-    </div>
+      </NoShrinkClusterRow>
+    </ClusterRow>
   );
 };

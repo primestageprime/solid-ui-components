@@ -145,7 +145,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   (StatusCard row3 margin-top:auto). Gap snaps sm(6)/md(12)/lg(20)→sm(8); only
   live gap in the tree is `sm` (+2px). Active-state bg/border suppression (fbc65b0)
   untouched. `text-align:center` on the stretch variant kept (non-geometry).
-- [ ] ActionListItem (geo 20)
+- [x] ActionListItem (geo 20) — DONE. Root row → ClusterRow (gap sm exact); meta
+  cluster → NoShrinkClusterRow (flex:none, gap 6→sm +2); assignee roster →
+  TightClusterRow (gap 3→xs +1). No new variants — reused existing. The
+  self-contained icon-button caps (open flex:none; dismiss flex:none +
+  align-self:stretch + negative-margin semicircle) STAY as intrinsic
+  single-widget geometry (the component's own header declares them
+  deliberately-local, non-reusable row chrome; per-child align-self on a
+  non-Layout <button> can't be wrapped without breaking the negative-margin
+  flush-to-edge cap). Hover-geometry invariant preserved (only flex/gap/align
+  moved to Layout classes). Verified on the action-list showcase incl. a hover
+  revealing the full-height dismiss cap.
 - [x] ActionList (geo 6) — DONE. Wrapper column → NarrowStack, selection bar →
   ClusterRow; bar's accent styling + margin-right:auto spacer kept. Props unchanged.
 - [x] ButtonGroup (geo 7) — DONE. Marked layout-exempt (DEPRECATED-as-such) in
