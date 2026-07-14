@@ -350,15 +350,21 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   (header text + own sort glyph) reads as intrinsic single-widget header chrome.
 - [ ] Selector/SidebarSelector (geo 38)
 - [ ] ExtractionBoard (geo 44)
-- [~] ThreadGroup (geo 24) — BLOCKED (needs a primitive expansion). The base rows
-  map cleanly (`__row`→TopClusterRow, `__body`→a grow column, `__header`→
-  WrappedClusterRow, `__bubbles`→TightStack), BUT the `self` variant reverses the
-  axis via `flex-direction: row-reverse` (and `align-items: flex-end`), which
-  Row/Stack's API cannot express. Reordering children in the DOM instead is NOT
-  equivalent — row-reverse flips the VISUAL order while preserving avatar→body
-  DOM/reading order (an a11y property the component relies on). A `reverse` prop on
-  the Row primitive is a real primitive-scale expansion (Peter-gated), so this is a
-  BLOCK, not a self-authorized variant. Batched to team-lead. Left as-is.
+- [x] ThreadGroup (geo 24) — DONE (ruling 2, team-lead). Base arrangements migrated:
+  `__row`→`TopClusterRow` (gap 8=sm exact), `__body`→`ContentStack` (existing:
+  flex:1/min-width:0/gap:xs=4 exact), `__header`→`WrappedClusterRow` (gap 8=sm),
+  `__bubbles`→`TightStack` (gap 4=xs). No new variants. INTRINSIC (kept per ruling):
+  the `self` variant's axis reversal (`flex-direction: row-reverse` on `__row`/
+  `__header`) + trailing-edge alignment (`align-items: flex-end` on `__body`/
+  `__bubbles`) — Row has no `reverse` capability; row-reverse flips VISUAL order
+  while preserving avatar→body DOM/reading order (a11y), so a DOM reorder is NOT
+  equivalent. **Row reverse = candidate vocabulary if a second reversed-axis
+  consumer appears.** Also kept intrinsic: `__body`'s `max-width:80%` (the
+  self/other bubble-overlap signature, non-geometry) and `__header`'s `row-gap:0`
+  (WrappedClusterRow's single `gap` sets both axes to 8px; the header wants an 8px
+  column gap but 0 vertical gap on wrap — scoped `.sui-thread-group` prefix to beat
+  `.row--gap-sm`). Verified on the conversation-tree showcase (flat, threaded/reply-
+  indent, and tighter-window sections): pixel-identical, self-reversal preserved.
 - [x] DataDisplay/DigitRoller (geo 5) · NumberWithUnits (geo 7) · ResultDisplay (geo 13) · StatsTable (geo 3) — DONE.
   **ResultDisplay** migrated: header (space-between) → `SpreadRow`; value+units+badge
   row → `WrappedClusterRow` (gap 12→sm, wrap). **StatsTable** migrated: root flex-
