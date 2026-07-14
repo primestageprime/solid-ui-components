@@ -15,6 +15,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { Grid } from "../Layout/Grid";
 import "./DayOfWeekPicker.css";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
@@ -44,9 +45,14 @@ export const DayOfWeekPicker: Component<DayOfWeekPickerProps> = (props) => {
   const rootClass = () =>
     local.class ? `sui-dow-picker ${local.class}` : "sui-dow-picker";
 
+  // The 7-column grid is composed from the Layout Grid primitive (columns +
+  // gap:xs); the cells stay intrinsic (each centers its own day label). The
+  // --dom-cell-size var rides on the same element so the columns track resolves.
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the day-of-week cell layout
-    <div
+    <Grid
+      columns="repeat(7, var(--dom-cell-size, 3.5rem))"
+      gap="xs"
       class={rootClass()}
       role="grid"
       style={{ "--dom-cell-size": local.cellSize ?? "3.5rem" }}
@@ -75,7 +81,7 @@ export const DayOfWeekPicker: Component<DayOfWeekPickerProps> = (props) => {
           );
         }}
       </For>
-    </div>
+    </Grid>
   );
 };
 

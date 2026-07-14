@@ -232,7 +232,9 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   inline placement, and spinning up an inline-row primitive for a single consumer
   fails the start-minimal commandment (add it when a SECOND inline control demands
   it). Left as-is. See the inline-level discriminator in the rulings section.
-- [ ] DayOfWeekPicker (geo 6)
+- [x] DayOfWeekPicker (geo 6) — DONE (compose Grid, ruling 3). 7-col grid →
+  `Grid` (`columns="repeat(7, var(--dom-cell-size,3.5rem))"`, gap:xs=4 exact);
+  cells intrinsic; only `width:fit-content` remains. Verified pixel-identical.
 - [ ] DayOfMonthPicker (geo 7)
 - [x] MonthOfYearPicker (geo 6) — DONE (compose Grid, ruling 3; showcase-first via
   876cfa0). Grid container (`display:grid; repeat(4,cell); gap:4`) → `Grid`
