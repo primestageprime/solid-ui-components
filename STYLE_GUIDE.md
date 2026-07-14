@@ -106,6 +106,29 @@ renders the glyph/text. Don't force an absurd one-child `<Row>` wrapper around a
 pill just to satisfy the letter of the rule; the target is duplicated
 *arrangement* vocabulary, not every `inline-flex`.
 
+### Rulings on the hard cases (Peter, 2026-07-14)
+
+Four situations that have no obvious Layout home were adjudicated:
+
+1. **Pseudo-element layout chrome (`::before`/`::after` with `flex`, etc.):**
+   replace the pseudo-elements with **real elements** (e.g. a `GrowBox` rule
+   line) one at a time, verify the render is visually identical, and keep the
+   change only if it holds up. Fall back to BLOCKED-with-reason only if a
+   faithful real-element replacement genuinely can't match. Rationale: deeper
+   components shouldn't have to think about styling or accidentally override it.
+2. **Off-scale gaps: snap to the scale.** `6px` → nearest step, `12px` → the
+   `md` step. A 2–4px shift is accepted; note the snap in the commit message.
+   Do not expand the `Stack`/`Row` scale for this.
+3. **Missing 2-D / responsive layouts: add the primitive.** Two shipped:
+   `AutoStackRow` + `AutoStackItem` (responsive side-by-side → stacked via a
+   `breakWidth` prop — the "holy-albatross" behavior) and `Grid` + the
+   `LabelValueGrid` variant (`minmax(label, max-content) 1fr`). Compose these
+   instead of hand-rolling `flex-basis` calcs or `display: grid`.
+4. **Clipping/masking `overflow: hidden` is NOT an intrinsic carve-out.** Route
+   it through Layout: compose the `ClipBox` curried `Box` variant
+   (`overflow: hidden`) wherever a component clips for a collapse animation or a
+   progress/bar mask. There is no "overflow is fine here" exception.
+
 ### Migration posture
 
 Forward + opportunistic: new components must comply from the start; existing

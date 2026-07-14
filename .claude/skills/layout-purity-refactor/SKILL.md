@@ -80,6 +80,21 @@ migrate-heavy component write this test in `src/components/<Dir>/<Name>.layout.t
   if extraction is large, note it and prefer the smallest change that removes
   the geometry.
 
+### 3b. Adjudicated hard cases (Peter, 2026-07-14)
+
+- **Pseudo-element layout chrome** (`::before`/`::after` with `flex`/`gap`):
+  replace with **real elements** (e.g. `GrowBox` rule lines), one at a time,
+  verify visually identical, keep only if it holds; else BLOCKED-with-reason.
+- **Off-scale gaps: snap.** `6px` → nearest step, `12px` → `md`. A 2–4px shift
+  is accepted — note the snap in the commit message. Never expand the Stack/Row
+  scale for this.
+- **Missing 2-D / responsive layout: compose the primitive.** `AutoStackRow` +
+  `AutoStackItem` (responsive side-by-side→stacked, `breakWidth` prop) and
+  `Grid` / `LabelValueGrid` (`minmax(label,max-content) 1fr`) now exist in
+  Layout — compose them, don't hand-roll `flex-basis` calcs or `display:grid`.
+- **Clip/mask `overflow:hidden` is NOT exempt** — compose the `ClipBox` Box
+  variant wherever a component clips for a collapse animation or bar mask.
+
 ### 4. Child arrangement vs intrinsic element styling
 
 - **Child arrangement** (a wrapper laying out multiple children) → MUST migrate.
