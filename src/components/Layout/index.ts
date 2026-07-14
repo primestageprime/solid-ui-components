@@ -12,6 +12,9 @@ export type {
   ProportionalStackProps,
   ProportionalItemProps,
 } from "./ProportionalStack";
+// Responsive side-by-side -> stacked row (the "holy albatross"). No-config shell.
+export { AutoStackRow, AutoStackItem } from "./AutoStack";
+export type { AutoStackRowProps, AutoStackItemProps } from "./AutoStack";
 // AppShell/AppMain have no design-config — re-exported as-is. AppHeader (size/inline) is curried.
 export { AppShell, AppMain, createAppHeader } from "./AppShell";
 export type {

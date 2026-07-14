@@ -89,11 +89,11 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [x] ProductGridCard (geo 4) — DONE. Centered column → new `CenteredColumn`
   Layout variant (align:center, sm gap, no justify). Gap snapped 6px→8px (sm)
   per ruling 2. Card visuals + data-state attrs + click/keyboard semantics kept.
-- [ ] BLOCKED — FormComposite (geo 10): the block row uses the bespoke
-  "holy-albatross" responsive `flex-basis: calc((var(--fc-break) - 100%) * 999)`
-  auto-stacking algorithm + **gap:12px** — no Layout analogue. This component is
-  itself doing layout that arguably belongs IN the Layout family as a new
-  "auto-stack row" primitive. Needs a decision (add primitive vs exempt).
+- [x] FormComposite (geo 10) — DONE (ruling 3). Extracted the holy-albatross
+  behavior into a new `AutoStackRow` / `AutoStackItem` Layout primitive; the
+  slots now compose them (outer gap 12px→md, item gap sm). FormComposite is now
+  a zero-CSS Composite (FormComposite.css deleted). Existing test updated to the
+  new internals (public props unchanged).
 - [ ] BLOCKED — DiffPair (geo 10): the labeled form is `display:grid;
   grid-template-columns: minmax(80px,max-content) 1fr; gap:12px` — CSS grid with
   no Layout grid primitive, plus off-scale 12px gap. The inner before/arrow/after

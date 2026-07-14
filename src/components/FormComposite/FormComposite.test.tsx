@@ -35,7 +35,8 @@ describe("FormComposite", () => {
       <FormComposite identity={<span>x</span>} breakWidth="44rem" />
     ));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--fc-break")).toBe("44rem");
+    // Composed via AutoStackRow, which owns the responsive break var.
+    expect(root.style.getPropertyValue("--auto-stack-break")).toBe("44rem");
     expect(root.className).toContain("sui-form-composite");
   });
 
@@ -43,7 +44,7 @@ describe("FormComposite", () => {
     const Curried = createFormComposite({ breakWidth: "20rem" });
     const { container } = render(() => <Curried identity={<span>x</span>} />);
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--fc-break")).toBe("20rem");
+    expect(root.style.getPropertyValue("--auto-stack-break")).toBe("20rem");
   });
 });
 
@@ -57,8 +58,12 @@ describe("FormComposite amounts slot", () => {
       />
     ));
     const root = container.firstElementChild!;
-    const classes = [...root.children].map((c) => c.className);
-    expect(classes).toEqual([
+    // Each slot is an AutoStackItem carrying its BEM hook class; assert the
+    // hook order (the AutoStackItem classes are the composition detail).
+    const hooks = [...root.children].map((c) =>
+      [...c.classList].find((x) => x.startsWith("sui-form-composite__")),
+    );
+    expect(hooks).toEqual([
       "sui-form-composite__identity",
       "sui-form-composite__amounts",
       "sui-form-composite__schedule",
@@ -77,6 +82,7 @@ describe("FormComposite stacked", () => {
       <FormComposite stacked identity={<input />} schedule={<div>grid</div>} />
     ));
     const root = container.querySelector(".sui-form-composite")!;
-    expect(root.classList.contains("sui-form-composite--stacked")).toBe(true);
+    // The forced-stack modifier now lives on the composed AutoStackRow.
+    expect(root.classList.contains("auto-stack-row--stacked")).toBe(true);
   });
 });

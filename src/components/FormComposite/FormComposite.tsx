@@ -1,6 +1,6 @@
 // ============================================
-// FormComposite — Layout (Depth 1)
-// Owns CSS (FormComposite.css), no component imports.
+// FormComposite — Composite (Depth 2, zero CSS)
+// Composes the AutoStackRow / AutoStackItem Layout primitives.
 // SLOT-BASED form layout: [[identity][amounts][schedule]] — the fields that
 // don't vary across curried form variants (name + a single amount) group in
 // the `identity` slot; an ATOMIC amount group (a min/typical/max trio) takes
@@ -14,7 +14,8 @@
 // slot contents are arbitrary JSX, so the individual field components stay
 // independent and keep working standalone. Deliberately NOT a mega-component
 // that takes every child's props: that couples every form to one
-// component's churn.
+// component's churn. The responsive side-by-side->stacked behavior now lives in
+// the AutoStackRow Layout primitive rather than a hand-rolled flex-basis calc.
 //   <FormComposite
 //     identity={<><NameInput …/><AmountInput …/></>}
 //     schedule={<DayOfMonthPicker …/>}
@@ -28,7 +29,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
-import "./FormComposite.css";
+import { AutoStackRow, AutoStackItem } from "../Layout/AutoStack";
 
 export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** The stable block — fields that read the same across variants
@@ -64,29 +65,30 @@ export const FormComposite: Component<FormCompositeProps> = (props) => {
     "class",
   ]);
   const rootClass = () =>
-    [
-      "sui-form-composite",
-      local.stacked ? "sui-form-composite--stacked" : "",
-      local.class ?? "",
-    ]
-      .filter(Boolean)
-      .join(" ");
+    ["sui-form-composite", local.class ?? ""].filter(Boolean).join(" ");
   return (
-    <div
+    <AutoStackRow
       class={rootClass()}
-      style={{ "--fc-break": local.breakWidth ?? "38rem" }}
+      breakWidth={local.breakWidth ?? "38rem"}
+      stacked={local.stacked}
       {...others}
     >
       <Show when={local.identity}>
-        <div class="sui-form-composite__identity">{local.identity}</div>
+        <AutoStackItem class="sui-form-composite__identity">
+          {local.identity}
+        </AutoStackItem>
       </Show>
       <Show when={local.amounts}>
-        <div class="sui-form-composite__amounts">{local.amounts}</div>
+        <AutoStackItem class="sui-form-composite__amounts">
+          {local.amounts}
+        </AutoStackItem>
       </Show>
       <Show when={local.schedule}>
-        <div class="sui-form-composite__schedule">{local.schedule}</div>
+        <AutoStackItem class="sui-form-composite__schedule">
+          {local.schedule}
+        </AutoStackItem>
       </Show>
-    </div>
+    </AutoStackRow>
   );
 };
 
