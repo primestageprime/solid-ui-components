@@ -328,7 +328,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2)
 - [ ] Selector/SidebarSelector (geo 38)
 - [ ] ExtractionBoard (geo 44)
-- [ ] ThreadGroup (geo 24)
+- [~] ThreadGroup (geo 24) — BLOCKED (needs a primitive expansion). The base rows
+  map cleanly (`__row`→TopClusterRow, `__body`→a grow column, `__header`→
+  WrappedClusterRow, `__bubbles`→TightStack), BUT the `self` variant reverses the
+  axis via `flex-direction: row-reverse` (and `align-items: flex-end`), which
+  Row/Stack's API cannot express. Reordering children in the DOM instead is NOT
+  equivalent — row-reverse flips the VISUAL order while preserving avatar→body
+  DOM/reading order (an a11y property the component relies on). A `reverse` prop on
+  the Row primitive is a real primitive-scale expansion (Peter-gated), so this is a
+  BLOCK, not a self-authorized variant. Batched to team-lead. Left as-is.
 - [x] DataDisplay/DigitRoller (geo 5) · NumberWithUnits (geo 7) · ResultDisplay (geo 13) · StatsTable (geo 3) — DONE.
   **ResultDisplay** migrated: header (space-between) → `SpreadRow`; value+units+badge
   row → `WrappedClusterRow` (gap 12→sm, wrap). **StatsTable** migrated: root flex-
@@ -350,7 +358,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   field-type chips → `TagRow` (gap 4=xs, wrap). The "structural exception" carve-
   out comment is gone. Verified on the census-view showcase: two-column layout,
   sticky detail rail, row-counts + chip flow all pixel-identical.
-- [ ] SortableList (geo 10)
+- [~] SortableList (geo 10) — BLOCKED (policy). The root reorder column has a
+  RUNTIME numeric `gap` prop (`style={{ gap: `${props.gap ?? 8}px` }}`) that the
+  xs/sm token scale can't express without dropping a public prop — the same shape
+  as ButtonGroup's Peter-ruled runtime-gap exemption. Two clean routes need a
+  ruling (batched to team-lead): (a) treat like ButtonGroup → root layout-exempt,
+  keep the runtime gap; or (b) compose the base flex-column via `NarrowStack` and
+  keep only the runtime gap as an allowed *data-driven inline style* (the carve-
+  out ThreadGroup's header cites). The row internals (grip+content, gap 10) WOULD
+  migrate cleanly via `<Surface direction="row" align="center" gap="sm">`. Left
+  as-is pending the ruling.
 - [x] MutableList (geo 13) — DONE. Card row (grip+content) → `ClusterRow`
   (align:center, gap 8=sm exact; keeps width:100%/min-width:0 in CSS); name/detail
   column → existing `ContentStack` (grow column, gap 2→xs); delete button → wrapped
@@ -359,7 +376,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   kept: the name text-button, inline input, detail ellipsis, delete reveal
   (opacity/pointer-events). Verified on the mutable-list showcase: card layout +
   hover-revealed × identical.
-- [ ] Tabs (geo 10)
+- [~] Tabs (geo 10) — NEEDS RULING (batched to team-lead). Borderline between the
+  MSF-`__bar` precedent (a block-level flex row of data-derived option buttons →
+  MIGRATE) and the SegmentedControl precedent (a self-contained data-derived
+  control strip → INTRINSIC). Tabs is a block-level `display:flex` strip of
+  data-derived tab buttons (`<For each={tabs}>`) with an integrated `::after`
+  sliding active-indicator. Unlike MSF-`__bar` it also flips orientation
+  (horizontal Row ↔ vertical Stack) and carries per-variant micro-gaps
+  (default 0 / underline 4 / pill 8) at DEFAULT align:stretch — a clean migration
+  needs a `<Dynamic>` row/stack switch + several single-use no-align micro-gap
+  variants (over-fits start-minimal). Leaning INTRINSIC (SegmentedControl category)
+  but not ticking without a ruling. Left as-is.
 - [ ] RecentStarred (geo 16)
 - [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
 - [ ] DnDHierarchySortBar (geo 8)
