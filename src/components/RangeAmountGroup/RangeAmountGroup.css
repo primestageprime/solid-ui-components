@@ -7,6 +7,14 @@
    above it the negative basis lets flex-grow
    split the row three ways.
    ============================================ */
+/* The holy-albatross responsive container stays INTRINSIC. AutoStackRow /
+   AutoStackItem provide the same mechanic, BUT their albatross basis lives only
+   on `.auto-stack-item` children, whereas RangeAmountGroup applies it to `> *`
+   so its `children` passthrough API (arbitrary triple content, NOT wrapped in
+   AutoStackItem) stays responsive. Composing AutoStackRow would force callers to
+   wrap each child in AutoStackItem — a breaking change. Candidate to migrate if
+   the `children` API is dropped or AutoStackRow gains a raw-child mode.
+   The label|input SLOT column composes TightStack instead (see the .tsx). */
 .sui-range-amount-group {
   display: flex;
   flex-wrap: wrap;
@@ -17,12 +25,6 @@
   flex-grow: 1;
   flex-basis: calc((var(--rag-break, 30rem) - 100%) * 999);
   min-width: 0;
-}
-
-.sui-range-amount-group__slot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sui-space-1, 4px);
 }
 
 .sui-range-amount-group__label {

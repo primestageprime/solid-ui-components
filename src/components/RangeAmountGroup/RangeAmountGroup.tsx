@@ -23,6 +23,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { TightStack } from "../Layout/variants";
 import { ThemedNumberInput } from "../ThemedNumberInput/ThemedNumberInput";
 import "./RangeAmountGroup.css";
 
@@ -80,7 +81,7 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
           // change — position keying keeps the focused input mounted.
           <Index each={local.slots ?? []}>
             {(slot, i) => (
-              <div class="sui-range-amount-group__slot">
+              <TightStack class="sui-range-amount-group__slot">
                 <span class="sui-range-amount-group__label">
                   {slot().label || DEFAULT_LABELS[i] || ""}
                 </span>
@@ -90,7 +91,7 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
                   step={local.step ?? 0.01}
                   onChange={(v: number | undefined) => slot().onChange(v)}
                 />
-              </div>
+              </TightStack>
             )}
           </Index>
         }

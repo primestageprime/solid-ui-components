@@ -590,7 +590,16 @@ tick", not real arrangement migrations. Review each per skill step 4.
   same class as WeekCalendar's load-bearing off-scale grid gap). `.math-formula`'s
   `overflow-x:auto` is the formula's own horizontal scroll (single-widget). A
   self-contained KaTeX rendering widget — ruling 4 + off-scale-load-bearing. As-is.
-- [~ claimed: lp-5] RangeAmountGroup (geo 9)
+- [x] RangeAmountGroup (geo 9) — DONE (partial; team-lead assigned P5 to lp-4).
+  The label|input SLOT column (`display:flex; flex-direction:column; gap:4`) →
+  `TightStack` (gap 4=xs exact, byte-identical). The holy-albatross responsive
+  CONTAINER (`display:flex; flex-wrap:wrap; gap:8` + `> *` albatross basis) stays
+  INTRINSIC: AutoStackRow/AutoStackItem put the albatross basis only on
+  `.auto-stack-item`, but RangeAmountGroup applies it to `> *` to keep its
+  `children` passthrough API (arbitrary triple content) responsive — composing
+  AutoStackRow would force callers to wrap each child in AutoStackItem (breaking
+  change). Candidate to migrate if the `children` API is dropped or AutoStackRow
+  gains a raw-child mode. No showcase exists; change is exact-CSS-equivalent.
 - [~ claimed: lp-5] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
 - [x] TitledTimeRangeHeader (geo 11) — DONE (with an anchor-duality carve-out). Root
   [main | action] → `SpreadRow` (gap 16→sm; keeps padding/bg/border/radius); action
