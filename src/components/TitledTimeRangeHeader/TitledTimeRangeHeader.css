@@ -7,17 +7,19 @@
    library-component imports.
    ============================================ */
 
+/* Root [main | action] spread → SpreadRow (gap 16→sm); only the panel chrome
+   remains. */
 .sui-titled-time-range-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   padding: 12px 16px;
   background: rgba(var(--sui-accent-rgb), 0.05);
   border: 1px solid rgba(var(--sui-accent-rgb), 0.2);
   border-radius: 8px;
 }
 
+/* INTRINSIC: the header's OWN content line (prop-derived title + timestamp +
+   duration + optional badge), rendered as either a <div> OR a semantic <a>
+   link (href). Layout's Row is div-only so it can't express the link case;
+   kept as-is (own-content + anchor duality). */
 .sui-titled-time-range-header__main {
   display: flex;
   align-items: center;
@@ -68,10 +70,6 @@
   font-size: 0.75rem;
   color: var(--sui-text-secondary);
   white-space: nowrap;
-}
-
-.sui-titled-time-range-header__action {
-  flex-shrink: 0;
 }
 
 .sui-titled-time-range-header__link {

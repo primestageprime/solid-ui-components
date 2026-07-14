@@ -11,6 +11,7 @@
 // ============================================
 import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { formatDateTimeRange } from "../DataDisplay/formatDateTimeRange";
+import { ActionSlot, SpreadRow } from "../Layout/variants";
 import "./TitledTimeRangeHeader.css";
 
 // Omit the DOM `title` attribute (typed `string`) so our richer heading prop
@@ -92,7 +93,7 @@ export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (
   );
 
   return (
-    <div class={rootClass()} {...others}>
+    <SpreadRow class={rootClass()} {...others}>
       <Show
         when={local.href}
         fallback={
@@ -107,8 +108,10 @@ export const TitledTimeRangeHeader: Component<TitledTimeRangeHeaderProps> = (
         </a>
       </Show>
       <Show when={local.action}>
-        <div class="sui-titled-time-range-header__action">{local.action}</div>
+        <ActionSlot class="sui-titled-time-range-header__action">
+          {local.action}
+        </ActionSlot>
       </Show>
-    </div>
+    </SpreadRow>
   );
 };

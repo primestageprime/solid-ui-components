@@ -524,7 +524,15 @@ tick", not real arrangement migrations. Review each per skill step 4.
 - [ ] MathFormula (geo 9)
 - [ ] RangeAmountGroup (geo 9)
 - [ ] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
-- [ ] TitledTimeRangeHeader (geo 11)
+- [x] TitledTimeRangeHeader (geo 11) — DONE (with an anchor-duality carve-out). Root
+  [main | action] → `SpreadRow` (gap 16→sm; keeps padding/bg/border/radius); action
+  slot → `ActionSlot` (drops flex-shrink:0). INTRINSIC: `__main` is the header's OWN
+  content line (prop-derived title + timestamp + duration + optional badge) rendered
+  as either a `<div>` OR a semantic `<a>` link (href) — Layout's Row is div-only so
+  it can't express the link case; kept as-is (own-content + anchor duality,
+  ThreadGroup-precedent). `__badge` inline-flex intrinsic. Verified on the
+  titled-time-range-header showcase: all 3 headers (active/ongoing/link+asset)
+  pixel-identical, VIEW action right-aligned.
 - [ ] SprintSelector (geo 8)
 - [ ] Legend (geo 12) — HTML swatch/label rows (chart-adjacent but box-model → migrates)
 - [ ] PivotTreemap/PivotPills (geo 12) — HTML pill rows
