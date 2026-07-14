@@ -271,16 +271,6 @@ export const ScrollXBox: Component<BoxDataProps> = createBox({
   style: { "overflow-x": "auto" },
 });
 
-// ScrollYBox — a Box that scrolls its own VERTICAL overflow (`overflow-y: auto`),
-// with no baked flex. For a height-CAPPED scroll region: pair it with an inline
-// `max-height` (a size, not banned) so a long list/table scrolls within the cap
-// without pushing the page. The non-growing sibling of ScrollFillColumn (which
-// flex-fills its parent's leftover height); use this when the height is an
-// explicit cap rather than a fill.
-export const ScrollYBox: Component<BoxDataProps> = createBox({
-  style: { "overflow-y": "auto" },
-});
-
 // ClipBox — a Box that clips overflowing content (`overflow: hidden`). For
 // masking/clipping visuals: a max-height collapse animation, a progress-bar
 // fill mask, a rounded avatar. NOT for scroll regions (use ScrollColumn/

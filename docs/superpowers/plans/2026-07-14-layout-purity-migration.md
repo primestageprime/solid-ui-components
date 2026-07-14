@@ -325,29 +325,27 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P4 — big composites
 
-- [x] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2) — BaseTable
-  fill-chain DONE (block LIFTED via the approved flush variants). The earlier "conditional
-  multi-mode fill-chain" block is resolved: the frame + scroll region are now composed via a
-  3-way `<Dynamic>` keyed on props — root = `fill` ? `ClipFillColumnFlush` : non-sticky ?
-  `ClipBox` : plain `div` (sticky mode leaves overflow visible so the sticky <thead> isn't
-  trapped); scroll = `fill` ? `ScrollFillColumn` : `maxHeight` ? new `ScrollYBox` (+ inline
-  max-height *size*) : plain `div`. `tableContainerStyle` now returns only `max-height` (the
-  `overflow-y` is composed). Table.css keeps only the frame's non-geometry chrome (bg/border/
-  clip-path corners) + `.hud-table--fill { height/min-height }` (sizes) + the sticky-thead
-  `position:sticky` rule. One new variant: `ScrollYBox`. Verified on the base-table showcase
-  across EVERY mode — natural-height, striped+scroll (maxHeight cap → ScrollYBox scrollbar),
-  compact+sticky+scroll (header pins), fill DataTable (ClipFillColumnFlush + ScrollFillColumn,
-  scrolls internally), empty state, grouped headers, curried variants — all pixel-identical;
-  + CensusView's BaseTables unaffected.
+- [x] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2) — DONE-with-
+  EXEMPTION (team-lead ruling). **BaseTable `.hud-table` fill-chain = LAYOUT-EXEMPT** (deprecation-
+  style note). Rationale (two standing precedents at once): (1) the page-structure-family exemption
+  — a prop-conditional full-height scroll chain (`fill`/`stickyHeader`/`maxHeight` → clip flex
+  column + flex-grow scroll child / overflow toggle / capped scroll) IS scroll *plumbing*, the
+  thing the exempt layout family exists to own; (2) the ButtonGroup pattern — this legacy geometry
+  stays as-is; `FillColumnFlush` / `ClipFillColumnFlush` (+ a `ScrollYBox`-style vertical-cap box
+  if needed) are THE PURE PATH for any FUTURE table-like component, and a `<Dynamic>`-root
+  restructure of BaseTable remains a candidate ONLY IF the Table family is ever rewritten (the
+  regression surface on the library's MOST-USED component isn't worth purity today). NOTE: a
+  working 3-way-Dynamic restructure was built + verified across every mode (base-table showcase +
+  27 tests) but REVERTED per this ruling — kept out of the flagship's shipping path deliberately.
   **CellRenderers (geo 14) + GapCell (geo 2): AUDITED INTRINSIC** — every cell renderer
-  (`.cell-status` dot+label, `.cell-datetime`, `.cell-checkbox`, `.sui-gap-cell__meta` %+bar,
+  (`.cell-status`, `.cell-datetime`, `.cell-checkbox`, `.sui-gap-cell__meta` %+bar,
   `.sui-gap-cell__bar` fill-mask) is a self-contained DATA-DERIVED cell-content widget
-  (inline-level / ruling-4 / single-widget bar mask). `.hud-table__header-content` (label +
-  own sort glyph) is intrinsic single-widget header chrome; `.hud-table__actions-content` is
-  a hover-reveal action cap (ActionListItem-precedent intrinsic). REMAINING (sibling composites
-  sharing Table.css, NOT BaseTable): FilterableTable (`.hud-table-quickfilter*`), SelectableTable
-  (`.hud-selectable-table`/`.hud-selection-action-bar*`), DataTableContainer — each a clean
-  NarrowStack/SpreadRow/ClusterRow follow-up (same fill pattern, now unblocked by the flush set).
+  (inline-level / ruling-4 / single-widget bar mask). `.hud-table__header-content` (label + own
+  sort glyph) is intrinsic single-widget header chrome; `.hud-table__actions-content` is a
+  hover-reveal action cap (ActionListItem-precedent intrinsic). REMAINING sibling composites
+  sharing Table.css (NOT BaseTable, follow-up): FilterableTable / SelectableTable /
+  DataTableContainer own the same fill/toolbar pattern — clean NarrowStack/SpreadRow/ClusterRow
+  work, but by the same ruling their fill-chain roots are exempt-as-layout too.
 - [x] Selector/SidebarSelector (geo 38) — DONE. Single-mode full-height flex chain
   composed end-to-end: root → new `FillColumnFlush` (flex:1;min-height:0;no gap);
   `__layout` → `PaneRow` (gap 16→sm; fill row); `__sidebar` → new `NoShrinkScrollBox`
