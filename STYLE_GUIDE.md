@@ -146,9 +146,17 @@ Four situations that have no obvious Layout home were adjudicated:
 Forward + opportunistic: new components must comply from the start; existing
 ones migrate via the `layout-purity-refactor` skill
 (`.claude/skills/layout-purity-refactor/SKILL.md`), one component per commit,
-each verified visually identical before moving on. The running inventory and
-status live in
-`docs/superpowers/plans/2026-07-14-layout-purity-migration.md`.
+each verified visually identical before moving on.
+
+**Status: the initial migration is COMPLETE (2026-07-14).** Every component in
+the inventory reached a terminal disposition — DONE (geometry composed from
+Layout variants), AUDITED-INTRINSIC (self-contained widget arranging its own
+prop/data-derived parts), or EXEMPT-AS-LAYOUT (the Layout family + genuine
+full-height scroll plumbing + genuine 2-D grid matrices). The full inventory,
+the vocabulary the migration added, and the standing keep-vs-migrate
+discriminators live in
+`docs/superpowers/plans/2026-07-14-layout-purity-migration.md` › *Migration
+complete*. New components still comply from the start.
 
 ## Prop Architecture: Overrides vs Data
 
