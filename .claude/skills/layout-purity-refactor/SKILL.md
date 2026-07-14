@@ -85,9 +85,13 @@ migrate-heavy component write this test in `src/components/<Dir>/<Name>.layout.t
 - **Pseudo-element layout chrome** (`::before`/`::after` with `flex`/`gap`):
   replace with **real elements** (e.g. `GrowBox` rule lines), one at a time,
   verify visually identical, keep only if it holds; else BLOCKED-with-reason.
-- **Off-scale gaps: snap.** `6px` → nearest step, `12px` → `md`. A 2–4px shift
-  is accepted — note the snap in the commit message. Never expand the Stack/Row
-  scale for this.
+- **Off-scale gaps: snap EVERYTHING.** The Stack/Row scale is `xs(4)`/`sm(8)`
+  ONLY (Peter, superseding the earlier ±2–4px tolerance): `6px`→sm, `12px`→sm,
+  `16px`→sm — even where visible. Note each snap in the commit message so
+  visual diffs are attributable. Never expand the scale.
+  - EXCEPTION (Peter-precedent 75a5d33): a **data-derived calendar/heatmap
+    grid whose off-scale gap is load-bearing** (e.g. a 1px cell seam that xs=4
+    would visibly widen) stays INTRINSIC rather than forcing the scale.
 - **Missing 2-D / responsive layout: compose the primitive.** `AutoStackRow` +
   `AutoStackItem` (responsive side-by-side→stacked, `breakWidth` prop) and
   `Grid` / `LabelValueGrid` (`minmax(label,max-content) 1fr`) now exist in
@@ -101,6 +105,24 @@ migrate-heavy component write this test in `src/components/<Dir>/<Name>.layout.t
 - **Intrinsic element styling** (a self-contained pill/icon-button centering its
   OWN single label with `display:inline-flex; align-items:center`) → MAY STAY.
   Note it in the commit/plan; don't force an absurd one-child `<Row>` wrapper.
+
+Accumulated classification discriminators (from the 2026-07-14 migration —
+apply before asking):
+
+- **Inline-level control widget** (`inline-flex; width:fit-content` — the
+  control must shrink-wrap; SegmentedControl, SegmentedInput, DatePicker
+  trigger) → INTRINSIC almost by construction: composing a block-level Row
+  would make it full-width.
+- **Data-derived cells/options/segments** (`<For each={data}>` rendering the
+  control's own option rows, chips, bar segments, menu items) → INTRINSIC
+  (ruling 4). Consumer-CHILD arrangement migrates; data-content doesn't.
+- **Leaf control vs field composition**: a leaf control (Checkbox, Toggle)
+  is intrinsic; a FIELD laying out [label | control | hint] regions
+  (CheckboxField, ThemedInput group) MIGRATES.
+- **Third-party-driven parts (Kobalte etc.)** → CARVE-OUT: framework parts
+  you can only pass `class` to (Combobox Control/Listbox/Content, popover
+  anchoring) keep their geometry; compose ONLY the plain-div regions the
+  component itself owns.
 
 ### 5. Gates
 
