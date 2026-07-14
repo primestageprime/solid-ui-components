@@ -20,6 +20,8 @@ import {
   type TimelineBarDatum,
   type Pin,
   type Descriptor,
+  slotId,
+  type Id,
 } from "../../src/components/Chart";
 
 const STRIP_HEIGHT = 10;
@@ -60,7 +62,7 @@ export const DotchartShowcase: Component = () => {
 
   const segments: HighlightSegment[] = [
     {
-      id: "s1",
+      id: slotId("s1"),
       start: t0 + 1 * 3600_000,
       end: t0 + 3 * 3600_000,
       color: "var(--sui-accent)",
@@ -68,7 +70,7 @@ export const DotchartShowcase: Component = () => {
   ];
   const scheduledBars: TimelineBarDatum[] = [
     {
-      id: "sched-1",
+      id: slotId("sched-1"),
       start: t0 + 0.5 * 3600_000,
       end: t0 + 2.5 * 3600_000,
       lane: "scheduled",
@@ -76,7 +78,7 @@ export const DotchartShowcase: Component = () => {
       state: "OK",
     },
     {
-      id: "sched-2",
+      id: slotId("sched-2"),
       start: t0 + 5 * 3600_000,
       end: t0 + 6.5 * 3600_000,
       lane: "scheduled",
@@ -86,7 +88,7 @@ export const DotchartShowcase: Component = () => {
   ];
   const detectedBars: TimelineBarDatum[] = [
     {
-      id: "det-1",
+      id: slotId("det-1"),
       start: t0 + 3 * 3600_000,
       end: t0 + 4 * 3600_000,
       lane: "detected",
@@ -94,7 +96,7 @@ export const DotchartShowcase: Component = () => {
       state: "WARNING",
     },
     {
-      id: "det-2",
+      id: slotId("det-2"),
       start: t0 + 6 * 3600_000,
       end: t0 + 7 * 3600_000,
       lane: "detected",
@@ -103,9 +105,9 @@ export const DotchartShowcase: Component = () => {
     },
   ];
   const [pins, setPins] = createSignal<Pin[]>([
-    { id: "p1", x: t0 + 1.5 * 3600_000, descriptor: warningPin },
+    { id: slotId("p1"), x: t0 + 1.5 * 3600_000, descriptor: warningPin },
   ]);
-  const [selectedPin, setSelectedPin] = createSignal<string | null>(null);
+  const [selectedPin, setSelectedPin] = createSignal<Id | null>(null);
   const [currentX, setCurrentX] = createSignal(t0 + 5 * 3600_000);
   const currentPoint = createMemo(() => ({
     x: currentX(),
@@ -123,7 +125,7 @@ export const DotchartShowcase: Component = () => {
   const hitDomainMax = createMemo(() => committedRange()?.end === t1);
   const hitDomainMin = createMemo(() => committedRange()?.start === t0);
 
-  const [hoveredBarId, setHoveredBarId] = createSignal<string | number | null>(
+  const [hoveredBarId, setHoveredBarId] = createSignal<Id | null>(
     null,
   );
   const [highlightedState, setHighlightedState] = createSignal<string | null>(

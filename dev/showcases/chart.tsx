@@ -104,7 +104,8 @@ export const ChartShowcase: Component = () => {
             <XAxis tickCount={6} tickFormat={(v) => `t${v}`} />
             <AreaSeries data={live()} x={(d) => d.t} y={(d) => d.v} />
             <ReferenceLine
-              y={liveAvg()}
+              orientation="horizontal"
+              value={liveAvg()}
               label={`avg ${liveAvg().toFixed(1)}`}
             />
             <LineSeries data={live()} x={(d) => d.t} y={(d) => d.v} />
@@ -144,7 +145,8 @@ export const ChartShowcase: Component = () => {
               fillOpacity={0.18}
             />
             <ReferenceLine
-              y={avg}
+              orientation="horizontal"
+              value={avg}
               label={`avg ${avg.toFixed(1)}`}
               strokeDasharray="3 3"
             />
@@ -267,7 +269,12 @@ export const ChartShowcase: Component = () => {
                   tickValues={burndown.map((_, i) => i)}
                   tickFormat={(v) => burndown[Math.round(v)]?.day ?? ""}
                 />
-                <ReferenceLine y={0} stroke="currentColor" strokeDasharray="" />
+                <ReferenceLine
+                  orientation="horizontal"
+                  value={0}
+                  stroke="currentColor"
+                  strokeDasharray=""
+                />
                 <BarSeries
                   data={burndown}
                   x={(_d, i) => i}

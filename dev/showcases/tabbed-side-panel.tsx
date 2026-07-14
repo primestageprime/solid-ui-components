@@ -1,11 +1,54 @@
 import { type Component, createMemo, createSignal } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import {
   TabbedSidePanel,
-  RightDetailTabbedPanel,
-  LeftNavTabbedPanel,
+  createTabbedSidePanel,
   type ContentPaddingValue,
   type TabbedPanelTab,
+  type TabbedSidePanelDataProps,
 } from "../../src/components/TabbedSidePanel";
+
+// This showcase demonstrates the contentPadding axis at runtime. contentPadding
+// is a baked override, so the matrix lives in module-top factory instances and
+// the live <select> picks one via <Dynamic> — no visual config at the call site.
+type PaddedPanels = Record<
+  ContentPaddingValue,
+  Component<TabbedSidePanelDataProps>
+>;
+const RIGHT_PANELS: PaddedPanels = {
+  none: createTabbedSidePanel({
+    side: "right",
+    tabsVariant: "default",
+    contentPadding: "none",
+  }),
+  sm: createTabbedSidePanel({
+    side: "right",
+    tabsVariant: "default",
+    contentPadding: "sm",
+  }),
+  md: createTabbedSidePanel({
+    side: "right",
+    tabsVariant: "default",
+    contentPadding: "md",
+  }),
+};
+const LEFT_PANELS: PaddedPanels = {
+  none: createTabbedSidePanel({
+    side: "left",
+    tabsVariant: "default",
+    contentPadding: "none",
+  }),
+  sm: createTabbedSidePanel({
+    side: "left",
+    tabsVariant: "default",
+    contentPadding: "sm",
+  }),
+  md: createTabbedSidePanel({
+    side: "left",
+    tabsVariant: "default",
+    contentPadding: "md",
+  }),
+};
 
 const placeholderBody = (label: string) => () => (
   <div
@@ -136,13 +179,13 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
           border: "1px dashed var(--sui-border)",
         }}
       >
-        <RightDetailTabbedPanel
+        <Dynamic
+          component={RIGHT_PANELS[props.padding()]}
           tabs={visibleTabs()}
           activeTab={active()}
           onTabChange={setActive}
           isOpen={open()}
           onOpenChange={setOpen}
-          contentPadding={props.padding()}
         />
       </div>
     </div>
@@ -192,13 +235,13 @@ export const TabbedSidePanelShowcase: Component = () => {
           title="RightDetailTabbedPanel"
           padding={padding}
           render={(p) => (
-            <RightDetailTabbedPanel
+            <Dynamic
+              component={RIGHT_PANELS[p.padding()]}
               tabs={p.tabs}
               activeTab={p.active()}
               onTabChange={p.setActive}
               isOpen={p.open()}
               onOpenChange={p.setOpen}
-              contentPadding={p.padding()}
             />
           )}
         />
@@ -206,13 +249,13 @@ export const TabbedSidePanelShowcase: Component = () => {
           title="LeftNavTabbedPanel"
           padding={padding}
           render={(p) => (
-            <LeftNavTabbedPanel
+            <Dynamic
+              component={LEFT_PANELS[p.padding()]}
               tabs={p.tabs}
               activeTab={p.active()}
               onTabChange={p.setActive}
               isOpen={p.open()}
               onOpenChange={p.setOpen}
-              contentPadding={p.padding()}
             />
           )}
         />

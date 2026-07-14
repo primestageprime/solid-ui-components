@@ -9,6 +9,8 @@ export const IconShowcase: Component = () => {
     time: "Time",
     actions: "Actions",
     ui: "UI",
+    auth: "Auth",
+    cache: "Cache",
   };
 
   return (

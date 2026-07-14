@@ -139,7 +139,7 @@ export const ToastShowcase: Component = () => {
           Each button calls{" "}
           <code>{`showToast({ variant, title, description })`}</code>.
         </div>
-        <Row gap="sm" wrap="wrap">
+        <Row gap="sm" wrap>
           <PrimaryButton onClick={showInfo}>Info</PrimaryButton>
           <PrimaryButton onClick={showSuccess}>Success</PrimaryButton>
           <PrimaryButton onClick={showWarning}>Warning</PrimaryButton>
