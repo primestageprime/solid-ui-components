@@ -8,6 +8,7 @@
 // Factory: createLabeledDivider().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { ClusterRow, GrowBox } from "../Layout/variants";
 import "./LabeledDivider.css";
 
 export interface LabeledDividerProps
@@ -28,14 +29,20 @@ export const LabeledDivider: Component<LabeledDividerProps> = (props) => {
   const [local, others] = splitProps(props, ["label", "class", "aria-label"]);
 
   return (
+    // The row + flanking rule lines are composed from Layout: ClusterRow lays
+    // out the center-aligned row (8px gap), and two GrowBox rule lines fill the
+    // space on either side of the label (replacing the former ::before/::after
+    // flex:1 pseudo-elements per Peter ruling 1).
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: decorative titled divider — aria-label gives AT a name when `label` is non-text JSX; role="separator" is rejected because Biome treats every separator as an adjustable window-splitter (forcing focus + aria-valuenow), which this non-interactive divider is not.
-    <div
+    <ClusterRow
       class={clsx("sui-labeled-divider", local.class)}
       aria-label={local["aria-label"] ?? labelAsString(local.label)}
       {...others}
     >
+      <GrowBox class="sui-labeled-divider__rule" aria-hidden="true" />
       <span class="sui-labeled-divider__label">{local.label}</span>
-    </div>
+      <GrowBox class="sui-labeled-divider__rule" aria-hidden="true" />
+    </ClusterRow>
   );
 };
 

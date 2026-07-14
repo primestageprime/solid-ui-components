@@ -82,12 +82,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   space-between). BEM hook classes retained on the Layout wrappers.
   `overflow:hidden` on plan/progress/bar-track now composed via the ClipBox
   Layout variant (Peter ruling 4 — no intrinsic carve-out). Retrofit landed.
-- [ ] BLOCKED — LabeledDivider (geo 4): the two flanking rule lines are
-  `::before/::after { flex:1; height:1px }` pseudo-elements — no JSX element to
-  wrap in a Layout, and `flex:1` on a pseudo-element is banned-in-CSS geometry
-  with no Layout analogue. Faithful fix would need replacing the pseudo lines
-  with real `<Box grow>` divider elements (DOM + visual change → redesign, not a
-  byte-faithful migration). Needs a decision.
+- [x] LabeledDivider (geo 4) — DONE (ruling 1). `::before/::after flex:1` lines
+  replaced with two real `GrowBox` rule elements; outer flex row → ClusterRow
+  (gap 8=sm exact). Render verified identical (same 3 flex items, 1px lines,
+  8px gaps). Public props byte-identical.
 - [x] ProductGridCard (geo 4) — DONE. Centered column → new `CenteredColumn`
   Layout variant (align:center, sm gap, no justify). Gap snapped 6px→8px (sm)
   per ruling 2. Card visuals + data-state attrs + click/keyboard semantics kept.

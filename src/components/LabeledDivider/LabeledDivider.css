@@ -1,20 +1,17 @@
 /* ============================================
- * LabeledDivider — a horizontal rule with a
- * centered label. Lines on either side via
- * ::before/::after pseudo-elements.
+ * LabeledDivider — a horizontal rule with a centered label. The row and the
+ * flanking rule lines are composed from Layout (ClusterRow + two GrowBox rule
+ * lines); this file owns only intrinsic styling (padding, the 1px line paint,
+ * label typography).
  * ============================================ */
 
 .sui-labeled-divider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 8px 0 4px;
 }
 
-.sui-labeled-divider::before,
-.sui-labeled-divider::after {
-  content: "";
-  flex: 1;
+/* Each flanking rule line is a real GrowBox element (Layout) that grows to fill
+   the space beside the label; this rule paints it as a 1px line. */
+.sui-labeled-divider__rule {
   height: 1px;
   background: var(--sui-border);
 }
