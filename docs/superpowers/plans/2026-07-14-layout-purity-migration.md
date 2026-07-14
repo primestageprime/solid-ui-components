@@ -116,7 +116,8 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Panel (geo 17)
 - [ ] Surface (geo 11)
 - [ ] ActionListItem (geo 20)
-- [ ] ActionList (geo 6)
+- [x] ActionList (geo 6) — DONE. Wrapper column → NarrowStack, selection bar →
+  ClusterRow; bar's accent styling + margin-right:auto spacer kept. Props unchanged.
 - [x] ButtonGroup (geo 7) — DONE. Marked layout-exempt (DEPRECATED-as-such) in
   the header + prop docs. Pure-path curried variants ALREADY existed
   (`ButtonGroup`/`VerticalButtonGroup`/`BorderedButtonGroup` in variants.ts) — no

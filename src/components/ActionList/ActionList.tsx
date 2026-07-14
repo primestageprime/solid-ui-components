@@ -52,6 +52,7 @@ import {
   onMount,
   untrack,
 } from "solid-js";
+import { NarrowStack, ClusterRow } from "../Layout/variants";
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
 import { HotkeyButton, isEditableTarget } from "../HotkeyButton";
@@ -259,9 +260,13 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   };
 
   return (
-    <div class="sui-action-list">
+    <NarrowStack class="sui-action-list">
       <Show when={selectionEnabled() && selection().length > 0}>
-        <div class="sui-action-list__bar" role="toolbar" aria-label="Selection actions">
+        <ClusterRow
+          class="sui-action-list__bar"
+          role="toolbar"
+          aria-label="Selection actions"
+        >
           <span class="sui-action-list__bar-count">
             {selection().length} selected
           </span>
@@ -277,7 +282,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
               </HotkeyButton>
             )}
           </For>
-        </div>
+        </ClusterRow>
       </Show>
       <SortableList
         items={props.items}
@@ -318,7 +323,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
           />
         )}
       />
-    </div>
+    </NarrowStack>
   );
 };
 
