@@ -16,7 +16,7 @@
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, For, Show, createMemo, createSignal } from "solid-js";
+import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import { SectionTitle } from "../../../src/components/Text";
 import { SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
@@ -68,6 +68,22 @@ const SEED: TriageItem[] = [
   { id: "t7", name: "change sf6 max threshold for jtf", prompt: "Bump the sf6 ceiling — current max trips false alarms on Vessel Call 12.", status: "TODO" },
   { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", blockedBy: "Ryan — email the vessel-call range", blockedUntil: NOW + 26 * HOUR },
 ];
+
+/** De-emphasized count lozenge that briefly lights up when the value changes
+ * (reuses TagPill's active state as the flash). */
+const FlashCount: Component<{ count: number }> = (props) => {
+  const [flash, setFlash] = createSignal(false);
+  let prev: number | undefined;
+  createEffect(() => {
+    const n = props.count;
+    if (prev !== undefined && n !== prev) {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 700);
+    }
+    prev = n;
+  });
+  return <TagPill tag={{ label: String(props.count), active: flash() }} />;
+};
 
 const Placeholder: Component<{ label: string; hint: string }> = (props) => (
   <InfoPanel title={props.label}>
@@ -129,8 +145,8 @@ const CategoricalTriageBench: Component = () => {
               {(cat) => (
                 <div>
                   <SpreadRow gap="sm">
-                    <span class="text-meta">{cat.label}</span>
-                    <TagPill tag={{ label: String(cat.items.length), active: cat.items.length > 0 }} />
+                    <strong>{cat.label}</strong>
+                    <FlashCount count={cat.items.length} />
                   </SpreadRow>
                   <Show when={cat.mode === "children"}>
                     <TightStack>

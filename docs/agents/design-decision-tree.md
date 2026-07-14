@@ -165,8 +165,10 @@ NEXT CATEGORY                     [count]     ← count-only mode
 - The "eligible" remainder does NOT belong in this rail — it IS the main
   queue; surface its count in the top bar instead.
 - **Counts render as the thematic number lozenge** — `TagPill` plain-label
-  form (`tag={{ label: String(n), active: n > 0 }}`), not the rectangular
-  CountChip (Peter, 2026-07-14).
+  form — but DE-emphasized: the CATEGORY label carries the visual weight
+  (strong), the count stays muted. The count briefly lights up (TagPill
+  `active` as a ~700ms flash) when its VALUE CHANGES — animation marks
+  change, not steady-state importance (Peter, 2026-07-14).
 - **Child lines follow the card canon — [title (data)]**: title left (the
   focus), the category's datum trailing right — person-blocked → glyph + the
   FIRST WORD of the blocked-by string (convention: blocked_by starts with
