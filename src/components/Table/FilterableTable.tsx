@@ -6,7 +6,9 @@
 // Filter input + table passthrough.
 // ============================================
 import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { BaseTable } from "./BaseTable";
+import { FillColumn, NarrowStack, SpreadRow } from "../Layout/variants";
 import type { BaseTableProps, TableRow } from "./types";
 
 export interface FilterableTableProps<T> extends BaseTableProps<T> {
@@ -83,9 +85,15 @@ export function FilterableTable<T extends TableRow>(
       ? "hud-table-quickfilter hud-table-quickfilter--fill"
       : "hud-table-quickfilter";
 
+  // Wrapper column composed via Layout (layout-purity): `fill` → FillColumn
+  // (flex-fills so the BaseTable child has a concrete height to scroll within,
+  // toolbar stays fixed); otherwise a plain NarrowStack. Toolbar → SpreadRow.
   return (
-    <div class={wrapperClass()}>
-      <div class="hud-table-quickfilter__toolbar">
+    <Dynamic
+      component={props.fill ? FillColumn : NarrowStack}
+      class={wrapperClass()}
+    >
+      <SpreadRow class="hud-table-quickfilter__toolbar">
         <input
           type="text"
           class="hud-table-quickfilter__input"
@@ -98,8 +106,8 @@ export function FilterableTable<T extends TableRow>(
           {filter() ? `${formatCount(filteredData().length)} of ` : ""}
           {formatCount(props.data.length)}
         </span>
-      </div>
+      </SpreadRow>
       <BaseTable {...tableProps} data={filteredData()} />
-    </div>
+    </Dynamic>
   );
 }

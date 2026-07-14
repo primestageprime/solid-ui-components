@@ -353,7 +353,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 ##### Table-family fill/toolbar follow-ups (lp-5, exemption superseded)
 
-- [~ claimed: lp-5] Table/FilterableTable (`.hud-table-quickfilter*`)
+- [x] Table/FilterableTable (`.hud-table-quickfilter*`) — DONE (lp-5). Wrapper
+  column composed via `<Dynamic>`: `fill` → `FillColumn` (flex-fills so the
+  `hud-table--fill` BaseTable child has a concrete height to scroll within;
+  height:100% *size* kept in CSS) : `NarrowStack` (gap 12→sm). Toolbar → `SpreadRow`
+  (align:center, justify:between; padding/bg/border/clip-path chrome kept). The
+  `--fill` toolbar `flex:0 0 auto` was dropped as practically inert — the flex:1
+  (min-height:0) BaseTable absorbs all column growth, so the toolbar keeps its
+  content height without an explicit no-shrink. Verified on the quick-filter
+  showcase: search input left / count right in the clipped toolbar, table below,
+  filtering intact (logic untouched).
 - [x] Table/SelectableTable (`.hud-selectable-table` / `.hud-selection-action-bar*`)
   — DONE (lp-5). Root column → `Column` (bare, gap:0 exact); selection action bar
   → `ClusterRow` (align:center, gap 12→sm; gradient/clip-path/::before chrome kept);
