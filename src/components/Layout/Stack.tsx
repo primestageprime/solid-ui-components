@@ -6,6 +6,7 @@
 // with gap/align/justify. Factory: createStack().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { mergeStyle } from "./mergeStyle";
 import "./Layout.css";
 
 export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -56,5 +57,11 @@ export type StackDataProps = Omit<StackProps, keyof StackOverrides>;
 export function createStack(
   defaults: Partial<Omit<StackProps, "children">>,
 ): Component<StackDataProps> {
-  return (props) => <Stack {...mergeProps(defaults, props)} />;
+  // `style` is merged (not clobbered) — see mergeStyle / createBox.
+  return (props) => (
+    <Stack
+      {...mergeProps(defaults, props)}
+      style={mergeStyle(defaults.style, props.style)}
+    />
+  );
 }

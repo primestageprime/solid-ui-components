@@ -6,6 +6,7 @@
 // with gap/align/justify/wrap. Factory: createRow().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { mergeStyle } from "./mergeStyle";
 import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -59,5 +60,11 @@ export type RowDataProps = Omit<RowProps, keyof RowOverrides>;
 export function createRow(
   defaults: Partial<Omit<RowProps, "children">>,
 ): Component<RowDataProps> {
-  return (props) => <Row {...mergeProps(defaults, props)} />;
+  // `style` is merged (not clobbered) — see mergeStyle / createBox.
+  return (props) => (
+    <Row
+      {...mergeProps(defaults, props)}
+      style={mergeStyle(defaults.style, props.style)}
+    />
+  );
 }
