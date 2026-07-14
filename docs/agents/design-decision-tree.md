@@ -100,3 +100,11 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   bench view; resizability not yet requested → **ThreePanelLayout**
   (topBar/left/center/right slots). Chosen over ResizableContainer split,
   Page+Stack, TabbedSidePanel. Also the dside Focus anatomy — consistency.
+- **2026-07-14 · workshop:categorical-triage · left list (queue rail)** —
+  statuses: multi (TODO/DOING/DONE + blockage categories; the flow is
+  resolve-obvious-fast, revisit the complex set) → **ActionList**. Filtering:
+  none (the design's /triage is a one-at-a-time queue; Todo keeps the filter
+  bar). Sort: derived shared StatementOrder priority — defer is the "Later"
+  action, not drag, so no reorder affordance in the rail. Rail sizing:
+  **fixed width** (Peter) — rail rows are previews and the detail panel
+  shows the full title; matches dside Focus's fixed team rail.
