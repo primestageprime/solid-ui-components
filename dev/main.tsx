@@ -53,6 +53,10 @@ import { InputsShowcase } from "./showcases/inputs";
 import { MathFormulaShowcase } from "./showcases/math-formula";
 import { NavItemShowcase } from "./showcases/nav-item";
 import { ProgressBarShowcase } from "./showcases/progress-bar";
+import { AsyncProgressShowcase } from "./showcases/async-progress";
+import { MarkdownEditorShowcase } from "./showcases/markdown-editor";
+import { RangeAmountGroupShowcase } from "./showcases/range-amount-group";
+import { InlineChartErrorOverlayShowcase } from "./showcases/inline-chart-error-overlay";
 import { ScrollRegionShowcase } from "./showcases/scroll-region";
 import { SectionShowcase } from "./showcases/section";
 import { SelectShowcase } from "./showcases/select";
@@ -359,6 +363,30 @@ const items: Item[] = [
     label: "ProgressBar",
     component: ProgressBarShowcase,
     tags: ["depth:0", "indicator"],
+  },
+  {
+    id: "async-progress",
+    label: "AsyncProgress",
+    component: AsyncProgressShowcase,
+    tags: ["depth:1", "indicator"],
+  },
+  {
+    id: "markdown-editor",
+    label: "MarkdownEditor",
+    component: MarkdownEditorShowcase,
+    tags: ["depth:2", "data"],
+  },
+  {
+    id: "range-amount-group",
+    label: "RangeAmountGroup",
+    component: RangeAmountGroupShowcase,
+    tags: ["depth:2", "input"],
+  },
+  {
+    id: "inline-chart-error-overlay",
+    label: "InlineChartErrorOverlay",
+    component: InlineChartErrorOverlayShowcase,
+    tags: ["depth:1", "feedback"],
   },
   {
     id: "scroll-region",
