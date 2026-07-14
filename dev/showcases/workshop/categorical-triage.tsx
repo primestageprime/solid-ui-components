@@ -16,7 +16,7 @@
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Component, For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
 import { ClusterRow, FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
@@ -28,6 +28,8 @@ import { Icon, type IconName } from "../../../src/components/Icon";
 import { HotkeyButton, isEditableTarget } from "../../../src/components/HotkeyButton";
 import { QuickFilter } from "../../../src/components/QuickFilter";
 import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
+import { ThemedInput } from "../../../src/components/Inputs";
+import { DatePicker } from "../../../src/components/DatePicker";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -223,41 +225,69 @@ const CategoricalTriageBench: Component = () => {
   ];
   const isCategorized = (it: TriageItem) => RESTORE.some((a) => a.when(it));
 
-  // Dependency picker mode — [d]epends opens it instead of patching directly.
-  // Pending picks accumulate above the fold; [f]inish creates the association
-  // (which implicitly categorizes the item and moves it to the right rail).
-  const [pickingFor, setPickingFor] = createSignal<string | null>(null);
-  const [pending, setPending] = createSignal<string[]>([]);
-  const pickingTarget = createMemo(() => items().find((it) => it.id === pickingFor()));
+  // Center INPUT MODES — block/snooze/depends open an input surface instead
+  // of patching directly (claim and later stay one-keystroke). Nothing
+  // mutates until the mode commits; committing categorizes the item (it
+  // moves to the right rail) and advances selection.
+  const [mode, setMode] = createSignal<{ kind: "deps" | "block" | "snooze"; id: string } | null>(null);
+  const modeTarget = createMemo(() => {
+    const m = mode();
+    return m ? items().find((it) => it.id === m.id) : undefined;
+  });
+  const [pending, setPending] = createSignal<string[]>([]); // deps picks
+  const [blockText, setBlockText] = createSignal(""); // block reason
+  const [customDate, setCustomDate] = createSignal(""); // snooze ISO date
   const candidates = createMemo(() => {
-    const id = pickingFor();
+    const id = mode()?.id;
     const picked = new Set(pending());
     return items().filter((it) => it.id !== id && !picked.has(it.name));
   });
-  const finishPicking = () => {
-    const id = pickingFor();
-    const deps = pending();
-    if (id && deps.length) {
-      const q = unresolved();
-      const i = q.findIndex((it) => it.id === id);
-      const next = q[i + 1] ?? q[i - 1];
-      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, deps } : it)));
-      if (selectedId() === id && next) setSelectedId(next.id);
-    }
-    setPickingFor(null);
-    setPending([]);
+  /** Commit a categorization for the mode's target: patch, advance, exit. */
+  const commitMode = (patch: Partial<TriageItem>) => {
+    const id = mode()?.id;
+    if (!id) return;
+    const q = unresolved();
+    const i = q.findIndex((it) => it.id === id);
+    const next = q[i + 1] ?? q[i - 1];
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+    if (selectedId() === id && next) setSelectedId(next.id);
+    setMode(null);
+  };
+  const finishDeps = () => (pending().length ? commitMode({ deps: pending() }) : setMode(null));
+  const finishBlock = () => {
+    const reason = blockText().trim();
+    if (reason) commitMode({ blockedBy: reason });
+  };
+  const snoozeDays = (days: number) => commitMode({ blockedUntil: NOW + days * 24 * HOUR });
+  const finishSnooze = () => {
+    const iso = customDate();
+    if (iso) commitMode({ blockedUntil: new Date(`${iso}T09:00`).getTime() });
   };
 
   const CATEGORIZE = [
     { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
-    { hotkey: "b", label: "block", apply: () => patchSelected({ blockedBy: "Ryan — follow up" }) },
-    { hotkey: "s", label: "snooze", apply: () => patchSelected({ blockedUntil: NOW + 26 * HOUR }) },
+    {
+      hotkey: "b",
+      label: "block",
+      apply: () => {
+        setBlockText("");
+        setMode({ kind: "block", id: selectedId() });
+      },
+    },
+    {
+      hotkey: "s",
+      label: "snooze",
+      apply: () => {
+        setCustomDate("");
+        setMode({ kind: "snooze", id: selectedId() });
+      },
+    },
     {
       hotkey: "d",
       label: "depends",
       apply: () => {
         setPending(selected()?.deps ?? []);
-        setPickingFor(selectedId());
+        setMode({ kind: "deps", id: selectedId() });
       },
     },
     {
@@ -319,16 +349,75 @@ const CategoricalTriageBench: Component = () => {
         }
         centerPanel={
           <Show
-            when={!pickingTarget()}
+            when={!modeTarget()}
             fallback={
-              // Dependency picker: pending picks above the fold (removable),
-              // filterable full list below, [f]inish pinned at the bottom.
               <FillColumn>
                 <SpreadRow>
-                  <TextLabel>{pickingTarget()!.name}</TextLabel>
-                  <TextSublabel>select dependencies</TextSublabel>
+                  <TextLabel>{modeTarget()!.name}</TextLabel>
+                  <TextSublabel>
+                    {mode()!.kind === "deps" ? "select dependencies" : mode()!.kind === "block" ? "block — on whom / what" : "snooze — until when"}
+                  </TextSublabel>
                 </SpreadRow>
                 <Divider />
+                <Switch>
+                <Match when={mode()!.kind === "block"}>
+                  {/* Block: a focused reason input (person-first convention);
+                      Enter commits — the input has focus, so Enter beats f. */}
+                  <ScrollColumn>
+                    <InfoPanel title="Blocked on">
+                      <TightStack>
+                        <ThemedInput
+                          ref={(el: HTMLInputElement) => queueMicrotask(() => el.focus())}
+                          value={blockText()}
+                          onInput={(e) => setBlockText(e.currentTarget.value)}
+                          placeholder={'start with the person — "Ryan — grant access"'}
+                          onKeyDown={(e) => e.key === "Enter" && finishBlock()}
+                        />
+                        <TextSublabel>press Enter to block</TextSublabel>
+                      </TightStack>
+                    </InfoPanel>
+                  </ScrollColumn>
+                  <InfoPanel title="Confirm">
+                    <ClusterRow>
+                      <HotkeyButton hotkey="f" onTrigger={finishBlock}>
+                        finish
+                      </HotkeyButton>
+                    </ClusterRow>
+                  </InfoPanel>
+                </Match>
+                <Match when={mode()!.kind === "snooze"}>
+                  {/* Snooze: common presets one keypress away; a date picker
+                      for the long tail. */}
+                  <ScrollColumn>
+                    <InfoPanel title="Common">
+                      <ClusterRow>
+                        <HotkeyButton hotkey="1" onTrigger={() => snoozeDays(1)}>
+                          1 day
+                        </HotkeyButton>
+                        <HotkeyButton hotkey="3" onTrigger={() => snoozeDays(3)}>
+                          3 days
+                        </HotkeyButton>
+                        <HotkeyButton hotkey="7" onTrigger={() => snoozeDays(7)}>
+                          7 days
+                        </HotkeyButton>
+                      </ClusterRow>
+                    </InfoPanel>
+                    <InfoPanel title="Custom">
+                      <TightStack>
+                        <DatePicker value={customDate()} onChange={setCustomDate} />
+                        <TextSublabel>wakes at 09:00 that day</TextSublabel>
+                      </TightStack>
+                    </InfoPanel>
+                  </ScrollColumn>
+                  <InfoPanel title="Confirm">
+                    <ClusterRow>
+                      <HotkeyButton hotkey="f" onTrigger={finishSnooze}>
+                        finish
+                      </HotkeyButton>
+                    </ClusterRow>
+                  </InfoPanel>
+                </Match>
+                <Match when={mode()!.kind === "deps"}>
                 <ScrollColumn>
                   <InfoPanel title="Dependencies">
                     <Show
@@ -370,11 +459,13 @@ const CategoricalTriageBench: Component = () => {
                 </ScrollColumn>
                 <InfoPanel title="Confirm">
                   <ClusterRow>
-                    <HotkeyButton hotkey="f" onTrigger={finishPicking}>
+                    <HotkeyButton hotkey="f" onTrigger={finishDeps}>
                       finish
                     </HotkeyButton>
                   </ClusterRow>
                 </InfoPanel>
+                </Match>
+                </Switch>
               </FillColumn>
             }
           >
