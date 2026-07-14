@@ -565,10 +565,31 @@ tick", not real arrangement migrations. Review each per skill step 4.
   tightly coupled to the border/focus-within box; not consumer-child arrangement.
   Unlike ThemedInput (whose PLAIN-div field column migrated to GrowColumn), here the
   field column is the Kobalte root and can't be wrapped. As-is.
-- [~ claimed: lp-5] EditableTitle (geo 8)
-- [~ claimed: lp-5] List (geo 8)
+- [x] EditableTitle (geo 8) — AUDITED INTRINSIC (lp-5). No child arrangement:
+  `.sui-editable-title` is a `<span>` that is a flex CHILD (`flex:1 1 auto;
+  min-width:0; overflow:hidden; white-space:nowrap`) — it grows into a row slot and
+  clips its own text; it holds a SINGLE alternate child (the `__text` button OR the
+  `__editor`), never a multi-region layout. `flex:1 1 auto` (basis auto, not
+  GrowBox's basis 0%) + the ellipsis-clip overflow are the widget's own self-sizing.
+  `.sui-editable-title__editor` is an `inline-grid` fitted-input replica
+  (`::after { content: attr(data-value) }` sizes the cell to the live draft) — an
+  inline-level, data-derived self-contained editor. Nothing to compose. Left as-is.
+- [x] List (geo 8) — AUDITED INTRINSIC (lp-5; semantic-element carve-out,
+  RecentStarred precedent). `.sui-list` is a `<ul>` and `.sui-list-item` a `<li>`;
+  Layout's Stack/Row are `<div>`-only (no polymorphic `as`), so composing them would
+  drop the `<ul>`/`<li>` list semantics. The `<li>`'s [status | icon | content] flex
+  row lays out the item's OWN prop-derived parts (status dot, icon slot, content
+  column), and `.sui-list--scroll` is the `<ul>`'s own fill-scroll
+  (`flex:1;min-height:0;overflow-y:auto`) — a semantic scrolling list. Left as-is.
 - [~ claimed: lp-5] Markdown (geo 4)
-- [~ claimed: lp-5] MathFormula (geo 9)
+- [x] MathFormula (geo 9) — AUDITED INTRINSIC (lp-5; data-derived + off-scale em
+  gaps). `.math-formula-row` renders each top-level KaTeX term/operator as its own
+  inline element (`<For>`-style data-derived segments) and wraps them with
+  `column-gap:0.4em; row-gap:0.25em` — EM-based gaps tied to the math font size, off
+  the px scale and load-bearing for KaTeX spacing (xs=4 would break term kerning;
+  same class as WeekCalendar's load-bearing off-scale grid gap). `.math-formula`'s
+  `overflow-x:auto` is the formula's own horizontal scroll (single-widget). A
+  self-contained KaTeX rendering widget — ruling 4 + off-scale-load-bearing. As-is.
 - [~ claimed: lp-5] RangeAmountGroup (geo 9)
 - [~ claimed: lp-5] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
 - [x] TitledTimeRangeHeader (geo 11) — DONE (with an anchor-duality carve-out). Root
@@ -580,7 +601,14 @@ tick", not real arrangement migrations. Review each per skill step 4.
   ThreadGroup-precedent). `__badge` inline-flex intrinsic. Verified on the
   titled-time-range-header showcase: all 3 headers (active/ongoing/link+asset)
   pixel-identical, VIEW action right-aligned.
-- [~ claimed: lp-5] SprintSelector (geo 8)
+- [x] SprintSelector (geo 8) — AUDITED INTRINSIC (lp-5; data-derived mini bar-chart).
+  A `<For each={sprints}>` strip of SVG burndown bars: the root
+  (`display:flex; gap:4px; align-items:flex-end`) establishes the shared BASELINE the
+  data-scaled `<svg><rect>` bars grow up from (align:flex-end is load-bearing and off
+  the align vocabulary — no reuse-first variant, and a single-consumer bottom-align
+  row fails start-minimal), and each `__bar-group` is a data-derived chart column
+  (`flex:1; column; align:center`) centering its own SVG bar + label. Chart-family
+  (SVG rendering) + ruling-4 data-derived cells. Left as-is.
 - [x] Legend (geo 12) — AUDITED INTRINSIC (Tabs/SegmentedControl category, ruling 3).
   A block-level, ORIENTATION-FLIPPING strip of DATA-DERIVED legend items
   (`<For each={items}>` → swatch+label): `.sui-legend--horizontal` is a wrap row,
@@ -589,7 +617,18 @@ tick", not real arrangement migrations. Review each per skill step 4.
   micro-gap variants that over-fit start-minimal, and the items are ruling-4
   data-content. `.sui-legend__item` is inline-flex (swatch+label, inline-level
   intrinsic); `__swatch` flex-shrink:0 is part of the item. Left as-is.
-- [~ claimed: lp-5] PivotTreemap/PivotPills (geo 12) — HTML pill rows
+- [x] PivotTreemap/PivotPills (geo 12) — AUDITED INTRINSIC (lp-5; data-derived
+  drag widget, contrast DnDHierarchySortBar). A `<For each={p.order}>` drag-to-reorder
+  strip: root `display:flex; flex-direction:row; align-items:flex-end; gap:8px;
+  flex-wrap:wrap` with a leading `__hint` span. Unlike DnDHierarchySortBar (whose flat
+  center-aligned pill row migrated to the existing WrappedClusterRow), PivotPills'
+  root is align:flex-END — it baselines the hint against taller label-over-pill slot
+  columns (load-bearing, off-vocabulary, no reuse-first variant; a single-consumer
+  bottom-align wrap row fails start-minimal). Each `__slot` is a data-derived
+  label-over-pill column (ruling 4) and each `__pill` is an inline-flex draggable whose
+  captured box-sizing footprint must not reflow mid-drag (DnDHierarchySortBar-pill
+  precedent). No consumer-child multi-region arrangement expressible with reuse-first
+  vocabulary. Left as-is.
 - [~ claimed: lp-5] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
 - [x] DragDrop/QuadrantGrid (geo 10) — AUDITED, INTRINSIC (genuine load-bearing 2-D
   matrix; the grid-exemption from the known-blockers list + skill 3b). The root
