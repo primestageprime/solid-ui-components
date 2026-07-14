@@ -133,6 +133,16 @@ export const TightClusterRow: Component<RowDataProps> = createRow({
   gap: "xs",
   align: "center",
 });
+// GrowClusterRow — a center-aligned cluster row that itself grows to fill its
+// parent and may shrink past its content (`flex:1 1 auto; min-width:0`), gap:sm.
+// The growing sibling of ClusterRow: for a control root that arranges a fixed
+// leading slot (label) beside a growing region (a chip bar / trigger) AND takes
+// its own share of a parent toolbar row.
+export const GrowClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { flex: "1 1 auto", "min-width": "0" },
+});
 export const TopClusterRow: Component<RowDataProps> = createRow({
   gap: "sm",
   align: "start",

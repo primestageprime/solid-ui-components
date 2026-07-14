@@ -1,24 +1,13 @@
+/* Root cluster row, chip bar, and menu-wrap grow/anchoring now come from
+   composed Layout variants (GrowClusterRow / GrowWrapRow / GrowBox). This file
+   keeps only intrinsic (non-geometry) styling: colors, borders, the control
+   chrome of the menu trigger, and the overlay menu's own anchoring/scroll. */
 .sui-msf {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 12px;
-  min-width: 0;
-  flex: 1 1 auto;
 }
 
 .sui-msf__label {
   color: var(--sui-text-muted);
-  flex-shrink: 0;
-}
-
-.sui-msf__bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .sui-msf__chip {
@@ -56,9 +45,8 @@
 }
 
 .sui-msf__menu-wrap {
+  /* overlay anchor for the absolute menu; grow/shrink comes from GrowBox */
   position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .sui-msf__menu-trigger {

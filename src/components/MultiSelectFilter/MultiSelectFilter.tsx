@@ -26,6 +26,12 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import {
+  ActionSlot,
+  GrowBox,
+  GrowClusterRow,
+  GrowWrapRow,
+} from "../Layout/variants";
 import "./MultiSelectFilter.css";
 
 export interface MultiSelectOption {
@@ -121,15 +127,15 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   });
 
   return (
-    <div class="sui-msf" ref={containerRef}>
+    <GrowClusterRow class="sui-msf" ref={containerRef}>
       <Show when={props.label}>
-        <span class="sui-msf__label">{props.label}</span>
+        <ActionSlot class="sui-msf__label">{props.label}</ActionSlot>
       </Show>
 
       <Show
         when={mode() === "bar"}
         fallback={
-          <div class="sui-msf__menu-wrap">
+          <GrowBox class="sui-msf__menu-wrap">
             <button
               type="button"
               class="sui-msf__menu-trigger"
@@ -161,11 +167,11 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
                 </For>
               </div>
             </Show>
-          </div>
+          </GrowBox>
         }
       >
         {/* biome-ignore lint/a11y/useSemanticElements: native <fieldset> carries default border/margin/padding and its own layout box, which would alter this styled chip-bar's visual output; role="group" preserves the grouping semantics without changing rendering */}
-        <div class="sui-msf__bar" role="group">
+        <GrowWrapRow class="sui-msf__bar" role="group">
           <For each={props.options}>
             {(opt) => (
               <button
@@ -180,8 +186,8 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
               </button>
             )}
           </For>
-        </div>
+        </GrowWrapRow>
       </Show>
-    </div>
+    </GrowClusterRow>
   );
 };

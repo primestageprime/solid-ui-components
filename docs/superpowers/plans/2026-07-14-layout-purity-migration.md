@@ -287,10 +287,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   centering its own dot+label (ruling 4: data-derived option content = intrinsic).
   The footer has no banned geometry. No consumer-child multi-region composition →
   nothing to migrate.
-- [ ] MultiSelectFilter (geo 24) — overlay-partial. TEED UP (layout-purity-2
-  audit): `__bar` is a growing wrap-row of filter controls → migratable;
-  `__menu`/`__menu-item` are data-derived → intrinsic. NO showcase — needs
-  the showcase-first treatment (StatusCard pattern) before migrating.
+- [x] MultiSelectFilter (geo 24) — DONE. Showcase-first (dc3bb09: bar +
+  menu modes). Root cluster → new `GrowClusterRow` variant (align:center,
+  gap:sm, flex:1 1 auto, min-width:0 — the growing sibling of ClusterRow);
+  label → `ActionSlot` (no-shrink, class kept for color); `__bar` growing
+  wrap-row → `GrowWrapRow` (role="group" passes through); menu-wrap → `GrowBox`
+  (position:relative anchoring stays in CSS). Both gaps on-scale (8=sm, 4=xs) —
+  no snaps. INTRINSIC (kept): `__menu-trigger` (inline-flex control chrome
+  centering its own summary+caret), `__menu` (absolute overlay + data-derived
+  option column + overflow-y:auto list scroll), `__menu-item`/`__check`
+  (data-derived option rows, ruling 4), `__chip` (self-contained pill). Verified
+  on the new showcase: pixel-identical bar/menu modes.
 - [x] TagInput (geo 11) — AUDITED, INTRINSIC (field-composition discriminator
   applied; fell to intrinsic). Unlike CheckboxField/ThemedInput there is NO outer
   label|control field-row — `.tag-input` is just position:relative/width:100%.
