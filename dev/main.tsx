@@ -79,6 +79,7 @@ import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { StatusCardShowcase } from "./showcases/status-card";
 import { CheckboxShowcase } from "./showcases/checkbox";
+import { PickersShowcase } from "./showcases/pickers";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
@@ -620,6 +621,12 @@ const items: Item[] = [
     label: "Checkbox",
     component: CheckboxShowcase,
     tags: ["depth:0", "form"],
+  },
+  {
+    id: "pickers",
+    label: "Recurrence pickers",
+    component: PickersShowcase,
+    tags: ["depth:1", "form", "time"],
   },
   {
     id: "segmented-control",
