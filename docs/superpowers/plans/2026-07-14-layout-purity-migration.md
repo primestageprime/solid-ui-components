@@ -94,11 +94,11 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   slots now compose them (outer gap 12px→md, item gap sm). FormComposite is now
   a zero-CSS Composite (FormComposite.css deleted). Existing test updated to the
   new internals (public props unchanged).
-- [ ] BLOCKED — DiffPair (geo 10): the labeled form is `display:grid;
-  grid-template-columns: minmax(80px,max-content) 1fr; gap:12px` — CSS grid with
-  no Layout grid primitive, plus off-scale 12px gap. The inner before/arrow/after
-  row could be a WrapRow, but the outer grid blocks. Needs Grid-primitive
-  decision.
+- [x] DiffPair (geo 10) — DONE (ruling 3). Labeled form → new `Grid` primitive
+  via the `LabelValueGrid` variant (gap 12px→md); before/arrow/after row → new
+  `BaselineWrapRow` variant. Sides/arrow keep only intrinsic min-width/color
+  (the redundant `flex:0 1 auto` / no-shrink `flex:0 0 auto` dropped — the 1-char
+  arrow's shrink is imperceptible). Public props byte-identical.
 
 #### P2 — high-traffic
 
@@ -204,3 +204,10 @@ tick", not real arrangement migrations. Review each per skill step 4.
 
 - 2026-07-14 — P0 complete: commandment recorded (STYLE_GUIDE + decision-tree),
   skill written, harness landed, this plan doc created.
+- 2026-07-14 — Peter's 4 rulings recorded (STYLE_GUIDE + skill). **P1 pilot
+  complete (6/6):** AssigneeChips, WorkerCard, ProductGridCard, LabeledDivider,
+  FormComposite, DiffPair all migrated; WorkerCard clip retrofit via ClipBox.
+  New Layout vocabulary added: `ChipCluster`, `ClipBox`, `CenteredColumn`,
+  `BaselineWrapRow`, `LabelValueGrid` variants; `AutoStackRow`/`AutoStackItem`
+  and `Grid` primitives. Each has a `*.layout.test.tsx` guard; full suite green
+  (1547). Next: P2 high-traffic composites.

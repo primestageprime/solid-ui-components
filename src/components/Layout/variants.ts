@@ -12,11 +12,13 @@
 import { createStack } from "./Stack";
 import { createRow } from "./Row";
 import { createBox } from "./Box";
+import { createGrid } from "./Grid";
 import { createAppHeader } from "./AppShell";
 import type { AppHeaderDataProps } from "./AppShell";
 import type { StackDataProps } from "./Stack";
 import type { RowDataProps } from "./Row";
 import type { BoxDataProps } from "./Box";
+import type { GridDataProps } from "./Grid";
 import type { Component } from "solid-js";
 
 // Stack variants — named by gap
@@ -137,6 +139,15 @@ export const WrapRow: Component<RowDataProps> = createRow({
 });
 export const FlexRow: Component<RowDataProps> = createRow({});
 
+// Baseline-aligned wrapping row — a row whose items share a text baseline and
+// wrap to a new line when they don't fit. For a before/arrow/after or
+// value+unit pairing where the pieces must sit on the same baseline.
+export const BaselineWrapRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  align: "baseline",
+  wrap: true,
+});
+
 // ChipCluster — a wrapping cluster of chips/tags that must NOT be compressed by
 // a flex parent (baked `flex-shrink: 0`). Like TagRow (4px gap, wrap, centered)
 // but holds its intrinsic width so the chips wrap to a new line instead of
@@ -183,6 +194,16 @@ export const FadedBox: Component<BoxDataProps> = createBox({
 // component CSS per the layout-purity rule.
 export const ClipBox: Component<BoxDataProps> = createBox({
   style: { overflow: "hidden" },
+});
+
+// LabelValueGrid — a 2-column label/value grid: a first column sized to the
+// label (min 80px, growing to its content) and a second flexible value column,
+// items aligned on the baseline. For labeled key/value pairs (e.g. DiffPair's
+// "Label: before → after").
+export const LabelValueGrid: Component<GridDataProps> = createGrid({
+  columns: "minmax(80px, max-content) 1fr",
+  gap: "md",
+  align: "baseline",
 });
 export const ConstrainedBox: Component<BoxDataProps> = createBox({
   style: { "max-width": "400px" },

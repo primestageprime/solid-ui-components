@@ -6,6 +6,8 @@ export { createRow } from "./Row";
 export type { RowDataProps } from "./Row";
 export { createBox } from "./Box";
 export type { BoxDataProps } from "./Box";
+export { createGrid } from "./Grid";
+export type { GridDataProps } from "./Grid";
 // No-config structural shell components — re-exported as-is.
 export { ProportionalStack, ProportionalItem } from "./ProportionalStack";
 export type {

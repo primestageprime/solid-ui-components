@@ -20,6 +20,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { BaselineWrapRow, LabelValueGrid } from "../Layout/variants";
 import "./DiffPair.css";
 
 export interface DiffPairProps {
@@ -68,8 +69,10 @@ export const DiffPair: Component<DiffPairProps> = (props) => {
 
   const arrow = () => props.arrow ?? DEFAULT_ARROW;
 
+  // before → after sit on a shared baseline and wrap together — composed from
+  // the BaselineWrapRow Layout variant.
   const pair = (
-    <div class="sui-diff-pair__pair">
+    <BaselineWrapRow class="sui-diff-pair__pair">
       <div class="sui-diff-pair__side sui-diff-pair__side--before">
         {props.before}
       </div>
@@ -79,18 +82,20 @@ export const DiffPair: Component<DiffPairProps> = (props) => {
       <div class="sui-diff-pair__side sui-diff-pair__side--after">
         {props.after}
       </div>
-    </div>
+    </BaselineWrapRow>
   );
 
+  // Labeled form is a label|value grid — composed from the LabelValueGrid
+  // Layout variant (was a hand-rolled display:grid).
   return (
     <Show
       when={props.label}
       fallback={<div class={containerClass()}>{pair}</div>}
     >
-      <div class={`${containerClass()} sui-diff-pair--with-label`}>
+      <LabelValueGrid class={`${containerClass()} sui-diff-pair--with-label`}>
         <span class="sui-diff-pair__label">{props.label}:</span>
         {pair}
-      </div>
+      </LabelValueGrid>
     </Show>
   );
 };

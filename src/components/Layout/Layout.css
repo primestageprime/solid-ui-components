@@ -140,6 +140,36 @@
   overflow: auto;
 }
 
+/* Grid — CSS-grid container. `grid-template-columns` is set inline (from the
+   `columns` override); gap + cross-axis alignment come from these classes. */
+.grid {
+  display: grid;
+}
+.grid--gap-xs {
+  gap: 4px;
+}
+.grid--gap-sm {
+  gap: 8px;
+}
+.grid--gap-md {
+  gap: 12px;
+}
+.grid--align-start {
+  align-items: start;
+}
+.grid--align-center {
+  align-items: center;
+}
+.grid--align-end {
+  align-items: end;
+}
+.grid--align-baseline {
+  align-items: baseline;
+}
+.grid--align-stretch {
+  align-items: stretch;
+}
+
 /* AutoStackRow / AutoStackItem — responsive side-by-side -> stacked row.
    Items sit side by side while the container is wider than --auto-stack-break,
    then each takes a full row below it. The "holy albatross": each item's
