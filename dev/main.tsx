@@ -85,6 +85,7 @@ import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
+import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
@@ -598,6 +599,12 @@ const items: Item[] = [
     label: "MutableList",
     component: MutableListShowcase,
     tags: ["depth:2", "list", "form", "container"],
+  },
+  {
+    id: "recent-starred",
+    label: "RecentStarred",
+    component: RecentStarredShowcase,
+    tags: ["depth:1", "list", "navigation", "container"],
   },
   {
     id: "three-panel-layout",
