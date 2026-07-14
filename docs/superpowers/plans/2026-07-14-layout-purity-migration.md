@@ -73,7 +73,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P1 — pilot
 
-- [ ] AssigneeChips (geo 6) — wrapper flex-wrap row migrates; chip pill intrinsic
+- [x] AssigneeChips (geo 6) — DONE. Wrapper → new `ChipCluster` Layout variant
+  (wrapping cluster, `flex-shrink:0` baked). Chip pill `inline-flex` kept as
+  intrinsic. Gap 3px→4px (xs), imperceptible. **Precedent set:** a Primitive now
+  imports Layout for geometry while keeping intrinsic CSS — see report/blockers.
 - [ ] LabeledDivider (geo 4) — pseudo-element `::before/::after flex:1` divider lines; see blockers
 - [ ] ProductGridCard (geo 4)
 - [ ] WorkerCard (geo 10)

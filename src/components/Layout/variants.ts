@@ -129,6 +129,20 @@ export const WrapRow: Component<RowDataProps> = createRow({
 });
 export const FlexRow: Component<RowDataProps> = createRow({});
 
+// ChipCluster — a wrapping cluster of chips/tags that must NOT be compressed by
+// a flex parent (baked `flex-shrink: 0`). Like TagRow (4px gap, wrap, centered)
+// but holds its intrinsic width so the chips wrap to a new line instead of
+// being squeezed narrower. For inline pill/tag groups sitting beside flexible
+// siblings (e.g. an assignee-chip group in a card meta row). The baked flex is
+// the Layout family defining its own vocabulary — allowed here, not in a
+// consuming component's CSS.
+export const ChipCluster: Component<RowDataProps> = createRow({
+  gap: "xs",
+  wrap: true,
+  align: "center",
+  style: { "flex-shrink": 0 },
+});
+
 // Wrapping center-aligned cluster — for header rows where a name + timestamp
 // pair must collapse onto a second line on narrow widths without forcing a
 // large vertical row-gap.

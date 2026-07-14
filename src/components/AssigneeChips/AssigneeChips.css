@@ -1,13 +1,9 @@
 /* ============================================
-   AssigneeChips — Structural
+   AssigneeChips — the wrapping chip row is composed from the ChipCluster Layout
+   variant (see Layout/variants.ts); this file owns only the intrinsic chip pill
+   styling. The chip's own `inline-flex; align-items: center` centers its single
+   label — intrinsic element styling, not child arrangement.
    ============================================ */
-.sui-assignee-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  flex-shrink: 0;
-}
-
 .sui-assignee-chip {
   border-radius: 999px;
   background: var(--sui-accent);
