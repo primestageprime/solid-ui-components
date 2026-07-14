@@ -167,10 +167,11 @@ NEXT CATEGORY                     [count]     ← count-only mode
 - **Counts render as the thematic number lozenge** — `TagPill` plain-label
   form (`tag={{ label: String(n), active: n > 0 }}`), not the rectangular
   CountChip (Peter, 2026-07-14).
-- **Child-line content per category kind**: person-blocked → the FIRST WORD
-  of the blocked-by string (convention: blocked_by starts with the person,
-  "Ryan — grant access") + title; snoozed → humanized time REMAINING,
-  compact ("2d4h", "1d2h", "45m") + title.
+- **Child lines follow the card canon — [title (data)]**: title left (the
+  focus), the category's datum trailing right — person-blocked → glyph + the
+  FIRST WORD of the blocked-by string (convention: blocked_by starts with
+  the person, "Ryan — grant access"); snoozed → glyph + humanized time
+  REMAINING, compact ("2d4h", "1d2h", "45m").
 - Compose: `TightStack` of sections; header `SpreadRow(label, TagPill)`;
   children muted one-line rows. No new component until a second consumer
   demands one.

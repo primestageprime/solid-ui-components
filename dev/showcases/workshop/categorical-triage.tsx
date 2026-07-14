@@ -90,10 +90,10 @@ const CategoricalTriageBench: Component = () => {
     // person-blocked first (you can nudge), snooze (will self-clear),
     // dependency (count only), claimed-but-non-terminal (count only).
     return [
-      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, childText: (it: TriageItem) => `${firstWord(it.blockedBy ?? "")} — ${it.name}`, items: all.filter((it) => !!it.blockedBy) },
-      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, childText: (it: TriageItem) => `${remaining(it.blockedUntil ?? 0)} — ${it.name}`, items: all.filter((it) => !!it.blockedUntil) },
-      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, childText: (it: TriageItem) => it.name, items: all.filter((it) => !!(it.deps && it.deps.length)) },
-      { label: "CLAIMED", glyph: "◉", mode: "count" as const, childText: (it: TriageItem) => it.name, items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
+      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
+      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
+      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { label: "CLAIMED", glyph: "◉", mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
     ];
   });
 
@@ -136,13 +136,17 @@ const CategoricalTriageBench: Component = () => {
                     <TightStack>
                       <For each={cat.items}>
                         {(it) => (
-                          <span
-                            class="text-meta"
+                          <div
                             style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
                             onClick={() => setSelectedId(it.id)}
                           >
-                            {cat.glyph} {cat.childText(it)}
-                          </span>
+                            <SpreadRow gap="sm">
+                              <span class="text-meta">{it.name}</span>
+                              <span class="text-meta" style={{ "white-space": "nowrap" }}>
+                                {cat.glyph} {cat.childData(it)}
+                              </span>
+                            </SpreadRow>
+                          </div>
                         )}
                       </For>
                     </TightStack>
