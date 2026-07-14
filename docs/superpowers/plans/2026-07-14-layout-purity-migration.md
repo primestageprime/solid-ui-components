@@ -565,12 +565,12 @@ tick", not real arrangement migrations. Review each per skill step 4.
   tightly coupled to the border/focus-within box; not consumer-child arrangement.
   Unlike ThemedInput (whose PLAIN-div field column migrated to GrowColumn), here the
   field column is the Kobalte root and can't be wrapped. As-is.
-- [ ] EditableTitle (geo 8)
-- [ ] List (geo 8)
-- [ ] Markdown (geo 4)
-- [ ] MathFormula (geo 9)
-- [ ] RangeAmountGroup (geo 9)
-- [ ] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
+- [~ claimed: lp-5] EditableTitle (geo 8)
+- [~ claimed: lp-5] List (geo 8)
+- [~ claimed: lp-5] Markdown (geo 4)
+- [~ claimed: lp-5] MathFormula (geo 9)
+- [~ claimed: lp-5] RangeAmountGroup (geo 9)
+- [~ claimed: lp-5] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
 - [x] TitledTimeRangeHeader (geo 11) — DONE (with an anchor-duality carve-out). Root
   [main | action] → `SpreadRow` (gap 16→sm; keeps padding/bg/border/radius); action
   slot → `ActionSlot` (drops flex-shrink:0). INTRINSIC: `__main` is the header's OWN
@@ -580,7 +580,7 @@ tick", not real arrangement migrations. Review each per skill step 4.
   ThreadGroup-precedent). `__badge` inline-flex intrinsic. Verified on the
   titled-time-range-header showcase: all 3 headers (active/ongoing/link+asset)
   pixel-identical, VIEW action right-aligned.
-- [ ] SprintSelector (geo 8)
+- [~ claimed: lp-5] SprintSelector (geo 8)
 - [x] Legend (geo 12) — AUDITED INTRINSIC (Tabs/SegmentedControl category, ruling 3).
   A block-level, ORIENTATION-FLIPPING strip of DATA-DERIVED legend items
   (`<For each={items}>` → swatch+label): `.sui-legend--horizontal` is a wrap row,
@@ -589,8 +589,8 @@ tick", not real arrangement migrations. Review each per skill step 4.
   micro-gap variants that over-fit start-minimal, and the items are ruling-4
   data-content. `.sui-legend__item` is inline-flex (swatch+label, inline-level
   intrinsic); `__swatch` flex-shrink:0 is part of the item. Left as-is.
-- [ ] PivotTreemap/PivotPills (geo 12) — HTML pill rows
-- [ ] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
+- [~ claimed: lp-5] PivotTreemap/PivotPills (geo 12) — HTML pill rows
+- [~ claimed: lp-5] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
 - [x] DragDrop/QuadrantGrid (geo 10) — AUDITED, INTRINSIC (genuine load-bearing 2-D
   matrix; the grid-exemption from the known-blockers list + skill 3b). The root
   `.sui-quadrant-grid` is a true 2-D grid (`grid-template-columns:1fr 1fr` AND
