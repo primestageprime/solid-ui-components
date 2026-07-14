@@ -43,6 +43,15 @@ export interface BaseTableProps<T>
    * push the table wider than its container.
    */
   fixedLayout?: boolean;
+  /**
+   * Shrink-wrap the table to its content width instead of stretching to fill the
+   * container (the default `width: 100%`). For tables whose columns are ALL
+   * fixed/capped-content (counts, money, dates) — a full-width stretch would
+   * leave large dead gaps between columns. `fit` sizes the frame + table to
+   * `fit-content` (capped at 100%) and left-aligns it. Mutually exclusive with
+   * `fixedLayout` (fixed layout is for one flexing/ellipsized column).
+   */
+  fit?: boolean;
   getRowClass?: (row: T, index: number) => string;
   onRowClick?: (row: T, index: number) => void;
   emptyMessage?: string;

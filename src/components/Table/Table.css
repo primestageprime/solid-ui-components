@@ -44,6 +44,17 @@
   table-layout: fixed;
 }
 
+/* Fit: shrink-wrap the frame + table to content width (capped at the container)
+   instead of stretching full-width. For all-fixed-content tables so columns sit
+   together with no dead gap; the frame hugs the table and left-aligns. */
+.hud-table--fit {
+  width: fit-content;
+  max-width: 100%;
+}
+.hud-table--fit .hud-table__table {
+  width: auto;
+}
+
 /* Header */
 .hud-table__head {
   background: linear-gradient(

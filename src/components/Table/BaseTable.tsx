@@ -107,6 +107,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "hoverable",
     "compact",
     "fixedLayout",
+    "fit",
     "getRowClass",
     "onRowClick",
     "emptyMessage",
@@ -178,6 +179,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     if (local.hoverable) classList.push("hud-table--hoverable");
     if (local.compact) classList.push("hud-table--compact");
     if (local.fixedLayout) classList.push("hud-table--fixed");
+    if (local.fit) classList.push("hud-table--fit");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
