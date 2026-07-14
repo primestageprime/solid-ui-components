@@ -352,3 +352,12 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   stick to the bottom, detail panel scrolls internally"). The existing
   page-structure variants already bake the flex/overflow plumbing — no
   hand-rolled styles.
+- **2026-07-14 · workshop:categorical-triage · agentic release + no Later**
+  (Peter) — triage gains **[a]gentic**: one-keystroke release of an item to
+  the agent pipeline (dside's EXISTING `StatementTag::Agentic` → agent-owned
+  work stage; `Species` classifies claimants — no new backend field). Count
+  rail AGENTIC sits last (nothing for the human to do); Restore gains
+  [w]ithdraw. **"Later" is REMOVED** (supersedes the triage-route entry
+  above): triage actions change item STATE; deferral is just not deciding
+  (arrow-down skips) and queue ORDER belongs to the todo view's drag-sort.
+  Final row: [c]laim [a]gentic [b]lock [s]nooze [d]epends.
