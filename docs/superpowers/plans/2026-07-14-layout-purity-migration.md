@@ -430,7 +430,18 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P-overlay — overlay controls not in P3
 
-- [ ] PopoverMenu (geo 16) — overlay-partial
+- [x] PopoverMenu (geo 16) — overlay-partial; AUDITED, INTRINSIC (no migration).
+  Structurally identical to the already-audited Dropdown: root is
+  `position:relative; inline-block` (neither banned). The `__trigger` is an
+  INLINE-flex control button and `__trigger-content` its own inline chrome
+  centering the consumer's trigger beside the component's own `__caret` glyph
+  (inline-level discriminator — composing a block Row would break the button's
+  fit-content sizing). The `__panel` is an absolute-anchored `<ul>` overlay
+  (anchoring stays) whose `<li>`s block-stack in normal flow — the panel itself
+  has NO flex. Each `__item` is a DATA-derived (`<For each={items}>`) menu row
+  centering its OWN icon + label (ruling 4). `__item-icon` is a self-contained
+  inline glyph; `__item-label` (flex:1;min-width:0) is that item's own internal
+  fill. No consumer-child multi-region composition → nothing to migrate.
 - [ ] Toast (geo 22) — overlay-partial
 
 #### P5 — remainder (migrate, unprioritized)
