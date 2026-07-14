@@ -217,7 +217,11 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   (`inline-flex`) labeled switch centering its own track/slider + its own
   `<label>` (from the `label` prop), plus a thematic pill variant that is itself a
   self-contained control. Prop-derived parts, inline-level → intrinsic, left as-is.
-- [ ] SegmentedInput (geo 14)
+- [x] SegmentedInput (geo 14) — AUDITED, INTRINSIC. An INLINE-level stepper control
+  widget (`.sui-segmented-stepper` is `inline-flex; fit-content`), rendering its
+  own chevron buttons + value cell (each centering its own glyph). Same category
+  as SegmentedControl per the inline-level discriminator — block Layout Rows can't
+  express it. Left as-is.
 - [x] SegmentedControl (geo 6) — AUDITED, INTRINSIC (no migration; Peter-precedent
   via team-lead 2026-07-14). Its segments are DATA-derived (`<For each={options}>`
   → `<button role=radio>`) with intrinsic groove-seam chrome — a single
@@ -237,7 +241,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Select (geo 28) — overlay-partial
 - [ ] Dropdown (geo 8) — overlay-partial
 - [ ] MultiSelectFilter (geo 24) — overlay-partial
-- [ ] TagInput (geo 11)
+- [x] TagInput (geo 11) — AUDITED, INTRINSIC (field-composition discriminator
+  applied; fell to intrinsic). Unlike CheckboxField/ThemedInput there is NO outer
+  label|control field-row — `.tag-input` is just position:relative/width:100%.
+  Everything else is the control's OWN content: `.tag-input__chips` is the input's
+  border/chrome holding the data-derived chip flow + the text field (chips inside
+  the input border = intrinsic per team-lead), each `__chip` centers its own
+  label+remove, `__input` is the control's text field, and `.tag-input__suggestions`
+  is an absolute overlay of data-derived option buttons (overlay anchoring stays;
+  a single data-derived option column = intrinsic content, not a multi-region
+  composition). Nothing to migrate. Left as-is.
 - [x] QuickFilter (geo 5) — DONE. Container column (search input above the
   consumer render-prop list) → `NarrowStack` (gap 8=sm exact). The composed
   ThemedInput is wrapped in an `ActionSlot` (flex:none) so it keeps its natural
