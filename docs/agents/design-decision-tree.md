@@ -145,6 +145,12 @@ established look, not a pattern to copy into new card/list designs.
   `StatusChip` in a `SpreadRow` title bar (the ActionList detail idiom).
 - Transient/modal inspection (keeps list context) → `Modal`; mobile-ish
   bottom drawer → `BottomSheet`.
+- **Panel with a persistent action row** (the actions must not drift as the
+  detail grows) → `FillColumn` filling the panel; the variable detail lives
+  in a `ScrollColumn` (scrolls internally); the action row is the last
+  child, pinned to the bottom. Reason: in a focused activity the action row
+  is the stable target the user's hands/eyes return to per item — never let
+  the panel scroll it away or let short content float it up.
 
 ## Counts / metrics rail
 
@@ -252,3 +258,9 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   [c]laim [b]lock [s]nooze [d]epends [l]ater; applying a category advances
   selection to the next item (the flow IS the loop). Letters don't conflict
   at 5 actions. Right rail widened to 300px so category labels stay one line.
+- **2026-07-14 · workshop:categorical-triage · center panel structure** —
+  action row must stay put while detail varies per item → **FillColumn +
+  ScrollColumn(detail) + Categorize InfoPanel pinned last** (Peter: "buttons
+  stick to the bottom, detail panel scrolls internally"). The existing
+  page-structure variants already bake the flex/overflow plumbing — no
+  hand-rolled styles.

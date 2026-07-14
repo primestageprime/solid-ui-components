@@ -18,7 +18,7 @@
 //   [ ] topBar — page title + to-triage badge
 import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
-import { SpreadRow, TightStack } from "../../../src/components/Layout";
+import { FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
@@ -171,16 +171,21 @@ const CategoricalTriageBench: Component = () => {
         centerPanel={
           <Show when={selected()} fallback={<Placeholder label="Triage" hint="empty queue — triage complete" />}>
             {(it) => (
-              <TightStack>
+              // FillColumn + ScrollColumn: title fixed at top, detail scrolls
+              // internally, Categorize pinned to the bottom — the action row
+              // never drifts as the detail grows.
+              <FillColumn>
                 <SpreadRow gap="sm">
                   <TextLabel>{it().name}</TextLabel>
                   <StatusChip status={it().status} options={["TODO", "DOING", "DONE"]} title={it().name} highlight={it().status === "DOING"} />
                 </SpreadRow>
-                <Show when={it().prompt}>
-                  <InfoPanel title="Prompt">
-                    <TextBody>{it().prompt}</TextBody>
-                  </InfoPanel>
-                </Show>
+                <ScrollColumn>
+                  <Show when={it().prompt}>
+                    <InfoPanel title="Prompt">
+                      <TextBody>{it().prompt}</TextBody>
+                    </InfoPanel>
+                  </Show>
+                </ScrollColumn>
                 <InfoPanel title="Categorize">
                   <SpreadRow gap="sm">
                     <For each={CATEGORIZE}>
@@ -192,7 +197,7 @@ const CategoricalTriageBench: Component = () => {
                     </For>
                   </SpreadRow>
                 </InfoPanel>
-              </TightStack>
+              </FillColumn>
             )}
           </Show>
         }
