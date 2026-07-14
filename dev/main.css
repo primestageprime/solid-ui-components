@@ -1121,6 +1121,30 @@
   max-width: none;
 }
 
+/* Application mode: the showcase fills the content pane down to the bottom
+   of the viewport and its sections scroll INTERNALLY — the content pane
+   itself stops scrolling. Opt in with `component-section--app`. The gallery
+   is already an application layout (.showcase = 100vh flex row); this just
+   extends the fill chain through the content pane to the showcase root. */
+.showcase__content:has(.component-section--app) {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px 16px 0;
+}
+.component-section--app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The showcase's main layout (its last child) takes the remaining height. */
+.component-section--app > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
 /* ── Shared showcase classes ───────────────────────────── */
 
 .component-section h2 {

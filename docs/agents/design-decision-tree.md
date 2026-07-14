@@ -66,6 +66,15 @@ Discriminators:
   `AppShell` wrapping; embedded → bare layout component.
 - **Should a region be user-resizable?** → wrap that region in
   `ResizableContainer` (composes with any of the above).
+- **Which outermost archetype?** The root is either **Application** (fills
+  the viewport height; sections fill their container and scroll internally;
+  elements can pin to top/bottom edges) or **FixedWidthScrolling** (centered
+  max-width column, the document scrolls — the marketing-site model). Work
+  surfaces default to Application. On gallery benches, opt into Application
+  mode with `component-section--app` (dev/main.css) — the gallery is already
+  an application layout; the class extends the fill chain through the content
+  pane so the bench reaches the bottom of the screen. Never fake it with a
+  `height="78vh"`-style constant.
 
 ## Left list (a rail of items you pick from / work through)
 

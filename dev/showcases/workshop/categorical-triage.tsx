@@ -148,9 +148,10 @@ const CategoricalTriageBench: Component = () => {
   ];
 
   return (
-    <div class="component-section component-section--full">
+    // Application mode: the bench fills the gallery content pane to the
+    // bottom of the viewport; panels scroll internally (no document scroll).
+    <div class="component-section component-section--app">
       <ThreePanelLayout
-        height="78vh"
         topBar={<SectionTitle>Categorical Triage — refining: queue done</SectionTitle>}
         leftPanelWidth="380px"
         rightPanelWidth="300px"
