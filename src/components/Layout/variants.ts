@@ -304,6 +304,31 @@ export const ScrollColumn: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-width": "0", overflow: "auto" },
 });
 
+// --- Column-context growth / clip / scroll (vertical siblings of the
+// row-context GrowBox/ScrollColumn) ---
+
+/** ScrollFillColumn — a column that grows to fill its flex parent's leftover
+ *  height AND scrolls its own vertical overflow: `flex:1 1 auto; min-height:0;
+ *  overflow:auto`. The `min-height:0` is load-bearing — without it the column
+ *  refuses to shrink below its content and never produces a scrollbar. This is
+ *  the column-context scroll region (vertical analogue of ScrollColumn, which
+ *  is row-context min-width:0). No baked gap — children keep their own spacing.
+ *  For a bounded panel's inner content region that scrolls inside the frame. */
+export const ScrollFillColumn: Component<StackDataProps> = createStack({
+  style: { flex: "1 1 auto", "min-height": "0", overflow: "auto" },
+});
+
+/** ClipColumn — a flex column that clips its overflow (`overflow: clip`). The
+ *  column-context clip frame: children stack while the box clips decorative
+ *  bleed (e.g. corner-bracket -1px overhang, a clip-path corner notch). `clip`
+ *  (not `hidden`) means the box is not itself a scroll container — scrolling is
+ *  delegated to an inner ScrollFillColumn. Vertical sibling of ClipBox.
+ *  (Height for a `fill` panel comes from the consumer's own class, not here —
+ *  `height:100%;min-height:0` are non-geometry and stay on the frame.) */
+export const ClipColumn: Component<StackDataProps> = createStack({
+  style: { overflow: "clip" },
+});
+
 // --- AppHeader variants (size/inline baked) ---
 
 /** Default page-top header (md padding). */

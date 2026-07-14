@@ -113,7 +113,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   shouldn't think about styling," wrapping a pill's own text in a Layout Row is
   the absurd-wrapper anti-pattern. Ticked as intrinsic; left as-is.
 - [ ] Card/StatusCard (geo 41)
-- [ ] Panel (geo 17)
+- [x] Panel (geo 17) — DONE. Frame `.sui-panel` (display:flex column + overflow:clip)
+  → composed `ClipColumn`; header (flex/align-center/gap:8) → `ClusterRow` (gap 8=sm
+  exact); content region (flex:1;min-height:0;overflow:auto) → new `ScrollFillColumn`.
+  `fill` keeps only its non-geometry `height:100%;min-height:0` in Panel.css (height
+  is not layout-purity-banned; the flex-column comes from the composed Stack). All
+  sui-panel* classes retained as theming/structure hooks (corner brackets, clip-path
+  corners, edge accents, header border unaffected). Verified: canary InfoPanels
+  pixel-identical, Panel showcase all corner variants clip cleanly, layout-skeleton
+  fill panels still expand/scroll. **New column-context vocabulary** (see below).
 - [x] Surface (geo 11) — DONE (keystone). direction/align/gap now delegate to a
   composed inner `Stack`(column, `fill`)/`Row`(row) instead of flex/gap/align-items
   on the surface div; the `surface--dir/align/gap` classes stay as inert
@@ -282,6 +290,25 @@ Enumerated while reading StatusCard, WorkProgressCard, ActionListItem:
 
 These are shared across Surface/Panel/the cards/ActionListItem — hence the
 recommendation to establish them WITH the primitive pass, not ad-hoc per card.
+
+### Column-context vocabulary ADDED (Surface + Panel pass, 2026-07-14)
+
+- **`ScrollFillColumn`** (`Layout/variants.ts`) — `flex:1 1 auto; min-height:0;
+  overflow:auto`. The column-context scroll region (vertical analogue of
+  `ScrollColumn` which is row-context `min-width:0`). No baked gap. Used by Panel's
+  content region; the go-to for any "fills the leftover column height AND scrolls
+  its own vertical overflow" region (e.g. StatusCard's future desc-wrap).
+- **`ClipColumn`** (`Layout/variants.ts`) — a flex column that clips overflow
+  (`overflow: clip`, not `hidden` — not a scroll container). Vertical sibling of
+  `ClipBox`. For a bounded frame that clips decorative bleed / a clip-path notch
+  while delegating scroll to an inner `ScrollFillColumn`. Used by Panel's frame.
+- **Surface's column delegation** — a bare `Stack`(column, `fill`)/`Row` composed
+  inside Surface when `direction` is set; the cards that pass
+  `<Surface direction="column" gap="sm">` now get this for free.
+- Still OPEN for the cards/ActionListItem: **per-child `align-self`** (dismiss-cap
+  stretch) and **`FillColumn`+`overflow:hidden` clip-fill** (already have
+  `FillColumn` no-clip and `ScrollFillColumn` scroll; a `ClipFillColumn` = fill +
+  `overflow:hidden` is the remaining gap, add when StatusCard's desc-wrap needs it).
 
 ## Progress log
 

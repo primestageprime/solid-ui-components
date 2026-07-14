@@ -14,6 +14,7 @@ import {
   mergeProps,
 } from "solid-js";
 import type { ColorVariant, CornerStyle } from "../../types";
+import { ClipColumn, ClusterRow, ScrollFillColumn } from "../Layout/variants";
 import "./Panel.css";
 
 export interface PanelProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -63,8 +64,17 @@ export const Panel: Component<PanelProps> = (props) => {
     return classList.join(" ");
   };
 
+  // Layout is composed from the Layout family (layout-purity): the frame is a
+  // ClipColumn (flex column that clips decorative bleed / clip-path notch — the
+  // old `.sui-panel` display:flex + overflow:clip), the header is a ClusterRow
+  // (align:center, gap:sm — the old flex header), and the content is a
+  // ScrollFillColumn (flex:1;min-height:0;overflow:auto — the scroll owner that
+  // stays bounded inside a height-bounded frame). The `sui-panel--fill` class
+  // (emitted when `fill`) supplies the non-geometry height:100%;min-height:0 so
+  // the frame grows to its flex parent and the content takes the leftover space.
+  // The sui-panel* classes ride along as theming/structure hooks.
   return (
-    <div class={classes()} {...others}>
+    <ClipColumn class={classes()} {...others}>
       {/* Corner bracket decorations */}
       <Show when={local.corners === "bracket"}>
         <span class="sui-panel__corner-bl" />
@@ -72,20 +82,18 @@ export const Panel: Component<PanelProps> = (props) => {
       </Show>
 
       <Show when={local.title}>
-        <div class="sui-panel__header">
+        <ClusterRow class="sui-panel__header">
           <h3 class="sui-panel__title">{local.title}</h3>
-        </div>
+        </ClusterRow>
       </Show>
-      {/* Children ALWAYS live in an inner content region. The outer .sui-panel
-          frame is non-scrolling (overflow:clip) and owns the corner brackets;
-          .sui-panel__content is the scroll owner (overflow:auto), so a
-          height-bounded panel scrolls inside the frame and the bottom brackets
+      {/* Children ALWAYS live in an inner content region — the scroll owner, so
+          a height-bounded panel scrolls inside the frame and the bottom brackets
           stay pinned to the visible panel edge instead of riding the scroll
-          content. `fill` additionally makes this region grow (flex:1;min-height:0)
-          so a flexible child (e.g. a container-sized chart) takes the height
-          left after the title. */}
-      <div class="sui-panel__content">{local.children}</div>
-    </div>
+          content. */}
+      <ScrollFillColumn class="sui-panel__content">
+        {local.children}
+      </ScrollFillColumn>
+    </ClipColumn>
   );
 };
 
