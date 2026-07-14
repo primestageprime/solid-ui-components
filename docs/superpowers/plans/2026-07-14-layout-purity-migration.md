@@ -229,10 +229,37 @@ tick", not real arrangement migrations. Review each per skill step 4.
 - **no-shrink cluster + justify-end wrap variants** — within standing authority;
   add as named variants when a migrating component needs them.
 
+## P2 sequencing finding — do the layout-owning primitives before the cards
+
+Reading StatusCard/WorkProgressCard surfaced a dependency the P2 order doesn't
+account for:
+
+- **The cards delegate their OUTER column to `Surface`** (`<Surface
+  direction="column" gap="sm">`). Migrating `Surface` will change/retire those
+  layout props, so the cards' outer composition is defined by the Surface pass —
+  doing the cards first means reworking them after Surface.
+- **The cards' inner geometry is column-context growth/clip** (`flex:1;
+  min-height:0; overflow:hidden` fill/desc regions; `flex:1` meta cells;
+  baseline spread rows). The Layout vocabulary today is row-context
+  (`GrowBox`=min-width:0). Migrating StatusCard alone would spawn ~6–8 ad-hoc
+  column-context variants (baseline-spread, clip-fill-column, clip-grow-column,
+  no-shrink-wrap, grow-wrap-cluster…). Those same variants are what `Surface`
+  and `Panel` need — better designed ONCE with the primitives than ad-hoc per
+  card.
+
+**Recommendation:** re-sequence P2 to **Surface → Panel → (cards: StatusCard,
+WorkProgressCard) → ActionListItem → BatchBar.** The primitives establish the
+column-context variant vocabulary; the cards then compose it cleanly instead of
+each inventing its own. (Raised with team-lead 2026-07-14.)
+
 ## Progress log
 
 - 2026-07-14 — P0 complete: commandment recorded (STYLE_GUIDE + decision-tree),
   skill written, harness landed, this plan doc created.
+- 2026-07-14 — P2 in progress: rulings recorded; migrated ActionRow,
+  BulkActionBar, ActionList, ProgressCard; ButtonGroup marked exempt; Badge
+  family audited intrinsic. Added `NoShrinkClusterRow`/`EndWrapRow`. Suite green
+  (1557). Surfaced the sequencing finding above before StatusCard.
 - 2026-07-14 — Peter's 4 rulings recorded (STYLE_GUIDE + skill). **P1 pilot
   complete (6/6):** AssigneeChips, WorkerCard, ProductGridCard, LabeledDivider,
   FormComposite, DiffPair all migrated; WorkerCard clip retrofit via ClipBox.
