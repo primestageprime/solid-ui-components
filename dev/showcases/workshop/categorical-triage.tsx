@@ -30,6 +30,16 @@ import { QuickFilter } from "../../../src/components/QuickFilter";
 import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { DatePicker } from "../../../src/components/DatePicker";
+import {
+  choreograph,
+  collapse,
+  commit,
+  expand,
+  glowIn,
+  rollUp,
+  slideDown,
+  step,
+} from "../../../src/internal/animation/choreography";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -164,14 +174,14 @@ const CategoricalTriageBench: Component = () => {
     // person-blocked first (you can nudge), snooze (will self-clear),
     // dependency (count only), claimed-but-non-terminal (count only).
     return [
-      { label: "BLOCKED · PERSON", icon: "user" as IconName, mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
-      { label: "BLOCKED · SNOOZE", icon: "clock" as IconName, mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
-      { label: "BLOCKED · DEPENDENCY", icon: "dependency" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
-      { label: "CLAIMED", icon: "user" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
+      { key: "person", label: "BLOCKED · PERSON", icon: "user" as IconName, mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
+      { key: "snooze", label: "BLOCKED · SNOOZE", icon: "clock" as IconName, mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
+      { key: "dep", label: "BLOCKED · DEPENDENCY", icon: "dependency" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { key: "claimed", label: "CLAIMED", icon: "user" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
       // Handed to the agent pipeline (dside StatementTag::Agentic) — the
       // dispatcher claims from here; nothing for the human to do but watch,
       // so it sits last and counts only.
-      { label: "AGENTIC", icon: "agent" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.agentic && it.status !== "DONE") },
+      { key: "agentic", label: "AGENTIC", icon: "agent" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.agentic && it.status !== "DONE") },
     ];
   });
 
@@ -212,16 +222,46 @@ const CategoricalTriageBench: Component = () => {
     window.addEventListener("keydown", onKey);
     onCleanup(() => window.removeEventListener("keydown", onKey));
   });
-  // Categorize the SELECTED item, then advance to the next unresolved one —
-  // the center's whole activity. The candidate is computed BEFORE the patch:
-  // afterwards the item has left the queue.
-  const patchSelected = (patch: Partial<TriageItem>) => {
+  // Which right-rail category a categorize patch sends the item to —
+  // drives the choreography's expand/rollUp targets.
+  const railKeyFor = (patch: Partial<TriageItem>) =>
+    patch.blockedBy ? "person"
+    : patch.blockedUntil ? "snooze"
+    : patch.deps ? "dep"
+    : patch.claimedBy ? "claimed"
+    : patch.agentic ? "agentic"
+    : null;
+
+  // Categorize an item, then advance to the next unresolved one — as ONE
+  // choreographed gesture (the composable-animation dream, first wired
+  // here explicitly; later this becomes the ambient list default):
+  //   1. collapse the leaving card + the detail
+  //   COMMIT — state flips here (item leaves queue, selection advances)
+  //   2. expand the item's new rail row (if that rail shows children)
+  //      and roll up the category count
+  //   3. glow the selection onto the new queue item
+  //   4. slide the new detail down into place
+  // The candidate is computed BEFORE the patch: afterwards the item has
+  // left the queue. Missing handles (count-only rails, empty queue) skip.
+  const animateCategorize = (id: string, patch: Partial<TriageItem>) => {
     const q = unresolved();
-    const i = q.findIndex((it) => it.id === selectedId());
+    const i = q.findIndex((it) => it.id === id);
     const next = q[i + 1] ?? q[i - 1];
-    setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
-    if (next) setSelectedId(next.id);
+    const rail = railKeyFor(patch);
+    void choreograph([
+      step(collapse(`unresolved:${id}`), collapse("detail")),
+      commit(() => {
+        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+        if (selectedId() === id && next) setSelectedId(next.id);
+        setMode(null);
+      }),
+      step(expand(`rail:${rail}:${id}`), rollUp(`count:${rail}`)),
+      step(glowIn(next ? `unresolved:${next.id}` : "", ".surface")),
+      step(slideDown("detail")),
+    ]);
   };
+  const patchSelected = (patch: Partial<TriageItem>) =>
+    animateCategorize(selectedId(), patch);
   // Restore actions for already-categorized items — the bottom row swaps
   // contextually: uncategorizing returns the item to Unresolved and keeps it
   // SELECTED (no advance — you navigated here deliberately).
@@ -255,16 +295,12 @@ const CategoricalTriageBench: Component = () => {
     const picked = new Set(pending());
     return items().filter((it) => it.id !== id && !picked.has(it.name));
   });
-  /** Commit a categorization for the mode's target: patch, advance, exit. */
+  /** Commit a categorization for the mode's target: same choreographed
+   *  gesture (setMode(null) rides the choreography's commit). */
   const commitMode = (patch: Partial<TriageItem>) => {
     const id = mode()?.id;
     if (!id) return;
-    const q = unresolved();
-    const i = q.findIndex((it) => it.id === id);
-    const next = q[i + 1] ?? q[i - 1];
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-    if (selectedId() === id && next) setSelectedId(next.id);
-    setMode(null);
+    animateCategorize(id, patch);
   };
   const finishDeps = () => (pending().length ? commitMode({ deps: pending() }) : setMode(null));
   const finishBlock = () => {
@@ -339,12 +375,16 @@ const CategoricalTriageBench: Component = () => {
               <TightStack>
                 <For each={unresolved()}>
                   {(it) => (
-                    <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
-                      <SpreadRow>
-                        <TextTitle>{it.name}</TextTitle>
-                        <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
-                      </SpreadRow>
-                    </InteractiveCard>
+                    // data-anim: choreography handle — collapse on leave,
+                    // glowIn (inner .surface) when selection arrives.
+                    <div data-anim={`unresolved:${it.id}`}>
+                      <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
+                        <SpreadRow>
+                          <TextTitle>{it.name}</TextTitle>
+                          <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
+                        </SpreadRow>
+                      </InteractiveCard>
+                    </div>
                   )}
                 </For>
               </TightStack>
@@ -352,6 +392,9 @@ const CategoricalTriageBench: Component = () => {
           </FillColumn>
         }
         centerPanel={
+          // data-anim="detail": one handle over BOTH center states (detail
+          // view and input-mode surface) so collapse/slideDown always land.
+          <div data-anim="detail" style={{ height: "100%", "min-height": 0 }}>
           <Show
             when={!modeTarget()}
             fallback={
@@ -555,6 +598,7 @@ const CategoricalTriageBench: Component = () => {
             )}
           </Show>
           </Show>
+          </div>
         }
         rightPanel={
           <TightStack>
@@ -563,13 +607,16 @@ const CategoricalTriageBench: Component = () => {
                 <div>
                   <SpreadRow>
                     <TextLabel>{cat.label}</TextLabel>
-                    <FlashCount count={cat.items.length} />
+                    <span data-anim={`count:${cat.key}`}>
+                      <FlashCount count={cat.items.length} />
+                    </span>
                   </SpreadRow>
                   <Show when={cat.mode === "children"}>
                     <TightStack>
                       <For each={cat.items}>
                         {(it) => (
                           <div
+                            data-anim={`rail:${cat.key}:${it.id}`}
                             style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
                             onClick={() => setSelectedId(it.id)}
                           >
