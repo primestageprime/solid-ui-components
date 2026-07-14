@@ -44,6 +44,11 @@ type TriageItem = {
   creator: string;
   createdAt: number; // epoch ms
   claimedBy?: string;
+  // Released to the agent pipeline. Mirrors dside's EXISTING data model:
+  // StatementTag::Agentic routes the Statement to the workflow's agent-owned
+  // work stage (persona_hint="architect", OwnerKind::Agent) — triage [a] is
+  // just the human grant that applies that tag.
+  agentic?: boolean;
   blockedBy?: string; // convention: starts with the person ("Ryan — …")
   blockedUntil?: number; // epoch ms
   deps?: string[];
@@ -163,6 +168,10 @@ const CategoricalTriageBench: Component = () => {
       { label: "BLOCKED · SNOOZE", icon: "clock" as IconName, mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
       { label: "BLOCKED · DEPENDENCY", icon: "external-link" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
       { label: "CLAIMED", icon: "user" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
+      // Handed to the agent pipeline (dside StatementTag::Agentic) — the
+      // dispatcher claims from here; nothing for the human to do but watch,
+      // so it sits last and counts only.
+      { label: "AGENTIC", icon: "settings" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.agentic && it.status !== "DONE") },
     ];
   });
 
@@ -176,6 +185,7 @@ const CategoricalTriageBench: Component = () => {
         !it.blockedUntil &&
         !(it.deps && it.deps.length) &&
         !it.claimedBy &&
+        !it.agentic &&
         it.status !== "DONE",
     ),
   );
@@ -222,6 +232,9 @@ const CategoricalTriageBench: Component = () => {
     { when: (it: TriageItem) => !!it.blockedUntil, hotkey: "n", label: "unsnooze", apply: () => patchStay({ blockedUntil: undefined }) },
     { when: (it: TriageItem) => !!(it.deps && it.deps.length), hotkey: "d", label: "undepend", apply: () => patchStay({ deps: undefined }) },
     { when: (it: TriageItem) => !!it.claimedBy, hotkey: "r", label: "release", apply: () => patchStay({ claimedBy: undefined }) },
+    // Withdraw the agentic grant — takes the item back human-side. (In dside
+    // terms: if a worker holds a lease, the dispatcher stops renewing it.)
+    { when: (it: TriageItem) => !!it.agentic, hotkey: "w", label: "withdraw", apply: () => patchStay({ agentic: undefined }) },
   ];
   const isCategorized = (it: TriageItem) => RESTORE.some((a) => a.when(it));
 
@@ -266,6 +279,9 @@ const CategoricalTriageBench: Component = () => {
 
   const CATEGORIZE = [
     { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
+    // Release for agentic work: one keystroke, like claim — the tag is the
+    // whole gesture (the agent pipeline takes it from there).
+    { hotkey: "a", label: "agentic", apply: () => patchSelected({ agentic: true }) },
     {
       hotkey: "b",
       label: "block",
