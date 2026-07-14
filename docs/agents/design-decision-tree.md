@@ -285,6 +285,23 @@ Composed: FillColumn(title bar, Divider, ScrollColumn(pending InfoPanel,
 QuickFilter InfoPanel), confirm InfoPanel). Precedent: categorical-triage
 [d]epends picker (2026-07-14).
 
+The picker generalizes to **categorize input modes** — match the input
+surface to what the action needs (Peter, 2026-07-14):
+
+- **No input needed** (claim, later) → stay ONE-KEYSTROKE, apply immediately.
+  Don't build a surface for an action with an obvious default.
+- **One free-text fact** (block reason) → a single `ThemedInput`,
+  AUTO-FOCUSED on entry, placeholder teaching the convention (person-first),
+  **Enter commits** (the input owns focus, so Enter beats hotkeys); pinned
+  [f]inish for the mouse.
+- **A duration/quantity with common cases** (snooze) → preset HotkeyButtons
+  first ([1]/[3]/[7] days — number keys, one press commits), a picker
+  (`DatePicker`) below for the long tail + [f]inish.
+- **N associations** (depends) → the two-section picker above.
+
+All share the shell: FillColumn(title bar with mode hint, Divider,
+ScrollColumn(inputs), pinned confirm). Nothing mutates until commit.
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
