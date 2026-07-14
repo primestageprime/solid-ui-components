@@ -1,5 +1,15 @@
 import { type Component, createSignal } from "solid-js";
-import { Tabs } from "../../src/components/Tabs";
+import { createTabs } from "../../src/components/Tabs";
+import { BoxedTabs, PillTabs, Tabs } from "../../src/components/Tabs/variants";
+
+// Local prop-matrix instances — this showcase demonstrates the orientation
+// axis, which no shipped variant bakes. Factory-curried at module top so the
+// visual config still lives in one place, not at the call site.
+const VerticalTabs = createTabs({ orientation: "vertical" });
+const VerticalBoxedTabs = createTabs({
+  orientation: "vertical",
+  variant: "boxed",
+});
 
 export const TabsShowcase: Component = () => {
   const [active, setActive] = createSignal("overview");
@@ -22,20 +32,10 @@ export const TabsShowcase: Component = () => {
           <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Boxed</h3>
-          <Tabs
-            tabs={tabs}
-            activeTab={active()}
-            onTabChange={setActive}
-            variant="boxed"
-          />
+          <BoxedTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — Pill</h3>
-          <Tabs
-            tabs={tabs}
-            activeTab={active()}
-            onTabChange={setActive}
-            variant="pill"
-          />
+          <PillTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
           <h3 style={{ "margin-top": "24px" }}>Composed — With Status</h3>
           <Tabs
@@ -58,11 +58,10 @@ export const TabsShowcase: Component = () => {
               border: "1px dashed var(--sui-border)",
             }}
           >
-            <Tabs
+            <VerticalTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
-              orientation="vertical"
             />
             <div
               style={{
@@ -83,12 +82,10 @@ export const TabsShowcase: Component = () => {
               border: "1px dashed var(--sui-border)",
             }}
           >
-            <Tabs
+            <VerticalBoxedTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
-              orientation="vertical"
-              variant="boxed"
             />
             <div
               style={{

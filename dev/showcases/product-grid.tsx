@@ -20,7 +20,7 @@ import {
   NarrowStack,
   ContentStack,
   ClusterRow,
-  FlexRow,
+  TightClusterRow,
 } from "../../src/components/Layout";
 import { TextLabel, MutedBody, PageTitle } from "../../src/components/Text";
 import { BaseTable, type TableColumn } from "../../src/components/Table";
@@ -565,7 +565,7 @@ export const ProductGridShowcase: Component = () => {
         focus to highlight its whole sub-column. Work flows todo → doing → done
         one unit per tick.
       </MutedBody>
-      <ClusterRow gap="xs">
+      <TightClusterRow>
         <For each={DATASETS}>
           {(ds) => {
             const active = () => activeDatasetId() === ds.id;
@@ -594,7 +594,7 @@ export const ProductGridShowcase: Component = () => {
             );
           }}
         </For>
-      </ClusterRow>
+      </TightClusterRow>
       <ProductGrid
         items={dataset().items}
         areaOrder={dataset().areaOrder}
@@ -603,7 +603,7 @@ export const ProductGridShowcase: Component = () => {
         onSelectionChange={setSelection}
       />
       <ContentStack>
-        <FlexRow gap="sm" align="center">
+        <ClusterRow>
           <TextLabel>
             items{" "}
             <span style={{ color: "var(--sui-text-muted)" }}>
@@ -626,7 +626,7 @@ export const ProductGridShowcase: Component = () => {
               clear filter
             </button>
           </Show>
-        </FlexRow>
+        </ClusterRow>
         <BaseTable
           data={tableRows()}
           columns={columns}

@@ -1,8 +1,19 @@
 import type { Component } from "solid-js";
-import { EmptyState } from "../../src/components/Feedback";
+import {
+  EmptyState,
+  MutedEmptyState,
+  createEmptyState,
+} from "../../src/components/Feedback";
 import { Icon } from "../../src/components/Icon";
 import { Stack } from "../../src/components/Layout/Stack";
 import { TextBody, MutedBody, AccentBody } from "../../src/components/Text";
+
+// Local prop-matrix instances — this showcase demonstrates the size and accent
+// axes, which no shipped variant bakes. Factory-curried at module top so the
+// visual config stays in one place rather than at the call site.
+const SmEmptyState = createEmptyState({ size: "sm" });
+const LgEmptyState = createEmptyState({ size: "lg" });
+const AccentEmptyState = createEmptyState({ variant: "accent" });
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -22,7 +33,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
           <Stack gap="sm">
             <div>
               <div class="text-meta">sm</div>
-              <EmptyState size="sm" message="No results found" />
+              <SmEmptyState message="No results found" />
             </div>
             <div>
               <div class="text-meta">md (default)</div>
@@ -33,8 +44,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div>
               <div class="text-meta">lg</div>
-              <EmptyState
-                size="lg"
+              <LgEmptyState
                 icon={<Icon name="search" size="lg" />}
                 message="No results found"
               />
@@ -49,11 +59,11 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
             </div>
             <div>
               <div class="text-meta">muted</div>
-              <EmptyState variant="muted" message="Muted text style" />
+              <MutedEmptyState message="Muted text style" />
             </div>
             <div>
               <div class="text-meta">accent</div>
-              <EmptyState variant="accent" message="Accent text style" />
+              <AccentEmptyState message="Accent text style" />
             </div>
           </Stack>
         </div>

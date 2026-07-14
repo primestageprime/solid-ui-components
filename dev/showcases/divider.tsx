@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 import { Panel } from "../../src/components/Panel/Panel";
-import { Divider } from "../../src/components/Divider";
+import { Divider, DashedDivider } from "../../src/components/Divider";
 
 export const DividerShowcase: Component = () => {
   return (
@@ -21,7 +21,7 @@ export const DividerShowcase: Component = () => {
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Content below (solid)
           </p>
-          <Divider variant="dashed" />
+          <DashedDivider />
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Content below (dashed)
           </p>

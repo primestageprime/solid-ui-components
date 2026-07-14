@@ -3,7 +3,7 @@
 import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
 import { CensusView, type CensusTable } from "../../src/components/CensusView";
-import { GhostButton } from "../../src/components/Button";
+import { SmallGhostButton } from "../../src/components/Button";
 
 // ── Seed tables — one entry per bucket (all 8) plus extras for scroll visibility ──
 const SEED_TABLES: CensusTable[] = [
@@ -73,18 +73,16 @@ export const CensusViewShowcase: Component = () => {
           tableMaxHeight="200px"
           actions={(t) => (
             <div style={{ display: "flex", gap: "8px", "margin-top": "12px", "flex-wrap": "wrap" }}>
-              <GhostButton
-                size="sm"
+              <SmallGhostButton
                 onClick={() => setLastAction(`Recount: ${t.entity}`)}
               >
                 Recount
-              </GhostButton>
-              <GhostButton
-                size="sm"
+              </SmallGhostButton>
+              <SmallGhostButton
                 onClick={() => setLastAction(`Queue export: ${t.entity}`)}
               >
                 Queue export
-              </GhostButton>
+              </SmallGhostButton>
             </div>
           )}
         />
