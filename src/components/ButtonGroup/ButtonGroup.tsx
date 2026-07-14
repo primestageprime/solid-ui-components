@@ -1,17 +1,25 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// ButtonGroup — Atomic (Depth 1)
+// ButtonGroup — Layout-exempt (arranges child buttons).
 // Owns CSS (ButtonGroup.css), no component imports.
-// Button arrangement with orientation + gap.
+//
+// Layout-purity status: ButtonGroup is `layout`-exempt (its whole job is
+// arranging child buttons), but its runtime `gap` / `orientation` props are
+// DEPRECATED-as-such (Peter, 2026-07-14). New call sites should use the pure-
+// path curried variants in ./variants.ts — `ButtonGroup` (horizontal),
+// `VerticalButtonGroup`, `BorderedButtonGroup` — which bake orientation/gap and
+// expose only data props. The runtime props stay for backwards compatibility;
+// consumers migrate opportunistically. No breaking changes.
 // ============================================
 import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
 import "./ButtonGroup.css";
 
 export interface ButtonGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  /** Orientation of buttons */
+  /** Orientation. Legacy runtime prop — new call sites bake it into a curried
+   *  variant (`ButtonGroup` / `VerticalButtonGroup`) instead of passing inline. */
   orientation?: "horizontal" | "vertical";
-  /** Gap between buttons */
+  /** Gap between buttons. Legacy runtime prop — prefer a curried variant. */
   gap?: "none" | "sm" | "md" | "lg";
   /** Border around group */
   bordered?: boolean;

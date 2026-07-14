@@ -117,8 +117,11 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Surface (geo 11)
 - [ ] ActionListItem (geo 20)
 - [ ] ActionList (geo 6)
-- [ ] ButtonGroup (geo 7) — layout-exempt (DEPRECATED-as-such): keep runtime
-  API; ADD HButtonGroup/VButtonGroup curried variants for the pure path
+- [x] ButtonGroup (geo 7) — DONE. Marked layout-exempt (DEPRECATED-as-such) in
+  the header + prop docs. Pure-path curried variants ALREADY existed
+  (`ButtonGroup`/`VerticalButtonGroup`/`BorderedButtonGroup` in variants.ts) — no
+  redundant H/VButtonGroup aliases added (#2 rule). Runtime gap/orientation
+  props kept unchanged; zero breaking changes.
 - [ ] ProgressCard (geo 18)
 - [ ] WorkProgressCard (geo 14)
 - [ ] BatchBar (geo 12)
