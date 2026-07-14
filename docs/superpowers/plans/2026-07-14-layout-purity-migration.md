@@ -252,6 +252,28 @@ WorkProgressCard) → ActionListItem → BatchBar.** The primitives establish th
 column-context variant vocabulary; the cards then compose it cleanly instead of
 each inventing its own. (Raised with team-lead 2026-07-14.)
 
+### Vocabulary gaps the remaining P2 needs (design once, with the primitives)
+
+Enumerated while reading StatusCard, WorkProgressCard, ActionListItem:
+
+- **Column-context growth/clip** — `flex:1; min-height:0` fill columns and
+  `overflow:hidden` clip regions IN a column. Today only `FillColumn` (no clip)
+  and `ScrollColumn` (scroll, not clip) exist; `GrowBox` is min-*width*:0 (row
+  context). Need e.g. `ClipFillColumn`, a column-context grow-clip box.
+- **Per-child cross-axis alignment (`align-self`)** — ActionListItem's dismiss
+  cap uses `align-self: stretch` to span the row height. A `Row`'s single
+  `align` prop can't express per-child alignment. Needs an `AlignSelf*` Box
+  variant (or a Box `alignSelf` prop) — a real vocabulary addition.
+- **No-shrink on intrinsic buttons/icons** — `flex:none` on self-contained icon
+  buttons (open/dismiss caps). Clean route is wrapping in `ActionSlot`, but that
+  nests a div around each button; worth deciding the idiom (wrapper vs a Box
+  `shrink` on the button-owning primitive) before doing it 6× per row.
+- **Baseline spread** — `align:baseline; justify:between` (StatusCard row1).
+  A `BaselineSpreadRow` variant covers it (trivial, add when first used).
+
+These are shared across Surface/Panel/the cards/ActionListItem — hence the
+recommendation to establish them WITH the primitive pass, not ad-hoc per card.
+
 ## Progress log
 
 - 2026-07-14 — P0 complete: commandment recorded (STYLE_GUIDE + decision-tree),
