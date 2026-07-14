@@ -821,3 +821,47 @@ recommendation to establish them WITH the primitive pass, not ad-hoc per card.
   **Deferred:** StatusCard (no dev showcase → visually unverifiable here — needs a
   showcase or a DOM-structure guard); CheckboxField + SegmentedControl (genuine
   arrangement questions, own pass). Remaining P3/P4/P5 unstarted.
+- 2026-07-14 — **MIGRATION COMPLETE.** All P0–P5 items are DONE, AUDITED-INTRINSIC,
+  or LAYOUT-EXEMPT — zero unchecked/claimed lines remain. Worked across 3 concurrent
+  fresh-context sessions on a shared checkout (exact-path staging + `git pull --rebase
+  --autostash`, no clobbering). P3 overlays (Combobox/DateRangePicker/MultiSelectFilter),
+  P4 big composites (Table exempt; Surface/Panel keystone; SidebarSelector,
+  ExtractionBoard, CensusView, ThreadGroup, SortableList, MutableList, DataDisplay,
+  DnDHierarchySortBar, RecentStarred), and P5 (real migrations ValueRenderer,
+  TitledTimeRangeHeader, MarkdownEditor, AsyncProgress, RangeAmountGroup,
+  InlineChartErrorOverlay, … + the intrinsic atom sweep) all landed. Table's
+  prop-conditional fill-chain was ruled **layout-exempt** (a verified Dynamic-root
+  restructure was built then reverted — the flagship's regression surface isn't worth
+  purity; the flush variants are the pure path for any future table-like).
+
+## Migration complete
+
+Every component in the inventory has reached a terminal disposition:
+
+- **DONE** — geometry composed from Layout variants, verified visually
+  (showcase/canary) and by the gates (`tsc` + `typecheck:dev` + `vitest`).
+- **AUDITED INTRINSIC** — a self-contained widget arranging its OWN prop/data-derived
+  parts (inline-level control, data-derived option/cell/segment, single-widget bar
+  mask, leaf control) — wrapping it in a Layout Row would be the absurd-wrapper
+  anti-pattern. Left as-is, with the reason recorded per component.
+- **EXEMPT-AS-LAYOUT** — the Layout family itself + genuine full-height scroll
+  plumbing (page-structure family; Table's `fill`/`stickyHeader`/`maxHeight` frame)
+  + genuine 2-D CSS-grid matrices with load-bearing off-scale/0-gap seams
+  (WeekCalendar, QuadrantGrid, the heat grids). These OWN the vocabulary or a
+  matrix geometry the token scale can't express.
+
+**Vocabulary the migration added** (Layout/variants.ts + primitives): the row/
+column cluster set (Cluster/Spread/Baseline/Top/GrowCluster/Wrapped/NoShrink/
+End/Tag/Wrap/Chip/Stretch/GrowWrap/GrowCenter/CenteredWrap rows; Tight/Narrow/
+Content/Centered/Grow/Fill/Column stacks), the column-context grow/clip/scroll set
+(FillColumn(+Flush), ClipFillColumn(+Flush/Box), ScrollFillColumn, ClipColumn,
+GrowColumn, GrowStack, ScrollX/Y boxes), the 2-D primitives (`Grid`/`LabelValueGrid`,
+`AutoStackRow`/`AutoStackItem`), and the Box slots (ActionSlot, GrowBox, ClipBox,
+NoShrinkScrollBox). The **no-gap flush set** (`FillColumnFlush`/`ClipFillColumnFlush`)
+is the pure path for margin-spaced full-height composites and any future table-like.
+
+**Standing discriminators** (in SKILL.md §3b/4): inline-level control ⇒ intrinsic;
+data-derived cells/options/segments ⇒ intrinsic; leaf control vs field composition;
+third-party/Kobalte parts ⇒ carve-out; load-bearing off-scale/0-gap data-grids ⇒
+intrinsic; snap-everything to xs(4)/sm(8); runtime numeric layout props ⇒
+ButtonGroup-pattern (deprecated legacy, base geometry composed).
