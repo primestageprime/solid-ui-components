@@ -74,8 +74,9 @@ Three categories are exempt — everything else migrates:
 
 1. **`layout`-tagged components** — the Layout family itself (`Stack`, `Row`,
    `Box`, `AppShell`) **plus** `ThreePanelLayout`, `Page`, `ScrollRegion`,
-   `SplitQueueList`, `Section`, `CollapsiblePanel`, `Modal`, and `BottomSheet`.
-   These components **are** the arrangement vocabulary — they are allowed (and
+   `SplitQueueList`, `Section`, `CollapsiblePanel`, `Modal`, `BottomSheet`, and
+   `ButtonGroup` (the last DEPRECATED-as-such — see ruling 5 below). These
+   components **are** the arrangement vocabulary — they are allowed (and
    required) to declare flex/grid/overflow/positioning directly.
 2. **svg / canvas rendering** — charts and their render primitives may position
    freely (the SVG coordinate system is their layout engine, not the box model).
@@ -116,9 +117,14 @@ Four situations that have no obvious Layout home were adjudicated:
    change only if it holds up. Fall back to BLOCKED-with-reason only if a
    faithful real-element replacement genuinely can't match. Rationale: deeper
    components shouldn't have to think about styling or accidentally override it.
-2. **Off-scale gaps: snap to the scale.** `6px` → nearest step, `12px` → the
-   `md` step. A 2–4px shift is accepted; note the snap in the commit message.
-   Do not expand the `Stack`/`Row` scale for this.
+2. **Off-scale gaps: snap to the scale — always (final, 2026-07-14).** The
+   `Stack`/`Row` gap scale is `xs`(4px)/`sm`(8px), full stop — no `md`/`lg`.
+   **Every** off-scale gap snaps to the nearest existing step, even when the
+   change is visible: `6px`→`sm`, `12px`→`sm`, `16px`→`sm`. There is no ±2–4px
+   tolerance gate and nothing blocks on gap size. Note each snap in the commit
+   message so visual diffs are attributable. (`Grid` and `AutoStackRow` are
+   separate primitives that carry their own `md`(12px) step for genuine 2-D /
+   responsive gaps; this rule governs `Stack`/`Row`.)
 3. **Missing 2-D / responsive layouts: add the primitive.** Two shipped:
    `AutoStackRow` + `AutoStackItem` (responsive side-by-side → stacked via a
    `breakWidth` prop — the "holy-albatross" behavior) and `Grid` + the
@@ -128,6 +134,12 @@ Four situations that have no obvious Layout home were adjudicated:
    it through Layout: compose the `ClipBox` curried `Box` variant
    (`overflow: hidden`) wherever a component clips for a collapse animation or a
    progress/bar mask. There is no "overflow is fine here" exception.
+5. **ButtonGroup is `layout`-exempt but DEPRECATED-as-such (2026-07-14).** Its
+   job is arranging child buttons, so it joins the exempt list and its internals
+   may use base `Row`/`Stack`. But its runtime `gap`/`orientation` props are
+   legacy: add curried variants (`HButtonGroup`/`VButtonGroup`) so new call sites
+   have the pure path, keep the existing runtime API working unchanged (zero
+   breaking changes), and let consumers migrate opportunistically.
 
 ### Migration posture
 

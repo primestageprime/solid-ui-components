@@ -114,7 +114,8 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Surface (geo 11)
 - [ ] ActionListItem (geo 20)
 - [ ] ActionList (geo 6)
-- [ ] ButtonGroup (geo 7)
+- [ ] ButtonGroup (geo 7) — layout-exempt (DEPRECATED-as-such): keep runtime
+  API; ADD HButtonGroup/VButtonGroup curried variants for the pure path
 - [ ] ProgressCard (geo 18)
 - [ ] WorkProgressCard (geo 14)
 - [ ] BatchBar (geo 12)
@@ -205,22 +206,17 @@ tick", not real arrangement migrations. Review each per skill step 4.
   4px(xs)/8px(sm). Accept the 1px nudge where imperceptible; a load-bearing
   off-scale value is a BLOCK, not a scale expansion (Peter-gated).
 
-## P2 friction (recurring — batch a decision)
+## P2 friction — RESOLVED (Peter, 2026-07-14)
 
-Surfacing across P2 (ActionRow, ButtonGroup, BulkActionBar, …):
-
-- **Row/Stack gap scale is xs(4)/sm(8) only.** Ruling 2 says snap (2–4px ok).
-  So 6px→sm(8, +2 ok), 12px→sm(8, −4 edge-ok but collapses distinct steps),
-  **16px→ blocks** (−8, out of tolerance; BulkActionBar's outer gap). If enough
-  block, that's the signal to add `md` to Row/Stack — but ruling 2 said NOT to
-  expand the scale, so blocking-with-note is the current default.
-- **No-shrink cluster** — several components want a center cluster that won't
-  compress (`flex-shrink:0` + row + gap): ActionRow leading/trailing. Candidate
-  variant `NoShrinkClusterRow` (like `ChipCluster` but non-wrapping).
-- **Justify-end wrapping row** — ActionRow `__actions` (wrap + justify flex-end).
-  No variant yet.
-
-Prefer batching these small variant additions once rather than per-component.
+- **Gap scale: snap EVERYTHING to xs(4)/sm(8).** No md/lg on Stack/Row. 12px→sm,
+  16px→sm, even when visible; no tolerance gate; nothing blocks on gap size.
+  Note each snap in the commit. (Grid/AutoStack keep their own md step.)
+- **ButtonGroup → `layout`-exempt but DEPRECATED-as-such.** Keep its runtime
+  gap/orientation API working unchanged (zero breaking changes); ADD curried
+  variants (`HButtonGroup`/`VButtonGroup`) for the pure path; consumers migrate
+  later. Ticked as exempt below.
+- **no-shrink cluster + justify-end wrap variants** — within standing authority;
+  add as named variants when a migrating component needs them.
 
 ## Progress log
 
