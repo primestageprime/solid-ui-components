@@ -15,6 +15,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { Grid } from "../Layout/Grid";
 import "./MonthOfYearPicker.css";
 
 const MONTH_ABBR = [
@@ -54,9 +55,14 @@ export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
   ]);
   const rootClass = () =>
     local.class ? `sui-moy-picker ${local.class}` : "sui-moy-picker";
+  // The 4-column grid is composed from the Layout Grid primitive (columns +
+  // gap:xs); the cells stay intrinsic (each centers its own month label). The
+  // --moy-cell-size var rides on the same element so the columns track resolves.
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the month cell layout
-    <div
+    <Grid
+      columns="repeat(4, var(--moy-cell-size, 3.5rem))"
+      gap="xs"
       class={rootClass()}
       role="grid"
       style={{ "--moy-cell-size": local.cellSize ?? "3.5rem" }}
@@ -85,7 +91,7 @@ export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
           );
         }}
       </For>
-    </div>
+    </Grid>
   );
 };
 

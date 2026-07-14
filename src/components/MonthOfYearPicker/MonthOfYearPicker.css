@@ -4,10 +4,9 @@
    4-column uniform grid, same visual language
    as DayOfMonthPicker.
    ============================================ */
+/* The 4-column grid (grid-template-columns + gap) is composed from the Layout
+   Grid primitive; only the content-width sizing lives here now. */
 .sui-moy-picker {
-  display: grid;
-  grid-template-columns: repeat(4, var(--moy-cell-size, 3.5rem));
-  gap: var(--sui-space-1, 4px);
   width: fit-content;
 }
 

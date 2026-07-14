@@ -234,7 +234,12 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   it). Left as-is. See the inline-level discriminator in the rulings section.
 - [ ] DayOfWeekPicker (geo 6)
 - [ ] DayOfMonthPicker (geo 7)
-- [ ] MonthOfYearPicker (geo 6)
+- [x] MonthOfYearPicker (geo 6) — DONE (compose Grid, ruling 3; showcase-first via
+  876cfa0). Grid container (`display:grid; repeat(4,cell); gap:4`) → `Grid`
+  primitive (`columns="repeat(4, var(--moy-cell-size,3.5rem))"`, gap:xs=4 exact;
+  the --moy-cell-size var rides on the same element so the track resolves). Cells
+  stay intrinsic (each centers its own month label). Only `width:fit-content`
+  remains in CSS. Verified on the pickers showcase: pixel-identical 4-col grid.
 - [ ] DatePicker (geo 7) — overlay-partial
 - [ ] DateRangePicker (geo 26) — overlay-partial
 - [ ] Combobox (geo 47) — overlay-partial
