@@ -542,10 +542,29 @@ tick", not real arrangement migrations. Review each per skill step 4.
   data structure (`<For each={Object.entries}>`) — data-content, not the component's
   arrangement. Verified on the value-renderer showcase: primitives, objects (nested,
   zebra rows), arrays, and the no-label body all render identically.
-- [ ] ResponsiveMoney (geo 2)
-- [ ] BigNumberInput (geo 4)
-- [ ] CurrencyInput (geo 2)
-- [ ] ThemedNumberInput (geo 12)
+- [x] ResponsiveMoney (geo 2) — AUDITED, INTRINSIC. Inline money figure
+  (`inline-flex; min-width:0; max-width:100%; overflow:hidden`) that truncates
+  responsively; the `overflow:hidden` is the widget's OWN truncation mask and the
+  absolute `__measure` twin its OWN sizing mechanism (single-widget internal, like
+  DigitRoller/BatchBar). Inline-level. As-is.
+- [x] BigNumberInput (geo 4) — AUDITED, INTRINSIC. Inline large-number input
+  (`inline-flex; align:baseline; gap:4`) centering its OWN sign/prefix/input on a
+  baseline inside a fixed-width root (`__input` fills via flex:1 1 auto). Same
+  category as NumberWithUnits (inline-level self-contained widget). As-is.
+- [x] CurrencyInput (geo 2) — AUDITED, INTRINSIC. A thin width-capping wrapper
+  around a SINGLE child (ThemedNumberInput): `display:flex; flex:1 1 auto;
+  min-width:0` + an inline value-derived `max-width`. The `display:flex` sizes its
+  one child; it is not a multi-child arrangement — forcing a one-child Layout Box
+  is the absurd-wrapper anti-pattern (skill step 4). As-is.
+- [x] ThemedNumberInput (geo 12) — AUDITED, INTRINSIC (Kobalte carve-out + control
+  chrome). Root `.sui-number-input` IS the Kobalte `NumberField` Root (third-party —
+  we can only pass `class`, like the Combobox/Toast Kobalte carve-out), so its
+  field-column flex stays. The plain-div `__group` (`flex; align:stretch`) + `__triggers`
+  (`flex-column`) are the number field's OWN integrated [input | stepper] chrome —
+  a single control widget's internals (same category as SegmentedInput's stepper),
+  tightly coupled to the border/focus-within box; not consumer-child arrangement.
+  Unlike ThemedInput (whose PLAIN-div field column migrated to GrowColumn), here the
+  field column is the Kobalte root and can't be wrapped. As-is.
 - [ ] EditableTitle (geo 8)
 - [ ] List (geo 8)
 - [ ] Markdown (geo 4)
