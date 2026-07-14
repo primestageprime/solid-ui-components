@@ -1,9 +1,7 @@
-.themed-input-group {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
+/* The field column (label above input, growing/shrinking in a form row) is
+   composed from the GrowColumn Layout variant — no box-model geometry lives
+   here now. The label's own margin-bottom (below) provides the label→input
+   spacing. */
 
 .themed-input-label {
   display: block;

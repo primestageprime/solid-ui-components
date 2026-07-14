@@ -306,6 +306,17 @@ export const PaneRow: Component<RowDataProps> = createRow({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** GrowColumn — a column that grows to fill its share of a parent ROW and may
+ *  shrink past its content (`flex:1; min-width:0`), while stacking its own
+ *  children. The column-stacking analogue of `GrowBox` (a plain grow box) and
+ *  the row-context sibling of `FillColumn` (which fills column-context HEIGHT
+ *  via min-height:0). No baked gap — children space themselves (e.g. a form
+ *  field: a label with its own margin above a full-width input). For a
+ *  form-field column that takes its share of a horizontal field row. */
+export const GrowColumn: Component<StackDataProps> = createStack({
+  style: { flex: "1", "min-width": "0" },
+});
+
 /** Flex column that scrolls its own overflow — `flex:1; min-width:0;
  *  overflow:auto`. The main/detail pane beside a Sidebar. */
 export const ScrollColumn: Component<StackDataProps> = createStack({

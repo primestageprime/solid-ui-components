@@ -6,6 +6,7 @@
 // Styled text input with optional label.
 // ============================================
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
+import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
 
 export interface ThemedInputProps
@@ -25,14 +26,16 @@ export const ThemedInput: Component<ThemedInputProps> = (props) => {
     return classList.join(" ");
   };
 
+  // The field column (label above input, growing in a form row) is composed
+  // from the GrowColumn Layout variant; the label keeps its own margin-bottom.
   return (
-    <div class="themed-input-group">
+    <GrowColumn class="themed-input-group">
       {local.label && (
         <label class="themed-input-label" for={inputId()}>
           {local.label}
         </label>
       )}
       <input id={inputId()} class={classes()} {...others} />
-    </div>
+    </GrowColumn>
   );
 };

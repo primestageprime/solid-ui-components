@@ -191,7 +191,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P3 — form / overlay controls
 
-- [ ] Inputs/ThemedInputs (geo 3)
+- [x] Inputs/ThemedInputs (geo 3) — DONE (field-composition ⇒ migrate). Covers all
+  three consumers of `.themed-input-group` (ThemedInput, ThemedTextarea,
+  NameInput) sharing ThemedInputs.css. The field column (label above input,
+  `flex:1; min-width:0` growing in a form row) → new `GrowColumn` variant (the
+  column-stacking analogue of GrowBox; no baked gap). The label keeps its own
+  `margin-bottom:8px` (margin is not layout-purity-banned) for the label→input
+  spacing, so no gap variant was needed. Verified on the inputs showcase:
+  pixel-identical label/input spacing and widths; full suite + QuickFilter (which
+  composes ThemedInput) green.
 - [x] Checkbox/Checkbox (geo 6) — AUDITED, INTRINSIC. A self-contained inline
   labeled control: its `inline-flex`/align/gap center its OWN painted box +
   its OWN `<label>` (rendered from the `label` string prop + `labelPosition`,
