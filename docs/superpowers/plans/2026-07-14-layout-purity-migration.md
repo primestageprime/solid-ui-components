@@ -252,8 +252,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   control widget → intrinsic (inline discriminator); the native-input anchoring
   and the display's own clip stay. Canary (categorical-triage) unaffected — no
   change. Nothing to migrate.
-- [ ] DateRangePicker (geo 26) — overlay-partial
-- [ ] Combobox (geo 47) — overlay-partial
+- [ ] DateRangePicker (geo 26) — overlay-partial. TEED UP (layout-purity-2
+  audit, 2026-07-14): the big multi-region one — two calendar month GRIDS
+  (→ Grid primitive, cells intrinsic), a dual-calendar layout row, header
+  rows, preset rows, and a footer — all genuine consumer-arrangement to
+  migrate; overlay anchoring stays. HAS a showcase. Deserves a careful
+  individual pass.
+- [ ] Combobox (geo 47) — overlay-partial. TEED UP (layout-purity-2 audit):
+  mixed. `__chips` is a REAL column of [`__chips-header` (space-between row)
+  | `__chip-list` (wrap flow)] → migratable arrangement. `__input-row` is
+  control chrome and `__item`/chips are data-derived → intrinsic (ruling 4).
+  Per-element judgement required.
 - [x] Select (geo 28) — overlay-partial; AUDITED, INTRINSIC. Its only banned
   geometry is `.sui-select__item` (data-derived option rows, `<For>`, each a
   space-between [label | check/meta] of its own parts → ruling 4 intrinsic) and
@@ -270,7 +279,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   centering its own dot+label (ruling 4: data-derived option content = intrinsic).
   The footer has no banned geometry. No consumer-child multi-region composition →
   nothing to migrate.
-- [ ] MultiSelectFilter (geo 24) — overlay-partial
+- [ ] MultiSelectFilter (geo 24) — overlay-partial. TEED UP (layout-purity-2
+  audit): `__bar` is a growing wrap-row of filter controls → migratable;
+  `__menu`/`__menu-item` are data-derived → intrinsic. NO showcase — needs
+  the showcase-first treatment (StatusCard pattern) before migrating.
 - [x] TagInput (geo 11) — AUDITED, INTRINSIC (field-composition discriminator
   applied; fell to intrinsic). Unlike CheckboxField/ThemedInput there is NO outer
   label|control field-row — `.tag-input` is just position:relative/width:100%.
