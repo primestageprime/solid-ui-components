@@ -38,6 +38,12 @@
   font-family: var(--sui-font-family);
 }
 
+/* Fixed layout: column widths honored exactly; the one unwidthed (ellipsis)
+   column absorbs the remainder and truncates instead of widening the table. */
+.hud-table--fixed .hud-table__table {
+  table-layout: fixed;
+}
+
 /* Header */
 .hud-table__head {
   background: linear-gradient(

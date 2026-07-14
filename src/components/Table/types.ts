@@ -15,6 +15,12 @@ export interface TableColumn<T> {
   accessor: keyof T | ((row: T) => JSX.Element | string | number);
   width?: string;
   align?: "left" | "center" | "right";
+  /**
+   * Clip overflowing content with an ellipsis even when no fixed `width` is set —
+   * for the flexible column in a `fixedLayout` table (e.g. a name column that
+   * takes the remaining space and truncates long values).
+   */
+  ellipsis?: boolean;
   sortable?: boolean;
   /** Group label for column grouping — columns sharing the same group string are merged under a colspan header */
   group?: string;
@@ -30,6 +36,13 @@ export interface BaseTableProps<T>
   striped?: boolean;
   hoverable?: boolean;
   compact?: boolean;
+  /**
+   * Use CSS `table-layout: fixed` — column widths are honored exactly, columns
+   * with a `width` stay put, and the one unwidthed column (mark it `ellipsis`)
+   * absorbs the remaining space and truncates. Without this, a `nowrap` cell can
+   * push the table wider than its container.
+   */
+  fixedLayout?: boolean;
   getRowClass?: (row: T, index: number) => string;
   onRowClick?: (row: T, index: number) => void;
   emptyMessage?: string;

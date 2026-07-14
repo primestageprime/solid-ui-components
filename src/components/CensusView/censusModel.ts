@@ -68,4 +68,10 @@ export interface CensusViewProps {
   actions?: (t: CensusTable) => import("solid-js").JSX.Element | null;
   /** Max height for each bucket table; taller buckets scroll under the sticky header. */
   tableMaxHeight?: string;
+  /**
+   * When set, buckets flow into a responsive grid (CSS `auto-fill` / `minmax`)
+   * instead of a single vertical column — e.g. `"360px"` yields 2–3 columns
+   * depending on viewport width. Omit for the classic single-column stack.
+   */
+  bucketMinWidth?: string;
 }

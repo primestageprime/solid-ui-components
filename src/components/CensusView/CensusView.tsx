@@ -13,7 +13,6 @@ import { CountChip } from "../Badge/CountChip";
 import {
   ActionSlot,
   BaselineClusterRow,
-  GrowStack,
   TagRow,
   TopClusterRow,
   WrappedClusterRow,
@@ -57,19 +56,23 @@ function buildColumns(
           )}
         </span>
       ),
-      width: "160px",
+      // No fixed width: the flexible column. Absorbs remaining space under
+      // fixedLayout and ellipsizes long entity names.
+      ellipsis: true,
     },
     {
       id: "fields",
       header: "Fields",
       align: "right",
+      width: "52px",
       accessor: (row) =>
         row.fieldCount != null ? String(row.fieldCount) : "—",
     },
     {
       id: "source",
-      header: "Source rows",
+      header: "Source #",
       align: "right",
+      width: "88px",
       accessor: (row) =>
         row.sourceRows != null
           ? (row.approx ? "~" : "") + row.sourceRows.toLocaleString()
@@ -77,8 +80,9 @@ function buildColumns(
     },
     {
       id: "local",
-      header: "Local rows",
+      header: "Local #",
       align: "right",
+      width: "88px",
       accessor: (row) =>
         row.localRows != null ? row.localRows.toLocaleString() : "—",
     },
@@ -86,8 +90,10 @@ function buildColumns(
       id: "gap",
       header: "Gap",
       align: "right",
+      width: "72px",
       accessor: (row) => (
         <GapCell
+          inline
           remaining={Math.max(0, (row.sourceRows ?? 0) - (row.localRows ?? 0))}
           total={row.sourceRows ?? 0}
         />
@@ -96,6 +102,7 @@ function buildColumns(
     {
       id: "status",
       header: "Status",
+      width: "92px",
       accessor: (row) => (
         <StatusBadge
           variant={normStatusVariant(row.status)}
@@ -242,7 +249,15 @@ export const CensusView: Component<CensusViewProps> = (props) => {
         placeholder="Filter tables by name…"
       >
         {(filtered) => (
-          <GrowStack class="sui-census-view__buckets">
+          <div
+            class="sui-census-view__buckets"
+            classList={{ "sui-census-view__buckets--grid": !!props.bucketMinWidth }}
+            style={
+              props.bucketMinWidth
+                ? { "--sui-census-bucket-min": props.bucketMinWidth }
+                : undefined
+            }
+          >
             <For each={groupIntoBuckets(filtered)}>
               {(b) => (
                 <section>
@@ -256,6 +271,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
                     stickyHeader
                     compact
                     hoverable
+                    fixedLayout
                     maxHeight={props.tableMaxHeight}
                     data={b.tables}
                     columns={buildColumns(select)}
@@ -267,7 +283,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
                 </section>
               )}
             </For>
-          </GrowStack>
+          </div>
         )}
       </QuickFilter>
 

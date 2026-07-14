@@ -106,6 +106,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "striped",
     "hoverable",
     "compact",
+    "fixedLayout",
     "getRowClass",
     "onRowClick",
     "emptyMessage",
@@ -176,18 +177,22 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     if (local.striped) classList.push("hud-table--striped");
     if (local.hoverable) classList.push("hud-table--hoverable");
     if (local.compact) classList.push("hud-table--compact");
+    if (local.fixedLayout) classList.push("hud-table--fixed");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
 
   /** Shared body-cell style — width clamp + alignment. */
-  const cellStyle = (column: TableColumn<T>): JSX.CSSProperties => ({
-    "text-align": column.align || "left",
-    "max-width": column.width,
-    overflow: column.width ? "hidden" : undefined,
-    "text-overflow": column.width ? "ellipsis" : undefined,
-    "white-space": column.width ? "nowrap" : undefined,
-  });
+  const cellStyle = (column: TableColumn<T>): JSX.CSSProperties => {
+    const clip = !!column.width || !!column.ellipsis;
+    return {
+      "text-align": column.align || "left",
+      "max-width": column.width,
+      overflow: clip ? "hidden" : undefined,
+      "text-overflow": clip ? "ellipsis" : undefined,
+      "white-space": clip ? "nowrap" : undefined,
+    };
+  };
 
   /** Render a sortable <th> for a single column */
   const renderColumnTh = (

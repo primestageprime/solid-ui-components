@@ -23,6 +23,12 @@ export interface GapCellProps {
   remaining: number | null | undefined;
   /** Denominator; 0 renders the blank em-dash. */
   total: number;
+  /**
+   * Single-line variant: collapses the count line into a hover title and shows
+   * only `pct + bar` on one row. Keeps dense tables (e.g. CensusView) to a
+   * single text line instead of the default two-line count/meta stack.
+   */
+  inline?: boolean;
 }
 
 export const GapCell: Component<GapCellProps> = (props) => {
@@ -31,15 +37,30 @@ export const GapCell: Component<GapCellProps> = (props) => {
   const severity = () => gapSeverity(pct());
   return (
     <Show when={!blank()} fallback={<span class="sui-gap-cell__blank">—</span>}>
-      <div class={`sui-gap-cell sui-gap-cell--${severity()}`}>
-        <div class="sui-gap-cell__count">{(props.remaining ?? 0).toLocaleString()}</div>
-        <div class="sui-gap-cell__meta">
-          <span class="sui-gap-cell__pct">{pct().toFixed(1)}%</span>
+      <Show
+        when={props.inline}
+        fallback={
+          <div class={`sui-gap-cell sui-gap-cell--${severity()}`}>
+            <div class="sui-gap-cell__count">{(props.remaining ?? 0).toLocaleString()}</div>
+            <div class="sui-gap-cell__meta">
+              <span class="sui-gap-cell__pct">{pct().toFixed(1)}%</span>
+              <div class="sui-gap-cell__bar">
+                <div class="sui-gap-cell__fill" style={{ width: `${Math.min(100, 100 - pct())}%` }} />
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <div
+          class={`sui-gap-cell sui-gap-cell--inline sui-gap-cell--${severity()}`}
+          title={`${(props.remaining ?? 0).toLocaleString()} remaining`}
+        >
+          <span class="sui-gap-cell__pct">{pct().toFixed(0)}%</span>
           <div class="sui-gap-cell__bar">
             <div class="sui-gap-cell__fill" style={{ width: `${Math.min(100, 100 - pct())}%` }} />
           </div>
         </div>
-      </div>
+      </Show>
     </Show>
   );
 };
