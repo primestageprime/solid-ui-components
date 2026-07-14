@@ -1,17 +1,11 @@
-.stats-table {
-  display: flex;
-  flex-direction: column;
-}
-
+/* Root column (Column) and the horizontal scroll wrapper (ScrollXBox) are
+   composed from Layout variants; the `<table>` keeps its table-display, and
+   only intrinsic typography/borders remain here. */
 .stats-table__caption {
   color: var(--sui-accent);
   margin: 0 0 15px 0;
   font-size: 1rem;
   font-weight: 600;
-}
-
-.stats-table__scroll {
-  overflow-x: auto;
 }
 
 .stats-table__table {

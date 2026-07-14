@@ -21,6 +21,11 @@ import type { BoxDataProps } from "./Box";
 import type { GridDataProps } from "./Grid";
 import type { Component } from "solid-js";
 
+// Plain flex column, no baked gap — a bare vertical stack whose children space
+// themselves (own margins) or sit flush. For a wrapper that just needs a flex
+// column context (e.g. a caption above a scroll region) without imposing a gap.
+export const Column: Component<StackDataProps> = createStack({});
+
 // Stack variants — named by gap
 export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
 export const NarrowStack: Component<StackDataProps> = createStack({
@@ -227,6 +232,14 @@ export const GrowBox: Component<BoxDataProps> = createBox({
 });
 export const FadedBox: Component<BoxDataProps> = createBox({
   style: { opacity: "0.5" },
+});
+
+// ScrollXBox — a Box that scrolls its own horizontal overflow
+// (`overflow-x: auto`). For a wide child (a table, a code line, a timeline) that
+// must scroll sideways inside a bounded width without pushing the page. The
+// horizontal sibling of ScrollColumn/ScrollFillColumn (which scroll vertically).
+export const ScrollXBox: Component<BoxDataProps> = createBox({
+  style: { "overflow-x": "auto" },
 });
 
 // ClipBox — a Box that clips overflowing content (`overflow: hidden`). For

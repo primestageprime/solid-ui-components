@@ -6,6 +6,7 @@
 // Simple stats table with typed columns and row classes.
 // ============================================
 import { type JSX, splitProps, For, Show } from "solid-js";
+import { Column, ScrollXBox } from "../../Layout/variants";
 import "./StatsTable.css";
 
 export interface StatsColumn<T = Record<string, unknown>> {
@@ -48,11 +49,11 @@ export function StatsTable<T extends object>(props: StatsTableProps<T>) {
   };
 
   return (
-    <div class={classes()} {...others}>
+    <Column class={classes()} {...others}>
       <Show when={local.caption}>
         <h3 class="stats-table__caption">{local.caption}</h3>
       </Show>
-      <div class="stats-table__scroll">
+      <ScrollXBox class="stats-table__scroll">
         <table class="stats-table__table">
           <thead>
             <tr class="stats-table__header-row">
@@ -92,7 +93,7 @@ export function StatsTable<T extends object>(props: StatsTableProps<T>) {
             </For>
           </tbody>
         </table>
-      </div>
-    </div>
+      </ScrollXBox>
+    </Column>
   );
 }

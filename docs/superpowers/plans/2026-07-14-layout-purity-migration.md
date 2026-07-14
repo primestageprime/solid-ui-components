@@ -329,7 +329,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Selector/SidebarSelector (geo 38)
 - [ ] ExtractionBoard (geo 44)
 - [ ] ThreadGroup (geo 24)
-- [ ] DataDisplay/DigitRoller (geo 5) · NumberWithUnits (geo 7) · ResultDisplay (geo 13) · StatsTable (geo 3)
+- [x] DataDisplay/DigitRoller (geo 5) · NumberWithUnits (geo 7) · ResultDisplay (geo 13) · StatsTable (geo 3) — DONE.
+  **ResultDisplay** migrated: header (space-between) → `SpreadRow`; value+units+badge
+  row → `WrappedClusterRow` (gap 12→sm, wrap). **StatsTable** migrated: root flex-
+  column → new `Column` variant (bare, no-gap flex column); horizontal scroll wrapper
+  (overflow-x:auto) → new `ScrollXBox` variant (the `<table>` keeps table-display).
+  **NumberWithUnits** + **DigitRoller** AUDITED INTRINSIC: both are INLINE-level
+  (`inline-flex`) self-contained widgets centering their OWN value+units baseline /
+  animating their OWN data-derived digit strips (DigitRoller's `overflow:hidden` is
+  the roll-clip mask, like BatchBar) — inline-level discriminator, left as-is. Two
+  new variants (`Column`, `ScrollXBox`). Verified on result-display + stats-table
+  showcases: pixel-identical.
 - [x] CensusView (geo 11) — DONE. Root two-column layout → `TopClusterRow`
   (align:start, gap 16→sm); buckets column (flex:1;min-width:0;column;gap:12) →
   new `GrowStack` variant (grow column + sm gap — the gapped sibling of

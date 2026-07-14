@@ -5,10 +5,9 @@
    the value span — allowed inside a Primitive per CONTEXT.md.
    ============================================ */
 
+/* Header (SpreadRow) and value row (WrappedClusterRow) are composed from Layout
+   variants; only the header's bottom margin + the typography remain here. */
 .sui-result-display__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 8px;
 }
 
@@ -24,12 +23,6 @@
   font-size: 0.75rem;
 }
 
-.sui-result-display__row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
 
 .sui-result-display__value {
   font-size: 1.5rem;
