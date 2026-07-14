@@ -505,14 +505,33 @@ Atoms whose flex is mostly **intrinsic element styling** (a self-contained
 element centering its own label) — expect most to be "intrinsic-only, note &
 tick", not real arrangement migrations. Review each per skill step 4.
 
-- [ ] Button (geo 7) — intrinsic (button centers its own label)
-- [ ] Icon (geo 4) — intrinsic
-- [ ] Kbd (geo 2) — intrinsic
-- [ ] StatusLight (geo 4) — intrinsic
-- [ ] ServiceHealthDot (geo 6) — intrinsic + label row
-- [ ] ParticipantAvatar/ParticipantAvatar (geo 4) · AssigneeIcon (geo 3) — intrinsic
-- [ ] TruthIndicator (geo 4)
-- [ ] ProgressCheck (geo 4)
+- [x] Button (geo 7) — AUDITED, INTRINSIC. The canonical leaf control: root
+  `inline-flex; align-items:center; justify-content:center; gap:8px` + a
+  `__content` wrapper (`inline-flex; gap:inherit`) center the button's OWN
+  icon/label/badge children. Inline-level control widget (composing a block Row
+  would make it full-width) → intrinsic by the inline discriminator. Left as-is.
+- [x] Icon (geo 4) — AUDITED, INTRINSIC. Self-contained inline glyph wrapper
+  (`inline-flex; center; flex-shrink:0`) centering its OWN svg. Inline-level. As-is.
+- [x] Kbd (geo 2) — AUDITED, INTRINSIC. Inline keycap (`inline-flex; center;
+  vertical-align:baseline`) centering its OWN label. Inline-level. As-is.
+- [x] StatusLight (geo 4) — AUDITED, INTRINSIC. Inline indicator (`inline-flex;
+  center; gap:6px`) centering its OWN dot (`inline-block; flex-shrink:0`) + label,
+  both prop-derived. Same category as the Badge family. Inline-level. As-is.
+- [x] ServiceHealthDot (geo 6) — AUDITED, INTRINSIC. Inline status widget
+  (`inline-flex; center; gap:4px`) centering its OWN dot + name; the hover
+  `__popover` is absolute-anchored (position stays) and its `__popover-footer`
+  spread (`display:flex; justify-content:space-between`) is the widget's OWN
+  data-derived tooltip chrome (single-widget internal, like WorkProgressCard's bar
+  strip) — not consumer-child arrangement. Inline-level widget. As-is.
+- [x] ParticipantAvatar/ParticipantAvatar (geo 4) · AssigneeIcon (geo 3) — AUDITED,
+  INTRINSIC. Both are inline self-contained icons: ParticipantAvatar
+  (`inline-flex; center; flex-shrink:0`) centers its OWN initials/image;
+  AssigneeIcon (`flex:none; inline-flex; center`) centers its OWN glyph. Inline-level,
+  single-content → intrinsic. As-is.
+- [x] TruthIndicator (geo 4) — AUDITED, INTRINSIC. Inline indicator (`inline-flex;
+  center; flex-shrink:0`) centering its OWN glyph. Inline-level. As-is.
+- [x] ProgressCheck (geo 4) — AUDITED, INTRINSIC. Inline check indicator
+  (`inline-flex; center; flex-shrink:0`) centering its OWN glyph. Inline-level. As-is.
 - [ ] ValueRenderer (geo 13)
 - [ ] ResponsiveMoney (geo 2)
 - [ ] BigNumberInput (geo 4)
