@@ -16,7 +16,7 @@
 //   [ ] center — card detail (title bar, prompt, DAG)
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
-import { Component, For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Component, For, Index, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
 import { ClusterRow, FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
@@ -625,28 +625,32 @@ const CategoricalTriageBench: Component = () => {
         }
         rightPanel={
           <TightStack>
-            <For each={categories()}>
+            {/* Index (not For): categories() rebuilds objects on every items
+                change — For would key by reference and REMOUNT each rail,
+                killing RollingCount's prev-value state (digits never rolled).
+                Index keys by position; rails persist and props update. */}
+            <Index each={categories()}>
               {(cat) => (
                 <div>
                   <SpreadRow>
-                    <TextLabel>{cat.label}</TextLabel>
-                    <span data-anim={`count:${cat.key}`}>
-                      <RollingCount count={cat.items.length} />
+                    <TextLabel>{cat().label}</TextLabel>
+                    <span data-anim={`count:${cat().key}`}>
+                      <RollingCount count={cat().items.length} />
                     </span>
                   </SpreadRow>
-                  <Show when={cat.mode === "children"}>
+                  <Show when={cat().mode === "children"}>
                     <TightStack>
-                      <For each={cat.items}>
+                      <For each={cat().items}>
                         {(it) => (
                           <div
-                            data-anim={`rail:${cat.key}:${it.id}`}
+                            data-anim={`rail:${cat().key}:${it.id}`}
                             style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
                             onClick={() => setSelectedId(it.id)}
                           >
                             <SpreadRow>
                               <TextSublabel>{it.name}</TextSublabel>
                               <TextSublabel style={{ "white-space": "nowrap" }}>
-                                <Icon name={cat.icon} variant="outline" size="xs" /> {cat.childData(it)}
+                                <Icon name={cat().icon} variant="outline" size="xs" /> {cat().childData(it)}
                               </TextSublabel>
                             </SpreadRow>
                           </div>
@@ -656,7 +660,7 @@ const CategoricalTriageBench: Component = () => {
                   </Show>
                 </div>
               )}
-            </For>
+            </Index>
           </TightStack>
         }
       />
