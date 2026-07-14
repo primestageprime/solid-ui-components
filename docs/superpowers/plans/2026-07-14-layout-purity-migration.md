@@ -346,10 +346,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   `.sui-gap-cell__bar` fill-mask) is a self-contained DATA-DERIVED cell-content widget
   (inline-level / ruling-4 / single-widget bar mask). `.hud-table__header-content` (label + own
   sort glyph) is intrinsic single-widget header chrome; `.hud-table__actions-content` is a
-  hover-reveal action cap (ActionListItem-precedent intrinsic). REMAINING sibling composites
-  sharing Table.css (NOT BaseTable, follow-up): FilterableTable / SelectableTable /
-  DataTableContainer own the same fill/toolbar pattern — clean NarrowStack/SpreadRow/ClusterRow
-  work, but by the same ruling their fill-chain roots are exempt-as-layout too.
+  hover-reveal action cap (ActionListItem-precedent intrinsic). Sibling composites sharing
+  Table.css (FilterableTable / SelectableTable / DataTableContainer) own the same fill/toolbar
+  pattern — now MIGRATED per the BaseTable precedent (exemption superseded); see the three
+  follow-up items below.
+
+##### Table-family fill/toolbar follow-ups (lp-5, exemption superseded)
+
+- [~ claimed: lp-5] Table/FilterableTable (`.hud-table-quickfilter*`)
+- [~ claimed: lp-5] Table/SelectableTable (`.hud-selectable-table` / `.hud-selection-action-bar*`)
+- [~ claimed: lp-5] Table/DataTableContainer (`.data-table-container*`)
 - [x] Selector/SidebarSelector (geo 38) — DONE. Single-mode full-height flex chain
   composed end-to-end: root → new `FillColumnFlush` (flex:1;min-height:0;no gap);
   `__layout` → `PaneRow` (gap 16→sm; fill row); `__sidebar` → new `NoShrinkScrollBox`
