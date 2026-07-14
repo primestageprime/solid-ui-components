@@ -15,7 +15,14 @@ import {
   mergeProps,
 } from "solid-js";
 import type { JSX } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { clickableCursor } from "../../internal/style/clickable";
+import {
+  ClipBox,
+  ClipFillColumnFlush,
+  ScrollFillColumn,
+  ScrollYBox,
+} from "../Layout/variants";
 import type { TableColumn, TableRow } from "./types";
 import {
   type BaseTableProps,
@@ -207,8 +214,27 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     </th>
   );
 
+  // The table FRAME's fill/clip geometry is composed from Layout variants
+  // (layout-purity): `fill` makes the frame a clipping flex column whose scroll
+  // region grows to fill it; otherwise the frame is a plain box that clips its
+  // rounded corners ONLY when the sticky header is off (a sticky <thead> must
+  // not be trapped by an ancestor `overflow`, so sticky mode leaves overflow
+  // visible = a plain div). `.hud-table--fill { height:100% }` (a size, kept in
+  // CSS) still lets the frame fill a definite-height block parent.
+  const rootComponent = () =>
+    local.fill
+      ? ClipFillColumnFlush
+      : local.stickyHeader === false
+        ? ClipBox
+        : "div";
+  // Inner scroll region: `fill` → flex-fill + scroll (ScrollFillColumn); an
+  // explicit `maxHeight` → a height-capped scroll (ScrollYBox + inline
+  // max-height); otherwise a plain box that doesn't scroll.
+  const scrollComponent = () =>
+    local.fill ? ScrollFillColumn : local.maxHeight ? ScrollYBox : "div";
+
   return (
-    <div class={classes()} {...others}>
+    <Dynamic component={rootComponent()} class={classes()} {...others}>
       <Show when={local.data.length === 0}>
         <div class="hud-table__empty">
           {local.emptyMessage || "No data available"}
@@ -219,7 +245,8 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
         {/* Inner scroll region. Owns the scroll container so the sticky <thead>
             sticks relative to it: maxHeight caps + scrolls inline, while `fill`
             flex-grows it to fill the clipping outer wrapper (see Table.css). */}
-        <div
+        <Dynamic
+          component={scrollComponent()}
           class="hud-table__scroll"
           style={tableContainerStyle(local.maxHeight)}
         >
@@ -370,9 +397,9 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
               </For>
             </tbody>
           </table>
-        </div>
+        </Dynamic>
       </Show>
-    </div>
+    </Dynamic>
   );
 }
 

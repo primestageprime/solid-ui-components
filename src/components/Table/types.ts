@@ -116,12 +116,13 @@ export function getCellValue<
 /**
  * Inline style for the inner scroll region wrapping the <table>.
  *
- * `maxHeight` is the explicit escape hatch — "cap at 400px and scroll". When
- * it's unset, scrolling is driven by the `fill` prop via the `.hud-table--fill`
- * CSS class (which makes the outer wrapper a clipping flex column and the inner
- * scroll region flex-grow + overflow-y:auto), so no inline style is needed here.
+ * `maxHeight` is the explicit escape hatch — "cap at 400px and scroll". Only the
+ * `max-height` SIZE is set here; the `overflow-y:auto` scroll is composed —
+ * BaseTable renders the scroll region as a `ScrollYBox` when `maxHeight` is set,
+ * or a `ScrollFillColumn` under `fill`. When both are unset the region is a plain
+ * box and needs no inline style.
  */
 export function tableContainerStyle(maxHeight?: string): JSX.CSSProperties {
   if (!maxHeight) return {};
-  return { "max-height": maxHeight, "overflow-y": "auto" };
+  return { "max-height": maxHeight };
 }

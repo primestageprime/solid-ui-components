@@ -2,12 +2,17 @@
    HUD-Style Table Components
    ============================================ */
 
-/* Base Table */
+/* Base Table frame. The frame's fill/clip/overflow geometry is COMPOSED from
+   Layout variants in BaseTable.tsx (layout-purity): non-fill + non-sticky → a
+   `ClipBox` (clips the rounded corners); non-fill + sticky → a plain box
+   (overflow visible so the sticky <thead> isn't trapped); `fill` → a
+   `ClipFillColumnFlush` (clipping flex column) whose scroll region is a
+   `ScrollFillColumn`; `maxHeight` → a `ScrollYBox`. Only the frame's own
+   non-geometry chrome (bg/border/clip-path corners) remains here. */
 .hud-table {
   position: relative;
   background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
-  overflow: hidden;
   /* Clip corners — top-left and bottom-right */
   clip-path: polygon(
     12px 0,
@@ -19,27 +24,12 @@
   );
 }
 
-/* `fill` makes internal scrolling the default: the outer wrapper becomes a
-   clipping flex column (grows to its parent on both a flex-column parent via
-   `flex` and a definite-height block parent via `height: 100%`), and the inner
-   scroll region flex-grows to fill it with its own vertical scrollbar. The
-   sticky <thead> stays put because it sticks relative to that scroll region.
-   `maxHeight` overrides this (inline style on the scroll region) as the
-   explicit "cap at Npx" escape hatch. Higher specificity than
-   `.hud-table--sticky-header { overflow: visible }` so the clip wins. */
+/* `fill` keeps only its SIZES here (height/min-height are not layout-purity-
+   banned) so the composed flex column can fill a definite-height block parent;
+   the flex/overflow come from the composed ClipFillColumnFlush + ScrollFillColumn. */
 .hud-table.hud-table--fill {
   height: 100%;
   min-height: 0;
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.hud-table.hud-table--fill .hud-table__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .hud-table__table {
@@ -57,13 +47,10 @@
   );
 }
 
-/* Sticky header requires the wrapper not to clip — `overflow: hidden` on an
-   ancestor traps sticky positioning. When sticky-header is on, the sticky
-   <thead> should follow the *outer* scroll container (e.g. ScrollPanel). */
-.hud-table--sticky-header {
-  overflow: visible;
-}
-
+/* Sticky header requires the frame not to clip — `overflow: hidden` on an
+   ancestor traps sticky positioning. In sticky mode BaseTable renders the frame
+   as a plain box (no composed clip), so overflow stays visible by default and
+   the sticky <thead> follows the outer scroll container. */
 .hud-table--sticky-header .hud-table__head {
   position: sticky;
   top: 0;
