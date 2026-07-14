@@ -36,6 +36,8 @@ type TriageItem = {
   name: string;
   prompt?: string;
   status: "TODO" | "DOING" | "DONE";
+  creator: string;
+  createdAt: number; // epoch ms
   claimedBy?: string;
   blockedBy?: string; // convention: starts with the person ("Ryan — …")
   blockedUntil?: number; // epoch ms
@@ -48,9 +50,8 @@ const HOUR = 3_600_000;
 /** First word of a blocked-by string — the WHO (convention: person-first). */
 const firstWord = (s: string) => s.split(/[\s—:-]+/)[0] ?? s;
 
-/** Humanized time REMAINING, compact: "2d4h", "26h" → "1d2h", "45m". */
-const remaining = (until: number) => {
-  const ms = until - NOW;
+/** Compact humanized span: "2d4h", "1d2h", "45m". */
+const span = (ms: number) => {
   if (ms <= 0) return "now";
   const h = Math.floor(ms / HOUR);
   const d = Math.floor(h / 24);
@@ -59,16 +60,23 @@ const remaining = (until: number) => {
   if (h > 0) return m ? `${h}h${m}m` : `${h}h`;
   return `${m}m`;
 };
+/** Time REMAINING until an epoch-ms deadline. */
+const remaining = (until: number) => span(until - NOW);
+/** Time ELAPSED since an epoch-ms timestamp. */
+const ago = (ts: number) => span(NOW - ts);
+/** Compact absolute stamp: "Jul 12 08:14". */
+const stamp = (ts: number) =>
+  new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
 const SEED: TriageItem[] = [
-  { id: "t1", name: "need category for salaries", prompt: "Salaries land uncategorized in thorcasting. Add a category so the forecast splits them out.", status: "TODO" },
-  { id: "t2", name: "need category for payroll", prompt: "Same treatment as salaries — payroll needs its own category.", status: "TODO", deps: ["need category for salaries"] },
-  { id: "t3", name: '"typical" derivation should clearly display how we got to these numbers', status: "DOING", claimedBy: "Adlai" },
-  { id: "t4", name: "data quality officer view — y-axis alarm chart", status: "TODO", blockedBy: "Ryan — grant metric access" },
-  { id: "t5", name: "user should be able to filter todos for claimant", status: "TODO" },
-  { id: "t6", name: "user can mark items \"won't do\" or \"not needed\"", status: "TODO", blockedUntil: NOW + (2 * 24 + 4) * HOUR },
-  { id: "t7", name: "change sf6 max threshold for jtf", prompt: "Bump the sf6 ceiling — current max trips false alarms on Vessel Call 12.", status: "TODO" },
-  { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", blockedBy: "Ryan — email the vessel-call range", blockedUntil: NOW + 26 * HOUR },
+  { id: "t1", name: "need category for salaries", prompt: "Salaries land uncategorized in thorcasting. Add a category so the forecast splits them out.", status: "TODO", creator: "Ryan", createdAt: NOW - (2 * 24 + 3) * HOUR },
+  { id: "t2", name: "need category for payroll", prompt: "Same treatment as salaries — payroll needs its own category.", status: "TODO", creator: "Ryan", createdAt: NOW - (2 * 24 + 2) * HOUR, deps: ["need category for salaries"] },
+  { id: "t3", name: '"typical" derivation should clearly display how we got to these numbers', status: "DOING", creator: "Peter", createdAt: NOW - 5 * 24 * HOUR, claimedBy: "Adlai" },
+  { id: "t4", name: "data quality officer view — y-axis alarm chart", status: "TODO", creator: "Adlai", createdAt: NOW - 26 * HOUR, blockedBy: "Ryan — grant metric access" },
+  { id: "t5", name: "user should be able to filter todos for claimant", status: "TODO", creator: "Peter", createdAt: NOW - 4 * HOUR },
+  { id: "t6", name: "user can mark items \"won't do\" or \"not needed\"", status: "TODO", creator: "Peter", createdAt: NOW - 3 * 24 * HOUR, blockedUntil: NOW + (2 * 24 + 4) * HOUR },
+  { id: "t7", name: "change sf6 max threshold for jtf", prompt: "Bump the sf6 ceiling — current max trips false alarms on Vessel Call 12.", status: "TODO", creator: "Ryan", createdAt: NOW - 45 * 60_000 },
+  { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", creator: "Peter", createdAt: NOW - 30 * HOUR, blockedBy: "Ryan — email the vessel-call range", blockedUntil: NOW + 26 * HOUR },
 ];
 
 /** De-emphasized count lozenge that briefly lights up when the value changes
@@ -180,10 +188,43 @@ const CategoricalTriageBench: Component = () => {
                   <TextLabel>{it().name}</TextLabel>
                   <StatusChip status={it().status} options={["TODO", "DOING", "DONE"]} title={it().name} highlight={it().status === "DOING"} />
                 </SpreadRow>
+                {/* Provenance sub-line — canon: ownership left, timing right. */}
+                <SpreadRow gap="sm">
+                  <TextSublabel>{it().creator}</TextSublabel>
+                  <TextSublabel>created {stamp(it().createdAt)} ({ago(it().createdAt)} ago)</TextSublabel>
+                </SpreadRow>
                 <ScrollColumn>
                   <Show when={it().prompt}>
                     <InfoPanel title="Prompt">
                       <TextBody>{it().prompt}</TextBody>
+                    </InfoPanel>
+                  </Show>
+                  <Show when={it().blockedBy || it().blockedUntil}>
+                    <InfoPanel title="Blocked">
+                      <TextBody>
+                        <Icon name={it().blockedBy ? "user" : "clock"} variant="outline" size="xs" />{" "}
+                        {it().blockedBy ?? "snoozed"}
+                        {it().blockedUntil ? ` · until ${remaining(it().blockedUntil!)}` : ""}
+                      </TextBody>
+                    </InfoPanel>
+                  </Show>
+                  <Show when={it().deps?.length}>
+                    <InfoPanel title="Depends on">
+                      <TightStack>
+                        <For each={it().deps}>
+                          {(dep) => {
+                            const target = () => items().find((x) => x.name === dep);
+                            return (
+                              <div
+                                style={{ cursor: target() ? "pointer" : "default" }}
+                                onClick={() => target() && setSelectedId(target()!.id)}
+                              >
+                                <TextSublabel>→ {dep}</TextSublabel>
+                              </div>
+                            );
+                          }}
+                        </For>
+                      </TightStack>
                     </InfoPanel>
                   </Show>
                 </ScrollColumn>

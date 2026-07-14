@@ -172,6 +172,13 @@ established look, not a pattern to copy into new card/list designs.
   `StatusChip` in a `SpreadRow` title bar (the ActionList detail idiom).
 - Transient/modal inspection (keeps list context) → `Modal`; mobile-ish
   bottom drawer → `BottomSheet`.
+- **Provenance metadata (creator, timestamps)** → a muted sub-line directly
+  under the title bar — the two-line-card canon scaled up: ownership LEFT,
+  timing RIGHT (`SpreadRow(TextSublabel creator, TextSublabel created …)`).
+  Conditional facts (blockage, dependencies) get their own `InfoPanel`
+  sections that render ONLY when present — zero space in the common case
+  where the item is just title + one-line prompt. Chosen over a uniform
+  label→value details panel: rapid triage scans, it doesn't read.
 - **Panel with a persistent action row** (the actions must not drift as the
   detail grows) → `FillColumn` filling the panel; the variable detail lives
   in a `ScrollColumn` (scrolls internally); the action row is the last
