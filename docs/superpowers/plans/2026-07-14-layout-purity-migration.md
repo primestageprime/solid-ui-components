@@ -258,7 +258,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   rows, preset rows, and a footer — all genuine consumer-arrangement to
   migrate; overlay anchoring stays. HAS a showcase. Deserves a careful
   individual pass.
-- [ ] Combobox (geo 47) — overlay-partial. TEED UP (layout-purity-2 audit):
+- [x] Combobox (geo 47) — overlay-partial; DONE (with a Kobalte carve-out). The
+  PLAIN-div internal rows we own were composed: `__chips` → NarrowStack (gap 6→sm),
+  `__chips-header` → SpreadRow (gap 8=sm), `__chip-list` → TagRow (gap 4=xs; chips
+  are data-derived intrinsic), `__input-row` → TightClusterRow (gap 4=xs). CARVE-OUT
+  (documented in CSS): the root/`__control`/`__input`/`__item`/`__listbox`/`__content`
+  are Kobalte parts (KobalteCombobox.*) — we can only pass `class`, not replace them
+  with Layout components, so their flex/scroll stays (third-party, like the
+  exempt-layout family). Verified on the combobox showcase (multi-mode chips:
+  spread header, chip flow, tag-input row all correct).. TEED UP (layout-purity-2 audit):
   mixed. `__chips` is a REAL column of [`__chips-header` (space-between row)
   | `__chip-list` (wrap flow)] → migratable arrangement. `__input-row` is
   control chrome and `__item`/chips are data-derived → intrinsic (ruling 4).

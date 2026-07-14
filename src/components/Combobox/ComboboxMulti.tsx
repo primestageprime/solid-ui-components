@@ -26,6 +26,12 @@
 // ============================================
 import { Combobox as KobalteCombobox } from "@kobalte/core/combobox";
 import { type Accessor, createEffect, createSignal, For, Show } from "solid-js";
+import {
+  NarrowStack,
+  SpreadRow,
+  TagRow,
+  TightClusterRow,
+} from "../Layout/variants";
 import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import type { ComboboxOption, MultiComboboxProps } from "./Combobox";
@@ -202,8 +208,8 @@ export const renderMulti = (
         {(state) => (
           <>
             <Show when={chipsEnabled() && state.selectedOptions().length > 0}>
-              <div class="sui-combobox__chips">
-                <div class="sui-combobox__chips-header">
+              <NarrowStack class="sui-combobox__chips">
+                <SpreadRow class="sui-combobox__chips-header">
                   <span class="sui-combobox__chips-count">
                     Selected ({state.selectedOptions().length})
                   </span>
@@ -216,8 +222,8 @@ export const renderMulti = (
                   >
                     Clear all
                   </button>
-                </div>
-                <div class="sui-combobox__chip-list">
+                </SpreadRow>
+                <TagRow class="sui-combobox__chip-list">
                   <For each={state.selectedOptions()}>
                     {(option) => (
                       <span
@@ -249,10 +255,10 @@ export const renderMulti = (
                       </span>
                     )}
                   </For>
-                </div>
-              </div>
+                </TagRow>
+              </NarrowStack>
             </Show>
-            <div class="sui-combobox__input-row">
+            <TightClusterRow class="sui-combobox__input-row">
               <KobalteCombobox.Input
                 id={local.id}
                 class="sui-combobox__input"
@@ -275,7 +281,7 @@ export const renderMulti = (
                   />
                 </KobalteCombobox.Icon>
               </KobalteCombobox.Trigger>
-            </div>
+            </TightClusterRow>
           </>
         )}
       </KobalteCombobox.Control>
