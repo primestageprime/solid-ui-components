@@ -404,17 +404,14 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   kept: the name text-button, inline input, detail ellipsis, delete reveal
   (opacity/pointer-events). Verified on the mutable-list showcase: card layout +
   hover-revealed × identical.
-- [~] Tabs (geo 10) — NEEDS RULING (batched to team-lead). Borderline between the
-  MSF-`__bar` precedent (a block-level flex row of data-derived option buttons →
-  MIGRATE) and the SegmentedControl precedent (a self-contained data-derived
-  control strip → INTRINSIC). Tabs is a block-level `display:flex` strip of
-  data-derived tab buttons (`<For each={tabs}>`) with an integrated `::after`
-  sliding active-indicator. Unlike MSF-`__bar` it also flips orientation
-  (horizontal Row ↔ vertical Stack) and carries per-variant micro-gaps
-  (default 0 / underline 4 / pill 8) at DEFAULT align:stretch — a clean migration
-  needs a `<Dynamic>` row/stack switch + several single-use no-align micro-gap
-  variants (over-fits start-minimal). Leaning INTRINSIC (SegmentedControl category)
-  but not ticking without a ruling. Left as-is.
+- [x] Tabs (geo 10) — AUDITED, INTRINSIC (ruling 3, team-lead: SegmentedControl
+  category). A self-contained data-derived control strip: `<For each={tabs}>` →
+  `<button role=tab>`, with an integrated `::after` sliding active-indicator. It
+  flips orientation (horizontal `display:flex` ↔ vertical `flex-direction:column`)
+  and carries per-variant micro-gaps (default 0 / underline 4 / pill 8) at DEFAULT
+  align:stretch. A clean migration would need a `<Dynamic>` row/stack switch plus
+  several single-use no-align micro-gap variants — over-fitting start-minimal for a
+  single control. Same category as SegmentedControl / SegmentedInput. Left as-is.
 - [ ] RecentStarred (geo 16)
 - [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
 - [ ] DnDHierarchySortBar (geo 8)
