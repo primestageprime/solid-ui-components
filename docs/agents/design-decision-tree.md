@@ -78,6 +78,14 @@ Discriminators:
 
 ## Left list (a rail of items you pick from / work through)
 
+Rails generally get a **title** (`SectionTitle`), with the count beside it
+(the FlashCount lozenge idiom) when the list length is meaningful.
+
+**One item, one home:** when a categorized rail exists on the same surface
+(right bar of blocked/claimed/etc.), items belonging to a category leave the
+queue rail — the queue shows only the UNRESOLVED remainder. No double
+representation (Peter, 2026-07-14, categorical-triage).
+
 The load-bearing discriminator is **how many statuses the items represent**,
 because status count encodes the user's workflow:
 

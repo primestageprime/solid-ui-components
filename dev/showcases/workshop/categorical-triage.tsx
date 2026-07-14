@@ -123,20 +123,28 @@ const CategoricalTriageBench: Component = () => {
     ];
   });
 
-  // Categorize the SELECTED item, then advance to the next — the center's
-  // whole activity. Keyboard-first: HotkeyButton arms window-level keys.
-  const advance = () => {
-    const all = items();
-    const i = all.findIndex((it) => it.id === selectedId());
-    setSelectedId(all[(i + 1) % all.length].id);
-  };
-  // Arrow keys walk the queue; selection CLAMPS at the top and bottom
-  // (no wrap — the edges are felt, matching list-navigation convention).
+  // The left rail shows only UNRESOLVED items — anything that appears in a
+  // right-bar category (blocked, snoozed, dependent, claimed) leaves the
+  // queue: one item, one home, no double representation.
+  const unresolved = createMemo(() =>
+    items().filter(
+      (it) =>
+        !it.blockedBy &&
+        !it.blockedUntil &&
+        !(it.deps && it.deps.length) &&
+        !it.claimedBy &&
+        it.status !== "DONE",
+    ),
+  );
+  // Arrow keys walk the UNRESOLVED queue; selection CLAMPS at the top and
+  // bottom (no wrap — the edges are felt, matching list convention). If the
+  // selection lives in the right rail, arrows re-enter the queue at the top.
   const move = (delta: number) => {
-    const all = items();
-    const i = all.findIndex((it) => it.id === selectedId());
-    if (i < 0) return;
-    setSelectedId(all[Math.min(all.length - 1, Math.max(0, i + delta))].id);
+    const q = unresolved();
+    if (!q.length) return;
+    const i = q.findIndex((it) => it.id === selectedId());
+    const next = i < 0 ? 0 : Math.min(q.length - 1, Math.max(0, i + delta));
+    setSelectedId(q[next].id);
   };
   onMount(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -149,9 +157,15 @@ const CategoricalTriageBench: Component = () => {
     window.addEventListener("keydown", onKey);
     onCleanup(() => window.removeEventListener("keydown", onKey));
   });
+  // Categorize the SELECTED item, then advance to the next unresolved one —
+  // the center's whole activity. The candidate is computed BEFORE the patch:
+  // afterwards the item has left the queue.
   const patchSelected = (patch: Partial<TriageItem>) => {
+    const q = unresolved();
+    const i = q.findIndex((it) => it.id === selectedId());
+    const next = q[i + 1] ?? q[i - 1];
     setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
-    advance();
+    if (next) setSelectedId(next.id);
   };
   const CATEGORIZE = [
     { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
@@ -161,16 +175,22 @@ const CategoricalTriageBench: Component = () => {
     {
       hotkey: "l",
       label: "later",
-      apply: () =>
+      // Later keeps the item unresolved but sends it to the queue bottom;
+      // selection moves to the item that followed it (wraps to the top).
+      apply: () => {
+        const q = unresolved();
+        const i = q.findIndex((it) => it.id === selectedId());
+        const next = q[i + 1] ?? q[0];
         setItems((prev) => {
-          const i = prev.findIndex((it) => it.id === selectedId());
-          if (i < 0) return prev;
-          const next = [...prev];
-          const [moved] = next.splice(i, 1);
-          next.push(moved);
-          setSelectedId(next[Math.min(i, next.length - 1)].id);
-          return next;
-        }),
+          const at = prev.findIndex((it) => it.id === selectedId());
+          if (at < 0) return prev;
+          const out = [...prev];
+          const [moved] = out.splice(at, 1);
+          out.push(moved);
+          return out;
+        });
+        if (next) setSelectedId(next.id);
+      },
     },
   ];
 
@@ -184,7 +204,12 @@ const CategoricalTriageBench: Component = () => {
         rightPanelWidth="300px"
         leftPanel={
           <TightStack>
-            <For each={items()}>
+            {/* Rails generally get a title; the count follows it (flashes on change). */}
+            <SpreadRow gap="sm">
+              <SectionTitle>Unresolved</SectionTitle>
+              <FlashCount count={unresolved().length} />
+            </SpreadRow>
+            <For each={unresolved()}>
               {(it) => (
                 <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
                   <SpreadRow gap="sm">
