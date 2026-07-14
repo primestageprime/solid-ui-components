@@ -281,6 +281,25 @@ export const ScrollYBox: Component<BoxDataProps> = createBox({
   style: { "overflow-y": "auto" },
 });
 
+// ScrollBox — a Box that scrolls its own overflow on BOTH axes (`overflow: auto`),
+// with no baked flex. For a height-CAPPED region that may also overflow sideways
+// (a wide data table inside a bounded box): pair it with an inline `max-height`
+// (a size, not banned). The both-axis sibling of ScrollXBox/ScrollYBox.
+export const ScrollBox: Component<BoxDataProps> = createBox({
+  style: { overflow: "auto" },
+});
+
+// ScrollFillBox — a (non-flex) block that grows to fill its flex parent's leftover
+// space AND scrolls its own overflow on both axes: `flex-grow:1; min-height:0;
+// overflow:auto`. The scroll sibling of `ClipFillBox` (which clips) and the
+// block-flow sibling of `ScrollFillColumn` (a flex column) — use this when the
+// scrolled child (a table) must keep its own block/table sizing rather than
+// becoming a stretched flex item. For a fill-mode table scroll container.
+export const ScrollFillBox: Component<BoxDataProps> = createBox({
+  grow: true,
+  style: { "min-height": "0", overflow: "auto" },
+});
+
 // ClipBox — a Box that clips overflowing content (`overflow: hidden`). For
 // masking/clipping visuals: a max-height collapse animation, a progress-bar
 // fill mask, a rounded avatar. NOT for scroll regions (use ScrollColumn/

@@ -355,7 +355,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 - [~ claimed: lp-5] Table/FilterableTable (`.hud-table-quickfilter*`)
 - [~ claimed: lp-5] Table/SelectableTable (`.hud-selectable-table` / `.hud-selection-action-bar*`)
-- [~ claimed: lp-5] Table/DataTableContainer (`.data-table-container*`)
+- [x] Table/DataTableContainer (`.data-table-container*`) — DONE (lp-5). The
+  both-axis scroll + fill plumbing is composed via a `<Dynamic>`: `fill` →
+  `ScrollFillBox` (new: grow + min-height:0 + overflow:auto — block-flow so the
+  table keeps its own sizing); capped → `ScrollBox` (new: overflow:auto, both-axis)
+  + inline `max-height` *size*. Only `position:relative` stays in CSS (sticky
+  header/row children anchor to the scroll container). New variants: `ScrollBox`,
+  `ScrollFillBox` (completing the ScrollXBox/ScrollYBox family). Prereq bugfix:
+  `create{Box,Stack,Row}` now MERGE baked+caller `style` (9795041) — the capped
+  case passes `max-height` which previously clobbered the baked `overflow`.
+  Verified on the data-table-container showcase: capped 200px + fill both scroll
+  internally with sticky headers.
 - [x] Selector/SidebarSelector (geo 38) — DONE. Single-mode full-height flex chain
   composed end-to-end: root → new `FillColumnFlush` (flex:1;min-height:0;no gap);
   `__layout` → `PaneRow` (gap 16→sm; fill row); `__sidebar` → new `NoShrinkScrollBox`
