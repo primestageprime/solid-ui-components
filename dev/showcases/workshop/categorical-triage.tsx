@@ -22,7 +22,7 @@ import { SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
-import { CountChip, StatusChip } from "../../../src/components/Badge";
+import { StatusChip, TagPill } from "../../../src/components/Badge";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -35,20 +35,38 @@ type TriageItem = {
   prompt?: string;
   status: "TODO" | "DOING" | "DONE";
   claimedBy?: string;
-  blockedBy?: string;
-  blockedUntil?: string;
+  blockedBy?: string; // convention: starts with the person ("Ryan — …")
+  blockedUntil?: number; // epoch ms
   deps?: string[];
+};
+
+const NOW = Date.now();
+const HOUR = 3_600_000;
+
+/** First word of a blocked-by string — the WHO (convention: person-first). */
+const firstWord = (s: string) => s.split(/[\s—:-]+/)[0] ?? s;
+
+/** Humanized time REMAINING, compact: "2d4h", "26h" → "1d2h", "45m". */
+const remaining = (until: number) => {
+  const ms = until - NOW;
+  if (ms <= 0) return "now";
+  const h = Math.floor(ms / HOUR);
+  const d = Math.floor(h / 24);
+  const m = Math.floor((ms % HOUR) / 60_000);
+  if (d > 0) return h % 24 ? `${d}d${h % 24}h` : `${d}d`;
+  if (h > 0) return m ? `${h}h${m}m` : `${h}h`;
+  return `${m}m`;
 };
 
 const SEED: TriageItem[] = [
   { id: "t1", name: "need category for salaries", prompt: "Salaries land uncategorized in thorcasting. Add a category so the forecast splits them out.", status: "TODO" },
   { id: "t2", name: "need category for payroll", prompt: "Same treatment as salaries — payroll needs its own category.", status: "TODO", deps: ["need category for salaries"] },
   { id: "t3", name: '"typical" derivation should clearly display how we got to these numbers', status: "DOING", claimedBy: "Adlai" },
-  { id: "t4", name: "data quality officer view — y-axis alarm chart", status: "TODO", blockedBy: "Waiting for Ryan to grant metric access" },
+  { id: "t4", name: "data quality officer view — y-axis alarm chart", status: "TODO", blockedBy: "Ryan — grant metric access" },
   { id: "t5", name: "user should be able to filter todos for claimant", status: "TODO" },
-  { id: "t6", name: "user can mark items \"won't do\" or \"not needed\"", status: "TODO", blockedUntil: "Jul 16" },
+  { id: "t6", name: "user can mark items \"won't do\" or \"not needed\"", status: "TODO", blockedUntil: NOW + (2 * 24 + 4) * HOUR },
   { id: "t7", name: "change sf6 max threshold for jtf", prompt: "Bump the sf6 ceiling — current max trips false alarms on Vessel Call 12.", status: "TODO" },
-  { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", blockedBy: "Waiting for Ryan's email", blockedUntil: "Jul 15" },
+  { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", blockedBy: "Ryan — email the vessel-call range", blockedUntil: NOW + 26 * HOUR },
 ];
 
 const Placeholder: Component<{ label: string; hint: string }> = (props) => (
@@ -72,10 +90,10 @@ const CategoricalTriageBench: Component = () => {
     // person-blocked first (you can nudge), snooze (will self-clear),
     // dependency (count only), claimed-but-non-terminal (count only).
     return [
-      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, items: all.filter((it) => !!it.blockedBy) },
-      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, items: all.filter((it) => !!it.blockedUntil) },
-      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, items: all.filter((it) => !!(it.deps && it.deps.length)) },
-      { label: "CLAIMED", glyph: "◉", mode: "count" as const, items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
+      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, childText: (it: TriageItem) => `${firstWord(it.blockedBy ?? "")} — ${it.name}`, items: all.filter((it) => !!it.blockedBy) },
+      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, childText: (it: TriageItem) => `${remaining(it.blockedUntil ?? 0)} — ${it.name}`, items: all.filter((it) => !!it.blockedUntil) },
+      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, childText: (it: TriageItem) => it.name, items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { label: "CLAIMED", glyph: "◉", mode: "count" as const, childText: (it: TriageItem) => it.name, items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
     ];
   });
 
@@ -112,7 +130,7 @@ const CategoricalTriageBench: Component = () => {
                 <div>
                   <SpreadRow gap="sm">
                     <span class="text-meta">{cat.label}</span>
-                    <CountChip count={cat.items.length} label="" active={cat.items.length > 0} />
+                    <TagPill tag={{ label: String(cat.items.length), active: cat.items.length > 0 }} />
                   </SpreadRow>
                   <Show when={cat.mode === "children"}>
                     <TightStack>
@@ -123,7 +141,7 @@ const CategoricalTriageBench: Component = () => {
                             style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
                             onClick={() => setSelectedId(it.id)}
                           >
-                            {cat.glyph} {it.name}
+                            {cat.glyph} {cat.childText(it)}
                           </span>
                         )}
                       </For>
