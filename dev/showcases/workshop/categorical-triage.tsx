@@ -77,6 +77,44 @@ const SEED: TriageItem[] = [
   { id: "t6", name: "user can mark items \"won't do\" or \"not needed\"", status: "TODO", creator: "Peter", createdAt: NOW - 3 * 24 * HOUR, blockedUntil: NOW + (2 * 24 + 4) * HOUR },
   { id: "t7", name: "change sf6 max threshold for jtf", prompt: "Bump the sf6 ceiling — current max trips false alarms on Vessel Call 12.", status: "TODO", creator: "Ryan", createdAt: NOW - 45 * 60_000 },
   { id: "t8", name: "get Ryan's email and find the range in time for 1-1 Vessel Call", status: "TODO", creator: "Peter", createdAt: NOW - 30 * HOUR, blockedBy: "Ryan — email the vessel-call range", blockedUntil: NOW + 26 * HOUR },
+  // 27 more unresolved items (30 unresolved total) so the queue demonstrates
+  // internal scrolling with realistic volume.
+  ...[
+    "surface forecast confidence bands on the expense chart",
+    "add keyboard shortcut cheatsheet overlay",
+    "export triage decisions to CSV",
+    "dispatcher should retry failed decompositions",
+    "show claimant avatar in the queue rail",
+    "thorcasting: split contractor costs from salaries",
+    "add snooze presets (1d, 3d, 1w)",
+    "highlight items older than a week",
+    "jtf: reconcile alarm thresholds with vessel-call 12 data",
+    "batch-block items by the same person",
+    "rhinotools: census view for extract worker fleet",
+    "show dependency chain depth in the rail",
+    "unsnooze should restore prior queue position",
+    "add creator filter to the triage view",
+    "persist triage session across reloads",
+    "dside: link decomposition parent from item detail",
+    "warn when blocking on someone with 3+ open blocks",
+    "add won't-do terminal status with reason",
+    "surface item age in the unresolved rail",
+    "jtf: sf6 alarm digest email",
+    "group snoozed items by wake day",
+    "thorcasting: typical derivation drill-down",
+    "add undo for the last categorize action",
+    "show total cycle time per item after done",
+    "rhinotools: throughput chart on extract dashboard",
+    "auto-suggest category from prompt keywords",
+    "dside: species flag rollout checklist",
+  ].map((name, i) => ({
+    id: `x${i + 1}`,
+    name,
+    status: "TODO" as const,
+    creator: ["Peter", "Ryan", "Adlai"][i % 3],
+    createdAt: NOW - (i * 5 + 2) * HOUR,
+    ...(i % 4 === 0 ? { prompt: `Detail for "${name}" — captured during triage planning.` } : {}),
+  })),
 ];
 
 /** De-emphasized count lozenge that briefly lights up when the value changes
@@ -203,23 +241,29 @@ const CategoricalTriageBench: Component = () => {
         leftPanelWidth="380px"
         rightPanelWidth="300px"
         leftPanel={
-          <TightStack>
+          // Title pinned, cards scroll — same FillColumn/ScrollColumn pattern
+          // as the center's pinned action row.
+          <FillColumn>
             {/* Rails generally get a title; the count follows it (flashes on change). */}
             <SpreadRow gap="sm">
               <SectionTitle>Unresolved</SectionTitle>
               <FlashCount count={unresolved().length} />
             </SpreadRow>
-            <For each={unresolved()}>
-              {(it) => (
-                <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
-                  <SpreadRow gap="sm">
-                    <TextTitle>{it.name}</TextTitle>
-                    <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
-                  </SpreadRow>
-                </InteractiveCard>
-              )}
-            </For>
-          </TightStack>
+            <ScrollColumn>
+              <TightStack>
+                <For each={unresolved()}>
+                  {(it) => (
+                    <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
+                      <SpreadRow gap="sm">
+                        <TextTitle>{it.name}</TextTitle>
+                        <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
+                      </SpreadRow>
+                    </InteractiveCard>
+                  )}
+                </For>
+              </TightStack>
+            </ScrollColumn>
+          </FillColumn>
         }
         centerPanel={
           <Show when={selected()} fallback={<Placeholder label="Triage" hint="empty queue — triage complete" />}>

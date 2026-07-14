@@ -79,7 +79,9 @@ Discriminators:
 ## Left list (a rail of items you pick from / work through)
 
 Rails generally get a **title** (`SectionTitle`), with the count beside it
-(the FlashCount lozenge idiom) when the list length is meaningful.
+(the FlashCount lozenge idiom) when the list length is meaningful. The title
+is PINNED — `FillColumn(title row, ScrollColumn(cards))` — so the rail keeps
+its identity while long lists scroll beneath.
 
 **One item, one home:** when a categorized rail exists on the same surface
 (right bar of blocked/claimed/etc.), items belonging to a category leave the
