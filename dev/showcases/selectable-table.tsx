@@ -38,7 +38,7 @@ export const SelectableTableShowcase: Component = () => {
                 variant: "danger" as const,
                 onClick: (ids) => {
                   console.log("Delete:", [...ids]);
-                  setSelected(new Set());
+                  setSelected(new Set<string>());
                 },
               },
             ]}

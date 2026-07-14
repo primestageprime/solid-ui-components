@@ -14,8 +14,6 @@ export const DropdownShowcase: Component = () => {
       <div class="example-group">
         <Stack gap="sm" style={{ "max-width": "300px" }}>
           <Dropdown
-            id="region"
-            label="Region"
             value={v()}
             onChange={(id) => setV(id)}
             items={[

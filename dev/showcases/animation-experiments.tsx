@@ -373,7 +373,6 @@ function TaskCard(props: {
       overflow="visible"
     >
       <div
-        xmlns="http://www.w3.org/1999/xhtml"
         onPointerEnter={() => props.visible && setHover(true)}
         onPointerLeave={() => setHover(false)}
         style={{
@@ -1763,7 +1762,6 @@ const MixedShapesRow: Component = () => {
                     height={POPOVER_H}
                   >
                     <div
-                      xmlns="http://www.w3.org/1999/xhtml"
                       style={{
                         width: `${POPOVER_W}px`,
                         padding: "4px 8px",

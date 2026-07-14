@@ -1,6 +1,17 @@
 import { type Component, createSignal } from "solid-js";
-import { ConfirmationModal } from "../../src/components/Modal";
+import {
+  ConfirmationModal,
+  createConfirmationModal,
+} from "../../src/components/Modal";
 import { Button } from "../../src/components/Button/Button";
+
+// Medium destructive confirm dialog — danger accent + danger confirm button at
+// md size. Curried at module top so the tone/size config stays off the call site.
+const MdDangerConfirmationModal = createConfirmationModal({
+  variant: "danger",
+  confirmVariant: "danger",
+  size: "md",
+});
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -153,7 +164,7 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
           <button class="demo-btn" onClick={() => setDangerOpen(true)}>
             Open Danger Confirm
           </button>
-          <ConfirmationModal
+          <MdDangerConfirmationModal
             open={dangerOpen()}
             onClose={() => setDangerOpen(false)}
             onConfirm={() => setDangerOpen(false)}
@@ -161,9 +172,6 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             subtitle="This action cannot be undone"
             description="Are you sure you want to delete the selected records?"
             confirmLabel="Delete"
-            confirmVariant="danger"
-            variant="danger"
-            size="md"
           >
             <p
               style={{
@@ -174,7 +182,7 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             >
               3 records will be permanently removed.
             </p>
-          </ConfirmationModal>
+          </MdDangerConfirmationModal>
         </div>
         <div class="depth2-atoms">
           <h3>Sub-Components</h3>

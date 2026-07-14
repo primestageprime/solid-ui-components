@@ -26,7 +26,8 @@ const AccentFloat = withCellStyle(FloatCell, {
 const SmallDate = withCellStyle(DateCell, { fontSize: "0.75rem" });
 const NoxCell = withValueColor(
   FloatCell,
-  (v) => (v != null && v > 2.8 ? "var(--sui-danger)" : "var(--sui-success)"),
+  (v: number | null | undefined) =>
+    v != null && v > 2.8 ? "var(--sui-danger)" : "var(--sui-success)",
   { textAlign: "right" },
 );
 

@@ -143,7 +143,15 @@ import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-cha
 import { SwimlaneNodeCardShowcase } from "./showcases/swimlane-node-card";
 import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
-type Item = { id: string; label: string; component: Component; tags: string[] };
+type ShowcaseProps = {
+  onNavigate?: (id: string, pushHash?: boolean) => void;
+};
+type Item = {
+  id: string;
+  label: string;
+  component: Component<ShowcaseProps>;
+  tags: string[];
+};
 
 // Auto-discovered workshop benches (dev/showcases/workshop/*.tsx). Each file
 // default-exports a Component; new benches appear here with no registration edit.
