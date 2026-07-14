@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.104.0
+
 ### Added
 
 - **Choreography module (public API)** — `choreograph`/`step`/`weightedStep`/`commit` sequence named animation EFFECTS (`collapse`, `expand`, `fadeIn`, `fadeOut`, `slideDown`, `rollUp`, `glowIn`, `settleIn`) across components around an explicit state-commit point; targets are `data-anim` handles (spread via the `anim(handle)` helper). Weight-fractions of one timing budget; hidden-tab hardened. Exported from the root barrel.
