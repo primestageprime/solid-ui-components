@@ -252,12 +252,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   control widget → intrinsic (inline discriminator); the native-input anchoring
   and the display's own clip stay. Canary (categorical-triage) unaffected — no
   change. Nothing to migrate.
-- [ ] DateRangePicker (geo 26) — overlay-partial. TEED UP (layout-purity-2
-  audit, 2026-07-14): the big multi-region one — two calendar month GRIDS
-  (→ Grid primitive, cells intrinsic), a dual-calendar layout row, header
-  rows, preset rows, and a footer — all genuine consumer-arrangement to
-  migrate; overlay anchoring stays. HAS a showcase. Deserves a careful
-  individual pass.
+- [x] DateRangePicker (geo 26) — overlay-partial; DONE. It shows a SINGLE calendar
+  (no dual-calendar container after all). Migrated the plain-div internal rows:
+  `__presets` → WrapRow (gap 4=xs), `__calendar-header` (prev|month|next) →
+  SpreadRow, `__time-inputs` (start|"to"|end) → ClusterRow (gap 8=sm). CARVE-OUTS:
+  the Kobalte popover trigger/content anchoring stays; the calendar grid
+  (`__weekday-row` + `__days-grid`) is kept INTRINSIC — a data-derived 7-col month
+  of `<For>` day cells whose 1px gap is load-bearing and off the Grid scale (xs=4
+  would widen the month ~18px); the `__time-toggle` label + inline buttons stay
+  intrinsic. Used only existing variants (no variants.ts edit). Verified on the
+  date-range-picker showcase with the popover open: presets, header, tight
+  calendar, and time inputs all correct.
 - [x] Combobox (geo 47) — overlay-partial; DONE (with a Kobalte carve-out). The
   PLAIN-div internal rows we own were composed: `__chips` → NarrowStack (gap 6→sm),
   `__chips-header` → SpreadRow (gap 8=sm), `__chip-list` → TagRow (gap 4=xs; chips

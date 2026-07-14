@@ -52,10 +52,9 @@
 }
 
 /* ---- Preset row ---- */
+/* Wrapping preset chips composed from WrapRow (gap 4=xs); only the divider
+   spacing lives here. */
 .sui-drp__presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
@@ -89,12 +88,16 @@
 }
 
 /* ---- Calendar header ---- */
+/* [prev | month-label | next] spread composed from SpreadRow (min-gap sm,
+   invisible under space-between); only the spacing below lives here. */
 .sui-drp__calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-bottom: 8px;
 }
+
+/* Calendar grid CARVE-OUT: the weekday-row + days-grid are a DATA-derived
+   calendar widget (7-column month of `<For>`-rendered day cells) whose tight
+   1px cell gap is load-bearing and off the Grid scale (xs=4 would widen the
+   month by ~18px). Kept intrinsic, like a heatmap / the progress-bar widgets. */
 
 .sui-drp__month-label {
   font-size: 13px;
@@ -239,10 +242,9 @@
   accent-color: var(--sui-accent);
 }
 
+/* [start-time | "to" | end-time] cluster composed from ClusterRow (gap 8=sm);
+   only the spacing above lives here. */
 .sui-drp__time-inputs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-top: 8px;
 }
 

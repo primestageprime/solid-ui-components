@@ -8,6 +8,7 @@
 // imports, matching the Combobox/Select/Tooltip Kobalte-wrapping pattern.
 // ============================================
 import { type Component, For, Show } from "solid-js";
+import { WrapRow } from "../Layout/variants";
 import type { DateRangePreset } from "./types";
 
 export interface PresetButtonsProps {
@@ -17,7 +18,7 @@ export interface PresetButtonsProps {
 
 export const PresetButtons: Component<PresetButtonsProps> = (props) => (
   <Show when={props.presets?.length}>
-    <div class="sui-drp__presets">
+    <WrapRow class="sui-drp__presets">
       <For each={props.presets}>
         {(preset) => (
           <button
@@ -29,6 +30,6 @@ export const PresetButtons: Component<PresetButtonsProps> = (props) => (
           </button>
         )}
       </For>
-    </div>
+    </WrapRow>
   </Show>
 );

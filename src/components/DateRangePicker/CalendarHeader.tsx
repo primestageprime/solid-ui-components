@@ -5,6 +5,7 @@
 // Month label + prev/next month nav buttons.
 // ============================================
 import type { Accessor, Component } from "solid-js";
+import { SpreadRow } from "../Layout/variants";
 import { formatMonthYear } from "./calendarUtils";
 
 export interface CalendarHeaderProps {
@@ -16,7 +17,7 @@ export interface CalendarHeaderProps {
 }
 
 export const CalendarHeader: Component<CalendarHeaderProps> = (props) => (
-  <div class="sui-drp__calendar-header">
+  <SpreadRow class="sui-drp__calendar-header">
     <button
       type="button"
       class="sui-drp__nav-btn"
@@ -36,5 +37,5 @@ export const CalendarHeader: Component<CalendarHeaderProps> = (props) => (
     >
       {"\u203A"}
     </button>
-  </div>
+  </SpreadRow>
 );
