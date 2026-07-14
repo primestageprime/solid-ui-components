@@ -77,6 +77,7 @@ import { SprintSelectorShowcase } from "./showcases/sprint-selector";
 import { TagInputShowcase } from "./showcases/tag-input";
 import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
+import { StatusCardShowcase } from "./showcases/status-card";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
@@ -564,6 +565,12 @@ const items: Item[] = [
     label: "WorkProgressCard",
     component: WorkProgressCardShowcase,
     tags: ["depth:1", "container", "indicator", "data", "time"],
+  },
+  {
+    id: "status-card",
+    label: "StatusCard",
+    component: StatusCardShowcase,
+    tags: ["depth:2", "container", "status", "data"],
   },
   {
     id: "split-queue-list",
