@@ -17,7 +17,11 @@ import {
   StatsTable,
   createFormulaPanel,
 } from "../../src/components/DataDisplay";
-import { EmptyState } from "../../src/components/Feedback";
+import {
+  EmptyState,
+  MutedEmptyState,
+  createEmptyState,
+} from "../../src/components/Feedback";
 import { AlertBox } from "../../src/components/Feedback/AlertBox";
 import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
 import { Icon, type IconName, ICON_GROUPS } from "../../src/components/Icon";
@@ -51,15 +55,28 @@ import {
 } from "../../src/components/Table";
 import { Section } from "../../src/components/Section/Section";
 import { Panel } from "../../src/components/Panel/Panel";
-import { Divider } from "../../src/components/Divider";
+import { Divider, DashedDivider } from "../../src/components/Divider";
 import { Page } from "../../src/components/Page";
-import { Modal } from "../../src/components/Modal";
-import { Tabs } from "../../src/components/Tabs";
-import { ButtonGroup } from "../../src/components/ButtonGroup";
+import { Modal, createModal } from "../../src/components/Modal";
+import { Tabs, BoxedTabs, PillTabs } from "../../src/components/Tabs";
+import {
+  ButtonGroup,
+  createButtonGroup,
+} from "../../src/components/ButtonGroup";
 import { ListItem } from "../../src/components/List";
 import { List } from "../../src/components/List/List";
 import { SidebarSelectorDemo } from "../../src/components/Selector";
 import { RemovableItemCard } from "../../src/components/Card";
+
+// Local prop-matrix instances — these showcase sections demonstrate axes that
+// no shipped variant bakes (EmptyState size/accent, connected ButtonGroup, a
+// clip-cornered md modal). Factory-curried at module top so no visual config
+// sits at the call site.
+const AccentEmptyState = createEmptyState({ variant: "accent" });
+const SmEmptyState = createEmptyState({ size: "sm" });
+const LgEmptyState = createEmptyState({ size: "lg" });
+const ConnectedButtonGroup = createButtonGroup({ gap: "none" });
+const AlertModal = createModal({ size: "md", corners: "clip" });
 
 // ── HUD ──────────────────────────────────────────────────────────────
 
@@ -138,11 +155,10 @@ const HUDShowcase: Component = () => {
               >
                 Boxed
               </p>
-              <Tabs
+              <BoxedTabs
                 tabs={hudTabs}
                 activeTab={activeHudTab()}
                 onTabChange={setActiveHudTab}
-                variant="boxed"
               />
             </div>
             <div>
@@ -155,11 +171,10 @@ const HUDShowcase: Component = () => {
               >
                 Pill
               </p>
-              <Tabs
+              <PillTabs
                 tabs={hudTabs}
                 activeTab={activeHudTab()}
                 onTabChange={setActiveHudTab}
-                variant="pill"
               />
             </div>
           </div>
@@ -272,18 +287,18 @@ const HUDShowcase: Component = () => {
                 <Toggle
                   label="Primary Power"
                   checked={toggles().power}
-                  onChange={(v) => setToggles({ ...toggles(), power: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), power: v })}
                 />
                 <Toggle
                   label="Sensor Array"
                   checked={toggles().sensors}
-                  onChange={(v) => setToggles({ ...toggles(), sensors: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), sensors: v })}
                   color="warning"
                 />
                 <Toggle
                   label="Target Tracking"
                   checked={toggles().tracking}
-                  onChange={(v) => setToggles({ ...toggles(), tracking: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), tracking: v })}
                   color="success"
                 />
               </div>
@@ -310,18 +325,18 @@ const HUDShowcase: Component = () => {
                 <Toggle
                   variant="minimal"
                   checked={toggles().power}
-                  onChange={(v) => setToggles({ ...toggles(), power: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), power: v })}
                 />
                 <Toggle
                   variant="minimal"
                   checked={toggles().sensors}
-                  onChange={(v) => setToggles({ ...toggles(), sensors: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), sensors: v })}
                   color="warning"
                 />
                 <Toggle
                   variant="minimal"
                   checked={toggles().tracking}
-                  onChange={(v) => setToggles({ ...toggles(), tracking: v })}
+                  onCheckedChange={(v) => setToggles({ ...toggles(), tracking: v })}
                   color="success"
                 />
               </div>
@@ -367,12 +382,12 @@ const HUDShowcase: Component = () => {
               >
                 Connected Buttons
               </p>
-              <ButtonGroup gap="none">
+              <ConnectedButtonGroup>
                 <Button active>Day</Button>
                 <Button>Week</Button>
                 <Button>Month</Button>
                 <Button>Year</Button>
-              </ButtonGroup>
+              </ConnectedButtonGroup>
             </div>
           </div>
         </Section>
@@ -428,13 +443,11 @@ const HUDShowcase: Component = () => {
             </Button>
           </ButtonGroup>
 
-          <Modal
+          <AlertModal
             open={modalOpen()}
             onClose={() => setModalOpen(false)}
             title="System Alert"
             subtitle="Priority Level: High"
-            size="md"
-            corners="clip"
             footer={
               <>
                 <Button onClick={() => setModalOpen(false)}>Cancel</Button>
@@ -458,7 +471,7 @@ const HUDShowcase: Component = () => {
                 Warning: Unauthorized access attempt logged
               </p>
             </Panel>
-          </Modal>
+          </AlertModal>
         </Section>
       </div>
     </Page>
@@ -614,10 +627,7 @@ const FeedbackShowcase: Component = () => {
               "border-radius": "8px",
             }}
           >
-            <EmptyState
-              variant="muted"
-              message="Select a vessel call to view details."
-            />
+            <MutedEmptyState message="Select a vessel call to view details." />
           </div>
           <div
             style={{
@@ -625,10 +635,7 @@ const FeedbackShowcase: Component = () => {
               "border-radius": "8px",
             }}
           >
-            <EmptyState
-              variant="accent"
-              message="Loading vessel call data..."
-            />
+            <AccentEmptyState message="Loading vessel call data..." />
           </div>
         </div>
       </div>
@@ -644,7 +651,7 @@ const FeedbackShowcase: Component = () => {
               "border-radius": "8px",
             }}
           >
-            <EmptyState size="sm" message="No rows." />
+            <SmEmptyState message="No rows." />
           </div>
           <div
             style={{
@@ -660,10 +667,7 @@ const FeedbackShowcase: Component = () => {
               "border-radius": "8px",
             }}
           >
-            <EmptyState
-              size="lg"
-              message="No vessel calls found matching your criteria."
-            />
+            <LgEmptyState message="No vessel calls found matching your criteria." />
           </div>
         </div>
       </div>
@@ -1426,6 +1430,8 @@ const HopperIconShowcase: Component = () => {
     time: "Time",
     actions: "Actions",
     ui: "UI",
+    auth: "Auth",
+    cache: "Cache",
   };
 
   return (
@@ -2339,7 +2345,7 @@ const SectionShowcase: Component = () => {
         <Section
           title="Bordered Section"
           subtitle="With border and background"
-          variant="bordered"
+          corners="round"
         >
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             This section has a border and background.
@@ -2349,7 +2355,7 @@ const SectionShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Decorated Section</h3>
-        <Section title="Decorated Section" variant="decorated">
+        <Section title="Decorated Section" corners="clip">
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             This section has decorative corner accents and a clipped shape.
           </p>
@@ -2364,7 +2370,7 @@ const SectionShowcase: Component = () => {
               Panel content
             </p>
           </Panel>
-          <Panel padding="sm" style={{ flex: 1 }}>
+          <Panel size="sm" style={{ flex: 1 }}>
             <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
               Small padding panel
             </p>
@@ -2382,7 +2388,7 @@ const SectionShowcase: Component = () => {
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Content below (solid)
           </p>
-          <Divider variant="dashed" />
+          <DashedDivider />
           <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
             Content below (dashed)
           </p>
