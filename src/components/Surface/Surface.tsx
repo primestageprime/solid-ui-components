@@ -61,11 +61,14 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
 
   const mergedStyle = (): JSX.CSSProperties | undefined => {
     const custom: JSX.CSSProperties = {};
-    if (local.bg) custom.background = local.bg;
-    if (local.borderColor) custom["border-color"] = local.borderColor;
+    // When active, .surface--active owns background/border — inline idle
+    // colors would override the class and make the active state invisible.
+    if (local.bg && !local.active) custom.background = local.bg;
+    if (local.borderColor && !local.active)
+      custom["border-color"] = local.borderColor;
     if (local.minWidth) custom["min-width"] = local.minWidth;
     if (local.maxWidth) custom["max-width"] = local.maxWidth;
-    if (!local.bg && !local.borderColor && !local.minWidth && !local.maxWidth)
+    if (Object.keys(custom).length === 0)
       return local.style as JSX.CSSProperties | undefined;
     const base = (
       typeof local.style === "object" ? local.style : {}

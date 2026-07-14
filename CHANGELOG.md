@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Surface` — `active` state was invisible on variants with baked colors.** `bg`/`borderColor` are applied as inline styles, which silently overrode the `.surface--active` class, so `InteractiveCard active` (and any colored variant) never showed its selection. Active now owns background/border. Also themed the active colors (`--sui-accent` tokens replace hardcoded cyan).
+
 ## 0.102.0
 
 ### Added
