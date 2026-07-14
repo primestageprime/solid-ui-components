@@ -529,7 +529,20 @@ tick", not real arrangement migrations. Review each per skill step 4.
 - [ ] Legend (geo 12) — HTML swatch/label rows (chart-adjacent but box-model → migrates)
 - [ ] PivotTreemap/PivotPills (geo 12) — HTML pill rows
 - [ ] Feedback/InlineChartErrorOverlay (geo 3) — overlay-ish; review
-- [ ] DragDrop/QuadrantGrid (geo 10) — likely BLOCK: CSS-grid 2×2, no Layout grid analogue
+- [x] DragDrop/QuadrantGrid (geo 10) — AUDITED, INTRINSIC (genuine load-bearing 2-D
+  matrix; the grid-exemption from the known-blockers list + skill 3b). The root
+  `.sui-quadrant-grid` is a true 2-D grid (`grid-template-columns:1fr 1fr` AND
+  `grid-template-rows:1fr 1fr` for four equal quadrants filling a flex parent) with
+  a load-bearing `gap:1px` cell-seam (the `background:var(--sui-border)` shows through
+  the 1px gaps as the grid lines). The `Grid` primitive can't express it: it has NO
+  `rows` prop (grid-template-rows:1fr 1fr — equal-height rows — is load-bearing and
+  would degrade to content-height auto-rows), and its gap scale is xs(4)/sm(8)/md —
+  the 1px seam is off-scale + load-bearing (xs=4 would visibly thicken the lines,
+  skill 3b calendar/heatmap-seam exception). Adding a rows-prop AND a 1px-gap
+  capability to Grid for a single consumer fails start-minimal (both Peter-gated
+  primitive expansions). The four cells are DATA-derived (`<For each={cells}>`) drop
+  zones, each a self-contained column stacking its OWN label + scroll-content
+  (ruling 4). No consumer-child multi-region composition to migrate. Left as-is.
 
 ## Known structural blockers (need a decision / new primitive)
 
