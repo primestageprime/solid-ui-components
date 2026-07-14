@@ -25,7 +25,9 @@ import { InteractiveCard } from "../../../src/components/Surface";
 import { StatusChip, TagPill } from "../../../src/components/Badge";
 import { Divider } from "../../../src/components/Divider";
 import { Icon, type IconName } from "../../../src/components/Icon";
-import { HotkeyButton } from "../../../src/components/HotkeyButton";
+import { HotkeyButton, isEditableTarget } from "../../../src/components/HotkeyButton";
+import { QuickFilter } from "../../../src/components/QuickFilter";
+import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -187,7 +189,9 @@ const CategoricalTriageBench: Component = () => {
   };
   onMount(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Arrows + emacs-style C-n / C-p walk the queue.
+      // Arrows + emacs-style C-n / C-p walk the queue. Defer to text inputs
+      // (e.g. the dependency picker's QuickFilter) like HotkeyButton does.
+      if (isEditableTarget(e.target)) return;
       const down = e.key === "ArrowDown" || (e.ctrlKey && e.key === "n");
       const up = e.key === "ArrowUp" || (e.ctrlKey && e.key === "p");
       if (down) { e.preventDefault(); move(1); }
@@ -219,11 +223,43 @@ const CategoricalTriageBench: Component = () => {
   ];
   const isCategorized = (it: TriageItem) => RESTORE.some((a) => a.when(it));
 
+  // Dependency picker mode — [d]epends opens it instead of patching directly.
+  // Pending picks accumulate above the fold; [f]inish creates the association
+  // (which implicitly categorizes the item and moves it to the right rail).
+  const [pickingFor, setPickingFor] = createSignal<string | null>(null);
+  const [pending, setPending] = createSignal<string[]>([]);
+  const pickingTarget = createMemo(() => items().find((it) => it.id === pickingFor()));
+  const candidates = createMemo(() => {
+    const id = pickingFor();
+    const picked = new Set(pending());
+    return items().filter((it) => it.id !== id && !picked.has(it.name));
+  });
+  const finishPicking = () => {
+    const id = pickingFor();
+    const deps = pending();
+    if (id && deps.length) {
+      const q = unresolved();
+      const i = q.findIndex((it) => it.id === id);
+      const next = q[i + 1] ?? q[i - 1];
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, deps } : it)));
+      if (selectedId() === id && next) setSelectedId(next.id);
+    }
+    setPickingFor(null);
+    setPending([]);
+  };
+
   const CATEGORIZE = [
     { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
     { hotkey: "b", label: "block", apply: () => patchSelected({ blockedBy: "Ryan — follow up" }) },
     { hotkey: "s", label: "snooze", apply: () => patchSelected({ blockedUntil: NOW + 26 * HOUR }) },
-    { hotkey: "d", label: "depends", apply: () => patchSelected({ deps: ["need category for salaries"] }) },
+    {
+      hotkey: "d",
+      label: "depends",
+      apply: () => {
+        setPending(selected()?.deps ?? []);
+        setPickingFor(selectedId());
+      },
+    },
     {
       hotkey: "l",
       label: "later",
@@ -282,6 +318,66 @@ const CategoricalTriageBench: Component = () => {
           </FillColumn>
         }
         centerPanel={
+          <Show
+            when={!pickingTarget()}
+            fallback={
+              // Dependency picker: pending picks above the fold (removable),
+              // filterable full list below, [f]inish pinned at the bottom.
+              <FillColumn>
+                <SpreadRow>
+                  <TextLabel>{pickingTarget()!.name}</TextLabel>
+                  <TextSublabel>select dependencies</TextSublabel>
+                </SpreadRow>
+                <Divider />
+                <ScrollColumn>
+                  <InfoPanel title="Dependencies">
+                    <Show
+                      when={pending().length}
+                      fallback={<TextSublabel>none yet — add from the list below</TextSublabel>}
+                    >
+                      <TightStack>
+                        <For each={pending()}>
+                          {(name) => (
+                            <SpreadRow>
+                              <TextBody>{name}</TextBody>
+                              <SmallDangerButton onClick={() => setPending((p) => p.filter((n) => n !== name))}>
+                                Remove Dependency
+                              </SmallDangerButton>
+                            </SpreadRow>
+                          )}
+                        </For>
+                      </TightStack>
+                    </Show>
+                  </InfoPanel>
+                  <InfoPanel title="All items">
+                    <QuickFilter items={candidates()} extract={(it) => it.name} placeholder="filter items…">
+                      {(filtered) => (
+                        <TightStack>
+                          <For each={filtered}>
+                            {(cand) => (
+                              <SpreadRow>
+                                <TextBody>{cand.name}</TextBody>
+                                <SmallButton onClick={() => setPending((p) => [...p, cand.name])}>
+                                  Add Dependency
+                                </SmallButton>
+                              </SpreadRow>
+                            )}
+                          </For>
+                        </TightStack>
+                      )}
+                    </QuickFilter>
+                  </InfoPanel>
+                </ScrollColumn>
+                <InfoPanel title="Confirm">
+                  <ClusterRow>
+                    <HotkeyButton hotkey="f" onTrigger={finishPicking}>
+                      finish
+                    </HotkeyButton>
+                  </ClusterRow>
+                </InfoPanel>
+              </FillColumn>
+            }
+          >
           <Show when={selected()} fallback={<Placeholder label="Triage" hint="empty queue — triage complete" />}>
             {(it) => (
               // FillColumn + ScrollColumn: title fixed at top, detail scrolls
@@ -362,6 +458,7 @@ const CategoricalTriageBench: Component = () => {
                 </Show>
               </FillColumn>
             )}
+          </Show>
           </Show>
         }
         rightPanel={

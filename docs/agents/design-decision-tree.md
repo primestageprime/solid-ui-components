@@ -264,6 +264,27 @@ ACTIVITY** (working item-by-item through a queue: triage, review, grading):
   item (the flow is the loop); inverse actions KEEP the item selected (you
   navigated to it deliberately) as it re-enters the queue.
 
+## Association picker (choose N related items for the selected thing)
+
+When an action needs the user to pick multiple associations (dependencies,
+members, links), the work surface swaps into a PICKER MODE with two sections:
+
+- **Above the fold: the pending picks** — each with a remove Button
+  (danger-toned). Empty state says where to add from.
+- **Below: the full candidate list** wrapped in `QuickFilter` (text
+  narrowing) — each row `SpreadRow(name, SmallButton add)`. Picked items
+  leave the candidate list (no double representation, same rule as rails).
+- **Pinned confirm row** (`[f]inish`, HotkeyButton) creates the
+  associations in one commit-style step — which implicitly categorizes the
+  item. Nothing mutates until finish.
+- Keyboard discipline: window-level hotkeys defer to the filter input via
+  `isEditableTarget` (exported by HotkeyButton) — every bench-level key
+  listener must apply the same guard.
+
+Composed: FillColumn(title bar, Divider, ScrollColumn(pending InfoPanel,
+QuickFilter InfoPanel), confirm InfoPanel). Precedent: categorical-triage
+[d]epends picker (2026-07-14).
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
