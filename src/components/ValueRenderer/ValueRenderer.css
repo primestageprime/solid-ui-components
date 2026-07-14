@@ -4,8 +4,10 @@
    Uses --sui-* tokens from the active theme.
    ============================================ */
 
+/* No `display` here: the no-label case is a plain block div, and the labeled
+   case composes the LabelValueGrid variant (grid comes from `.grid`). Keeping a
+   `display:block` would fight the composed grid on the same element. */
 .sui-value {
-  display: block;
   min-width: 0;
   font-family: var(--sui-font-family);
   color: var(--sui-text-primary);
@@ -13,13 +15,8 @@
   line-height: 1.4;
 }
 
-.sui-value--with-label {
-  display: grid;
-  grid-template-columns: minmax(80px, max-content) 1fr;
-  gap: 12px;
-  align-items: baseline;
-  width: 100%;
-}
+/* The label|value row now composes `LabelValueGrid` (minmax(80px, max-content)
+   1fr, gap 12=md, align:baseline — see ValueRenderer.tsx). Class kept as a hook. */
 
 .sui-value__label {
   color: var(--sui-text-secondary);

@@ -532,7 +532,16 @@ tick", not real arrangement migrations. Review each per skill step 4.
   center; flex-shrink:0`) centering its OWN glyph. Inline-level. As-is.
 - [x] ProgressCheck (geo 4) — AUDITED, INTRINSIC. Inline check indicator
   (`inline-flex; center; flex-shrink:0`) centering its OWN glyph. Inline-level. As-is.
-- [ ] ValueRenderer (geo 13)
+- [x] ValueRenderer (geo 13) — DONE. The top-level label|value row
+  (`.sui-value--with-label`: `grid; minmax(80px,max-content) 1fr; gap:12; baseline`)
+  → `LabelValueGrid` (byte-identical: same track list, gap 12=md, align:baseline).
+  Dropped the redundant `display:block` from `.sui-value` (the no-label case is a
+  plain block div; keeping it would fight the composed grid on the labeled element).
+  INTRINSIC (kept, ruling 4): the object-dispatch `.sui-value__entries` (flex column)
+  + `.sui-value__entry` (nested label|value grids) render the VALUE's own recursive
+  data structure (`<For each={Object.entries}>`) — data-content, not the component's
+  arrangement. Verified on the value-renderer showcase: primitives, objects (nested,
+  zebra rows), arrays, and the no-label body all render identically.
 - [ ] ResponsiveMoney (geo 2)
 - [ ] BigNumberInput (geo 4)
 - [ ] CurrencyInput (geo 2)
