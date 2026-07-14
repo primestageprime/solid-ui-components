@@ -1147,7 +1147,10 @@
 
 /* ── Shared showcase classes ───────────────────────────── */
 
-.component-section h2 {
+/* Direct child only: this styles the showcase's own page heading. A
+   descendant selector here leaks 24px/margin chrome into any SUI title
+   (SectionTitle renders an h2) composed INSIDE a bench — un-thematic. */
+.component-section > h2 {
   margin: 0 0 24px;
   font-size: 24px;
   font-weight: 600;

@@ -1,0 +1,15 @@
+{
+  // Type-checks the gallery/benches AGAINST the library's curried types.
+  // The Overrides/DataProps split makes visual config (gap/align/justify/…)
+  // a compile error at call sites — but tsconfig.json only includes src/,
+  // so benches could cheat silently. This config closes that hole:
+  //   npm run typecheck:dev
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationDir": null,
+    "noEmit": true
+  },
+  "include": ["src/**/*", "dev/**/*"],
+  "exclude": ["node_modules", "dist", "dev/dist"]
+}

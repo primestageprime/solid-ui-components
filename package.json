@@ -74,6 +74,7 @@
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "typecheck": "tsc --noEmit",
+    "typecheck:dev": "tsc -p tsconfig.dev.json",
     "lint": "biome lint src",
     "lint:fix": "biome lint --write src",
     "lint:all": "biome lint",

@@ -23,6 +23,7 @@ import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
 import { StatusChip, TagPill } from "../../../src/components/Badge";
+import { Divider } from "../../../src/components/Divider";
 import { Icon, type IconName } from "../../../src/components/Icon";
 import { HotkeyButton } from "../../../src/components/HotkeyButton";
 
@@ -244,17 +245,19 @@ const CategoricalTriageBench: Component = () => {
           // Title pinned, cards scroll — same FillColumn/ScrollColumn pattern
           // as the center's pinned action row.
           <FillColumn>
-            {/* Rails generally get a title; the count follows it (flashes on change). */}
-            <SpreadRow gap="sm">
+            {/* Rails generally get a title; the count follows it (flashes on
+                change). A Divider separates the pinned header from the list. */}
+            <SpreadRow>
               <SectionTitle>Unresolved</SectionTitle>
               <FlashCount count={unresolved().length} />
             </SpreadRow>
+            <Divider />
             <ScrollColumn>
               <TightStack>
                 <For each={unresolved()}>
                   {(it) => (
                     <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
-                      <SpreadRow gap="sm">
+                      <SpreadRow>
                         <TextTitle>{it.name}</TextTitle>
                         <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
                       </SpreadRow>
@@ -272,12 +275,12 @@ const CategoricalTriageBench: Component = () => {
               // internally, Categorize pinned to the bottom — the action row
               // never drifts as the detail grows.
               <FillColumn>
-                <SpreadRow gap="sm">
+                <SpreadRow>
                   <TextLabel>{it().name}</TextLabel>
                   <StatusChip status={it().status} options={["TODO", "DOING", "DONE"]} title={it().name} highlight={it().status === "DOING"} />
                 </SpreadRow>
                 {/* Provenance sub-line — canon: ownership left, timing right. */}
-                <SpreadRow gap="sm">
+                <SpreadRow>
                   <TextSublabel>{it().creator}</TextSublabel>
                   <TextSublabel>created {stamp(it().createdAt)} ({ago(it().createdAt)} ago)</TextSublabel>
                 </SpreadRow>
@@ -317,7 +320,7 @@ const CategoricalTriageBench: Component = () => {
                   </Show>
                 </ScrollColumn>
                 <InfoPanel title="Categorize">
-                  <SpreadRow gap="sm">
+                  <SpreadRow>
                     <For each={CATEGORIZE}>
                       {(a) => (
                         <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
@@ -336,7 +339,7 @@ const CategoricalTriageBench: Component = () => {
             <For each={categories()}>
               {(cat) => (
                 <div>
-                  <SpreadRow gap="sm">
+                  <SpreadRow>
                     <TextLabel>{cat.label}</TextLabel>
                     <FlashCount count={cat.items.length} />
                   </SpreadRow>
@@ -348,7 +351,7 @@ const CategoricalTriageBench: Component = () => {
                             style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
                             onClick={() => setSelectedId(it.id)}
                           >
-                            <SpreadRow gap="sm">
+                            <SpreadRow>
                               <TextSublabel>{it.name}</TextSublabel>
                               <TextSublabel style={{ "white-space": "nowrap" }}>
                                 <Icon name={cat.icon} variant="outline" size="xs" /> {cat.childData(it)}
