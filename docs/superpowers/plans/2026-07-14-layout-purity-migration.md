@@ -218,7 +218,15 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [ ] Dropdown (geo 8) — overlay-partial
 - [ ] MultiSelectFilter (geo 24) — overlay-partial
 - [ ] TagInput (geo 11)
-- [ ] QuickFilter (geo 5)
+- [x] QuickFilter (geo 5) — DONE. Container column (search input above the
+  consumer render-prop list) → `NarrowStack` (gap 8=sm exact). The composed
+  ThemedInput is wrapped in an `ActionSlot` (flex:none) so it keeps its natural
+  height — this REPLACES the old `.sui-quickfilter .themed-input-group { flex:0 0
+  auto }` descendant-override (both the root flex-column and that override are
+  now gone from the CSS; only width:100%/min-width:0 + the compact input sizing
+  remain). Independent of the ThemedInput labeled-field ruling. Verified on the
+  quick-filter showcase: pixel-identical, filtering still narrows the list
+  (typed "fuel" → 2 of 6), input holds natural height; canary unaffected.
 
 #### P4 — big composites
 

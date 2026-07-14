@@ -1,7 +1,7 @@
+/* Container column (input above the filtered list) is composed from the
+   NarrowStack Layout variant (gap:sm); only the sizing (full-width, shrinkable)
+   lives here. */
 .sui-quickfilter {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   width: 100%;
   min-width: 0;
 }
@@ -9,17 +9,11 @@
 /* The field's surface (background, border, text/placeholder colour, focus ring,
    box-sizing, transition) comes from the composed ThemedInput primitive
    (.themed-input). QuickFilter only layers a COMPACT/dense sizing on top — the
-   filter input is smaller than a form field — plus a couple of structural
-   neutralisations for the primitive's form-field defaults. Selectors are scoped
-   under .sui-quickfilter so they reliably win over .themed-input regardless of
-   stylesheet order. */
-
-/* ThemedInput wraps its <input> in a .themed-input-group flex column that grows
-   (flex: 1) to fill a form layout. Inside QuickFilter's own column, let it size
-   to content so the input sits above the rendered list at its natural height. */
-.sui-quickfilter .themed-input-group {
-  flex: 0 0 auto;
-}
+   filter input is smaller than a form field. Selectors are scoped under
+   .sui-quickfilter so they reliably win over .themed-input regardless of
+   stylesheet order. (ThemedInput's group would grow to fill a flex column; the
+   input is wrapped in an ActionSlot in QuickFilter.tsx so it keeps its natural
+   height — replacing the old `.themed-input-group { flex:0 0 auto }` override.) */
 
 .sui-quickfilter .sui-quickfilter__input {
   /* compact sizing — smaller than the 12px padding / 0.875rem form default */

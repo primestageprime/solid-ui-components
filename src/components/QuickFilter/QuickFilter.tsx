@@ -10,6 +10,7 @@
 // child, OR caller listens to onQueryChange and filters externally.
 // ============================================
 import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
+import { NarrowStack, ActionSlot } from "../Layout/variants";
 import { ThemedInput } from "../Inputs";
 import "./QuickFilter.css";
 
@@ -79,19 +80,26 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
     local.onQueryChange?.(v);
   };
 
+  // Container column (input above the filtered list) is composed from the
+  // NarrowStack Layout variant (gap:sm). The input is wrapped in an ActionSlot
+  // (flex:none) so it keeps its natural height instead of stretching in the
+  // column — this replaces the old `.themed-input-group { flex:0 0 auto }`
+  // neutralisation without QuickFilter owning any flex geometry.
   return (
-    <div
+    <NarrowStack
       class={`sui-quickfilter${local.class ? ` ${local.class}` : ""}`}
       {...(others as JSX.HTMLAttributes<HTMLDivElement>)}
     >
-      <ThemedInput
-        class="sui-quickfilter__input"
-        type="search"
-        placeholder={local.placeholder ?? "Filter…"}
-        value={query()}
-        onInput={onInput}
-      />
+      <ActionSlot>
+        <ThemedInput
+          class="sui-quickfilter__input"
+          type="search"
+          placeholder={local.placeholder ?? "Filter…"}
+          value={query()}
+          onInput={onInput}
+        />
+      </ActionSlot>
       {local.children(filtered(), query())}
-    </div>
+    </NarrowStack>
   );
 }
