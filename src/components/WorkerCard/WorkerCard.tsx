@@ -11,6 +11,7 @@
 import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
+import { SpreadRow, ClusterRow } from "../Layout/variants";
 import "./WorkerCard.css";
 
 export type WorkerStatus =
@@ -215,8 +216,8 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
       {...others}
     >
       {/* Row 1: Identity */}
-      <div class="worker-card__identity">
-        <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
+      <SpreadRow class="worker-card__identity">
+        <ClusterRow>
           <Text as="span" class="worker-card__name" color={effectiveColor()}>
             W{local.slotId}
           </Text>
@@ -229,7 +230,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
           >
             {effectiveLabel()}
           </span>
-        </div>
+        </ClusterRow>
         <Text
           as="span"
           class="worker-card__timer"
@@ -239,10 +240,10 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
         >
           {formatTime(elapsed())}
         </Text>
-      </div>
+      </SpreadRow>
 
       {/* Row 2: History */}
-      <div class="worker-card__history">
+      <SpreadRow class="worker-card__history">
         <Text as="span">{local.jobsCompleted} jobs done</Text>
         <Show when={local.currentJob}>
           <Text as="span" color={CYAN}>
@@ -254,13 +255,13 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             {fmtNum(local.avgRatePerSec)} rec/s avg
           </Text>
         </Show>
-      </div>
+      </SpreadRow>
 
       {/* Row 3: Plan (animated expand/collapse) */}
       <div
         class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}
       >
-        <div class="worker-card__plan-inner">
+        <SpreadRow class="worker-card__plan-inner">
           <Show
             when={isBatchMode()}
             fallback={<Text as="span">single stream</Text>}
@@ -279,7 +280,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             </Show>
             {local.columnCount ?? "?"} cols
           </Text>
-        </div>
+        </SpreadRow>
       </div>
 
       {/* Row 4: Progress (animated expand/collapse) */}

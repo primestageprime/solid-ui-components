@@ -11,12 +11,9 @@
     background 0.3s ease;
 }
 
-/* Row 1: Identity */
-.worker-card__identity {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+/* Row 1: Identity — arrangement composed via SpreadRow (Layout); the
+   name+badge cluster via ClusterRow. The worker-card__identity class is
+   retained on the SpreadRow as a consumer BEM hook (no geometry of its own). */
 
 .worker-card__name {
   font-size: 13px;
@@ -37,14 +34,18 @@
   font-weight: 700;
 }
 
-/* Row 2: History */
+/* Row 2: History — spread arrangement composed via SpreadRow (Layout); this
+   rule keeps only the intrinsic typography + top spacing. */
 .worker-card__history {
-  display: flex;
-  justify-content: space-between;
   font-size: 10px;
   color: var(--sui-text-muted);
   margin-top: 4px;
 }
+
+/* Rows 3 & 4 use `overflow: hidden` as a MAX-HEIGHT COLLAPSE CLIP (and the bar
+   track as a fill mask), not as a scroll region or child arrangement — this is
+   intrinsic animation mechanics with no Layout analogue, so it stays here per
+   the layout-purity intrinsic-styling carve-out. */
 
 /* Row 3: Plan (animated) */
 .worker-card__plan {
@@ -67,9 +68,8 @@
   margin-top: 0;
 }
 
+/* Spread arrangement composed via SpreadRow (Layout); intrinsic typography only. */
 .worker-card__plan-inner {
-  display: flex;
-  justify-content: space-between;
   font-size: 10px;
   color: var(--sui-text-secondary);
 }

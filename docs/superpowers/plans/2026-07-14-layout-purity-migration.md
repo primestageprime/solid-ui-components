@@ -77,11 +77,30 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   (wrapping cluster, `flex-shrink:0` baked). Chip pill `inline-flex` kept as
   intrinsic. Gap 3px→4px (xs), imperceptible. **Precedent set:** a Primitive now
   imports Layout for geometry while keeping intrinsic CSS — see report/blockers.
-- [ ] LabeledDivider (geo 4) — pseudo-element `::before/::after flex:1` divider lines; see blockers
-- [ ] ProductGridCard (geo 4)
-- [ ] WorkerCard (geo 10)
-- [ ] FormComposite (geo 10)
-- [ ] DiffPair (geo 10)
+- [x] WorkerCard (geo 10) — DONE. identity/history/plan-inner rows → SpreadRow,
+  name+badge → ClusterRow (gaps on-scale: 8px = sm, or absent/invisible under
+  space-between). BEM hook classes retained on the Layout wrappers.
+  `overflow:hidden` on plan/progress/bar-track kept as animation-clip/mask
+  (intrinsic, not scroll) — flagged as a proposed carve-out.
+- [ ] BLOCKED — LabeledDivider (geo 4): the two flanking rule lines are
+  `::before/::after { flex:1; height:1px }` pseudo-elements — no JSX element to
+  wrap in a Layout, and `flex:1` on a pseudo-element is banned-in-CSS geometry
+  with no Layout analogue. Faithful fix would need replacing the pseudo lines
+  with real `<Box grow>` divider elements (DOM + visual change → redesign, not a
+  byte-faithful migration). Needs a decision.
+- [ ] BLOCKED — ProductGridCard (geo 4): a centered column with **gap:6px**,
+  off the xs(4)/sm(8) scale. Otherwise a clean `Stack align=center` migration.
+  Blocked pending the gap-scale decision (snap to 8px? expand scale?).
+- [ ] BLOCKED — FormComposite (geo 10): the block row uses the bespoke
+  "holy-albatross" responsive `flex-basis: calc((var(--fc-break) - 100%) * 999)`
+  auto-stacking algorithm + **gap:12px** — no Layout analogue. This component is
+  itself doing layout that arguably belongs IN the Layout family as a new
+  "auto-stack row" primitive. Needs a decision (add primitive vs exempt).
+- [ ] BLOCKED — DiffPair (geo 10): the labeled form is `display:grid;
+  grid-template-columns: minmax(80px,max-content) 1fr; gap:12px` — CSS grid with
+  no Layout grid primitive, plus off-scale 12px gap. The inner before/arrow/after
+  row could be a WrapRow, but the outer grid blocks. Needs Grid-primitive
+  decision.
 
 #### P2 — high-traffic
 
