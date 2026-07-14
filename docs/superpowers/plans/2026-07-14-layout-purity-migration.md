@@ -245,11 +245,31 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   the --moy-cell-size var rides on the same element so the track resolves). Cells
   stay intrinsic (each centers its own month label). Only `width:fit-content`
   remains in CSS. Verified on the pickers showcase: pixel-identical 4-col grid.
-- [ ] DatePicker (geo 7) — overlay-partial
+- [x] DatePicker (geo 7) — overlay-partial; AUDITED, INTRINSIC. Root is an
+  INLINE-flex control (`position:relative; inline-flex; align-items:center;
+  gap:4`) centering its OWN parts (formatted-date display span, icon, and an
+  absolutely-positioned hidden native `<input type=date>` overlay). Inline-level
+  control widget → intrinsic (inline discriminator); the native-input anchoring
+  and the display's own clip stay. Canary (categorical-triage) unaffected — no
+  change. Nothing to migrate.
 - [ ] DateRangePicker (geo 26) — overlay-partial
 - [ ] Combobox (geo 47) — overlay-partial
-- [ ] Select (geo 28) — overlay-partial
-- [ ] Dropdown (geo 8) — overlay-partial
+- [x] Select (geo 28) — overlay-partial; AUDITED, INTRINSIC. Its only banned
+  geometry is `.sui-select__item` (data-derived option rows, `<For>`, each a
+  space-between [label | check/meta] of its own parts → ruling 4 intrinsic) and
+  `.sui-select__listbox` `overflow-y:auto` (the option list's own scroll, like a
+  menu — intrinsic overlay-list scroll, same treatment as the StatusCard popover
+  / TagInput suggestions). Trigger + data-derived option list, no consumer-child
+  multi-region composition → nothing to migrate. (The geo-28 count is mostly
+  per-state colour/hover rules, not layout.)
+- [x] Dropdown (geo 8) — overlay-partial; AUDITED, INTRINSIC (no migration). Root
+  is `position:relative; inline-block` (neither banned). The trigger is an
+  INLINE-flex control centering its OWN dot/label/caret (intrinsic, inline
+  discriminator). The `__menu` is an absolute-anchored overlay (anchoring stays)
+  whose items are DATA-derived option buttons (`<For each={items}>`) each
+  centering its own dot+label (ruling 4: data-derived option content = intrinsic).
+  The footer has no banned geometry. No consumer-child multi-region composition →
+  nothing to migrate.
 - [ ] MultiSelectFilter (geo 24) — overlay-partial
 - [x] TagInput (geo 11) — AUDITED, INTRINSIC (field-composition discriminator
   applied; fell to intrinsic). Unlike CheckboxField/ThemedInput there is NO outer
