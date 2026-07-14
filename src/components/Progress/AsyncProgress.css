@@ -1,13 +1,9 @@
-.async-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
+/* Layout composed via Layout variants (layout-purity):
+   root column → TightStack (gap xs=4, was gap:4px); header → BaselineSpreadRow
+   (align:baseline, justify:between; +sm min-gap is invisible under space-between).
+   The bar-track/bar-fill below stay intrinsic — a single-widget progress-bar mask
+   rendering its own data-derived fill (BatchBar / ProgressCard precedent). */
 .async-progress__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
   font-size: 0.85rem;
 }
 

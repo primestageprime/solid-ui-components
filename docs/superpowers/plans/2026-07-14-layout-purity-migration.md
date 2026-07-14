@@ -600,7 +600,18 @@ tick", not real arrangement migrations. Review each per skill step 4.
   AutoStackRow would force callers to wrap each child in AutoStackItem (breaking
   change). Candidate to migrate if the `children` API is dropped or AutoStackRow
   gains a raw-child mode. No showcase exists; change is exact-CSS-equivalent.
-- [~ claimed: lp-5] Progress/AsyncProgress + StackedProgressBar (geo 7 + n)
+- [x] Progress/AsyncProgress + StackedProgressBar (geo 7 + n) — DONE (lp-5;
+  showcase-first via f5a4a9c). **AsyncProgress** migrated: outer column
+  (`display:flex;column;gap:4px`) → `TightStack` (gap xs=4 exact); header
+  (`display:flex;justify-content:space-between;align-items:baseline`) →
+  `BaselineSpreadRow` (WorkProgressCard precedent — no gap → +sm min-gap invisible
+  under space-between; `font-size:0.85rem` kept). The `__bar-track`/`__bar-fill`
+  stay INTRINSIC — a single-widget progress-bar mask (`overflow:hidden`) rendering
+  its own data-derived fill width (BatchBar/ProgressCard precedent). No new
+  variants. **StackedProgressBar** AUDITED INTRINSIC: a self-contained bar widget
+  whose flex centres its OWN `__label` over its OWN `position:absolute` data-derived
+  `__segment`s (BatchBar family). Verified on the new async-progress showcase:
+  header spread + bar pixel-identical.
 - [x] TitledTimeRangeHeader (geo 11) — DONE (with an anchor-duality carve-out). Root
   [main | action] → `SpreadRow` (gap 16→sm; keeps padding/bg/border/radius); action
   slot → `ActionSlot` (drops flex-shrink:0). INTRINSIC: `__main` is the header's OWN
