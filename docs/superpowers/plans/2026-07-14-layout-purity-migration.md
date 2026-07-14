@@ -123,7 +123,10 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   (`ButtonGroup`/`VerticalButtonGroup`/`BorderedButtonGroup` in variants.ts) — no
   redundant H/VButtonGroup aliases added (#2 rule). Runtime gap/orientation
   props kept unchanged; zero breaking changes.
-- [ ] ProgressCard (geo 18)
+- [x] ProgressCard (geo 18) — DONE. Header→ClusterRow, steps→TightClusterRow,
+  each step + connector→no-shrink ActionSlot. Step circle/icon keep their
+  intrinsic glyph-centering flex (single-glyph badge, not child arrangement).
+  Props unchanged.
 - [ ] WorkProgressCard (geo 14)
 - [ ] BatchBar (geo 12)
 - [x] BulkActionBar (geo 7) — DONE. Sticky-bottom overlay anchoring kept in CSS;

@@ -2,10 +2,12 @@
    primitive; padding (12px) and border-radius (lg) are supplied inline at
    the composition site since they sit off Surface's padding/radius scale. */
 
+/* The header row (ClusterRow), the steps row (TightClusterRow), and each step's
+   no-shrink slot (ActionSlot) are composed from Layout — see ProgressCard.tsx.
+   The step circle + icon below keep their own `flex`-centering: that is a badge
+   centering its OWN single glyph (intrinsic element styling), not child
+   arrangement. */
 .jtf-progress-card__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 8px;
 }
 
@@ -13,20 +15,6 @@
    Only the monospace face for the subtitle is component-specific. */
 .jtf-progress-card__subtitle {
   font-family: monospace;
-}
-
-.jtf-progress-card__steps {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.jtf-progress-card__step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
 }
 
 /* Circle container */
@@ -104,11 +92,11 @@
 }
 
 /* Arrow connector */
+/* No-shrink composed via ActionSlot; this keeps only the arrow's intrinsic look. */
 .jtf-progress-card__connector {
   color: var(--sui-border);
   font-size: 12px;
   line-height: 1;
-  flex-shrink: 0;
 }
 
 .jtf-progress-card__connector--completed {

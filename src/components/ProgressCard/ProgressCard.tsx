@@ -17,6 +17,7 @@ import {
 } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
+import { ClusterRow, TightClusterRow, ActionSlot } from "../Layout/variants";
 import "./ProgressCard.css";
 
 export type ProgressStatus = "pending" | "active" | "completed" | "error";
@@ -106,7 +107,7 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
       style={cardStyle()}
       {...others}
     >
-      <div class="jtf-progress-card__header">
+      <ClusterRow class="jtf-progress-card__header">
         <Text variant="title" as="div" class="jtf-progress-card__title">
           {local.title}
         </Text>
@@ -115,15 +116,15 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
             {local.subtitle}
           </Text>
         </Show>
-      </div>
+      </ClusterRow>
 
       <Show when={steps().length > 0}>
-        <div class="jtf-progress-card__steps">
+        <TightClusterRow class="jtf-progress-card__steps">
           <For each={steps()}>
             {(step, index) => (
               <>
                 <Show when={index() > 0}>
-                  <div
+                  <ActionSlot
                     class={`jtf-progress-card__connector ${
                       steps()[index() - 1]?.status === "completed"
                         ? "jtf-progress-card__connector--completed"
@@ -131,9 +132,9 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
                     }`}
                   >
                     &rarr;
-                  </div>
+                  </ActionSlot>
                 </Show>
-                <div
+                <ActionSlot
                   class={`jtf-progress-card__step jtf-progress-card__step--${step.status}`}
                   title={step.label}
                 >
@@ -147,11 +148,11 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
                       innerHTML={`<svg viewBox="0 0 16 16" fill="none">${getStepIcon(step)}</svg>`}
                     />
                   </div>
-                </div>
+                </ActionSlot>
               </>
             )}
           </For>
-        </div>
+        </TightClusterRow>
       </Show>
 
       <Show when={local.message}>
