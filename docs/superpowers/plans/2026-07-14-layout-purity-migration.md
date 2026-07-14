@@ -325,7 +325,29 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 
 #### P4 — big composites
 
-- [ ] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2)
+- [~] Table/Table (geo 42) · Table/CellRenderers (geo 14) · Table/GapCell (geo 2) — PARTIAL.
+  **CellRenderers (geo 14) + GapCell (geo 2): AUDITED INTRINSIC** — every cell
+  renderer (`.cell-status` dot+label, `.cell-datetime` date-over-time, `.cell-checkbox`,
+  `.sui-gap-cell__meta` %+bar, `.sui-gap-cell__bar` fill-mask) is a self-contained
+  DATA-DERIVED cell-content widget (inline-level / ruling-4 / single-widget bar mask
+  like BatchBar). No consumer-child arrangement → left as-is.
+  **BaseTable (`.hud-table`, geo 42): BLOCKED (conditional multi-mode fill-chain).**
+  The root's geometry is PROP-CONDITIONAL across 3 modes — `fill` → clipping flex
+  column (`display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden`)
+  with a flex-grow scroll child; `stickyHeader` (default ON) → root `overflow:visible`;
+  non-sticky → root `overflow:hidden` corner-clip; and `maxHeight` injects
+  `overflow-y:auto` via inline `tableContainerStyle`. The same conditional fill/scroll
+  pattern recurs in FilterableTable (`.hud-table-quickfilter--fill`), SelectableTable,
+  DataTableContainer, and VirtualTable. Composing this needs a 3-way `<Dynamic>` root
+  swap keyed on props + a matching scroll-region swap, a restructure of the library's
+  MOST-USED component with a huge regression surface (every consuming table) that I
+  can't exhaustively verify. RECOMMENDATION (batched to team-lead): this is the same
+  "full-height scroll plumbing" category as the already-exempt page-structure family
+  (AppShell/ThreePanelLayout/SplitQueueList) — either grant Table's fill-chain the
+  same layout-exempt status, or approve the Dynamic-root restructure. The only clean
+  consumer-child arrangement in BaseTable is `.hud-table__actions-content` (wraps the
+  `rowActions` render-prop) → a right-end cluster; `.hud-table__header-content`
+  (header text + own sort glyph) reads as intrinsic single-widget header chrome.
 - [ ] Selector/SidebarSelector (geo 38)
 - [ ] ExtractionBoard (geo 44)
 - [~] ThreadGroup (geo 24) — BLOCKED (needs a primitive expansion). The base rows
