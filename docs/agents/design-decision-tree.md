@@ -31,6 +31,11 @@ and un-thematic text is exactly the drift Peter watches for (2026-07-14).
 Emphasis is chosen by picking the variant (label > title > body > sublabel),
 not by bolding.
 
+Same discipline for ICONS: always the `Icon` component, outline variant,
+currentColor (thematic) — never emoji glyphs (colored emoji break the theme;
+"the clock looks weird" — Peter, 2026-07-14). Gap noted: no chain/link icon
+for dependency semantics yet — add one to Icon when dependency children ship.
+
 ## Page layout
 
 Discriminators:

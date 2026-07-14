@@ -23,6 +23,7 @@ import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
 import { StatusChip, TagPill } from "../../../src/components/Badge";
+import { Icon, type IconName } from "../../../src/components/Icon";
 
 export const meta = { label: "Categorical Triage" };
 
@@ -106,10 +107,10 @@ const CategoricalTriageBench: Component = () => {
     // person-blocked first (you can nudge), snooze (will self-clear),
     // dependency (count only), claimed-but-non-terminal (count only).
     return [
-      { label: "BLOCKED · PERSON", glyph: "⏸", mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
-      { label: "BLOCKED · SNOOZE", glyph: "⏰", mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
-      { label: "BLOCKED · DEPENDENCY", glyph: "⛓", mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
-      { label: "CLAIMED", glyph: "◉", mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
+      { label: "BLOCKED · PERSON", icon: "user" as IconName, mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
+      { label: "BLOCKED · SNOOZE", icon: "clock" as IconName, mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
+      { label: "BLOCKED · DEPENDENCY", icon: "external-link" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { label: "CLAIMED", icon: "user" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
     ];
   });
 
@@ -159,7 +160,7 @@ const CategoricalTriageBench: Component = () => {
                             <SpreadRow gap="sm">
                               <TextSublabel>{it.name}</TextSublabel>
                               <TextSublabel style={{ "white-space": "nowrap" }}>
-                                {cat.glyph} {cat.childData(it)}
+                                <Icon name={cat.icon} variant="outline" size="xs" /> {cat.childData(it)}
                               </TextSublabel>
                             </SpreadRow>
                           </div>
