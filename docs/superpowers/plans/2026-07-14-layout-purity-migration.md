@@ -80,8 +80,8 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 - [x] WorkerCard (geo 10) — DONE. identity/history/plan-inner rows → SpreadRow,
   name+badge → ClusterRow (gaps on-scale: 8px = sm, or absent/invisible under
   space-between). BEM hook classes retained on the Layout wrappers.
-  `overflow:hidden` on plan/progress/bar-track kept as animation-clip/mask
-  (intrinsic, not scroll) — flagged as a proposed carve-out.
+  `overflow:hidden` on plan/progress/bar-track now composed via the ClipBox
+  Layout variant (Peter ruling 4 — no intrinsic carve-out). Retrofit landed.
 - [ ] BLOCKED — LabeledDivider (geo 4): the two flanking rule lines are
   `::before/::after { flex:1; height:1px }` pseudo-elements — no JSX element to
   wrap in a Layout, and `flex:1` on a pseudo-element is banned-in-CSS geometry

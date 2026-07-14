@@ -11,7 +11,7 @@
 import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
-import { SpreadRow, ClusterRow } from "../Layout/variants";
+import { SpreadRow, ClusterRow, ClipBox } from "../Layout/variants";
 import "./WorkerCard.css";
 
 export type WorkerStatus =
@@ -257,8 +257,8 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
         </Show>
       </SpreadRow>
 
-      {/* Row 3: Plan (animated expand/collapse) */}
-      <div
+      {/* Row 3: Plan (animated expand/collapse) — ClipBox clips the max-height collapse */}
+      <ClipBox
         class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}
       >
         <SpreadRow class="worker-card__plan-inner">
@@ -281,13 +281,13 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             {local.columnCount ?? "?"} cols
           </Text>
         </SpreadRow>
-      </div>
+      </ClipBox>
 
-      {/* Row 4: Progress (animated expand/collapse) */}
-      <div
+      {/* Row 4: Progress (animated expand/collapse) — ClipBox clips the collapse + the bar mask */}
+      <ClipBox
         class={`worker-card__progress ${isActive() ? "worker-card__progress--visible" : "worker-card__progress--hidden"}`}
       >
-        <div class="worker-card__bar-track">
+        <ClipBox class="worker-card__bar-track">
           <div
             class={`worker-card__bar-fill ${local.status === "extracting" ? "worker-card__bar-fill--extracting" : ""}`}
             style={{
@@ -295,7 +295,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
               background: barColor(),
             }}
           />
-        </div>
+        </ClipBox>
         <Show when={local.rows != null}>
           <Text as="div" class="worker-card__rows" color={CYAN}>
             {fmtNum(local.rows!)} rows
@@ -309,7 +309,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             </Show>
           </Text>
         </Show>
-      </div>
+      </ClipBox>
 
       {/* Idle state */}
       <Show when={local.status === "idle"}>

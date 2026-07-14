@@ -167,6 +167,15 @@ export const GrowBox: Component<BoxDataProps> = createBox({
 export const FadedBox: Component<BoxDataProps> = createBox({
   style: { opacity: "0.5" },
 });
+
+// ClipBox — a Box that clips overflowing content (`overflow: hidden`). For
+// masking/clipping visuals: a max-height collapse animation, a progress-bar
+// fill mask, a rounded avatar. NOT for scroll regions (use ScrollColumn/
+// ScrollPanel). Routing clip-overflow through Layout keeps `overflow` out of
+// component CSS per the layout-purity rule.
+export const ClipBox: Component<BoxDataProps> = createBox({
+  style: { overflow: "hidden" },
+});
 export const ConstrainedBox: Component<BoxDataProps> = createBox({
   style: { "max-width": "400px" },
 });
