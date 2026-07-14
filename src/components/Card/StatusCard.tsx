@@ -26,6 +26,16 @@ import {
   onCleanup,
 } from "solid-js";
 import { Surface } from "../Surface/Surface";
+import {
+  BaselineSpreadRow,
+  ClipFillColumn,
+  ClipFillBox,
+  TagRow,
+  ClusterRow,
+  GrowWrapRow,
+  GrowCenterRow,
+  TightNoShrinkClusterRow,
+} from "../Layout/variants";
 import { Text } from "../Text/Text";
 import { Button } from "../Button/Button";
 import "./StatusCard.css";
@@ -137,15 +147,17 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
       onClick={() => local.onSelect?.()}
       {...others}
     >
-      {/* Row 1 — name + status */}
-      <div class="sui-status-card__row1">
+      {/* Row 1 — name + status. BaselineSpreadRow (baseline + space-between)
+          replaces the hand-rolled flex; the name drops its flex:1 (space-between
+          already separates the pair; min-width:0 + ellipsis stay intrinsic). */}
+      <BaselineSpreadRow class="sui-status-card__row1">
         <Text as="span" class="sui-status-card__name" title={local.name}>
           {local.name}
         </Text>
         <Show when={local.status != null}>
           <span class="sui-status-card__status">{local.status}</span>
         </Show>
-      </div>
+      </BaselineSpreadRow>
 
       {/* Row 2 — detail area. The description fills the space between the title
           and the bottom-pinned meta row (overflow clipped with a "more"
@@ -156,9 +168,9 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
           local.actions != null
         }
       >
-        <div class="sui-status-card__row2">
+        <ClipFillColumn class="sui-status-card__row2">
           <Show when={local.description && local.description.trim().length > 0}>
-            <div class="sui-status-card__desc-wrap">
+            <ClipFillBox class="sui-status-card__desc-wrap">
               <span class="sui-status-card__desc" ref={attachRef}>
                 {local.description}
               </span>
@@ -175,17 +187,17 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
                   more
                 </Button>
               </Show>
-            </div>
+            </ClipFillBox>
           </Show>
           <Show when={local.actions != null}>
             {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so action clicks don't bubble to the card onSelect; not an interactive control. */}
             {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only calls stopPropagation — there is no action to mirror on the keyboard (keyboard events don't bubble as clicks to the card). */}
-            <div
+            <TagRow
               class="sui-status-card__actions"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: MouseEvent) => e.stopPropagation()}
             >
               {local.actions}
-            </div>
+            </TagRow>
           </Show>
           <Show when={moreOpen()}>
             {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so popover clicks don't bubble to the card onSelect; not an interactive control. */}
@@ -214,16 +226,25 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
               </Button>
             </div>
           </Show>
-        </div>
+        </ClipFillColumn>
       </Show>
 
-      {/* Row 3 — claimed-by / progress / estimate */}
+      {/* Row 3 — claimed-by / progress / estimate. ClusterRow strip; the cells
+          are grow / grow-centered / no-shrink Layout variants that split the
+          strip width and align their own slot content. margin-top:auto (kept in
+          CSS) pins the strip to the card's bottom. */}
       <Show when={hasMeta()}>
-        <div class="sui-status-card__row3">
-          <span class="sui-status-card__meta-left">{local.claimedBy}</span>
-          <span class="sui-status-card__meta-center">{local.progress}</span>
-          <span class="sui-status-card__meta-right">{local.estimate}</span>
-        </div>
+        <ClusterRow class="sui-status-card__row3">
+          <GrowWrapRow class="sui-status-card__meta-left">
+            {local.claimedBy}
+          </GrowWrapRow>
+          <GrowCenterRow class="sui-status-card__meta-center">
+            {local.progress}
+          </GrowCenterRow>
+          <TightNoShrinkClusterRow class="sui-status-card__meta-right">
+            {local.estimate}
+          </TightNoShrinkClusterRow>
+        </ClusterRow>
       </Show>
 
       {local.children}

@@ -112,20 +112,21 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   consumer-child arrangement). Per skill step 4 + Peter's "deeper components
   shouldn't think about styling," wrapping a pill's own text in a Layout Row is
   the absurd-wrapper anti-pattern. Ticked as intrinsic; left as-is.
-- [ ] Card/StatusCard (geo 41) — DEFERRED (no showcase in dev/, so visual
-  verification is impossible here — the skill's re-screenshot gate can't run).
-  Outer column already handled by the composed Surface (direction="column"
-  gap="sm"). Remaining internal arrangement to migrate: row1 (name+status) →
-  `BaselineSpreadRow` (added); row2 detail column (flex:1;min-height:0;overflow:
-  hidden;gap:6→sm) → a `ClipFillColumn` (fill + overflow:hidden, NOT yet added);
-  desc-wrap (column-context grow+clip) same; row3 + meta-left/center/right
-  (grow/wrap/center/no-shrink clusters at gap:4) → grow/wrap cluster variants
-  (not yet added). name flex:1 can DROP (justify:between makes it identical; keep
-  min-width:0). The desc clamp measurement (scrollHeight−clientHeight on the desc
-  span) is load-bearing — keep the span's intrinsic overflow:hidden. Needs either
-  a StatusCard showcase added first, or a DOM-structure `.layout.test.tsx` guard
-  plus property-by-property CSS equivalence. Left for a focused follow-up rather
-  than shipped blind on the shared checkout.
+- [x] Card/StatusCard (geo 41) — DONE. A `dev/showcases/status-card.tsx` showcase
+  was added first (separate commit 4ee4cee — closes the standing "core card with
+  no showcase" gap) so the migration is visually verifiable. Outer column is
+  handled by the composed Surface. Migrated: row1 → `BaselineSpreadRow` (name
+  drops flex:1 — space-between separates the pair; min-width:0 + ellipsis stay
+  intrinsic; status stays an intrinsic badge slot); row2 → `ClipFillColumn`
+  (gap 6→sm); desc-wrap → `ClipFillBox`; actions → `TagRow` (gap 6→xs,
+  flex-shrink:0 dropped); row3 → `ClusterRow` (gap 6→sm) with the three cells →
+  `GrowWrapRow` / `GrowCenterRow` / `TightNoShrinkClusterRow` (gap 4=xs exact);
+  margin-top:auto pin kept. Intrinsic kept: name ellipsis, desc clamp
+  (scrollHeight−clientHeight measurement is load-bearing), status slot, the
+  absolute "more"/popover overlay (overflow-y:auto is the overlay's own scroll).
+  Verified on the new showcase: pixel-identical, incl. the active/selected
+  re-tint (accent border+wash) AND the clickable hover re-tint (muted border) —
+  both flowing through the preserved Surface --surface-bg/--surface-border path.
 - [x] Panel (geo 17) — DONE. Frame `.sui-panel` (display:flex column + overflow:clip)
   → composed `ClipColumn`; header (flex/align-center/gap:8) → `ClusterRow` (gap 8=sm
   exact); content region (flex:1;min-height:0;overflow:auto) → new `ScrollFillColumn`.
@@ -356,10 +357,17 @@ recommendation to establish them WITH the primitive pass, not ad-hoc per card.
 - **Surface's column delegation** — a bare `Stack`(column, `fill`)/`Row` composed
   inside Surface when `direction` is set; the cards that pass
   `<Surface direction="column" gap="sm">` now get this for free.
-- Still OPEN for the cards/ActionListItem: **per-child `align-self`** (dismiss-cap
-  stretch) and **`FillColumn`+`overflow:hidden` clip-fill** (already have
-  `FillColumn` no-clip and `ScrollFillColumn` scroll; a `ClipFillColumn` = fill +
-  `overflow:hidden` is the remaining gap, add when StatusCard's desc-wrap needs it).
+- **`ClipFillColumn`** / **`ClipFillBox`** (added for StatusCard) — fill + clip
+  in column context: `flex:1 1 auto; min-height:0; overflow:hidden`. Column is a
+  Stack (gap:sm, for a multi-region detail column); Box is block flow (for a
+  grow-clip wrap holding a clamped text + an absolute affordance).
+- **`GrowWrapRow`** / **`GrowCenterRow`** / **`TightNoShrinkClusterRow`** (added
+  for StatusCard's row-3 meta strip) — a growing wrap cluster, a growing
+  center-justified cluster, and a tight (xs-gap) no-shrink cluster. Reusable for
+  any left-grows / center / right-fixed meta strip.
+- Still OPEN: **per-child `align-self`** (ActionListItem's dismiss-cap stretch was
+  kept intrinsic; a per-child align-self Box variant is the clean route if a
+  future case can't keep it intrinsic).
 
 ## Progress log
 

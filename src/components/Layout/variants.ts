@@ -327,6 +327,57 @@ export const ScrollFillColumn: Component<StackDataProps> = createStack({
   style: { flex: "1 1 auto", "min-height": "0", overflow: "auto" },
 });
 
+/** ClipFillColumn — a column that grows to fill its flex parent's leftover
+ *  height AND clips its overflow: `flex:1 1 auto; min-height:0; overflow:hidden`,
+ *  `gap:sm`. The clip sibling of `ScrollFillColumn` (which scrolls) and the
+ *  column-context sibling of `ClipBox`. For a card's detail region that fills
+ *  the space between a header and a bottom-pinned meta row and clips overflowing
+ *  content behind a "more" affordance. */
+export const ClipFillColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "1 1 auto", "min-height": "0", overflow: "hidden" },
+});
+
+/** ClipFillBox — a (non-flex) block that grows to fill its flex parent's
+ *  leftover column height and clips its overflow: `flex:1 1 auto (grow);
+ *  min-height:0; overflow:hidden`. Unlike ClipFillColumn it lays its children
+ *  out in normal block flow (it is a Box, not a Stack), so a single clamped
+ *  text block + an absolutely-positioned affordance resolve exactly as before.
+ *  For a description wrap that grows, clips, and anchors a "more" button. */
+export const ClipFillBox: Component<BoxDataProps> = createBox({
+  grow: true,
+  style: { "min-height": "0", overflow: "hidden" },
+});
+
+/** GrowWrapRow — a growing, wrapping, center-aligned cluster: `flex:1;
+ *  min-width:0; flex-wrap:wrap; align:center; gap:xs`. A row-3 meta cell that
+ *  takes its share of the strip width and wraps its chips/glyphs. */
+export const GrowWrapRow: Component<RowDataProps> = createRow({
+  align: "center",
+  wrap: true,
+  gap: "xs",
+  style: { flex: "1", "min-width": "0" },
+});
+
+/** GrowCenterRow — a growing, center-justified cluster: `flex:1; min-width:0;
+ *  align:center; justify:center; gap:xs`. A row-3 meta cell that centers its
+ *  content in its share of the strip. */
+export const GrowCenterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  justify: "center",
+  gap: "xs",
+  style: { flex: "1", "min-width": "0" },
+});
+
+/** TightNoShrinkClusterRow — a center cluster that refuses to shrink, xs gap:
+ *  `flex-shrink:0; align:center; gap:xs`. The tight sibling of
+ *  NoShrinkClusterRow (which is sm gap). A fixed right-hand meta cell. */
+export const TightNoShrinkClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "xs",
+  style: { "flex-shrink": 0 },
+});
+
 /** ClipColumn — a flex column that clips its overflow (`overflow: clip`). The
  *  column-context clip frame: children stack while the box clips decorative
  *  bleed (e.g. corner-bracket -1px overhang, a clip-path corner notch). `clip`
