@@ -329,6 +329,24 @@ export const FillColumn: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** FillColumnFlush — the no-gap sibling of `FillColumn`: fills its parent's
+ *  height (`flex:1; min-height:0`) and stacks its children FLUSH (no baked gap,
+ *  they space themselves via their own margins). For a full-height container
+ *  whose regions (a label with its own margin above a growing layout row) must
+ *  not get an extra flex gap. */
+export const FillColumnFlush: Component<StackDataProps> = createStack({
+  style: { flex: "1", "min-height": "0" },
+});
+
+/** NoShrinkScrollBox — a fixed-size box that refuses to shrink in a flex parent
+ *  and scrolls its own vertical overflow (`flex-shrink:0; overflow-y:auto;
+ *  min-height:0`). For a fixed-width sidebar/rail beside a growing pane: it keeps
+ *  its width (set per-instance) and scrolls its list within the row's height. */
+export const NoShrinkScrollBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { "overflow-y": "auto", "min-height": "0" },
+});
+
 /** Flex row that fills its parent — `fill; flex:1; min-height:0`. Holds a
  *  Sidebar beside a ScrollColumn pane. */
 export const PaneRow: Component<RowDataProps> = createRow({
@@ -388,6 +406,21 @@ export const ScrollFillColumn: Component<StackDataProps> = createStack({
 export const ClipFillColumn: Component<StackDataProps> = createStack({
   gap: "sm",
   style: { flex: "1 1 auto", "min-height": "0", overflow: "hidden" },
+});
+
+/** ClipFillColumnFlush — the no-gap sibling of `ClipFillColumn` that ALSO
+ *  shrinks horizontally: `flex:1; min-width:0; min-height:0; overflow:hidden`,
+ *  no baked gap. A growing, clipping content column whose children (a page's
+ *  own headings/tables with their own margins) manage their own spacing and
+ *  whose inner content owns its scroll. For a selection/detail pane beside a
+ *  fixed sidebar that fills the row and clips (content scrolls internally). */
+export const ClipFillColumnFlush: Component<StackDataProps> = createStack({
+  style: {
+    flex: "1",
+    "min-width": "0",
+    "min-height": "0",
+    overflow: "hidden",
+  },
 });
 
 /** ClipFillBox — a (non-flex) block that grows to fill its flex parent's

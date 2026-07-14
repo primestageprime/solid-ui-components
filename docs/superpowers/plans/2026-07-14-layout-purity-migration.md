@@ -348,7 +348,19 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   consumer-child arrangement in BaseTable is `.hud-table__actions-content` (wraps the
   `rowActions` render-prop) → a right-end cluster; `.hud-table__header-content`
   (header text + own sort glyph) reads as intrinsic single-widget header chrome.
-- [ ] Selector/SidebarSelector (geo 38)
+- [x] Selector/SidebarSelector (geo 38) — DONE. Single-mode full-height flex chain
+  composed end-to-end: root → new `FillColumnFlush` (flex:1;min-height:0;no gap);
+  `__layout` → `PaneRow` (gap 16→sm; fill row); `__sidebar` → new `NoShrinkScrollBox`
+  (flex-shrink:0;overflow-y:auto;min-height:0; width stays inline from sidebarWidth);
+  `__list` → `Column`; `__selection` → new `ClipFillColumnFlush`
+  (flex:1;min-width:0;min-height:0;overflow:hidden;no gap — inner renderSelection
+  manages its own scroll). Shipped EpisodeCard/EpisodeSelection also migrated:
+  `.episode-card`→`TightStack`, `__header`→`SpreadRow`, `__empty`→`CenteredStack`,
+  `__meta`→`ClusterRow` (gap 16→sm). 3 new NO-GAP fill/clip/scroll variants
+  (`FillColumnFlush`, `NoShrinkScrollBox`, `ClipFillColumnFlush`) — the vocabulary
+  gap the margin-spaced composites need (also unblocks Table's fill-chain if that
+  gets a ruling). Verified on the sidebar-selector showcase: two-column layout +
+  card selection pixel-identical.
 - [ ] ExtractionBoard (geo 44)
 - [x] ThreadGroup (geo 24) — DONE (ruling 2, team-lead). Base arrangements migrated:
   `__row`→`TopClusterRow` (gap 8=sm exact), `__body`→`ContentStack` (existing:

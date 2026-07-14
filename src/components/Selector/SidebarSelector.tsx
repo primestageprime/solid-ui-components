@@ -6,6 +6,17 @@
 // Sidebar card list + selection content area.
 // ============================================
 import { type Component, type JSX, For, Show, createSignal } from "solid-js";
+import {
+  CenteredStack,
+  ClipFillColumnFlush,
+  ClusterRow,
+  Column,
+  FillColumnFlush,
+  NoShrinkScrollBox,
+  PaneRow,
+  SpreadRow,
+  TightStack,
+} from "../Layout/variants";
 import "./SidebarSelector.css";
 
 export interface SidebarSelectorItem<T = unknown> {
@@ -49,23 +60,23 @@ export function SidebarSelector<T>(
   };
 
   return (
-    <div class={containerClass()}>
+    <FillColumnFlush class={containerClass()}>
       <Show when={props.label}>
         <div class="sidebar-selector__label">{props.label}</div>
       </Show>
-      <div
+      <PaneRow
         class="sidebar-selector__layout"
         style={props.height ? { height: props.height } : undefined}
       >
         {/* Sidebar with cards */}
-        <div
+        <NoShrinkScrollBox
           class="sidebar-selector__sidebar"
           style={{
             width: props.sidebarWidth || "280px",
             ...(props.maxHeight ? { "max-height": props.maxHeight } : {}),
           }}
         >
-          <div class="sidebar-selector__list">
+          <Column class="sidebar-selector__list">
             <For each={props.items}>
               {(item) => {
                 const isSelected = () => item.id === props.selectedId;
@@ -80,15 +91,15 @@ export function SidebarSelector<T>(
                 );
               }}
             </For>
-          </div>
-        </div>
+          </Column>
+        </NoShrinkScrollBox>
 
         {/* Selection display */}
-        <div class="sidebar-selector__selection">
+        <ClipFillColumnFlush class="sidebar-selector__selection">
           {props.renderSelection(selectedItem()?.data)}
-        </div>
-      </div>
-    </div>
+        </ClipFillColumnFlush>
+      </PaneRow>
+    </FillColumnFlush>
   );
 }
 
@@ -113,8 +124,8 @@ export interface EpisodeCardProps {
 
 export const EpisodeCard: Component<EpisodeCardProps> = (props) => {
   return (
-    <div class="episode-card">
-      <div class="episode-card__header">
+    <TightStack class="episode-card">
+      <SpreadRow class="episode-card__header">
         <span class="episode-card__number">
           S{props.episode.season}E{props.episode.episode}
         </span>
@@ -124,9 +135,9 @@ export const EpisodeCard: Component<EpisodeCardProps> = (props) => {
         >
           {props.episode.primaryCharacter}
         </span>
-      </div>
+      </SpreadRow>
       <div class="episode-card__title">{props.episode.title}</div>
-    </div>
+    </TightStack>
   );
 };
 
@@ -144,9 +155,9 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
       <Show
         when={props.episode}
         fallback={
-          <div class="episode-selection__empty">
+          <CenteredStack class="episode-selection__empty">
             Select an episode from the sidebar
-          </div>
+          </CenteredStack>
         }
       >
         {(ep) => (
@@ -157,7 +168,7 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
               </span>
             </div>
             <h3 class="episode-selection__title">{ep().title}</h3>
-            <div class="episode-selection__meta">
+            <ClusterRow class="episode-selection__meta">
               <span
                 class="episode-selection__character"
                 style={{ color: ep().characterColor || "var(--sui-accent)" }}
@@ -167,7 +178,7 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
               <Show when={ep().airDate}>
                 <span class="episode-selection__date">{ep().airDate}</span>
               </Show>
-            </div>
+            </ClusterRow>
             <Show when={ep().synopsis}>
               <p class="episode-selection__synopsis">{ep().synopsis}</p>
             </Show>
