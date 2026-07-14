@@ -36,7 +36,6 @@ import {
   commit,
   expand,
   glowIn,
-  rollUp,
   slideDown,
   step,
 } from "../../../src/internal/animation/choreography";
@@ -136,6 +135,86 @@ const SEED: TriageItem[] = [
     ...(i % 4 === 0 ? { prompt: `Detail for "${name}" — captured during triage planning.` } : {}),
   })),
 ];
+
+/**
+ * RollingDigits — a number whose CHANGED characters roll like a digital
+ * clock: the old digit slides up and out while the new one slides in from
+ * below, per character (unchanged digits hold still). Self-animating on
+ * value change — no choreography step needed, this IS the ambient-default
+ * principle: the commit flips the count, the component does the motion.
+ * tabular-nums keeps cell widths stable so only the glyphs move.
+ * Prototype: promote alongside the choreography module once nailed.
+ */
+const RollingDigits: Component<{ value: number }> = (props) => {
+  let host!: HTMLSpanElement;
+  const [chars, setChars] = createSignal(String(props.value).split(""));
+  let prev = String(props.value);
+  const ROLL_MS = 280;
+  createEffect(() => {
+    const next = String(props.value);
+    if (next === prev) return;
+    const old = prev;
+    prev = next;
+    setChars(next.split(""));
+    // After Solid renders the new chars, roll each CHANGED cell.
+    queueMicrotask(() => {
+      const cells = host.querySelectorAll<HTMLElement>("[data-cell]");
+      next.split("").forEach((ch, i) => {
+        const cell = cells[i];
+        if (!cell || old[i] === ch || typeof cell.animate !== "function") return;
+        const live = cell.firstElementChild as HTMLElement | null;
+        live?.animate?.(
+          [{ transform: "translateY(1em)" }, { transform: "none" }],
+          { duration: ROLL_MS, easing: "cubic-bezier(0.33, 1, 0.68, 1)" },
+        );
+        if (old[i] !== undefined) {
+          const ghost = document.createElement("span");
+          ghost.textContent = old[i];
+          ghost.style.cssText = "position:absolute;left:0;top:0";
+          cell.appendChild(ghost);
+          ghost.animate(
+            [{ transform: "none" }, { transform: "translateY(-1em)" }],
+            { duration: ROLL_MS, easing: "cubic-bezier(0.33, 1, 0.68, 1)" },
+          );
+          // Timer removal, not finished-promise — hidden tabs never resolve
+          // animation.finished (choreography lesson).
+          setTimeout(() => ghost.remove(), ROLL_MS + 60);
+        }
+      });
+    });
+  });
+  return (
+    <span
+      ref={host}
+      style={{ display: "inline-flex", "font-variant-numeric": "tabular-nums" }}
+    >
+      <For each={chars()}>
+        {(ch) => (
+          <span
+            data-cell
+            style={{
+              position: "relative",
+              display: "inline-block",
+              overflow: "hidden",
+              height: "1.5em",
+              "line-height": "1.5",
+            }}
+          >
+            <span style={{ display: "inline-block" }}>{ch}</span>
+          </span>
+        )}
+      </For>
+    </span>
+  );
+};
+
+/** Count lozenge whose digits roll on change (TagPill shell + RollingDigits).
+ * Supersedes FlashCount for the rail counts. */
+const RollingCount: Component<{ count: number }> = (props) => (
+  <span class="sui-tag-pill">
+    <RollingDigits value={props.count} />
+  </span>
+);
 
 /** De-emphasized count lozenge that briefly lights up when the value changes
  * (reuses TagPill's active state as the flash). */
@@ -255,7 +334,9 @@ const CategoricalTriageBench: Component = () => {
         if (selectedId() === id && next) setSelectedId(next.id);
         setMode(null);
       }),
-      step(expand(`rail:${rail}:${id}`), rollUp(`count:${rail}`)),
+      // No count effect here: RollingCount self-animates its changed digits
+      // on the commit (digital-clock roll) — motion owned by the component.
+      step(expand(`rail:${rail}:${id}`)),
       step(glowIn(next ? `unresolved:${next.id}` : "", ".surface")),
       step(slideDown("detail")),
     ]);
@@ -608,7 +689,7 @@ const CategoricalTriageBench: Component = () => {
                   <SpreadRow>
                     <TextLabel>{cat.label}</TextLabel>
                     <span data-anim={`count:${cat.key}`}>
-                      <FlashCount count={cat.items.length} />
+                      <RollingCount count={cat.items.length} />
                     </span>
                   </SpreadRow>
                   <Show when={cat.mode === "children"}>
