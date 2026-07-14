@@ -140,8 +140,11 @@ const CategoricalTriageBench: Component = () => {
   };
   onMount(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+      // Arrows + emacs-style C-n / C-p walk the queue.
+      const down = e.key === "ArrowDown" || (e.ctrlKey && e.key === "n");
+      const up = e.key === "ArrowUp" || (e.ctrlKey && e.key === "p");
+      if (down) { e.preventDefault(); move(1); }
+      else if (up) { e.preventDefault(); move(-1); }
     };
     window.addEventListener("keydown", onKey);
     onCleanup(() => window.removeEventListener("keydown", onKey));
