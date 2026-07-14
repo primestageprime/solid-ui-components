@@ -30,6 +30,7 @@ import { QuickFilter } from "../../../src/components/QuickFilter";
 import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { DatePicker } from "../../../src/components/DatePicker";
+import { DigitRoller } from "../../../src/components/DataDisplay";
 import {
   choreograph,
   collapse,
@@ -137,84 +138,25 @@ const SEED: TriageItem[] = [
 ];
 
 /**
- * RollingDigits — a number whose CHANGED characters roll like a digital
- * clock: the old digit slides up and out while the new one slides in from
- * below, per character (unchanged digits hold still). Self-animating on
- * value change — no choreography step needed, this IS the ambient-default
- * principle: the commit flips the count, the component does the motion.
- * tabular-nums keeps cell widths stable so only the glyphs move.
- * Prototype: promote alongside the choreography module once nailed.
+ * Count lozenge whose digits roll like an odometer on change — the
+ * EXISTING DigitRoller (DataDisplay: mod-10 strips, direction-aware:
+ * increases roll up, decreases roll down). Self-animating on value
+ * change: the commit flips the count, the component owns the motion —
+ * no choreography step needed. Supersedes FlashCount for rail counts.
  */
-const RollingDigits: Component<{ value: number }> = (props) => {
-  let host!: HTMLSpanElement;
-  const [chars, setChars] = createSignal(String(props.value).split(""));
-  let prev = String(props.value);
-  const ROLL_MS = 280;
-  createEffect(() => {
-    const next = String(props.value);
-    if (next === prev) return;
-    const old = prev;
-    prev = next;
-    setChars(next.split(""));
-    // After Solid renders the new chars, roll each CHANGED cell.
-    queueMicrotask(() => {
-      const cells = host.querySelectorAll<HTMLElement>("[data-cell]");
-      next.split("").forEach((ch, i) => {
-        const cell = cells[i];
-        if (!cell || old[i] === ch || typeof cell.animate !== "function") return;
-        const live = cell.firstElementChild as HTMLElement | null;
-        live?.animate?.(
-          [{ transform: "translateY(1em)" }, { transform: "none" }],
-          { duration: ROLL_MS, easing: "cubic-bezier(0.33, 1, 0.68, 1)" },
-        );
-        if (old[i] !== undefined) {
-          const ghost = document.createElement("span");
-          ghost.textContent = old[i];
-          ghost.style.cssText = "position:absolute;left:0;top:0";
-          cell.appendChild(ghost);
-          ghost.animate(
-            [{ transform: "none" }, { transform: "translateY(-1em)" }],
-            { duration: ROLL_MS, easing: "cubic-bezier(0.33, 1, 0.68, 1)" },
-          );
-          // Timer removal, not finished-promise — hidden tabs never resolve
-          // animation.finished (choreography lesson).
-          setTimeout(() => ghost.remove(), ROLL_MS + 60);
-        }
-      });
-    });
+const RollingCount: Component<{ count: number }> = (props) => {
+  const [pair, setPair] = createSignal({ prev: null as string | null, cur: String(props.count) });
+  createEffect<string>((prev) => {
+    const next = String(props.count);
+    if (prev !== undefined && next !== prev) setPair({ prev, cur: next });
+    return next;
   });
   return (
-    <span
-      ref={host}
-      style={{ display: "inline-flex", "font-variant-numeric": "tabular-nums" }}
-    >
-      <For each={chars()}>
-        {(ch) => (
-          <span
-            data-cell
-            style={{
-              position: "relative",
-              display: "inline-block",
-              overflow: "hidden",
-              height: "1.5em",
-              "line-height": "1.5",
-            }}
-          >
-            <span style={{ display: "inline-block" }}>{ch}</span>
-          </span>
-        )}
-      </For>
+    <span class="sui-tag-pill">
+      <DigitRoller value={pair().cur} previousValue={pair().prev} animate duration={300} stagger={40} />
     </span>
   );
 };
-
-/** Count lozenge whose digits roll on change (TagPill shell + RollingDigits).
- * Supersedes FlashCount for the rail counts. */
-const RollingCount: Component<{ count: number }> = (props) => (
-  <span class="sui-tag-pill">
-    <RollingDigits value={props.count} />
-  </span>
-);
 
 /** De-emphasized count lozenge that briefly lights up when the value changes
  * (reuses TagPill's active state as the flash). */
