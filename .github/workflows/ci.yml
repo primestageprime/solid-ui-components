@@ -40,6 +40,10 @@ jobs:
       # pass. Vite's build only transpiles — it doesn't type-check — so
       # this job is genuinely separate signal from the build job.
       - run: npx tsc --noEmit
+      # Gallery/bench check: the Overrides/DataProps split makes visual
+      # config (gap/size/variant/…) a compile error at curried call sites,
+      # but only if dev/ is compiled. This keeps benches honest.
+      - run: npm run typecheck:dev
 
   build:
     runs-on: ubuntu-latest
