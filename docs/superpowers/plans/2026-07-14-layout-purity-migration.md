@@ -441,7 +441,14 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   single control. Same category as SegmentedControl / SegmentedInput. Left as-is.
 - [ ] RecentStarred (geo 16)
 - [ ] WeekCalendar (geo 6) — likely BLOCK: CSS-grid time/day matrix, no Layout grid analogue
-- [ ] DnDHierarchySortBar (geo 8)
+- [x] DnDHierarchySortBar (geo 8) — DONE. The only consumer-arrangement is the
+  root pill row (flex-wrap) → `WrappedClusterRow` (wrap, align:center, gap 8=sm
+  exact); only `font-size` remains on the class. Pills stay INTRINSIC — each is an
+  inline-flex, data-derived widget whose `box-sizing:border-box` + captured
+  width/height are load-bearing for the drag placeholder footprint (must not
+  reflow mid-drag). label/grip/placeholder are non-geometry. role="list" +
+  drag handlers pass through the composed row. Verified on the
+  dnd-hierarchy-sort-bar showcase: both pill rows pixel-identical.
 
 #### P-overlay — overlay controls not in P3
 

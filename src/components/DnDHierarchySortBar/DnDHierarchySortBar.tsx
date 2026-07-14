@@ -20,6 +20,7 @@
 
 import { type Component, For, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
+import { WrappedClusterRow } from "../Layout/variants";
 import "./DnDHierarchySortBar.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
     // dragover never fires. The handler reads each item's live geometry via the
     // `data-dnd-id` stamps below.
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ol>/<ul> would require <li> children, but the pills are <span>s in a flex row — swapping would break the drag layout.
-    <div
+    <WrappedClusterRow
       class="sui-dnd-hierarchy-sort-bar"
       role="list"
       aria-label={label()}
@@ -134,6 +135,6 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
           );
         }}
       </For>
-    </div>
+    </WrappedClusterRow>
   );
 };
