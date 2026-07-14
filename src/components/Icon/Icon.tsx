@@ -18,7 +18,7 @@ export const ICON_GROUPS = {
     "chevron-right",
     "arrow-right",
   ] as const,
-  data: ["data", "table", "chart-bar", "chart-line", "chart-area"] as const,
+  data: ["data", "table", "chart-bar", "chart-line", "chart-area", "dependency"] as const,
   time: ["clock", "hourglass"] as const,
   actions: [
     "plus",
@@ -28,9 +28,10 @@ export const ICON_GROUPS = {
     "filter",
     "refresh",
     "download",
+    "pause",
   ] as const,
   ui: ["spinner", "menu", "settings", "external-link"] as const,
-  auth: ["log-out", "log-in", "user"] as const,
+  auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
     "cache-minutes",
     "cache-hours",
@@ -58,6 +59,7 @@ export type IconName =
   | "chart-bar"
   | "chart-line"
   | "chart-area"
+  | "dependency"
   // Time
   | "clock"
   | "hourglass"
@@ -69,6 +71,7 @@ export type IconName =
   | "filter"
   | "refresh"
   | "download"
+  | "pause"
   // UI
   | "spinner"
   | "menu"
@@ -78,6 +81,7 @@ export type IconName =
   | "log-out"
   | "log-in"
   | "user"
+  | "agent"
   // Cache
   | "cache-minutes"
   | "cache-hours"
@@ -182,6 +186,19 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
             <path d="M2 12L5.5 8L8.5 10L14 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
+    // Dependency tree: root node branching to two children — the DAG edge
+    // a "depends on" relationship draws.
+    dependency: {
+      outline: `<rect x="6" y="1.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="1.5" y="10.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="10.5" y="10.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 5.5V8M8 8H3.5v2.5M8 8h4.5v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<rect x="6" y="1" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <rect x="1.5" y="10.5" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <rect x="10.5" y="10.5" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <path d="M8 5V8M8 8H3.5v2.5M8 8h4.5v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+    },
+
     // === TIME ICONS ===
     clock: {
       outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
@@ -236,6 +253,14 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
             <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
+    // Two vertical bars — the universal "paused / on hold" glyph.
+    pause: {
+      outline: `<rect x="4" y="3" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="9.5" y="3" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
+      solid: `<rect x="4" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>
+            <rect x="9" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>`,
+    },
+
     // === UI ICONS ===
     spinner: {
       outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
@@ -279,6 +304,21 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M7 3h5a1 1 0 011 1v8a1 1 0 01-1 1H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Robot head: antenna + rounded head with two eyes — the automated
+    // counterpart to `user` (dside Species: Human | Agent).
+    agent: {
+      outline: `<rect x="3" y="6" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 6V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <circle cx="8" cy="2.5" r="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
+              <circle cx="6" cy="9.5" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+              <circle cx="10" cy="9.5" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1"/>`,
+      solid: `<rect x="3" y="6" width="10" height="7.5" rx="1.5" fill="currentColor"/>
+            <path d="M8 6V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <circle cx="8" cy="2.5" r="1.2" fill="currentColor"/>
+            <circle cx="6" cy="9.5" r="1" fill="var(--sui-bg-primary)"/>
+            <circle cx="10" cy="9.5" r="1" fill="var(--sui-bg-primary)"/>`,
     },
 
     // === CACHE ICONS ===

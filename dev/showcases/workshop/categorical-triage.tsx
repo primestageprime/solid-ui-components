@@ -166,12 +166,12 @@ const CategoricalTriageBench: Component = () => {
     return [
       { label: "BLOCKED · PERSON", icon: "user" as IconName, mode: "children" as const, childData: (it: TriageItem) => firstWord(it.blockedBy ?? ""), items: all.filter((it) => !!it.blockedBy) },
       { label: "BLOCKED · SNOOZE", icon: "clock" as IconName, mode: "children" as const, childData: (it: TriageItem) => remaining(it.blockedUntil ?? 0), items: all.filter((it) => !!it.blockedUntil) },
-      { label: "BLOCKED · DEPENDENCY", icon: "external-link" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
+      { label: "BLOCKED · DEPENDENCY", icon: "dependency" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!(it.deps && it.deps.length)) },
       { label: "CLAIMED", icon: "user" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.claimedBy && it.status !== "DONE") },
       // Handed to the agent pipeline (dside StatementTag::Agentic) — the
       // dispatcher claims from here; nothing for the human to do but watch,
       // so it sits last and counts only.
-      { label: "AGENTIC", icon: "settings" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.agentic && it.status !== "DONE") },
+      { label: "AGENTIC", icon: "agent" as IconName, mode: "count" as const, childData: () => "", items: all.filter((it) => !!it.agentic && it.status !== "DONE") },
     ];
   });
 
@@ -277,14 +277,17 @@ const CategoricalTriageBench: Component = () => {
     if (iso) commitMode({ blockedUntil: new Date(`${iso}T09:00`).getTime() });
   };
 
-  const CATEGORIZE = [
-    { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
+  // Each action carries its thematic glyph — the same icon the right rail
+  // uses for the category it sends the item to.
+  const CATEGORIZE: { hotkey: string; label: string; icon: IconName; apply: () => void }[] = [
+    { hotkey: "c", label: "claim", icon: "user", apply: () => patchSelected({ claimedBy: "Peter" }) },
     // Release for agentic work: one keystroke, like claim — the tag is the
     // whole gesture (the agent pipeline takes it from there).
-    { hotkey: "a", label: "agentic", apply: () => patchSelected({ agentic: true }) },
+    { hotkey: "a", label: "agentic", icon: "agent", apply: () => patchSelected({ agentic: true }) },
     {
       hotkey: "b",
       label: "block",
+      icon: "pause" as IconName,
       apply: () => {
         setBlockText("");
         setMode({ kind: "block", id: selectedId() });
@@ -293,6 +296,7 @@ const CategoricalTriageBench: Component = () => {
     {
       hotkey: "s",
       label: "snooze",
+      icon: "clock" as IconName,
       apply: () => {
         setCustomDate("");
         setMode({ kind: "snooze", id: selectedId() });
@@ -301,6 +305,7 @@ const CategoricalTriageBench: Component = () => {
     {
       hotkey: "d",
       label: "depends",
+      icon: "dependency" as IconName,
       apply: () => {
         setPending(selected()?.deps ?? []);
         setMode({ kind: "deps", id: selectedId() });
@@ -525,7 +530,7 @@ const CategoricalTriageBench: Component = () => {
                       <SpreadRow>
                         <For each={CATEGORIZE}>
                           {(a) => (
-                            <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
+                            <HotkeyButton hotkey={a.hotkey} icon={a.icon} onTrigger={a.apply}>
                               {a.label}
                             </HotkeyButton>
                           )}

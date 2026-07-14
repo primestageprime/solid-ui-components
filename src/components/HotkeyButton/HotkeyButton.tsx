@@ -20,11 +20,14 @@ import {
   createMemo,
 } from "solid-js";
 import { Button, type ButtonProps } from "../Button/Button";
+import { Icon, type IconName } from "../Icon";
 import "./HotkeyButton.css";
 
 export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
   /** Single character that triggers this button (case-insensitive), e.g. "d". */
   hotkey: string;
+  /** Optional leading icon associating the action with its glyph. */
+  icon?: IconName;
   /** Fired on click OR when the hotkey is pressed (while armed + enabled). */
   onTrigger?: (e: KeyboardEvent | MouseEvent) => void;
   /**
@@ -57,6 +60,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
   const merged = mergeProps({ armed: true }, props);
   const [local, others] = splitProps(merged, [
     "hotkey",
+    "icon",
     "onTrigger",
     "armed",
     "children",
@@ -112,6 +116,14 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       disabled={local.disabled}
       onClick={fire as JSX.EventHandler<HTMLButtonElement, MouseEvent>}
     >
+      {local.icon && (
+        <Icon
+          name={local.icon}
+          variant="outline"
+          size="xs"
+          class="sui-hotkey-btn__icon"
+        />
+      )}
       {/* Rendered tight on one line so the JSX compiler can't insert
           whitespace text nodes between the segments (which would show as a
           gap around the emphasized key, e.g. "D one" instead of "Done"). */}
