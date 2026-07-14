@@ -103,7 +103,12 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 #### P2 — high-traffic
 
 - [ ] ActionRow (geo 15)
-- [ ] Badge/CountChip (geo 6) · Badge/StatusBadge (geo 3) · Badge/StatusChip (geo 2) · Badge/TagPill (geo 3) — mostly intrinsic pill styling; review each
+- [x] Badge family — AUDITED, INTRINSIC (no migration). StatusBadge, StatusChip,
+  CountChip, TagPill are all self-contained pills whose `inline-flex`/`gap`
+  center their OWN label/count/text/caret (single-widget internals, not
+  consumer-child arrangement). Per skill step 4 + Peter's "deeper components
+  shouldn't think about styling," wrapping a pill's own text in a Layout Row is
+  the absurd-wrapper anti-pattern. Ticked as intrinsic; left as-is.
 - [ ] Card/StatusCard (geo 41)
 - [ ] Panel (geo 17)
 - [ ] Surface (geo 11)
@@ -199,6 +204,23 @@ tick", not real arrangement migrations. Review each per skill step 4.
 - **Off-scale gaps** — e.g. AssigneeChips' 3px wrapper gap; the Layout scale is
   4px(xs)/8px(sm). Accept the 1px nudge where imperceptible; a load-bearing
   off-scale value is a BLOCK, not a scale expansion (Peter-gated).
+
+## P2 friction (recurring — batch a decision)
+
+Surfacing across P2 (ActionRow, ButtonGroup, BulkActionBar, …):
+
+- **Row/Stack gap scale is xs(4)/sm(8) only.** Ruling 2 says snap (2–4px ok).
+  So 6px→sm(8, +2 ok), 12px→sm(8, −4 edge-ok but collapses distinct steps),
+  **16px→ blocks** (−8, out of tolerance; BulkActionBar's outer gap). If enough
+  block, that's the signal to add `md` to Row/Stack — but ruling 2 said NOT to
+  expand the scale, so blocking-with-note is the current default.
+- **No-shrink cluster** — several components want a center cluster that won't
+  compress (`flex-shrink:0` + row + gap): ActionRow leading/trailing. Candidate
+  variant `NoShrinkClusterRow` (like `ChipCluster` but non-wrapping).
+- **Justify-end wrapping row** — ActionRow `__actions` (wrap + justify flex-end).
+  No variant yet.
+
+Prefer batching these small variant additions once rather than per-component.
 
 ## Progress log
 
