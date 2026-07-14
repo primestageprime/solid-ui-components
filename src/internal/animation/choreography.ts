@@ -37,6 +37,16 @@
 // choreography FAST-FORWARDS any in-flight one: its remaining commits
 // run synchronously (state is never lost), its animations cancel.
 
+/**
+ * Attribute-spread helper: `<InteractiveCard {...anim(`unresolved:${id}`)}>`
+ * registers the element under a choreography handle without a wrapper div
+ * (Solid's JSX types don't admit literal `data-*` attributes on components;
+ * a typed spread does).
+ */
+export const anim = (handle: string): { "data-anim": string } => ({
+  "data-anim": handle,
+});
+
 export type EffectFn = (el: HTMLElement, ms: number) => Animation | null;
 
 export interface EffectInstance {

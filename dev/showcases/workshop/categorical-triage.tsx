@@ -17,20 +17,22 @@
 //   [ ] right — categorical counts
 //   [ ] topBar — page title + to-triage badge
 import { Component, For, Index, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
+import { NoWrapSublabel, SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
 import { ClusterRow, FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
-import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
+import { createThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
 import { StatusChip, TagPill } from "../../../src/components/Badge";
 import { Divider } from "../../../src/components/Divider";
-import { Icon, type IconName } from "../../../src/components/Icon";
+import { InlineMetaIcon, type IconName } from "../../../src/components/Icon";
 import { HotkeyButton, isEditableTarget } from "../../../src/components/HotkeyButton";
 import { QuickFilter } from "../../../src/components/QuickFilter";
 import { SmallButton, SmallDangerButton } from "../../../src/components/Button";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { DatePicker } from "../../../src/components/DatePicker";
+import { GhostRow, IndentedGhostRow } from "../../../src/components/GhostRow";
 import {
+  anim,
   choreograph,
   collapse,
   commit,
@@ -41,6 +43,13 @@ import {
 } from "../../../src/internal/animation/choreography";
 
 export const meta = { label: "Categorical Triage" };
+
+// Project-specific curried layout — the 380/300 widths are DESIGN RULINGS
+// (rail sizing rule), remembered here once, never repeated at call sites.
+const TriageLayout = createThreePanelLayout({
+  leftPanelWidth: "380px",
+  rightPanelWidth: "300px",
+});
 
 // Seed queue — shapes mirror dside's todo projection + the design's Work
 // blockage columns. Multi-status is the point: TODO/DOING/DONE plus the
@@ -259,7 +268,7 @@ const CategoricalTriageBench: Component = () => {
       // No count effect here: counts roll ambiently (TagPill composes
       // DigitRoller for numeric labels) — motion owned by the component.
       step(expand(`rail:${rail}:${id}`)),
-      step(glowIn(next ? `unresolved:${next.id}` : "", ".surface")),
+      step(glowIn(next ? `unresolved:${next.id}` : "")),
       step(slideDown("detail")),
     ]);
   };
@@ -359,10 +368,8 @@ const CategoricalTriageBench: Component = () => {
     // Application mode: the bench fills the gallery content pane to the
     // bottom of the viewport; panels scroll internally (no document scroll).
     <div class="component-section component-section--app">
-      <ThreePanelLayout
+      <TriageLayout
         topBar={<SectionTitle>Categorical Triage — refining: queue done</SectionTitle>}
-        leftPanelWidth="380px"
-        rightPanelWidth="300px"
         leftPanel={
           // Title pinned, cards scroll — same FillColumn/ScrollColumn pattern
           // as the center's pinned action row.
@@ -378,16 +385,14 @@ const CategoricalTriageBench: Component = () => {
               <TightStack>
                 <For each={unresolved()}>
                   {(it) => (
-                    // data-anim: choreography handle — collapse on leave,
-                    // glowIn (inner .surface) when selection arrives.
-                    <div data-anim={`unresolved:${it.id}`}>
-                      <InteractiveCard active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
-                        <SpreadRow>
-                          <TextTitle>{it.name}</TextTitle>
-                          <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
-                        </SpreadRow>
-                      </InteractiveCard>
-                    </div>
+                    // anim(): choreography handle rides on the card itself —
+                    // collapse on leave, glowIn when selection arrives.
+                    <InteractiveCard {...anim(`unresolved:${it.id}`)} active={it.id === selectedId()} onClick={() => setSelectedId(it.id)}>
+                      <SpreadRow>
+                        <TextTitle>{it.name}</TextTitle>
+                        <StatusChip status={it.status} options={["TODO", "DOING", "DONE"]} title={it.name} highlight={it.status === "DOING"} />
+                      </SpreadRow>
+                    </InteractiveCard>
                   )}
                 </For>
               </TightStack>
@@ -395,9 +400,9 @@ const CategoricalTriageBench: Component = () => {
           </FillColumn>
         }
         centerPanel={
-          // data-anim="detail": one handle over BOTH center states (detail
-          // view and input-mode surface) so collapse/slideDown always land.
-          <div data-anim="detail" style={{ height: "100%", "min-height": 0 }}>
+          // anim("detail"): one handle over BOTH center states (detail view
+          // and input-mode surface) so collapse/slideDown always land.
+          <FillColumn {...anim("detail")}>
           <Show
             when={!modeTarget()}
             fallback={
@@ -543,7 +548,7 @@ const CategoricalTriageBench: Component = () => {
                   <Show when={it().blockedBy || it().blockedUntil}>
                     <InfoPanel title="Blocked">
                       <TextBody>
-                        <Icon name={it().blockedBy ? "user" : "clock"} variant="outline" size="xs" />{" "}
+                        <InlineMetaIcon name={it().blockedBy ? "user" : "clock"} />{" "}
                         {it().blockedBy ?? "snoozed"}
                         {it().blockedUntil ? ` · until ${remaining(it().blockedUntil!)}` : ""}
                       </TextBody>
@@ -556,12 +561,9 @@ const CategoricalTriageBench: Component = () => {
                           {(dep) => {
                             const target = () => items().find((x) => x.name === dep);
                             return (
-                              <div
-                                style={{ cursor: target() ? "pointer" : "default" }}
-                                onClick={() => target() && setSelectedId(target()!.id)}
-                              >
+                              <GhostRow onClick={target() ? () => setSelectedId(target()!.id) : undefined}>
                                 <TextSublabel>→ {dep}</TextSublabel>
-                              </div>
+                              </GhostRow>
                             );
                           }}
                         </For>
@@ -601,7 +603,7 @@ const CategoricalTriageBench: Component = () => {
             )}
           </Show>
           </Show>
-          </div>
+          </FillColumn>
         }
         rightPanel={
           <TightStack>
@@ -611,10 +613,10 @@ const CategoricalTriageBench: Component = () => {
                 Index keys by position; rails persist and props update. */}
             <Index each={categories()}>
               {(cat) => (
-                <div>
+                <TightStack>
                   <SpreadRow>
                     <TextLabel>{cat().label}</TextLabel>
-                    <span data-anim={`count:${cat().key}`}>
+                    <span {...anim(`count:${cat().key}`)}>
                       <FlashCount count={cat().items.length} />
                     </span>
                   </SpreadRow>
@@ -622,23 +624,23 @@ const CategoricalTriageBench: Component = () => {
                     <TightStack>
                       <For each={cat().items}>
                         {(it) => (
-                          <div
-                            data-anim={`rail:${cat().key}:${it.id}`}
-                            style={{ "padding-left": "1rem", cursor: "pointer", opacity: it.id === selectedId() ? 1 : 0.7 }}
+                          <IndentedGhostRow
+                            {...anim(`rail:${cat().key}:${it.id}`)}
+                            selected={it.id === selectedId()}
                             onClick={() => setSelectedId(it.id)}
                           >
                             <SpreadRow>
                               <TextSublabel>{it.name}</TextSublabel>
-                              <TextSublabel style={{ "white-space": "nowrap" }}>
-                                <Icon name={cat().icon} variant="outline" size="xs" /> {cat().childData(it)}
-                              </TextSublabel>
+                              <NoWrapSublabel>
+                                <InlineMetaIcon name={cat().icon} /> {cat().childData(it)}
+                              </NoWrapSublabel>
                             </SpreadRow>
-                          </div>
+                          </IndentedGhostRow>
                         )}
                       </For>
                     </TightStack>
                   </Show>
-                </div>
+                </TightStack>
               )}
             </Index>
           </TightStack>

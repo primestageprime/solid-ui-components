@@ -34,6 +34,7 @@ import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
 import { DividerShowcase } from "./showcases/divider";
+import { GhostRowShowcase } from "./showcases/ghost-row";
 import { DotchartShowcase } from "./showcases/dotchart";
 import { HeatmapShowcase } from "./showcases/heatmap";
 import { HeatStreamShowcase } from "./showcases/heatstream";
@@ -291,6 +292,12 @@ const items: Item[] = [
     label: "Divider",
     component: DividerShowcase,
     tags: ["depth:0", "layout"],
+  },
+  {
+    id: "ghost-row",
+    label: "GhostRow",
+    component: GhostRowShowcase,
+    tags: ["depth:1", "list", "indicator"],
   },
   {
     id: "heatmap",

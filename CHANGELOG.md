@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Choreography module (public API)** — `choreograph`/`step`/`weightedStep`/`commit` sequence named animation EFFECTS (`collapse`, `expand`, `fadeIn`, `fadeOut`, `slideDown`, `rollUp`, `glowIn`, `settleIn`) across components around an explicit state-commit point; targets are `data-anim` handles (spread via the `anim(handle)` helper). Weight-fractions of one timing budget; hidden-tab hardened. Exported from the root barrel.
+- **`GhostRow` / `IndentedGhostRow`** — de-emphasized clickable row (dim unless `selected`, pointer only when clickable; indented form for rail children). `createGhostRow` factory.
+- **`createIcon` + `InlineMetaIcon`** — Icon gains the Overrides/DataProps split (`variant`/`size` curried, `name` stays data); `InlineMetaIcon` (outline, xs) ships for icon-beside-sublabel meta rows.
+- **`createThreePanelLayout`** — geometry props (panel widths, height, aside cap) become curry-able Overrides so apps bake their layout rulings once.
+- **`NoWrapSublabel`** — Text variant with `white-space: nowrap` baked (trailing meta that must stay one line).
+
 ### Changed
 
 - **Numeric counts roll by default.** `DigitRoller` now auto-tracks its previous value: a bare `<DigitRoller value={n}/>` rolls odometer-style (direction-aware) on every change — `previousValue` becomes an optional override for replaying a specific transition, and `animate` defaults to true (`animate={false}` opts out). `CountChip` and `TagPill` (purely-numeric plain labels) compose it internally, so every count in the library gets the roll with zero call-site changes. Caveat: the roll requires the component instance to SURVIVE the value change — lists that rebuild row objects each update must render with `<Index>`/stable keys, not `<For>` (see the new STYLE_GUIDE "List Identity" section).

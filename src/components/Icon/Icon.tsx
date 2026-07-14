@@ -5,7 +5,7 @@
 // Owns CSS (Icon.css), no component imports.
 // SVG icon set with outline/solid variants, 5 sizes.
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Icon.css";
 
 // Icon groups for organization and documentation
@@ -382,3 +382,18 @@ export const Icon: Component<IconProps> = (props) => {
     />
   );
 };
+
+/** Presentational knobs — locked at variant-definition time. `name` stays a
+ *  DATA prop (which glyph is semantic, per-call-site information). */
+export type IconOverrides = Pick<IconProps, "variant" | "size">;
+export type IconDataProps = Omit<IconProps, keyof IconOverrides>;
+
+export function createIcon(
+  defaults: Partial<Omit<IconProps, "children">>,
+): Component<IconDataProps> {
+  return (props) => <Icon {...mergeProps(defaults, props as IconProps)} />;
+}
+
+/** Inline icon beside sublabel/meta text (outline, xs) — the glyph that
+ *  rides in a row like `⏱ 2d4h` or `👤 Ryan`. */
+export const InlineMetaIcon = createIcon({ variant: "outline", size: "xs" });

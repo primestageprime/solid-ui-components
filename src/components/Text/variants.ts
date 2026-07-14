@@ -18,6 +18,13 @@ export const EndSublabel = createText({
   style: { "text-align": "right" },
 });
 
+// Non-wrapping sublabel — trailing meta (icon + duration/name) that must
+// stay one line while the leading text wraps
+export const NoWrapSublabel = createText({
+  variant: "sublabel",
+  style: { "white-space": "nowrap" },
+});
+
 // Flex-filling label — title text that grows to fill available space
 export const FlexLabel = createText({ variant: "label", style: { flex: "1" } });
 

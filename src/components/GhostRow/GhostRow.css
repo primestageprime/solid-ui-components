@@ -1,0 +1,18 @@
+/* GhostRow — de-emphasized clickable row. Color/opacity only (geometry-
+   stable hover/selection, same invariant as ActionListItem); the indent is
+   padding-as-inset, not child arrangement. */
+.sui-ghost-row {
+  opacity: 0.7;
+}
+.sui-ghost-row--clickable {
+  cursor: pointer;
+}
+.sui-ghost-row--clickable:hover {
+  opacity: 0.9;
+}
+.sui-ghost-row--selected {
+  opacity: 1;
+}
+.sui-ghost-row--indent {
+  padding-left: 1rem;
+}

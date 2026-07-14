@@ -230,3 +230,33 @@ export * from "./components/ProductGrid";
 
 // Hooks
 export * from "./hooks";
+
+// GhostRow — de-emphasized clickable rows (rail children, link rows)
+export * from "./components/GhostRow";
+
+// Choreography — compose + sequence animation effects across components
+// (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/
+// commit/choreograph, and the anim() data-anim spread helper). Public API;
+// the implementation lives beside the other animation engines in
+// src/internal/animation/.
+export {
+  anim,
+  choreograph,
+  step,
+  weightedStep,
+  commit,
+  collapse,
+  expand,
+  fadeIn,
+  fadeOut,
+  slideDown,
+  rollUp,
+  glowIn,
+  settleIn,
+  DEFAULT_TOTAL_MS,
+} from "./internal/animation/choreography";
+export type {
+  EffectFn,
+  EffectInstance,
+  Step,
+} from "./internal/animation/choreography";
