@@ -16,6 +16,7 @@ import {
   onMount,
   onCleanup,
 } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { clickableCursor } from "../../internal/style/clickable";
 import {
   type SelectableTableProps,
@@ -24,6 +25,12 @@ import {
   tableContainerStyle,
 } from "./types";
 import { Button } from "../Button/Button";
+import {
+  Column,
+  ClusterRow,
+  GrowClusterRow,
+  ScrollYBox,
+} from "../Layout/variants";
 
 export function SelectableTable<T extends TableRow>(
   props: SelectableTableProps<T>,
@@ -159,13 +166,13 @@ export function SelectableTable<T extends TableRow>(
   };
 
   return (
-    <div class="hud-selectable-table">
+    <Column class="hud-selectable-table">
       <Show when={selected().size > 0 && local.selectionActions?.length}>
-        <div class="hud-selection-action-bar">
+        <ClusterRow class="hud-selection-action-bar">
           <span class="hud-selection-action-bar__count">
             {selected().size} selected
           </span>
-          <div class="hud-selection-action-bar__actions">
+          <GrowClusterRow class="hud-selection-action-bar__actions">
             <For each={local.selectionActions}>
               {(action) => (
                 <Button
@@ -178,7 +185,7 @@ export function SelectableTable<T extends TableRow>(
                 </Button>
               )}
             </For>
-          </div>
+          </GrowClusterRow>
           <button
             type="button"
             class="hud-selection-action-bar__clear"
@@ -187,10 +194,13 @@ export function SelectableTable<T extends TableRow>(
           >
             Clear
           </button>
-        </div>
+        </ClusterRow>
       </Show>
 
-      <div
+      {/* The table wrapper owns the maxHeight scroll: compose ScrollYBox so the
+          capped body scrolls (overflow-y is composed, not in .hud-table CSS). */}
+      <Dynamic
+        component={local.maxHeight ? ScrollYBox : "div"}
         class={classes()}
         style={tableContainerStyle(local.maxHeight)}
         {...others}
@@ -277,7 +287,7 @@ export function SelectableTable<T extends TableRow>(
             </For>
           </tbody>
         </table>
-      </div>
-    </div>
+      </Dynamic>
+    </Column>
   );
 }

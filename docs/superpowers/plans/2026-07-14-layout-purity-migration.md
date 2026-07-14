@@ -354,7 +354,17 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
 ##### Table-family fill/toolbar follow-ups (lp-5, exemption superseded)
 
 - [~ claimed: lp-5] Table/FilterableTable (`.hud-table-quickfilter*`)
-- [~ claimed: lp-5] Table/SelectableTable (`.hud-selectable-table` / `.hud-selection-action-bar*`)
+- [x] Table/SelectableTable (`.hud-selectable-table` / `.hud-selection-action-bar*`)
+  — DONE (lp-5). Root column → `Column` (bare, gap:0 exact); selection action bar
+  → `ClusterRow` (align:center, gap 12→sm; gradient/clip-path/::before chrome kept);
+  its actions cluster → `GrowClusterRow` (flex:1, gap 8=sm exact — grows so CLEAR
+  right-aligns). The `.hud-table` wrapper composes `ScrollYBox` when `maxHeight` is
+  set — this ALSO fixes a latent scroll regression (SelectableTable called the
+  now-overflow-less `tableContainerStyle`, so its capped body had no scrollbar; the
+  ScrollYBox + create*-style-merge fix restores it). Checkbox cells / indicators stay
+  intrinsic (self-contained inline-flex controls). Verified on the selectable-table
+  showcase (select-all): count | DELETE | right-aligned CLEAR, gradient + clip corners
+  + selected-row tint pixel-identical.
 - [x] Table/DataTableContainer (`.data-table-container*`) — DONE (lp-5). The
   both-axis scroll + fill plumbing is composed via a `<Dynamic>`: `fill` →
   `ScrollFillBox` (new: grow + min-height:0 + overflow:auto — block-flow so the

@@ -303,11 +303,10 @@
 /* ============================================
    Selectable Table
    ============================================ */
-.hud-selectable-table {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+/* Layout composed (layout-purity): root column → Column; the selection action
+   bar → ClusterRow; its actions cluster → GrowClusterRow. The .hud-table
+   wrapper composes ScrollYBox for the maxHeight scroll. Only non-geometry chrome
+   (gradient/clip-path/colours) stays in the rules below. */
 
 /* Result count */
 .hud-table__result-count {
@@ -415,9 +414,6 @@
    Selection Action Bar - HUD Style
    ============================================ */
 .hud-selection-action-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 10px 16px;
   background: linear-gradient(90deg, var(--sui-accent), var(--sui-accent-dim));
   color: var(--sui-bg-deep);
@@ -461,11 +457,7 @@
   letter-spacing: 0.08em;
 }
 
-.hud-selection-action-bar__actions {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-}
+/* geometry composed via GrowClusterRow (align:center, gap sm=8, flex:1) */
 
 .hud-selection-action-bar__actions .hud-button {
   background-color: rgba(0, 0, 0, 0.2);
