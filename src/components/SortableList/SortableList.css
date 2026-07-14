@@ -5,10 +5,9 @@
    only the row wrapper, the drag grip, the spacing, and the placeholder gap.
    ============================================ */
 
+/* Flex-column context + row gap now come from the composed NarrowStack (see
+   SortableList.tsx); only the non-geometry font-size stays here. */
 .sui-sortable-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   font-size: 12px;
 }
 
@@ -22,7 +21,6 @@
   padding: 0;
   border-color: transparent;
   background: transparent;
-  gap: 6px;
 }
 .sui-sortable-list--bare .sui-sortable-list__grip {
   opacity: 0;
@@ -44,12 +42,12 @@
    lifts specificity above Surface's base `.surface` rule so the border colour
    wins; it stays in CSS (not an inline Surface prop) so the `:hover` brighten
    below can override it — an inline border-color would block it. */
+/* The grip+content row flex (direction:row, align:center, gap) now comes from
+   the composed Surface (direction="row" align="center" gap="sm"); the 10px gap
+   snapped to sm(8). This rule keeps only the non-geometry chrome + box-sizing so
+   the placeholder's captured (border-box) height yields the SAME footprint. */
 .sui-sortable-list .sui-sortable-list__row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   box-sizing: border-box;
-  gap: 10px;
   border-color: var(--sui-border);
   color: var(--sui-text-primary);
   cursor: grab;

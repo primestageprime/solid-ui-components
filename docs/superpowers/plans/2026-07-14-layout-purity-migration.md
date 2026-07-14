@@ -358,16 +358,16 @@ CSS files list each file. Check the box when migrated (or BLOCKED with reason).
   field-type chips → `TagRow` (gap 4=xs, wrap). The "structural exception" carve-
   out comment is gone. Verified on the census-view showcase: two-column layout,
   sticky detail rail, row-counts + chip flow all pixel-identical.
-- [~] SortableList (geo 10) — BLOCKED (policy). The root reorder column has a
-  RUNTIME numeric `gap` prop (`style={{ gap: `${props.gap ?? 8}px` }}`) that the
-  xs/sm token scale can't express without dropping a public prop — the same shape
-  as ButtonGroup's Peter-ruled runtime-gap exemption. Two clean routes need a
-  ruling (batched to team-lead): (a) treat like ButtonGroup → root layout-exempt,
-  keep the runtime gap; or (b) compose the base flex-column via `NarrowStack` and
-  keep only the runtime gap as an allowed *data-driven inline style* (the carve-
-  out ThreadGroup's header cites). The row internals (grip+content, gap 10) WOULD
-  migrate cleanly via `<Surface direction="row" align="center" gap="sm">`. Left
-  as-is pending the ruling.
+- [x] SortableList (geo 10) — DONE (ruling 1(b), team-lead). Root reorder column →
+  `NarrowStack` (flex-column + sm gap); the RUNTIME numeric `gap` prop stays as a
+  DEPRECATED data-driven inline style (`style={{ gap: `${props.gap ?? 8}px` }}`)
+  that overrides the Stack's sm gap — the ButtonGroup runtime-layout-prop pattern,
+  zero breaking changes, NOT a scale value. Row internals (grip+content) migrated
+  via the composed `<Surface direction="row" align="center" gap="sm">` (gap 10→sm
+  snap; bare's 6px override also folds to sm — the surface/bare gap distinction is
+  lost to the snap, imperceptible). CSS keeps only non-geometry chrome + box-sizing
+  (placeholder border-box footprint preserved). No new variants. Verified on the
+  sortable-list showcase: pixel-identical rows, grips, spacing.
 - [x] MutableList (geo 13) — DONE. Card row (grip+content) → `ClusterRow`
   (align:center, gap 8=sm exact; keeps width:100%/min-width:0 in CSS); name/detail
   column → existing `ContentStack` (grow column, gap 2→xs); delete button → wrapped

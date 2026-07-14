@@ -31,6 +31,7 @@
 
 import { For, type JSX, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
+import { NarrowStack } from "../Layout/variants";
 import { Surface } from "../Surface/Surface";
 import "./SortableList.css";
 
@@ -82,8 +83,12 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // placeholder tracks the cursor through the row gaps too, where a per-row
     // dragover never fires. The handler reads each row's live geometry via the
     // `data-dnd-id` stamps below.
+    // Column context comes from the composed NarrowStack (flex-column, sm gap);
+    // the runtime numeric `gap` prop stays as a DEPRECATED data-driven inline
+    // style that overrides the Stack's sm gap (same shape as ButtonGroup's
+    // runtime layout props — kept for zero breaking changes, not a scale value).
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
-    <div
+    <NarrowStack
       class="sui-sortable-list"
       classList={{ "sui-sortable-list--bare": bare() }}
       role="list"
@@ -148,6 +153,9 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
                 onDragEnd={handlers().onDragEnd}
                 padding="none"
                 radius="md"
+                direction="row"
+                align="center"
+                gap="sm"
                 /* "bare" drops the inline bg + padding so the CSS below can
                    strip the chrome; the row content becomes the only surface. */
                 bg={bare() ? undefined : "var(--sui-bg-elevated)"}
@@ -164,6 +172,6 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
           );
         }}
       </For>
-    </div>
+    </NarrowStack>
   );
 }
