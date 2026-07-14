@@ -257,6 +257,12 @@ ACTIVITY** (working item-by-item through a queue: triage, review, grading):
 - Casual/occasional actions → plain `Button` variants; no key chrome.
 - Batch actions over a selection → ActionList's built-in `actions` bar
   (same HotkeyButton, list-scoped).
+- **The action row swaps CONTEXTUALLY with the selected item's state** —
+  forward actions (categorize) for items in the queue, inverse actions
+  (unblock/unsnooze/undepend/release) for already-categorized ones, showing
+  only the actions that apply. Forward actions ADVANCE to the next queue
+  item (the flow is the loop); inverse actions KEEP the item selected (you
+  navigated to it deliberately) as it re-enters the queue.
 
 ## Flow / stage visualization
 

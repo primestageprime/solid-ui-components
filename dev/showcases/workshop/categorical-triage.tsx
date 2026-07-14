@@ -18,7 +18,7 @@
 //   [ ] topBar — page title + to-triage badge
 import { Component, For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextLabel, TextSublabel, TextTitle } from "../../../src/components/Text";
-import { FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
+import { ClusterRow, FillColumn, ScrollColumn, SpreadRow, TightStack } from "../../../src/components/Layout";
 import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { InfoPanel } from "../../../src/components/Panel";
 import { InteractiveCard } from "../../../src/components/Surface";
@@ -206,6 +206,19 @@ const CategoricalTriageBench: Component = () => {
     setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
     if (next) setSelectedId(next.id);
   };
+  // Restore actions for already-categorized items — the bottom row swaps
+  // contextually: uncategorizing returns the item to Unresolved and keeps it
+  // SELECTED (no advance — you navigated here deliberately).
+  const patchStay = (patch: Partial<TriageItem>) =>
+    setItems((prev) => prev.map((it) => (it.id === selectedId() ? { ...it, ...patch } : it)));
+  const RESTORE = [
+    { when: (it: TriageItem) => !!it.blockedBy, hotkey: "u", label: "unblock", apply: () => patchStay({ blockedBy: undefined }) },
+    { when: (it: TriageItem) => !!it.blockedUntil, hotkey: "n", label: "unsnooze", apply: () => patchStay({ blockedUntil: undefined }) },
+    { when: (it: TriageItem) => !!(it.deps && it.deps.length), hotkey: "d", label: "undepend", apply: () => patchStay({ deps: undefined }) },
+    { when: (it: TriageItem) => !!it.claimedBy, hotkey: "r", label: "release", apply: () => patchStay({ claimedBy: undefined }) },
+  ];
+  const isCategorized = (it: TriageItem) => RESTORE.some((a) => a.when(it));
+
   const CATEGORIZE = [
     { hotkey: "c", label: "claim", apply: () => patchSelected({ claimedBy: "Peter" }) },
     { hotkey: "b", label: "block", apply: () => patchSelected({ blockedBy: "Ryan — follow up" }) },
@@ -319,17 +332,34 @@ const CategoricalTriageBench: Component = () => {
                     </InfoPanel>
                   </Show>
                 </ScrollColumn>
-                <InfoPanel title="Categorize">
-                  <SpreadRow>
-                    <For each={CATEGORIZE}>
-                      {(a) => (
-                        <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
-                          {a.label}
-                        </HotkeyButton>
-                      )}
-                    </For>
-                  </SpreadRow>
-                </InfoPanel>
+                <Show
+                  when={isCategorized(it())}
+                  fallback={
+                    <InfoPanel title="Categorize">
+                      <SpreadRow>
+                        <For each={CATEGORIZE}>
+                          {(a) => (
+                            <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
+                              {a.label}
+                            </HotkeyButton>
+                          )}
+                        </For>
+                      </SpreadRow>
+                    </InfoPanel>
+                  }
+                >
+                  <InfoPanel title="Restore">
+                    <ClusterRow>
+                      <For each={RESTORE.filter((a) => a.when(it()))}>
+                        {(a) => (
+                          <HotkeyButton hotkey={a.hotkey} onTrigger={a.apply}>
+                            {a.label}
+                          </HotkeyButton>
+                        )}
+                      </For>
+                    </ClusterRow>
+                  </InfoPanel>
+                </Show>
               </FillColumn>
             )}
           </Show>
