@@ -1,0 +1,20 @@
+/* ============================================
+   Sparkline Component — Structural (Depth 0)
+   Generic inline SVG sparkline. Stroke color is driven by the `color`
+   prop (explicit CSS string on the <polyline> attribute) — no color
+   rules live here. Only structural geometry: display + stroke-width.
+   ============================================ */
+.sui-sparkline {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.sui-sparkline__line {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Sawtooth variant: slightly thicker stroke to keep the fine teeth visible. */
+.sui-sparkline--sawtooth .sui-sparkline__line {
+  stroke-width: 1.8;
+}

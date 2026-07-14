@@ -210,6 +210,15 @@ State derivation:
     />
     ```
 
+## Sparkline
+- **Sparkline** — Atomic (Depth 1). Generic inline SVG polyline: arbitrary values → tiny chart strip. Two render modes: `line` (smooth polyline, default) and `sawtooth` (drops to baseline between samples — per-period values like batch throughput). Color is prop-driven (explicit CSS string or token), no trend-class coupling: for trend-colored sparklines use `TrendSparkline`; for 0..1 connection-health strips use `HeartbeatSparkline`. Owns CSS (structural geometry only). Key props: `values` (number[], oldest first, auto-scaled), `mode` (`"line"`|`"sawtooth"`), `color` (default `var(--sui-accent)`), `width` (default 80), `height` (default 20). Exported types: `SparklineProps`, `SparklineMode`. Use for: inline throughput/count strips where the caller owns the color semantics.
+  - Example:
+    ```tsx
+    import { Sparkline } from "solid-ui-components";
+
+    <Sparkline values={[0, 400, 600, 800, 700, 900]} mode="sawtooth" color="var(--sui-success)" />
+    ```
+
 ## TrendSparkline
 - **TrendSparkline** — Atomic (Depth 1). Tiny value sparkline (no axes). Series scaled into a fixed rect, stroked by trajectory — UP green, DOWN red, FLAT grey. Exports `trendOf(initial, final)` as the pure color rule (`final > initial` → `"up"`, `< initial` → `"down"`, equal → `"flat"`). Distinct from `HeartbeatSparkline` (which plots 0..1 connection health): `TrendSparkline` plots arbitrary numeric series — projected balances, rolling totals, any "which direction is this heading?" micro-visual. Owns CSS. Key props: `values` (number[], oldest first), `trend` (`"up"`|`"down"`|`"flat"`), `width` (default 120), `height` (default 24), `capacity` (max points; longer series downsampled, default 80), `yDomain` ([min, max] — shared scale for groups of sparklines; omit for per-series auto-scale). Exported types: `SparklineTrend`, `TrendSparklineProps`. Exported helper: `trendOf`. Use for: projected balances, running totals, any compact "where is this heading?" indicator alongside a value.
   - Example:

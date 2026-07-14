@@ -93,6 +93,7 @@ import { MutableListShowcase } from "./showcases/mutable-list";
 import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
+import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
@@ -520,6 +521,12 @@ const items: Item[] = [
     label: "RingChart",
     component: RingChartShowcase,
     tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "sparkline",
+    label: "Sparkline",
+    component: SparklineShowcase,
+    tags: ["depth:1", "chart", "indicator"],
   },
   {
     id: "trend-sparkline",

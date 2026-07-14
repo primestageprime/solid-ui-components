@@ -27,6 +27,7 @@ export * from "./components/Dot";
 export * from "./components/TruthIndicator";
 export * from "./components/QuickFilter";
 export * from "./components/MultiSelectFilter";
+export * from "./components/Sparkline";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
 export * from "./components/LiveHeartbeatTrace";

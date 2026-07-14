@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`Sparkline`** — Atomic (Depth 1). Generic inline SVG polyline sparkline with `line` and `sawtooth` modes; color is prop-driven (`var(--sui-accent)` default). Complements `TrendSparkline` (trend-colored) and `HeartbeatSparkline` (0..1 health strips).
+
 ## 0.104.0
 
 ### Added
