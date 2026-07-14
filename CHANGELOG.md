@@ -2,10 +2,29 @@
 
 ## [Unreleased]
 
+## 0.103.0
+
+### ⚠ BREAKING
+
+- **Layout Purity migration — the entire library recomposed.** All 95 components were migrated to the new Layout Purity commandment (STYLE_GUIDE.md): no component owns box-model geometry (`flex`/`grid`/`gap`/`align`/`justify`/`overflow`) — everything composes named `Layout` variants. Public **props are byte-identical** (zero call-signature changes), but the rendered **DOM wrapper structure and internal class names changed across the library**: consumer CSS that targets a component's internal classes or relies on its exact element nesting may break. Off-scale internal gaps (6/12/16px) were snapped to the `xs(4)`/`sm(8)` scale, so small visual spacing shifts are expected.
+- **`createBox`/`createStack`/`createRow` factories: caller `style` no longer clobbers baked style.** The factories previously shallow-merged, so a caller's `style` object wiped the variant's baked styles entirely — which shipped `ScrollYBox` (and every scroll variant) with its `overflow` silently deleted whenever a consumer passed `style={{ "max-height": … }}`. Styles now merge per-property (baked first, caller wins). Any consumer that depended on full-object clobbering will now see the variant's baked properties come through.
+
+### Added
+
+- **~28 new Layout variants + 2 primitives** — role-named vocabulary demanded by the migration, including `Grid`/`createGrid` and `AutoStackRow`/`AutoStackItem` (responsive 2-D primitives), `ClipBox`, `ScrollBox`, `ScrollFillBox`, `ScrollXBox`, `ScrollYBox`, `ScrollFillColumn`, `ClipFillColumnFlush`, `CenteredColumn`, `LabelValueGrid`, `ChipCluster`, `BaselineWrapRow`, `GrowClusterRow`, and more — each with a when-to-use comment in `Layout/variants.ts`.
+- **`Icon`: `pause`, `agent`, `dependency` glyphs.** `agent` (robot head) is the automated counterpart to `user`, mirroring dside's `Species: Human | Agent`.
+- **`HotkeyButton`: optional leading `icon` prop** (backwards compatible) — associates an action with its thematic glyph.
+- **`typecheck:dev` gate** — `tsconfig.dev.json` now compiles the dev gallery, and CI enforces it, so the Overrides/DataProps currying rules are type-checked at every call site including showcases.
+
+### Deprecated
+
+- **`ButtonGroup`** — tagged `layout` but deprecated; migrate to the curried variants shipped alongside. No breaking change; existing call sites keep working.
+
 ### Fixed
 
 - **`Divider` — rendered nothing.** The CSS set `border:none` and a 1px box but never a color, so solid dividers were transparent and dashed/dotted had no border style at all. Now draws `var(--sui-border)` in all orientation/variant combinations.
 - **`Surface` — `active` state was invisible on variants with baked colors.** `bg`/`borderColor` are applied as inline styles, which silently overrode the `.surface--active` class, so `InteractiveCard active` (and any colored variant) never showed its selection. Active now owns background/border. Also themed the active colors (`--sui-accent` tokens replace hardcoded cyan).
+- **`BaseTable` / `DataTableContainer` / `SelectableTable` — `maxHeight` scroll actually scrolls.** Consequence of the style-merge fix above; `SelectableTable` additionally had a latent regression (it read a no-longer-overflowing container style) that the migration restored.
 
 ## 0.102.0
 
