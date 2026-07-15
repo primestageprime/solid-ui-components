@@ -7,7 +7,7 @@
 .sui-assignee-chip {
   border-radius: 999px;
   background: var(--sui-accent);
-  color: #001018;
+  color: var(--sui-bg-deep, #001018);
   font-weight: 500;
   display: inline-flex;
   align-items: center;

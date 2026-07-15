@@ -4,6 +4,12 @@
 
 ### Added
 
+- **`npm run health`** — vision-adherence health check with a CI ratchet (`scripts/health.mjs` + `scripts/health-baseline.json`, new `health` job in ci.yml). Mechanical KPIs — bare hex colors in CSS/TSX, inline `style={{}}` counts in src and showcases, folders without tests, undocumented components, missing Depth headers — may only decrease; a deliberate increase requires committing an updated baseline. `--verbose` lists offenders, `--update-baseline` locks in improvements.
+
+### Fixed
+
+- **Token purity: all 25 bare hex colors removed from component CSS** (plus `GroupedTable`'s inline `#ff6b6b` → `var(--sui-danger)`). Every hardcoded color now derives from a `--sui-*` token with the original value as fallback: dark-text-on-accent → `var(--sui-bg-deep)` (Button/ActionRow/AssigneeChips, matching SegmentedControl's precedent), Alarm reds → `var(--sui-danger)`, MathFormula number gold and RecentStarred star colors → `var(--sui-warning)`, RecentStarred surface palette → bg/border/text tokens, Table info-tag blue → accent tokens, and derived shades (CashflowChart project/onetime bars, Table danger hover, Alarm count tint) via `color-mix()` on the token. Themes now retint these components; under the default theme values shift only marginally toward their semantic tokens.
+
 - **`Sparkline`** — Atomic (Depth 1). Generic inline SVG polyline sparkline with `line` and `sawtooth` modes; color is prop-driven (`var(--sui-accent)` default). Complements `TrendSparkline` (trend-colored) and `HeartbeatSparkline` (0..1 health strips).
 
 ## 0.104.0

@@ -71,7 +71,7 @@
   justify-content: center;
   width: 12px;
   height: 12px;
-  color: #666;
+  color: var(--sui-text-muted, #666);
 }
 
 .jtf-progress-card__step-icon svg {
@@ -80,7 +80,7 @@
 }
 
 .jtf-progress-card__step--completed .jtf-progress-card__step-icon {
-  color: #0a0e17;
+  color: var(--sui-bg-deep, #0a0e17);
 }
 
 .jtf-progress-card__step--active .jtf-progress-card__step-icon {
@@ -88,7 +88,7 @@
 }
 
 .jtf-progress-card__step--error .jtf-progress-card__step-icon {
-  color: #0a0e17;
+  color: var(--sui-bg-deep, #0a0e17);
 }
 
 /* Arrow connector */

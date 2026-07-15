@@ -489,8 +489,8 @@
 }
 
 .hud-selection-action-bar__actions .hud-button--danger:hover {
-  background-color: #ff1a53;
-  box-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+  background-color: color-mix(in srgb, var(--sui-danger, #ff1a53) 85%, white);
+  box-shadow: 0 0 10px rgba(var(--sui-danger-rgb, 255, 51, 102), 0.5);
 }
 
 .hud-selection-action-bar__clear {

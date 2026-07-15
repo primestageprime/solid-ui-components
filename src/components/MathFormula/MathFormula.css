@@ -74,7 +74,7 @@
 
 /* Numbers - gold/yellow */
 .math-formula .katex .mord:not(.mathnormal):not(.mathdefault) {
-  color: #ffcc00;
+  color: var(--sui-warning, #ffcc00);
 }
 
 /* Operators (+, -, ×, etc) */

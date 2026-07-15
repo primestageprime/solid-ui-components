@@ -38,7 +38,7 @@
 .sui-btn--tone-accent {
   border: 1px solid var(--sui-accent);
   background: var(--sui-accent);
-  color: #001018;
+  color: var(--sui-bg-deep, #001018);
   font-weight: 500;
 }
 .sui-btn--tone-outline {

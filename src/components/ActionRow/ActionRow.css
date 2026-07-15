@@ -47,7 +47,7 @@
 .sui-action-row__btn--accent {
   border-color: var(--sui-accent);
   background: var(--sui-accent);
-  color: #001018;
+  color: var(--sui-bg-deep, #001018);
 }
 .sui-action-row__btn--outline {
   border-color: var(--sui-accent);

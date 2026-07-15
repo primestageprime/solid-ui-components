@@ -329,7 +329,7 @@ export function GroupedTableDemo() {
       header: "NOx",
       accessor: (row) => (
         <span
-          style={{ color: row.nox_emissions > 2.8 ? "#ff6b6b" : undefined }}
+          style={{ color: row.nox_emissions > 2.8 ? "var(--sui-danger)" : undefined }}
         >
           {row.nox_emissions.toFixed(2)}
         </span>
@@ -342,7 +342,7 @@ export function GroupedTableDemo() {
       header: "ROG",
       accessor: (row) => (
         <span
-          style={{ color: row.rog_emissions > 0.125 ? "#ff6b6b" : undefined }}
+          style={{ color: row.rog_emissions > 0.125 ? "var(--sui-danger)" : undefined }}
         >
           {row.rog_emissions.toFixed(2)}
         </span>

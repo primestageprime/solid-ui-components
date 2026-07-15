@@ -62,7 +62,8 @@
 }
 .sui-segmented__seg--selected.sui-segmented__seg--danger {
   background: var(--sui-danger);
-  color: #fff;
+  /* Constant white-on-danger, matching Table.css's danger buttons. */
+  color: white;
 }
 .sui-segmented__seg--selected.sui-segmented__seg--warning {
   background: var(--sui-warning);

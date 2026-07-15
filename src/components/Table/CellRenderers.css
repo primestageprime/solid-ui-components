@@ -91,10 +91,10 @@
 }
 
 .cell-tag--info {
-  background: rgba(102, 153, 255, 0.15);
-  color: #6699ff;
-  border: 1px solid rgba(102, 153, 255, 0.3);
-  box-shadow: 0 0 8px rgba(102, 153, 255, 0.2);
+  background: rgba(var(--sui-accent-rgb, 102, 153, 255), 0.15);
+  color: var(--sui-accent, #6699ff);
+  border: 1px solid rgba(var(--sui-accent-rgb, 102, 153, 255), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-accent-rgb, 102, 153, 255), 0.2);
 }
 
 /* Money Cell — fixed-width money value. Tabular figures + right alignment so

@@ -73,7 +73,9 @@
 }
 
 .rc-cashflow__bar--rev-project {
-  fill: #1a7a3a;
+  /* Darker shade of success — distinguishes project revenue from the
+     recurring/onetime bars that use the token directly. */
+  fill: color-mix(in srgb, var(--sui-success, #1a7a3a) 65%, black);
   opacity: 0.85;
 }
 
@@ -93,7 +95,8 @@
 }
 
 .rc-cashflow__bar--exp-onetime {
-  fill: #cc2222;
+  /* Darker shade of danger — see rev-project note above. */
+  fill: color-mix(in srgb, var(--sui-danger, #cc2222) 80%, black);
   opacity: 0.9;
 }
 

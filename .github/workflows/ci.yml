@@ -45,6 +45,21 @@ jobs:
       # but only if dev/ is compiled. This keeps benches honest.
       - run: npm run typecheck:dev
 
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      # Vision-adherence ratchet: mechanical counts (bare hex colors,
+      # inline styles, missing tests/docs/depth headers) may only go
+      # down. Baseline lives in scripts/health-baseline.json; a
+      # deliberate increase requires committing an updated baseline.
+      # No npm ci — the script has zero dependencies.
+      - run: npm run health
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
