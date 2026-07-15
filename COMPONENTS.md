@@ -1336,6 +1336,8 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **NowrapBody** — Body text that never wraps. Use for: inline formatted values.
   - **MutedBody** — Dim body text. Use for: secondary descriptions, hints.
   - **AccentBody** — Cyan-accented body text. Use for: highlighted descriptions.
+  - **DangerBody** — Danger-tinted body text. Use for: inline error reasons in detail panels.
+  - **MonoMeta** — Mono meta text (11px monospace, muted). Use for: panel subtitles, tiny section labels (SOURCE/LOCAL/COLS-style), footnotes beside data readouts. Library-side replacement for the dev-only `.text-meta` showcase class — library components must not use that class.
   - **FlexLabel** — Label that grows to fill available space. Use for: label + value rows.
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.

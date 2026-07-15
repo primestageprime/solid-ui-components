@@ -13,10 +13,13 @@ import { CountChip } from "../Badge/CountChip";
 import {
   ActionSlot,
   BaselineClusterRow,
+  NarrowStack,
   TagRow,
+  TightStack,
   TopClusterRow,
   WrappedClusterRow,
 } from "../Layout/variants";
+import { DangerBody, MonoMeta } from "../Text/variants";
 import "./CensusView.css";
 
 import {
@@ -50,9 +53,9 @@ function buildColumns(
         <span title={row.entity}>
           {row.entity}
           {row.subtitle && (
-            <span class="text-meta sui-census__entity-subtitle">
+            <MonoMeta class="sui-census__entity-subtitle">
               {row.subtitle}
-            </span>
+            </MonoMeta>
           )}
         </span>
       ),
@@ -146,35 +149,35 @@ const DetailContent: Component<{
   const cols = () => t().columns ?? [];
 
   return (
-    <>
+    <NarrowStack>
       {/* Subtitle / version / status */}
       <Show when={t().subtitle || t().version}>
-        <div class="text-meta" style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
+        <MonoMeta>
           <Show when={t().subtitle}>{t().subtitle} · </Show>
           <Show when={t().version}>v{t().version}</Show>
-        </div>
+        </MonoMeta>
       </Show>
 
       {/* Row counts */}
-      <WrappedClusterRow style={{ "margin-bottom": "var(--sui-space-3, 12px)" }}>
-        <div>
-          <div class="text-meta" style={{ "font-size": "11px" }}>SOURCE</div>
+      <WrappedClusterRow>
+        <TightStack>
+          <MonoMeta>SOURCE</MonoMeta>
           <NumberWithUnits value={t().sourceRows} units="rows" />
-        </div>
-        <div>
-          <div class="text-meta" style={{ "font-size": "11px" }}>LOCAL</div>
+        </TightStack>
+        <TightStack>
+          <MonoMeta>LOCAL</MonoMeta>
           <NumberWithUnits value={t().localRows} units="rows" />
-        </div>
+        </TightStack>
         <Show when={t().fieldCount != null}>
-          <div>
-            <div class="text-meta" style={{ "font-size": "11px" }}>COLS</div>
+          <TightStack>
+            <MonoMeta>COLS</MonoMeta>
             <NumberWithUnits value={t().fieldCount} units="fields" />
-          </div>
+          </TightStack>
         </Show>
       </WrappedClusterRow>
 
       {/* Status badge */}
-      <div style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
+      <div>
         <StatusBadge variant={normStatusVariant(t().status)} label={t().status} />
         <Show when={t().keyLabel}>
           {" "}
@@ -184,19 +187,17 @@ const DetailContent: Component<{
 
       {/* Error reason */}
       <Show when={(t().status === "error" || t().status === "noaccess") && t().error}>
-        <div style={{ "margin-bottom": "var(--sui-space-2, 8px)", color: "var(--sui-danger)" }}>
-          {t().error}
-        </div>
+        <DangerBody>{t().error}</DangerBody>
       </Show>
 
       {/* Note */}
       <Show when={t().note && t().status !== "error"}>
-        <div class="text-meta" style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>{t().note}</div>
+        <MonoMeta>{t().note}</MonoMeta>
       </Show>
 
       {/* Field-type chips */}
       <Show when={Object.values(fbt()).some((v) => v > 0)}>
-        <TagRow style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
+        <TagRow>
           <For each={Object.entries(fbt())}>
             {([k, v]) => (
               <Show when={v > 0}>
@@ -212,21 +213,19 @@ const DetailContent: Component<{
 
       {/* Schema list */}
       <Show when={cols().length > 0}>
-        <div style={{ "margin-bottom": "var(--sui-space-2, 8px)" }}>
-          <div class="text-meta" style={{ "font-size": "11px", "margin-bottom": "var(--sui-space-1, 4px)" }}>
-            SCHEMA ({cols().length})
-          </div>
+        <TightStack>
+          <MonoMeta>SCHEMA ({cols().length})</MonoMeta>
           <BaseTable
             data={cols()}
             compact
             columns={schemaColumns}
           />
-        </div>
+        </TightStack>
       </Show>
 
       {/* Source-specific actions */}
       <Show when={props.actions}>{props.actions?.(t())}</Show>
-    </>
+    </NarrowStack>
   );
 };
 
@@ -264,7 +263,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
                   <BaselineClusterRow class="sui-census-view__bucket-header">
                     <strong>{b.label}</strong>
                     <Show when={b.hint}>
-                      <span class="text-meta">{b.hint}</span>
+                      <MonoMeta>{b.hint}</MonoMeta>
                     </Show>
                   </BaselineClusterRow>
                   <BaseTable

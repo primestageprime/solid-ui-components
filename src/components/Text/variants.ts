@@ -128,6 +128,21 @@ export const MonoDump = createText({
   },
 });
 
+// Mono meta text (11px monospace, muted) — panel subtitles, tiny section
+// labels, footnotes beside data readouts. The library-side home for what the
+// dev-only `.text-meta` showcase class provided; library components must not
+// depend on that class (it doesn't exist for consumers).
+export const MonoMeta = createText({
+  variant: "sublabel",
+  style: { "font-size": "11px", "font-family": "var(--sui-font-mono)" },
+});
+
+// Danger-tinted body text — inline error reasons in detail panels.
+export const DangerBody = createText({
+  variant: "body",
+  color: "var(--sui-danger)",
+});
+
 // Inline units — inherits font-size from parent, muted color, left margin
 export const InlineUnits = createText({
   variant: "sublabel",
