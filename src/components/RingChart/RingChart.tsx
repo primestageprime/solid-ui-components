@@ -12,10 +12,6 @@ export interface RingChartProps {
   size?: number;
 }
 
-const monoStyle = {
-  "font-family": "'JetBrains Mono', 'Fira Code', monospace",
-};
-
 export function RingChart(props: RingChartProps) {
   const size = () => props.size ?? 100;
   const strokeWidth = 10;
@@ -40,14 +36,8 @@ export function RingChart(props: RingChartProps) {
 
   return (
     <div
-      style={{
-        position: "relative",
-        display: "inline-flex",
-        "align-items": "center",
-        "justify-content": "center",
-        width: `${size()}px`,
-        height: `${size()}px`,
-      }}
+      class="sui-ring-chart"
+      style={{ width: `${size()}px`, height: `${size()}px` }}
     >
       <svg
         role="img"
@@ -90,25 +80,17 @@ export function RingChart(props: RingChartProps) {
       {/* center label */}
       <div class="sui-ring-chart__center">
         <div
+          class="sui-ring-chart__label"
           style={{
-            ...monoStyle,
-            color: "var(--sui-text-primary)",
             "font-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
-            "font-weight": "700",
-            "line-height": "1.1",
           }}
         >
           {props.label}
         </div>
         <Show when={props.sublabel}>
           <div
-            style={{
-              color: "var(--sui-text-secondary)",
-              "font-size": `${Math.max(9, size() / 10)}px`,
-              "text-transform": "uppercase",
-              "letter-spacing": "0.05em",
-              "margin-top": "2px",
-            }}
+            class="sui-ring-chart__sublabel"
+            style={{ "font-size": `${Math.max(9, size() / 10)}px` }}
           >
             {props.sublabel}
           </div>

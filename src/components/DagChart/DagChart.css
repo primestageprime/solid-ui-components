@@ -50,6 +50,18 @@
   cursor: pointer;
 }
 
+/* Hidden until the edge is hovered; the transparent hit circle keeps it
+   clickable at opacity 0. */
+.sui-dag__edge-delete {
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.sui-dag__edge-delete--visible {
+  opacity: 1;
+}
+
 .sui-dag__edge-delete circle {
   fill: var(--sui-bg-deep, #001018);
   stroke: var(--sui-accent);

@@ -3,6 +3,15 @@
    label font scaling, dash arcs) stays inline in the component.
    ============================================ */
 
+/* Root — square inline box centering the svg + label overlay. Width/height
+   stay inline (size-driven px values). */
+.sui-ring-chart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Rotate so arcs start at 12 o'clock. */
 .sui-ring-chart__svg {
   transform: rotate(-90deg);
@@ -20,4 +29,20 @@
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
+}
+
+/* Label typography — font-size stays inline (scales with ring size and
+   label length). */
+.sui-ring-chart__label {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: var(--sui-text-primary);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sui-ring-chart__sublabel {
+  color: var(--sui-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
 }

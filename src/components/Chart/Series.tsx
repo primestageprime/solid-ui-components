@@ -310,6 +310,7 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
                   // biome-ignore lint/a11y/noStaticElementInteractions: interactive role/tabIndex + Enter/Space keyboard parity are wired dynamically when a click handler is provided; the analyzer can't see the conditional role
                   <rect
                     class="sui-chart__bar"
+                    classList={{ "sui-chart__bar--interactive": interactive() }}
                     role={interactive() ? "button" : undefined}
                     tabIndex={interactive() ? 0 : undefined}
                     x={xPx}
@@ -323,9 +324,6 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
                         e.preventDefault();
                         click(e as unknown as MouseEvent);
                       }
-                    }}
-                    style={{
-                      cursor: interactive() ? "pointer" : undefined,
                     }}
                   />
                 );

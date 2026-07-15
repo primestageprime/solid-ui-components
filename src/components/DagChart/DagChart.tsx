@@ -418,10 +418,9 @@ export function DagChart<T>(props: DAGProps<T>) {
                         props.onEdgeClick?.(edge.source, edge.target);
                       }
                     }}
-                    style={{
-                      cursor: "pointer",
-                      opacity: hoveredEdge() === edgeKey ? 1 : 0,
-                      transition: "opacity 0.1s ease",
+                    classList={{
+                      "sui-dag__edge-delete--visible":
+                        hoveredEdge() === edgeKey,
                     }}
                   >
                     {/* Invisible larger hit circle so the badge always has a

@@ -203,7 +203,9 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
         type="text"
         inputmode="decimal"
         class="sui-big-number__input"
-        style={{ "text-align": local.align ?? "left" }}
+        classList={{
+          "sui-big-number__input--right": local.align === "right",
+        }}
         value={display()}
         onInput={handleInput}
         onFocus={handleFocus}

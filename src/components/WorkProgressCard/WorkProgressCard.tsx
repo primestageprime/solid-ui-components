@@ -8,12 +8,7 @@ import { For, Show, type Component, type JSX } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { BaselineSpreadRow } from "../Layout/variants";
 import { Text } from "../Text/Text";
-import {
-  deriveCardBar,
-  statusAccent,
-  CARD_SIGN_COLOR,
-  type WorkStatus,
-} from "./cardProgress";
+import { deriveCardBar, statusAccent, type WorkStatus } from "./cardProgress";
 import "./WorkProgressCard.css";
 
 export interface WorkProgressCardProps {
@@ -94,13 +89,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
         </div>
         <Show when={bar().sign}>
           {(sign) => (
-            <div
-              class="sui-wpc__sign"
-              style={{
-                border: `1px solid ${CARD_SIGN_COLOR}`,
-                color: CARD_SIGN_COLOR,
-              }}
-            >
+            <div class="sui-wpc__sign">
               {sign() === "yield" ? "⚠︎" : "?"}
             </div>
           )}

@@ -38,20 +38,10 @@ export const ScenarioGlyph: Component<ScenarioGlyphProps> = (props) => {
     "style",
   ]);
   const size = () => local.size ?? 10;
-  const overrides = () =>
-    local.style && typeof local.style === "object" ? local.style : {};
   return (
     <span
       class={`scenario-glyph${local.class ? ` ${local.class}` : ""}`}
-      style={{
-        display: "inline-flex",
-        "align-items": "center",
-        "justify-content": "center",
-        "vertical-align": "middle",
-        // Never shrinks in a flex row (matches ScenarioDot).
-        flex: "0 0 auto",
-        ...overrides(),
-      }}
+      style={local.style}
       {...others}
     >
       <svg

@@ -90,6 +90,9 @@
   height: 16px;
   border-radius: 50%;
   background: var(--sui-surface, #16202a);
+  /* Sign chrome matches CARD_SIGN_COLOR (the accent) from cardProgress.ts. */
+  border: 1px solid var(--sui-accent, #00d4ff);
+  color: var(--sui-accent, #00d4ff);
   display: flex;
   align-items: center;
   justify-content: center;

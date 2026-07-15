@@ -2,6 +2,16 @@
    ScenarioGlyph — svg wrapper for a single ShapeGlyph.
    ============================================ */
 
+/* Inline-centered box that drops into a text row like ScenarioDot;
+   flex: 0 0 auto so it never shrinks in a flex row (matches ScenarioDot). */
+.scenario-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+
 /* overflow: visible so a hollow stroke that straddles the box edge (e.g. a
    full-diameter circle) is never clipped. */
 .sui-scenario-glyph {
