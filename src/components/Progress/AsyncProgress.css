@@ -46,3 +46,9 @@
     transform: translateX(-100%);
   }
 }
+
+/* Indeterminate mode — fixed-width shuttle sweeping the track. */
+.async-progress__bar-fill--indeterminate {
+  width: 30%;
+  animation: async-progress-indeterminate 1.5s ease-in-out infinite;
+}

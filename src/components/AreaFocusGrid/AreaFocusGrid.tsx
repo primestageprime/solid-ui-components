@@ -195,10 +195,7 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
         )}
       </For>
       {/* Row 2 — full-width major hsep under headers. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "2", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--under-headers" />
       {/* Row 3 — above-the-line cell stacks. */}
       <For each={layout().subCols}>
         {(sc, i) => (
@@ -219,10 +216,7 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
         )}
       </For>
       {/* Row 4 — full-width major hsep above the label band. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "4", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--above-labels" />
       {/* Row 5 — focus labels. */}
       <For each={layout().subCols}>
         {(sc, i) => (
@@ -243,10 +237,7 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
         )}
       </For>
       {/* Row 6 — full-width major hsep below the label band. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "6", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--below-labels" />
       {/* Row 7 — below-the-line cell stacks. */}
       <For each={layout().subCols}>
         {(sc, i) => (

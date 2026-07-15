@@ -64,3 +64,21 @@
 .sui-area-focus-grid__cell-stack--anchor-top {
   justify-content: flex-start;
 }
+
+/* Full-width horizontal separators — fixed rows of the 7-row template.
+   (Data-driven column placements stay inline in the component.) */
+.sui-area-focus-grid__hsep {
+  grid-column: 1 / -1;
+}
+
+.sui-area-focus-grid__hsep--under-headers {
+  grid-row: 2;
+}
+
+.sui-area-focus-grid__hsep--above-labels {
+  grid-row: 4;
+}
+
+.sui-area-focus-grid__hsep--below-labels {
+  grid-row: 6;
+}

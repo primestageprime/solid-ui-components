@@ -127,14 +127,7 @@ export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
             style={{ width: `${Math.min(percent()! * 100, 100)}%` }}
           />
         ) : (
-          <div
-            class="async-progress__bar-fill"
-            style={{
-              width: "30%",
-              animation:
-                "async-progress-indeterminate 1.5s ease-in-out infinite",
-            }}
-          />
+          <div class="async-progress__bar-fill async-progress__bar-fill--indeterminate" />
         )}
       </div>
     </TightStack>

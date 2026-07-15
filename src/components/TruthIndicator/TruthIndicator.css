@@ -1,4 +1,10 @@
+/* Rendered as a <button> when interactive — neutralize UA button chrome. */
 .sui-truth {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;

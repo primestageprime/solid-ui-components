@@ -45,8 +45,9 @@ const rows = Object.entries(latest.metrics).sort(([ka, va], [kb, vb]) => {
   return (ZERO_PRIORITY[kb] ?? 0) - (ZERO_PRIORITY[ka] ?? 0);
 });
 
+// Lower is always better: ↓ = improvement, ↑ = regression.
 const fmtDelta = (d) =>
-  d === null ? "" : d === 0 ? "±0" : d > 0 ? `+${d}` : `${d}`;
+  d === null ? "" : d === 0 ? "±0" : d > 0 ? `↑${d}` : `↓${-d}`;
 
 if (process.argv.includes("--history")) {
   const keys = rows.map(([k]) => k);
