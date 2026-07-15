@@ -143,6 +143,70 @@ export const DangerBody = createText({
   color: "var(--sui-danger)",
 });
 
+// Warning-tinted body text — inline caution notes (non-destructive).
+export const WarningBody = createText({
+  variant: "body",
+  color: "var(--sui-warning)",
+});
+
+// Success-tinted body text — inline confirmation / healthy-state notes.
+export const SuccessBody = createText({
+  variant: "body",
+  color: "var(--sui-success)",
+});
+
+// Emphasized body — inline bold (600) accentuation inside table cells and
+// labels where a word/value must stand out without changing typographic role.
+export const EmphasisBody = createText({
+  variant: "body",
+  as: "span",
+  style: { "font-weight": "600" },
+});
+
+// Accent-emphasized body — bold (600), accent-colored inline counts/values.
+export const AccentEmphasisBody = createText({
+  variant: "body",
+  as: "span",
+  color: "var(--sui-accent)",
+  style: { "font-weight": "600" },
+});
+
+// Italic note — parenthetical default/fallback annotation beside a value.
+export const NoteText = createText({
+  variant: "sublabel",
+  as: "span",
+  style: { "font-style": "italic" },
+});
+
+// Danger-tinted small caption — compact inline error text beside a control.
+export const DangerSublabel = createText({
+  variant: "sublabel",
+  color: "var(--sui-danger)",
+  as: "span",
+});
+
+// Uppercase section caption (secondary tone) above a table / card group.
+export const CaptionLabel = createText({
+  variant: "label",
+  color: "var(--sui-text-secondary)",
+  style: {
+    "font-size": "0.9rem",
+    "text-transform": "uppercase",
+    "letter-spacing": "0.5px",
+  },
+});
+
+// Uppercase accent caption — settings-style column headings.
+export const AccentCaptionLabel = createText({
+  variant: "label",
+  color: "var(--sui-accent)",
+  style: {
+    "font-size": "0.85rem",
+    "text-transform": "uppercase",
+    "letter-spacing": "0.08em",
+  },
+});
+
 // Inline units — inherits font-size from parent, muted color, left margin
 export const InlineUnits = createText({
   variant: "sublabel",
@@ -154,6 +218,7 @@ export const InlineUnits = createText({
 export const PageTitle = createText({ variant: "title", as: "h1" });
 export const SectionTitle = createText({ variant: "title", as: "h2" });
 export const SubsectionTitle = createText({ variant: "title", as: "h3" });
+export const TopicTitle = createText({ variant: "title", as: "h4" });
 
 // Status-colored titles
 export const InfoTitle = createText({

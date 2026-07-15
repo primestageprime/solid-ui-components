@@ -3403,6 +3403,30 @@
             "kind": "named"
           }
         ],
+        "BaselineClusterRow": [
+          {
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/ViolationCardList.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "BaselineSpreadRow": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/ViolationCardList.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "BoxedTabs": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
@@ -3411,6 +3435,11 @@
           }
         ],
         "CardSurface": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/ViolationCardList.tsx",
             "line": 2,
@@ -3432,8 +3461,48 @@
             "kind": "named"
           },
           {
+            "file": "src/components/qaqcTriage/CallFilterList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/violations/PeriodsList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/asset-triage/detail.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -3444,6 +3513,11 @@
           {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/violations/explore.tsx",
+            "line": 3,
             "kind": "named"
           }
         ],
@@ -3542,6 +3616,23 @@
             "kind": "named"
           }
         ],
+        "ChipCluster": [
+          {
+            "file": "src/routes/metric-analyzer.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/nox-report.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/asset-triage/detail.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
         "ClusterRow": [
           {
             "file": "src/auth/EmailSignInButton.tsx",
@@ -3574,6 +3665,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/AutomationModal.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -3599,6 +3695,31 @@
             "kind": "named"
           },
           {
+            "file": "src/components/qaqcTriage/CallFilterList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/index.tsx",
             "line": 7,
             "kind": "named"
@@ -3616,6 +3737,11 @@
           {
             "file": "src/routes/reports/thousand-hour/[id].tsx",
             "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/thousand-hour/index.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -3637,6 +3763,38 @@
             "file": "src/routes/violations/explore.tsx",
             "line": 3,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/violations/grid.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
+        "Column": [
+          {
+            "file": "src/components/fortnight/ViolationCardList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallFilterList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/violations/PeriodsList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
           }
         ],
         "CompactSurface": [
@@ -3648,6 +3806,16 @@
           {
             "file": "src/components/SettingsPanel.tsx",
             "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/violations/PeriodsList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/flow-diagnosis/index.tsx",
+            "line": 3,
             "kind": "named"
           },
           {
@@ -3694,6 +3862,13 @@
           },
           {
             "file": "src/routes/metric-analyzer.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ContentSurface": [
+          {
+            "file": "src/components/NoxWidgets.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -3745,6 +3920,13 @@
           {
             "file": "src/routes/index.tsx",
             "line": 7,
+            "kind": "named"
+          }
+        ],
+        "DangerBody": [
+          {
+            "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -3974,10 +4156,24 @@
             "kind": "named"
           }
         ],
+        "FillColumnFlush": [
+          {
+            "file": "src/components/fortnight/ViolationsPreview.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "FilterableTable": [
           {
             "file": "src/components/fortnight/ViolationsPreview.tsx",
             "line": 2,
+            "kind": "named"
+          }
+        ],
+        "FlexRow": [
+          {
+            "file": "src/routes/violations/grid.tsx",
+            "line": 4,
             "kind": "named"
           }
         ],
@@ -4069,13 +4265,33 @@
         ],
         "GrowBox": [
           {
+            "file": "src/components/StatisticsSummary.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/vessel-detail/VesselCallNoxDetail.tsx",
             "line": 6,
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx",
             "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -4228,6 +4444,11 @@
           }
         ],
         "InfoSurface": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallNoxDetail.tsx",
             "line": 6,
@@ -4513,6 +4734,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/PowerLogCacheView.tsx",
             "line": 2,
             "kind": "named"
@@ -4638,11 +4864,41 @@
             "file": "src/components/fortnight/ViolationsPreview.tsx",
             "line": 2,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/durability.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/fortnight/index.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/nox-report.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/thousand-hour/index.tsx",
+            "line": 2,
+            "kind": "named"
           }
         ],
         "NarrowStack": [
           {
             "file": "src/components/ApprovalSection.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/NoxWidgets.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -4662,6 +4918,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/AutomationModal.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -4672,6 +4933,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/automationParts.tsx",
+            "line": 6,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/vessel-detail/VesselCallNoxDetail.tsx",
             "line": 6,
             "kind": "named"
@@ -4679,6 +4945,21 @@
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx",
             "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/violations/QaqcAssetTriage.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -4798,6 +5079,11 @@
           }
         ],
         "PaneRow": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/routes/flow-diagnosis/index.tsx",
             "line": 3,
@@ -4931,7 +5217,7 @@
         "ScrollRegion": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 176,
+            "line": 161,
             "kind": "named"
           }
         ],
@@ -5034,6 +5320,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/violations/PeriodsList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/index.tsx",
             "line": 7,
             "kind": "named"
@@ -5081,6 +5372,11 @@
           {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/violations/explore.tsx",
+            "line": 3,
             "kind": "named"
           },
           {
@@ -5165,6 +5461,16 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/asset-triage/detail.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -5207,7 +5513,7 @@
           },
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 30,
+            "line": 31,
             "kind": "type"
           },
           {
@@ -5220,6 +5526,18 @@
           {
             "file": "src/routes/reports/fortnight/index.tsx",
             "line": 2,
+            "kind": "named"
+          }
+        ],
+        "StretchRow": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/metric-explorer.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
@@ -5246,6 +5564,11 @@
           }
         ],
         "SubsectionTitle": [
+          {
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          },
           {
             "file": "src/routes/reports/nox-report.tsx",
             "line": 2,
@@ -5345,7 +5668,7 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 6,
+            "line": 20,
             "kind": "type"
           },
           {
@@ -5466,6 +5789,16 @@
             "kind": "named"
           },
           {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
@@ -5515,6 +5848,11 @@
         ],
         "TextSublabel": [
           {
+            "file": "src/components/fortnight/AutomationModal.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/cells.tsx",
             "line": 2,
             "kind": "named"
@@ -5535,6 +5873,31 @@
             "kind": "named"
           },
           {
+            "file": "src/components/qaqcTriage/CallFilterList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/violations/PeriodsList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-analyzer.tsx",
             "line": 2,
             "kind": "named"
@@ -5551,6 +5914,11 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/qaqc-checks.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5622,6 +5990,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/reports/thousand-hour/index.tsx",
             "line": 2,
             "kind": "named"
@@ -5654,7 +6027,17 @@
             "kind": "named"
           },
           {
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/StatisticsSummary.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/AutomationModal.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5771,7 +6154,19 @@
             "kind": "named"
           }
         ],
+        "TightCenteredColumn": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
         "TightClusterRow": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/ViolationCardList.tsx",
             "line": 2,
@@ -5780,6 +6175,11 @@
           {
             "file": "src/components/fortnight/cells.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/violations/grid.tsx",
+            "line": 4,
             "kind": "named"
           }
         ],
@@ -5797,6 +6197,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/AutomationModal.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -5807,12 +6212,27 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/automationParts.tsx",
+            "line": 6,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/components/fortnight/vessel-detail/detail-ui.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5926,7 +6346,19 @@
         ],
         "TopClusterRow": [
           {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "TopSpreadRow": [
+          {
+            "file": "src/components/fortnight/ViolationCardList.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -5970,6 +6402,13 @@
             "kind": "named"
           }
         ],
+        "WarningBadge": [
+          {
+            "file": "src/routes/violations/explore.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
         "WarningPanel": [
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
@@ -6003,15 +6442,40 @@
         ],
         "WrapRow": [
           {
+            "file": "src/components/StatisticsSummary.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
         "WrappedClusterRow": [
           {
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/StatisticsSummary.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/fortnight/FortnightDetailPane.tsx",
+            "line": 3,
             "kind": "named"
           },
           {
@@ -6035,6 +6499,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/asset-triage/detail.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
             "kind": "named"
@@ -6043,19 +6512,14 @@
             "file": "src/routes/violations/explore.tsx",
             "line": 3,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/violations/grid.tsx",
+            "line": 4,
+            "kind": "named"
           }
         ],
         "createBox": [
-          {
-            "file": "src/components/StatisticsSummary.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/StatisticsSummary.tsx",
-            "line": 9,
-            "kind": "factory-call"
-          },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
@@ -6063,12 +6527,7 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 46,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 47,
+            "line": 54,
             "kind": "factory-call"
           },
           {
@@ -6078,42 +6537,12 @@
           },
           {
             "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 31,
+            "line": 36,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 38,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 51,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 64,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 75,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/ViolationCardList.tsx",
-            "line": 87,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/ViolationsPreview.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/ViolationsPreview.tsx",
-            "line": 20,
+            "line": 48,
             "kind": "factory-call"
           },
           {
@@ -6123,12 +6552,7 @@
           },
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 78,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 86,
+            "line": 84,
             "kind": "factory-call"
           },
           {
@@ -6150,57 +6574,17 @@
             "file": "src/components/ui/layout.tsx",
             "line": 25,
             "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 87,
-            "kind": "factory-call"
           }
         ],
         "createButton": [
           {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 58,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 7,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 50,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/routes/reports/qaqc-checks.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 100,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/explore.tsx",
-            "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/violations/explore.tsx",
-            "line": 47,
+            "line": 102,
             "kind": "factory-call"
           }
         ],
@@ -6253,58 +6637,6 @@
             "kind": "factory-call"
           }
         ],
-        "createEmptyState": [
-          {
-            "file": "src/routes/reports/durability.tsx",
-            "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/durability.tsx",
-            "line": 29,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/fortnight/index.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/fortnight/index.tsx",
-            "line": 108,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/nox-report.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/nox-report.tsx",
-            "line": 93,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 98,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 64,
-            "kind": "factory-call"
-          }
-        ],
         "createFormulaPanel": [
           {
             "file": "src/lib/formulaPanels.ts",
@@ -6336,168 +6668,38 @@
         ],
         "createRow": [
           {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 27,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 30,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 37,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/StatisticsSummary.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/StatisticsSummary.tsx",
-            "line": 8,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightDetailPane.tsx",
-            "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/FortnightDetailPane.tsx",
-            "line": 53,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 52,
+            "line": 70,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 53,
+            "line": 72,
             "kind": "factory-call"
           },
           {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 54,
-            "kind": "factory-call"
+            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
+            "line": 2,
+            "kind": "named"
           },
           {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 55,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 67,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
             "line": 69,
             "kind": "factory-call"
           },
           {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 71,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 73,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 75,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 83,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 85,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 6,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 32,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 68,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 20,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 18,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/components/qaqcTriage/CannedExplanations.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 27,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 28,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 9,
+            "line": 21,
             "kind": "factory-call"
           },
           {
@@ -6507,12 +6709,7 @@
           },
           {
             "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 17,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 23,
+            "line": 22,
             "kind": "factory-call"
           },
           {
@@ -6551,33 +6748,13 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/routes/metric-analyzer.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/metric-analyzer.tsx",
-            "line": 23,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 7,
             "kind": "named"
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 56,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 58,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 60,
+            "line": 53,
             "kind": "factory-call"
           },
           {
@@ -6627,27 +6804,22 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 31,
+            "line": 32,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 33,
+            "line": 34,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 36,
+            "line": 37,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 39,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/nox-report.tsx",
-            "line": 41,
+            "line": 40,
             "kind": "factory-call"
           },
           {
@@ -6667,7 +6839,7 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 96,
+            "line": 100,
             "kind": "factory-call"
           },
           {
@@ -6687,12 +6859,17 @@
           },
           {
             "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 51,
+            "line": 52,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 62,
+            "line": 63,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/reports/thousand-hour/index.tsx",
+            "line": 70,
             "kind": "factory-call"
           },
           {
@@ -6702,17 +6879,7 @@
           },
           {
             "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 72,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/thousand-hour/index.tsx",
             "line": 73,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 75,
             "kind": "factory-call"
           },
           {
@@ -6727,57 +6894,7 @@
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 39,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 40,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 46,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 55,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 40,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 42,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 44,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 46,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 48,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 50,
             "kind": "factory-call"
           },
           {
@@ -6788,36 +6905,6 @@
           {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 55,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 4,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 25,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 26,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 27,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 28,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/grid.tsx",
-            "line": 30,
             "kind": "factory-call"
           }
         ],
@@ -6839,7 +6926,7 @@
           },
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
-            "line": 60,
+            "line": 61,
             "kind": "factory-call"
           }
         ],
@@ -6851,7 +6938,7 @@
           },
           {
             "file": "src/components/fortnight/automationParts.tsx",
-            "line": 17,
+            "line": 16,
             "kind": "factory-call"
           }
         ],
@@ -6863,17 +6950,12 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 29,
+            "line": 37,
             "kind": "factory-call"
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 38,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 44,
+            "line": 42,
             "kind": "factory-call"
           },
           {
@@ -6883,17 +6965,17 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 60,
+            "line": 63,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 62,
+            "line": 65,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 64,
+            "line": 67,
             "kind": "factory-call"
           },
           {
@@ -6903,47 +6985,7 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 79,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 81,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 87,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 89,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 91,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 94,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 6,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 26,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 29,
+            "line": 82,
             "kind": "factory-call"
           },
           {
@@ -6953,62 +6995,17 @@
           },
           {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 19,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 28,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 17,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 32,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 20,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 8,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
             "line": 21,
             "kind": "factory-call"
           },
           {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 22,
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 19,
             "kind": "factory-call"
           },
           {
@@ -7032,38 +7029,13 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 57,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 59,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 21,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 7,
             "kind": "named"
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 53,
+            "line": 51,
             "kind": "factory-call"
           },
           {
@@ -7074,16 +7046,6 @@
           {
             "file": "src/routes/reports/nox-report.tsx",
             "line": 91,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 107,
             "kind": "factory-call"
           },
           {
@@ -7103,7 +7065,7 @@
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 49,
+            "line": 45,
             "kind": "factory-call"
           },
           {
@@ -7113,27 +7075,27 @@
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 53,
+            "line": 44,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 55,
+            "line": 46,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 90,
+            "line": 78,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 93,
+            "line": 81,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 96,
+            "line": 84,
             "kind": "factory-call"
           },
           {
@@ -7237,16 +7199,6 @@
             "file": "src/components/ui/StatusBadge.tsx",
             "line": 38,
             "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/violations/explore.tsx",
-            "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/violations/explore.tsx",
-            "line": 48,
-            "kind": "factory-call"
           }
         ],
         "createSurface": [
@@ -7257,42 +7209,17 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 17,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 33,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
             "line": 34,
             "kind": "factory-call"
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 245,
+            "line": 35,
             "kind": "factory-call"
           },
           {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 4,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 98,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 100,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 102,
+            "file": "src/components/NoxWidgets.tsx",
+            "line": 243,
             "kind": "factory-call"
           },
           {
@@ -7303,11 +7230,6 @@
           {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
             "line": 23,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 29,
             "kind": "factory-call"
           },
           {
@@ -7326,46 +7248,6 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 33,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 19,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 7,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 62,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 63,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/routes/flow-diagnosis/index.tsx",
             "line": 3,
             "kind": "named"
@@ -7373,11 +7255,6 @@
           {
             "file": "src/routes/flow-diagnosis/index.tsx",
             "line": 16,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/flow-diagnosis/index.tsx",
-            "line": 17,
             "kind": "factory-call"
           },
           {
@@ -7397,12 +7274,7 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 95,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 97,
+            "line": 99,
             "kind": "factory-call"
           },
           {
@@ -7412,12 +7284,12 @@
           },
           {
             "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 54,
+            "line": 55,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/thousand-hour/index.tsx",
-            "line": 66,
+            "line": 65,
             "kind": "factory-call"
           },
           {
@@ -7427,17 +7299,7 @@
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 41,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 42,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 43,
+            "line": 39,
             "kind": "factory-call"
           },
           {
@@ -7482,38 +7344,28 @@
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 58,
+            "line": 51,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 61,
+            "line": 54,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 64,
+            "line": 57,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 67,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 79,
+            "line": 69,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/explore.tsx",
             "line": 3,
             "kind": "named"
-          },
-          {
-            "file": "src/routes/violations/explore.tsx",
-            "line": 41,
-            "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/explore.tsx",
@@ -7527,12 +7379,12 @@
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 24,
+            "line": 27,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 68,
+            "line": 66,
             "kind": "factory-call"
           }
         ],
@@ -7541,21 +7393,6 @@
             "file": "src/components/NoxWidgets.tsx",
             "line": 2,
             "kind": "named"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 25,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 26,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 28,
-            "kind": "factory-call"
           },
           {
             "file": "src/components/NoxWidgets.tsx",
@@ -7569,7 +7406,7 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 35,
+            "line": 33,
             "kind": "factory-call"
           },
           {
@@ -7579,17 +7416,12 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 39,
+            "line": 40,
             "kind": "factory-call"
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 42,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/NoxWidgets.tsx",
-            "line": 246,
+            "line": 244,
             "kind": "factory-call"
           },
           {
@@ -7599,277 +7431,187 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 106,
+            "line": 91,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 108,
+            "line": 93,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 110,
+            "line": 95,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 112,
+            "line": 97,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 114,
+            "line": 99,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 116,
+            "line": 101,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 118,
+            "line": 103,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 120,
+            "line": 105,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 122,
+            "line": 107,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 124,
+            "line": 109,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 126,
+            "line": 111,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 128,
+            "line": 113,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 130,
+            "line": 115,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 132,
+            "line": 117,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 134,
+            "line": 119,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 136,
+            "line": 121,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 138,
+            "line": 123,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 140,
+            "line": 125,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 142,
+            "line": 127,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 144,
+            "line": 129,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 146,
+            "line": 131,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 148,
+            "line": 133,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 150,
+            "line": 135,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 152,
+            "line": 137,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 154,
+            "line": 139,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 156,
+            "line": 141,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 158,
+            "line": 143,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 160,
+            "line": 145,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 162,
+            "line": 147,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 164,
+            "line": 149,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 166,
+            "line": 151,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 168,
+            "line": 153,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 170,
+            "line": 155,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 172,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 6,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 35,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 38,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 45,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/automationParts.tsx",
-            "line": 52,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 21,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 30,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 19,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 34,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 21,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 26,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 10,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/ExplanationForm.tsx",
-            "line": 11,
+            "line": 157,
             "kind": "factory-call"
           },
           {
             "file": "src/components/qaqcTriage/FocusEditor.tsx",
             "line": 2,
             "kind": "named"
-          },
-          {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 18,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
-            "line": 19,
-            "kind": "factory-call"
           },
           {
             "file": "src/components/qaqcTriage/FocusEditor.tsx",
             "line": 20,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "line": 21,
             "kind": "factory-call"
           },
           {
@@ -7948,43 +7690,28 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 60,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/violations/PeriodsList.tsx",
-            "line": 61,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 22,
+            "line": 21,
             "kind": "factory-call"
           },
           {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 24,
+            "line": 23,
             "kind": "factory-call"
           },
           {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 26,
+            "line": 25,
             "kind": "factory-call"
           },
           {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
-            "line": 28,
+            "line": 27,
             "kind": "factory-call"
           },
           {
@@ -7994,17 +7721,17 @@
           },
           {
             "file": "src/routes/flow-diagnosis/index.tsx",
+            "line": 18,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/flow-diagnosis/index.tsx",
             "line": 19,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/flow-diagnosis/index.tsx",
             "line": 20,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/flow-diagnosis/index.tsx",
-            "line": 21,
             "kind": "factory-call"
           },
           {
@@ -8054,47 +7781,22 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 101,
+            "line": 106,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 102,
+            "line": 107,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 103,
+            "line": 109,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 105,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 108,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 110,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 111,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 113,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 116,
+            "line": 112,
             "kind": "factory-call"
           },
           {
@@ -8114,17 +7816,17 @@
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 51,
+            "line": 47,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 52,
+            "line": 48,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
-            "line": 53,
+            "line": 49,
             "kind": "factory-call"
           },
           {
@@ -8151,6 +7853,26 @@
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 87,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 90,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 93,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 96,
+            "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
@@ -8184,57 +7906,37 @@
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 117,
+            "line": 128,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 120,
+            "line": 131,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 123,
+            "line": 134,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 126,
+            "line": 137,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 140,
+            "line": 144,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 143,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 146,
+            "line": 147,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 149,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 156,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 159,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/tools/ftir-gap-fill.tsx",
-            "line": 161,
             "kind": "factory-call"
           },
           {
@@ -8269,27 +7971,27 @@
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 33,
+            "line": 31,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 48,
+            "line": 46,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 55,
+            "line": 53,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 58,
+            "line": 56,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/violations/grid.tsx",
-            "line": 65,
+            "line": 63,
             "kind": "factory-call"
           }
         ],
@@ -9589,8 +9291,14 @@
       "jtf-ui",
       "thorcasting-ui"
     ],
+    "BaselineClusterRow": [
+      "jtf-ui"
+    ],
     "BaselineDot": [
       "thorcasting-ui"
+    ],
+    "BaselineSpreadRow": [
+      "jtf-ui"
     ],
     "BatchProgressState": [
       "goose-ui"
@@ -9669,6 +9377,9 @@
     "CheckboxField": [
       "dside-work"
     ],
+    "ChipCluster": [
+      "jtf-ui"
+    ],
     "ClusterRow": [
       "dside-ui",
       "goose-ui",
@@ -9682,6 +9393,9 @@
     ],
     "ColorVariant": [
       "thorcasting-ui"
+    ],
+    "Column": [
+      "jtf-ui"
     ],
     "Combobox": [
       "amygdala-ui"
@@ -9702,6 +9416,9 @@
       "dside-ui"
     ],
     "ContentStack": [
+      "jtf-ui"
+    ],
+    "ContentSurface": [
       "jtf-ui"
     ],
     "ConversationMessage": [
@@ -9746,6 +9463,9 @@
     "DangerAlert": [
       "jtf-ui",
       "thorcasting-ui"
+    ],
+    "DangerBody": [
+      "jtf-ui"
     ],
     "DangerButton": [
       "dside-ui",
@@ -9823,7 +9543,13 @@
       "goose-ui",
       "jtf-ui"
     ],
+    "FillColumnFlush": [
+      "jtf-ui"
+    ],
     "FilterableTable": [
+      "jtf-ui"
+    ],
+    "FlexRow": [
       "jtf-ui"
     ],
     "FloatCell": [
@@ -10210,6 +9936,9 @@
     "StatusLightDataProps": [
       "dside-ui"
     ],
+    "StretchRow": [
+      "jtf-ui"
+    ],
     "StringCell": [
       "jtf-ui",
       "thorcasting-ui"
@@ -10327,6 +10056,9 @@
     "ThroughputPoint": [
       "goose-ui"
     ],
+    "TightCenteredColumn": [
+      "jtf-ui"
+    ],
     "TightClusterRow": [
       "jtf-ui"
     ],
@@ -10373,6 +10105,9 @@
     "TopClusterRow": [
       "jtf-ui"
     ],
+    "TopSpreadRow": [
+      "jtf-ui"
+    ],
     "TrendSparkline": [
       "thorcasting-ui"
     ],
@@ -10390,6 +10125,7 @@
       "thorcasting-ui"
     ],
     "WarningBadge": [
+      "jtf-ui",
       "thorcasting-ui"
     ],
     "WarningButton": [
@@ -10484,7 +10220,6 @@
     ],
     "createEmptyState": [
       "goose-ui",
-      "jtf-ui",
       "thorcasting-ui"
     ],
     "createExtractionBoard": [

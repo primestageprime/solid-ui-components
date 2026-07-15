@@ -82,6 +82,12 @@ export const SmallGhostButton: Component<ButtonDataProps> = createButton({
   size: "sm",
 });
 
+// Small outlined button — compact mid-emphasis action (accent border + text)
+export const SmallOutlinedButton: Component<ButtonDataProps> = createButton({
+  variant: "outlined",
+  size: "sm",
+});
+
 // Small warning button — compact amber caution action (not destructive)
 export const SmallWarningButton: Component<ButtonDataProps> = createButton({
   variant: "warning",

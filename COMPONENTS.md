@@ -280,7 +280,7 @@ State derivation:
     - `outlined` — transparent fill with accent border + text; mid-emphasis
     - `text` — link-like; no border, no fill, accent text only
     - `icon-only` — 1.4rem square, accent-colored glyph, no border or fill; pair with an icon child
-- **PrimaryButton / SecondaryButton / DangerButton / WarningButton / GhostButton / OutlinedButton / TextButton / IconOnlyButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / SmallWarningButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. Same pattern should be applied to Cell and Layout curried variants when they're first consumed downstream (see TODO.md).
+- **PrimaryButton / SecondaryButton / DangerButton / WarningButton / GhostButton / OutlinedButton / TextButton / IconOnlyButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / SmallOutlinedButton / SmallWarningButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. Same pattern should be applied to Cell and Layout curried variants when they're first consumed downstream (see TODO.md).
 
 ## ButtonGroup
 - **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
@@ -1328,7 +1328,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **TextValue** — `variant="value"`. Use for: data values, readouts.
   - **TextLabel** — `variant="label"`. Use for: field labels, captions.
   - **TextTitle** — `variant="title"`. Use for: section/panel titles (renders `<span>`).
-  - **PageTitle** — `variant="title"`, `as="h1"`. Use for: top-level page headings.
+  - **PageTitle / SectionTitle / SubsectionTitle / TopicTitle** — `variant="title"` with `as="h1"`/`"h2"`/`"h3"`/`"h4"`. Use for: semantic document headings — pick the level that matches the outline depth (all share the `title` typography).
   - **TextBody** — `variant="body"`. Use for: paragraph text, descriptions.
   - **TextUnits** — `variant="units"`. Use for: unit labels next to values.
   - **TextSublabel** — `variant="sublabel"`. Use for: secondary labels, footnotes.
@@ -1336,7 +1336,11 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **NowrapBody** — Body text that never wraps. Use for: inline formatted values.
   - **MutedBody** — Dim body text. Use for: secondary descriptions, hints.
   - **AccentBody** — Cyan-accented body text. Use for: highlighted descriptions.
-  - **DangerBody** — Danger-tinted body text. Use for: inline error reasons in detail panels.
+  - **DangerBody / WarningBody / SuccessBody** — Status-tinted body text (`--sui-danger`/`--sui-warning`/`--sui-success`). Use for: inline error reasons, caution notes, confirmation notes in detail panels.
+  - **EmphasisBody** — Inline bold (600) body `<span>`. Use for: emphasizing a word/value inside a table cell or label. **AccentEmphasisBody** — accent-colored sibling for emphasized counts/values.
+  - **NoteText** — Italic sublabel `<span>`. Use for: parenthetical default/fallback annotations beside a value.
+  - **DangerSublabel** — Danger-tinted sublabel `<span>`. Use for: compact inline error captions beside a control.
+  - **CaptionLabel** — Uppercase, letter-spaced, secondary-tone `label` (0.9rem). Use for: small section captions above a table/card group. **AccentCaptionLabel** — accent-colored sibling (0.85rem) for settings-style column headings.
   - **MonoMeta** — Mono meta text (11px monospace, muted). Use for: panel subtitles, tiny section labels (SOURCE/LOCAL/COLS-style), footnotes beside data readouts. Library-side replacement for the dev-only `.text-meta` showcase class — library components must not use that class.
   - **FlexLabel** — Label that grows to fill available space. Use for: label + value rows.
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
