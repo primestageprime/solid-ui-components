@@ -110,6 +110,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "fit",
     "getRowClass",
     "onRowClick",
+    "onRowHover",
     "emptyMessage",
     "rowActions",
     "spanRow",
@@ -326,7 +327,10 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                 </thead>
               )}
             </Show>
-            <tbody class="hud-table__body">
+            <tbody
+              class="hud-table__body"
+              onMouseLeave={() => local.onRowHover?.(null, -1)}
+            >
               <For each={sortedData()}>
                 {(row, rowIndex) => {
                   // Per-row tail-collapse: index of the column from which the row
@@ -343,6 +347,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                     <tr
                       class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
                       onClick={() => local.onRowClick?.(row, rowIndex())}
+                      onMouseEnter={() => local.onRowHover?.(row, rowIndex())}
                       style={clickableCursor(!!local.onRowClick)}
                     >
                       <Show

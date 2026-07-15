@@ -54,6 +54,12 @@ export interface BaseTableProps<T>
   fit?: boolean;
   getRowClass?: (row: T, index: number) => string;
   onRowClick?: (row: T, index: number) => void;
+  /**
+   * Row hover callback for cross-highlighting (e.g. a table row ↔ a chart
+   * point). Fires with `(row, index)` on row enter and `(null, -1)` when the
+   * pointer leaves the table body.
+   */
+  onRowHover?: (row: T | null, index: number) => void;
   emptyMessage?: string;
   /**
    * Optional per-row trailing action slot. When provided, an extra cell is
