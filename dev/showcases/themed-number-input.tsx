@@ -1,6 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 export const ThemedNumberInputShowcase: Component = () => {
@@ -27,13 +28,15 @@ export const ThemedNumberInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Default (zero config)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          No label, no bounds, step 1. Emits `undefined` when cleared (kobalte's
-          NaN is normalized out).
-        </div>
-        <div style={{ "max-width": "240px" }}>
-          <ThemedNumberInput name="plain" value={plain} onChange={setPlain} />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            No label, no bounds, step 1. Emits `undefined` when cleared
+            (kobalte's NaN is normalized out).
+          </div>
+          <div style={{ "max-width": "240px" }}>
+            <ThemedNumberInput name="plain" value={plain} onChange={setPlain} />
+          </div>
+        </NarrowStack>
         <Text variant="sublabel">
           Value: {plain() === undefined ? "(none)" : String(plain())}
         </Text>
@@ -69,39 +72,43 @@ export const ThemedNumberInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>With error message</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          When `errorMessage` is present, the field renders in invalid state and
-          the description (if any) is suppressed.
-        </div>
-        <div style={{ "max-width": "320px" }}>
-          <ThemedNumberInput
-            name="elevation"
-            label="Elevation (m)"
-            description="Positive integer, metres above sea level."
-            value={withError}
-            onChange={setWithError}
-            errorMessage={errorMessage()}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            When `errorMessage` is present, the field renders in invalid state
+            and the description (if any) is suppressed.
+          </div>
+          <div style={{ "max-width": "320px" }}>
+            <ThemedNumberInput
+              name="elevation"
+              label="Elevation (m)"
+              description="Positive integer, metres above sea level."
+              value={withError}
+              onChange={setWithError}
+              errorMessage={errorMessage()}
+            />
+          </div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Bounded (min + max + step)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `min=0`, `max=1000`, `step=50`. The stepper triggers disable at the
-          bounds via kobalte's built-in behavior.
-        </div>
-        <div style={{ "max-width": "240px" }}>
-          <ThemedNumberInput
-            name="rpm"
-            label="RPM"
-            value={bounded}
-            onChange={setBounded}
-            min={0}
-            max={1000}
-            step={50}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `min=0`, `max=1000`, `step=50`. The stepper triggers disable at the
+            bounds via kobalte's built-in behavior.
+          </div>
+          <div style={{ "max-width": "240px" }}>
+            <ThemedNumberInput
+              name="rpm"
+              label="RPM"
+              value={bounded}
+              onChange={setBounded}
+              min={0}
+              max={1000}
+              step={50}
+            />
+          </div>
+        </NarrowStack>
         <Stack gap="xs">
           <Text variant="sublabel">
             Value: {bounded() === undefined ? "(none)" : String(bounded())}
@@ -111,18 +118,20 @@ export const ThemedNumberInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Disabled</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `disabled` forwarded to kobalte's root — input and triggers are
-          non-interactive and opacity drops.
-        </div>
-        <div style={{ "max-width": "240px" }}>
-          <ThemedNumberInput
-            name="locked"
-            label="Threshold (locked)"
-            value={locked}
-            disabled
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `disabled` forwarded to kobalte's root — input and triggers are
+            non-interactive and opacity drops.
+          </div>
+          <div style={{ "max-width": "240px" }}>
+            <ThemedNumberInput
+              name="locked"
+              label="Threshold (locked)"
+              value={locked}
+              disabled
+            />
+          </div>
+        </NarrowStack>
       </div>
     </div>
   );

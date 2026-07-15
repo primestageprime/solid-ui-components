@@ -12,7 +12,15 @@ import {
   IconOnlyButton,
 } from "../../src/components/Button";
 import { Stack } from "../../src/components/Layout/Stack";
-import { SpreadRow, ClusterRow, WrapRow } from "../../src/components/Layout";
+import {
+  SpreadRow,
+  ClusterRow,
+  NarrowStack,
+  TagRow,
+  TightStack,
+  TopClusterRow,
+  WrappedClusterRow,
+} from "../../src/components/Layout";
 import { CardSurface } from "../../src/components/Surface";
 import { Text } from "../../src/components/Text/Text";
 
@@ -22,10 +30,10 @@ import { Text } from "../../src/components/Text/Text";
 const GuidanceRow: Component<{ button: JSX.Element; children: JSX.Element }> = (
   props,
 ) => (
-  <ClusterRow style={{ "align-items": "flex-start", gap: "16px" }}>
+  <TopClusterRow>
     <div style={{ "min-width": "150px", display: "flex" }}>{props.button}</div>
     <Text variant="body">{props.children}</Text>
-  </ClusterRow>
+  </TopClusterRow>
 );
 
 // One practical example: a framed card with a title, a one-line caption that
@@ -35,11 +43,11 @@ const Example: Component<{
   caption: string;
   children: JSX.Element;
 }> = (props) => (
-  <Stack gap="xs" style={{ "max-width": "520px" }}>
+  <TightStack style={{ "max-width": "520px" }}>
     <Text variant="sublabel">{props.title}</Text>
     <CardSurface>{props.children}</CardSurface>
     <div class="text-meta">{props.caption}</div>
-  </Stack>
+  </TightStack>
 );
 
 export const ButtonShowcase: Component = () => {
@@ -65,13 +73,12 @@ export const ButtonShowcase: Component = () => {
       {/* ============================================================ */}
       <div class="example-group">
         <h3>When to use each style</h3>
-        <p class="text-meta">
-          One emphasis per intent. Pick the style by the job the button does,
-          not by how it looks — a consistent hierarchy is what makes a screen
-          readable.
-        </p>
-
-        <Stack gap="sm" style={{ "margin-top": "12px" }}>
+        <NarrowStack>
+          <p class="text-meta">
+            One emphasis per intent. Pick the style by the job the button does,
+            not by how it looks — a consistent hierarchy is what makes a screen
+            readable.
+          </p>
           <GuidanceRow button={<PrimaryButton>Save changes</PrimaryButton>}>
             <strong>primary</strong> — the single main affirmative action of a
             view or dialog (submit / save / confirm). At most one per context;
@@ -128,7 +135,7 @@ export const ButtonShowcase: Component = () => {
             Always pass an `aria-label`. Good for close / overflow affordances
             inside dense chrome.
           </GuidanceRow>
-        </Stack>
+        </NarrowStack>
       </div>
 
       {/* ============================================================ */}
@@ -136,13 +143,12 @@ export const ButtonShowcase: Component = () => {
       {/* ============================================================ */}
       <div class="example-group">
         <h3>Practical examples</h3>
-        <p class="text-meta">
-          Buttons rarely appear alone — hierarchy is established by how they sit
-          together. Each composition below pairs a quiet dismiss with exactly
-          one emphasised action.
-        </p>
-
-        <Stack gap="sm" style={{ "margin-top": "12px" }}>
+        <NarrowStack>
+          <p class="text-meta">
+            Buttons rarely appear alone — hierarchy is established by how they
+            sit together. Each composition below pairs a quiet dismiss with
+            exactly one emphasised action.
+          </p>
           <Example
             title="Dialog footer — save"
             caption="Ghost 'Cancel' recedes; one filled primary carries the affirmative action."
@@ -208,7 +214,7 @@ export const ButtonShowcase: Component = () => {
               <DangerButton>Delete</DangerButton>
             </ClusterRow>
           </Example>
-        </Stack>
+        </NarrowStack>
       </div>
 
       {/* ============================================================ */}
@@ -216,29 +222,28 @@ export const ButtonShowcase: Component = () => {
       {/* ============================================================ */}
       <div class="example-group">
         <h3>Modifiers reference</h3>
-        <p class="text-meta">
-          Size, shape, tone and state are orthogonal modifiers — they compose
-          with any of the styles above. Kept brief; the emphasis policy is the
-          when-to-use guidance.
-        </p>
-
-        <Stack gap="sm" style={{ "margin-top": "12px" }}>
+        <NarrowStack>
+          <p class="text-meta">
+            Size, shape, tone and state are orthogonal modifiers — they compose
+            with any of the styles above. Kept brief; the emphasis policy is the
+            when-to-use guidance.
+          </p>
           <div>
             <Text variant="sublabel">Sizes</Text>
-            <div class="example-row" style={{ "align-items": "center" }}>
+            <WrappedClusterRow>
               <Button size="sm">Small</Button>
               <Button size="md">Medium</Button>
               <Button size="lg">Large</Button>
-            </div>
+            </WrappedClusterRow>
           </div>
 
-          <div>
+          <NarrowStack>
             <Text variant="sublabel">Pill shape + tone</Text>
             <div class="text-meta">
               Pure shape variant; composes with size and the
               accent/outline/muted tone matrix.
             </div>
-            <WrapRow style={{ "align-items": "center", "margin-top": "8px" }}>
+            <TagRow>
               <Button variant="pill">Default</Button>
               <Button variant="pill" size="sm">
                 Small
@@ -252,8 +257,8 @@ export const ButtonShowcase: Component = () => {
               <Button variant="pill" tone="muted">
                 Muted
               </Button>
-            </WrapRow>
-          </div>
+            </TagRow>
+          </NarrowStack>
 
           <div>
             <Text variant="sublabel">States</Text>
@@ -273,7 +278,7 @@ export const ButtonShowcase: Component = () => {
             are exported from the Button barrel and are the preferred call-site
             form — emphasis is chosen by name, never by a `variant` prop.
           </div>
-        </Stack>
+        </NarrowStack>
       </div>
     </div>
   );

@@ -1,5 +1,11 @@
 import { type Component, createSignal, For } from "solid-js";
 import { SortableList } from "../../src/components/SortableList";
+import {
+  NarrowStack,
+  TightStack,
+  WrappedClusterRow,
+} from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 // ── Sample data ───────────────────────────────────────────────────────────
 
@@ -47,7 +53,7 @@ const applyReorder = (tasks: Task[], nextIds: string[]): Task[] => {
 
 /** Current-order readout rendered beneath the list (mirrors the pill-bar demo). */
 const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
-  <div style={{ display: "flex", "flex-direction": "column", gap: "6px" }}>
+  <NarrowStack>
     <span
       style={{
         "font-size": "10px",
@@ -58,14 +64,7 @@ const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
     >
       Current order
     </span>
-    <div
-      style={{
-        display: "flex",
-        gap: "8px",
-        "align-items": "center",
-        "flex-wrap": "wrap",
-      }}
-    >
+    <WrappedClusterRow>
       <For each={props.tasks}>
         {(t, idx) => (
           <>
@@ -78,18 +77,12 @@ const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
             >
               {idx() + 1}. {t.id}
             </span>
-            {idx() < props.tasks.length - 1 && (
-              <span
-                style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}
-              >
-                →
-              </span>
-            )}
+            {idx() < props.tasks.length - 1 && <TextSublabel>→</TextSublabel>}
           </>
         )}
       </For>
-    </div>
-  </div>
+    </WrappedClusterRow>
+  </NarrowStack>
 );
 
 // ── Main showcase ─────────────────────────────────────────────────────────
@@ -148,25 +141,12 @@ export const SortableListShowcase: Component = () => {
             getId={(t) => t.id}
             onReorder={(nextIds) => setTasks(applyReorder(tasks(), nextIds))}
             renderItem={(t) => (
-              <div
-                style={{
-                  display: "flex",
-                  "flex-direction": "column",
-                  gap: "2px",
-                }}
-              >
+              <TightStack>
                 <span style={{ "font-weight": 600, "font-size": "13px" }}>
                   {t.title}
                 </span>
-                <span
-                  style={{
-                    "font-size": "11px",
-                    color: "var(--sui-text-muted)",
-                  }}
-                >
-                  {t.detail}
-                </span>
-              </div>
+                <TextSublabel>{t.detail}</TextSublabel>
+              </TightStack>
             )}
             label="Task list"
           />

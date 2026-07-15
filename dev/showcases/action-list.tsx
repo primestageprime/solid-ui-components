@@ -1,5 +1,9 @@
 import { Component, createMemo, createSignal, Show } from "solid-js";
-import { SectionTitle, MutedBody } from "../../src/components/Text";
+import { SectionTitle, MutedBody, TextSublabel } from "../../src/components/Text";
+import {
+  WrappedClusterRow,
+  TightCenteredColumn,
+} from "../../src/components/Layout";
 import { ActionListItem, type ActionListItemTone } from "../../src/components/ActionListItem";
 import {
   ActionList,
@@ -464,26 +468,17 @@ export const ActionListShowcase: Component = () => {
         clash (<b>Ada Lovelace</b>, <b>Deep Agent</b>) keep a single letter. Hover any
         glyph for the full name.
       </MutedBody>
-      <div style={{ display: "flex", "align-items": "center", gap: "16px", "flex-wrap": "wrap" }}>
+      <WrappedClusterRow>
         {(() => {
           const initials = deriveInitials(rosterNames);
           return roster.map((person) => (
-            <div
-              style={{
-                display: "flex",
-                "flex-direction": "column",
-                "align-items": "center",
-                gap: "4px",
-                color: "var(--sui-text)",
-              }}
-              title={person.name}
-            >
+            <TightCenteredColumn title={person.name}>
               <AssigneeIcon initials={initials.get(person.name)!} kind={person.kind} />
-              <span style={{ "font-size": "0.75rem", opacity: 0.7 }}>{person.name}</span>
-            </div>
+              <TextSublabel>{person.name}</TextSublabel>
+            </TightCenteredColumn>
           ));
         })()}
-      </div>
+      </WrappedClusterRow>
 
       <SectionTitle>Composed tag pairs — composeTagPairs</SectionTitle>
       <MutedBody>

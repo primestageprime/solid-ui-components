@@ -13,8 +13,11 @@ import {
 import type { DAGNode, NodeRenderState } from "../../src/components/DagChart";
 import { Surface } from "../../src/components/Surface/Surface";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack, ClusterRow } from "../../src/components/Layout";
 import {
   TextLabel,
+  TextSublabel,
+  MutedBody,
   EllipsizedTitle,
   SectionTitle,
   SubsectionTitle,
@@ -422,8 +425,8 @@ const AnimatedChain: Component = () => {
   } as const;
 
   return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+    <NarrowStack>
+      <ClusterRow>
         <button
           type="button"
           style={btnStyle}
@@ -442,10 +445,10 @@ const AnimatedChain: Component = () => {
         <button type="button" style={btnStyle} onClick={advance}>
           Next →
         </button>
-        <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
+        <TextSublabel>
           frame {idx() + 1} / {history().length}
-        </span>
-      </div>
+        </TextSublabel>
+      </ClusterRow>
       <div
         style={{
           width: "100%",
@@ -463,7 +466,7 @@ const AnimatedChain: Component = () => {
           renderNode={renderAnimNode}
         />
       </div>
-    </div>
+    </NarrowStack>
   );
 };
 
@@ -552,20 +555,14 @@ export const SwimlaneChartShowcase: Component = () => {
 
         <div class="workshop-grid__cell">
           <SubsectionTitle>9 · animated linear chain (live)</SubsectionTitle>
-          <p
-            style={{
-              "font-size": "12px",
-              color: "var(--sui-text-secondary)",
-              margin: "8px 0",
-            }}
-          >
+          <MutedBody>
             8-node chain ticking through TODO → DOING → DONE. Col is the signed
             graph distance from the current DOING node, so the whole chain
             slides horizontally as work progresses. Resize the window to see the
             depth ring compress: overflow nodes collapse into per-side boundary
             badges. Uses <code>LinearFlowSwimlaneChart</code> (the curried
             variant).
-          </p>
+          </MutedBody>
           <JsonPanel
             value={{ nodes: ANIM_CHAIN_NODES, edges: ANIM_CHAIN_EDGES }}
             heightLines={10}

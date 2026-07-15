@@ -19,6 +19,8 @@ import {
 // Pull in the card/popover CSS (normally loaded via SwimlaneAnimatedLane).
 import "../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.css";
 import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
+import { MonoMeta } from "../../src/components/Text";
+import { NarrowStack } from "../../src/components/Layout";
 
 const [NODE_W, NODE_H] = ANIMATED_SWIMLANE_DEFAULTS.nodeSize;
 
@@ -99,15 +101,7 @@ const HoverCardSlot: Component<{ node: StatusFlowNode }> = (props) => {
 };
 
 const Caption: Component<{ children: any }> = (props) => (
-  <div
-    style={{
-      "font-size": "12px",
-      color: "rgba(255,255,255,0.55)",
-      "font-family": "ui-monospace, SFMono-Regular, monospace",
-    }}
-  >
-    {props.children}
-  </div>
+  <MonoMeta>{props.children}</MonoMeta>
 );
 
 export const SwimlaneNodeCardShowcase: Component = () => (
@@ -133,29 +127,29 @@ export const SwimlaneNodeCardShowcase: Component = () => (
       text into the hover popover.
     </div>
 
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+    <NarrowStack>
       <Caption>short title — estimate 3d / actual 4d</Caption>
       <CardSlot node={SHORT} />
-    </div>
+    </NarrowStack>
 
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+    <NarrowStack>
       <Caption>
         long title — clamps to 3 lines; hover to reveal the full text
       </Caption>
       <HoverCardSlot node={LONG} />
-    </div>
+    </NarrowStack>
 
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+    <NarrowStack>
       <Caption>unclaimed (no claimedBy) + subtitle + estimate only</Caption>
       <CardSlot node={WITH_SUBTITLE} />
-    </div>
+    </NarrowStack>
 
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+    <NarrowStack>
       <Caption>parent row (DONE) — no estimate/actual</Caption>
       <CardSlot
         node={{ id: "p", title: "Patch the roof", status: "DONE" }}
         parent
       />
-    </div>
+    </NarrowStack>
   </div>
 );

@@ -23,6 +23,8 @@ import {
   slotId,
   type Id,
 } from "../../src/components/Chart";
+import { ClusterRow } from "../../src/components/Layout";
+import { SubsectionTitle } from "../../src/components/Text";
 
 const STRIP_HEIGHT = 10;
 const TICK_LENGTH = 4;
@@ -151,15 +153,7 @@ export const DotchartShowcase: Component = () => {
         strips anchored in <code>margin-bottom</code>, with x-axis ticks pushed
         below.
       </p>
-      <div
-        class="text-meta"
-        style={{
-          display: "flex",
-          "align-items": "center",
-          gap: "8px",
-          "margin-bottom": "8px",
-        }}
-      >
+      <ClusterRow class="text-meta">
         <span>Highlight status:</span>
         <For each={["OK", "WARNING", "ALARM"]}>
           {(status) => (
@@ -193,7 +187,7 @@ export const DotchartShowcase: Component = () => {
         <span style={{ opacity: 0.6 }}>
           ← hover a chip; every bar with that state glows
         </span>
-      </div>
+      </ClusterRow>
       <Chart
         width={800}
         height={300}
@@ -278,8 +272,8 @@ export const DotchartShowcase: Component = () => {
         class="example-group"
         style={{ "margin-top": "16px", "max-width": "800px" }}
       >
-        <h3 style={{ margin: "0 0 4px 0" }}>Drag-off-edge proof</h3>
-        <p class="text-meta" style={{ margin: "0 0 8px 0" }}>
+        <SubsectionTitle>Drag-off-edge proof</SubsectionTitle>
+        <p class="text-meta">
           Press inside the chart and drag. To prove the fix: (1) drag past the{" "}
           <strong>right edge</strong> — the range should extend to the domain
           max <code>{fmtClock(t1)}</code>, not freeze at the last in-bounds
@@ -343,16 +337,16 @@ export const DotchartShowcase: Component = () => {
         </div>
       </div>
 
-      <div class="example-group" style={{ "margin-top": "16px" }}>
-        <h3 style={{ margin: "0 0 4px 0" }}>Timeline-bar data check</h3>
-        <p class="text-meta" style={{ margin: "0 0 8px 0" }}>
+      <div class="example-group">
+        <SubsectionTitle>Timeline-bar data check</SubsectionTitle>
+        <p class="text-meta">
           Hover any bar above to highlight its row below and pop dashed
           reference lines at its start/end on the chart. If the rendered rect
           doesn't line up with the dashed lines, the time → pixel mapping is
           wrong; if it does, the data itself is correct and any visual mismatch
           is downstream.
         </p>
-        <div class="text-meta" style={{ "margin-bottom": "8px" }}>
+        <div class="text-meta">
           Domain: <code>{fmtClock(t0)}</code> → <code>{fmtClock(t1)}</code> (
           {fmtDuration(t0, t1)}, t0 = <code>{t0}</code>)
         </div>

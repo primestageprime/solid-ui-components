@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
 import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
+import { NarrowStack } from "../../src/components/Layout";
+import { TextBody } from "../../src/components/Text";
 
 // A single frame inside the showcase so each variant renders at a bounded
 // height. The dev shell does not grant the component a viewport, so we set
@@ -16,7 +18,7 @@ const Frame: Component<{ label: string; children: any }> = (props) => (
 const DemoTopBar = () => (
   <>
     <strong style={{ color: "var(--sui-accent)" }}>Alarm Lab</strong>
-    <span style={{ color: "var(--sui-text-secondary)" }}>/ Explanation</span>
+    <TextBody>/ Explanation</TextBody>
   </>
 );
 
@@ -173,19 +175,21 @@ export const ThreePanelLayoutShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Explicit viewport height (caller-controlled)</h3>
-        <Frame label='height="100%"  — wrap in a container to get "viewport minus header"'>
-          <ThreePanelLayout
-            height="100%"
-            topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
-            centerPanel={<DemoCenter />}
-            rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
-          />
-        </Frame>
-        <p class="text-meta" style={{ "margin-top": "8px" }}>
-          For "viewport minus app header" pass{" "}
-          <code>height="calc(100vh - var(--app-header-height, 64px))"</code>.
-        </p>
+        <NarrowStack>
+          <Frame label='height="100%"  — wrap in a container to get "viewport minus header"'>
+            <ThreePanelLayout
+              height="100%"
+              topBar={<DemoTopBar />}
+              leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
+              centerPanel={<DemoCenter />}
+              rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
+            />
+          </Frame>
+          <p class="text-meta">
+            For "viewport minus app header" pass{" "}
+            <code>height="calc(100vh - var(--app-header-height, 64px))"</code>.
+          </p>
+        </NarrowStack>
       </div>
     </div>
   );

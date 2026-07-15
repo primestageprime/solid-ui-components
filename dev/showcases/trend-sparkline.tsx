@@ -3,6 +3,12 @@ import {
   TrendSparkline,
   trendOf,
 } from "../../src/components/TrendSparkline/TrendSparkline";
+import {
+  ClusterRow,
+  TightStack,
+  WrappedClusterRow,
+} from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 export const TrendSparklineShowcase: Component = () => {
   // Live-appending signal demo
@@ -51,48 +57,35 @@ export const TrendSparklineShowcase: Component = () => {
 
       <h3>Trend directions</h3>
       <div class="example-group">
-        <div
-          style={{
-            display: "flex",
-            gap: "24px",
-            "align-items": "center",
-            "flex-wrap": "wrap",
-          }}
-        >
-          <div style={{ display: "flex", "flex-direction": "column", gap: "4px" }}>
-            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
-              UP
-            </span>
+        <WrappedClusterRow>
+          <TightStack>
+            <TextSublabel>UP</TextSublabel>
             <TrendSparkline
               values={upValues}
               trend={trendOf(upValues[0], upValues[upValues.length - 1])}
               width={120}
               height={32}
             />
-          </div>
-          <div style={{ display: "flex", "flex-direction": "column", gap: "4px" }}>
-            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
-              DOWN
-            </span>
+          </TightStack>
+          <TightStack>
+            <TextSublabel>DOWN</TextSublabel>
             <TrendSparkline
               values={downValues}
               trend={trendOf(downValues[0], downValues[downValues.length - 1])}
               width={120}
               height={32}
             />
-          </div>
-          <div style={{ display: "flex", "flex-direction": "column", gap: "4px" }}>
-            <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
-              FLAT
-            </span>
+          </TightStack>
+          <TightStack>
+            <TextSublabel>FLAT</TextSublabel>
             <TrendSparkline
               values={flatValues}
               trend={trendOf(flatValues[0], flatValues[flatValues.length - 1])}
               width={120}
               height={32}
             />
-          </div>
-        </div>
+          </TightStack>
+        </WrappedClusterRow>
       </div>
 
       <h3>
@@ -103,13 +96,7 @@ export const TrendSparklineShowcase: Component = () => {
         Pass the same <code>[min, max]</code> to all three for a common baseline.
       </p>
       <div class="example-group">
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            "align-items": "center",
-          }}
-        >
+        <ClusterRow>
           <TrendSparkline
             values={seriesA}
             trend={trendOf(seriesA[0], seriesA[seriesA.length - 1])}
@@ -131,7 +118,7 @@ export const TrendSparklineShowcase: Component = () => {
             height={28}
             yDomain={sharedDomain}
           />
-        </div>
+        </ClusterRow>
       </div>
 
       <h3>Live-appending signal</h3>

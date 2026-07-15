@@ -4,6 +4,8 @@ import {
   type CashflowCell,
 } from "../../src/components/CashflowScrubChart";
 import { dailyCells } from "../../src/components/DateAxis";
+import { ClusterRow } from "../../src/components/Layout";
+import { MutedBody } from "../../src/components/Text";
 
 // Deterministic stub for the demo. Real consumers wire this from their own
 // data source — CashflowScrubChart cares only about the per-day `cashflowCents`
@@ -123,13 +125,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           today={PINNED_TODAY}
         />
 
-        <div
-          style={{
-            "margin-top": "16px",
-            "font-size": "13px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <MutedBody>
           Selected:{" "}
           <strong style={{ color: "var(--sui-text-primary)" }}>
             {fmtDate(cell().start)}
@@ -141,7 +137,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           </strong>
           {" · Day cashflow: "}
           <span>{fmtDollars(cell().cashflowCents)}</span>
-        </div>
+        </MutedBody>
       </div>
 
       <div class="example-group">
@@ -259,15 +255,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           ]}
         />
 
-        <div
-          style={{
-            "margin-top": "12px",
-            display: "flex",
-            gap: "18px",
-            "font-size": "12px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <ClusterRow>
           <span>
             <span
               style={{
@@ -306,7 +294,7 @@ export const CashflowScrubChartShowcase: Component = () => {
             />
             Pessimistic (−$200/day)
           </span>
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
@@ -348,15 +336,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           ]}
         />
 
-        <div
-          style={{
-            "margin-top": "12px",
-            display: "flex",
-            gap: "18px",
-            "font-size": "12px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <ClusterRow>
           <span>
             <span
               style={{
@@ -402,7 +382,7 @@ export const CashflowScrubChartShowcase: Component = () => {
             />
             Target line
           </span>
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">

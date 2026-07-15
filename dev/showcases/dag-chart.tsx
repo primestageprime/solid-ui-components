@@ -5,6 +5,8 @@ import type {
   DAGEdge,
   NodeRenderState,
 } from "../../src/components/DagChart";
+import { ClusterRow } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 type TaskNode = {
   label: string;
@@ -144,7 +146,7 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
         "box-sizing": "border-box",
       }}
     >
-      <div style={{ display: "flex", "align-items": "center", gap: "6px" }}>
+      <ClusterRow>
         <span
           style={{
             width: "8px",
@@ -157,23 +159,16 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
         <span style={{ "font-weight": "600", "font-size": "13px" }}>
           {node.data.label}
         </span>
-      </div>
+      </ClusterRow>
       <Show when={node.data.sublabel || node.data.estimate}>
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            color: "var(--sui-text-secondary)",
-            "font-size": "11px",
-          }}
-        >
+        <ClusterRow>
           <Show when={node.data.sublabel}>
-            <span>{node.data.sublabel}</span>
+            <TextSublabel>{node.data.sublabel}</TextSublabel>
           </Show>
           <Show when={node.data.estimate}>
-            <span>· {node.data.estimate}</span>
+            <TextSublabel>· {node.data.estimate}</TextSublabel>
           </Show>
-        </div>
+        </ClusterRow>
       </Show>
     </div>
   );

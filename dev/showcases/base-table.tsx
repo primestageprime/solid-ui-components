@@ -9,6 +9,7 @@ import {
 import type { TableColumn } from "../../src/components/Table";
 import { IconOnlyButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
+import { NarrowStack } from "../../src/components/Layout";
 
 const sampleData = [
   {
@@ -295,28 +296,30 @@ export const BaseTableShowcase: Component = () => {
           />
 
           <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
-          <div>
-            <CompactTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              CompactTable — compact, stickyHeader, maxHeight: "300px"
+          <NarrowStack>
+            <div>
+              <CompactTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                CompactTable — compact, stickyHeader, maxHeight: "300px"
+              </div>
             </div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <StripedTable data={sampleData} columns={columns} />
-            <div class="text-meta">StripedTable — striped, hoverable</div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <StickyTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              StickyTable — stickyHeader, maxHeight: "400px"
+            <div>
+              <StripedTable data={sampleData} columns={columns} />
+              <div class="text-meta">StripedTable — striped, hoverable</div>
             </div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <DataTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              DataTable — striped, hoverable, stickyHeader, fill
+            <div>
+              <StickyTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                StickyTable — stickyHeader, maxHeight: "400px"
+              </div>
             </div>
-          </div>
+            <div>
+              <DataTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                DataTable — striped, hoverable, stickyHeader, fill
+              </div>
+            </div>
+          </NarrowStack>
         </div>
         <div class="depth2-atoms">
           <h3>Props</h3>
