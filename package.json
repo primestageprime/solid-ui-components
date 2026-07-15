@@ -70,7 +70,7 @@
     "build:server": "SUI_BUILD_TARGET=server vite build --mode production --ssr src/index.ts",
     "watch": "vite build --mode production --watch",
     "preview": "vite preview",
-    "prepare": "npm run build",
+    "prepare": "git config core.hooksPath githooks 2>/dev/null; npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "health": "node scripts/health.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",

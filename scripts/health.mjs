@@ -77,9 +77,12 @@ for (const f of walk(
 // Workshop benches count too (Peter ruling 2026-07-15): benches use the
 // curried SUI vocabulary like any showcase — inline styles there are
 // only for genuinely dynamic experiment geometry.
-let inlineStyleShowcases = 0;
+hits.inlineStyleShowcases = [];
 for (const f of walk(join(root, "dev/showcases"), (p) => p.endsWith(".tsx")))
-  for (const l of lines(f)) if (l.includes("style={{")) inlineStyleShowcases++;
+  lines(f).forEach((l, i) => {
+    if (l.includes("style={{"))
+      hits.inlineStyleShowcases.push(`${f.replace(root + "/", "")}:${i + 1}`);
+  });
 
 const foldersWithoutTests = componentDirs.filter(
   (d) =>
@@ -109,7 +112,7 @@ const metrics = {
   bareHexCss: hits.bareHexCss.length,
   bareHexTsx: hits.bareHexTsx.length,
   inlineStyleSrc: hits.inlineStyleSrc.length,
-  inlineStyleShowcases,
+  inlineStyleShowcases: hits.inlineStyleShowcases.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
   missingDepthHeaders: missingDepth.length,
@@ -123,8 +126,18 @@ const baseline = existsSync(BASELINE_PATH)
   ? JSON.parse(readFileSync(BASELINE_PATH, "utf8"))
   : null;
 
+const detail = {
+  bareHexCss: hits.bareHexCss,
+  bareHexTsx: hits.bareHexTsx,
+  inlineStyleSrc: hits.inlineStyleSrc,
+  inlineStyleShowcases: hits.inlineStyleShowcases,
+  foldersWithoutTests,
+  undocumentedComponents: undocumented,
+  missingDepthHeaders: missingDepth,
+};
+
 console.log("SUI health check (lower is better; 0 is the goal)\n");
-let regressed = false;
+const regressions = [];
 for (const [k, v] of Object.entries(metrics)) {
   const base = baseline?.[k];
   const status =
@@ -135,18 +148,12 @@ for (const [k, v] of Object.entries(metrics)) {
         : v < base
           ? `  ✓ improved (baseline ${base})`
           : "  = at baseline";
-  if (base !== undefined && v > base) regressed = true;
+  if (base !== undefined && v > base) regressions.push({ k, base, v });
   console.log(`  ${k.padEnd(24)} ${String(v).padStart(4)}${status}`);
 }
+const regressed = regressions.length > 0;
 
 if (verbose) {
-  const detail = {
-    bareHexCss: hits.bareHexCss,
-    bareHexTsx: hits.bareHexTsx,
-    foldersWithoutTests,
-    undocumentedComponents: undocumented,
-    missingDepthHeaders: missingDepth,
-  };
   for (const [k, list] of Object.entries(detail)) {
     if (!list.length) continue;
     console.log(`\n${k}:`);
@@ -158,8 +165,38 @@ if (updateBaseline) {
   writeFileSync(BASELINE_PATH, JSON.stringify(metrics, null, 2) + "\n");
   console.log(`\nBaseline updated: ${BASELINE_PATH}`);
 } else if (regressed) {
+  // Offenders in locally-changed files are almost always the culprits of a
+  // regression, so surface those first; fall back to a capped full list.
+  let changedFiles = [];
+  try {
+    const { execSync } = await import("node:child_process");
+    changedFiles = execSync(
+      "git diff --name-only @{upstream} 2>/dev/null || git diff --name-only HEAD",
+      { cwd: root, encoding: "utf8", shell: "/bin/sh" },
+    )
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    /* not a repo / no upstream — fall through to the capped list */
+  }
+
+  console.error("\n✗ Health regressed above baseline:");
+  const CAP = 25;
+  for (const { k, base, v } of regressions) {
+    console.error(`\n  ${k}: ${base} → ${v} (+${v - base})`);
+    const list = detail[k] ?? [];
+    const inChanged = list.filter((item) =>
+      changedFiles.some((f) => item.startsWith(f)),
+    );
+    const show = inChanged.length ? inChanged : list.slice(0, CAP);
+    if (inChanged.length)
+      console.error(`  offending lines in files changed since upstream:`);
+    for (const item of show) console.error(`    ${item}`);
+    if (!inChanged.length && list.length > CAP)
+      console.error(`    …and ${list.length - CAP} more (--verbose for all)`);
+  }
   console.error(
-    "\n✗ Health regressed above baseline. Fix the regression, or if the increase is deliberate and justified, run `npm run health -- --update-baseline` and commit the result.",
+    "\nFix the regression, or if the increase is deliberate and justified, run `npm run health -- --update-baseline` and commit the result.",
   );
   process.exit(1);
 } else {

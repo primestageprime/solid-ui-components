@@ -1,0 +1,21 @@
+#!/bin/sh
+# SUI health ratchet — gates PUSHES only, never commits (Peter ruling 2026-07-15).
+# Versioned in githooks/; wired via `git config core.hooksPath githooks`,
+# which the npm "prepare" script sets automatically on install.
+echo "pre-push: SUI health ratchet (scripts/health.mjs)…"
+if ! npm run --silent health; then
+  {
+    echo ""
+    echo "══════════════════════════════════════════════════════════════"
+    echo " ✗ PUSH BLOCKED — SUI health ratchet regressed above baseline"
+    echo ""
+    echo " The regressed check(s) and offending file:line locations are"
+    echo " listed above. Commits are never gated — fix and push again."
+    echo ""
+    echo "   full offender lists:  npm run health -- --verbose"
+    echo "   deliberate increase:  npm run health -- --update-baseline"
+    echo "                         (commit the baseline with your change)"
+    echo "══════════════════════════════════════════════════════════════"
+  } >&2
+  exit 1
+fi
