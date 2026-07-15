@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { StatusBadge } from "../../src/components/Badge/StatusBadge";
 import { ResultDisplay } from "../../src/components/DataDisplay";
+import { NarrowStack } from "../../src/components/Layout";
 
 export const ResultDisplayShowcase: Component = () => {
   return (
@@ -46,20 +47,21 @@ export const ResultDisplayShowcase: Component = () => {
         `createFormulaResult` to coordinate hover between a formula variable and
         its result row.
       </p>
-      <ResultDisplay
-        label="Highlightable (hover-affordance only)"
-        value="0.123"
-        units="g/kWh"
-        highlightable
-      />
-      <div style={{ "margin-top": "8px" }} />
-      <ResultDisplay
-        label="Highlighted (active tint)"
-        value="0.123"
-        units="g/kWh"
-        highlightable
-        highlighted
-      />
+      <NarrowStack>
+        <ResultDisplay
+          label="Highlightable (hover-affordance only)"
+          value="0.123"
+          units="g/kWh"
+          highlightable
+        />
+        <ResultDisplay
+          label="Highlighted (active tint)"
+          value="0.123"
+          units="g/kWh"
+          highlightable
+          highlighted
+        />
+      </NarrowStack>
     </div>
   );
 };

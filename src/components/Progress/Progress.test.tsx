@@ -74,11 +74,15 @@ describe("AsyncProgress", () => {
       <AsyncProgress processId="test-proc" label="Working" active={true} />
     ));
     expect(getByText("Working")).toBeTruthy();
-    // No stored max → percent() is null → the fill has no explicit width%.
+    // No stored max → percent() is null → the indeterminate modifier carries
+    // the fixed shuttle width + animation (see AsyncProgress.css).
     const fill = container.querySelector<HTMLElement>(
       ".async-progress__bar-fill",
     )!;
-    expect(fill.style.width).toBe("30%");
+    expect(
+      fill.classList.contains("async-progress__bar-fill--indeterminate"),
+    ).toBe(true);
+    expect(fill.style.width).toBe("");
   });
 
   it("renders a determinate fill when history exists in localStorage", () => {

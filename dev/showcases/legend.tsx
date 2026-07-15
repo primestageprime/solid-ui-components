@@ -1,6 +1,6 @@
 import { type Component, For, createSignal } from "solid-js";
 import { Legend, type LegendItem } from "../../src/components/Legend";
-import { NarrowStack, TightStack } from "../../src/components/Layout";
+import { ClusterRow, NarrowStack, TightStack } from "../../src/components/Layout";
 import { TextSublabel, MutedBody } from "../../src/components/Text";
 
 // Chart series — the canonical "this color means this line" case. Generic
@@ -55,7 +55,7 @@ const InteractiveLegendExample: Component = () => {
         highlightedLabel={hovered()}
         onItemHover={setHovered}
       />
-      <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
+      <ClusterRow style={{ "margin-top": "8px" }}>
         <For each={CHART_SERIES}>
           {(item) => (
             <div
@@ -86,7 +86,7 @@ const InteractiveLegendExample: Component = () => {
             </div>
           )}
         </For>
-      </div>
+      </ClusterRow>
       <MutedBody>
         Currently hovered: <code>{hovered() ?? "(none)"}</code>
       </MutedBody>

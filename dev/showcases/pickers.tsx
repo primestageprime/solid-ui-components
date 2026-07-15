@@ -10,6 +10,7 @@ import { type Component, createSignal } from "solid-js";
 import { DayOfWeekPicker } from "../../src/components/DayOfWeekPicker";
 import { DayOfMonthPicker } from "../../src/components/DayOfMonthPicker";
 import { MonthOfYearPicker } from "../../src/components/MonthOfYearPicker";
+import { NarrowStack } from "../../src/components/Layout";
 
 export const PickersShowcase: Component = () => {
   const [dow, setDow] = createSignal<number | null>(1);
@@ -27,30 +28,30 @@ export const PickersShowcase: Component = () => {
 
       <div class="example-group">
         <h3>DayOfWeekPicker (7 cells)</h3>
-        <DayOfWeekPicker value={dow()} onChange={setDow} />
-        <div class="text-meta" style={{ "margin-top": "8px" }}>
-          selected: {String(dow())}
-        </div>
+        <NarrowStack>
+          <DayOfWeekPicker value={dow()} onChange={setDow} />
+          <div class="text-meta">selected: {String(dow())}</div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>DayOfMonthPicker (1..31 + last)</h3>
-        <DayOfMonthPicker
-          value={dom()}
-          onChange={setDom}
-          onSelectLast={() => setDom("last")}
-        />
-        <div class="text-meta" style={{ "margin-top": "8px" }}>
-          selected: {String(dom())}
-        </div>
+        <NarrowStack>
+          <DayOfMonthPicker
+            value={dom()}
+            onChange={setDom}
+            onSelectLast={() => setDom("last")}
+          />
+          <div class="text-meta">selected: {String(dom())}</div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>MonthOfYearPicker (12 cells, 4 columns)</h3>
-        <MonthOfYearPicker value={moy()} onChange={setMoy} />
-        <div class="text-meta" style={{ "margin-top": "8px" }}>
-          selected: {String(moy())}
-        </div>
+        <NarrowStack>
+          <MonthOfYearPicker value={moy()} onChange={setMoy} />
+          <div class="text-meta">selected: {String(moy())}</div>
+        </NarrowStack>
       </div>
     </div>
   );

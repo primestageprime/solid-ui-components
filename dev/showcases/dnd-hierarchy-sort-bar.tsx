@@ -3,6 +3,8 @@ import {
   DnDHierarchySortBar,
   type DnDHierarchySortBarItem,
 } from "../../src/components/DnDHierarchySortBar";
+import { NarrowStack, WrappedClusterRow } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 // ── Sample data ───────────────────────────────────────────────────────────
 
@@ -38,13 +40,7 @@ const applyReorder = (
 const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (
   props,
 ) => (
-  <div
-    style={{
-      display: "flex",
-      "flex-direction": "column",
-      gap: "6px",
-    }}
-  >
+  <NarrowStack>
     <span
       style={{
         "font-size": "10px",
@@ -55,14 +51,7 @@ const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (
     >
       Current order
     </span>
-    <div
-      style={{
-        display: "flex",
-        gap: "6px",
-        "align-items": "center",
-        "flex-wrap": "wrap",
-      }}
-    >
+    <WrappedClusterRow>
       <For each={props.items}>
         {(item, idx) => (
           <>
@@ -75,21 +64,12 @@ const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (
             >
               {idx() + 1}. {item.label}
             </span>
-            {idx() < props.items.length - 1 && (
-              <span
-                style={{
-                  color: "var(--sui-text-muted)",
-                  "font-size": "11px",
-                }}
-              >
-                →
-              </span>
-            )}
+            {idx() < props.items.length - 1 && <TextSublabel>→</TextSublabel>}
           </>
         )}
       </For>
-    </div>
-  </div>
+    </WrappedClusterRow>
+  </NarrowStack>
 );
 
 /** Isolated demo with its own independent order signal. */

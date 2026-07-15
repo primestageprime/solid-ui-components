@@ -1,5 +1,6 @@
 import { For, type Component } from "solid-js";
 import { Icon, type IconName, ICON_GROUPS } from "../../src/components/Icon";
+import { ClusterRow, WrappedClusterRow } from "../../src/components/Layout";
 
 export const IconShowcase: Component = () => {
   const groupLabels: Record<keyof typeof ICON_GROUPS, string> = {
@@ -32,10 +33,7 @@ export const IconShowcase: Component = () => {
         {([groupKey, icons]) => (
           <div class="example-group">
             <h3>{groupLabels[groupKey]}</h3>
-            <div
-              class="example-row"
-              style={{ gap: "16px", "flex-wrap": "wrap" }}
-            >
+            <WrappedClusterRow class="example-row">
               <For each={icons as IconName[]}>
                 {(name) => (
                   <div class="icon-item">
@@ -44,17 +42,14 @@ export const IconShowcase: Component = () => {
                   </div>
                 )}
               </For>
-            </div>
+            </WrappedClusterRow>
           </div>
         )}
       </For>
 
       <div class="example-group">
         <h3>Sizes</h3>
-        <div
-          class="example-row"
-          style={{ "align-items": "center", gap: "16px" }}
-        >
+        <ClusterRow class="example-row">
           <div class="icon-item">
             <Icon name="check" size="xs" />
             <span class="icon-label">xs</span>
@@ -75,20 +70,17 @@ export const IconShowcase: Component = () => {
             <Icon name="check" size="xl" />
             <span class="icon-label">xl</span>
           </div>
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
         <h3>Spinner Animation</h3>
-        <div
-          class="example-row"
-          style={{ "align-items": "center", gap: "16px" }}
-        >
+        <ClusterRow class="example-row">
           <Icon name="spinner" size="sm" />
           <Icon name="spinner" size="md" />
           <Icon name="spinner" size="lg" />
           <Icon name="spinner" size="xl" />
-        </div>
+        </ClusterRow>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { BottomSheet } from "../../src/components/BottomSheet";
 import { TextBody, MutedBody } from "../../src/components/Text";
-import { NarrowStack } from "../../src/components/Layout";
+import { FillColumnFlush, NarrowStack } from "../../src/components/Layout";
 
 export const BottomSheetShowcase: Component = () => {
   const [open, setOpen] = createSignal(false);
@@ -71,7 +71,7 @@ export const BottomSheetShowcase: Component = () => {
             `inset: 0` of THIS div — not the viewport, not the phone frame,
             not the header.
           */}
-          <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
+          <FillColumnFlush style={{ position: "relative" }}>
             {/* Page content — dimmed behind the scrim when sheet is open */}
             <NarrowStack>
               <TextBody>Page content area</TextBody>
@@ -112,7 +112,7 @@ export const BottomSheetShowcase: Component = () => {
                 </button>
               </NarrowStack>
             </BottomSheet>
-          </div>
+          </FillColumnFlush>
         </div>
         <div class="text-meta">
           Dismiss paths: grabber tap, or a direct click on the scrim. A click on

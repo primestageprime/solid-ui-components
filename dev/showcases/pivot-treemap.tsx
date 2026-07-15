@@ -6,6 +6,7 @@ import {
   type PivotSelection,
 } from "../../src/components/PivotTreemap";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 
 // ── Sample dataset: a flat list of "alarm" rows with two pivot dimensions:
 //    ASSET (single-valued) and SEVERITY (single-valued). Some rows are
@@ -85,86 +86,94 @@ export const PivotTreemapShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Basic pivot — ASSET × SEVERITY</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Outer columns are assets; inner leaves are severity tiers. Cell
-          weights match row counts so heavier buckets get wider columns and
-          taller leaves.
-        </div>
-        <Stack>
-          <div style={{ height: "320px" }}>
-            <PivotTreemap
-              rows={ROWS}
-              outer="ASSET"
-              inner="SEVERITY"
-              accessors={accessors}
-              selection={sel1()}
-              onSelect={setSel1}
-            />
+        <NarrowStack>
+          <div class="text-meta">
+            Outer columns are assets; inner leaves are severity tiers. Cell
+            weights match row counts so heavier buckets get wider columns and
+            taller leaves.
           </div>
-          <Debug value={sel1()} />
-        </Stack>
+          <Stack>
+            <div style={{ height: "320px" }}>
+              <PivotTreemap
+                rows={ROWS}
+                outer="ASSET"
+                inner="SEVERITY"
+                accessors={accessors}
+                selection={sel1()}
+                onSelect={setSel1}
+              />
+            </div>
+            <Debug value={sel1()} />
+          </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>With per-bucket SlotFillBar feed</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `metrics` adds resolved/in-progress predicates → each leaf gets a
-          SlotFillBar (`done/total`) and each outer header gets a thin summary
-          bar across its children.
-        </div>
-        <Stack>
-          <div style={{ height: "360px" }}>
-            <PivotTreemap
-              rows={ROWS}
-              outer="ASSET"
-              inner="SEVERITY"
-              accessors={accessors}
-              metrics={{
-                done: (r) => r.status === "resolved",
-                doing: (r) => r.status === "in-progress",
-              }}
-              selection={sel2()}
-              onSelect={setSel2}
-            />
+        <NarrowStack>
+          <div class="text-meta">
+            `metrics` adds resolved/in-progress predicates → each leaf gets a
+            SlotFillBar (`done/total`) and each outer header gets a thin
+            summary bar across its children.
           </div>
-          <Debug value={sel2()} />
-        </Stack>
+          <Stack>
+            <div style={{ height: "360px" }}>
+              <PivotTreemap
+                rows={ROWS}
+                outer="ASSET"
+                inner="SEVERITY"
+                accessors={accessors}
+                metrics={{
+                  done: (r) => r.status === "resolved",
+                  doing: (r) => r.status === "in-progress",
+                }}
+                selection={sel2()}
+                onSelect={setSel2}
+              />
+            </div>
+            <Debug value={sel2()} />
+          </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Untagged sidebar</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Pass `untaggedCount` to surface a trailing sidebar for rows that
-          aren't represented in the tagged buckets. The sidebar uses ChipLabel +
-          CountText for its label/count typography.
-        </div>
-        <Stack>
-          <div style={{ height: "320px" }}>
-            <PivotTreemap
-              rows={ROWS}
-              outer="ASSET"
-              inner="SEVERITY"
-              accessors={accessors}
-              untaggedCount={4}
-              selection={sel3()}
-              onSelect={setSel3}
-            />
+        <NarrowStack>
+          <div class="text-meta">
+            Pass `untaggedCount` to surface a trailing sidebar for rows that
+            aren't represented in the tagged buckets. The sidebar uses
+            ChipLabel + CountText for its label/count typography.
           </div>
-          <Debug value={sel3()} />
-        </Stack>
+          <Stack>
+            <div style={{ height: "320px" }}>
+              <PivotTreemap
+                rows={ROWS}
+                outer="ASSET"
+                inner="SEVERITY"
+                accessors={accessors}
+                untaggedCount={4}
+                selection={sel3()}
+                onSelect={setSel3}
+              />
+            </div>
+            <Debug value={sel3()} />
+          </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>PivotPills — drag-to-reorder dim picker</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Sub-Primitive exported alongside PivotTreemap. Drag a pill onto
-          another to swap their slot positions; slot 0 = outer, slot 1 = inner,
-          slot 2+ = unused.
-        </div>
-        <Stack>
-          <PivotPills<Dim> order={order()} setOrder={setOrder} />
-          <Debug value={order()} />
-        </Stack>
+        <NarrowStack>
+          <div class="text-meta">
+            Sub-Primitive exported alongside PivotTreemap. Drag a pill onto
+            another to swap their slot positions; slot 0 = outer, slot 1 =
+            inner, slot 2+ = unused.
+          </div>
+          <Stack>
+            <PivotPills<Dim> order={order()} setOrder={setOrder} />
+            <Debug value={order()} />
+          </Stack>
+        </NarrowStack>
       </div>
     </div>
   );

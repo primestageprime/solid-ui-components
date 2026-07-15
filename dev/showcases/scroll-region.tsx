@@ -1,5 +1,6 @@
 import { type Component, For } from "solid-js";
 import { ScrollRegion } from "../../src/components/ScrollRegion";
+import { WrappedClusterRow } from "../../src/components/Layout/variants";
 
 const rows = (n: number, label: string) =>
   Array.from({ length: n }, (_, i) => `${label} row ${i + 1}`);
@@ -45,10 +46,7 @@ export const ScrollRegionShowcase: Component = () => {
         <code>createScrollRegion(&#123; style &#125;)</code>.
       </p>
 
-      <div
-        class="example-group"
-        style={{ display: "flex", gap: "24px", "flex-wrap": "wrap" }}
-      >
+      <WrappedClusterRow class="example-group">
         <div>
           <h3>Content fits — no fade</h3>
           <Box>
@@ -91,7 +89,7 @@ export const ScrollRegionShowcase: Component = () => {
             </ScrollRegion>
           </Box>
         </div>
-      </div>
+      </WrappedClusterRow>
     </div>
   );
 };

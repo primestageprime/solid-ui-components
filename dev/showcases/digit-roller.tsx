@@ -1,5 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { DigitRoller } from "../../src/components/DataDisplay";
+import { ClusterRow, NarrowStack } from "../../src/components/Layout";
+import { TextSublabel, TextUnits } from "../../src/components/Text";
 
 export const DigitRollerShowcase: Component = () => {
   const [rollerAnimating, setRollerAnimating] = createSignal(false);
@@ -26,17 +28,12 @@ export const DigitRollerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Animated Transition</h3>
-        <p
-          style={{
-            color: "var(--sui-text-muted)",
-            "font-size": "12px",
-            margin: "0 0 12px",
-          }}
-        >
+        <NarrowStack>
+        <TextSublabel>
           Vertical digit rolling animation for transitioning between numeric
           values.
-        </p>
-        <div style={{ display: "flex", "align-items": "center", gap: "20px" }}>
+        </TextSublabel>
+        <ClusterRow>
           <span
             style={{
               "font-size": "1.5rem",
@@ -52,21 +49,15 @@ export const DigitRollerShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span
-            style={{
-              color: "var(--sui-text-secondary)",
-              "font-size": "0.9rem",
-            }}
-          >
-            g/kWh
-          </span>
+          <TextUnits>g/kWh</TextUnits>
           <button class="demo-btn" onClick={triggerRoll}>
             Roll to{" "}
             {rollerCurrent() === rollerValueA()
               ? rollerValueB()
               : rollerValueA()}
           </button>
-        </div>
+        </ClusterRow>
+        </NarrowStack>
       </div>
 
       <div class="example-group">

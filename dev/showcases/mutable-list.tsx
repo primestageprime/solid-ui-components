@@ -1,5 +1,7 @@
 import { type Component, createSignal, For } from "solid-js";
 import { MutableList } from "../../src/components/MutableList";
+import { NarrowStack, WrappedClusterRow } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 // ── Sample data ───────────────────────────────────────────────────────────
 
@@ -30,7 +32,7 @@ const applyReorder = (tags: Tag[], nextIds: string[]): Tag[] => {
 // ── State readout ───────────────────────────────────────────────────────────
 
 const StateReadout: Component<{ tags: Tag[] }> = (props) => (
-  <div style={{ display: "flex", "flex-direction": "column", gap: "6px" }}>
+  <NarrowStack>
     <span
       style={{
         "font-size": "10px",
@@ -41,21 +43,10 @@ const StateReadout: Component<{ tags: Tag[] }> = (props) => (
     >
       Live state
     </span>
-    <div
-      style={{
-        display: "flex",
-        gap: "8px",
-        "align-items": "center",
-        "flex-wrap": "wrap",
-      }}
-    >
+    <WrappedClusterRow>
       <For
         each={props.tags}
-        fallback={
-          <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
-            (list is empty)
-          </span>
-        }
+        fallback={<TextSublabel>(list is empty)</TextSublabel>}
       >
         {(t, idx) => (
           <>
@@ -68,18 +59,12 @@ const StateReadout: Component<{ tags: Tag[] }> = (props) => (
             >
               {idx() + 1}. {t.id}="{t.name}"
             </span>
-            {idx() < props.tags.length - 1 && (
-              <span
-                style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}
-              >
-                →
-              </span>
-            )}
+            {idx() < props.tags.length - 1 && <TextSublabel>→</TextSublabel>}
           </>
         )}
       </For>
-    </div>
-  </div>
+    </WrappedClusterRow>
+  </NarrowStack>
 );
 
 // ── Main showcase ─────────────────────────────────────────────────────────

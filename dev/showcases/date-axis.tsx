@@ -47,7 +47,7 @@ const demoBox = (label: string, children: () => unknown) => (
     >
       {label}
     </div>
-    <div style={{ padding: "0" }}>{children() as any}</div>
+    <div>{children() as any}</div>
   </div>
 );
 

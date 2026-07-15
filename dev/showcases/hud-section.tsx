@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { Section } from "../../src/components/Section/Section";
 import { Button } from "../../src/components/Button/Button";
+import { TextBody, TextLabel, TextSublabel } from "../../src/components/Text";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -26,15 +27,7 @@ export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
               </Button>
             }
           >
-            <p
-              style={{
-                margin: "0",
-                color: "var(--sui-text-secondary)",
-                "font-size": "0.875rem",
-              }}
-            >
-              HUD section content goes here.
-            </p>
+            <TextBody>HUD section content goes here.</TextBody>
           </Section>
         </div>
         <div class="depth2-atoms">
@@ -44,26 +37,14 @@ export const AccentSectionShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Title</div>
-            <h2
-              style={{ margin: "0", "font-size": "1rem", "font-weight": "600" }}
-            >
-              System Status
-            </h2>
+            <TextLabel>System Status</TextLabel>
           </div>
           <div
             class="depth2-atom depth2-atom--link"
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Sublabel</div>
-            <p
-              style={{
-                margin: "0",
-                "font-size": "0.75rem",
-                color: "var(--sui-text-muted)",
-              }}
-            >
-              Real-time monitoring
-            </p>
+            <TextSublabel>Real-time monitoring</TextSublabel>
           </div>
           <div
             class="depth2-atom depth2-atom--link"

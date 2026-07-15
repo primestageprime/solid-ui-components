@@ -1,6 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import { Toggle } from "../../src/components/Toggle";
 import { Stack } from "../../src/components/Layout/Stack";
+import { ClusterRow, WrappedClusterRow } from "../../src/components/Layout";
 
 export const ToggleShowcase: Component = () => {
   const [checked, setChecked] = createSignal(false);
@@ -55,7 +56,7 @@ export const ToggleShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Sizes</h3>
-        <div style={{ display: "flex", gap: "24px", "align-items": "center" }}>
+        <ClusterRow>
           <Toggle
             size="sm"
             label="SM"
@@ -74,19 +75,12 @@ export const ToggleShowcase: Component = () => {
             checked={checked()}
             onCheckedChange={setChecked}
           />
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
         <h3>Colors</h3>
-        <div
-          style={{
-            display: "flex",
-            gap: "24px",
-            "align-items": "center",
-            "flex-wrap": "wrap",
-          }}
-        >
+        <WrappedClusterRow>
           <Toggle label="Default" checked={true} onChange={() => {}} />
           <Toggle
             color="danger"
@@ -106,12 +100,12 @@ export const ToggleShowcase: Component = () => {
             checked={true}
             onChange={() => {}}
           />
-        </div>
+        </WrappedClusterRow>
       </div>
 
       <div class="example-group">
         <h3>States</h3>
-        <div style={{ display: "flex", gap: "24px", "align-items": "center" }}>
+        <ClusterRow>
           <Toggle
             label="Disabled off"
             disabled
@@ -124,7 +118,7 @@ export const ToggleShowcase: Component = () => {
             checked={true}
             onChange={() => {}}
           />
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">

@@ -3,6 +3,7 @@ import {
   SidebarSelector,
   type SidebarSelectorItem,
 } from "../../src/components/Selector";
+import { TextBody } from "../../src/components/Text";
 
 interface DemoItem {
   title: string;
@@ -92,11 +93,7 @@ export const SidebarSelectorShowcase: Component = () => {
                     >
                       {data.title}
                     </h4>
-                    <p
-                      style={{ color: "var(--sui-text-secondary)", margin: 0 }}
-                    >
-                      {data.description}
-                    </p>
+                    <TextBody>{data.description}</TextBody>
                     <p
                       style={{
                         color:

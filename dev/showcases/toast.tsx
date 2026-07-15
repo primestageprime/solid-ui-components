@@ -16,6 +16,7 @@ import {
 } from "../../src/components/Button";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 export const ToastShowcase: Component = () => {
@@ -135,76 +136,90 @@ export const ToastShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Variants (show programmatically)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Each button calls{" "}
-          <code>{`showToast({ variant, title, description })`}</code>.
-        </div>
-        <Row gap="sm" wrap>
-          <PrimaryButton onClick={showInfo}>Info</PrimaryButton>
-          <PrimaryButton onClick={showSuccess}>Success</PrimaryButton>
-          <PrimaryButton onClick={showWarning}>Warning</PrimaryButton>
-          <PrimaryButton onClick={showError}>Error</PrimaryButton>
-        </Row>
+        <NarrowStack>
+          <div class="text-meta">
+            Each button calls{" "}
+            <code>{`showToast({ variant, title, description })`}</code>.
+          </div>
+          <Row gap="sm" wrap>
+            <PrimaryButton onClick={showInfo}>Info</PrimaryButton>
+            <PrimaryButton onClick={showSuccess}>Success</PrimaryButton>
+            <PrimaryButton onClick={showWarning}>Warning</PrimaryButton>
+            <PrimaryButton onClick={showError}>Error</PrimaryButton>
+          </Row>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Title-only (no description)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Lightweight confirmation — description is optional.
-        </div>
-        <OutlinedButton onClick={showTitleOnly}>Show title-only</OutlinedButton>
+        <NarrowStack>
+          <div class="text-meta">
+            Lightweight confirmation — description is optional.
+          </div>
+          <OutlinedButton onClick={showTitleOnly}>
+            Show title-only
+          </OutlinedButton>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>With actions</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Actions auto-dismiss the toast on click (unless `persistent`).
-        </div>
-        <OutlinedButton onClick={showWithActions}>
-          Show with actions
-        </OutlinedButton>
+        <NarrowStack>
+          <div class="text-meta">
+            Actions auto-dismiss the toast on click (unless `persistent`).
+          </div>
+          <OutlinedButton onClick={showWithActions}>
+            Show with actions
+          </OutlinedButton>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Persistent</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          No auto-dismiss and no progress bar — user must close manually.
-        </div>
-        <Row gap="sm">
-          <OutlinedButton onClick={showPersistent}>
-            Show persistent
-          </OutlinedButton>
-          <GhostButton onClick={dismissLast}>Dismiss last</GhostButton>
-        </Row>
+        <NarrowStack>
+          <div class="text-meta">
+            No auto-dismiss and no progress bar — user must close manually.
+          </div>
+          <Row gap="sm">
+            <OutlinedButton onClick={showPersistent}>
+              Show persistent
+            </OutlinedButton>
+            <GhostButton onClick={dismissLast}>Dismiss last</GhostButton>
+          </Row>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Long duration</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `duration: 20_000` overrides the region default.
-        </div>
-        <OutlinedButton onClick={showLongDuration}>
-          Show 20s toast
-        </OutlinedButton>
+        <NarrowStack>
+          <div class="text-meta">
+            `duration: 20_000` overrides the region default.
+          </div>
+          <OutlinedButton onClick={showLongDuration}>
+            Show 20s toast
+          </OutlinedButton>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Stack of toasts</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Show several in a row to see them stack in the region.
-        </div>
-        <Row gap="sm">
-          <SecondaryButton
-            onClick={() => {
-              showInfo();
-              showWarning();
-              showError();
-            }}
-          >
-            Fire 3 toasts
-          </SecondaryButton>
-          <GhostButton onClick={clearAll}>Clear all</GhostButton>
-        </Row>
+        <NarrowStack>
+          <div class="text-meta">
+            Show several in a row to see them stack in the region.
+          </div>
+          <Row gap="sm">
+            <SecondaryButton
+              onClick={() => {
+                showInfo();
+                showWarning();
+                showError();
+              }}
+            >
+              Fire 3 toasts
+            </SecondaryButton>
+            <GhostButton onClick={clearAll}>Clear all</GhostButton>
+          </Row>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
