@@ -76,6 +76,7 @@
     "style-rubric": "node scripts/style-rubric.mjs",
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
+    "usage-manifest": "node scripts/usage-manifest.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
     "lint": "biome lint src",

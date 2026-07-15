@@ -19,3 +19,24 @@ if ! npm run --silent health; then
   } >&2
   exit 1
 fi
+
+# Production usage manifest freshness — docs/usage-manifest.json must match
+# what the SUI-consuming production repos actually import (scripts/usage-manifest.mjs).
+echo "pre-push: SUI usage manifest freshness (scripts/usage-manifest.mjs --check)…"
+if ! node scripts/usage-manifest.mjs --check; then
+  {
+    echo ""
+    echo "══════════════════════════════════════════════════════════════"
+    echo " ✗ PUSH BLOCKED — docs/usage-manifest.json is stale"
+    echo ""
+    echo " Production consumer imports changed since the manifest was"
+    echo " last generated (differences listed above). Regenerate it:"
+    echo ""
+    echo "   npm run usage-manifest"
+    echo "   git add docs/usage-manifest.json && git commit"
+    echo ""
+    echo " then push again."
+    echo "══════════════════════════════════════════════════════════════"
+  } >&2
+  exit 1
+fi

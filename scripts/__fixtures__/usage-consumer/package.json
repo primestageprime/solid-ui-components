@@ -1,0 +1,7 @@
+{
+  "name": "usage-consumer-fixture",
+  "private": true,
+  "dependencies": {
+    "@primestageprime/solid-ui-components": "*"
+  }
+}
