@@ -394,6 +394,79 @@ State derivation:
     <CashflowScrubChart cells={cells} selected={selectedIdx()} onScrub={setSelectedIdx} today={today} />
     ```
 
+## CashflowChart
+- **CashflowChart** — Composite (Depth 2). Weekly revenue/expense cashflow chart ported from Thorcasting: for each week, up to four stacked SVG bars (recurring + project revenue rising from the $0 baseline, recurring + one-time expenses dropping below it) plus a running-balance ("coffers") line — solid for past weeks, dashed for projected — with a "now" marker, optional bankruptcy annotation, and an interactive hover popover breaking down each segment's line items. Container-driven sizing: a ResizeObserver measures the wrapping `div` and the SVG fills that box on both axes (no width-locked aspect ratio, no horizontal scroll); auto-scales the y-domain to the data extent with 10% headroom, degenerate/empty data rests on the $0 baseline. Exported as `WeeklyCashflowChart`. Key prop: `data` (`WeeklyCashflowChartData` — `bars: WeeklyChartBar[]` plus optional `todayWeek`, `bankruptcyWeek`, `bankruptcyDate`); `height` (number, optional — pins an explicit viewBox height, otherwise measured; floor 160px); `yMax` (number | null — pins the top of the y-domain and enables the fixed -$100k floor). Each `WeeklyChartBar` carries per-segment cents (revenue/expense/balance) plus `revenue_items`/`expense_items`/`recurring_expense_items`/`onetime_expense_items` (`BarLineItem[]` of `{ name, amount_cents }`) and `isProjected`. Exported types: `WeeklyCashflowChartProps`, `WeeklyCashflowChartData`, `WeeklyChartBar`, `BarLineItem`. Uses d3-scale (`scaleBand`/`scaleLinear`); CSS tokens `--sui-accent`, `--sui-success`, `--sui-danger`, `--sui-warning`, `--sui-text`, `--sui-text-muted`, `--sui-border`, `--sui-border-bright`, `--sui-bg`, `--sui-bg-elevated`. Use for: financial runway/coffers dashboards, weekly burn-vs-revenue forecasting.
+  - Example:
+    ```tsx
+    import { WeeklyCashflowChart, type WeeklyCashflowChartData } from "solid-ui-components";
+
+    const data: WeeklyCashflowChartData = {
+      todayWeek: "2026-03-02",
+      bars: [
+        {
+          week_start: "2026-03-02",
+          month_label: "Mar '26",
+          revenue_cents: 500000,
+          recurring_revenue_cents: 300000,
+          project_revenue_cents: 200000,
+          product_revenue_cents: 0,
+          expense_cents: 420000,
+          recurring_expense_cents: 350000,
+          onetime_expense_cents: 70000,
+          balance_cents: 80000,
+          revenue_items: [{ name: "Retainer", amount_cents: 300000 }],
+          expense_items: [{ name: "Payroll", amount_cents: 350000 }],
+          recurring_expense_items: [{ name: "Payroll", amount_cents: 350000 }],
+          onetime_expense_items: [{ name: "Laptop", amount_cents: 70000 }],
+          isProjected: false,
+        },
+      ],
+    };
+
+    <div style={{ height: "320px" }}>
+      <WeeklyCashflowChart data={data} />
+    </div>
+    ```
+
+## CompletionTimeline
+- **CompletionTimeline** — Composite (Depth 2). Buckets a stream of completion events into 30-minute slots across a trailing time window and renders them via the `Chart` primitive family (`Chart` + `Grid` + `XAxis`/`YAxis` + `BarSeries` + `ChartTooltip`): bars show per-bucket counts, a header shows the accent-colored title and total completions in window, and hovering a bar reveals its start time, count, and running cumulative total (events before the window seed the cumulative baseline). Fixed 800×260 chart with ~6 evenly-spaced hour ticks. Key props: `completions` (`CompletionEvent[]`, each `{ tableName: string; completedAt: number /* epoch ms */; rowCount: number }`); `windowHours` (number, default 8). Exported types: `CompletionTimelineProps`, `CompletionEvent`. CSS tokens: `--sui-accent`, `--sui-text-muted`. Use for: ETL/ingestion dashboards, activity-over-time monitors showing what completed and cumulative progress.
+  - Example:
+    ```tsx
+    import { CompletionTimeline, type CompletionEvent } from "solid-ui-components";
+
+    const completions: CompletionEvent[] = [
+      { tableName: "orders", completedAt: Date.now() - 3_600_000, rowCount: 12000 },
+      { tableName: "users", completedAt: Date.now() - 1_800_000, rowCount: 340 },
+    ];
+
+    <CompletionTimeline completions={completions} windowHours={8} />
+    ```
+
+## Alarm
+- **Alarm** — Composite (Depth 2). A family of chart-overlay renderers plus a pure pipeline for turning raw time-series points into "alarm" overlays inside a `<Chart>`. Three layers: (1) pure helpers in `alarm.ts`, (2) base SVG renderers, (3) the curried `AlarmOverlay`. Core types: `Pt` (`{ x: number; y: number }`), `Range` (`{ start: number; end: number }`), `HotZone` (`Range & { count: number }`). Use for: marking regions of a chart where a signal crosses a threshold — smooth translucent bands for normal alarms, striped "barcode" blocks with `×N` badges for dense clusters, with per-series lane subdivision when multiple channels share a panel.
+  - **AlarmOverlay** — curried one-call overlay. Props: `series` (`readonly AlarmSeries[]`, each `{ data: readonly Pt[]; threshold: number }`), `padFraction?` (fraction of x-domain to widen each range, default `0`), `depthThreshold?` (absolute concurrent-range count above which a region collapses to a striped block, default `5`), `patternId?`. Reads the chart x-domain from `useChart()` context; runs `detectRanges → padRanges → findHotZones → subtractZones → clampRanges` per series and emits `AlarmStripeDefs` + `AlarmBands` + `AlarmHotZones` in lanes. Exported types `AlarmOverlayProps`, `AlarmSeries`.
+  - **AlarmBands** — pure SVG renderer of translucent red rectangles, one per pre-computed `Range`. Props: `ranges` (`readonly Range[]`), `laneIndex?` (0-based, default 0), `laneCount?` (default 1 = full height). Styled via `--sui-alarm-band-fill` (#ff4040) and `--sui-alarm-band-fill-opacity` (0.22). Type `AlarmBandsProps`.
+  - **AlarmHotZones** — pure renderer of a striped block + thick border + `×N` count badge per `HotZone`. Props: `zones` (`readonly HotZone[]`), `laneIndex?`, `laneCount?`, `patternId?`. Requires an `AlarmStripeDefs` in the same chart so `fill="url(#…)"` resolves. Styled via `--sui-alarm-zone-stroke`, `--sui-alarm-zone-stroke-width`, `--sui-alarm-count-fill`, `--sui-alarm-count-size`, `--sui-alarm-count-font`, `--sui-alarm-count-weight`. Type `AlarmHotZonesProps`.
+  - **AlarmStripeDefs** — SVG `<defs>` registering the diagonal-stripe pattern used by `AlarmHotZones`. Props: `patternId?` (default `"alarm-stripe"`), `spacing?` (numeric tile size, default 10 — numeric because SVG geometry attrs don't resolve `var()`), `strokeWidth?` (default 3). Paint themed via `--sui-alarm-zone-stripe-fill`, `--sui-alarm-zone-stripe-bg-opacity`, `--sui-alarm-zone-stripe-line-opacity`. Type `AlarmStripeDefsProps`.
+  - **Pure helpers** — `detectRanges(data, yThreshold)`, `padRanges(ranges, padFraction, xDomainWidth)`, `findHotZones(ranges, depthThreshold)` (sweep-line), `subtractZones(ranges, zones)`, `clampRanges(ranges, xMin, xMax)`, and `alarmPipeline(data, opts)` (canonical composition returning `{ ranges, padded, hotZones, visibleRanges, visibleHotZones }`). Each is total, deterministic, and render-free — compose them directly for custom overlays.
+  - Example:
+    ```tsx
+    import { Chart, LineSeries, Grid, XAxis, YAxis, AlarmOverlay } from "solid-ui-components";
+
+    <Chart width={480} height={220} xDomain={[0, 199]} yDomain={[0, 100]}>
+      <AlarmOverlay
+        series={[
+          { data: pointsA, threshold: 60 },
+          { data: pointsB, threshold: 40 },
+        ]}
+        padFraction={0.12}
+        depthThreshold={5}
+      />
+      <Grid /><XAxis /><YAxis />
+      <LineSeries data={pointsA} x={(d) => d.x} y={(d) => d.y} stroke="#ff8080" />
+    </Chart>
+    ```
+
 ## SwimlaneChart
 - **SwimlaneChart** — Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: "collapsed", collapsedCount }` for nodes that overflowed the depth window), `maxDepth` (rings on each side of center; default 2), `responsiveCollapse` (default true — shrinks depth to fit `containerWidth`), `centerCol` (default 0), `nodeSize`, `columnGap`, `rowGap`, `interactive`, `arrows`, `onNodeClick`. Nodes outside the visible depth window collapse into boundary badges (circle + count) at the outer edge of the outermost visible anchor. Width budgeting is purely symmetric — chart reserves `depth` columns on each side of center, so DOING-anchored layouts never push content off-screen. Leaving nodes play a 360ms mirrored compress-into-badge animation (rect → circle, shrinks toward the badge side); entering nodes mirror the leave in reverse (emerge from the badge as a circle, expand to rect). Use for: current-step-in-workflow displays, DOING-centered Kanban, dependency chain visualizations with overflow summarization.
 - **LinearFlowSwimlaneChart** — Curried variant of SwimlaneChart pre-configured for "current step in a sequential workflow" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom.
@@ -528,6 +601,150 @@ State derivation:
     - Internal sub-components are private, not exported (downstream has them as separate `CalendarGrid` / `CalendarHeader` / `PresetButtons` / `TimeInputs` files inside the feature folder; upstream treats them as implementation details).
     - Downstream uses Luxon for weekday/month formatting and the `MMM d`/`MMMM yyyy` trigger label; upstream uses vanilla `Date` arithmetic plus `Intl.DateTimeFormat`. Behavior and layout match; the library surface does not add Luxon as a dependency.
     - Downstream uses SCSS CSS modules (`dateRangePicker.module.scss`); upstream uses a single plain CSS file (`DateRangePicker.css`) with BEM-ish `.sui-drp__*` class names and `--sui-*` tokens.
+
+## BigNumberInput
+- **BigNumberInput** — Atomic (Depth 1). Editable numeric input rendered at a large `Text variant="value"` headline size for editing a money amount in place. The `value` (`number`, controlled) is masked as localized currency via `Intl.NumberFormat` for display while `onChange` (`(n: number) => void`) always emits the parsed raw `number` — the symbol, grouping and decimal mark are locale-driven presentation, never part of the value. Format-on-blur: while focused it shows the bare editable number (no grouping) so the caret never jumps mid-edit; on blur it reformats to the masked currency string. A local string buffer mirrors the input and only re-syncs from `value` when the parsed number actually diverges, keeping it controlled and loop-free. Key props: `locale` (`string`, default `"en-US"`), `currency` (ISO-4217 `string`, default `"USD"`), `align` (`"left" | "right"`, default `"left"`), `selectOnFocus` (`boolean`, default `true` — selects all contents on focus, deferred one frame). `prefix` (`string`) and `sign` (`"+" | "-" | "none"`, default `"none"`) are deprecated static-glyph escape hatches that do not participate in currency masking. Extends `JSX.InputHTMLAttributes` (minus `onChange`/`value`/`type`/`prefix`). Exported types: `BigNumberInputProps`. Factory: `createBigNumberInput(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-space-1`. Use for: inline editing of a headline money/number figure.
+  - Example:
+    ```tsx
+    import { BigNumberInput } from "solid-ui-components";
+
+    <BigNumberInput value={amount()} onChange={setAmount} currency="EUR" locale="de-DE" />
+    ```
+
+## SegmentedInput
+- **SegmentedInput** — Atomic (Depth 1). Single-select segmented control: a horizontal row of connected, keyboard-focusable buttons (`role="radiogroup"`) where the selected segment gets the accent treatment. Key props: `options` (`SegmentedInputOption[]`, each `{ id: string; label: string }`), `value` (`string`, the selected id), `onChange` (`(id: string) => void`), `compact` (`boolean`, default `false`). In compact mode it renders a content-width stepper (`‹ label ›`) instead of the full strip, clamped at the ends (no wrap), with chevron clicks, left/right arrow keys, and swipe (30px threshold). Extends `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exported types: `SegmentedInputProps`, `SegmentedInputOption`. Factory: `createSegmentedInput(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-border`, `--sui-radius-sm/md`, `--sui-text-primary/secondary`, `--sui-space-*`. Use for: mutually-exclusive choices among a small fixed set (view toggles, filters, mode pickers).
+  - Example:
+    ```tsx
+    import { SegmentedInput } from "solid-ui-components";
+
+    <SegmentedInput
+      options={[{ id: "day", label: "Day" }, { id: "week", label: "Week" }]}
+      value={range()}
+      onChange={setRange}
+    />
+    ```
+
+## RangeAmountGroup
+- **RangeAmountGroup** — Atomic (Depth 2). Responsive trio of labeled amount inputs (min / standard / max): all three on one line when there's room, otherwise each on its own line — never the awkward 2+1 wrap (holy-albatross flex basis). Composes `TightStack` (Layout) and `ThemedNumberInput`. Key props: `slots` (`RangeAmountSlot[]`, each `{ label: string; value: number | undefined; onChange: (value: number | undefined) => void }` — empty labels fall back to `Min`/`Standard`/`Max`), `step` (`number`, default `0.01`, forwarded to each input), `name` (`string`, prefixes input names `name-0/1/2`), `breakWidth` (CSS length `string`, default `"30rem"`, the container width below which the trio stacks). Pass `children` (`JSX.Element`) instead of `slots` to reuse the responsive container for arbitrary triple inputs (e.g. three date pickers). Extends `JSX.HTMLAttributes<HTMLDivElement>` (minus `children`). Exported types: `RangeAmountGroupProps`, `RangeAmountSlot`. Factory: `createRangeAmountGroup(defaults)` for curried variants. CSS tokens: `--rag-break` (set from `breakWidth`), `--sui-space-2`, `--sui-text-secondary`. Use for: min/typical/max amount ranges (budget bands, price tiers, estimate spreads).
+  - Example:
+    ```tsx
+    import { RangeAmountGroup } from "solid-ui-components";
+
+    <RangeAmountGroup
+      slots={[
+        { label: "Min", value: min(), onChange: setMin },
+        { label: "p95", value: typical(), onChange: setTypical },
+        { label: "Max", value: max(), onChange: setMax },
+      ]}
+    />
+    ```
+
+## TagInput
+- **TagInput** — Atomic (Depth 1). Chip row plus autocomplete text input for tag editing. Renders existing tags as removable chips (each with an `×` button) followed by a text field; typing filters `suggestions` (prefix-match, case-insensitive, excluding already-applied tags, capped at 8) into a popover. Committing (Enter, Tab, or comma) adds the trimmed tag via `onAdd`, deduped case-insensitively; Backspace on an empty field removes the last tag via `onRemove`. Key props: `tags` (`string[]`), `suggestions` (`string[]`), `onAdd` (`(tag: string) => void`), `onRemove` (`(tag: string) => void`), `placeholder` (`string`, default `"Add a tag..."`), `autofocus` (`boolean`). Exported types: `TagInputProps`. No factory / curried variants. CSS tokens: `--sui-bg-primary/secondary/tertiary`, `--sui-border`, `--sui-text-primary/secondary/muted`. Use for: editing a free-form set of tags/labels with type-ahead over known values.
+  - Example:
+    ```tsx
+    import { TagInput } from "solid-ui-components";
+
+    <TagInput
+      tags={tags()}
+      suggestions={["urgent", "backend", "design"]}
+      onAdd={(t) => setTags([...tags(), t])}
+      onRemove={(t) => setTags(tags().filter((x) => x !== t))}
+    />
+    ```
+
+## MultiSelectFilter
+- **MultiSelectFilter** — Atomic (Depth 1). Responsive multi-select that renders as a horizontal chip/button bar when the container is wide enough to fit all options, and collapses to a dropdown popover with checkmarks when it isn't (measured via `ResizeObserver`); same data model either way. Composes Layout variants (`GrowClusterRow`, `GrowWrapRow`, `GrowBox`, `ActionSlot`). Selection semantics: an empty `selected` array means "all" (no filter applied, no separate "all" chip) — clicking an inactive chip with an empty selection focuses to just that one (replaces), clicking another inactive chip while some are selected adds it, and clicking an active chip toggles it off (possibly returning to empty=all). Key props: `options` (`readonly MultiSelectOption[]`, each `{ value: string; label?: string }` — label falls back to value), `selected` (`readonly string[]`), `onChange` (`(next: string[]) => void`), `label` (`string`, rendered left of the control), `allLabel` (`string`, default `"all"`, shown in the collapsed trigger when nothing is selected), `optionWidthEstimate` (`number`, default `90` px per option, used to decide bar-vs-menu fit; tune up for long labels). Exported types: `MultiSelectFilterProps`, `MultiSelectOption`. No factory / curried variants. CSS tokens: `--sui-accent`, `--sui-accent-hover`, `--sui-bg-base/elevated/hover`, `--sui-border`, `--sui-border-strong`, `--sui-text-primary/muted`. Use for: a compact category/status filter that adapts to available width in toolbars and filter bars.
+  - Example:
+    ```tsx
+    import { MultiSelectFilter } from "solid-ui-components";
+
+    <MultiSelectFilter
+      label="Status"
+      options={[{ value: "open" }, { value: "closed" }, { value: "wip", label: "In progress" }]}
+      selected={statuses()}
+      onChange={setStatuses}
+    />
+    ```
+
+## Dropdown
+- **Dropdown** — Atomic (Depth 1). Trigger button plus popover listbox for single selection, with full keyboard support: roving-tabindex options, ArrowUp/Down to open and move focus, Home/End, Escape and click-outside to close (refocusing the trigger), and Tab to leave the widget. Global mousedown/keydown listeners live only while open. Key props: `items` (`DropdownItem[]`, each `{ id: string; label: string; color?: string }` — an optional color renders as an indicator dot), `value` (`string`, the selected id), `onChange` (`(id: string) => void`), `placeholder` (`string`, default `"Select..."`), `footer` (`JSX.Element`, e.g. an "Add new" action rendered below the list), `size` (`"sm" | "md"`, default `"md"`), `subtle` (`boolean` — trigger looks like read-only text until hovered), `class` (`string`). Exported types: `DropdownItem`, `DropdownProps`. No factory / curried variants; `size`/`subtle` are exposed directly on this base. Use for: single-value selection with optional color indicators and a menu footer action (status pickers, category selectors).
+  - Example:
+    ```tsx
+    import { Dropdown } from "solid-ui-components";
+
+    <Dropdown
+      items={[
+        { id: "todo", label: "To do", color: "#888" },
+        { id: "done", label: "Done", color: "#3c9" },
+      ]}
+      value={status()}
+      onChange={setStatus}
+    />
+    ```
+
+## DayOfMonthPicker
+- **DayOfMonthPicker** — Atomic (Depth 1). Compact calendar-style ARIA grid (`role="grid"` / `role="gridcell"`) for picking a day of the month, composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap="xs"`; the selected cell gets the accent treatment. Key props: `value` (`number | "last" | null`), `onChange` (`(day: number) => void`, required), `max` (number, default 31 — capped to 28 in lastOfMonth mode), `lastOfMonth` (boolean — replaces the 29/30/31 slots with one wide "Last of month" cell that avoids the short-month scheduling trap), `onSelectLast` (`() => void`, fired when that cell is clicked and shown selected when `value === "last"`), `cellSize` (string, default `"3.5rem"`, drives the `--dom-cell-size` CSS var). Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `DayOfMonthPickerProps` and factory `createDayOfMonthPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: monthly recurring-schedule day selection, day-of-month filters.
+  - Example:
+    ```tsx
+    import { DayOfMonthPicker } from "solid-ui-components";
+    const [day, setDay] = createSignal<number | "last" | null>(9);
+    <DayOfMonthPicker
+      value={day()}
+      lastOfMonth
+      onChange={(d) => setDay(d)}
+      onSelectLast={() => setDay("last")}
+    />
+    ```
+
+## DayOfWeekPicker
+- **DayOfWeekPicker** — Atomic (Depth 1). A 7-cell single-select ARIA grid row for Sun..Sat, sibling of DayOfMonthPicker and sharing its `--dom-cell-size` sizing so the two read as a family; composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap="xs"`. Cells are labeled `Sun Mon Tue Wed Thu Fri Sat`; the selected cell gets the accent treatment. Key props: `value` (`number | null`, 0=Sun..6=Sat), `onChange` (`(day: number) => void`, required, receives the 0..6 index), `cellSize` (string, default `"3.5rem"`, drives the shared `--dom-cell-size` CSS var). Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `DayOfWeekPickerProps` and factory `createDayOfWeekPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: weekly recurring-schedule day selection, weekday filters.
+  - Example:
+    ```tsx
+    import { DayOfWeekPicker } from "solid-ui-components";
+    const [dow, setDow] = createSignal<number | null>(1);
+    <DayOfWeekPicker value={dow()} onChange={setDow} />
+    ```
+
+## MonthOfYearPicker
+- **MonthOfYearPicker** — Atomic (Depth 1). Compact ARIA grid for picking a month of the year (1..12), the natural sibling of DayOfMonthPicker in the same visual language; composed from the Layout `Grid` primitive as `repeat(4, var(--moy-cell-size, 3.5rem))` with `gap="xs"`. Cells are labeled `Jan..Dec`; the selected cell gets the accent treatment. Key props: `value` (`number | null`, 1..12), `onChange` (`(month: number) => void`, required, receives 1..12), `cellSize` (string, default `"3.5rem"`, drives the `--moy-cell-size` CSS var). Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `MonthOfYearPickerProps` and factory `createMonthOfYearPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: yearly/annual-schedule month selection, month-of-year filters.
+  - Example:
+    ```tsx
+    import { MonthOfYearPicker } from "solid-ui-components";
+    const [month, setMonth] = createSignal<number | null>(4);
+    <MonthOfYearPicker value={month()} onChange={setMonth} />
+    ```
+
+## WeekCalendar
+- **WeekCalendar** — Composite (Depth 2). Pure weekly time-grid layout primitive: a left time gutter with hourly marks plus one column per day, each holding absolute-positioned block slots. Owns its CSS, imports no other components, and delegates block content entirely to a caller-supplied `renderBlock` callback. Times follow the dside convention where bare hours 1–8 are treated as PM (parsed via the exported `parseWeekCalendarTime`). Key props: `days` (string[], column identities), `startHour`/`endHour` (numbers; `endHour` may be fractional like 16.5), `blocks` (`WeekCalendarBlock[]`, each `{ day; startAt: "H"|"H:MM"; durationInHrs; key? }`), `renderBlock` ((block) => JSX.Element), `pxPerHour` (default 60), `dayLabel` (optional `(day, index) => JSX.Element` custom header), `highlight` (`WeekCalendarHighlight | null` — `{ day, startAt }` to flag one block), `gutterWidth` (default 56), `headerHeight` (default 24), `class`. Reactive to `pxPerHour` so a consumer can scale the grid live (e.g. via ResizeObserver). Exported types: `WeekCalendarProps`, `WeekCalendarBlock`, `WeekCalendarHighlight`. Factory: `createWeekCalendar(defaults)` returns a pre-configured component. Exported helper: `parseWeekCalendarTime`. CSS tokens: `--sui-accent`, `--sui-accent-rgb`, `--sui-border`, `--sui-text-primary`, `--sui-text-muted`. Use for: schedule/agenda views, design-session planners, any per-day time-block layout.
+  - Example:
+    ```tsx
+    import { WeekCalendar, type WeekCalendarBlock } from "solid-ui-components";
+
+    const blocks: WeekCalendarBlock[] = [
+      { day: "Mon", startAt: "9:00", durationInHrs: 1.5 },
+      { day: "Wed", startAt: "2", durationInHrs: 2 }, // 2 → 2 PM (dside convention)
+    ];
+
+    <WeekCalendar
+      days={["Mon", "Tue", "Wed", "Thu", "Fri"]}
+      startHour={8}
+      endHour={17}
+      blocks={blocks}
+      renderBlock={(b) => <div>{b.day} · {b.startAt}</div>}
+    />
+    ```
+
+## FormComposite
+- **FormComposite** — Composite (Depth 2, zero CSS). Composes the `AutoStackRow` / `AutoStackItem` Layout primitives — owns only layout (grouping, gap, responsive stacking), never field internals, so field components stay independent and standalone. Slot-based form layout `[[identity][amounts][schedule]]`: `identity?` holds the fields that read the same across variants (name + a single amount), `amounts?` holds an atomic min/typical/max trio kept together between identity and schedule, `schedule?` holds the curry-varying picker (day-of-month, weekday, payday, …). Each provided slot is wrapped in an `AutoStackItem` with class `sui-form-composite__{identity,amounts,schedule}`. Blocks sit side by side when there's room and stack otherwise. Props (extends `JSX.HTMLAttributes<HTMLDivElement>`): `identity?`, `amounts?`, `schedule?` (all `JSX.Element`), `breakWidth?` (CSS length below which blocks stack, default `"38rem"`), `stacked?` (force fully-stacked arrangement at every width). `createFormComposite(defaults)` factory for curried variants. Use for: recurring-payment / schedule forms where a name+amount block pairs with a variant-specific cadence picker.
+  - Example:
+    ```tsx
+    import { FormComposite } from "solid-ui-components";
+    <FormComposite
+      identity={<><NameInput value={name()} onInput={setName} /><AmountInput value={amt()} /></>}
+      schedule={<DayOfMonthPicker value={day()} onChange={setDay} />}
+    />
+    ```
 
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
@@ -686,6 +903,23 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
     />
     ```
 
+## MutableList
+- **MutableList** — Composite (Depth 3). Owns `MutableList.css`. A `SortableList` specialized into editable, deletable cards: it composes `<SortableList>` (inheriting the grip, placeholder gap, and live drag-reflow from the headless `createDnDReorder` hook) and supplies a `renderItem` card built from `ClusterRow`/`ContentStack`/`ActionSlot` Layout variants — an inline-editable name button on the left (click → bare `<input>`; Enter commits, Escape reverts, blur commits) and a hover-revealed `IconOnlyButton` × delete on the right. During editing it toggles the enclosing `.sui-sortable-list__row`'s native `draggable` off (interactive zones also carry `draggable={false}`) so the input keeps its caret/selection. Generic over `T`; all props are data/callbacks: `items: T[]` (controlled order), `getId: (item) => string`, `getName: (item) => string`, `onReorder: (orderedIds: string[]) => void`, `onRename: (id, name) => void` (fires only on a changed, non-empty commit — never on unchanged/cleared/Escape), `onDelete: (id) => void` (consumer owns confirmation), `label?`, `renderDetail?: (item) => JSX.Element` (secondary line below the name). NO curried variant by rule — data-only components are already zero-config at the call site. Use for: editable ordered card lists (rename + reorder + delete), e.g. category or line-item managers.
+  - Example:
+    ```tsx
+    import { MutableList } from "solid-ui-components";
+    <MutableList
+      items={cats()}
+      getId={(c) => c.id}
+      getName={(c) => c.name}
+      label="Categories"
+      onReorder={(ids) => reorder(ids)}
+      onRename={(id, name) => rename(id, name)}
+      onDelete={(id) => remove(id)}
+      renderDetail={(c) => <span>{c.count} items</span>}
+    />
+    ```
+
 ## ActionList
 The ActionList family — a drop-in editable action-row list, graduated from the ListItem workshop bench. Bench visuals/behavior are final; extraction is pixel-faithful. Depth 3 `ActionList` composes SortableList + the Depth-2 `ActionListItem`, which composes four Depth-1 primitives. All row text rides one thematic foreground (`--sui-accent` / `currentColor`).
 
@@ -720,10 +954,103 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **GhostRow / IndentedGhostRow** — Atomic (Depth 1). Owns `GhostRow.css`. De-emphasized clickable row: dimmed (0.7) unless `selected` (data flag, full strength), pointer cursor only when `onClick` is wired, color/opacity-only hover (geometry-stable). `IndentedGhostRow` bakes the one-step inset for rail children under a section heading (`createGhostRow` factory, `indent` is the Override). Born from the triage bench's right-rail children + dependency-link rows. Key props: `selected?`, `onClick?`, children.
 - **composeTagPairs** — Pure helper (not a component), shipped from the Badge family (`src/components/Badge/tagPairs.ts`, exported from the family index and root barrel). `composeTagPairs(tags: SourceTag[], cfg: TagDisplayConfig) => ComposedTag[]`. Decides HOW a flat list of `{ dim, value }` tags is presented, so an app renders composed split lozenges instead of a row of labeled pills; TagPill owns the pixels, this owns the composition. A pair rule (`{ parent, child }`) whose **both** dims are present collapses those two tags into ONE lozenge of the two VALUES — the dim names drop out but survive in `title` for hover recovery (`customer:stax` + `project:jtf` → key `stax`, value `jtf`, title `customer: stax · project: jtf`, `sources` = `[parent, child]`). A dim present **without** its partner is not abbreviated and falls through to the labeled form (`key = dim`, `value = value`, title `dim: value`). Deterministic: pairs first in rule order, then remaining labeled tags in input order — or by `cfg.order` (unknown dims after, stable) when supplied. Each source tag is consumed at most once; a duplicated dim pairs on its first occurrence and extras stay labeled. Pure, no DOM; empty inputs → `[]`. Each `ComposedTag`'s `{ key, value }` drops straight onto `ActionListTag` / `TagPill`. Use for: turning app-side dimensional tags (customer/project, owner/assignee) into compact tag rows.
 
+## ActionRow
+- **ActionRow** — Composite (Depth 2). A row with an optional leading slot, a growing body (`children`), an optional trailing slot, and a hover/focus-revealed action bar underneath. The action bar stays layout-stable via `visibility` toggling (hidden until `:hover`/`:focus-within` on the row), so rows don't reflow. Arrangement is composed from Layout variants (`NarrowStack` outer column, `ClusterRow` main row, `NoShrinkClusterRow` leading/trailing clusters, `GrowBox` body, `EndWrapRow` action bar); this component owns only intrinsic styling and the hover-reveal. Props: `tone` (`ActionRowTone` = `"default"`|`"danger"`|`"accent"`, default `"default"`; danger/accent tint the border + background), `leading`/`trailing`/`children` (`JSX.Element` slots), `actions` (`ActionRowAction[]`), `class`. Each `ActionRowAction` is `{ label: JSX.Element; onClick: () => void; tone?: ActionRowActionTone; title?: string; disabled?: boolean }` where `ActionRowActionTone` is `"accent"`|`"muted"`|`"outline"`. Exported types: `ActionRowDataProps`, `ActionRowAction`, `ActionRowActionTone`. The base `ActionRow` is intentionally not exported from the barrel — use the `createActionRow(defaults)` factory (returns `Component<ActionRowDataProps>`, baking `tone`/`leading` as `ActionRowOverrides`) or the curried variants `PlainActionRow` (default), `DangerActionRow` (`tone: "danger"`), `AccentActionRow` (`tone: "accent"`). CSS tokens: `--sui-border`, `--sui-text-primary`, `--sui-text-muted`, `--sui-danger`, `--sui-accent`, `--sui-accent-rgb`, `--sui-bg-deep`. Use for: list/table rows that expose per-row actions only on hover, with an optional status slot and destructive/emphasis tinting.
+  - Example:
+    ```tsx
+    import { PlainActionRow, DangerActionRow } from "solid-ui-components";
+
+    <PlainActionRow
+      trailing={<span>3 items</span>}
+      actions={[
+        { label: "Edit", tone: "outline", onClick: () => edit(row) },
+        { label: "Delete", tone: "muted", onClick: () => remove(row) },
+      ]}
+    >
+      {row.name}
+    </PlainActionRow>
+
+    <DangerActionRow actions={[{ label: "Undo", tone: "accent", onClick: undo }]}>
+      Deletion pending
+    </DangerActionRow>
+    ```
+
+## GroupBracket
+- **GroupBracket** — Atomic Primitive (Depth 1). A thin right-edge bracket cue for a single list/table row that marks which rows belong to the same contiguous run of a group; stacking N members renders one unbroken `]`-shape. Renders a `<div>` gutter with a `spine` plus optional top/bottom `stub`s and a `badge`, driven entirely by `position`: `GroupBracketPosition` = `"none"` (not in a group — empty gutter, keeps geometry stable across boundaries), `"interior"` (spine only), `"leader"` (spine + top stub + badge), `"tail"` (spine + bottom stub), `"leader-tail"` (sole row — spine + both stubs + badge). Props: `position` (required), `color?` (stroke + badge border, sets `--sui-group-bracket-color`; falls back to inherited text color), `badgeFill?` (badge fill, sets `--sui-group-bracket-badge-fill`, composited over an opaque base so the spine doesn't read through), `badge?` (`JSX.Element`, typically `×N`, only rendered on `leader`/`leader-tail`), plus all `JSX.HTMLAttributes<HTMLDivElement>` (except `color`) spread onto the root. Colors are the only inline payload (CSS-variable channel); all other styling lives in the stylesheet. Sets `aria-hidden` when no badge is shown. Exported types: `GroupBracketProps`, `GroupBracketPosition`. Use for: a per-row grouping gutter in dense lists/tables where contiguous runs of a group should read as a single visual bracket with an optional count on the leader.
+  - Example:
+    ```tsx
+    import { GroupBracket } from "solid-ui-components";
+
+    <GroupBracket
+      position="leader"
+      color="var(--sui-accent)"
+      badgeFill="rgba(var(--sui-accent-rgb), 0.2)"
+      badge={`×${run.length}`}
+    />
+    ```
+
+## AssigneeChips
+- **AssigneeChips** — Atomic (Depth 1). Renders a filled accent-colored pill per id, applying a caller-supplied `resolveName` to display each label; renders nothing when `ids` is empty. The wrapping chip row is composed from the `ChipCluster` Layout variant; this component owns only the intrinsic pill styling. Props: `ids` (`string[]`), `resolveName` (`(id: string) => string`), `size` (`"sm"`|`"md"`, default `"sm"` — sm is 9px/min-height 12px, md is 10px/min-height 14px), `class`. Exported type `AssigneeChipsDataProps` (`Omit` of `size`). The base `AssigneeChips` is intentionally not exported from the barrel — use the `createAssigneeChips(defaults)` factory (bakes `size` as `AssigneeChipsOverrides`, returns `Component<AssigneeChipsDataProps>`) or the curried variants `Assignees` (default, small) and `MdAssigneeChips` (`size: "md"`). CSS tokens: `--sui-accent` (pill fill), `--sui-bg-deep` (label color). Use for: compact rows of assignee/owner name pills on cards or table rows where the caller owns id→name resolution.
+  - Example:
+    ```tsx
+    import { Assignees } from "solid-ui-components";
+
+    <Assignees ids={task.assigneeIds} resolveName={(id) => users[id]?.name ?? id} />
+    ```
+
+## TruthIndicator
+- **TruthIndicator** — Atomic (Depth 1). Boolean status glyph: a green check for `true`, a red prohibition (circle-with-diagonal-slash) for `false`. Read-only by default (renders a `<span role="img">`); supplying `onClick` upgrades it to a real `<button>` with native click + keyboard activation and reset chrome so the `sui-truth*` classes fully govern appearance. Base `TruthIndicator` is intentionally NOT exported — consume the curried variants or the factory. Key props: `value` (boolean, required), `size` (`"sm"`|`"md"`|`"lg"` → 12/16/22px, default `md`), `label` (string, optional aria-label override; defaults to "true"/"false"), `onClick` ((e: MouseEvent) => void, optional); also spreads remaining `HTMLAttributes`. Factory: `createTruthIndicator(defaults)`. Curried variants (all with `size` baked, `value`/`onClick`/`label` left as runtime data): `TruthIndicator` (md default), `SmallTruthIndicator` (sm, for dense rows), `LargeTruthIndicator` (lg, for prominent status). Exported types: `TruthIndicatorDataProps` (plus `TruthIndicatorOverrides`, `TruthIndicatorSize` internally). CSS tokens: `--sui-success`, `--sui-danger`, `--sui-accent`, `--sui-bg-secondary`. Use for: boolean cells in tables, feature-flag/health status, toggleable yes/no fields.
+  - Example:
+    ```tsx
+    import { TruthIndicator, SmallTruthIndicator, LargeTruthIndicator } from "solid-ui-components";
+
+    <TruthIndicator value={true} />
+    <SmallTruthIndicator value={false} label="unverified" />
+    <LargeTruthIndicator value={true} onClick={() => toggle()} />
+    ```
+
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.
 - **FormulaVarRow** — Table `<tr>` that highlights when its corresponding formula variable is hovered. Key props: `varId`. Use for: variable definition rows that link to formula terms.
+
+## CodeBlock
+- **CodeBlock** — Atomic Primitive (Depth 1). Owns `CodeBlock.css`, no component imports. Recessed dark monospace `<pre>` for raw code / JSON: preserves whitespace/newlines (`white-space: pre`) and scrolls horizontally on overflow (`overflow: auto`). Extends `JSX.HTMLAttributes<HTMLPreElement>`, so any native `<pre>` attr passes through. Only styling prop is `size?: "sm" | "md" | "lg"` (default `"md"`, mapping to 0.8125/0.875/1rem). Children render literally. `createCodeBlock(defaults)` factory yields curried variants (none pre-defined in-folder). CSS tokens: `--sui-font-mono`, `--sui-space-3`, `--sui-border`, `--sui-radius-sm`, `--sui-bg-deep`, `--sui-text-primary`. Use for: displaying JSON payloads, config snippets, log dumps, raw code in showcases.
+  - Example:
+    ```tsx
+    import { CodeBlock } from "solid-ui-components";
+    <CodeBlock size="sm">{JSON.stringify(payload, null, 2)}</CodeBlock>
+    ```
+
+## Markdown
+- **Markdown / MarkdownEditor** — Atomic + Composite. Owns `Markdown.css`. Tiny hand-rolled markdown viewer (extracted from dside-ui's inline SimpleMarkdown) — no external parser.
+  - **Markdown** — Atomic (Depth 1). Renders `source: string` into a `.sui-markdown` div via `innerHTML`. Supports `#`–`###` headings, `-`/`*` bullet lists, `**bold**`, `*italic*`, `` `code` ``, and blank-line-separated paragraphs; inline HTML in the source is escaped first (`&`,`<`,`>`) before inline markup is applied. Props: `source: string`, `class?`. Exports the pure helper `renderMarkdownHtml(source): string` (the string generator, usable standalone) and `createMarkdown(defaults)` factory.
+  - **MarkdownEditor** — Composite (Depth 2). Composes `Grid` (`columns="1fr 1fr"`, `gap="md"`) for a 50/50 textarea-plus-live-preview split, feeding the textarea value straight into `<Markdown>`. Props: `value: string`, `onChange: (next: string) => void`, `rows?` (default `12`), `class?`. Factory `createMarkdownEditor(defaults)`.
+  - Use for: rendering stored markdown notes/descriptions; the editor for authoring markdown with live preview (design-doc panels).
+  - Example:
+    ```tsx
+    import { Markdown, MarkdownEditor } from "solid-ui-components";
+    const [text, setText] = createSignal("# Notes\n- **first**\n- second");
+    <MarkdownEditor value={text()} onChange={setText} rows={8} />
+    <Markdown source={text()} />
+    ```
+
+## Kbd
+- **Kbd** — Atomic Primitive (Depth 1). Owns `Kbd.css`, no component imports. Renders a `<kbd>` keyboard hint with two mutually-exclusive modes: pass `letter?` (+ optional `rest?`) to get an underlined hotkey letter followed by plain trailing text (`<Kbd letter="C" rest="onfirm" />` → **C**onfirm), or pass `children` for literal content (`<Kbd>Esc</Kbd>`). Presence of `letter` (even `""`) switches to letter mode via `Show`. Props: `letter?`, `rest?`, `children?`, `class?`. `createKbd(defaults)` factory for curried variants. Emits spans `.sui-kbd__letter` / `.sui-kbd__rest`. Use for: command-palette hotkey hints, inline keyboard shortcut labels.
+  - Example:
+    ```tsx
+    import { Kbd } from "solid-ui-components";
+    <Kbd letter="C" rest="onfirm" />
+    <Kbd>Esc</Kbd>
+    ```
+
+## ResponsiveMoney
+- **ResponsiveMoney** — Atomic (Depth 1). Renders the widest dollar rendering of a cents value that still fits its container, stepping down through a candidate ladder (`$330,285 → $330k → $0.3m`) as the container shrinks, measured via a hidden `Text` twin and a `ResizeObserver`. Abbreviation is view-only — callers keep passing exact integer cents; it never rounds the underlying value, only its display. The ladder (`formatMoneyLadder`) adds tiers by magnitude: full always, `k` at |dollars| ≥ 1,000 (0 fraction digits), `m` at ≥ 1,000,000 (1 fraction digit), with the sign rendered once before the `$` (`-$1,234`). Key props: `cents` (number, integer, may be negative), `variant` (`TextVariant`, default `"value"`), `color` (string). Spreads remaining `JSX.HTMLAttributes<HTMLSpanElement>` (minus `children`). Exports type `ResponsiveMoneyProps`. Composes the `Text` component; no curry factory (styling rides on `Text`; owns `.sui-responsive-money` layout). Use for: money figures in width-constrained cells, dashboard KPIs, responsive table columns.
+  - Example:
+    ```tsx
+    import { ResponsiveMoney } from "solid-ui-components";
+    <ResponsiveMoney cents={33028500} variant="value" />
+    ```
 
 ## Modal
 - **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`), `showClose`, `footer`. Use for: dialog windows.
@@ -772,6 +1099,30 @@ Where the constituents live (design decision — prefer siblings of existing fam
     <OverflowNav items={items} />
     ```
 
+## RecentStarred
+- **RecentStarred** — Composite (Depth 2). A reusable "recently-visited" + "starred" shortcut feature for any navigable items (cases, customers, dashboards — anything with a stable id), shipped as a framework-agnostic store plus two bundled UI pieces. Item shape `RecentStarredItem` = `{ id: string; label: string; meta?: Record<string, unknown> }` (meta is a small JSON-safe payload that round-trips through localStorage so a click can navigate without re-fetching). Both lists persist to localStorage; `recent` is newest-first, de-duped, FIFO-capped; `starred` is id-keyed. CSS tokens: `--sui-star-fill`, `--sui-star-empty`, `--sui-star-hover`, `--sui-star-size`, `--sui-recent-bg`, `--sui-recent-border`, `--sui-recent-item-fg`, `--sui-recent-item-hover`, `--sui-recent-item-radius`, `--sui-recent-section-fg`, `--sui-recent-empty-fg`, `--sui-warning`, `--sui-bg-elevated`, `--sui-bg-secondary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-muted`, `--sui-text-secondary`. Exports:
+  - **createRecentStarredStore(opts)** — store factory. `opts: CreateRecentStarredOpts` = `{ storageKey: string; recentLimit?: number }` (default limit 20; writes `<storageKey>.recent` and `<storageKey>.starred`). Returns `RecentStarredStore` = `{ recent: Accessor<RecentStarredItem[]>; starred: Accessor<RecentStarredItem[]>; pushRecent(item); toggleStar(item); isStarred(id): boolean; clearAll() }`.
+  - **StarToggle** — a 5-point star `<button>` that fills when the item is starred; click flips state via `store.toggleStar`. Props `StarToggleProps`: `store` (RecentStarredStore), `item` (RecentStarredItem), `ariaLabel?` (`(isStarred: boolean) => string`, defaults to "Starred"/"Not starred"), `title?` (string tooltip).
+  - **RecentStarredSidebar** — pure sidebar renderer (no navigation/persistence) built on Layout `NarrowStack` + `BaselineSpreadRow`, showing starred and recent sections (both always render, with counts). Props `RecentStarredSidebarProps`: `store`, `onPick` (`(item) => void`, required), `starredTitle?` (default "Starred"), `recentTitle?` (default "Recent"), `starredEmpty?`/`recentEmpty?` (JSX.Element empty-state copy), `renderItem?` (`(item) => JSX.Element` label override), `class?`.
+  - Use for: navbar/sidebar quick-access shortcuts, star-to-pin favorites, recently-viewed lists.
+  - Example:
+    ```tsx
+    import {
+      createRecentStarredStore,
+      StarToggle,
+      RecentStarredSidebar,
+    } from "solid-ui-components";
+
+    const cases = createRecentStarredStore({ storageKey: "rth.cases" });
+    cases.pushRecent({ id: "r123", label: "R12345", meta: { tenant_id } });
+
+    <StarToggle store={cases} item={{ id: "r123", label: "R12345" }} />
+    <RecentStarredSidebar
+      store={cases}
+      onPick={(item) => navigateToCase(item.meta)}
+    />
+    ```
+
 ## Page
 - **Page** — Full-page container with optional scanline and grid overlays. Key props: `scanLines`, `gridPattern`. Use for: top-level page wrapper. Scanline and grid effects are theme-dependent.
 
@@ -787,6 +1138,17 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **SimplePanel** — Small size, no decorations. (Formerly CompactJTFPanel.)
 - **SpaciousPanel** — Large size.
 
+## CollapsiblePanel
+- **CollapsiblePanel** — Composite (Depth 2). A side panel (`<aside>`) that collapses to a vertical strip with a rotated label and a chevron. Expanded, it shows a collapse tab plus a body wrapping `children`; collapsed, it becomes a clickable strip button that expands on click. Optionally mirrors the collapsed boolean to `window.localStorage` under `persistKey` (SSR-safe; reads `"1"`/`"true"` as collapsed). Props: `side` (`"left"`|`"right"` — drives chevron direction and edge styling), `label` (string, shown rotated on the strip and in expand/collapse titles), `persistKey?` (localStorage key), `defaultCollapsed?` (initial state when no persisted value, default `false`), `class?` (extra class on the outer `<aside>`), `children?`. Exported type `CollapsiblePanelProps`. Both the base `CollapsiblePanel` and the `createCollapsiblePanel(defaults)` factory are exported. Use for: dockable left/right sidebars (filters, inspectors, tool panels) that a user can fold to a thin labeled strip and whose state should persist across reloads.
+  - Example:
+    ```tsx
+    import { CollapsiblePanel } from "solid-ui-components";
+
+    <CollapsiblePanel side="left" label="Filters" persistKey="designview.filters">
+      <FilterList />
+    </CollapsiblePanel>
+    ```
+
 ## ScrollRegion
 - **ScrollRegion** — Atomic Primitive (Depth 1). Owns `ScrollRegion.css`; no library-component imports. A self-contained, **DYNAMIC** scroll affordance: a `position: relative` frame wrapping an `overflow-y: auto` viewport (holding `children`) with TOP and BOTTOM fade overlays whose visibility is **computed at runtime from scroll position**, not painted by static CSS. The component evaluates `overflowing = scrollHeight > clientHeight + threshold`, `atTop`, and `atBottom`; the top fade shows only when `overflowing && !atTop`, the bottom only when `overflowing && !atBottom`, and **NEITHER** when the content fits — so a fade always means "there is more content this way you can't see," never "this is the edge." The recompute fires on three triggers wired up on mount and torn down in `onCleanup`: the viewport's `onScroll`, a `ResizeObserver` (watching both the viewport and the content wrapper, so loading data / toggling rows re-evaluates the fades), and a `MutationObserver` (children added/removed change `scrollHeight` without firing scroll or, in some flex configs, resize). The component is **height-agnostic** — it fills its flex parent rather than baking in a fixed height, so a `height: 100%` / flex child resolves against the viewport while real overflow still scrolls. Colours key off `--sui-*` theme tokens; the fade gradients fade `transparent → var(--sui-bg-primary)` so they match the panel/background in every theme. BEM classes: `.sui-scroll-region` (frame), `__viewport`, `__content`, `__fade` + `__fade--top`/`__fade--bottom` with an `is-visible` state class. Props: `children`, `class`/`style` (inner viewport), `frameStyle` (outer frame), `threshold` (rounding tolerance, default 1), plus standard `<div>` attributes (`id`, `data-*`, aria, `ref`) passing through to the frame. The base `ScrollRegion` IS exported (it is the primary, behaviour-bearing API). **Factory + variants** are optional convenience presets for bounded, non-flex call sites: `createScrollRegion({ style | frameStyle | threshold })` plus `ScrollRegionMd` (viewport caps at 240px) and `ScrollRegionLg` (360px) — these only bake a viewport `max-height`, they do not change the fade behaviour. Exported types: `ScrollRegionProps`, `ScrollRegionOverrides`. Use for: any scrollable list/panel where a "more below/above" cue is wanted and a hard edge should read as the end.
 
@@ -799,6 +1161,22 @@ Where the constituents live (design decision — prefer siblings of existing fam
 
 ## BurndownChart
 - **BurndownChart** — SVG burndown bar chart with dual-axis stacked bars and trendline. Key props: `bars` (array of `BurndownBar` with `planned_complete`, `planned_incomplete`, `unplanned_complete`, `unplanned_incomplete`), `onSegmentClick` (callback with `barIndex` and `BurndownSegmentKind`), `height`. Above zero: green (planned complete) on grey (planned incomplete). Below zero: orange (unplanned complete) on red (unplanned incomplete). Trendline projects remaining planned work to zero with "+Nd" annotation. Uses `--sui-*` CSS variables. Use for: sprint burndown tracking, planned vs actual visualization.
+
+## SprintSelector
+- **SprintSelector** — Atomic (Depth 1). Horizontal row of clickable mini stacked bars for selecting a sprint/week. Each sprint renders a `viewBox="0 0 20 100"` SVG bar whose overall height scales to that sprint's share of the max total across all sprints, internally stacked into four segments — planned-complete, planned-incomplete, unplanned-complete, unplanned-incomplete — with a text label beneath. Each bar-group is a keyboard-accessible `role="button"` (Enter/Space activates). Key props: `sprints` (`SprintSummary[]`, each `{ label; planned_complete; planned_incomplete; unplanned_complete; unplanned_incomplete }` counts), `selectedIndex` (number, optional — applies the selected style), `onSelect` ((index: number) => void, optional). Exported types: `SprintSelectorProps`, `SprintSummary`. Styling shares the `sui-burndown__seg--{pc,pi,uc,ui}` segment classes; CSS tokens `--sui-accent`, `--sui-accent-rgb`, `--sui-text-muted`. Use for: sprint pickers, burndown week navigators, compact multi-period selectors.
+  - Example:
+    ```tsx
+    import { SprintSelector, type SprintSummary } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const sprints: SprintSummary[] = [
+      { label: "W1", planned_complete: 6, planned_incomplete: 2, unplanned_complete: 1, unplanned_incomplete: 0 },
+      { label: "W2", planned_complete: 4, planned_incomplete: 3, unplanned_complete: 2, unplanned_incomplete: 1 },
+    ];
+    const [selected, setSelected] = createSignal(0);
+
+    <SprintSelector sprints={sprints} selectedIndex={selected()} onSelect={setSelected} />
+    ```
 
 ## RingChart
 - **RingChart** — Atomic (Depth 0). Radial donut gauge: stacked arc segments over a background track ring, with a bold auto-fitting center label and optional sublabel. Pure SVG — no library dependencies. Segment order is clockwise from the top (rotated -90deg). The center label font-size is auto-fitted to the ring diameter and the label's character count. Key props: `segments` (`{ value: number; color: string; animate?: boolean }[]` — animate adds a 2s pulse on the arc), `total` (denominator for all segments), `label` (bold center text, e.g. `"62%"`), `sublabel?` (secondary text below label), `size?` (diameter in px, default 100). Use for: completion gauges, category-breakdown donuts, any "N of total" ring indicator.
@@ -1157,6 +1535,23 @@ The renderers family is a set of small, composable components for displaying fie
     <DnDHierarchySortBar items={items()} onReorder={handleReorder} />
     // With custom label:
     <DnDHierarchySortBar items={items()} onReorder={handleReorder} label="group by" />
+    ```
+
+## DragDrop
+- **DragDrop** — Composite (Depth 2). Folder exposing a generic 2x2 quadrant layout for drag-and-drop sorting UIs (the folder currently exports a single component):
+  - **QuadrantGrid** — a generic 2x2 grid of labeled, colored drop zones. Prop `cells` is a fixed 4-tuple of `QuadrantCellConfig` = `{ key: string; label: string; color: string; children: JSX.Element }`, rendered in order top-left, top-right, bottom-left, bottom-right; each cell exposes its accent via the `--sui-quadrant-color` CSS var and renders a label plus a content slot (the intended droppable region, keyed by `key`). Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>`. Exports types `QuadrantGridProps` and `QuadrantCellConfig`; no curry factory. CSS tokens: `--sui-quadrant-color`, `--sui-border`, `--sui-surface`.
+  - Use for: Eisenhower-style priority matrices, 2x2 categorization boards, drag-to-sort quadrant layouts.
+  - Example:
+    ```tsx
+    import { QuadrantGrid } from "solid-ui-components";
+    <QuadrantGrid
+      cells={[
+        { key: "do", label: "Do first", color: "#22c55e", children: <TaskList bucket="do" /> },
+        { key: "schedule", label: "Schedule", color: "#3b82f6", children: <TaskList bucket="schedule" /> },
+        { key: "delegate", label: "Delegate", color: "#f59e0b", children: <TaskList bucket="delegate" /> },
+        { key: "drop", label: "Drop", color: "#ef4444", children: <TaskList bucket="drop" /> },
+      ]}
+    />
     ```
 
 ## TitledTimeRangeHeader
