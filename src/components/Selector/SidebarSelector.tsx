@@ -35,10 +35,6 @@ export interface SidebarSelectorProps<T> {
   renderCard: (item: T, isSelected: boolean) => JSX.Element;
   /** Render function for the selection display button */
   renderSelection: (item: T | undefined) => JSX.Element;
-  /** Optional width for the sidebar */
-  sidebarWidth?: string;
-  /** Optional max height for the sidebar scroll area */
-  maxHeight?: string;
   /** Optional fixed height for the entire layout (sidebar + selection fill this) */
   height?: string;
   /** Optional class for the container */
@@ -68,14 +64,9 @@ export function SidebarSelector<T>(
         class="sidebar-selector__layout"
         style={props.height ? { height: props.height } : undefined}
       >
-        {/* Sidebar with cards */}
-        <NoShrinkScrollBox
-          class="sidebar-selector__sidebar"
-          style={{
-            width: props.sidebarWidth || "280px",
-            ...(props.maxHeight ? { "max-height": props.maxHeight } : {}),
-          }}
-        >
+        {/* Sidebar with cards — frozen 280px width + scroll geometry live in
+            SidebarSelector.css / NoShrinkScrollBox; no inline geometry here. */}
+        <NoShrinkScrollBox class="sidebar-selector__sidebar">
           <Column class="sidebar-selector__list">
             <For each={props.items}>
               {(item) => {
@@ -291,7 +282,7 @@ export function SidebarSelectorDemo(): JSX.Element {
           <EpisodeCard episode={ep} isSelected={isSelected} />
         )}
         renderSelection={(ep) => <EpisodeSelection episode={ep} />}
-        maxHeight="320px"
+        height="320px"
       />
     </div>
   );

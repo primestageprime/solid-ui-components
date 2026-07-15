@@ -642,6 +642,8 @@
 }
 
 .sui-virtual-table__row {
+  /* Frozen estimated row height (matches the virtualizer's estimateSize). */
+  min-height: 36px;
   border-bottom: 1px solid rgba(74, 106, 128, 0.15);
 }
 

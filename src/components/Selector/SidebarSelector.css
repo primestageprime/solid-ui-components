@@ -24,9 +24,10 @@
   margin-bottom: 12px;
 }
 
-/* Fixed-width sidebar chrome (width comes from the sidebarWidth prop; the
-   no-shrink + scroll geometry comes from NoShrinkScrollBox). */
+/* Fixed-width sidebar chrome (frozen 280px width; the no-shrink + scroll
+   geometry comes from NoShrinkScrollBox). */
 .sidebar-selector__sidebar {
+  width: 280px;
   border: 1px solid var(--sui-border);
   background: var(--sui-bg-secondary);
 }

@@ -130,9 +130,7 @@ export const SidebarSelectorShowcase: Component = () => {
           <div class="depth2-atom-group">
             <div class="depth2-atom-group__label">Layout</div>
             <div class="depth2-atom">
-              <div class="depth2-atom__label">
-                sidebarWidth / maxHeight / height
-              </div>
+              <div class="depth2-atom__label">height</div>
             </div>
           </div>
         </div>

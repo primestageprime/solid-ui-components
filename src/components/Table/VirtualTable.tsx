@@ -13,12 +13,13 @@ import type { BaseTableProps, TableColumn } from "./types";
 import { getCellValue } from "./types";
 import "./Table.css";
 
-export interface VirtualTableProps<T> extends BaseTableProps<T> {
-  /** Estimated height of each row in pixels (used before measurement). Default: 36 */
-  rowHeight?: number;
-  /** Number of rows to render outside visible area. Default: 5 */
-  overscan?: number;
-}
+// Frozen virtualization tuning — no caller configured these, so they live as
+// constants (row height also carried in Table.css as .sui-virtual-table__row
+// min-height) rather than props.
+const ROW_HEIGHT = 36; // estimated px before per-row measurement
+const OVERSCAN = 5; // rows rendered outside the viewport
+
+export type VirtualTableProps<T> = BaseTableProps<T>;
 
 export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
   const [local, others] = splitProps(props, [
@@ -33,13 +34,8 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
     "getRowClass",
     "onRowClick",
     "emptyMessage",
-    "rowHeight",
-    "overscan",
     "class",
   ]);
-
-  const rowHeight = () => local.rowHeight ?? 36;
-  const overscan = () => local.overscan ?? 5;
 
   let scrollEl: HTMLDivElement | undefined;
 
@@ -48,8 +44,8 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
       return local.data.length;
     },
     getScrollElement: () => scrollEl ?? null,
-    estimateSize: () => rowHeight(),
-    overscan: overscan(),
+    estimateSize: () => ROW_HEIGHT,
+    overscan: OVERSCAN,
   });
 
   const cellPad = () => (local.compact ? "4px 6px" : "6px 10px");
@@ -158,7 +154,6 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                           local.striped && virtualRow.index % 2 === 1,
                         "sui-virtual-table__row--hoverable": local.hoverable,
                       }}
-                      style={{ "min-height": `${rowHeight()}px` }}
                       onClick={() =>
                         local.onRowClick?.(row(), virtualRow.index)
                       }

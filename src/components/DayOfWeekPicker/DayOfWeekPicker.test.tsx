@@ -45,20 +45,21 @@ describe("DayOfWeekPicker", () => {
     expect(cell.tagName).toBe("BUTTON");
   });
 
-  it("applies the default fixed cell size via shared CSS var", () => {
+  it("emits no inline cell-size style (frozen to the CSS var fallback)", () => {
     const { container } = render(() => (
       <DayOfWeekPicker value={null} onChange={() => {}} />
     ));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--dom-cell-size")).toBe("3.5rem");
+    expect(root.style.getPropertyValue("--dom-cell-size")).toBe("");
   });
 
   it("createDayOfWeekPicker bakes defaults", () => {
-    const Picker = createDayOfWeekPicker({ cellSize: "4rem" });
+    const Picker = createDayOfWeekPicker({ class: "baked" });
     const { container } = render(() => (
       <Picker value={null} onChange={() => {}} />
     ));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--dom-cell-size")).toBe("4rem");
+    expect(root.classList.contains("baked")).toBe(true);
+    expect(container.querySelectorAll(".sui-dow-picker__cell").length).toBe(7);
   });
 });

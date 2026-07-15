@@ -38,11 +38,20 @@ describe("MonthOfYearPicker", () => {
   });
 
   it("createMonthOfYearPicker bakes defaults", () => {
-    const Picker = createMonthOfYearPicker({ cellSize: "2rem" });
+    const Picker = createMonthOfYearPicker({ class: "baked" });
     const { container } = render(() => (
       <Picker value={null} onChange={() => {}} />
     ));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--moy-cell-size")).toBe("2rem");
+    expect(root.classList.contains("baked")).toBe(true);
+    expect(container.querySelectorAll(".sui-moy-picker__cell").length).toBe(12);
+  });
+
+  it("emits no inline cell-size style (frozen to the CSS var fallback)", () => {
+    const { container } = render(() => (
+      <MonthOfYearPicker value={null} onChange={() => {}} />
+    ));
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.getPropertyValue("--moy-cell-size")).toBe("");
   });
 });

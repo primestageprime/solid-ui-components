@@ -76,22 +76,18 @@ describe("SidebarSelector", () => {
     expect(document.querySelector(".sel-name")?.textContent).toBe("none");
   });
 
-  it("renders an optional label and honours the sidebar width", () => {
+  it("renders an optional label; sidebar width is frozen in CSS (no inline)", () => {
     render(() => (
-      <SidebarSelector
-        {...baseProps()}
-        onSelect={() => {}}
-        label="Episodes"
-        sidebarWidth="360px"
-      />
+      <SidebarSelector {...baseProps()} onSelect={() => {}} label="Episodes" />
     ));
     expect(document.querySelector(".sidebar-selector__label")?.textContent).toBe(
       "Episodes",
     );
+    // Width now lives in SidebarSelector.css, not an inline style.
     expect(
       document.querySelector<HTMLElement>(".sidebar-selector__sidebar")?.style
         .width,
-    ).toBe("360px");
+    ).toBe("");
   });
 });
 
