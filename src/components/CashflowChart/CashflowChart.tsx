@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// WeeklyCashflowChart — Composite (Depth 2). Composes CashflowBars + CashflowPopover (each Depth 1).
 // CashflowChart — weekly revenue/expense bars with a running-balance ("coffers")
 // line, ported from the Thorcasting app. Container-driven sizing: the chart FILLS
 // the height its layout box allots it (via a ResizeObserver that measures the

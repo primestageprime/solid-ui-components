@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// RingChart — Structural (Depth 1). SVG chart; composes no library components.
 import { For, Show } from "solid-js";
 
 export interface RingChartProps {

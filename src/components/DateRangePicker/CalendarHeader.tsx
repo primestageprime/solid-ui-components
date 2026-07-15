@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// DateRangePicker/CalendarHeader — Internal (not exported from library root).
+// DateRangePicker/CalendarHeader — Internal (Depth 1) (not exported from library root).
 // Month label + prev/next month nav buttons.
 // ============================================
 import type { Accessor, Component } from "solid-js";

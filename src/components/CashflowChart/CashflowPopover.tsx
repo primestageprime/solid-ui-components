@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// CashflowPopover — Structural (Depth 1). Internal render fragment; composes no library components.
 // CashflowChart — the HOVER POPOVER render fragment for the weekly chart.
 //
 // When the pointer is over a bar segment, WeeklyCashflowChart tracks a

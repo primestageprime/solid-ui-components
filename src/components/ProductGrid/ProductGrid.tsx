@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// ProductGrid — Pure Composite (Depth ≥ 2).
+// ProductGrid — Pure Composite (Depth 2).
 // Composes AreaFocusGrid + ProductGridCard + FocusLabelBand + StackedProgressBar.
 //
 // (Area × focus) pivot grid. Above-the-line items are solutions whose

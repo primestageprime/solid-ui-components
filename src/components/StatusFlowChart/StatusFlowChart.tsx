@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// StatusFlowChart — Composite (Depth 2). Composes SwimlaneChart (Depth 1).
 import {
   createMemo,
   createSignal,

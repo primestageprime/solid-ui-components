@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// CashflowBars — Structural (Depth 1). Internal SVG render fragment; composes no library components.
 // CashflowChart — the STACKED WEEKLY BARS render fragment.
 //
 // For each week this draws up to four stacked <rect>s — two revenue segments

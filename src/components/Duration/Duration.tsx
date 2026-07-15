@@ -1,3 +1,4 @@
+// Duration — Atomic Primitive (Depth 1, styleless). Wraps a pure ms→text formatter in a bare <span>.
 export interface DurationProps {
   /** Duration in milliseconds */
   ms: number | null | undefined;

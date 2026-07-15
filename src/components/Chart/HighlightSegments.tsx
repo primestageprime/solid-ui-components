@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// HighlightSegments — Structural (Depth 1). SVG chart slot; composes no library components.
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
 import { type Component, For, Show, createMemo, mergeProps } from "solid-js";

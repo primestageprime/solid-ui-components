@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// PinMarkers — Structural (Depth 1). SVG chart slot (renders ShapeGlyph, a same-dir render helper).
 // `renderPin` is an escape hatch when the descriptor cannot express what
 // the consumer needs (otherwise the slot renders one ShapeGlyph per pin).
 import {

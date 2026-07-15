@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// SwimlaneAnimatedLane — Structural (Depth 1). SVG lane renderer; composes no library components.
 // src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.tsx
 import {
   createEffect,

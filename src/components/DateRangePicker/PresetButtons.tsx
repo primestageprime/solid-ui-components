@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// DateRangePicker/PresetButtons — Internal (not exported from library root).
+// DateRangePicker/PresetButtons — Internal (Depth 1) (not exported from library root).
 // Native <button> chips styled by the parent Primitive's own CSS
 // (`.sui-drp__preset-btn`). Intentionally does NOT import the library's
 // `Button` — keeps DateRangePicker a leaf Primitive with no sibling-component

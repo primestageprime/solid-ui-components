@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// VirtualTable — Atomic (Depth 1). Native table markup; composes no library components.
 /**
  * VirtualTable — renders only visible rows using @tanstack/solid-virtual.
  * Same API as BaseTable but with virtual scrolling for large datasets.

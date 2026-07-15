@@ -1,4 +1,5 @@
-/* SplitQueueList — STATIC mode.
+/* StaticSplitLayout — Composed (Depth 1). Composes Surface (Depth 0).
+ * SplitQueueList — STATIC mode.
  *
  * A non-animated "two stacked labeled sections with a seam" layout: a read-only
  * TOP list of recent items and an arbitrary BOTTOM block the consumer composes.

@@ -1,5 +1,5 @@
 // ============================================
-// Sidebar — Resizable, width-persisting side column.
+// Sidebar — Layout (Depth 1). Resizable, width-persisting side column; composes Stack (Depth 0).
 //
 // A fixed-but-draggable vertical column for the side of a two-pane layout.
 // Bakes the layout plumbing (fixed width, flex-shrink:0, full-height stretch,

@@ -1,3 +1,4 @@
+// SplitQueueList — Composite (Depth 2). Composes Surface (Depth 0) + StaticSplitLayout (Depth 1).
 import {
   For,
   Show,

@@ -1,4 +1,5 @@
-// WorkProgressCard — a status-aware work card with a progress bar derived
+// WorkProgressCard — Composed (Depth 1). Composes Surface / Text / Layout variants (each Depth 0).
+// A status-aware work card with a progress bar derived
 // entirely from work metadata. Data-only: the caller passes domain values
 // (status, estimate, actual) and never reasons about colors or proportions —
 // all styling comes from cardProgress.ts. It carries no visual/size overrides,

@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// GhostPin — Structural (Depth 1). SVG chart slot (renders ShapeGlyph, a same-dir render helper).
 // Anchored to context.hoverX; `descriptor=null` hides the ghost.
 import { type Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";

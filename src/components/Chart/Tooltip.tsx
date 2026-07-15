@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// ChartTooltip — Structural (Depth 1). HTML overlay chart slot; composes no library components.
 // Chart slot: Tooltip — HTML overlay anchored to the hovered X.
 // Rendered via Solid <Portal> into Chart's overlay div, NOT into the SVG —
 // HTML inside <svg><g> has zero layout (needs <foreignObject>), so the tooltip

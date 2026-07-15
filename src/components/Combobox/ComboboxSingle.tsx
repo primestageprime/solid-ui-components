@@ -1,5 +1,6 @@
 // ============================================
 // Combobox — Single-mode render (internal sibling of Combobox.tsx)
+// Atomic (Depth 1) — internal render half of the Combobox Kobalte-wrapping Primitive.
 // ============================================
 // Extracted from Combobox.tsx to keep each module under the ~500-line
 // guideline. This is NOT a public export — the folder barrel (index.ts)

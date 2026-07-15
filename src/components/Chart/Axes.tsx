@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// Axes (XAxis / YAxis) — Structural (Depth 1). SVG chart slot; composes no library components.
 import {
   type Component,
   For,
