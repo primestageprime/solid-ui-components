@@ -3,6 +3,7 @@ import {
   SprintSelector,
   type SprintSummary,
 } from "../../src/components/SprintSelector";
+import { NarrowStack } from "../../src/components/Layout";
 
 export const SprintSelectorShowcase: Component = () => {
   const [idx, setIdx] = createSignal(2);
@@ -36,16 +37,14 @@ export const SprintSelectorShowcase: Component = () => {
         Pick a sprint from a horizontal strip; shows label + progress per
         sprint. Reactive over <code>selectedIndex</code>.
       </p>
-      <div class="example-group">
+      <NarrowStack class="example-group">
         <SprintSelector
           sprints={sprints}
           selectedIndex={idx()}
           onSelect={(i) => setIdx(i)}
         />
-        <p class="text-meta" style={{ "margin-top": "8px" }}>
-          selected: {sprints[idx()]?.label}
-        </p>
-      </div>
+        <p class="text-meta">selected: {sprints[idx()]?.label}</p>
+      </NarrowStack>
     </div>
   );
 };

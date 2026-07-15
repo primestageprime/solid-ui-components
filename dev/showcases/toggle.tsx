@@ -1,5 +1,6 @@
 import { createSignal, type Component } from "solid-js";
 import { Toggle } from "../../src/components/Toggle";
+import { TextSublabel } from "../../src/components/Text";
 
 export const ToggleShowcase: Component = () => {
   const [enabled1, setEnabled1] = createSignal(false);
@@ -21,9 +22,7 @@ export const ToggleShowcase: Component = () => {
             checked={enabled1()}
             onChange={() => setEnabled1(!enabled1())}
           />
-          <span style={{ color: "var(--sui-text-secondary)" }}>
-            State: {enabled1() ? "ON" : "OFF"}
-          </span>
+          <TextSublabel>State: {enabled1() ? "ON" : "OFF"}</TextSublabel>
         </div>
       </div>
 

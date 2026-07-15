@@ -8,7 +8,7 @@ import {
   SuccessSurface,
   DangerSurface,
 } from "../../src/components/Surface";
-import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 export const SurfaceShowcase: Component = () => {
@@ -44,7 +44,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants — Shape</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <div>
             <CardSurface>
               <Text variant="body">CardSurface</Text>
@@ -61,12 +61,12 @@ export const SurfaceShowcase: Component = () => {
               CompactSurface — padding: "sm", radius: "sm"
             </div>
           </div>
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Curried Variants — Status Colors</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <div>
             <InfoSurface>
               <Text variant="body">InfoSurface</Text>
@@ -99,7 +99,7 @@ export const SurfaceShowcase: Component = () => {
               DangerSurface — card + rgba(255,0,64) bg/border
             </div>
           </div>
-        </Stack>
+        </NarrowStack>
       </div>
     </div>
   );

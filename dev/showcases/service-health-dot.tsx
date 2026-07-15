@@ -1,5 +1,6 @@
 import { type Component, createSignal, onCleanup, onMount, For } from "solid-js";
 import { ServiceHealthDot } from "../../src/components/ServiceHealthDot";
+import { WrappedClusterRow } from "../../src/components/Layout";
 
 // ── Ticking harness (showcase only — NOT in the component) ───────────────────
 // Each service has a lastBeat timestamp. Every 1 Hz tick we compute ageMs from
@@ -84,7 +85,7 @@ export const ServiceHealthDotShowcase: Component = () => {
           scheduler every 14s (nearly stale), dead-svc never beats.
           Hover each dot to see the sparkline popover.
         </p>
-        <div style={{ display: "flex", gap: "24px", "align-items": "center", "flex-wrap": "wrap", padding: "16px 0" }}>
+        <WrappedClusterRow style={{ padding: "16px 0" }}>
           <For each={services()}>
             {svc => (
               <ServiceHealthDot
@@ -95,7 +96,7 @@ export const ServiceHealthDotShowcase: Component = () => {
               />
             )}
           </For>
-        </div>
+        </WrappedClusterRow>
       </div>
 
       <div class="example-group">
@@ -104,7 +105,7 @@ export const ServiceHealthDotShowcase: Component = () => {
           Pure snapshots demonstrating the opacity ramp at various ages
           (threshold = 15 000 ms). No ticking.
         </p>
-        <div style={{ display: "flex", gap: "24px", "align-items": "center", "flex-wrap": "wrap", padding: "16px 0" }}>
+        <WrappedClusterRow style={{ padding: "16px 0" }}>
           <For each={[
             { name: "0 ms (fresh)",      ageMs: 0,      samples: [0.0, 0.0, 0.0] },
             { name: "3 750 ms (25%)",    ageMs: 3_750,  samples: [0.1, 0.15, 0.25] },
@@ -121,7 +122,7 @@ export const ServiceHealthDotShowcase: Component = () => {
               />
             )}
           </For>
-        </div>
+        </WrappedClusterRow>
       </div>
     </div>
   );

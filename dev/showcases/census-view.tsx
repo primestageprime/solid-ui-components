@@ -4,6 +4,7 @@ import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
 import { CensusView, type CensusTable } from "../../src/components/CensusView";
 import { SmallGhostButton } from "../../src/components/Button";
+import { NarrowStack, WrappedClusterRow } from "../../src/components/Layout";
 
 // ── Seed tables — one entry per bucket (all 8) plus extras for scroll visibility ──
 const SEED_TABLES: CensusTable[] = [
@@ -60,32 +61,34 @@ export const CensusViewShowcase: Component = () => {
 
       <div class="example-group">
         <h3>All 8 buckets + working actions slot</h3>
-        {lastAction() && (
-          <p class="text-meta" style={{ "margin-bottom": "8px" }}>
-            Last action: <code>{lastAction()}</code>
-          </p>
-        )}
-        {/* tableMaxHeight caps every bucket table at 200px; the "< 100 rows"
-            bucket is seeded with 11 rows so it scrolls internally with the
-            sticky header staying visible. */}
-        <CensusView
-          tables={SEED_TABLES}
-          tableMaxHeight="200px"
-          actions={(t) => (
-            <div style={{ display: "flex", gap: "8px", "margin-top": "12px", "flex-wrap": "wrap" }}>
-              <SmallGhostButton
-                onClick={() => setLastAction(`Recount: ${t.entity}`)}
-              >
-                Recount
-              </SmallGhostButton>
-              <SmallGhostButton
-                onClick={() => setLastAction(`Queue export: ${t.entity}`)}
-              >
-                Queue export
-              </SmallGhostButton>
-            </div>
+        <NarrowStack>
+          {lastAction() && (
+            <p class="text-meta">
+              Last action: <code>{lastAction()}</code>
+            </p>
           )}
-        />
+          {/* tableMaxHeight caps every bucket table at 200px; the "< 100 rows"
+              bucket is seeded with 11 rows so it scrolls internally with the
+              sticky header staying visible. */}
+          <CensusView
+            tables={SEED_TABLES}
+            tableMaxHeight="200px"
+            actions={(t) => (
+              <WrappedClusterRow>
+                <SmallGhostButton
+                  onClick={() => setLastAction(`Recount: ${t.entity}`)}
+                >
+                  Recount
+                </SmallGhostButton>
+                <SmallGhostButton
+                  onClick={() => setLastAction(`Queue export: ${t.entity}`)}
+                >
+                  Queue export
+                </SmallGhostButton>
+              </WrappedClusterRow>
+            )}
+          />
+        </NarrowStack>
       </div>
 
       <div class="example-group">

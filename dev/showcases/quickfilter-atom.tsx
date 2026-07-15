@@ -1,6 +1,6 @@
 import { type Component, For } from "solid-js";
 import { QuickFilter } from "../../src/components/QuickFilter";
-import { Stack } from "../../src/components/Layout/Stack";
+import { TightStack } from "../../src/components/Layout";
 import { CompactCard } from "../../src/components/Surface";
 import { TextLabel, TextSublabel } from "../../src/components/Text";
 
@@ -56,7 +56,7 @@ export const QuickFilterAtomShowcase: Component = () => {
           placeholder="Filter items…"
         >
           {(filtered, q) => (
-            <Stack gap="xs" style={{ "max-width": "480px" }}>
+            <TightStack style={{ "max-width": "480px" }}>
               <TextSublabel>
                 {filtered.length} of {ITEMS.length} matching{" "}
                 {q ? `"${q}"` : "(none)"}
@@ -69,7 +69,7 @@ export const QuickFilterAtomShowcase: Component = () => {
                   </CompactCard>
                 )}
               </For>
-            </Stack>
+            </TightStack>
           )}
         </QuickFilter>
       </div>

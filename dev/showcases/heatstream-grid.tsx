@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { HeatStreamGrid } from "../../src/components/HeatStreamGrid";
 import { createSelectionStore } from "../../src/components/Table/createSelectionStore";
+import { NarrowStack } from "../../src/components/Layout";
 import type {
   HeatStreamItem,
   HeatStreamStatus,
@@ -137,16 +138,18 @@ export const HeatStreamGridShowcase: Component = () => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>4 Assets x 6 Months — Selectable Grid</h3>
-          <p class="text-meta" style={{ "margin-bottom": "8px" }}>
-            Selected: {selectionStore.selected().size} cells
-          </p>
-          <HeatStreamGrid
-            rows={ROWS}
-            columns={COLUMNS}
-            keys={KEYS}
-            data={getData}
-            selectionStore={selectionStore}
-          />
+          <NarrowStack>
+            <p class="text-meta">
+              Selected: {selectionStore.selected().size} cells
+            </p>
+            <HeatStreamGrid
+              rows={ROWS}
+              columns={COLUMNS}
+              keys={KEYS}
+              data={getData}
+              selectionStore={selectionStore}
+            />
+          </NarrowStack>
         </div>
         <div class="depth2-atoms">
           <h3>Props</h3>

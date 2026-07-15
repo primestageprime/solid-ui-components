@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 import { NavLink } from "../../src/components/Navigation";
+import { TightClusterRow, NarrowStack } from "../../src/components/Layout";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -16,10 +17,8 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <div
+          <TightClusterRow
             style={{
-              display: "flex",
-              gap: "4px",
               "border-bottom": "1px solid var(--sui-border)",
               "padding-bottom": "2px",
             }}
@@ -32,7 +31,7 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
               Alerts
             </NavLink>
             <NavLink href="#">Settings</NavLink>
-          </div>
+          </TightClusterRow>
         </div>
         <div class="depth2-atoms">
           <h3>Atomic</h3>
@@ -41,13 +40,7 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("nav-item")}
           >
             <div class="depth2-atom__label">NavItem</div>
-            <div
-              style={{
-                display: "flex",
-                "flex-direction": "column",
-                gap: "8px",
-              }}
-            >
+            <NarrowStack>
               <NavLink href="#" active>
                 Active
               </NavLink>
@@ -55,7 +48,7 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
               <NavLink href="#" color="warning" badge={3}>
                 With Badge
               </NavLink>
-            </div>
+            </NarrowStack>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { type Component, createSignal } from "solid-js";
 import { RangeAmountGroup } from "../../src/components/RangeAmountGroup";
-import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 
 /**
  * RangeAmountGroup showcase — closes the showcase gap so the layout-purity
@@ -37,9 +37,9 @@ export const RangeAmountGroupShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Narrow (stacks one-per-line, below breakWidth)</h3>
-        <Stack gap="sm" style={{ width: "260px" }}>
+        <NarrowStack style={{ width: "260px" }}>
           <RangeAmountGroup slots={slots()} name="narrow" />
-        </Stack>
+        </NarrowStack>
       </div>
     </div>
   );
