@@ -22,6 +22,7 @@
 
 ### Fixed
 
+- **`StackedProgressBar` segments actually stack now.** Solid silently drops the first of two computed keys in a style object literal, so the cumulative `left`/`bottom` offset never rendered — every segment sat at the start edge, overlapping, since the component's inception (found by the new test batch, verified in Chrome). Fixed with explicit per-orientation style objects; regression test asserts the offsets.
 - **`HotkeyButton.isEditableTarget`** now returns a real boolean (`isContentEditable ?? false`) instead of `undefined` for non-editable elements.
 
 ### Added

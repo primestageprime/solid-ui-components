@@ -30,12 +30,13 @@ describe("StackedProgressBar", () => {
     const segs = container.querySelectorAll<HTMLElement>(
       ".stacked-progress-bar__segment",
     );
-    // NOTE: the cumulative `left` offset (StackedProgressBar.tsx:71) never
-    // reaches the DOM in this render path — only the width/height computed key
-    // lands. Assert the part that renders; the offset gap is reported upstream.
     expect(segs[0].style.width).toBe("25%");
     expect(segs[1].style.width).toBe("40%");
     expect(segs[0].style.background).toBe("red");
+    // Cumulative offsets stack the segments (regression: Solid dropped the
+    // first of two computed style keys, so `left` never rendered).
+    expect(segs[0].style.left).toBe("0%");
+    expect(segs[1].style.left).toBe("25%");
   });
 
   it("applies the vertical modifier and renders a label", () => {

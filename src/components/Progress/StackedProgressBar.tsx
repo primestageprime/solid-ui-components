@@ -67,11 +67,23 @@ export const StackedProgressBar: Component<StackedProgressBarProps> = (
         {(seg) => (
           <div
             class="stacked-progress-bar__segment"
-            style={{
-              [isVertical() ? "bottom" : "left"]: `${seg.offset}%`,
-              [isVertical() ? "height" : "width"]: `${seg.percentage}%`,
-              background: seg.color,
-            }}
+            // Explicit per-orientation objects: Solid's style handling
+            // silently drops the FIRST of two computed keys in one object
+            // literal (verified in Chrome — segments overlapped at the
+            // start edge for the component's whole life).
+            style={
+              isVertical()
+                ? {
+                    bottom: `${seg.offset}%`,
+                    height: `${seg.percentage}%`,
+                    background: seg.color,
+                  }
+                : {
+                    left: `${seg.offset}%`,
+                    width: `${seg.percentage}%`,
+                    background: seg.color,
+                  }
+            }
           />
         )}
       </For>
