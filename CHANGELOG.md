@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.105.0
+
 ### ⚠ Breaking
 
 - **`HeatStack` renders rows in input order** (first item at top). It previously reversed the array ("earliest at bottom"); Peter ruled that a bug — visual order now matches array order. Consumers relying on the bottom-up stacking must reverse their input.
@@ -15,6 +17,12 @@
 - **`createDropdown` + `InlineSubtleDropdown`** — Dropdown gains the Overrides/DataProps split (`size`/`subtle` curried); `InlineSubtleDropdown` (sm, subtle) is the compact inline-picker form thorcasting configures by hand today.
 - **CONTEXT.md: `Structural` Primitive subkind** — chart/SVG-geometry primitives (axes, grids, series, bands) are now a defined third subkind alongside Atomic and Layout.
 - **Gallery chrome: `.demo-frame` / `.demo-cols`** — dashed demo frames and comparison columns for visualizing invisible layout components; `stack.tsx` and `row.tsx` showcases recomposed onto them (21 → 2 inline styles).
+- **`--sui-series-1..8` categorical data-viz palette** — every theme (default, HUD, bronze, colorblind) now declares eight fixed, CVD-validated series slots; callers colour chart series / legend swatches / category dots by `var(--sui-series-N)` instead of hardcoding hues. Eight is a hard cap; the status tokens (`--sui-success`/`--sui-warning`/`--sui-danger`) are reserved for meaning and never a series slot. See ADR 0003.
+- **`BaseTable`: `onRowHover` callback** — fires with the hovered row for cross-highlighting between a table and a linked chart.
+- **`Chart`: `responsive` prop** — fills the container width via a `viewBox` aspect ratio instead of a fixed pixel width.
+- **Inline-style rubric linter (`scripts/style-rubric.mjs`) + ADR 0003** — a compiler-API walker classifies every `src` inline style against a category allow-list (`scripts/style-rubric.json`); a static-literal inline is now a `styleRubricViolations` health violation (ratcheted at 0). Curried variants in `variants.ts` are the sanctioned home for static presentational config.
+- **Production usage manifest (`scripts/usage-manifest.mjs` + `docs/usage-manifest.json`)** — surveys which SUI exports each production consumer (dside, amygdala, jtf, goose, wellappoint, thorcasting) actually imports; `--check` guards the manifest against drift in the pre-push gate.
+- **12 curried variants promoted for the jtf-ui migration** (real call sites, no new props/components). Text: **`EmphasisBody`** / **`AccentEmphasisBody`** (inline bold 600, plain + accent), **`NoteText`** (italic sublabel note), **`WarningBody`** / **`SuccessBody`** (status-tinted body, joining `DangerBody`), **`DangerSublabel`** (inline error caption), **`CaptionLabel`** / **`AccentCaptionLabel`** (uppercase letter-spaced section captions, secondary + accent), and **`TopicTitle`** (`title` variant, `as="h4"` — the h4 level of the `PageTitle`/`SectionTitle`/`SubsectionTitle` heading series). Button: **`SmallOutlinedButton`** (outlined, sm). Modal: **`PrimaryConfirmationModal`** (md, clip, primary) / **`LargePrimaryConfirmationModal`** (lg sibling).
 
 ### Changed
 
