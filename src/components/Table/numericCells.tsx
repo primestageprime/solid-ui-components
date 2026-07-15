@@ -199,7 +199,7 @@ export const MetricValueCell: Component<MetricValueCellProps> = (props) => {
     if (props.compliant == null) return undefined;
     return props.compliant
       ? (props.compliantColor ?? "var(--sui-accent)")
-      : (props.violationColor ?? "#ff0040");
+      : (props.violationColor ?? "var(--sui-danger)");
   };
 
   return (

@@ -62,14 +62,15 @@ for (const f of walk(join(root, "src/components"), (p) => p.endsWith(".css"))) {
 
 for (const f of walk(
   join(root, "src/components"),
-  (p) => p.endsWith(".tsx") && !p.includes(".test."),
+  (p) => /\.tsx?$/.test(p) && !p.includes(".test.") && !p.endsWith(".d.ts"),
 )) {
   lines(f).forEach((l, i) => {
     if (isCommentLine(l)) return;
     const rel = `${f.replace(root + "/", "")}:${i + 1}`;
     if (/["'`]#[0-9a-fA-F]{3,8}\b/.test(l.replace(/var\([^)]*\)/g, "")))
       hits.bareHexTsx.push(rel);
-    if (l.includes("style={{")) hits.inlineStyleSrc.push(rel);
+    if (f.endsWith(".tsx") && l.includes("style={{"))
+      hits.inlineStyleSrc.push(rel);
   });
 }
 

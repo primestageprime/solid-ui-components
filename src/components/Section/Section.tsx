@@ -111,7 +111,7 @@ export const Section: Component<SectionProps> = (props) => {
               <p class="sui-section__subtitle">{local.subtitle}</p>
             </Show>
           </div>
-          <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
+          <div class="sui-section__header-actions">
             {local.headerAction}
             <Show when={local.collapsible}>
               <button

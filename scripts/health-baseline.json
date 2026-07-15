@@ -1,9 +1,9 @@
 {
   "bareHexCss": 0,
-  "bareHexTsx": 8,
-  "inlineStyleSrc": 144,
-  "inlineStyleShowcases": 800,
-  "foldersWithoutTests": 48,
-  "undocumentedComponents": 27,
-  "missingDepthHeaders": 47
+  "bareHexTsx": 0,
+  "inlineStyleSrc": 140,
+  "inlineStyleShowcases": 782,
+  "foldersWithoutTests": 26,
+  "undocumentedComponents": 0,
+  "missingDepthHeaders": 1
 }

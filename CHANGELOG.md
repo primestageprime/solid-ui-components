@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- **Token purity extended to TSX/TS: all remaining bare hex colors removed from src.** `SidebarSelector` demo fixtures, `MetricValueCell`'s violation default, `ConversationTree` bubble colors, `WorkProgressCard`'s bar palette, and `WarningTitle` now use `--sui-*` tokens (originals kept as fallbacks); the health scan now covers `.ts` files too. Static inline styles in `Section`, `CensusView`, and the `SidebarSelector` demo moved to their component CSS.
+- **`StatusCard` no longer crashes on mount when `ResizeObserver` is unavailable** (jsdom/SSR) — guarded like `MessageBubble`.
+- **Test coverage: 23 previously-untested component folders now have tests** (+125 tests; issue #48 phase 4 batches 1-2). 46 component headers gained explicit kind/depth declarations; 27 uncataloged components documented in COMPONENTS.md; worst showcases (recent-starred, progress-card, checkbox) recomposed with curried vocabulary.
+
 - **Token purity: all 25 bare hex colors removed from component CSS** (plus `GroupedTable`'s inline `#ff6b6b` → `var(--sui-danger)`). Every hardcoded color now derives from a `--sui-*` token with the original value as fallback: dark-text-on-accent → `var(--sui-bg-deep)` (Button/ActionRow/AssigneeChips, matching SegmentedControl's precedent), Alarm reds → `var(--sui-danger)`, MathFormula number gold and RecentStarred star colors → `var(--sui-warning)`, RecentStarred surface palette → bg/border/text tokens, Table info-tag blue → accent tokens, and derived shades (CashflowChart project/onetime bars, Table danger hover, Alarm count tint) via `color-mix()` on the token. Themes now retint these components; under the default theme values shift only marginally toward their semantic tokens.
 
 - **`Sparkline`** — Atomic (Depth 1). Generic inline SVG polyline sparkline with `line` and `sawtooth` modes; color is prop-driven (`var(--sui-accent)` default). Complements `TrendSparkline` (trend-colored) and `HeartbeatSparkline` (0..1 health strips).

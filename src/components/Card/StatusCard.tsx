@@ -103,6 +103,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
   const attachRef = (el: HTMLSpanElement) => {
     descRef = el;
     queueMicrotask(measure);
+    if (typeof ResizeObserver === "undefined") return; // jsdom/SSR
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
     onCleanup(() => ro.disconnect());

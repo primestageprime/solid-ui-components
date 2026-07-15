@@ -145,7 +145,10 @@ export const InfoTitle = createText({
   variant: "title",
   color: "var(--sui-accent)",
 });
-export const WarningTitle = createText({ variant: "title", color: "#ffcc00" });
+export const WarningTitle = createText({
+  variant: "title",
+  color: "var(--sui-warning, #ffcc00)",
+});
 export const SuccessTitle = createText({
   variant: "title",
   color: "var(--sui-success)",

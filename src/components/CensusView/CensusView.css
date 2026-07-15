@@ -35,3 +35,9 @@
   position: sticky;
   top: 0;
 }
+
+/* Entity subtitle — second line under the entity name in the entity column. */
+.sui-census__entity-subtitle {
+  display: block;
+  font-size: 0.85em;
+}

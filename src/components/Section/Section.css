@@ -119,3 +119,10 @@
   bottom: 0;
   right: 0;
 }
+
+/* Header action cluster — headerAction slot + collapse toggle. */
+.sui-section__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

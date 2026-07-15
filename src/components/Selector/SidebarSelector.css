@@ -185,3 +185,17 @@
   padding-top: 12px;
   border-top: 1px solid var(--sui-border);
 }
+
+/* Demo scaffold (SidebarSelectorDemo) — page wrapper + heading. */
+.episode-demo {
+  padding: 20px;
+  background: var(--sui-bg-deep);
+}
+
+.episode-demo__heading {
+  color: var(--sui-accent);
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}

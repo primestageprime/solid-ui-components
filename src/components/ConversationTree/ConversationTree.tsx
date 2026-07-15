@@ -227,11 +227,11 @@ const flattenWithGrouping = (
 
 const bubbleBg = (color: string, isSelf: boolean): string =>
   isSelf
-    ? `color-mix(in srgb, ${color} 70%, #0a1525 30%)`
+    ? `color-mix(in srgb, ${color} 70%, var(--sui-bg-deep, #0a1525) 30%)`
     : `color-mix(in srgb, ${color} 12%, transparent)`;
 
 const bubbleTextColor = (isSelf: boolean): string | undefined =>
-  isSelf ? "#f4f8ff" : undefined;
+  isSelf ? "var(--sui-text-primary, #f4f8ff)" : undefined;
 
 export const ConversationTree: Component<ConversationTreeProps> = (props) => {
   const groupWithinMs = () => props.groupWithinMs ?? 5 * 60_000;

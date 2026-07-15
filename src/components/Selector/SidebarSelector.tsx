@@ -201,7 +201,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 1,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Feb 21, 2005",
       synopsis:
         "Katara and Sokka discover Aang, the long-lost Avatar, frozen in an iceberg.",
@@ -214,7 +214,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 3,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Feb 25, 2005",
       synopsis:
         "Aang returns to his childhood home and learns the fate of his people.",
@@ -227,7 +227,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 12,
       primaryCharacter: "Zuko",
-      characterColor: "#ff4444",
+      characterColor: "var(--sui-danger)",
       airDate: "Jun 3, 2005",
       synopsis:
         "The pasts of both Aang and Zuko are revealed through flashbacks.",
@@ -240,7 +240,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 2,
       episode: 6,
       primaryCharacter: "Toph",
-      characterColor: "#44cc44",
+      characterColor: "var(--sui-success)",
       airDate: "May 5, 2006",
       synopsis:
         "The gang searches for an earthbending teacher and discovers Toph.",
@@ -253,7 +253,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 2,
       episode: 15,
       primaryCharacter: "Iroh",
-      characterColor: "#ff8844",
+      characterColor: "var(--sui-accent)",
       airDate: "Sep 29, 2006",
       synopsis:
         "A collection of short stories featuring each member of the group.",
@@ -266,7 +266,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 3,
       episode: 21,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Jul 19, 2008",
       synopsis: "The final battle. Aang faces Fire Lord Ozai to end the war.",
     },
@@ -281,18 +281,8 @@ export function SidebarSelectorDemo(): JSX.Element {
   };
 
   return (
-    <div style={{ padding: "20px", background: "var(--sui-bg-deep)" }}>
-      <h3
-        style={{
-          color: "var(--sui-accent)",
-          "margin-bottom": "16px",
-          "font-size": "14px",
-          "text-transform": "uppercase",
-          "letter-spacing": "0.1em",
-        }}
-      >
-        Episode Selector
-      </h3>
+    <div class="episode-demo">
+      <h3 class="episode-demo__heading">Episode Selector</h3>
       <SidebarSelector
         items={AVATAR_EPISODES}
         selectedId={selectedId()}

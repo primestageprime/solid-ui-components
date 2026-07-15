@@ -50,7 +50,7 @@ function buildColumns(
         <span title={row.entity}>
           {row.entity}
           {row.subtitle && (
-            <span class="text-meta" style={{ "font-size": "0.85em", display: "block" }}>
+            <span class="text-meta sui-census__entity-subtitle">
               {row.subtitle}
             </span>
           )}
