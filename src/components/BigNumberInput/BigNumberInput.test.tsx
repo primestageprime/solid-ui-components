@@ -176,27 +176,6 @@ describe("BigNumberInput", () => {
     expect(input.value).toBe("$950.00");
   });
 
-  // -- deprecated escape-hatch chrome ---------------------------------
-
-  it("still renders deprecated prefix/sign chrome when provided", () => {
-    const { container } = render(() => (
-      <BigNumberInput value={50} prefix="$" sign="+" onChange={() => {}} />
-    ));
-    expect(
-      container.querySelector(".sui-big-number__prefix")?.textContent,
-    ).toBe("$");
-    expect(container.querySelector(".sui-big-number__sign")?.textContent).toBe(
-      "+",
-    );
-  });
-
-  it("omits the sign chrome when sign is 'none' or absent", () => {
-    const { container } = render(() => (
-      <BigNumberInput value={50} sign="none" onChange={() => {}} />
-    ));
-    expect(container.querySelector(".sui-big-number__sign")).toBeNull();
-  });
-
   // -- fixed width ----------------------------------------------------
 
   it("renders the same fixed-width root for small and max values", () => {

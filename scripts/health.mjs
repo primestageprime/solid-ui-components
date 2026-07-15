@@ -74,14 +74,11 @@ for (const f of walk(
   });
 }
 
-// Workshop benches (dev/showcases/workshop/) are LABS — experiments are
-// exempt from showcase purity, so the metric measures only the catalog
-// showcases that teach composition patterns.
+// Workshop benches count too (Peter ruling 2026-07-15): benches use the
+// curried SUI vocabulary like any showcase — inline styles there are
+// only for genuinely dynamic experiment geometry.
 let inlineStyleShowcases = 0;
-for (const f of walk(
-  join(root, "dev/showcases"),
-  (p) => p.endsWith(".tsx") && !p.includes("/workshop/"),
-))
+for (const f of walk(join(root, "dev/showcases"), (p) => p.endsWith(".tsx")))
   for (const l of lines(f)) if (l.includes("style={{")) inlineStyleShowcases++;
 
 const foldersWithoutTests = componentDirs.filter(

@@ -241,3 +241,22 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     </div>
   );
 };
+
+// ── currying ─────────────────────────────────────────────────────────────
+
+export type DropdownOverrides = Pick<DropdownProps, "size" | "subtle">;
+export type DropdownDataProps = Omit<DropdownProps, keyof DropdownOverrides>;
+
+export function createDropdown(
+  defaults: DropdownOverrides,
+): Component<DropdownDataProps> {
+  return (props) => <Dropdown {...mergeProps(defaults, props)} />;
+}
+
+/** Compact inline picker: small trigger that reads as plain text until
+ *  hovered. The form used beside values in dense editors/panes
+ *  (thorcasting's option editor + explore pane). */
+export const InlineSubtleDropdown = createDropdown({
+  size: "sm",
+  subtle: true,
+});

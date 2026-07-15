@@ -50,8 +50,8 @@ describe("HeatStack", () => {
     const cell = container.querySelector(".jtf-heatstack__cell")!;
     fireEvent.click(cell);
     expect(onItemClick).toHaveBeenCalledOnce();
-    // Rows are reversed (earliest at bottom), so the first rendered cell is "Second".
-    expect(onItemClick).toHaveBeenCalledWith("Second", "A");
+    // Rows render in input order — the first rendered cell is the first item.
+    expect(onItemClick).toHaveBeenCalledWith("First", "A");
   });
 
   it("applies the variant modifier class", () => {

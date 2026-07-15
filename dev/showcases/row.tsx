@@ -31,11 +31,13 @@ export const RowShowcase: Component = () => {
           {(["xs", "sm"] as const).map((gap) => (
             <div>
               <Text variant="sublabel">{gap}</Text>
-              <Row gap={gap} style={{ "margin-top": "8px" }}>
-                <DemoBox label="A" />
-                <DemoBox label="B" />
-                <DemoBox label="C" />
-              </Row>
+              <div class="demo-frame">
+                <Row gap={gap}>
+                  <DemoBox label="A" />
+                  <DemoBox label="B" />
+                  <DemoBox label="C" />
+                </Row>
+              </div>
             </div>
           ))}
         </Stack>
@@ -47,19 +49,13 @@ export const RowShowcase: Component = () => {
           {(["start", "center", "end", "between"] as const).map((justify) => (
             <div>
               <Text variant="sublabel">{justify}</Text>
-              <Row
-                gap="sm"
-                justify={justify}
-                style={{
-                  "margin-top": "8px",
-                  border: "1px dashed var(--sui-border)",
-                  padding: "8px",
-                }}
-              >
-                <DemoBox label="A" />
-                <DemoBox label="B" />
-                <DemoBox label="C" />
-              </Row>
+              <div class="demo-frame">
+                <Row gap="sm" justify={justify}>
+                  <DemoBox label="A" />
+                  <DemoBox label="B" />
+                  <DemoBox label="C" />
+                </Row>
+              </div>
             </div>
           ))}
         </Stack>
@@ -73,31 +69,23 @@ export const RowShowcase: Component = () => {
             <div class="text-meta">
               align: "center", justify: "between", gap: "sm"
             </div>
-            <SpreadRow
-              style={{
-                "margin-top": "8px",
-                border: "1px dashed var(--sui-border)",
-                padding: "8px",
-              }}
-            >
-              <DemoBox label="Left" />
-              <DemoBox label="Right" />
-            </SpreadRow>
+            <div class="demo-frame">
+              <SpreadRow>
+                <DemoBox label="Left" />
+                <DemoBox label="Right" />
+              </SpreadRow>
+            </div>
           </div>
           <div>
             <Text variant="sublabel">ClusterRow</Text>
             <div class="text-meta">align: "center", gap: "sm"</div>
-            <ClusterRow
-              style={{
-                "margin-top": "8px",
-                border: "1px dashed var(--sui-border)",
-                padding: "8px",
-              }}
-            >
-              <DemoBox label="A" />
-              <DemoBox label="B" />
-              <DemoBox label="C" />
-            </ClusterRow>
+            <div class="demo-frame">
+              <ClusterRow>
+                <DemoBox label="A" />
+                <DemoBox label="B" />
+                <DemoBox label="C" />
+              </ClusterRow>
+            </div>
           </div>
         </Stack>
       </div>

@@ -52,7 +52,7 @@ export function isEditableTarget(el: EventTarget | null): boolean {
     tag === "INPUT" ||
     tag === "TEXTAREA" ||
     tag === "SELECT" ||
-    el.isContentEditable
+    (el.isContentEditable ?? false)
   );
 }
 

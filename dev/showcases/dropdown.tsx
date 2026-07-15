@@ -1,5 +1,5 @@
 import { type Component, createSignal } from "solid-js";
-import { Dropdown } from "../../src/components/Dropdown";
+import { Dropdown, InlineSubtleDropdown } from "../../src/components/Dropdown";
 import { Stack } from "../../src/components/Layout/Stack";
 
 export const DropdownShowcase: Component = () => {
@@ -26,6 +26,23 @@ export const DropdownShowcase: Component = () => {
           />
           <span class="text-meta">selected: {v()}</span>
         </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>InlineSubtleDropdown — curried (size "sm", subtle)</h3>
+        <p class="text-meta">
+          Compact inline picker that reads as plain text until hovered — for
+          values embedded in dense editors and panes.
+        </p>
+        <InlineSubtleDropdown
+          value={v()}
+          onChange={(id) => setV(id)}
+          items={[
+            { id: "us-east-1", label: "us-east-1" },
+            { id: "us-west-2", label: "us-west-2" },
+            { id: "eu-west-1", label: "eu-west-1" },
+          ]}
+        />
       </div>
     </div>
   );

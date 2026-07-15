@@ -35,14 +35,6 @@
   padding-inline: 0.5rem;
 }
 
-.sui-big-number__sign,
-.sui-big-number__prefix {
-  font-size: inherit;
-  font-weight: inherit;
-  color: var(--sui-text-secondary, #94a3b8);
-  user-select: none;
-}
-
 .sui-big-number__input {
   /* Inherit the big font; strip all native input chrome. */
   font-family: inherit;

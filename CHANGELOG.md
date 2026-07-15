@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### ⚠ Breaking
+
+- **`HeatStack` renders rows in input order** (first item at top). It previously reversed the array ("earliest at bottom"); Peter ruled that a bug — visual order now matches array order. Consumers relying on the bottom-up stacking must reverse their input.
+- **`TagInput` removed** — unused by every production consumer (dside, Amygdala, jtf, goose, wellappoint, thorcasting), pruned per the new production-repo prune rule.
+- **`BigNumberInput`: deprecated `prefix`/`sign` static-glyph props removed** (superseded by currency masking; no production caller).
+- **`MultiSelectFilter`: `optionWidthEstimate` tuning prop removed** (fit estimate fixed at ~90px/option; no production caller ever set it).
+
+### Added
+
+- **`ChartHeader`** — Composed (Depth 2), zero CSS. The standard chart title strip (mono accent title left, muted meta right, spread). `CompletionTimeline` now composes it, removing the last real inline-style cluster in src.
+- **`createDropdown` + `InlineSubtleDropdown`** — Dropdown gains the Overrides/DataProps split (`size`/`subtle` curried); `InlineSubtleDropdown` (sm, subtle) is the compact inline-picker form thorcasting configures by hand today.
+- **CONTEXT.md: `Structural` Primitive subkind** — chart/SVG-geometry primitives (axes, grids, series, bands) are now a defined third subkind alongside Atomic and Layout.
+- **Gallery chrome: `.demo-frame` / `.demo-cols`** — dashed demo frames and comparison columns for visualizing invisible layout components; `stack.tsx` and `row.tsx` showcases recomposed onto them (21 → 2 inline styles).
+
+### Changed
+
+- **Workshop benches count toward showcase purity** (ruling reversal): benches use curried SUI layouts/text for chrome like any showcase; inline styles only for genuinely dynamic experiment geometry.
+
+### Fixed
+
+- **`HotkeyButton.isEditableTarget`** now returns a real boolean (`isContentEditable ?? false`) instead of `undefined` for non-editable elements.
+
 ### Added
 
 - **`npm run health`** — vision-adherence health check with a CI ratchet (`scripts/health.mjs` + `scripts/health-baseline.json`, new `health` job in ci.yml). Mechanical KPIs — bare hex colors in CSS/TSX, inline `style={{}}` counts in src and showcases, folders without tests, undocumented components, missing Depth headers — may only decrease; a deliberate increase requires committing an updated baseline. `--verbose` lists offenders, `--update-baseline` locks in improvements.

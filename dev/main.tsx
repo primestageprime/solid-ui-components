@@ -79,7 +79,6 @@ import { DropdownShowcase } from "./showcases/dropdown";
 import { PopoverMenuShowcase } from "./showcases/popover-menu";
 import { ProgressCheckShowcase } from "./showcases/progress-check";
 import { SprintSelectorShowcase } from "./showcases/sprint-selector";
-import { TagInputShowcase } from "./showcases/tag-input";
 import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
 import { StatusCardShowcase } from "./showcases/status-card";
@@ -93,6 +92,7 @@ import { MutableListShowcase } from "./showcases/mutable-list";
 import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
+import { ChartHeaderShowcase } from "./showcases/chart-header";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
@@ -521,6 +521,12 @@ const items: Item[] = [
     tags: ["depth:0", "chart", "data"],
   },
   {
+    id: "chart-header",
+    label: "ChartHeader",
+    component: ChartHeaderShowcase,
+    tags: ["depth:2", "chart", "indicator"],
+  },
+  {
     id: "sparkline",
     label: "Sparkline",
     component: SparklineShowcase,
@@ -567,12 +573,6 @@ const items: Item[] = [
     label: "StatusLight",
     component: StatusLightShowcase,
     tags: ["depth:0", "indicator", "status"],
-  },
-  {
-    id: "tag-input",
-    label: "TagInput",
-    component: TagInputShowcase,
-    tags: ["depth:0", "form"],
   },
   {
     id: "throughput-chart",

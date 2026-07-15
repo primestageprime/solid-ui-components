@@ -8,6 +8,7 @@
 // ============================================
 import { createMemo } from "solid-js";
 import { Chart, Grid, XAxis, YAxis, BarSeries, ChartTooltip } from "../Chart";
+import { ChartHeader } from "../ChartHeader";
 
 export interface CompletionEvent {
   tableName: string;
@@ -111,23 +112,11 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
   });
 
   return (
-    <div class="sui-completion-timeline" style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          "justify-content": "space-between",
-          "font-family": '"JetBrains Mono", "Fira Code", monospace',
-          "font-size": "11px",
-          padding: "0 8px 4px",
-        }}
-      >
-        <span style={{ color: "var(--sui-accent)", "font-weight": "600" }}>
-          Completion Timeline
-        </span>
-        <span style={{ color: "var(--sui-text-muted)" }}>
-          {buckets().reduce((s, b) => s + b.count, 0)} completions in window
-        </span>
-      </div>
+    <div class="sui-completion-timeline">
+      <ChartHeader
+        title="Completion Timeline"
+        meta={`${buckets().reduce((s, b) => s + b.count, 0)} completions in window`}
+      />
       <Chart
         width={800}
         height={260}

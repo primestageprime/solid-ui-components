@@ -7,7 +7,7 @@ PrimeStage's SolidJS component library. Defines the architectural vocabulary use
 ### Component layers
 
 **Primitive**:
-A Depth-1 component that owns its own CSS file and never imports another Primitive *component*. (Data and type imports from another Primitive's directory — e.g. `ICON_PATHS`, type re-exports, render helpers — don't count: the rule is about composition, not module boundaries.) Splits into two subkinds: **Atomic** and **Layout**.
+A Depth-1 component that owns its own CSS file and never imports another Primitive *component*. (Data and type imports from another Primitive's directory — e.g. `ICON_PATHS`, type re-exports, render helpers — don't count: the rule is about composition, not module boundaries.) Splits into three subkinds: **Atomic**, **Layout**, and **Structural**.
 The CSS-file requirement applies only when the Primitive has visual styling of its own to express. A Primitive whose entire job is wrapping a pure formatting function in a bare `<span>` — no class, no inline style, typography inherited from the parent — may omit the CSS file: there is no styling to own. `Duration` (renders `ms → "12.3s"`-style text via a 4-branch format) is the canonical example. The rule exists to enforce single-place ownership of visual styling; if there is no styling, the rule has nothing to enforce.
 _Avoid_: Atom, base component, leaf.
 
@@ -18,6 +18,10 @@ _Avoid_: Element, widget.
 **Layout**:
 A Primitive whose job is to arrange children via flex (no rendered content of its own). Examples: `Stack`, `Row`, `Box`.
 _Avoid_: Container, wrapper.
+
+**Structural**:
+A Primitive that renders chart/SVG geometry — axes, grids, series, bands, edges — rather than visual content or child arrangement. Owns CSS only for stroke/fill/typography hooks; geometry values flow through props, because SVG geometry attributes can't resolve `var()`. Examples: `Chart/Axes`, `Chart/Grid`, `AlarmBands`, `Sparkline`, `DagChart`.
+_Avoid_: Renderer, fragment.
 
 **Composite**:
 A Depth-2-or-higher component. Owns zero CSS files AND zero inline `style={}` except `style={props.style}` passthrough; composes only curried variants of Primitives (or lower-depth Composites). All visual styling lives in Primitives — Composites express structure and pass Data Props.

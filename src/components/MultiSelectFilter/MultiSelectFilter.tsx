@@ -51,11 +51,6 @@ export interface MultiSelectFilterProps {
    * (i.e. all are implicitly active). Default "all".
    */
   allLabel?: string;
-  /**
-   * Pixel budget per option used to estimate whether the bar fits.
-   * Default 90 (room for ~10ch label + padding). Tune up for long labels.
-   */
-  optionWidthEstimate?: number;
 }
 
 const labelOf = (opt: MultiSelectOption): string => opt.label ?? opt.value;
@@ -66,7 +61,9 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [menuOpen, setMenuOpen] = createSignal(false);
 
-  const optionWidth = () => props.optionWidthEstimate ?? 90;
+  // Pixel budget per option for the fits-as-bar estimate (~10ch + padding).
+  // Was a prop; pruned 2026-07-15 — no production caller ever tuned it.
+  const optionWidth = () => 90;
 
   // Width budget required for full button bar mode.
   const requiredWidth = createMemo(() => {

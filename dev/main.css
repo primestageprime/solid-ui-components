@@ -1175,6 +1175,25 @@
   flex-wrap: wrap;
 }
 
+/* Demo frame — dashed outline making invisible layout boxes visible
+   (Stack/Row/alignment demos). Gallery furniture, same category as
+   .example-group; chosen over a library DemoFrame component (Peter
+   ruling 2026-07-15). */
+.demo-frame {
+  margin-top: 8px;
+  border: 1px dashed var(--sui-border);
+  padding: 8px;
+}
+
+/* Side-by-side comparison columns for variant/prop matrices
+   (gap sizes, alignment values, curried-variant lineups). */
+.demo-cols {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
 .example-column {
   display: flex;
   flex-direction: column;
