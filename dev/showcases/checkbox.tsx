@@ -8,11 +8,10 @@
  */
 import { type Component, createSignal } from "solid-js";
 import { Checkbox, CheckboxField } from "../../src/components/Checkbox";
+import { NarrowStack } from "../../src/components/Layout";
 
 const Row: Component<{ children: any }> = (props) => (
-  <div class="example-row" style={{ "align-items": "center", gap: "20px" }}>
-    {props.children}
-  </div>
+  <div class="example-row">{props.children}</div>
 );
 
 export const CheckboxShowcase: Component = () => {
@@ -65,7 +64,7 @@ export const CheckboxShowcase: Component = () => {
         </Row>
       </div>
 
-      <h2 style={{ "margin-top": "32px" }}>CheckboxField — form-field composition</h2>
+      <h2>CheckboxField — form-field composition</h2>
       <p class="text-meta">
         Composes Checkbox + a label/hint text column. The row is laid out with
         Layout variants (control cluster + tight text stack); the field passes
@@ -74,7 +73,7 @@ export const CheckboxShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Label + hint</h3>
-        <div style={{ display: "flex", "flex-direction": "column", gap: "12px", "max-width": "420px" }}>
+        <NarrowStack>
           <CheckboxField
             label="Email notifications"
             hint="Send a digest when a batch completes."
@@ -95,7 +94,7 @@ export const CheckboxShowcase: Component = () => {
             checked
             onCheckedChange={() => {}}
           />
-        </div>
+        </NarrowStack>
       </div>
     </div>
   );

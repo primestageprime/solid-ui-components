@@ -6,6 +6,7 @@ import {
 import { CacheProgressCard } from "../../src/components/ProgressCard/variants";
 import { Icon } from "../../src/components/Icon";
 import type { IconName } from "../../src/components/Icon";
+import { ClusterRow } from "../../src/components/Layout";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -58,7 +59,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Processing vessel records..."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Error State</h3>
+          <h3>Composed — Error State</h3>
           <ProgressCard
             title="Data Import"
             subtitle="Validation Failed"
@@ -66,7 +67,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Invalid format in row 42."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Complete</h3>
+          <h3>Composed — Complete</h3>
           <ProgressCard
             title="Data Import"
             subtitle="All steps complete"
@@ -74,7 +75,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Import successful."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3>
             CacheProgressCard — Active at minute_level
           </h3>
           <CacheProgressCard
@@ -85,7 +86,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Fetching minute-level data..."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3>
             CacheProgressCard — Active at statistics
           </h3>
           <CacheProgressCard
@@ -96,7 +97,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Computing statistics..."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3>
             CacheProgressCard — Completed
           </h3>
           <CacheProgressCard
@@ -107,7 +108,7 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
             message="Cache complete."
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3>
             CacheProgressCard — Error at hour_level
           </h3>
           <CacheProgressCard
@@ -129,17 +130,11 @@ export const ProgressCardShowcase: Component<Depth2Props> = (props) => {
                   onClick={() => props.onNavigate?.("icon")}
                 >
                   <div class="depth2-atom__label">{icon.name}</div>
-                  <div
-                    style={{
-                      display: "flex",
-                      "align-items": "center",
-                      gap: "8px",
-                    }}
-                  >
+                  <ClusterRow>
                     <Icon name={icon.name} variant="outline" size="lg" />
                     <Icon name={icon.name} variant="solid" size="lg" />
                     <span class="text-meta">{icon.label}</span>
-                  </div>
+                  </ClusterRow>
                 </div>
               )}
             </For>

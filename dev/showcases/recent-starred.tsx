@@ -4,6 +4,8 @@ import {
   RecentStarredSidebar,
   StarToggle,
 } from "../../src/components/RecentStarred";
+import { NarrowStack, ClusterRow } from "../../src/components/Layout";
+import { SectionTitle, MutedBody } from "../../src/components/Text";
 
 // ── Seeded demo store ───────────────────────────────────────────────────────
 // A dedicated storageKey so the showcase never collides with a consuming app's
@@ -30,43 +32,35 @@ export const RecentStarredShowcase: Component = () => {
   const [lastPicked, setLastPicked] = createSignal<string>("—");
 
   return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "24px" }}>
+    <NarrowStack>
       <div>
-        <h2 style={{ margin: "0 0 4px" }}>RecentStarred — Composite (Depth 1)</h2>
-        <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
+        <SectionTitle>RecentStarred — Composite (Depth 1)</SectionTitle>
+        <MutedBody>
           A pure sidebar renderer for a `createRecentStarredStore`. Two sections
           (Starred, Recent), each with a header + count and a scrolling list of
           clickable items. Empty sections still render so the sidebar height
           doesn't jump.
-        </p>
+        </MutedBody>
       </div>
 
       <section>
-        <h3 style={{ "font-size": "13px", "text-transform": "uppercase" }}>
-          Sidebar panel
-        </h3>
+        <h3>Sidebar panel</h3>
         <div style={{ width: "260px", height: "320px", display: "flex" }}>
           <RecentStarredSidebar
             store={store}
             onPick={(item) => setLastPicked(item.label)}
           />
         </div>
-        <p style={{ "font-size": "12px", color: "var(--sui-text-muted)" }}>
-          Last picked: {lastPicked()}
-        </p>
+        <p class="text-meta">Last picked: {lastPicked()}</p>
       </section>
 
       <section>
-        <h3 style={{ "font-size": "13px", "text-transform": "uppercase" }}>
-          StarToggle
-        </h3>
-        <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
+        <h3>StarToggle</h3>
+        <ClusterRow>
           <StarToggle store={store} item={SEED[1]} title="Star R12046" />
-          <span style={{ "font-size": "12px", color: "var(--sui-text-muted)" }}>
-            Click to toggle the star fill.
-          </span>
-        </div>
+          <span class="text-meta">Click to toggle the star fill.</span>
+        </ClusterRow>
       </section>
-    </div>
+    </NarrowStack>
   );
 };
