@@ -10,7 +10,7 @@ import "./Icon.css";
 
 // Icon groups for organization and documentation
 export const ICON_GROUPS = {
-  status: ["check", "error", "warning", "info"] as const,
+  status: ["check", "error", "warning", "info", "stethoscope"] as const,
   navigation: [
     "chevron-down",
     "chevron-up",
@@ -47,6 +47,7 @@ export type IconName =
   | "error"
   | "warning"
   | "info"
+  | "stethoscope"
   // Navigation
   | "chevron-down"
   | "chevron-up"
@@ -123,6 +124,18 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M8 7V11M8 5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
       solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
             <path d="M8 7V11M8 5V5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round"/>`,
+    },
+
+    // Earpiece fork descending into a tube that ends at the chest-piece
+    // bell — the "health check" glyph.
+    stethoscope: {
+      outline: `<path d="M4 1.5v4a3 3 0 006 0v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M7 8.5v2.5a3 3 0 006 0v-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <circle cx="13" cy="7.5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
+      solid: `<path d="M4 1.5v4a3 3 0 006 0v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M7 8.5v2.5a3 3 0 006 0v-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="13" cy="7.5" r="2.5" fill="currentColor"/>
+            <circle cx="13" cy="7.5" r="1" fill="var(--sui-bg-primary)"/>`,
     },
 
     // === NAVIGATION ICONS ===

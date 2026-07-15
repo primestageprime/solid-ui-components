@@ -15,6 +15,8 @@ import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Sandbox } from "./sandbox";
 import { LayoutsGallery } from "./layouts-gallery";
+import { HealthView } from "./health-view";
+import { Icon } from "../src/components/Icon";
 import { TagPill, type PillStats } from "./tag-pill";
 
 // Atomic
@@ -1090,8 +1092,19 @@ const App: Component = () => {
       <nav class="showcase__sidebar">
         <div class="showcase__sidebar-head">
           <div class="showcase__brand">
-            <h1>Solid Components</h1>
-            <p>SolidJS Component Library</p>
+            <div class="showcase__brand-row">
+              <div>
+                <h1>Solid Components</h1>
+                <p>SolidJS Component Library</p>
+              </div>
+              <a
+                class="health-link"
+                href="#/health"
+                title="SUI health — ratchet metrics"
+              >
+                <Icon name="stethoscope" size="sm" />
+              </a>
+            </div>
             <ThemeSwitcher />
           </div>
 
@@ -1216,14 +1229,21 @@ const Root: Component = () => {
   });
   return (
     <Show
-      when={route().startsWith("#/layouts")}
+      when={route().startsWith("#/health")}
       fallback={
-        <Show when={route().startsWith("#/sandbox")} fallback={<App />}>
-          <Sandbox />
+        <Show
+          when={route().startsWith("#/layouts")}
+          fallback={
+            <Show when={route().startsWith("#/sandbox")} fallback={<App />}>
+              <Sandbox />
+            </Show>
+          }
+        >
+          <LayoutsGallery />
         </Show>
       }
     >
-      <LayoutsGallery />
+      <HealthView />
     </Show>
   );
 };

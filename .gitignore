@@ -13,4 +13,3 @@ worktrees/
 mempalace.yaml
 entities.json
 .claude/scheduled_tasks.lock
-scripts/health-history.json

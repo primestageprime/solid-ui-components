@@ -51,6 +51,23 @@
   color: var(--sui-text-muted);
 }
 
+.showcase__brand-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.health-link {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--sui-text-muted);
+}
+
+.health-link:hover {
+  color: var(--sui-accent);
+}
+
 .workshop-grid {
   display: grid;
   /* Left column fixed at 300px (titles + JSON panels). Right column
