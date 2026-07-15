@@ -17,9 +17,10 @@
 //     as the A/B reference against the extracted version.
 //  3. This file is a LEAF: no exports besides `meta` and the default
 //     component. Nothing may import from a bench.
-//  4. Inline styles are permitted ONLY inside experiment demos (the
-//     workshop is exempt from the showcase-purity KPI); any chrome
-//     around the experiments uses curried SUI.
+//  4. Benches follow the same purity rules as showcases (they count
+//     toward the showcase-purity KPI): all chrome and layout uses the
+//     curried SUI vocabulary. Inline styles ONLY for genuinely dynamic
+//     experiment geometry (animated transforms, computed positions).
 //  5. Do not register this bench anywhere — workshop benches are
 //     auto-discovered from dev/showcases/workshop/*.tsx.
 // ============================================
@@ -75,6 +76,16 @@ import {
 import { SwimlaneAnimatedLane } from "../../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane";
 import { visibleChildRowCount } from "../../../src/components/AnimatedSwimlaneChart/lanes";
 import type { RenderNodeContext } from "../../../src/components/AnimatedSwimlaneChart/defaults";
+import {
+  AccentBody,
+  MutedBody,
+  TextSublabel,
+} from "../../../src/components/Text";
+import {
+  ClusterRow,
+  TightStack,
+  WrappedClusterRow,
+} from "../../../src/components/Layout";
 
 interface Experiment {
   /** Short slug, used in the heading and as a stable id. */
@@ -1308,20 +1319,13 @@ const LayoutKnobsPanel: Component<{
   };
   return (
     <div style={{ "margin-top": "12px" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          "flex-wrap": "wrap",
-          "align-items": "center",
-        }}
-      >
+      <WrappedClusterRow>
         {knob("cardWidth", "card")}
         {knob("cardGap", "gap")}
         {knob("lozengeWidth", "lozW")}
         {knob("lozengeGap", "lozGap")}
         {knob("padding", "pad")}
-      </div>
+      </WrappedClusterRow>
       {/* ── Animation knobs ─────────────────────────────────────────
           Tunes how long each phase of the per-tick animation runs.
           slurpMs governs both the leave-slurp at the start of the
@@ -1344,29 +1348,13 @@ const LayoutKnobsPanel: Component<{
       >
         Animation
       </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          "flex-wrap": "wrap",
-          "align-items": "center",
-          "margin-top": "4px",
-        }}
-      >
+      <WrappedClusterRow>
         {timingKnob("slurpMs", "slurp", 1)}
         {timingKnob("moveMs", "move", 1)}
         {timingKnob("arrowSettleMs", "settle", 0)}
         {timingKnob("arrowPathMs", "path", 0)}
-        <span
-          style={{
-            "font-family": monoFont,
-            "font-size": "10px",
-            color: "rgba(255,255,255,0.55)",
-          }}
-        >
-          total {timingTotal()}ms
-        </span>
-      </div>
+        <TextSublabel>total {timingTotal()}ms</TextSublabel>
+      </WrappedClusterRow>
       <table
         style={{
           "margin-top": "8px",
@@ -1401,16 +1389,7 @@ const LayoutKnobsPanel: Component<{
           </For>
         </tbody>
       </table>
-      <div
-        style={{
-          "margin-top": "4px",
-          "font-family": monoFont,
-          "font-size": "10px",
-          color: "rgba(255,255,255,0.55)",
-        }}
-      >
-        stage width: {props.stageWidth}px
-      </div>
+      <TextSublabel>stage width: {props.stageWidth}px</TextSublabel>
     </div>
   );
 };
@@ -1604,13 +1583,7 @@ const MixedShapesRow: Component = () => {
         <SubsectionTitleLite>
           StatusFlowChart — mixed shapes (SVG primitives)
         </SubsectionTitleLite>
-        <p
-          style={{
-            "font-size": "12px",
-            color: "rgba(255,255,255,0.6)",
-            margin: "8px 0",
-          }}
-        >
+        <MutedBody>
           Same 4-lane dataset as the StatusFlowChart-based version below, but
           rendered entirely from the SVG primitives we've built — and driven by
           the same shared layout helpers (<code>computeColFor</code>,{" "}
@@ -1619,16 +1592,8 @@ const MixedShapesRow: Component = () => {
           machine forward: one DOING leaf finishes per tick, ready TODOs are
           promoted, cards animate between columns as their status changes. The
           animation halts when every leaf is DONE.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            "align-items": "center",
-            "margin-top": "12px",
-            "flex-wrap": "wrap",
-          }}
-        >
+        </MutedBody>
+        <WrappedClusterRow>
           <button
             type="button"
             style={buttonStyle}
@@ -1657,16 +1622,8 @@ const MixedShapesRow: Component = () => {
           <button type="button" style={buttonStyle} onClick={reset}>
             ↺ reset
           </button>
-          <span
-            style={{
-              "font-size": "11px",
-              color: "rgba(255,255,255,0.55)",
-              "font-family": "ui-monospace, SFMono-Regular, monospace",
-            }}
-          >
-            frame {cursor() + 1}
-          </span>
-        </div>
+          <TextSublabel>frame {cursor() + 1}</TextSublabel>
+        </WrappedClusterRow>
         {/* ── Knob row + breakpoints table ──────────────────────────── */}
         <LayoutKnobsPanel
           config={layoutConfig()}
@@ -2239,18 +2196,12 @@ const TwoFrameArrowDemoRow: Component = () => {
         <SubsectionTitleLite>
           Arrow smoothness · 2-frame demo
         </SubsectionTitleLite>
-        <p
-          style={{
-            "font-size": "12px",
-            color: "rgba(255,255,255,0.6)",
-            margin: "8px 0",
-          }}
-        >
+        <MutedBody>
           Toggle between two frames to inspect how the b1→b4 arrow morphs as b1
           moves from the col-0 stack out to col -1, and b2/b3 re-stack. Goal: a
           smooth, snap-free transition.
-        </p>
-        <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
+        </MutedBody>
+        <ClusterRow>
           <button type="button" style={buttonStyle} onClick={prev}>
             ← prev
           </button>
@@ -2263,17 +2214,8 @@ const TwoFrameArrowDemoRow: Component = () => {
           <button type="button" style={buttonStyle} onClick={reset}>
             ↺ reset
           </button>
-          <span
-            style={{
-              "font-size": "11px",
-              color: "rgba(255,255,255,0.55)",
-              "font-family": "ui-monospace, SFMono-Regular, monospace",
-              "align-self": "center",
-            }}
-          >
-            frame {cursor() === 0 ? "A" : "B"}
-          </span>
-        </div>
+          <TextSublabel>frame {cursor() === 0 ? "A" : "B"}</TextSublabel>
+        </ClusterRow>
       </div>
       <div class="workshop-grid__cell">
         <div
@@ -2361,23 +2303,17 @@ const AnimationExperimentsRow: Component = () => {
   return (
     <>
       <div class="workshop-grid__cell">
-        <div
-          style={{
-            "font-family": "ui-monospace, SFMono-Regular, monospace",
-            "font-size": "12px",
-            color: "rgba(255,255,255,0.7)",
-          }}
-        >
-          <p style={{ margin: "0 0 8px" }}>
+        <TightStack>
+          <MutedBody>
             Each experiment isolates one effect. Use the play button to restart
             the animation. Once an effect feels right, we'll name it and compose
             it into the SwimlaneChart pipeline.
-          </p>
-          <p style={{ margin: "0", color: "rgba(255,255,255,0.5)" }}>
+          </MutedBody>
+          <TextSublabel>
             Add more experiments by appending to <code>EXPERIMENTS</code> in{" "}
             <code>dev/showcases/animation-experiments.tsx</code>.
-          </p>
-        </div>
+          </TextSublabel>
+        </TightStack>
       </div>
       <div class="workshop-grid__cell">
         <div
@@ -2389,28 +2325,11 @@ const AnimationExperimentsRow: Component = () => {
         >
           <For each={EXPERIMENTS}>
             {(e) => (
-              <div>
-                <div
-                  style={{
-                    "font-family": "ui-monospace, SFMono-Regular, monospace",
-                    "font-size": "12px",
-                    color: "var(--sui-accent, #00d4ff)",
-                    "margin-bottom": "4px",
-                  }}
-                >
-                  {e.label}
-                </div>
-                <div
-                  style={{
-                    "font-size": "11px",
-                    color: "rgba(255,255,255,0.55)",
-                    "margin-bottom": "8px",
-                  }}
-                >
-                  {e.description}
-                </div>
+              <TightStack>
+                <AccentBody>{e.label}</AccentBody>
+                <TextSublabel>{e.description}</TextSublabel>
                 <e.Demo />
-              </div>
+              </TightStack>
             )}
           </For>
         </div>
