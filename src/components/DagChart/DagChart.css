@@ -60,3 +60,9 @@
   font-size: 11px;
   user-select: none;
 }
+
+/* Measured container — the svg sizes itself to this box. */
+.sui-dag-container {
+  width: 100%;
+  height: 100%;
+}

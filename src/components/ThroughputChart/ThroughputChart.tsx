@@ -35,6 +35,7 @@ import {
   ChartTooltip,
 } from "../Chart";
 import { Legend } from "../Legend";
+import "./ThroughputChart.css";
 
 export interface ThroughputPoint {
   timestamp: number; // epoch ms
@@ -157,7 +158,7 @@ function RateChart(props: ThroughputChartProps) {
   });
 
   return (
-    <div class="sui-throughput-chart" style={{ position: "relative" }}>
+    <div class="sui-throughput-chart">
       <div
         style={{
           display: "flex",

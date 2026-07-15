@@ -103,10 +103,10 @@ export const StatusCell: Component<StatusCellProps> = (props) => {
     >
       <Show when={props.href} fallback={inner()}>
         <a
+          class="cell-status__link"
           href={props.href}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ "text-decoration": "none" }}
         >
           {inner()}
         </a>

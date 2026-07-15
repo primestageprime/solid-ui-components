@@ -31,6 +31,7 @@ import {
 import { ANIMATED_SWIMLANE_DEFAULTS, type RenderNodeContext } from "./defaults";
 import { groupIntoLanes, visibleChildRowCount } from "./lanes";
 import { SwimlaneAnimatedLane } from "./SwimlaneAnimatedLane";
+import "./AnimatedSwimlaneChart.css";
 
 export type AnimatedSwimlaneChartProps = {
   // ── REQUIRED ──
@@ -418,7 +419,6 @@ export const AnimatedSwimlaneChartBase: Component<
     <div
       ref={containerRef}
       class="sui-animated-swimlane-chart"
-      style={{ width: "100%" }}
     >
       <svg
         width={stageWidth()}
@@ -426,7 +426,7 @@ export const AnimatedSwimlaneChartBase: Component<
         role="img"
         aria-label="Swimlane chart"
         viewBox={`0 0 ${stageWidth()} ${lanesWithY().totalH}`}
-        style={{ display: "block", overflow: "visible" }}
+        class="sui-animated-swimlane-chart__svg"
       >
         {/* Index, not For: lanesWithY rebuilds its items array on every
             `nodes` change, so a For would re-mount every lane on every

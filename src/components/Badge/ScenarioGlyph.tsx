@@ -13,6 +13,7 @@
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
 import { ShapeGlyph, type Shape } from "../Chart/shapes";
+import "./ScenarioGlyph.css";
 
 export interface ScenarioGlyphProps
   extends JSX.HTMLAttributes<HTMLSpanElement> {
@@ -53,13 +54,11 @@ export const ScenarioGlyph: Component<ScenarioGlyphProps> = (props) => {
       }}
       {...others}
     >
-      {/* overflow:visible so a hollow stroke that straddles the box edge (e.g. a
-          full-diameter circle) is never clipped. */}
       <svg
+        class="sui-scenario-glyph"
         width={size()}
         height={size()}
         viewBox={`0 0 ${size()} ${size()}`}
-        style={{ overflow: "visible" }}
         aria-hidden="true"
       >
         <ShapeGlyph

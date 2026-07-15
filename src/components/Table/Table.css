@@ -215,6 +215,12 @@
   padding: 6px 12px;
 }
 
+/* Virtual-scroll spacer rows — pure height, no cell chrome. */
+.hud-table__virtual-spacer-cell {
+  padding: 0;
+  border: none;
+}
+
 /* Column Group Headers (two-row thead) */
 .hud-table__header-cell--group {
   text-align: center;

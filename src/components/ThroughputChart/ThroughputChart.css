@@ -1,0 +1,9 @@
+/* ============================================
+   ThroughputChart — static chrome. The svg plot and its data-driven
+   geometry stay inline in the component.
+   ============================================ */
+
+/* Positioning context for the crosshair/tooltip overlays. */
+.sui-throughput-chart {
+  position: relative;
+}

@@ -1,0 +1,9 @@
+/* ============================================
+   ScenarioGlyph — svg wrapper for a single ShapeGlyph.
+   ============================================ */
+
+/* overflow: visible so a hollow stroke that straddles the box edge (e.g. a
+   full-diameter circle) is never clipped. */
+.sui-scenario-glyph {
+  overflow: visible;
+}

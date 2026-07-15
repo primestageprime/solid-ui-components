@@ -1,0 +1,23 @@
+/* ============================================
+   RingChart — static chrome. Dynamic geometry (size-driven px values,
+   label font scaling, dash arcs) stays inline in the component.
+   ============================================ */
+
+/* Rotate so arcs start at 12 o'clock. */
+.sui-ring-chart__svg {
+  transform: rotate(-90deg);
+}
+
+.sui-ring-chart__track {
+  stroke: var(--sui-border-bright);
+}
+
+/* Center label overlay — sized/positioned over the svg. */
+.sui-ring-chart__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}

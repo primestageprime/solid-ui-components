@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // RingChart — Structural (Depth 1). SVG chart; composes no library components.
 import { For, Show } from "solid-js";
+import "./RingChart.css";
 
 export interface RingChartProps {
   segments: { value: number; color: string; animate?: boolean }[];
@@ -54,7 +55,7 @@ export function RingChart(props: RingChartProps) {
         width={size()}
         height={size()}
         viewBox={`0 0 ${size()} ${size()}`}
-        style={{ transform: "rotate(-90deg)" }}
+        class="sui-ring-chart__svg"
       >
         {/* background track */}
         <circle
@@ -63,7 +64,7 @@ export function RingChart(props: RingChartProps) {
           r={radius()}
           fill="none"
           stroke-width={strokeWidth}
-          style={{ stroke: "var(--sui-border-bright)" }}
+          class="sui-ring-chart__track"
         />
         <For each={arcs()}>
           {(arc) => (
@@ -87,16 +88,7 @@ export function RingChart(props: RingChartProps) {
         </For>
       </svg>
       {/* center label */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          "text-align": "center",
-          "pointer-events": "none",
-        }}
-      >
+      <div class="sui-ring-chart__center">
         <div
           style={{
             ...monoStyle,

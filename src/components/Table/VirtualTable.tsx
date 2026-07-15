@@ -151,8 +151,8 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                 }}
               >
                 <td
+                  class="hud-table__virtual-spacer-cell"
                   colspan={local.columns.length}
-                  style={{ padding: "0", border: "none" }}
                 />
               </tr>
 
@@ -217,8 +217,8 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                 }}
               >
                 <td
+                  class="hud-table__virtual-spacer-cell"
                   colspan={local.columns.length}
-                  style={{ padding: "0", border: "none" }}
                 />
               </tr>
             </Show>

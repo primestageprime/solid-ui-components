@@ -151,9 +151,9 @@ export function PinMarkers<TPin extends Pin = Pin>(
   return (
     <g
       class={`sui-chart__pin-markers${merged.class ? ` ${merged.class}` : ""}`}
+      classList={{ "sui-chart__pin-markers--inert": !interactive() }}
       clip-path={clipPath()}
       data-lane={merged.lane}
-      style={{ "pointer-events": interactive() ? undefined : "none" }}
     >
       <For each={merged.data}>
         {(pin, i) => {

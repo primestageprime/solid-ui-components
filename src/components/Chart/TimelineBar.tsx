@@ -252,11 +252,10 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                   onPointerDown={(e) => merged.onBarClick?.(bar, e)}
                   onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
                   onPointerLeave={(e) => merged.onBarHover?.(null, e)}
-                  style={{
-                    cursor:
+                  classList={{
+                    "sui-chart__timeline-bar--interactive": !!(
                       merged.onBarClick || merged.onBarHover
-                        ? "pointer"
-                        : undefined,
+                    ),
                   }}
                 />
               </Show>
@@ -285,7 +284,6 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               ? `translate(-8, ${labelY()}) rotate(-45)`
               : undefined
           }
-          style={{ "pointer-events": "none" }}
         >
           {merged.label}
         </text>

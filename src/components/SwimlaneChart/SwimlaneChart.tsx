@@ -391,7 +391,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   };
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div ref={containerRef} class="sui-swimlane-container">
       <svg
         ref={svgRef}
         class="sui-swimlane"

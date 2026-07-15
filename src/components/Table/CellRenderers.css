@@ -377,3 +377,8 @@
   text-decoration: underline;
   text-shadow: 0 0 8px var(--sui-accent);
 }
+
+/* Linked status cell — the badge itself carries the affordance. */
+.cell-status__link {
+  text-decoration: none;
+}

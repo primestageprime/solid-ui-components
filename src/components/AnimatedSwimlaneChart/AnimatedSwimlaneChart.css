@@ -1,0 +1,14 @@
+/* ============================================
+   AnimatedSwimlaneChart — root chrome. Lane internals live in
+   SwimlaneAnimatedLane.css; all animated geometry stays inline.
+   ============================================ */
+
+.sui-animated-swimlane-chart {
+  width: 100%;
+}
+
+/* overflow: visible so leave-slurp animations can travel outside the stage. */
+.sui-animated-swimlane-chart__svg {
+  display: block;
+  overflow: visible;
+}

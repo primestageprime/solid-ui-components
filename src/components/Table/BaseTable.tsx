@@ -297,7 +297,6 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                           <th
                             class="hud-table__header-cell hud-table__header-cell--group"
                             colspan={span.colspan}
-                            style={{ "text-align": "center" }}
                           >
                             {span.label}
                           </th>

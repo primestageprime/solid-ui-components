@@ -281,7 +281,7 @@ export function DagChart<T>(props: DAGProps<T>) {
   const [hoveredEdge, setHoveredEdge] = createSignal<string | null>(null);
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div ref={containerRef} class="sui-dag-container">
       <svg
         ref={svgRef}
         class="sui-dag"

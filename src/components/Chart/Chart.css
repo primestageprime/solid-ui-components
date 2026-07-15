@@ -203,6 +203,18 @@
 .sui-chart__timeline-bar-label {
   fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.7rem;
+  pointer-events: none;
+}
+
+/* Bars with a click/hover handler advertise interactivity. */
+.sui-chart__timeline-bar--interactive {
+  cursor: pointer;
+}
+
+/* Pin markers in a non-interactive lane pass pointer events through to the
+   chart's root svg listener. */
+.sui-chart__pin-markers--inert {
+  pointer-events: none;
 }
 
 /* Tooltip */

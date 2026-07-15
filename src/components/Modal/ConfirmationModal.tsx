@@ -83,13 +83,9 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
       corners={local.corners ?? "clip"}
       variant={local.variant ?? "primary"}
       footer={
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            "justify-content": "flex-end",
-          }}
-        >
+        <>
+          {/* Modal's own .sui-modal__footer already lays out a right-aligned
+              12px-gap button row — no wrapper needed. */}
           <Button size="sm" onClick={local.onClose} disabled={local.loading}>
             {local.cancelLabel ?? "Cancel"}
           </Button>
@@ -101,20 +97,12 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
           >
             {confirmText()}
           </Button>
-        </div>
+        </>
       }
     >
-      <div style={{ "max-height": "60vh", overflow: "auto" }}>
+      <div class="sui-confirmation-modal__body">
         <Show when={local.description}>
-          <p
-            style={{
-              margin: "0 0 16px",
-              color: "var(--sui-text-secondary)",
-              "font-size": "0.875rem",
-            }}
-          >
-            {local.description}
-          </p>
+          <p class="sui-confirmation-modal__description">{local.description}</p>
         </Show>
         {local.children}
       </div>
