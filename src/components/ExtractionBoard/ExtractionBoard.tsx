@@ -84,13 +84,19 @@ const STATUS_RANK: Record<CategoryStatus, number> = {
   complete: 2,
 };
 
-/** Two items are the "same card" iff the same table — keeps card refs STABLE
- *  between renders so a card recreates ONLY on a real transition (firing the
- *  slide/slurp), not on a plain rows-fill update (which would flicker). */
-const sameName = (
-  a: { name: string } | null,
-  b: { name: string } | null,
-): boolean => (a?.name ?? null) === (b?.name ?? null);
+/** Two items are the "same card" iff the same table AND the same displayed
+ *  numbers — card refs stay stable across renders so a card recreates only on
+ *  a real transition (firing the slide/slurp) or when its counts actually
+ *  change. Name-only equality froze a card's numbers forever: a totals
+ *  correction arriving AFTER the lane transition (e.g. reconciliation counted
+ *  late) never re-rendered, showing "0 Rows" on a 166K-row Done card. */
+const sameCard = (
+  a: { name: string; totalRows?: number; rows?: number } | null,
+  b: { name: string; totalRows?: number; rows?: number } | null,
+): boolean =>
+  (a?.name ?? null) === (b?.name ?? null) &&
+  a?.totalRows === b?.totalRows &&
+  a?.rows === b?.rows;
 
 // ---------------------------------------------------------------------------
 // Public props.
@@ -336,12 +342,12 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
           const done = createMemo<DoneItem | null>(
             () => doneByCategory()[cat],
             null,
-            { equals: sameName },
+            { equals: sameCard },
           );
           const todoNext = createMemo<TodoItem | null>(
             () => todoByCategory()[cat].next,
             null,
-            { equals: sameName },
+            { equals: sameCard },
           );
           const remaining = () => todoByCategory()[cat].remaining;
           const doingCards = () => doingByCategory()[cat] ?? [];
