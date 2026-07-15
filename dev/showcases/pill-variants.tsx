@@ -1,5 +1,16 @@
 import { type Component, For, Show, createMemo, createSignal } from "solid-js";
 import { TagPill, type PillStats } from "../tag-pill";
+import {
+  TextBody,
+  MutedBody,
+  TextLabel,
+  InlineUnits,
+} from "../../src/components/Text";
+import {
+  NarrowStack,
+  ClusterRow,
+  WrappedClusterRow,
+} from "../../src/components/Layout";
 
 // Mirror of items[] in main.tsx — only id+tags needed. Keep in sync.
 type ItemMeta = { id: string; tags: string[] };
@@ -178,79 +189,36 @@ export const PillVariantsShowcase: Component = () => {
     <div class="component-section">
       <h2>Pill Sandbox — Variant D (dynamic deltas)</h2>
       <p class="text-meta">
-        Each pill shows: <code style={{ color: "#3ecf8e" }}>+N</code> additions
-        and <code style={{ color: "#e57373" }}>−N</code> removals if toggled.
+        Each pill shows: <code>+N</code> additions and <code>−N</code> removals
+        if toggled.
         Internal fill bar is the projected result count if you toggled this
         pill, as a fraction of all {TOTAL_ITEMS} items. Click pills to interact
         — this sandbox has its own state, separate from the sidebar.
       </p>
 
-      <div
-        style={{
-          display: "flex",
-          "align-items": "center",
-          gap: "12px",
-          "margin-top": "16px",
-          "margin-bottom": "20px",
-          padding: "10px 14px",
-          background: "var(--sui-bg-secondary)",
-          border: "1px solid var(--sui-border)",
-          "border-radius": "6px",
-        }}
-      >
-        <span style={{ "font-size": "13px", color: "var(--sui-text-primary)" }}>
-          <strong style={{ "font-feature-settings": '"tnum"' }}>
-            {currentItems().length}
-          </strong>
-          <span style={{ color: "var(--sui-text-muted)" }}>
-            {" "}
-            / {TOTAL_ITEMS} matching
-          </span>
-        </span>
-        <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
+      <ClusterRow>
+        <TextBody>
+          <strong>{currentItems().length}</strong>
+          <InlineUnits>/ {TOTAL_ITEMS} matching</InlineUnits>
+        </TextBody>
+        <MutedBody>
           Selected:{" "}
-          {selected().size === 0 ? (
-            <em style={{ opacity: 0.6 }}>none</em>
-          ) : (
-            [...selected()].sort().map(shortTag).join(", ")
-          )}
-        </span>
+          {selected().size === 0
+            ? "none"
+            : [...selected()].sort().map(shortTag).join(", ")}
+        </MutedBody>
         <Show when={selected().size > 0}>
-          <button
-            type="button"
-            onClick={reset}
-            style={{
-              "margin-left": "auto",
-              padding: "4px 10px",
-              background: "transparent",
-              border: "1px solid var(--sui-border)",
-              "border-radius": "4px",
-              color: "var(--sui-text-muted)",
-              "font-size": "11px",
-              cursor: "pointer",
-            }}
-          >
+          <button class="demo-btn" type="button" onClick={reset}>
             Reset
           </button>
         </Show>
-      </div>
+      </ClusterRow>
 
       <For each={TAG_CATEGORIES}>
         {(cat) => (
-          <div style={{ "margin-bottom": "20px" }}>
-            <div
-              style={{
-                "font-size": "10px",
-                "font-weight": 700,
-                color: "var(--sui-text-muted)",
-                "text-transform": "uppercase",
-                "letter-spacing": "0.08em",
-                "margin-bottom": "8px",
-              }}
-            >
-              {cat.label}
-            </div>
-            <div style={{ display: "flex", "flex-wrap": "wrap", gap: "8px" }}>
+          <NarrowStack>
+            <TextLabel>{cat.label}</TextLabel>
+            <WrappedClusterRow>
               <For each={cat.tags}>
                 {(tag) => (
                   <TagPill
@@ -261,42 +229,32 @@ export const PillVariantsShowcase: Component = () => {
                   />
                 )}
               </For>
-            </div>
-          </div>
+            </WrappedClusterRow>
+          </NarrowStack>
         )}
       </For>
 
-      <div
-        style={{
-          "margin-top": "24px",
-          "font-size": "11px",
-          color: "var(--sui-text-muted)",
-          "line-height": 1.6,
-        }}
-      >
+      <MutedBody>
         <div>
           <strong>Reading the deltas:</strong>
         </div>
         <div>
           • Inactive pill in a fresh facet → toggling adds an AND constraint →
-          shows <code style={{ color: "#e57373" }}>−N</code> (items lost).
+          shows <code>−N</code> (items lost).
         </div>
         <div>
           • Inactive pill in a facet that already has selections → toggling
-          widens the OR set → shows <code style={{ color: "#3ecf8e" }}>+N</code>{" "}
-          (items gained).
+          widens the OR set → shows <code>+N</code> (items gained).
         </div>
         <div>
           • Active pill that's the only one in its facet → toggling off removes
-          the constraint → shows <code style={{ color: "#3ecf8e" }}>+N</code>{" "}
-          (items gained).
+          the constraint → shows <code>+N</code> (items gained).
         </div>
         <div>
           • Active pill alongside others in the same facet → toggling off
-          narrows the OR set → shows{" "}
-          <code style={{ color: "#e57373" }}>−N</code> (items lost).
+          narrows the OR set → shows <code>−N</code> (items lost).
         </div>
-      </div>
+      </MutedBody>
     </div>
   );
 };

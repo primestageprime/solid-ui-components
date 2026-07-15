@@ -1,5 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { BottomSheet } from "../../src/components/BottomSheet";
+import { TextBody, MutedBody } from "../../src/components/Text";
+import { NarrowStack } from "../../src/components/Layout";
 
 export const BottomSheetShowcase: Component = () => {
   const [open, setOpen] = createSignal(false);
@@ -58,24 +60,8 @@ export const BottomSheetShowcase: Component = () => {
               gap: "8px",
             }}
           >
-            <span
-              style={{
-                "font-size": "12px",
-                "font-weight": "600",
-                color: "var(--sui-text-primary)",
-              }}
-            >
-              App header (sibling above)
-            </span>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-muted)",
-                "margin-left": "auto",
-              }}
-            >
-              never covered
-            </span>
+            <TextBody>App header (sibling above)</TextBody>
+            <MutedBody>never covered</MutedBody>
           </div>
 
           {/*
@@ -87,89 +73,44 @@ export const BottomSheetShowcase: Component = () => {
           */}
           <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
             {/* Page content — dimmed behind the scrim when sheet is open */}
-            <div
-              style={{
-                padding: "20px 16px",
-                display: "flex",
-                "flex-direction": "column",
-                gap: "10px",
-              }}
-            >
-              <span
-                style={{
-                  "font-size": "13px",
-                  color: "var(--sui-text-primary)",
-                }}
-              >
-                Page content area
-              </span>
-              <span
-                style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}
-              >
+            <NarrowStack>
+              <TextBody>Page content area</TextBody>
+              <MutedBody>
                 The scrim dims this region when the sheet is open, but it stays
                 within the inner container — it cannot reach the header above or
                 the page outside the frame.
-              </span>
+              </MutedBody>
               <button
+                class="demo-btn"
                 type="button"
                 onClick={() => setOpen(true)}
-                style={{
-                  "margin-top": "12px",
-                  padding: "8px 16px",
-                  background: "var(--sui-accent, #00a8cc)",
-                  color: "#fff",
-                  border: "none",
-                  "border-radius": "var(--sui-radius-sm, 4px)",
-                  cursor: "pointer",
-                  "font-size": "13px",
-                  "align-self": "flex-start",
-                }}
               >
                 Open sheet
               </button>
-            </div>
+            </NarrowStack>
 
             <BottomSheet
               open={open()}
               onClose={() => setOpen(false)}
               label="Demo sheet"
             >
-              <p
-                style={{
-                  margin: "0 0 12px",
-                  "font-size": "14px",
-                  color: "var(--sui-text-primary)",
-                }}
-              >
-                Sheet contents
-              </p>
-              <p
-                style={{
-                  margin: "0 0 16px",
-                  "font-size": "12px",
-                  color: "var(--sui-text-secondary)",
-                }}
-              >
-                Tap the grabber at the top or click the scrim (the dimmed area
-                behind this panel) to close. Clicking inside the sheet body does
-                not dismiss it. The sheet top cannot exceed 60% of the inner
-                container, so it never reaches the app header strip above.
-              </p>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                style={{
-                  padding: "8px 16px",
-                  background: "transparent",
-                  color: "var(--sui-text-secondary)",
-                  border: "1px solid var(--sui-border)",
-                  "border-radius": "var(--sui-radius-sm, 4px)",
-                  cursor: "pointer",
-                  "font-size": "12px",
-                }}
-              >
-                Dismiss
-              </button>
+              <NarrowStack>
+                <TextBody>Sheet contents</TextBody>
+                <MutedBody>
+                  Tap the grabber at the top or click the scrim (the dimmed area
+                  behind this panel) to close. Clicking inside the sheet body
+                  does not dismiss it. The sheet top cannot exceed 60% of the
+                  inner container, so it never reaches the app header strip
+                  above.
+                </MutedBody>
+                <button
+                  class="demo-btn"
+                  type="button"
+                  onClick={() => setOpen(false)}
+                >
+                  Dismiss
+                </button>
+              </NarrowStack>
             </BottomSheet>
           </div>
         </div>

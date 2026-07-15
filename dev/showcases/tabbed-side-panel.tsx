@@ -7,6 +7,8 @@ import {
   type TabbedPanelTab,
   type TabbedSidePanelDataProps,
 } from "../../src/components/TabbedSidePanel";
+import { MutedBody } from "../../src/components/Text";
+import { ClusterRow } from "../../src/components/Layout";
 
 // This showcase demonstrates the contentPadding axis at runtime. contentPadding
 // is a baked override, so the matrix lives in module-top factory instances and
@@ -51,15 +53,7 @@ const LEFT_PANELS: PaddedPanels = {
 };
 
 const placeholderBody = (label: string) => () => (
-  <div
-    style={{
-      padding: "16px",
-      color: "var(--sui-text-muted)",
-      "font-size": "13px",
-    }}
-  >
-    {label} body — replace with real content in consumer.
-  </div>
+  <MutedBody>{label} body — replace with real content in consumer.</MutedBody>
 );
 
 const baseTabs: TabbedPanelTab[] = [
@@ -96,15 +90,8 @@ function Instance(props: {
   const [open, setOpen] = createSignal(true);
   return (
     <div style={{ flex: 1, "min-width": "320px" }}>
-      <h3 style={{ "margin-bottom": "8px" }}>{props.title}</h3>
-      <button
-        style={{
-          "margin-bottom": "12px",
-          padding: "4px 10px",
-          "font-size": "12px",
-        }}
-        onClick={() => setOpen((v) => !v)}
-      >
+      <h3>{props.title}</h3>
+      <button class="demo-btn" onClick={() => setOpen((v) => !v)}>
         {open() ? "Close panel" : "Open panel"}
       </button>
       <div
@@ -139,17 +126,8 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
   });
   return (
     <div style={{ flex: 1, "min-width": "320px" }}>
-      <h3 style={{ "margin-bottom": "8px" }}>
-        Filtered tabs (consumer pre-filters)
-      </h3>
-      <div
-        style={{
-          "margin-bottom": "12px",
-          display: "flex",
-          gap: "12px",
-          "font-size": "12px",
-        }}
-      >
+      <h3>Filtered tabs (consumer pre-filters)</h3>
+      <ClusterRow>
         <label>
           <input
             type="checkbox"
@@ -166,13 +144,10 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
           />{" "}
           Raw
         </label>
-        <button
-          style={{ "margin-left": "auto", padding: "2px 8px" }}
-          onClick={() => setOpen((v) => !v)}
-        >
+        <button class="demo-btn" onClick={() => setOpen((v) => !v)}>
           {open() ? "Close" : "Open"}
         </button>
-      </div>
+      </ClusterRow>
       <div
         style={{
           "min-height": "260px",
@@ -202,15 +177,7 @@ export const TabbedSidePanelShowcase: Component = () => {
         active tab's content renders inboard only when isOpen=true. Clicking the
         active tab toggles isOpen.
       </p>
-      <div
-        style={{
-          padding: "12px 24px 0",
-          display: "flex",
-          gap: "12px",
-          "align-items": "center",
-          "font-size": "13px",
-        }}
-      >
+      <ClusterRow>
         <label>contentPadding:</label>
         <select
           value={padding()}
@@ -222,15 +189,8 @@ export const TabbedSidePanelShowcase: Component = () => {
           <option value="sm">sm (default)</option>
           <option value="md">md</option>
         </select>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "24px",
-          padding: "24px",
-          "flex-wrap": "wrap",
-        }}
-      >
+      </ClusterRow>
+      <div class="example-row">
         <Instance
           title="RightDetailTabbedPanel"
           padding={padding}

@@ -10,6 +10,12 @@ import {
 } from "../../src/components/Panel";
 import { Panel } from "../../src/components/Panel/Panel";
 import { Stack } from "../../src/components/Layout/Stack";
+import {
+  MutedBody,
+  AccentBody,
+  TextValueDangerSm,
+  TextValueSuccessSm,
+} from "../../src/components/Text";
 
 export const PanelShowcase: Component = () => {
   return (
@@ -22,100 +28,46 @@ export const PanelShowcase: Component = () => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Corner Variants</h3>
-          <div
-            style={{
-              display: "grid",
-              "grid-template-columns": "repeat(3, 1fr)",
-              gap: "16px",
-            }}
-          >
+          <div class="example-row">
             <Panel title="Clip Corners" corners="clip" glow="subtle">
-              <p
-                style={{
-                  color: "var(--sui-text-secondary)",
-                  "font-size": "13px",
-                  margin: 0,
-                }}
-              >
-                Angled corners using clip-path.
-              </p>
+              <MutedBody>Angled corners using clip-path.</MutedBody>
             </Panel>
             <Panel title="Bracket Corners" corners="bracket" glow="medium">
-              <p
-                style={{
-                  color: "var(--sui-text-secondary)",
-                  "font-size": "13px",
-                  margin: 0,
-                }}
-              >
-                L-shaped bracket decorations.
-              </p>
+              <MutedBody>L-shaped bracket decorations.</MutedBody>
             </Panel>
             <Panel title="Notch Corners" corners="notch" glow="strong">
-              <p
-                style={{
-                  color: "var(--sui-text-secondary)",
-                  "font-size": "13px",
-                  margin: 0,
-                }}
-              >
-                Asymmetric notch cut-outs.
-              </p>
+              <MutedBody>Asymmetric notch cut-outs.</MutedBody>
             </Panel>
           </div>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Color Variants</h3>
-          <div
-            style={{
-              display: "grid",
-              "grid-template-columns": "repeat(3, 1fr)",
-              gap: "16px",
-            }}
-          >
+          <h3>Composed — Color Variants</h3>
+          <div class="example-row">
             <Panel title="Primary" variant="primary" corners="clip" size="sm">
-              <span style={{ color: "var(--sui-accent)" }}>Accent color</span>
+              <AccentBody>Accent color</AccentBody>
             </Panel>
             <Panel title="Danger" variant="danger" corners="clip" size="sm">
-              <span style={{ color: "var(--sui-danger)" }}>Warning state</span>
+              <TextValueDangerSm>Warning state</TextValueDangerSm>
             </Panel>
             <Panel title="Success" variant="success" corners="clip" size="sm">
-              <span style={{ color: "var(--sui-success)" }}>
-                Positive state
-              </span>
+              <TextValueSuccessSm>Positive state</TextValueSuccessSm>
             </Panel>
           </div>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Edge Accents</h3>
+          <h3>Composed — Edge Accents</h3>
           <Panel
             title="With Edge Accents"
             corners="clip"
             edgeAccents
             glow="subtle"
           >
-            <p
-              style={{
-                color: "var(--sui-text-secondary)",
-                "font-size": "13px",
-                margin: 0,
-              }}
-            >
-              Decorative edge lines on the panel borders.
-            </p>
+            <MutedBody>Decorative edge lines on the panel borders.</MutedBody>
           </Panel>
 
-          <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
+          <h3>Curried Variants</h3>
           <Stack gap="sm">
             <div>
               <InfoPanel title="InfoPanel">
-                <p
-                  style={{
-                    color: "var(--sui-text-secondary)",
-                    "font-size": "13px",
-                    margin: 0,
-                  }}
-                >
-                  clip corners, subtle glow
-                </p>
+                <MutedBody>clip corners, subtle glow</MutedBody>
               </InfoPanel>
               <div class="text-meta">
                 InfoPanel — corners: "clip", glow: "subtle"
@@ -123,61 +75,27 @@ export const PanelShowcase: Component = () => {
             </div>
             <div>
               <AccentPanel title="AccentPanel">
-                <p
-                  style={{
-                    color: "var(--sui-text-secondary)",
-                    "font-size": "13px",
-                    margin: 0,
-                  }}
-                >
-                  primary, bracket corners, medium glow
-                </p>
+                <MutedBody>primary, bracket corners, medium glow</MutedBody>
               </AccentPanel>
               <div class="text-meta">
                 AccentPanel — variant: "primary", corners: "bracket", glow:
                 "medium"
               </div>
             </div>
-            <div
-              style={{
-                display: "grid",
-                "grid-template-columns": "repeat(3, 1fr)",
-                gap: "16px",
-              }}
-            >
-              <div>
-                <DangerPanel title="DangerPanel">
-                  <span style={{ "font-size": "13px" }}>
-                    danger + strong glow
-                  </span>
-                </DangerPanel>
-              </div>
-              <div>
-                <WarningPanel title="WarningPanel">
-                  <span style={{ "font-size": "13px" }}>
-                    warning + subtle glow
-                  </span>
-                </WarningPanel>
-              </div>
-              <div>
-                <SuccessPanel title="SuccessPanel">
-                  <span style={{ "font-size": "13px" }}>
-                    success + subtle glow
-                  </span>
-                </SuccessPanel>
-              </div>
+            <div class="example-row">
+              <DangerPanel title="DangerPanel">
+                <MutedBody>danger + strong glow</MutedBody>
+              </DangerPanel>
+              <WarningPanel title="WarningPanel">
+                <MutedBody>warning + subtle glow</MutedBody>
+              </WarningPanel>
+              <SuccessPanel title="SuccessPanel">
+                <MutedBody>success + subtle glow</MutedBody>
+              </SuccessPanel>
             </div>
             <div>
               <CompactPanel title="CompactPanel">
-                <p
-                  style={{
-                    color: "var(--sui-text-secondary)",
-                    "font-size": "13px",
-                    margin: 0,
-                  }}
-                >
-                  small size, no glow
-                </p>
+                <MutedBody>small size, no glow</MutedBody>
               </CompactPanel>
               <div class="text-meta">
                 CompactPanel — size: "sm", corners: "clip", glow: "none"
@@ -185,15 +103,7 @@ export const PanelShowcase: Component = () => {
             </div>
             <div>
               <DecoratedPanel title="DecoratedPanel">
-                <p
-                  style={{
-                    color: "var(--sui-text-secondary)",
-                    "font-size": "13px",
-                    margin: 0,
-                  }}
-                >
-                  bracket corners + edge accents
-                </p>
+                <MutedBody>bracket corners + edge accents</MutedBody>
               </DecoratedPanel>
               <div class="text-meta">
                 DecoratedPanel — corners: "bracket", edgeAccents, glow: "medium"
