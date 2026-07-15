@@ -5,10 +5,18 @@
    only the row wrapper, the drag grip, the spacing, and the placeholder gap.
    ============================================ */
 
-/* Flex-column context + row gap now come from the composed NarrowStack (see
+/* Flex-column context comes from the composed NarrowStack (see
    SortableList.tsx); only the non-geometry font-size stays here. */
 .sui-sortable-list {
   font-size: 12px;
+}
+
+/* Row gap: the DEPRECATED runtime `gap` prop rides in on the --sui-sortable-gap
+   custom property (a cssvar bridge, not a raw inline `gap`). The doubled class
+   raises specificity above the composed NarrowStack's `.stack--gap-sm`, so this
+   value wins; unset it falls back to the sm (8px) step. */
+.sui-sortable-list.sui-sortable-list {
+  gap: var(--sui-sortable-gap, var(--sui-space-2));
 }
 
 /* "bare" row chrome — strips the Surface border / bg / padding so a self-styled

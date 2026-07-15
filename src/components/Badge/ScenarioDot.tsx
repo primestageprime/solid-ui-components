@@ -39,8 +39,7 @@ export const ScenarioDot: Component<ScenarioDotProps> = (props) => {
       style={{
         width: diameter(),
         height: diameter(),
-        // Hollow rings need a visible stroke; filled discs read the same width.
-        "border-width": "1.5px",
+        // border-width lives in ScenarioDot.css (static); colour is data.
         "border-color": local.color,
         background: local.filled ? local.color : "transparent",
         ...overrides(),

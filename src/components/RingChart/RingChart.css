@@ -31,13 +31,15 @@
   pointer-events: none;
 }
 
-/* Label typography — font-size stays inline (scales with ring size and
-   label length). */
+/* Label typography — the font-size PROPERTY lives here; only the computed size
+   (scales with ring size + label length) rides in on the --ring-*-size vars set
+   inline by the component (a cssvar bridge, not a raw inline font-size). */
 .sui-ring-chart__label {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   color: var(--sui-text-primary);
   font-weight: 700;
   line-height: 1.1;
+  font-size: var(--ring-label-size);
 }
 
 .sui-ring-chart__sublabel {
@@ -45,4 +47,5 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 2px;
+  font-size: var(--ring-sublabel-size);
 }

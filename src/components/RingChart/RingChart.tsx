@@ -82,7 +82,7 @@ export function RingChart(props: RingChartProps) {
         <div
           class="sui-ring-chart__label"
           style={{
-            "font-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
+            "--ring-label-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
           }}
         >
           {props.label}
@@ -90,7 +90,7 @@ export function RingChart(props: RingChartProps) {
         <Show when={props.sublabel}>
           <div
             class="sui-ring-chart__sublabel"
-            style={{ "font-size": `${Math.max(9, size() / 10)}px` }}
+            style={{ "--ring-sublabel-size": `${Math.max(9, size() / 10)}px` }}
           >
             {props.sublabel}
           </div>

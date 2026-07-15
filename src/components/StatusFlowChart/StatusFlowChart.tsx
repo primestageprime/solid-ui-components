@@ -332,7 +332,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
                 // the parent slides between columns when its effective
                 // status changes.
                 transform: `translateX(${parentCol() * columnGap()}px)`,
-                transition: "transform 0.55s ease-out",
+                // transition (static easing) lives in StatusFlowChart.css.
               }}
             >
               {renderInnerForData(parent()!)}

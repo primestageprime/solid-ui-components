@@ -76,7 +76,7 @@ export function StaticSplitLayout<T>(
       bg="var(--sui-bg-secondary)"
       borderColor="var(--sui-border)"
       style={{
-        "border-radius": "var(--sui-radius-md)",
+        // border-radius (static token) lives in SplitQueueList.css (.sui-sql).
         height: props.height != null ? `${props.height}px` : "100%",
       }}
     >

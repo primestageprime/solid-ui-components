@@ -16,6 +16,7 @@
   box-sizing: border-box;
   font-family: var(--sui-font-family);
   color: var(--sui-text-primary);
+  border-radius: var(--sui-radius-md);
   overflow: hidden;
 }
 

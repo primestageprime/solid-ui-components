@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { run as runStyleRubric } from "./style-rubric.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = join(root, "scripts", "health-baseline.json");
@@ -109,11 +110,20 @@ for (const f of walk(
     missingDepth.push(f.replace(root + "/", ""));
 }
 
+// Rubric linter (scripts/style-rubric.mjs): count of a+b+c violations — a
+// src/components inline style={{ that is un-manifested, uses a property outside
+// its rubric categories, or carries a pure static-literal value. Expected 0.
+const styleRubric = runStyleRubric();
+const styleRubricHits = styleRubric.violations.map(
+  (v) => `${v.file}:${v.line} [${v.kind}] ${v.prop} — ${v.detail}`,
+);
+
 const metrics = {
   bareHexCss: hits.bareHexCss.length,
   bareHexTsx: hits.bareHexTsx.length,
   inlineStyleSrc: hits.inlineStyleSrc.length,
   inlineStyleShowcases: hits.inlineStyleShowcases.length,
+  styleRubricViolations: styleRubric.violations.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
   missingDepthHeaders: missingDepth.length,
@@ -132,6 +142,7 @@ const detail = {
   bareHexTsx: hits.bareHexTsx,
   inlineStyleSrc: hits.inlineStyleSrc,
   inlineStyleShowcases: hits.inlineStyleShowcases,
+  styleRubricViolations: styleRubricHits,
   foldersWithoutTests,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,

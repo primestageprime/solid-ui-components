@@ -342,7 +342,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       // total — the root's own height stays parent-driven, so there's no feedback
       // loop (only the panes are sized from the measured value).
       style={{
-        "border-radius": "var(--sui-radius-md)",
+        // border-radius (static token) lives in SplitQueueList.css.
         height: props.topOnly
           ? undefined
           : props.height != null

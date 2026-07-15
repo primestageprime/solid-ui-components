@@ -8,6 +8,8 @@
   display: inline-block;
   border-radius: 50%;
   border-style: solid;
+  /* Hollow rings need a visible stroke; filled discs read the same width. */
+  border-width: 1.5px;
   box-sizing: border-box;
   flex: 0 0 auto;
 }

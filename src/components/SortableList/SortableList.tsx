@@ -83,17 +83,19 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // placeholder tracks the cursor through the row gaps too, where a per-row
     // dragover never fires. The handler reads each row's live geometry via the
     // `data-dnd-id` stamps below.
-    // Column context comes from the composed NarrowStack (flex-column, sm gap);
-    // the runtime numeric `gap` prop stays as a DEPRECATED data-driven inline
-    // style that overrides the Stack's sm gap (same shape as ButtonGroup's
-    // runtime layout props — kept for zero breaking changes, not a scale value).
+    // Column context comes from the composed NarrowStack (flex-column, sm gap).
+    // The DEPRECATED runtime numeric `gap` prop rides in on the
+    // --sui-sortable-gap custom property (a cssvar bridge — see SortableList.css,
+    // where a doubled-class rule wins over the Stack's sm gap); kept for zero
+    // breaking changes, not a scale value (same shape as ButtonGroup's runtime
+    // layout props).
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
     <NarrowStack
       class="sui-sortable-list"
       classList={{ "sui-sortable-list--bare": bare() }}
       role="list"
       aria-label={label()}
-      style={{ gap: `${props.gap ?? 8}px` }}
+      style={{ "--sui-sortable-gap": `${props.gap ?? 8}px` }}
       onDragOver={dnd.containerHandlers.onDragOver}
       onDrop={dnd.containerHandlers.onDrop}
     >
