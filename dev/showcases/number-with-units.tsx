@@ -22,18 +22,18 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
             <NumberWithUnits value={3.81} units="g/kWh" precision={2} />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Power</h3>
+          <h3 class="showcase-heading-gap">Composed — Power</h3>
           <Stack gap="sm">
             <NumberWithUnits value={1200} units="kW" />
             <NumberWithUnits value={2841.3} units="scfm" precision={1} />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Percentage</h3>
+          <h3 class="showcase-heading-gap">Composed — Percentage</h3>
           <Stack gap="sm">
             <NumberWithUnits value={90} units="%" />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Color-Coded</h3>
+          <h3 class="showcase-heading-gap">Composed — Color-Coded</h3>
           <Stack gap="sm">
             <NumberWithUnits
               value={0.42}
@@ -49,7 +49,7 @@ export const NumberWithUnitsShowcase: Component<Depth2Props> = (props) => {
             />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Null Fallback</h3>
+          <h3 class="showcase-heading-gap">Composed — Null Fallback</h3>
           <Stack gap="sm">
             <NumberWithUnits value={null} units="kW" />
             <NumberWithUnits value={undefined} units="ppm" />

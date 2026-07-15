@@ -1173,6 +1173,17 @@
   font-weight: 600;
 }
 
+/* Vertical spacer above a showcase sub-heading that follows a preceding
+   example block. Pure spacing — the heading tag carries its own type
+   styling; --lg is the wider gap used for major section breaks. */
+.showcase-heading-gap {
+  margin-top: 24px;
+}
+
+.showcase-heading-gap--lg {
+  margin-top: 32px;
+}
+
 .example-group {
   margin-bottom: 32px;
 }

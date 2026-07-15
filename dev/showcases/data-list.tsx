@@ -43,7 +43,7 @@ export const DataListShowcase: Component<Depth2Props> = (props) => {
             <DD muted>No issues reported</DD>
           </DTable>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — With NumberWithUnits
           </h3>
           <DTable>
@@ -61,7 +61,7 @@ export const DataListShowcase: Component<Depth2Props> = (props) => {
             </DD>
           </DTable>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — With Val + Units (legacy)
           </h3>
           <DTable>
@@ -85,7 +85,7 @@ export const DataListShowcase: Component<Depth2Props> = (props) => {
             </DD>
           </DTable>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — With Headers</h3>
+          <h3 class="showcase-heading-gap">Composed — With Headers</h3>
           <DTableWithHeader
             header={
               <DHeader>

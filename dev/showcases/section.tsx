@@ -32,7 +32,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             <TextBody>Section content goes here.</TextBody>
           </Section>
 
-          <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
+          <h3 class="showcase-heading-gap">Curried Variants</h3>
           <Stack gap="sm">
             <div>
               <CollapsibleSection

@@ -121,7 +121,7 @@ export const ChartShowcase: Component = () => {
             </ChartTooltip>
           </Chart>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Reimplementation — ThroughputChart features
           </h3>
           <p class="text-meta">
@@ -168,7 +168,7 @@ export const ChartShowcase: Component = () => {
             </ChartTooltip>
           </Chart>
 
-          <h3 style={{ "margin-top": "24px" }}>Multi-series</h3>
+          <h3 class="showcase-heading-gap">Multi-series</h3>
           <p class="text-meta">
             Three independent <code>&lt;LineSeries&gt;</code> share the same
             scales; <code>&lt;Crosshair&gt;</code> spotlights a dot per series.
@@ -204,7 +204,7 @@ export const ChartShowcase: Component = () => {
             />
           </Chart>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Reimplementation — CompletionTimeline-style
           </h3>
           <p class="text-meta">
@@ -230,7 +230,7 @@ export const ChartShowcase: Component = () => {
             />
           </Chart>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Reimplementation — BurndownChart-style
           </h3>
           <p class="text-meta">
@@ -313,7 +313,7 @@ export const ChartShowcase: Component = () => {
             );
           })()}
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             BarSeries — single value, with crosshair
           </h3>
           <p class="text-meta">
@@ -347,7 +347,7 @@ export const ChartShowcase: Component = () => {
             );
           })()}
 
-          <h3 style={{ "margin-top": "24px" }}>Minimal — line only</h3>
+          <h3 class="showcase-heading-gap">Minimal — line only</h3>
           <Chart width={400} height={120} xDomain={[0, 39]} yDomain={[0, 100]}>
             <LineSeries data={a} x={(d) => d.t} y={(d) => d.v} />
           </Chart>

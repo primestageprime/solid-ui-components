@@ -32,7 +32,7 @@ export const ButtonGroupShowcase: Component = () => {
             <Button variant="primary">Execute</Button>
           </ButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Connected (gap: none)
           </h3>
           <ConnectedButtonGroup>
@@ -42,14 +42,14 @@ export const ButtonGroupShowcase: Component = () => {
             <Button>Year</Button>
           </ConnectedButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical</h3>
+          <h3 class="showcase-heading-gap">Composed — Vertical</h3>
           <VerticalGapButtonGroup>
             <Button>Option A</Button>
             <Button>Option B</Button>
             <Button variant="danger">Delete</Button>
           </VerticalGapButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Button Variants</h3>
+          <h3 class="showcase-heading-gap">Composed — Button Variants</h3>
           <ButtonGroup>
             <Button>Default</Button>
             <Button variant="primary">Primary</Button>

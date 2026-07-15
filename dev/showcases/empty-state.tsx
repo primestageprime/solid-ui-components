@@ -51,7 +51,7 @@ export const EmptyStateShowcase: Component<Depth2Props> = (props) => {
             </div>
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Variants</h3>
+          <h3 class="showcase-heading-gap">Composed — Variants</h3>
           <Stack gap="sm">
             <div>
               <div class="text-meta">default</div>

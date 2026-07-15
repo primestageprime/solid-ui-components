@@ -78,7 +78,7 @@ export const ConnectionStatusShowcase: Component = () => {
             />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>
+          <h3 class="showcase-heading-gap--lg">
             LiveHeartbeatTrace — Depth 1 (raw)
           </h3>
           <p class="text-meta">
@@ -112,7 +112,7 @@ export const ConnectionStatusShowcase: Component = () => {
             />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>
+          <h3 class="showcase-heading-gap--lg">
             HeartbeatSparkline — Primitive (Depth 0, hand-fed)
           </h3>
           <p class="text-meta">

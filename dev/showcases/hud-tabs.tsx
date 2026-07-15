@@ -31,13 +31,13 @@ export const TabsShowcase: Component = () => {
           <h3>Composed — Default (Underline)</h3>
           <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Boxed</h3>
+          <h3 class="showcase-heading-gap">Composed — Boxed</h3>
           <BoxedTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Pill</h3>
+          <h3 class="showcase-heading-gap">Composed — Pill</h3>
           <PillTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — With Status</h3>
+          <h3 class="showcase-heading-gap">Composed — With Status</h3>
           <Tabs
             tabs={[
               { id: "a", label: "Clean" },
@@ -48,7 +48,7 @@ export const TabsShowcase: Component = () => {
             onTabChange={() => {}}
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Vertical (Default)
           </h3>
           <div
@@ -74,7 +74,7 @@ export const TabsShowcase: Component = () => {
             </div>
           </div>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Boxed)</h3>
+          <h3 class="showcase-heading-gap">Composed — Vertical (Boxed)</h3>
           <div
             style={{
               display: "flex",

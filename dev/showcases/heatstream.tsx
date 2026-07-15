@@ -328,15 +328,15 @@ export const HeatStreamShowcase: Component = () => {
           <h3>Default — C Never Worked, F Gap at 6–8, G Missing at 2</h3>
           <HeatStream items={sampleItems} keys={KEYS} showLegend />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Top 5 Unknown (Not Yet Reported)
           </h3>
           <HeatStream items={partialUnknownItems} keys={KEYS} showLegend />
 
-          <h3 style={{ "margin-top": "24px" }}>Compact — Default (10 items)</h3>
+          <h3 class="showcase-heading-gap">Compact — Default (10 items)</h3>
           <HeatStream items={sampleItems} keys={KEYS} variant="compact" />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Compact — Top 5 Unknown (10 items)
           </h3>
           <HeatStream

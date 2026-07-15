@@ -32,7 +32,7 @@ export const ResultPanelShowcase: Component = () => {
             </div>
           </ResultPanel>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Warning Result</h3>
+          <h3 class="showcase-heading-gap">Composed — Warning Result</h3>
           <ResultPanel
             label="ROG Result"
             value="0.95"

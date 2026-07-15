@@ -91,10 +91,10 @@ export const HeatmapShowcase: Component = () => {
             showTooltips
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Compact Variant</h3>
+          <h3 class="showcase-heading-gap">Composed — Compact Variant</h3>
           <Heatmap rows={singleRows} variant="compact" showTooltips />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Multi-Category Heatmap
           </h3>
           <HeatmapMulti
@@ -103,7 +103,7 @@ export const HeatmapShowcase: Component = () => {
             showLegend
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Multi Sparkline</h3>
+          <h3 class="showcase-heading-gap">Composed — Multi Sparkline</h3>
           <HeatmapMulti
             rows={multiRows}
             categoryLabels={["NOx", "SOx", "CO2"]}

@@ -60,10 +60,10 @@ export const FormulaPanelShowcase: Component<Depth3Props> = (props) => {
           <h3>Composed — Compliant Result</h3>
           <NoxPanel.Panel values={compliantValues} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Violation Result</h3>
+          <h3 class="showcase-heading-gap">Composed — Violation Result</h3>
           <ViolationPanel.Panel values={violationValues} />
 
-          <h3 style={{ "margin-top": "24px" }}>Individual Sub-Components</h3>
+          <h3 class="showcase-heading-gap">Individual Sub-Components</h3>
           <p class="text-meta">
             Result, Givens, and Formula can be used separately.
           </p>

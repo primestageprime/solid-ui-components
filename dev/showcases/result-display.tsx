@@ -23,7 +23,7 @@ export const ResultDisplayShowcase: Component = () => {
         badge={<StatusBadge variant="compliant">PASSING</StatusBadge>}
       />
 
-      <h3 style={{ "margin-top": "24px" }}>
+      <h3 class="showcase-heading-gap">
         Violation (data-driven `valueColor`)
       </h3>
       <ResultDisplay
@@ -35,10 +35,10 @@ export const ResultDisplayShowcase: Component = () => {
         badge={<StatusBadge variant="violation">VIOLATION</StatusBadge>}
       />
 
-      <h3 style={{ "margin-top": "24px" }}>No units</h3>
+      <h3 class="showcase-heading-gap">No units</h3>
       <ResultDisplay label="Count" value={42} />
 
-      <h3 style={{ "margin-top": "24px" }}>
+      <h3 class="showcase-heading-gap">
         Highlightable + highlighted (FormulaDecomposition affordance)
       </h3>
       <p class="text-meta">

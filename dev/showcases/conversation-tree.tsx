@@ -174,7 +174,7 @@ export const ConversationTreeShowcase: Component = () => {
             currentUserId="peter"
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Threaded — replies indent</h3>
+          <h3 class="showcase-heading-gap">Threaded — replies indent</h3>
           <p class="text-meta">
             Each reply nests under its parent. Left rail colored by the replying
             author for quick scanning at depth.
@@ -185,7 +185,7 @@ export const ConversationTreeShowcase: Component = () => {
             currentUserId="peter"
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Tighter group window (1 min)</h3>
+          <h3 class="showcase-heading-gap">Tighter group window (1 min)</h3>
           <p class="text-meta">
             Reduce <code>groupWithinMs</code> to split bursts that you want to
             treat as separate utterances rather than one.
