@@ -61,7 +61,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
       </KobalteTooltip.Trigger>
       <KobalteTooltip.Portal>
         <KobalteTooltip.Content class="sui-tooltip__content">
-          <KobalteTooltip.Arrow style={{ "stroke-width": "2px" }} />
+          <KobalteTooltip.Arrow class="sui-tooltip__arrow" />
           {resolveContent(local.content)}
         </KobalteTooltip.Content>
       </KobalteTooltip.Portal>

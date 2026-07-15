@@ -576,6 +576,7 @@
 
 /* Rowspan cells - vertically centered and visually distinct */
 .hud-grouped-table__rowspan-cell {
+  vertical-align: middle;
   background: linear-gradient(
     90deg,
     rgba(var(--sui-accent-rgb), 0.06),

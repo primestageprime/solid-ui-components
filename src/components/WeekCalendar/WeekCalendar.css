@@ -11,6 +11,7 @@
 
 .sui-week-calendar__corner,
 .sui-week-calendar__day-header {
+  height: var(--sui-wc-header-h);
   border-bottom: 1px solid var(--sui-border);
   border-right: 1px solid var(--sui-border);
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.4));
@@ -27,6 +28,7 @@
 }
 
 .sui-week-calendar__gutter {
+  height: var(--sui-wc-cal-h);
   position: relative;
   border-right: 1px solid var(--sui-border);
   /* Give the first hour mark room so it isn't clipped by the header
@@ -47,6 +49,7 @@
 }
 
 .sui-week-calendar__column {
+  height: var(--sui-wc-cal-h);
   position: relative;
   border-right: 1px solid var(--sui-border);
   /* Match the gutter so blocks line up with the hour marks. */

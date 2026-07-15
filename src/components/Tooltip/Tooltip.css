@@ -69,3 +69,7 @@
     transform: scale(0.96);
   }
 }
+
+.sui-tooltip__arrow {
+  stroke-width: 2px;
+}

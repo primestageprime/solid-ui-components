@@ -35,6 +35,7 @@ import {
   ChartTooltip,
 } from "../Chart";
 import { Legend } from "../Legend";
+import { SpreadRow } from "../Layout/variants";
 import "./ThroughputChart.css";
 
 export interface ThroughputPoint {
@@ -159,22 +160,14 @@ function RateChart(props: ThroughputChartProps) {
 
   return (
     <div class="sui-throughput-chart">
-      <div
-        style={{
-          display: "flex",
-          "justify-content": "space-between",
-          "font-family": '"JetBrains Mono", "Fira Code", monospace',
-          "font-size": "11px",
-          padding: "0 8px 4px",
-        }}
-      >
-        <span style={{ color: "var(--sui-success)", "font-weight": "600" }}>
+      <SpreadRow class="sui-throughput-chart__header">
+        <span class="sui-throughput-chart__header-title">
           Extraction Throughput
         </span>
-        <span style={{ color: "var(--sui-text-muted)" }}>
+        <span class="sui-throughput-chart__header-meta">
           avg {fmtNum(avg())} / peak {fmtNum(peak())} rows/min
         </span>
-      </div>
+      </SpreadRow>
       <Chart
         width={800}
         height={props.height ?? 260}
