@@ -108,4 +108,23 @@
   --chart-series-4: #22c55e;
   --chart-series-5: #a855f7;
   --chart-series-6: #ec4899;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     --sui-series-1..8 are the standard data-viz categorical colours. Callers
+     colour chart series / legend swatches / category dots by series INDEX
+     (var(--sui-series-N)) rather than hardcoding hues. Eight slots is the cap;
+     a ninth category needs a redesign, not a ninth colour. The palette is
+     theme-tuned for mood but validated (dataviz validate_palette.js) for an
+     OKLCH mid-lightness band, an adjacent-pair CVD floor (min protan/deutan
+     ΔE ≥ 8), a chroma floor, and ≥3:1 contrast on this theme's chart surface
+     (--sui-bg-elevated). The status tokens (--sui-success / --sui-warning /
+     --sui-danger) are reserved for meaning and never appear as a series slot. */
+  --sui-series-1: #217bf4;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #de3d30;
+  --sui-series-5: #955be3;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #d13d91;
+  --sui-series-8: #8c8309;
 }

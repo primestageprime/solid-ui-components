@@ -46,4 +46,16 @@ html[data-colorblind="true"] {
   --chart-series-4: #cc79a7;
   --chart-series-5: #f0e442;
   --chart-series-6: #0072b2;
+
+  /* CVD-safe categorical series palette — overrides the base theme's
+     --sui-series-* whenever colorblind mode is toggled on. Matches
+     colorblind.css. See default.css for the series-token contract. */
+  --sui-series-1: #297cef;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #da4336;
+  --sui-series-5: #935edf;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #cd4290;
+  --sui-series-8: #8c8309;
 }

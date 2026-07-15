@@ -150,6 +150,21 @@ body {
   --chart-series-4: #00ff88;
   --chart-series-5: #b388ff;
   --chart-series-6: #ff66cc;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     Cyan-forward set matched to the HUD mood (higher chroma "neon" read),
+     validated for the OKLCH lightness band, adjacent CVD floor (min ΔE ≥ 8),
+     chroma floor, and ≥3:1 on the HUD chart surface (--sui-bg-elevated
+     #142535). Colour series by index (var(--sui-series-N)); status tokens
+     stay reserved and are never a series slot. See default.css for the full note. */
+  --sui-series-1: #0d9298;
+  --sui-series-2: #bb6802;
+  --sui-series-3: #0b8bc0;
+  --sui-series-4: #e62b34;
+  --sui-series-5: #516efe;
+  --sui-series-6: #019a46;
+  --sui-series-7: #b744cf;
+  --sui-series-8: #918112;
 }
 
 /* ============================================

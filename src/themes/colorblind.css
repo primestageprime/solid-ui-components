@@ -162,6 +162,22 @@ body {
   --chart-series-4: #cc79a7; /* reddish purple */
   --chart-series-5: #f0e442; /* yellow */
   --chart-series-6: #0072b2; /* blue */
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     CVD-first set on the deep-navy surfaces: every adjacent pair clears an
+     OKLCH ΔE ≥ 8 under BOTH protan and deutan simulation (min ≈ 11), so the
+     eight categories stay distinct for dichromat readers. Validated for the
+     dark-mode lightness band, chroma floor, and ≥3:1 on the chart surface
+     (--sui-bg-elevated #1c2533). Colour series by index; status tokens stay
+     reserved. See default.css for the full note. */
+  --sui-series-1: #297cef;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #da4336;
+  --sui-series-5: #935edf;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #cd4290;
+  --sui-series-8: #8c8309;
 }
 
 /* ============================================
@@ -208,4 +224,15 @@ html[data-colorblind="true"] {
   --chart-series-4: #cc79a7;
   --chart-series-5: #f0e442;
   --chart-series-6: #0072b2;
+
+  /* CVD-safe series palette layered over the base theme (matches the
+     colorblind :root set above; overrides whatever series the base theme set). */
+  --sui-series-1: #297cef;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #da4336;
+  --sui-series-5: #935edf;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #cd4290;
+  --sui-series-8: #8c8309;
 }

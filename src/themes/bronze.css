@@ -139,6 +139,21 @@ body {
   --chart-series-4: #c96442;
   --chart-series-5: #7a5c8c;
   --chart-series-6: #2c7c8c;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     Warm-earth set matched to the bronze (light) mood, muted chroma to sit on
+     the bone/paper surfaces. Validated for the light-mode OKLCH lightness band,
+     adjacent CVD floor (min ΔE ≥ 8), chroma floor, and ≥3:1 on the bronze chart
+     surface (--sui-bg-elevated #ffffff). Colour series by index; status tokens
+     stay reserved. See default.css for the full note. */
+  --sui-series-1: #c94c18;
+  --sui-series-2: #0c87a7;
+  --sui-series-3: #a56d0f;
+  --sui-series-4: #2279dc;
+  --sui-series-5: #0a924b;
+  --sui-series-6: #9658c6;
+  --sui-series-7: #7f8006;
+  --sui-series-8: #c04688;
 }
 
 /* ============================================
