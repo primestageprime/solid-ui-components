@@ -1,8 +1,9 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-// Chart — composed root. Owns the single pointer listener on its <svg>
-// (so per-slot listeners would clobber dispatch); slots read scales +
-// pointer state via context.
+// Chart — Structural (Depth 1). SVG chart root; composes no library
+// components (slots arrive as caller children). Owns the single pointer
+// listener on its <svg> (so per-slot listeners would clobber dispatch);
+// slots read scales + pointer state via context.
 import {
   type Component,
   type JSX,
@@ -50,6 +51,12 @@ export interface ChartProps {
    *  doesn't eat plot pixels) and ALSO surfaced as the SVG `<title>` for
    *  screen readers. */
   title?: string;
+  /**
+   * Scale the SVG to fill its container width (`width: 100%; height: auto`),
+   * using `width`/`height` only as the `viewBox` aspect ratio. Removes the need
+   * for the caller to measure the container. Default false (fixed pixel size).
+   */
+  responsive?: boolean;
   class?: string;
   style?: JSX.CSSProperties | string;
   children?: JSX.Element;
@@ -91,6 +98,7 @@ export const Chart: Component<ChartProps> = (props) => {
     "margin",
     "annotationLaneHeight",
     "title",
+    "responsive",
     "class",
     "style",
     "children",
@@ -290,7 +298,7 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div
-        class={`sui-chart${local.class ? ` ${local.class}` : ""}`}
+        class={`sui-chart${local.responsive ? " sui-chart--responsive" : ""}${local.class ? ` ${local.class}` : ""}`}
         style={local.style as JSX.CSSProperties}
       >
         <Show when={local.title}>
@@ -298,7 +306,7 @@ export const Chart: Component<ChartProps> = (props) => {
         </Show>
         <svg
           ref={svgEl}
-          class="sui-chart__svg"
+          class={`sui-chart__svg${local.responsive ? " sui-chart__svg--responsive" : ""}`}
           width={width()}
           height={height()}
           viewBox={`0 0 ${width()} ${height()}`}

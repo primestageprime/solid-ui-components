@@ -10,6 +10,18 @@
   overflow: visible;
 }
 
+/* Responsive: fill the container width; the SVG's viewBox keeps the aspect
+   ratio (width/height props become the ratio, not fixed pixels). Lets callers
+   drop container measurement entirely. */
+.sui-chart--responsive {
+  display: block;
+  width: 100%;
+}
+.sui-chart__svg--responsive {
+  width: 100%;
+  height: auto;
+}
+
 /* Overlay — sibling of <svg> inside .sui-chart. Hosts portal-rendered
    HTML overlays (e.g. ChartTooltip) since HTML inside <svg><g> has no
    layout box. position: absolute makes this element the positioning
