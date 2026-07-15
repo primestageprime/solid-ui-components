@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = join(root, "scripts", "health-baseline.json");
+const HISTORY_PATH = join(root, "scripts", "health-history.json");
 
 const walk = (dir, pred) => {
   const out = [];
@@ -135,6 +136,21 @@ const detail = {
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
 };
+
+// Every run whose metrics differ from the last recorded entry appends to
+// health-history.json — the iteration log that scripts/kpi-table.mjs renders.
+const history = existsSync(HISTORY_PATH)
+  ? JSON.parse(readFileSync(HISTORY_PATH, "utf8"))
+  : [];
+const last = history[history.length - 1];
+if (JSON.stringify(last?.metrics) !== JSON.stringify(metrics)) {
+  history.push({
+    at: new Date().toISOString(),
+    metrics,
+    baseline: baseline ?? undefined,
+  });
+  writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2) + "\n");
+}
 
 console.log("SUI health check (lower is better; 0 is the goal)\n");
 const regressions = [];

@@ -73,6 +73,7 @@
     "prepare": "git config core.hooksPath githooks 2>/dev/null; npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "health": "node scripts/health.mjs",
+    "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
