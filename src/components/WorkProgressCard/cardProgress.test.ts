@@ -5,6 +5,7 @@ import {
   actualFromSegments,
   isRunning,
   CARD_BAR_COLOR as C,
+  CARD_SIGN_COLOR,
   type CardProgressInput,
 } from "./cardProgress";
 
@@ -190,9 +191,9 @@ describe("actualFromSegments", () => {
 describe("statusAccent", () => {
   it("DONE is green; active states are blue; new/closed are muted", () => {
     expect(statusAccent("DONE")).toBe(C.fillDone);
-    expect(statusAccent("DOING")).toBe("#00d4ff");
-    expect(statusAccent("BLOCKED")).toBe("#00d4ff");
-    expect(statusAccent("QUESTION")).toBe("#00d4ff");
+    expect(statusAccent("DOING")).toBe(CARD_SIGN_COLOR);
+    expect(statusAccent("BLOCKED")).toBe(CARD_SIGN_COLOR);
+    expect(statusAccent("QUESTION")).toBe(CARD_SIGN_COLOR);
     expect(statusAccent("NEW")).toBe("rgba(255, 255, 255, 0.5)");
     expect(statusAccent("CLOSED")).toBe("rgba(255, 255, 255, 0.4)");
   });
