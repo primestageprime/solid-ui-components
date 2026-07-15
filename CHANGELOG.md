@@ -6,6 +6,11 @@
 
 - **`npm run health`** — vision-adherence health check with a CI ratchet (`scripts/health.mjs` + `scripts/health-baseline.json`, new `health` job in ci.yml). Mechanical KPIs — bare hex colors in CSS/TSX, inline `style={{}}` counts in src and showcases, folders without tests, undocumented components, missing Depth headers — may only decrease; a deliberate increase requires committing an updated baseline. `--verbose` lists offenders, `--update-baseline` locks in improvements.
 
+### Removed
+
+- **`hopper.tsx` ("All Components") deleted from the gallery.** The legacy kitchen-sink showcase predated the workshop system; every component it demoed has a dedicated showcase.
+- **`animation-experiments.tsx` moved to `workshop:animation-lab`** — the animation R&D lab is now a proper bench (`dev/showcases/workshop/animation-lab.tsx`) with a strict lab contract in its header (named isolated experiments, real library internals only, leaf module, extract-then-A/B). Workshop benches are labs and are now exempt from the showcase-purity health KPI.
+
 ### Fixed
 
 - **Token purity extended to TSX/TS: all remaining bare hex colors removed from src.** `SidebarSelector` demo fixtures, `MetricValueCell`'s violation default, `ConversationTree` bubble colors, `WorkProgressCard`'s bar palette, and `WarningTitle` now use `--sui-*` tokens (originals kept as fallbacks); the health scan now covers `.ts` files too. Static inline styles in `Section`, `CensusView`, and the `SidebarSelector` demo moved to their component CSS.

@@ -1,3 +1,28 @@
+// ============================================
+// Bench: Animation Lab (workshop:animation-lab)
+//
+// The R&D lab for animation primitives — moved here from
+// dev/showcases/animation-experiments.tsx when the catalog showcases
+// were purified (issue #48). This is a LAB, not a catalog page.
+//
+// STRICT RULES (the lab contract):
+//  1. Every experiment is NAMED and isolated: one effect per demo,
+//     appended to EXPERIMENTS so it can be referred to later
+//     ("birth grow", "genie extrude", "turtle edge draw", ...).
+//  2. Experiments exercise the REAL library internals
+//     (src/internal/animation/*, src/internal/dag-svg,
+//     AnimatedSwimlaneChart lanes) — never forked copies of library
+//     math. When an effect settles, extract it into src/internal (or
+//     the choreography verb vocabulary) and keep the experiment here
+//     as the A/B reference against the extracted version.
+//  3. This file is a LEAF: no exports besides `meta` and the default
+//     component. Nothing may import from a bench.
+//  4. Inline styles are permitted ONLY inside experiment demos (the
+//     workshop is exempt from the showcase-purity KPI); any chrome
+//     around the experiments uses curried SUI.
+//  5. Do not register this bench anywhere — workshop benches are
+//     auto-discovered from dev/showcases/workshop/*.tsx.
+// ============================================
 /**
  * Animation experiments. Each experiment is a small isolated demo
  * exercising one effect, named so we can refer to it later. The pattern:
@@ -33,23 +58,23 @@ import {
   type LayoutParams as TrajLayoutParams,
   type LozengeRects,
   MS_PHASE_TOTAL,
-} from "../../src/internal/animation/trajectories";
-import { orthogonalAvoidingObstacles } from "../../src/internal/dag-svg";
-import type { StatusFlowNode } from "../../src/components/StatusFlowChart";
+} from "../../../src/internal/animation/trajectories";
+import { orthogonalAvoidingObstacles } from "../../../src/internal/dag-svg";
+import type { StatusFlowNode } from "../../../src/components/StatusFlowChart";
 import {
   advanceChildren as advanceChildrenLib,
   isAllDone,
-} from "./workshop-layout";
+} from "../workshop-layout";
 import {
   computeBreakpoints,
   maxDepthForWidth,
   DEFAULT_LANE_LAYOUT_CONFIG,
   type LaneLayoutConfig,
   type Breakpoint,
-} from "../../src/internal/animation/breakpoints";
-import { SwimlaneAnimatedLane } from "../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane";
-import { visibleChildRowCount } from "../../src/components/AnimatedSwimlaneChart/lanes";
-import type { RenderNodeContext } from "../../src/components/AnimatedSwimlaneChart/defaults";
+} from "../../../src/internal/animation/breakpoints";
+import { SwimlaneAnimatedLane } from "../../../src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane";
+import { visibleChildRowCount } from "../../../src/components/AnimatedSwimlaneChart/lanes";
+import type { RenderNodeContext } from "../../../src/components/AnimatedSwimlaneChart/defaults";
 
 interface Experiment {
   /** Short slug, used in the heading and as a stable id. */
@@ -2126,7 +2151,6 @@ const EXPERIMENTS: Experiment[] = [
 ];
 
 // ─── separate row export for the full mixed-shapes preview ─────────────────
-export { MixedShapesRow };
 
 // ─── two-frame arrow-smoothness demo ────────────────────────────────────────
 //
@@ -2331,10 +2355,9 @@ const TwoFrameArrowDemoRow: Component = () => {
   );
 };
 
-export { TwoFrameArrowDemoRow };
 
 // ─── row entrypoint ─────────────────────────────────────────────────────────
-export const AnimationExperimentsRow: Component = () => {
+const AnimationExperimentsRow: Component = () => {
   return (
     <>
       <div class="workshop-grid__cell">
@@ -2395,3 +2418,9 @@ export const AnimationExperimentsRow: Component = () => {
     </>
   );
 };
+
+export const meta = { label: "Animation Lab" };
+
+const AnimationLabBench: Component = () => <AnimationExperimentsRow />;
+
+export default AnimationLabBench;

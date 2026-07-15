@@ -74,8 +74,14 @@ for (const f of walk(
   });
 }
 
+// Workshop benches (dev/showcases/workshop/) are LABS — experiments are
+// exempt from showcase purity, so the metric measures only the catalog
+// showcases that teach composition patterns.
 let inlineStyleShowcases = 0;
-for (const f of walk(join(root, "dev/showcases"), (p) => p.endsWith(".tsx")))
+for (const f of walk(
+  join(root, "dev/showcases"),
+  (p) => p.endsWith(".tsx") && !p.includes("/workshop/"),
+))
   for (const l of lines(f)) if (l.includes("style={{")) inlineStyleShowcases++;
 
 const foldersWithoutTests = componentDirs.filter(

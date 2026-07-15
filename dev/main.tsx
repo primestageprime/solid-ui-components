@@ -142,8 +142,6 @@ import { TitledTimeRangeHeaderShowcase } from "./showcases/titled-time-range-hea
 // Depth 4
 import { ResultPanelShowcase } from "./showcases/result-panel";
 
-// Hopper
-import { HopperShowcase } from "./showcases/hopper";
 
 // Sandbox / design exploration
 import { PillVariantsShowcase } from "./showcases/pill-variants";
@@ -885,13 +883,6 @@ const items: Item[] = [
     label: "ResultPanel",
     component: ResultPanelShowcase,
     tags: ["depth:2", "container", "math", "data"],
-  },
-
-  {
-    id: "hopper",
-    label: "All Components",
-    component: HopperShowcase,
-    tags: [],
   },
 
   {
