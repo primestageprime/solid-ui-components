@@ -66,50 +66,42 @@ export const SidebarSelectorShowcase: Component = () => {
             renderCard={(data, isSelected) => (
               <div>
                 <div
-                  style={{
-                    "font-weight": isSelected ? "bold" : "normal",
-                    color: "var(--sui-accent)",
+                  class="sidebar-selector-demo__card-title"
+                  classList={{
+                    "sidebar-selector-demo__card-title--selected": isSelected,
                   }}
                 >
                   {data.title}
                 </div>
-                <div
-                  style={{
-                    "font-size": "11px",
-                    color: "var(--sui-text-secondary)",
-                    "margin-top": "2px",
-                  }}
-                >
+                <div class="sidebar-selector-demo__card-status">
                   {data.status}
                 </div>
               </div>
             )}
             renderSelection={(data) => (
-              <div style={{ padding: "16px" }}>
+              <div class="sidebar-selector-demo__selection">
                 {data ? (
                   <>
-                    <h4
-                      style={{ color: "var(--sui-accent)", margin: "0 0 8px" }}
-                    >
+                    <h4 class="sidebar-selector-demo__sel-title">
                       {data.title}
                     </h4>
                     <TextBody>{data.description}</TextBody>
                     <p
-                      style={{
-                        color:
-                          data.status === "Online"
-                            ? "var(--sui-success)"
-                            : data.status === "Offline"
-                              ? "var(--sui-danger)"
-                              : "#ffcc00",
-                        "margin-top": "8px",
+                      class="sidebar-selector-demo__sel-status"
+                      classList={{
+                        "sidebar-selector-demo__sel-status--online":
+                          data.status === "Online",
+                        "sidebar-selector-demo__sel-status--offline":
+                          data.status === "Offline",
+                        "sidebar-selector-demo__sel-status--other":
+                          data.status !== "Online" && data.status !== "Offline",
                       }}
                     >
                       {data.status}
                     </p>
                   </>
                 ) : (
-                  <span style={{ color: "var(--sui-text-secondary)" }}>
+                  <span class="sidebar-selector-demo__empty">
                     Select an item
                   </span>
                 )}

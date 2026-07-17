@@ -37,15 +37,8 @@ export const AppShellShowcase: Component = () => (
 
     <div class="example-group">
       <h3>Live preview (200px tall window)</h3>
-      <div
-        style={{
-          height: "320px",
-          border: "1px solid var(--sui-border)",
-          "border-radius": "4px",
-          overflow: "hidden",
-        }}
-      >
-        <AppShell style={{ height: "100%" }}>
+      <div class="app-shell-demo__frame">
+        <AppShell class="app-shell-demo__fill">
           <AppHeader>
             <strong>dside</strong>
             <Row gap="sm">
@@ -66,7 +59,7 @@ export const AppShellShowcase: Component = () => (
             </Row>
             <span class="text-meta">· 8 active</span>
           </CompactInlineAppHeader>
-          <AppMain style={{ "overflow-y": "auto" }}>
+          <AppMain class="app-shell-demo__main">
             <Stack gap="xs">
               {FAKE_GROUPS.map((g) => (
                 <div>
@@ -74,7 +67,7 @@ export const AppShellShowcase: Component = () => (
                     <SectionLabel>{g.tag}</SectionLabel>
                     <MutedBody>· {g.count}</MutedBody>
                   </StickyGroupHeader>
-                  <Stack gap="xs" style={{ padding: "4px 12px" }}>
+                  <Stack gap="xs" class="app-shell-demo__row-pad">
                     {Array.from({ length: g.count }).map((_, i) => (
                       <Row gap="sm">
                         <TextLabel>

@@ -1851,3 +1851,179 @@
   flex-direction: column;
   gap: 20px;
 }
+.currency-input-demo__frame {
+  width: 640px;
+  padding: 12px;
+  border: 1px dashed var(--sui-border);
+}
+/* Host-owned SidebarSelector renderCard/renderSelection demo styling. */
+.sidebar-selector-demo__card-title {
+  color: var(--sui-accent);
+  font-weight: normal;
+}
+.sidebar-selector-demo__card-title--selected {
+  font-weight: bold;
+}
+.sidebar-selector-demo__card-status {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--sui-text-secondary);
+}
+.sidebar-selector-demo__selection {
+  padding: 16px;
+}
+.sidebar-selector-demo__sel-title {
+  margin: 0 0 8px;
+  color: var(--sui-accent);
+}
+.sidebar-selector-demo__sel-status {
+  margin-top: 8px;
+}
+.sidebar-selector-demo__sel-status--online {
+  color: var(--sui-success);
+}
+.sidebar-selector-demo__sel-status--offline {
+  color: var(--sui-danger);
+}
+.sidebar-selector-demo__sel-status--other {
+  color: #ffcc00;
+}
+.sidebar-selector-demo__empty {
+  color: var(--sui-text-secondary);
+}
+.router-demo__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+}
+.router-demo__cell-label {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: var(--sui-text-secondary);
+}
+.router-demo__cell-id {
+  color: var(--sui-accent);
+}
+.router-demo__cell-svg {
+  background: var(--sui-bg-elevated);
+  border-radius: 2px;
+}
+.router-demo__path {
+  color: var(--sui-accent);
+}
+/* grid columns bridge in via --router-cell-w (computed from CELL_W). */
+.router-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--router-cell-w));
+  gap: 10px;
+  margin-top: 12px;
+}
+.date-axis-demo__box {
+  padding: 0 0 4px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.date-axis-demo__box-label {
+  padding: 8px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+  border-bottom: 1px solid var(--sui-border);
+}
+.date-axis-demo__banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-accent);
+  border-radius: var(--sui-radius-md);
+  margin-bottom: 16px;
+}
+.date-axis-demo__emoji {
+  font-size: 20px;
+}
+.date-axis-demo__banner-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+}
+.date-axis-demo__banner-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sui-accent);
+}
+.math-formula-demo__prose {
+  color: var(--sui-text-secondary);
+}
+.math-formula-demo__inline {
+  display: inline-block;
+}
+.math-formula-demo__wide {
+  width: 100%;
+}
+.math-formula-demo__narrow {
+  width: 320px;
+  max-width: 100%;
+  border: 1px dashed var(--sui-border);
+  border-radius: 6px;
+}
+.scroll-region-demo__box {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  height: 200px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-primary);
+}
+.scroll-region-demo__row {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sui-border);
+  color: var(--sui-text-secondary);
+}
+.scroll-region-demo__fill {
+  height: 100%;
+}
+.tabbed-side-panel-demo__col {
+  flex: 1;
+  min-width: 320px;
+}
+.tabbed-side-panel-demo__slot {
+  min-height: 260px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-tabs-demo__row {
+  display: flex;
+  min-height: 180px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-tabs-demo__pane {
+  flex: 1;
+  padding: 16px;
+  color: var(--sui-text-muted);
+}
+.app-shell-demo__frame {
+  height: 320px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.app-shell-demo__fill {
+  height: 100%;
+}
+.app-shell-demo__main {
+  overflow-y: auto;
+}
+.app-shell-demo__row-pad {
+  padding: 4px 12px;
+}

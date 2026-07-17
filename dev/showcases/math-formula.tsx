@@ -32,12 +32,12 @@ export const MathFormulaShowcase: Component = () => {
           </div>
           <div>
             <div class="text-meta">Inline mode (displayMode: false)</div>
-            <p style={{ color: "var(--sui-text-secondary)" }}>
+            <p class="math-formula-demo__prose">
               The result is{" "}
               <MathFormula
                 latex={"x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"}
                 displayMode={false}
-                style={{ display: "inline-block" }}
+                class="math-formula-demo__inline"
               />{" "}
               for all values.
             </p>
@@ -57,7 +57,7 @@ export const MathFormulaShowcase: Component = () => {
         <Stack gap="sm">
           <div>
             <div class="text-meta">Wide container — fits on one line</div>
-            <div style={{ width: "100%" }}>
+            <div class="math-formula-demo__wide">
               <MathFormula
                 wrap
                 latex={
@@ -70,14 +70,7 @@ export const MathFormulaShowcase: Component = () => {
             <div class="text-meta">
               Narrow container (320px) — wraps at + / = boundaries
             </div>
-            <div
-              style={{
-                width: "320px",
-                "max-width": "100%",
-                border: "1px dashed var(--sui-border)",
-                "border-radius": "6px",
-              }}
-            >
+            <div class="math-formula-demo__narrow">
               <MathFormula
                 wrap
                 latex={
@@ -90,14 +83,7 @@ export const MathFormulaShowcase: Component = () => {
             <div class="text-meta">
               Narrow WITHOUT wrap (default) — single block, scrolls
             </div>
-            <div
-              style={{
-                width: "320px",
-                "max-width": "100%",
-                border: "1px dashed var(--sui-border)",
-                "border-radius": "6px",
-              }}
-            >
+            <div class="math-formula-demo__narrow">
               <MathFormula
                 latex={
                   "(1 - CE) \\times 13.8 + \\frac{NOx \\times F_2 \\times 2760}{836200 \\times kW} + \\frac{0.1029 \\times A}{kW} = 1.2345"

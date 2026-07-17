@@ -27,17 +27,11 @@ export const CurrencyInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Default ($10B cap)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           Placed in a wide container — the field caps at {currencyWidthRem()}rem
           instead of stretching.
         </div>
-        <div
-          style={{
-            width: "640px",
-            border: "1px dashed var(--sui-border)",
-            padding: "12px",
-          }}
-        >
+        <div class="currency-input-demo__frame">
           <CurrencyInput
             name="amount"
             label="Amount ($)"
@@ -52,13 +46,7 @@ export const CurrencyInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Holds a near-$10B value without reflowing</h3>
-        <div
-          style={{
-            width: "640px",
-            border: "1px dashed var(--sui-border)",
-            padding: "12px",
-          }}
-        >
+        <div class="currency-input-demo__frame">
           <CurrencyInput name="big" value={big} onChange={setBig} step={1000} />
         </div>
       </div>
@@ -68,16 +56,10 @@ export const CurrencyInputShowcase: Component = () => {
           Smaller ceiling (maxValue = $1,000,000 → {currencyWidthRem(1_000_000)}
           rem)
         </h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           A tighter cap for a column that never holds more than a million.
         </div>
-        <div
-          style={{
-            width: "640px",
-            border: "1px dashed var(--sui-border)",
-            padding: "12px",
-          }}
-        >
+        <div class="currency-input-demo__frame">
           <CurrencyInput
             name="fee"
             maxValue={1_000_000}
@@ -89,7 +71,7 @@ export const CurrencyInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Matching display cell — MoneyCell</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           `MoneyCell` shares the same tabular figures + width cap, so a money
           column lines up with its input.
         </div>

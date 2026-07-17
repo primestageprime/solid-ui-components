@@ -55,6 +55,7 @@
   "showcases": {
     "dev/showcases/change-renderer.tsx": ["paint"],
     "dev/showcases/value-renderer.tsx": ["paint"],
-    "dev/showcases/legend.tsx": ["paint"]
+    "dev/showcases/legend.tsx": ["paint"],
+    "dev/showcases/router-demo.tsx": ["cssvar"]
   }
 }

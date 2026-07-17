@@ -51,49 +51,25 @@ export const TabsShowcase: Component = () => {
           <h3 class="showcase-heading-gap">
             Composed — Vertical (Default)
           </h3>
-          <div
-            style={{
-              display: "flex",
-              "min-height": "180px",
-              border: "1px dashed var(--sui-border)",
-            }}
-          >
+          <div class="hud-tabs-demo__row">
             <VerticalTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
             />
-            <div
-              style={{
-                flex: 1,
-                padding: "16px",
-                color: "var(--sui-text-muted)",
-              }}
-            >
+            <div class="hud-tabs-demo__pane">
               Active tab: <strong>{active()}</strong>
             </div>
           </div>
 
           <h3 class="showcase-heading-gap">Composed — Vertical (Boxed)</h3>
-          <div
-            style={{
-              display: "flex",
-              "min-height": "180px",
-              border: "1px dashed var(--sui-border)",
-            }}
-          >
+          <div class="hud-tabs-demo__row">
             <VerticalBoxedTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
             />
-            <div
-              style={{
-                flex: 1,
-                padding: "16px",
-                color: "var(--sui-text-muted)",
-              }}
-            >
+            <div class="hud-tabs-demo__pane">
               Active tab: <strong>{active()}</strong>
             </div>
           </div>

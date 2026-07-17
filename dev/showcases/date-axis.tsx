@@ -25,28 +25,8 @@ const fmtLong = (d: Date): string =>
   });
 
 const demoBox = (label: string, children: () => unknown) => (
-  <div
-    style={{
-      padding: "0 0 4px",
-      background: "var(--sui-bg-elevated)",
-      border: "1px solid var(--sui-border)",
-      "border-radius": "var(--sui-radius-md)",
-      "margin-bottom": "16px",
-      overflow: "hidden",
-    }}
-  >
-    <div
-      style={{
-        padding: "8px 16px",
-        "font-size": "11px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-        color: "var(--sui-text-muted)",
-        "border-bottom": "1px solid var(--sui-border)",
-      }}
-    >
-      {label}
-    </div>
+  <div class="date-axis-demo__box">
+    <div class="date-axis-demo__box-label">{label}</div>
     <div>{children() as any}</div>
   </div>
 );
@@ -91,37 +71,13 @@ export const DateAxisShowcase: Component = () => {
           one <code>selected</code> signal.
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "12px",
-            padding: "16px 20px",
-            background: "var(--sui-bg-elevated)",
-            border: "1px solid var(--sui-accent)",
-            "border-radius": "var(--sui-radius-md)",
-            "margin-bottom": "16px",
-          }}
-        >
-          <span style={{ "font-size": "20px" }}>📈</span>
+        <div class="date-axis-demo__banner">
+          <span class="date-axis-demo__emoji">📈</span>
           <div>
-            <div
-              style={{
-                "font-size": "11px",
-                "text-transform": "uppercase",
-                "letter-spacing": "0.08em",
-                color: "var(--sui-text-muted)",
-              }}
-            >
+            <div class="date-axis-demo__banner-label">
               Graph view — centered on
             </div>
-            <div
-              style={{
-                "font-size": "15px",
-                "font-weight": "600",
-                color: "var(--sui-accent)",
-              }}
-            >
+            <div class="date-axis-demo__banner-value">
               {fmtLong(selected())}
             </div>
           </div>

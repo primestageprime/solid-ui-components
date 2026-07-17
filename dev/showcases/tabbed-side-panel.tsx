@@ -89,17 +89,12 @@ function Instance(props: {
   const [active, setActive] = createSignal("details");
   const [open, setOpen] = createSignal(true);
   return (
-    <div style={{ flex: 1, "min-width": "320px" }}>
+    <div class="tabbed-side-panel-demo__col">
       <h3>{props.title}</h3>
       <button class="demo-btn" onClick={() => setOpen((v) => !v)}>
         {open() ? "Close panel" : "Open panel"}
       </button>
-      <div
-        style={{
-          "min-height": "260px",
-          border: "1px dashed var(--sui-border)",
-        }}
-      >
+      <div class="tabbed-side-panel-demo__slot">
         {props.render({
           tabs: baseTabs,
           active,
@@ -125,7 +120,7 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
     return out;
   });
   return (
-    <div style={{ flex: 1, "min-width": "320px" }}>
+    <div class="tabbed-side-panel-demo__col">
       <h3>Filtered tabs (consumer pre-filters)</h3>
       <ClusterRow>
         <label>
@@ -148,12 +143,7 @@ function FilteredInstance(props: { padding: () => ContentPaddingValue }) {
           {open() ? "Close" : "Open"}
         </button>
       </ClusterRow>
-      <div
-        style={{
-          "min-height": "260px",
-          border: "1px dashed var(--sui-border)",
-        }}
-      >
+      <div class="tabbed-side-panel-demo__slot">
         <Dynamic
           component={RIGHT_PANELS[props.padding()]}
           tabs={visibleTabs()}

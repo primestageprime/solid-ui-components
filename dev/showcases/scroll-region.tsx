@@ -6,31 +6,11 @@ const rows = (n: number, label: string) =>
   Array.from({ length: n }, (_, i) => `${label} row ${i + 1}`);
 
 const Box: Component<{ children: any }> = (props) => (
-  <div
-    style={{
-      width: "260px",
-      height: "200px",
-      border: "1px solid var(--sui-border)",
-      "border-radius": "var(--sui-radius-sm, 4px)",
-      display: "flex",
-      "flex-direction": "column",
-      background: "var(--sui-bg-primary)",
-    }}
-  >
-    {props.children}
-  </div>
+  <div class="scroll-region-demo__box">{props.children}</div>
 );
 
 const Row: Component<{ children: any }> = (props) => (
-  <div
-    style={{
-      padding: "8px 12px",
-      "border-bottom": "1px solid var(--sui-border)",
-      color: "var(--sui-text-secondary)",
-    }}
-  >
-    {props.children}
-  </div>
+  <div class="scroll-region-demo__row">{props.children}</div>
 );
 
 export const ScrollRegionShowcase: Component = () => {
@@ -50,7 +30,7 @@ export const ScrollRegionShowcase: Component = () => {
         <div>
           <h3>Content fits — no fade</h3>
           <Box>
-            <ScrollRegion style={{ height: "100%" }}>
+            <ScrollRegion class="scroll-region-demo__fill">
               <For each={rows(3, "Fits")}>{(r) => <Row>{r}</Row>}</For>
             </ScrollRegion>
           </Box>
@@ -62,7 +42,7 @@ export const ScrollRegionShowcase: Component = () => {
             Scroll down: the bottom fade clears, the top fade appears.
           </p>
           <Box>
-            <ScrollRegion style={{ height: "100%" }}>
+            <ScrollRegion class="scroll-region-demo__fill">
               <For each={rows(30, "Overflow")}>{(r) => <Row>{r}</Row>}</For>
             </ScrollRegion>
           </Box>
@@ -75,7 +55,7 @@ export const ScrollRegionShowcase: Component = () => {
           </p>
           <Box>
             <ScrollRegion
-              style={{ height: "100%" }}
+              class="scroll-region-demo__fill"
               ref={(el) =>
                 queueMicrotask(() => {
                   const vp = el.querySelector(
