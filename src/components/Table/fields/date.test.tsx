@@ -13,10 +13,11 @@ describe("date field module", () => {
     expect(geo).toEqual({ minCh: 14, maxCh: 14, css: "14ch" });
   });
 
-  it("dateCol builds a sortable, centered-header column at geo width", () => {
+  it("dateCol builds a sortable, center-aligned column at geo width", () => {
     const col = dateCol<Row>("createdAt");
     expect(col.id).toBe("createdAt");
     expect(col.sortable).toBe(true);
+    expect(col.align).toBe("center");
     expect(col.width).toBe(geo.css);
     expect(col.geo).toBe(geo);
   });
