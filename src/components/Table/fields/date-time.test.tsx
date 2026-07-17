@@ -10,13 +10,13 @@ interface Row {
 
 describe("dateTime field", () => {
   it("geo is a fixed 23ch column", () => {
-    expect(geo).toEqual({ minCh: 21, maxCh: 21, css: "21ch" });
+    expect(geo).toEqual({ minCh: 19, maxCh: 19, padPx: 16, css: "calc(19ch + 16px)" });
   });
 
   it("factory bakes in id, width, sortable, and geometry", () => {
     const col = dateTimeCol<Row>("createdAt");
     expect(col.id).toBe("createdAt");
-    expect(col.width).toBe("21ch");
+    expect(col.width).toBe("calc(19ch + 16px)");
     expect(col.sortable).toBe(true);
     expect(col.geo).toBe(geo);
   });

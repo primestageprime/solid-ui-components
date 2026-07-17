@@ -79,15 +79,27 @@ export const col = <T,>(
 export function resolveFields<T>(
   specs: FieldSpec<T>[],
   registry: Record<string, FieldCol<T>>,
-): { columns: FieldCol<T>[]; minCh: number; maxCh: number } {
+): {
+  columns: FieldCol<T>[];
+  minCh: number;
+  maxCh: number;
+  /** Ready-to-use width budget for the frame vars: calc(Σ content ch + Σ pad). */
+  minW: string;
+  maxW: string;
+} {
   const columns = specs.map((spec) => {
     if (typeof spec === "string") return registry[spec];
     if (Array.isArray(spec)) return clusterCol(spec.map((id) => registry[id]));
     return spec;
   });
+  const minCh = columns.reduce((s, c) => s + c.geo.minCh, 0);
+  const maxCh = columns.reduce((s, c) => s + c.geo.maxCh, 0);
+  const padPx = columns.reduce((s, c) => s + (c.geo.padPx ?? 0), 0);
   return {
     columns,
-    minCh: columns.reduce((s, c) => s + c.geo.minCh, 0),
-    maxCh: columns.reduce((s, c) => s + c.geo.maxCh, 0),
+    minCh,
+    maxCh,
+    minW: `calc(${minCh}ch + ${padPx}px)`,
+    maxW: `calc(${maxCh}ch + ${padPx}px)`,
   };
 }

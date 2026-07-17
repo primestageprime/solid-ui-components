@@ -15,14 +15,14 @@ interface Row {
 
 describe("money field module", () => {
   it("geo is a content-fit column capped at 22ch", () => {
-    expect(geo).toEqual({ minCh: 8, maxCh: 20, css: "20ch" });
+    expect(geo).toEqual({ minCh: 6, maxCh: 18, padPx: 16, css: "calc(18ch + 16px)" });
   });
 
   it("moneyCol builds a right-aligned, sortable column with baked geometry", () => {
     const col = moneyCol<Row>("amountCents");
     expect(col.id).toBe("amountCents");
     expect(col.align).toBe("right");
-    expect(col.width).toBe("20ch");
+    expect(col.width).toBe("calc(18ch + 16px)");
     expect(col.sortable).toBe(true);
     expect(col.geo).toBe(geo);
   });

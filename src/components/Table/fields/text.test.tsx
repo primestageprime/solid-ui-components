@@ -23,7 +23,7 @@ const asFn = <T,>(
 
 describe("text field — geometry", () => {
   it("expands between 8 and 40ch with no fixed css (yields to name)", () => {
-    expect(geo).toEqual({ minCh: 8, maxCh: 40 });
+    expect(geo).toEqual({ minCh: 8, maxCh: 40, padPx: 16 });
     expect(geo.css).toBeUndefined();
   });
 });

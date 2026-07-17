@@ -14,7 +14,7 @@ const ROW: Row = { name: "Adlai Arnold", title: "Lead Dispatcher" };
 
 describe("name field — geometry", () => {
   it("exports an expanding geo (min < max, no fixed css)", () => {
-    expect(geo).toEqual({ minCh: 12, maxCh: 50 });
+    expect(geo).toEqual({ minCh: 12, maxCh: 50, padPx: 16 });
     expect(geo.css).toBeUndefined();
     expect(geo.minCh).toBeLessThan(geo.maxCh);
   });

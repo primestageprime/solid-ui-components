@@ -10,7 +10,7 @@ import { LongTextCell } from "../textCells";
 import { humanize, type FieldCol, type FieldGeo } from "./shared";
 
 /** Secondary text: expands between bounds, then ellipsis; yields to `name`. */
-export const geo: FieldGeo = { minCh: 8, maxCh: 40 };
+export const geo: FieldGeo = { minCh: 8, maxCh: 40, padPx: 16 };
 
 /** A secondary-text column for `key`: humanized left header, sortable, clipped. */
 export const textCol = <T,>(key: keyof T): FieldCol<T> => ({

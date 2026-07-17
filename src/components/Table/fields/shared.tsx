@@ -31,9 +31,15 @@ export type FieldType =
  *  browser zoom. min === max is a fixed column; name/text expand between
  *  bounds; numeric types content-fit up to their cap. */
 export interface FieldGeo {
+  /** CONTENT width bounds in ch (glyphs only — padding is NOT included). */
   minCh: number;
   maxCh: number;
-  /** CSS width the factory applies internally — clients never see it.
+  /** Horizontal cell padding (both sides summed, px) this column adds on top
+   *  of its content ch. 16 for text columns under the field-frame's 8px/side
+   *  chrome; 0 for rem-sized columns whose css is already the total width. */
+  padPx?: number;
+  /** CSS width the factory applies internally — clients never see it. Cells
+   *  are border-box, so text columns use `calc(<content>ch + <pad>px)`.
    *  Absent for expanding columns (they flex; `ellipsis` caps them). */
   css?: string;
 }

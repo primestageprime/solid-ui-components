@@ -11,7 +11,7 @@ interface Row {
 
 describe("date field module", () => {
   it("geo is a fixed 14ch column (min === max)", () => {
-    expect(geo).toEqual({ minCh: 12, maxCh: 12, css: "12ch" });
+    expect(geo).toEqual({ minCh: 10, maxCh: 10, padPx: 16, css: "calc(10ch + 16px)" });
   });
 
   it("dateCol builds a sortable, center-aligned column at geo width", () => {

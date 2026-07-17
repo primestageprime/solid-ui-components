@@ -14,7 +14,7 @@
 import { humanize, type FieldCol, type FieldGeo } from "./shared";
 import { LongTextCell } from "../textCells";
 
-export const geo: FieldGeo = { minCh: 12, maxCh: 50 };
+export const geo: FieldGeo = { minCh: 12, maxCh: 50, padPx: 16 };
 
 /** Known-field factory: the primary name/title column. Left-aligned humanized
  *  header, expands between `geo` bounds; overflow ellipsizes with the full

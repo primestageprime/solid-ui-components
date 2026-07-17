@@ -227,8 +227,8 @@ const TableFieldsBench: Component = () => {
         <div
           class="sui-field-frame"
           style={{
-            "--sui-field-table-min": `${workers.minCh}ch`,
-            "--sui-field-table-max": `${workers.maxCh}ch`,
+            "--sui-field-table-min": workers.minW,
+            "--sui-field-table-max": workers.maxW,
           }}
         >
           <DataTable data={WORKERS} columns={workers.columns} fixedLayout />
@@ -243,8 +243,8 @@ const TableFieldsBench: Component = () => {
         <div
           class="sui-field-frame"
           style={{
-            "--sui-field-table-min": `${batchTable.minCh}ch`,
-            "--sui-field-table-max": `${batchTable.maxCh}ch`,
+            "--sui-field-table-min": batchTable.minW,
+            "--sui-field-table-max": batchTable.maxW,
           }}
         >
           <DataTable data={batches} columns={batchTable.columns} fixedLayout />
@@ -277,8 +277,8 @@ const TableFieldsBench: Component = () => {
                 <div
                   class="sui-field-frame"
                   style={{
-                    "--sui-field-table-min": `${t.minCh}ch`,
-                    "--sui-field-table-max": `${t.maxCh}ch`,
+                    "--sui-field-table-min": t.minW,
+                    "--sui-field-table-max": t.maxW,
                   }}
                 >
                   <DataTable data={SPECIMENS} columns={t.columns} fixedLayout />
