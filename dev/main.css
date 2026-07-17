@@ -2272,3 +2272,112 @@
 .dotchart-demo__row--hovered {
   background: var(--sui-bg-hover, rgba(255, 255, 255, 0.06));
 }
+
+/* dag-chart demo nodes. The per-node status colour rides in via
+   --dag-node-status (consumed by the status dot and the focused border). */
+.dag-chart-demo__collapsed-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--sui-bg-elevated);
+  border: 1px dashed var(--sui-border-bright);
+  color: var(--sui-text-secondary);
+  font-size: 12px;
+}
+.dag-chart-demo__node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-primary);
+  font-size: 12px;
+  box-sizing: border-box;
+}
+.dag-chart-demo__node--adjacent {
+  border-color: var(--sui-text-muted);
+}
+.dag-chart-demo__node--focused {
+  background: rgba(var(--sui-success-rgb), 0.18);
+  border-color: var(--dag-node-status);
+}
+.dag-chart-demo__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dag-node-status);
+  flex-shrink: 0;
+}
+.dag-chart-demo__node-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+.dag-chart-demo__frame {
+  border: 1px solid var(--sui-border);
+  border-radius: 6px;
+}
+.dag-chart-demo__frame--h420 {
+  height: 420px;
+}
+.dag-chart-demo__frame--h320 {
+  height: 320px;
+}
+.dag-chart-demo__frame--h260 {
+  height: 260px;
+}
+
+/* cashflow-scrub-chart demo readout + legend swatches. */
+.cashflow-scrub-chart-demo__strong {
+  color: var(--sui-text-primary);
+}
+.cashflow-scrub-chart-demo__tip {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cashflow-scrub-chart-demo__tip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.cashflow-scrub-chart-demo__legend-line {
+  display: inline-block;
+  width: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.cashflow-scrub-chart-demo__legend-line--actual {
+  border-top: 2px solid var(--sui-accent, #00a8cc);
+}
+.cashflow-scrub-chart-demo__legend-line--positive {
+  border-top: 2px dashed var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-line--negative {
+  border-top: 2px dashed var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-line--muted {
+  border-top: 2px dashed var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
+}
+.cashflow-scrub-chart-demo__legend-band {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.cashflow-scrub-chart-demo__legend-band--positive {
+  background: var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18));
+  border: 1px solid var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-band--negative {
+  background: var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18));
+  border: 1px solid var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+}
+.cashflow-scrub-chart-demo__token-list {
+  padding-left: 20px;
+}
