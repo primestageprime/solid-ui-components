@@ -46,8 +46,10 @@ whose only delta is a baked-in tone function.
    through the resolved columns and kill hand-rolled JSX sort headers.
    Demand: QaqcAssetTriage (11 cols), nox-report preview. Unblocks two of the
    HARD sites.
-5. **`selectionCol` select-all header** — header checkbox with
-   all/none/partial state. Demand: nox-report preview.
+5. ~~**`selectionCol` select-all header**~~ — SHIPPED 2026-07-17 (ruled):
+   `createFieldSelection({rows, key})` + `selectionCol(selection)` gives the
+   select-all/none header (indeterminate over partial) AND shift-click range
+   selection over the current sort order.
 6. **Confirmable `actionCol`** — two-click delete→confirm/cancel cluster with
    internal state. Demand: thorcasting ForecastSnapshotsPanel.
 7. **`onRowClick` on `FieldTable`** — semantic row navigation. Demand:
@@ -63,9 +65,10 @@ whose only delta is a baked-in tone function.
 
 ## Where fields deliberately stops (stay on BaseTable raw, or a dedicated component)
 
-- **Value matrices** — ComplianceThresholdTable (CE × power-source grid with
-  selection highlight). Not a row table; candidate for a dedicated matrix/grid
-  component.
+- **Value matrices** — SHIPPED as `ValueMatrix` 2026-07-17 (ruled): a
+  dedicated axis × axis component (rows, cols, value(row,col), tone fn,
+  selected fn). jtf's ComplianceThresholdTable is now a thin wrapper over it;
+  fits thorcasting viable-price × salaries next.
 - **Per-row colspan** — qaqc-checks `spanRow` (partial weeks collapse into one
   spanning action cell).
 - **Grouped/spanned column headers** — HourLevelDataTable `group`.
