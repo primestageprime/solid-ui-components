@@ -78,15 +78,20 @@ Below Σ min, container-query drop-priority hides columns (name never drops).
 | selection  | em   | 2.25     | 2.25     | fixed         | checkbox glyph              |
 | name       | ch   | 12       | 80       | expands ≤ cap | primary identifier          |
 | text       | ch   | 8        | 40       | expands ≤ cap | secondary text              |
-| date       | ch   | 12       | 12       | fixed         | "2026-07-15"                |
-| dateTime   | ch   | 21       | 21       | fixed         | "2026-07-15 14:10:00"       |
-| int        | ch   | 6        | 10       | content-fit   | "9,999,999"                 |
-| float      | ch   | 8        | 12       | content-fit   | "1,234,567.89"              |
-| money      | ch   | 8        | 18       | content-fit   | "$10,000,000,000.00" ($10B) |
-| duration   | ch   | 6        | 10       | content-fit   | "12h 30m 45s"               |
-| status     | ch   | 12       | 12       | fixed         | "● 118/140"                 |
-| chart      | em   | 10       | 10       | fixed         | sparkline strip (bench: 8em clipped) |
-| actions(n) | em   | n×4.5    | n×4.5    | fixed         | standard icon buttons (edit=pencil, delete=trash; bench-measured: 2 buttons need 9em, not 5) |
+| date       | ch   | 12       | 12       | fixed         | "2026-07-15" + 8px/side frame chrome |
+| dateTime   | ch   | 21       | 21       | fixed         | "2026-07-15 14:10:00" + chrome |
+| int        | ch   | 6        | 12       | content-fit   | "9,999,999" + chrome        |
+| float      | ch   | 8        | 14       | content-fit   | "1,234,567.89" + chrome     |
+| money      | ch   | 8        | 20       | content-fit   | "$10,000,000,000.00" ($10B) + chrome |
+| duration   | ch   | 8        | 11       | content-fit   | "365d 23h" — DAY scale is the max basis (ruled) |
+| status     | ch   | 11       | 11       | fixed         | "● 118/140"                 |
+| chart      | em   | 6        | 6        | fixed         | 80px sparkline strip + chrome |
+| actions(n) | rem  | n×1.4+(n-1)×0.5+1 | same | fixed | icon buttons; browser-measured formula, geoFor(2)=4.3rem |
+
+CHROME AMENDMENT (ruled 2026-07-17 pm): field tables run inside
+`.sui-field-frame` (fields/shared.css), which tightens cell padding to
+8px/side — the default 16px sides read as double the intended surround.
+All geos above assume that 8px chrome (~1ch/side).
 
 Bench corrections vs the first paper sketch (each found by rendering, not
 reasoning — keep the habit at promotion):

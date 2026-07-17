@@ -11,7 +11,7 @@ interface Row {
 
 describe("int field", () => {
   it("geo is a content-fit column (min < max, capped css width)", () => {
-    expect(geo).toEqual({ minCh: 8, maxCh: 14, css: "14ch" });
+    expect(geo).toEqual({ minCh: 6, maxCh: 12, css: "12ch" });
     expect(geo.minCh).toBeLessThan(geo.maxCh);
   });
 

@@ -1,8 +1,0 @@
-/* Selection cells halve the standard horizontal cell padding so the checkbox
-   keeps ~8px breathing room per side instead of 16px (ruled 2026-07-17: the
-   default chrome read as twice the intended surround). The :has() hook keys
-   off the accessor's wrapper class, so only selection cells are affected. */
-.hud-table__cell:has(> .sui-field-selection) {
-  padding-left: 8px;
-  padding-right: 8px;
-}

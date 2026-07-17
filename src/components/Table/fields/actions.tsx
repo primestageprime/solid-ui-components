@@ -21,11 +21,11 @@ export const ACTION_ICONS: Record<string, IconName> = {
  *  widths come from the rendered chrome: n IconOnlyButtons at 1.4rem each, the
  *  IconClusterRow's `sm`/0.5rem gap between adjacent buttons (Peter's amendment
  *  2026-07-17 — glyphs ~1em apart, not 1rem), plus 2rem of cell chrome, so the
- *  column is `n·1.4 + (n-1)·0.5 + 2` rem. Fixed (min === max); minCh/maxCh
+ *  column is `n·1.4 + (n-1)·0.5 + 1` rem. Fixed (min === max); minCh/maxCh
  *  express that rem width in ch (1rem ≈ 2ch).
- *  geoFor(2) = 2·1.4 + 0.5 + 2 = 5.3rem = 10.6ch. */
+ *  geoFor(2) = 2·1.4 + 0.5 + 1 = 4.3rem = 8.6ch (8px/side field-frame chrome). */
 export const geoFor = (n: number): FieldGeo => {
-  const rem = Number((n * 1.4 + (n - 1) * 0.5 + 2).toFixed(1));
+  const rem = Number((n * 1.4 + (n - 1) * 0.5 + 1).toFixed(1));
   return { minCh: rem * 2, maxCh: rem * 2, css: `${rem.toFixed(1)}rem` };
 };
 

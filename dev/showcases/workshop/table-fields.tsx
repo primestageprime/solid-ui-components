@@ -83,7 +83,7 @@ interface Specimen {
 
 const SPECIMENS: Specimen[] = [
   { name: "Adlai Arnold", note: "Prefers morning dispatch", createdAt: "2026-05-02T09:14:00Z", hours: 62, ratio: 12.5, amountCents: 812_500, secs: 754, history: [4, 9, 12, 11, 15], done: 41, failed: 0, total: 60 },
-  { name: "A deliberately very long identifier that runs past the eighty character cap to demonstrate the ellipsis", note: "A secondary note long enough to pass the forty character cap", createdAt: "2026-06-19T16:55:00Z", hours: 9_999_999, ratio: 1_234_567.89, amountCents: 1_000_000_000_000, secs: 45_045, history: [22, 18, 25, 24, 30], done: 118, failed: 3, total: 140 },
+  { name: "A deliberately very long identifier that runs past the eighty character cap to demonstrate the ellipsis", note: "A secondary note long enough to pass the forty character cap", createdAt: "2026-06-19T16:55:00Z", hours: 9_999_999, ratio: 1_234_567.89, amountCents: 1_000_000_000_000, secs: 31_626_000, history: [22, 18, 25, 24, 30], done: 118, failed: 3, total: 140 },
   { name: "Chandra Voss", note: "Escalations only", createdAt: "2026-07-16T11:05:00Z", hours: 12, ratio: 0.25, amountCents: 157_500, secs: 59, history: [7, 7, 6, 8, 7], done: 35, failed: 0, total: 210 },
 ];
 
@@ -225,10 +225,10 @@ const TableFieldsBench: Component = () => {
           {'fields = ["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]]'}
         </TextSublabel>
         <div
-          class="tf-table-frame"
+          class="sui-field-frame"
           style={{
-            "--tf-table-min": `${workers.minCh}ch`,
-            "--tf-table-max": `${workers.maxCh}ch`,
+            "--sui-field-table-min": `${workers.minCh}ch`,
+            "--sui-field-table-max": `${workers.maxCh}ch`,
           }}
         >
           <DataTable data={WORKERS} columns={workers.columns} fixedLayout />
@@ -241,10 +241,10 @@ const TableFieldsBench: Component = () => {
           {'fields = ["name", "createdAt", col("trend", …fn, "chart"), col("health", …fn, "status")] — two weird fields inserted inline'}
         </TextSublabel>
         <div
-          class="tf-table-frame"
+          class="sui-field-frame"
           style={{
-            "--tf-table-min": `${batchTable.minCh}ch`,
-            "--tf-table-max": `${batchTable.maxCh}ch`,
+            "--sui-field-table-min": `${batchTable.minCh}ch`,
+            "--sui-field-table-max": `${batchTable.maxCh}ch`,
           }}
         >
           <DataTable data={batches} columns={batchTable.columns} fixedLayout />
@@ -275,10 +275,10 @@ const TableFieldsBench: Component = () => {
                   {`${tile.label} · ${t.minCh}–${t.maxCh}ch · ${behaviorOf(tile.c.geo)}`}
                 </TextSublabel>
                 <div
-                  class="tf-table-frame"
+                  class="sui-field-frame"
                   style={{
-                    "--tf-table-min": `${t.minCh}ch`,
-                    "--tf-table-max": `${t.maxCh}ch`,
+                    "--sui-field-table-min": `${t.minCh}ch`,
+                    "--sui-field-table-max": `${t.maxCh}ch`,
                   }}
                 >
                   <DataTable data={SPECIMENS} columns={t.columns} fixedLayout />

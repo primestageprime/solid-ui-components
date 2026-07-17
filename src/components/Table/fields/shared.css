@@ -10,3 +10,19 @@ th:has(.sui-field-th-center) .hud-table__header-content {
   width: 100%;
   justify-content: center;
 }
+
+/* Field-table frame. Consumes the resolver's width budget:
+     <div class="sui-field-frame" style={{ "--sui-field-table-min": `${minCh}ch`,
+                                           "--sui-field-table-max": `${maxCh}ch` }}>
+   and tightens the standard cell chrome to 8px per side (ruled 2026-07-17:
+   the default 16px sides read as twice the intended surround on fixed-width
+   field columns). All field geos assume this 8px chrome (≈1ch per side). */
+.sui-field-frame {
+  min-width: min(var(--sui-field-table-min), 100%);
+  max-width: var(--sui-field-table-max);
+}
+.sui-field-frame th,
+.sui-field-frame td {
+  padding-left: 8px;
+  padding-right: 8px;
+}

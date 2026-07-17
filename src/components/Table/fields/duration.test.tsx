@@ -11,7 +11,7 @@ interface Row {
 
 describe("duration field module", () => {
   it("geo is a content-fit column capped at 14ch (min < max)", () => {
-    expect(geo).toEqual({ minCh: 10, maxCh: 14, css: "14ch" });
+    expect(geo).toEqual({ minCh: 8, maxCh: 11, css: "11ch" });
   });
 
   it("durationCol builds a sortable, right-aligned column at geo width", () => {

@@ -11,7 +11,7 @@ import type { FieldCol, FieldGeo } from "./shared";
 import { centered, humanize } from "./shared";
 import { MoneyCell } from "../numericCells";
 
-export const geo: FieldGeo = { minCh: 10, maxCh: 22, css: "22ch" };
+export const geo: FieldGeo = { minCh: 8, maxCh: 20, css: "20ch" };
 
 export const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),

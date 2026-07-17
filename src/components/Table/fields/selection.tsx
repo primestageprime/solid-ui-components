@@ -16,11 +16,9 @@ import type { JSX } from "solid-js";
 import type { FieldGeo, FieldCol } from "./shared";
 import { Checkbox } from "../../Checkbox";
 import { CenteredColumn } from "../../Layout";
-import "./selection.css";
 
-// 2.125rem = 18px checkbox + 8px breathing room per side (ruled 2026-07-17:
-// the standard 16px cell padding read as twice the intended surround, so
-// selection cells halve it via selection.css). min === max: fixed column.
+// 2.125rem = 18px checkbox + 8px breathing room per side — the field-frame's
+// standard cell chrome (shared.css .sui-field-frame). min === max: fixed.
 export const geo: FieldGeo = { minCh: 4.25, maxCh: 4.25, css: "2.125rem" };
 
 /** Row-selection checkbox column. `isSelected` and `toggle` are the only client
@@ -34,7 +32,7 @@ export const selectionCol = <T,>(
   width: geo.css,
   geo,
   accessor: (row): JSX.Element => (
-    <CenteredColumn class="sui-field-selection">
+    <CenteredColumn>
       <Checkbox checked={isSelected(row)} onChange={() => toggle(row)} />
     </CenteredColumn>
   ),
