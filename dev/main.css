@@ -2560,3 +2560,14 @@ th:has(.tf-th-center) .hud-table__header-content {
   width: 100%;
   justify-content: center;
 }
+
+/* JTF table catalog (workshop bench) — replicas hug their content instead of
+   stretching to the pane, so fixed-width columns (time, numerics) stay fixed
+   and the table width adjusts. Gallery furniture, same category as .demo-frame. */
+.jtf-catalog-pane .hud-table {
+  width: fit-content;
+  max-width: 100%;
+}
+.jtf-catalog-pane .hud-table .hud-table__table {
+  width: auto;
+}

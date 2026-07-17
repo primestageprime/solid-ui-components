@@ -4,7 +4,7 @@
 // with call-site geometry/color). Sidebar lists route + table name; clicking
 // renders the replica. The catalog is the migration worklist made visible.
 import type { Component } from "solid-js";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextSublabel } from "../../../src/components/Text";
 import {
   ContentStack,
@@ -33,10 +33,59 @@ const ALL: TableEntry[] = [
   ...triageEntries,
 ];
 
+// Stable slug per entry for the ?t= hash param (deep-linkable selection).
+// The gallery router only reads the path segment and known params, so an
+// extra param passes through parseHash untouched.
+const slugify = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+const SLUGS = (() => {
+  const seen = new Map<string, number>();
+  return ALL.map((e) => {
+    const base = slugify(e.name);
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return n === 0 ? base : `${base}-${n + 1}`;
+  });
+})();
+
+const readSlugFromHash = (): string | null => {
+  const [, queryStr = ""] = location.hash.replace(/^#\/?/, "").split("?");
+  return new URLSearchParams(queryStr).get("t");
+};
+
+const writeSlugToHash = (slug: string) => {
+  const raw = location.hash.replace(/^#\/?/, "");
+  const [path, queryStr = ""] = raw.split("?");
+  const params = new URLSearchParams(queryStr);
+  params.set("t", slug);
+  location.hash = `#/${path}?${params.toString()}`;
+};
+
 const JtfTablesBench: Component = () => {
-  const [active, setActive] = createSignal(0);
+  const initialSlug = readSlugFromHash();
+  const initialIdx = initialSlug ? SLUGS.indexOf(initialSlug) : -1;
+  const [active, setActive] = createSignal(initialIdx >= 0 ? initialIdx : 0);
   const entry = () => ALL[active()];
   const suiCount = ALL.filter((e) => e.status === "sui").length;
+
+  const select = (i: number) => {
+    setActive(i);
+    writeSlugToHash(SLUGS[i]);
+  };
+
+  // Back/forward restores the selection from the hash.
+  onMount(() => {
+    const onHash = () => {
+      const slug = readSlugFromHash();
+      const idx = slug ? SLUGS.indexOf(slug) : -1;
+      if (idx >= 0 && idx !== active()) setActive(idx);
+    };
+    window.addEventListener("hashchange", onHash);
+    onCleanup(() => window.removeEventListener("hashchange", onHash));
+  });
 
   return (
     <div class="component-section component-section--full">
@@ -48,7 +97,7 @@ const JtfTablesBench: Component = () => {
         <DelineatedSidebar>
           <For each={ALL}>
             {(e, i) => (
-              <InteractiveCard onClick={() => setActive(i())}>
+              <InteractiveCard active={i() === active()} onClick={() => select(i())}>
                 <SpreadRow>
                   <TightStack>
                     <TextSublabel>{e.route}</TextSublabel>
@@ -77,7 +126,7 @@ const JtfTablesBench: Component = () => {
                   <TextSublabel>{`${e.route} — ${e.name}`}</TextSublabel>
                 </ClusterRow>
                 <TextSublabel>{e.note}</TextSublabel>
-                <ScrollXBox>
+                <ScrollXBox class="jtf-catalog-pane">
                   <e.component />
                 </ScrollXBox>
               </ContentStack>
