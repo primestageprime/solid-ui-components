@@ -627,6 +627,7 @@
 .dtb-canvas svg {
   width: 100%;
   height: auto;
+  max-height: 70vh;
   display: block;
 }
 
@@ -1419,4 +1420,93 @@
 .workshop-link--bench {
   padding-left: 24px;
   font-size: 12px;
+}
+
+/* ── Per-showcase demo furniture ───────────────────────────
+   Bespoke demo geometry (fixed frame sizes, demo-width bounds, one-off
+   debug controls) that has no SUI-vocabulary equivalent lives here as
+   scoped showcase classes — same gallery-furniture category as .demo-frame
+   / .example-column / .dts-* (Peter ruling 2026-07-15: gallery furniture is
+   a showcase CSS class, not a library variant). Values are the exact ones
+   that were previously inline, so rendered output is byte-identical. */
+
+.async-progress-demo {
+  max-width: 420px;
+}
+.connection-status-demo__label {
+  min-width: 22rem;
+  font-size: 0.8rem;
+}
+.duration-demo__label {
+  min-width: 10rem;
+}
+.heatstack-demo__compact {
+  width: 80px;
+}
+.quickfilter-atom-demo {
+  max-width: 480px;
+}
+.recent-starred-demo__frame {
+  display: flex;
+  width: 260px;
+  height: 320px;
+}
+.inputs-demo {
+  max-width: 500px;
+}
+.dropdown-demo {
+  max-width: 300px;
+}
+.tooltip-demo__clip {
+  display: inline-block;
+  max-width: 180px;
+}
+/* Host-owned status pill for the ValueRenderer/ChangeRenderer custom-dispatch
+   examples — deliberately NOT a SUI atomic (host owns what a status is). The
+   background-color rides in inline (data-driven identity paint). */
+.demo-status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--sui-text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.section-demo__atom-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.slot-fill-bar-demo__replay {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sui-border);
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 11px;
+  cursor: pointer;
+}
+.status-badge-demo__violation-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--sui-danger);
+}
+.data-table-container-demo__fill-frame {
+  display: flex;
+  flex-direction: column;
+  height: 150px;
+  border: 1px dashed var(--sui-border-bright);
+}
+.inline-chart-error-demo__area {
+  position: relative;
+  width: 420px;
+  height: 220px;
+  max-width: 100%;
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
+  border-radius: 8px;
+}
+.nav-bar-demo__composed {
+  border-bottom: 1px solid var(--sui-border);
+  padding-bottom: 2px;
 }

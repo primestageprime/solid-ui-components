@@ -87,7 +87,7 @@ export const TooltipShowcase: Component = () => {
             openDelay={1000}
             class="sui-tooltip__trigger--cell"
           >
-            <span style={{ display: "inline-block", "max-width": "180px" }}>
+            <span class="tooltip-demo__clip">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </span>
           </Tooltip>

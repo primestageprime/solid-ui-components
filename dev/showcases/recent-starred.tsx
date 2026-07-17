@@ -45,7 +45,7 @@ export const RecentStarredShowcase: Component = () => {
 
       <section>
         <h3>Sidebar panel</h3>
-        <div style={{ width: "260px", height: "320px", display: "flex" }}>
+        <div class="recent-starred-demo__frame">
           <RecentStarredSidebar
             store={store}
             onPick={(item) => setLastPicked(item.label)}

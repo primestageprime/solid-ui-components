@@ -73,15 +73,7 @@ export const SectionShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Title</div>
-            <h2
-              style={{
-                margin: "0",
-                "font-size": "1.125rem",
-                "font-weight": "600",
-              }}
-            >
-              Overview
-            </h2>
+            <h2 class="section-demo__atom-title">Overview</h2>
           </div>
           <div
             class="depth2-atom depth2-atom--link"

@@ -17,12 +17,7 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <TightClusterRow
-            style={{
-              "border-bottom": "1px solid var(--sui-border)",
-              "padding-bottom": "2px",
-            }}
-          >
+          <TightClusterRow class="nav-bar-demo__composed">
             <NavLink href="#" active>
               Dashboard
             </NavLink>

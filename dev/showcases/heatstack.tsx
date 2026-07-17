@@ -329,7 +329,7 @@ export const HeatStackShowcase: Component = () => {
           <HeatStack items={partialUnknownItems} keys={KEYS} showLegend />
 
           <h3 class="showcase-heading-gap">Compact — 30 Rows</h3>
-          <div style={{ width: "80px" }}>
+          <div class="heatstack-demo__compact">
             <HeatStack items={compactItems} keys={KEYS} variant="compact" />
           </div>
         </div>

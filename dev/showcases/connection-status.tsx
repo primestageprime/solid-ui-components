@@ -150,9 +150,7 @@ export const ConnectionStatusShowcase: Component = () => {
           >
             {(row) => (
               <Row gap="sm" align="center">
-                <span style={{ "min-width": "22rem", "font-size": "0.8rem" }}>
-                  {row.label}
-                </span>
+                <span class="connection-status-demo__label">{row.label}</span>
                 <HeartbeatSparkline
                   state={row.state}
                   samples={row.samples}

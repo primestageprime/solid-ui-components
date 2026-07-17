@@ -52,5 +52,8 @@
     "src/components/WorkerCard/WorkerCard.tsx": ["proportion", "paint"]
   },
   "$showcases_comment": "Same engine as `files`, rooted at dev/showcases. Surfaced as the `showcaseStyleRubricViolations` health metric (expected 0). A dev/showcases *.tsx that keeps an inline style={{ … }} is mapped to the rubric CATEGORIES it legitimately needs — ONLY for genuinely-dynamic demo geometry/data (data-driven chart demo values, measured/plotted per the dynamic-value rule). Showcase demo DATA (plotting fake series) is legitimate dynamism. Static demo-chrome geometry (fixed demo widths/heights, spacers, debug-panel padding/fonts) is NOT manifested here — it moves to a dev/main.css class (gallery furniture, per the .demo-frame ruling 2026-07-15) or to curried SUI vocabulary. Do NOT widen categories to launder a static literal.",
-  "showcases": {}
+  "showcases": {
+    "dev/showcases/change-renderer.tsx": ["paint"],
+    "dev/showcases/value-renderer.tsx": ["paint"]
+  }
 }

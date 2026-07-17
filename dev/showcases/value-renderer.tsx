@@ -7,17 +7,7 @@ import { AccentBody } from "../../src/components/Text";
 // A small status-badge override used by the "custom dispatch" example. Not a
 // library atomic — host code owns what a "status" is and how to render it.
 const StatusPill: Component<{ label: string; color: string }> = (props) => (
-  <span
-    style={{
-      display: "inline-block",
-      padding: "2px 8px",
-      "border-radius": "10px",
-      "background-color": props.color,
-      color: "var(--sui-text-primary)",
-      "font-size": "0.75rem",
-      "font-weight": 600,
-    }}
-  >
+  <span class="demo-status-pill" style={{ "background-color": props.color }}>
     {props.label}
   </span>
 );

@@ -73,18 +73,7 @@ const AnimatedExample: Component = () => {
               : ""}
         </TextLabel>
         <Show when={finished()}>
-          <button
-            onClick={start}
-            style={{
-              padding: "2px 10px",
-              "border-radius": "999px",
-              border: "1px solid var(--sui-border)",
-              background: "transparent",
-              color: "var(--sui-text-muted, #888)",
-              cursor: "pointer",
-              "font-size": "11px",
-            }}
-          >
+          <button onClick={start} class="slot-fill-bar-demo__replay">
             ↻ replay
           </button>
         </Show>

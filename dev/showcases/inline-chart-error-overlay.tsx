@@ -9,19 +9,7 @@ import { InlineChartErrorOverlay } from "../../src/components/Feedback";
  * title/subtitle.
  */
 const ChartArea: Component<{ children: unknown }> = (props) => (
-  <div
-    style={{
-      position: "relative",
-      width: "420px",
-      height: "220px",
-      "max-width": "100%",
-      background: "var(--sui-bg-secondary)",
-      border: "1px solid var(--sui-border)",
-      "border-radius": "8px",
-    }}
-  >
-    {props.children as never}
-  </div>
+  <div class="inline-chart-error-demo__area">{props.children as never}</div>
 );
 
 export const InlineChartErrorOverlayShowcase: Component = () => (

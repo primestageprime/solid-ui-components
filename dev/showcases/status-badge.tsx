@@ -54,15 +54,7 @@ export const StatusBadgeShowcase: Component = () => {
             <StatusBadge variant="compliant">COMPLIANT</StatusBadge>
           </ClusterRow>
           <ClusterRow>
-            <span
-              style={{
-                "font-size": "1.5rem",
-                "font-weight": "600",
-                color: "var(--sui-danger)",
-              }}
-            >
-              4.821
-            </span>
+            <span class="status-badge-demo__violation-value">4.821</span>
             <TextUnits>g/kWh</TextUnits>
             <StatusBadge variant="violation">VIOLATION</StatusBadge>
           </ClusterRow>

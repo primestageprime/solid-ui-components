@@ -4,17 +4,7 @@ import { Stack } from "../../src/components/Layout/Stack";
 import { Text } from "../../src/components/Text/Text";
 
 const StatusPill: Component<{ label: string; color: string }> = (props) => (
-  <span
-    style={{
-      display: "inline-block",
-      padding: "2px 8px",
-      "border-radius": "10px",
-      "background-color": props.color,
-      color: "var(--sui-text-primary)",
-      "font-size": "0.75rem",
-      "font-weight": 600,
-    }}
-  >
+  <span class="demo-status-pill" style={{ "background-color": props.color }}>
     {props.label}
   </span>
 );

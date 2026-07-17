@@ -28,7 +28,7 @@ export const InputsShowcase: Component = () => {
 
       <div class="example-group">
         <h3>ThemedTextarea</h3>
-        <div style={{ "max-width": "500px" }}>
+        <div class="inputs-demo">
           <NarrowStack>
             <ThemedTextarea
               label="Note (optional)"

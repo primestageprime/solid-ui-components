@@ -50,14 +50,7 @@ export const DataTableContainerShowcase: Component = () => {
             <div class="text-meta">
               fill: true — flex: 1, no max-height (fills parent)
             </div>
-            <div
-              style={{
-                height: "150px",
-                display: "flex",
-                "flex-direction": "column",
-                border: "1px dashed var(--sui-border-bright)",
-              }}
-            >
+            <div class="data-table-container-demo__fill-frame">
               <DataTableContainer fill>
                 <table>
                   <thead class="sticky-table-header">

@@ -20,7 +20,7 @@ export const AsyncProgressShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Running (indeterminate until a duration is recorded)</h3>
-        <Stack gap="sm" style={{ "max-width": "420px" }}>
+        <Stack gap="sm" class="async-progress-demo">
           <AsyncProgress
             processId="showcase-ocr"
             label="Processing with Claude Vision"

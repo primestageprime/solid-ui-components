@@ -56,7 +56,7 @@ export const QuickFilterAtomShowcase: Component = () => {
           placeholder="Filter items…"
         >
           {(filtered, q) => (
-            <TightStack style={{ "max-width": "480px" }}>
+            <TightStack class="quickfilter-atom-demo">
               <TextSublabel>
                 {filtered.length} of {ITEMS.length} matching{" "}
                 {q ? `"${q}"` : "(none)"}
