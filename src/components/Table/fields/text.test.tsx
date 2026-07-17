@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 // The text field module: an expanding secondary-text column factory plus its
 // geometry. Guards the factory shape (humanized LEFT header, sortable, ellipsis)
-// and that its accessor renders a StringCell.
+// and that its accessor renders a LongTextCell.
 
 interface Row {
   displayName: string;
@@ -48,12 +48,12 @@ describe("textCol — factory shape", () => {
 });
 
 describe("textCol — cell rendering", () => {
-  it("renders a StringCell with the row value", () => {
+  it("renders a LongTextCell with the row value", () => {
     const col = textCol<Row>("note");
     const { container } = render(() =>
       asFn(col.accessor)({ displayName: "x", note: "Prefers mornings" }),
     );
-    expect(container.querySelector(".cell-string")?.textContent).toBe(
+    expect(container.querySelector(".cell-longtext")?.textContent).toBe(
       "Prefers mornings",
     );
   });

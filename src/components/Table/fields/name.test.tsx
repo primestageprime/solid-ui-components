@@ -14,7 +14,7 @@ const ROW: Row = { name: "Adlai Arnold", title: "Lead Dispatcher" };
 
 describe("name field — geometry", () => {
   it("exports an expanding geo (min < max, no fixed css)", () => {
-    expect(geo).toEqual({ minCh: 12, maxCh: 80 });
+    expect(geo).toEqual({ minCh: 12, maxCh: 50 });
     expect(geo.css).toBeUndefined();
     expect(geo.minCh).toBeLessThan(geo.maxCh);
   });
@@ -40,11 +40,11 @@ describe("name field — factory shape", () => {
 });
 
 describe("name field — cell render", () => {
-  it("renders the row value via StringCell", () => {
+  it("renders the row value via LongTextCell", () => {
     const col = nameCol<Row>();
     const accessor = col.accessor as (row: Row) => JSX.Element;
     const { container } = render(() => accessor(ROW));
-    expect(container.querySelector(".cell-string")?.textContent).toBe(
+    expect(container.querySelector(".cell-longtext")?.textContent).toBe(
       "Adlai Arnold",
     );
   });

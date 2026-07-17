@@ -2,10 +2,11 @@
 // Expanding secondary text: absorbs slack between its bounds, then ellipsizes.
 // Lower max than `name` (40ch vs 80ch), so when width is scarce it yields the
 // space to the primary identifier. LEFT-aligned humanized header (flowing text,
-// never centered()), sortable, ellipsis-clipped. Composes StringCell from
-// ../textCells. See docs/superpowers/plans/2026-07-16-semantic-props-metric.md
-// §3a-geometry.
-import { StringCell } from "../textCells";
+// never centered()), sortable, ellipsis-clipped with the full value in a hover
+// tooltip (ruled 2026-07-17: variable text ellipsizes with full-text tooltip by
+// default). Composes LongTextCell from ../textCells. See
+// docs/superpowers/plans/2026-07-16-semantic-props-metric.md §3a-geometry.
+import { LongTextCell } from "../textCells";
 import { humanize, type FieldCol, type FieldGeo } from "./shared";
 
 /** Secondary text: expands between bounds, then ellipsis; yields to `name`. */
@@ -18,5 +19,11 @@ export const textCol = <T,>(key: keyof T): FieldCol<T> => ({
   ellipsis: true,
   sortable: true,
   geo,
-  accessor: (row) => <StringCell value={String(row[key] ?? "")} />,
+  accessor: (row) => (
+    <LongTextCell
+      value={String(row[key] ?? "")}
+      clampLines={1}
+      reveal="tooltip"
+    />
+  ),
 });

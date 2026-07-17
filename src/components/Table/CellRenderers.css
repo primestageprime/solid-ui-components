@@ -356,6 +356,10 @@
 .cell-longtext.cell-longtext--tooltip {
   display: inline-block;
   max-width: 100%;
+  /* The trigger is a <button>: neutralize the UA's centered text so clamped
+     cells align with their untruncated siblings. */
+  text-align: inherit;
+  padding: 0;
 }
 
 .cell-longtext__more,
