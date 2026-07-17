@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## 0.106.0
+
+### ⚠ Breaking
+
+- **`fields.selectionCol` signature** — now takes a `FieldSelection` (from `createFieldSelection({ rows, key })`) instead of `(isSelected, toggle)` positional callbacks, in exchange for the select-all header and shift-range behavior. (The fields system was unreleased pre-0.106, so no production consumer breaks.)
+- **`fields.floatCol` precision** — moved from a positional second argument into the options object: `floatCol(key, { precision, tone })`.
+
+### Added
+
+- **Table fields system promoted** (ruled 2026-07-17) — exported from the barrel as the `fields` namespace + top-level **`FieldTable`**. A table is an ordered gesture of field ids resolved against a plain registry object; field types own ALL geometry in ch/em; call sites never see width/align/CSS. `FieldTable` owns the width-budget frame internally and adds `emptyMessage` and a semantic `maxRows` scroll cap (em-based, zoom-proportional). Dedicated `Table Fields` showcase; workshop bench retired.
+- **Tone treatment functions** (ruled 2026-07-17) — `intCol`/`floatCol`/`textCol` accept a configure-time `tone: (value, row) => Tone`; `Tone` (`default|success|warning|danger|accent|muted`) lives in `src/types.ts` as the shared semantic vocabulary. Clients name meanings; themes own colors.
+- **Generic selection** (ruled 2026-07-17) — `fields.createFieldSelection({ rows, key })` + `selectionCol(selection)`: select-all/none header checkbox (indeterminate over a partial selection) and shift-click range selection across the current sort order (Gmail semantics, keyed anchor; shift-mousedown suppresses the native text-selection smear).
+- **`Checkbox`: `indeterminate` prop** — semantic mixed-state for aggregate checkboxes; synced to the DOM property via ref, dash styling in every theme.
+- **`ValueMatrix`** (ruled 2026-07-17) — a row-axis × column-axis grid of computed values (NOT a row table): `rows`, `cols`, `value(row, col)`, configure-time `tone(value, row, col)` and `selected(row, col)`, null → em-dash, selected cell wears weight + a soft halo. `createValueMatrix` curries the mapping surface (`rowAxisLabel`/`rowLabel`/`colLabel`/`format`/`tone`) into a domain matrix (jtf's ComplianceThresholdTable is now a thin wrapper; fits thorcasting's viable-price × salaries grid). Dedicated showcase.
+- **`fields` humanize** — handles snake_case keys (`metric_id` → "Metric Id") alongside camelCase.
+
+### Changed
+
+- jtf-ui easy-tier tables migrated to `FieldTable`/fields registries (StatisticsSummary, MinMaxTable, ftir-gap-fill, power-log-ocr, FortnightReportBody's seven metric tables); every call-site width/align/color deleted. Field-type catalog for the remaining tiers: `docs/superpowers/plans/2026-07-17-field-type-catalog.md`.
+
 ## 0.105.0
 
 ### ⚠ Breaking
