@@ -37,6 +37,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const COMPONENTS = join(root, "src/components");
+const SHOWCASES = join(root, "dev/showcases");
 const MANIFEST_PATH = join(root, "scripts", "style-rubric.json");
 
 // Canonical category → allowed CSS properties. `cssvar` is special: it grants
@@ -116,8 +117,10 @@ function collectStyleObjects(sf) {
   return found;
 }
 
-function lint(manifest) {
-  const files = walk(COMPONENTS);
+// Lint one tree of files against a per-file category map (file → [categories]).
+// Shared by the src/components gate (`run`) and the dev/showcases gate
+// (`runShowcases`); same engine, same CATEGORY_PROPS, different roots + maps.
+function lintFiles(files, catsMap) {
   const violations = []; // {file,line,prop,kind,detail}
   const advisories = [];
   const perFile = {}; // file -> [{prop, static, value}]
@@ -129,7 +132,7 @@ function lint(manifest) {
     const styleObjs = collectStyleObjects(sf);
     if (!styleObjs.length) continue;
 
-    const cats = manifest.files?.[rel];
+    const cats = catsMap?.[rel];
     const allowed = cats
       ? new Set(cats.flatMap((c) => CATEGORY_PROPS[c] ?? []))
       : new Set();
@@ -177,18 +180,30 @@ function lint(manifest) {
   return { violations, advisories, perFile };
 }
 
-// ── run ──────────────────────────────────────────────────────────────────────
-export function run() {
-  const manifest = existsSync(MANIFEST_PATH)
+const loadManifest = () =>
+  existsSync(MANIFEST_PATH)
     ? JSON.parse(readFileSync(MANIFEST_PATH, "utf8"))
-    : { files: {} };
-  return lint(manifest);
+    : {};
+
+// ── run ──────────────────────────────────────────────────────────────────────
+// src/components gate — the `files` map. Surfaced as `styleRubricViolations`.
+export function run() {
+  return lintFiles(walk(COMPONENTS), loadManifest().files ?? {});
+}
+
+// dev/showcases gate — the `showcases` map. Surfaced as
+// `showcaseStyleRubricViolations`. Showcases are the teaching surface: a static
+// literal inline style there is a violation just as in src (agents copy what
+// they see). Genuinely-dynamic demo geometry/data is manifested with a category.
+export function runShowcases() {
+  return lintFiles(walk(SHOWCASES), loadManifest().showcases ?? {});
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const report = process.argv.includes("--report");
   const asJson = process.argv.includes("--json");
-  const { violations, advisories, perFile } = run();
+  const showcases = process.argv.includes("--showcases");
+  const { violations, advisories, perFile } = showcases ? runShowcases() : run();
   if (asJson) {
     console.log(JSON.stringify({ violations: violations.length, advisories: advisories.length, detail: violations }, null, 2));
     process.exit(violations.length ? 1 : 0);
@@ -201,7 +216,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
     console.log("\n────────────");
   }
-  console.log(`styleRubricViolations: ${violations.length}   (advisories: ${advisories.length})`);
+  const label = showcases ? "showcaseStyleRubricViolations" : "styleRubricViolations";
+  console.log(`${label}: ${violations.length}   (advisories: ${advisories.length})`);
   for (const v of violations) console.log(`  [${v.kind}] ${v.file}:${v.line}  ${v.prop}  — ${v.detail}`);
   if (advisories.length && report)
     for (const a of advisories) console.log(`  (advisory) ${a.file}:${a.line}  ${a.prop}  — ${a.detail}`);

@@ -17,7 +17,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { run as runStyleRubric } from "./style-rubric.mjs";
+import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./style-rubric.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -130,12 +130,22 @@ const propRubricHits = propRubric.violations.map(
   (v) => `${v.file}:${v.line} ${v.prop}: ${v.type}`,
 );
 
+// Showcase rubric linter (same engine over dev/showcases, `showcases` manifest
+// section). dev/showcases is the teaching surface — agents copy what they see —
+// so a static-literal inline style there is a violation just as in src/. Only
+// genuinely-dynamic demo geometry/data is manifested. Expected 0.
+const showcaseRubric = runShowcaseRubric();
+const showcaseRubricHits = showcaseRubric.violations.map(
+  (v) => `${v.file}:${v.line} [${v.kind}] ${v.prop} — ${v.detail}`,
+);
+
 const metrics = {
   bareHexCss: hits.bareHexCss.length,
   bareHexTsx: hits.bareHexTsx.length,
   inlineStyleSrc: hits.inlineStyleSrc.length,
   inlineStyleShowcases: hits.inlineStyleShowcases.length,
   styleRubricViolations: styleRubric.violations.length,
+  showcaseStyleRubricViolations: showcaseRubric.violations.length,
   cssTypedProps: propRubric.violations.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
@@ -156,6 +166,7 @@ const detail = {
   inlineStyleSrc: hits.inlineStyleSrc,
   inlineStyleShowcases: hits.inlineStyleShowcases,
   styleRubricViolations: styleRubricHits,
+  showcaseStyleRubricViolations: showcaseRubricHits,
   cssTypedProps: propRubricHits,
   foldersWithoutTests,
   undocumentedComponents: undocumented,
