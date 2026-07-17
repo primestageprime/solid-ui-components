@@ -73,6 +73,8 @@ export type IconName =
   | "refresh"
   | "download"
   | "pause"
+  | "edit"
+  | "trash"
   // UI
   | "spinner"
   | "menu"
@@ -272,6 +274,25 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <rect x="9.5" y="3" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
       solid: `<rect x="4" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>
             <rect x="9" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>`,
+    },
+
+    // Pencil at 45° — the standard edit affordance for table action columns.
+    edit: {
+      outline: `<path d="M10.5 2.5l3 3L5 14l-3.5.5L2 11l8.5-8.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+              <path d="M9 4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+      solid: `<path d="M10.5 2l3.5 3.5L5.5 14 1.5 14.5 2 10.5 10.5 2Z" fill="currentColor"/>
+            <path d="M9.5 3.5l3 3" stroke="var(--sui-bg-primary)" stroke-width="1" stroke-linecap="round"/>`,
+    },
+    // Lidded bin — the standard delete affordance for table action columns.
+    trash: {
+      outline: `<path d="M2.5 4.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M4 4.5l.6 8.5a1 1 0 001 .9h4.8a1 1 0 001-.9l.6-8.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M6.5 7v4M9.5 7v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
+      solid: `<path d="M2.5 4.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M4 5h8l-.6 8.6a1 1 0 01-1 .9H5.6a1 1 0 01-1-.9L4 5Z" fill="currentColor"/>
+            <path d="M6.5 7v4M9.5 7v4" stroke="var(--sui-bg-primary)" stroke-width="1.2" stroke-linecap="round"/>`,
     },
 
     // === UI ICONS ===

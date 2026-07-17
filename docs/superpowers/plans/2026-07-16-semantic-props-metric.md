@@ -64,6 +64,35 @@ found.** The survey (2026-07-16-css-prop-usage-survey.md) pins the blast radius.
   factory calls with widths deleted (jtf 42, goose 4). Bespoke widths snap to
   the field-type standard — visual change accepted by ruling.
 
+### 3a-geometry. Field-type width contract (RULED 2026-07-17, bench-verified)
+
+All widths are ch/em (scale with theme font-size + browser zoom) — never px.
+Behaviors: fixed (min=max) · content-fit ≤ cap (numerics size to widest
+realistic value) · expands ≤ cap (name/text absorb slack, then ellipsis).
+Table width: `min-width = Σ min`, `max-width = Σ max` — a table caps at Σ max
+and becomes a dashboard tile, not wallpaper (ruled: the eye doesn't scan 4K).
+Below Σ min, container-query drop-priority hides columns (name never drops).
+
+| fieldType  | unit | min      | max      | behavior      | basis                       |
+|------------|------|----------|----------|---------------|-----------------------------|
+| selection  | em   | 2.25     | 2.25     | fixed         | checkbox glyph              |
+| name       | ch   | 12       | 80       | expands ≤ cap | primary identifier          |
+| text       | ch   | 8        | 40       | expands ≤ cap | secondary text              |
+| date       | ch   | 12       | 12       | fixed         | "2026-07-15"                |
+| dateTime   | ch   | 21       | 21       | fixed         | "2026-07-15 14:10:00"       |
+| int        | ch   | 6        | 10       | content-fit   | "9,999,999"                 |
+| float      | ch   | 8        | 12       | content-fit   | "1,234,567.89"              |
+| money      | ch   | 8        | 18       | content-fit   | "$10,000,000,000.00" ($10B) |
+| duration   | ch   | 6        | 10       | content-fit   | "12h 30m 45s"               |
+| status     | ch   | 12       | 12       | fixed         | "● 118/140"                 |
+| chart      | em   | 10       | 10       | fixed         | sparkline strip (bench: 8em clipped) |
+| actions(n) | em   | n×4.5    | n×4.5    | fixed         | standard icon buttons (edit=pencil, delete=trash; bench-measured: 2 buttons need 9em, not 5) |
+
+Bench corrections vs the first paper sketch: actions 2×→9em (button+cell
+padding real chrome), chart→10em (Sparkline strip + padding). Standard action
+widths must be DERIVED from button metrics at promotion, not guessed.
+Icons `edit` (pencil) and `trash` added to the Icon set per ruling.
+
 ### 3b. Other CSS-typed props
 
 - `ChartCanvas.height: number | string` → `number` only (zero consumer impact).

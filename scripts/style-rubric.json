@@ -1,68 +1,229 @@
 {
   "$comment": "Manifest for scripts/style-rubric.mjs. Maps each src/components *.tsx that legitimately keeps an inline style={{ … }} to the rubric CATEGORIES it is allowed to use. A file's allowed CSS properties are the union of its categories' property lists (see `categories` below and CATEGORY_PROPS in style-rubric.mjs). `cssvar` grants any --* custom property. A file that uses style={{ but is absent here is a violation; so is a property outside its categories, or a pure static-literal value. Keep this in sync when adding/removing inline styles — do NOT widen a file's categories to launder a real violation; move static values to CSS or a curried variant instead.",
   "categories": {
-    "measured": ["width", "height", "min-width", "min-height", "max-width", "max-height", "top", "left", "transform"],
-    "plotted": ["grid-row", "grid-column", "top", "left", "transform", "transition"],
-    "proportion": ["width", "height", "flex", "flex-basis", "transform", "clip-path", "transition"],
-    "paint": ["background", "background-color", "color", "border-color", "opacity", "transition"],
-    "anchored": ["top", "left", "right", "bottom", "transform"],
-    "columnar": ["width", "max-width", "min-width", "text-align"],
-    "cssvar": ["(any --* custom property)"]
+    "measured": [
+      "width",
+      "height",
+      "min-width",
+      "min-height",
+      "max-width",
+      "max-height",
+      "top",
+      "left",
+      "transform"
+    ],
+    "plotted": [
+      "grid-row",
+      "grid-column",
+      "top",
+      "left",
+      "transform",
+      "transition"
+    ],
+    "proportion": [
+      "width",
+      "height",
+      "flex",
+      "flex-basis",
+      "transform",
+      "clip-path",
+      "transition"
+    ],
+    "paint": [
+      "background",
+      "background-color",
+      "color",
+      "border-color",
+      "opacity",
+      "transition"
+    ],
+    "anchored": [
+      "top",
+      "left",
+      "right",
+      "bottom",
+      "transform"
+    ],
+    "columnar": [
+      "width",
+      "max-width",
+      "min-width",
+      "text-align"
+    ],
+    "cssvar": [
+      "(any --* custom property)"
+    ]
   },
   "files": {
-    "src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.tsx": ["plotted", "paint"],
-    "src/components/AreaFocusGrid/AreaFocusGrid.tsx": ["plotted"],
-    "src/components/Badge/ScenarioDot.tsx": ["measured", "paint"],
-    "src/components/Badge/StatusChip.tsx": ["measured"],
-    "src/components/BatchBar/BatchBar.tsx": ["proportion", "paint"],
-    "src/components/CandlestickRenderer/CandlestickRenderer.tsx": ["paint"],
-    "src/components/CashflowChart/CashflowPopover.tsx": ["anchored"],
-    "src/components/CashflowScrubChart/CashflowScrubChart.tsx": ["proportion"],
-    "src/components/Chart/Tooltip.tsx": ["anchored"],
-    "src/components/ChartCanvas/ChartCanvas.tsx": ["measured"],
-    "src/components/CurrencyInput/CurrencyInput.tsx": ["measured"],
-    "src/components/DataDisplay/DigitRoller.tsx": ["proportion"],
-    "src/components/DataDisplay/StatsTable/StatsTable.tsx": ["columnar"],
-    "src/components/DateAxis/DateAxis.tsx": ["cssvar"],
-    "src/components/DragDrop/QuadrantGrid.tsx": ["cssvar"],
-    "src/components/Dropdown/Dropdown.tsx": ["paint"],
-    "src/components/Heatmap/Heatmap.tsx": ["paint"],
-    "src/components/Layout/Sidebar.tsx": ["measured"],
-    "src/components/Legend/Legend.tsx": ["paint"],
-    "src/components/Progress/AsyncProgress.tsx": ["proportion"],
-    "src/components/Progress/StackedProgressBar.tsx": ["paint"],
-    "src/components/RingChart/RingChart.tsx": ["measured", "cssvar"],
-    "src/components/ScrubChart/ScrubChart.tsx": ["measured"],
-    "src/components/Selector/SidebarSelector.tsx": ["paint"],
-    "src/components/ServiceHealthDot/ServiceHealthDot.tsx": ["paint"],
-    "src/components/SlotFillBar/SlotFillBar.tsx": ["proportion", "paint"],
-    "src/components/SortableList/SortableList.tsx": ["cssvar"],
-    "src/components/SplitQueueList/SplitQueueList.tsx": ["measured"],
-    "src/components/SplitQueueList/StaticSplitLayout.tsx": ["measured"],
-    "src/components/StatusFlowChart/StatusFlowChart.tsx": ["measured"],
-    "src/components/Table/BaseTable.tsx": ["columnar"],
-    "src/components/Table/GapCell.tsx": ["proportion"],
-    "src/components/Table/GroupedTable.tsx": ["columnar"],
-    "src/components/Table/SelectableTable.tsx": ["columnar"],
-    "src/components/Table/VirtualTable.tsx": ["measured"],
-    "src/components/Table/numericCells.tsx": ["columnar", "paint"],
-    "src/components/Treemap/Treemap.tsx": ["proportion"],
-    "src/components/WeekCalendar/WeekCalendar.tsx": ["measured"],
-    "src/components/WorkProgressCard/WorkProgressCard.tsx": ["proportion", "paint"],
-    "src/components/WorkerCard/WorkerCard.tsx": ["proportion", "paint"]
+    "src/components/AnimatedSwimlaneChart/SwimlaneAnimatedLane.tsx": [
+      "plotted",
+      "paint"
+    ],
+    "src/components/AreaFocusGrid/AreaFocusGrid.tsx": [
+      "plotted"
+    ],
+    "src/components/Badge/ScenarioDot.tsx": [
+      "measured",
+      "paint"
+    ],
+    "src/components/Badge/StatusChip.tsx": [
+      "measured"
+    ],
+    "src/components/BatchBar/BatchBar.tsx": [
+      "proportion",
+      "paint"
+    ],
+    "src/components/CandlestickRenderer/CandlestickRenderer.tsx": [
+      "paint"
+    ],
+    "src/components/CashflowChart/CashflowPopover.tsx": [
+      "anchored"
+    ],
+    "src/components/CashflowScrubChart/CashflowScrubChart.tsx": [
+      "proportion"
+    ],
+    "src/components/Chart/Tooltip.tsx": [
+      "anchored"
+    ],
+    "src/components/ChartCanvas/ChartCanvas.tsx": [
+      "measured"
+    ],
+    "src/components/CurrencyInput/CurrencyInput.tsx": [
+      "measured"
+    ],
+    "src/components/DataDisplay/DigitRoller.tsx": [
+      "proportion"
+    ],
+    "src/components/DataDisplay/StatsTable/StatsTable.tsx": [
+      "columnar"
+    ],
+    "src/components/DateAxis/DateAxis.tsx": [
+      "cssvar"
+    ],
+    "src/components/DragDrop/QuadrantGrid.tsx": [
+      "cssvar"
+    ],
+    "src/components/Dropdown/Dropdown.tsx": [
+      "paint"
+    ],
+    "src/components/Heatmap/Heatmap.tsx": [
+      "paint"
+    ],
+    "src/components/Layout/Sidebar.tsx": [
+      "measured"
+    ],
+    "src/components/Legend/Legend.tsx": [
+      "paint"
+    ],
+    "src/components/Progress/AsyncProgress.tsx": [
+      "proportion"
+    ],
+    "src/components/Progress/StackedProgressBar.tsx": [
+      "paint"
+    ],
+    "src/components/RingChart/RingChart.tsx": [
+      "measured",
+      "cssvar"
+    ],
+    "src/components/ScrubChart/ScrubChart.tsx": [
+      "measured"
+    ],
+    "src/components/Selector/SidebarSelector.tsx": [
+      "paint"
+    ],
+    "src/components/ServiceHealthDot/ServiceHealthDot.tsx": [
+      "paint"
+    ],
+    "src/components/SlotFillBar/SlotFillBar.tsx": [
+      "proportion",
+      "paint"
+    ],
+    "src/components/SortableList/SortableList.tsx": [
+      "cssvar"
+    ],
+    "src/components/SplitQueueList/SplitQueueList.tsx": [
+      "measured"
+    ],
+    "src/components/SplitQueueList/StaticSplitLayout.tsx": [
+      "measured"
+    ],
+    "src/components/StatusFlowChart/StatusFlowChart.tsx": [
+      "measured"
+    ],
+    "src/components/Table/BaseTable.tsx": [
+      "columnar"
+    ],
+    "src/components/Table/GapCell.tsx": [
+      "proportion"
+    ],
+    "src/components/Table/GroupedTable.tsx": [
+      "columnar"
+    ],
+    "src/components/Table/SelectableTable.tsx": [
+      "columnar"
+    ],
+    "src/components/Table/VirtualTable.tsx": [
+      "measured"
+    ],
+    "src/components/Table/numericCells.tsx": [
+      "columnar",
+      "paint"
+    ],
+    "src/components/Treemap/Treemap.tsx": [
+      "proportion"
+    ],
+    "src/components/WeekCalendar/WeekCalendar.tsx": [
+      "measured"
+    ],
+    "src/components/WorkProgressCard/WorkProgressCard.tsx": [
+      "proportion",
+      "paint"
+    ],
+    "src/components/WorkerCard/WorkerCard.tsx": [
+      "proportion",
+      "paint"
+    ]
   },
   "$showcases_comment": "Same engine as `files`, rooted at dev/showcases. Surfaced as the `showcaseStyleRubricViolations` health metric (expected 0). A dev/showcases *.tsx that keeps an inline style={{ … }} is mapped to the rubric CATEGORIES it legitimately needs — ONLY for genuinely-dynamic demo geometry/data (data-driven chart demo values, measured/plotted per the dynamic-value rule). Showcase demo DATA (plotting fake series) is legitimate dynamism. Static demo-chrome geometry (fixed demo widths/heights, spacers, debug-panel padding/fonts) is NOT manifested here — it moves to a dev/main.css class (gallery furniture, per the .demo-frame ruling 2026-07-15) or to curried SUI vocabulary. Do NOT widen categories to launder a static literal.",
   "showcases": {
-    "dev/showcases/change-renderer.tsx": ["paint"],
-    "dev/showcases/value-renderer.tsx": ["paint"],
-    "dev/showcases/legend.tsx": ["paint"],
-    "dev/showcases/router-demo.tsx": ["cssvar"],
-    "dev/showcases/swimlane-node-card.tsx": ["measured", "anchored"],
-    "dev/showcases/swimlane-chart.tsx": ["measured"],
-    "dev/showcases/work-progress-card.tsx": ["measured", "cssvar"],
-    "dev/showcases/cashflow-day-cell.tsx": ["proportion", "paint"],
-    "dev/showcases/dotchart.tsx": ["cssvar"],
-    "dev/showcases/dag-chart.tsx": ["cssvar"],
-    "dev/showcases/workshop/animation-lab.tsx": ["cssvar"]
+    "dev/showcases/change-renderer.tsx": [
+      "paint"
+    ],
+    "dev/showcases/value-renderer.tsx": [
+      "paint"
+    ],
+    "dev/showcases/legend.tsx": [
+      "paint"
+    ],
+    "dev/showcases/router-demo.tsx": [
+      "cssvar"
+    ],
+    "dev/showcases/swimlane-node-card.tsx": [
+      "measured",
+      "anchored"
+    ],
+    "dev/showcases/swimlane-chart.tsx": [
+      "measured"
+    ],
+    "dev/showcases/work-progress-card.tsx": [
+      "measured",
+      "cssvar"
+    ],
+    "dev/showcases/cashflow-day-cell.tsx": [
+      "proportion",
+      "paint"
+    ],
+    "dev/showcases/dotchart.tsx": [
+      "cssvar"
+    ],
+    "dev/showcases/dag-chart.tsx": [
+      "cssvar"
+    ],
+    "dev/showcases/workshop/animation-lab.tsx": [
+      "cssvar"
+    ],
+    "dev/showcases/workshop/table-fields.tsx": [
+      "cssvar"
+    ]
   }
 }

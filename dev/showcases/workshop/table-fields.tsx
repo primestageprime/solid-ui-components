@@ -21,6 +21,7 @@ import {
 } from "../../../src/components/Table";
 import { Checkbox } from "../../../src/components/Checkbox";
 import { GhostButton } from "../../../src/components/Button";
+import { Icon, type IconName } from "../../../src/components/Icon";
 import { ClusterRow, ContentStack } from "../../../src/components/Layout";
 import { Sparkline } from "../../../src/components/Sparkline";
 import { SmallStatusLight } from "../../../src/components/StatusLight";
@@ -30,6 +31,30 @@ import { SmallStatusLight } from "../../../src/components/StatusLight";
 /** A fields entry: a known id, an action cluster, or an explicit column. */
 type FieldSpec<T> = string | string[] | TableColumn<T>;
 
+// Field-type geometry contract (ruled 2026-07-17): all widths are ch/em —
+// they scale with theme font-size and browser zoom, never px. `min === max`
+// is a fixed column; name expands between its bounds; the table caps at the
+// sum of column maxes so a table becomes a dashboard tile, not wallpaper.
+// (Sums below convert 1em ≈ 2ch.)
+interface FieldGeo {
+  minCh: number;
+  maxCh: number;
+  /** CSS width the factory applies internally — clients never see it. */
+  css?: string;
+}
+const GEO = {
+  selection: { minCh: 4.5, maxCh: 4.5, css: "2.25em" },
+  name:      { minCh: 12,  maxCh: 80 },              // expands, ellipsis past cap
+  dateTime:  { minCh: 21,  maxCh: 21, css: "21ch" }, // "2026-07-15 14:10:00"
+  int:       { minCh: 6,   maxCh: 10, css: "10ch" },
+  money:     { minCh: 8,   maxCh: 18, css: "18ch" }, // "$10,000,000,000.00"
+  actions2:  { minCh: 18,  maxCh: 18, css: "9em" },  // 2 icon buttons + button/cell padding + gap (measured on bench)
+  chart:     { minCh: 20,  maxCh: 20, css: "10em" }, // sparkline strip + cell padding
+  status:    { minCh: 12,  maxCh: 12, css: "12ch" },
+} satisfies Record<string, FieldGeo>;
+
+type FieldCol<T> = TableColumn<T> & { geo: FieldGeo };
+
 const humanize = (id: string): string =>
   id
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -37,61 +62,81 @@ const humanize = (id: string): string =>
     .replace(/ At$/, "")
     .replace(/ Cents$/, ""); // storage unit, not a label
 
-/** Known-field factories — each returns a TableColumn; align/renderer baked in. */
-const nameCol = <T,>(key: keyof T = "name" as keyof T): TableColumn<T> => ({
+/** Known-field factories — each returns a column with geometry baked in.
+ *  Clients never see width/align: the factory owns the CSS translation. */
+const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   ellipsis: true,
   sortable: true,
+  geo: GEO.name,
   accessor: (row) => <StringCell value={String(row[key] ?? "")} />,
 });
 
-const intCol = <T,>(key: keyof T): TableColumn<T> => ({
+const intCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   align: "right",
+  width: GEO.int.css,
   sortable: true,
+  geo: GEO.int,
   accessor: (row) => <IntCell value={row[key] as number} />,
 });
 
-const moneyCol = <T,>(key: keyof T): TableColumn<T> => ({
+const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   align: "right",
+  width: GEO.money.css,
   sortable: true,
+  geo: GEO.money,
   accessor: (row) => <MoneyCell value={(row[key] as number) / 100} />,
 });
 
-const dateTimeCol = <T,>(key: keyof T): TableColumn<T> => ({
+const dateTimeCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
+  width: GEO.dateTime.css,
   sortable: true,
+  geo: GEO.dateTime,
   accessor: (row) => <DateTimeCell value={row[key] as string} />,
 });
 
 const selectionCol = <T,>(
   isSelected: (row: T) => boolean,
   toggle: (row: T) => void,
-): TableColumn<T> => ({
+): FieldCol<T> => ({
   id: "selected",
   header: "",
+  width: GEO.selection.css,
+  geo: GEO.selection,
   accessor: (row) => (
     <Checkbox checked={isSelected(row)} onChange={() => toggle(row)} />
   ),
 });
 
-/** The 5% tail: a weird cell is just a function → JSX. No CSS reachable. */
+/** The 5% tail: a weird cell is just a function → JSX. Geometry comes from a
+ *  named field type — even the weirdest cell cannot reach CSS. */
 const col = <T,>(
   id: string,
   header: string,
   cell: (row: T) => JSX.Element,
-): TableColumn<T> => ({ id, header, accessor: cell });
+  geoKey: keyof typeof GEO = "status",
+): FieldCol<T> => ({
+  id,
+  header,
+  width: GEO[geoKey].css,
+  geo: GEO[geoKey],
+  accessor: cell,
+});
 
-/** ['edit','delete'] → one compact trailing action column. */
-const clusterCol = <T,>(actions: TableColumn<T>[]): TableColumn<T> => ({
+/** ['edit','delete'] → one compact trailing action column, standard icons. */
+const clusterCol = <T,>(actions: FieldCol<T>[]): FieldCol<T> => ({
   id: actions.map((a) => a.id).join("+"),
   header: "",
   align: "right",
+  width: GEO.actions2.css,
+  geo: GEO.actions2,
   accessor: (row) => (
     <ClusterRow>
       {actions.map((a) => (a.accessor as (r: T) => JSX.Element)(row))}
@@ -99,24 +144,34 @@ const clusterCol = <T,>(actions: TableColumn<T>[]): TableColumn<T> => ({
   ),
 });
 
-const actionCol = <T,>(id: string, run: (row: T) => void): TableColumn<T> => ({
+const ACTION_ICONS: Record<string, IconName> = { edit: "edit", delete: "trash" };
+
+const actionCol = <T,>(id: string, run: (row: T) => void): FieldCol<T> => ({
   id,
   header: "",
+  geo: GEO.actions2,
   accessor: (row) => (
-    <GhostButton onClick={() => run(row)}>{humanize(id)}</GhostButton>
+    <GhostButton aria-label={humanize(id)} title={humanize(id)} onClick={() => run(row)}>
+      <Icon name={ACTION_ICONS[id] ?? "settings"} size="sm" />
+    </GhostButton>
   ),
 });
 
-/** Resolve the gesture against a plain registry object of column references. */
+/** Resolved gesture: the columns plus the table's width budget (Σ min, Σ max). */
 function resolveFields<T>(
   specs: FieldSpec<T>[],
-  registry: Record<string, TableColumn<T>>,
-): TableColumn<T>[] {
-  return specs.map((spec) => {
+  registry: Record<string, FieldCol<T>>,
+): { columns: TableColumn<T>[]; minCh: number; maxCh: number } {
+  const columns = specs.map((spec) => {
     if (typeof spec === "string") return registry[spec];
     if (Array.isArray(spec)) return clusterCol(spec.map((id) => registry[id]));
-    return spec;
+    return spec as FieldCol<T>;
   });
+  return {
+    columns,
+    minCh: columns.reduce((s, c) => s + c.geo.minCh, 0),
+    maxCh: columns.reduce((s, c) => s + c.geo.maxCh, 0),
+  };
 }
 
 // ── Demo data ────────────────────────────────────────────────────────────────
@@ -167,7 +222,7 @@ const TableFieldsBench: Component = () => {
       return next;
     });
 
-  const workerFields: Record<string, TableColumn<Worker>> = {
+  const workerFields: Record<string, FieldCol<Worker>> = {
     selected: selectionCol((row) => selected().has(row.name), toggle),
     name: nameCol(),
     createdAt: dateTimeCol("createdAt"),
@@ -177,12 +232,34 @@ const TableFieldsBench: Component = () => {
     delete: actionCol("delete", (row) => console.log("[bench] delete", row.name)),
   };
 
+  const workers = resolveFields(
+    ["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]],
+    workerFields,
+  );
+
   // Table 2 — same known vocabulary, plus two weird fields inserted as
   // functions. Store-backed rows: mutating one row's history re-renders only
   // that Sparkline cell, never the column structure.
   const [batches, setBatches] = createStore<Batch[]>(
     structuredClone(INITIAL_BATCHES),
   );
+  const batchTable = resolveFields<Batch>(
+    [
+      "name",
+      "createdAt",
+      col("trend", "Trend", (row) => (
+        <Sparkline values={row.throughputHistory} />
+      ), "chart"),
+      col("health", "Health", (row) => (
+        <ClusterRow>
+          <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
+          <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
+        </ClusterRow>
+      ), "status"),
+    ],
+    { name: nameCol(), createdAt: dateTimeCol("createdAt") },
+  );
+
   const tick = () =>
     setBatches(
       produce((rows) => {
@@ -210,44 +287,34 @@ const TableFieldsBench: Component = () => {
         <TextSublabel>
           {'fields = ["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]]'}
         </TextSublabel>
-        <DataTable
-          data={WORKERS}
-          columns={resolveFields(
-            ["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]],
-            workerFields,
-          )}
-        />
+        <div
+          class="tf-table-frame"
+          style={{
+            "--tf-table-min": `${workers.minCh}ch`,
+            "--tf-table-max": `${workers.maxCh}ch`,
+          }}
+        >
+          <DataTable data={WORKERS} columns={workers.columns} />
+        </div>
         <TextSublabel>
-          {`selected: ${selected().size} — selection flows through the registry's closures; the column list never rebuilds`}
+          {`selected: ${selected().size} — width budget Σmin ${workers.minCh}ch → Σmax ${workers.maxCh}ch; only name flexes between them`}
         </TextSublabel>
 
         <TextSublabel>
-          {'fields = ["name", "createdAt", col("trend", …fn), col("health", …fn)] — two weird fields inserted inline'}
+          {'fields = ["name", "createdAt", col("trend", …fn, "chart"), col("health", …fn, "status")] — two weird fields inserted inline'}
         </TextSublabel>
-        <DataTable
-          data={batches}
-          columns={resolveFields<Batch>(
-            [
-              "name",
-              "createdAt",
-              col("trend", "Trend", (row) => (
-                <Sparkline values={row.throughputHistory} />
-              )),
-              col("health", "Health", (row) => (
-                <ClusterRow>
-                  <SmallStatusLight
-                    variant={row.failed > 0 ? "error" : "active"}
-                  />
-                  <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
-                </ClusterRow>
-              )),
-            ],
-            {
-              name: nameCol(),
-              createdAt: dateTimeCol("createdAt"),
-            },
-          )}
-        />
+        <div
+          class="tf-table-frame"
+          style={{
+            "--tf-table-min": `${batchTable.minCh}ch`,
+            "--tf-table-max": `${batchTable.maxCh}ch`,
+          }}
+        >
+          <DataTable data={batches} columns={batchTable.columns} />
+        </div>
+        <TextSublabel>
+          {`width budget Σmin ${batchTable.minCh}ch → Σmax ${batchTable.maxCh}ch — the table caps at Σmax and becomes a dashboard tile, not wallpaper`}
+        </TextSublabel>
         <ClusterRow>
           <GhostButton onClick={tick}>Simulate work tick</GhostButton>
           <TextSublabel>

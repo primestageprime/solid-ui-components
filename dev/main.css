@@ -2550,3 +2550,11 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
+
+/* Workshop bench: table-fields — the field-geometry width budget.
+   The frame consumes the resolver's computed Σmin/Σmax (cssvar bridge);
+   ch/em units scale with zoom, so the budget holds proportionately. */
+.tf-table-frame {
+  min-width: min(var(--tf-table-min), 100%);
+  max-width: var(--tf-table-max);
+}
