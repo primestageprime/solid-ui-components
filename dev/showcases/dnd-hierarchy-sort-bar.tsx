@@ -41,27 +41,12 @@ const OrderReadout: Component<{ items: DnDHierarchySortBarItem[] }> = (
   props,
 ) => (
   <NarrowStack>
-    <span
-      style={{
-        "font-size": "10px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-        color: "var(--sui-text-muted)",
-      }}
-    >
-      Current order
-    </span>
+    <span class="demo-state-readout__label">Current order</span>
     <WrappedClusterRow>
       <For each={props.items}>
         {(item, idx) => (
           <>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-primary)",
-                "font-family": "monospace",
-              }}
-            >
+            <span class="demo-state-readout__tag">
               {idx() + 1}. {item.label}
             </span>
             {idx() < props.items.length - 1 && <TextSublabel>→</TextSublabel>}
@@ -78,15 +63,7 @@ const CustomLabelDemo: Component = () => {
     createSignal<DnDHierarchySortBarItem[]>(DEMO_B_ITEMS);
 
   return (
-    <div
-      style={{
-        padding: "20px 24px",
-        background: "var(--sui-bg-elevated)",
-        border: "1px solid var(--sui-border)",
-        "border-radius": "var(--sui-radius-md)",
-        "max-width": "600px",
-      }}
-    >
+    <div class="dnd-hierarchy-demo__panel">
       <DnDHierarchySortBar
         items={items()}
         onReorder={(nextIds) => setItems(applyReorder(items(), nextIds))}
@@ -131,18 +108,7 @@ export const DnDHierarchySortBarShowcase: Component = () => {
           reserves the dragged pill's width). Release to commit — the live order
           readout below updates on drop.
         </p>
-        <div
-          style={{
-            padding: "20px 24px",
-            background: "var(--sui-bg-elevated)",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            display: "flex",
-            "flex-direction": "column",
-            gap: "20px",
-            "max-width": "600px",
-          }}
-        >
+        <div class="dnd-hierarchy-demo__panel dnd-hierarchy-demo__panel--flex">
           <DnDHierarchySortBar
             items={items()}
             onReorder={(nextIds) => setItems(applyReorder(items(), nextIds))}

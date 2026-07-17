@@ -365,33 +365,18 @@ export const ActionListShowcase: Component = () => {
       </MutedBody>
       <div style={stackStyle}>
         <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "8px",
-            "min-height": "24px",
-            color: "var(--sui-accent)",
-            "font-size": "0.8125rem",
-          }}
+          class="action-list-demo__statusbar"
         >
-          <span style={{ opacity: 0.75 }}>{demoSel().length} selected</span>
+          <span class="action-list-demo__count">{demoSel().length} selected</span>
           <Show when={tagFilter()}>
-            <span style={{ opacity: 0.5 }}>·</span>
+            <span class="action-list-demo__sep">·</span>
             <span>
               filtering <b>{tagFilter()}</b> ({demoRows().length} of {demoTasks().length})
             </span>
             <button
               type="button"
               onClick={() => setTagFilter(null)}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--sui-border)",
-                "border-radius": "999px",
-                color: "inherit",
-                cursor: "pointer",
-                "line-height": 1,
-                padding: "0 6px",
-              }}
+              class="action-list-demo__reset"
               aria-label="Clear tag filter"
             >
               ×
@@ -426,19 +411,12 @@ export const ActionListShowcase: Component = () => {
       </MutedBody>
       <div style={stackStyle}>
         <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "8px",
-            "min-height": "24px",
-            color: "var(--sui-accent)",
-            "font-size": "0.8125rem",
-          }}
+          class="action-list-demo__statusbar"
         >
-          <span style={{ opacity: 0.75 }}>
+          <span class="action-list-demo__count">
             {replaceSel().length} selected [{replaceSel().join(", ")}]
           </span>
-          <span style={{ opacity: 0.5 }}>·</span>
+          <span class="action-list-demo__sep">·</span>
           <span>
             last gesture: <b>{lastGesture()}</b>
           </span>
@@ -504,16 +482,7 @@ export const ActionListShowcase: Component = () => {
             value: t.value,
           }))}
         />
-        <div
-          style={{
-            display: "flex",
-            "flex-direction": "column",
-            gap: "2px",
-            "font-size": "0.75rem",
-            opacity: 0.7,
-            color: "var(--sui-text)",
-          }}
-        >
+        <div class="action-list-demo__footer">
           {composeTagPairs(tagSource, tagConfig).map((t) => (
             <span>
               <b>

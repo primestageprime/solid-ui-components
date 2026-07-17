@@ -54,27 +54,12 @@ const applyReorder = (tasks: Task[], nextIds: string[]): Task[] => {
 /** Current-order readout rendered beneath the list (mirrors the pill-bar demo). */
 const OrderReadout: Component<{ tasks: Task[] }> = (props) => (
   <NarrowStack>
-    <span
-      style={{
-        "font-size": "10px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-        color: "var(--sui-text-muted)",
-      }}
-    >
-      Current order
-    </span>
+    <span class="demo-state-readout__label">Current order</span>
     <WrappedClusterRow>
       <For each={props.tasks}>
         {(t, idx) => (
           <>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-primary)",
-                "font-family": "monospace",
-              }}
-            >
+            <span class="demo-state-readout__tag">
               {idx() + 1}. {t.id}
             </span>
             {idx() < props.tasks.length - 1 && <TextSublabel>→</TextSublabel>}
@@ -124,27 +109,14 @@ export const SortableListShowcase: Component = () => {
           reserves the dragged row's height). Release to commit — the order
           readout below updates on drop.
         </p>
-        <div
-          style={{
-            padding: "20px 24px",
-            background: "var(--sui-bg-base, var(--sui-bg))",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            display: "flex",
-            "flex-direction": "column",
-            gap: "20px",
-            "max-width": "520px",
-          }}
-        >
+        <div class="demo-state-readout">
           <SortableList
             items={tasks()}
             getId={(t) => t.id}
             onReorder={(nextIds) => setTasks(applyReorder(tasks(), nextIds))}
             renderItem={(t) => (
               <TightStack>
-                <span style={{ "font-weight": 600, "font-size": "13px" }}>
-                  {t.title}
-                </span>
+                <span class="sortable-list-demo__item-title">{t.title}</span>
                 <TextSublabel>{t.detail}</TextSublabel>
               </TightStack>
             )}

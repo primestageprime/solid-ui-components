@@ -1598,18 +1598,10 @@
 .pivot-treemap-demo__h360 {
   height: 360px;
 }
-.mutable-list-demo__state-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--sui-text-muted);
-}
-.mutable-list-demo__tag {
-  font-size: 11px;
-  color: var(--sui-text-primary);
-  font-family: monospace;
-}
-.mutable-list-demo__readout {
+/* Shared "live-state readout" furniture — a bordered panel below an
+   interactive demo (MutableList, SortableList, DnDHierarchySortBar) showing
+   the current order/state, with an uppercase caption and mono tag chips. */
+.demo-state-readout {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1618,6 +1610,17 @@
   background: var(--sui-bg-base, var(--sui-bg));
   border: 1px solid var(--sui-border);
   border-radius: var(--sui-radius-md);
+}
+.demo-state-readout__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+}
+.demo-state-readout__tag {
+  font-size: 11px;
+  color: var(--sui-text-primary);
+  font-family: monospace;
 }
 .legend-demo__swatch-row {
   margin-top: 8px;
@@ -1800,4 +1803,51 @@
   display: flex;
   gap: 12px;
   align-items: flex-end;
+}
+.action-list-demo__statusbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--sui-accent);
+  font-size: 0.8125rem;
+}
+.action-list-demo__count {
+  opacity: 0.75;
+}
+.action-list-demo__sep {
+  opacity: 0.5;
+}
+.action-list-demo__reset {
+  padding: 0 6px;
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.action-list-demo__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  color: var(--sui-text);
+}
+.sortable-list-demo__item-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.dnd-hierarchy-demo__panel {
+  max-width: 600px;
+  padding: 20px 24px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+}
+.dnd-hierarchy-demo__panel--flex {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
