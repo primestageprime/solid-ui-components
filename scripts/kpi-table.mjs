@@ -19,6 +19,7 @@ const HISTORY_PATH = join(root, "scripts", "health-history.json");
 
 // Higher = more regression-prone; breaks ties among the zeros.
 const ZERO_PRIORITY = {
+  cssTypedProps: 6,
   bareHexTsx: 5,
   bareHexCss: 4,
   missingDepthHeaders: 3,

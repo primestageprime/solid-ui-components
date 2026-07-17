@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as runStyleRubric } from "./style-rubric.mjs";
+import { run as runPropRubric } from "./prop-rubric.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = join(root, "scripts", "health-baseline.json");
@@ -118,12 +119,24 @@ const styleRubricHits = styleRubric.violations.map(
   (v) => `${v.file}:${v.line} [${v.kind}] ${v.prop} — ${v.detail}`,
 );
 
+// Prop rubric linter (scripts/prop-rubric.mjs): count of geometry/paint props
+// whose declared type admits a raw CSS string (`width?: string`,
+// `maxHeight?: string`, `height?: number | string`). This guards the public
+// contract — a curried component's interface is specific typed properties,
+// never raw CSS. Caller-owned identity paint is whitelisted in
+// scripts/prop-rubric.json. Expected 0.
+const propRubric = runPropRubric();
+const propRubricHits = propRubric.violations.map(
+  (v) => `${v.file}:${v.line} ${v.prop}: ${v.type}`,
+);
+
 const metrics = {
   bareHexCss: hits.bareHexCss.length,
   bareHexTsx: hits.bareHexTsx.length,
   inlineStyleSrc: hits.inlineStyleSrc.length,
   inlineStyleShowcases: hits.inlineStyleShowcases.length,
   styleRubricViolations: styleRubric.violations.length,
+  cssTypedProps: propRubric.violations.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
   missingDepthHeaders: missingDepth.length,
@@ -143,6 +156,7 @@ const detail = {
   inlineStyleSrc: hits.inlineStyleSrc,
   inlineStyleShowcases: hits.inlineStyleShowcases,
   styleRubricViolations: styleRubricHits,
+  cssTypedProps: propRubricHits,
   foldersWithoutTests,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
