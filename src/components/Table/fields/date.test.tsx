@@ -1,3 +1,4 @@
+import type { JSX } from "solid-js";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { dateCol, geo } from "./date";
@@ -26,7 +27,7 @@ describe("date field module", () => {
     const col = dateCol<Row>("createdAt");
     // Local (no "Z") noon so the rendered calendar date is timezone-stable.
     const { container } = render(() => (
-      <>{col.accessor({ createdAt: "2026-07-15T12:00:00" })}</>
+      <>{(col.accessor as (row: Row) => JSX.Element)({ createdAt: "2026-07-15T12:00:00" })}</>
     ));
     expect(container.querySelector(".cell-date")?.textContent).toBe(
       "2026-07-15",

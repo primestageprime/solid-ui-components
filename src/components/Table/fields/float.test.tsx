@@ -1,3 +1,4 @@
+import type { JSX } from "solid-js";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { floatCol, geo } from "./float";
@@ -34,13 +35,13 @@ describe("float field", () => {
 
   it("accessor renders a FloatCell at the default precision of 2", () => {
     const col = floatCol<Row>("ratio");
-    const { container } = render(() => <>{col.accessor?.({ ratio: Math.PI })}</>);
+    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: Math.PI })}</>);
     expect(container.querySelector(".cell-float")?.textContent).toBe("3.14");
   });
 
   it("accessor honors an explicit precision", () => {
     const col = floatCol<Row>("ratio", 4);
-    const { container } = render(() => <>{col.accessor?.({ ratio: Math.PI })}</>);
+    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: Math.PI })}</>);
     expect(container.querySelector(".cell-float")?.textContent).toBe("3.1416");
   });
 });

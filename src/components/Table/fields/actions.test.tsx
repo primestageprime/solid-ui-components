@@ -1,3 +1,4 @@
+import type { JSX } from "solid-js";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
 import { actionCol, clusterCol, geoFor, ACTION_ICONS } from "./actions";
@@ -29,7 +30,7 @@ describe("actions field module", () => {
     const seen: Row[] = [];
     const col = actionCol<Row>("edit", (row) => seen.push(row));
     const row: Row = { name: "Adlai Arnold" };
-    const { getByRole } = render(() => <>{col.accessor(row)}</>);
+    const { getByRole } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)(row)}</>);
 
     const button = getByRole("button", { name: "Edit" });
     expect(button.getAttribute("title")).toBe("Edit");
@@ -50,7 +51,7 @@ describe("actions field module", () => {
     expect(col.geo).toEqual(geoFor(2));
 
     const { getAllByRole } = render(() => (
-      <>{col.accessor({ name: "Bea" })}</>
+      <>{(col.accessor as (row: Row) => JSX.Element)({ name: "Bea" })}</>
     ));
     expect(getAllByRole("button")).toHaveLength(2);
   });

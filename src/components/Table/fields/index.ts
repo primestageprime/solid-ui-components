@@ -1,0 +1,93 @@
+// ============================================
+// Table fields — aggregator (Depth 1: composes the field modules)
+// The fields-as-functions table system. Import factories from here:
+//   import { nameCol, intCol, resolveFields } from ".../Table/fields";
+// NOT re-exported through the Table barrel yet — columnHelpers still owns the
+// intCol/textCol/... names there; step ③ of the semantic-props release swaps
+// columnHelpers for this module (see docs/superpowers/plans/
+// 2026-07-16-semantic-props-metric.md §3a).
+// ============================================
+import type { JSX } from "solid-js";
+import type { FieldCol, FieldGeo, FieldSpec, FieldType } from "./shared";
+import { centered } from "./shared";
+import { geo as selectionGeo } from "./selection";
+import { geo as nameGeo } from "./name";
+import { geo as textGeo } from "./text";
+import { geo as dateGeo } from "./date";
+import { geo as dateTimeGeo } from "./date-time";
+import { geo as intGeo } from "./int";
+import { geo as floatGeo } from "./float";
+import { geo as moneyGeo } from "./money";
+import { geo as durationGeo } from "./duration";
+import { geo as statusGeo } from "./status";
+import { geo as chartGeo } from "./chart";
+import { clusterCol } from "./actions";
+
+export * from "./shared";
+export { selectionCol } from "./selection";
+export { nameCol } from "./name";
+export { textCol } from "./text";
+export { dateCol } from "./date";
+export { dateTimeCol } from "./date-time";
+export { intCol } from "./int";
+export { floatCol } from "./float";
+export { moneyCol } from "./money";
+export { durationCol } from "./duration";
+export { ACTION_ICONS, geoFor, actionCol, clusterCol } from "./actions";
+
+/** Geometry registry by field type. `actions` is parameterized by count —
+ *  use `geoFor(n)` from ./actions instead. */
+export const GEO: Record<Exclude<FieldType, "actions">, FieldGeo> = {
+  selection: selectionGeo,
+  name: nameGeo,
+  text: textGeo,
+  date: dateGeo,
+  dateTime: dateTimeGeo,
+  int: intGeo,
+  float: floatGeo,
+  money: moneyGeo,
+  duration: durationGeo,
+  status: statusGeo,
+  chart: chartGeo,
+};
+
+/** The 5% tail: a weird cell is just a function → JSX. Geometry comes from a
+ *  named field type — even the weirdest cell cannot reach CSS. Fixed-width
+ *  types center header AND values (ruled 2026-07-17); flowing text stays left. */
+export const col = <T,>(
+  id: string,
+  header: string,
+  cell: (row: T) => JSX.Element,
+  fieldType: Exclude<FieldType, "actions"> = "status",
+): FieldCol<T> => {
+  const geo = GEO[fieldType];
+  const flowing = fieldType === "name" || fieldType === "text";
+  return {
+    id,
+    header: flowing ? header : centered(header),
+    align: flowing ? undefined : "center",
+    width: geo.css,
+    geo,
+    accessor: cell,
+  };
+};
+
+/** Resolve the compositional gesture against a plain registry object of column
+ *  references. Returns the columns plus the table's width budget: render inside
+ *  a frame with `min-width: Σ min` / `max-width: Σ max` so the table caps at
+ *  Σ max and reads as a dashboard tile, not wallpaper. */
+export function resolveFields<T>(
+  specs: FieldSpec<T>[],
+  registry: Record<string, FieldCol<T>>,
+): { columns: FieldCol<T>[]; minCh: number; maxCh: number } {
+  const columns = specs.map((spec) => {
+    if (typeof spec === "string") return registry[spec];
+    if (Array.isArray(spec)) return clusterCol(spec.map((id) => registry[id]));
+    return spec;
+  });
+  return {
+    columns,
+    minCh: columns.reduce((s, c) => s + c.geo.minCh, 0),
+    maxCh: columns.reduce((s, c) => s + c.geo.maxCh, 0),
+  };
+}

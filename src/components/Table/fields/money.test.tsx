@@ -1,3 +1,4 @@
+import type { JSX } from "solid-js";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { geo, moneyCol } from "./money";
@@ -34,7 +35,7 @@ describe("money field module", () => {
 
   it("renders the cell as currency, dividing integer cents by 100", () => {
     const col = moneyCol<Row>("amountCents");
-    const { container } = render(() => <>{col.accessor({ amountCents: 812_500 })}</>);
+    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ amountCents: 812_500 })}</>);
     expect(container.querySelector(".cell-money")?.textContent).toBe("$8,125.00");
   });
 });

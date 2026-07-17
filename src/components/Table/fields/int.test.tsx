@@ -1,3 +1,4 @@
+import type { JSX } from "solid-js";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { geo, intCol } from "./int";
@@ -33,7 +34,7 @@ describe("int field", () => {
 
   it("accessor renders a locale-formatted integer", () => {
     const col = intCol<Row>("hours");
-    const { container } = render(() => <>{col.accessor({ hours: 9_999_999 })}</>);
+    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ hours: 9_999_999 })}</>);
     expect(container.querySelector(".cell-int")?.textContent).toBe("9,999,999");
   });
 });
