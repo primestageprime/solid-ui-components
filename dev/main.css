@@ -2200,3 +2200,75 @@
 .scrub-chart-demo__strong {
   color: var(--sui-text-primary);
 }
+
+/* dotchart composition smoke — hand-built chip row + debug readout/table.
+   Only the per-row accent colour is data-driven (bridged via
+   --dotchart-row-color); everything else is static chrome. */
+.dotchart-demo__chip {
+  padding: 2px 10px;
+  border: 1px solid var(--sui-border, #333);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--sui-font-mono, monospace);
+  font-size: 11px;
+  cursor: pointer;
+}
+.dotchart-demo__chip--active {
+  border-color: var(--sui-accent, #5b8def);
+  background: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__dim6 {
+  opacity: 0.6;
+}
+.dotchart-demo__dim5 {
+  opacity: 0.5;
+}
+.dotchart-demo__proof {
+  margin-top: 16px;
+  max-width: 800px;
+}
+.dotchart-demo__readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border, #333);
+  border-radius: 6px;
+  font-family: var(--sui-font-mono, monospace);
+  font-size: 13px;
+}
+.dotchart-demo__range {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: transparent;
+}
+.dotchart-demo__range--hit {
+  background: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__reached {
+  color: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--sui-font-mono, monospace);
+}
+.dotchart-demo__th {
+  padding: 4px 8px;
+  text-align: left;
+}
+.dotchart-demo__td {
+  padding: 4px 8px;
+}
+.dotchart-demo__td--dim {
+  opacity: 0.7;
+}
+.dotchart-demo__row {
+  background: transparent;
+  border-left: 3px solid var(--dotchart-row-color);
+  cursor: pointer;
+}
+.dotchart-demo__row--hovered {
+  background: var(--sui-bg-hover, rgba(255, 255, 255, 0.06));
+}

@@ -163,28 +163,16 @@ export const DotchartShowcase: Component = () => {
               onPointerLeave={() => setHighlightedState(null)}
               onFocus={() => setHighlightedState(status)}
               onBlur={() => setHighlightedState(null)}
-              style={{
-                padding: "2px 10px",
-                "border-radius": "12px",
-                border:
-                  highlightedState() === status
-                    ? "1px solid var(--sui-accent, #5b8def)"
-                    : "1px solid var(--sui-border, #333)",
-                background:
-                  highlightedState() === status
-                    ? "var(--sui-accent, #5b8def)"
-                    : "transparent",
-                color: "inherit",
-                cursor: "pointer",
-                "font-family": "var(--sui-font-mono, monospace)",
-                "font-size": "11px",
+              class="dotchart-demo__chip"
+              classList={{
+                "dotchart-demo__chip--active": highlightedState() === status,
               }}
             >
               {status}
             </button>
           )}
         </For>
-        <span style={{ opacity: 0.6 }}>
+        <span class="dotchart-demo__dim6">
           ← hover a chip; every bar with that state glows
         </span>
       </ClusterRow>
@@ -268,10 +256,7 @@ export const DotchartShowcase: Component = () => {
         <Crosshair />
       </Chart>
 
-      <div
-        class="example-group"
-        style={{ "margin-top": "16px", "max-width": "800px" }}
-      >
+      <div class="example-group dotchart-demo__proof">
         <SubsectionTitle>Drag-off-edge proof</SubsectionTitle>
         <p class="text-meta">
           Press inside the chart and drag. To prove the fix: (1) drag past the{" "}
@@ -281,53 +266,32 @@ export const DotchartShowcase: Component = () => {
           — the drag should still commit instead of getting stuck. Before the
           fix, both cases failed.
         </p>
-        <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "12px",
-            padding: "8px 12px",
-            "border-radius": "6px",
-            border: "1px solid var(--sui-border, #333)",
-            "font-family": "var(--sui-font-mono, monospace)",
-            "font-size": "13px",
-          }}
-        >
-          <span style={{ opacity: 0.6 }}>last committed range:</span>
+        <div class="dotchart-demo__readout">
+          <span class="dotchart-demo__dim6">last committed range:</span>
           <Show
             when={committedRange()}
-            fallback={<span style={{ opacity: 0.5 }}>— none yet —</span>}
+            fallback={<span class="dotchart-demo__dim5">— none yet —</span>}
           >
             {(range) => (
               <>
                 <span
-                  style={{
-                    padding: "1px 6px",
-                    "border-radius": "4px",
-                    background: hitDomainMin()
-                      ? "var(--sui-accent, #5b8def)"
-                      : "transparent",
-                  }}
+                  class="dotchart-demo__range"
+                  classList={{ "dotchart-demo__range--hit": hitDomainMin() }}
                 >
                   {fmtClock(range().start)}
                 </span>
-                <span style={{ opacity: 0.6 }}>→</span>
+                <span class="dotchart-demo__dim6">→</span>
                 <span
-                  style={{
-                    padding: "1px 6px",
-                    "border-radius": "4px",
-                    background: hitDomainMax()
-                      ? "var(--sui-accent, #5b8def)"
-                      : "transparent",
-                  }}
+                  class="dotchart-demo__range"
+                  classList={{ "dotchart-demo__range--hit": hitDomainMax() }}
                 >
                   {fmtClock(range().end)}
                 </span>
-                <span style={{ opacity: 0.6 }}>
+                <span class="dotchart-demo__dim6">
                   ({fmtDuration(range().start, range().end)})
                 </span>
                 <Show when={hitDomainMax() || hitDomainMin()}>
-                  <span style={{ color: "var(--sui-accent, #5b8def)" }}>
+                  <span class="dotchart-demo__reached">
                     ✓ reached domain {hitDomainMax() ? "max" : "min"}
                   </span>
                 </Show>
@@ -350,36 +314,30 @@ export const DotchartShowcase: Component = () => {
           Domain: <code>{fmtClock(t0)}</code> → <code>{fmtClock(t1)}</code> (
           {fmtDuration(t0, t1)}, t0 = <code>{t0}</code>)
         </div>
-        <table
-          style={{
-            "border-collapse": "collapse",
-            "font-size": "12px",
-            "font-family": "var(--sui-font-mono, monospace)",
-          }}
-        >
+        <table class="dotchart-demo__table">
           <thead>
             <tr>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>id</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>lane</th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">id</th>
+              <th class="dotchart-demo__th">lane</th>
+              <th class="dotchart-demo__th">
                 start (clock)
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 start (offset)
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 end (clock)
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 end (offset)
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 duration
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 start (ms)
               </th>
-              <th style={{ "text-align": "left", padding: "4px 8px" }}>
+              <th class="dotchart-demo__th">
                 end (ms)
               </th>
             </tr>
@@ -392,33 +350,29 @@ export const DotchartShowcase: Component = () => {
                   <tr
                     onPointerEnter={() => setHoveredBarId(bar.id)}
                     onPointerLeave={() => setHoveredBarId(null)}
-                    style={{
-                      background: isHovered()
-                        ? "var(--sui-bg-hover, rgba(255,255,255,0.06))"
-                        : "transparent",
-                      "border-left": `3px solid ${bar.color}`,
-                      cursor: "pointer",
-                    }}
+                    class="dotchart-demo__row"
+                    classList={{ "dotchart-demo__row--hovered": isHovered() }}
+                    style={{ "--dotchart-row-color": bar.color }}
                   >
-                    <td style={{ padding: "4px 8px" }}>{bar.id}</td>
-                    <td style={{ padding: "4px 8px" }}>{bar.lane}</td>
-                    <td style={{ padding: "4px 8px" }}>
+                    <td class="dotchart-demo__td">{bar.id}</td>
+                    <td class="dotchart-demo__td">{bar.lane}</td>
+                    <td class="dotchart-demo__td">
                       {fmtClock(bar.start)}
                     </td>
-                    <td style={{ padding: "4px 8px" }}>
+                    <td class="dotchart-demo__td">
                       {fmtOffset(bar.start, t0)}
                     </td>
-                    <td style={{ padding: "4px 8px" }}>{fmtClock(bar.end)}</td>
-                    <td style={{ padding: "4px 8px" }}>
+                    <td class="dotchart-demo__td">{fmtClock(bar.end)}</td>
+                    <td class="dotchart-demo__td">
                       {fmtOffset(bar.end, t0)}
                     </td>
-                    <td style={{ padding: "4px 8px" }}>
+                    <td class="dotchart-demo__td">
                       {fmtDuration(bar.start, bar.end)}
                     </td>
-                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>
+                    <td class="dotchart-demo__td dotchart-demo__td--dim">
                       {bar.start}
                     </td>
-                    <td style={{ padding: "4px 8px", opacity: 0.7 }}>
+                    <td class="dotchart-demo__td dotchart-demo__td--dim">
                       {bar.end}
                     </td>
                   </tr>

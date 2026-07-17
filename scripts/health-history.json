@@ -507,5 +507,32 @@
       "undocumentedComponents": 0,
       "missingDepthHeaders": 0
     }
+  },
+  {
+    "at": "2026-07-17T15:05:10.598Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 73,
+      "inlineStyleShowcases": 72,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 57,
+      "cssTypedProps": 13,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 73,
+      "inlineStyleShowcases": 102,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 88,
+      "cssTypedProps": 13,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    }
   }
 ]
