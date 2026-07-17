@@ -40,7 +40,7 @@ export const MultiSelectFilterShowcase: Component = () => {
       <div class="example-group">
         <h3>Bar mode (wide container)</h3>
         <p class="text-meta">Two selected — active chips filled.</p>
-        <div style={{ "max-width": "700px" }}>
+        <div class="demo-maxw-700">
           <MultiSelectFilter
             label="Status"
             options={statuses}
@@ -53,7 +53,7 @@ export const MultiSelectFilterShowcase: Component = () => {
       <div class="example-group">
         <h3>Bar mode — empty selection (all active)</h3>
         <p class="text-meta">Nothing selected → every chip inactive, no filter.</p>
-        <div style={{ "max-width": "700px" }}>
+        <div class="demo-maxw-700">
           <MultiSelectFilter
             label="Status"
             options={statuses}
@@ -65,7 +65,7 @@ export const MultiSelectFilterShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Bar mode — no label</h3>
-        <div style={{ "max-width": "700px" }}>
+        <div class="demo-maxw-700">
           <MultiSelectFilter
             options={statuses}
             selected={bar()}
@@ -80,7 +80,7 @@ export const MultiSelectFilterShowcase: Component = () => {
           Container too narrow for the bar → dropdown trigger with a checkbox
           menu. Click to open.
         </p>
-        <div style={{ "max-width": "240px" }}>
+        <div class="demo-maxw-240">
           <MultiSelectFilter
             label="Status"
             options={statuses}
@@ -92,7 +92,7 @@ export const MultiSelectFilterShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Menu mode — multiple selected</h3>
-        <div style={{ "max-width": "240px" }}>
+        <div class="demo-maxw-240">
           <MultiSelectFilter
             label="Status"
             options={statuses}

@@ -22,13 +22,7 @@ export const ProgressBarShowcase: Component = () => {
                 { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
               ]}
               label={5}
-              style={{
-                width: "120px",
-                height: "20px",
-                "font-size": "11px",
-                "font-weight": "600",
-                color: "var(--sui-text-primary)",
-              }}
+              class="progress-bar-demo__h"
             />
             <TextSublabel>30% partial + 20% missing</TextSublabel>
           </ClusterRow>
@@ -39,12 +33,7 @@ export const ProgressBarShowcase: Component = () => {
                 { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
               ]}
               label={0}
-              style={{
-                width: "120px",
-                height: "20px",
-                "font-size": "11px",
-                color: "var(--sui-text-muted)",
-              }}
+              class="progress-bar-demo__h progress-bar-demo__h--empty"
             />
             <TextSublabel>Empty — no errors</TextSublabel>
           </ClusterRow>
@@ -54,7 +43,7 @@ export const ProgressBarShowcase: Component = () => {
       <div class="example-group">
         <h3>Vertical</h3>
         <div
-          style={{ display: "flex", gap: "12px", "align-items": "flex-end" }}
+          class="progress-bar-demo__vrow"
         >
           <StackedProgressBar
             direction="vertical"
@@ -63,13 +52,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
-            style={{
-              width: "24px",
-              height: "80px",
-              "font-size": "11px",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-            }}
+            class="progress-bar-demo__v"
           />
           <StackedProgressBar
             direction="vertical"
@@ -78,13 +61,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
-            style={{
-              width: "24px",
-              height: "80px",
-              "font-size": "11px",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-            }}
+            class="progress-bar-demo__v"
           />
         </div>
       </div>

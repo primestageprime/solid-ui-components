@@ -104,7 +104,7 @@ export const ComboboxShowcase: Component = () => {
             Type a country and press Enter — the parent appends to `options` and
             selects it.
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="demo-maxw-320">
             <Combobox
               placeholder="Search or create country…"
               options={countries}
@@ -125,7 +125,7 @@ export const ComboboxShowcase: Component = () => {
             `false` to hide the chip header and rely on the inline listbox
             indicators.
           </div>
-          <div style={{ "max-width": "420px" }}>
+          <div class="demo-maxw-420">
             <Combobox
               multiple
               placeholder="Tag or create…"
@@ -157,7 +157,7 @@ export const ComboboxShowcase: Component = () => {
             No chip list — selected state is indicated via the listbox check
             marks only.
           </div>
-          <div style={{ "max-width": "420px" }}>
+          <div class="demo-maxw-420">
             <Combobox
               multiple
               showChips={false}
@@ -177,7 +177,7 @@ export const ComboboxShowcase: Component = () => {
             `disabled` is forwarded to both the input and the trigger. Opacity
             drops and pointer events are suppressed.
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="demo-maxw-320">
             <Combobox
               placeholder="Locked"
               options={() => INITIAL_COUNTRIES}
@@ -196,7 +196,7 @@ export const ComboboxShowcase: Component = () => {
             filtered option list via `createMemo` — type "st" to see only
             Stainless Steel.
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="demo-maxw-320">
             <Combobox
               placeholder="Search materials…"
               options={filteredCatalog}

@@ -1720,3 +1720,84 @@
 .bottom-sheet-demo__body {
   position: relative;
 }
+
+/* Shared demo-width bounds — keep a demo column readable instead of letting
+   it stretch full-bleed (same intent as .example-column's max-width:400). */
+.demo-maxw-240 {
+  max-width: 240px;
+}
+.demo-maxw-280 {
+  max-width: 280px;
+}
+.demo-maxw-320 {
+  max-width: 320px;
+}
+.demo-maxw-420 {
+  max-width: 420px;
+}
+.demo-maxw-700 {
+  max-width: 700px;
+}
+/* Bottom margin under a .text-meta caption that sits above a demo. */
+.demo-caption-gap {
+  margin-bottom: 12px;
+}
+.resizable-container-demo__fill {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+.hud-page-demo__frame {
+  height: 120px;
+  min-height: unset;
+}
+.three-panel-demo__pane {
+  height: 320px;
+  border: 1px solid var(--sui-border);
+}
+.three-panel-demo__brand {
+  color: var(--sui-accent);
+}
+.three-panel-demo__list-title {
+  margin: 0 0 8px;
+  color: var(--sui-text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.three-panel-demo__list-item {
+  padding: 6px 8px;
+  background: var(--sui-bg-secondary);
+  border-left: 2px solid var(--sui-accent);
+  font-size: 13px;
+}
+.three-panel-demo__heading {
+  margin: 0;
+}
+.three-panel-demo__prose {
+  margin: 0;
+  color: var(--sui-text-secondary);
+}
+.progress-bar-demo__h {
+  width: 120px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.progress-bar-demo__h--empty {
+  font-weight: normal;
+  color: var(--sui-text-muted);
+}
+.progress-bar-demo__v {
+  width: 24px;
+  height: 80px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.progress-bar-demo__vrow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}

@@ -53,7 +53,7 @@ export const SelectShowcase: Component = () => {
           <div class="text-meta">
             `value: SelectOption | null`. Trigger shows the selected label.
           </div>
-          <div style={{ "max-width": "240px" }}>
+          <div class="demo-maxw-240">
             <Select
               label="Priority"
               description="Defines escalation rules."
@@ -75,7 +75,7 @@ export const SelectShowcase: Component = () => {
             `multiple` flips `value` to `SelectOption[]`. Trigger shows a
             comma-joined preview with an inline clear button.
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="demo-maxw-320">
             <Select
               multiple
               label="Statuses"
@@ -104,7 +104,7 @@ export const SelectShowcase: Component = () => {
             `disabled` is forwarded to Kobalte's root — the trigger is
             non-interactive and the opacity drops to 50%.
           </div>
-          <div style={{ "max-width": "240px" }}>
+          <div class="demo-maxw-240">
             <Select
               label="Priority (locked)"
               options={() => PRIORITY_OPTIONS}
@@ -122,7 +122,7 @@ export const SelectShowcase: Component = () => {
             Validates the listbox `max-height: 280px` overflow rule — the popup
             should scroll, the trigger should not grow.
           </div>
-          <div style={{ "max-width": "280px" }}>
+          <div class="demo-maxw-280">
             <Select
               label="Asset"
               placeholder="Pick an asset…"

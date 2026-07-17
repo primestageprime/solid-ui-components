@@ -10,7 +10,7 @@ const DemoContent: Component<{ label: string }> = (props) => (
     radius="sm"
     bg="rgba(59,130,246,0.08)"
     borderColor="rgba(59,130,246,0.3)"
-    style={{ width: "100%", height: "100%", "box-sizing": "border-box" }}
+    class="resizable-container-demo__fill"
   >
     <Text variant="body">{props.label}</Text>
   </Surface>
@@ -30,7 +30,7 @@ export const ResizableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Right + Bottom (default)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           directions: ["right", "bottom"] — drag the right or bottom edge
         </div>
         <ResizableContainer
@@ -44,7 +44,7 @@ export const ResizableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>All four edges</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           directions: ["top", "right", "bottom", "left"] with min/max bounds
         </div>
         <ResizableContainer
@@ -62,7 +62,7 @@ export const ResizableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Horizontal only (right)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           directions: ["right"] — width-only resize, height stays fixed
         </div>
         <ResizableContainer
@@ -78,7 +78,7 @@ export const ResizableContainerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>With onResize callback</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <div class="text-meta demo-caption-gap">
           Live dimensions are echoed outside the container.
         </div>
         <Stack gap="sm">

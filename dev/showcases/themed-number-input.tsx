@@ -33,7 +33,7 @@ export const ThemedNumberInputShowcase: Component = () => {
             No label, no bounds, step 1. Emits `undefined` when cleared
             (kobalte's NaN is normalized out).
           </div>
-          <div style={{ "max-width": "240px" }}>
+          <div class="demo-maxw-240">
             <ThemedNumberInput name="plain" value={plain} onChange={setPlain} />
           </div>
         </NarrowStack>
@@ -44,7 +44,7 @@ export const ThemedNumberInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Labeled</h3>
-        <div style={{ "max-width": "240px" }}>
+        <div class="demo-maxw-240">
           <ThemedNumberInput
             name="quantity"
             label="Quantity"
@@ -59,7 +59,7 @@ export const ThemedNumberInputShowcase: Component = () => {
 
       <div class="example-group">
         <h3>With description</h3>
-        <div style={{ "max-width": "320px" }}>
+        <div class="demo-maxw-320">
           <ThemedNumberInput
             name="engine-kw"
             label="Engine Power"
@@ -77,7 +77,7 @@ export const ThemedNumberInputShowcase: Component = () => {
             When `errorMessage` is present, the field renders in invalid state
             and the description (if any) is suppressed.
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="demo-maxw-320">
             <ThemedNumberInput
               name="elevation"
               label="Elevation (m)"
@@ -97,7 +97,7 @@ export const ThemedNumberInputShowcase: Component = () => {
             `min=0`, `max=1000`, `step=50`. The stepper triggers disable at the
             bounds via kobalte's built-in behavior.
           </div>
-          <div style={{ "max-width": "240px" }}>
+          <div class="demo-maxw-240">
             <ThemedNumberInput
               name="rpm"
               label="RPM"
@@ -123,7 +123,7 @@ export const ThemedNumberInputShowcase: Component = () => {
             `disabled` forwarded to kobalte's root — input and triggers are
             non-interactive and opacity drops.
           </div>
-          <div style={{ "max-width": "240px" }}>
+          <div class="demo-maxw-240">
             <ThemedNumberInput
               name="locked"
               label="Threshold (locked)"

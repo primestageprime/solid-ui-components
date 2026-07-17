@@ -17,7 +17,7 @@ export const PageShowcase: Component = () => {
         <Stack gap="sm">
           <div>
             <div class="text-meta">default — dark bg, no pattern</div>
-            <Page style={{ height: "120px", "min-height": "unset" }}>
+            <Page class="hud-page-demo__frame">
               <MutedBody>Default page shell</MutedBody>
             </Page>
           </div>
@@ -26,7 +26,7 @@ export const PageShowcase: Component = () => {
             <div class="text-meta">gridPattern — 40px accent grid overlay</div>
             <Page
               gridPattern
-              style={{ height: "120px", "min-height": "unset" }}
+              class="hud-page-demo__frame"
             >
               <MutedBody>Grid pattern background</MutedBody>
             </Page>
@@ -36,7 +36,7 @@ export const PageShowcase: Component = () => {
             <div class="text-meta">
               scanLines — animated horizontal scan line effect
             </div>
-            <Page scanLines style={{ height: "120px", "min-height": "unset" }}>
+            <Page scanLines class="hud-page-demo__frame">
               <MutedBody>Scan lines overlay</MutedBody>
             </Page>
           </div>
@@ -48,7 +48,7 @@ export const PageShowcase: Component = () => {
             <Page
               gridPattern
               scanLines
-              style={{ height: "120px", "min-height": "unset" }}
+              class="hud-page-demo__frame"
             >
               <MutedBody>Both effects combined</MutedBody>
             </Page>
