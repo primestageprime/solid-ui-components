@@ -14,8 +14,11 @@ import { SectionTitle, TextSublabel, TextBody } from "../../../src/components/Te
 import {
   DataTable,
   IntCell,
+  FloatCell,
   MoneyCell,
+  DateCell,
   DateTimeCell,
+  DurationCell,
   StringCell,
   type TableColumn,
 } from "../../../src/components/Table";
@@ -49,9 +52,13 @@ interface FieldGeo {
 const GEO = {
   selection: { minCh: 6.5, maxCh: 6.5, css: "3.25rem" }, // 18px checkbox + 32px padding
   name:      { minCh: 12,  maxCh: 80 },                  // expands, ellipsis past cap
+  text:      { minCh: 8,   maxCh: 40 },                  // secondary text, expands, yields to name
+  date:      { minCh: 14,  maxCh: 14, css: "14ch" },     // "2026-07-15" (10ch) + chrome
   dateTime:  { minCh: 23,  maxCh: 23, css: "23ch" },     // "2026-07-15 14:10:00" (19ch) + chrome
   int:       { minCh: 8,   maxCh: 14, css: "14ch" },     // "9,999,999" + chrome
+  float:     { minCh: 10,  maxCh: 16, css: "16ch" },     // "1,234,567.89" + chrome
   money:     { minCh: 10,  maxCh: 22, css: "22ch" },     // "$10,000,000,000.00" + chrome
+  duration:  { minCh: 10,  maxCh: 14, css: "14ch" },     // "12h 30m 45s" + chrome
   // 2 × IconOnlyButton (1.4rem) with 1rem around each icon (md-gap cluster).
   actions2:  { minCh: 12,  maxCh: 12, css: "6rem" },
   chart:     { minCh: 24,  maxCh: 24, css: "12em" },     // sparkline strip + chrome (10em tripped cell ellipsis; chart cells should drop text-overflow at promotion)
@@ -111,6 +118,44 @@ const dateTimeCol = <T,>(key: keyof T): FieldCol<T> => ({
   sortable: true,
   geo: GEO.dateTime,
   accessor: (row) => <DateTimeCell value={row[key] as string} />,
+});
+
+const textCol = <T,>(key: keyof T): FieldCol<T> => ({
+  id: String(key),
+  header: humanize(String(key)),
+  ellipsis: true,
+  sortable: true,
+  geo: GEO.text,
+  accessor: (row) => <StringCell value={String(row[key] ?? "")} />,
+});
+
+const dateCol = <T,>(key: keyof T): FieldCol<T> => ({
+  id: String(key),
+  header: centered(humanize(String(key))),
+  width: GEO.date.css,
+  sortable: true,
+  geo: GEO.date,
+  accessor: (row) => <DateCell value={row[key] as string} />,
+});
+
+const floatCol = <T,>(key: keyof T): FieldCol<T> => ({
+  id: String(key),
+  header: centered(humanize(String(key))),
+  align: "right",
+  width: GEO.float.css,
+  sortable: true,
+  geo: GEO.float,
+  accessor: (row) => <FloatCell value={row[key] as number} precision={2} />,
+});
+
+const durationCol = <T,>(key: keyof T): FieldCol<T> => ({
+  id: String(key),
+  header: centered(humanize(String(key))),
+  align: "right",
+  width: GEO.duration.css,
+  sortable: true,
+  geo: GEO.duration,
+  accessor: (row) => <DurationCell value={row[key] as number} unit="s" />,
 });
 
 const selectionCol = <T,>(
@@ -216,6 +261,36 @@ const INITIAL_BATCHES: Batch[] = [
   { name: "gl-lines-jul", createdAt: "2026-07-16T11:05:00Z", throughputHistory: [7, 7, 6, 8, 7], done: 35, failed: 0, total: 210 },
 ];
 
+// Isolation specimens — row 2 carries each type's widest REALISTIC value so
+// every tile demonstrates its cap honestly (the $10B money basis, a name past
+// the 80ch cap, a 7-digit int).
+interface Specimen {
+  name: string;
+  note: string;
+  createdAt: string;
+  hours: number;
+  ratio: number;
+  amountCents: number;
+  secs: number;
+  history: number[];
+  done: number;
+  failed: number;
+  total: number;
+}
+
+const SPECIMENS: Specimen[] = [
+  { name: "Adlai Arnold", note: "Prefers morning dispatch", createdAt: "2026-05-02T09:14:00Z", hours: 62, ratio: 12.5, amountCents: 812_500, secs: 754, history: [4, 9, 12, 11, 15], done: 41, failed: 0, total: 60 },
+  { name: "A deliberately very long identifier that runs past the eighty character cap to demonstrate the ellipsis", note: "A secondary note long enough to pass the forty character cap", createdAt: "2026-06-19T16:55:00Z", hours: 9_999_999, ratio: 1_234_567.89, amountCents: 1_000_000_000_000, secs: 45_045, history: [22, 18, 25, 24, 30], done: 118, failed: 3, total: 140 },
+  { name: "Chandra Voss", note: "Escalations only", createdAt: "2026-07-16T11:05:00Z", hours: 12, ratio: 0.25, amountCents: 157_500, secs: 59, history: [7, 7, 6, 8, 7], done: 35, failed: 0, total: 210 },
+];
+
+const behaviorOf = (g: FieldGeo): string =>
+  g.minCh === g.maxCh
+    ? "fixed"
+    : g === GEO.name || g === GEO.text
+      ? "expands ≤ cap"
+      : "content-fit ≤ cap";
+
 // ── Bench ────────────────────────────────────────────────────────────────────
 
 const TableFieldsBench: Component = () => {
@@ -285,6 +360,55 @@ const TableFieldsBench: Component = () => {
       }),
     );
 
+  // One single-column table per field type — each at its own natural width.
+  const [isoSel, setIsoSel] = createSignal<ReadonlySet<string>>(new Set());
+  const isoTiles: { label: string; c: FieldCol<Specimen> }[] = [
+    {
+      label: "selection",
+      c: selectionCol(
+        (r) => isoSel().has(r.name),
+        (r) =>
+          setIsoSel((prev) => {
+            const next = new Set(prev);
+            if (next.has(r.name)) {
+              next.delete(r.name);
+            } else {
+              next.add(r.name);
+            }
+            return next;
+          }),
+      ),
+    },
+    { label: "name", c: nameCol() },
+    { label: "text", c: textCol("note") },
+    { label: "date", c: dateCol("createdAt") },
+    { label: "dateTime", c: dateTimeCol("createdAt") },
+    { label: "int", c: intCol("hours") },
+    { label: "float", c: floatCol("ratio") },
+    { label: "money", c: moneyCol("amountCents") },
+    { label: "duration", c: durationCol("secs") },
+    {
+      label: "status",
+      c: col("health", "Health", (r) => (
+        <ClusterRow>
+          <SmallStatusLight variant={r.failed > 0 ? "error" : "active"} />
+          <TextSublabel>{`${r.done}/${r.total}`}</TextSublabel>
+        </ClusterRow>
+      ), "status"),
+    },
+    {
+      label: "chart",
+      c: col("trend", "Trend", (r) => <Sparkline values={r.history} />, "chart"),
+    },
+    {
+      label: "actions",
+      c: clusterCol([
+        actionCol("edit", (r) => console.log("[bench] edit", r.name)),
+        actionCol("delete", (r) => console.log("[bench] delete", r.name)),
+      ]),
+    },
+  ];
+
   return (
     <div class="component-section component-section--full">
       <SectionTitle>Table Fields (function composition)</SectionTitle>
@@ -333,6 +457,34 @@ const TableFieldsBench: Component = () => {
             config is static, reactivity is per-cell
           </TextSublabel>
         </ClusterRow>
+
+        <SectionTitle>Field types in isolation</SectionTitle>
+        <TextBody>
+          One single-column table per field type, each at its natural width.
+          Row two carries the type's widest realistic value, so every cap is
+          exercised: the $10B money basis, a name past 80ch, a 7-digit int.
+        </TextBody>
+        <ContentStack>
+          {isoTiles.map((tile) => {
+            const t = resolveFields<Specimen>([tile.c], {});
+            return (
+              <ContentStack>
+                <TextSublabel>
+                  {`${tile.label} · ${t.minCh}–${t.maxCh}ch · ${behaviorOf(tile.c.geo)}`}
+                </TextSublabel>
+                <div
+                  class="tf-table-frame"
+                  style={{
+                    "--tf-table-min": `${t.minCh}ch`,
+                    "--tf-table-max": `${t.maxCh}ch`,
+                  }}
+                >
+                  <DataTable data={SPECIMENS} columns={t.columns} fixedLayout />
+                </div>
+              </ContentStack>
+            );
+          })}
+        </ContentStack>
       </ContentStack>
     </div>
   );
