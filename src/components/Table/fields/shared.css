@@ -20,6 +20,17 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 .sui-field-frame {
   min-width: min(var(--sui-field-table-min), 100%);
   max-width: var(--sui-field-table-max);
+  /* ONE ch basis. Column widths (th), the frame's width budget, and the cell
+     glyphs must all resolve `ch` against the same font, or the budget and the
+     columns disagree and the slack pools into uneven cell margins (measured:
+     date insets hit 23px while name sat at 8px). 12px mono everywhere. */
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+.sui-field-frame th,
+.sui-field-frame td,
+.sui-field-frame td :is(span, div) {
+  font-size: 12px;
 }
 .sui-field-frame th,
 .sui-field-frame td {

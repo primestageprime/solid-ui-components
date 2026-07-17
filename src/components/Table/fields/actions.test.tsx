@@ -15,15 +15,15 @@ describe("actions field module", () => {
     expect(ACTION_ICONS.delete).toBe("trash");
   });
 
-  it("geoFor derives width from button metrics: geoFor(2) = 5.3rem / 8.6ch", () => {
-    expect(geoFor(2)).toEqual({ minCh: 8.6, maxCh: 8.6, css: "4.3rem" });
+  it("geoFor derives width from button metrics: geoFor(2) = 5.3rem / 9.5ch", () => {
+    expect(geoFor(2)).toEqual({ minCh: 9.5, maxCh: 9.5, css: "4.3rem" });
   });
 
   it("geoFor(n) is a fixed column scaling with the action count", () => {
     const g = geoFor(3);
     expect(g.css).toBe("6.2rem"); // 3 × 1.4 + 2 × 0.5 + 1
     expect(g.minCh).toBe(g.maxCh); // fixed
-    expect(g.minCh).toBe(12.4);
+    expect(g.minCh).toBe(13.8);
   });
 
   it("actionCol renders an accessible icon button that fires run(row)", () => {

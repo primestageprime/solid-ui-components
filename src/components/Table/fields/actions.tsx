@@ -26,7 +26,7 @@ export const ACTION_ICONS: Record<string, IconName> = {
  *  geoFor(2) = 2·1.4 + 0.5 + 1 = 4.3rem = 8.6ch (8px/side field-frame chrome). */
 export const geoFor = (n: number): FieldGeo => {
   const rem = Number((n * 1.4 + (n - 1) * 0.5 + 1).toFixed(1));
-  return { minCh: rem * 2, maxCh: rem * 2, css: `${rem.toFixed(1)}rem` };
+  return { minCh: Number((rem * 2.22).toFixed(1)), maxCh: Number((rem * 2.22).toFixed(1)), css: `${rem.toFixed(1)}rem` };
 };
 
 /** A single action cell: an icon button that runs `run(row)`. aria-label and

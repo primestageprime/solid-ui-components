@@ -19,7 +19,7 @@ import { CenteredColumn } from "../../Layout";
 
 // 2.125rem = 18px checkbox + 8px breathing room per side — the field-frame's
 // standard cell chrome (shared.css .sui-field-frame). min === max: fixed.
-export const geo: FieldGeo = { minCh: 4.25, maxCh: 4.25, css: "2.125rem" };
+export const geo: FieldGeo = { minCh: 4.75, maxCh: 4.75, css: "2.125rem" };
 
 /** Row-selection checkbox column. `isSelected` and `toggle` are the only client
  *  inputs — width, header, and centering are owned here. */

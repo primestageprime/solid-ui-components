@@ -20,7 +20,7 @@ describe("selection field", () => {
       () => {},
     );
     expect(col.geo).toBe(geo);
-    expect(geo).toEqual({ minCh: 4.25, maxCh: 4.25, css: "2.125rem" });
+    expect(geo).toEqual({ minCh: 4.75, maxCh: 4.75, css: "2.125rem" });
     expect(col.id).toBe("selected");
     expect(col.header).toBe("");
   });
