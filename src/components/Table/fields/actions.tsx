@@ -18,13 +18,15 @@ export const ACTION_ICONS: Record<string, IconName> = {
 };
 
 /** actions(n) geometry — DERIVED from button metrics, never guessed. Standard
- *  widths come from the rendered chrome: each action is a 2.5rem-wide button and
- *  the cluster adds 1rem of surrounding gutter, so the column is `n·2.5 + 1` rem.
- *  Fixed (min === max); minCh/maxCh express that rem width in ch (1rem ≈ 2ch).
- *  Bench-verified: geoFor(2) = 6rem = 12ch (2 buttons need 6rem, not 5). */
+ *  widths come from the rendered chrome: n IconOnlyButtons at 1.4rem each, the
+ *  IconClusterRow's `sm`/0.5rem gap between adjacent buttons (Peter's amendment
+ *  2026-07-17 — glyphs ~1em apart, not 1rem), plus 2rem of cell chrome, so the
+ *  column is `n·1.4 + (n-1)·0.5 + 2` rem. Fixed (min === max); minCh/maxCh
+ *  express that rem width in ch (1rem ≈ 2ch).
+ *  geoFor(2) = 2·1.4 + 0.5 + 2 = 5.3rem = 10.6ch. */
 export const geoFor = (n: number): FieldGeo => {
-  const rem = n * 2.5 + 1;
-  return { minCh: rem * 2, maxCh: rem * 2, css: `${rem}rem` };
+  const rem = Number((n * 1.4 + (n - 1) * 0.5 + 2).toFixed(1));
+  return { minCh: rem * 2, maxCh: rem * 2, css: `${rem.toFixed(1)}rem` };
 };
 
 /** A single action cell: an icon button that runs `run(row)`. aria-label and

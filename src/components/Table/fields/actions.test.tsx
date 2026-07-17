@@ -14,15 +14,15 @@ describe("actions field module", () => {
     expect(ACTION_ICONS.delete).toBe("trash");
   });
 
-  it("geoFor derives width from button metrics: geoFor(2) = 6rem / 12ch", () => {
-    expect(geoFor(2)).toEqual({ minCh: 12, maxCh: 12, css: "6rem" });
+  it("geoFor derives width from button metrics: geoFor(2) = 5.3rem / 10.6ch", () => {
+    expect(geoFor(2)).toEqual({ minCh: 10.6, maxCh: 10.6, css: "5.3rem" });
   });
 
   it("geoFor(n) is a fixed column scaling with the action count", () => {
     const g = geoFor(3);
-    expect(g.css).toBe("8.5rem"); // 3 × 2.5 + 1
+    expect(g.css).toBe("7.2rem"); // 3 × 1.4 + 2 × 0.5 + 2
     expect(g.minCh).toBe(g.maxCh); // fixed
-    expect(g.minCh).toBe(17);
+    expect(g.minCh).toBe(14.4);
   });
 
   it("actionCol renders an accessible icon button that fires run(row)", () => {
@@ -46,7 +46,7 @@ describe("actions field module", () => {
     expect(col.id).toBe("edit+delete");
     expect(col.header).toBe("");
     expect(col.align).toBe("right");
-    expect(col.width).toBe("6rem");
+    expect(col.width).toBe("5.3rem");
     expect(col.geo).toEqual(geoFor(2));
 
     const { getAllByRole } = render(() => (
