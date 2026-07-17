@@ -29,7 +29,7 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 }
 .sui-field-frame th,
 .sui-field-frame td,
-.sui-field-frame td :is(span, div) {
+.sui-field-frame td :is(span, div, button) {
   font-size: 12px;
 }
 .sui-field-frame th,

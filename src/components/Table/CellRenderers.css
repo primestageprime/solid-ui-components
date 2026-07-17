@@ -356,10 +356,22 @@
 .cell-longtext.cell-longtext--tooltip {
   display: inline-block;
   max-width: 100%;
-  /* The trigger is a <button>: neutralize the UA's centered text so clamped
-     cells align with their untruncated siblings. */
+  /* The trigger is a <button>: neutralize the UA button chrome so a clamped
+     cell is visually identical to its untruncated .cell-longtext siblings
+     except for the ellipsis. font-size and color come from .cell-longtext
+     itself (do NOT inherit them — that would pull the td's values instead). */
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  /* Tooltip.css's .sui-tooltip__trigger { color: inherit } loads later and
+     would pull the td's secondary color — pin the cell's own primary. */
+  color: var(--sui-text-primary);
   text-align: inherit;
+  background: none;
+  border: none;
   padding: 0;
+  cursor: help;
 }
 
 .cell-longtext__more,
