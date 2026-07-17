@@ -139,3 +139,20 @@
 .sui-checkbox__input:disabled + .sui-checkbox__box {
   cursor: not-allowed;
 }
+
+/* Indeterminate state — accent fill + centered dash (aggregate checkboxes
+   over a partial selection, e.g. a table's select-all header). */
+.sui-checkbox__input:indeterminate + .sui-checkbox__box {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+}
+.sui-checkbox__input:indeterminate + .sui-checkbox__box::after {
+  opacity: 1;
+  border: none;
+  background: var(--sui-bg-deep, #001018);
+  transform: none;
+  left: 25%;
+  width: 50%;
+  top: calc(50% - 1px);
+  height: 2px;
+}

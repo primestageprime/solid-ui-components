@@ -1,0 +1,41 @@
+/* ============================================
+   ValueMatrix — axis × axis grid of computed values
+   ============================================ */
+
+/* Values are comparable magnitudes: tabular figures so digits align across
+   the grid. */
+.sui-value-matrix__cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sui-value-matrix__axis {
+  color: var(--sui-text-secondary);
+  white-space: nowrap;
+}
+
+/* Semantic tones — the configure-time treatment vocabulary (src/types.ts
+   Tone). The theme owns every color. */
+.sui-value-matrix__cell--success {
+  color: var(--sui-success);
+}
+.sui-value-matrix__cell--warning {
+  color: var(--sui-warning);
+}
+.sui-value-matrix__cell--danger {
+  color: var(--sui-danger);
+}
+.sui-value-matrix__cell--accent {
+  color: var(--sui-accent);
+}
+.sui-value-matrix__cell--muted {
+  color: var(--sui-text-muted);
+}
+
+/* The chosen cell: weight plus a soft single halo (the double full-strength
+   currentColor glow smeared into a blob on light surfaces — ruled in jtf). */
+.sui-value-matrix__cell--selected {
+  font-weight: 700;
+  text-shadow: 0 0 6px color-mix(in srgb, currentColor 30%, transparent);
+}

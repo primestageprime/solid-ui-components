@@ -49,8 +49,10 @@ export type FieldCol<T> = TableColumn<T> & { geo: FieldGeo };
 
 /** Semantic treatment for a cell value (ruled 2026-07-17): columns may be
  *  configured with a function (value, row) → Tone at REGISTRY time; the tone
- *  maps to theme color inside SUI. The client names a meaning, never a color. */
-export type Tone = "default" | "success" | "warning" | "danger" | "accent" | "muted";
+ *  maps to theme color inside SUI. The client names a meaning, never a color.
+ *  The Tone vocabulary lives in src/types.ts (shared with ValueMatrix). */
+export type { Tone } from "../../../types";
+import type { Tone } from "../../../types";
 
 /** Configure-time treatment function: derives a Tone from the cell's value. */
 export type ToneFn<T, V> = (value: V, row: T) => Tone;

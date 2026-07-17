@@ -16,6 +16,7 @@ import {
   FieldTable,
   behaviorOf,
   col,
+  createFieldSelection,
   resolveFields,
   selectionCol,
   nameCol,
@@ -93,20 +94,15 @@ const SPECIMENS: Specimen[] = [
 const TableFieldsBench: Component = () => {
   // Table 1 — every field known. Registry is a plain object of references;
   // built once at setup (static config — reactivity lives inside the cells).
-  const [selected, setSelected] = createSignal<ReadonlySet<string>>(new Set());
-  const toggle = (row: Worker) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(row.name)) {
-        next.delete(row.name);
-      } else {
-        next.add(row.name);
-      }
-      return next;
-    });
+  // Selection: createFieldSelection gives the select-all header + shift-click
+  // range behavior for free (ruled 2026-07-17).
+  const workerSelection = createFieldSelection<Worker>({
+    rows: () => WORKERS,
+    key: (row) => row.name,
+  });
 
   const workerFields: Record<string, FieldCol<Worker>> = {
-    selected: selectionCol((row) => selected().has(row.name), toggle),
+    selected: selectionCol(workerSelection),
     name: nameCol(),
     createdAt: dateTimeCol("createdAt"),
     hours: intCol("hours"),
@@ -162,24 +158,12 @@ const TableFieldsBench: Component = () => {
     );
 
   // One single-column table per field type — each at its own natural width.
-  const [isoSel, setIsoSel] = createSignal<ReadonlySet<string>>(new Set());
+  const isoSelection = createFieldSelection<Specimen>({
+    rows: () => SPECIMENS,
+    key: (r) => r.name,
+  });
   const isoTiles: { label: string; c: FieldCol<Specimen> }[] = [
-    {
-      label: "selection",
-      c: selectionCol(
-        (r) => isoSel().has(r.name),
-        (r) =>
-          setIsoSel((prev) => {
-            const next = new Set(prev);
-            if (next.has(r.name)) {
-              next.delete(r.name);
-            } else {
-              next.add(r.name);
-            }
-            return next;
-          }),
-      ),
-    },
+    { label: "selection", c: selectionCol(isoSelection) },
     { label: "name", c: nameCol() },
     { label: "text", c: textCol("note") },
     { label: "date", c: dateCol("createdAt") },

@@ -73,6 +73,7 @@ export * as fields from "./components/Table/fields";
 export { FieldTable } from "./components/Table/fields/FieldTable";
 export type { FieldTableProps } from "./components/Table/fields/FieldTable";
 export * from "./components/PivotGrid";
+export * from "./components/ValueMatrix";
 export * from "./components/Section";
 export * from "./components/Panel";
 export * from "./components/ScrollRegion";
