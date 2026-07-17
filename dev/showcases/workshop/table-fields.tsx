@@ -7,7 +7,6 @@
 // This bench is now a pure CONSUMER of the promoted library modules at
 // src/components/Table/fields — the prototype layer graduated 2026-07-17.
 import type { Component } from "solid-js";
-import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { SectionTitle, TextSublabel, TextBody } from "../../../src/components/Text";
 import {
@@ -217,7 +216,7 @@ const TableFieldsBench: Component = () => {
           registry={workerFields}
         />
         <TextSublabel>
-          {`selected: ${selected().size} — width budget Σmin ${workers.minCh}ch → Σmax ${workers.maxCh}ch; only name flexes between them`}
+          {`selected: ${workerSelection.selected().size} — width budget Σmin ${workers.minCh}ch → Σmax ${workers.maxCh}ch; only name flexes between them — try the select-all header and shift-click ranges`}
         </TextSublabel>
 
         <TextSublabel>

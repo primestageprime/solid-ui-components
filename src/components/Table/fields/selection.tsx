@@ -152,6 +152,11 @@ export const selectionCol = <T,>(selection: FieldSelection<T>): FieldCol<T> => (
       <Checkbox
         checked={selection.isSelected(row)}
         onClick={(e: MouseEvent) => selection.toggle(row, { range: e.shiftKey })}
+        // Shift-click must range-select, not smear a native text selection
+        // across the rows between the endpoints.
+        onMouseDown={(e: MouseEvent) => {
+          if (e.shiftKey) e.preventDefault();
+        }}
         aria-label="Select row"
       />
     </CenteredColumn>
