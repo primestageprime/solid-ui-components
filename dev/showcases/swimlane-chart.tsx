@@ -210,14 +210,7 @@ export const renderStubNode = (
         radius="sm"
         bg="var(--sui-bg-secondary)"
         borderColor="var(--sui-border-bright)"
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          "border-style": "dashed",
-        }}
+        class="swimlane-chart-demo__collapsed"
       >
         ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}
         …)
@@ -231,7 +224,7 @@ export const renderStubNode = (
       radius="sm"
       bg={tint.bg}
       borderColor={tint.border}
-      style={{ width: "100%", height: "100%" }}
+      class="swimlane-chart-demo__fill"
     >
       <Stack gap="xs">
         <TextLabel>{colLabel(node.data.col)}</TextLabel>
@@ -249,13 +242,11 @@ export const StubChart: Component<{
   maxDepth?: number;
 }> = (props) => (
   <div
+    class="swimlane-chart-demo__stub"
     style={{
       width: props.width ?? "100%",
       height: `${10 * 1.4}em`,
       "min-width": props.minWidth ?? "320px",
-      border: "1px dashed var(--sui-border)",
-      "border-radius": "4px",
-      "box-sizing": "border-box",
     }}
   >
     <SwimlaneChart
@@ -315,14 +306,7 @@ const renderAnimNode = (
         radius="sm"
         bg="var(--sui-bg-secondary)"
         borderColor="var(--sui-border-bright)"
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          "border-style": "dashed",
-        }}
+        class="swimlane-chart-demo__collapsed"
       >
         ({state.collapsedCount} {state.collapsedCount === 1 ? "node" : "nodes"}
         …)
@@ -336,7 +320,7 @@ const renderAnimNode = (
       radius="sm"
       bg={tint.bg}
       borderColor={tint.border}
-      style={{ width: "100%", height: "100%" }}
+      class="swimlane-chart-demo__fill"
     >
       <Stack gap="xs">
         <TextLabel>{ANIM_STATUS_LABEL[node.data.status]}</TextLabel>
@@ -449,16 +433,7 @@ const AnimatedChain: Component = () => {
           frame {idx() + 1} / {history().length}
         </TextSublabel>
       </ClusterRow>
-      <div
-        style={{
-          width: "100%",
-          height: "560px",
-          "min-width": "360px",
-          border: "1px dashed var(--sui-border)",
-          "border-radius": "4px",
-          "box-sizing": "border-box",
-        }}
-      >
+      <div class="swimlane-chart-demo__frame560">
         <LinearFlowSwimlaneChart
           nodes={nodes()}
           edges={ANIM_CHAIN_EDGES}

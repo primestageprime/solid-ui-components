@@ -56,6 +56,10 @@
     "dev/showcases/change-renderer.tsx": ["paint"],
     "dev/showcases/value-renderer.tsx": ["paint"],
     "dev/showcases/legend.tsx": ["paint"],
-    "dev/showcases/router-demo.tsx": ["cssvar"]
+    "dev/showcases/router-demo.tsx": ["cssvar"],
+    "dev/showcases/swimlane-node-card.tsx": ["measured", "anchored"],
+    "dev/showcases/swimlane-chart.tsx": ["measured"],
+    "dev/showcases/work-progress-card.tsx": ["measured", "cssvar"],
+    "dev/showcases/cashflow-day-cell.tsx": ["proportion", "paint"]
   }
 }

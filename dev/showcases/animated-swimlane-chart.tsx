@@ -338,24 +338,11 @@ export const AnimatedSwimlaneChartShowcase: Component = () => {
     // 1000px content cap so the chart reflows across the full viewport.
     <div
       class="component-section--full"
-      style={{
-        display: "flex",
-        "flex-direction": "column",
-        gap: "12px",
-        padding: "24px",
-      }}
+      class="animated-swimlane-demo__page"
     >
-      <div
-        style={{
-          "font-size": "14px",
-          color: "rgba(255,255,255,0.7)",
-          "max-width": "780px",
-        }}
-      >
+      <div class="animated-swimlane-demo__intro">
         Data-only consumer — the entire chart is{" "}
-        <code
-          style={{ "font-family": "ui-monospace, SFMono-Regular, monospace" }}
-        >
+        <code class="animated-swimlane-demo__code">
           &lt;ProjectFlow nodes=&#123;tasks&#125; /&gt;
         </code>
         . Play walks every lane through its dependency graph one tick at a time,
@@ -364,7 +351,7 @@ export const AnimatedSwimlaneChartShowcase: Component = () => {
         as an agent frees up. Resize the window to watch the visible-column
         window collapse and the side-lozenges roll up the hidden node counts.
       </div>
-      <div style={{ display: "flex", gap: "8px" }}>
+      <div class="animated-swimlane-demo__controls">
         <button type="button" onClick={play}>
           {playing() ? "⏸ Pause" : "▶ Play"}
         </button>

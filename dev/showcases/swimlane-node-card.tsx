@@ -71,23 +71,16 @@ const HoverCardSlot: Component<{ node: StatusFlowNode }> = (props) => {
   const [hovered, setHovered] = createSignal(false);
   return (
     <div
-      style={{
-        position: "relative",
-        width: `${NODE_W}px`,
-        height: `${NODE_H}px`,
-      }}
+      class="swimlane-node-card-demo__node"
+      style={{ width: `${NODE_W}px`, height: `${NODE_H}px` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <Show when={hovered()}>
         <div
           class="sui-asc__popover-host"
-          style={{
-            position: "absolute",
-            bottom: `${NODE_H + 8}px`,
-            left: "0",
-            "z-index": "10",
-          }}
+          class="swimlane-node-card-demo__tooltip"
+          style={{ bottom: `${NODE_H + 8}px` }}
         >
           {defaultRenderPopover(props.node)}
         </div>
@@ -106,19 +99,10 @@ const Caption: Component<{ children: any }> = (props) => (
 
 export const SwimlaneNodeCardShowcase: Component = () => (
   <div
-    style={{
-      display: "flex",
-      "flex-direction": "column",
-      gap: "28px",
-      padding: "24px",
-    }}
+    class="swimlane-node-card-demo__page"
   >
     <div
-      style={{
-        "font-size": "14px",
-        color: "rgba(255,255,255,0.7)",
-        "max-width": "640px",
-      }}
+      class="swimlane-node-card-demo__intro"
     >
       The card the swimlane chart stamps into each slot, pinned to its real size
       ({NODE_W}×{NODE_H}). The top line carries claimedBy (left) vs. status

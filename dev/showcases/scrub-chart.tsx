@@ -59,7 +59,7 @@ const renderCashflowChart = (
     <svg
       viewBox={`0 0 ${ctx.width} ${ctx.height}`}
       preserveAspectRatio="none"
-      style={{ width: "100%", height: "100%", display: "block" }}
+      class="scrub-chart-demo__svg"
     >
       <line
         x1={0}
@@ -125,18 +125,15 @@ export const ScrubChartShowcase: Component = () => {
           />
 
           <div
-            style={{
-              "font-size": "13px",
-              color: "var(--sui-text-secondary)",
-            }}
+            class="scrub-chart-demo__readout"
           >
             Selected:{" "}
-            <strong style={{ color: "var(--sui-text-primary)" }}>
+            <strong class="scrub-chart-demo__strong">
               {fmtDate(cell().start)}
             </strong>
             {" — "}
             Balance:{" "}
-            <strong style={{ color: "var(--sui-text-primary)" }}>
+            <strong class="scrub-chart-demo__strong">
               {fmtDollars(cell().balanceCents / 100)}
             </strong>
             {" · Day cashflow: "}

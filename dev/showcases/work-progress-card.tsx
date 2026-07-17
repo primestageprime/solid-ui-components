@@ -37,12 +37,8 @@ const Slot: Component<{ children: any }> = (props) => (
 
 const Grid: Component<{ children: any }> = (props) => (
   <div
-    style={{
-      display: "grid",
-      "grid-template-columns": `repeat(3, ${CARD_W}px)`,
-      gap: "16px",
-      "justify-content": "start",
-    }}
+    class="work-progress-card-demo__grid"
+    style={{ "--wpc-card-w": `${CARD_W}px` }}
   >
     {props.children}
   </div>
@@ -162,7 +158,7 @@ const LiveTasks: Component = () => {
     now() >= endsAt ? [{ start: 0, end: endsAt }] : [{ start: 0 }];
 
   return (
-    <NarrowStack style={{ "margin-top": "32px" }}>
+    <NarrowStack class="work-progress-card-demo__live">
       <MutedBody>
         Live — three tasks started together (10s estimate). Actual accrues from
         work segments (<code>now − start</code>) while running and freezes when
@@ -207,8 +203,8 @@ const LiveTasks: Component = () => {
 };
 
 export const WorkProgressCardShowcase: Component = () => (
-  <NarrowStack class="component-section--full" style={{ padding: "24px" }}>
-    <MutedBody style={{ "max-width": "760px" }}>
+  <NarrowStack class="component-section--full work-progress-card-demo__page">
+    <MutedBody class="work-progress-card-demo__lede">
       Data-only card — pass <code>status</code>, <code>estimate</code>, and{" "}
       <code>actual</code>; the library derives the bar (blue in-progress, green
       complete, crimson over-budget, grey unused, ⚠/? for blocked/question). The

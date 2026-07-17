@@ -2027,3 +2027,176 @@
 .app-shell-demo__row-pad {
   padding: 4px 12px;
 }
+.demo-maxw-600 {
+  max-width: 600px;
+}
+
+/* ── Chart-cluster demos ───────────────────────────────────
+   These size chart nodes/frames from demo constants or plot data-driven
+   bars; the computed geometry rides inline (manifested measured/proportion/
+   cssvar) while the static frame chrome lives here. */
+.swimlane-node-card-demo__node {
+  position: relative;
+}
+.swimlane-node-card-demo__tooltip {
+  position: absolute;
+  left: 0;
+  z-index: 10;
+}
+.swimlane-node-card-demo__page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px;
+}
+.swimlane-node-card-demo__intro {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 640px;
+}
+.work-progress-card-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--wpc-card-w));
+  gap: 16px;
+  justify-content: start;
+}
+.work-progress-card-demo__live {
+  margin-top: 32px;
+}
+.work-progress-card-demo__page {
+  padding: 24px;
+}
+.work-progress-card-demo__lede {
+  max-width: 760px;
+}
+.cashflow-day-cell-demo__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 60px;
+  height: 72px;
+  padding: 3px 4px 4px;
+  box-sizing: border-box;
+  border-right: 1px solid var(--sui-border);
+}
+.cashflow-day-cell-demo__corner {
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--sui-text-muted);
+  white-space: nowrap;
+}
+.cashflow-day-cell-demo__plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.cashflow-day-cell-demo__baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--sui-border);
+}
+.cashflow-day-cell-demo__bar {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+}
+.cashflow-day-cell-demo__value {
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+.product-grid-demo__page {
+  padding: 20px 24px;
+}
+.product-grid-demo__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.product-grid-demo__chip {
+  padding: 4px 12px;
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+}
+.product-grid-demo__chip--active {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent);
+  color: var(--sui-accent, #4ea1ff);
+}
+.product-grid-demo__count {
+  color: var(--sui-text-muted);
+}
+.product-grid-demo__clear {
+  padding: 3px 10px;
+  border: 1px solid var(--sui-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+}
+.animated-swimlane-demo__page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+}
+.animated-swimlane-demo__intro {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 780px;
+}
+.animated-swimlane-demo__code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.animated-swimlane-demo__controls {
+  display: flex;
+  gap: 8px;
+}
+/* Compound with .surface so these win the Surface base border/layout rules
+   (the collapsed placeholder must read as a dashed box). */
+.surface.swimlane-chart-demo__collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-style: dashed;
+}
+.surface.swimlane-chart-demo__fill {
+  width: 100%;
+  height: 100%;
+}
+.swimlane-chart-demo__stub {
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.swimlane-chart-demo__frame560 {
+  width: 100%;
+  height: 560px;
+  min-width: 360px;
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.scrub-chart-demo__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.scrub-chart-demo__readout {
+  font-size: 13px;
+  color: var(--sui-text-secondary);
+}
+.scrub-chart-demo__strong {
+  color: var(--sui-text-primary);
+}
