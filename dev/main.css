@@ -2381,3 +2381,172 @@
 .cashflow-scrub-chart-demo__token-list {
   padding-left: 20px;
 }
+
+/* ── animation-lab workshop bench ──────────────────────────
+   Scratch animation bench. Genuinely-dynamic values (theme fill/stroke/text,
+   computed card geometry, per-edge arrow colour) bridge through custom
+   properties (--anim-*, manifested cssvar); the mount/visibility animation
+   states are modifier classes; everything else is static chrome. */
+.anim-lab__svg {
+  display: block;
+  overflow: visible;
+}
+.anim-lab__svg--center {
+  margin: 0 auto;
+}
+.anim-lab__stage {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px;
+}
+.anim-lab__stage--fill {
+  width: 100%;
+  box-sizing: border-box;
+}
+.anim-lab__stage--bb {
+  box-sizing: border-box;
+}
+.anim-lab__card {
+  position: relative;
+  width: var(--anim-w);
+  height: var(--anim-h);
+  padding: 6px 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--anim-fill);
+  border: 1px solid var(--anim-stroke);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--sui-text, #e6ecf5);
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease-out;
+}
+.anim-lab__card--visible {
+  cursor: pointer;
+  pointer-events: auto;
+}
+.anim-lab__card--shown {
+  opacity: 1;
+}
+.anim-lab__card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 14px;
+}
+.anim-lab__card-status {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--anim-text);
+}
+.anim-lab__theme-text {
+  color: var(--anim-text);
+}
+.anim-lab__card-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  height: 28px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.anim-lab__card-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 260px;
+  padding: 8px 10px;
+  background: #0c141c;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sui-text, #e6ecf5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 10;
+  white-space: normal;
+}
+.anim-lab__popover-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.anim-lab__popover-meta {
+  color: rgba(255, 255, 255, 0.55);
+}
+.anim-lab__node {
+  height: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--anim-fill);
+  border: 1px solid var(--anim-stroke);
+  color: var(--anim-text);
+  font-size: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.anim-lab__node-status {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.anim-lab__chart-popover {
+  width: 260px;
+  padding: 4px 8px;
+  background: #0c141c;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sui-text, #e6ecf5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  box-sizing: border-box;
+}
+.anim-lab__knobs {
+  margin-top: 12px;
+}
+.anim-lab__knob-label {
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.anim-lab__table {
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.anim-lab__accent {
+  color: var(--sui-accent, #00d4ff);
+}
+.anim-lab__hidden {
+  visibility: hidden;
+}
+.anim-lab__grey-arrow {
+  color: rgba(255, 255, 255, 0.45);
+}
+.anim-lab__arrow {
+  color: var(--anim-arrow);
+}
+.anim-lab__subsection {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sui-text, #e6ecf5);
+  margin-bottom: 4px;
+}
+.anim-lab__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}

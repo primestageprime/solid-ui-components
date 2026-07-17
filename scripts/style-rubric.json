@@ -62,6 +62,7 @@
     "dev/showcases/work-progress-card.tsx": ["measured", "cssvar"],
     "dev/showcases/cashflow-day-cell.tsx": ["proportion", "paint"],
     "dev/showcases/dotchart.tsx": ["cssvar"],
-    "dev/showcases/dag-chart.tsx": ["cssvar"]
+    "dev/showcases/dag-chart.tsx": ["cssvar"],
+    "dev/showcases/workshop/animation-lab.tsx": ["cssvar"]
   }
 }
