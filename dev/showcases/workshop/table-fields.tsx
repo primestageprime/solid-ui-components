@@ -59,8 +59,9 @@ const GEO = {
   float:     { minCh: 10,  maxCh: 16, css: "16ch" },     // "1,234,567.89" + chrome
   money:     { minCh: 10,  maxCh: 22, css: "22ch" },     // "$10,000,000,000.00" + chrome
   duration:  { minCh: 10,  maxCh: 14, css: "14ch" },     // "12h 30m 45s" + chrome
-  // 2 × IconOnlyButton (1.4rem), glyphs ~1 icon-width apart (sm-gap cluster).
-  actions2:  { minCh: 11,  maxCh: 11, css: "5.5rem" },
+  // 2 × IconOnlyButton (1.4rem) + 0.5rem gap + 2rem cell chrome = 5.3rem,
+  // browser-measured exact (n·1.4 + (n-1)·0.5 + 2 rem).
+  actions2:  { minCh: 10.6, maxCh: 10.6, css: "5.3rem" },
   chart:     { minCh: 24,  maxCh: 24, css: "12em" },     // sparkline strip + chrome (10em tripped cell ellipsis; chart cells should drop text-overflow at promotion)
   status:    { minCh: 14,  maxCh: 14, css: "14ch" },
 } satisfies Record<string, FieldGeo>;
