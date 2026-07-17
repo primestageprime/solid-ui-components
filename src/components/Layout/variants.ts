@@ -132,6 +132,14 @@ export const ClusterRow: Component<RowDataProps> = createRow({
   align: "center",
   gap: "sm",
 });
+// IconClusterRow — a row of icon-only action buttons with 1rem breathing room
+// around each icon (table action columns; ruled 2026-07-17). The md gap plus
+// the cell's own padding gives every icon its 1rem surround.
+export const IconClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  justify: "center",
+  gap: "md",
+});
 // StretchRow — a plain gapped row whose children STRETCH to equal height (the
 // flex default cross-axis). For a row of equal-height columns/cards where a
 // taller cell makes its neighbours grow to match (e.g. a swimlane of cards).

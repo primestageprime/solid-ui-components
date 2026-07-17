@@ -57,6 +57,9 @@
 .row--gap-sm {
   gap: 8px;
 }
+.row--gap-md {
+  gap: 1rem;
+}
 
 .row--align-start {
   align-items: flex-start;

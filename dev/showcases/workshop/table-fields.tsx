@@ -20,9 +20,9 @@ import {
   type TableColumn,
 } from "../../../src/components/Table";
 import { Checkbox } from "../../../src/components/Checkbox";
-import { GhostButton } from "../../../src/components/Button";
+import { GhostButton, IconOnlyButton } from "../../../src/components/Button";
 import { Icon, type IconName } from "../../../src/components/Icon";
-import { ClusterRow, ContentStack } from "../../../src/components/Layout";
+import { ClusterRow, IconClusterRow, ContentStack } from "../../../src/components/Layout";
 import { Sparkline } from "../../../src/components/Sparkline";
 import { SmallStatusLight } from "../../../src/components/StatusLight";
 
@@ -42,16 +42,27 @@ interface FieldGeo {
   /** CSS width the factory applies internally — clients never see it. */
   css?: string;
 }
+// Widths are TOTAL column widths under table-layout: fixed — content basis
+// plus the cell's own chrome (16px ≈ 2ch padding per side). Bench-measured:
+// hinted widths without fixedLayout get squeezed by auto layout (the checkbox
+// column collapsed to a 1px content box).
 const GEO = {
-  selection: { minCh: 4.5, maxCh: 4.5, css: "2.25em" },
-  name:      { minCh: 12,  maxCh: 80 },              // expands, ellipsis past cap
-  dateTime:  { minCh: 21,  maxCh: 21, css: "21ch" }, // "2026-07-15 14:10:00"
-  int:       { minCh: 6,   maxCh: 10, css: "10ch" },
-  money:     { minCh: 8,   maxCh: 18, css: "18ch" }, // "$10,000,000,000.00"
-  actions2:  { minCh: 18,  maxCh: 18, css: "9em" },  // 2 icon buttons + button/cell padding + gap (measured on bench)
-  chart:     { minCh: 20,  maxCh: 20, css: "10em" }, // sparkline strip + cell padding
-  status:    { minCh: 12,  maxCh: 12, css: "12ch" },
+  selection: { minCh: 6.5, maxCh: 6.5, css: "3.25rem" }, // 18px checkbox + 32px padding
+  name:      { minCh: 12,  maxCh: 80 },                  // expands, ellipsis past cap
+  dateTime:  { minCh: 23,  maxCh: 23, css: "23ch" },     // "2026-07-15 14:10:00" (19ch) + chrome
+  int:       { minCh: 8,   maxCh: 14, css: "14ch" },     // "9,999,999" + chrome
+  money:     { minCh: 10,  maxCh: 22, css: "22ch" },     // "$10,000,000,000.00" + chrome
+  // 2 × IconOnlyButton (1.4rem) with 1rem around each icon (md-gap cluster).
+  actions2:  { minCh: 12,  maxCh: 12, css: "6rem" },
+  chart:     { minCh: 24,  maxCh: 24, css: "12em" },     // sparkline strip + chrome (10em tripped cell ellipsis; chart cells should drop text-overflow at promotion)
+  status:    { minCh: 14,  maxCh: 14, css: "14ch" },
 } satisfies Record<string, FieldGeo>;
+
+/** Header alignment by field type: left for flowing text, center for
+ *  fixed-width text/icons (ruled 2026-07-17). Values keep their own align. */
+const centered = (label: string): JSX.Element => (
+  <span class="tf-th-center">{label}</span>
+);
 
 type FieldCol<T> = TableColumn<T> & { geo: FieldGeo };
 
@@ -75,7 +86,7 @@ const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
 
 const intCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
-  header: humanize(String(key)),
+  header: centered(humanize(String(key))),
   align: "right",
   width: GEO.int.css,
   sortable: true,
@@ -85,7 +96,7 @@ const intCol = <T,>(key: keyof T): FieldCol<T> => ({
 
 const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
-  header: humanize(String(key)),
+  header: centered(humanize(String(key))),
   align: "right",
   width: GEO.money.css,
   sortable: true,
@@ -95,7 +106,7 @@ const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
 
 const dateTimeCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
-  header: humanize(String(key)),
+  header: centered(humanize(String(key))),
   width: GEO.dateTime.css,
   sortable: true,
   geo: GEO.dateTime,
@@ -124,7 +135,7 @@ const col = <T,>(
   geoKey: keyof typeof GEO = "status",
 ): FieldCol<T> => ({
   id,
-  header,
+  header: geoKey === "name" ? header : centered(header),
   width: GEO[geoKey].css,
   geo: GEO[geoKey],
   accessor: cell,
@@ -138,9 +149,9 @@ const clusterCol = <T,>(actions: FieldCol<T>[]): FieldCol<T> => ({
   width: GEO.actions2.css,
   geo: GEO.actions2,
   accessor: (row) => (
-    <ClusterRow>
+    <IconClusterRow>
       {actions.map((a) => (a.accessor as (r: T) => JSX.Element)(row))}
-    </ClusterRow>
+    </IconClusterRow>
   ),
 });
 
@@ -151,9 +162,9 @@ const actionCol = <T,>(id: string, run: (row: T) => void): FieldCol<T> => ({
   header: "",
   geo: GEO.actions2,
   accessor: (row) => (
-    <GhostButton aria-label={humanize(id)} title={humanize(id)} onClick={() => run(row)}>
+    <IconOnlyButton aria-label={humanize(id)} title={humanize(id)} onClick={() => run(row)}>
       <Icon name={ACTION_ICONS[id] ?? "settings"} size="sm" />
-    </GhostButton>
+    </IconOnlyButton>
   ),
 });
 
@@ -294,7 +305,7 @@ const TableFieldsBench: Component = () => {
             "--tf-table-max": `${workers.maxCh}ch`,
           }}
         >
-          <DataTable data={WORKERS} columns={workers.columns} />
+          <DataTable data={WORKERS} columns={workers.columns} fixedLayout />
         </div>
         <TextSublabel>
           {`selected: ${selected().size} — width budget Σmin ${workers.minCh}ch → Σmax ${workers.maxCh}ch; only name flexes between them`}
@@ -310,7 +321,7 @@ const TableFieldsBench: Component = () => {
             "--tf-table-max": `${batchTable.maxCh}ch`,
           }}
         >
-          <DataTable data={batches} columns={batchTable.columns} />
+          <DataTable data={batches} columns={batchTable.columns} fixedLayout />
         </div>
         <TextSublabel>
           {`width budget Σmin ${batchTable.minCh}ch → Σmax ${batchTable.maxCh}ch — the table caps at Σmax and becomes a dashboard tile, not wallpaper`}

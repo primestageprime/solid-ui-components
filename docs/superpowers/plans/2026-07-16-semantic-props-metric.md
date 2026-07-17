@@ -88,9 +88,23 @@ Below Σ min, container-query drop-priority hides columns (name never drops).
 | chart      | em   | 10       | 10       | fixed         | sparkline strip (bench: 8em clipped) |
 | actions(n) | em   | n×4.5    | n×4.5    | fixed         | standard icon buttons (edit=pencil, delete=trash; bench-measured: 2 buttons need 9em, not 5) |
 
-Bench corrections vs the first paper sketch: actions 2×→9em (button+cell
-padding real chrome), chart→10em (Sparkline strip + padding). Standard action
-widths must be DERIVED from button metrics at promotion, not guessed.
+Bench corrections vs the first paper sketch (each found by rendering, not
+reasoning — keep the habit at promotion):
+- Widths are TOTAL column widths and must include cell chrome (16px ≈ 2ch
+  padding/side): dateTime 23ch, int ≤14ch, money ≤22ch, status 14ch,
+  selection 3.25rem (18px checkbox + 32px padding — anything less clips).
+- `table-layout: fixed` is REQUIRED — auto layout squeezes hinted widths
+  (the checkbox column collapsed to a 1px content box). Pairs with name's
+  `ellipsis` flex column.
+- actions(n): IconOnlyButton (1.4rem square) per action in an IconClusterRow
+  (new Layout variant, md/1rem gap — Row gap scale gained `md` on real
+  demand); 2 actions = 6rem.
+- chart: 12em (10em tripped the cell's text-overflow ellipsis; chart cells
+  should drop text-overflow entirely at promotion).
+- Header alignment by field type (ruled): LEFT for flowing text (name/text),
+  CENTER for fixed-width text/icons (dateTime/date/int/float/money/duration/
+  status/chart/actions); values keep their own alignment. Centering must be
+  applied to BaseTable's header-content flex wrapper, not inside it.
 Icons `edit` (pencil) and `trash` added to the Icon set per ruling.
 
 ### 3b. Other CSS-typed props

@@ -2558,3 +2558,13 @@
   min-width: min(var(--tf-table-min), 100%);
   max-width: var(--tf-table-max);
 }
+.tf-th-center {
+  text-align: center;
+}
+/* Center the fixed-width column's whole header row (label + sort indicator):
+   BaseTable wraps header content in an inline-flex span, so centering must
+   happen on the wrapper, not inside the label span. */
+th:has(.tf-th-center) .hud-table__header-content {
+  width: 100%;
+  justify-content: center;
+}

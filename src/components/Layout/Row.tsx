@@ -10,7 +10,7 @@ import { mergeStyle } from "./mergeStyle";
 import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  gap?: "xs" | "sm";
+  gap?: "xs" | "sm" | "md";
   align?: "start" | "center" | "end" | "stretch" | "baseline";
   justify?: "start" | "center" | "end" | "between";
   wrap?: boolean;
