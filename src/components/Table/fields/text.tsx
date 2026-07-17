@@ -7,23 +7,28 @@
 // default). Composes LongTextCell from ../textCells. See
 // docs/superpowers/plans/2026-07-16-semantic-props-metric.md §3a-geometry.
 import { LongTextCell } from "../textCells";
-import { humanize, type FieldCol, type FieldGeo } from "./shared";
+import { humanize, toneWrap, type FieldCol, type FieldGeo, type ToneFn } from "./shared";
 
 /** Secondary text: expands between bounds, then ellipsis; yields to `name`. */
 export const geo: FieldGeo = { minCh: 8, maxCh: 40, padPx: 16 };
 
+export interface TextColOpts<T> {
+  /** Configure-time treatment: (value, row) → Tone (ruled 2026-07-17). */
+  tone?: ToneFn<T, string>;
+}
+
 /** A secondary-text column for `key`: humanized left header, sortable, clipped. */
-export const textCol = <T,>(key: keyof T): FieldCol<T> => ({
+export const textCol = <T,>(key: keyof T, opts: TextColOpts<T> = {}): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   ellipsis: true,
   sortable: true,
   geo,
-  accessor: (row) => (
-    <LongTextCell
-      value={String(row[key] ?? "")}
-      clampLines={1}
-      reveal="tooltip"
-    />
-  ),
+  accessor: (row) => {
+    const value = String(row[key] ?? "");
+    return toneWrap(
+      opts.tone?.(value, row),
+      <LongTextCell value={value} clampLines={1} reveal="tooltip" />,
+    );
+  },
 });

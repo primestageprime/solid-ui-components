@@ -40,7 +40,7 @@ describe("float field", () => {
   });
 
   it("accessor honors an explicit precision", () => {
-    const col = floatCol<Row>("ratio", 4);
+    const col = floatCol<Row>("ratio", { precision: 4 });
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: Math.PI })}</>);
     expect(container.querySelector(".cell-float")?.textContent).toBe("3.1416");
   });

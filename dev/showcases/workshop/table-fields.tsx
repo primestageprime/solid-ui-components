@@ -10,9 +10,10 @@ import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { SectionTitle, TextSublabel, TextBody } from "../../../src/components/Text";
-import { DataTable } from "../../../src/components/Table";
 import {
   type FieldCol,
+  type FieldSpec,
+  FieldTable,
   behaviorOf,
   col,
   resolveFields,
@@ -125,24 +126,26 @@ const TableFieldsBench: Component = () => {
   const [batches, setBatches] = createStore<Batch[]>(
     structuredClone(INITIAL_BATCHES),
   );
-  const batchTable = resolveFields<Batch>(
-    [
-      "name",
-      "createdAt",
-      col("trend", "Trend", (row) => (
-        <CenteredWrapRow>
-          <Sparkline values={row.throughputHistory} />
-        </CenteredWrapRow>
-      ), "chart"),
-      col("health", "Health", (row) => (
-        <EndWrapRow>
-          <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
-          <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
-        </EndWrapRow>
-      ), "status"),
-    ],
-    { name: nameCol(), createdAt: dateTimeCol("createdAt") },
-  );
+  const batchSpecs: FieldSpec<Batch>[] = [
+    "name",
+    "createdAt",
+    col("trend", "Trend", (row) => (
+      <CenteredWrapRow>
+        <Sparkline values={row.throughputHistory} />
+      </CenteredWrapRow>
+    ), "chart"),
+    col("health", "Health", (row) => (
+      <EndWrapRow>
+        <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
+        <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
+      </EndWrapRow>
+    ), "status"),
+  ];
+  const batchRegistry: Record<string, FieldCol<Batch>> = {
+    name: nameCol(),
+    createdAt: dateTimeCol("createdAt"),
+  };
+  const batchTable = resolveFields(batchSpecs, batchRegistry);
 
   const tick = () =>
     setBatches(
@@ -224,15 +227,11 @@ const TableFieldsBench: Component = () => {
         <TextSublabel>
           {'fields = ["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]]'}
         </TextSublabel>
-        <div
-          class="sui-field-frame"
-          style={{
-            "--sui-field-table-min": workers.minW,
-            "--sui-field-table-max": workers.maxW,
-          }}
-        >
-          <DataTable data={WORKERS} columns={workers.columns} fixedLayout />
-        </div>
+        <FieldTable
+          data={WORKERS}
+          fields={["selected", "name", "createdAt", "hours", "amount", ["edit", "delete"]]}
+          registry={workerFields}
+        />
         <TextSublabel>
           {`selected: ${selected().size} — width budget Σmin ${workers.minCh}ch → Σmax ${workers.maxCh}ch; only name flexes between them`}
         </TextSublabel>
@@ -240,15 +239,7 @@ const TableFieldsBench: Component = () => {
         <TextSublabel>
           {'fields = ["name", "createdAt", col("trend", …fn, "chart"), col("health", …fn, "status")] — two weird fields inserted inline'}
         </TextSublabel>
-        <div
-          class="sui-field-frame"
-          style={{
-            "--sui-field-table-min": batchTable.minW,
-            "--sui-field-table-max": batchTable.maxW,
-          }}
-        >
-          <DataTable data={batches} columns={batchTable.columns} fixedLayout />
-        </div>
+        <FieldTable data={batches} fields={batchSpecs} registry={batchRegistry} />
         <TextSublabel>
           {`width budget Σmin ${batchTable.minCh}ch → Σmax ${batchTable.maxCh}ch — the table caps at Σmax and becomes a dashboard tile, not wallpaper`}
         </TextSublabel>
@@ -274,15 +265,7 @@ const TableFieldsBench: Component = () => {
                 <TextSublabel>
                   {`${tile.label} · ${t.minCh}–${t.maxCh}ch · ${behaviorOf(tile.c.geo)}`}
                 </TextSublabel>
-                <div
-                  class="sui-field-frame"
-                  style={{
-                    "--sui-field-table-min": t.minW,
-                    "--sui-field-table-max": t.maxW,
-                  }}
-                >
-                  <DataTable data={SPECIMENS} columns={t.columns} fixedLayout />
-                </div>
+                <FieldTable data={SPECIMENS} fields={[tile.c]} registry={{}} />
               </ContentStack>
             );
           })}

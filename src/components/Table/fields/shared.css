@@ -42,3 +42,16 @@ th:has(.sui-field-th-center) .hud-table__header-content {
   padding-left: 8px;
   padding-right: 8px;
 }
+
+/* Semantic tones (ruled 2026-07-17): the configure-time treatment vocabulary.
+   A tone names a meaning; the theme owns the color. Cell renderers that pin
+   their own color (.cell-longtext) are re-pointed at the tone via `inherit` —
+   the attribute selector outranks their double-class specificity. */
+.sui-field-tone--success { color: var(--sui-success); }
+.sui-field-tone--warning { color: var(--sui-warning); }
+.sui-field-tone--danger  { color: var(--sui-danger); }
+.sui-field-tone--accent  { color: var(--sui-accent); }
+.sui-field-tone--muted   { color: var(--sui-text-muted); }
+span[class*="sui-field-tone--"] :is(.cell-longtext, .cell-longtext.cell-longtext--tooltip, .cell-string) {
+  color: inherit;
+}

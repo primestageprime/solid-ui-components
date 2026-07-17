@@ -47,6 +47,22 @@ export interface FieldGeo {
 /** A resolved field column: the TableColumn plus its geometry. */
 export type FieldCol<T> = TableColumn<T> & { geo: FieldGeo };
 
+/** Semantic treatment for a cell value (ruled 2026-07-17): columns may be
+ *  configured with a function (value, row) → Tone at REGISTRY time; the tone
+ *  maps to theme color inside SUI. The client names a meaning, never a color. */
+export type Tone = "default" | "success" | "warning" | "danger" | "accent" | "muted";
+
+/** Configure-time treatment function: derives a Tone from the cell's value. */
+export type ToneFn<T, V> = (value: V, row: T) => Tone;
+
+/** Wrap a cell in its tone class ("default" and absent tone add nothing). */
+export const toneWrap = (tone: Tone | undefined, cell: JSX.Element): JSX.Element =>
+  tone && tone !== "default" ? (
+    <span class={`sui-field-tone--${tone}`}>{cell}</span>
+  ) : (
+    cell
+  );
+
 /** A fields entry: a known id, an action-id cluster, or an explicit column. */
 export type FieldSpec<T> = string | string[] | FieldCol<T>;
 
