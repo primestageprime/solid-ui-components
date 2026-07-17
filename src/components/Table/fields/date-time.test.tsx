@@ -21,6 +21,10 @@ describe("dateTime field", () => {
     expect(col.geo).toBe(geo);
   });
 
+  it("centers values in the fixed-width column", () => {
+    expect(dateTimeCol<Row>("createdAt").align).toBe("center");
+  });
+
   it("header is centered and humanized — trailing ' At' is stripped", () => {
     const col = dateTimeCol<Row>("createdAt");
     const { container } = render(() => col.header as any);
