@@ -25,7 +25,7 @@ import {
 import { Checkbox } from "../../../src/components/Checkbox";
 import { GhostButton, IconOnlyButton } from "../../../src/components/Button";
 import { Icon, type IconName } from "../../../src/components/Icon";
-import { ClusterRow, IconClusterRow, ContentStack } from "../../../src/components/Layout";
+import { ClusterRow, IconClusterRow, ContentStack, CenteredWrapRow } from "../../../src/components/Layout";
 import { Sparkline } from "../../../src/components/Sparkline";
 import { SmallStatusLight } from "../../../src/components/StatusLight";
 
@@ -59,8 +59,8 @@ const GEO = {
   float:     { minCh: 10,  maxCh: 16, css: "16ch" },     // "1,234,567.89" + chrome
   money:     { minCh: 10,  maxCh: 22, css: "22ch" },     // "$10,000,000,000.00" + chrome
   duration:  { minCh: 10,  maxCh: 14, css: "14ch" },     // "12h 30m 45s" + chrome
-  // 2 × IconOnlyButton (1.4rem) with 1rem around each icon (md-gap cluster).
-  actions2:  { minCh: 12,  maxCh: 12, css: "6rem" },
+  // 2 × IconOnlyButton (1.4rem), glyphs ~1 icon-width apart (sm-gap cluster).
+  actions2:  { minCh: 11,  maxCh: 11, css: "5.5rem" },
   chart:     { minCh: 24,  maxCh: 24, css: "12em" },     // sparkline strip + chrome (10em tripped cell ellipsis; chart cells should drop text-overflow at promotion)
   status:    { minCh: 14,  maxCh: 14, css: "14ch" },
 } satisfies Record<string, FieldGeo>;
@@ -114,6 +114,7 @@ const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
 const dateTimeCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
   header: centered(humanize(String(key))),
+  align: "center",
   width: GEO.dateTime.css,
   sortable: true,
   geo: GEO.dateTime,
@@ -132,6 +133,7 @@ const textCol = <T,>(key: keyof T): FieldCol<T> => ({
 const dateCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),
   header: centered(humanize(String(key))),
+  align: "center",
   width: GEO.date.css,
   sortable: true,
   geo: GEO.date,
@@ -180,7 +182,9 @@ const col = <T,>(
   geoKey: keyof typeof GEO = "status",
 ): FieldCol<T> => ({
   id,
-  header: geoKey === "name" ? header : centered(header),
+  // Fixed-width fields appear centered — headers AND values (ruled 2026-07-17).
+  header: geoKey === "name" || geoKey === "text" ? header : centered(header),
+  align: geoKey === "name" || geoKey === "text" ? undefined : "center",
   width: GEO[geoKey].css,
   geo: GEO[geoKey],
   accessor: cell,
@@ -334,13 +338,15 @@ const TableFieldsBench: Component = () => {
       "name",
       "createdAt",
       col("trend", "Trend", (row) => (
-        <Sparkline values={row.throughputHistory} />
+        <CenteredWrapRow>
+          <Sparkline values={row.throughputHistory} />
+        </CenteredWrapRow>
       ), "chart"),
       col("health", "Health", (row) => (
-        <ClusterRow>
+        <CenteredWrapRow>
           <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
           <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
-        </ClusterRow>
+        </CenteredWrapRow>
       ), "status"),
     ],
     { name: nameCol(), createdAt: dateTimeCol("createdAt") },
@@ -390,15 +396,19 @@ const TableFieldsBench: Component = () => {
     {
       label: "status",
       c: col("health", "Health", (r) => (
-        <ClusterRow>
+        <CenteredWrapRow>
           <SmallStatusLight variant={r.failed > 0 ? "error" : "active"} />
           <TextSublabel>{`${r.done}/${r.total}`}</TextSublabel>
-        </ClusterRow>
+        </CenteredWrapRow>
       ), "status"),
     },
     {
       label: "chart",
-      c: col("trend", "Trend", (r) => <Sparkline values={r.history} />, "chart"),
+      c: col("trend", "Trend", (r) => (
+        <CenteredWrapRow>
+          <Sparkline values={r.history} />
+        </CenteredWrapRow>
+      ), "chart"),
     },
     {
       label: "actions",
