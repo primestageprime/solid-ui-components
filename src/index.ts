@@ -261,3 +261,13 @@ export type {
   EffectInstance,
   Step,
 } from "./internal/animation/choreography";
+
+// Theme-switching API — see src/themes/README.md.
+export {
+  THEMES,
+  loadTheme,
+  loadBaseline,
+  getPersistedTheme,
+  persistTheme,
+} from "./themes/loader";
+export type { ThemeId, ThemeEntry } from "./themes/manifest";
