@@ -1,0 +1,12 @@
+/* Table fields — shared chrome for the fields-as-functions system. */
+
+/* Centered header for fixed-width field types (ruled 2026-07-17). BaseTable
+   wraps header content in an inline-flex span, so centering must be applied
+   to the wrapper, not inside the label span. */
+.sui-field-th-center {
+  text-align: center;
+}
+th:has(.sui-field-th-center) .hud-table__header-content {
+  width: 100%;
+  justify-content: center;
+}
