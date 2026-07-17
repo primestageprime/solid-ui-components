@@ -51,16 +51,17 @@ body {
 :root {
   /* ---- Accent — STAX lime ----
      Raw lime on white is ~1.9:1, so the accent is reserved for fills next to
-     dark ink; --sui-accent-dim is the text-safe darker lime. */
+     dark ink; --sui-accent-dim is the text-safe darker lime (retuned to
+     ~4.5:1+ on both bg-primary and bg-secondary, same hue/chroma as accent). */
   --sui-accent: #a6ce39;
   --sui-accent-rgb: 166, 206, 57;
-  --sui-accent-dim: #7fa32b;
+  --sui-accent-dim: #5f7a20;
 
   /* ---- Semantic ---- */
   --sui-danger: #b3372c;
   --sui-danger-rgb: 179, 55, 44;
-  --sui-warning: #c78a1f;
-  --sui-warning-rgb: 199, 138, 31;
+  --sui-warning: #966817;
+  --sui-warning-rgb: 150, 104, 23;
   --sui-success: #2f7d4f;
   --sui-success-rgb: 47, 125, 79;
 
@@ -75,10 +76,10 @@ body {
   /* ---- Text — pine ink ---- */
   --sui-text-primary: #12312b;
   --sui-text-secondary: #40615a;
-  --sui-text-muted: #6f8680;
+  --sui-text-muted: #617570;
 
   /* ---- Borders ---- */
-  --sui-border: #d5ded9;
+  --sui-border: #ced8d3;
   --sui-border-bright: #b9c9c2;
   --sui-border-focus: #0d4a42;
 
@@ -113,8 +114,8 @@ body {
 
   /* ---- Chart status colors ---- */
   --status-full: #2f7d4f;
-  --status-partial: #c78a1f;
-  --status-sparse: #d9541e;
+  --status-partial: #9a6b18;
+  --status-sparse: #c74d1b;
   --status-missing: #b3372c;
 
   /* ---- Chart chrome ---- */

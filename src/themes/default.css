@@ -15,12 +15,12 @@
 :root {
   /* ---- Accent / Primary ---- */
   --sui-accent: #3b82f6;
-  --sui-accent-dim: #2563eb;
+  --sui-accent-dim: #5585ef;
   --sui-accent-rgb: 59, 130, 246;
 
   /* ---- Semantic Colors ---- */
-  --sui-danger: #ef4444;
-  --sui-danger-rgb: 239, 68, 68;
+  --sui-danger: #f05151;
+  --sui-danger-rgb: 240, 81, 81;
   --sui-warning: #f59e0b;
   --sui-warning-rgb: 245, 158, 11;
   --sui-success: #22c55e;
@@ -36,7 +36,7 @@
   /* ---- Text ---- */
   --sui-text-primary: #f1f5f9;
   --sui-text-secondary: #94a3b8;
-  --sui-text-muted: #64748b;
+  --sui-text-muted: #7b8aa0;
 
   /* ---- Borders ---- */
   --sui-border: #334155;
@@ -77,13 +77,13 @@
   --status-full: #00d4ff;
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
-  --status-missing: #ff0040;
+  --status-missing: #ff3769;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
      reference labels). Held separate from --sui-text-muted so chart chrome
      can be tinted independently from broader app muted text. */
-  --sui-chart-tick-color: #64748b;
+  --sui-chart-tick-color: #7b8aa0;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      Consumed by violation charts (jtf-ui ViolationChart). Held as tokens so a

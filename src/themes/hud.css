@@ -79,7 +79,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #e0f4ff;
   --sui-text-secondary: #7aa8c0;
-  --sui-text-muted: #4a6a80;
+  --sui-text-muted: #5d86a2;
 
   /* ---- Borders ---- */
   --sui-border: rgba(var(--sui-accent-rgb), 0.3);
@@ -126,13 +126,13 @@ body {
   --status-full: #00d4ff;
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
-  --status-missing: #ff0040;
+  --status-missing: #ff0a48;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
      reference labels). Cool blue-gray reads as quiet HUD chrome against the
      deep-navy backgrounds. */
-  --sui-chart-tick-color: #4a6a80;
+  --sui-chart-tick-color: #5d86a2;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css for the rationale. HUD's brighter red (#ff0040) matches

@@ -61,10 +61,10 @@ body {
   /* ---- Semantic ---- */
   --sui-danger: #a8443a;
   --sui-danger-rgb: 168, 68, 58;
-  --sui-warning: #c58a2c;
-  --sui-warning-rgb: 197, 138, 44;
-  --sui-success: #5c7c5c;
-  --sui-success-rgb: 92, 124, 92;
+  --sui-warning: #926621;
+  --sui-warning-rgb: 146, 102, 33;
+  --sui-success: #577657;
+  --sui-success-rgb: 87, 118, 87;
 
   /* ---- Backgrounds — bone family ---- */
   --sui-bg-deep: #efeae0;
@@ -75,11 +75,11 @@ body {
 
   /* ---- Text ---- */
   --sui-text-primary: #2b1d14;
-  --sui-text-secondary: #8c7861;
-  --sui-text-muted: #b8a78c;
+  --sui-text-secondary: #7d6b57;
+  --sui-text-muted: #7e6c4e;
 
   /* ---- Borders ---- */
-  --sui-border: #e5dcc9;
+  --sui-border: #ddd1b9;
   --sui-border-bright: #d9cdb4;
   --sui-border-focus: #c96442;
 
@@ -113,16 +113,16 @@ body {
   --sui-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* ---- Chart status colors — warm mapping ---- */
-  --status-full: #5c7c5c;
-  --status-partial: #c58a2c;
-  --status-sparse: #c96442;
+  --status-full: #5b7b5b;
+  --status-partial: #986a22;
+  --status-sparse: #b85635;
   --status-missing: #a8443a;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, kept separate from `--sui-text-muted` so the
      chart's in-plot chrome can read as warm-muted against the bone bg
      without being tied to the broader surface/table muted hue. */
-  --sui-chart-tick-color: #8c7861;
+  --sui-chart-tick-color: #83705b;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css. Warm-mapped to the bronze palette. */
@@ -162,9 +162,10 @@ body {
    palette-specific neutral button)
    ============================================ */
 
-/* Solid neutral. Uses an inlined warm-dark tone because var(--sui-text-secondary)
-   on white sits at 4.22:1 — just below WCAG AA. #6B5C48 is between text-secondary
-   and text-primary in lightness; ~5.8:1 on white. */
+/* Solid neutral. Uses an inlined warm-dark tone deeper than
+   var(--sui-text-secondary) (now ~4.8:1 on white after the WCAG retune) for
+   a still-more-confident filled-control tone. #6B5C48 sits between
+   text-secondary and text-primary in lightness; ~5.8:1 on white. */
 .sui-btn--secondary {
   background: #6b5c48;
   border-color: #6b5c48;

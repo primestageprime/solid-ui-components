@@ -58,11 +58,11 @@ body {
   /* ---- Accent ---- */
   --sui-accent: #e07a4f;
   --sui-accent-rgb: 224, 122, 79;
-  --sui-accent-dim: #b85f38;
+  --sui-accent-dim: #c56940;
 
   /* ---- Semantic ---- */
-  --sui-danger: #d4584e;
-  --sui-danger-rgb: 212, 88, 78;
+  --sui-danger: #d55b51;
+  --sui-danger-rgb: 213, 91, 81;
   --sui-warning: #e0a040;
   --sui-warning-rgb: 224, 160, 64;
   --sui-success: #7ba67b;
@@ -78,7 +78,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #f4ecd8;
   --sui-text-secondary: #c8b89a;
-  --sui-text-muted: #8c7861;
+  --sui-text-muted: #947e66;
 
   /* ---- Borders ---- */
   --sui-border: #4a3625;
@@ -118,13 +118,13 @@ body {
   --status-full: #7ba67b;
   --status-partial: #e0a040;
   --status-sparse: #e07a4f;
-  --status-missing: #d4584e;
+  --status-missing: #d55b51;
 
   /* ---- Chart chrome ----
-     Axis tick + label colour. Reuses --sui-text-muted (#8C7861) which on
-     dark walnut reads as quietly-warm chrome — the same hex Bronze light
-     uses for --sui-text-secondary, but in dark mode it lands as "muted". */
-  --sui-chart-tick-color: #8c7861;
+     Axis tick + label colour. Matches --sui-text-muted (retuned to #947E66
+     for WCAG 4.5:1 on both bg-primary and bg-secondary) which on dark
+     walnut reads as quietly-warm chrome. */
+  --sui-chart-tick-color: #947e66;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css. Warm-mapped to the bronze-dark palette. */

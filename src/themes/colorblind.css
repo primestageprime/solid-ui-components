@@ -73,7 +73,7 @@ body {
   /* ---- Accent / Primary (cyan — safe across CVD types) ---- */
   --sui-accent: #3aa0ff;
   --sui-accent-rgb: 58, 160, 255;
-  --sui-accent-dim: #2d7fcc;
+  --sui-accent-dim: #3888d3;
 
   /* ---- Semantic Colors — CB-safe blue/orange pair ----
      danger=vermilion, success=blue, warning=amber. */
@@ -94,7 +94,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #eaf1f8;
   --sui-text-secondary: #9fb2c4;
-  --sui-text-muted: #6b7e90;
+  --sui-text-muted: #748798;
 
   /* ---- Borders ---- */
   --sui-border: #2c3a4a;
@@ -142,7 +142,7 @@ body {
   --status-missing: #e66100; /* worst — vermilion */
 
   /* ---- Chart chrome ---- */
-  --sui-chart-tick-color: #6b7e90;
+  --sui-chart-tick-color: #748798;
 
   /* ---- Chart semantics — CB-safe ----
      Violation/threshold move to vermilion (matches --sui-danger). Transition
