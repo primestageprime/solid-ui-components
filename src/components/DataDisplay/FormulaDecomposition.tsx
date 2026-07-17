@@ -52,6 +52,13 @@ export interface FormulaConfig {
   comparison?: "lt" | "lte" | "gt" | "gte";
   /** Decimal places for result, default 4 */
   resultPrecision?: number;
+  /**
+   * Opt-in: format the computed result to N significant figures
+   * (`Number(value).toPrecision(resultSigFigs)`) instead of a fixed
+   * decimal-place count. When unset, behavior is unchanged — the
+   * result is formatted via `resultPrecision`/`toFixed`.
+   */
+  resultSigFigs?: number;
   /** Compute the result from variable values */
   compute: (v: Record<string, number>) => number;
   /** Generate LaTeX string; must include \var{result}{resultStr} for result highlighting */
@@ -79,8 +86,12 @@ function computeResult(
   config: FormulaConfig,
   values: Record<string, number>,
 ): string {
+  const result = config.compute(values);
+  if (config.resultSigFigs != null) {
+    return Number(result).toPrecision(config.resultSigFigs);
+  }
   const precision = config.resultPrecision ?? 4;
-  return config.compute(values).toFixed(precision);
+  return result.toFixed(precision);
 }
 
 function isCompliant(config: FormulaConfig, resultValue: number): boolean {
