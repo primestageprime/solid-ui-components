@@ -1,9 +1,10 @@
 /* /health route — dev-gallery chrome for the SUI health ratchet viewer. */
 
 .health-view {
-  max-width: 1100px;
+  /* Fluid — the ratchet table earns the full viewport. */
+  max-width: none;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -43,8 +44,8 @@
 .health-summary-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 10px 14px;
   border: 1px solid var(--sui-border);
   border-radius: 4px;
   background: var(--sui-bg-secondary);
@@ -53,6 +54,16 @@
 .health-summary-item__label {
   font-size: 10px;
   color: var(--sui-text-muted);
+}
+
+.health-summary-item__trend {
+  margin-top: 2px;
+}
+
+.health-summary-item__range {
+  font-size: 10px;
+  color: var(--sui-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .health-cell {

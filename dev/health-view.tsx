@@ -8,6 +8,7 @@ import baselineJson from "../scripts/health-baseline.json";
 import historyJson from "../scripts/health-history.json";
 import { DataTable, type TableColumn } from "../src/components/Table";
 import { Icon } from "../src/components/Icon";
+import { Sparkline } from "../src/components/Sparkline";
 import "./health-view.css";
 
 type Metrics = Record<string, number>;
@@ -16,7 +17,20 @@ type HistoryEntry = { at: string; metrics: Metrics; baseline?: Metrics };
 const baseline = baselineJson as Metrics;
 const history = historyJson as HistoryEntry[];
 
-const METRIC_KEYS = Object.keys(baseline);
+const latestMetrics = history[history.length - 1]?.metrics ?? baseline;
+
+// Biggest offenders lead: columns and tiles sort by current value, descending,
+// so the zeros drift right as the ratchet does its job. Alphabetical tiebreak
+// keeps the boring (all-zero) tail stable between runs.
+const METRIC_KEYS = Object.keys(baseline).sort(
+  (a, b) =>
+    (latestMetrics[b] ?? baseline[b]) - (latestMetrics[a] ?? baseline[a]) ||
+    a.localeCompare(b),
+);
+
+/** Chronological series for one metric, skipping runs that predate it. */
+const seriesFor = (key: string): number[] =>
+  history.filter((h) => h.metrics[key] != null).map((h) => h.metrics[key]);
 
 // Rows render newest-first — the row you care about is the latest run.
 type HealthRow = HistoryEntry & { index: number };
@@ -89,14 +103,33 @@ export const HealthView: Component = () => (
       </p>
     </header>
 
+    {/* Small-multiple trend tiles — one per metric, own scale, biggest
+        offender left-most. A flat line on the floor is the happy state. */}
     <section class="health-view__summary">
       <For each={METRIC_KEYS}>
-        {(key) => (
-          <div class="health-summary-item">
-            <span class="health-summary-item__label">{key}</span>
-            {metricCell(latest?.metrics[key] ?? baseline[key], baseline[key])}
-          </div>
-        )}
+        {(key) => {
+          const values = seriesFor(key);
+          const start = values[0] ?? baseline[key];
+          const now = latest?.metrics[key] ?? baseline[key];
+          return (
+            <div class="health-summary-item">
+              <span class="health-summary-item__label">{key}</span>
+              {metricCell(now, baseline[key])}
+              <Sparkline
+                class="health-summary-item__trend"
+                values={values.length > 0 ? values : [baseline[key]]}
+                width={168}
+                height={34}
+                color={now === 0 ? "var(--sui-success)" : "var(--sui-accent)"}
+              />
+              <span class="health-summary-item__range">
+                <Show when={start !== now} fallback={<>steady at {now}</>}>
+                  {start} → {now}
+                </Show>
+              </span>
+            </div>
+          );
+        }}
       </For>
     </section>
 
