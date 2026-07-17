@@ -66,12 +66,14 @@ export const toneWrap = (tone: Tone | undefined, cell: JSX.Element): JSX.Element
 /** A fields entry: a known id, an action-id cluster, or an explicit column. */
 export type FieldSpec<T> = string | string[] | FieldCol<T>;
 
-/** "amountCents" → "Amount": humanized field label; storage-unit and
- *  timestamp suffixes are implementation detail, not labels. */
+/** "amountCents" → "Amount", "metric_id" → "Metric Id": humanized field label
+ *  from camelCase or snake_case; storage-unit and timestamp suffixes are
+ *  implementation detail, not labels. */
 export const humanize = (id: string): string =>
   id
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/^./, (c) => c.toUpperCase())
+    .replace(/_+/g, " ")
+    .replace(/(^|\s)[a-z]/g, (c) => c.toUpperCase())
     .replace(/ At$/, "")
     .replace(/ Cents$/, "");
 

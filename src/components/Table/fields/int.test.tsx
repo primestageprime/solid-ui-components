@@ -32,6 +32,13 @@ describe("int field", () => {
     expect(th?.textContent).toBe("Hours");
   });
 
+  it("humanizes snake_case keys", () => {
+    const { container } = render(() => (
+      <>{intCol<{ csv_rows: number }>("csv_rows").header}</>
+    ));
+    expect(container.querySelector(".sui-field-th-center")?.textContent).toBe("Csv Rows");
+  });
+
   it("accessor renders a locale-formatted integer", () => {
     const col = intCol<Row>("hours");
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ hours: 9_999_999 })}</>);
