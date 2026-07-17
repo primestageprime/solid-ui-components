@@ -57,7 +57,7 @@ export const StackShowcase: Component = () => {
             <div>
               <Text variant="sublabel">{align}</Text>
               {/* Fixed demo width so alignment has room to show. */}
-              <div class="demo-frame" style={{ width: "160px" }}>
+              <div class="demo-frame demo-frame--w160">
                 <Stack gap="sm" align={align}>
                   <DemoBox label="Short" />
                   <DemoBox label="Medium item" />
@@ -108,7 +108,7 @@ export const StackShowcase: Component = () => {
             <Text variant="sublabel">CenteredStack</Text>
             <div class="text-meta">align/justify: center, gap: "sm"</div>
             {/* Fixed demo height so vertical centering has room to show. */}
-            <div class="demo-frame" style={{ height: "120px", display: "flex" }}>
+            <div class="demo-frame demo-frame--h120-flex">
               <CenteredStack>
                 <DemoBox label="Centered" />
               </CenteredStack>

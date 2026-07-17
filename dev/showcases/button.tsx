@@ -31,7 +31,7 @@ const GuidanceRow: Component<{ button: JSX.Element; children: JSX.Element }> = (
   props,
 ) => (
   <TopClusterRow>
-    <div style={{ "min-width": "150px", display: "flex" }}>{props.button}</div>
+    <div class="button-demo__slot">{props.button}</div>
     <Text variant="body">{props.children}</Text>
   </TopClusterRow>
 );
@@ -43,7 +43,7 @@ const Example: Component<{
   caption: string;
   children: JSX.Element;
 }> = (props) => (
-  <TightStack style={{ "max-width": "520px" }}>
+  <TightStack class="button-demo__col">
     <Text variant="sublabel">{props.title}</Text>
     <CardSurface>{props.children}</CardSurface>
     <div class="text-meta">{props.caption}</div>

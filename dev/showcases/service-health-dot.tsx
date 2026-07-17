@@ -85,7 +85,7 @@ export const ServiceHealthDotShowcase: Component = () => {
           scheduler every 14s (nearly stale), dead-svc never beats.
           Hover each dot to see the sparkline popover.
         </p>
-        <WrappedClusterRow style={{ padding: "16px 0" }}>
+        <WrappedClusterRow class="service-health-dot-demo__row">
           <For each={services()}>
             {svc => (
               <ServiceHealthDot
@@ -105,7 +105,7 @@ export const ServiceHealthDotShowcase: Component = () => {
           Pure snapshots demonstrating the opacity ramp at various ages
           (threshold = 15 000 ms). No ticking.
         </p>
-        <WrappedClusterRow style={{ padding: "16px 0" }}>
+        <WrappedClusterRow class="service-health-dot-demo__row">
           <For each={[
             { name: "0 ms (fresh)",      ageMs: 0,      samples: [0.0, 0.0, 0.0] },
             { name: "3 750 ms (25%)",    ageMs: 3_750,  samples: [0.1, 0.15, 0.25] },

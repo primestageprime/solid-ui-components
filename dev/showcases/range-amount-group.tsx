@@ -30,14 +30,14 @@ export const RangeAmountGroupShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Wide (all on one line)</h3>
-        <div style={{ width: "560px", "max-width": "100%" }}>
+        <div class="range-amount-group-demo__wide">
           <RangeAmountGroup slots={slots()} name="wide" />
         </div>
       </div>
 
       <div class="example-group">
         <h3>Narrow (stacks one-per-line, below breakWidth)</h3>
-        <NarrowStack style={{ width: "260px" }}>
+        <NarrowStack class="range-amount-group-demo__narrow">
           <RangeAmountGroup slots={slots()} name="narrow" />
         </NarrowStack>
       </div>

@@ -22,7 +22,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Padding</h3>
-        <div class="example-row" style={{ "align-items": "flex-start" }}>
+        <div class="example-row example-row--top">
           {(["none", "sm", "md"] as const).map((padding) => (
             <Surface padding={padding} radius="md">
               <Text variant="body">padding="{padding}"</Text>
@@ -33,7 +33,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Border Radius</h3>
-        <div class="example-row" style={{ "align-items": "flex-start" }}>
+        <div class="example-row example-row--top">
           {(["none", "sm", "md"] as const).map((radius) => (
             <Surface padding="md" radius={radius}>
               <Text variant="body">radius="{radius}"</Text>

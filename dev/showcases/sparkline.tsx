@@ -55,13 +55,13 @@ export const SparklineShowcase: Component = () => (
 
     <div class="example-group">
       <h3>Inline — embedding inside text</h3>
-      <p style={{ color: "var(--sui-text-primary)" }}>
+      <p class="sparkline-demo__caption">
         Throughput last 14 batches:{" "}
         <Sparkline
           values={WAVE}
           width={60}
           height={14}
-          style={{ "vertical-align": "middle" }}
+          class="sparkline-demo__inline"
         />{" "}
         trending up.
       </p>

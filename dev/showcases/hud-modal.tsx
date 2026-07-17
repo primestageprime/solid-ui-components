@@ -29,13 +29,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             title="Confirm Action"
             subtitle="Review before proceeding"
             footer={
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  "justify-content": "flex-end",
-                }}
-              >
+              <div class="hud-modal-demo__footer">
                 <Button size="sm" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
@@ -61,15 +55,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("text")}
           >
             <div class="depth2-atom__label">Title</div>
-            <h2
-              style={{
-                margin: "0",
-                "font-size": "1.125rem",
-                "font-weight": "600",
-              }}
-            >
-              Confirm Action
-            </h2>
+            <h2 class="demo-atom-title">Confirm Action</h2>
           </div>
           <div
             class="depth2-atom depth2-atom--link"
@@ -85,14 +71,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             onClick={() => props.onNavigate?.("button")}
           >
             <div class="depth2-atom__label">Button</div>
-            <div
-              style={{
-                display: "flex",
-                "flex-direction": "column",
-                gap: "8px",
-                "align-items": "flex-start",
-              }}
-            >
+            <div class="hud-modal-demo__btn-col">
               <Button size="sm">Cancel</Button>
               <Button variant="primary" size="sm">
                 Confirm

@@ -14,15 +14,15 @@ export const DividerShowcase: Component = () => {
       <div class="example-group">
         <h3>Solid & Dashed</h3>
         <Panel>
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+          <p class="divider-demo__caption">
             Content above
           </p>
           <Divider />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+          <p class="divider-demo__caption">
             Content below (solid)
           </p>
           <DashedDivider />
-          <p style={{ margin: 0, color: "var(--sui-text-secondary)" }}>
+          <p class="divider-demo__caption">
             Content below (dashed)
           </p>
         </Panel>

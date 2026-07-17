@@ -260,7 +260,7 @@ function SelectionDemo() {
       </WrappedClusterRow>
 
       <TopClusterRow>
-        <div style={{ width: "340px" }}>
+        <div class="split-queue-list-demo__left">
           <SplitQueueList<QueueItem>
             resolved={resolved()}
             unresolved={unresolved()}
@@ -284,7 +284,7 @@ function SelectionDemo() {
         </div>
 
         {/* Detail panel — CONSUMER-composed; the component only emits selection. */}
-        <div style={{ width: "260px", position: "sticky", top: "16px" }}>
+        <div class="split-queue-list-demo__sticky">
           <DetailCard>
             <Show
               when={currentItem()}
@@ -417,7 +417,7 @@ function QueueDemo(props: { height: number }) {
           {resolved().length} resolved · {unresolved().length} left
         </span>
       </WrappedClusterRow>
-      <div style={{ width: "320px" }}>
+      <div class="split-queue-list-demo__narrow">
         <SplitQueueList<QueueItem>
           resolved={resolved()}
           unresolved={unresolved()}

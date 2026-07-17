@@ -14,35 +14,18 @@ import { type Component, createSignal } from "solid-js";
 import { StatusCard } from "../../src/components/Card";
 
 const Slot: Component<{ children: any }> = (props) => (
-  <div style={{ width: "260px", height: "170px" }}>{props.children}</div>
+  <div class="status-card-demo__slot">{props.children}</div>
 );
 
 const Grid: Component<{ children: any }> = (props) => (
-  <div
-    style={{
-      display: "grid",
-      "grid-template-columns": "repeat(3, 260px)",
-      gap: "16px",
-      "justify-content": "start",
-    }}
-  >
-    {props.children}
-  </div>
+  <div class="status-card-demo__grid">{props.children}</div>
 );
 
 // A tiny status pill so the row-1 badge slot has realistic content.
 const Pill: Component<{ text: string; tone?: string }> = (props) => (
   <span
-    style={{
-      "font-size": "10px",
-      "font-weight": 600,
-      "letter-spacing": "0.05em",
-      padding: "1px 6px",
-      "border-radius": "3px",
-      border: `1px solid ${props.tone ?? "var(--sui-border)"}`,
-      color: props.tone ?? "var(--sui-text-muted)",
-      "white-space": "nowrap",
-    }}
+    class="status-card-demo__pill"
+    style={props.tone ? { "border-color": props.tone, color: props.tone } : undefined}
   >
     {props.text}
   </span>

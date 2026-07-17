@@ -33,16 +33,7 @@ const applyReorder = (tags: Tag[], nextIds: string[]): Tag[] => {
 
 const StateReadout: Component<{ tags: Tag[] }> = (props) => (
   <NarrowStack>
-    <span
-      style={{
-        "font-size": "10px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-        color: "var(--sui-text-muted)",
-      }}
-    >
-      Live state
-    </span>
+    <span class="mutable-list-demo__state-label">Live state</span>
     <WrappedClusterRow>
       <For
         each={props.tags}
@@ -50,13 +41,7 @@ const StateReadout: Component<{ tags: Tag[] }> = (props) => (
       >
         {(t, idx) => (
           <>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-primary)",
-                "font-family": "monospace",
-              }}
-            >
+            <span class="mutable-list-demo__tag">
               {idx() + 1}. {t.id}="{t.name}"
             </span>
             {idx() < props.tags.length - 1 && <TextSublabel>→</TextSublabel>}
@@ -110,18 +95,7 @@ export const MutableListShowcase: Component = () => {
           <code>×</code> button, then click to delete. Every action updates the
           live state below.
         </p>
-        <div
-          style={{
-            padding: "20px 24px",
-            background: "var(--sui-bg-base, var(--sui-bg))",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            display: "flex",
-            "flex-direction": "column",
-            gap: "20px",
-            "max-width": "520px",
-          }}
-        >
+        <div class="mutable-list-demo__readout">
           <MutableList
             items={tags()}
             getId={(t) => t.id}

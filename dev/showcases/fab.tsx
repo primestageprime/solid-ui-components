@@ -58,29 +58,9 @@ export const FabShowcase: Component = () => {
           box places <code>AddFab</code> at its bottom-right corner via a
           positioned wrapper div.
         </p>
-        <div
-          style={{
-            position: "relative",
-            width: "320px",
-            height: "200px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "4px",
-            background: "var(--sui-bg-secondary)",
-          }}
-        >
-          <span
-            class="text-meta"
-            style={{ position: "absolute", top: "12px", left: "12px" }}
-          >
-            Container (320 × 200)
-          </span>
-          <div
-            style={{
-              position: "absolute",
-              bottom: "16px",
-              right: "16px",
-            }}
-          >
+        <div class="fab-demo__container">
+          <span class="text-meta fab-demo__label">Container (320 × 200)</span>
+          <div class="fab-demo__corner">
             <AddFab label="Add item" onClick={() => {}} />
           </div>
         </div>

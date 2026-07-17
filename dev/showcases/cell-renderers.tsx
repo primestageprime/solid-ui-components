@@ -64,7 +64,7 @@ export const CellRendererShowcase: Component = () => {
               "more..." toggle
             </div>
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="cell-renderers-demo__cell">
             <LongTextCell
               value="When clampLines is set, the cell uses CSS line-clamp and measures overflow at runtime. Width-dependent — shrink the browser to force truncation across multiple lines."
               clampLines={2}
@@ -75,7 +75,7 @@ export const CellRendererShowcase: Component = () => {
               value
             </div>
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="cell-renderers-demo__cell">
             <LongTextCell
               value="Char-count truncation with tooltip reveal instead of inline button."
               maxLength={40}

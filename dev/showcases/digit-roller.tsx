@@ -34,14 +34,7 @@ export const DigitRollerShowcase: Component = () => {
           values.
         </TextSublabel>
         <ClusterRow>
-          <span
-            style={{
-              "font-size": "1.5rem",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-              "font-variant-numeric": "tabular-nums",
-            }}
-          >
+          <span class="digit-roller-demo__value digit-roller-demo__value--tnum">
             <DigitRoller
               value={rollerCurrent()}
               previousValue={rollerPrev()}
@@ -62,26 +55,14 @@ export const DigitRollerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Static (no animation)</h3>
-        <div
-          style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-text-primary)",
-          }}
-        >
+        <div class="digit-roller-demo__value">
           <DigitRoller value="0.1250" />
         </div>
       </div>
 
       <div class="example-group">
         <h3>Tabular digits</h3>
-        <div
-          style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-accent)",
-          }}
-        >
+        <div class="digit-roller-demo__value digit-roller-demo__value--accent">
           <DigitRoller value="42.00" />
         </div>
       </div>

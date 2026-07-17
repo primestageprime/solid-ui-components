@@ -93,7 +93,7 @@ export const PivotTreemapShowcase: Component = () => {
             taller leaves.
           </div>
           <Stack>
-            <div style={{ height: "320px" }}>
+            <div class="pivot-treemap-demo__h320">
               <PivotTreemap
                 rows={ROWS}
                 outer="ASSET"
@@ -117,7 +117,7 @@ export const PivotTreemapShowcase: Component = () => {
             summary bar across its children.
           </div>
           <Stack>
-            <div style={{ height: "360px" }}>
+            <div class="pivot-treemap-demo__h360">
               <PivotTreemap
                 rows={ROWS}
                 outer="ASSET"
@@ -145,7 +145,7 @@ export const PivotTreemapShowcase: Component = () => {
             ChipLabel + CountText for its label/count typography.
           </div>
           <Stack>
-            <div style={{ height: "320px" }}>
+            <div class="pivot-treemap-demo__h320">
               <PivotTreemap
                 rows={ROWS}
                 outer="ASSET"

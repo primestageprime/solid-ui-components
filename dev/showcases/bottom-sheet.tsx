@@ -34,32 +34,9 @@ export const BottomSheetShowcase: Component = () => {
           Phone-frame: stands in for a bounded app region.
           overflow: hidden hard-clips so nothing bleeds out visually.
         */}
-        <div
-          style={{
-            position: "relative",
-            width: "360px",
-            height: "480px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            background: "var(--sui-bg-elevated)",
-            overflow: "hidden",
-            display: "flex",
-            "flex-direction": "column",
-          }}
-        >
+        <div class="bottom-sheet-demo__frame">
           {/* ── Sibling header strip ABOVE the sheet region ──────────── */}
-          <div
-            style={{
-              "flex-shrink": "0",
-              height: "48px",
-              "border-bottom": "1px solid var(--sui-border)",
-              background: "var(--sui-bg-secondary)",
-              display: "flex",
-              "align-items": "center",
-              padding: "0 16px",
-              gap: "8px",
-            }}
-          >
+          <div class="bottom-sheet-demo__header">
             <TextBody>App header (sibling above)</TextBody>
             <MutedBody>never covered</MutedBody>
           </div>
@@ -71,7 +48,7 @@ export const BottomSheetShowcase: Component = () => {
             `inset: 0` of THIS div — not the viewport, not the phone frame,
             not the header.
           */}
-          <FillColumnFlush style={{ position: "relative" }}>
+          <FillColumnFlush class="bottom-sheet-demo__body">
             {/* Page content — dimmed behind the scrim when sheet is open */}
             <NarrowStack>
               <TextBody>Page content area</TextBody>

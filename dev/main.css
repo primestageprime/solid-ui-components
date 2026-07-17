@@ -1510,3 +1510,213 @@
   border-bottom: 1px solid var(--sui-border);
   padding-bottom: 2px;
 }
+
+/* example-row aligned to the top instead of the default stretch. */
+.example-row--top {
+  align-items: flex-start;
+}
+/* demo-frame size modifiers — give layout/alignment demos room to show. */
+.demo-frame--w160 {
+  width: 160px;
+}
+.demo-frame--h120-flex {
+  display: flex;
+  height: 120px;
+}
+.sparkline-demo__caption {
+  color: var(--sui-text-primary);
+}
+.sparkline-demo__inline {
+  vertical-align: middle;
+}
+.service-health-dot-demo__row {
+  padding: 16px 0;
+}
+.result-panel-demo__slot {
+  padding: 12px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  color: var(--sui-text-secondary);
+  font-size: 13px;
+}
+.range-amount-group-demo__wide {
+  width: 560px;
+  max-width: 100%;
+}
+.range-amount-group-demo__narrow {
+  width: 260px;
+}
+.cell-renderers-demo__cell {
+  max-width: 320px;
+}
+.button-demo__slot {
+  display: flex;
+  min-width: 150px;
+}
+.button-demo__col {
+  max-width: 520px;
+}
+.status-card-demo__slot {
+  width: 260px;
+  height: 170px;
+}
+.status-card-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 260px);
+  gap: 16px;
+  justify-content: start;
+}
+/* Host-owned status pill (row-1 badge slot). border-color + color ride in
+   inline when a tone is passed; otherwise these neutral defaults apply. */
+.status-card-demo__pill {
+  padding: 1px 6px;
+  border: 1px solid var(--sui-border);
+  border-radius: 3px;
+  color: var(--sui-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.split-queue-list-demo__left {
+  width: 340px;
+}
+.split-queue-list-demo__sticky {
+  width: 260px;
+  position: sticky;
+  top: 16px;
+}
+.split-queue-list-demo__narrow {
+  width: 320px;
+}
+.removable-item-card-demo {
+  max-width: 280px;
+}
+.pivot-treemap-demo__h320 {
+  height: 320px;
+}
+.pivot-treemap-demo__h360 {
+  height: 360px;
+}
+.mutable-list-demo__state-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+}
+.mutable-list-demo__tag {
+  font-size: 11px;
+  color: var(--sui-text-primary);
+  font-family: monospace;
+}
+.mutable-list-demo__readout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 520px;
+  padding: 20px 24px;
+  background: var(--sui-bg-base, var(--sui-bg));
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+}
+.legend-demo__swatch-row {
+  margin-top: 8px;
+}
+.legend-demo__swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 48px;
+  border-radius: 4px;
+  outline: 1px solid var(--sui-border-bright);
+  outline-offset: 2px;
+  color: var(--sui-text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: default;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.legend-demo__swatch--hovered {
+  outline: 2px solid var(--sui-text-primary);
+  filter: brightness(1.2);
+}
+.legend-demo__wrap {
+  max-width: 320px;
+  padding: 8px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-modal-demo__footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+/* Shared "Title atom" heading used by depth-2 atom breakdowns. */
+.demo-atom-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.hud-modal-demo__btn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.fab-demo__container {
+  position: relative;
+  width: 320px;
+  height: 200px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  background: var(--sui-bg-secondary);
+}
+.fab-demo__label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+.fab-demo__corner {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+.divider-demo__caption {
+  margin: 0;
+  color: var(--sui-text-secondary);
+}
+.digit-roller-demo__value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.digit-roller-demo__value--tnum {
+  font-variant-numeric: tabular-nums;
+}
+.digit-roller-demo__value--accent {
+  color: var(--sui-accent);
+}
+.bottom-sheet-demo__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  height: 480px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+  background: var(--sui-bg-elevated);
+  overflow: hidden;
+}
+.bottom-sheet-demo__header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--sui-border);
+  background: var(--sui-bg-secondary);
+}
+.bottom-sheet-demo__body {
+  position: relative;
+}
