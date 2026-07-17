@@ -1,6 +1,6 @@
 .surface {
   border: 1px solid var(--surface-border, rgba(var(--sui-accent-rgb), 0.3));
-  background: var(--surface-bg, #0d1a2a);
+  background: var(--surface-bg, var(--sui-bg-secondary, #0d1a2a));
 }
 
 .surface--padding-none {
