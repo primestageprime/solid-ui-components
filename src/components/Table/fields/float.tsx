@@ -7,7 +7,7 @@
 import { FloatCell } from "../numericCells";
 import { centered, humanize, type FieldCol, type FieldGeo } from "./shared";
 
-export const geo: FieldGeo = { minCh: 6, maxCh: 12, padPx: 16, css: "calc(12ch + 16px)" };
+export const geo: FieldGeo = { minCh: 6, maxCh: 12, padPx: 18, css: "calc(12ch + 18px)" };
 
 /** A decimal field: right-aligned values, centered header, `precision`
  *  fraction digits. Clients never see width/align — the factory owns it. */

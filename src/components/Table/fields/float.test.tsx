@@ -14,14 +14,14 @@ interface Row {
 
 describe("float field", () => {
   it("geo is a content-fit column capped at 16ch", () => {
-    expect(geo).toEqual({ minCh: 6, maxCh: 12, padPx: 16, css: "calc(12ch + 16px)" });
+    expect(geo).toEqual({ minCh: 6, maxCh: 12, padPx: 18, css: "calc(12ch + 18px)" });
   });
 
   it("floatCol builds a right-aligned, sortable, geometry-carrying column", () => {
     const col = floatCol<Row>("ratio");
     expect(col.id).toBe("ratio");
     expect(col.align).toBe("right");
-    expect(col.width).toBe("calc(12ch + 16px)");
+    expect(col.width).toBe("calc(12ch + 18px)");
     expect(col.sortable).toBe(true);
     expect(col.geo).toBe(geo);
   });

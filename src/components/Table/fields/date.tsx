@@ -7,7 +7,7 @@ import type { FieldCol, FieldGeo } from "./shared";
 import { centered, humanize } from "./shared";
 import { DateCell } from "../dateCells";
 
-export const geo: FieldGeo = { minCh: 10, maxCh: 10, padPx: 16, css: "calc(10ch + 16px)" };
+export const geo: FieldGeo = { minCh: 10, maxCh: 10, padPx: 18, css: "calc(10ch + 18px)" };
 
 export const dateCol = <T,>(key: keyof T): FieldCol<T> => ({
   id: String(key),

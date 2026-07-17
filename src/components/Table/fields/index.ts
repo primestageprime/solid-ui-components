@@ -62,10 +62,12 @@ export const col = <T,>(
 ): FieldCol<T> => {
   const geo = GEO[fieldType];
   const flowing = fieldType === "name" || fieldType === "text";
+  // status reads as a trailing indicator: values right-align (ruled 2026-07-17)
+  const align = flowing ? undefined : fieldType === "status" ? "right" : "center";
   return {
     id,
     header: flowing ? header : centered(header),
-    align: flowing ? undefined : "center",
+    align,
     width: geo.css,
     geo,
     accessor: cell,

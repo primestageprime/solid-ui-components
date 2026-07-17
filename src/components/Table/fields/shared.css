@@ -30,7 +30,12 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 .sui-field-frame th,
 .sui-field-frame td,
 .sui-field-frame td :is(span, div, button) {
+  /* Same font-size AND family as the frame: `ch` must mean the same width in
+     the frame's budget, the th's column width, and the cell glyphs. Table.css
+     gives headers the sans family, which resolves a different ch and made
+     columns outgrow the frame budget (89.95px column in an 83px frame). */
   font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
 }
 .sui-field-frame th,
 .sui-field-frame td {

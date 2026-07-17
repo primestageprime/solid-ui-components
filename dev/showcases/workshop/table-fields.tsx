@@ -29,7 +29,7 @@ import {
   clusterCol,
 } from "../../../src/components/Table/fields";
 import { GhostButton } from "../../../src/components/Button";
-import { ClusterRow, ContentStack, CenteredWrapRow } from "../../../src/components/Layout";
+import { ClusterRow, ContentStack, CenteredWrapRow, EndWrapRow } from "../../../src/components/Layout";
 import { Sparkline } from "../../../src/components/Sparkline";
 import { SmallStatusLight } from "../../../src/components/StatusLight";
 
@@ -135,10 +135,10 @@ const TableFieldsBench: Component = () => {
         </CenteredWrapRow>
       ), "chart"),
       col("health", "Health", (row) => (
-        <CenteredWrapRow>
+        <EndWrapRow>
           <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
           <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
-        </CenteredWrapRow>
+        </EndWrapRow>
       ), "status"),
     ],
     { name: nameCol(), createdAt: dateTimeCol("createdAt") },
@@ -188,10 +188,10 @@ const TableFieldsBench: Component = () => {
     {
       label: "status",
       c: col("health", "Health", (r) => (
-        <CenteredWrapRow>
+        <EndWrapRow>
           <SmallStatusLight variant={r.failed > 0 ? "error" : "active"} />
           <TextSublabel>{`${r.done}/${r.total}`}</TextSublabel>
-        </CenteredWrapRow>
+        </EndWrapRow>
       ), "status"),
     },
     {

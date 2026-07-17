@@ -7,7 +7,7 @@ import type { FieldCol, FieldGeo } from "./shared";
 import { centered, humanize } from "./shared";
 import { DurationCell } from "../numericCells";
 
-export const geo: FieldGeo = { minCh: 5, maxCh: 9, padPx: 16, css: "calc(9ch + 16px)" };
+export const geo: FieldGeo = { minCh: 5, maxCh: 9, padPx: 36, css: "calc(9ch + 36px)" };
 
 export const durationCol = <T,>(
   key: keyof T,

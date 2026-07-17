@@ -7,7 +7,7 @@ import { type FieldCol, type FieldGeo, centered, humanize } from "./shared";
 
 // "9,999,999" (7 digits + 2 group separators = 9ch) plus cell chrome
 // (16px ≈ 2ch padding per side); content-fits down to `minCh`, caps at `maxCh`.
-export const geo: FieldGeo = { minCh: 4, maxCh: 9, padPx: 16, css: "calc(9ch + 16px)" };
+export const geo: FieldGeo = { minCh: 4, maxCh: 9, padPx: 18, css: "calc(9ch + 18px)" };
 
 /** A whole-number column keyed on `key`: CENTERED header, right-aligned value,
  *  sortable, formatted by IntCell. Width/align are baked in from `geo`. */
