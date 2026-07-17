@@ -224,9 +224,6 @@
     ],
     "dev/showcases/workshop/animation-lab.tsx": [
       "cssvar"
-    ],
-    "dev/showcases/workshop/table-fields.tsx": [
-      "cssvar"
     ]
   }
 }

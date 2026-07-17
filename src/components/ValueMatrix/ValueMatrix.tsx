@@ -9,7 +9,7 @@
 // tone by threshold compliance, selected = chosen CE/source) and fits any
 // scenario grid, e.g. thorcasting's viable price × salaries-to-pay.
 // ============================================
-import type { JSX } from "solid-js";
+import { mergeProps, type JSX } from "solid-js";
 import type { Tone } from "../../types";
 import type { TableColumn } from "../Table/types";
 import { BaseTable } from "../Table/BaseTable";
@@ -82,4 +82,25 @@ export function ValueMatrix<R, C>(props: ValueMatrixProps<R, C>): JSX.Element {
       <BaseTable data={data()} columns={columns()} compact />
     </div>
   );
+}
+
+/** The configure-time mapping surface: axis labels, value formatting, and the
+ *  tone treatment. Curried away by `createValueMatrix` so a domain matrix's
+ *  call sites pass only axes + values + selection. */
+export type ValueMatrixOverrides<R, C> = Pick<
+  ValueMatrixProps<R, C>,
+  "rowAxisLabel" | "rowLabel" | "colLabel" | "format" | "tone"
+>;
+export type ValueMatrixDataProps<R, C> = Omit<
+  ValueMatrixProps<R, C>,
+  keyof ValueMatrixOverrides<R, C>
+>;
+
+/** Curry a domain matrix (e.g. a compliance grid: g/kWh format + threshold
+ *  tone baked in) so call sites supply only rows/cols/value/selected.
+ *  Generic-preserving, mirroring `createTreemap`. */
+export function createValueMatrix<R, C>(
+  defaults: Partial<ValueMatrixProps<R, C>> & ValueMatrixOverrides<R, C>,
+): (props: ValueMatrixDataProps<R, C>) => JSX.Element {
+  return (props) => <ValueMatrix {...mergeProps(defaults, props)} />;
 }
