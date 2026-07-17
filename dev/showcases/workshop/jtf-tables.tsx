@@ -25,13 +25,15 @@ import { ENTRIES as powerEntries } from "./jtf-tables/power";
 import { ENTRIES as routeEntries } from "./jtf-tables/routes";
 import { ENTRIES as triageEntries } from "./jtf-tables/triage";
 
+// Raw first — they're the migration worklist; stable sort keeps each
+// group's internal order.
 const ALL: TableEntry[] = [
   ...fortnightEntries,
   ...widgetEntries,
   ...powerEntries,
   ...routeEntries,
   ...triageEntries,
-];
+].sort((a, b) => (a.status === b.status ? 0 : a.status === "raw" ? -1 : 1));
 
 // Stable slug per entry for the ?t= hash param (deep-linkable selection).
 // The gallery router only reads the path segment and known params, so an
@@ -94,7 +96,7 @@ const JtfTablesBench: Component = () => {
         {`Every table in jtf-ui with realistic stub data — ${suiCount} of ${ALL.length} SUI-compliant. The warning-tagged replicas are the migration worklist.`}
       </TextBody>
       <PaneRow>
-        <DelineatedSidebar>
+        <DelineatedSidebar class="jtf-catalog-rail">
           <For each={ALL}>
             {(e, i) => (
               <InteractiveCard active={i() === active()} onClick={() => select(i())}>

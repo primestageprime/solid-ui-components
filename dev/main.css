@@ -2571,3 +2571,9 @@ th:has(.tf-th-center) .hud-table__header-content {
 .jtf-catalog-pane .hud-table .hud-table__table {
   width: auto;
 }
+/* The catalog rail scrolls internally so selecting far-down entries never
+   scrolls the rendered table off the scene. */
+.jtf-catalog-rail {
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}

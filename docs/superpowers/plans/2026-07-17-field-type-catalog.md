@@ -86,3 +86,60 @@ Easy tier migrated to `FieldTable` + fields: jtf StatisticsSummary,
 MinMaxTable, ftir-gap-fill gaps table, power-log-ocr table, FortnightReportBody
 ×7 metric tables. Remaining moderate tier waits on catalog items 1–3;
 hard tier on 4–5 or stays raw.
+
+## Raw-table analysis (2026-07-17, from the JTF Table Catalog bench)
+
+The 20 raw replicas decompose into exactly these needs. Coverage: shipping
+items 1–6 migrates 15 of 20; the runtime-specs pattern covers 2 more (OCR,
+HourlyDataTable pivot); 2 stay raw by design (grouped headers, spanRow);
+PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
+
+### New curried column types / factory options (demand-ranked)
+
+1. **`statusCol(key, { label?, tone, href? })`** — badge cell from a value.
+   Demand: MissingInfoPreview (operator kind), ViolationsPreview (violation
+   type), NoxWidgets CE projection, fortnight reports list (linked status),
+   durability data_status.
+2. **`href?: (row) => string`** on nameCol/textCol/dateTimeCol/statusCol —
+   the link cell. Demand: VesselName first columns (index, ViolationsPreview,
+   nox-report), AccentRouteLink period/week cells (fortnight list,
+   qaqc-checks), linked DateTimeCell (ViolationsPreview). Optional sibling:
+   `glyph?: (row) => IconName` on nameCol for the vessel-type icon.
+3. **Derived accessors** — every scalar factory accepts
+   `(row) => value` with explicit `{ id, header }` when derived. Demand:
+   durations computed from two timestamps (durability, index, nox-report),
+   Pacific-time strings (thousand-hour, PowerLogCacheView), computed row
+   averages (PowerLogCacheView), Map-backed pivots (HourlyDataTable).
+   Feeding durationCol raw seconds via a derived accessor also retires every
+   pre-formatted duration string.
+4. **`placeholder?: string` (null → muted placeholder)** on
+   int/float/dateTime/text cols — "—", "N/A", "In Progress". Demand:
+   MetricsStatsTable, PowerLogCacheView, durability (nullable
+   disconnected_at), power-log aux nulls.
+5. **`tone` completed across nameCol** (int/float/text shipped) — bag-state
+   colored vessel names (nox-report preview), coverage FULL/Nm cells (index).
+6. **`suffix?: string` on floatCol** (or a percentCol) — "%", "ppm", "kW"
+   units rendered inside the cell. Demand: VesselCall Nox/Rog pct columns,
+   thousand-hour completeness, NoxWidgets ppm columns.
+
+### Table-level FieldTable features
+
+7. **`sortable`** — surface BaseTable sorting through resolved columns;
+   kills the hand-rolled JSX sort headers. Demand: QaqcAssetTriage (11
+   cols), nox-report preview, ViolationsPreview, MetricsStatsTable.
+8. **`onRowClick`** — row navigation (index dashboard).
+9. **`rowTone?: (row) => Tone | "highlight"`** — the semantic replacement
+   for getRowClass (NoxWidgets baseline-row highlight). Note: tones being
+   theme-var-driven also retires NoxWidgets' hand-rolled colorblind remap.
+10. **`filter?`** — FilterableTable's text filter as a FieldTable prop
+    (ViolationsPreview).
+11. **`headerHint?: string`** — tooltip on a column header (qaqc-checks) —
+    weakest demand, candidate only.
+
+### Stays raw / out of model
+
+- HourLevelDataTable — grouped/spanned headers.
+- qaqc-checks — per-row `spanRow` colspan (its cells could still take
+  items 2/6/7).
+- PowerLogPanel ×3 — component retired at jtf HEAD 2026-07-17; drop from
+  the worklist.
