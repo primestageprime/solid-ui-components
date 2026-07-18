@@ -21,6 +21,7 @@ import {
 import { clamp } from "../../internal/math/clamp";
 import { Stack } from "./Stack";
 import "./Sidebar.css";
+import { pipe, filter, join } from "../../fn";
 
 const DEFAULT_WIDTH = 300;
 const MIN_WIDTH = 200;
@@ -138,7 +139,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     }
   };
 
-  const classes = () => ["sidebar", local.class].filter(Boolean).join(" ");
+  const classes = () =>
+    pipe(["sidebar", local.class], filter(Boolean), join(" "));
 
   return (
     <div

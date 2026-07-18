@@ -10,6 +10,7 @@
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./ParticipantTimeLabel.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface ParticipantTimeLabelProps
   extends JSX.HTMLAttributes<HTMLSpanElement> {
@@ -19,7 +20,11 @@ export interface ParticipantTimeLabelProps
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const ParticipantTimeLabel: Component<ParticipantTimeLabelProps> = (
   props,

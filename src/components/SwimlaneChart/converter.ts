@@ -16,6 +16,7 @@
  */
 
 import type { DAGEdge } from "../DagChart/types";
+import { pipe, filter, map } from "../../fn";
 
 // ---------------------------------------------------------------------------
 // Public input types — the client-facing JSON shape.
@@ -170,9 +171,11 @@ export function convertSwimlaneDagInput(
   // Only dependency edges feed the chart's edge graph. Containment
   // edges are dropped here (they could be re-introduced later via a
   // separate decorative-edges field if a renderer wants them).
-  const edges: DAGEdge[] = input.edges
-    .filter((e) => (e.kind ?? "dependency") === "dependency")
-    .map((e) => ({ source: e.from, target: e.to }));
+  const edges: DAGEdge[] = pipe(
+    input.edges,
+    filter((e: SwimlaneDagEdge) => (e.kind ?? "dependency") === "dependency"),
+    map((e: SwimlaneDagEdge) => ({ source: e.from, target: e.to })),
+  );
 
   return {
     nodes,

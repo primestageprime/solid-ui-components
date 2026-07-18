@@ -20,6 +20,7 @@ import {
   type StatusFlowNode,
 } from "./columns";
 import "./StatusFlowChart.css";
+import { map } from "../../fn";
 
 export type {
   StatusFlowNode,
@@ -188,7 +189,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // provides `colFor`, that overrides the status-based result per node
   // (an `undefined` from colFor falls back to status-based).
   const cols = createMemo(() => {
-    const ns = visibleNodes().map((n) => ({ ...n, status: n.effectiveStatus }));
+    const ns = map((n) => ({ ...n, status: n.effectiveStatus }), visibleNodes());
     const base = assignColumns(
       ns,
       props.columns,
