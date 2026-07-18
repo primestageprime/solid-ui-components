@@ -24,6 +24,7 @@ import {
   textCol,
   dateTimeCol,
   durationCol,
+  floatCol,
   toneWrap,
 } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
@@ -609,103 +610,71 @@ function FortnightReportsTable() {
 // ---------------------------------------------------------------------------
 
 interface ThousandHourVesselCall {
+  vessel_call_id: string;
   vessel_name: string;
   vessel_type: string;
-  connected_pacific: string;
-  duration_humanized: string;
+  connected_at: string;
+  disconnected_at: string | null;
   completeness_pct: number | null;
+  // Severity band precomputed in the DATA layer (ruled: threshold math lives in
+  // the data layer, the cell only wears a tone). null when completeness unknown.
+  completeness_band: "full" | "partial" | "low" | null;
 }
 
-// Pacific timestamps and humanized durations are precomputed in the stub —
-// the real page derives them from ISO instants via toLocaleString("sv-SE",
-// { timeZone: "America/Los_Angeles" }) and a fmt_duration_humanized replica.
+// Raw UTC instants (April/May PDT = UTC-7): dateTimeCol renders them in Pacific
+// and durationCol derives elapsed minutes — no pre-formatted strings on the row.
 const THOUSAND_HOUR_CALLS: ThousandHourVesselCall[] = [
-  {
-    vessel_name: "Ever Steadfast",
-    vessel_type: "CONTAINER",
-    connected_pacific: "2026-04-02 21:15:00",
-    duration_humanized: "3d 7h 23m",
-    completeness_pct: 99.2,
-  },
-  {
-    vessel_name: "Pacific Dawn",
-    vessel_type: "TANKER",
-    connected_pacific: "2026-04-11 02:30:00",
-    duration_humanized: "6d 11h 35m",
-    completeness_pct: 87.4,
-  },
-  {
-    vessel_name: "Coral Meridian",
-    vessel_type: "RORO",
-    connected_pacific: "2026-04-19 07:45:00",
-    duration_humanized: "17h 55m",
-    completeness_pct: 96.8,
-  },
-  {
-    vessel_name: "Golden Horizon",
-    vessel_type: "BULK",
-    connected_pacific: "2026-04-27 23:00:00",
-    duration_humanized: "3d 22h 33m",
-    completeness_pct: 64.1,
-  },
-  {
-    vessel_name: "Ever Resolute",
-    vessel_type: "CONTAINER",
-    connected_pacific: "2026-05-06 05:20:00",
-    duration_humanized: "—",
-    completeness_pct: null,
-  },
+  { vessel_call_id: "vc-th-a", vessel_name: "Ever Steadfast", vessel_type: "CONTAINER", connected_at: "2026-04-03T04:15:00Z", disconnected_at: "2026-04-06T11:38:00Z", completeness_pct: 99.2, completeness_band: "full" },
+  { vessel_call_id: "vc-th-b", vessel_name: "Pacific Dawn", vessel_type: "TANKER", connected_at: "2026-04-11T09:30:00Z", disconnected_at: "2026-04-17T21:05:00Z", completeness_pct: 87.4, completeness_band: "partial" },
+  { vessel_call_id: "vc-th-c", vessel_name: "Coral Meridian", vessel_type: "RORO", connected_at: "2026-04-19T14:45:00Z", disconnected_at: "2026-04-20T08:40:00Z", completeness_pct: 96.8, completeness_band: "full" },
+  { vessel_call_id: "vc-th-d", vessel_name: "Golden Horizon", vessel_type: "BULK", connected_at: "2026-04-28T06:00:00Z", disconnected_at: "2026-05-02T04:33:00Z", completeness_pct: 64.1, completeness_band: "low" },
+  { vessel_call_id: "vc-th-e", vessel_name: "Ever Resolute", vessel_type: "CONTAINER", connected_at: "2026-05-06T12:20:00Z", disconnected_at: null, completeness_pct: null, completeness_band: null },
 ];
 
-/** Traffic-light color for a completeness percentage (jtf replica). */
-function completenessColor(pct: number): string {
-  if (pct >= 95) return "var(--sui-success)";
-  if (pct >= 80) return "var(--sui-warning)";
-  return "var(--sui-danger)";
-}
+const THOUSAND_HOUR_REGISTRY = {
+  // Vessel calls have a detail page (/detail/:id) → the name IS the link.
+  vessel_name: identityLinkCol<ThousandHourVesselCall>("vessel_name", {
+    href: (row) => `/detail/${row.vessel_call_id}`,
+    glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
+  }),
+  // The Pacific-time STRING column retires: dateTimeCol reads the raw instant
+  // and renders it zoned. Duration derives from the two instants (in-progress
+  // → blank), replacing the humanized string.
+  connected_at: dateTimeCol<ThousandHourVesselCall>("connected_at", {
+    timeZone: "America/Los_Angeles",
+  }),
+  duration: durationCol<ThousandHourVesselCall>(
+    (row) =>
+      row.disconnected_at
+        ? Math.floor(
+            (new Date(row.disconnected_at).getTime() -
+              new Date(row.connected_at).getTime()) /
+              60_000,
+          )
+        : null,
+    "m",
+    { id: "duration", header: "Duration" },
+  ),
+  // Traffic light: the '%' rides in-cell; the tone reads the data-layer band.
+  completeness: floatCol<ThousandHourVesselCall>("completeness_pct", {
+    precision: 1,
+    suffix: "%",
+    header: "Data Completeness",
+    tone: (_v, row) =>
+      row.completeness_band === "full"
+        ? "success"
+        : row.completeness_band === "partial"
+          ? "warning"
+          : "danger",
+  }),
+};
 
 function ThousandHourManifestTable() {
-  const columns: TableColumn<ThousandHourVesselCall>[] = [
-    {
-      id: "vessel_name",
-      header: "Vessel Name",
-      accessor: (vc) => (
-        <VesselNameCell type={vc.vessel_type} name={vc.vessel_name} />
-      ),
-    },
-    {
-      id: "connected_at",
-      header: "Connected At (Pacific)",
-      accessor: (vc) => vc.connected_pacific,
-    },
-    {
-      id: "duration",
-      header: "Duration",
-      accessor: (vc) => vc.duration_humanized,
-    },
-    {
-      id: "completeness",
-      header: "Data Completeness",
-      align: "center",
-      accessor: (vc) =>
-        vc.completeness_pct == null ? (
-          "—"
-        ) : (
-          <EmphasisBody>
-            <InlineText color={completenessColor(vc.completeness_pct)}>
-              {vc.completeness_pct.toFixed(1)}%
-            </InlineText>
-          </EmphasisBody>
-        ),
-    },
-  ];
   return (
-    <BaseTable
+    <FieldTable
       data={THOUSAND_HOUR_CALLS}
-      columns={columns}
-      compact
-      stickyHeader
-      fill
+      fields={["vessel_name", "connected_at", "duration", "completeness"]}
+      registry={THOUSAND_HOUR_REGISTRY}
     />
   );
 }
@@ -813,9 +782,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/thousand-hour/[id]",
     name: "1000-Hour Report Manifest",
-    status: "raw",
-    customs: ["derived-accessor", "unit-suffix"],
-    note: "VesselName entity cell, Pacific-time string column, humanized duration ('3d 7h 23m'), traffic-light completeness percentage.",
+    status: "sui",
+    note: "Migrated to FieldTable: identityLinkCol vessel (→ /detail/:id, type glyph); Pacific-time string retired for dateTimeCol timeZone 'America/Los_Angeles' on the raw instant; humanized duration → durationCol DERIVED from the two instants; completeness → floatCol suffix '%' + tone fn fed by a data-layer severity band.",
     component: ThousandHourManifestTable,
   },
   {
