@@ -11,6 +11,7 @@ import {
 } from "solid-js";
 import { useChart } from "./context";
 import type { Scale } from "./scales";
+import { map } from "../../fn";
 
 // ---- Y-axis title placement ----
 // Tick labels sit at x=-8 (see YAxis `<text x={-8}>`); the rotated title is
@@ -165,7 +166,7 @@ export const YAxis: Component<AxisProps> = (props) => {
   const tickCount = () => props.tickCount ?? 5;
   const fmt = () => props.tickFormat ?? defaultFormat;
   const ticks = () => props.tickValues ?? ctx.yScale().ticks(tickCount());
-  const tickLabels = createMemo(() => ticks().map((t) => fmt()(t)));
+  const tickLabels = createMemo(() => map((t) => fmt()(t), ticks()));
 
   // Widest tick label, in px. Seeded from a char-count estimate so SSR/jsdom
   // still get a sane title offset, then refined to exact glyph metrics once

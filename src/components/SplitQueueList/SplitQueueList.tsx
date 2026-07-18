@@ -230,7 +230,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // bottom row shows the focused styling while the card collapses (only the clone).
   const focusedKey = createMemo(() => {
     if (flight.exitingKey()) return null;
-    const keys = unresolvedItems().map(keyOf);
+    const keys = map(keyOf, unresolvedItems());
     if (props.focusedKey && keys.includes(props.focusedKey))
       return props.focusedKey;
     return null;
@@ -252,8 +252,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const keyboard = createRowKeyboard({
     getRootEl: () => rootEl,
     allKeys: () => [
-      ...resolvedItems().map(keyOf),
-      ...unresolvedItems().map(keyOf),
+      ...map(keyOf, resolvedItems()),
+      ...map(keyOf, unresolvedItems()),
     ],
     focusedKey: () => tabStopFallbackKey(),
     selectedKey: () => props.selectedKey,
