@@ -61,6 +61,7 @@ import type {
   ScrubChartProps,
 } from "./types";
 import "./ScrubChart.css";
+import { map } from "../../fn";
 
 export type {
   ScrubChartContext,
@@ -122,9 +123,10 @@ export const ScrubChart = <C extends Cell>(
   const yTicks = createMemo<{ value: number; y: number }[]>(() => {
     const s = yScale();
     if (!s) return [];
-    return s
-      .ticks(props.yTickCount ?? DEFAULT_Y_TICK_COUNT)
-      .map((v) => ({ value: v, y: s(v) }));
+    return map(
+      (v) => ({ value: v, y: s(v) }),
+      s.ticks(props.yTickCount ?? DEFAULT_Y_TICK_COUNT),
+    );
   });
 
   // Auto-sized y-axis column: just wide enough to fit the longest formatted

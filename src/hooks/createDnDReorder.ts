@@ -22,6 +22,7 @@
 // ============================================
 
 import { type Accessor, createMemo, createSignal } from "solid-js";
+import { map } from "../fn";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -220,7 +221,7 @@ export function createDnDReorder<T>(
 
   const commit = () => {
     if (dragId() && insertPos() != null) {
-      onReorder(displayItems().map(getId));
+      onReorder(map(getId, displayItems()));
     }
     reset();
   };

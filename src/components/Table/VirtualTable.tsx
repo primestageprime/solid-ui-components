@@ -12,6 +12,7 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 import type { BaseTableProps, TableColumn } from "./types";
 import { getCellValue } from "./types";
 import "./Table.css";
+import { pipe, filter, join } from "../../fn";
 
 // Frozen virtualization tuning — no caller configured these, so they live as
 // constants (row height also carried in Table.css as .sui-virtual-table__row
@@ -73,7 +74,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
 
   return (
     <div
-      class={["sui-virtual-table", local.class].filter(Boolean).join(" ")}
+      class={pipe(["sui-virtual-table", local.class], filter(Boolean), join(" "))}
       {...others}
     >
       {/* Scrollable container — max-height inline only when the prop is set;

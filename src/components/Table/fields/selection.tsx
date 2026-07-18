@@ -22,6 +22,7 @@ import { createSignal } from "solid-js";
 import type { FieldGeo, FieldCol } from "./shared";
 import { Checkbox } from "../../Checkbox";
 import { CenteredColumn } from "../../Layout";
+import { map } from "../../../fn";
 
 // 2.125rem = 18px checkbox + 8px breathing room per side — the field-frame's
 // standard cell chrome (shared.css .sui-field-frame). min === max: fixed.
@@ -62,7 +63,7 @@ export function createFieldSelection<T>(
   const toggle = (row: T, o?: { range?: boolean }) => {
     const key = opts.key(row);
     if (o?.range && anchorKey !== null && anchorKey !== key) {
-      const keys = opts.rows().map(opts.key);
+      const keys = map(opts.key, opts.rows());
       const from = keys.indexOf(anchorKey);
       const to = keys.indexOf(key);
       if (from !== -1 && to !== -1) {

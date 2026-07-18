@@ -18,6 +18,7 @@ import {
 } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import "./ResizableContainer.css";
+import { pipe, filter, join } from "../../fn";
 
 export type ResizeDirection = "top" | "right" | "bottom" | "left";
 
@@ -164,7 +165,7 @@ export const ResizableContainer: Component<ResizableContainerProps> = (
   onCleanup(stopResize);
 
   const containerClass = () =>
-    ["sui-resizable", props.class].filter(Boolean).join(" ");
+    pipe(["sui-resizable", props.class], filter(Boolean), join(" "));
 
   const hasHorizontalHandle = () =>
     directions().includes("left") || directions().includes("right");
