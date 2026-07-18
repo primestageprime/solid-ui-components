@@ -119,27 +119,11 @@ default — surface it rather than quietly forking to `BaseTable`.
    </HabitCard>
    ```
 
-If the variant is project-specific and unlikely to be reused, you can create it locally in the app using the factory function — but the visual config still lives in one place, not scattered across JSX.
-
-### Local Curried Variants (in app code)
-
-If a variant is truly app-specific:
-
-```tsx
-// In your app's src/components/variants.ts
-import { createSurface, createText } from "solid-ui-components";
-
-export const ScoreCard = createSurface({
-  padding: "lg", radius: "lg",
-  bg: "#111", direction: "column", align: "center",
-});
-
-export const ScoreValue = createText({
-  size: "3xl", weight: "bold", color: "var(--sui-color-accent)",
-});
-```
-
-This is acceptable — the key is that override props are set once, not repeated at every call site.
+There is no app-local path (ruled 2026-07-18): apps use curried variants ONLY —
+never the `create*` factories. Even a "project-specific" variant is defined in
+the library (variants live in one place; a second project wanting it is the
+norm, not the exception). If the variant you need is missing, add it to
+solid-ui-components and export it — that IS the workflow, not a detour.
 
 ## The #2 Rule
 
@@ -224,7 +208,7 @@ Peter's sign-off.
 
 // ✅ RIGHT — use the correct variant
 <LargeDangerButton>Delete</LargeDangerButton>
-// Or if it doesn't exist, create it:
+// Or if it doesn't exist, add it to the LIBRARY's variants.ts (never locally):
 // export const LargeDangerButton = createButton({ variant: "danger", size: "lg" });
 ```
 
@@ -234,8 +218,7 @@ Peter's sign-off.
 // ❌ WRONG
 <Stack style={{ gap: "4px", "max-width": "400px" }}>
 
-// ✅ RIGHT — create a variant
-const NarrowTightStack = createStack({ gap: "xs", maxWidth: "400px" });
+// ✅ RIGHT — use (or add to the library) a curried variant
 <NarrowTightStack>
 ```
 

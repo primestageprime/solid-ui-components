@@ -1,4 +1,4 @@
-// Base (StatusBadge) is intentionally NOT exported — use curried variants or createStatusBadge().
+// Base (StatusBadge) is intentionally NOT exported — use curried variants ONLY (no create* factories at call sites — if the variant you need is missing, add it here).
 export { createStatusBadge } from "./StatusBadge";
 // StatusBadgeVariant is the public contract of createStatusBadge({ variant }) — exported so consumers can type the variant arg.
 export type { StatusBadgeDataProps, StatusBadgeVariant } from "./StatusBadge";

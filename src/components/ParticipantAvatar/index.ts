@@ -1,4 +1,4 @@
-// Base (ParticipantAvatar) is intentionally NOT exported — use curried variants or createParticipantAvatar().
+// Base (ParticipantAvatar) is intentionally NOT exported — use curried variants ONLY (no create* factories at call sites — if the variant you need is missing, add it here).
 export { createParticipantAvatar } from "./ParticipantAvatar";
 export type { ParticipantAvatarDataProps } from "./ParticipantAvatar";
 export * from "./variants";

@@ -1,5 +1,5 @@
 // Base (ActionListBase) is intentionally NOT exported — use the curried
-// `ActionList` variant or createActionList().
+// `ActionList` variant ONLY (no create* factories at call sites).
 export { createActionList, DEFAULT_STATUS_TONES } from "./ActionList";
 export type {
   ActionListProps,

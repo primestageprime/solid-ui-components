@@ -1,5 +1,5 @@
 // Bases (Stack, Row, Box) are intentionally NOT exported — use curried variants
-// (TightStack, SpreadRow, ConstrainedBox, …) or the create* factories.
+// (TightStack, SpreadRow, ConstrainedBox, …) ONLY — no create* factories at call sites; if the variant you need is missing, add it here.
 export { createStack } from "./Stack";
 export type { StackDataProps } from "./Stack";
 export { createRow } from "./Row";
