@@ -36,36 +36,28 @@ const NOX_PERIOD_DATA: NoxPeriodRow[] = [
   { period: "After", pct: 18, nox: 38.1, highlight: "after" },
 ];
 
-// Data-driven cell colors, exactly as jtf writes them: the active ("during")
-// control period is emphasised green, the others amber.
-const noxCellColor = (row: NoxPeriodRow) =>
-  row.highlight === "during" ? "#00ff88" : "#ff8800";
-const noxPeriodColor = (row: NoxPeriodRow) =>
-  row.highlight === "during" ? "#00ff88" : undefined;
-
-const NOX_DETAIL_COLUMNS: TableColumn<NoxPeriodRow>[] = [
-  {
-    id: "period",
-    header: "Period",
-    accessor: (row) => (
-      <InlineText color={noxPeriodColor(row)}>{row.period}</InlineText>
-    ),
-  },
-  { id: "pct", header: "%", accessor: (row) => `${row.pct}%`, align: "right" },
-  {
-    id: "nox",
+// Semantic tones (ruled 2026-07-18): the data layer flags the active control
+// period via `highlight`; the cell wears success (during) / warning (the
+// before-after amber baseline). No hex at the call site — the period label
+// recedes to default off the active period, the ppm value carries the amber.
+const NOX_PERIOD_REGISTRY = {
+  period: fields.textCol<NoxPeriodRow>("period", {
+    tone: (_v, row) => (row.highlight === "during" ? "success" : "default"),
+  }),
+  pct: fields.intCol<NoxPeriodRow>("pct", { suffix: "%", header: "Share" }),
+  nox: fields.floatCol<NoxPeriodRow>("nox", {
+    precision: 1,
     header: "NOx (ppm)",
-    accessor: (row) => (
-      <InlineText color={noxCellColor(row)}>
-        <FloatCell value={row.nox} precision={1} />
-      </InlineText>
-    ),
-    align: "right",
-  },
-];
+    tone: (_v, row) => (row.highlight === "during" ? "success" : "warning"),
+  }),
+};
 
 const NoxDetailPeriodTable = () => (
-  <BaseTable data={NOX_PERIOD_DATA} columns={NOX_DETAIL_COLUMNS} compact />
+  <fields.FieldTable
+    data={NOX_PERIOD_DATA}
+    fields={["period", "pct", "nox"]}
+    registry={NOX_PERIOD_REGISTRY}
+  />
 );
 
 // ============================================================================
@@ -440,9 +432,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/fortnight/[id] (NOx detail)",
     name: "VesselCallNoxDetail — Statistics by Control Period",
-    status: "raw",
-    customs: ["derived-accessor", "unit-suffix"],
-    note: "Conditional cell color (during=green else amber) via InlineText color — not yet a tone fn; literal column accessors block fields migration.",
+    status: "sui",
+    note: "Migrated to FieldTable: textCol/intCol/floatCol registry; during→success else warning tone fn fed by the row's highlight flag; pct → suffix '%'.",
     component: NoxDetailPeriodTable,
   },
   {
