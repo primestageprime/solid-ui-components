@@ -23,7 +23,7 @@ export const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   ellipsis: true,
-  sortable: true,
+  sortValue: (row) => String(row[key] ?? ""),
   geo,
   accessor: (row) => {
     const value = String(row[key] ?? "");

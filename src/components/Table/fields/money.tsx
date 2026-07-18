@@ -18,7 +18,7 @@ export const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
   header: centered(humanize(String(key))),
   align: "right",
   width: geo.css,
-  sortable: true,
+  sortValue: (row) => row[key] as number,
   geo,
   accessor: (row) => <MoneyCell value={(row[key] as number) / 100} />,
 });

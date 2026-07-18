@@ -13,11 +13,12 @@ describe("dateTime field", () => {
     expect(geo).toEqual({ minCh: 19, maxCh: 19, padPx: 18, css: "calc(19ch + 18px)" });
   });
 
-  it("factory bakes in id, width, sortable, and geometry", () => {
+  it("factory bakes in id, width, sortValue, and geometry", () => {
     const col = dateTimeCol<Row>("createdAt");
     expect(col.id).toBe("createdAt");
     expect(col.width).toBe("calc(19ch + 18px)");
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.geo).toBe(geo);
   });
 

@@ -17,7 +17,7 @@ export const durationCol = <T,>(
   header: centered(humanize(String(key))),
   align: "right",
   width: geo.css,
-  sortable: true,
+  sortValue: (row) => row[key] as number,
   geo,
   accessor: (row) => <DurationCell value={row[key] as number} unit={unit} />,
 });

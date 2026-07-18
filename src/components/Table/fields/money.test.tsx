@@ -18,12 +18,13 @@ describe("money field module", () => {
     expect(geo).toEqual({ minCh: 6, maxCh: 18, padPx: 18, css: "calc(18ch + 18px)" });
   });
 
-  it("moneyCol builds a right-aligned, sortable column with baked geometry", () => {
+  it("moneyCol builds a right-aligned, sortValue-carrying column with baked geometry", () => {
     const col = moneyCol<Row>("amountCents");
     expect(col.id).toBe("amountCents");
     expect(col.align).toBe("right");
     expect(col.width).toBe("calc(18ch + 18px)");
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.geo).toBe(geo);
   });
 

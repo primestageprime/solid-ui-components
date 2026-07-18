@@ -27,6 +27,11 @@ export interface FieldTableProps<T> {
    *  Mapped to an em-based height internally so it scales with zoom — the
    *  client names a row count, never a height. */
   maxRows?: number;
+  /** Table-level sorting (ruled 2026-07-18): a sortable table makes EVERY
+   *  column sortable — except field types with no valid sort order (selection,
+   *  actions, lists, charts), which simply lack a `sortValue`. There is no
+   *  per-column opt-out; prefer the curried `SortableFieldTable`. */
+  sortable?: boolean;
 }
 
 // Row ≈ 10px pad ×2 + 1.4 line at the frame's 12px basis ⇒ ~3.1em; the header
@@ -38,6 +43,11 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
   // Static config by design: fields/registry are setup-time values (the
   // reactive surface is the row data and the cells' own signals).
   const resolved = resolveFields(props.fields, props.registry);
+  // Sortability is a table-level mode: flip on every column that carries a
+  // comparable value. Columns without a sortValue have no valid sort.
+  const columns = props.sortable
+    ? resolved.columns.map((c) => ({ ...c, sortable: c.sortValue != null }))
+    : resolved.columns;
   return (
     <div
       class="sui-field-frame"
@@ -48,7 +58,7 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
     >
       <DataTable
         data={props.data as object[]}
-        columns={resolved.columns as unknown as TableColumn<object>[]}
+        columns={columns as unknown as TableColumn<object>[]}
         fixedLayout
         fill={!props.maxRows}
         maxHeight={props.maxRows ? rowCapEm(props.maxRows) : undefined}
@@ -56,4 +66,12 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
       />
     </div>
   );
+}
+
+/** Curried sortable variant (ruled 2026-07-18): the table is sortable or it
+ *  isn't — pick the variant, never configure columns. */
+export function SortableFieldTable<T>(
+  props: Omit<FieldTableProps<T>, "sortable">,
+): JSX.Element {
+  return <FieldTable {...props} sortable />;
 }

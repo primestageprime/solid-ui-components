@@ -62,3 +62,67 @@ describe("FieldTable", () => {
     expect(toned[0]?.textContent).toBe("9");
   });
 });
+
+// SortableFieldTable (ruled 2026-07-18): sorting is a table-level mode — the
+// sortable variant flips every column that carries a sortValue; columns
+// without one (no valid sort order) stay inert. Field accessors return JSX,
+// so ordering MUST come from sortValue, never the rendered cell.
+import { fireEvent } from "@solidjs/testing-library";
+import { SortableFieldTable } from "./FieldTable";
+import { col } from "./resolve";
+
+const clickHeader = (container: HTMLElement, label: string) => {
+  const th = Array.from(container.querySelectorAll("th")).find((el) =>
+    el.textContent?.includes(label),
+  );
+  if (!th) throw new Error(`no header matching ${label}`);
+  fireEvent.click(th);
+};
+
+const firstCells = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll("tbody tr")).map(
+    (r) => r.querySelector("td")?.textContent,
+  );
+
+describe("SortableFieldTable", () => {
+  const registry = {
+    note: textCol<Row>("note"),
+    hours: intCol<Row>("hours"),
+    weird: col<Row>("weird", "Weird", () => <span>?</span>),
+  };
+
+  it("marks every sortValue-carrying column sortable; no-sort types stay inert", () => {
+    const { container } = render(() => (
+      <SortableFieldTable
+        data={ROWS}
+        fields={["note", "hours", "weird"]}
+        registry={registry}
+      />
+    ));
+    const sortable = container.querySelectorAll(".hud-table__header-cell--sortable");
+    expect(sortable.length).toBe(2);
+  });
+
+  it("plain FieldTable stays entirely unsortable", () => {
+    const { container } = render(() => (
+      <FieldTable data={ROWS} fields={["note", "hours"]} registry={registry} />
+    ));
+    expect(
+      container.querySelectorAll(".hud-table__header-cell--sortable").length,
+    ).toBe(0);
+  });
+
+  it("orders rows by the raw sortValue, not the rendered JSX", () => {
+    const { container } = render(() => (
+      <SortableFieldTable
+        data={ROWS}
+        fields={["note", "hours"]}
+        registry={registry}
+      />
+    ));
+    clickHeader(container, "Hours");
+    expect(firstCells(container)).toEqual(["alpha", "beta"]); // 4 < 9
+    clickHeader(container, "Hours");
+    expect(firstCells(container)).toEqual(["beta", "alpha"]); // desc
+  });
+});

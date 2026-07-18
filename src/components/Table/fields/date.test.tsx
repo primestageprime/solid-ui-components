@@ -14,10 +14,11 @@ describe("date field module", () => {
     expect(geo).toEqual({ minCh: 10, maxCh: 10, padPx: 18, css: "calc(10ch + 18px)" });
   });
 
-  it("dateCol builds a sortable, center-aligned column at geo width", () => {
+  it("dateCol builds a sortValue-carrying, center-aligned column at geo width", () => {
     const col = dateCol<Row>("createdAt");
     expect(col.id).toBe("createdAt");
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.align).toBe("center");
     expect(col.width).toBe(geo.css);
     expect(col.geo).toBe(geo);

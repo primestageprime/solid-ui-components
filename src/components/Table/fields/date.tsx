@@ -14,7 +14,8 @@ export const dateCol = <T,>(key: keyof T): FieldCol<T> => ({
   header: centered(humanize(String(key))),
   align: "center",
   width: geo.css,
-  sortable: true,
+  // ISO date strings order lexically — the raw value is the sort key.
+  sortValue: (row) => row[key] as string,
   geo,
   accessor: (row) => <DateCell value={row[key] as string} />,
 });

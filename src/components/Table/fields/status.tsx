@@ -61,6 +61,13 @@ export const statusCol = <T,>(
   align: "right",
   width: geo.css,
   geo,
+  // Sorts by display label so equal badges group together; unmapped values
+  // fall back to their raw text, blanks sort last.
+  sortValue: (row) => {
+    const value = row[key];
+    if (value == null || value === "") return null;
+    return map[String(value)]?.label ?? String(value);
+  },
   accessor: (row) => {
     const value = row[key];
     if (value == null || value === "") return "";

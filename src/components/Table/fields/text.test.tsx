@@ -38,9 +38,10 @@ describe("textCol — factory shape", () => {
     expect(typeof col.header).toBe("string");
   });
 
-  it("is sortable, ellipsis-clipped, and carries the text geometry", () => {
+  it("carries a sortValue, is ellipsis-clipped, and carries the text geometry", () => {
     const col = textCol<Row>("note");
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.ellipsis).toBe(true);
     expect(col.geo).toBe(geo);
     expect(col.align).toBeUndefined();

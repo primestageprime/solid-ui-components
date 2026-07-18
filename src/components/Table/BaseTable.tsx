@@ -147,10 +147,18 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
 
     return [...local.data].sort((a, b) => {
       const accessor = column.accessor;
-      const aVal: unknown =
-        typeof accessor === "function" ? accessor(a) : a[accessor];
-      const bVal: unknown =
-        typeof accessor === "function" ? accessor(b) : b[accessor];
+      // JSX-rendering columns (field factories) carry their comparable value
+      // in `sortValue`; keyed/primitive accessors compare directly.
+      const aVal: unknown = column.sortValue
+        ? column.sortValue(a)
+        : typeof accessor === "function"
+          ? accessor(a)
+          : a[accessor];
+      const bVal: unknown = column.sortValue
+        ? column.sortValue(b)
+        : typeof accessor === "function"
+          ? accessor(b)
+          : b[accessor];
 
       if (aVal == null) return dir === "asc" ? 1 : -1;
       if (bVal == null) return dir === "asc" ? -1 : 1;

@@ -20,6 +20,18 @@ export interface AvgColOpts<T> {
   tone?: ToneFn<T, number>;
 }
 
+const isFiniteNumber = (v: unknown): v is number =>
+  typeof v === "number" && !Number.isNaN(v);
+
+const mean = (values: number[]): number | null =>
+  values.length === 0
+    ? null
+    : values.reduce((sum, v) => sum + v, 0) / values.length;
+
+/** The mean of the row's numeric members among `keys`; null when none. */
+const rowMean = <T,>(keys: (keyof T)[], row: T): number | null =>
+  mean(keys.map((key): unknown => row[key]).filter(isFiniteNumber));
+
 /** The mean of `keys` per row: right-aligned float at float geometry,
  *  centered header, accent-toned unless configured otherwise. */
 export const avgCol = <T,>(
@@ -31,15 +43,10 @@ export const avgCol = <T,>(
   align: "right",
   width: floatGeo.css,
   geo: floatGeo,
+  sortValue: (row) => rowMean(keys, row),
   accessor: (row) => {
-    const values = keys
-      .map((key) => row[key])
-      .filter(
-        (v): v is Extract<T[keyof T], number> =>
-          typeof v === "number" && !Number.isNaN(v),
-      );
-    if (values.length === 0) return "";
-    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const avg = rowMean(keys, row);
+    if (avg == null) return "";
     return toneWrap(
       opts.tone?.(avg, row) ?? "accent",
       <FloatCell value={avg} precision={opts.precision ?? 2} />,

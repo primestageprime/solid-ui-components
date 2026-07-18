@@ -10,11 +10,13 @@
 // ============================================
 export * from "./shared";
 export { GEO, col, resolveFields } from "./resolve";
-export { FieldTable } from "./FieldTable";
+export { FieldTable, SortableFieldTable } from "./FieldTable";
 export type { FieldTableProps } from "./FieldTable";
 export { selectionCol, createFieldSelection } from "./selection";
 export type { FieldSelection, FieldSelectionOpts } from "./selection";
 export { nameCol } from "./name";
+export { identityLinkCol } from "./identity-link";
+export type { IdentityLinkColOpts } from "./identity-link";
 export { textCol } from "./text";
 export type { TextColOpts } from "./text";
 export { dateCol } from "./date";

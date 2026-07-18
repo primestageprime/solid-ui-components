@@ -14,10 +14,11 @@ describe("duration field module", () => {
     expect(geo).toEqual({ minCh: 5, maxCh: 9, padPx: 36, css: "calc(9ch + 36px)" });
   });
 
-  it("durationCol builds a sortable, right-aligned column at geo width", () => {
+  it("durationCol builds a sortValue-carrying, right-aligned column at geo width", () => {
     const col = durationCol<Row>("elapsed");
     expect(col.id).toBe("elapsed");
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.align).toBe("right");
     expect(col.width).toBe(geo.css);
     expect(col.geo).toBe(geo);

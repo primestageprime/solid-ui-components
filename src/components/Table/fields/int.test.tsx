@@ -15,12 +15,13 @@ describe("int field", () => {
     expect(geo.minCh).toBeLessThan(geo.maxCh);
   });
 
-  it("intCol builds a right-aligned, sortable column carrying its geometry", () => {
+  it("intCol builds a right-aligned, sortValue-carrying column carrying its geometry", () => {
     const col = intCol<Row>("hours");
     expect(col.id).toBe("hours");
     expect(col.align).toBe("right");
     expect(col.width).toBe(geo.css);
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.geo).toBe(geo);
   });
 

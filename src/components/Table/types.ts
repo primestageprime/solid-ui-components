@@ -22,6 +22,12 @@ export interface TableColumn<T> {
    */
   ellipsis?: boolean;
   sortable?: boolean;
+  /**
+   * Raw value used for sorting when `accessor` returns JSX (a rendered cell
+   * carries no comparable value). When present, the sort comparator reads this
+   * instead of the accessor. Nullish results sort last in either direction.
+   */
+  sortValue?: (row: T) => string | number | null | undefined;
   /** Group label for column grouping — columns sharing the same group string are merged under a colspan header */
   group?: string;
 }

@@ -28,7 +28,8 @@ describe("name field — factory shape", () => {
     // flowing text: no centered() wrapper, so header stays a plain string
     expect(typeof col.header).toBe("string");
     expect(col.ellipsis).toBe(true);
-    expect(col.sortable).toBe(true);
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
     expect(col.geo).toBe(geo);
   });
 

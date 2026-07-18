@@ -22,7 +22,7 @@ export const textCol = <T,>(key: keyof T, opts: TextColOpts<T> = {}): FieldCol<T
   id: String(key),
   header: humanize(String(key)),
   ellipsis: true,
-  sortable: true,
+  sortValue: (row) => String(row[key] ?? ""),
   geo,
   accessor: (row) => {
     const value = String(row[key] ?? "");

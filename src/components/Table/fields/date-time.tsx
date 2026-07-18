@@ -13,7 +13,8 @@ export const dateTimeCol = <T,>(key: keyof T): FieldCol<T> => ({
   header: centered(humanize(String(key))),
   align: "center",
   width: geo.css,
-  sortable: true,
+  // ISO timestamps order lexically — the raw value is the sort key.
+  sortValue: (row) => row[key] as string,
   geo,
   accessor: (row) => <DateTimeCell value={row[key] as string} />,
 });

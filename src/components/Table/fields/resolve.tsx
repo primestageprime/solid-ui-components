@@ -44,6 +44,7 @@ export const col = <T,>(
   header: string,
   cell: (row: T) => JSX.Element,
   fieldType: Exclude<FieldType, "actions"> = "status",
+  sortValue?: (row: T) => string | number | null | undefined,
 ): FieldCol<T> => {
   const geo = GEO[fieldType];
   const flowing = fieldType === "name" || fieldType === "text";
@@ -55,6 +56,7 @@ export const col = <T,>(
     align,
     width: geo.css,
     geo,
+    sortValue,
     accessor: cell,
   };
 };

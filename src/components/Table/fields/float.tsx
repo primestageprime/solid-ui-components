@@ -23,7 +23,7 @@ export const floatCol = <T,>(key: keyof T, opts: FloatColOpts<T> = {}): FieldCol
   header: centered(humanize(String(key))),
   align: "right",
   width: geo.css,
-  sortable: true,
+  sortValue: (row) => row[key] as number,
   geo,
   accessor: (row) => {
     const value = row[key] as number;
