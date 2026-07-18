@@ -1,6 +1,6 @@
 import { type Layering, graphStratify, sugiyama } from "d3-dag";
 import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
-import { map } from "../../fn";
+import { map, pluck } from "../../fn";
 
 /**
  * Custom layering that places every source node (no incoming edges) at layer 0
@@ -72,11 +72,11 @@ export function computeLayout<T>(
   const displayGap = gap ?? DEFAULT_GAP;
 
   const sizeMap = new Map<string, [number, number]>(
-    nodes.map((n) => [n.id, nodeSize ? nodeSize(n) : DEFAULT_NODE_SIZE]),
+    map((n) => [n.id, nodeSize ? nodeSize(n) : DEFAULT_NODE_SIZE], nodes),
   );
 
-  const nodeIds = new Set(nodes.map((n) => n.id));
-  const parentMap = new Map<string, string[]>(nodes.map((n) => [n.id, []]));
+  const nodeIds = new Set(pluck("id", nodes));
+  const parentMap = new Map<string, string[]>(map((n) => [n.id, []], nodes));
 
   for (const edge of edges) {
     if (nodeIds.has(edge.source) && nodeIds.has(edge.target)) {
@@ -84,10 +84,13 @@ export function computeLayout<T>(
     }
   }
 
-  const stratifyData = nodes.map((n) => ({
-    id: n.id,
-    parentIds: parentMap.get(n.id) ?? [],
-  }));
+  const stratifyData = map(
+    (n) => ({
+      id: n.id,
+      parentIds: parentMap.get(n.id) ?? [],
+    }),
+    nodes,
+  );
 
   let dag: ReturnType<ReturnType<typeof graphStratify>>;
   try {
@@ -185,9 +188,9 @@ function fallbackGridLayout<T>(
   nodeRank?: (node: DAGNode<T>) => number | undefined,
   gap: [number, number] = DEFAULT_GAP,
 ): LayoutResult {
-  const idSet = new Set(nodes.map((n) => n.id));
-  const parentMap = new Map<string, string[]>(nodes.map((n) => [n.id, []]));
-  const childMap = new Map<string, string[]>(nodes.map((n) => [n.id, []]));
+  const idSet = new Set(pluck("id", nodes));
+  const parentMap = new Map<string, string[]>(map((n) => [n.id, []], nodes));
+  const childMap = new Map<string, string[]>(map((n) => [n.id, []], nodes));
   for (const e of edges) {
     if (idSet.has(e.source) && idSet.has(e.target)) {
       parentMap.get(e.target)!.push(e.source);
@@ -198,7 +201,7 @@ function fallbackGridLayout<T>(
   // Topological order via Kahn's algorithm; cycles are tolerated (remaining
   // nodes are appended at the end and get layer = max so far).
   const indeg = new Map<string, number>(
-    nodes.map((n) => [n.id, parentMap.get(n.id)!.length]),
+    map((n) => [n.id, parentMap.get(n.id)!.length], nodes),
   );
   const queue: string[] = [];
   for (const [id, d] of indeg) if (d === 0) queue.push(id);
