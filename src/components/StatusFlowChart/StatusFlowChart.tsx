@@ -20,7 +20,7 @@ import {
   type StatusFlowNode,
 } from "./columns";
 import "./StatusFlowChart.css";
-import { map } from "../../fn";
+import { map, filter, pluck } from "../../fn";
 
 export type {
   StatusFlowNode,
@@ -231,20 +231,20 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
 
   const chartChildren = createMemo<EnrichedNode[]>(() => {
     const p = parent();
-    return p ? visibleNodes().filter((n) => n.id !== p.id) : visibleNodes();
+    return p ? filter((n) => n.id !== p.id, visibleNodes()) : visibleNodes();
   });
 
   // SwimlaneChart node shape: { id, data }. We stash the enriched node
   // in `data` so the renderNode callback can read effectiveStatus etc.
   const swimlaneNodes = createMemo((): DAGNode<EnrichedNode>[] =>
-    chartChildren().map((n) => ({ id: n.id, data: n })),
+    map((n) => ({ id: n.id, data: n }), chartChildren()),
   );
 
   // Build edges from each chart child's `dependsOn`. Drop edges that
   // reference a hidden node (parent collapsed its children → those ids
   // aren't rendered, so an arrow to them would dangle).
   const swimlaneEdges = createMemo(() => {
-    const visibleIds = new Set(chartChildren().map((n) => n.id));
+    const visibleIds = new Set(pluck("id", chartChildren()));
     const edges: { source: string; target: string }[] = [];
     for (const n of chartChildren()) {
       for (const src of n.dependsOn ?? []) {

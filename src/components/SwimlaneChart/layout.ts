@@ -1,5 +1,6 @@
 import type { DAGNode, DAGEdge, LayoutEdge } from "../DagChart/types";
 import type { LayoutResult } from "../DagChart/layout";
+import { sortBy } from "../../fn";
 
 export type SwimlaneOptions<T> = {
   /**
@@ -94,7 +95,7 @@ export function computeSwimlaneLayout<T>(
   // Center column defaults to 0; can be overridden by opts.centerCol so
   // a consumer can "follow" a different column (e.g. wherever the DOING
   // nodes currently sit) without rewriting node data.
-  const uniqueCols = Array.from(nodesByCol.keys()).sort((a, b) => a - b);
+  const uniqueCols = sortBy((a) => a, Array.from(nodesByCol.keys()));
   const minCol = uniqueCols[0];
   const maxCol = uniqueCols[uniqueCols.length - 1];
   const centerCol = opts.centerCol ?? 0;
@@ -238,7 +239,7 @@ export function computeSwimlaneLayout<T>(
   }
 
   // 8. Stable column order for sweeps + Y assignment.
-  const orderedCols = Array.from(visibleCols.keys()).sort((a, b) => a - b);
+  const orderedCols = sortBy((a) => a, Array.from(visibleCols.keys()));
 
   // 9. Initial rank = current order within each col.
   const rank = new Map<string, number>();

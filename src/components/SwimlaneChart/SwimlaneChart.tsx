@@ -25,6 +25,7 @@ import type { DAGNode } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
+import { map, filter, pluck } from "../../fn";
 import {
   computeBoundaryBadges,
   computeEdgeViews,
@@ -215,9 +216,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       // Enterers: in current but not in prev. Skip if the item is also
       // currently in the leaving set (it's re-appearing — let it just
       // slide back without a hard re-enter).
-      const newlyEntered = current
-        .filter((c) => !prevIds.has(c.id))
-        .map((c) => c.id);
+      const newlyEntered = pluck(
+        "id",
+        filter((c) => !prevIds.has(c.id), current),
+      );
       if (newlyEntered.length > 0) {
         setEnteringIds((existing) => {
           const next = new Set(existing);
@@ -305,12 +307,15 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // height overflow at the bottom of the affected column.
   type BottomBadge = SwimlaneBottomBadge;
   const bottomBadges = createMemo<BottomBadge[]>(() =>
-    (layout().rowOverflows ?? []).map((o) => ({
-      key: `rowoverflow|${o.column}`,
-      x: o.x,
-      y: o.bottomY + STUB_LENGTH + BADGE_RADIUS,
-      count: o.count,
-    })),
+    map(
+      (o) => ({
+        key: `rowoverflow|${o.column}`,
+        x: o.x,
+        y: o.bottomY + STUB_LENGTH + BADGE_RADIUS,
+        count: o.count,
+      }),
+      layout().rowOverflows ?? [],
+    ),
   );
   const [bottomBadgesStore, setBottomBadgesStore] = createStore<BottomBadge[]>(
     [],
