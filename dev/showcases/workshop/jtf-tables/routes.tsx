@@ -12,13 +12,20 @@ import { createSignal } from "solid-js";
 import {
   BaseTable,
   DateCell,
-  DateTimeCell,
   IntCell,
   MetricValueCell,
   StatusCell,
   type TableColumn,
 } from "../../../../src/components/Table";
-import { FieldTable, col } from "../../../../src/components/Table/fields";
+import {
+  FieldTable,
+  col,
+  identityLinkCol,
+  textCol,
+  dateTimeCol,
+  durationCol,
+  toneWrap,
+} from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { EmphasisBody, MutedBody } from "../../../../src/components/Text";
 import type { TableEntry } from "./shared";
@@ -308,6 +315,7 @@ function CachedVesselCallsTable() {
 // ---------------------------------------------------------------------------
 
 interface DurabilityRow {
+  id: string;
   vessel_name: string;
   vessel_type: string;
   asset_id: string;
@@ -318,6 +326,7 @@ interface DurabilityRow {
 
 const DURABILITY_ROWS: DurabilityRow[] = [
   {
+    id: "vc-durab-a",
     vessel_name: "Ever Steadfast",
     vessel_type: "CONTAINER",
     asset_id: "BE-104",
@@ -326,6 +335,7 @@ const DURABILITY_ROWS: DurabilityRow[] = [
     missing_categories: [],
   },
   {
+    id: "vc-durab-b",
     vessel_name: "Pacific Dawn",
     vessel_type: "TANKER",
     asset_id: "BE-207",
@@ -334,6 +344,7 @@ const DURABILITY_ROWS: DurabilityRow[] = [
     missing_categories: ["FTIR.O", "MSI"],
   },
   {
+    id: "vc-durab-c",
     vessel_name: "Coral Meridian",
     vessel_type: "RORO",
     asset_id: "BE-112",
@@ -342,6 +353,7 @@ const DURABILITY_ROWS: DurabilityRow[] = [
     missing_categories: [],
   },
   {
+    id: "vc-durab-d",
     vessel_name: "Golden Horizon",
     vessel_type: "BULK",
     asset_id: "BE-309",
@@ -350,6 +362,7 @@ const DURABILITY_ROWS: DurabilityRow[] = [
     missing_categories: ["SCR"],
   },
   {
+    id: "vc-durab-e",
     vessel_name: "Ever Resolute",
     vessel_type: "CONTAINER",
     asset_id: "BE-215",
@@ -359,71 +372,68 @@ const DURABILITY_ROWS: DurabilityRow[] = [
   },
 ];
 
+// Vessel calls have a detail page (/detail/:id), so the name IS the link
+// (ruled 2026-07-18); the vessel-type glyph leads it, adopting the link ink.
+const DURABILITY_REGISTRY = {
+  vessel_name: identityLinkCol<DurabilityRow>("vessel_name", {
+    href: (row) => `/detail/${row.id}`,
+    glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
+  }),
+  asset_id: textCol<DurabilityRow>("asset_id"),
+  connected_at: dateTimeCol<DurabilityRow>("connected_at"),
+  // Nullable end → BLANK (ruled 2026-07-18): no 'In Progress' placeholder.
+  disconnected_at: dateTimeCol<DurabilityRow>("disconnected_at"),
+  // Duration DERIVED from the two timestamps (minutes); an in-progress call
+  // has no defined end, so it reads null → blank.
+  duration: durationCol<DurabilityRow>(
+    (row) =>
+      row.disconnected_at
+        ? Math.floor(
+            (new Date(row.disconnected_at).getTime() -
+              new Date(row.connected_at).getTime()) /
+              60_000,
+          )
+        : null,
+    "m",
+    { id: "duration", header: "Duration" },
+  ),
+  // Derived display + conditional tone (the 5% tail): FULL→success, a missing
+  // list→danger, unknown→blank. Semantic tone via toneWrap — no color at the
+  // call site.
+  data_status: col<DurabilityRow>(
+    "data_status",
+    "Data Status",
+    (row) => {
+      const missing = row.missing_categories;
+      if (missing === null) return "";
+      if (missing.length === 0) return toneWrap("success", "FULL");
+      return toneWrap("danger", missing.join(", "));
+    },
+    "text",
+    (row) =>
+      row.missing_categories === null
+        ? ""
+        : row.missing_categories.length === 0
+          ? "FULL"
+          : row.missing_categories.join(", "),
+  ),
+};
+
 function DurabilityTable() {
-  const columns: TableColumn<DurabilityRow>[] = [
-    {
-      id: "vessel_name",
-      header: "Vessel Name",
-      accessor: (row) => (
-        <VesselNameCell type={row.vessel_type} name={row.vessel_name} />
-      ),
-      width: "200px",
-    },
-    {
-      id: "asset_id",
-      header: "Asset ID",
-      accessor: (row) => row.asset_id,
-      width: "100px",
-    },
-    {
-      id: "connected_at",
-      header: "Connected",
-      accessor: (row) => <DateTimeCell value={row.connected_at} />,
-      width: "180px",
-    },
-    {
-      id: "disconnected_at",
-      header: "Disconnected",
-      accessor: (row) =>
-        row.disconnected_at ? (
-          <DateTimeCell value={row.disconnected_at} />
-        ) : (
-          "In Progress"
-        ),
-      width: "180px",
-    },
-    {
-      id: "duration",
-      header: "Duration",
-      accessor: (row) =>
-        connectionDuration(row.connected_at, row.disconnected_at),
-      width: "100px",
-    },
-    {
-      id: "data_status",
-      header: "Data Status",
-      accessor: (row) => {
-        if (row.missing_categories === null) return "—";
-        if (row.missing_categories.length === 0) {
-          return (
-            <EmphasisBody>
-              <InlineText color="var(--sui-success)">FULL</InlineText>
-            </EmphasisBody>
-          );
-        }
-        return (
-          <EmphasisBody>
-            <InlineText color="var(--sui-danger)">
-              {row.missing_categories.join(", ")}
-            </InlineText>
-          </EmphasisBody>
-        );
-      },
-      width: "200px",
-    },
-  ];
   return (
-    <BaseTable data={DURABILITY_ROWS} columns={columns} compact stickyHeader />
+    <FieldTable
+      data={DURABILITY_ROWS}
+      fields={[
+        "vessel_name",
+        "asset_id",
+        "connected_at",
+        "disconnected_at",
+        "duration",
+        "data_status",
+      ]}
+      registry={DURABILITY_REGISTRY}
+      maxRows={12}
+    />
   );
 }
 
@@ -788,9 +798,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/durability",
     name: "Durability Vessel Calls",
-    status: "raw",
-    customs: [],
-    note: "All widths explicit on TableColumn; VesselName entity cell, nullable disconnected_at ('In Progress'), conditional data_status coloring.",
+    status: "sui",
+    note: "Migrated to FieldTable: identityLinkCol vessel (→ /detail/:id, type glyph), textCol/dateTimeCol, durationCol DERIVED from the two timestamps (in-progress → blank), nullable disconnected_at → blank, data_status col() custom with toneWrap (FULL→success / missing→danger). Explicit widths deleted.",
     component: DurabilityTable,
   },
   {
