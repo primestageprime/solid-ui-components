@@ -321,99 +321,65 @@ const METRIC_STATS_DATA: MetricRow[] = [
   { metric_id: "AMPS_L1", count: 2688, min: 42.3, avg: 188.71, max: 260.9 },
 ];
 
-const METRIC_STATS_COLUMNS: TableColumn<MetricRow>[] = [
-  { id: "metric_id", header: "Metric", accessor: "metric_id", sortable: true },
-  {
-    id: "count",
-    header: "Total",
-    accessor: (row) => {
-      const value = isCachedMetric(row) ? row.total_cnt : row.count;
-      return value.toLocaleString();
-    },
-    sortable: true,
+// Union-guarded numerics become DERIVED sources: one reader per column reads
+// through the isCachedMetric arm (accessor + sortValue share it). The
+// MetricStats arm has no non-zero/valid/stddev/repeats/coverage — those read
+// null and render BLANK (ruled 2026-07-18: no '-' placeholder). IntCell/
+// FloatCell own the grouping/precision the hand-formatters did.
+const METRIC_STATS_REGISTRY = {
+  metric_id: fields.textCol<MetricRow>("metric_id"),
+  count: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.total_cnt : row.count), { id: "count", header: "Total" }),
+  nonzero: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.nonzero_cnt : null), { id: "nonzero", header: "Non-Zero" }),
+  valid: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.valid_cnt : null), { id: "valid", header: "Valid" }),
+  min: fields.floatCol<MetricRow>((row) => (isCachedMetric(row) ? row.min_val : row.min), { id: "min", header: "Min" }),
+  avg: fields.floatCol<MetricRow>((row) => (isCachedMetric(row) ? row.avg_val : row.avg), { id: "avg", header: "Avg" }),
+  max: fields.floatCol<MetricRow>((row) => (isCachedMetric(row) ? row.max_val : row.max), { id: "max", header: "Max" }),
+  max_repeats: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.max_consec_repeats : null), { id: "max_repeats", header: "Max Repeats" }),
+};
+
+// Composite cells stay col() customs (the 5% tail): a "lo - hi" range and an
+// "Nm (P%)" coverage cell, each with a derived numeric sortValue so they stay
+// sortable under SortableFieldTable. BLANK off the cached arm.
+const stddevRangeCol = fields.col<MetricRow>(
+  "stddev_range",
+  "StdDev Range",
+  (row) => {
+    if (!isCachedMetric(row)) return "";
+    const lo = row.stddev_min;
+    const hi = row.stddev_max;
+    if (lo == null || hi == null) return "";
+    return `${lo.toFixed(2)} - ${hi.toFixed(2)}`;
   },
-  {
-    id: "nonzero",
-    header: "Non-Zero",
-    accessor: (row) => {
-      if (!isCachedMetric(row)) return "-";
-      return row.nonzero_cnt.toLocaleString();
-    },
-    sortable: true,
-  },
-  {
-    id: "valid",
-    header: "Valid",
-    accessor: (row) => {
-      if (!isCachedMetric(row)) return "-";
-      return row.valid_cnt.toLocaleString();
-    },
-    sortable: true,
-  },
-  {
-    id: "min",
-    header: "Min",
-    accessor: (row) => {
-      const value = isCachedMetric(row) ? row.min_val : row.min;
-      return value !== null ? value.toFixed(2) : "N/A";
-    },
-    sortable: true,
-  },
-  {
-    id: "avg",
-    header: "Avg",
-    accessor: (row) => {
-      const value = isCachedMetric(row) ? row.avg_val : row.avg;
-      return value !== null ? value.toFixed(2) : "N/A";
-    },
-    sortable: true,
-  },
-  {
-    id: "max",
-    header: "Max",
-    accessor: (row) => {
-      const value = isCachedMetric(row) ? row.max_val : row.max;
-      return value !== null ? value.toFixed(2) : "N/A";
-    },
-    sortable: true,
-  },
-  {
-    id: "stddev_range",
-    header: "StdDev Range",
-    accessor: (row) => {
-      if (!isCachedMetric(row)) return "-";
-      const min = row.stddev_min !== null ? row.stddev_min.toFixed(2) : "N/A";
-      const max = row.stddev_max !== null ? row.stddev_max.toFixed(2) : "N/A";
-      return `${min} - ${max}`;
-    },
-  },
-  {
-    id: "max_repeats",
-    header: "Max Repeats",
-    accessor: (row) => {
-      if (!isCachedMetric(row)) return "-";
-      return row.max_consec_repeats;
-    },
-    sortable: true,
-  },
-  {
-    id: "coverage",
-    header: "Coverage",
-    accessor: (row) => {
-      if (!isCachedMetric(row)) return "-";
-      return `${row.coverage_mins}m (${row.coverage_pct.toFixed(1)}%)`;
-    },
-    sortable: true,
-  },
+  "text",
+  (row) => (isCachedMetric(row) ? row.stddev_min : null),
+);
+const coverageCol = fields.col<MetricRow>(
+  "coverage",
+  "Coverage",
+  (row) => (isCachedMetric(row) ? `${row.coverage_mins}m (${row.coverage_pct.toFixed(1)}%)` : ""),
+  "text",
+  (row) => (isCachedMetric(row) ? row.coverage_pct : null),
+);
+
+const METRIC_STATS_FIELDS = [
+  "metric_id",
+  "count",
+  "nonzero",
+  "valid",
+  "min",
+  "avg",
+  "max",
+  stddevRangeCol,
+  "max_repeats",
+  coverageCol,
 ];
 
 const MetricsStatsReplicaTable = () => (
-  <BaseTable
+  <fields.SortableFieldTable
     data={METRIC_STATS_DATA}
-    columns={METRIC_STATS_COLUMNS}
-    maxHeight="500px"
-    stickyHeader
-    hoverable
+    fields={METRIC_STATS_FIELDS}
+    registry={METRIC_STATS_REGISTRY}
+    maxRows={12}
   />
 );
 
@@ -469,9 +435,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "(embedded) MetricsStatsTable",
     name: "MetricsStatsTable — metric statistics",
-    status: "raw",
-    customs: ["derived-accessor", "unit-suffix"],
-    note: "Union-guarded hand-formatted numerics, composite 'min - max' and 'Nm (P%)' string cells; sortable + maxHeight/stickyHeader.",
+    status: "sui",
+    note: "Migrated to SortableFieldTable: union-guarded intCol/floatCol derived sources (MetricStats arm → blank), composite 'lo - hi' and 'Nm (P%)' col() customs with derived sortValue, maxRows scroll cap.",
     component: MetricsStatsReplicaTable,
   },
 ];
