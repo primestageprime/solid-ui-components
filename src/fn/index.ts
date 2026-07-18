@@ -11,9 +11,12 @@
 export { pipe } from "./pipe";
 export { map } from "./map";
 export { filter } from "./filter";
+export { prop } from "./prop";
 export { pluck } from "./pluck";
 export { sortBy } from "./sortBy";
 export { sum } from "./sum";
 export { mean } from "./mean";
+export { length } from "./length";
+export { lengthOf } from "./lengthOf";
 export { join } from "./join";
 export { groupBy } from "./groupBy";

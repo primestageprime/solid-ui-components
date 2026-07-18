@@ -51,12 +51,22 @@ form shown and a direct form that appends the array (`map(fn, array) => U[]`,
 | `pipe(v, …fns)` | value-first composition | typed to 12 args / 11 stages, no untyped rest fallback; unary — no direct form |
 | `map(fn)` | `(readonly T[]) => U[]` | + direct `map(fn, arr)`; wrapper over `Array.prototype.map` |
 | `filter(pred)` | `(readonly T[]) => T[]` | + direct `filter(pred, arr)`; type-guard overload narrows in both forms |
+| `prop(key)` | `(obj) => obj[key]` | + direct `prop(key, obj)`; function-first property access. Direct form is `T[K]`-typed; a curried `prop(key)` passed as an argument loses its value type — see caveat below |
 | `pluck(key)` | `(readonly T[]) => T[key][]` | + direct `pluck(key, arr)`; the `xs.map(x => x.key)` shape in one step |
 | `sortBy(keyFn)` | `(readonly T[]) => T[]` | + direct `sortBy(keyFn, arr)`; ascending, **stable**, **copies** (non-mutating). Direct form infers the key-fn param from the array |
 | `sum(xs)` | `(readonly number[]) => number` | unary; `sum([]) === 0` |
 | `mean(xs)` | `(readonly number[]) => number` | unary; `NaN` on empty (guard on `.length`) |
+| `length(xs)` | `({ length: number }) => number` | unary; the `.length` of an array or string |
+| `lengthOf(key)` | `(obj) => number` | + direct `lengthOf(key, obj)`; `length(prop(key, obj))` — the function-first `obj.key.length` |
 | `join(sep)` | `(readonly unknown[]) => string` | + direct `join(sep, arr)`; wrapper over `Array.prototype.join` |
 | `groupBy(keyFn)` | `(readonly T[]) => Map<K, T[]>` | + direct `groupBy(keyFn, arr)`; first-seen key order; order-preserving buckets |
+
+> **`prop` caveat.** As a curried accessor, `prop(key)` recovers the property's
+> value type only when applied directly to an object. Passed as an _argument_ to
+> a higher-order helper it types the value as `unknown` — `sortBy(prop("w"))` is
+> not usable. For sort keys use a typed arrow (`sortBy((r) => r.w)`); for array
+> projection use `pluck`. `prop` is for direct/`pipe`d object access, and it is
+> what `lengthOf` composes over.
 
 ## Examples
 
@@ -83,6 +93,8 @@ const label = fn.pipe(selected, fn.pluck("label"), fn.join(", "));
 const doubled = fn.map((n) => n * 2, counts); // not counts.map(...)
 const ids = fn.pluck("id", rows); //             not rows.map(r => r.id)
 const ordered = fn.sortBy((r) => r.rank, rows); // not [...rows].sort(...)
+const owner = fn.prop("owner", task); //          not task.owner
+const nChains = fn.lengthOf("dotChains", hits); // not hits.dotChains.length
 ```
 
 ## Adding a function
