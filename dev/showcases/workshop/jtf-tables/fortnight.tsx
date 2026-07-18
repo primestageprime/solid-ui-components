@@ -256,10 +256,11 @@ const ComplianceThresholdReplica: Component = () => (
 );
 
 // ============================================
-// 10. Missing Info Preview (RAW)
-// MissingInfoPreview.tsx: BaseTable with 10 columns — StatusBadge operator
-// kind, AffectedVessels tooltip cell, MissingOrString fallbacks rendering a
-// pending "empty" badge for blank operator fields.
+// 10. Missing Info Preview (SUI — migrated 2026-07-18)
+// MissingInfoPreview.tsx: FieldTable — statusCol's valid-value mapping for
+// the operator badge, listCol (item formatter, +N more, tooltip) for the
+// vessels, textCol for the contact fields. Missing values render blank per
+// the no-empty-markers ruling (the MissingOrString EMPTY badges are gone).
 // ============================================
 
 interface AffectedVesselStub {
@@ -279,39 +280,6 @@ interface MissingInfoRowStub {
   phone: string | null;
   email: string | null;
 }
-
-function capitalize(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-}
-
-/** jtf MissingOrStringCell: value when present, pending "empty" badge when blank. */
-const MissingOrStringReplica: Component<{ value: string | null }> = (props) => (
-  <Show
-    when={props.value !== null && props.value !== ""}
-    fallback={<SmStatusBadge variant="pending" label="empty" />}
-  >
-    <StringCell value={props.value ?? ""} />
-  </Show>
-);
-
-/** jtf AffectedVesselsCell: up to 3 shown, "+N more" muted, full list on hover. */
-const AffectedVesselsReplica: Component<{ vessels: AffectedVesselStub[] }> = (props) => {
-  const format = (v: AffectedVesselStub) => `${v.vessel_name} (${v.asset_id})`;
-  const shown = () => props.vessels.slice(0, 3).map(format).join(", ");
-  const extra = () => Math.max(0, props.vessels.length - 3);
-  const full = () => props.vessels.map(format).join(", ");
-  return (
-    <Tooltip content={full()} openDelay={1000} class="sui-tooltip__trigger--cell">
-      <InlineText>
-        {shown()}
-        <Show when={extra() > 0}>
-          <InlineText color="var(--sui-text-muted)">{` +${extra()} more`}</InlineText>
-        </Show>
-      </InlineText>
-    </Tooltip>
-  );
-};
 
 const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
   {
@@ -376,37 +344,51 @@ const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
   },
 ];
 
-const MISSING_INFO_COLUMNS: TableColumn<MissingInfoRowStub>[] = [
-  {
-    id: "operator_kind",
-    header: "Operator",
-    accessor: (row) => <SmStatusBadge variant="info" label={capitalize(row.operator_kind)} />,
-  },
-  {
-    id: "vessel_call_count",
-    header: "Affects",
-    accessor: (row) => <IntCell value={row.vessel_call_count} />,
-  },
-  {
-    id: "affected_vessels",
-    header: "Vessels",
-    accessor: (row) => <AffectedVesselsReplica vessels={row.affected_vessels} />,
-  },
-  { id: "name", header: "Name", accessor: (row) => <MissingOrStringReplica value={row.name} /> },
-  { id: "street", header: "Street", accessor: (row) => <MissingOrStringReplica value={row.street} /> },
-  { id: "city", header: "City", accessor: (row) => <MissingOrStringReplica value={row.city} /> },
-  { id: "state", header: "State", accessor: (row) => <MissingOrStringReplica value={row.state} /> },
-  {
-    id: "postal_code",
-    header: "Postal",
-    accessor: (row) => <MissingOrStringReplica value={row.postal_code} />,
-  },
-  { id: "phone", header: "Phone", accessor: (row) => <MissingOrStringReplica value={row.phone} /> },
-  { id: "email", header: "Email", accessor: (row) => <MissingOrStringReplica value={row.email} /> },
-];
+const MISSING_INFO_REGISTRY = {
+  operator_kind: fields.statusCol<MissingInfoRowStub>(
+    "operator_kind",
+    {
+      operator: { label: "Operator", tone: "accent" },
+      agent: { label: "Agent", tone: "accent" },
+    },
+    { header: "Operator" },
+  ),
+  vessel_call_count: fields.col<MissingInfoRowStub>(
+    "vessel_call_count",
+    "Affects",
+    (row) => String(row.vessel_call_count),
+    "int",
+  ),
+  affected_vessels: fields.listCol<MissingInfoRowStub, AffectedVesselStub>(
+    "affected_vessels",
+    { header: "Vessels", item: (v) => `${v.vessel_name} (${v.asset_id})` },
+  ),
+  name: fields.textCol<MissingInfoRowStub>("name"),
+  street: fields.textCol<MissingInfoRowStub>("street"),
+  city: fields.textCol<MissingInfoRowStub>("city"),
+  state: fields.textCol<MissingInfoRowStub>("state"),
+  postal_code: fields.textCol<MissingInfoRowStub>("postal_code"),
+  phone: fields.textCol<MissingInfoRowStub>("phone"),
+  email: fields.textCol<MissingInfoRowStub>("email"),
+};
 
 const MissingInfoReplica: Component = () => (
-  <BaseTable data={MISSING_INFO_ROWS} columns={MISSING_INFO_COLUMNS} />
+  <FieldTable
+    data={MISSING_INFO_ROWS}
+    fields={[
+      "operator_kind",
+      "vessel_call_count",
+      "affected_vessels",
+      "name",
+      "street",
+      "city",
+      "state",
+      "postal_code",
+      "phone",
+      "email",
+    ]}
+    registry={MISSING_INFO_REGISTRY}
+  />
 );
 
 // ============================================
@@ -732,8 +714,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: FORTNIGHT_ROUTE,
     name: "Missing Info Preview",
-    status: "raw",
-    note: "raw: StatusBadge + AffectedVessels custom cells, MissingOrString empty-badge fallbacks",
+    status: "sui",
+    note: "statusCol mapping + listCol + textCol registries (migrated 2026-07-18); missing values render blank",
     component: MissingInfoReplica,
   },
   {

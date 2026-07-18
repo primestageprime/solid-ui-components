@@ -96,10 +96,16 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
 
 ### New curried column types / factory options (demand-ranked)
 
-1. **`statusCol(key, { label?, tone, href? })`** — badge cell from a value.
-   Demand: MissingInfoPreview (operator kind), ViolationsPreview (violation
-   type), NoxWidgets CE projection, fortnight reports list (linked status),
-   durability data_status.
+1. ~~**`statusCol`**~~ — SHIPPED 2026-07-18 (ruled):
+   `statusCol(key, map, { header? })` — a mapping of valid values →
+   `{ label, tone }`; tone resolves to the theme badge variant; null renders
+   blank; unmapped values render as quiet muted text. First consumer:
+   MissingInfoPreview. Remaining demand (ViolationsPreview, NoxWidgets CE
+   projection, fortnight list, durability) migrates on the same type; the
+   `href` option is still pending (item 2).
+   Sibling SHIPPED 2026-07-18: **`listCol(key, { max?, header?, item? })`** —
+   comma list with +N-more overflow and full-list tooltip (MissingInfoPreview
+   vessels; item formatter for object lists).
 2. **`href?: (row) => string`** on nameCol/textCol/dateTimeCol/statusCol —
    the link cell. Demand: VesselName first columns (index, ViolationsPreview,
    nox-report), AccentRouteLink period/week cells (fortnight list,

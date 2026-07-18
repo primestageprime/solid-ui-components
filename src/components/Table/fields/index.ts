@@ -27,4 +27,8 @@ export { avgCol } from "./avg";
 export type { AvgColOpts } from "./avg";
 export { moneyCol } from "./money";
 export { durationCol } from "./duration";
+export { statusCol } from "./status";
+export type { StatusColMapping, StatusColOpts } from "./status";
+export { listCol } from "./list";
+export type { ListColOpts } from "./list";
 export { ACTION_ICONS, geoFor, actionCol, clusterCol } from "./actions";
