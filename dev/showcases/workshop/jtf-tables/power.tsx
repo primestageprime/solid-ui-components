@@ -18,10 +18,9 @@ import {
   FloatCell,
   IntCell,
   MinuteDateTimeCell,
-  floatCol,
 } from "../../../../src/components/Table";
 import type { TableColumn } from "../../../../src/components/Table";
-import { FieldTable, textCol, col, avgCol } from "../../../../src/components/Table/fields";
+import { FieldTable, SortableFieldTable, textCol, col, floatCol, avgCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { TextSublabel } from "../../../../src/components/Text";
 import { TightStack } from "../../../../src/components/Layout";
@@ -326,18 +325,30 @@ const PIVOT_ROWS: PivotRow[] = [
   { timestamp: "2026-07-08T18:00:00Z", values: new Map([["aux_1_value", 351.6], ["aux_2_value", 341.2], ["aux_3_value", null]]) },
 ];
 
-const pivotColumns: TableColumn<PivotRow>[] = [
-  { id: "timestamp", header: "Timestamp", accessor: (row) => <MinuteDateTimeCell value={row.timestamp} />, sortable: true },
-  ...PIVOT_METRICS.map((m) =>
-    floatCol<PivotRow>(m, m, 2, { field: (row) => row.values.get(m) ?? null }),
-  ),
-];
-
-const HourlyPivotTable: Component = () => (
-  <DataTableContainer maxHeight="320px">
-    <BaseTable data={PIVOT_ROWS} columns={pivotColumns} stickyHeader />
-  </DataTableContainer>
-);
+// Runtime-built specs (precedent: FortnightReportBody's OCR migration): one
+// fields.floatCol per metric discovered in the data, each a DERIVED source
+// reading the row's Map. The timestamp keeps its minute-grain cell as a col()
+// custom on dateTime geometry (sorted by the raw ISO). registry stays {} — the
+// specs ARE the columns.
+const HourlyPivotTable: Component = () => {
+  const pivotFields = [
+    col<PivotRow>(
+      "timestamp",
+      "Timestamp",
+      (row) => <MinuteDateTimeCell value={row.timestamp} />,
+      "dateTime",
+      (row) => row.timestamp,
+    ),
+    ...PIVOT_METRICS.map((m) =>
+      floatCol<PivotRow>((row) => row.values.get(m) ?? null, { id: m, header: m, precision: 2 }),
+    ),
+  ];
+  return (
+    <DataTableContainer maxHeight="320px">
+      <SortableFieldTable data={PIVOT_ROWS} fields={pivotFields} registry={{}} />
+    </DataTableContainer>
+  );
+};
 
 // ============================================
 // Catalog entries
@@ -378,9 +389,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "(embedded) HourlyDataTable",
     name: "Hourly minute-avg pivot",
-    status: "raw",
-    customs: ["derived-accessor"],
-    note: "Runtime-pivoted columns — one floatCol per metric discovered in the data, Map accessors, DataTableContainer scroll frame.",
+    status: "sui",
+    note: "Migrated to SortableFieldTable: runtime-built specs — one fields.floatCol per metric with a DERIVED Map-reading source; timestamp col() custom keeps the minute cell; registry {}. DataTableContainer keeps the scroll frame.",
     component: HourlyPivotTable,
   },
 ];
