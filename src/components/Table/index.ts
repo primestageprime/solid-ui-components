@@ -3,6 +3,8 @@ export * from "./BaseTable";
 export * from "./GroupedTable";
 export { FilterableTable } from "./FilterableTable";
 export type { FilterableTableProps } from "./FilterableTable";
+export { TableQuickFilter } from "./TableQuickFilter";
+export type { TableQuickFilterProps } from "./TableQuickFilter";
 export * from "./SelectableTable";
 export * from "./createSelectionStore";
 export * from "./CellRenderers";
