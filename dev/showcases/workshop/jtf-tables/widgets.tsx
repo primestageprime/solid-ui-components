@@ -79,34 +79,27 @@ const ROG_PERIOD_DATA: RogPeriodRow[] = [
   { period: "After", pct: 21, fidThc: 114.6, highlight: "after" },
 ];
 
-const thcColor = (row: RogPeriodRow) =>
-  row.highlight === "during" ? "#00ff88" : "#ff8800";
-const rogPeriodColor = (row: RogPeriodRow) =>
-  row.highlight === "during" ? "#00ff88" : undefined;
-
-const ROG_DETAIL_COLUMNS: TableColumn<RogPeriodRow>[] = [
-  {
-    id: "period",
-    header: "Period",
-    accessor: (row) => (
-      <InlineText color={rogPeriodColor(row)}>{row.period}</InlineText>
-    ),
-  },
-  { id: "pct", header: "%", accessor: (row) => `${row.pct}%`, align: "right" },
-  {
-    id: "fidThc",
+// Structural twin of the NOx detail registry (FID THC instead of NOx): the
+// data layer flags the active control period; the cell wears success (during) /
+// warning (before-after baseline). No hex at the call site.
+const ROG_PERIOD_REGISTRY = {
+  period: fields.textCol<RogPeriodRow>("period", {
+    tone: (_v, row) => (row.highlight === "during" ? "success" : "default"),
+  }),
+  pct: fields.intCol<RogPeriodRow>("pct", { suffix: "%", header: "Share" }),
+  fidThc: fields.floatCol<RogPeriodRow>("fidThc", {
+    precision: 1,
     header: "FID THC",
-    accessor: (row) => (
-      <InlineText color={thcColor(row)}>
-        <FloatCell value={row.fidThc} precision={1} />
-      </InlineText>
-    ),
-    align: "right",
-  },
-];
+    tone: (_v, row) => (row.highlight === "during" ? "success" : "warning"),
+  }),
+};
 
 const RogDetailPeriodTable = () => (
-  <BaseTable data={ROG_PERIOD_DATA} columns={ROG_DETAIL_COLUMNS} compact />
+  <fields.FieldTable
+    data={ROG_PERIOD_DATA}
+    fields={["period", "pct", "fidThc"]}
+    registry={ROG_PERIOD_REGISTRY}
+  />
 );
 
 // ============================================================================
@@ -439,9 +432,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/fortnight/[id] (ROG detail)",
     name: "VesselCallRogDetail — Statistics by Control Period",
-    status: "raw",
-    customs: ["derived-accessor", "unit-suffix"],
-    note: "Structural twin of the NOx detail table with FID THC; same conditional-color blocker.",
+    status: "sui",
+    note: "Migrated to FieldTable (twin of NOx detail): textCol/intCol/floatCol registry; during→success else warning tone fn on the highlight flag; pct → suffix '%'.",
     component: RogDetailPeriodTable,
   },
   {
