@@ -148,7 +148,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
 
   // ----- derived state ------------------------------------------------------
   const aboveItems = createMemo(() =>
-    props.items.filter((it) => it.position === "above"),
+    filter((it) => it.position === "above", props.items),
   );
 
   const satisfiedById = createMemo(() => {
@@ -231,17 +231,19 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   /** Look up the above/below items for one (area × focus) cell. */
   const bucketFor = (key: AreaFocusCellKey): FocusBucket => {
     const empty: FocusBucket = { above: [], below: [] };
-    const above = props.items.filter(
+    const above = filter(
       (it) =>
         it.area === key.area.label &&
         it.focus === key.focus.label &&
         it.position === "above",
+      props.items,
     );
-    const below = props.items.filter(
+    const below = filter(
       (it) =>
         it.area === key.area.label &&
         it.focus === key.focus.label &&
         it.position === "below",
+      props.items,
     );
     return above.length === 0 && below.length === 0 ? empty : { above, below };
   };
@@ -303,7 +305,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         { todo: 0, doing: 0, done: 0 },
       );
     const aboveSegmentsAccessor = () => workSegments(aboveTotals());
-    const metCount = () => below.filter((n) => isNeedMet(n)).length;
+    const metCount = () => filter((n) => isNeedMet(n), below).length;
     const belowSegmentsAccessor = () => {
       const m = metCount();
       const u = below.length - m;

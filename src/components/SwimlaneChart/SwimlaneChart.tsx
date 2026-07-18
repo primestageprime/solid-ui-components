@@ -193,22 +193,22 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   createEffect(
     on(items, (current, prev) => {
       if (!prev) return;
-      const currentIds = new Set(current.map((i) => i.id));
-      const prevIds = new Set(prev.map((i) => i.id));
+      const currentIds = new Set(pluck("id", current));
+      const prevIds = new Set(pluck("id", prev));
 
       // Leavers: in prev but not in current.
-      const newlyLeft = prev.filter((p) => !currentIds.has(p.id));
+      const newlyLeft = filter((p) => !currentIds.has(p.id), prev);
       if (newlyLeft.length > 0) {
         setLeavingItems((prevLeaving) => {
-          const stillLeaving = prevLeaving.filter((p) => !currentIds.has(p.id));
-          const stillLeavingIds = new Set(stillLeaving.map((p) => p.id));
-          const fresh = newlyLeft.filter((n) => !stillLeavingIds.has(n.id));
+          const stillLeaving = filter((p) => !currentIds.has(p.id), prevLeaving);
+          const stillLeavingIds = new Set(pluck("id", stillLeaving));
+          const fresh = filter((n) => !stillLeavingIds.has(n.id), newlyLeft);
           return [...stillLeaving, ...fresh];
         });
-        const removedIds = new Set(newlyLeft.map((n) => n.id));
+        const removedIds = new Set(pluck("id", newlyLeft));
         setTimeout(() => {
           setLeavingItems((prevLeaving) =>
-            prevLeaving.filter((p) => !removedIds.has(p.id)),
+            filter((p) => !removedIds.has(p.id), prevLeaving),
           );
         }, NODE_LEAVE_MS);
       }

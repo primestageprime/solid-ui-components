@@ -25,6 +25,7 @@ import {
   tableContainerStyle,
 } from "./types";
 import { Button } from "../Button/Button";
+import { map, filter } from "../../fn";
 import {
   Column,
   ClusterRow,
@@ -74,7 +75,7 @@ export function SelectableTable<T extends TableRow>(
     return classList.join(" ");
   };
 
-  const allIds = createMemo(() => local.data.map((row) => local.getRowId(row)));
+  const allIds = createMemo(() => map((row) => local.getRowId(row), local.data));
 
   const allSelected = createMemo(() => {
     const sel = selected();
@@ -85,7 +86,7 @@ export function SelectableTable<T extends TableRow>(
   const someSelected = createMemo(() => {
     const sel = selected();
     const ids = allIds();
-    const count = ids.filter((id) => sel.has(id)).length;
+    const count = filter((id) => sel.has(id), ids).length;
     return count > 0 && count < ids.length;
   });
 
@@ -154,7 +155,7 @@ export function SelectableTable<T extends TableRow>(
 
   const selectedRows = createMemo(() => {
     const sel = selected();
-    return local.data.filter((row) => sel.has(local.getRowId(row)));
+    return filter((row) => sel.has(local.getRowId(row)), local.data);
   });
 
   const handleRowClick = (row: T, index: number, e: MouseEvent) => {
