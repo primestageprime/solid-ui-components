@@ -117,26 +117,39 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
    index/nox-report VesselName columns) migrates on this type; an `href`
    option on non-identity cols (textCol/dateTimeCol/statusCol) is now
    demand-unproven — re-rank if a caller shows up that isn't an identity.
-3. **Derived accessors** — every scalar factory accepts
-   `(row) => value` with explicit `{ id, header }` when derived. Demand:
-   durations computed from two timestamps (durability, index, nox-report),
-   Pacific-time strings (thousand-hour, PowerLogCacheView), Map-backed
-   pivots (HourlyDataTable). (Computed row AVERAGES are covered by avgCol —
-   SHIPPED 2026-07-18: `avgCol(keys, { header, precision, tone })`, mean of
-   the configured fields, null-skipping, BLANK when empty (ruled 2026-07-18: no empty markers), accent tone by
-   default. Consumed by jtf power-log-ocr.)
-   Feeding durationCol raw seconds via a derived accessor also retires every
-   pre-formatted duration string.
+3. ~~**Derived accessors**~~ — SHIPPED 2026-07-18 (ruled): every scalar
+   factory (`intCol`/`floatCol`/`durationCol`) accepts `(row) => value`
+   alongside `keyof T`, with an explicit `{ id, header }` when derived; the
+   accessor and sortValue share the one reader. First consumers (jtf):
+   MetricsStatsTable (union-guarded int/float derived sources — the
+   `MetricStats` arm reads null → blank), Durability + 1000-Hour manifest
+   (durationCol fed minutes derived from the two instants — in-progress →
+   blank), HourlyDataTable (runtime-built floatCol per metric reading the
+   row's Map). `dateTimeCol` gained a sibling `timeZone`
+   ("America/Los_Angeles") that renders a raw instant zoned, retiring the
+   pre-formatted Pacific-time string columns (1000-Hour manifest). (Computed
+   row AVERAGES are covered by avgCol — SHIPPED 2026-07-18:
+   `avgCol(keys, { header, precision, tone })`, mean of the configured fields,
+   null-skipping, BLANK when empty, accent tone by default. Consumed by jtf
+   power-log-ocr.) Feeding durationCol minutes via a derived accessor retires
+   every pre-formatted duration string.
 4. ~~**`placeholder?: string`**~~ — REJECTED 2026-07-18 (ruled): "Empty
    placeholder shouldn't be a thing. If the value is empty, just show an
    empty cell." No opt-in, no exceptions — null renders BLANK, full stop.
    Migrations drop existing placeholder strings (durability's nullable
    disconnected_at → blank; PowerLogCacheView's '—' literals → blank).
-5. **`tone` completed across nameCol** (int/float/text shipped) — bag-state
-   colored vessel names (nox-report preview), coverage FULL/Nm cells (index).
-6. **`suffix?: string` on floatCol** (or a percentCol) — "%", "ppm", "kW"
-   units rendered inside the cell. Demand: VesselCall Nox/Rog pct columns,
-   thousand-hour completeness, NoxWidgets ppm columns.
+5. ~~**name recede knob**~~ — SHIPPED 2026-07-18 (ruled): the "name tone"
+   demand resolved to a single `muted?: (row) => boolean` recede knob on
+   `nameCol`/`identityLinkCol` (a boolean, NOT the Tone vocabulary — int/
+   float/text keep their `tone` fn). `identityLinkCol` landed as the
+   vessel-name column in Durability + 1000-Hour manifest (name IS the link to
+   `/detail/:id`, type glyph); the `muted` knob itself still awaits a recede
+   consumer (bag-state names in nox-report preview, coverage cells in index).
+6. ~~**`suffix?: string` on floatCol/intCol**~~ — SHIPPED 2026-07-18 (ruled):
+   "%", "ppm", "kW" rendered in muted ink inside the cell; the geometry
+   auto-widens by the suffix glyphs. First consumers (jtf): VesselCallNoxDetail
+   + VesselCallRogDetail pct columns ("%") and the 1000-Hour manifest
+   completeness ("%"). Remaining ppm demand (NoxWidgets) rides the same option.
 
 ### Table-level FieldTable features
 
