@@ -10,6 +10,7 @@
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { ClusterRow, GrowBox } from "../Layout/variants";
 import "./LabeledDivider.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface LabeledDividerProps
   extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +21,11 @@ export interface LabeledDividerProps
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 const labelAsString = (label: JSX.Element | undefined): string | undefined =>
   typeof label === "string" ? label : undefined;

@@ -5,6 +5,8 @@
  * between source and target columns, avoiding in-column siblings.
  */
 
+import { pipe, filter, sortBy } from "../../fn";
+
 export type EdgeRect = {
   /** Center x. */
   x: number;
@@ -86,9 +88,13 @@ export function bezierAvoidingObstacles(
 
   // Find obstacles whose bbox the straight line would cross. Sort by
   // distance from source so we detour around the nearest one first.
-  const blockers = obstacles
-    .filter((o) => segmentIntersectsRect(fromX, from.y, toX, to.y, o, 2))
-    .sort((a, b) => Math.abs(a.x - fromX) - Math.abs(b.x - fromX));
+  const blockers = pipe(
+    obstacles,
+    filter((o: ObstacleRect) =>
+      segmentIntersectsRect(fromX, from.y, toX, to.y, o, 2),
+    ),
+    sortBy((o: ObstacleRect) => Math.abs(o.x - fromX)),
+  );
 
   if (blockers.length === 0) {
     return bezierThroughChannelPath(from, to);

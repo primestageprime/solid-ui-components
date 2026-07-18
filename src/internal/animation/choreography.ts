@@ -43,6 +43,8 @@
  * (Solid's JSX types don't admit literal `data-*` attributes on components;
  * a typed spread does).
  */
+import { pipe, map, filter } from "../../fn";
+
 export const anim = (handle: string): { "data-anim": string } => ({
   "data-anim": handle,
 });
@@ -165,12 +167,14 @@ export async function choreograph(
       continue;
     }
     const ms = totalWeight > 0 ? (totalMs * s.weight) / totalWeight : 0;
-    const anims = s.effects
-      .map((e) => {
+    const anims = pipe(
+      s.effects,
+      map((e: EffectInstance) => {
         const el = resolveTarget(e);
         return el ? e.run(el, ms) : null;
-      })
-      .filter((a): a is Animation => a !== null);
+      }),
+      filter((a): a is Animation => a !== null),
+    );
     live = anims;
     // `animation.finished` is serviced from the RENDERING loop — in a
     // hidden/occluded tab it never resolves even once playState is

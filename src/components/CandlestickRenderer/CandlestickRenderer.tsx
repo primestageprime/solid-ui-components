@@ -11,6 +11,7 @@
 // ============================================
 import { type Component, Show, mergeProps } from "solid-js";
 import "./CandlestickRenderer.css";
+import { pipe, filter, join } from "../../fn";
 
 /** OHLC shape consumed by `CandlestickRenderer`. */
 export interface Candlestick {
@@ -78,7 +79,7 @@ export const CandlestickRenderer: Component<CandlestickRendererProps> = (
   const props = mergeProps({ precision: DEFAULT_PRECISION }, rawProps);
 
   const containerClass = () =>
-    ["sui-candlestick", props.class].filter(Boolean).join(" ");
+    pipe(["sui-candlestick", props.class], filter(Boolean), join(" "));
 
   const body = (
     <Show
