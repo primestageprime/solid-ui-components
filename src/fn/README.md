@@ -1,7 +1,7 @@
 # `fn` — data-last functional utilities
 
-A small, self-contained module of always-curried, **data-last** helpers plus a
-typed, value-first **`pipe`**. It exists to replace inline dot-chained
+A small, self-contained module of **data-last** helpers plus a typed,
+value-first **`pipe`**. It exists to replace inline dot-chained
 `.map().filter().reduce()` lambdas with small named pure functions composed
 through `pipe` (ruled 2026-07-18).
 
@@ -12,11 +12,20 @@ through `pipe` (ruled 2026-07-18).
 
 ## Convention
 
-- **Data-last, one calling shape.** Every helper takes its configuration first
-  and returns a function of the data: `map(fn)` is `(array) => U[]`,
-  `sortBy(keyFn)` is `(array) => T[]`. There is no data-first overload (no
-  purry-style dispatch). Helpers that take _only_ data (`sum`, `mean`) are
-  called directly. Everything is meant to flow through `pipe`.
+- **Dual form: curried for `pipe`, direct everywhere else** (ruled 2026-07-18:
+  Peter prefers `map(f, arr)` over `arr.map(f)` — even for a single call). Every
+  non-unary helper has two shapes:
+  - **curried / data-last** — `map(fn)` returns `(array) => U[]`. Use this
+    _inside a `pipe`_, where each stage is a one-argument function.
+  - **direct / full application** — `map(fn, array)` runs immediately and
+    returns the result. Use this _outside a pipe_, and **prefer it over
+    `array.map(fn)`** as the house style, single calls included.
+
+  It is 2-ary dispatch (branch on `arguments.length`), NOT ramda-style
+  auto-curry — exactly two overloads per function, config-first in both. There
+  is no data-first form (`map(arr, fn)` is a type error). Helpers that take
+  _only_ data (`sum`, `mean`) are unary and always called directly; `pipe`
+  itself is unchanged.
 - **`pipe` is value-first** (like remeda, not `compose`): `pipe(value, f1, f2)`
   reads top-to-bottom as the data moving through stages. Typed by hand-written
   overloads up to 12 arguments (a value + 11 stages), and a mismatched stage is
@@ -33,17 +42,21 @@ through `pipe` (ruled 2026-07-18).
 
 ## Functions
 
-| fn | shape | notes |
+Every helper below (except unary `sum`/`mean` and `pipe`) has BOTH the curried
+form shown and a direct form that appends the array (`map(fn, array) => U[]`,
+`sortBy(keyFn, array) => T[]`, …).
+
+| fn | curried shape | notes |
 |----|----|----|
-| `pipe(v, …fns)` | value-first composition | typed to arity 12 + rest fallback |
-| `map(fn)` | `(readonly T[]) => U[]` | wrapper over `Array.prototype.map` |
-| `filter(pred)` | `(readonly T[]) => T[]` | type-guard overload narrows the element type |
-| `pluck(key)` | `(readonly T[]) => T[key][]` | the `xs.map(x => x.key)` shape in one step |
-| `sortBy(keyFn)` | `(readonly T[]) => T[]` | ascending, **stable**, **copies** (non-mutating); pass a typed key fn |
-| `sum(xs)` | `(readonly number[]) => number` | `sum([]) === 0` |
-| `mean(xs)` | `(readonly number[]) => number` | `NaN` on empty (guard on `.length`) |
-| `join(sep)` | `(readonly unknown[]) => string` | wrapper over `Array.prototype.join` |
-| `groupBy(keyFn)` | `(readonly T[]) => Map<K, T[]>` | first-seen key order; order-preserving buckets |
+| `pipe(v, …fns)` | value-first composition | typed to 12 args / 11 stages, no untyped rest fallback; unary — no direct form |
+| `map(fn)` | `(readonly T[]) => U[]` | + direct `map(fn, arr)`; wrapper over `Array.prototype.map` |
+| `filter(pred)` | `(readonly T[]) => T[]` | + direct `filter(pred, arr)`; type-guard overload narrows in both forms |
+| `pluck(key)` | `(readonly T[]) => T[key][]` | + direct `pluck(key, arr)`; the `xs.map(x => x.key)` shape in one step |
+| `sortBy(keyFn)` | `(readonly T[]) => T[]` | + direct `sortBy(keyFn, arr)`; ascending, **stable**, **copies** (non-mutating). Direct form infers the key-fn param from the array |
+| `sum(xs)` | `(readonly number[]) => number` | unary; `sum([]) === 0` |
+| `mean(xs)` | `(readonly number[]) => number` | unary; `NaN` on empty (guard on `.length`) |
+| `join(sep)` | `(readonly unknown[]) => string` | + direct `join(sep, arr)`; wrapper over `Array.prototype.join` |
+| `groupBy(keyFn)` | `(readonly T[]) => Map<K, T[]>` | + direct `groupBy(keyFn, arr)`; first-seen key order; order-preserving buckets |
 
 ## Examples
 
@@ -65,6 +78,11 @@ const avg = fn.pipe(
 
 // pluck + join
 const label = fn.pipe(selected, fn.pluck("label"), fn.join(", "));
+
+// Outside a pipe, prefer the DIRECT form over a native method call:
+const doubled = fn.map((n) => n * 2, counts); // not counts.map(...)
+const ids = fn.pluck("id", rows); //             not rows.map(r => r.id)
+const ordered = fn.sortBy((r) => r.rank, rows); // not [...rows].sort(...)
 ```
 
 ## Adding a function

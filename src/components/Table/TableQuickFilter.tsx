@@ -37,12 +37,15 @@ export function normalizeValue(value: unknown): string {
 export function createFilterPattern(filter: string): RegExp | null {
   if (!filter.trim()) return null;
 
-  const escaped = filter
+  const parts = filter
     .toLowerCase()
     .split(" ")
-    .filter((part) => part.length > 0)
-    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join(".*");
+    .filter((part) => part.length > 0);
+  const escaped = pipe(
+    parts,
+    map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    join(".*"),
+  );
 
   return new RegExp(escaped, "i");
 }

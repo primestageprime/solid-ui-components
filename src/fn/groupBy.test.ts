@@ -31,3 +31,26 @@ describe("groupBy", () => {
     expect(out.get(false)).toEqual([-1, -3]);
   });
 });
+
+describe("groupBy — direct form", () => {
+  it("applies immediately with groupBy(keyFn, array)", () => {
+    const out = groupBy((n) => n % 2, [2, 1, 4, 3]);
+    expect(out.get(0)).toEqual([2, 4]);
+    expect(out.get(1)).toEqual([1, 3]);
+  });
+
+  it("direct === curried-then-applied", () => {
+    const nums = [1, 2, 3, 4];
+    const key = (n: number) => n % 2;
+    expect([...groupBy(key, nums).entries()]).toEqual([
+      ...groupBy(key)(nums).entries(),
+    ]);
+  });
+
+  it("rejects reversed argument order at compile time", () => {
+    const reversed = () =>
+      // @ts-expect-error key fn must come first, array second.
+      groupBy([1, 2, 3], (n: number) => n);
+    expect(typeof reversed).toBe("function"); // never invoked; type-only check
+  });
+});

@@ -132,7 +132,7 @@ function RateChart(props: ThroughputChartProps) {
   });
 
   const yMax = createMemo(() =>
-    niceMax(Math.max(0, ...points().map((p) => p.rowsPerMinute))),
+    niceMax(Math.max(0, ...pluck("rowsPerMinute", points()))),
   );
   const avg = createMemo(() => {
     const pts = points();

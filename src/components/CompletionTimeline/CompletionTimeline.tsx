@@ -9,7 +9,7 @@
 import { createMemo } from "solid-js";
 import { Chart, Grid, XAxis, YAxis, BarSeries, ChartTooltip } from "../Chart";
 import { ChartHeader } from "../ChartHeader";
-import { pipe, pluck, sum } from "../../fn";
+import { map, pipe, pluck, sum } from "../../fn";
 
 export interface CompletionEvent {
   tableName: string;
@@ -91,10 +91,10 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
   });
 
   const yMaxCount = createMemo(() =>
-    Math.max(1, ...buckets().map((b) => b.count)),
+    Math.max(1, ...pluck("count", buckets())),
   );
   const _yMaxCumulative = createMemo(() =>
-    Math.max(1, ...buckets().map((b) => b.cumulative)),
+    Math.max(1, ...pluck("cumulative", buckets())),
   );
 
   // X domain in bucket-index space; tick labels render the bucket start time.
@@ -142,7 +142,7 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
           bandWidth={0.7}
         />
         <ChartTooltip
-          data={buckets().map((b, i) => ({ ...b, _i: i }))}
+          data={pipe(buckets(), map((b, i) => ({ ...b, _i: i })))}
           x={(b) => b._i}
         >
           {(b) => (

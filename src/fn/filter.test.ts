@@ -19,3 +19,30 @@ describe("filter", () => {
     expect(strings).toEqual(["a", "b"]);
   });
 });
+
+describe("filter — direct form", () => {
+  it("applies immediately with filter(pred, array)", () => {
+    expect(filter((n: number) => n > 1, [1, 2, 3])).toEqual([2, 3]);
+  });
+
+  it("direct === curried-then-applied", () => {
+    const pred = (n: number) => n % 2 === 0;
+    expect(filter(pred, [1, 2, 3, 4])).toEqual(filter(pred)([1, 2, 3, 4]));
+  });
+
+  it("narrows the element type in the direct form", () => {
+    const mixed: (string | number)[] = ["a", 1, "b", 2];
+    const strings: string[] = filter(
+      (v): v is string => typeof v === "string",
+      mixed,
+    );
+    expect(strings).toEqual(["a", "b"]);
+  });
+
+  it("rejects reversed argument order at compile time", () => {
+    const reversed = () =>
+      // @ts-expect-error predicate must come first, array second.
+      filter([1, 2, 3], (n: number) => n > 1);
+    expect(typeof reversed).toBe("function"); // never invoked; type-only check
+  });
+});

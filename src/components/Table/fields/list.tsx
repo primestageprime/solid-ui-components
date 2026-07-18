@@ -4,6 +4,7 @@
 // muted "+N more", and the full list lives in a hover tooltip. Empty renders
 // blank (no empty markers). Flowing-text geometry (shares the text field's).
 import { Tooltip } from "../../Tooltip";
+import { join, map } from "../../../fn";
 import { geo as textGeo } from "./text";
 import { humanize, toneWrap, type FieldCol } from "./shared";
 
@@ -29,14 +30,14 @@ export const listCol = <T, I = string>(
   accessor: (row) => {
     const raw = (row[key] as unknown as readonly I[] | null) ?? [];
     if (raw.length === 0) return "";
-    const items = raw.map(opts.item ?? String);
+    const items = map(opts.item ?? String, raw);
     const max = opts.max ?? 3;
-    const shown = items.slice(0, max).join(", ");
+    const shown = join(", ", items.slice(0, max));
     const extra = items.length - max;
     if (extra <= 0) return <span class="cell-string">{shown}</span>;
     return (
       <Tooltip
-        content={items.join(", ")}
+        content={join(", ", items)}
         class="cell-longtext cell-longtext--tooltip"
       >
         <span class="cell-string">

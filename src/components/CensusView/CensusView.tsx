@@ -20,7 +20,7 @@ import {
   WrappedClusterRow,
 } from "../Layout/variants";
 import { DangerBody, MonoMeta } from "../Text/variants";
-import { groupBy } from "../../fn";
+import { filter, groupBy, map, pipe } from "../../fn";
 import "./CensusView.css";
 
 import {
@@ -122,11 +122,12 @@ function buildColumns(
 function groupIntoBuckets(
   list: readonly CensusTable[],
 ): { id: CensusBucketId; label: string; hint: string; tables: CensusTable[] }[] {
-  const by = groupBy(bucketOf)(list);
-  return CENSUS_BUCKETS.filter((b) => by.has(b.id)).map((b) => ({
-    ...b,
-    tables: by.get(b.id)!,
-  }));
+  const by = groupBy(bucketOf, list);
+  return pipe(
+    CENSUS_BUCKETS,
+    filter((b) => by.has(b.id)),
+    map((b) => ({ ...b, tables: by.get(b.id)! })),
+  );
 }
 
 /** Columns for the schema sub-table inside the detail panel. */

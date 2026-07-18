@@ -55,3 +55,33 @@ describe("sortBy", () => {
     expect(sortBy((n: number) => n)([5])).toEqual([5]);
   });
 });
+
+describe("sortBy — direct form", () => {
+  it("applies immediately; key-fn param is inferred from the array", () => {
+    const rows = [{ w: 3 }, { w: 1 }, { w: 2 }];
+    // No annotation on `r` — inferred from `rows` in the direct form.
+    expect(sortBy((r) => r.w, rows)).toEqual([{ w: 1 }, { w: 2 }, { w: 3 }]);
+  });
+
+  it("does not mutate the input", () => {
+    const input = [3, 1, 2];
+    const out = sortBy((n) => n, input);
+    expect(out).toEqual([1, 2, 3]);
+    expect(input).toEqual([3, 1, 2]);
+    expect(out).not.toBe(input);
+  });
+
+  it("direct === curried-then-applied", () => {
+    const input = [3, 1, 2];
+    expect(sortBy((n: number) => n, input)).toEqual(
+      sortBy((n: number) => n)(input),
+    );
+  });
+
+  it("rejects reversed argument order at compile time", () => {
+    const reversed = () =>
+      // @ts-expect-error key fn must come first, array second.
+      sortBy([1, 2, 3], (n: number) => n);
+    expect(typeof reversed).toBe("function"); // never invoked; type-only check
+  });
+});
