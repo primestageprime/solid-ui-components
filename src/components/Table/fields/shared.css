@@ -20,6 +20,11 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 .sui-field-frame {
   min-width: min(var(--sui-field-table-min), 100%);
   max-width: var(--sui-field-table-max);
+  /* Columns never get squeezed below their geometry (ruled 2026-07-18: a
+     12-column table was crushing the name column to nothing while every
+     other column kept its data). The inner table holds its Σmin budget and
+     the frame scrolls the excess horizontally instead. */
+  overflow-x: auto;
   /* ONE ch basis. Column widths (th), the frame's width budget, and the cell
      glyphs must all resolve `ch` against the same font, or the budget and the
      columns disagree and the slack pools into uneven cell margins (measured:
@@ -41,6 +46,13 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 .sui-field-frame td {
   padding-left: 8px;
   padding-right: 8px;
+}
+
+/* The width floor that makes the geometry real under table-layout: fixed —
+   without it, a 100%-width table inside a pane-capped frame scales every
+   column width down proportionally. */
+.sui-field-frame .hud-table__table {
+  min-width: var(--sui-field-table-min);
 }
 
 /* Semantic tones (ruled 2026-07-17): the configure-time treatment vocabulary.

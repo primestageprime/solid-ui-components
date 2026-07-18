@@ -27,8 +27,9 @@ describe("FieldTable", () => {
     ));
     const frame = container.querySelector(".sui-field-frame") as HTMLElement;
     expect(frame).toBeTruthy();
-    // text {8,40,16} + int {4,9,18} ⇒ min 12ch+34px, max 49ch+34px
-    expect(frame.style.getPropertyValue("--sui-field-table-min")).toBe("calc(12ch + 34px)");
+    // text {8,40,16} expands + int {4,9,18} is css-fixed (consumes its 9ch
+    // under fixed layout) ⇒ floor 8+9=17ch+34px, max 49ch+34px
+    expect(frame.style.getPropertyValue("--sui-field-table-min")).toBe("calc(17ch + 34px)");
     expect(frame.style.getPropertyValue("--sui-field-table-max")).toBe("calc(49ch + 34px)");
     expect(container.querySelectorAll("tbody tr").length).toBe(2);
   });

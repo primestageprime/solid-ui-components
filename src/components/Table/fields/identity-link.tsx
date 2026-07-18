@@ -27,6 +27,7 @@ export const identityLinkCol = <T,>(
 ): FieldCol<T> => ({
   id: String(key),
   header: opts.header ?? humanize(String(key)),
+  width: nameGeo.css,
   ellipsis: true,
   sortValue: (row) => String(row[key] ?? ""),
   geo: nameGeo,

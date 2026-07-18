@@ -13,10 +13,14 @@ interface Row {
 const ROW: Row = { name: "Adlai Arnold", title: "Lead Dispatcher" };
 
 describe("name field — geometry", () => {
-  it("exports an expanding geo (min < max, no fixed css)", () => {
-    expect(geo).toEqual({ minCh: 12, maxCh: 50, padPx: 16 });
-    expect(geo.css).toBeUndefined();
-    expect(geo.minCh).toBeLessThan(geo.maxCh);
+  it("is FIXED at 50ch — names never get squeezed (ruled 2026-07-18)", () => {
+    expect(geo).toEqual({
+      minCh: 50,
+      maxCh: 50,
+      padPx: 16,
+      css: "calc(50ch + 16px)",
+    });
+    expect(geo.minCh).toBe(geo.maxCh);
   });
 });
 

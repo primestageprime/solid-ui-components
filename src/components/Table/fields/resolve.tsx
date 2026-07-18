@@ -84,11 +84,20 @@ export function resolveFields<T>(
   const minCh = columns.reduce((s, c) => s + c.geo.minCh, 0);
   const maxCh = columns.reduce((s, c) => s + c.geo.maxCh, 0);
   const padPx = columns.reduce((s, c) => s + (c.geo.padPx ?? 0), 0);
+  // The fixed-layout floor: a column with a css width CONSUMES that width
+  // outright (fixed layout never content-fits it down to minCh), so the
+  // table's minimum is Σ css-widths plus the expanding columns' minCh —
+  // summing raw minCh would leave the expanding columns' share underwater
+  // and fixed layout would crush them to nothing.
+  const floorCh = columns.reduce(
+    (s, c) => s + (c.geo.css ? c.geo.maxCh : c.geo.minCh),
+    0,
+  );
   return {
     columns,
     minCh,
     maxCh,
-    minW: `calc(${minCh}ch + ${padPx}px)`,
+    minW: `calc(${floorCh}ch + ${padPx}px)`,
     maxW: `calc(${maxCh}ch + ${padPx}px)`,
   };
 }

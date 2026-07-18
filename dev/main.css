@@ -2571,6 +2571,13 @@ th:has(.tf-th-center) .hud-table__header-content {
 .jtf-catalog-pane .hud-table .hud-table__table {
   width: auto;
 }
+/* …but NOT inside a field frame: `table-layout: fixed` is ignored when the
+   table's width is auto, and auto layout squeezes the ellipsis (name) column
+   below its geometry. Field frames own their sizing (Σmin floor + overflow-x
+   on the frame), so the table keeps its definite width there. */
+.jtf-catalog-pane .sui-field-frame .hud-table__table {
+  width: 100%;
+}
 /* The catalog rail scrolls internally so selecting far-down entries never
    scrolls the rendered table off the scene. */
 .jtf-catalog-rail {
