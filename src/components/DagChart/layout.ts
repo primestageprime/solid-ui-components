@@ -1,5 +1,6 @@
 import { type Layering, graphStratify, sugiyama } from "d3-dag";
 import type { DAGNode, DAGEdge, LayoutEdge } from "./types";
+import { map } from "../../fn";
 
 /**
  * Custom layering that places every source node (no incoming edges) at layer 0
@@ -158,8 +159,10 @@ export function computeLayout<T>(
   const layoutEdges: LayoutEdge[] = [...dag.links()].map((link) => {
     const sourceId = (link.source.data as { id: string }).id;
     const targetId = (link.target.data as { id: string }).id;
-    const points = (link.points as [number, number][]).map(([px, py]) =>
-      direction === "horizontal" ? { x: py, y: px } : { x: px, y: py },
+    const points = map(
+      ([px, py]) =>
+        direction === "horizontal" ? { x: py, y: px } : { x: px, y: py },
+      link.points as [number, number][],
     );
     return { sourceId, targetId, points };
   });

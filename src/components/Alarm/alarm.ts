@@ -21,6 +21,8 @@
  *     "barcode only at >N concurrent" doesn't drift with dataset size.
  */
 
+import { pipe, filter, map } from "../../fn";
+
 export type Pt = { readonly x: number; readonly y: number };
 export type Range = { readonly start: number; readonly end: number };
 export type HotZone = Range & { readonly count: number };
@@ -90,12 +92,14 @@ export function findHotZones(
     }
   }
   // Drop zero-width zones and tally source-range count per zone.
-  return zones
-    .filter((z) => z.end > z.start)
-    .map((z) => ({
+  return pipe(
+    zones,
+    filter((z: { start: number; end: number; count: number }) => z.end > z.start),
+    map((z: { start: number; end: number; count: number }) => ({
       ...z,
       count: ranges.filter((r) => r.start < z.end && r.end > z.start).length,
-    }));
+    })),
+  );
 }
 
 /* Filter out ranges that intersect any zone (the block has replaced them
@@ -117,13 +121,15 @@ export function clampRanges<T extends Range>(
   xMin: number,
   xMax: number,
 ): T[] {
-  return ranges
-    .map((r) => ({
+  return pipe(
+    ranges,
+    map((r: T) => ({
       ...r,
       start: Math.max(xMin, r.start),
       end: Math.min(xMax, r.end),
-    }))
-    .filter((r) => r.end > r.start);
+    })),
+    filter((r: T) => r.end > r.start),
+  );
 }
 
 /* Full per-series pipeline in one call. Returns the render-ready
