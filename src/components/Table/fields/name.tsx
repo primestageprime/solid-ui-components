@@ -13,15 +13,24 @@
 // p99 = 41ch, and the longest LEGITIMATE name at 43ch — everything past ~48ch
 // is dirty data (addresses, emails, notes in name columns) that SHOULD
 // truncate; ellipsis remains for exactly that case.
-import { humanize, type FieldCol, type FieldGeo } from "./shared";
+import { humanize, toneWrap, type FieldCol, type FieldGeo } from "./shared";
 import { LongTextCell } from "../textCells";
 
 export const geo: FieldGeo = { minCh: 50, maxCh: 50, padPx: 16, css: "calc(50ch + 16px)" };
 
+export interface NameColOpts<T> {
+  /** Recede knob (ruled 2026-07-18): the name renders muted when true —
+   *  a single boolean, not the Tone vocabulary (e.g. bag membership). */
+  muted?: (row: T) => boolean;
+}
+
 /** Known-field factory: the primary name/title column. Left-aligned humanized
  *  header, fixed 50ch (names never get squeezed); overflow ellipsizes with
  *  the full value in a hover tooltip. */
-export const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
+export const nameCol = <T,>(
+  key: keyof T = "name" as keyof T,
+  opts: NameColOpts<T> = {},
+): FieldCol<T> => ({
   id: String(key),
   header: humanize(String(key)),
   width: geo.css,
@@ -32,6 +41,9 @@ export const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
     const value = String(row[key] ?? "");
     // Blank, not the legacy em-dash (ruled 2026-07-18: no empty markers).
     if (value === "") return "";
-    return <LongTextCell value={value} clampLines={1} reveal="tooltip" />;
+    return toneWrap(
+      opts.muted?.(row) ? "muted" : undefined,
+      <LongTextCell value={value} clampLines={1} reveal="tooltip" />,
+    );
   },
 });

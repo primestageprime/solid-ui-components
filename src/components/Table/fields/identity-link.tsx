@@ -17,6 +17,9 @@ export interface IdentityLinkColOpts<T> {
   glyph?: (row: T) => JSX.Element;
   /** Header label (default: humanized key). */
   header?: string;
+  /** Recede knob (ruled 2026-07-18): the name renders muted when true —
+   *  a single boolean, not the Tone vocabulary (e.g. already in the bag). */
+  muted?: (row: T) => boolean;
 }
 
 /** The primary identity column for an entity with a detail page: the name is
@@ -35,8 +38,14 @@ export const identityLinkCol = <T,>(
     const value = String(row[key] ?? "");
     // Blank, not a dead link (ruled 2026-07-18: no empty markers).
     if (value === "") return "";
+    const muted = opts.muted?.(row) === true;
     return (
-      <a class="sui-identity-link" href={opts.href(row)}>
+      <a
+        class={
+          muted ? "sui-identity-link sui-identity-link--muted" : "sui-identity-link"
+        }
+        href={opts.href(row)}
+      >
         {opts.glyph?.(row)}
         <LongTextCell value={value} clampLines={1} reveal="tooltip" />
       </a>

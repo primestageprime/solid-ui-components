@@ -46,3 +46,40 @@ describe("float field", () => {
     expect(container.querySelector(".cell-float")?.textContent).toBe("3.1416");
   });
 });
+
+// Wave 1 (ruled 2026-07-18): derived source, in-cell suffix, blank nulls.
+describe("floatCol — derived source + suffix + blank", () => {
+  interface DRow {
+    a: number;
+    b: number | null;
+  }
+  const rows: DRow = { a: 3, b: null };
+
+  it("derived fn source shares ONE reader between accessor and sortValue", () => {
+    const col = floatCol<DRow>((r) => r.a * 2, { id: "double_a", header: "Double A" });
+    expect(col.id).toBe("double_a");
+    expect(col.sortValue?.(rows)).toBe(6);
+  });
+
+  it("throws without an explicit id on a derived source", () => {
+    expect(() => floatCol<DRow>((r) => r.a)).toThrow(/explicit id/);
+  });
+
+  it("renders the suffix in muted ink and widens the geometry", () => {
+    const col = floatCol<DRow>("a", { suffix: "ppm" });
+    expect(col.geo.maxCh).toBe(16); // 12 + "ppm".length + 1
+    expect(col.geo.css).toBe("calc(16ch + 18px)");
+    const { container } = render(() =>
+      (col.accessor as (r: DRow) => never)(rows),
+    );
+    expect(container.querySelector(".sui-field-suffix")?.textContent).toBe(" ppm");
+  });
+
+  it("renders blank for null (ruled 2026-07-18: empty value → empty cell)", () => {
+    const col = floatCol<DRow>("b");
+    const { container } = render(() =>
+      (col.accessor as (r: DRow) => never)(rows),
+    );
+    expect(container.textContent).toBe("");
+  });
+});

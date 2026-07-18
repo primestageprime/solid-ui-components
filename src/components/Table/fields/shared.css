@@ -84,3 +84,12 @@ span[class*="sui-field-tone--"] :is(.cell-longtext, .cell-longtext.cell-longtext
 .sui-identity-link :is(.cell-longtext, .cell-longtext.cell-longtext--tooltip) {
   color: inherit;
 }
+/* Recede knob (ruled 2026-07-18): a muted identity still links, in muted ink. */
+.sui-identity-link--muted {
+  color: var(--sui-text-muted);
+}
+
+/* In-cell unit suffix ("%", "ppm", "kW") — quiet ink so the value leads. */
+.sui-field-suffix {
+  color: var(--sui-text-muted);
+}

@@ -68,6 +68,35 @@ export const toneWrap = (tone: Tone | undefined, cell: JSX.Element): JSX.Element
 /** A fields entry: a known id, an action-id cluster, or an explicit column. */
 export type FieldSpec<T> = string | string[] | FieldCol<T>;
 
+/** A column's value source (ruled 2026-07-18): a row key, or a DERIVED
+ *  `(row) => value` function — durations from two timestamps, Map-backed
+ *  pivots. The derived form requires an explicit `id` in the opts; the
+ *  accessor and sortValue share the ONE reader (never duplicate a
+ *  computation across two callbacks). */
+export type ValueSource<T, V> = keyof T | ((row: T) => V);
+
+export const readerOf = <T, V>(source: ValueSource<T, V>): ((row: T) => V) =>
+  typeof source === "function" ? source : (row) => row[source] as V;
+
+export const idOf = <T, V>(source: ValueSource<T, V>, id?: string): string => {
+  if (typeof source !== "function") return String(source);
+  if (!id) throw new Error("a derived field column needs an explicit id");
+  return id;
+};
+
+/** Widen a geometry by `extraCh` content columns (an in-cell unit suffix
+ *  claims its glyphs — the field type still owns ALL geometry). */
+export const widen = (geo: FieldGeo, extraCh: number): FieldGeo =>
+  extraCh === 0
+    ? geo
+    : {
+        ...geo,
+        maxCh: geo.maxCh + extraCh,
+        css: geo.css
+          ? `calc(${geo.maxCh + extraCh}ch + ${geo.padPx ?? 0}px)`
+          : undefined,
+      };
+
 /** "amountCents" → "Amount", "metric_id" → "Metric Id": humanized field label
  *  from camelCase or snake_case; storage-unit and timestamp suffixes are
  *  implementation detail, not labels. */

@@ -61,3 +61,17 @@ describe("name field — cell render", () => {
     expect(container.textContent).toBe("");
   });
 });
+
+// Recede knob (ruled 2026-07-18): a boolean muted fn, not the Tone vocabulary.
+describe("name field — muted knob", () => {
+  it("wraps the name in the muted tone when the fn returns true", () => {
+    const col = nameCol<{ name: string; spent: boolean }>("name", {
+      muted: (r) => r.spent,
+    });
+    const accessor = col.accessor as (row: { name: string; spent: boolean }) => JSX.Element;
+    const { container } = render(() => accessor({ name: "Coral Dawn", spent: true }));
+    expect(container.querySelector(".sui-field-tone--muted")).toBeTruthy();
+    const plain = render(() => accessor({ name: "Coral Dawn", spent: false }));
+    expect(plain.container.querySelector(".sui-field-tone--muted")).toBeNull();
+  });
+});

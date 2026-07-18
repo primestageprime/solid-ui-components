@@ -73,3 +73,18 @@ describe("identityLinkCol — cell render", () => {
     expect(container.textContent).toBe("");
   });
 });
+
+describe("identityLinkCol — muted knob (ruled 2026-07-18)", () => {
+  it("a muted identity still links, wearing the muted class", () => {
+    const c = identityLinkCol<Row & { inBag?: boolean }>("vessel_name", {
+      href: (r) => `/detail/${r.call_id}`,
+      muted: (r) => r.inBag === true,
+    });
+    const { container } = render(() =>
+      accessorOf<Row & { inBag?: boolean }>(c)({ ...ROW, inBag: true }),
+    );
+    const a = container.querySelector("a.sui-identity-link--muted");
+    expect(a).toBeTruthy();
+    expect(a?.getAttribute("href")).toBe("/detail/vc-42");
+  });
+});
