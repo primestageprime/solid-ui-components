@@ -13,6 +13,7 @@ import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { NarrowStack, ActionSlot } from "../Layout/variants";
 import { ThemedInput } from "../Inputs";
 import "./QuickFilter.css";
+import { pipe, map, filter } from "../../fn";
 
 export interface QuickFilterProps<T> {
   items: readonly T[];
@@ -43,11 +44,11 @@ const defaultExtract = (item: unknown): string => {
 };
 
 const tokens = (q: string): string[] =>
-  q
-    .toLowerCase()
-    .split(/\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  pipe(
+    q.toLowerCase().split(/\s+/),
+    map((s: string) => s.trim()),
+    filter((s: string) => s !== ""),
+  );
 
 export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
   const [local, others] = splitProps(rawProps, [

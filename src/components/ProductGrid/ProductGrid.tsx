@@ -33,6 +33,7 @@ import {
 } from "../AreaFocusGrid";
 import { ProductGridCard } from "../ProductGridCard";
 import { FocusLabelBand } from "../FocusLabelBand";
+import { pipe, filter, map, pluck } from "../../fn";
 
 export interface ProductGridWorkCounts {
   todo: number;
@@ -168,9 +169,11 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     if (!sel) return new Set();
     if (sel.kind === "focus") {
       return new Set(
-        props.items
-          .filter((it) => it.area === sel.area && it.focus === sel.focus)
-          .map((it) => it.id),
+        pipe(
+          props.items,
+          filter((it) => it.area === sel.area && it.focus === sel.focus),
+          pluck("id"),
+        ),
       );
     }
     const it = props.items.find((x) => x.id === sel.id);
@@ -213,10 +216,13 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         {
           id: area,
           label: area,
-          focuses: Array.from(focusMap.keys()).map((focus) => ({
-            id: `${area}:${focus}`,
-            label: focus,
-          })),
+          focuses: pipe(
+            Array.from(focusMap.keys()),
+            map((focus) => ({
+              id: `${area}:${focus}`,
+              label: focus,
+            })),
+          ),
         },
       ];
     });

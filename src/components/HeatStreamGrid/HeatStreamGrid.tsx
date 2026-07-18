@@ -19,6 +19,7 @@ import { clickableCursor } from "../../internal/style/clickable";
 import { HeatStream, type HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
+import { pipe, filter, map } from "../../fn";
 
 export interface HeatStreamGridProps
   extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -83,14 +84,18 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
   };
 
   const nonEmptyKeysForRow = (row: string) =>
-    local.columns
-      .filter((col) => local.data(row, col).length > 0)
-      .map((col) => cellKey(row, col));
+    pipe(
+      local.columns,
+      filter((col) => local.data(row, col).length > 0),
+      map((col) => cellKey(row, col)),
+    );
 
   const nonEmptyKeysForCol = (col: string) =>
-    local.rows
-      .filter((row) => local.data(row, col).length > 0)
-      .map((row) => cellKey(row, col));
+    pipe(
+      local.rows,
+      filter((row) => local.data(row, col).length > 0),
+      map((row) => cellKey(row, col)),
+    );
 
   const allNonEmptyKeys = () =>
     local.rows.flatMap((row) => nonEmptyKeysForRow(row));

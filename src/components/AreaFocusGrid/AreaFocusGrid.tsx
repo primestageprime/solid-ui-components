@@ -22,6 +22,7 @@ import {
   mergeProps,
 } from "solid-js";
 import "./AreaFocusGrid.css";
+import { map } from "../../fn";
 
 /** One focus sub-column within an area. */
 export interface AreaFocusGridFocus {
@@ -109,9 +110,10 @@ const buildLayout = (
 
   // The vsep between the last sub-col of area i and the first of area i+1
   // lives at grid-column = 2 * (lastSubCol).
-  const areaBoundaryCols = areaSpans
-    .slice(0, -1)
-    .map((a) => 2 * (a.startSubCol + a.span - 1));
+  const areaBoundaryCols = map(
+    (a) => 2 * (a.startSubCol + a.span - 1),
+    areaSpans.slice(0, -1),
+  );
 
   // A vsep between every pair of consecutive sub-cols (even-indexed tracks).
   const interSubColVseps = subCols.slice(1).map((_, k) => 2 * (k + 1));
