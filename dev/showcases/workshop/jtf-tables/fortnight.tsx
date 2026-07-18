@@ -5,27 +5,16 @@
 //   sui — FieldTable/fields registries or ValueMatrix (call sites own no CSS)
 //   raw — BaseTable/FilterableTable with call-site geometry/color
 import { Show, type Component, type JSX } from "solid-js";
-import {
-  BaseTable,
-  FilterableTable,
-  FloatCell,
-  IntCell,
-  DateTimeCell,
-  StringCell,
-  type TableColumn,
-} from "../../../../src/components/Table";
+import { TableQuickFilter, FloatCell } from "../../../../src/components/Table";
 import * as fields from "../../../../src/components/Table/fields";
-import { FieldTable, type FieldCol } from "../../../../src/components/Table/fields";
-import { ValueMatrix } from "../../../../src/components/ValueMatrix";
-import { InlineText } from "../../../../src/components/InlineText";
 import {
-  TextSublabel,
-  TextValueSuccessSm,
-  TextValueDangerSm,
-} from "../../../../src/components/Text";
+  FieldTable,
+  SortableFieldTable,
+  type FieldCol,
+} from "../../../../src/components/Table/fields";
+import { ValueMatrix } from "../../../../src/components/ValueMatrix";
+import { TextSublabel } from "../../../../src/components/Text";
 import { TightStack, TightClusterRow } from "../../../../src/components/Layout";
-import { SmStatusBadge } from "../../../../src/components/Badge";
-import { Tooltip } from "../../../../src/components/Tooltip";
 import type { TableEntry } from "./shared";
 
 const FORTNIGHT_ROUTE = "/reports/fortnight/[id]";
@@ -392,17 +381,23 @@ const MissingInfoReplica: Component = () => (
 );
 
 // ============================================
-// 11. Violations Preview (RAW)
-// ViolationsPreview.tsx: FilterableTable, 12 sortable columns, VesselName
-// link cell, AccentRouteLink-wrapped connected date, threshold-colored
-// ChosenResult cells, preformatted duration strings, violation badge.
+// 11. Violations Preview (SUI)
+// ViolationsPreview.tsx (migrated 2026-07-18): SortableFieldTable inside the
+// composable TableQuickFilter. Vessel name is an identityLinkCol (glyph +
+// detail-page link); compliance is decided in the DATA layer — the chosen-
+// result cells never see a threshold, they wear success/danger tones off a
+// compliant flag; violation badges via statusCol; duration sorts on minutes
+// through col()'s sortValue.
 // ============================================
 
 interface ViolationRowStub {
+  vessel_call_id: string;
+  vessel_type: string;
   vessel_name: string;
   asset_id: string;
   connected_at: string;
   duration: string;
+  duration_min: number | null;
   ce_level: number;
   nox_ppm: number;
   mso_f2_avg: number;
@@ -420,64 +415,103 @@ interface ViolationRowStub {
 const VIOLATION_NOX_THRESHOLD = 2.8;
 const VIOLATION_ROG_THRESHOLD = 0.14;
 
-function violationLabel(violationType: string): string {
-  switch (violationType) {
-    case "nox":
-      return "NOx";
-    case "rog":
-      return "ROG";
-    case "both":
-      return "Both";
-    default:
-      return violationType;
-  }
+// -- Data layer (mirrors jtf, ruled 2026-07-18): compliance is decided here,
+//    never in a cell. The worst-case value is carried only when it tells a
+//    story — chosen compliant, worst over the line.
+interface EmissionDisplay {
+  compliant: boolean;
+  worst_g_kwh: number | null;
 }
 
-/** jtf ChosenResultCell: chosen g/kWh colored by compliance, worst-case in
- *  red parens only when the chosen value is compliant but the worst is not. */
-const ChosenResultReplica: Component<{
-  chosenGKwh: number;
-  chosenCe: number;
-  worstGKwh: number;
-  threshold: number;
-}> = (props) => {
-  const isCompliant = () => props.chosenGKwh <= props.threshold;
-  const showWorst = () => isCompliant() && props.worstGKwh > props.threshold;
-  const cePct = () => Math.round(props.chosenCe * 100);
-  return (
-    <TightClusterRow>
-      <Show
-        when={isCompliant()}
-        fallback={
-          <TextValueDangerSm>
-            {formatGPerKwh(props.chosenGKwh)} @{cePct()}
-          </TextValueDangerSm>
-        }
-      >
-        <TextValueSuccessSm>
-          {formatGPerKwh(props.chosenGKwh)} @{cePct()}
-        </TextValueSuccessSm>
-      </Show>
-      <Show when={showWorst()}>
-        <TextValueDangerSm>({formatGPerKwh(props.worstGKwh)} @90)</TextValueDangerSm>
-      </Show>
-    </TightClusterRow>
+function emissionDisplay(
+  chosen: number,
+  worst: number,
+  threshold: number,
+): EmissionDisplay {
+  const compliant = chosen <= threshold;
+  return {
+    compliant,
+    worst_g_kwh: compliant && worst > threshold ? worst : null,
+  };
+}
+
+interface ViolationDisplayStub extends ViolationRowStub {
+  nox_compliant: boolean;
+  nox_worst_display: number | null;
+  rog_compliant: boolean;
+  rog_worst_display: number | null;
+}
+
+function withCompliance(row: ViolationRowStub): ViolationDisplayStub {
+  const nox = emissionDisplay(
+    row.chosen_nox_g_kwh,
+    row.nox_worst_g_kwh,
+    VIOLATION_NOX_THRESHOLD,
   );
+  const rog = emissionDisplay(
+    row.chosen_rog_g_kwh,
+    row.rog_worst_g_kwh,
+    VIOLATION_ROG_THRESHOLD,
+  );
+  return {
+    ...row,
+    nox_compliant: nox.compliant,
+    nox_worst_display: nox.worst_g_kwh,
+    rog_compliant: rog.compliant,
+    rog_worst_display: rog.worst_g_kwh,
+  };
+}
+
+/** Pure presentation: value @ CE toned by the data-layer compliance flag,
+ *  pre-decided worst case in danger parens. */
+const ResultCellReplica: Component<{
+  g_kwh: number;
+  ce: number;
+  compliant: boolean;
+  worst_g_kwh: number | null;
+}> = (props) => (
+  <TightClusterRow>
+    {fields.toneWrap(
+      props.compliant ? "success" : "danger",
+      <>
+        {formatGPerKwh(props.g_kwh)} @{Math.round(props.ce * 100)}
+      </>,
+    )}
+    <Show when={props.worst_g_kwh != null}>
+      {fields.toneWrap(
+        "danger",
+        <>({formatGPerKwh(props.worst_g_kwh as number)} @90)</>,
+      )}
+    </Show>
+  </TightClusterRow>
+);
+
+/** jtf EngineKwCell: null → the worst-case default 300, rendered muted. */
+function renderEngineKw(row: ViolationDisplayStub): JSX.Element {
+  if (row.aux_engine_kw == null) return fields.toneWrap("muted", "300");
+  return <FloatCell value={row.aux_engine_kw} precision={1} />;
+}
+
+/** jtf VesselTypeIcon stands in as a type glyph at configure time. */
+const VESSEL_GLYPHS: Record<string, string> = {
+  container: "▣",
+  tanker: "◍",
+  reefer: "❄",
 };
 
-/** jtf EngineKwCell: null → the worst-case default 300 rendered dimmed. */
-const EngineKwReplica: Component<{ value: number | null }> = (props) => (
-  <Show when={props.value !== null} fallback={<TextSublabel>300</TextSublabel>}>
-    <FloatCell value={props.value as number} precision={1} />
-  </Show>
-);
+function vesselGlyph(row: ViolationDisplayStub): JSX.Element {
+  return <span title={row.vessel_type}>{VESSEL_GLYPHS[row.vessel_type] ?? "▢"}</span>;
+}
 
 const VIOLATION_ROWS: ViolationRowStub[] = [
   {
+    vessel_call_id: "vc-3101",
+    vessel_type: "container",
     vessel_name: "Ever Steadfast",
     asset_id: "AMECS-011",
     connected_at: "2026-06-03T14:22:00Z",
     duration: "34h 12m",
+    duration_min: 2052,
     ce_level: 0.9,
     nox_ppm: 41.83,
     mso_f2_avg: 1962.4,
@@ -492,10 +526,13 @@ const VIOLATION_ROWS: ViolationRowStub[] = [
     violation_type: "nox",
   },
   {
+    vessel_call_id: "vc-3107",
+    vessel_type: "tanker",
     vessel_name: "Pacific Meridian",
     asset_id: "AMECS-014",
     connected_at: "2026-06-05T02:47:00Z",
     duration: "21h 05m",
+    duration_min: 1265,
     ce_level: 0.85,
     nox_ppm: 38.09,
     mso_f2_avg: 2051.8,
@@ -510,10 +547,13 @@ const VIOLATION_ROWS: ViolationRowStub[] = [
     violation_type: "rog",
   },
   {
+    vessel_call_id: "vc-3112",
+    vessel_type: "container",
     vessel_name: "Coral Dawn",
     asset_id: "AMECS-007",
     connected_at: "2026-06-08T19:10:00Z",
     duration: "42h 38m",
+    duration_min: 2558,
     ce_level: 0.9,
     nox_ppm: 44.57,
     mso_f2_avg: 1899.2,
@@ -528,10 +568,13 @@ const VIOLATION_ROWS: ViolationRowStub[] = [
     violation_type: "both",
   },
   {
+    vessel_call_id: "vc-3118",
+    vessel_type: "reefer",
     vessel_name: "Iron Halcyon",
     asset_id: "AMECS-021",
     connected_at: "2026-06-11T07:55:00Z",
     duration: "in progress",
+    duration_min: null,
     ce_level: 0.8,
     nox_ppm: 39.66,
     mso_f2_avg: 2010.7,
@@ -546,10 +589,13 @@ const VIOLATION_ROWS: ViolationRowStub[] = [
     violation_type: "nox",
   },
   {
+    vessel_call_id: "vc-3121",
+    vessel_type: "tanker",
     vessel_name: "Golden Tern",
     asset_id: "AMECS-003",
     connected_at: "2026-06-12T11:31:00Z",
     duration: "18h 44m",
+    duration_min: 1124,
     ce_level: 0.95,
     nox_ppm: 36.12,
     mso_f2_avg: 2087.3,
@@ -565,124 +611,105 @@ const VIOLATION_ROWS: ViolationRowStub[] = [
   },
 ];
 
-const VIOLATION_COLUMNS: TableColumn<ViolationRowStub>[] = [
-  {
-    id: "vessel_name",
+const VIOLATION_BADGES: Record<string, fields.StatusColMapping> = {
+  nox: { label: "NOx", tone: "danger" },
+  rog: { label: "ROG", tone: "danger" },
+  both: { label: "Both", tone: "danger" },
+};
+
+const VIOLATION_REGISTRY: Record<string, FieldCol<ViolationDisplayStub>> = {
+  vessel_name: fields.identityLinkCol<ViolationDisplayStub>("vessel_name", {
     header: "Vessel",
-    sortable: true,
-    // jtf: VesselName entity-link cell — replicated as an accent-colored name.
-    accessor: (r) => <InlineText color="var(--sui-accent)">{r.vessel_name}</InlineText>,
-  },
-  {
-    id: "asset_id",
-    header: "Asset",
-    sortable: true,
-    accessor: (r) => <StringCell value={r.asset_id} />,
-  },
-  {
-    id: "connected_at",
-    header: "Connected",
-    sortable: true,
-    // jtf: AccentRouteLink to the vessel-call detail page.
-    accessor: (r) => (
-      <InlineText color="var(--sui-accent)">
-        <DateTimeCell value={r.connected_at} />
-      </InlineText>
-    ),
-  },
-  {
-    id: "duration",
-    header: "Duration",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <StringCell value={r.duration} />,
-  },
-  {
-    id: "ce_level",
-    header: "CE",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <FloatCell value={r.ce_level} precision={2} />,
-  },
-  {
-    id: "nox_ppm",
-    header: "NOx ppm",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <FloatCell value={r.nox_ppm} precision={2} />,
-  },
-  {
-    id: "mso_f2_avg",
-    header: "MSO_F2",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <FloatCell value={r.mso_f2_avg} precision={1} />,
-  },
-  {
-    id: "engine_kw",
-    header: "Engine kW",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <EngineKwReplica value={r.aux_engine_kw} />,
-  },
-  {
-    id: "fid_thc",
-    header: "FID_THC",
-    sortable: true,
-    align: "right",
-    accessor: (r) => <FloatCell value={r.fid_thc} precision={2} />,
-  },
-  {
-    id: "chosen_nox",
-    header: "NOx (g/kWh) @ CE",
-    sortable: true,
-    align: "right",
-    accessor: (r) => (
-      <ChosenResultReplica
-        chosenGKwh={r.chosen_nox_g_kwh}
-        chosenCe={r.chosen_nox_ce}
-        worstGKwh={r.nox_worst_g_kwh}
-        threshold={VIOLATION_NOX_THRESHOLD}
+    href: (r) => `#/detail/${r.vessel_call_id}`,
+    glyph: vesselGlyph,
+  }),
+  asset_id: fields.textCol<ViolationDisplayStub>("asset_id"),
+  connected_at: fields.dateTimeCol<ViolationDisplayStub>("connected_at"),
+  duration: fields.col<ViolationDisplayStub>(
+    "duration",
+    "Duration",
+    (r) => r.duration,
+    "duration",
+    (r) => r.duration_min,
+  ),
+  ce_level: fields.floatCol<ViolationDisplayStub>("ce_level"),
+  nox_ppm: fields.floatCol<ViolationDisplayStub>("nox_ppm"),
+  mso_f2_avg: fields.floatCol<ViolationDisplayStub>("mso_f2_avg", { precision: 1 }),
+  engine_kw: fields.col<ViolationDisplayStub>(
+    "engine_kw",
+    "Engine kW",
+    renderEngineKw,
+    "float",
+    (r) => r.aux_engine_kw ?? 300,
+  ),
+  fid_thc: fields.floatCol<ViolationDisplayStub>("fid_thc"),
+  chosen_nox: fields.col<ViolationDisplayStub>(
+    "chosen_nox",
+    "NOx (g/kWh) @ CE",
+    (r) => (
+      <ResultCellReplica
+        g_kwh={r.chosen_nox_g_kwh}
+        ce={r.chosen_nox_ce}
+        compliant={r.nox_compliant}
+        worst_g_kwh={r.nox_worst_display}
       />
     ),
-  },
-  {
-    id: "chosen_rog",
-    header: "ROG (g/kWh) @ CE",
-    sortable: true,
-    align: "right",
-    accessor: (r) => (
-      <ChosenResultReplica
-        chosenGKwh={r.chosen_rog_g_kwh}
-        chosenCe={r.chosen_rog_ce}
-        worstGKwh={r.rog_worst_g_kwh}
-        threshold={VIOLATION_ROG_THRESHOLD}
+    "text",
+    (r) => r.chosen_nox_g_kwh,
+  ),
+  chosen_rog: fields.col<ViolationDisplayStub>(
+    "chosen_rog",
+    "ROG (g/kWh) @ CE",
+    (r) => (
+      <ResultCellReplica
+        g_kwh={r.chosen_rog_g_kwh}
+        ce={r.chosen_rog_ce}
+        compliant={r.rog_compliant}
+        worst_g_kwh={r.rog_worst_display}
       />
     ),
-  },
-  {
-    id: "violation_type",
-    header: "Violation",
-    sortable: true,
-    accessor: (r) => (
-      <SmStatusBadge variant="violation" label={violationLabel(r.violation_type)} />
-    ),
-  },
+    "text",
+    (r) => r.chosen_rog_g_kwh,
+  ),
+  violation_type: fields.statusCol<ViolationDisplayStub>(
+    "violation_type",
+    VIOLATION_BADGES,
+    { header: "Violation" },
+  ),
+};
+
+const VIOLATION_FIELD_ORDER: string[] = [
+  "vessel_name",
+  "asset_id",
+  "connected_at",
+  "duration",
+  "ce_level",
+  "nox_ppm",
+  "mso_f2_avg",
+  "engine_kw",
+  "fid_thc",
+  "chosen_nox",
+  "chosen_rog",
+  "violation_type",
 ];
 
+const VIOLATION_DISPLAY_ROWS: ViolationDisplayStub[] =
+  VIOLATION_ROWS.map(withCompliance);
+
 // jtf renders with `fill` inside a FillColumnFlush chain; the bench pane has
-// no fill chain, so the replica caps height instead (same scroll behavior).
+// no fill chain, so the replica caps rows instead (same scroll behavior).
 const ViolationsReplica: Component = () => (
-  <FilterableTable
-    data={VIOLATION_ROWS}
-    columns={VIOLATION_COLUMNS}
-    stickyHeader
-    compact
-    hoverable
-    maxHeight="320px"
-    filterPlaceholder="Filter violations…"
-    emptyMessage="No violations match the filter"
-  />
+  <TableQuickFilter data={VIOLATION_DISPLAY_ROWS} placeholder="Filter violations…">
+    {(filtered) => (
+      <SortableFieldTable
+        data={filtered()}
+        fields={VIOLATION_FIELD_ORDER}
+        registry={VIOLATION_REGISTRY}
+        maxRows={8}
+        emptyMessage="No violations match the filter"
+      />
+    )}
+  </TableQuickFilter>
 );
 
 // ============================================
@@ -721,8 +748,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: FORTNIGHT_ROUTE,
     name: "Violations Preview",
-    status: "raw",
-    note: "raw: FilterableTable with 12 sortable cols, VesselName link cell, threshold-colored ChosenResult cells, string durations",
+    status: "sui",
+    note: "SortableFieldTable + TableQuickFilter (migrated 2026-07-18): identityLinkCol vessel, data-layer compliance tones, statusCol badges, sortValue durations",
     component: ViolationsReplica,
   },
 ];

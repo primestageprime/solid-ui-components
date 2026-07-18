@@ -106,11 +106,17 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
    Sibling SHIPPED 2026-07-18: **`listCol(key, { max?, header?, item? })`** —
    comma list with +N-more overflow and full-list tooltip (MissingInfoPreview
    vessels; item formatter for object lists).
-2. **`href?: (row) => string`** on nameCol/textCol/dateTimeCol/statusCol —
-   the link cell. Demand: VesselName first columns (index, ViolationsPreview,
-   nox-report), AccentRouteLink period/week cells (fortnight list,
-   qaqc-checks), linked DateTimeCell (ViolationsPreview). Optional sibling:
-   `glyph?: (row) => IconName` on nameCol for the vessel-type icon.
+2. ~~**`href` link cell**~~ — SHIPPED 2026-07-18 as
+   **`identityLinkCol(key, { href, glyph?, header? })`** (ruled: an entity
+   with a detail page displays its name AS the link by default — the
+   IdentityLink cell; configure-time `href(row)`, optional `glyph(row)`, name
+   geometry, blank empty). First consumer: ViolationsPreview vessel column
+   (which also RETIRED its linked DateTimeCell — the identity link owns
+   navigation, connected_at went back to a plain dateTimeCol). Remaining
+   href demand (fortnight list period cells, qaqc-checks week cells,
+   index/nox-report VesselName columns) migrates on this type; an `href`
+   option on non-identity cols (textCol/dateTimeCol/statusCol) is now
+   demand-unproven — re-rank if a caller shows up that isn't an identity.
 3. **Derived accessors** — every scalar factory accepts
    `(row) => value` with explicit `{ id, header }` when derived. Demand:
    durations computed from two timestamps (durability, index, nox-report),
@@ -135,15 +141,28 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
 
 ### Table-level FieldTable features
 
-7. **`sortable`** — surface BaseTable sorting through resolved columns;
-   kills the hand-rolled JSX sort headers. Demand: QaqcAssetTriage (11
-   cols), nox-report preview, ViolationsPreview, MetricsStatsTable.
+7. ~~**`sortable`**~~ — SHIPPED 2026-07-18 (ruled): table-level mode —
+   **`SortableFieldTable`** (curried; or `sortable` on FieldTable). A
+   sortable table makes EVERY column sortable except types with no valid
+   sort (selection/actions/list/chart); no per-column opt-out. Mechanics:
+   `sortValue?: (row) => raw` on TableColumn — field accessors return JSX,
+   so BaseTable's comparator now prefers the raw channel (this also fixes
+   the latent broken sort on all pre-existing field columns). col() takes
+   sortValue as its 5th arg. First consumer: ViolationsPreview (12 cols).
+   Remaining demand (QaqcAssetTriage, nox-report preview, MetricsStatsTable)
+   rides free on migration.
 8. **`onRowClick`** — row navigation (index dashboard).
 9. **`rowTone?: (row) => Tone | "highlight"`** — the semantic replacement
    for getRowClass (NoxWidgets baseline-row highlight). Note: tones being
    theme-var-driven also retires NoxWidgets' hand-rolled colorblind remap.
-10. **`filter?`** — FilterableTable's text filter as a FieldTable prop
-    (ViolationsPreview).
+10. ~~**`filter?`**~~ — SHIPPED 2026-07-18 (ruled): NOT a FieldTable prop —
+    **`TableQuickFilter`**, the composable client-side filter module
+    (toolbar: input + shown-of-total count; children get the filtered-rows
+    accessor and render ANY table). FilterableTable is now BaseTable
+    composed with it. First consumer: ViolationsPreview
+    (TableQuickFilter + SortableFieldTable). Sibling note: the generic
+    `components/QuickFilter` (ThemedInput collection filter) predates it;
+    table chrome + table matching semantics live in TableQuickFilter.
 11. **`headerHint?: string`** — tooltip on a column header (qaqc-checks) —
     weakest demand, candidate only.
 
