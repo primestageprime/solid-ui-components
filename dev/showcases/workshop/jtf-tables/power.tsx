@@ -21,7 +21,7 @@ import {
   floatCol,
 } from "../../../../src/components/Table";
 import type { TableColumn } from "../../../../src/components/Table";
-import { FieldTable, textCol, col } from "../../../../src/components/Table/fields";
+import { FieldTable, textCol, col, avgCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { TextSublabel } from "../../../../src/components/Text";
 import { TightStack } from "../../../../src/components/Layout";
@@ -219,18 +219,12 @@ const ocrFields = [
   col<PowerLogEntry>("aux_2", "Aux. 2", (row) => (row.aux_2 !== null ? row.aux_2.toFixed(0) : ""), "int"),
   col<PowerLogEntry>("aux_3", "Aux. 3", (row) => (row.aux_3 !== null ? row.aux_3.toFixed(0) : ""), "int"),
   col<PowerLogEntry>("aux_4", "Aux. 4", (row) => (row.aux_4 !== null ? row.aux_4.toFixed(0) : ""), "int"),
-  col<PowerLogEntry>(
-    "avg",
-    "Avg (kW)",
-    (row) => {
-      const vals = [row.aux_1, row.aux_2, row.aux_3, row.aux_4].filter(
-        (v): v is number => v !== null,
-      );
-      if (vals.length === 0) return "";
-      return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(0);
-    },
-    "int",
-  ),
+  // The aggregate field (ruled 2026-07-18): configured with the avg targets,
+  // accent tone by default — mirrors jtf's migrated form.
+  avgCol<PowerLogEntry>(["aux_1", "aux_2", "aux_3", "aux_4"], {
+    header: "Avg (kW)",
+    precision: 0,
+  }),
 ];
 
 const PowerLogOcrTable: Component = () => (

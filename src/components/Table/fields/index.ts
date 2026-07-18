@@ -23,6 +23,8 @@ export { intCol } from "./int";
 export type { IntColOpts } from "./int";
 export { floatCol } from "./float";
 export type { FloatColOpts } from "./float";
+export { avgCol } from "./avg";
+export type { AvgColOpts } from "./avg";
 export { moneyCol } from "./money";
 export { durationCol } from "./duration";
 export { ACTION_ICONS, geoFor, actionCol, clusterCol } from "./actions";

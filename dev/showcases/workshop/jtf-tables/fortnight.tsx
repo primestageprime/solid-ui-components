@@ -730,7 +730,7 @@ export const ENTRIES: TableEntry[] = [
     route: FORTNIGHT_ROUTE,
     name: "Power Log OCR Results",
     status: "raw",
-    note: "raw: dynamic aux column count + runtime-computed total header (kW/train vs Total kW) + CyanValue-colored custom cell",
+    note: "raw: dynamic aux column count + runtime-computed total header (kW/train vs Total kW) — both workable via runtime-built specs; the colored total is avgCol now (ruled 2026-07-18)",
     component: PowerLogOcrReplica,
   },
   {

@@ -108,8 +108,11 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
 3. **Derived accessors** — every scalar factory accepts
    `(row) => value` with explicit `{ id, header }` when derived. Demand:
    durations computed from two timestamps (durability, index, nox-report),
-   Pacific-time strings (thousand-hour, PowerLogCacheView), computed row
-   averages (PowerLogCacheView), Map-backed pivots (HourlyDataTable).
+   Pacific-time strings (thousand-hour, PowerLogCacheView), Map-backed
+   pivots (HourlyDataTable). (Computed row AVERAGES are covered by avgCol —
+   SHIPPED 2026-07-18: `avgCol(keys, { header, precision, tone })`, mean of
+   the configured fields, null-skipping, em-dash when empty, accent tone by
+   default. Consumed by jtf power-log-ocr.)
    Feeding durationCol raw seconds via a derived accessor also retires every
    pre-formatted duration string.
 4. **`placeholder?: string` (null → muted placeholder)** on
