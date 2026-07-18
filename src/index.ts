@@ -67,6 +67,9 @@ export * from "./components/HeatStack";
 export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";
+// Data-last functional utilities + typed pipe: namespaced (mirrors `fields`).
+// Self-contained, liftable-to-own-package module — see src/fn/README.md.
+export * as fn from "./fn";
 // Fields-as-functions table system: namespaced (columnHelpers still owns the
 // bare intCol/textCol/... names until step ③ swaps them out of the barrel).
 export * as fields from "./components/Table/fields";
