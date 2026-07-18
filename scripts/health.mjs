@@ -105,15 +105,34 @@ const stripComments = (src) =>
     .map((l) => (isCommentLine(l) ? "" : l))
     .join("\n");
 
+// Every collection-method CALL SITE, chained or not (Peter ruling
+// 2026-07-18: function-first `map(f, arr)` over `arr.map(f)` — the
+// convention wins because humans aren't typing most of the code). The fix
+// is the fn helper (direct form outside pipes, curried inside). `src/fn/`
+// is excluded by construction — its thin wrappers are the one sanctioned
+// home for the native calls. Restricted to the unambiguous array-iteration
+// methods (join/slice/concat/reverse are common string ops and would be
+// noise here; they still count as chain links above).
+const ITERATION_METHODS =
+  "map|filter|reduce|reduceRight|flatMap|forEach|some|every|find|findIndex|findLast|sort|toSorted";
+const METHOD_CALL = new RegExp(`\\.(?:${ITERATION_METHODS})\\(`, "g");
+
 hits.dotChains = [];
+hits.collectionMethodCalls = [];
 for (const f of walk(
   join(root, "src"),
   (p) => /\.tsx?$/.test(p) && !p.includes(".test.") && !p.endsWith(".d.ts"),
 )) {
   const text = stripComments(readFileSync(f, "utf8"));
+  const rel = f.replace(root + "/", "");
   for (const m of text.matchAll(CHAIN_LINK)) {
     const line = text.slice(0, m.index).split("\n").length;
-    hits.dotChains.push(`${f.replace(root + "/", "")}:${line}`);
+    hits.dotChains.push(`${rel}:${line}`);
+  }
+  if (rel.startsWith("src/fn/")) continue;
+  for (const m of text.matchAll(METHOD_CALL)) {
+    const line = text.slice(0, m.index).split("\n").length;
+    hits.collectionMethodCalls.push(`${rel}:${line}`);
   }
 }
 
@@ -178,6 +197,7 @@ const metrics = {
   showcaseStyleRubricViolations: showcaseRubric.violations.length,
   cssTypedProps: propRubric.violations.length,
   dotChains: hits.dotChains.length,
+  collectionMethodCalls: hits.collectionMethodCalls.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
   missingDepthHeaders: missingDepth.length,
@@ -200,6 +220,7 @@ const detail = {
   showcaseStyleRubricViolations: showcaseRubricHits,
   cssTypedProps: propRubricHits,
   dotChains: hits.dotChains,
+  collectionMethodCalls: hits.collectionMethodCalls,
   foldersWithoutTests,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
