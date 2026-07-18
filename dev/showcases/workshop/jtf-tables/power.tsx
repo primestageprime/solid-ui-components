@@ -359,7 +359,7 @@ export const ENTRIES: TableEntry[] = [
     route: "(embedded) PowerLogPanel",
     name: "Power log record tables (×3: existing-aux, DB records, confirm modal)",
     status: "raw",
-    customs: ["styled-number", "derived-accessor"],
+    customs: ["styled-number"],
     note: "Three near-identical BaseTables, one entry: withCellStyle green oversized floats + derived Pacific-time string columns block fields migration. Panel retired in jtf HEAD; replicated from git history.",
     component: PowerLogPanelTables,
   },

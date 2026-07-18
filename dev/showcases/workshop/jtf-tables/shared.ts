@@ -34,24 +34,9 @@ export interface CustomDemand {
  *  list is the definition side only, never counts. */
 export const CUSTOM_DEMANDS: CustomDemand[] = [
   {
-    id: "derived-accessor",
-    name: "Derived accessor",
-    why: "Scalar cols read one literal row key; computed values (durations from two timestamps, Pacific-time strings, Map-backed pivots) have nowhere to hang.",
-  },
-  {
-    id: "unit-suffix",
-    name: "Unit suffix",
-    why: "Values wear their unit in-cell ('%', 'ppm', 'Nm (P%)'); floatCol has no suffix and no percent form.",
-  },
-  {
     id: "styled-number",
     name: "Emphasis numerics",
     why: "withCellStyle oversized/weighted/colored floats say more than the Tone vocabulary (primary vs accent weight, oversized green).",
-  },
-  {
-    id: "name-tone",
-    name: "Name tone",
-    why: "nameCol/identityLinkCol take no tone fn; bag membership and coverage severity color the NAME itself.",
   },
   {
     id: "row-tone",

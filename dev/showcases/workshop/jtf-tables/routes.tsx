@@ -760,7 +760,7 @@ export const ENTRIES: TableEntry[] = [
     route: "/",
     name: "Cached Vessel Calls",
     status: "raw",
-    customs: ["row-click", "name-tone"],
+    customs: ["row-click"],
     note: "Blocked by onRowClick navigation + custom VesselName entity cell and CoverageCell (FULL/Nm severity coloring); NOx/ROG use MetricValueCell.",
     component: CachedVesselCallsTable,
   },
