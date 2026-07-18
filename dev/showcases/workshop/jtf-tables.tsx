@@ -72,9 +72,18 @@ const writeSlugToHash = (slug: string) => {
 };
 
 const JtfTablesBench: Component = () => {
-  // A (re)load always lands on the TOP of the worklist (ruled 2026-07-18) —
-  // any stale ?t= from a previous session is replaced, not restored.
-  const [active, setActive] = createSignal(0);
+  // Deep links restore (?t=), and the restored card is scrolled into view in
+  // the rail — a selection below the fold read as "nothing selected"
+  // (ruled 2026-07-18).
+  const initialSlug = readSlugFromHash();
+  const initialIdx = initialSlug ? SLUGS.indexOf(initialSlug) : -1;
+  const [active, setActive] = createSignal(initialIdx >= 0 ? initialIdx : 0);
+
+  const revealActive = () => {
+    document
+      .getElementById(`jtf-cat-${SLUGS[active()]}`)
+      ?.scrollIntoView({ block: "nearest" });
+  };
   const entry = () => ALL[active()];
   const suiCount = ALL.filter((e) => e.status === "sui").length;
 
@@ -85,12 +94,17 @@ const JtfTablesBench: Component = () => {
 
   // Back/forward restores the selection from the hash.
   onMount(() => {
-    // Reflect the top item in the URL without minting a history entry.
-    history.replaceState(null, "", hashWithSlug(SLUGS[0]));
+    // Reflect the restored/default selection in the URL without minting a
+    // history entry, and make sure its card is visible in the rail.
+    history.replaceState(null, "", hashWithSlug(SLUGS[active()]));
+    revealActive();
     const onHash = () => {
       const slug = readSlugFromHash();
       const idx = slug ? SLUGS.indexOf(slug) : -1;
-      if (idx >= 0 && idx !== active()) setActive(idx);
+      if (idx >= 0 && idx !== active()) {
+        setActive(idx);
+        revealActive();
+      }
     };
     window.addEventListener("hashchange", onHash);
     onCleanup(() => window.removeEventListener("hashchange", onHash));
@@ -106,7 +120,11 @@ const JtfTablesBench: Component = () => {
         <DelineatedSidebar class="jtf-catalog-rail">
           <For each={ALL}>
             {(e, i) => (
-              <InteractiveCard active={i() === active()} onClick={() => select(i())}>
+              <InteractiveCard
+                id={`jtf-cat-${SLUGS[i()]}`}
+                active={i() === active()}
+                onClick={() => select(i())}
+              >
                 <SpreadRow>
                   <TightStack>
                     <TextSublabel>{e.route}</TextSublabel>
