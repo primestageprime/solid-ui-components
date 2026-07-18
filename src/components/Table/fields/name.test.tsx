@@ -49,10 +49,10 @@ describe("name field — cell render", () => {
     );
   });
 
-  it("renders an em-dash for an empty value", () => {
+  it("renders blank for an empty value (ruled 2026-07-18: no empty markers)", () => {
     const col = nameCol<{ name: string }>();
     const accessor = col.accessor as (row: { name: string }) => JSX.Element;
     const { container } = render(() => accessor({ name: "" }));
-    expect(container.querySelector(".cell-empty")?.textContent).toBe("—");
+    expect(container.textContent).toBe("");
   });
 });

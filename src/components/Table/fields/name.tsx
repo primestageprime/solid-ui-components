@@ -25,11 +25,10 @@ export const nameCol = <T,>(key: keyof T = "name" as keyof T): FieldCol<T> => ({
   ellipsis: true,
   sortable: true,
   geo,
-  accessor: (row) => (
-    <LongTextCell
-      value={String(row[key] ?? "")}
-      clampLines={1}
-      reveal="tooltip"
-    />
-  ),
+  accessor: (row) => {
+    const value = String(row[key] ?? "");
+    // Blank, not the legacy em-dash (ruled 2026-07-18: no empty markers).
+    if (value === "") return "";
+    return <LongTextCell value={value} clampLines={1} reveal="tooltip" />;
+  },
 });

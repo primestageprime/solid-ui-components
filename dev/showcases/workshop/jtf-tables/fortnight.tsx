@@ -283,7 +283,7 @@ interface MissingInfoRowStub {
 
 const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
   {
-    operator_kind: "AGENT",
+    operator_kind: "agent",
     vessel_call_count: 4,
     affected_vessels: [
       { vessel_name: "Ever Steadfast", asset_id: "AMECS-011" },
@@ -300,7 +300,7 @@ const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
     email: "ops@harborpoint.example.com",
   },
   {
-    operator_kind: "OPERATOR",
+    operator_kind: "operator",
     vessel_call_count: 2,
     affected_vessels: [
       { vessel_name: "Golden Tern", asset_id: "AMECS-003" },
@@ -315,7 +315,7 @@ const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
     email: null,
   },
   {
-    operator_kind: "AGENT",
+    operator_kind: "agent",
     vessel_call_count: 1,
     affected_vessels: [{ vessel_name: "Coral Dawn", asset_id: "AMECS-007" }],
     name: null,
@@ -327,7 +327,7 @@ const MISSING_INFO_ROWS: MissingInfoRowStub[] = [
     email: null,
   },
   {
-    operator_kind: "OPERATOR",
+    operator_kind: "operator",
     vessel_call_count: 3,
     affected_vessels: [
       { vessel_name: "Iron Halcyon", asset_id: "AMECS-021" },

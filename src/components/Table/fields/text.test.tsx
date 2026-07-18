@@ -58,11 +58,11 @@ describe("textCol — cell rendering", () => {
     );
   });
 
-  it("renders an em-dash when the value is nullish", () => {
+  it("renders blank when the value is nullish (ruled 2026-07-18: no empty markers)", () => {
     const col = textCol<Row>("note");
     const { container } = render(() =>
       asFn(col.accessor)({ displayName: "x", note: null }),
     );
-    expect(container.querySelector(".cell-empty")?.textContent).toBe("—");
+    expect(container.textContent).toBe("");
   });
 });

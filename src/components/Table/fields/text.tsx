@@ -26,6 +26,8 @@ export const textCol = <T,>(key: keyof T, opts: TextColOpts<T> = {}): FieldCol<T
   geo,
   accessor: (row) => {
     const value = String(row[key] ?? "");
+    // Blank, not the legacy em-dash (ruled 2026-07-18: no empty markers).
+    if (value === "") return "";
     return toneWrap(
       opts.tone?.(value, row),
       <LongTextCell value={value} clampLines={1} reveal="tooltip" />,
