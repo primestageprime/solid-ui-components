@@ -22,6 +22,7 @@ import {
 } from "solid-js";
 import { BaselineWrapRow, LabelValueGrid } from "../Layout/variants";
 import "./DiffPair.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface DiffPairProps {
   /** Optional label; when supplied, renders `{label}: {before} {arrow} {after}` in a two-column grid. */
@@ -65,7 +66,7 @@ const DEFAULT_ARROW = "→"; // →
  */
 export const DiffPair: Component<DiffPairProps> = (props) => {
   const containerClass = () =>
-    ["sui-diff-pair", props.class].filter(Boolean).join(" ");
+    pipe(["sui-diff-pair", props.class], filter(Boolean), join(" "));
 
   const arrow = () => props.arrow ?? DEFAULT_ARROW;
 

@@ -17,6 +17,7 @@ import {
   splitProps,
 } from "solid-js";
 import "./MessageBubble.css";
+import { pipe, filter, join } from "../../fn";
 
 export type MessageBubbleVariant = "self" | "other";
 
@@ -39,7 +40,11 @@ export interface MessageBubbleProps
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const MessageBubble: Component<MessageBubbleProps> = (props) => {
   const [local, others] = splitProps(props, [

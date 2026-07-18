@@ -26,6 +26,7 @@ import {
   WrappedClusterRow,
 } from "../Layout/variants";
 import "./ThreadGroup.css";
+import { pipe, filter, join } from "../../fn";
 
 export type ThreadGroupVariant = "self" | "other";
 
@@ -47,7 +48,11 @@ export interface ThreadGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const ThreadGroup: Component<ThreadGroupProps> = (props) => {
   const [local, others] = splitProps(props, [

@@ -22,6 +22,7 @@ import {
   splitProps,
 } from "solid-js";
 import "./Legend.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface LegendItem {
   /** CSS color string applied to the swatch (any valid CSS color). */
@@ -74,9 +75,11 @@ export const Legend: Component<LegendProps> = (rawProps) => {
   ]);
 
   const wrapperClass = (): string =>
-    ["sui-legend", `sui-legend--${local.orientation}`, local.class]
-      .filter(Boolean)
-      .join(" ");
+    pipe(
+      ["sui-legend", `sui-legend--${local.orientation}`, local.class],
+      filter(Boolean),
+      join(" "),
+    );
 
   const wrapperStyle = (): JSX.CSSProperties | string | undefined => {
     if (local.swatchSize === undefined) return local.style;
