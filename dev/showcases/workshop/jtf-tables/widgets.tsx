@@ -487,7 +487,7 @@ export const ENTRIES: TableEntry[] = [
     route: "(embedded) MetricsStatsTable",
     name: "MetricsStatsTable — metric statistics",
     status: "raw",
-    customs: ["derived-accessor", "unit-suffix", "placeholder"],
+    customs: ["derived-accessor", "unit-suffix"],
     note: "Union-guarded hand-formatted numerics, composite 'min - max' and 'Nm (P%)' string cells; sortable + maxHeight/stickyHeader.",
     component: MetricsStatsReplicaTable,
   },

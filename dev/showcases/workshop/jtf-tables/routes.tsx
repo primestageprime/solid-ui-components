@@ -789,7 +789,7 @@ export const ENTRIES: TableEntry[] = [
     route: "/reports/durability",
     name: "Durability Vessel Calls",
     status: "raw",
-    customs: ["placeholder"],
+    customs: [],
     note: "All widths explicit on TableColumn; VesselName entity cell, nullable disconnected_at ('In Progress'), conditional data_status coloring.",
     component: DurabilityTable,
   },

@@ -44,11 +44,6 @@ export const CUSTOM_DEMANDS: CustomDemand[] = [
     why: "Values wear their unit in-cell ('%', 'ppm', 'Nm (P%)'); floatCol has no suffix and no percent form.",
   },
   {
-    id: "placeholder",
-    name: "Empty placeholder",
-    why: "Blank-empty is the rule; these cells need an OPT-IN visible placeholder that carries meaning ('In Progress').",
-  },
-  {
     id: "styled-number",
     name: "Emphasis numerics",
     why: "withCellStyle oversized/weighted/colored floats say more than the Tone vocabulary (primary vs accent weight, oversized green).",

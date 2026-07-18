@@ -356,7 +356,7 @@ export const ENTRIES: TableEntry[] = [
     route: "(embedded) PowerLogCacheView",
     name: "Cached aux hourly table",
     status: "raw",
-    customs: ["styled-number", "placeholder"],
+    customs: ["styled-number"],
     note: "AuxFloat/AvgFloat withCellStyle variants (primary/accent weighted floats) + null→'—' literals at the call site.",
     component: PowerLogCacheTable,
   },

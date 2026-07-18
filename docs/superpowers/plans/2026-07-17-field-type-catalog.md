@@ -127,12 +127,11 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
    default. Consumed by jtf power-log-ocr.)
    Feeding durationCol raw seconds via a derived accessor also retires every
    pre-formatted duration string.
-4. **`placeholder?: string`** on int/float/dateTime/text cols — null renders
-   BLANK by default (ruled 2026-07-18: empty markers distract from real
-   data); a visible placeholder is opt-in only where it carries meaning
-   ("In Progress"). Demand:
-   MetricsStatsTable, PowerLogCacheView, durability (nullable
-   disconnected_at), power-log aux nulls.
+4. ~~**`placeholder?: string`**~~ — REJECTED 2026-07-18 (ruled): "Empty
+   placeholder shouldn't be a thing. If the value is empty, just show an
+   empty cell." No opt-in, no exceptions — null renders BLANK, full stop.
+   Migrations drop existing placeholder strings (durability's nullable
+   disconnected_at → blank; PowerLogCacheView's '—' literals → blank).
 5. **`tone` completed across nameCol** (int/float/text shipped) — bag-state
    colored vessel names (nox-report preview), coverage FULL/Nm cells (index).
 6. **`suffix?: string` on floatCol** (or a percentCol) — "%", "ppm", "kW"
