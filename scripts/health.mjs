@@ -19,7 +19,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./style-rubric.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
-import { length, lengthOf } from "./fn.mjs";
+import { length, mapValues } from "./fn.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = join(root, "scripts", "health-baseline.json");
@@ -189,20 +189,21 @@ const showcaseRubricHits = showcaseRubric.violations.map(
   (v) => `${v.file}:${v.line} [${v.kind}] ${v.prop} — ${v.detail}`,
 );
 
-const metrics = {
-  bareHexCss: lengthOf("bareHexCss", hits),
-  bareHexTsx: lengthOf("bareHexTsx", hits),
-  inlineStyleSrc: lengthOf("inlineStyleSrc", hits),
-  inlineStyleShowcases: lengthOf("inlineStyleShowcases", hits),
-  styleRubricViolations: lengthOf("violations", styleRubric),
-  showcaseStyleRubricViolations: lengthOf("violations", showcaseRubric),
-  cssTypedProps: lengthOf("violations", propRubric),
-  dotChains: lengthOf("dotChains", hits),
-  collectionMethodCalls: lengthOf("collectionMethodCalls", hits),
-  foldersWithoutTests: length(foldersWithoutTests),
-  undocumentedComponents: length(undocumented),
-  missingDepthHeaders: length(missingDepth),
+// ONE source of truth: metric name → offending-item list. `hits` spreads in
+// wholesale (every collector pushes to a named key); the rubric and coverage
+// sources merge alongside. Counts derive from it by iteration — adding a
+// metric is adding a key here, nowhere else.
+const detail = {
+  ...hits,
+  styleRubricViolations: styleRubricHits,
+  showcaseStyleRubricViolations: showcaseRubricHits,
+  cssTypedProps: propRubricHits,
+  foldersWithoutTests,
+  undocumentedComponents: undocumented,
+  missingDepthHeaders: missingDepth,
 };
+
+const metrics = mapValues(length, detail);
 
 // ── report + ratchet ──────────────────────────────────────────────────
 
@@ -211,21 +212,6 @@ const verbose = process.argv.includes("--verbose");
 const baseline = existsSync(BASELINE_PATH)
   ? JSON.parse(readFileSync(BASELINE_PATH, "utf8"))
   : null;
-
-const detail = {
-  bareHexCss: hits.bareHexCss,
-  bareHexTsx: hits.bareHexTsx,
-  inlineStyleSrc: hits.inlineStyleSrc,
-  inlineStyleShowcases: hits.inlineStyleShowcases,
-  styleRubricViolations: styleRubricHits,
-  showcaseStyleRubricViolations: showcaseRubricHits,
-  cssTypedProps: propRubricHits,
-  dotChains: hits.dotChains,
-  collectionMethodCalls: hits.collectionMethodCalls,
-  foldersWithoutTests,
-  undocumentedComponents: undocumented,
-  missingDepthHeaders: missingDepth,
-};
 
 // Every run whose metrics differ from the last recorded entry appends to
 // health-history.json — the iteration log that scripts/kpi-table.mjs renders.

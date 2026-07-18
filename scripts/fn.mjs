@@ -22,3 +22,10 @@ export function lengthOf(key, obj) {
   if (arguments.length === 1) return (o) => length(prop(key, o));
   return length(prop(key, obj));
 }
+
+/** mapValues(f, obj) → object with the same keys and f(value) values;
+ *  mapValues(f) curries. */
+export function mapValues(f, obj) {
+  if (arguments.length === 1) return (o) => mapValues(f, o);
+  return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, f(v)]));
+}
