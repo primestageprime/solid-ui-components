@@ -36,6 +36,7 @@ import {
 } from "./calendarUtils";
 import type { DateRange, DateRangePickerProps, DateRangePreset } from "./types";
 import "./DateRangePicker.css";
+import { pipe, filter, join } from "../../fn";
 
 const DEFAULT_START_TIME = "00:00";
 const DEFAULT_END_TIME = "23:59";
@@ -136,7 +137,7 @@ export const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   );
 
   const triggerClass = () =>
-    ["sui-drp__trigger", props.class].filter(Boolean).join(" ");
+    pipe(["sui-drp__trigger", props.class], filter(Boolean), join(" "));
 
   return (
     <Popover open={open()} onOpenChange={handleOpenChange} gutter={8}>

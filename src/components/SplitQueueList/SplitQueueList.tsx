@@ -16,6 +16,7 @@ import { createRowKeyboard } from "./keyboard";
 import { StaticSplitLayout } from "./StaticSplitLayout";
 import type { SplitQueueListProps } from "./types";
 import "./SplitQueueList.css";
+import { map } from "../../fn";
 
 export type { SplitQueueListProps } from "./types";
 
@@ -214,8 +215,8 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     topOnly: () => !!props.topOnly,
     topOnlyHeight,
     layout,
-    resolvedKeys: () => resolvedItems().map(keyOf),
-    unresolvedKeys: () => unresolvedItems().map(keyOf),
+    resolvedKeys: () => map(keyOf, resolvedItems()),
+    unresolvedKeys: () => map(keyOf, unresolvedItems()),
     reducedMotion,
     onFocusChange: (key) => props.onFocusChange?.(key),
   });

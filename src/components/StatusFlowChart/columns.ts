@@ -4,7 +4,7 @@
 // and the chart figures out where to draw it. No positional hints in the
 // data. These three functions encapsulate that math and are unit-tested
 // in isolation so the rendering layer can stay thin.
-import { sortBy } from "../../fn";
+import { sortBy, filter, map } from "../../fn";
 
 export type StatusFlowNode = {
   id: string;
@@ -225,8 +225,8 @@ function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
     if (hit !== undefined) return hit;
     const n = byId.get(id);
     if (!n) return 0;
-    const deps = (n.dependsOn ?? []).filter((d) => byId.has(d));
-    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
+    const deps = filter((d) => byId.has(d), n.dependsOn ?? []);
+    const d = deps.length === 0 ? 0 : Math.max(...map(visit, deps)) + 1;
     cache.set(id, d);
     return d;
   };

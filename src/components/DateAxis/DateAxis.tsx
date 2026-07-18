@@ -23,6 +23,7 @@ import {
   onMount,
 } from "solid-js";
 import "./DateAxis.css";
+import { pipe, filter, join } from "../../fn";
 import type { Cell } from "./cells";
 
 export type { Cell } from "./cells";
@@ -357,15 +358,17 @@ export const DateAxis = <C extends Cell = Cell>(
                 // biome-ignore lint/a11y/noStaticElementInteractions: dual-mode cell — role resolves to "button" exactly when the click/key handlers are attached (clickable()); "columnheader" otherwise carries no handlers
                 // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-pressed is emitted only when clickable(), i.e. only when role is "button" (which supports it); it is undefined under the "columnheader" role
                 <div
-                  class={[
-                    "sui-date-axis__cell",
-                    "sui-date-axis__cell--custom",
-                    isToday() ? "sui-date-axis__cell--today" : "",
-                    isSelected() ? "sui-date-axis__cell--selected" : "",
-                    clickable() ? "sui-date-axis__cell--clickable" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  class={pipe(
+                    [
+                      "sui-date-axis__cell",
+                      "sui-date-axis__cell--custom",
+                      isToday() ? "sui-date-axis__cell--today" : "",
+                      isSelected() ? "sui-date-axis__cell--selected" : "",
+                      clickable() ? "sui-date-axis__cell--clickable" : "",
+                    ],
+                    filter(Boolean),
+                    join(" "),
+                  )}
                   role={clickable() ? "button" : "columnheader"}
                   tabindex={clickable() ? 0 : undefined}
                   aria-current={isToday() ? "date" : undefined}

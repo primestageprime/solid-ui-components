@@ -16,6 +16,8 @@
 // ============================================
 
 /** Milliseconds in one calendar day. */
+import { map } from "../../fn";
+
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -276,7 +278,7 @@ export const applyTimeToDate = (
   time: string,
   timeZone?: string,
 ): Date => {
-  const [h, m] = time.split(":").map(Number);
+  const [h, m] = map(Number, time.split(":"));
   const hours = Number.isFinite(h) ? h : 0;
   const minutes = Number.isFinite(m) ? m : 0;
   const { year, month, day } = getDateParts(date, timeZone);
