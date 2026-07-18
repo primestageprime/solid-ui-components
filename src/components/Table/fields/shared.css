@@ -55,3 +55,20 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 span[class*="sui-field-tone--"] :is(.cell-longtext, .cell-longtext.cell-longtext--tooltip, .cell-string) {
   color: inherit;
 }
+
+/* IdentityLink (ruled 2026-07-18): the entity's name IS the link to its
+   detail page. Accent ink, underline on hover; optional leading glyph. */
+.sui-identity-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  color: var(--sui-accent);
+  text-decoration: none;
+}
+.sui-identity-link:hover {
+  text-decoration: underline;
+}
+.sui-identity-link :is(.cell-longtext, .cell-longtext.cell-longtext--tooltip) {
+  color: inherit;
+}
