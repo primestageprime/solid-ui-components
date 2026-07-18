@@ -12,6 +12,95 @@ export interface TableEntry {
   status: "sui" | "raw";
   /** One line: what blocks compliance (raw) or what it migrated to (sui). */
   note: string;
+  /** CUSTOM_DEMANDS ids this table needs before it can go sui — the
+   *  not-yet-curried field types blocking it. Absent/empty on a raw entry
+   *  means pure migration work (everything it needs already exists). */
+  customs?: string[];
   /** Renders the table with realistic stub data. */
   component: Component;
 }
+
+/** A field type (or table feature) the fields system does NOT yet curry. */
+export interface CustomDemand {
+  id: string;
+  /** Short name. */
+  name: string;
+  /** Why it's still custom — what the fields model can't express yet. */
+  why: string;
+}
+
+/** The not-yet-curried vocabulary, referenced by TableEntry.customs. The
+ *  demand rail derives per-type table counts from the annotations — this
+ *  list is the definition side only, never counts. */
+export const CUSTOM_DEMANDS: CustomDemand[] = [
+  {
+    id: "derived-accessor",
+    name: "Derived accessor",
+    why: "Scalar cols read one literal row key; computed values (durations from two timestamps, Pacific-time strings, Map-backed pivots) have nowhere to hang.",
+  },
+  {
+    id: "unit-suffix",
+    name: "Unit suffix",
+    why: "Values wear their unit in-cell ('%', 'ppm', 'Nm (P%)'); floatCol has no suffix and no percent form.",
+  },
+  {
+    id: "placeholder",
+    name: "Empty placeholder",
+    why: "Blank-empty is the rule; these cells need an OPT-IN visible placeholder that carries meaning ('In Progress').",
+  },
+  {
+    id: "styled-number",
+    name: "Emphasis numerics",
+    why: "withCellStyle oversized/weighted/colored floats say more than the Tone vocabulary (primary vs accent weight, oversized green).",
+  },
+  {
+    id: "name-tone",
+    name: "Name tone",
+    why: "nameCol/identityLinkCol take no tone fn; bag membership and coverage severity color the NAME itself.",
+  },
+  {
+    id: "row-tone",
+    name: "Row tone",
+    why: "getRowClass row highlights (baseline row, conditional row sets) need a semantic rowTone, not a class escape hatch.",
+  },
+  {
+    id: "header-hint",
+    name: "Header hint",
+    why: "Headers carrying JSX Tooltips; fields headers are plain strings with no hint channel.",
+  },
+  {
+    id: "linked-value",
+    name: "Linked value",
+    why: "Non-identity cells that navigate (bucket-count links, week links) — identityLinkCol covers names only.",
+  },
+  {
+    id: "count-emphasis",
+    name: "Count emphasis",
+    why: "Count columns colored from the series palette with conditional emphasis; intCol's tone fn can't reach the palette.",
+  },
+  {
+    id: "linked-badge",
+    name: "Linked badge",
+    why: "A statusCol badge that is ALSO a link (spreadsheet href).",
+  },
+  {
+    id: "row-click",
+    name: "Row navigation",
+    why: "Whole-row onRowClick navigation isn't surfaced through FieldTable.",
+  },
+  {
+    id: "select-state",
+    name: "Selection labels",
+    why: "Bespoke select-all header with per-row 'added' state labels beyond createFieldSelection.",
+  },
+  {
+    id: "grouped-headers",
+    name: "Grouped headers",
+    why: "Two-row spanned category headers — stays raw by design.",
+  },
+  {
+    id: "span-row",
+    name: "Row collapse",
+    why: "Per-row colspan takeover for partial weeks (BaseTable spanRow) — stays raw by design.",
+  },
+];

@@ -18,7 +18,8 @@ import {
 } from "../../../src/components/Layout";
 import { CompliantBadge, WarningBadge } from "../../../src/components/Badge";
 import { InteractiveCard } from "../../../src/components/Surface";
-import type { TableEntry } from "./jtf-tables/shared";
+import { pipe, map, filter, sortBy, length } from "../../../src/fn";
+import { CUSTOM_DEMANDS, type TableEntry } from "./jtf-tables/shared";
 import { ENTRIES as fortnightEntries } from "./jtf-tables/fortnight";
 import { ENTRIES as widgetEntries } from "./jtf-tables/widgets";
 import { ENTRIES as powerEntries } from "./jtf-tables/power";
@@ -52,6 +53,21 @@ const SLUGS = (() => {
     return n === 0 ? base : `${base}-${n + 1}`;
   });
 })();
+
+// The not-yet-curried rail: each demand's table count derives from the
+// entries' `customs` annotations — the definitions never carry counts.
+const usesDemand = (id: string) => (e: TableEntry) =>
+  (e.customs ?? []).includes(id);
+
+const demandTableCount = (id: string): number =>
+  pipe(ALL, filter(usesDemand(id)), length);
+
+const DEMAND_RAIL = pipe(
+  CUSTOM_DEMANDS,
+  map((d) => ({ ...d, count: demandTableCount(d.id) })),
+  filter((d) => d.count > 0),
+  sortBy((d) => -d.count),
+);
 
 const readSlugFromHash = (): string | null => {
   const [, queryStr = ""] = location.hash.replace(/^#\/?/, "").split("?");
@@ -160,6 +176,22 @@ const JtfTablesBench: Component = () => {
             )}
           </Show>
         </GrowColumn>
+        {/* Not-yet-curried rail: the field types still blocking migrations,
+            counts derived from the entries' customs annotations. */}
+        <DelineatedSidebar class="jtf-catalog-demand-rail">
+          <TextSublabel>NOT YET CURRIED</TextSublabel>
+          <For each={DEMAND_RAIL}>
+            {(d) => (
+              <TightStack>
+                <SpreadRow>
+                  <TextBody>{d.name}</TextBody>
+                  <WarningBadge label={`${d.count} table${d.count === 1 ? "" : "s"}`} />
+                </SpreadRow>
+                <TextSublabel>{d.why}</TextSublabel>
+              </TightStack>
+            )}
+          </For>
+        </DelineatedSidebar>
       </PaneRow>
     </div>
   );
