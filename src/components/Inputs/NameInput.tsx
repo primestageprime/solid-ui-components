@@ -25,6 +25,7 @@ import {
 } from "solid-js";
 import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface NameInputProps
   extends Omit<
@@ -41,7 +42,8 @@ export const NameInput: Component<NameInputProps> = (props) => {
   const generatedId = createUniqueId();
   const inputId = () => local.id ?? generatedId;
 
-  const classes = () => ["themed-input", local.class].filter(Boolean).join(" ");
+  const classes = () =>
+    pipe(["themed-input", local.class], filter(Boolean), join(" "));
 
   // Field column composed from the GrowColumn Layout variant; label keeps its
   // own margin-bottom. Reuses ThemedInputs.css for visual parity.

@@ -22,6 +22,7 @@ import {
 import { type Component, type JSX, For, Show, splitProps } from "solid-js";
 import { GrowBox, TopClusterRow, WrapRow } from "../Layout/variants";
 import "./Toast.css";
+import { pipe, filter, join } from "../../fn";
 
 /** Action button rendered in the toast's action row. */
 export interface ToastAction {
@@ -184,7 +185,7 @@ export type ToastListCurriedProps = KobalteToastListProps & { class?: string };
 export const ToastList: Component<ToastListCurriedProps> = (props) => {
   const [local, rest] = splitProps(props, ["class"]);
   const listClass = () =>
-    ["sui-toast__list", local.class].filter(Boolean).join(" ");
+    pipe(["sui-toast__list", local.class], filter(Boolean), join(" "));
   return <KobalteToast.List {...rest} class={listClass()} />;
 };
 

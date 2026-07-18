@@ -17,6 +17,7 @@ import {
   splitProps,
 } from "solid-js";
 import "./Tooltip.css";
+import { pipe, filter, join } from "../../fn";
 
 /** Content accepted by `Tooltip.content` — a primitive, JSX, or an accessor of either. */
 export type TooltipContent = string | JSX.Element;
@@ -52,7 +53,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
   ]);
 
   const triggerClass = () =>
-    ["sui-tooltip__trigger", local.class].filter(Boolean).join(" ");
+    pipe(["sui-tooltip__trigger", local.class], filter(Boolean), join(" "));
 
   return (
     <KobalteTooltip {...rest}>

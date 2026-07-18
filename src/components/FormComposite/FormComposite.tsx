@@ -30,6 +30,7 @@ import {
   splitProps,
 } from "solid-js";
 import { AutoStackRow, AutoStackItem } from "../Layout/AutoStack";
+import { pipe, filter, join } from "../../fn";
 
 export interface FormCompositeProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** The stable block — fields that read the same across variants
@@ -65,7 +66,7 @@ export const FormComposite: Component<FormCompositeProps> = (props) => {
     "class",
   ]);
   const rootClass = () =>
-    ["sui-form-composite", local.class ?? ""].filter(Boolean).join(" ");
+    pipe(["sui-form-composite", local.class ?? ""], filter(Boolean), join(" "));
   return (
     <AutoStackRow
       class={rootClass()}
