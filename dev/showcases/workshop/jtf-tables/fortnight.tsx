@@ -22,7 +22,6 @@ import {
   TextSublabel,
   TextValueSuccessSm,
   TextValueDangerSm,
-  NowrapBody,
 } from "../../../../src/components/Text";
 import { TightStack, TightClusterRow } from "../../../../src/components/Layout";
 import { SmStatusBadge } from "../../../../src/components/Badge";
@@ -158,12 +157,11 @@ const MSO_COLS: MetricColSpec[] = [
 ];
 
 // ============================================
-// 8. Power Log OCR Results (RAW)
-// FortnightReportBody.tsx ~line 1457: BaseTable whose column list is built at
-// runtime from `page.summary.aux_columns_used`, the total header switches on
-// train count ("kW/train" vs "Total kW"), and the total cell is wrapped in a
-// local CyanValue (createText color #00d4ff). Replicated with a fixed 2-aux
-// stub and InlineText carrying the cyan.
+// 8. Power Log OCR Results (SUI — migrated 2026-07-18)
+// FortnightReportBody.tsx: FieldTable with runtime-built specs — the aux
+// column list comes from per-page data, the total header switches on train
+// count at spec build, and the derived total wears the accent tone via
+// toneWrap. The CyanValue hardcoded-hex local died with the migration.
 // ============================================
 
 interface OcrRow {
@@ -192,26 +190,17 @@ const OCR_ROWS: OcrRow[] = OCR_READINGS.map(([time, aux1, aux2]) => ({
   total: (aux1 + aux2) / OCR_NUM_TRAINS,
 }));
 
-const OCR_COLUMNS: TableColumn<OcrRow>[] = [
-  { id: "time", header: "Time", accessor: (r) => <NowrapBody>{r.time}</NowrapBody> },
-  ...OCR_AUX_COLS.map(
-    (col): TableColumn<OcrRow> => ({
-      id: col,
-      header: col,
-      align: "right",
-      accessor: (r) => <FloatCell value={r[col]} precision={0} />,
-    }),
+const OCR_FIELDS = [
+  fields.col<OcrRow>("time", "Time", (r) => r.time, "dateTime"),
+  ...OCR_AUX_COLS.map((c) =>
+    fields.col<OcrRow>(c, c, (r) => <FloatCell value={r[c]} precision={0} />, "float"),
   ),
-  {
-    id: "total",
-    header: OCR_NUM_TRAINS > 1 ? "kW/train" : "Total kW",
-    align: "right",
-    accessor: (r) => (
-      <InlineText color="#00d4ff">
-        <FloatCell value={r.total} precision={0} />
-      </InlineText>
-    ),
-  },
+  fields.col<OcrRow>(
+    "total",
+    OCR_NUM_TRAINS > 1 ? "kW/train" : "Total kW",
+    (r) => fields.toneWrap("accent", <FloatCell value={r.total} precision={0} />),
+    "float",
+  ),
 ];
 
 const PowerLogOcrReplica: Component = () => (
@@ -219,7 +208,7 @@ const PowerLogOcrReplica: Component = () => (
     <TextSublabel>
       Page 1: Ever Steadfast 06/07/2026 — 928 kW avg from 6 hours
     </TextSublabel>
-    <BaseTable data={OCR_ROWS} columns={OCR_COLUMNS} compact maxHeight="200px" />
+    <FieldTable data={OCR_ROWS} fields={OCR_FIELDS} registry={{}} maxRows={5} />
   </TightStack>
 );
 
@@ -729,8 +718,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: FORTNIGHT_ROUTE,
     name: "Power Log OCR Results",
-    status: "raw",
-    note: "raw: dynamic aux column count + runtime-computed total header (kW/train vs Total kW) — both workable via runtime-built specs; the colored total is avgCol now (ruled 2026-07-18)",
+    status: "sui",
+    note: "FieldTable with runtime-built specs (migrated 2026-07-18): per-page aux columns, header computed at spec build, accent-toned derived total",
     component: PowerLogOcrReplica,
   },
   {
