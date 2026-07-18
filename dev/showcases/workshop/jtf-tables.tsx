@@ -58,18 +58,23 @@ const readSlugFromHash = (): string | null => {
   return new URLSearchParams(queryStr).get("t");
 };
 
-const writeSlugToHash = (slug: string) => {
+const hashWithSlug = (slug: string): string => {
   const raw = location.hash.replace(/^#\/?/, "");
   const [path, queryStr = ""] = raw.split("?");
   const params = new URLSearchParams(queryStr);
   params.set("t", slug);
-  location.hash = `#/${path}?${params.toString()}`;
+  return `#/${path}?${params.toString()}`;
+};
+
+/** Click selections push history (back/forward walks them). */
+const writeSlugToHash = (slug: string) => {
+  location.hash = hashWithSlug(slug);
 };
 
 const JtfTablesBench: Component = () => {
-  const initialSlug = readSlugFromHash();
-  const initialIdx = initialSlug ? SLUGS.indexOf(initialSlug) : -1;
-  const [active, setActive] = createSignal(initialIdx >= 0 ? initialIdx : 0);
+  // A (re)load always lands on the TOP of the worklist (ruled 2026-07-18) —
+  // any stale ?t= from a previous session is replaced, not restored.
+  const [active, setActive] = createSignal(0);
   const entry = () => ALL[active()];
   const suiCount = ALL.filter((e) => e.status === "sui").length;
 
@@ -80,6 +85,8 @@ const JtfTablesBench: Component = () => {
 
   // Back/forward restores the selection from the hash.
   onMount(() => {
+    // Reflect the top item in the URL without minting a history entry.
+    history.replaceState(null, "", hashWithSlug(SLUGS[0]));
     const onHash = () => {
       const slug = readSlugFromHash();
       const idx = slug ? SLUGS.indexOf(slug) : -1;
