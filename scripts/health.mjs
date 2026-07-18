@@ -19,6 +19,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./style-rubric.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
+import { length, lengthOf } from "./fn.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = join(root, "scripts", "health-baseline.json");
@@ -126,12 +127,12 @@ for (const f of walk(
   const text = stripComments(readFileSync(f, "utf8"));
   const rel = f.replace(root + "/", "");
   for (const m of text.matchAll(CHAIN_LINK)) {
-    const line = text.slice(0, m.index).split("\n").length;
+    const line = length(text.slice(0, m.index).split("\n"));
     hits.dotChains.push(`${rel}:${line}`);
   }
   if (rel.startsWith("src/fn/")) continue;
   for (const m of text.matchAll(METHOD_CALL)) {
-    const line = text.slice(0, m.index).split("\n").length;
+    const line = length(text.slice(0, m.index).split("\n"));
     hits.collectionMethodCalls.push(`${rel}:${line}`);
   }
 }
@@ -189,18 +190,18 @@ const showcaseRubricHits = showcaseRubric.violations.map(
 );
 
 const metrics = {
-  bareHexCss: hits.bareHexCss.length,
-  bareHexTsx: hits.bareHexTsx.length,
-  inlineStyleSrc: hits.inlineStyleSrc.length,
-  inlineStyleShowcases: hits.inlineStyleShowcases.length,
-  styleRubricViolations: styleRubric.violations.length,
-  showcaseStyleRubricViolations: showcaseRubric.violations.length,
-  cssTypedProps: propRubric.violations.length,
-  dotChains: hits.dotChains.length,
-  collectionMethodCalls: hits.collectionMethodCalls.length,
-  foldersWithoutTests: foldersWithoutTests.length,
-  undocumentedComponents: undocumented.length,
-  missingDepthHeaders: missingDepth.length,
+  bareHexCss: lengthOf("bareHexCss", hits),
+  bareHexTsx: lengthOf("bareHexTsx", hits),
+  inlineStyleSrc: lengthOf("inlineStyleSrc", hits),
+  inlineStyleShowcases: lengthOf("inlineStyleShowcases", hits),
+  styleRubricViolations: lengthOf("violations", styleRubric),
+  showcaseStyleRubricViolations: lengthOf("violations", showcaseRubric),
+  cssTypedProps: lengthOf("violations", propRubric),
+  dotChains: lengthOf("dotChains", hits),
+  collectionMethodCalls: lengthOf("collectionMethodCalls", hits),
+  foldersWithoutTests: length(foldersWithoutTests),
+  undocumentedComponents: length(undocumented),
+  missingDepthHeaders: length(missingDepth),
 };
 
 // ── report + ratchet ──────────────────────────────────────────────────
@@ -231,7 +232,7 @@ const detail = {
 const history = existsSync(HISTORY_PATH)
   ? JSON.parse(readFileSync(HISTORY_PATH, "utf8"))
   : [];
-const last = history[history.length - 1];
+const last = history[length(history) - 1];
 if (JSON.stringify(last?.metrics) !== JSON.stringify(metrics)) {
   history.push({
     at: new Date().toISOString(),
@@ -256,11 +257,11 @@ for (const [k, v] of Object.entries(metrics)) {
   if (base !== undefined && v > base) regressions.push({ k, base, v });
   console.log(`  ${k.padEnd(24)} ${String(v).padStart(4)}${status}`);
 }
-const regressed = regressions.length > 0;
+const regressed = length(regressions) > 0;
 
 if (verbose) {
   for (const [k, list] of Object.entries(detail)) {
-    if (!list.length) continue;
+    if (length(list) === 0) continue;
     console.log(`\n${k}:`);
     for (const item of list) console.log(`  ${item}`);
   }
@@ -293,12 +294,12 @@ if (updateBaseline) {
     const inChanged = list.filter((item) =>
       changedFiles.some((f) => item.startsWith(f)),
     );
-    const show = inChanged.length ? inChanged : list.slice(0, CAP);
-    if (inChanged.length)
+    const show = length(inChanged) ? inChanged : list.slice(0, CAP);
+    if (length(inChanged))
       console.error(`  offending lines in files changed since upstream:`);
     for (const item of show) console.error(`    ${item}`);
-    if (!inChanged.length && list.length > CAP)
-      console.error(`    …and ${list.length - CAP} more (--verbose for all)`);
+    if (length(inChanged) === 0 && length(list) > CAP)
+      console.error(`    …and ${length(list) - CAP} more (--verbose for all)`);
   }
   console.error(
     "\nFix the regression, or if the increase is deliberate and justified, run `npm run health -- --update-baseline` and commit the result.",
