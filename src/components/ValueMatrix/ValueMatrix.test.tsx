@@ -45,9 +45,12 @@ describe("ValueMatrix", () => {
     expect(container.querySelectorAll("tbody tr").length).toBe(2);
   });
 
-  it("renders null values as the em-dash placeholder", () => {
-    const { getByText } = render(() => matrix());
-    expect(getByText("—")).toBeTruthy();
+  it("renders null values blank (ruled 2026-07-18: no empty markers)", () => {
+    const { container } = render(() => matrix());
+    // barge @ 95 is null — its cell renders empty, no dash.
+    expect(container.textContent).not.toContain("—");
+    const cells = container.querySelectorAll(".sui-value-matrix__cell");
+    expect([...cells].some((c) => c.textContent === "")).toBe(true);
   });
 
   it("applies the configure-time tone function per cell", () => {

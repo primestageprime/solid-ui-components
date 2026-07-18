@@ -26,7 +26,8 @@ export interface ValueMatrixProps<R, C> {
   colLabel: (col: C) => string;
   /** Header over the row-axis column, e.g. "CE". Empty when omitted. */
   rowAxisLabel?: string;
-  /** The matrix: value at (row, col); null renders the em-dash placeholder. */
+  /** The matrix: value at (row, col); null renders BLANK (ruled 2026-07-18:
+   *  empty markers distract from real data). */
   value: (row: R, col: C) => number | null;
   /** Value formatter, e.g. formatGPerKwh. Defaults to String(value). */
   format?: (value: number) => string;
@@ -67,7 +68,7 @@ export function ValueMatrix<R, C>(props: ValueMatrixProps<R, C>): JSX.Element {
                   props.selected?.(row, col) ?? false,
               }}
             >
-              {value == null ? "—" : (props.format ?? String)(value)}
+              {value == null ? "" : (props.format ?? String)(value)}
             </span>
           );
         },

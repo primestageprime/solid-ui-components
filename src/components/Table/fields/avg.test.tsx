@@ -39,10 +39,9 @@ describe("avg field", () => {
     expect(toned?.textContent).toBe("929"); // (912 + 946) / 2
   });
 
-  it("renders the muted em-dash when no member is numeric", () => {
+  it("renders blank when no member is numeric (ruled 2026-07-18)", () => {
     const { container } = renderCell({ aux_1: null, aux_2: null, aux_3: null });
-    const muted = container.querySelector(".sui-field-tone--muted");
-    expect(muted?.textContent).toBe("—");
+    expect(container.textContent).toBe("");
   });
 
   it("a configured tone fn overrides the accent default", () => {

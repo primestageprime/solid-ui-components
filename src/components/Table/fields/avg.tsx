@@ -3,7 +3,8 @@
 // same row (ruled 2026-07-18). Derived values read as derived — the cell
 // wears the accent tone by default; a configure-time tone fn overrides it.
 // Null/missing members are skipped; a row with no numeric members renders
-// the muted em-dash. Geometry is the float type's.
+// BLANK (ruled 2026-07-18: empty markers distract from real data).
+// Geometry is the float type's.
 import { FloatCell } from "../numericCells";
 import { geo as floatGeo } from "./float";
 import { centered, toneWrap, type FieldCol, type ToneFn } from "./shared";
@@ -37,7 +38,7 @@ export const avgCol = <T,>(
         (v): v is Extract<T[keyof T], number> =>
           typeof v === "number" && !Number.isNaN(v),
       );
-    if (values.length === 0) return toneWrap("muted", "—");
+    if (values.length === 0) return "";
     const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
     return toneWrap(
       opts.tone?.(avg, row) ?? "accent",

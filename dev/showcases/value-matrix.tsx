@@ -60,7 +60,8 @@ export const ValueMatrixShowcase: Component = () => {
       <p class="text-meta">
         A row-axis × column-axis grid of COMPUTED values — not a row table.
         Cells come from <code>value(row, col)</code>; tone and selection are
-        configure-time functions; null renders an em-dash; the chosen cell
+        configure-time functions; null renders blank (empty markers distract
+        from real data — ruled 2026-07-18); the chosen cell
         carries weight + a soft halo. Generic over both axis types.
       </p>
 
