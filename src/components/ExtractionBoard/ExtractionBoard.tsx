@@ -65,6 +65,7 @@ import type {
   DoingItem,
   TodoItem,
 } from "./types";
+import { pipe, filter, map, join, sortBy } from "../../fn";
 
 // ---------------------------------------------------------------------------
 // Defaults + small helpers.
@@ -133,7 +134,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   // Only tables whose category is known to the config participate.
   const knownTables = createMemo(() => {
     const known = new Set(catOrder());
-    return local.tables.filter((t) => known.has(t.category));
+    return filter((t) => known.has(t.category), local.tables);
   });
 
   // ---- derived views (pure over `tables`) --------------------------------
@@ -200,9 +201,10 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
 
   /** All currently-extracting tables (flat). */
   const doingFlat = createMemo<DoingItem[]>(() =>
-    knownTables()
-      .filter((t) => t.status === "doing")
-      .map((t) => ({
+    pipe(
+      knownTables(),
+      filter((t: BoardTable) => t.status === "doing"),
+      map((t: BoardTable) => ({
         name: t.name,
         category: t.category,
         colsByType: t.colsByType,
@@ -210,6 +212,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
         transferredRows: t.transferredRows,
         batches: t.totalRows > multiBatchAbove() ? t.batches : undefined,
       })),
+    ),
   );
 
   /** The next queued (todo) table + remaining count per category. */
@@ -268,9 +271,11 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   let lastStatusSig = "";
   createEffect(() => {
     const sum = summaryByCategory();
-    const sig = catOrder()
-      .map((c) => sum[c].status)
-      .join(",");
+    const sig = pipe(
+      catOrder(),
+      map((c: string) => sum[c].status),
+      join(","),
+    );
     if (sig === lastStatusSig) return; // only react to summary status changes
     lastStatusSig = sig;
     clearTimeout(resortTimer);
@@ -301,10 +306,12 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
     }
     sig +=
       "doing>" +
-      doingNow
-        .map((d) => `${d.category}:${d.name}`)
-        .sort()
-        .join(",");
+      pipe(
+        doingNow,
+        map((d: DoingItem) => `${d.category}:${d.name}`),
+        sortBy((s: string) => s),
+        join(","),
+      );
     flip.sync(sig);
   });
 
