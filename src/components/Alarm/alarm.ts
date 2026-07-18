@@ -55,9 +55,9 @@ export function padRanges(
   padFraction: number,
   xDomainWidth: number,
 ): Range[] {
-  if (padFraction <= 0) return ranges.map((r) => ({ ...r }));
+  if (padFraction <= 0) return map((r) => ({ ...r }), ranges);
   const pad = padFraction * xDomainWidth;
-  return ranges.map((r) => ({ start: r.start - pad, end: r.end + pad }));
+  return map((r) => ({ start: r.start - pad, end: r.end + pad }), ranges);
 }
 
 /* Sweep-line detection of "hot zones" — contiguous x-regions in which
@@ -97,7 +97,7 @@ export function findHotZones(
     filter((z: { start: number; end: number; count: number }) => z.end > z.start),
     map((z: { start: number; end: number; count: number }) => ({
       ...z,
-      count: ranges.filter((r) => r.start < z.end && r.end > z.start).length,
+      count: filter((r) => r.start < z.end && r.end > z.start, ranges).length,
     })),
   );
 }
@@ -108,9 +108,10 @@ export function subtractZones(
   ranges: readonly Range[],
   zones: readonly Range[],
 ): Range[] {
-  if (zones.length === 0) return ranges.map((r) => ({ ...r }));
-  return ranges.filter(
+  if (zones.length === 0) return map((r) => ({ ...r }), ranges);
+  return filter(
     (r) => !zones.some((z) => r.start < z.end && r.end > z.start),
+    ranges,
   );
 }
 

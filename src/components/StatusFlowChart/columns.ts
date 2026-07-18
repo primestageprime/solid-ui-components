@@ -151,7 +151,7 @@ export function resolveParentStatuses(
   for (const n of nodes) {
     const children = childrenByParent.get(n.id);
     if (children && children.length > 0) {
-      const statuses = children.map((c) => c.status);
+      const statuses = map((c) => c.status, children);
       if (statuses.some((s) => s === centerStatus)) {
         out.set(n.id, centerStatus);
       } else if (statuses.every((s) => s === statuses[0])) {
@@ -189,7 +189,7 @@ export const STATUS_TO_COL: Record<string, number> = {
  * entries that reference ids outside the leaf set.
  */
 export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const byId = new Map(map((n) => [n.id, n], leaves));
   const remainingDeps = new Map<string, Set<string>>();
   for (const n of leaves) {
     const deps = new Set<string>();
@@ -218,7 +218,7 @@ export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
 
 /** Compute each leaf's topological depth via memoized recursion. */
 function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const byId = new Map(map((n) => [n.id, n], leaves));
   const cache = new Map<string, number>();
   const visit = (id: string): number => {
     const hit = cache.get(id);
@@ -254,13 +254,13 @@ export function computeColFor(
   if (n.status === "DOING") return 0;
 
   const leaves =
-    parentIds.size > 0 ? nodes.filter((node) => node.parentId) : nodes;
+    parentIds.size > 0 ? filter((node) => Boolean(node.parentId), nodes) : nodes;
   const depths = topoDepths(leaves);
   const myDepth = depths.get(n.id) ?? 0;
 
-  const sameStatus = leaves.filter((l) => l.status === n.status);
+  const sameStatus = filter((l) => l.status === n.status, leaves);
   const uniqueDepths = Array.from(
-    new Set(sameStatus.map((l) => depths.get(l.id) ?? 0)),
+    new Set(map((l) => depths.get(l.id) ?? 0, sameStatus)),
   );
   uniqueDepths.sort((a, b) => (n.status === "DONE" ? b - a : a - b));
   const rank = uniqueDepths.indexOf(myDepth) + 1; // 1-indexed

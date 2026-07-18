@@ -18,6 +18,7 @@ import { createPanZoom } from "./pan-zoom";
 import { clipPolyline, buildEdgePath, polylineMidpoint } from "./edge-path";
 import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import "./DagChart.css";
+import { map } from "../../fn";
 
 const _RESPONSIVE_BREAKPOINT = 640;
 
@@ -71,7 +72,7 @@ export function DagChart<T>(props: DAGProps<T>) {
   );
 
   const _stateMap = createMemo(
-    () => new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
+    () => new Map(map((v) => [v.node.id, v.state], collapsed().visibleNodes)),
   );
 
   // Merge full-graph positions with collapse state.
