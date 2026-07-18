@@ -8,6 +8,7 @@
  */
 
 import type { EdgeRect, ObstacleRect } from "./edge-routing";
+import { map, filter } from "../../fn";
 
 /** Vertical clearance the router leaves above/below an obstacle's edge.
  *  2rem at the default 16px base font size. */
@@ -159,18 +160,18 @@ export function orthogonalAvoidingObstacles(
   // target. Corridor side based on source vs target y, matching the
   // "left-node-below-target → bottom approach" convention we use today.
   const above = fromPortY <= toPortY;
-  const obsInBand = obstacles.filter((o) => {
+  const obsInBand = filter((o) => {
     const oxL = o.x - o.width / 2;
     const oxR = o.x + o.width / 2;
     const xMin = Math.min(fromOuterX, toOuterX);
     const xMax = Math.max(fromOuterX, toOuterX);
     return oxR >= xMin && oxL <= xMax;
-  });
+  }, obstacles);
   let corridorY: number;
   if (obsInBand.length > 0) {
     corridorY = above
-      ? Math.min(...obsInBand.map((o) => o.y - o.height / 2)) - OBSTACLE_MARGIN
-      : Math.max(...obsInBand.map((o) => o.y + o.height / 2)) + OBSTACLE_MARGIN;
+      ? Math.min(...map((o) => o.y - o.height / 2, obsInBand)) - OBSTACLE_MARGIN
+      : Math.max(...map((o) => o.y + o.height / 2, obsInBand)) + OBSTACLE_MARGIN;
   } else {
     corridorY = above ? toPortY - OBSTACLE_MARGIN : toPortY + OBSTACLE_MARGIN;
   }
@@ -186,8 +187,8 @@ export function orthogonalAvoidingObstacles(
   // When lower > upper, the obstacle is jammed against the node — fall
   // back to the source-/target-adjacent edge (lift right at fromOuterX
   // or drop right at toOuterX) and trust the corridor to lift above it.
-  const obsXLefts = obsInBand.map((o) => o.x - o.width / 2);
-  const obsXRights = obsInBand.map((o) => o.x + o.width / 2);
+  const obsXLefts = map((o) => o.x - o.width / 2, obsInBand);
+  const obsXRights = map((o) => o.x + o.width / 2, obsInBand);
   let liftX: number;
   let dropX: number;
   if (goingRight) {

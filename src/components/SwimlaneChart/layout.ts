@@ -1,6 +1,6 @@
 import type { DAGNode, DAGEdge, LayoutEdge } from "../DagChart/types";
 import type { LayoutResult } from "../DagChart/layout";
-import { sortBy } from "../../fn";
+import { sortBy, filter } from "../../fn";
 
 export type SwimlaneOptions<T> = {
   /**
@@ -108,7 +108,7 @@ export function computeSwimlaneLayout<T>(
   // Number of unique cols strictly below centerCol (used when centerCol
   // is NOT present in the data — we insert a "virtual" slot for it so
   // cols above the center don't collapse onto the center.
-  const colsBelowCenter = uniqueCols.filter((c) => c < centerCol).length;
+  const colsBelowCenter = filter((c) => c < centerCol, uniqueCols).length;
   const ordinalFor = (col: number): number => {
     const idx = uniqueCols.indexOf(col);
     if (idx >= 0) {
@@ -182,7 +182,7 @@ export function computeSwimlaneLayout<T>(
   // 5. Initial columns map keyed by col value — visible-only.
   const visibleCols = new Map<number, string[]>();
   for (const [col, ids] of nodesByCol) {
-    const filtered = ids.filter(isVisible);
+    const filtered = filter(isVisible, ids);
     if (filtered.length > 0) visibleCols.set(col, filtered);
   }
   // The center column always exists in the visible map if any center-col
@@ -256,7 +256,7 @@ export function computeSwimlaneLayout<T>(
     if (!ids || ids.length < 2) return;
     const bary = new Map<string, number>();
     for (const id of ids) {
-      const ns = neighbors.get(id)!.filter((nid) => colOf.get(nid) !== col);
+      const ns = filter((nid) => colOf.get(nid) !== col, neighbors.get(id)!);
       if (ns.length === 0) {
         bary.set(id, rank.get(id)!);
       } else {
@@ -289,11 +289,11 @@ export function computeSwimlaneLayout<T>(
   if (opts.maxRows && opts.maxRows > 0) {
     for (const col of orderedCols) {
       const ids = visibleCols.get(col)!;
-      const realIds = ids.filter((id) => !id.startsWith("__collapsed_"));
+      const realIds = filter((id) => !id.startsWith("__collapsed_"), ids);
       if (realIds.length <= opts.maxRows) continue;
       const keepReal = realIds.slice(0, opts.maxRows);
       const overflowCount = realIds.length - keepReal.length;
-      const placeholders = ids.filter((id) => id.startsWith("__collapsed_"));
+      const placeholders = filter((id) => id.startsWith("__collapsed_"), ids);
       visibleCols.set(col, [...keepReal, ...placeholders]);
       rowOverflowByCol.set(
         col,

@@ -42,6 +42,7 @@ import {
 } from "./format";
 import { CashflowBars } from "./CashflowBars";
 import { CashflowPopover } from "./CashflowPopover";
+import { map, pluck } from "../../fn";
 
 // Public data shapes live in `./types`; re-exported here so consumers (and the
 // folder barrel) keep importing them from CashflowChart unchanged.
@@ -113,20 +114,20 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
 
   const scales = createMemo(() => {
     const bars = props.data.bars;
-    const weeks = bars.map((b) => b.week_start);
+    const weeks = pluck("week_start", bars);
 
     const xScale = scaleBand<string>()
       .domain(weeks)
       .range([plotX().start, plotX().end])
       .padding(0.15);
 
-    const maxRevenue = Math.max(0, ...bars.map((b) => b.revenue_cents));
-    const maxExpense = Math.max(0, ...bars.map((b) => b.expense_cents));
+    const maxRevenue = Math.max(0, ...pluck("revenue_cents", bars));
+    const maxExpense = Math.max(0, ...pluck("expense_cents", bars));
     const minBalance = bars.length
-      ? Math.min(0, ...bars.map((b) => b.balance_cents))
+      ? Math.min(0, ...pluck("balance_cents", bars))
       : 0;
     const maxBalance = bars.length
-      ? Math.max(0, ...bars.map((b) => b.balance_cents))
+      ? Math.max(0, ...pluck("balance_cents", bars))
       : 0;
     const FIXED_Y_MIN = -10_000_000; // -$100k in cents (manual/fixed-range floor)
     // Full rendered vertical extent: revenue bars rise from $0, expense bars drop
@@ -179,10 +180,13 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
     const bw = xScale.bandwidth();
 
     const balancePoints = (subset: WeeklyChartBar[]) =>
-      subset.map((d) => ({
-        x: (xScale(d.week_start) ?? 0) + bw / 2,
-        y: yScale(d.balance_cents),
-      }));
+      map(
+        (d) => ({
+          x: (xScale(d.week_start) ?? 0) + bw / 2,
+          y: yScale(d.balance_cents),
+        }),
+        subset,
+      );
 
     const todayWeek = props.data.todayWeek;
     const todayIdx = todayWeek ? weeks.indexOf(todayWeek) : -1;
