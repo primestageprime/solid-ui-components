@@ -15,6 +15,8 @@
 // ============================================
 
 /** Which line is higher across a band run. "positive" = series above reference. */
+import { map } from "../../fn";
+
 export type BandSign = "positive" | "negative";
 
 /** One filled region of the deviation band. */
@@ -47,8 +49,8 @@ const rawSign = (diff: number): RawSign =>
 // back, yielding a polygon hugging both lines.
 const polygonPoints = (run: Sample[]): string =>
   [
-    ...run.map((s) => `${fmt(s.x)},${fmt(s.refY)}`),
-    ...[...run].reverse().map((s) => `${fmt(s.x)},${fmt(s.seriesY)}`),
+    ...map((s) => `${fmt(s.x)},${fmt(s.refY)}`, run),
+    ...map((s) => `${fmt(s.x)},${fmt(s.seriesY)}`, [...run].reverse()),
   ].join(" ");
 
 // Split one contiguous span (both lines defined throughout) into same-sign

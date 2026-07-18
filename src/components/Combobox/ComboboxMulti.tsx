@@ -36,6 +36,7 @@ import {
 import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import type { ComboboxOption, MultiComboboxProps } from "./Combobox";
+import { filter } from "../../fn";
 
 /** Narrowed local props for multi-mode rendering. */
 export type MultiLocal = Pick<
@@ -92,8 +93,9 @@ export const renderMulti = (
   };
 
   const handleChange = (next: ComboboxOption[]) => {
-    const removed = prevValue().filter(
+    const removed = filter(
       (prev) => !next.some((n) => n.value === prev.value),
+      prevValue(),
     );
     removed.forEach((opt) => {
       local.onRemove?.(opt);

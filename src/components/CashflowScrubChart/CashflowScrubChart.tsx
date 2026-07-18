@@ -46,6 +46,7 @@ import type {
   CashflowSeriesFill,
 } from "./types";
 import "./CashflowScrubChart.css";
+import { filter, map } from "../../fn";
 
 // Re-export the public type surface so the folder barrel (and existing
 // consumers importing from this module) keep resolving the same names.
@@ -89,9 +90,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const line = lineCells();
     const values = props.cells.flatMap((c, i) => [
       ...(line[i] ? [line[i].balanceCents] : []),
-      ...series
-        .map((s) => s.balanceCents(c, i))
-        .filter((v): v is number => v != null),
+      ...filter(
+        (v): v is number => v != null,
+        map((s) => s.balanceCents(c, i), series),
+      ),
     ]);
     // Reduce (not Math.min(...spread)) to stay safe on long ranges.
     const lo = values.reduce((m, v) => Math.min(m, v), 0);
