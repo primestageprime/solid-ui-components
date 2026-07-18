@@ -20,6 +20,7 @@ import {
   SmallOutlinedButton,
 } from "../../../../src/components/Button";
 import { ClusterRow, NarrowStack } from "../../../../src/components/Layout";
+import { sortBy } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
 
 // Shared palette — the same CSS vars the jtf cells drive their colors with.
@@ -93,11 +94,9 @@ function QaqcAssetTriageReplica(): JSX.Element {
     const key = sortKey();
     if (!key) {
       // Default: needs-analysis share, worst first.
-      return [...TRIAGE_ASSETS].sort(
-        (a, b) =>
-          needsAnalysis(b) / Math.max(1, classified(b)) -
-          needsAnalysis(a) / Math.max(1, classified(a)),
-      );
+      return sortBy(
+        (a: TriageAsset) => -(needsAnalysis(a) / Math.max(1, classified(a))),
+      )(TRIAGE_ASSETS);
     }
     const dir = sortDir();
     const val = TRIAGE_SORT_VAL[key];

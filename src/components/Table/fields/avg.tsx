@@ -8,6 +8,7 @@
 import { FloatCell } from "../numericCells";
 import { geo as floatGeo } from "./float";
 import { centered, toneWrap, type FieldCol, type ToneFn } from "./shared";
+import { pipe, map, filter, mean } from "../../../fn";
 
 export interface AvgColOpts<T> {
   /** Column id (default "avg"). */
@@ -23,14 +24,16 @@ export interface AvgColOpts<T> {
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === "number" && !Number.isNaN(v);
 
-const mean = (values: number[]): number | null =>
-  values.length === 0
-    ? null
-    : values.reduce((sum, v) => sum + v, 0) / values.length;
-
-/** The mean of the row's numeric members among `keys`; null when none. */
-const rowMean = <T,>(keys: (keyof T)[], row: T): number | null =>
-  mean(keys.map((key): unknown => row[key]).filter(isFiniteNumber));
+/** The mean of the row's numeric members among `keys`; null when none.
+ *  (fn.mean returns NaN on empty, so guard on .length to keep the null.) */
+const rowMean = <T,>(keys: (keyof T)[], row: T): number | null => {
+  const values = pipe(
+    keys,
+    map((key) => row[key] as unknown),
+    filter(isFiniteNumber),
+  );
+  return values.length === 0 ? null : mean(values);
+};
 
 /** The mean of `keys` per row: right-aligned float at float geometry,
  *  centered header, accent-toned unless configured otherwise. */

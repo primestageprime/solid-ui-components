@@ -15,6 +15,7 @@ import {
   mergeProps,
 } from "solid-js";
 import type { ColorVariant } from "../../types";
+import { pipe, filter, pluck } from "../../fn";
 import "./SegmentedControl.css";
 
 export interface SegmentOption {
@@ -88,7 +89,11 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
   };
 
   const enabledValues = () =>
-    local.options.filter((o) => !isDisabled(o)).map((o) => o.value);
+    pipe(
+      local.options,
+      filter((o) => !isDisabled(o)),
+      pluck("value"),
+    );
 
   const resolveNext = (
     dir: 1 | -1 | "home" | "end",

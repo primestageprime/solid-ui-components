@@ -19,6 +19,7 @@ import { geo as durationGeo } from "./duration";
 import { geo as statusGeo } from "./status";
 import { geo as chartGeo } from "./chart";
 import { clusterCol } from "./actions";
+import { pipe, map, sum } from "../../../fn";
 
 /** Geometry registry by field type. `actions` is parameterized by count —
  *  use `geoFor(n)` from ./actions instead. */
@@ -81,9 +82,9 @@ export function resolveFields<T>(
     if (Array.isArray(spec)) return clusterCol(spec.map((id) => registry[id]));
     return spec;
   });
-  const minCh = columns.reduce((s, c) => s + c.geo.minCh, 0);
-  const maxCh = columns.reduce((s, c) => s + c.geo.maxCh, 0);
-  const padPx = columns.reduce((s, c) => s + (c.geo.padPx ?? 0), 0);
+  const minCh = pipe(columns, map((c) => c.geo.minCh), sum);
+  const maxCh = pipe(columns, map((c) => c.geo.maxCh), sum);
+  const padPx = pipe(columns, map((c) => c.geo.padPx ?? 0), sum);
   // The fixed-layout floor: a column with a css width CONSUMES that width
   // outright (fixed layout never content-fits it down to minCh), so the
   // table's minimum is Σ css-widths plus the expanding columns' minCh —

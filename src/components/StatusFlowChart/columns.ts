@@ -4,6 +4,7 @@
 // and the chart figures out where to draw it. No positional hints in the
 // data. These three functions encapsulate that math and are unit-tested
 // in isolation so the rendering layer can stay thin.
+import { sortBy } from "../../fn";
 
 export type StatusFlowNode = {
   id: string;
@@ -56,7 +57,7 @@ export function pickVisibleCols(
   breakpoints: StatusFlowBreakpoint[],
 ): number {
   if (breakpoints.length === 0) return 1;
-  const sorted = [...breakpoints].sort((a, b) => a.minWidth - b.minWidth);
+  const sorted = sortBy((b: StatusFlowBreakpoint) => b.minWidth)(breakpoints);
   let chosen = sorted[0].visibleCols;
   for (const bp of sorted) {
     if (containerWidth >= bp.minWidth) chosen = bp.visibleCols;

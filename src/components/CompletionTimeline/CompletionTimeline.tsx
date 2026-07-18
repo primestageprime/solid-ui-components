@@ -9,6 +9,7 @@
 import { createMemo } from "solid-js";
 import { Chart, Grid, XAxis, YAxis, BarSeries, ChartTooltip } from "../Chart";
 import { ChartHeader } from "../ChartHeader";
+import { pipe, pluck, sum } from "../../fn";
 
 export interface CompletionEvent {
   tableName: string;
@@ -115,7 +116,7 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
     <div class="sui-completion-timeline">
       <ChartHeader
         title="Completion Timeline"
-        meta={`${buckets().reduce((s, b) => s + b.count, 0)} completions in window`}
+        meta={`${pipe(buckets(), pluck("count"), sum)} completions in window`}
       />
       <Chart
         width={800}

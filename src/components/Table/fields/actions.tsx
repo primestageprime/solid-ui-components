@@ -9,6 +9,7 @@ import { humanize } from "./shared";
 import { IconOnlyButton } from "../../Button";
 import { Icon, type IconName } from "../../Icon";
 import { IconClusterRow } from "../../Layout";
+import { pipe, pluck, join } from "../../../fn";
 
 /** Standard icons for known action ids. Extend ONLY with names that exist in
  *  IconName; unknown ids fall back to the neutral `settings` glyph. */
@@ -55,7 +56,7 @@ export const actionCol = <T,>(
 export const clusterCol = <T,>(actions: FieldCol<T>[]): FieldCol<T> => {
   const geo = geoFor(actions.length);
   return {
-    id: actions.map((a) => a.id).join("+"),
+    id: pipe(actions, pluck("id"), join("+")),
     header: "",
     align: "right",
     width: geo.css,

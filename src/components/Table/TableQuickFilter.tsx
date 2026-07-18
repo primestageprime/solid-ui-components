@@ -15,6 +15,7 @@
 import { type Accessor, type JSX, createSignal, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { FillColumn, NarrowStack, SpreadRow } from "../Layout/variants";
+import { pipe, map, join } from "../../fn";
 
 /**
  * Normalizes a value for searching:
@@ -48,7 +49,7 @@ export function createFilterPattern(filter: string): RegExp | null {
 
 /** Extracts all searchable text from a row (every own value, normalized). */
 function getRowSearchText(row: object): string {
-  return Object.values(row).map(normalizeValue).join(" ");
+  return pipe(Object.values(row), map(normalizeValue), join(" "));
 }
 
 export interface TableQuickFilterProps<T> {

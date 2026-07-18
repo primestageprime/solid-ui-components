@@ -28,6 +28,7 @@ import { ParticipantNameLabel } from "../ParticipantNameLabel";
 import { ParticipantTimeLabel } from "../ParticipantTimeLabel";
 import { LabeledDivider } from "../LabeledDivider";
 import { ThreadGroup } from "../ThreadGroup/ThreadGroup";
+import { sortBy } from "../../fn";
 
 export interface Participant {
   id: string;
@@ -148,14 +149,14 @@ const buildTree = (msgs: ConversationMessage[]): TreeNode[] => {
     }
   });
   // Sort children by timestamp at every level.
-  const sortRec = (nodes: TreeNode[]) => {
-    nodes.sort((a, b) => toMs(a.msg.timestamp) - toMs(b.msg.timestamp));
-    nodes.forEach((n) => {
-      sortRec(n.children);
+  const sortRec = (nodes: TreeNode[]): TreeNode[] => {
+    const sorted = sortBy((n: TreeNode) => toMs(n.msg.timestamp))(nodes);
+    sorted.forEach((n) => {
+      n.children = sortRec(n.children);
     });
+    return sorted;
   };
-  sortRec(roots);
-  return roots;
+  return sortRec(roots);
 };
 
 // Flatten with grouping. Within a parent (same depth, same thread context),

@@ -36,6 +36,7 @@ import {
 } from "../Chart";
 import { Legend } from "../Legend";
 import { SpreadRow } from "../Layout/variants";
+import { mean, pluck, sortBy } from "../../fn";
 import "./ThroughputChart.css";
 
 export interface ThroughputPoint {
@@ -124,9 +125,10 @@ function RateChart(props: ThroughputChartProps) {
 
   const points = createMemo(() => {
     const { start, end } = timeRange();
-    return data()
-      .filter((p) => p.timestamp >= start && p.timestamp <= end)
-      .sort((a, b) => a.timestamp - b.timestamp);
+    const inWindow = data().filter(
+      (p) => p.timestamp >= start && p.timestamp <= end,
+    );
+    return sortBy((p: ThroughputPoint) => p.timestamp)(inWindow);
   });
 
   const yMax = createMemo(() =>
@@ -135,9 +137,7 @@ function RateChart(props: ThroughputChartProps) {
   const avg = createMemo(() => {
     const pts = points();
     if (pts.length === 0) return 0;
-    return Math.round(
-      pts.reduce((s, p) => s + p.rowsPerMinute, 0) / pts.length,
-    );
+    return Math.round(mean(pluck("rowsPerMinute")(pts)));
   });
   const peak = createMemo(() => {
     const pts = points();

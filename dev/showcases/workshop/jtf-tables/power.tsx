@@ -25,6 +25,7 @@ import { FieldTable, textCol, col, avgCol } from "../../../../src/components/Tab
 import { InlineText } from "../../../../src/components/InlineText";
 import { TextSublabel } from "../../../../src/components/Text";
 import { TightStack } from "../../../../src/components/Layout";
+import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
 
 // ============================================
@@ -143,11 +144,12 @@ const CACHE_ROWS: AuxHourlyRow[] = [
 
 /** Matches the source's 1-train branch (2-train would halve the sum). */
 function cacheRowAverage(row: AuxHourlyRow): number | null {
-  const values = [row.aux_1, row.aux_2, row.aux_3, row.aux_4].filter(
-    (v): v is number => v !== null && !Number.isNaN(v) && v > 0,
+  const values = pipe(
+    [row.aux_1, row.aux_2, row.aux_3, row.aux_4],
+    filter((v): v is number => v !== null && !Number.isNaN(v) && v > 0),
   );
   if (values.length === 0) return null;
-  return values.reduce((acc, v) => acc + v, 0);
+  return sum(values);
 }
 
 /** AuxFloat = withCellStyle(FloatCell, { color: text-primary, 500 }). */

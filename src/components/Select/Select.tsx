@@ -21,6 +21,7 @@ import {
   splitProps,
 } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
+import { pipe, pluck, join } from "../../fn";
 import "./Select.css";
 
 /** Standard option shape. `value` is intentionally `unknown` — callers narrow. */
@@ -189,7 +190,7 @@ const renderValue = (
   return (
     <>
       <span class="sui-select__value-text">
-        {selected.map((o) => o.label).join(", ")}
+        {pipe(selected, pluck("label"), join(", "))}
       </span>
       <button
         type="button"

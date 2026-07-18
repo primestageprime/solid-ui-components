@@ -11,6 +11,8 @@
 // the public API surface. Safe to import from server code.
 // ============================================
 
+import { sortBy } from "../../fn";
+
 /** A row's accessor surface for one or more pivot dimensions. */
 export interface PivotAccessors<T, Dim extends string> {
   /** Distinct dimension keys the user can pivot on. */
@@ -100,16 +102,14 @@ export function bucketByDims<T, Dim extends string>(
       if (m) child.metrics = m;
       children.push(child);
     }
-    children.sort((a, b) => b.total - a.total);
     const bucket: PivotBucket = {
       key: ok,
       total: group.length,
-      children,
+      children: sortBy((c: PivotBucket) => -c.total)(children),
     };
     const m = tally(group, metrics);
     if (m) bucket.metrics = m;
     out.push(bucket);
   }
-  out.sort((a, b) => b.total - a.total);
-  return out;
+  return sortBy((b: PivotBucket) => -b.total)(out);
 }
