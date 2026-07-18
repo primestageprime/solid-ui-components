@@ -87,6 +87,36 @@ for (const f of walk(join(root, "dev/showcases"), (p) => p.endsWith(".tsx")))
       hits.inlineStyleShowcases.push(`${f.replace(root + "/", "")}:${i + 1}`);
   });
 
+// Dot-operator chains (Peter ruling 2026-07-18): method chaining is
+// antithetical to function composition — the fix is `fn.pipe` with named
+// data-last steps. Mechanical definition: a chained collection-method call,
+// i.e. `.map(`/`.filter(`/… whose RECEIVER is itself a call expression
+// (`)` immediately before, across whitespace/newlines). Every link of
+// `xs().map(f).filter(g)` counts; a lone `arr.map(f)` on an identifier does
+// not — single calls were ruled acceptable where a pipe adds noise.
+const CHAIN_METHODS =
+  "map|filter|reduce|reduceRight|flatMap|forEach|some|every|find|findIndex|findLast|sort|toSorted|slice|join|concat|reverse|toReversed";
+const CHAIN_LINK = new RegExp(`\\)\\s*\\.(?:${CHAIN_METHODS})\\(`, "g");
+
+const stripComments = (src) =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .split("\n")
+    .map((l) => (isCommentLine(l) ? "" : l))
+    .join("\n");
+
+hits.dotChains = [];
+for (const f of walk(
+  join(root, "src"),
+  (p) => /\.tsx?$/.test(p) && !p.includes(".test.") && !p.endsWith(".d.ts"),
+)) {
+  const text = stripComments(readFileSync(f, "utf8"));
+  for (const m of text.matchAll(CHAIN_LINK)) {
+    const line = text.slice(0, m.index).split("\n").length;
+    hits.dotChains.push(`${f.replace(root + "/", "")}:${line}`);
+  }
+}
+
 const foldersWithoutTests = componentDirs.filter(
   (d) =>
     !readdirSync(join(root, "src/components", d)).some((f) =>
@@ -147,6 +177,7 @@ const metrics = {
   styleRubricViolations: styleRubric.violations.length,
   showcaseStyleRubricViolations: showcaseRubric.violations.length,
   cssTypedProps: propRubric.violations.length,
+  dotChains: hits.dotChains.length,
   foldersWithoutTests: foldersWithoutTests.length,
   undocumentedComponents: undocumented.length,
   missingDepthHeaders: missingDepth.length,
@@ -168,6 +199,7 @@ const detail = {
   styleRubricViolations: styleRubricHits,
   showcaseStyleRubricViolations: showcaseRubricHits,
   cssTypedProps: propRubricHits,
+  dotChains: hits.dotChains,
   foldersWithoutTests,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
