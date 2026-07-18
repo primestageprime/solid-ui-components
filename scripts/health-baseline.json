@@ -6,8 +6,8 @@
   "styleRubricViolations": 0,
   "showcaseStyleRubricViolations": 0,
   "cssTypedProps": 13,
-  "dotChains": 127,
-  "collectionMethodCalls": 362,
+  "dotChains": 55,
+  "collectionMethodCalls": 225,
   "foldersWithoutTests": 0,
   "undocumentedComponents": 0,
   "missingDepthHeaders": 0
