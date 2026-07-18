@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## 0.107.0
+
+### Added
+
+- **Table-level sorting** (ruled 2026-07-18) — **`SortableFieldTable`** (curried; or `sortable` on `FieldTable`): a sortable table makes every column sortable except types with no valid sort order (selection, actions, lists, charts); no per-column opt-out. Mechanics: `TableColumn.sortValue?: (row) => raw` — field accessors return JSX, so the comparator now reads the raw channel (this also fixes the silently broken sort on all pre-existing field columns); `fields.col()` takes `sortValue` as its 5th argument.
+- **`TableQuickFilter`** (ruled 2026-07-18) — the client-side filter module extracted from `FilterableTable`, composable with ANY table: fixed toolbar (input + shown-of-total count), children receive the filtered-rows accessor once so the composed table never remounts while typing. `FilterableTable` is now `BaseTable` composed with it. (Sibling: the generic `QuickFilter` collection filter is unchanged.)
+- **`fields.identityLinkCol(key, { href, glyph?, header? })`** (ruled 2026-07-18) — the IdentityLink cell: an entity with a detail page displays its name AS the link by default. Configure-time `href(row)`, optional `glyph(row)`, name geometry, accent ink, blank for empty names.
+- **`fn` namespace** (ruled 2026-07-18) — data-last functional utilities + typed `pipe` (12-arity overloads, NO untyped rest fallback — a mis-wired pipe is a compile error): `map`, `filter` (type-guard narrowing), `pluck`, `sortBy` (stable, non-mutating), `sum`, `mean`, `join`, `groupBy`. Self-contained under `src/fn/` (liftable to its own package); 16 call sites migrated off dot-chains.
+- **`fields.statusCol` / `fields.listCol` / `fields.avgCol`** (ruled 2026-07-18, shipped post-0.106) — curried badge-mapping cell, comma-list cell with +N-more overflow and full-list tooltip, and configured-keys row-mean cell (accent by default).
+
+### Changed
+
+- **Name columns are FIXED at 50ch** (ruled 2026-07-18) — names never get squeezed; `name`/`identityLink` geometry pins at the survey-backed 50ch cap and ellipsis clips only dirty data past it. The field frame now floors its table at the Σmin budget and scrolls the excess horizontally; the resolver's floor counts css-width columns at their full consumed width.
+- **Blank empties in fields** (ruled 2026-07-18) — `textCol`/`nameCol`/`statusCol`/`listCol`/`avgCol` render nullish values as blank, never an em-dash or EMPTY badge; visible placeholders are opt-in only where they carry meaning.
+- **Client guidance: curried variants ONLY** (ruled 2026-07-18) — every "use curried variants or `create*()`" note (26 barrels + AGENT_GUIDE) now reads curried variants only; the app-local factory path is removed from the docs. `create*` exports remain for existing consumers pending migration.
+- jtf-ui migrated: ViolationsPreview (SortableFieldTable + TableQuickFilter + identityLinkCol vessel, data-layer compliance tones), MissingInfoPreview (statusCol/listCol), FortnightReportBody OCR table, power-log-ocr avgCol. JTF Table Catalog bench: 15 of 32 SUI — the fortnight route group is fully migrated.
+
 ## 0.106.0
 
 ### ⚠ Breaking
