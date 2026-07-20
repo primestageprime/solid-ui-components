@@ -9,6 +9,10 @@
 // - withHint: the header grows a themed tooltip ("headers generally accept a
 //   hint; if we don't specify it, fine" — ruled 2026-07-20). Dotted-underline
 //   affordance; the header text itself is unchanged.
+// - withWhen: the cell renders only when the predicate holds — blank
+//   otherwise (ruled 2026-07-20: per-row colspan takeovers collapse to
+//   predicate-gated columns; a partial week blanks its stat cells and shows
+//   the row action instead). Header, geometry, and sort are untouched.
 import type { JSX } from "solid-js";
 import { Tooltip } from "../../Tooltip";
 import type { FieldCol } from "./shared";
@@ -47,6 +51,25 @@ export function withHref<T>(
         </a>
       );
     },
+  };
+}
+
+export function withWhen<T>(
+  pred: (row: T) => boolean,
+  column: FieldCol<T>,
+): FieldCol<T>;
+export function withWhen<T>(
+  pred: (row: T) => boolean,
+): (column: FieldCol<T>) => FieldCol<T>;
+export function withWhen<T>(
+  pred: (row: T) => boolean,
+  column?: FieldCol<T>,
+): FieldCol<T> | ((column: FieldCol<T>) => FieldCol<T>) {
+  if (column === undefined) return (c) => withWhen(pred, c);
+  const cell = cellOf(column);
+  return {
+    ...column,
+    accessor: (row) => (pred(row) ? cell(row) : ""),
   };
 }
 

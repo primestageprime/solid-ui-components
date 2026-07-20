@@ -14,6 +14,7 @@ describe("actions field module", () => {
     expect(ACTION_ICONS.edit).toBe("edit");
     expect(ACTION_ICONS.delete).toBe("trash");
     expect(ACTION_ICONS.remove).toBe("trash");
+    expect(ACTION_ICONS.run_checks).toBe("refresh");
   });
 
   it("geoFor derives width from button metrics: geoFor(2) = 5.3rem / 9.5ch", () => {

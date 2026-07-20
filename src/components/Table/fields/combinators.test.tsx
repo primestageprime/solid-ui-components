@@ -1,9 +1,10 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import type { JSX } from "solid-js";
-import { withHref, withHint } from "./combinators";
+import { withHref, withHint, withWhen } from "./combinators";
 import { intCol } from "./int";
 import { statusCol } from "./status";
+import { actionCol } from "./actions";
 
 afterEach(cleanup);
 
@@ -66,6 +67,42 @@ describe("withHint", () => {
     const hinted = withHint<Row>("hint", base);
     expect(hinted.accessor).toBe(base.accessor);
     expect(hinted.sortValue?.(ROW)).toBe(22);
+  });
+});
+
+describe("withWhen", () => {
+  it("renders the cell only when the predicate holds — blank otherwise", () => {
+    const gated = withWhen<Row>((r) => r.flow > 0, intCol<Row>("flow"));
+    const shown = renderCell(gated, ROW);
+    expect(shown.container.querySelector(".cell-int")?.textContent).toBe("22");
+    const hidden = renderCell(gated, { ...ROW, flow: 0 });
+    expect(hidden.container.textContent).toBe("");
+  });
+
+  it("geometry, header, and sort survive the gate", () => {
+    const base = intCol<Row>("flow");
+    const gated = withWhen<Row>(() => false, base);
+    expect(gated.geo).toBe(base.geo);
+    expect(gated.header).toBe(base.header);
+    expect(gated.sortValue?.(ROW)).toBe(22);
+  });
+
+  it("curried form equals direct form", () => {
+    const pred = (r: Row) => r.flow > 0;
+    const direct = renderCell(withWhen<Row>(pred, intCol<Row>("flow")), ROW);
+    const curried = renderCell(withWhen<Row>(pred)(intCol<Row>("flow")), ROW);
+    expect(direct.container.textContent).toBe(curried.container.textContent);
+  });
+
+  it("gates an action column — the conditional row action", () => {
+    const gated = withWhen<Row>(
+      (r) => r.flow === 0,
+      actionCol<Row>("run_checks", () => {}),
+    );
+    const partial = renderCell(gated, { ...ROW, flow: 0 });
+    expect(partial.container.querySelector("button")).toBeTruthy();
+    const full = renderCell(gated, ROW);
+    expect(full.container.querySelector("button")).toBeNull();
   });
 });
 

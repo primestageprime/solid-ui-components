@@ -17,6 +17,7 @@ export const ACTION_ICONS: Record<string, IconName> = {
   edit: "edit",
   delete: "trash",
   remove: "trash",
+  run_checks: "refresh",
 };
 
 /** actions(n) geometry — DERIVED from button metrics, never guessed. Standard
