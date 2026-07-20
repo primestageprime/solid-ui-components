@@ -50,9 +50,16 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 
 /* The width floor that makes the geometry real under table-layout: fixed —
    without it, a 100%-width table inside a pane-capped frame scales every
-   column width down proportionally. */
+   column width down proportionally.
+   The TABLE element needs the mono pin too (bug 2026-07-20): Table.css keeps
+   the <table> on the sans family, so this min-width's `ch` resolved ~4.5%
+   wider than the frame's identical budget (270px table in a 260px frame) —
+   fixed layout stretched every column into the wider table and the frame
+   clipped the last column's right edge. Same ONE-ch-basis rule as th/td. */
 .sui-field-frame .hud-table__table {
   min-width: var(--sui-field-table-min);
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
 }
 
 /* Semantic tones (ruled 2026-07-17): the configure-time treatment vocabulary.
