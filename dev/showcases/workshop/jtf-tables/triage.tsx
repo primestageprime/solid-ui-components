@@ -20,7 +20,16 @@ import {
   SmallOutlinedButton,
 } from "../../../../src/components/Button";
 import { ClusterRow, NarrowStack } from "../../../../src/components/Layout";
-import { sortBy } from "../../../../src/fn";
+import {
+  SortableFieldTable,
+  intCol,
+  floatCol,
+  statusCol,
+  identityLinkCol,
+  withHref,
+  withHint,
+  type StatusColMapping,
+} from "../../../../src/components/Table/fields";
 import type { TableEntry } from "./shared";
 
 // Shared palette — the same CSS vars the jtf cells drive their colors with.
@@ -59,145 +68,114 @@ const TRIAGE_ASSETS: TriageAsset[] = [
 
 const classified = (a: TriageAsset): number => a.total_calls - a.unevaluated;
 const needsAnalysis = (a: TriageAsset): number => a.flow + a.pressure + a.thc + a.nh3;
-const pctCount = (n: number, d: number): string =>
-  d <= 0 ? "—" : `${((n / d) * 100).toFixed(0)}% (${n})`;
 
-const statusLabel = (s: TriageAsset["status"]): string =>
-  s === "ready_to_export" ? "Ready to export" : s === "exported" ? "Exported" : "Unresolved";
-const statusColor = (s: TriageAsset["status"]): string =>
-  s === "ready_to_export" ? ACCENT : s === "exported" ? SECONDARY : MUTED;
+// Detail-worklist link for an asset's bucket (jtf's AccentRouteLink target).
+const detailHref = (a: TriageAsset, bucket: string): string =>
+  `/tools/asset-triage/detail?asset=${encodeURIComponent(a.asset_id)}&bucket=${bucket}`;
 
-/** Sortable columns in this replica (jtf sorts all 11; 3 demonstrate the pattern). */
-const TRIAGE_SORT_VAL: Record<string, (a: TriageAsset) => number | string> = {
-  asset: (a) => a.asset_id,
-  classified: (a) => classified(a),
-  flow: (a) => a.flow,
+// The asset name links to its first non-zero bucket, dropping the analyst into
+// the most relevant worklist (jtf's firstNonZeroBucket).
+const firstNonZeroBucket = (a: TriageAsset): string => {
+  if (a.flow > 0) return "flow";
+  if (a.pressure > 0) return "pressure";
+  if (a.thc > 0) return "thc";
+  if (a.nh3 > 0) return "nh3";
+  if (a.escalated > 0) return "escalated";
+  if (a.explained > 0) return "explained";
+  if (a.good_to_go > 0) return "good_to_go";
+  return "flow";
+};
+
+const TRIAGE_STATUS: Record<string, StatusColMapping> = {
+  unresolved: { label: "Unresolved", tone: "muted" },
+  ready_to_export: { label: "Ready to export", tone: "accent" },
+  exported: { label: "Exported", tone: "default" },
+};
+
+// A bucket column: the linked COUNT under a tooltip header —
+// withHint(withHref(intCol)). The old "P% (N)" composite collapses to the
+// count (the figure the worklist link drills into); the percentage context
+// dies in migration (ruled 2026-07-20). Escalated wears a danger tone.
+const bucketCol = (
+  key: "flow" | "pressure" | "thc" | "nh3" | "escalated" | "explained" | "good_to_go",
+  header: string,
+  hint: string,
+  danger = false,
+) =>
+  withHint(
+    hint,
+    withHref(
+      (a: TriageAsset) => detailHref(a, key),
+      intCol<TriageAsset>(key, {
+        header,
+        tone: danger ? (v) => (v > 0 ? "danger" : "default") : undefined,
+      }),
+    ),
+  );
+
+// Default view: needs-analysis share, worst first. SortableFieldTable starts in
+// data order, so the bespoke default ordering is baked into the data here; a
+// header click then re-sorts on that column's sortValue.
+const TRIAGE_DISPLAY: TriageAsset[] = [...TRIAGE_ASSETS].sort(
+  (a, b) =>
+    needsAnalysis(b) / Math.max(1, classified(b)) -
+    needsAnalysis(a) / Math.max(1, classified(a)),
+);
+
+const TRIAGE_REGISTRY = {
+  asset: withHint(
+    "Asset identifier",
+    identityLinkCol<TriageAsset>("asset_id", {
+      href: (a) => detailHref(a, firstNonZeroBucket(a)),
+      header: "Asset",
+    }),
+  ),
+  classified: withHint(
+    "Calls with a triage bin (excludes calls not yet evaluated)",
+    intCol<TriageAsset>((a) => classified(a), { id: "classified", header: "Classified Calls" }),
+  ),
+  flow: bucketCol("flow", "Flow Threshold", "Inlet flow out of band for over an hour — highest-priority bin"),
+  pressure: bucketCol("pressure", "Inlet Pressure Threshold", "Inlet pressure over its ceiling for over an hour (no flow bin)"),
+  thc: bucketCol("thc", "Outlet THC Threshold", "Outlet THC out of band for over an hour (no flow/pressure bin)"),
+  nh3: bucketCol("nh3", "Outlet NH3 Threshold", "Outlet NH3 slip over an hour (no flow/pressure/THC bin)"),
+  escalated: bucketCol("escalated", "Escalated", "Calls flagged for escalation to the compliance officer", true),
+  explained: bucketCol("explained", "Explained", "Faults justified by an analyst explanation"),
+  good_to_go: bucketCol("good_to_go", "Good to Go", "No diagnostic over an hour — report as-is, no analyst"),
+  // Resolution PROGRESS is a percentage (floatCol suffix %); blank when there
+  // are no classified calls. The raw resolved count drops with the composite.
+  resolved: withHint(
+    "Explained + Good to Go — calls cleared for reporting",
+    floatCol<TriageAsset>(
+      (a) => (classified(a) > 0 ? (a.resolved / classified(a)) * 100 : null),
+      { id: "resolved", header: "Resolved", suffix: "%", precision: 0 },
+    ),
+  ),
+  status: withHint(
+    "Ready to export once every call is explained or good-to-go",
+    statusCol<TriageAsset>("status", TRIAGE_STATUS, { header: "Status" }),
+  ),
 };
 
 function QaqcAssetTriageReplica(): JSX.Element {
-  const [sortKey, setSortKey] = createSignal<string | null>(null);
-  const [sortDir, setSortDir] = createSignal<"asc" | "desc">("asc");
-
-  const toggleSort = (id: string) => {
-    if (sortKey() === id) {
-      if (sortDir() === "asc") setSortDir("desc");
-      else setSortKey(null); // third click → back to default ordering
-    } else {
-      setSortKey(id);
-      setSortDir("asc");
-    }
-  };
-  const sortArrow = (id: string): string =>
-    sortKey() === id ? (sortDir() === "asc" ? "▲" : "▼") : "⇅";
-
-  const displayed = (): TriageAsset[] => {
-    const key = sortKey();
-    if (!key) {
-      // Default: needs-analysis share, worst first.
-      return sortBy(
-        (a: TriageAsset) => -(needsAnalysis(a) / Math.max(1, classified(a))),
-      )(TRIAGE_ASSETS);
-    }
-    const dir = sortDir();
-    const val = TRIAGE_SORT_VAL[key];
-    return [...TRIAGE_ASSETS].sort((a, b) => {
-      const av = val(a);
-      const bv = val(b);
-      const cmp =
-        typeof av === "string" && typeof bv === "string"
-          ? av.localeCompare(bv)
-          : (av as number) - (bv as number);
-      return dir === "asc" ? cmp : -cmp;
-    });
-  };
-
-  /** Clickable tri-state sort header: tooltip + label + direction arrow.
-   * jtf styles cursor/opacity inline; here the arrow dims via InlineText color. */
-  const sortHeader = (id: string, label: string, hint: string): JSX.Element => (
-    <InlineText onClick={() => toggleSort(id)}>
-      <Tooltip content={hint}>
-        <TextTitle>{label}</TextTitle>
-      </Tooltip>{" "}
-      <InlineText color={sortKey() === id ? undefined : MUTED}>{sortArrow(id)}</InlineText>
-    </InlineText>
-  );
-
-  /** Bucket cell: dim grey at zero, an accent "link" otherwise (danger for
-   * Escalated). jtf renders AccentRouteLink into the detail worklist. */
-  const valueCell = (a: TriageAsset, value: number, red = false): JSX.Element => {
-    const label = pctCount(value, classified(a));
-    if (value === 0) return <InlineText color={MUTED}>{label}</InlineText>;
-    return <InlineText color={red ? DANGER : ACCENT}>{label}</InlineText>;
-  };
-
-  const binColumn = (
-    id: string,
-    label: string,
-    bin: (a: TriageAsset) => number,
-    red = false,
-  ): TableColumn<TriageAsset> => ({
-    id,
-    header: label, // simplified: jtf renders a sortHeader with tooltip here
-    accessor: (a) => valueCell(a, bin(a), red),
-    align: "center",
-  });
-
-  const columns: TableColumn<TriageAsset>[] = [
-    {
-      id: "asset",
-      header: sortHeader("asset", "Asset", "Asset identifier"),
-      accessor: (a) => <InlineText color={ACCENT}>{a.asset_id}</InlineText>,
-    },
-    {
-      id: "classified",
-      header: sortHeader(
-        "classified",
-        "Classified Calls",
-        "Calls with a triage bin (excludes calls not yet evaluated)",
-      ),
-      accessor: (a) => classified(a),
-      align: "center",
-    },
-    {
-      id: "flow",
-      header: sortHeader(
-        "flow",
-        "Flow Threshold",
-        "Inlet flow out of band for over an hour — highest-priority bin",
-      ),
-      accessor: (a) => valueCell(a, a.flow),
-      align: "center",
-    },
-    binColumn("pressure", "Inlet Pressure Threshold", (a) => a.pressure),
-    binColumn("thc", "Outlet THC Threshold", (a) => a.thc),
-    binColumn("nh3", "Outlet NH3 Threshold", (a) => a.nh3),
-    binColumn("escalated", "Escalated", (a) => a.escalated, true),
-    binColumn("explained", "Explained", (a) => a.explained),
-    binColumn("good_to_go", "Good to Go", (a) => a.good_to_go),
-    {
-      id: "resolved",
-      header: "Resolved",
-      accessor: (a) =>
-        a.resolved === 0 ? (
-          <InlineText color={MUTED}>{pctCount(0, classified(a))}</InlineText>
-        ) : (
-          <InlineText>{pctCount(a.resolved, classified(a))}</InlineText>
-        ),
-      align: "center",
-    },
-    {
-      id: "status",
-      header: "Status",
-      accessor: (a) => (
-        <InlineText color={statusColor(a.status)}>{statusLabel(a.status)}</InlineText>
-      ),
-      align: "center",
-    },
-  ];
-
   return (
     <NarrowStack>
-      <BaseTable data={displayed()} columns={columns} />
+      <SortableFieldTable
+        data={TRIAGE_DISPLAY}
+        fields={[
+          "asset",
+          "classified",
+          "flow",
+          "pressure",
+          "thc",
+          "nh3",
+          "escalated",
+          "explained",
+          "good_to_go",
+          "resolved",
+          "status",
+        ]}
+        registry={TRIAGE_REGISTRY}
+      />
     </NarrowStack>
   );
 }
@@ -585,9 +563,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/violations (QaqcAssetTriage)",
     name: "QA/QC asset triage",
-    status: "raw",
-    customs: ["header-hint", "linked-value"],
-    note: "Blocked: client-side tri-state sort on all 11 headers (JSX Tooltip+arrow headers) + 10 custom cells (pct+count bucket links, conditional muted/danger colors, colored status).",
+    status: "sui",
+    note: "Migrated to SortableFieldTable: 11 columns — asset identityLinkCol, classified/bucket intCols (buckets = withHref(intCol) linked counts), resolved floatCol suffix '%', status statusCol, every header withHint. The 'P% (N)' bucket composite collapses to the linked count and the percentage context drops (ruled 2026-07-20).",
     component: QaqcAssetTriageReplica,
   },
   {
