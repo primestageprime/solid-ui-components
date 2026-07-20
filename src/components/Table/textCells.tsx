@@ -1,15 +1,7 @@
 /* Table cell renderers — text cells (Id, String, LongText). */
-import {
-  type Component,
-  type JSX,
-  Show,
-  createSignal,
-  createEffect,
-  on,
-  onMount,
-  onCleanup,
-} from "solid-js";
+import { type Component, type JSX, Show, createSignal } from "solid-js";
 import { Tooltip } from "../Tooltip";
+import { createTruncationObserver } from "../../hooks/createTruncationObserver";
 import type { CellRendererProps } from "./cellStyle";
 
 // ============================================
@@ -91,7 +83,6 @@ export interface LongTextCellProps
 export const LongTextCell: Component<LongTextCellProps> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
   const [clampEl, setClampEl] = createSignal<HTMLSpanElement | undefined>();
-  const [clampOverflow, setClampOverflow] = createSignal(false);
 
   const maxLen = () => props.maxLength || 50;
   const isClampMode = () => (props.clampLines ?? 0) > 0;
@@ -103,10 +94,20 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
     return props.value.length > maxLen();
   };
 
-  // Combined truncation flag — char-count when clampLines unset, overflow
-  // measurement when clampLines is set.
+  // Clamp-mode truncation is measured, not assumed: the observer tracks the
+  // rendered box and reports overflow exactly when CSS paints the ellipsis —
+  // re-measuring on every column reflow, not just at mount (see
+  // createTruncationObserver). This keeps the tooltip in lockstep with the
+  // ellipsis: shown iff the value is actually clipped.
+  const clampTruncated = createTruncationObserver(
+    clampEl,
+    () => [props.value, props.clampLines] as const,
+  );
+
+  // Combined truncation flag — char-count when clampLines unset, measured
+  // overflow when clampLines is set.
   const isTruncated = () =>
-    isClampMode() ? clampOverflow() : isCharTruncated();
+    isClampMode() ? clampTruncated() : isCharTruncated();
 
   // Display text: in clamp mode we always render the full value and let CSS
   // handle the visual truncation. In char-count mode we slice on truncation.
@@ -116,43 +117,6 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
     if (expanded() || !isCharTruncated()) return props.value;
     return props.value.slice(0, maxLen());
   };
-
-  // Overflow measurement for clamp mode. Runs on mount, after value/lines
-  // changes, and on window resize. Kept cheap — single `getBoundingClientRect`
-  // comparison is avoided in favour of intrinsic scroll vs. client metrics.
-  const measureOverflow = () => {
-    const el = clampEl();
-    if (!el) return;
-    const lines = props.clampLines ?? 0;
-    if (lines <= 0) {
-      setClampOverflow(false);
-      return;
-    }
-    const overflowed =
-      el.scrollHeight > el.clientHeight + 1 ||
-      el.scrollWidth > el.clientWidth + 1;
-    setClampOverflow(overflowed);
-  };
-
-  onMount(() => {
-    if (!isClampMode()) return;
-    measureOverflow();
-    const onResize = () => measureOverflow();
-    window.addEventListener("resize", onResize);
-    onCleanup(() => window.removeEventListener("resize", onResize));
-  });
-
-  createEffect(
-    on(
-      () => [props.value, props.clampLines] as const,
-      () => {
-        // Re-measure when value or clampLines change. Defer to the next frame
-        // so layout reflects the new text/styles.
-        if (!isClampMode()) return;
-        queueMicrotask(measureOverflow);
-      },
-    ),
-  );
 
   const clampStyle = (): JSX.CSSProperties | undefined => {
     if (!isClampMode()) return undefined;
