@@ -1,14 +1,10 @@
 // JTF Table Catalog — power-log group.
-// Replicas of the power-log tables in jtf-ui: the retired PowerLogPanel's
-// three record tables (git history, retired in "single vessel-call tab set"),
-// PowerLogCacheView, the migrated /tools/power-log-ocr FieldTable, and the
-// two hour-grain data tables (grouped headers + runtime pivot).
+// Replicas of the power-log tables in jtf-ui: PowerLogCacheView, the migrated
+// /tools/power-log-ocr FieldTable, and the two hour-grain data tables (grouped
+// headers + runtime pivot). PowerLogPanel was retired at jtf HEAD and removed
+// from this catalog (Wave 2, 2026-07-20) — dead debt, nothing to migrate.
 //
 // Judgment calls:
-// - PowerLogPanel's three BaseTables are catalogued as ONE entry rendering all
-//   three stacked (existing-aux, database records, confirm modal) — they share
-//   the same two blockers (withCellStyle green floats + derived Pacific-time
-//   string columns), so one worklist line covers the ×3.
 // - withCellStyle colored floats are approximated with InlineText color
 //   wrapping FloatCell (.cell-float inherits color) — no style objects.
 import type { Component } from "solid-js";
@@ -22,103 +18,8 @@ import {
 import type { TableColumn } from "../../../../src/components/Table";
 import { FieldTable, SortableFieldTable, textCol, col, floatCol, avgCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
-import { TextSublabel } from "../../../../src/components/Text";
-import { TightStack } from "../../../../src/components/Layout";
 import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
-
-// ============================================
-// Shared stub helpers (deterministic)
-// ============================================
-
-/** UTC ISO → "YYYY-MM-DD HH:mm PDT" with a fixed July offset (UTC-7). */
-function utcToPacific(timestamp: string): string {
-  const shifted = new Date(new Date(timestamp).getTime() - 7 * 3600_000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-` +
-    `${pad(shifted.getUTCDate())} ${pad(shifted.getUTCHours())}:` +
-    `${pad(shifted.getUTCMinutes())} PDT`
-  );
-}
-
-// ============================================
-// 1. PowerLogPanel (retired) — three record tables in one entry
-// ============================================
-
-interface ExistingAuxRecord {
-  timestamp: string;
-  metric_id: string;
-  value: number;
-}
-
-interface DatabaseRecord {
-  node_id: string;
-  device_id: string;
-  group: string;
-  timestamp: string;
-  float_value: number;
-}
-
-const EXISTING_AUX_ROWS: ExistingAuxRecord[] = [
-  { timestamp: "2026-07-08T14:00:00Z", metric_id: "aux_1_value", value: 412.5 },
-  { timestamp: "2026-07-08T14:00:00Z", metric_id: "aux_2_value", value: 398.2 },
-  { timestamp: "2026-07-08T15:00:00Z", metric_id: "aux_1_value", value: 455.0 },
-  { timestamp: "2026-07-08T15:00:00Z", metric_id: "aux_2_value", value: 431.7 },
-  { timestamp: "2026-07-08T16:00:00Z", metric_id: "aux_1_value", value: 487.3 },
-  { timestamp: "2026-07-08T16:00:00Z", metric_id: "aux_2_value", value: 442.9 },
-];
-
-const DATABASE_ROWS: DatabaseRecord[] = [
-  { node_id: "stax-ingest-01", device_id: "STX-0421", group: "aux_engine", timestamp: "2026-07-08T14:00:00Z", float_value: 810.7 },
-  { node_id: "stax-ingest-01", device_id: "STX-0421", group: "aux_engine", timestamp: "2026-07-08T15:00:00Z", float_value: 886.7 },
-  { node_id: "stax-ingest-01", device_id: "STX-0421", group: "aux_engine", timestamp: "2026-07-08T16:00:00Z", float_value: 930.2 },
-  { node_id: "stax-ingest-01", device_id: "STX-0421", group: "aux_engine", timestamp: "2026-07-08T17:00:00Z", float_value: 764.1 },
-  { node_id: "stax-ingest-01", device_id: "STX-0421", group: "aux_engine", timestamp: "2026-07-08T18:00:00Z", float_value: 692.8 },
-];
-
-/** withCellStyle(FloatCell, { color: success, 700, 1.25rem }) approximation. */
-const GreenFloat: Component<{ value: number }> = (props) => (
-  <InlineText color="var(--sui-success)">
-    <FloatCell value={props.value} precision={1} />
-  </InlineText>
-);
-
-const existingAuxColumns: TableColumn<ExistingAuxRecord>[] = [
-  { id: "timestamp", header: "Timestamp (UTC)", accessor: "timestamp" },
-  { id: "timestamp_pacific", header: "Pacific Time", accessor: (r) => utcToPacific(r.timestamp) },
-  { id: "metric_id", header: "Metric", accessor: "metric_id" },
-  { id: "value", header: "Value (kW)", accessor: (r) => <GreenFloat value={r.value} />, align: "right" },
-];
-
-const databaseColumns: TableColumn<DatabaseRecord>[] = [
-  { id: "node_id", header: "node_id", accessor: "node_id" },
-  { id: "device_id", header: "device_id", accessor: "device_id" },
-  { id: "group", header: "group", accessor: "group" },
-  { id: "timestamp", header: "timestamp (UTC)", accessor: "timestamp" },
-  { id: "timestamp_pacific", header: "timestamp (Pacific)", accessor: (r) => utcToPacific(r.timestamp) },
-  { id: "float_value", header: "float_value (kW)", accessor: (r) => <GreenFloat value={r.float_value} />, align: "right" },
-];
-
-const confirmModalColumns: TableColumn<DatabaseRecord>[] = [
-  { id: "node_id", header: "node_id", accessor: "node_id" },
-  { id: "device_id", header: "device_id", accessor: "device_id" },
-  { id: "group", header: "group", accessor: "group" },
-  { id: "timestamp", header: "timestamp (UTC)", accessor: "timestamp" },
-  { id: "timestamp_pacific", header: "timestamp (Pacific)", accessor: (r) => utcToPacific(r.timestamp) },
-  { id: "float_value", header: "float_value", accessor: (r) => <GreenFloat value={r.float_value} />, align: "right" },
-];
-
-const PowerLogPanelTables: Component = () => (
-  <TightStack>
-    <TextSublabel>Existing aux records (per-metric)</TextSublabel>
-    <BaseTable data={EXISTING_AUX_ROWS} columns={existingAuxColumns} compact />
-    <TextSublabel>Database records (to be written)</TextSublabel>
-    <BaseTable data={DATABASE_ROWS} columns={databaseColumns} compact />
-    <TextSublabel>Confirm-modal preview</TextSublabel>
-    <BaseTable data={DATABASE_ROWS} columns={confirmModalColumns} compact />
-  </TightStack>
-);
 
 // ============================================
 // 2. PowerLogCacheView — cached aux hourly table
@@ -355,14 +256,6 @@ const HourlyPivotTable: Component = () => {
 // ============================================
 
 export const ENTRIES: TableEntry[] = [
-  {
-    route: "(embedded) PowerLogPanel",
-    name: "Power log record tables (×3: existing-aux, DB records, confirm modal)",
-    status: "raw",
-    customs: ["styled-number"],
-    note: "Three near-identical BaseTables, one entry: withCellStyle green oversized floats + derived Pacific-time string columns block fields migration. Panel retired in jtf HEAD; replicated from git history.",
-    component: PowerLogPanelTables,
-  },
   {
     route: "(embedded) PowerLogCacheView",
     name: "Cached aux hourly table",
