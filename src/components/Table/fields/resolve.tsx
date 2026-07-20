@@ -19,7 +19,7 @@ import { geo as durationGeo } from "./duration";
 import { geo as statusGeo } from "./status";
 import { geo as chartGeo } from "./chart";
 import { clusterCol } from "./actions";
-import { pipe, map, sum } from "../../../fn";
+import { pipe, map, flatMap, sum } from "../../../fn";
 
 /** Geometry registry by field type. `actions` is parameterized by count —
  *  use `geoFor(n)` from ./actions instead. */
@@ -83,16 +83,20 @@ export function resolveFields<T>(
   // flatMap: a group expands to its member columns, each stamped with the
   // group label so BaseTable merges the consecutive run under one colspan
   // header (ungrouped columns it spans across both rows with rowspan=2).
-  const columns = specs.flatMap((spec): FieldCol<T>[] => {
+  const stampGroup =
+    (label: string) =>
+    (member: string | FieldCol<T>): FieldCol<T> => ({
+      ...resolveMember(member),
+      group: label,
+    });
+  const expandSpec = (spec: FieldSpec<T>): FieldCol<T>[] => {
     if (typeof spec === "string") return [registry[spec]];
-    if (Array.isArray(spec)) return [clusterCol(spec.map((id) => registry[id]))];
-    if (isFieldGroup(spec))
-      return spec.fields.map((member) => ({
-        ...resolveMember(member),
-        group: spec.group,
-      }));
+    if (Array.isArray(spec))
+      return [clusterCol(map((id: string) => registry[id], spec))];
+    if (isFieldGroup(spec)) return map(stampGroup(spec.group), spec.fields);
     return [spec];
-  });
+  };
+  const columns = flatMap(expandSpec, specs);
   const minCh = pipe(columns, map((c) => c.geo.minCh), sum);
   const maxCh = pipe(columns, map((c) => c.geo.maxCh), sum);
   const padPx = pipe(columns, map((c) => c.geo.padPx ?? 0), sum);

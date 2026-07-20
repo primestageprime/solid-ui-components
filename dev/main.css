@@ -2591,3 +2591,15 @@ th:has(.tf-th-center) .hud-table__header-content {
   max-height: calc(100vh - 240px);
   overflow-y: auto;
 }
+
+/* PopoverMenu showcase — the short overflow:hidden ancestor that would clip
+   a non-portalled panel (static demo chrome; no dynamic geometry). */
+.popover-menu-demo__clipframe {
+  height: 48px;
+  overflow: hidden;
+  border: 1px dashed var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}

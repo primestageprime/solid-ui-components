@@ -1,4 +1,5 @@
-/* Table cell primitive — ellipsis-aware text with an iff tooltip.
+/* Table cell primitive — ellipsis-aware text with an iff tooltip
+ * (Depth 1: composes Tooltip + the createTruncationObserver hook).
  *
  * Peter's ruling (2026-07-20): "Whatever component does ellipsising should know
  * that if and only if the ellipsis appears, there should be a tooltip with the

@@ -10,6 +10,7 @@
 // ============================================
 export { pipe } from "./pipe";
 export { map } from "./map";
+export { flatMap } from "./flatMap";
 export { filter } from "./filter";
 export { prop } from "./prop";
 export { pluck } from "./pluck";

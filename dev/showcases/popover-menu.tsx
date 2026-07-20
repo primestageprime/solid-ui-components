@@ -33,17 +33,7 @@ export const PopoverMenuShowcase: Component = () => {
         cut off.
       </p>
       <div class="example-group">
-        <div
-          style={{
-            height: "48px",
-            overflow: "hidden",
-            border: "1px dashed var(--sui-border)",
-            "border-radius": "var(--sui-radius-md, 4px)",
-            display: "flex",
-            "align-items": "center",
-            padding: "0 12px",
-          }}
-        >
+        <div class="popover-menu-demo__clipframe">
           <PopoverMenu
             trigger={<span>Account ▾</span>}
             header={<span>peter@example.com</span>}

@@ -1,3 +1,5 @@
+// Hook — createTruncationObserver (Depth 0: composes the DOM ResizeObserver
+// only; no library imports).
 import { createSignal, createEffect, onCleanup, type Accessor } from "solid-js";
 import { isServer } from "solid-js/web";
 
