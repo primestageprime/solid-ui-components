@@ -96,3 +96,66 @@
   padding-top: 4px;
   margin-top: 4px;
 }
+
+/* ============================================
+   Color layer — token-driven, adapts to the active theme
+   ============================================
+   Like every other component (Button, NavLink, PopoverMenu, …), Dropdown owns
+   its colors here via --sui-* tokens instead of relying on a per-theme skin.
+   Rules sit after the structural resets above so they win on equal specificity.
+   hud.css ships its own explicit dropdown overrides (a custom neon skin) which
+   load after component CSS and still win under the hud theme. */
+.sui-dropdown__trigger {
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-family, inherit);
+  font-weight: 500;
+}
+
+.sui-dropdown__trigger:hover {
+  border-color: var(--sui-border-bright);
+}
+
+.sui-dropdown--open .sui-dropdown__trigger {
+  border-color: var(--sui-accent);
+}
+
+/* Subtle variant — reads as plain, legible text until hover */
+.sui-dropdown--subtle .sui-dropdown__trigger {
+  background: transparent;
+  border-color: transparent;
+  color: var(--sui-text-primary);
+}
+
+.sui-dropdown--subtle .sui-dropdown__trigger:hover,
+.sui-dropdown--subtle.sui-dropdown--open .sui-dropdown__trigger {
+  background: rgba(var(--sui-accent-rgb), 0.08);
+  border-color: var(--sui-border);
+}
+
+.sui-dropdown__menu {
+  background: var(--sui-bg-primary);
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-md, 4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.sui-dropdown__item {
+  background: transparent;
+  color: var(--sui-text-primary);
+  border-radius: var(--sui-radius-md, 4px);
+}
+
+.sui-dropdown__item:hover {
+  background: rgba(var(--sui-accent-rgb), 0.1);
+}
+
+.sui-dropdown__item--active {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-accent);
+}
+
+.sui-dropdown__footer {
+  border-top: 1px solid var(--sui-border);
+}
