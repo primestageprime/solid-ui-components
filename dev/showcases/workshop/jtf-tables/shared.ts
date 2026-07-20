@@ -39,31 +39,6 @@ export const CUSTOM_DEMANDS: CustomDemand[] = [
     why: "withCellStyle oversized/weighted/colored floats say more than the Tone vocabulary (primary vs accent weight, oversized green).",
   },
   {
-    id: "row-tone",
-    name: "Row tone",
-    why: "getRowClass row highlights (baseline row, conditional row sets) need a semantic rowTone, not a class escape hatch.",
-  },
-  {
-    id: "header-hint",
-    name: "Header hint",
-    why: "Headers carrying JSX Tooltips; fields headers are plain strings with no hint channel.",
-  },
-  {
-    id: "linked-value",
-    name: "Linked value",
-    why: "Non-identity cells that navigate (bucket-count links, week links) — identityLinkCol covers names only.",
-  },
-  {
-    id: "count-emphasis",
-    name: "Count emphasis",
-    why: "Count columns colored from the series palette with conditional emphasis; intCol's tone fn can't reach the palette.",
-  },
-  {
-    id: "linked-badge",
-    name: "Linked badge",
-    why: "A statusCol badge that is ALSO a link (spreadsheet href).",
-  },
-  {
     id: "row-click",
     name: "Row navigation",
     why: "Whole-row onRowClick navigation isn't surfaced through FieldTable.",

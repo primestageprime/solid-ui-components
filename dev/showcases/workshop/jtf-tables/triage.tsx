@@ -571,8 +571,8 @@ export const ENTRIES: TableEntry[] = [
     route: "/reports/qaqc-checks",
     name: "Weekly QA/QC checks",
     status: "raw",
-    customs: ["span-row", "header-hint", "linked-value"],
-    note: "Blocked: per-row colspan — partial weeks collapse stat columns into one spanning cell (BaseTable spanRow) with a Run-checks action; JSX tooltip headers + tooltipped link cells.",
+    customs: ["span-row"],
+    note: "Blocked only by per-row colspan — partial weeks collapse stat columns into one spanning cell (BaseTable spanRow) with a Run-checks action. The tooltip headers and tooltipped link cells are now shipped (withHint/withHref) and no longer blockers.",
     component: QaqcChecksWeeklyReplica,
   },
   {
