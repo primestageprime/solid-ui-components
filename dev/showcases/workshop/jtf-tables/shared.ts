@@ -34,11 +34,6 @@ export interface CustomDemand {
  *  list is the definition side only, never counts. */
 export const CUSTOM_DEMANDS: CustomDemand[] = [
   {
-    id: "styled-number",
-    name: "Emphasis numerics",
-    why: "withCellStyle oversized/weighted/colored floats say more than the Tone vocabulary (primary vs accent weight, oversized green).",
-  },
-  {
     id: "row-click",
     name: "Row navigation",
     why: "Whole-row onRowClick navigation isn't surfaced through FieldTable.",

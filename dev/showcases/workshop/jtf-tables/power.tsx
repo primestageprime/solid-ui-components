@@ -4,19 +4,17 @@
 // headers + runtime pivot). PowerLogPanel was retired at jtf HEAD and removed
 // from this catalog (Wave 2, 2026-07-20) — dead debt, nothing to migrate.
 //
-// Judgment calls:
-// - withCellStyle colored floats are approximated with InlineText color
-//   wrapping FloatCell (.cell-float inherits color) — no style objects.
+// Judgment call: the raw HourLevelDataTable's status-colored text is
+// approximated with InlineText color (no style objects).
 import type { Component } from "solid-js";
 import {
   BaseTable,
   DataTableContainer,
-  FloatCell,
   IntCell,
   MinuteDateTimeCell,
 } from "../../../../src/components/Table";
 import type { TableColumn } from "../../../../src/components/Table";
-import { FieldTable, SortableFieldTable, textCol, col, floatCol, avgCol } from "../../../../src/components/Table/fields";
+import { FieldTable, SortableFieldTable, textCol, col, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
@@ -42,49 +40,33 @@ const CACHE_ROWS: AuxHourlyRow[] = [
   { hour_utc: "2026-07-08 19:00:00", aux_1: null, aux_2: null, aux_3: null, aux_4: null },
 ];
 
-/** Matches the source's 1-train branch (2-train would halve the sum). */
-function cacheRowAverage(row: AuxHourlyRow): number | null {
-  const values = pipe(
-    [row.aux_1, row.aux_2, row.aux_3, row.aux_4],
-    filter((v): v is number => v !== null && !Number.isNaN(v) && v > 0),
-  );
-  if (values.length === 0) return null;
-  return sum(values);
-}
-
-/** AuxFloat = withCellStyle(FloatCell, { color: text-primary, 500 }). */
-const AuxFloat: Component<{ value: number }> = (props) => (
-  <InlineText color="var(--sui-text-primary)">
-    <FloatCell value={props.value} precision={0} />
-  </InlineText>
-);
-
-/** AvgFloat = withCellStyle(FloatCell, { color: accent-dim, 600 }). */
-const AvgFloat: Component<{ value: number }> = (props) => (
-  <InlineText color="var(--sui-accent)">
-    <FloatCell value={props.value} precision={0} />
-  </InlineText>
-);
-
-const cacheColumns: TableColumn<AuxHourlyRow>[] = [
-  { id: "hour", header: "Date / Hour", accessor: (r) => r.hour_utc.slice(0, 16) },
-  { id: "aux1", header: "Aux. 1", align: "right", accessor: (r) => (r.aux_1 !== null ? <AuxFloat value={r.aux_1} /> : "—") },
-  { id: "aux2", header: "Aux. 2", align: "right", accessor: (r) => (r.aux_2 !== null ? <AuxFloat value={r.aux_2} /> : "—") },
-  { id: "aux3", header: "Aux. 3", align: "right", accessor: (r) => (r.aux_3 !== null ? <AuxFloat value={r.aux_3} /> : "—") },
-  { id: "aux4", header: "Aux. 4", align: "right", accessor: (r) => (r.aux_4 !== null ? <AuxFloat value={r.aux_4} /> : "—") },
-  {
-    id: "avg",
-    header: "Avg (kW)",
-    align: "right",
-    accessor: (r) => {
-      const avg = cacheRowAverage(r);
-      return avg !== null ? <AvgFloat value={avg} /> : "—";
+// The per-train average DECLARES its math via aggregateCol's combine (ruled
+// 2026-07-20): the sum of the positive aux readings, halved for two trains.
+// This replica bakes the source's 1-train branch (no allAssets here), so combine
+// is the plain sum. Accent by default (derived reads as derived). AuxFloat/
+// AvgFloat's weight nuance dies in migration; null → BLANK (no '—' literals).
+const CACHE_REGISTRY = {
+  hour: col<AuxHourlyRow>("hour", "Date / Hour", (row) => row.hour_utc.slice(0, 16), "dateTime", (row) => row.hour_utc),
+  aux1: floatCol<AuxHourlyRow>("aux_1", { precision: 0, header: "Aux. 1" }),
+  aux2: floatCol<AuxHourlyRow>("aux_2", { precision: 0, header: "Aux. 2" }),
+  aux3: floatCol<AuxHourlyRow>("aux_3", { precision: 0, header: "Aux. 3" }),
+  aux4: floatCol<AuxHourlyRow>("aux_4", { precision: 0, header: "Aux. 4" }),
+  avg: aggregateCol<AuxHourlyRow>(
+    ["aux_1", "aux_2", "aux_3", "aux_4"],
+    (values) => {
+      const positive = pipe(values, filter((v) => v > 0));
+      return positive.length ? sum(positive) : null;
     },
-  },
-];
+    { id: "avg", header: "Avg (kW)", precision: 0 },
+  ),
+};
 
 const PowerLogCacheTable: Component = () => (
-  <BaseTable data={CACHE_ROWS} compact columns={cacheColumns} />
+  <FieldTable
+    data={CACHE_ROWS}
+    fields={["hour", "aux1", "aux2", "aux3", "aux4", "avg"]}
+    registry={CACHE_REGISTRY}
+  />
 );
 
 // ============================================
@@ -259,9 +241,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "(embedded) PowerLogCacheView",
     name: "Cached aux hourly table",
-    status: "raw",
-    customs: ["styled-number"],
-    note: "AuxFloat/AvgFloat withCellStyle variants (primary/accent weighted floats) + null→'—' literals at the call site.",
+    status: "sui",
+    note: "Migrated to FieldTable: aux cells → plain floatCol (weight nuance dies, null→blank); the per-train average → aggregateCol whose combine declares the math (sum of positive readings ÷ trains — 1-train here), accent by default. Retires the last styled-number consumer.",
     component: PowerLogCacheTable,
   },
   {
