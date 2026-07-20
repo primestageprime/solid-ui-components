@@ -40,25 +40,30 @@ const CACHE_ROWS: AuxHourlyRow[] = [
   { hour_utc: "2026-07-08 19:00:00", aux_1: null, aux_2: null, aux_3: null, aux_4: null },
 ];
 
-// The per-train average DECLARES its math via aggregateCol's combine (ruled
-// 2026-07-20): the sum of the positive aux readings, halved for two trains.
-// This replica bakes the source's 1-train branch (no allAssets here), so combine
-// is the plain sum. Accent by default (derived reads as derived). AuxFloat/
-// AvgFloat's weight nuance dies in migration; null → BLANK (no '—' literals).
+const AUX_KEYS: (keyof AuxHourlyRow)[] = ["aux_1", "aux_2", "aux_3", "aux_4"];
+
+const isPositive = (v: number): boolean => v > 0;
+
+// Per-train kW (ruled 2026-07-20): the SUM of the positive aux readings divided
+// by the number of trains — a per-train TOTAL, not a mean across the aux columns
+// (the "Avg (kW)" production header is a mislabel we deliberately keep). Named +
+// pure so aggregateCol feeds the accessor and sortValue from one reader; values
+// arrive pre-filtered to finite members. This replica bakes the source's
+// 1-train branch (no allAssets here); 2-train would halve the sum.
+const perTrainKw = (values: number[]): number | null => {
+  const positive = pipe(values, filter(isPositive));
+  return positive.length ? sum(positive) : null;
+};
+
+// aggregateCol DECLARES its math via the combine fn (accent by default). Aux
+// cells are plain floatCol (weight nuance dies, null → BLANK, no '—' literals).
 const CACHE_REGISTRY = {
   hour: col<AuxHourlyRow>("hour", "Date / Hour", (row) => row.hour_utc.slice(0, 16), "dateTime", (row) => row.hour_utc),
   aux1: floatCol<AuxHourlyRow>("aux_1", { precision: 0, header: "Aux. 1" }),
   aux2: floatCol<AuxHourlyRow>("aux_2", { precision: 0, header: "Aux. 2" }),
   aux3: floatCol<AuxHourlyRow>("aux_3", { precision: 0, header: "Aux. 3" }),
   aux4: floatCol<AuxHourlyRow>("aux_4", { precision: 0, header: "Aux. 4" }),
-  avg: aggregateCol<AuxHourlyRow>(
-    ["aux_1", "aux_2", "aux_3", "aux_4"],
-    (values) => {
-      const positive = pipe(values, filter((v) => v > 0));
-      return positive.length ? sum(positive) : null;
-    },
-    { id: "avg", header: "Avg (kW)", precision: 0 },
-  ),
+  avg: aggregateCol<AuxHourlyRow>(AUX_KEYS, perTrainKw, { id: "avg_kw", header: "Avg (kW)", precision: 0 }),
 };
 
 const PowerLogCacheTable: Component = () => (
