@@ -65,8 +65,36 @@ export const toneWrap = (tone: Tone | undefined, cell: JSX.Element): JSX.Element
     cell
   );
 
-/** A fields entry: a known id, an action-id cluster, or an explicit column. */
-export type FieldSpec<T> = string | string[] | FieldCol<T>;
+/** A two-row spanned category header (ruled 2026-07-20): a label spanning an
+ *  ordered run of member columns. The resolver stamps each resolved member's
+ *  `group`, and BaseTable already derives the colspan header + rowspan=2 for
+ *  ungrouped columns — the fields side adds no header machinery of its own.
+ *  Members are LEAF specs (a known id or an explicit col), never nested groups:
+ *  exactly two header rows, by design. */
+export interface FieldGroup<T> {
+  /** Category label spanning the members in the header's top row. */
+  group: string;
+  /** Ordered member specs — known ids or explicit cols. */
+  fields: (string | FieldCol<T>)[];
+}
+
+/** A fields entry: a known id, an action-id cluster, a column group, or an
+ *  explicit column. */
+export type FieldSpec<T> = string | string[] | FieldGroup<T> | FieldCol<T>;
+
+/** Wrap an ordered run of member fields under a spanning category label. The
+ *  ordered gesture stays the source of truth; grouping is derived from it. */
+export const group = <T,>(
+  label: string,
+  fields: (string | FieldCol<T>)[],
+): FieldGroup<T> => ({ group: label, fields });
+
+/** Discriminate a FieldGroup from an explicit FieldCol: only the group carries
+ *  a `fields` array (a resolved column never does). */
+export const isFieldGroup = <T,>(spec: FieldSpec<T>): spec is FieldGroup<T> =>
+  typeof spec === "object" &&
+  !Array.isArray(spec) &&
+  Array.isArray((spec as FieldGroup<T>).fields);
 
 /** A column's value source (ruled 2026-07-18): a row key, or a DERIVED
  *  `(row) => value` function — durations from two timestamps, Map-backed

@@ -127,3 +127,103 @@ describe("SortableFieldTable", () => {
     expect(firstCells(container)).toEqual(["beta", "alpha"]); // desc
   });
 });
+
+// Grouped headers (ruled 2026-07-20): the `group(label, [...members])` spec
+// wrapper is the smallest way to express a two-row spanned category header —
+// the ordered gesture stays the source of truth, the resolver stamps each
+// member's `group`, and BaseTable derives the colspans it already renders.
+// Exactly two rows, one caller: a group's members are leaf specs, never
+// nested groups.
+import { group } from "./shared";
+
+interface QaRow {
+  hour: string;
+  ftirStatus: string;
+  ftirSamples: number;
+  scrStatus: string;
+  scrSamples: number;
+}
+
+const QA_ROWS: QaRow[] = [
+  { hour: "14:00", ftirStatus: "full", ftirSamples: 60, scrStatus: "partial", scrSamples: 33 },
+  { hour: "15:00", ftirStatus: "missing", ftirSamples: 0, scrStatus: "full", scrSamples: 60 },
+];
+
+const qaRegistry = {
+  hour: textCol<QaRow>("hour"),
+  ftirStatus: col<QaRow>("ftirStatus", "Status", (r) => <span>{r.ftirStatus}</span>, "status"),
+  ftirSamples: intCol<QaRow>("ftirSamples", { header: "Samples" }),
+  scrStatus: col<QaRow>("scrStatus", "Status", (r) => <span>{r.scrStatus}</span>, "status"),
+  scrSamples: intCol<QaRow>("scrSamples", { header: "Samples" }),
+};
+
+describe("FieldTable grouped headers", () => {
+  it("renders a two-row header with group labels spanning their members", () => {
+    const { container } = render(() => (
+      <FieldTable
+        data={QA_ROWS}
+        fields={[
+          "hour",
+          group<QaRow>("FTIR I", ["ftirStatus", "ftirSamples"]),
+          group<QaRow>("SCR", ["scrStatus", "scrSamples"]),
+        ]}
+        registry={qaRegistry}
+      />
+    ));
+    // Two header rows: group labels + sub-column headers.
+    expect(container.querySelectorAll("thead tr").length).toBe(2);
+    // Each group label is a colspan header over its two members.
+    const groups = Array.from(
+      container.querySelectorAll(".hud-table__header-cell--group"),
+    );
+    expect(groups.map((g) => g.textContent)).toEqual(["FTIR I", "SCR"]);
+    expect(groups.map((g) => g.getAttribute("colspan"))).toEqual(["2", "2"]);
+    // The five body columns still render as five cells per row.
+    expect(
+      container.querySelectorAll("tbody tr")[0].querySelectorAll("td").length,
+    ).toBe(5);
+  });
+
+  it("spans an ungrouped leading column across both header rows", () => {
+    const { container } = render(() => (
+      <FieldTable
+        data={QA_ROWS}
+        fields={[
+          "hour",
+          group<QaRow>("FTIR I", ["ftirStatus", "ftirSamples"]),
+        ]}
+        registry={qaRegistry}
+      />
+    ));
+    const rowspanned = container.querySelectorAll(
+      ".hud-table__header-cell--rowspan",
+    );
+    expect(rowspanned.length).toBe(1);
+    expect(rowspanned[0].textContent).toContain("Hour");
+    expect(rowspanned[0].getAttribute("rowspan")).toBe("2");
+    // The two grouped members appear as sub-headers in the second row.
+    const subs = Array.from(
+      container.querySelectorAll(".hud-table__header-cell--sub"),
+    ).map((s) => s.textContent);
+    expect(subs).toEqual(["Status", "Samples"]);
+  });
+
+  it("accepts an explicit col() as a group member alongside registry ids", () => {
+    const { container } = render(() => (
+      <FieldTable
+        data={QA_ROWS}
+        fields={[
+          "hour",
+          group<QaRow>("FTIR I", [
+            "ftirStatus",
+            col<QaRow>("ftirSamples", "Samples", (r) => <span>{r.ftirSamples}</span>),
+          ]),
+        ]}
+        registry={qaRegistry}
+      />
+    ));
+    const groupTh = container.querySelector(".hud-table__header-cell--group");
+    expect(groupTh?.getAttribute("colspan")).toBe("2");
+    expect(container.querySelectorAll(".hud-table__header-cell--sub").length).toBe(2);
+  });
+});

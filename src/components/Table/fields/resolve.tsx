@@ -6,7 +6,7 @@
 // ============================================
 import type { JSX } from "solid-js";
 import type { FieldCol, FieldGeo, FieldSpec, FieldType } from "./shared";
-import { centered } from "./shared";
+import { centered, isFieldGroup } from "./shared";
 import { geo as selectionGeo } from "./selection";
 import { geo as nameGeo } from "./name";
 import { geo as textGeo } from "./text";
@@ -77,10 +77,21 @@ export function resolveFields<T>(
   minW: string;
   maxW: string;
 } {
-  const columns = specs.map((spec) => {
-    if (typeof spec === "string") return registry[spec];
-    if (Array.isArray(spec)) return clusterCol(spec.map((id) => registry[id]));
-    return spec;
+  // Resolve one leaf member (a known id or an explicit col) to its column.
+  const resolveMember = (member: string | FieldCol<T>): FieldCol<T> =>
+    typeof member === "string" ? registry[member] : member;
+  // flatMap: a group expands to its member columns, each stamped with the
+  // group label so BaseTable merges the consecutive run under one colspan
+  // header (ungrouped columns it spans across both rows with rowspan=2).
+  const columns = specs.flatMap((spec): FieldCol<T>[] => {
+    if (typeof spec === "string") return [registry[spec]];
+    if (Array.isArray(spec)) return [clusterCol(spec.map((id) => registry[id]))];
+    if (isFieldGroup(spec))
+      return spec.fields.map((member) => ({
+        ...resolveMember(member),
+        group: spec.group,
+      }));
+    return [spec];
   });
   const minCh = pipe(columns, map((c) => c.geo.minCh), sum);
   const maxCh = pipe(columns, map((c) => c.geo.maxCh), sum);
