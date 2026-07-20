@@ -4,20 +4,17 @@
 //   jtf-ui/src/components/violations/QaqcAssetTriage.tsx
 //   jtf-ui/src/routes/reports/qaqc-checks.tsx
 //   jtf-ui/src/routes/reports/nox-report.tsx
-import { createMemo, createSignal, Show, type JSX } from "solid-js";
-import {
-  BaseTable,
-  DateTimeCell,
-  type TableColumn,
-} from "../../../../src/components/Table";
+import { createSignal, Show, type JSX } from "solid-js";
 import { MutedBody, TextSublabel } from "../../../../src/components/Text";
 import { Tooltip } from "../../../../src/components/Tooltip";
 import { InlineText } from "../../../../src/components/InlineText";
-import { Checkbox } from "../../../../src/components/Checkbox";
 import { NarrowStack } from "../../../../src/components/Layout";
+import { filter } from "../../../../src/fn";
 import {
   FieldTable,
   SortableFieldTable,
+  createFieldSelection,
+  selectionCol,
   col,
   intCol,
   floatCol,
@@ -39,8 +36,6 @@ import type { TableEntry } from "./shared";
 // Shared palette — the same CSS vars the jtf cells drive their colors with.
 const ACCENT = "var(--sui-accent)";
 const DANGER = "var(--sui-danger)";
-const MUTED = "var(--sui-text-muted)";
-const SECONDARY = "var(--sui-text-secondary)";
 
 // ============================================================
 // 1. /violations — QaqcAssetTriage (11-column per-asset triage)
@@ -377,123 +372,53 @@ const formatConnectionDuration = (from: string, to: string | null): string => {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 };
 
-type NoxSortKey = "vessel" | "connected" | "duration";
-
 function NoxPreviewReplica(): JSX.Element {
-  // Bag membership is fixed stub state: two calls are already in the report.
+  // Added calls are REMOVED from the picker (ruled 2026-07-20) — they live in
+  // the report bag table below, so the per-row 'added' label state and the
+  // bag-membership muting die; the picker shows only pickable calls. With
+  // that, createFieldSelection covers everything the bespoke header did.
   const inBagIds = new Set(["vc-101", "vc-104"]);
-  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set(["vc-103"]));
-  const [sortKey, setSortKey] = createSignal<NoxSortKey>("connected");
-  const [sortDir, setSortDir] = createSignal<"asc" | "desc">("desc");
+  const notInBag = (vc: VesselCall): boolean => !inBagIds.has(vc.id);
+  const pickable = filter(notInBag, NOX_CALLS);
 
-  const handleSort = (key: NoxSortKey) => {
-    if (sortKey() === key) setSortDir(sortDir() === "asc" ? "desc" : "asc");
-    else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-  };
-
-  const visibleItems = createMemo(() => {
-    const rows = NOX_CALLS.map((vc) => ({ ...vc, inBag: inBagIds.has(vc.id) }));
-    const dir = sortDir() === "asc" ? 1 : -1;
-    const dur = (vc: VesselCall) =>
-      vc.disconnected_at ? Date.parse(vc.disconnected_at) - Date.parse(vc.connected_at) : 0;
-    rows.sort((a, b) => {
-      switch (sortKey()) {
-        case "vessel":
-          return dir * a.vessel_name.localeCompare(b.vessel_name);
-        case "duration":
-          return dir * (dur(a) - dur(b));
-        case "connected":
-        default:
-          return dir * (Date.parse(a.connected_at) - Date.parse(b.connected_at));
-      }
-    });
-    return rows;
+  const selection = createFieldSelection<VesselCall>({
+    rows: () => pickable,
+    key: (vc) => vc.id,
   });
 
-  const visibleSelectable = createMemo(() => visibleItems().filter((vc) => !vc.inBag));
-  const allSelected = createMemo(() => {
-    const vs = visibleSelectable();
-    return vs.length > 0 && vs.every((vc) => selectedIds().has(vc.id));
-  });
-
-  const toggleSelectAll = () => {
-    const vs = visibleSelectable();
-    const next = new Set(selectedIds());
-    if (allSelected()) vs.forEach((vc) => next.delete(vc.id));
-    else vs.forEach((vc) => next.add(vc.id));
-    setSelectedIds(next);
-  };
-  const toggleSelection = (id: string) => {
-    const next = new Set(selectedIds());
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
-
-  /** Clickable, indicator-bearing header for a sortable column. */
-  const sortHeader = (key: NoxSortKey, label: string): JSX.Element => (
-    <InlineText onClick={() => handleSort(key)}>
-      {label}
-      {sortKey() === key ? (sortDir() === "asc" ? " ▲" : " ▼") : ""}
-    </InlineText>
-  );
-
-  const columns: TableColumn<VesselCall & { inBag: boolean }>[] = [
-    {
-      id: "select",
-      // Select-all checkbox lives in the column header (jtf pattern).
-      header: <Checkbox size="sm" checked={allSelected()} onChange={toggleSelectAll} />,
-      accessor: (row) =>
-        row.inBag ? (
-          <TextSublabel>added</TextSublabel>
-        ) : (
-          <Checkbox
-            size="sm"
-            checked={selectedIds().has(row.id)}
-            onChange={() => toggleSelection(row.id)}
-          />
-        ),
-      width: "50px",
-    },
-    {
-      id: "vessel_name",
-      header: sortHeader("vessel", "Vessel Name"),
-      // Color is data-driven: muted once the call is already in the report bag.
-      accessor: (row) => (
-        <InlineText color={row.inBag ? MUTED : ACCENT}>
-          {row.vessel_name} ({row.vessel_type})
-        </InlineText>
-      ),
-      width: "200px",
-    },
-    { id: "asset_id", header: "Asset", accessor: (row) => row.asset_id, width: "90px" },
-    {
-      id: "connected_at",
-      header: sortHeader("connected", "Connected"),
-      accessor: (row) => <DateTimeCell value={row.connected_at} />,
-      width: "180px",
-    },
-    {
-      id: "disconnected_at",
-      header: "Disconnected",
-      accessor: (row) =>
-        row.disconnected_at ? <DateTimeCell value={row.disconnected_at} /> : "In Progress",
-      width: "180px",
-    },
-    {
+  const registry = {
+    select: selectionCol<VesselCall>(selection),
+    vessel: col<VesselCall>(
+      "vessel",
+      "Vessel Name",
+      (row) => `${row.vessel_name} (${row.vessel_type})`,
+      "text",
+      (row) => row.vessel_name,
+    ),
+    asset_id: textCol<VesselCall>("asset_id"),
+    connected_at: dateTimeCol<VesselCall>("connected_at"),
+    // Nullable end → BLANK; the old "In Progress" placeholder dies.
+    disconnected_at: dateTimeCol<VesselCall>("disconnected_at"),
+    duration: durationCol<VesselCall>(bagMinutes, "m", {
       id: "duration",
-      header: sortHeader("duration", "Duration"),
-      accessor: (row) => formatConnectionDuration(row.connected_at, row.disconnected_at),
-      width: "100px",
-    },
-  ];
+      header: "Duration",
+    }),
+  };
 
   return (
     <NarrowStack>
-      <BaseTable data={visibleItems()} columns={columns} compact stickyHeader />
+      <SortableFieldTable
+        data={pickable}
+        fields={[
+          "select",
+          "vessel",
+          "asset_id",
+          "connected_at",
+          "disconnected_at",
+          "duration",
+        ]}
+        registry={registry}
+      />
     </NarrowStack>
   );
 }
@@ -569,9 +494,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/nox-report",
     name: "NOx preview (vessel-call picker)",
-    status: "raw",
-    customs: ["select-state"],
-    note: "Blocked: client sorting + bag-membership colored cells; select-all/range now exists in fields (createFieldSelection) but the custom select-all header + 'added' label state remain bespoke.",
+    status: "sui",
+    note: "Migrated to SortableFieldTable: added calls are REMOVED from the picker instead of carrying an 'added' row state (ruled 2026-07-20 — they live in the report bag table), so createFieldSelection + selectionCol cover selection entirely; vessel col() custom '(type)' suffix, dateTimeCol pair (nullable end → blank), derived durationCol; table-level sorting replaces the hand-rolled sortHeader.",
     component: NoxPreviewReplica,
   },
   {

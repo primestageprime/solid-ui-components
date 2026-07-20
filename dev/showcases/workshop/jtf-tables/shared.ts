@@ -36,11 +36,10 @@ export const CUSTOM_DEMANDS: CustomDemand[] = [
   // row-click ("Row navigation") SUBTRACTED 2026-07-20: ruled that row
   // navigation collapses to the identity cell (identityLinkCol is the link);
   // FieldTable never grows onRowClick.
-  {
-    id: "select-state",
-    name: "Selection labels",
-    why: "Bespoke select-all header with per-row 'added' state labels beyond createFieldSelection.",
-  },
+  // select-state ("Selection labels") SUBTRACTED 2026-07-20: ruled that added
+  // calls are REMOVED from the picker (they live in the report bag table)
+  // instead of carrying a per-row 'added' label — createFieldSelection covers
+  // the rest. The demand rail is EMPTY: every jtf table is expressible.
   // grouped-headers ("Grouped headers") SUBTRACTED 2026-07-20: ruled that the
   // last "stays raw by design" demand falls. Two-row spanned category headers
   // are expressed by the group(label, [...members]) spec wrapper — the ordered
