@@ -37,3 +37,4 @@ export type { StatusColMapping, StatusColOpts } from "./status";
 export { listCol } from "./list";
 export type { ListColOpts } from "./list";
 export { ACTION_ICONS, geoFor, actionCol, clusterCol } from "./actions";
+export { withHref, withHint } from "./combinators";

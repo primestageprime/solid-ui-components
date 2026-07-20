@@ -93,3 +93,24 @@ span[class*="sui-field-tone--"] :is(.cell-longtext, .cell-longtext.cell-longtext
 .sui-field-suffix {
   color: var(--sui-text-muted);
 }
+
+/* withHref combinator (ruled 2026-07-20): a non-identity linked value —
+   same accent link treatment as the identity link. */
+.sui-field-link {
+  color: var(--sui-accent);
+  text-decoration: none;
+}
+.sui-field-link:hover {
+  text-decoration: underline;
+}
+.sui-field-link :is(.cell-longtext, .cell-string, .cell-int, .cell-float) {
+  color: inherit;
+}
+
+/* withHint combinator (ruled 2026-07-20): headers generally accept a hint —
+   dotted underline is the affordance, the tooltip carries the text. */
+.sui-field-th-hint {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
