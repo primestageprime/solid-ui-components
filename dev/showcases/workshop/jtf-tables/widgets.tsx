@@ -253,10 +253,14 @@ const MIN_MAX_ROWS: MinMaxRow[] = [
 ];
 
 const MIN_MAX_REGISTRY = {
+  // The identity is the ONLY flexible column — it takes the slack (ruled
+  // 2026-07-20: a known-set column must not flex like flowing text).
   metric_id: fields.textCol<MinMaxRow>("metric_id"),
-  // The migrated tone fn: the client names a meaning, never a color.
-  type: fields.textCol<MinMaxRow>("type", {
-    tone: (v) => (v === "MIN" ? "success" : "danger"),
+  // MIN/MAX is a known set of strings → statusCol, fixed geometry, the tone
+  // names the meaning (ruled 2026-07-20; replaces the flexing textCol+tone).
+  type: fields.statusCol<MinMaxRow>("type", {
+    MIN: { label: "MIN", tone: "success" },
+    MAX: { label: "MAX", tone: "danger" },
   }),
   value: fields.floatCol<MinMaxRow>("value"),
   timestamp: fields.dateTimeCol<MinMaxRow>("timestamp"),
@@ -421,7 +425,7 @@ export const ENTRIES: TableEntry[] = [
     route: "(embedded) MinMaxTable",
     name: "MinMaxTable — per-metric extremes",
     status: "sui",
-    note: "Migrated to FieldTable; type column tone fn MIN→success / MAX→danger, dateTimeCol timestamps.",
+    note: "Migrated to FieldTable; type is a known set → statusCol (MIN success / MAX danger, fixed geometry — ruled 2026-07-20), so metric_id is the only flexible column and takes the space; floatCol value at its default cap, dateTimeCol timestamps.",
     component: MinMaxFieldTable,
   },
   {
