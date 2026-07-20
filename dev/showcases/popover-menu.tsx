@@ -14,7 +14,7 @@ export const PopoverMenuShowcase: Component = () => {
       <div class="example-group">
         <Row gap="sm" align="center">
           <PopoverMenu
-            trigger={<button>Actions ▾</button>}
+            trigger={<span>Actions ▾</span>}
             items={[
               { id: "edit", label: "Edit" },
               { id: "duplicate", label: "Duplicate" },
@@ -24,6 +24,36 @@ export const PopoverMenuShowcase: Component = () => {
           />
           <span class="text-meta">last selected: {last() || "—"}</span>
         </Row>
+      </div>
+
+      <p class="text-meta">
+        Inside a short <code>overflow: hidden</code> ancestor (reproduces a
+        clipping nav/panel frame). The menu is portaled to <code>document.body</code>
+        and positioned <code>fixed</code>, so it escapes the clip instead of being
+        cut off.
+      </p>
+      <div class="example-group">
+        <div
+          style={{
+            height: "48px",
+            overflow: "hidden",
+            border: "1px dashed var(--sui-border)",
+            "border-radius": "var(--sui-radius-md, 4px)",
+            display: "flex",
+            "align-items": "center",
+            padding: "0 12px",
+          }}
+        >
+          <PopoverMenu
+            trigger={<span>Account ▾</span>}
+            header={<span>peter@example.com</span>}
+            items={[
+              { id: "settings", label: "Settings" },
+              { id: "logout", label: "Logout" },
+            ]}
+            onSelect={(id) => setLast(id as string)}
+          />
+        </div>
       </div>
     </div>
   );
