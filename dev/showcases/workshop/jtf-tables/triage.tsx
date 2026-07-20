@@ -26,7 +26,7 @@ import {
   floatCol,
   statusCol,
   identityLinkCol,
-  withHref,
+  linkedCountCol,
   withHint,
   type StatusColMapping,
 } from "../../../../src/components/Table/fields";
@@ -93,9 +93,9 @@ const TRIAGE_STATUS: Record<string, StatusColMapping> = {
 };
 
 // A bucket column: the linked COUNT under a tooltip header —
-// withHint(withHref(intCol)). The old "P% (N)" composite collapses to the
-// count (the figure the worklist link drills into); the percentage context
-// dies in migration (ruled 2026-07-20). Escalated wears a danger tone.
+// withHint(linkedCountCol). The zero-has-no-destination gate lives in the
+// factory now (spec 2026-07-20); the old "P% (N)" composite collapses to the
+// count (ruled 2026-07-20). Escalated wears a danger tone.
 const bucketCol = (
   key: "flow" | "pressure" | "thc" | "nh3" | "escalated" | "explained" | "good_to_go",
   header: string,
@@ -104,14 +104,11 @@ const bucketCol = (
 ) =>
   withHint(
     hint,
-    withHref(
-      // A zero-count bucket has no worklist to open — nullish href, no link.
-      (a: TriageAsset) => (a[key] > 0 ? detailHref(a, key) : null),
-      intCol<TriageAsset>(key, {
-        header,
-        tone: danger ? (v) => (v > 0 ? "danger" : "default") : undefined,
-      }),
-    ),
+    linkedCountCol<TriageAsset>(key, {
+      href: (a) => detailHref(a, key),
+      header,
+      tone: danger ? (v) => (v > 0 ? "danger" : "default") : undefined,
+    }),
   );
 
 // Default view: needs-analysis share, worst first. SortableFieldTable starts in
