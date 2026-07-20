@@ -4,17 +4,15 @@
 // headers + runtime pivot). PowerLogPanel was retired at jtf HEAD and removed
 // from this catalog (Wave 2, 2026-07-20) — dead debt, nothing to migrate.
 //
-// Judgment call: the raw HourLevelDataTable's status-colored text is
-// approximated with InlineText color (no style objects).
+// Judgment call: HourLevelDataTable's status-colored text is approximated with
+// InlineText color inside a col() custom cell (no style objects).
 import type { Component } from "solid-js";
 import {
-  BaseTable,
   DataTableContainer,
   IntCell,
   MinuteDateTimeCell,
 } from "../../../../src/components/Table";
-import type { TableColumn } from "../../../../src/components/Table";
-import { FieldTable, SortableFieldTable, textCol, col, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
+import { FieldTable, SortableFieldTable, group, textCol, col, intCol, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
@@ -158,37 +156,47 @@ const StatusText: Component<{ status: HourStatus }> = (props) => (
 
 // 3 of the source's 8 category groups (FTIR I / SCR / FID / AUX subset keeps
 // the spanned-header shape readable); each group = Status + Samples columns.
-const hourLevelColumns: TableColumn<HourLevelRow>[] = [
-  { id: "hour", header: "Hour", accessor: (r) => <MinuteDateTimeCell value={r.hour_timestamp} />, sortable: true },
-  { id: "ftir_i_status", header: "Status", group: "FTIR I", accessor: (r) => <StatusText status={r.ftir_i_status} /> },
-  { id: "ftir_i_samples", header: "Samples", group: "FTIR I", align: "right", accessor: (r) => <IntCell value={r.ftir_i_samples} /> },
-  { id: "scr_status", header: "Status", group: "SCR", accessor: (r) => <StatusText status={r.scr_status} /> },
-  { id: "scr_samples", header: "Samples", group: "SCR", align: "right", accessor: (r) => <IntCell value={r.scr_samples} /> },
-  { id: "fid_status", header: "Status", group: "FID", accessor: (r) => <StatusText status={r.fid_status} /> },
-  { id: "fid_samples", header: "Samples", group: "FID", align: "right", accessor: (r) => <IntCell value={r.fid_samples} /> },
-  { id: "aux_status", header: "Status", group: "AUX", accessor: (r) => <StatusText status={r.aux_status} /> },
-  {
-    id: "aux_samples",
-    header: "Samples",
-    group: "AUX",
-    align: "right",
-    accessor: (r) => (
-      <>
-        <IntCell value={r.aux_samples} />
-        {r.aux_total_kw != null ? (
-          <InlineText color="var(--sui-text-muted)"> ({r.aux_total_kw.toFixed(0)} kW)</InlineText>
-        ) : null}
-      </>
-    ),
-  },
-];
+// Migrated to FieldTable via the group() spec wrapper (ruled 2026-07-20): the
+// ordered gesture stays the source of truth, group() names the category run,
+// and the resolver stamps each member's `group` so BaseTable derives the
+// two-row spanned header it already renders. Status text is a col() custom on
+// `status` geometry (the colored InlineText is the 5% tail); the leading Hour
+// column stays ungrouped and spans both header rows. The aux "Samples" cell
+// keeps its in-cell "(NNN kW)" muted annotation as a col() custom.
+const statusCell = (status: HourStatus) => <StatusText status={status} />;
+
+const auxSamplesCell = (row: HourLevelRow) => (
+  <>
+    <IntCell value={row.aux_samples} />
+    {row.aux_total_kw != null ? (
+      <InlineText color="var(--sui-text-muted)"> ({row.aux_total_kw.toFixed(0)} kW)</InlineText>
+    ) : null}
+  </>
+);
+
+const hourLevelRegistry = {
+  hour: col<HourLevelRow>("hour", "Hour", (r) => <MinuteDateTimeCell value={r.hour_timestamp} />, "dateTime", (r) => r.hour_timestamp),
+  ftir_i_status: col<HourLevelRow>("ftir_i_status", "Status", (r) => statusCell(r.ftir_i_status), "status"),
+  ftir_i_samples: intCol<HourLevelRow>("ftir_i_samples", { header: "Samples" }),
+  scr_status: col<HourLevelRow>("scr_status", "Status", (r) => statusCell(r.scr_status), "status"),
+  scr_samples: intCol<HourLevelRow>("scr_samples", { header: "Samples" }),
+  fid_status: col<HourLevelRow>("fid_status", "Status", (r) => statusCell(r.fid_status), "status"),
+  fid_samples: intCol<HourLevelRow>("fid_samples", { header: "Samples" }),
+  aux_status: col<HourLevelRow>("aux_status", "Status", (r) => statusCell(r.aux_status), "status"),
+  aux_samples: col<HourLevelRow>("aux_samples", "Samples", auxSamplesCell, "int"),
+};
 
 const HourLevelTable: Component = () => (
-  <BaseTable
+  <FieldTable
     data={HOUR_LEVEL_ROWS}
-    columns={hourLevelColumns}
-    stickyHeader
-    compact
+    fields={[
+      "hour",
+      group<HourLevelRow>("FTIR I", ["ftir_i_status", "ftir_i_samples"]),
+      group<HourLevelRow>("SCR", ["scr_status", "scr_samples"]),
+      group<HourLevelRow>("FID", ["fid_status", "fid_samples"]),
+      group<HourLevelRow>("AUX", ["aux_status", "aux_samples"]),
+    ]}
+    registry={hourLevelRegistry}
     emptyMessage="No hour-level data available."
   />
 );
@@ -260,9 +268,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "(embedded) HourLevelDataTable",
     name: "Hour-level QA table (grouped headers)",
-    status: "raw",
-    customs: ["grouped-headers"],
-    note: "Column `group` → spanned two-row headers (8 category groups in source) + status-colored text cells; grouped headers not modeled by fields.",
+    status: "sui",
+    note: "Migrated to FieldTable via the group() spec wrapper: the ordered gesture names each category run (FTIR I / SCR / FID / AUX), the resolver stamps each member's `group`, and BaseTable derives the two-row spanned header it already renders. Status text is a col() custom on status geometry; the ungrouped Hour column spans both header rows. Retires the last stays-raw-by-design demand.",
     component: HourLevelTable,
   },
   {

@@ -71,7 +71,9 @@ whose only delta is a baked-in tone function.
   fits thorcasting viable-price × salaries next.
 - **Per-row colspan** — qaqc-checks `spanRow` (partial weeks collapse into one
   spanning action cell).
-- **Grouped/spanned column headers** — HourLevelDataTable `group`.
+- ~~**Grouped/spanned column headers**~~ — SHIPPED 2026-07-20 as the
+  `group(label, [...members])` spec wrapper (see Wave 2 status). No longer a
+  stopping point.
 - **Conditional row styling** — NoxWidgets `getRowClass` highlight row;
   colorblind-toggle-reactive column recoloring.
 - **JSX tooltip headers** (`headerHint` in qaqc-checks) — would need a
@@ -180,7 +182,8 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
 
 ### Stays raw / out of model
 
-- HourLevelDataTable — grouped/spanned headers.
+- ~~HourLevelDataTable — grouped/spanned headers~~ — MIGRATED 2026-07-20 via
+  the `group()` spec wrapper (Wave 2).
 - qaqc-checks — per-row `spanRow` colspan (its cells could still take
   items 2/6/7).
 - PowerLogPanel ×3 — component retired at jtf HEAD 2026-07-17; drop from
@@ -232,3 +235,20 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
   zero-check ternary disappears; jtf-ui's `QaqcAssetTriage.tsx` gets the same
   collapse as a follow-up in that repo. Spec:
   `docs/superpowers/specs/2026-07-20-linked-count-col-design.md`.
+- **`group(label, [...members])` spec wrapper SHIPPED** (ruled 2026-07-20 — the
+  last "stays raw by design" demand falls). Two-row spanned category headers are
+  a compositional gesture, not new header machinery: `group()` is a fourth
+  `FieldSpec` variant (`src/components/Table/fields/shared.tsx`) that names an
+  ordered run of member fields (known ids or explicit cols — leaf specs only,
+  never nested groups: exactly two rows). `resolveFields` flat-maps a group into
+  its member columns, stamping each with the group label, and BaseTable ALREADY
+  derives the colspan header + `rowspan=2` for ungrouped columns from
+  consecutive `.group` runs (`computeColumnGroups`) — no BaseTable change, no
+  general multi-level tree. Ungrouped columns (a leading identity/timestamp)
+  span both header rows automatically. First (only) consumer: the bench's
+  `HourLevelDataTable` (`jtf-tables/power.tsx`) migrates raw→sui — the four
+  category groups become `group("FTIR I", [...])` etc., status text is a `col()`
+  custom on `status` geometry, and the ungrouped Hour column spans both rows.
+  `grouped-headers` subtracted from the bench `CUSTOM_DEMANDS`. This closes the
+  raw-table worklist for headers; the only remaining stays-raw demand is
+  `spanRow` (already resolved by subtraction to predicate-gated columns).

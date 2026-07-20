@@ -41,11 +41,12 @@ export const CUSTOM_DEMANDS: CustomDemand[] = [
     name: "Selection labels",
     why: "Bespoke select-all header with per-row 'added' state labels beyond createFieldSelection.",
   },
-  {
-    id: "grouped-headers",
-    name: "Grouped headers",
-    why: "Two-row spanned category headers — stays raw by design.",
-  },
+  // grouped-headers ("Grouped headers") SUBTRACTED 2026-07-20: ruled that the
+  // last "stays raw by design" demand falls. Two-row spanned category headers
+  // are expressed by the group(label, [...members]) spec wrapper — the ordered
+  // gesture names each category run, the resolver stamps each member's `group`,
+  // and BaseTable derives the colspan header it already renders. HourLevelDataTable
+  // migrated to FieldTable; nothing stays raw for headers.
   // span-row ("Row collapse") SUBTRACTED 2026-07-20: ruled that per-row
   // colspan takeovers collapse to predicate-gated columns — withWhen blanks
   // the stat cells and the row action rides an actions column.
