@@ -15,21 +15,24 @@ import { MutedBody, TextSublabel, TextTitle } from "../../../../src/components/T
 import { Tooltip } from "../../../../src/components/Tooltip";
 import { InlineText } from "../../../../src/components/InlineText";
 import { Checkbox } from "../../../../src/components/Checkbox";
-import {
-  SmallDangerButton,
-  SmallOutlinedButton,
-} from "../../../../src/components/Button";
+import { SmallOutlinedButton } from "../../../../src/components/Button";
 import { ClusterRow, NarrowStack } from "../../../../src/components/Layout";
 import {
+  FieldTable,
   SortableFieldTable,
   intCol,
   floatCol,
   statusCol,
   identityLinkCol,
   linkedCountCol,
+  textCol,
+  dateTimeCol,
+  durationCol,
+  actionCol,
   withHint,
   type StatusColMapping,
 } from "../../../../src/components/Table/fields";
+import { TYPE_GLYPH } from "./routes";
 import type { TableEntry } from "./shared";
 
 // Shared palette — the same CSS vars the jtf cells drive their colors with.
@@ -499,56 +502,51 @@ function NoxPreviewReplica(): JSX.Element {
   );
 }
 
+// Duration DERIVED from the two timestamps (minutes); an in-progress call has
+// no defined end, so it reads null → blank (same reader shape as Durability).
+const bagMinutes = (row: VesselCall): number | null =>
+  row.disconnected_at
+    ? Math.floor((Date.parse(row.disconnected_at) - Date.parse(row.connected_at)) / 60_000)
+    : null;
+
 function NoxReportBagReplica(): JSX.Element {
   // The report bag is mutable — "remove" works, seeded deterministically.
   const [bag, setBag] = createSignal<VesselCall[]>(NOX_CALLS.slice(0, 4));
   const removeFromReport = (id: string) =>
     setBag((prev) => prev.filter((vc) => vc.id !== id));
 
-  const columns: TableColumn<VesselCall>[] = [
-    {
-      id: "vessel_name",
-      header: "Vessel Name",
-      accessor: (row) => (
-        <InlineText color={ACCENT}>
-          {row.vessel_name} ({row.vessel_type})
-        </InlineText>
-      ),
-      width: "200px",
-    },
-    { id: "asset_id", header: "Asset", accessor: (row) => row.asset_id, width: "90px" },
-    {
-      id: "connected_at",
-      header: "Connected",
-      accessor: (row) => <DateTimeCell value={row.connected_at} />,
-      width: "180px",
-    },
-    {
-      id: "disconnected_at",
-      header: "Disconnected",
-      accessor: (row) =>
-        row.disconnected_at ? <DateTimeCell value={row.disconnected_at} /> : "In Progress",
-      width: "180px",
-    },
-    {
+  // Vessel calls have a detail page, so the name IS the link (ruled
+  // 2026-07-18, same as Durability); the type glyph leads it. Nullable end →
+  // BLANK — the old "In Progress" placeholder dies (no empty markers ruling).
+  const registry = {
+    vessel_name: identityLinkCol<VesselCall>("vessel_name", {
+      href: (row) => `/detail/${row.id}`,
+      glyph: (row) => <>{TYPE_GLYPH[row.vessel_type.toUpperCase()] ?? "▢"}&nbsp;</>,
+    }),
+    asset_id: textCol<VesselCall>("asset_id"),
+    connected_at: dateTimeCol<VesselCall>("connected_at"),
+    disconnected_at: dateTimeCol<VesselCall>("disconnected_at"),
+    duration: durationCol<VesselCall>(bagMinutes, "m", {
       id: "duration",
       header: "Duration",
-      accessor: (row) => formatConnectionDuration(row.connected_at, row.disconnected_at),
-      width: "100px",
-    },
-    {
-      id: "remove",
-      header: "",
-      accessor: (row) => (
-        <SmallDangerButton onClick={() => removeFromReport(row.id)}>remove</SmallDangerButton>
-      ),
-      width: "70px",
-    },
-  ];
+    }),
+    remove: actionCol<VesselCall>("remove", (row) => removeFromReport(row.id)),
+  };
 
   return (
     <NarrowStack>
-      <BaseTable data={bag()} columns={columns} compact stickyHeader />
+      <FieldTable
+        data={bag()}
+        fields={[
+          "vessel_name",
+          "asset_id",
+          "connected_at",
+          "disconnected_at",
+          "duration",
+          "remove",
+        ]}
+        registry={registry}
+      />
     </NarrowStack>
   );
 }
@@ -584,9 +582,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/nox-report",
     name: "NOx report bag",
-    status: "raw",
-    customs: [],
-    note: "Blocked: trailing remove-action column (SmallDangerButton per row) on a plain BaseTable; otherwise a straight field-table candidate.",
+    status: "sui",
+    note: "Migrated to FieldTable: vessel identityLinkCol (name-is-the-link + type glyph), textCol asset, dateTimeCol pair (nullable end → blank; the 'In Progress' placeholder dies per the no-empty-markers ruling), derived durationCol, trailing actionCol('remove') — the labeled SmallDangerButton becomes the standard trash icon-button (ruled 2026-07-20).",
     component: NoxReportBagReplica,
   },
 ];

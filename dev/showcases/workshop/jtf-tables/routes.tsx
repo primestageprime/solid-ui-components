@@ -39,7 +39,7 @@ import type { TableEntry } from "./shared";
 
 /** jtf vessel-type glyphs (VesselTypeIcon stand-in — the real one is an SVG
  *  outline icon with a hover title; the entity cell is a migration blocker). */
-const TYPE_GLYPH: Record<string, string> = {
+export const TYPE_GLYPH: Record<string, string> = {
   CONTAINER: "▣",
   TANKER: "◍",
   RORO: "◨",
