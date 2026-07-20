@@ -27,6 +27,8 @@ export { intCol } from "./int";
 export type { IntColOpts } from "./int";
 export { floatCol } from "./float";
 export type { FloatColOpts } from "./float";
+export { aggregateCol } from "./aggregate";
+export type { AggregateColOpts } from "./aggregate";
 export { avgCol } from "./avg";
 export type { AvgColOpts } from "./avg";
 export { moneyCol } from "./money";

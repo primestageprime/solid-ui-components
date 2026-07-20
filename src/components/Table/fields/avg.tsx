@@ -1,14 +1,13 @@
-// Table field — avg (Depth 1: composes FloatCell).
-// An AGGREGATE column: the mean of a configured set of numeric fields on the
-// same row (ruled 2026-07-18). Derived values read as derived — the cell
-// wears the accent tone by default; a configure-time tone fn overrides it.
-// Null/missing members are skipped; a row with no numeric members renders
-// BLANK (ruled 2026-07-18: empty markers distract from real data).
-// Geometry is the float type's.
-import { FloatCell } from "../numericCells";
-import { geo as floatGeo } from "./float";
-import { centered, toneWrap, type FieldCol, type ToneFn } from "./shared";
-import { pipe, map, filter, mean } from "../../../fn";
+// Table field — avg (Depth 1: mean sugar over aggregateCol, ruled
+// 2026-07-20). The arithmetic MEAN of the configured fields — and ONLY the
+// mean: an aggregate with different math (a sum, a per-train split) is an
+// aggregateCol with its combine function, never a "fixed" avgCol. Null
+// members are skipped; a row with no numeric members renders BLANK; accent
+// tone by default (derived values read as derived).
+import { mean } from "../../../fn";
+import { aggregateCol } from "./aggregate";
+import type { FieldCol } from "./shared";
+import type { ToneFn } from "./shared";
 
 export interface AvgColOpts<T> {
   /** Column id (default "avg"). */
@@ -21,38 +20,19 @@ export interface AvgColOpts<T> {
   tone?: ToneFn<T, number>;
 }
 
-const isFiniteNumber = (v: unknown): v is number =>
-  typeof v === "number" && !Number.isNaN(v);
+/** The mean of the finite members; null (→ blank) when there are none.
+ *  (fn.mean returns NaN on an empty list, so the guard keeps the null.) */
+const meanOrNull = (values: number[]): number | null =>
+  values.length === 0 ? null : mean(values);
 
-/** The mean of the row's numeric members among `keys`; null when none.
- *  (fn.mean returns NaN on empty, so guard on .length to keep the null.) */
-const rowMean = <T,>(keys: (keyof T)[], row: T): number | null => {
-  const values = pipe(
-    keys,
-    map((key) => row[key] as unknown),
-    filter(isFiniteNumber),
-  );
-  return values.length === 0 ? null : mean(values);
-};
-
-/** The mean of `keys` per row: right-aligned float at float geometry,
- *  centered header, accent-toned unless configured otherwise. */
+/** The mean of `keys` per row — aggregateCol with `meanOrNull`. */
 export const avgCol = <T,>(
   keys: (keyof T)[],
   opts: AvgColOpts<T> = {},
-): FieldCol<T> => ({
-  id: opts.id ?? "avg",
-  header: centered(opts.header ?? "Avg"),
-  align: "right",
-  width: floatGeo.css,
-  geo: floatGeo,
-  sortValue: (row) => rowMean(keys, row),
-  accessor: (row) => {
-    const avg = rowMean(keys, row);
-    if (avg == null) return "";
-    return toneWrap(
-      opts.tone?.(avg, row) ?? "accent",
-      <FloatCell value={avg} precision={opts.precision ?? 2} />,
-    );
-  },
-});
+): FieldCol<T> =>
+  aggregateCol<T>(keys, meanOrNull, {
+    id: opts.id ?? "avg",
+    header: opts.header ?? "Avg",
+    precision: opts.precision,
+    tone: opts.tone,
+  });
