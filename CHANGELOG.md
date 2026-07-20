@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## 0.108.0
+
+### Added
+
+- **`fields.linkedCountCol(source, { href, header?, id?, tone? })`** (ruled 2026-07-20) — an integer drill-down count: a POSITIVE count links via `href`, zero/null renders the plain cell, never a dead link. Built as `withHref` over `intCol` (geometry, formatting, sort, null-blank, tone all inherited); the zero-has-no-destination gate is a count *semantic*, which is the scoped exception to the combinator-first ruling. Spec: `docs/superpowers/specs/2026-07-20-linked-count-col-design.md`.
+- **`fields.withHref` / `withHint` / `withWhen` column combinators** (ruled 2026-07-20) — function-first decoration of ANY built column, dual form like `fn`: `withHref(href, col)` links the cell (nullish href → plain cell); `withHint(text, col)` grows a dotted-underline tooltip on the header; `withWhen(pred, col)` renders the cell only when the predicate holds — per-row colspan takeovers collapse to predicate-gated columns (a partial week blanks its stats and shows the row action instead).
+- **`fields.group(label, [...members])`** (ruled 2026-07-20) — two-row spanned category headers as a fourth `FieldSpec` variant: the resolver stamps each member with the group label and BaseTable derives the colspan header row (ungrouped columns span both rows). The last "stays raw by design" demand falls — the JTF Table Catalog bench is 31/31 SUI-compliant.
+- **`fields.aggregateCol`** (ruled 2026-07-20) — generic aggregate column: the math (sum/mean/custom) is named at configure time, emphasis at int geometry.
+- **`EllipsisText` + `createTruncationObserver`** (ruled 2026-07-20) — "if and only if the ellipsis appears, there is a tooltip with the full value." A ResizeObserver-backed truncation hook re-measures on every reflow (the old mount/window-resize measurement went stale on container reflow); `LongTextCell`, `StringCell`, `IdCell`, and `listCol`'s +N-more all route through it.
+- **`fn.flatMap`, `fn.prop`, `fn.length`, `fn.lengthOf` + direct application form** (ruled 2026-07-18) — every `fn` helper now applies directly as `map(f, arr)` alongside the curried `map(f)`; function-first property access joins the module.
+- **`ACTION_ICONS`: `remove` → trash, `run_checks` → refresh** — the trailing remove-action and conditional run-action columns are now expressible with stock `actionCol`.
+- **Health ratchets: `dotChains` + `collectionMethodCalls`** (ruled 2026-07-18) — method chaining and bare collection-method calls are counted and may only go down; `src/fn/` is the sanctioned home for the native calls. ~20 trickle commits migrated existing chains onto `fn` composition.
+
+### Fixed
+
+- **Field tables: right-edge column clipping** — the `<table>` element kept the sans font family, so its ch-based `min-width` resolved ~4.5% wider than the frame's identical budget; `table-layout: fixed` stretched every column past its geometry and the frame clipped the last column mid-glyph (also the cause of overlapping headers on narrow panes). The table element now shares the frame's ONE ch basis (12px mono).
+- **`withHref`/`identityLinkCol`: nullish href renders the plain cell** — never a dead link (zero-count buckets, missing spreadsheet URLs).
+- **`PopoverMenu`: panel portals to `document.body`** so an `overflow: hidden` ancestor can't clip it; header-slot tests query the portalled panel.
+- **`Dropdown` self-themes via tokens** in component CSS.
+
+### Changed
+
+- **JTF Table Catalog bench: 31/31 SUI-compliant; the not-yet-curried demand rail is EMPTY.** The closing rulings (all 2026-07-20): row navigation collapses to the identity cell (`identityLinkCol` is the nav; FieldTable never grows `onRowClick`); per-row colspan collapses to `withWhen`-gated columns + a row action; the QaqcTriage "P% (N)" composite collapses to the linked count; NOx preview's added calls are REMOVED from the picker (they live in the bag table) so `createFieldSelection` covers selection entirely; a known-set string column is `statusCol`, never a flexing `textCol` — the identity column is the table's only flexible one.
+- Bench replicas migrated to fields registries: QaqcAssetTriage, Weekly QA/QC, NOx preview + report bag, Cached Vessel Calls, HourLevelDataTable (grouped), HourlyDataTable, Durability, 1000-Hour Manifest, MetricsStatsTable, MinMaxTable, VesselCallNox/RogDetail, NoxWidgets, Fortnight list, PowerLogCacheView.
+
 ## 0.107.0
 
 ### Added
