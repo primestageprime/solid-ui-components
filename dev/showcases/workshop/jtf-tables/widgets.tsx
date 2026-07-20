@@ -7,14 +7,10 @@
 import {
   BaseTable,
   DataTableContainer,
-  FloatCell,
-  withCellStyle,
   floatCol as helperFloatCol,
   type TableColumn,
 } from "../../../../src/components/Table";
 import * as fields from "../../../../src/components/Table/fields";
-import { InlineText } from "../../../../src/components/InlineText";
-import { EmphasisBody } from "../../../../src/components/Text";
 import { CompliantBadge, ViolationBadge } from "../../../../src/components/Badge";
 import type { TableEntry } from "./shared";
 
@@ -103,14 +99,18 @@ const RogDetailPeriodTable = () => (
 );
 
 // ============================================================================
-// 3a. NoxWidgets — NoxControlPeriodStats period table (raw BaseTable)
-//     jtf-ui/src/components/NoxWidgets.tsx ~252. In jtf the column defs live in
-//     a createMemo over the colorblind() signal (Okabe-Ito remap); the replica
-//     bakes the normal palette statically.
+// 3a. NoxWidgets — NoxControlPeriodStats period table (MIGRATED: FieldTable)
+//     jtf-ui/src/components/NoxWidgets.tsx ~252. In jtf the column defs lived in
+//     a createMemo over the colorblind() signal (Okabe-Ito hex remap) with a
+//     getRowClass highlight; the migration drops both — semantic tones are
+//     theme vars that already adapt to the colorblind theme, so the memo and
+//     the row background disappear (precedent: VesselCallNoxDetail above).
 // ============================================================================
 
 interface PeriodStatsRow {
   period: string;
+  // Data-layer flag for the active control period (ruled 2026-07-20); the
+  // value tones read it, replacing the getRowClass row highlight.
   highlight: boolean;
   count: number;
   avgNOx: number | null;
@@ -124,42 +124,29 @@ const PERIOD_STATS_DATA: PeriodStatsRow[] = [
   { period: "After Control", highlight: false, count: 397, avgNOx: 38.05, avgNO: 34.2, avgNO2: 3.85 },
 ];
 
-// withCellStyle takes typed options (no style object at the call site).
-const DuringFloat = withCellStyle(FloatCell, { color: "#00ff88", fontWeight: "600" });
-const BaselineFloat = withCellStyle(FloatCell, { color: "#ff8800", fontWeight: "600" });
-
-const PERIOD_STATS_COLUMNS: TableColumn<PeriodStatsRow>[] = [
-  {
-    id: "period",
-    header: "Period",
-    accessor: (r) => (
-      <EmphasisBody>
-        <InlineText color={r.highlight ? "#00ff88" : undefined}>{r.period}</InlineText>
-      </EmphasisBody>
-    ),
-  },
-  { id: "count", header: "Data Points", accessor: "count", align: "right" },
-  {
-    id: "avgNOx",
+// Semantic tones fed by the data-layer highlight flag (precedent: the
+// VesselCallNoxDetail registry above): the During-Control row wears success,
+// the before/after baseline warning. Only avgNOx carried the During/Baseline
+// hex in the source — avgNO/avgNO2 stay plain. No hex at the call site.
+const PERIOD_STATS_REGISTRY = {
+  period: fields.textCol<PeriodStatsRow>("period", {
+    tone: (_v, row) => (row.highlight ? "success" : "default"),
+  }),
+  count: fields.intCol<PeriodStatsRow>("count", { header: "Data Points" }),
+  avgNOx: fields.floatCol<PeriodStatsRow>("avgNOx", {
+    precision: 2,
     header: "Avg NOx (ppm)",
-    accessor: (r) =>
-      r.highlight ? (
-        <DuringFloat value={r.avgNOx} precision={2} />
-      ) : (
-        <BaselineFloat value={r.avgNOx} precision={2} />
-      ),
-    align: "right",
-  },
-  { id: "avgNO", header: "Avg NO (ppm)", accessor: (r) => <FloatCell value={r.avgNO} precision={2} />, align: "right" },
-  { id: "avgNO2", header: "Avg NO₂ (ppm)", accessor: (r) => <FloatCell value={r.avgNO2} precision={2} />, align: "right" },
-];
+    tone: (_v, row) => (row.highlight ? "success" : "warning"),
+  }),
+  avgNO: fields.floatCol<PeriodStatsRow>("avgNO", { precision: 2, header: "Avg NO (ppm)" }),
+  avgNO2: fields.floatCol<PeriodStatsRow>("avgNO2", { precision: 2, header: "Avg NO₂ (ppm)" }),
+};
 
 const NoxPeriodStatsTable = () => (
-  <BaseTable
+  <fields.FieldTable
     data={PERIOD_STATS_DATA}
-    columns={PERIOD_STATS_COLUMNS}
-    compact
-    getRowClass={(row) => (row.highlight ? "hud-table__row--highlight" : "")}
+    fields={["period", "count", "avgNOx", "avgNO", "avgNO2"]}
+    registry={PERIOD_STATS_REGISTRY}
   />
 );
 
@@ -405,9 +392,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/nox-report (widgets)",
     name: "NoxWidgets — NOx Statistics by Control Period",
-    status: "raw",
-    customs: ["row-tone", "styled-number"],
-    note: "getRowClass row highlight + withCellStyle hex-colored floats + colorblind-reactive column memo — all three block FieldTable.",
+    status: "sui",
+    note: "Migrated to FieldTable (precedent VesselCallNoxDetail): textCol/intCol/floatCol registry; During→success else warning tone fns fed by the data-layer highlight flag on period + avgNOx. getRowClass row highlight DROPPED and the colorblind hex memo dies — tones are theme vars.",
     component: NoxPeriodStatsTable,
   },
   {
