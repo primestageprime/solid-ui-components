@@ -107,7 +107,7 @@ export const SidebarSelectorShowcase: Component = () => {
                 )}
               </div>
             )}
-            maxHeight="250px"
+            height="250px"
             label="Ship Systems"
           />
         </div>

@@ -124,7 +124,7 @@ export const TableFieldsShowcase: Component = () => {
     ), "chart"),
     col("health", "Health", (row) => (
       <EndWrapRow>
-        <SmallStatusLight variant={row.failed > 0 ? "error" : "active"} />
+        <SmallStatusLight variant={row.failed > 0 ? "danger" : "success"} />
         <TextSublabel>{`${row.done}/${row.total}`}</TextSublabel>
       </EndWrapRow>
     ), "status"),

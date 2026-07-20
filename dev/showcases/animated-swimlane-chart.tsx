@@ -336,10 +336,7 @@ export const AnimatedSwimlaneChartShowcase: Component = () => {
   return (
     // component-section--full opts this showcase out of the dev shell's
     // 1000px content cap so the chart reflows across the full viewport.
-    <div
-      class="component-section--full"
-      class="animated-swimlane-demo__page"
-    >
+    <div class="component-section--full animated-swimlane-demo__page">
       <div class="animated-swimlane-demo__intro">
         Data-only consumer — the entire chart is{" "}
         <code class="animated-swimlane-demo__code">

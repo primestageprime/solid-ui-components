@@ -78,8 +78,7 @@ const HoverCardSlot: Component<{ node: StatusFlowNode }> = (props) => {
     >
       <Show when={hovered()}>
         <div
-          class="sui-asc__popover-host"
-          class="swimlane-node-card-demo__tooltip"
+          class="sui-asc__popover-host swimlane-node-card-demo__tooltip"
           style={{ bottom: `${NODE_H + 8}px` }}
         >
           {defaultRenderPopover(props.node)}
