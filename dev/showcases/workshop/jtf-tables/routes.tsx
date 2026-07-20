@@ -12,9 +12,7 @@ import { createSignal } from "solid-js";
 import {
   BaseTable,
   DateCell,
-  IntCell,
   MetricValueCell,
-  StatusCell,
   type TableColumn,
 } from "../../../../src/components/Table";
 import {
@@ -25,7 +23,11 @@ import {
   dateTimeCol,
   durationCol,
   floatCol,
+  intCol,
+  statusCol,
+  withHref,
   toneWrap,
+  type StatusColMapping,
 } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { EmphasisBody, MutedBody } from "../../../../src/components/Text";
@@ -526,81 +528,75 @@ function CountCell(props: { count: number; activeColor: string }) {
   );
 }
 
-function FortnightReportsTable() {
-  const countCol = (
-    id: string,
-    header: string,
-    count: (r: FortnightReport) => number,
-    activeColor: string,
-  ): TableColumn<FortnightReport> => ({
+// The period label IS the row's identity (ruled 2026-07-20) → identityLinkCol
+// to the report detail route; the label is formatted in the data layer so the
+// identity column reads one field. The five count columns are the DEFERRED
+// count-emphasis type: col() customs at int geometry that reference the series
+// palette directly (identity color, not meaning — ruled) with the non-zero
+// emphasis, each carrying a numeric sortValue. The StatusCell badge becomes the
+// status field made a link to the spreadsheet — withHref(statusCol()).
+type FortnightRow = FortnightReport & { period: string };
+
+const FORTNIGHT_STATUS: Record<string, StatusColMapping> = {
+  completed: { label: "Completed", tone: "success" },
+  submitted: { label: "Submitted", tone: "accent" },
+  pending: { label: "Pending", tone: "default" },
+};
+
+const countEmphasisCol = (
+  id: "missing_data" | "power_log_nc" | "high_flow_95" | "high_flow_99" | "non_compliant",
+  header: string,
+  seriesColor: string,
+) =>
+  col<FortnightRow>(
     id,
     header,
-    align: "center",
-    accessor: (r) => <CountCell count={count(r)} activeColor={activeColor} />,
-  });
-  const columns: TableColumn<FortnightReport>[] = [
-    {
-      id: "period",
-      header: "Period",
-      // AccentRouteLink in jtf — plain accent text here, no real navigation.
-      accessor: (r) => (
-        <InlineText color="var(--sui-accent)">
-          {r.start_date} – {r.end_date}
-        </InlineText>
-      ),
-    },
-    {
-      id: "vessel_calls",
-      header: "Vessel Calls",
-      align: "center",
-      accessor: (r) => <IntCell value={r.vessel_calls} />,
-    },
-    countCol(
-      "missing_data",
-      "Missing Data",
-      (r) => r.missing_data,
-      "var(--sui-series-2)",
-    ),
-    countCol(
-      "power_log_nc",
-      "Power Log (NC)",
-      (r) => r.power_log_nc,
-      "var(--sui-series-3)",
-    ),
-    countCol(
-      "high_flow_95",
-      "95% CE (NC)",
-      (r) => r.high_flow_95,
-      "var(--sui-series-1)",
-    ),
-    countCol(
-      "high_flow_99",
-      "99% CE (NC)",
-      (r) => r.high_flow_99,
-      "var(--sui-series-4)",
-    ),
-    countCol(
-      "non_compliant",
-      "Non-Compliant",
-      (r) => r.non_compliant,
-      "var(--sui-danger)",
-    ),
-    {
-      id: "status",
-      header: "Status",
-      align: "center",
-      accessor: (r) => (
-        <StatusCell value={r.status} href={r.spreadsheet_url ?? undefined} />
-      ),
-    },
-  ];
+    (row) => <CountCell count={row[id]} activeColor={seriesColor} />,
+    "int",
+    (row) => row[id],
+  );
+
+const FORTNIGHT_REGISTRY = {
+  period: identityLinkCol<FortnightRow>("period", {
+    href: (row) => `/reports/fortnight/${row.id}`,
+    header: "Period",
+  }),
+  vessel_calls: intCol<FortnightRow>("vessel_calls", { header: "Vessel Calls" }),
+  missing_data: countEmphasisCol("missing_data", "Missing Data", "var(--sui-series-2)"),
+  power_log_nc: countEmphasisCol("power_log_nc", "Power Log (NC)", "var(--sui-series-3)"),
+  high_flow_95: countEmphasisCol("high_flow_95", "95% CE (NC)", "var(--sui-series-1)"),
+  high_flow_99: countEmphasisCol("high_flow_99", "99% CE (NC)", "var(--sui-series-4)"),
+  non_compliant: countEmphasisCol("non_compliant", "Non-Compliant", "var(--sui-danger)"),
+  // The badge is also the spreadsheet link (linked-badge, shipped as a
+  // combinator). withHref wraps unconditionally, so a report with no sheet
+  // links to "#" rather than staying unlinked — a minor degradation from the
+  // conditional StatusCell href.
+  status: withHref<FortnightRow>(
+    (row) => row.spreadsheet_url ?? "#",
+    statusCol<FortnightRow>("status", FORTNIGHT_STATUS, { header: "Status" }),
+  ),
+};
+
+const FORTNIGHT_ROWS: FortnightRow[] = FORTNIGHT_REPORTS.map((r) => ({
+  ...r,
+  period: `${r.start_date} – ${r.end_date}`,
+}));
+
+function FortnightReportsTable() {
   return (
-    <BaseTable
-      data={FORTNIGHT_REPORTS}
-      columns={columns}
-      compact
-      stickyHeader
-      fill
+    <FieldTable
+      data={FORTNIGHT_ROWS}
+      fields={[
+        "period",
+        "vessel_calls",
+        "missing_data",
+        "power_log_nc",
+        "high_flow_95",
+        "high_flow_99",
+        "non_compliant",
+        "status",
+      ]}
+      registry={FORTNIGHT_REGISTRY}
     />
   );
 }
@@ -774,9 +770,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/fortnight",
     name: "Fortnight Reports List",
-    status: "raw",
-    customs: ["count-emphasis", "linked-badge"],
-    note: "Period AccentRouteLink cell, five CountCell conditional-emphasis count columns (series palette), StatusCell badge with spreadsheet href.",
+    status: "sui",
+    note: "Migrated to FieldTable: period identityLinkCol (→ /reports/fortnight/:id, label formatted in the data layer); five count-emphasis col() customs at int geometry referencing the series palette with a numeric sortValue (deferred type, col() is the resolution); StatusCell badge → withHref(statusCol) linked to the spreadsheet.",
     component: FortnightReportsTable,
   },
   {
