@@ -185,3 +185,27 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
   items 2/6/7).
 - PowerLogPanel ×3 — component retired at jtf HEAD 2026-07-17; drop from
   the worklist.
+
+## Wave 2 status (2026-07-20)
+
+- **`withHref` / `withHint` SHIPPED** as column *combinators*
+  (`src/components/Table/fields/combinators.tsx`) — function-first wrappers that
+  decorate ANY FieldCol rather than growing an option on every factory
+  (item 2 "href on non-identity cols" + item 11 `headerHint` are both answered
+  by these). First consumers (bench + jtf): `withHref(statusCol())` linked
+  spreadsheet badge on the fortnight list, `withHref(intCol())` bucket-count
+  links + `withHint` tooltip headers across the 11-column QaqcAssetTriage.
+- **Emphasis numerics — RESOLVED by subtraction** (ruled 2026-07-20: no new
+  type). Weight/size nuances die in migration; color rides tone fns / avgCol's
+  accent. PowerLogCacheView + NoxWidgets stats migrate on floatCol/avgCol/tones;
+  the `styled-number` demand retires with the last of them.
+- **Series-palette counts — DEFERRED** (ruled 2026-07-20): no dedicated type.
+  The fortnight count cells stay configure-time `col()` customs at int geometry
+  that reference `var(--…-series-N)` directly (identity color, not meaning) with
+  a numeric `sortValue`. `count-emphasis` retired from the rail.
+- **`row-tone` — retired**: both NoxWidgets tables migrated on value tones
+  (during→success, baseline→warning) fed by a data-layer flag; the getRowClass
+  highlight and the colorblind-reactive hex memo both die (tones are theme
+  vars). No `rowTone` prop was minted.
+- **PowerLogPanel — REMOVED** from the JTF Table Catalog bench (retired at jtf
+  HEAD; dead debt, nothing to migrate).
