@@ -20,25 +20,33 @@ const cellOf = <T,>(column: FieldCol<T>): ((row: T) => JSX.Element) => {
 };
 
 export function withHref<T>(
-  href: (row: T) => string,
+  href: (row: T) => string | null | undefined,
   column: FieldCol<T>,
 ): FieldCol<T>;
 export function withHref<T>(
-  href: (row: T) => string,
+  href: (row: T) => string | null | undefined,
 ): (column: FieldCol<T>) => FieldCol<T>;
 export function withHref<T>(
-  href: (row: T) => string,
+  href: (row: T) => string | null | undefined,
   column?: FieldCol<T>,
 ): FieldCol<T> | ((column: FieldCol<T>) => FieldCol<T>) {
   if (column === undefined) return (c) => withHref(href, c);
   const cell = cellOf(column);
   return {
     ...column,
-    accessor: (row) => (
-      <a class="sui-field-link" href={href(row)}>
-        {cell(row)}
-      </a>
-    ),
+    accessor: (row) => {
+      // No destination → the plain cell, never a dead link (same ruling as
+      // identityLinkCol's blank-name case). Configure-time nulls are how a
+      // caller says "this row doesn't navigate" (missing spreadsheet URL,
+      // zero-count bucket).
+      const url = href(row);
+      if (url == null || url === "") return cell(row);
+      return (
+        <a class="sui-field-link" href={url}>
+          {cell(row)}
+        </a>
+      );
+    },
   };
 }
 

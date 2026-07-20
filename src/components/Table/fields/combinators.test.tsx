@@ -68,3 +68,17 @@ describe("withHint", () => {
     expect(hinted.sortValue?.(ROW)).toBe(22);
   });
 });
+
+describe("withHref — nullish href", () => {
+  it("renders the plain cell, never a dead link (no destination → no anchor)", () => {
+    const linked = withHref<Row>(
+      (r) => (r.flow > 0 ? `/violations?bucket=flow` : null),
+      intCol<Row>("flow"),
+    );
+    const zero = renderCell(linked, { ...ROW, flow: 0 });
+    expect(zero.container.querySelector("a")).toBeNull();
+    expect(zero.container.textContent).toBe("0");
+    const linkedRow = renderCell(linked, ROW);
+    expect(linkedRow.container.querySelector("a.sui-field-link")).toBeTruthy();
+  });
+});

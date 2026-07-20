@@ -105,7 +105,8 @@ const bucketCol = (
   withHint(
     hint,
     withHref(
-      (a: TriageAsset) => detailHref(a, key),
+      // A zero-count bucket has no worklist to open — nullish href, no link.
+      (a: TriageAsset) => (a[key] > 0 ? detailHref(a, key) : null),
       intCol<TriageAsset>(key, {
         header,
         tone: danger ? (v) => (v > 0 ? "danger" : "default") : undefined,

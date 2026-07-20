@@ -568,11 +568,9 @@ const FORTNIGHT_REGISTRY = {
   high_flow_99: countEmphasisCol("high_flow_99", "99% CE (NC)", "var(--sui-series-4)"),
   non_compliant: countEmphasisCol("non_compliant", "Non-Compliant", "var(--sui-danger)"),
   // The badge is also the spreadsheet link (linked-badge, shipped as a
-  // combinator). withHref wraps unconditionally, so a report with no sheet
-  // links to "#" rather than staying unlinked — a minor degradation from the
-  // conditional StatusCell href.
+  // combinator). No sheet → nullish href → the plain badge, never a dead link.
   status: withHref<FortnightRow>(
-    (row) => row.spreadsheet_url ?? "#",
+    (row) => row.spreadsheet_url,
     statusCol<FortnightRow>("status", FORTNIGHT_STATUS, { header: "Status" }),
   ),
 };
