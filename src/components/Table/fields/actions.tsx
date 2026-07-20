@@ -16,6 +16,7 @@ import { pipe, pluck, join } from "../../../fn";
 export const ACTION_ICONS: Record<string, IconName> = {
   edit: "edit",
   delete: "trash",
+  remove: "trash",
 };
 
 /** actions(n) geometry — DERIVED from button metrics, never guessed. Standard

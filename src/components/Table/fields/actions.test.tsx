@@ -13,6 +13,7 @@ describe("actions field module", () => {
   it("ACTION_ICONS maps the known ids to real icons", () => {
     expect(ACTION_ICONS.edit).toBe("edit");
     expect(ACTION_ICONS.delete).toBe("trash");
+    expect(ACTION_ICONS.remove).toBe("trash");
   });
 
   it("geoFor derives width from button metrics: geoFor(2) = 5.3rem / 9.5ch", () => {
