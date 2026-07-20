@@ -33,11 +33,9 @@ export interface CustomDemand {
  *  demand rail derives per-type table counts from the annotations — this
  *  list is the definition side only, never counts. */
 export const CUSTOM_DEMANDS: CustomDemand[] = [
-  {
-    id: "row-click",
-    name: "Row navigation",
-    why: "Whole-row onRowClick navigation isn't surfaced through FieldTable.",
-  },
+  // row-click ("Row navigation") SUBTRACTED 2026-07-20: ruled that row
+  // navigation collapses to the identity cell (identityLinkCol is the link);
+  // FieldTable never grows onRowClick.
   {
     id: "select-state",
     name: "Selection labels",

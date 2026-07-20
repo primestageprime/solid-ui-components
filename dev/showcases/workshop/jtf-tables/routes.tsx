@@ -8,13 +8,6 @@
 //   src/routes/reports/fortnight/index.tsx   — Fortnight reports list
 //   src/routes/reports/thousand-hour/[id].tsx — 1000-hour manifest
 //   src/routes/tools/ftir-gap-fill.tsx       — FTIR gaps (FieldTable, migrated)
-import { createSignal } from "solid-js";
-import {
-  BaseTable,
-  DateCell,
-  MetricValueCell,
-  type TableColumn,
-} from "../../../../src/components/Table";
 import {
   FieldTable,
   col,
@@ -29,8 +22,9 @@ import {
   toneWrap,
   type StatusColMapping,
 } from "../../../../src/components/Table/fields";
+import type { Tone } from "../../../../src/types";
 import { InlineText } from "../../../../src/components/InlineText";
-import { EmphasisBody, MutedBody } from "../../../../src/components/Text";
+import { EmphasisBody } from "../../../../src/components/Text";
 import type { TableEntry } from "./shared";
 
 // ---------------------------------------------------------------------------
@@ -46,50 +40,11 @@ export const TYPE_GLYPH: Record<string, string> = {
   BULK: "▤",
 };
 
-/** Replica of jtf's VesselName entity cell: (type icon) Name. */
-function VesselNameCell(props: { type: string; name: string }) {
-  return (
-    <span title={props.name}>
-      <InlineText color="var(--sui-text-secondary)">
-        {TYPE_GLYPH[props.type] ?? "▢"}{" "}
-      </InlineText>
-      <InlineText>{props.name}</InlineText>
-    </span>
-  );
-}
-
-/** Replica of jtf's CoverageCell: "FULL" in accent, else missing minutes
- *  colored by severity (>=60m danger, else warning). Bold via EmphasisBody. */
-function CoverageCell(props: { status: string; missingMins: number }) {
-  if (props.status === "FULL" || props.missingMins <= 0) {
-    return (
-      <EmphasisBody>
-        <InlineText color="var(--sui-accent)">FULL</InlineText>
-      </EmphasisBody>
-    );
-  }
-  const color =
-    props.missingMins >= 60 ? "var(--sui-danger)" : "var(--sui-warning)";
-  return (
-    <EmphasisBody>
-      <InlineText color={color}>{props.missingMins}m</InlineText>
-    </EmphasisBody>
-  );
-}
-
-/** jtf formatConnectionDuration replica — deterministic: "—" when still
- *  connected instead of the original's `new Date()` fallback. */
-function connectionDuration(
-  connectedAt: string,
-  disconnectedAt: string | null,
-): string {
-  if (!disconnectedAt) return "—";
-  const diffMs =
-    new Date(disconnectedAt).getTime() - new Date(connectedAt).getTime();
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-}
+// Coverage severity (the 5% tail, via col()): FULL reads accent; otherwise
+// the missing minutes read danger at ≥60m, warning below — semantic tone via
+// toneWrap, no color at the call site (same shape as Durability data_status).
+const coverageSeverity = (missingMins: number): Tone =>
+  missingMins >= 60 ? "danger" : "warning";
 
 // ---------------------------------------------------------------------------
 // 1. Cached Vessel Calls — src/routes/index.tsx (~line 639)
@@ -234,82 +189,87 @@ const CACHED_CALLS: CachedVesselCall[] = [
   },
 ];
 
-const coverageCol = (
-  id: string,
-  header: string,
-): TableColumn<CachedVesselCall> => ({
-  id,
-  header,
-  align: "center",
-  accessor: (c) => (
-    <CoverageCell
-      status={c.coverage[id]?.status ?? "MISSING"}
-      missingMins={c.coverage[id]?.missingMins ?? 0}
-    />
-  ),
-});
+const coverageCol = (id: string, header: string) =>
+  col<CachedVesselCall>(
+    id,
+    header,
+    (row) => {
+      const c = row.coverage[id];
+      if (!c || c.status === "FULL" || c.missingMins <= 0)
+        return toneWrap("accent", "FULL");
+      return toneWrap(coverageSeverity(c.missingMins), `${c.missingMins}m`);
+    },
+    "status",
+    (row) => row.coverage[id]?.missingMins ?? 0,
+  );
+
+// Duration DERIVED from the two timestamps (minutes); a still-connected call
+// has no defined end → null → blank (the old "—" dies, no empty markers).
+const cachedCallMinutes = (row: CachedVesselCall): number | null =>
+  row.disconnected_at
+    ? Math.floor(
+        (Date.parse(row.disconnected_at) - Date.parse(row.connected_at)) /
+          60_000,
+      )
+    : null;
+
+// Row navigation collapses to the identity cell (ruled 2026-07-20): the
+// vessel name IS the link to /detail/:id — a real <a> (cmd-click, a11y) —
+// and whole-row onRowClick dies with the raw table. jtf keeps the bigger
+// hit target only until its call site migrates.
+const CACHED_REGISTRY = {
+  vessel_name: identityLinkCol<CachedVesselCall>("vessel_name", {
+    href: (row) => `/detail/${row.id}`,
+    glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
+  }),
+  asset_id: textCol<CachedVesselCall>("asset_id"),
+  connected_at: dateTimeCol<CachedVesselCall>("connected_at"),
+  duration: durationCol<CachedVesselCall>(cachedCallMinutes, "m", {
+    id: "duration",
+    header: "Duration",
+  }),
+  // Compliance drives the tone (MetricValueCell's cyan/red → accent/danger).
+  nox: floatCol<CachedVesselCall>("nox_value", {
+    id: "nox",
+    header: "NOx",
+    precision: 2,
+    tone: (_v, row) => (row.nox_compliant ? "accent" : "danger"),
+  }),
+  rog: floatCol<CachedVesselCall>("rog_value", {
+    id: "rog",
+    header: "ROG",
+    precision: 4,
+    tone: (_v, row) => (row.rog_compliant ? "accent" : "danger"),
+  }),
+  ftir_i: coverageCol("ftir_i", "FTIR.I"),
+  ftir_o: coverageCol("ftir_o", "FTIR.O"),
+  scr: coverageCol("scr", "SCR"),
+  fid: coverageCol("fid", "FID"),
+  msi: coverageCol("msi", "MSI"),
+  mso: coverageCol("mso", "MSO"),
+};
 
 function CachedVesselCallsTable() {
-  const [lastNav, setLastNav] = createSignal<string | null>(null);
-  const columns: TableColumn<CachedVesselCall>[] = [
-    {
-      id: "vessel_name",
-      header: "Vessel Name",
-      accessor: (c) => (
-        <VesselNameCell type={c.vessel_type} name={c.vessel_name} />
-      ),
-    },
-    { id: "asset_id", header: "Asset ID", accessor: (c) => c.asset_id },
-    {
-      id: "connected_at",
-      header: "Connected At",
-      accessor: (c) => <DateCell value={c.connected_at} format="iso" />,
-    },
-    {
-      id: "duration",
-      header: "Duration",
-      accessor: (c) => connectionDuration(c.connected_at, c.disconnected_at),
-    },
-    {
-      id: "nox",
-      header: "NOx",
-      align: "right",
-      accessor: (c) => (
-        <MetricValueCell value={c.nox_value} compliant={c.nox_compliant} />
-      ),
-    },
-    {
-      id: "rog",
-      header: "ROG",
-      align: "right",
-      accessor: (c) => (
-        <MetricValueCell value={c.rog_value} compliant={c.rog_compliant} />
-      ),
-    },
-    coverageCol("ftir_i", "FTIR.I"),
-    coverageCol("ftir_o", "FTIR.O"),
-    coverageCol("scr", "SCR"),
-    coverageCol("fid", "FID"),
-    coverageCol("msi", "MSI"),
-    coverageCol("mso", "MSO"),
-  ];
   return (
-    <>
-      <BaseTable
-        data={CACHED_CALLS}
-        columns={columns}
-        fill
-        stickyHeader
-        compact
-        hoverable
-        onRowClick={(call) => setLastNav(`/detail/${call.id}`)}
-      />
-      <MutedBody>
-        {lastNav()
-          ? `Row click would navigate to ${lastNav()}`
-          : "Click a row — jtf navigates to /detail/:id"}
-      </MutedBody>
-    </>
+    <FieldTable
+      data={CACHED_CALLS}
+      fields={[
+        "vessel_name",
+        "asset_id",
+        "connected_at",
+        "duration",
+        "nox",
+        "rog",
+        "ftir_i",
+        "ftir_o",
+        "scr",
+        "fid",
+        "msi",
+        "mso",
+      ]}
+      registry={CACHED_REGISTRY}
+      maxRows={12}
+    />
   );
 }
 
@@ -753,9 +713,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/",
     name: "Cached Vessel Calls",
-    status: "raw",
-    customs: ["row-click"],
-    note: "Blocked by onRowClick navigation + custom VesselName entity cell and CoverageCell (FULL/Nm severity coloring); NOx/ROG use MetricValueCell.",
+    status: "sui",
+    note: "Migrated to FieldTable: row navigation collapses to the identity cell (ruled 2026-07-20) — vessel identityLinkCol is a real link to /detail/:id and whole-row onRowClick dies; dateTimeCol, derived durationCol (still-connected → blank), NOx/ROG floatCols with compliance tone (accent/danger), six coverage col() customs (FULL accent, missing minutes danger ≥60m / warning).",
     component: CachedVesselCallsTable,
   },
   {
