@@ -14,6 +14,7 @@ import {
   onCleanup,
   mergeProps,
 } from "solid-js";
+import { Portal } from "solid-js/web";
 import { ICON_PATHS } from "../Icon/Icon";
 import type { IconName } from "../Icon/Icon";
 import "./PopoverMenu.css";
@@ -80,10 +81,53 @@ export const PopoverMenu = <Id extends string = string>(
     props,
   );
   const [open, setOpen] = createSignal(false);
+  // Position of the portaled panel, in viewport (fixed) coordinates. Only one
+  // of left/right is set, per the alignment.
+  const [pos, setPos] = createSignal<{
+    top: number;
+    left?: number;
+    right?: number;
+  }>();
   let containerRef: HTMLDivElement | undefined;
+  let triggerRef: HTMLButtonElement | undefined;
+  // The panel is portaled to document.body, so it is NOT inside containerRef;
+  // outside-click detection must consult it separately.
+  let panelRef: HTMLUListElement | undefined;
+
+  // The panel renders through a Portal (below), so an ancestor with
+  // `overflow: clip/hidden/auto` can never clip it. That means it can't be
+  // positioned relative to the trigger via CSS `position: absolute` on a shared
+  // ancestor — we measure the trigger and position the panel with
+  // `position: fixed` in viewport coordinates instead. Right alignment anchors
+  // the panel's right edge to the trigger's right (no panel-width measurement
+  // needed); left alignment anchors its left edge to the trigger's left.
+  const computePosition = () => {
+    if (!triggerRef) return;
+    const rect = triggerRef.getBoundingClientRect();
+    const top = rect.bottom + 4;
+    if (merged.align === "right") {
+      setPos({ top, right: window.innerWidth - rect.right });
+    } else {
+      setPos({ top, left: rect.left });
+    }
+  };
+
+  const panelStyle = (): JSX.CSSProperties => {
+    const p = pos();
+    if (!p) return { position: "fixed" };
+    return {
+      position: "fixed",
+      top: `${p.top}px`,
+      left: p.left !== undefined ? `${p.left}px` : undefined,
+      right: p.right !== undefined ? `${p.right}px` : undefined,
+    };
+  };
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (containerRef && !containerRef.contains(e.target as Node)) {
+    const target = e.target as Node;
+    const inContainer = containerRef?.contains(target);
+    const inPanel = panelRef?.contains(target);
+    if (!inContainer && !inPanel) {
       close();
     }
   };
@@ -92,14 +136,22 @@ export const PopoverMenu = <Id extends string = string>(
     if (e.key === "Escape") close();
   };
 
+  // Keep the fixed-positioned panel pinned to the trigger as the page scrolls
+  // or resizes (capture phase catches scrolling in any ancestor container).
+  const handleReposition = () => computePosition();
+
   const setupListeners = () => {
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeydown);
+    window.addEventListener("scroll", handleReposition, true);
+    window.addEventListener("resize", handleReposition);
   };
 
   const teardownListeners = () => {
     document.removeEventListener("mousedown", handleClickOutside);
     document.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("scroll", handleReposition, true);
+    window.removeEventListener("resize", handleReposition);
   };
 
   const close = () => {
@@ -113,6 +165,7 @@ export const PopoverMenu = <Id extends string = string>(
     if (open()) {
       close();
     } else {
+      computePosition();
       setOpen(true);
       setupListeners();
     }
@@ -138,7 +191,12 @@ export const PopoverMenu = <Id extends string = string>(
 
   return (
     <div class={containerClass()} ref={containerRef}>
-      <button type="button" class={triggerClass()} onClick={toggle}>
+      <button
+        type="button"
+        class={triggerClass()}
+        onClick={toggle}
+        ref={triggerRef}
+      >
         <span class="sui-popover-menu__trigger-content">
           {merged.trigger}
           <span class="sui-popover-menu__caret">
@@ -148,37 +206,41 @@ export const PopoverMenu = <Id extends string = string>(
       </button>
 
       <Show when={open()}>
-        <ul class="sui-popover-menu__panel">
-          <Show when={merged.header}>
-            <li class="sui-popover-menu__header" role="presentation">
-              {merged.header}
-            </li>
-          </Show>
-          <For each={merged.items}>
-            {(item) => (
-              <li
-                class="sui-popover-menu__item"
-                // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA menu composite — <ul> panel with role="menuitem" <li>s; full keyboard support (tabIndex + Enter/Space onKeyDown) provided below
-                role="menuitem"
-                tabIndex={0}
-                onClick={() => select(item.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    select(item.id);
-                  }
-                }}
-              >
-                <Show when={item.icon}>
-                  <span class="sui-popover-menu__item-icon">
-                    <InlineIcon name={item.icon!} size="sm" />
-                  </span>
-                </Show>
-                <span class="sui-popover-menu__item-label">{item.label}</span>
+        {/* Portaled to document.body so no ancestor's overflow can clip it;
+            positioned via inline fixed coords measured from the trigger. */}
+        <Portal>
+          <ul class="sui-popover-menu__panel" ref={panelRef} style={panelStyle()}>
+            <Show when={merged.header}>
+              <li class="sui-popover-menu__header" role="presentation">
+                {merged.header}
               </li>
-            )}
-          </For>
-        </ul>
+            </Show>
+            <For each={merged.items}>
+              {(item) => (
+                <li
+                  class="sui-popover-menu__item"
+                  // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA menu composite — <ul> panel with role="menuitem" <li>s; full keyboard support (tabIndex + Enter/Space onKeyDown) provided below
+                  role="menuitem"
+                  tabIndex={0}
+                  onClick={() => select(item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      select(item.id);
+                    }
+                  }}
+                >
+                  <Show when={item.icon}>
+                    <span class="sui-popover-menu__item-icon">
+                      <InlineIcon name={item.icon!} size="sm" />
+                    </span>
+                  </Show>
+                  <span class="sui-popover-menu__item-label">{item.label}</span>
+                </li>
+              )}
+            </For>
+          </ul>
+        </Portal>
       </Show>
     </div>
   );

@@ -67,10 +67,15 @@
   transform: rotate(180deg);
 }
 
-/* ---- Menu panel ---- */
+/* ---- Menu panel ----
+   Portaled to document.body (see PopoverMenu.tsx) so no ancestor's overflow
+   can clip it. Positioned via inline `position: fixed` + measured top/left/right
+   coordinates from the trigger; the component sets those inline. Alignment is
+   likewise handled inline (right vs left edge), so there are no
+   `--align-*` positioning rules here — the panel is no longer a descendant of
+   the `.sui-popover-menu` container once portaled. Colors stay token-driven. */
 .sui-popover-menu__panel {
-  position: absolute;
-  top: calc(100% + 4px);
+  position: fixed;
   min-width: 140px;
   z-index: 100;
   margin: 0;
@@ -80,14 +85,6 @@
   border: 1px solid var(--sui-border);
   border-radius: var(--sui-radius-md, 4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.sui-popover-menu--align-right .sui-popover-menu__panel {
-  right: 0;
-}
-
-.sui-popover-menu--align-left .sui-popover-menu__panel {
-  left: 0;
 }
 
 /* ---- Optional non-interactive header (e.g. account email) ---- */
