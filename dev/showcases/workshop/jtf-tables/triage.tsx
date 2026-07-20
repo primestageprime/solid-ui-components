@@ -9,17 +9,16 @@ import {
   BaseTable,
   DateTimeCell,
   type TableColumn,
-  type TableRowSpan,
 } from "../../../../src/components/Table";
-import { MutedBody, TextSublabel, TextTitle } from "../../../../src/components/Text";
+import { MutedBody, TextSublabel } from "../../../../src/components/Text";
 import { Tooltip } from "../../../../src/components/Tooltip";
 import { InlineText } from "../../../../src/components/InlineText";
 import { Checkbox } from "../../../../src/components/Checkbox";
-import { SmallOutlinedButton } from "../../../../src/components/Button";
-import { ClusterRow, NarrowStack } from "../../../../src/components/Layout";
+import { NarrowStack } from "../../../../src/components/Layout";
 import {
   FieldTable,
   SortableFieldTable,
+  col,
   intCol,
   floatCol,
   statusCol,
@@ -29,7 +28,9 @@ import {
   dateTimeCol,
   durationCol,
   actionCol,
+  toneWrap,
   withHint,
+  withWhen,
   type StatusColMapping,
 } from "../../../../src/components/Table/fields";
 import { TYPE_GLYPH } from "./routes";
@@ -194,160 +195,155 @@ interface WeeklyRow {
   actionable: number;
   violation_count: number;
   violated_minutes: number;
-  pct_at_band: string;
-  op_at_band: string;
+  // Numbers in the data layer (migrated 2026-07-20) — the cells own the "%".
+  pct_at_band: number | null;
+  op_at_band: number | null;
   below_band_pct: number;
   current: boolean;
   has_issues: boolean;
 }
 
 const WEEKLY_ROWS: WeeklyRow[] = [
-  { week_start: "2026-06-15", week_end: "2026-06-21", total_calls: 41, evaluated_calls: 41, triage_summary: "3 · 1 · 0 · 0 · 35 · 2", actionable: 4, violation_count: 6, violated_minutes: 214, pct_at_band: "2%", op_at_band: "61%", below_band_pct: 12, current: false, has_issues: false },
-  { week_start: "2026-06-22", week_end: "2026-06-28", total_calls: 38, evaluated_calls: 38, triage_summary: "0 · 0 · 0 · 0 · 36 · 2", actionable: 0, violation_count: 1, violated_minutes: 35, pct_at_band: "0%", op_at_band: "58%", below_band_pct: 9, current: false, has_issues: true },
-  { week_start: "2026-06-29", week_end: "2026-07-05", total_calls: 44, evaluated_calls: 44, triage_summary: "5 · 2 · 1 · 0 · 33 · 3", actionable: 8, violation_count: 11, violated_minutes: 402, pct_at_band: "4%", op_at_band: "54%", below_band_pct: 18, current: false, has_issues: false },
-  { week_start: "2026-07-06", week_end: "2026-07-12", total_calls: 39, evaluated_calls: 24, triage_summary: "", actionable: 0, violation_count: 0, violated_minutes: 0, pct_at_band: "—", op_at_band: "—", below_band_pct: 0, current: false, has_issues: false },
-  { week_start: "2026-07-13", week_end: "2026-07-19", total_calls: 17, evaluated_calls: 17, triage_summary: "1 · 0 · 0 · 0 · 15 · 1", actionable: 1, violation_count: 2, violated_minutes: 66, pct_at_band: "1%", op_at_band: "63%", below_band_pct: 7, current: true, has_issues: false },
+  { week_start: "2026-06-15", week_end: "2026-06-21", total_calls: 41, evaluated_calls: 41, triage_summary: "3 · 1 · 0 · 0 · 35 · 2", actionable: 4, violation_count: 6, violated_minutes: 214, pct_at_band: 2, op_at_band: 61, below_band_pct: 12, current: false, has_issues: false },
+  { week_start: "2026-06-22", week_end: "2026-06-28", total_calls: 38, evaluated_calls: 38, triage_summary: "0 · 0 · 0 · 0 · 36 · 2", actionable: 0, violation_count: 1, violated_minutes: 35, pct_at_band: 0, op_at_band: 58, below_band_pct: 9, current: false, has_issues: true },
+  { week_start: "2026-06-29", week_end: "2026-07-05", total_calls: 44, evaluated_calls: 44, triage_summary: "5 · 2 · 1 · 0 · 33 · 3", actionable: 8, violation_count: 11, violated_minutes: 402, pct_at_band: 4, op_at_band: 54, below_band_pct: 18, current: false, has_issues: false },
+  { week_start: "2026-07-06", week_end: "2026-07-12", total_calls: 39, evaluated_calls: 24, triage_summary: "", actionable: 0, violation_count: 0, violated_minutes: 0, pct_at_band: null, op_at_band: null, below_band_pct: 0, current: false, has_issues: false },
+  { week_start: "2026-07-13", week_end: "2026-07-19", total_calls: 17, evaluated_calls: 17, triage_summary: "1 · 0 · 0 · 0 · 15 · 1", actionable: 1, violation_count: 2, violated_minutes: 66, pct_at_band: 1, op_at_band: 63, below_band_pct: 7, current: true, has_issues: false },
 ];
 
 const isFullyEvaluated = (r: WeeklyRow): boolean => r.evaluated_calls >= r.total_calls;
-const formatMinutes = (m: number): string =>
-  m === 0 ? "—" : m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${m % 60}m`;
 const weekLabel = (ymd: string): string => `Week of ${ymd}`;
 
 function QaqcChecksWeeklyReplica(): JSX.Element {
   const [running, setRunning] = createSignal(false);
 
-  /** Tooltip-bearing plain header (jtf's headerHint). */
-  const headerHint = (label: string, tip: string): JSX.Element => (
-    <Tooltip content={tip}>
-      <TextTitle>{label}</TextTitle>
-    </Tooltip>
-  );
+  // Per-row colspan collapses to predicate-gated columns (ruled 2026-07-20):
+  // a partial week blanks its stat cells (withWhen) and surfaces the
+  // Run-checks row action instead; the spanning cell dies. Evaluation
+  // progress moves into the calls column — "24 / 39" until fully evaluated.
+  const whenEvaluated = withWhen<WeeklyRow>(isFullyEvaluated);
 
-  /** Stat cell: full-cell accent link to the week's detail grid, tooltipped. */
-  const statCell = (value: string | number, tip: string): JSX.Element => (
-    <Tooltip content={tip}>
-      <InlineText color={ACCENT}>{value}</InlineText>
-    </Tooltip>
-  );
-
-  const columns: TableColumn<WeeklyRow>[] = [
-    {
-      id: "week",
-      header: headerHint("Week", "Monday-start week (PST/PDT)"),
-      width: "15rem",
-      accessor: (row) => (
-        <Tooltip content={`${row.week_start} → ${row.week_end}`}>
-          <InlineText color={ACCENT}>
-            {weekLabel(row.week_start)}
-            <Show when={row.current}>
-              <TextSublabel> (current)</TextSublabel>
-            </Show>
-            <Show when={row.has_issues}>
-              <InlineText color={DANGER}> ⚠</InlineText>
-            </Show>
-          </InlineText>
-        </Tooltip>
+  const registry = {
+    week: withHint(
+      "Monday-start week (PST/PDT)",
+      col<WeeklyRow>(
+        "week",
+        "Week",
+        (row) => (
+          <Tooltip content={`${row.week_start} → ${row.week_end}`}>
+            <InlineText color={ACCENT}>
+              {weekLabel(row.week_start)}
+              <Show when={row.current}>
+                <TextSublabel> (current)</TextSublabel>
+              </Show>
+              <Show when={row.has_issues}>
+                <InlineText color={DANGER}> ⚠</InlineText>
+              </Show>
+            </InlineText>
+          </Tooltip>
+        ),
+        "name",
+        (row) => row.week_start,
       ),
-    },
-    {
-      id: "calls",
-      header: headerHint("Vessel Calls", "Vessel calls overlapping this week"),
-      align: "center",
-      accessor: (row) => statCell(row.total_calls, "Vessel calls overlapping this week"),
-    },
-    {
-      id: "triage",
-      header: headerHint(
-        "Triage",
-        "Each visit's culling bin (one per visit, >1 hr continuous, priority order): flow · pressure · THC · NH3 · good to go · can't assess.",
+    ),
+    calls: withHint(
+      "Vessel calls overlapping this week — evaluated / total while checks are pending",
+      col<WeeklyRow>(
+        "calls",
+        "Vessel Calls",
+        (row) =>
+          isFullyEvaluated(row)
+            ? String(row.total_calls)
+            : `${row.evaluated_calls} / ${row.total_calls}`,
+        "int",
+        (row) => row.total_calls,
       ),
-      align: "center",
-      // Partial-eval rows are handled by `spanRow` below, so this only
-      // renders the fully-evaluated case.
-      accessor: (row) => (
-        <Tooltip content="flow · pressure · THC · NH3 · good to go · can't assess">
-          <InlineText color={row.actionable === 0 ? SECONDARY : ACCENT}>
-            {row.triage_summary}
-          </InlineText>
-        </Tooltip>
+    ),
+    triage: withHint(
+      "Each visit's culling bin (one per visit, >1 hr continuous, priority order): flow · pressure · THC · NH3 · good to go · can't assess.",
+      whenEvaluated(
+        col<WeeklyRow>(
+          "triage",
+          "Triage",
+          (row) =>
+            toneWrap(row.actionable === 0 ? "muted" : "accent", row.triage_summary),
+          "text",
+          (row) => row.triage_summary,
+        ),
       ),
-    },
-    {
-      id: "violations",
-      header: headerHint(
-        "Violations",
-        "Violation periods overlapping this week, counted per check",
+    ),
+    violations: withHint(
+      "Violation periods overlapping this week, counted per check",
+      whenEvaluated(intCol<WeeklyRow>("violation_count", { header: "Violations" })),
+    ),
+    vtime: withHint(
+      "Distinct time with ≥1 check violating, de-duped within each asset",
+      whenEvaluated(
+        durationCol<WeeklyRow>((row) => row.violated_minutes, "m", {
+          id: "vtime",
+          header: "Violation Time",
+        }),
       ),
-      align: "center",
-      accessor: (row) =>
-        statCell(row.violation_count, "Violation periods overlapping this week, counted per check"),
-    },
-    {
-      id: "vtime",
-      header: headerHint(
-        "Violation Time",
-        "Distinct time with ≥1 check violating, de-duped within each asset",
+    ),
+    pctatband: withHint(
+      "Process-check violated minutes ÷ at-band minutes",
+      whenEvaluated(
+        floatCol<WeeklyRow>("pct_at_band", {
+          id: "pctatband",
+          header: "% of At-Band Time",
+          precision: 0,
+          suffix: "%",
+        }),
       ),
-      align: "center",
-      accessor: (row) =>
-        statCell(formatMinutes(row.violated_minutes), "Distinct violating time, de-duped per asset"),
-    },
-    {
-      id: "pctatband",
-      header: headerHint(
-        "% of At-Band Time",
-        "Process-check violated minutes ÷ at-band minutes",
+    ),
+    opatband: withHint(
+      "Share of evaluated operational time with inlet flow inside the vessel-class band",
+      whenEvaluated(
+        col<WeeklyRow>(
+          "opatband",
+          "Op @ Band",
+          (row) =>
+            row.op_at_band == null ? (
+              ""
+            ) : (
+              <InlineText color={ACCENT}>
+                {row.op_at_band}%
+                <Show when={row.below_band_pct >= 1}>
+                  <TextSublabel> {row.below_band_pct.toFixed(0)}% below band</TextSublabel>
+                </Show>
+              </InlineText>
+            ),
+          // text geometry: the "N% below band" sublabel needs the room.
+          "text",
+          (row) => row.op_at_band,
+        ),
       ),
-      align: "center",
-      accessor: (row) =>
-        statCell(row.pct_at_band, "Process-check violated minutes ÷ at-band minutes"),
-    },
-    {
-      id: "opatband",
-      header: headerHint(
-        "Op @ Band",
-        "Share of evaluated operational time with inlet flow inside the vessel-class band",
-      ),
-      align: "center",
-      accessor: (row) => (
-        <Tooltip content="Evaluated minutes of this week's calls: at band · below band · idle · above band">
-          <InlineText color={ACCENT}>
-            {row.op_at_band}
-            <Show when={row.below_band_pct >= 1}>
-              <TextSublabel> {row.below_band_pct.toFixed(0)}% below band</TextSublabel>
-            </Show>
-          </InlineText>
-        </Tooltip>
-      ),
-    },
-  ];
-
-  /** Partial-eval weeks collapse the stat columns (from "triage" on) into one
-   * spanning cell holding the evaluation status + a Run-checks action. */
-  const spanRow = (row: WeeklyRow): TableRowSpan | null =>
-    isFullyEvaluated(row)
-      ? null
-      : {
-          fromColumnId: "triage",
-          content: (
-            <ClusterRow>
-              <MutedBody>
-                {row.evaluated_calls} of {row.total_calls} calls evaluated
-              </MutedBody>
-              <SmallOutlinedButton
-                disabled={running()}
-                onClick={() => setRunning(true)}
-              >
-                {running() ? "Running…" : "Run checks"}
-              </SmallOutlinedButton>
-            </ClusterRow>
-          ),
-        };
+    ),
+    run_checks: withWhen<WeeklyRow>(
+      (row) => !isFullyEvaluated(row),
+      actionCol<WeeklyRow>("run_checks", () => setRunning(true)),
+    ),
+  };
 
   return (
     <NarrowStack>
-      <BaseTable data={WEEKLY_ROWS} columns={columns} spanRow={spanRow} compact />
+      <FieldTable
+        data={WEEKLY_ROWS}
+        fields={[
+          "week",
+          "calls",
+          "triage",
+          "violations",
+          "vtime",
+          "pctatband",
+          "opatband",
+          "run_checks",
+        ]}
+        registry={registry}
+      />
+      <Show when={running()}>
+        <MutedBody>Checks running… (stub — jtf kicks off the evaluation job)</MutedBody>
+      </Show>
     </NarrowStack>
   );
 }
@@ -566,9 +562,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/qaqc-checks",
     name: "Weekly QA/QC checks",
-    status: "raw",
-    customs: ["span-row"],
-    note: "Blocked only by per-row colspan — partial weeks collapse stat columns into one spanning cell (BaseTable spanRow) with a Run-checks action. The tooltip headers and tooltipped link cells are now shipped (withHint/withHref) and no longer blockers.",
+    status: "sui",
+    note: "Migrated to FieldTable: the per-row colspan collapses to predicate-gated columns (ruled 2026-07-20) — partial weeks blank their stat cells (withWhen) and surface a Run-checks actionCol instead; evaluation progress moves into the calls column ('24 / 39'). Week col() custom keeps the (current)/⚠ decorations; violations intCol, violated time durationCol, %-at-band floatCol suffix '%', Op@Band col() custom; every header withHint.",
     component: QaqcChecksWeeklyReplica,
   },
   {

@@ -46,9 +46,7 @@ export const CUSTOM_DEMANDS: CustomDemand[] = [
     name: "Grouped headers",
     why: "Two-row spanned category headers — stays raw by design.",
   },
-  {
-    id: "span-row",
-    name: "Row collapse",
-    why: "Per-row colspan takeover for partial weeks (BaseTable spanRow) — stays raw by design.",
-  },
+  // span-row ("Row collapse") SUBTRACTED 2026-07-20: ruled that per-row
+  // colspan takeovers collapse to predicate-gated columns — withWhen blanks
+  // the stat cells and the row action rides an actions column.
 ];
