@@ -25,6 +25,8 @@ export { dateTimeCol } from "./date-time";
 export type { DateTimeColOpts } from "./date-time";
 export { intCol } from "./int";
 export type { IntColOpts } from "./int";
+export { linkedCountCol } from "./linked-count";
+export type { LinkedCountColOpts } from "./linked-count";
 export { floatCol } from "./float";
 export type { FloatColOpts } from "./float";
 export { aggregateCol } from "./aggregate";
