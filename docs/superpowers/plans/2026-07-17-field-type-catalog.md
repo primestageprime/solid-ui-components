@@ -196,9 +196,18 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
   spreadsheet badge on the fortnight list, `withHref(intCol())` bucket-count
   links + `withHint` tooltip headers across the 11-column QaqcAssetTriage.
 - **Emphasis numerics — RESOLVED by subtraction** (ruled 2026-07-20: no new
-  type). Weight/size nuances die in migration; color rides tone fns / avgCol's
-  accent. PowerLogCacheView + NoxWidgets stats migrate on floatCol/avgCol/tones;
-  the `styled-number` demand retires with the last of them.
+  weight/color type). Weight/size nuances die in migration; color rides tone
+  fns. NoxWidgets stats migrates on floatCol tones; PowerLogCacheView's aux
+  cells become plain floatCol. The `styled-number` demand retired with the last
+  of them.
+- **`aggregateCol(keys, combine, opts)` SHIPPED** (ruled 2026-07-20) — the
+  generic aggregate: the column DECLARES the sibling fields it folds and the
+  MATH is a configure-time `combine(values, row)` pure fn; `avgCol` is the mean
+  sugar over it. First consumers: power-log-ocr (true mean via avgCol),
+  PowerLogCacheView per-train kW (sum of positive readings ÷ trains). This
+  permanently retires the per-train-total-vs-mean trap — an aggregate with
+  different math is an `aggregateCol` with its own combine, never a "fixed"
+  avgCol.
 - **Series-palette counts — DEFERRED** (ruled 2026-07-20): no dedicated type.
   The fortnight count cells stay configure-time `col()` customs at int geometry
   that reference `var(--…-series-N)` directly (identity color, not meaning) with
