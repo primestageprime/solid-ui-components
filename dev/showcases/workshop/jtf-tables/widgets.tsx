@@ -4,14 +4,8 @@
 // with deterministic stub data. `status: "sui"` entries replicate the already-
 // migrated FieldTable form; `status: "raw"` entries replicate the hand-rolled
 // BaseTable form so the migration blockers are visible on the bench.
-import {
-  BaseTable,
-  DataTableContainer,
-  floatCol as helperFloatCol,
-  type TableColumn,
-} from "../../../../src/components/Table";
+import { DataTableContainer } from "../../../../src/components/Table";
 import * as fields from "../../../../src/components/Table/fields";
-import { CompliantBadge, ViolationBadge } from "../../../../src/components/Badge";
 import type { TableEntry } from "./shared";
 
 // ============================================================================
@@ -151,14 +145,18 @@ const NoxPeriodStatsTable = () => (
 );
 
 // ============================================================================
-// 3b. NoxWidgets — Capture Efficiency projection table (raw BaseTable)
+// 3b. NoxWidgets — Capture Efficiency projection table (MIGRATED: FieldTable)
 //     jtf-ui/src/components/NoxWidgets.tsx ~281. Baseline 42.7 ppm-equivalent,
-//     threshold 2.8 g/kWh.
+//     threshold 2.8 g/kWh. In jtf the row SET is conditional (90% always, 95%/
+//     99% only under certain compliance/flow states) — that filtering stays in
+//     the data layer; the compliance MEANING is carried by the statusCol badge
+//     plus a value tone on the projection (ruled 2026-07-20, tones like #3).
 // ============================================================================
 
 interface CeProjectionRow {
   ce: string;
   projected: number;
+  // Data-layer compliance flag; the badge + the projected value tone read it.
   compliant: boolean;
 }
 
@@ -168,24 +166,33 @@ const CE_PROJECTION_DATA: CeProjectionRow[] = [
   { ce: "99%", projected: 0.43, compliant: true },
 ];
 
-const CE_PROJECTION_COLUMNS: TableColumn<CeProjectionRow>[] = [
-  { id: "ce", header: "Capture Efficiency", accessor: "ce" },
-  helperFloatCol("projected", "Projected NOx (ppm)", 2),
-  {
-    id: "status",
+// The JSX Compliant/Violation badges become the standard status field, keyed on
+// the boolean compliance flag (String(true|false) → mapping).
+const CE_PROJECTION_STATUS: Record<string, fields.StatusColMapping> = {
+  true: { label: "COMPLIANT", tone: "success" },
+  false: { label: "VIOLATION", tone: "danger" },
+};
+
+const CE_PROJECTION_REGISTRY = {
+  // textCol has no header channel and humanize("ce") = "Ce"; the custom label
+  // rides a col() at text geometry (sorted by the label).
+  ce: fields.col<CeProjectionRow>("ce", "Capture Efficiency", (row) => row.ce, "text", (row) => row.ce),
+  projected: fields.floatCol<CeProjectionRow>("projected", {
+    precision: 2,
+    header: "Projected NOx (ppm)",
+    tone: (_v, row) => (row.compliant ? "success" : "danger"),
+  }),
+  status: fields.statusCol<CeProjectionRow>("compliant", CE_PROJECTION_STATUS, {
     header: "Status",
-    accessor: (r) =>
-      r.compliant ? (
-        <CompliantBadge>COMPLIANT</CompliantBadge>
-      ) : (
-        <ViolationBadge>VIOLATION</ViolationBadge>
-      ),
-    align: "center",
-  },
-];
+  }),
+};
 
 const CeProjectionTable = () => (
-  <BaseTable data={CE_PROJECTION_DATA} columns={CE_PROJECTION_COLUMNS} compact />
+  <fields.FieldTable
+    data={CE_PROJECTION_DATA}
+    fields={["ce", "projected", "status"]}
+    registry={CE_PROJECTION_REGISTRY}
+  />
 );
 
 // ============================================================================
@@ -399,9 +406,8 @@ export const ENTRIES: TableEntry[] = [
   {
     route: "/reports/nox-report (widgets)",
     name: "NoxWidgets — NOx Result at Capture Efficiency Levels",
-    status: "raw",
-    customs: ["row-tone"],
-    note: "JSX StatusBadge status column and conditional row set; needs a badge/status field column.",
+    status: "sui",
+    note: "Migrated to FieldTable: JSX StatusBadge column → statusCol keyed on the boolean compliance flag; projected NOx floatCol carries a compliant→success/danger value tone; the conditional row set stays a data-layer filter.",
     component: CeProjectionTable,
   },
   {
