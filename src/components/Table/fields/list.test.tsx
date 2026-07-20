@@ -39,7 +39,7 @@ describe("list field", () => {
       " +2 more",
     );
     // Tooltip trigger wraps the cell (full list revealed on hover).
-    expect(container.querySelector(".cell-longtext--tooltip")).toBeTruthy();
+    expect(container.querySelector(".sui-ellipsis-text__trigger")).toBeTruthy();
   });
 
   it("renders blank for an empty list (no empty markers)", () => {

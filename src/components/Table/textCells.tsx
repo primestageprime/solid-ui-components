@@ -1,6 +1,7 @@
 /* Table cell renderers — text cells (Id, String, LongText). */
 import { type Component, type JSX, Show, createSignal } from "solid-js";
 import { Tooltip } from "../Tooltip";
+import { EllipsisText } from "./EllipsisText";
 import { createTruncationObserver } from "../../hooks/createTruncationObserver";
 import type { CellRendererProps } from "./cellStyle";
 
@@ -15,7 +16,7 @@ export const IdCell: Component<
       when={props.value != null && props.value !== ""}
       fallback={<span class="cell-empty">—</span>}
     >
-      <span class="cell-id">{props.value}</span>
+      <EllipsisText class="cell-id" tooltip={String(props.value)} />
     </Show>
   );
 };
@@ -31,7 +32,7 @@ export const StringCell: Component<
       when={props.value != null && props.value !== ""}
       fallback={<span class="cell-empty">—</span>}
     >
-      <span class="cell-string">{props.value}</span>
+      <EllipsisText class="cell-string" tooltip={String(props.value)} />
     </Show>
   );
 };

@@ -329,6 +329,38 @@
   text-align: right;
 }
 
+/* Ellipsis-aware text (EllipsisText) — single-line clip with an iff tooltip.
+   The span hugs its content until it would exceed the cell, then caps at the
+   cell width and clips with an ellipsis. Taking the clip onto this element (vs.
+   the <td>'s own text-overflow) is what makes truncation measurable, so a
+   tooltip can appear exactly when the ellipsis does. */
+.sui-ellipsis-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* The tooltip trigger stays `display: inline` so it forms no width containing
+   block — the span's `max-width: 100%` keeps resolving against the <td>, so the
+   clip state doesn't change when the tooltip branch mounts. Neutralize the UA
+   button chrome so a clipped cell looks identical to its plain siblings. */
+.sui-ellipsis-text__trigger {
+  display: inline;
+  max-width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: help;
+}
+
 /* Long Text Cell */
 .cell-longtext {
   display: inline;

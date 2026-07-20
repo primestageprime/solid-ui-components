@@ -1,6 +1,6 @@
 import { render } from "@solidjs/testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LongTextCell } from "./textCells";
+import { IdCell, LongTextCell, StringCell } from "./textCells";
 
 // jsdom has no layout: scrollWidth/clientWidth are 0. To exercise the
 // clamp-mode "tooltip iff ellipsis" logic we (1) install a ResizeObserver that
@@ -79,6 +79,39 @@ describe("LongTextCell — clamp + tooltip reveal (ellipsis iff tooltip)", () =>
     ));
     expect(hasTooltip(container)).toBe(false);
     expect(container.querySelector(".cell-empty")).not.toBeNull();
+  });
+});
+
+describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
+  const hasTooltip = (container: HTMLElement) =>
+    container.querySelector(".sui-ellipsis-text__trigger") !== null;
+
+  it("StringCell tooltips a clipped value, not a fitting one", () => {
+    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
+    overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
+    const clipped = render(() => <StringCell value="a very long string value" />);
+    expect(hasTooltip(clipped.container)).toBe(true);
+
+    overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
+    const fits = render(() => <StringCell value="ok" />);
+    expect(hasTooltip(fits.container)).toBe(false);
+    expect(fits.container.querySelector(".cell-string")?.textContent).toBe("ok");
+  });
+
+  it("IdCell tooltips a clipped id and keeps the .cell-id pill", () => {
+    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
+    overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
+    const { container } = render(() => <IdCell value="veryLongIdentifier-0001" />);
+    expect(hasTooltip(container)).toBe(true);
+    expect(container.querySelector(".cell-id")?.textContent).toContain("veryLongIdentifier");
+  });
+
+  it("renders the empty fallback (never a tooltip) for null", () => {
+    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
+    overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
+    const { container } = render(() => <StringCell value={null} />);
+    expect(hasTooltip(container)).toBe(false);
+    expect(container.querySelector(".cell-empty")?.textContent).toBe("—");
   });
 });
 

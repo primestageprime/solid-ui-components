@@ -3,7 +3,7 @@
 // 2026-07-18): up to `max` items render inline, the remainder collapses to a
 // muted "+N more", and the full list lives in a hover tooltip. Empty renders
 // blank (no empty markers). Flowing-text geometry (shares the text field's).
-import { Tooltip } from "../../Tooltip";
+import { EllipsisText } from "../EllipsisText";
 import { join, map } from "../../../fn";
 import { geo as textGeo } from "./text";
 import { humanize, toneWrap, type FieldCol } from "./shared";
@@ -34,17 +34,14 @@ export const listCol = <T, I = string>(
     const max = opts.max ?? 3;
     const shown = join(", ", items.slice(0, max));
     const extra = items.length - max;
-    if (extra <= 0) return <span class="cell-string">{shown}</span>;
+    const full = join(", ", items);
+    // Tooltip iff the full list is hidden: either the inline text is clipped by
+    // the cell (measured by EllipsisText) or items collapsed into "+N more".
     return (
-      <Tooltip
-        content={join(", ", items)}
-        class="cell-longtext cell-longtext--tooltip"
-      >
-        <span class="cell-string">
-          {shown}
-          {toneWrap("muted", ` +${extra} more`)}
-        </span>
-      </Tooltip>
+      <EllipsisText class="cell-string" tooltip={full} alsoWhen={() => extra > 0}>
+        {shown}
+        {extra > 0 ? toneWrap("muted", ` +${extra} more`) : null}
+      </EllipsisText>
     );
   },
 });
