@@ -218,3 +218,17 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
   vars). No `rowTone` prop was minted.
 - **PowerLogPanel — REMOVED** from the JTF Table Catalog bench (retired at jtf
   HEAD; dead debt, nothing to migrate).
+- **`linkedCountCol(source, { href, header?, id?, tone? })` SHIPPED** (ruled
+  2026-07-20) — the linked drill-down count: built as `withHref` over
+  `intCol` (derive-don't-duplicate), adding exactly one behavior, the
+  positivity gate — value > 0 applies `href`, zero or null takes `withHref`'s
+  existing plain-cell path (never a dead link). Scoped exception to the
+  combinator-first ruling above: zero-has-no-destination is a count
+  *semantic* that would otherwise be re-derived at every call site, not a
+  decoration — a `withHrefWhen` combinator was considered and rejected (no
+  second caller demands the general mechanism; start-minimal). First
+  consumer: the bench's `bucketCol` (`triage.tsx`) collapses to
+  `withHint(hint, linkedCountCol(key, { href, header, tone? }))` and the
+  zero-check ternary disappears; jtf-ui's `QaqcAssetTriage.tsx` gets the same
+  collapse as a follow-up in that repo. Spec:
+  `docs/superpowers/specs/2026-07-20-linked-count-col-design.md`.
