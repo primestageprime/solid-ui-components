@@ -12,6 +12,7 @@ import {
   FieldTable,
   col,
   identityLinkCol,
+  identityLink20Col,
   textCol,
   dateTimeCol,
   durationCol,
@@ -218,7 +219,8 @@ const cachedCallMinutes = (row: CachedVesselCall): number | null =>
 // and whole-row onRowClick dies with the raw table. jtf keeps the bigger
 // hit target only until its call site migrates.
 const CACHED_REGISTRY = {
-  vessel_name: identityLinkCol<CachedVesselCall>("vessel_name", {
+  // Rightsized (ruled 2026-07-21): longest vessel name 16ch + glyph → 20 class.
+  vessel_name: identityLink20Col<CachedVesselCall>("vessel_name", {
     href: (row) => `/detail/${row.id}`,
     glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
   }),
@@ -338,7 +340,7 @@ const DURABILITY_ROWS: DurabilityRow[] = [
 // Vessel calls have a detail page (/detail/:id), so the name IS the link
 // (ruled 2026-07-18); the vessel-type glyph leads it, adopting the link ink.
 const DURABILITY_REGISTRY = {
-  vessel_name: identityLinkCol<DurabilityRow>("vessel_name", {
+  vessel_name: identityLink20Col<DurabilityRow>("vessel_name", {
     href: (row) => `/detail/${row.id}`,
     glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
   }),
@@ -587,7 +589,7 @@ const THOUSAND_HOUR_CALLS: ThousandHourVesselCall[] = [
 
 const THOUSAND_HOUR_REGISTRY = {
   // Vessel calls have a detail page (/detail/:id) → the name IS the link.
-  vessel_name: identityLinkCol<ThousandHourVesselCall>("vessel_name", {
+  vessel_name: identityLink20Col<ThousandHourVesselCall>("vessel_name", {
     href: (row) => `/detail/${row.vessel_call_id}`,
     glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
   }),
