@@ -2599,16 +2599,6 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 0 12px;
 }
 
-/* Catalog panes are an inspection surface (Peter ruling 2026-07-21): the
-   preview table takes the available horizontal space instead of capping at
-   the dashboard-tile budget; flexible columns absorb the slack. */
-.jtf-catalog-pane .sui-field-frame {
-  max-width: none;
-  width: 100%;
-}
-.jtf-catalog-pane .sui-field-frame .hud-table__table {
-  width: 100%;
-}
 
 /* Width Model bench — static demo chrome; the per-case widths are the
    experiment's dynamic geometry and stay inline in the bench. */
