@@ -20,6 +20,8 @@ export { identityLinkCol } from "./identity-link";
 export type { IdentityLinkColOpts } from "./identity-link";
 export { textCol } from "./text";
 export type { TextColOpts } from "./text";
+export { enumCol } from "./enum";
+export type { EnumColOpts } from "./enum";
 export { dateCol } from "./date";
 export { dateTimeCol } from "./date-time";
 export type { DateTimeColOpts } from "./date-time";

@@ -252,3 +252,22 @@ PowerLogPanel ×3 is retired at jtf HEAD (dead debt).
   `grouped-headers` subtracted from the bench `CUSTOM_DEMANDS`. This closes the
   raw-table worklist for headers; the only remaining stays-raw demand is
   `spanRow` (already resolved by subtraction to predicate-gated columns).
+- **`enumCol(key, values, { tone?, header? })` SHIPPED** (ruled 2026-07-20:
+  "there should be a smaller ENUM field for strings where the full set is 20
+  chars or less"). A small fixed-set string column
+  (`src/components/Table/fields/enum.tsx`): because the value SET is known at
+  configure time, geometry derives from it — content-fit FIXED at the longest
+  member (`min === max`), floored at the header label, chrome padPx 16 like
+  text. Left-aligned PLAIN text — it is a word, distinct from `intCol`
+  (right-aligned number) and `statusCol` (badge chip from a mapping). Null/empty
+  renders blank (no-empty-markers); a value NOT in the set renders as quiet
+  muted text (statusCol's unmapped spirit); `sortValue` is the raw string. The
+  ≤20ch rule is enforced at configure time: any member over 20 characters THROWS
+  and points the caller back to `textCol` — the factory refuses to be a
+  long-text column. First consumers (bench): the VesselCallNoxDetail /
+  VesselCallRogDetail PERIOD columns (Before/During/After, fixed 6ch instead of
+  textCol's flexing 8–40ch) and NoxWidgets' NoxControlPeriodStats period
+  (Before/During/After Control, fixed 14ch); each keeps its data-layer
+  `highlight`-flag tone fn. Fills the gap left by "no `placeholder`" and the
+  emphasis-by-subtraction rulings: an enum is not variable text, so it should
+  not wear textCol's flex range.
