@@ -31,7 +31,7 @@ const NOX_PERIOD_DATA: NoxPeriodRow[] = [
 // before-after amber baseline). No hex at the call site — the period label
 // recedes to default off the active period, the ppm value carries the amber.
 const NOX_PERIOD_REGISTRY = {
-  period: fields.textCol<NoxPeriodRow>("period", {
+  period: fields.enumCol<NoxPeriodRow>("period", ["Before", "During", "After"], {
     tone: (_v, row) => (row.highlight === "during" ? "success" : "default"),
   }),
   pct: fields.intCol<NoxPeriodRow>("pct", { suffix: "%", header: "Share" }),
@@ -73,7 +73,7 @@ const ROG_PERIOD_DATA: RogPeriodRow[] = [
 // data layer flags the active control period; the cell wears success (during) /
 // warning (before-after baseline). No hex at the call site.
 const ROG_PERIOD_REGISTRY = {
-  period: fields.textCol<RogPeriodRow>("period", {
+  period: fields.enumCol<RogPeriodRow>("period", ["Before", "During", "After"], {
     tone: (_v, row) => (row.highlight === "during" ? "success" : "default"),
   }),
   pct: fields.intCol<RogPeriodRow>("pct", { suffix: "%", header: "Share" }),
@@ -123,9 +123,11 @@ const PERIOD_STATS_DATA: PeriodStatsRow[] = [
 // the before/after baseline warning. Only avgNOx carried the During/Baseline
 // hex in the source — avgNO/avgNO2 stay plain. No hex at the call site.
 const PERIOD_STATS_REGISTRY = {
-  period: fields.textCol<PeriodStatsRow>("period", {
-    tone: (_v, row) => (row.highlight ? "success" : "default"),
-  }),
+  period: fields.enumCol<PeriodStatsRow>(
+    "period",
+    ["Before Control", "During Control", "After Control"],
+    { tone: (_v, row) => (row.highlight ? "success" : "default") },
+  ),
   count: fields.intCol<PeriodStatsRow>("count", { header: "Data Points" }),
   avgNOx: fields.floatCol<PeriodStatsRow>("avgNOx", {
     precision: 2,
@@ -390,21 +392,21 @@ export const ENTRIES: TableEntry[] = [
     route: "/reports/fortnight/[id] (NOx detail)",
     name: "VesselCallNoxDetail — Statistics by Control Period",
     status: "sui",
-    note: "Migrated to FieldTable: textCol/intCol/floatCol registry; during→success else warning tone fn fed by the row's highlight flag; pct → suffix '%'.",
+    note: "Migrated to FieldTable: enumCol period (Before/During/After — fixed 6ch instead of textCol's flexing 8–40ch)/intCol/floatCol registry; during→success else warning tone fn fed by the row's highlight flag; pct → suffix '%'.",
     component: NoxDetailPeriodTable,
   },
   {
     route: "/reports/fortnight/[id] (ROG detail)",
     name: "VesselCallRogDetail — Statistics by Control Period",
     status: "sui",
-    note: "Migrated to FieldTable (twin of NOx detail): textCol/intCol/floatCol registry; during→success else warning tone fn on the highlight flag; pct → suffix '%'.",
+    note: "Migrated to FieldTable (twin of NOx detail): enumCol period (Before/During/After, fixed 6ch)/intCol/floatCol registry; during→success else warning tone fn on the highlight flag; pct → suffix '%'.",
     component: RogDetailPeriodTable,
   },
   {
     route: "/reports/nox-report (widgets)",
     name: "NoxWidgets — NOx Statistics by Control Period",
     status: "sui",
-    note: "Migrated to FieldTable (precedent VesselCallNoxDetail): textCol/intCol/floatCol registry; During→success else warning tone fns fed by the data-layer highlight flag on period + avgNOx. getRowClass row highlight DROPPED and the colorblind hex memo dies — tones are theme vars.",
+    note: "Migrated to FieldTable (precedent VesselCallNoxDetail): enumCol period (Before/During/After Control — fixed 14ch)/intCol/floatCol registry; During→success else warning tone fns fed by the data-layer highlight flag on period + avgNOx. getRowClass row highlight DROPPED and the colorblind hex memo dies — tones are theme vars.",
     component: NoxPeriodStatsTable,
   },
   {
