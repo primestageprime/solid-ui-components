@@ -261,9 +261,9 @@ const MIN_MAX_ROWS: MinMaxRow[] = [
 ];
 
 const MIN_MAX_REGISTRY = {
-  // The identity is the ONLY flexible column — it takes the slack (ruled
-  // 2026-07-20: a known-set column must not flex like flowing text).
-  metric_id: fields.textCol<MinMaxRow>("metric_id"),
+  // Sized identity (ruled 2026-07-21): the metric-id population is short and
+  // known — longest "SCR.JM_NOXo" = 11ch → the 15 class, not the 8–40ch flex.
+  metric_id: fields.text15Col<MinMaxRow>("metric_id"),
   // MIN/MAX is a known set of strings → statusCol, fixed geometry, the tone
   // names the meaning (ruled 2026-07-20; replaces the flexing textCol+tone).
   type: fields.statusCol<MinMaxRow>("type", {
@@ -333,7 +333,8 @@ const METRIC_STATS_DATA: MetricRow[] = [
 // null and render BLANK (ruled 2026-07-18: no '-' placeholder). IntCell/
 // FloatCell own the grouping/precision the hand-formatters did.
 const METRIC_STATS_REGISTRY = {
-  metric_id: fields.textCol<MetricRow>("metric_id"),
+  // Same short known metric-id population as MinMaxTable → the 15 class.
+  metric_id: fields.text15Col<MetricRow>("metric_id"),
   count: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.total_cnt : row.count), { id: "count", header: "Total" }),
   nonzero: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.nonzero_cnt : null), { id: "nonzero", header: "Non-Zero" }),
   valid: fields.intCol<MetricRow>((row) => (isCachedMetric(row) ? row.valid_cnt : null), { id: "valid", header: "Valid" }),
