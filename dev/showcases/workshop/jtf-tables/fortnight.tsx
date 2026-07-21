@@ -190,7 +190,7 @@ const PowerLogOcrReplica: Component = () => (
     <TextSublabel>
       Page 1: Ever Steadfast 06/07/2026 — 928 kW avg from 6 hours
     </TextSublabel>
-    <FieldTable data={OCR_ROWS} fields={OCR_FIELDS} registry={{}} maxRows={5} />
+    <FieldTable data={OCR_ROWS} fields={OCR_FIELDS} registry={{}} />
   </TightStack>
 );
 

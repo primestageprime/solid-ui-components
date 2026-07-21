@@ -2735,3 +2735,19 @@ th:has(.tf-th-center) .hud-table__header-content {
   white-space: nowrap;
   text-align: left;
 }
+
+/* Catalog pane height context (ruled 2026-07-21): a fill-mode field table
+   takes ALL the vertical height available in its container — the pane is
+   that container, so it must be a definite-height flex column for the fill
+   chain (frame flex:1 → table height:100%) to resolve against. */
+.jtf-catalog-pane {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 240px);
+}
+/* The entry component's root (usually a caption Stack) must pass the height
+   down, or the frame's flex:1 resolves inside a content-sized wrapper. */
+.jtf-catalog-pane > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
