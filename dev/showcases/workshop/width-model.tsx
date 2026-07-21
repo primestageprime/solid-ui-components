@@ -14,6 +14,12 @@ import { SectionTitle, TextBody, TextSublabel, MutedBody } from "../../../src/co
 import { ContentStack, TightStack } from "../../../src/components/Layout";
 import { pipe, map, filter, sum } from "../../../src/fn";
 
+/** The standard gap: the cell chrome on EACH side of the content. A fixed
+ *  column's width DERIVES from its content — width = content + GAP × 2 — so
+ *  the padding is equal on both sides by construction (ruled 2026-07-21);
+ *  a fixed width is never an arbitrary number with slack pooling one side. */
+const GAP = 8;
+
 interface ColSpec {
   id: string;
   header: string;
@@ -21,11 +27,25 @@ interface ColSpec {
   min: number;
   max: number;
   sample: string;
+  /** Fixed columns: the measured content width the fixed width derives from. */
+  content?: number;
 }
 
+const fixedCol = (
+  id: string,
+  header: string,
+  content: number,
+  sample: string,
+): ColSpec => {
+  const width = content + GAP * 2;
+  return { id, header, min: width, max: width, sample, content };
+};
+
 const COLS: ColSpec[] = [
-  { id: "ts", header: "TIMESTAMP", min: 150, max: 150, sample: "2026-06-02 01:00" },
-  { id: "count", header: "COUNT", min: 100, max: 100, sample: "40,320" },
+  // "2026-06-02 01:00" = 16ch at the 12px mono basis ≈ 116px
+  fixedCol("ts", "TIMESTAMP", 116, "2026-06-02 01:00"),
+  // "40,320" = 6ch ≈ 44px
+  fixedCol("count", "COUNT", 44, "40,320"),
   { id: "name", header: "NAME (var)", min: 80, max: 240, sample: "Ever Steadfast" },
   { id: "notes", header: "NOTES (var)", min: 120, max: 360, sample: "inlet flow out of band" },
 ];
@@ -99,8 +119,10 @@ function MathPanel(props: { available: number; d: Distribution }): JSX.Element {
   const lines = (): string[] => {
     const base = [
       `available = ${props.available}px`,
-      `Σmin = 150 + 100 + 80 + 120 = ${minSum}px`,
-      `Σmax = 150 + 100 + 240 + 360 = ${maxSum}px`,
+      `TIMESTAMP (fixed) = content 116 + gap 8×2 = 132px — equal padding by construction`,
+      `COUNT (fixed) = content 44 + gap 8×2 = 60px`,
+      `Σmin = 132 + 60 + 80 + 120 = ${minSum}px`,
+      `Σmax = 132 + 60 + 240 + 360 = ${maxSum}px`,
     ];
     switch (d().regime) {
       case "above max":
@@ -117,13 +139,14 @@ function MathPanel(props: { available: number; d: Distribution }): JSX.Element {
           `Σrange (variable) = (240−80) + (360−120) = ${rangeSum}px`,
           `shrink NAME  = ${d().deficit} × 160/${rangeSum} = ${px(d().shrink.name ?? 0)} → NAME = ${px(d().widths.name)}`,
           `shrink NOTES = ${d().deficit} × 240/${rangeSum} = ${px(d().shrink.notes ?? 0)} → NOTES = ${px(d().widths.notes)}`,
-          `fixed columns unchanged (150, 100); table = ${px(d().tableW)}`,
+          `fixed columns unchanged (132, 60); table = ${px(d().tableW)}`,
         ];
       case "at min":
         return [
           ...base,
           `available = Σmin → every variable column exactly at min (80, 120); table = ${minSum}px`,
         ];
+      // (fixed columns never leave their derived width in any regime)
       case "below min (scroll)":
         return [
           ...base,
@@ -153,7 +176,10 @@ function Case(props: { title: string; available: number }): JSX.Element {
               <tr>
                 <For each={COLS}>
                   {(c) => (
-                    <th style={{ width: px(d().widths[c.id]) }}>
+                    <th
+                      classList={{ "width-model__th--fixed": !isVariable(c) }}
+                      style={{ width: px(d().widths[c.id]) }}
+                    >
                       <TextSublabel>{c.header}</TextSublabel>
                       <div class="width-model__w">{px(d().widths[c.id])}</div>
                     </th>
@@ -178,11 +204,11 @@ function Case(props: { title: string; available: number }): JSX.Element {
 }
 
 const CASES: { title: string; available: number }[] = [
-  { title: "1. Available (1000px) > Σmax (850px) — the table stops growing at max", available: 1000 },
-  { title: "2. Available (850px) = Σmax — every column at its max", available: 850 },
-  { title: "3. Between (650px) — variable columns shrink ∝ their range", available: 650 },
-  { title: "4. Available (450px) = Σmin — variable columns at min", available: 450 },
-  { title: "5. Available (350px) < Σmin — the table holds at min and scrolls", available: 350 },
+  { title: "1. Available (1000px) > Σmax (792px) — the table stops growing at max", available: 1000 },
+  { title: "2. Available (792px) = Σmax — every column at its max", available: 792 },
+  { title: "3. Between (592px) — variable columns shrink ∝ their range", available: 592 },
+  { title: "4. Available (392px) = Σmin — variable columns at min", available: 392 },
+  { title: "5. Available (300px) < Σmin — the table holds at min and scrolls", available: 300 },
 ];
 
 const WidthModelBench: Component = () => {
@@ -191,10 +217,11 @@ const WidthModelBench: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Width Model</SectionTitle>
       <TextBody>
-        Two fixed columns (150px, 100px) and two variable columns (NAME 80–240px,
-        NOTES 120–360px). Σmin = 450px, Σmax = 850px. Variable columns shrink in
-        proportion to their (max − min) range, so they all reach min together at
-        exactly Σmin.
+        Two fixed columns whose widths DERIVE from content — width = content +
+        standard gap (8px) each side, so fixed-column padding is always equal —
+        and two variable columns (NAME 80–240px, NOTES 120–360px). Σmin = 392px,
+        Σmax = 792px. Variable columns shrink in proportion to their (max − min)
+        range, so they all reach min together at exactly Σmin.
       </TextBody>
       <ContentStack>
         <For each={CASES}>{(c) => <Case title={c.title} available={c.available} />}</For>

@@ -2633,7 +2633,9 @@ th:has(.tf-th-center) .hud-table__header-content {
 }
 .width-model__table th,
 .width-model__table td {
-  border: 1px solid var(--sui-border);
+  /* Row separators only (SUI table chrome) — vertical borders would eat into
+     the content box and break the content + gap×2 arithmetic. */
+  border-bottom: 1px solid var(--sui-border);
   padding: 4px 8px;
   text-align: left;
   overflow: hidden;
@@ -2645,4 +2647,9 @@ th:has(.tf-th-center) .hud-table__header-content {
 }
 .width-model__slider {
   width: 400px;
+}
+/* Fixed columns center their header over the content-derived width (the SUI
+   fixed-width header rule), matching the equal-padding construction. */
+.width-model__th--fixed {
+  text-align: center;
 }
