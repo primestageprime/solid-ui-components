@@ -111,10 +111,20 @@ const JtfTablesBench: Component = () => {
   const isResolved = (slug: string) => resolved().has(slug);
   const toggleResolved = (slug: string) => {
     const next = new Set(resolved());
-    if (next.has(slug)) next.delete(slug);
-    else next.add(slug);
+    const marking = !next.has(slug);
+    if (marking) next.add(slug);
+    else next.delete(slug);
     writeResolved(next);
     setResolved(next);
+    // Marking the viewed table resolved moves focus to the top remaining
+    // entry (ruled 2026-07-21) — the rail is the checklist; keep working it.
+    if (marking && slug === SLUGS[active()]) {
+      const [top] = visibleIdx();
+      if (top !== undefined) {
+        select(top);
+        revealActive();
+      }
+    }
   };
   const clearResolved = () => {
     const none = new Set<string>();
