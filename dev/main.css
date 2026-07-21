@@ -2653,3 +2653,62 @@ th:has(.tf-th-center) .hud-table__header-content {
 .width-model__th--fixed {
   text-align: center;
 }
+
+/* Width Model — CSS-ONLY variant (ruled 2026-07-21 exploration).
+   The entire model in rules, no computed widths:
+   • fixed column:   flex: 0 0 calc(var(--content) + 16px)
+   • variable col:   flex-basis: max; flex-grow: 0 (never past max);
+                     flex-shrink: (max − min) / max  — flexbox shrinks items
+                     ∝ shrink×basis = (max − min), i.e. ∝ RANGE, so every
+                     variable column reaches min together at exactly Σmin;
+                     min-width clamps the floor.
+   • the "table":    width: fit-content ⇒ min(Σmax, available), floored at
+                     Σmin by the flex min-widths; the frame scrolls below. */
+.wm-css__frame {
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.wm-css__table {
+  /* Stretch to the available space, cap at the ONE table-level number pure
+     CSS cannot derive itself (no sibling summation): Σmax. Floor comes free
+     from min-content = Σ cell min-widths; the frame scrolls below it. */
+  width: 100%;
+  max-width: calc(var(--maxSumN) * 1px);
+  min-width: min-content;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+}
+.wm-css__row {
+  display: flex;
+}
+.wm-css__cell {
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--sui-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wm-css__cell--fixed {
+  flex: 0 0 calc(var(--content) + 16px);
+  min-width: calc(var(--content) + 16px);
+  text-align: center;
+}
+.wm-css__cell--var {
+  /* Unitless --minN/--maxN: length÷length division in calc() is still too
+     new to lean on; number arithmetic is universal. */
+  flex-basis: calc(var(--maxN) * 1px);
+  flex-grow: 0;
+  flex-shrink: calc((var(--maxN) - var(--minN)) / var(--maxN));
+  min-width: calc(var(--minN) * 1px);
+  /* nowrap text would otherwise drive the cell's min-content contribution
+     past min-width and inflate the table's floor; size containment zeroes
+     the intrinsic contribution so min-width IS the floor. */
+  contain: inline-size;
+}
+.wm-css__cell--var,
+.wm-css__cell--fixed .wm-css__value {
+  text-align: left;
+}

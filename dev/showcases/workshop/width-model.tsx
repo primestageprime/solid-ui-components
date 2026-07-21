@@ -211,6 +211,51 @@ const CASES: { title: string; available: number }[] = [
   { title: "5. Available (300px) < Σmin — the table holds at min and scrolls", available: 300 },
 ];
 
+/** CSS-ONLY variant: the same model expressed entirely in rules — no computed
+ *  widths. Each cell declares only its own bounds as custom props; flexbox
+ *  does the distribution (shrink ∝ shrink×basis = range). */
+function CssCase(props: { available: number }): JSX.Element {
+  const cellStyle = (c: ColSpec): Record<string, string> =>
+    isVariable(c)
+      ? { "--minN": String(c.min), "--maxN": String(c.max) }
+      : { "--content": `${c.content}px` };
+  const cellClass = (c: ColSpec): string =>
+    `wm-css__cell ${isVariable(c) ? "wm-css__cell--var" : "wm-css__cell--fixed"}`;
+  return (
+    <ContentStack>
+      <TextBody>{`CSS-only @ ${props.available}px — same rules, zero computed widths`}</TextBody>
+      <div class="width-model__frame" style={{ width: `${props.available}px` }}>
+        <div class="wm-css__frame">
+          <div class="wm-css__table" style={{ "--maxSumN": String(maxSum) }}>
+            <div class="wm-css__row">
+              <For each={COLS}>
+                {(c) => (
+                  <div class={cellClass(c)} style={cellStyle(c)}>
+                    <TextSublabel>{c.header}</TextSublabel>
+                  </div>
+                )}
+              </For>
+            </div>
+            <For each={[0, 1, 2]}>
+              {() => (
+                <div class="wm-css__row">
+                  <For each={COLS}>
+                    {(c) => (
+                      <div class={cellClass(c)} style={cellStyle(c)}>
+                        <span class="wm-css__value">{c.sample}</span>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              )}
+            </For>
+          </div>
+        </div>
+      </div>
+    </ContentStack>
+  );
+}
+
 const WidthModelBench: Component = () => {
   const [live, setLive] = createSignal(700);
   return (
@@ -238,6 +283,17 @@ const WidthModelBench: Component = () => {
           title={`Live (${live()}px available — ${distribute(live()).regime})`}
           available={live()}
         />
+        <SectionTitle>CSS-only — the same model as pure rules</SectionTitle>
+        <TextBody>
+          No computed widths: fixed cells are flex: 0 0 (content + 16px);
+          variable cells set flex-basis = max, flex-grow 0, min-width = min,
+          and flex-shrink = (max − min) / max — flexbox shrinks ∝ shrink ×
+          basis = the RANGE, which is exactly the model. The row block is
+          width: fit-content, so it caps at Σmax, floors at Σmin, and the
+          frame scrolls below.
+        </TextBody>
+        <For each={CASES}>{(c) => <CssCase available={c.available} />}</For>
+        <CssCase available={live()} />
       </ContentStack>
     </div>
   );
