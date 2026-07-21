@@ -17,6 +17,7 @@ import {
   ScrollXBox,
 } from "../../../src/components/Layout";
 import { CompliantBadge, WarningBadge } from "../../../src/components/Badge";
+import { SmallGhostButton } from "../../../src/components/Button";
 import { InteractiveCard } from "../../../src/components/Surface";
 import type { TableEntry } from "./jtf-tables/shared";
 import { ENTRIES as fortnightEntries } from "./jtf-tables/fortnight";
@@ -53,6 +54,23 @@ const SLUGS = (() => {
   });
 })();
 
+// Resolved worklist flags (2026-07-21): Peter marks a table resolved once
+// it's verified; the rail lists ONLY unresolved entries so the list is the
+// remaining checklist. Persisted per-browser in localStorage; "clear
+// resolved" restores the full list for a final regression sweep.
+const RESOLVED_KEY = "jtf-tables:resolved";
+const readResolved = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(RESOLVED_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+};
+const writeResolved = (slugs: Set<string>) => {
+  localStorage.setItem(RESOLVED_KEY, JSON.stringify([...slugs]));
+};
+
 const readSlugFromHash = (): string | null => {
   const [, queryStr = ""] = location.hash.replace(/^#\/?/, "").split("?");
   return new URLSearchParams(queryStr).get("t");
@@ -87,6 +105,26 @@ const JtfTablesBench: Component = () => {
   const entry = () => ALL[active()];
   const suiCount = ALL.filter((e) => e.status === "sui").length;
 
+  const [resolved, setResolved] = createSignal(readResolved(), {
+    equals: false,
+  });
+  const isResolved = (slug: string) => resolved().has(slug);
+  const toggleResolved = (slug: string) => {
+    const next = new Set(resolved());
+    if (next.has(slug)) next.delete(slug);
+    else next.add(slug);
+    writeResolved(next);
+    setResolved(next);
+  };
+  const clearResolved = () => {
+    const none = new Set<string>();
+    writeResolved(none);
+    setResolved(none);
+  };
+  // The rail is the REMAINING checklist: indices into ALL, resolved hidden.
+  const visibleIdx = () =>
+    ALL.map((_, i) => i).filter((i) => !isResolved(SLUGS[i]));
+
   const select = (i: number) => {
     setActive(i);
     writeSlugToHash(SLUGS[i]);
@@ -113,24 +151,33 @@ const JtfTablesBench: Component = () => {
   return (
     <div class="component-section component-section--full">
       <SectionTitle>JTF Table Catalog</SectionTitle>
-      <TextBody>
-        {`Every table in jtf-ui with realistic stub data — ${suiCount} of ${ALL.length} SUI-compliant.`}
-      </TextBody>
+      <ClusterRow>
+        <TextBody>
+          {`Every table in jtf-ui with realistic stub data — ${suiCount} of ${ALL.length} SUI-compliant${
+            resolved().size ? ` · ${resolved().size} resolved (hidden)` : ""
+          }.`}
+        </TextBody>
+        <Show when={resolved().size > 0}>
+          <SmallGhostButton onClick={clearResolved}>
+            Clear resolved
+          </SmallGhostButton>
+        </Show>
+      </ClusterRow>
       <PaneRow>
         <DelineatedSidebar class="jtf-catalog-rail">
-          <For each={ALL}>
-            {(e, i) => (
+          <For each={visibleIdx()}>
+            {(i) => (
               <InteractiveCard
-                id={`jtf-cat-${SLUGS[i()]}`}
-                active={i() === active()}
-                onClick={() => select(i())}
+                id={`jtf-cat-${SLUGS[i]}`}
+                active={i === active()}
+                onClick={() => select(i)}
               >
                 <SpreadRow>
                   <TightStack>
-                    <TextSublabel>{e.route}</TextSublabel>
-                    <TextBody>{e.name}</TextBody>
+                    <TextSublabel>{ALL[i].route}</TextSublabel>
+                    <TextBody>{ALL[i].name}</TextBody>
                   </TightStack>
-                  {e.status === "sui" ? (
+                  {ALL[i].status === "sui" ? (
                     <CompliantBadge label="SUI" />
                   ) : (
                     <WarningBadge label="raw" />
@@ -151,6 +198,13 @@ const JtfTablesBench: Component = () => {
                     <WarningBadge label="not migrated" />
                   )}
                   <TextSublabel>{`${e.route} — ${e.name}`}</TextSublabel>
+                  <SmallGhostButton
+                    onClick={() => toggleResolved(SLUGS[active()])}
+                  >
+                    {isResolved(SLUGS[active()])
+                      ? "✓ Resolved — unmark"
+                      : "Mark resolved"}
+                  </SmallGhostButton>
                 </ClusterRow>
                 <TextSublabel>{e.note}</TextSublabel>
                 <ScrollXBox class="jtf-catalog-pane">
