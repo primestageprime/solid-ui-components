@@ -185,7 +185,10 @@ const hourLevelRegistry = {
   fid_status: col<HourLevelRow>("fid_status", "Status", (r) => statusCell(r.fid_status), "status"),
   fid_samples: intCol<HourLevelRow>("fid_samples", { header: "Samples" }),
   aux_status: col<HourLevelRow>("aux_status", "Status", (r) => statusCell(r.aux_status), "status"),
-  aux_samples: col<HourLevelRow>("aux_samples", "Samples", auxSamplesCell, "int"),
+  // The "(NNN kW)" annotation pushes the composite to ~12ch — past int's 9ch
+  // cap, so it ellipsized even with table slack free (bug 2026-07-21). The
+  // money geometry is the wide right-aligned numeric (6–18ch content-fit).
+  aux_samples: col<HourLevelRow>("aux_samples", "Samples", auxSamplesCell, "money"),
 };
 
 const HourLevelTable: Component = () => (
