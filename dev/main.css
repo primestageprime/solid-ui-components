@@ -2614,3 +2614,35 @@ th:has(.tf-th-center) .hud-table__header-content {
 .jtf-catalog-pane .sui-field-frame .hud-table__table {
   width: 100%;
 }
+
+/* Width Model bench — static demo chrome; the per-case widths are the
+   experiment's dynamic geometry and stay inline in the bench. */
+.width-model__frame {
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  max-width: 100%;
+}
+.width-model__scroller {
+  overflow-x: auto;
+}
+.width-model__table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+}
+.width-model__table th,
+.width-model__table td {
+  border: 1px solid var(--sui-border);
+  padding: 4px 8px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.width-model__w {
+  color: var(--sui-accent);
+}
+.width-model__slider {
+  width: 400px;
+}
