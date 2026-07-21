@@ -14,6 +14,11 @@ import "./shared.css";
 export type FieldType =
   | "selection"
   | "name"
+  | "name10"
+  | "name15"
+  | "name20"
+  | "name25"
+  | "name30"
   | "text"
   | "text5"
   | "text10"

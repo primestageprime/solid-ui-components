@@ -8,7 +8,7 @@ import type { JSX } from "solid-js";
 import type { FieldCol, FieldGeo, FieldSpec, FieldType } from "./shared";
 import { centered, floorGeoAtLabel, isFieldGroup } from "./shared";
 import { geo as selectionGeo } from "./selection";
-import { geo as nameGeo } from "./name";
+import { geo as nameGeo, sizedNameGeo } from "./name";
 import { geo as textGeo, sizedTextGeo } from "./text";
 import { geo as dateGeo } from "./date";
 import { geo as dateTimeGeo } from "./date-time";
@@ -26,6 +26,11 @@ import { pipe, map, flatMap, sum } from "../../../fn";
 export const GEO: Record<Exclude<FieldType, "actions">, FieldGeo> = {
   selection: selectionGeo,
   name: nameGeo,
+  name10: sizedNameGeo(10),
+  name15: sizedNameGeo(15),
+  name20: sizedNameGeo(20),
+  name25: sizedNameGeo(25),
+  name30: sizedNameGeo(30),
   text: textGeo,
   text5: sizedTextGeo(5),
   text10: sizedTextGeo(10),
@@ -54,7 +59,7 @@ export const col = <T,>(
   const geo = floorGeoAtLabel(GEO[fieldType], header);
   // Sized text classes are flowing text at a fixed width — same alignment
   // rules as text, not the centered fixed-value treatment.
-  const flowing = fieldType === "name" || fieldType.startsWith("text");
+  const flowing = fieldType.startsWith("name") || fieldType.startsWith("text");
   // Alignment follows the REAL factory of the named geometry (bug 2026-07-21:
   // col() centered numeric customs while intCol/floatCol right-align, so a
   // dotted-header metric column read differently from its plain siblings).

@@ -65,6 +65,7 @@ export const nameCol = makeNameCol(geo);
  *  known, pick the nearest 5-ch class ≥ the longest legitimate value instead
  *  of the survey-driven 50ch default. Same cell; dirty overflow ellipsizes
  *  with the tooltip. */
+export const name10Col = makeNameCol(sizedNameGeo(10));
 export const name15Col = makeNameCol(sizedNameGeo(15));
 export const name20Col = makeNameCol(sizedNameGeo(20));
 export const name25Col = makeNameCol(sizedNameGeo(25));

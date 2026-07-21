@@ -13,6 +13,7 @@ import {
   col,
   identityLinkCol,
   identityLink20Col,
+  identityLink25Col,
   textCol,
   text10Col,
   dateTimeCol,
@@ -520,7 +521,8 @@ const countEmphasisCol = (
   );
 
 const FORTNIGHT_REGISTRY = {
-  period: identityLinkCol<FortnightRow>("period", {
+  // Rightsized (ruled 2026-07-21): "2026-05-18 — 2026-05-31" = 23ch → 25 class.
+  period: identityLink25Col<FortnightRow>("period", {
     href: (row) => `/reports/fortnight/${row.id}`,
     header: "Period",
   }),

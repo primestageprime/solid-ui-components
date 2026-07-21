@@ -61,6 +61,7 @@ export const identityLinkCol = makeIdentityLinkCol(nameGeo);
 /** Curried sized identity links (ruled 2026-07-21): the identity column is
  *  usually the link, so the name size classes exist here too — pick the
  *  nearest 5-ch class ≥ the longest legitimate name. */
+export const identityLink10Col = makeIdentityLinkCol(sizedNameGeo(10));
 export const identityLink15Col = makeIdentityLinkCol(sizedNameGeo(15));
 export const identityLink20Col = makeIdentityLinkCol(sizedNameGeo(20));
 export const identityLink25Col = makeIdentityLinkCol(sizedNameGeo(25));

@@ -20,6 +20,8 @@ import {
   floatCol,
   statusCol,
   identityLinkCol,
+  identityLink10Col,
+  identityLink20Col,
   linkedCountCol,
   textCol,
   text10Col,
@@ -123,7 +125,7 @@ const TRIAGE_DISPLAY: TriageAsset[] = [...TRIAGE_ASSETS].sort(
 const TRIAGE_REGISTRY = {
   asset: withHint(
     "Asset identifier",
-    identityLinkCol<TriageAsset>("asset_id", {
+    identityLink10Col<TriageAsset>("asset_id", {
       href: (a) => detailHref(a, firstNonZeroBucket(a)),
       header: "Asset",
     }),
@@ -238,7 +240,7 @@ function QaqcChecksWeeklyReplica(): JSX.Element {
             </InlineText>
           </Tooltip>
         ),
-        "name",
+        "name30", // "Week of 2026-06-15 (current) ⚠" ≈ 28ch worst case
         (row) => row.week_start,
       ),
     ),
@@ -441,7 +443,7 @@ function NoxReportBagReplica(): JSX.Element {
   // 2026-07-18, same as Durability); the type glyph leads it. Nullable end →
   // BLANK — the old "In Progress" placeholder dies (no empty markers ruling).
   const registry = {
-    vessel_name: identityLinkCol<VesselCall>("vessel_name", {
+    vessel_name: identityLink20Col<VesselCall>("vessel_name", {
       href: (row) => `/detail/${row.id}`,
       glyph: (row) => <>{TYPE_GLYPH[row.vessel_type.toUpperCase()] ?? "▢"}&nbsp;</>,
     }),
