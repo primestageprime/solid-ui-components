@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 0.108.1
+
+### Fixed
+
+- **Field-table headers never overlap their neighbors** (ruled 2026-07-21), three mechanisms:
+  - **Label floor** — a column is never narrower than its own header label (`floorGeoAtLabel`; a "Postal Code" header over 5-digit data widens the column instead of painting over the next header). Every labeled factory floors its geometry.
+  - **Sort-glyph budget** — sortable mode widens every sortValue-carrying column by the 2ch indicator allowance (`resolveFields(…, { sortable })`), so the ▲/⇅ glyph never rides past the label.
+  - **Flexible width basis** — flexible (no-css) columns now emit their floored `minCh` (+ cell chrome) as a width; `table-layout: fixed` splits leftover space equally among width-less columns and ignores `minCh`, which made the floor invisible and ate the standard inter-column gap.
+- **Dev catalog panes stretch tables to the available width** — inspection surface, not dashboard tiles; the library's Σmax "tile" cap is unchanged for consumers.
+
 ## 0.108.0
 
 ### Added
