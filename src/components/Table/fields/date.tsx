@@ -4,18 +4,22 @@
 // values (ruled 2026-07-17), so header is centered() and align is "center".
 // See docs/superpowers/plans/2026-07-16-semantic-props-metric.md §3a-geometry.
 import type { FieldCol, FieldGeo } from "./shared";
-import { centered, humanize } from "./shared";
+import { centered, floorGeoAtLabel, humanize } from "./shared";
 import { DateCell } from "../dateCells";
 
 export const geo: FieldGeo = { minCh: 10, maxCh: 10, padPx: 18, css: "calc(10ch + 18px)" };
 
-export const dateCol = <T,>(key: keyof T): FieldCol<T> => ({
-  id: String(key),
-  header: centered(humanize(String(key))),
-  align: "center",
-  width: geo.css,
-  // ISO date strings order lexically — the raw value is the sort key.
-  sortValue: (row) => row[key] as string,
-  geo,
-  accessor: (row) => <DateCell value={row[key] as string} />,
-});
+export const dateCol = <T,>(key: keyof T): FieldCol<T> => {
+  const label = humanize(String(key));
+  const colGeo = floorGeoAtLabel(geo, label);
+  return {
+    id: String(key),
+    header: centered(label),
+    align: "center",
+    width: colGeo.css,
+    // ISO date strings order lexically — the raw value is the sort key.
+    sortValue: (row) => row[key] as string,
+    geo: colGeo,
+    accessor: (row) => <DateCell value={row[key] as string} />,
+  };
+};

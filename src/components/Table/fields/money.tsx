@@ -8,17 +8,21 @@
 // Header centered per the fixed-width rule; values keep their right alignment.
 // See docs/superpowers/plans/2026-07-16-semantic-props-metric.md §3a-geometry.
 import type { FieldCol, FieldGeo } from "./shared";
-import { centered, humanize } from "./shared";
+import { centered, floorGeoAtLabel, humanize } from "./shared";
 import { MoneyCell } from "../numericCells";
 
 export const geo: FieldGeo = { minCh: 6, maxCh: 18, padPx: 18, css: "calc(18ch + 18px)" };
 
-export const moneyCol = <T,>(key: keyof T): FieldCol<T> => ({
-  id: String(key),
-  header: centered(humanize(String(key))),
-  align: "right",
-  width: geo.css,
-  sortValue: (row) => row[key] as number,
-  geo,
-  accessor: (row) => <MoneyCell value={(row[key] as number) / 100} />,
-});
+export const moneyCol = <T,>(key: keyof T): FieldCol<T> => {
+  const label = humanize(String(key));
+  const colGeo = floorGeoAtLabel(geo, label);
+  return {
+    id: String(key),
+    header: centered(label),
+    align: "right",
+    width: colGeo.css,
+    sortValue: (row) => row[key] as number,
+    geo: colGeo,
+    accessor: (row) => <MoneyCell value={(row[key] as number) / 100} />,
+  };
+};

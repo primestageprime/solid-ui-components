@@ -6,7 +6,7 @@
 // ============================================
 import type { JSX } from "solid-js";
 import type { FieldCol, FieldGeo, FieldSpec, FieldType } from "./shared";
-import { centered, isFieldGroup } from "./shared";
+import { centered, floorGeoAtLabel, isFieldGroup } from "./shared";
 import { geo as selectionGeo } from "./selection";
 import { geo as nameGeo } from "./name";
 import { geo as textGeo } from "./text";
@@ -47,7 +47,7 @@ export const col = <T,>(
   fieldType: Exclude<FieldType, "actions"> = "status",
   sortValue?: (row: T) => string | number | null | undefined,
 ): FieldCol<T> => {
-  const geo = GEO[fieldType];
+  const geo = floorGeoAtLabel(GEO[fieldType], header);
   const flowing = fieldType === "name" || fieldType === "text";
   // status reads as a trailing indicator: values right-align (ruled 2026-07-17)
   const align = flowing ? undefined : fieldType === "status" ? "right" : "center";
@@ -66,9 +66,21 @@ export const col = <T,>(
  *  references. Returns the columns plus the table's width budget: render inside
  *  a frame with `min-width: Σ min` / `max-width: Σ max` so the table caps at
  *  Σ max and reads as a dashboard tile, not wallpaper. */
+// One sort glyph (▲/⇅ at 10px) plus the header gap, at the frame's mono
+// basis. Sortable mode appends it after every sortable label, so the label
+// floor must budget for it or the glyph overflows into the next header.
+const SORT_INDICATOR_CH = 2;
+
+export interface ResolveFieldsOpts {
+  /** Table-level sortable mode: widen every sortValue-carrying column by the
+   *  sort-indicator allowance (ruled 2026-07-21). */
+  sortable?: boolean;
+}
+
 export function resolveFields<T>(
   specs: FieldSpec<T>[],
   registry: Record<string, FieldCol<T>>,
+  opts: ResolveFieldsOpts = {},
 ): {
   columns: FieldCol<T>[];
   minCh: number;
@@ -96,7 +108,35 @@ export function resolveFields<T>(
     if (isFieldGroup(spec)) return map(stampGroup(spec.group), spec.fields);
     return [spec];
   };
-  const columns = flatMap(expandSpec, specs);
+  // Sortable mode budgets the indicator glyph into every sortable column
+  // (ruled 2026-07-21) — without it the glyph rides past the label into the
+  // neighboring header.
+  const widenForSort = (c: FieldCol<T>): FieldCol<T> => {
+    if (!opts.sortable || c.sortValue == null) return c;
+    const maxCh = c.geo.maxCh + SORT_INDICATOR_CH;
+    const geo = {
+      ...c.geo,
+      minCh: c.geo.minCh + SORT_INDICATOR_CH,
+      maxCh,
+      css: c.geo.css ? `calc(${maxCh}ch + ${c.geo.padPx ?? 0}px)` : c.geo.css,
+    };
+    return { ...c, geo, width: geo.css ?? c.width };
+  };
+  // A flexible column (no fixed css) must EMIT its floored minCh as a width:
+  // table-layout: fixed splits leftover space equally among width-less
+  // columns and ignores minCh entirely, so the label floor (ruled 2026-07-21)
+  // is only real when the min becomes the proportional basis.
+  // Same convention as the fixed geos' css: the width INCLUDES the cell
+  // chrome (border-box), so the content box keeps the full minCh.
+  const flexBasis = (c: FieldCol<T>): FieldCol<T> =>
+    c.geo.css || c.width != null
+      ? c
+      : { ...c, width: `calc(${c.geo.minCh}ch + ${c.geo.padPx ?? 0}px)` };
+  const columns = pipe(
+    flatMap(expandSpec, specs),
+    map(widenForSort),
+    map(flexBasis),
+  );
   const minCh = pipe(columns, map((c) => c.geo.minCh), sum);
   const maxCh = pipe(columns, map((c) => c.geo.maxCh), sum);
   const padPx = pipe(columns, map((c) => c.geo.padPx ?? 0), sum);

@@ -29,6 +29,15 @@ describe("text field — geometry", () => {
 });
 
 describe("textCol — factory shape", () => {
+  it("minCh floors at a long humanized label (ruled 2026-07-21)", () => {
+    const col = textCol<{ operational_band_share: string }>(
+      "operational_band_share", // "Operational Band Share" = 22ch > 8ch min
+    );
+    expect(col.geo?.minCh).toBe(22);
+    expect(col.geo?.maxCh).toBe(40); // flexible cap unchanged
+    expect(col.geo?.css).toBeUndefined();
+  });
+
   it("humanizes the key into a LEFT-aligned plain-string header", () => {
     const col = textCol<Row>("displayName");
     expect(col.id).toBe("displayName");

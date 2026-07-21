@@ -4,7 +4,7 @@
 // the fixed-width rule. The input `unit` (ms/s/m/h) is a semantic knob, not CSS.
 // See docs/superpowers/plans/2026-07-16-semantic-props-metric.md §3a-geometry.
 import type { FieldCol, FieldGeo, ValueSource } from "./shared";
-import { centered, humanize, idOf, readerOf } from "./shared";
+import { centered, floorGeoAtLabel, humanize, idOf, readerOf } from "./shared";
 import { DurationCell } from "../numericCells";
 
 export const geo: FieldGeo = { minCh: 5, maxCh: 9, padPx: 36, css: "calc(9ch + 36px)" };
@@ -24,13 +24,15 @@ export const durationCol = <T,>(
 ): FieldCol<T> => {
   const read = readerOf(source);
   const id = idOf(source, opts.id);
+  const label = opts.header ?? humanize(id);
+  const colGeo = floorGeoAtLabel(geo, label);
   return {
     id,
-    header: centered(opts.header ?? humanize(id)),
+    header: centered(label),
     align: "right",
-    width: geo.css,
+    width: colGeo.css,
     sortValue: read,
-    geo,
+    geo: colGeo,
     accessor: (row) => {
       const value = read(row);
       // Blank, never a placeholder (ruled 2026-07-18: empty value → empty cell).

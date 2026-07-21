@@ -11,7 +11,7 @@
 import { FloatCell } from "../numericCells";
 import { geo as floatGeo } from "./float";
 import { pipe, map, filter } from "../../../fn";
-import { centered, humanize, toneWrap, type FieldCol, type ToneFn } from "./shared";
+import { centered, floorGeoAtLabel, humanize, toneWrap, type FieldCol, type ToneFn } from "./shared";
 
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === "number" && !Number.isNaN(v);
@@ -43,12 +43,14 @@ export const aggregateCol = <T,>(
     );
   const value = (row: T): number | null => combine(members(row), row);
   const id = opts.id ?? "aggregate";
+  const label = opts.header ?? humanize(id);
+  const colGeo = floorGeoAtLabel(floatGeo, label);
   return {
     id,
-    header: centered(opts.header ?? humanize(id)),
+    header: centered(label),
     align: "right",
-    width: floatGeo.css,
-    geo: floatGeo,
+    width: colGeo.css,
+    geo: colGeo,
     sortValue: value,
     accessor: (row) => {
       const v = value(row);

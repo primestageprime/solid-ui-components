@@ -14,6 +14,7 @@ import { FloatCell } from "../numericCells";
 import {
   centered,
   humanize,
+  floorGeoAtLabel,
   idOf,
   readerOf,
   toneWrap,
@@ -47,10 +48,14 @@ export const floatCol = <T,>(
 ): FieldCol<T> => {
   const read = readerOf(source);
   const id = idOf(source, opts.id);
-  const colGeo = widen(geo, opts.suffix ? opts.suffix.length + 1 : 0);
+  const label = opts.header ?? humanize(id);
+  const colGeo = floorGeoAtLabel(
+    widen(geo, opts.suffix ? opts.suffix.length + 1 : 0),
+    label,
+  );
   return {
     id,
-    header: centered(opts.header ?? humanize(id)),
+    header: centered(label),
     align: "right",
     width: colGeo.css,
     sortValue: read,

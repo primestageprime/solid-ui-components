@@ -24,7 +24,8 @@ const renderCell = (row: Row, opts?: Parameters<typeof avgCol<Row>>[1]) =>
 describe("avg field", () => {
   it("uses float geometry and the configured header/id", () => {
     const col = avgCol<Row>(["aux_1"], { id: "kw", header: "kW/train" });
-    expect(col.geo).toBe(floatGeo);
+    // "kW/train" (8ch) floors minCh above the 6ch data minimum (ruled 2026-07-21).
+    expect(col.geo).toEqual({ ...floatGeo, minCh: 8 });
     expect(col.id).toBe("kw");
     expect(col.align).toBe("right");
   });

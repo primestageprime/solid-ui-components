@@ -10,7 +10,7 @@
 import type { Component } from "solid-js";
 import type { Tone } from "../../../types";
 import type { FieldCol, FieldGeo } from "./shared";
-import { centered, humanize, toneWrap } from "./shared";
+import { centered, floorGeoAtLabel, humanize, toneWrap } from "./shared";
 import {
   createStatusBadge,
   type StatusBadgeVariant,
@@ -55,12 +55,15 @@ export const statusCol = <T,>(
   key: keyof T,
   map: Record<string, StatusColMapping>,
   opts: StatusColOpts = {},
-): FieldCol<T> => ({
+): FieldCol<T> => {
+  const label = opts.header ?? humanize(String(key));
+  const colGeo = floorGeoAtLabel(geo, label);
+  return {
   id: String(key),
-  header: centered(opts.header ?? humanize(String(key))),
+  header: centered(label),
   align: "right",
-  width: geo.css,
-  geo,
+  width: colGeo.css,
+  geo: colGeo,
   // Sorts by display label so equal badges group together; unmapped values
   // fall back to their raw text, blanks sort last.
   sortValue: (row) => {
@@ -76,4 +79,5 @@ export const statusCol = <T,>(
     const Badge = BADGES[TONE_VARIANT[mapping.tone]];
     return <Badge label={mapping.label} />;
   },
-});
+  };
+};

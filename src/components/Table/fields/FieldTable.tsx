@@ -42,7 +42,9 @@ const rowCapEm = (rows: number): string => `calc(3.5em + ${rows} * 3.1em)`;
 export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
   // Static config by design: fields/registry are setup-time values (the
   // reactive surface is the row data and the cells' own signals).
-  const resolved = resolveFields(props.fields, props.registry);
+  const resolved = resolveFields(props.fields, props.registry, {
+    sortable: props.sortable,
+  });
   // Sortability is a table-level mode: flip on every column that carries a
   // comparable value. Columns without a sortValue have no valid sort.
   const columns = props.sortable

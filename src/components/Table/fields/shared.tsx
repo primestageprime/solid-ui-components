@@ -114,6 +114,24 @@ export const idOf = <T, V>(source: ValueSource<T, V>, id?: string): string => {
 
 /** Widen a geometry by `extraCh` content columns (an in-cell unit suffix
  *  claims its glyphs — the field type still owns ALL geometry). */
+/** Header floor (ruled 2026-07-21): a column is never narrower than its own
+ *  label — the label is content too. Data-driven geometry keeps sizing the
+ *  cap for wide DATA; this floors the whole geo at the LABEL's ch length so
+ *  a short-data column ("90802") under a long header ("Postal Code") widens
+ *  instead of letting the header paint over its neighbor. Fixed geos widen
+ *  their css; flexible geos only raise minCh. */
+export const floorGeoAtLabel = (geo: FieldGeo, label: string): FieldGeo => {
+  const labelCh = label.length;
+  if (labelCh <= geo.minCh && labelCh <= geo.maxCh) return geo;
+  const maxCh = Math.max(geo.maxCh, labelCh);
+  return {
+    ...geo,
+    minCh: Math.max(geo.minCh, labelCh),
+    maxCh,
+    css: geo.css ? `calc(${maxCh}ch + ${geo.padPx ?? 0}px)` : geo.css,
+  };
+};
+
 export const widen = (geo: FieldGeo, extraCh: number): FieldGeo =>
   extraCh === 0
     ? geo
