@@ -64,9 +64,14 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
     ? resolved.columns.map((c) => ({ ...c, sortable: c.sortValue != null }))
     : resolved.columns;
   const columns = [...realColumns, spacerCol];
+  // `fill` is implicit: no maxRows cap ⇒ the composed BaseTable runs in fill
+  // mode (ClipFillColumnFlush + inner ScrollFillColumn, height:100%), which
+  // only resolves against a definite-height flex ancestor. The frame must BE
+  // that flex context in fill mode — see `.sui-field-frame--fill` in shared.css.
+  const fill = !props.maxRows;
   return (
     <div
-      class="sui-field-frame"
+      class={`sui-field-frame${fill ? " sui-field-frame--fill" : ""}`}
       style={{
         "--sui-field-table-min": resolved.minW,
         "--sui-field-table-max": resolved.maxW,
@@ -76,7 +81,7 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
         data={props.data as object[]}
         columns={columns as unknown as TableColumn<object>[]}
         fixedLayout
-        fill={!props.maxRows}
+        fill={fill}
         maxHeight={props.maxRows ? rowCapEm(props.maxRows) : undefined}
         emptyMessage={props.emptyMessage}
       />

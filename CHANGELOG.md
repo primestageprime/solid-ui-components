@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **`FieldTable`/`SortableFieldTable` fill mode now actually scrolls internally** (ruled 2026-07-21) — without a `maxRows` cap the composed `BaseTable` runs in `fill` (`ClipFillColumnFlush` + inner `ScrollFillColumn`, `height:100%`), but the `.sui-field-frame` wrapper was width-budget-only (no `display:flex`, no height), so the fill table's `height:100%` resolved against an auto-height parent → content height. Result: fill tables never scrolled internally and collapsed a flex sibling to nothing (repro: NOx Report route, bottom bag table showed only its header). Fix: in fill mode the frame gets a `.sui-field-frame--fill` modifier — `display:flex; flex-direction:column; flex:1; min-height:0` — so it becomes the definite-height flex context the composed table needs. The inner `ScrollFillColumn` (already `overflow:auto` on both axes) stays the single scroll owner: the frame drops its base `overflow-x:auto` (→ `overflow:hidden`, so `overflow-y` isn't forced to `auto` and can't compete) and its `min-width` floor (→ `min-width:0`, so the frame stays within its parent and the inner region scrolls the table's own `min-width` budget). **BEHAVIOR CHANGE — fill-mode `FieldTable` now requires/expects a definite-height flex parent and fills it; dside/thorcasting re-eyeball item on the next SUI bump.** Non-fill (`maxRows`-capped) tables get no modifier class and are byte-identical.
+
 ## 0.108.2
 
 ### Fixed
