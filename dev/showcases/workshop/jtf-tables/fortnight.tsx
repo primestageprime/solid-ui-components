@@ -32,16 +32,9 @@ interface MetricRow {
   timestamp: string;
 }
 
-/** jtf's metricCol: canonical dotted header, geometry from the float type. */
-const metricCol = (key: string, header: string, precision: number): FieldCol<MetricRow> =>
-  fields.col<MetricRow>(
-    key,
-    header,
-    (row) => <FloatCell value={row[key] as number | null} precision={precision} />,
-    "float",
-  );
-
-/** Column spec: `header` present → metricCol (dotted name); absent → floatCol. */
+/** Column spec: optional dotted canonical `header` (the humanizer can't
+ *  derive it); every metric is a REAL floatCol either way (ruled 2026-07-21:
+ *  all metrics are numeric fields — no col() escape hatch for a header). */
 interface MetricColSpec {
   key: string;
   header?: string;
@@ -68,10 +61,10 @@ function makeMinuteTable(cols: MetricColSpec[]): Component {
     timestamp: fields.dateTimeCol<MetricRow>("timestamp"),
   };
   for (const c of cols) {
-    registry[c.key] =
-      c.header !== undefined
-        ? metricCol(c.key, c.header, c.precision)
-        : fields.floatCol<MetricRow>(c.key, { precision: c.precision });
+    registry[c.key] = fields.floatCol<MetricRow>(c.key, {
+      precision: c.precision,
+      header: c.header,
+    });
   }
   const data: MetricRow[] = MINUTE_TIMESTAMPS.map((timestamp, i) => {
     const row: MetricRow = { timestamp };

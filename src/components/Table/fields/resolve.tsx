@@ -49,8 +49,20 @@ export const col = <T,>(
 ): FieldCol<T> => {
   const geo = floorGeoAtLabel(GEO[fieldType], header);
   const flowing = fieldType === "name" || fieldType === "text";
-  // status reads as a trailing indicator: values right-align (ruled 2026-07-17)
-  const align = flowing ? undefined : fieldType === "status" ? "right" : "center";
+  // Alignment follows the REAL factory of the named geometry (bug 2026-07-21:
+  // col() centered numeric customs while intCol/floatCol right-align, so a
+  // dotted-header metric column read differently from its plain siblings).
+  // Numerics + status right-align; date/dateTime/selection/chart center.
+  const numeric =
+    fieldType === "int" ||
+    fieldType === "float" ||
+    fieldType === "money" ||
+    fieldType === "duration";
+  const align = flowing
+    ? undefined
+    : numeric || fieldType === "status"
+      ? "right"
+      : "center";
   return {
     id,
     header: flowing ? header : centered(header),

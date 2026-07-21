@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveFields } from "./resolve";
+import { col, resolveFields } from "./resolve";
 import { textCol } from "./text";
 import { intCol } from "./int";
 
@@ -24,6 +24,14 @@ describe("resolveFields — flexible width basis (ruled 2026-07-21)", () => {
     const registry = { n: intCol<Row>("n") };
     const { columns } = resolveFields<Row>(["n"], registry);
     expect(columns[0].width).toBe("calc(9ch + 18px)");
+  });
+
+  it("col() aligns like the real factory of its geometry — numerics right, dates center", () => {
+    expect(col<Row>("m", "SCR.JM_Ti", () => "1.0", "float").align).toBe("right");
+    expect(col<Row>("n", "Count", () => "2", "int").align).toBe("right");
+    expect(col<Row>("t", "Time", () => "01:00", "dateTime").align).toBe("center");
+    expect(col<Row>("s", "State", () => "OK", "status").align).toBe("right");
+    expect(col<Row>("x", "Notes", () => "words", "text").align).toBeUndefined();
   });
 
   it("sortable mode budgets the sort-indicator glyph into every sortable column", () => {
