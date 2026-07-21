@@ -2586,11 +2586,6 @@ th:has(.tf-th-center) .hud-table__header-content {
 }
 /* Right rail: the not-yet-curried field-type demands. Same internal scroll;
    fixed width so the table pane keeps the slack. */
-.jtf-catalog-demand-rail {
-  flex: 0 0 300px;
-  max-height: calc(100vh - 240px);
-  overflow-y: auto;
-}
 
 /* PopoverMenu showcase — the short overflow:hidden ancestor that would clip
    a non-portalled panel (static demo chrome; no dynamic geometry). */
