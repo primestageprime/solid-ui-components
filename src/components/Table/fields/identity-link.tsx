@@ -7,8 +7,8 @@
 // intercept same-origin anchor clicks, so no router import is needed here.
 import type { JSX } from "solid-js";
 import { LongTextCell } from "../textCells";
-import { geo as nameGeo } from "./name";
-import { humanize, type FieldCol } from "./shared";
+import { geo as nameGeo, sizedNameGeo } from "./name";
+import { floorGeoAtLabel, humanize, type FieldCol, type FieldGeo } from "./shared";
 
 export interface IdentityLinkColOpts<T> {
   /** Configure-time routing: the entity's detail-page href for this row. */
@@ -22,18 +22,18 @@ export interface IdentityLinkColOpts<T> {
   muted?: (row: T) => boolean;
 }
 
-/** The primary identity column for an entity with a detail page: the name is
- *  the link. Left-aligned flowing text at name geometry, sortable by name. */
-export const identityLinkCol = <T,>(
-  key: keyof T,
-  opts: IdentityLinkColOpts<T>,
-): FieldCol<T> => ({
+const makeIdentityLinkCol =
+  (colGeo: FieldGeo) =>
+  <T,>(key: keyof T, opts: IdentityLinkColOpts<T>): FieldCol<T> => {
+  const label = opts.header ?? humanize(String(key));
+  const geo = floorGeoAtLabel(colGeo, label);
+  return {
   id: String(key),
-  header: opts.header ?? humanize(String(key)),
-  width: nameGeo.css,
+  header: label,
+  width: geo.css,
   ellipsis: true,
   sortValue: (row) => String(row[key] ?? ""),
-  geo: nameGeo,
+  geo,
   accessor: (row) => {
     const value = String(row[key] ?? "");
     // Blank, not a dead link (ruled 2026-07-18: no empty markers).
@@ -51,4 +51,17 @@ export const identityLinkCol = <T,>(
       </a>
     );
   },
-});
+  };
+  };
+
+/** The primary identity column for an entity with a detail page: the name is
+ *  the link. Left-aligned flowing text at name geometry, sortable by name. */
+export const identityLinkCol = makeIdentityLinkCol(nameGeo);
+
+/** Curried sized identity links (ruled 2026-07-21): the identity column is
+ *  usually the link, so the name size classes exist here too — pick the
+ *  nearest 5-ch class ≥ the longest legitimate name. */
+export const identityLink15Col = makeIdentityLinkCol(sizedNameGeo(15));
+export const identityLink20Col = makeIdentityLinkCol(sizedNameGeo(20));
+export const identityLink25Col = makeIdentityLinkCol(sizedNameGeo(25));
+export const identityLink30Col = makeIdentityLinkCol(sizedNameGeo(30));

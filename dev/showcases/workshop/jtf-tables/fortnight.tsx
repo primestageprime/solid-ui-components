@@ -613,7 +613,9 @@ const VIOLATION_BADGES: Record<string, fields.StatusColMapping> = {
 };
 
 const VIOLATION_REGISTRY: Record<string, FieldCol<ViolationDisplayStub>> = {
-  vessel_name: fields.identityLinkCol<ViolationDisplayStub>("vessel_name", {
+  // Best-fit sized identity (ruled 2026-07-21): longest vessel name here is
+  // 16ch ("Pacific Meridian") → the 20 class, not the 50ch survey default.
+  vessel_name: fields.identityLink20Col<ViolationDisplayStub>("vessel_name", {
     header: "Vessel",
     href: (r) => `#/detail/${r.vessel_call_id}`,
     glyph: vesselGlyph,
