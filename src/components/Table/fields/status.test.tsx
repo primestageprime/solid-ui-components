@@ -24,20 +24,23 @@ const renderCell = (row: Row) =>
   ));
 
 describe("status field", () => {
-  it("fixed status geometry, floored at the humanized label", () => {
+  it("derives content-fit geometry from the mapping labels + badge chrome, floored at the label", () => {
     const col = statusCol<Row>("operator_kind", MAP);
+    // The static geo stays the col() fallback for custom status-typed cells.
     expect(geo).toEqual({ minCh: 9, maxCh: 9, padPx: 18, css: "calc(9ch + 18px)" });
-    // "Operator Kind" (13ch) floors the 9ch badge geometry (ruled 2026-07-21).
-    expect(col.geo).toEqual({ minCh: 13, maxCh: 13, padPx: 18, css: "calc(13ch + 18px)" });
-    expect(col.width).toBe("calc(13ch + 18px)");
+    // Longest mapping label "Operator" (8ch) sets the base; the header
+    // "Operator Kind" (13ch) floors it. padPx = 18 cell + 18 badge chrome
+    // (the badge's own padding/border/letter-spacing — clipped 2026-07-21).
+    expect(col.geo).toEqual({ minCh: 13, maxCh: 13, padPx: 36, css: "calc(13ch + 36px)" });
+    expect(col.width).toBe("calc(13ch + 36px)");
     expect(col.align).toBe("right");
   });
 
   it("width floors at a long header label (ruled 2026-07-21)", () => {
     const col = statusCol<Row>("operator_kind", MAP, {
-      header: "% of At-Band Time", // 17ch > the 9ch badge geometry
+      header: "% of At-Band Time", // 17ch > the 8ch longest badge label
     });
-    expect(col.width).toBe("calc(17ch + 18px)");
+    expect(col.width).toBe("calc(17ch + 36px)");
     expect(col.geo?.maxCh).toBe(17);
   });
 

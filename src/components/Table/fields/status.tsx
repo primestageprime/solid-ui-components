@@ -19,6 +19,12 @@ import {
 
 export const geo: FieldGeo = { minCh: 9, maxCh: 9, padPx: 18, css: "calc(9ch + 18px)" };
 
+/** The sm badge's own chrome beyond the label glyphs: 6px padding ×2 + 1px
+ *  border ×2 + letter-spacing (≈0.4px/ch, budgeted for badge-short labels).
+ *  Measured 2026-07-21: a 9ch "VIOLATION" badge is 82.3px — 15.2px of chrome
+ *  the flat 9ch geometry never budgeted, so the badge clipped in its cell. */
+const BADGE_CHROME_PX = 18;
+
 /** Tone → theme badge variant. The client names a meaning, never a color. */
 const TONE_VARIANT: Record<Tone, StatusBadgeVariant> = {
   default: "pending",
@@ -57,7 +63,22 @@ export const statusCol = <T,>(
   opts: StatusColOpts = {},
 ): FieldCol<T> => {
   const label = opts.header ?? humanize(String(key));
-  const colGeo = floorGeoAtLabel(geo, label);
+  // Geometry derives from the mapping (the badge set is known at configure
+  // time, same rule as enumCol): content-fit fixed at the longest label, with
+  // the badge chrome budgeted on top of the cell chrome — the static 9ch geo
+  // remains only as the col() fallback for custom status-typed cells.
+  const longest = Object.values(map).reduce(
+    (m, s) => Math.max(m, s.label.length),
+    0,
+  );
+  const padPx = (geo.padPx ?? 0) + BADGE_CHROME_PX;
+  const badgeGeo: FieldGeo = {
+    minCh: longest,
+    maxCh: longest,
+    padPx,
+    css: `calc(${longest}ch + ${padPx}px)`,
+  };
+  const colGeo = floorGeoAtLabel(badgeGeo, label);
   return {
   id: String(key),
   header: centered(label),

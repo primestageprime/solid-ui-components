@@ -156,16 +156,16 @@ const NoxPeriodStatsTable = () => (
 // ============================================================================
 
 interface CeProjectionRow {
-  ce: string;
+  ce: number;
   projected: number;
   // Data-layer compliance flag; the badge + the projected value tone read it.
   compliant: boolean;
 }
 
 const CE_PROJECTION_DATA: CeProjectionRow[] = [
-  { ce: "90%", projected: 4.27, compliant: false },
-  { ce: "95%", projected: 2.14, compliant: true },
-  { ce: "99%", projected: 0.43, compliant: true },
+  { ce: 90, projected: 4.27, compliant: false },
+  { ce: 95, projected: 2.14, compliant: true },
+  { ce: 99, projected: 0.43, compliant: true },
 ];
 
 // The JSX Compliant/Violation badges become the standard status field, keyed on
@@ -176,9 +176,12 @@ const CE_PROJECTION_STATUS: Record<string, fields.StatusColMapping> = {
 };
 
 const CE_PROJECTION_REGISTRY = {
-  // textCol has no header channel and humanize("ce") = "Ce"; the custom label
-  // rides a col() at text geometry (sorted by the label).
-  ce: fields.col<CeProjectionRow>("ce", "Capture Efficiency", (row) => row.ce, "text", (row) => row.ce),
+  // A percentage is a NUMBER wearing a suffix (ruled 2026-07-21) — intCol,
+  // right-aligned, content-fit fixed; not a flexing text column.
+  ce: fields.intCol<CeProjectionRow>("ce", {
+    suffix: "%",
+    header: "Capture Efficiency",
+  }),
   projected: fields.floatCol<CeProjectionRow>("projected", {
     precision: 2,
     header: "Projected NOx (ppm)",
@@ -217,12 +220,15 @@ const EMISSION_ROWS: EmissionRow[] = [
 ];
 
 const EMISSION_REGISTRY = {
-  metric: fields.textCol<EmissionRow>("metric"),
+  // Metric names and units are small known sets (< 20ch) → enumCol, not
+  // flexing 8–40ch textCol (ruled 2026-07-21: the two text columns made the
+  // table wallpaper-wide).
+  metric: fields.enumCol<EmissionRow>("metric", ["NOx", "ROG"]),
   min: fields.floatCol<EmissionRow>("min"),
   avg: fields.floatCol<EmissionRow>("avg"),
   max: fields.floatCol<EmissionRow>("max"),
   stddev: fields.floatCol<EmissionRow>("stddev"),
-  unit: fields.textCol<EmissionRow>("unit"),
+  unit: fields.enumCol<EmissionRow>("unit", ["g/kWh"]),
 };
 
 const StatisticsSummaryTable = () => (
