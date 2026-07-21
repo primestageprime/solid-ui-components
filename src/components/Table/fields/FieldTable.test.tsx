@@ -34,6 +34,27 @@ describe("FieldTable", () => {
     expect(container.querySelectorAll("tbody tr").length).toBe(2);
   });
 
+  it("appends a trailing auto spacer column that absorbs stretch slack (ruled 2026-07-21)", () => {
+    const { container } = render(() => (
+      <FieldTable
+        data={ROWS}
+        fields={["hours"]}
+        registry={{ hours: intCol<Row>("hours") }}
+      />
+    ));
+    const headerCells = container.querySelectorAll("thead th");
+    // one real column + the spacer
+    expect(headerCells.length).toBe(2);
+    const spacer = headerCells[headerCells.length - 1] as HTMLElement;
+    expect(spacer.textContent).toBe("");
+    // auto width — the spacer, not the fixed columns, absorbs table stretch
+    expect(spacer.style.width).toBe("");
+    // and every body row carries the matching empty cell
+    const firstRowCells = container.querySelectorAll("tbody tr:first-child td");
+    expect(firstRowCells.length).toBe(2);
+    expect((firstRowCells[1] as HTMLElement).textContent).toBe("");
+  });
+
   it("renders emptyMessage when data is empty", () => {
     const { container } = render(() => (
       <FieldTable
@@ -178,10 +199,11 @@ describe("FieldTable grouped headers", () => {
     );
     expect(groups.map((g) => g.textContent)).toEqual(["FTIR I", "SCR"]);
     expect(groups.map((g) => g.getAttribute("colspan"))).toEqual(["2", "2"]);
-    // The five body columns still render as five cells per row.
+    // The five body columns still render, plus the trailing spacer cell
+    // (ruled 2026-07-21).
     expect(
       container.querySelectorAll("tbody tr")[0].querySelectorAll("td").length,
-    ).toBe(5);
+    ).toBe(6);
   });
 
   it("spans an ungrouped leading column across both header rows", () => {
@@ -198,7 +220,8 @@ describe("FieldTable grouped headers", () => {
     const rowspanned = container.querySelectorAll(
       ".hud-table__header-cell--rowspan",
     );
-    expect(rowspanned.length).toBe(1);
+    // Hour plus the trailing spacer, both ungrouped (ruled 2026-07-21).
+    expect(rowspanned.length).toBe(2);
     expect(rowspanned[0].textContent).toContain("Hour");
     expect(rowspanned[0].getAttribute("rowspan")).toBe("2");
     // The two grouped members appear as sub-headers in the second row.
