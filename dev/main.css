@@ -2736,18 +2736,17 @@ th:has(.tf-th-center) .hud-table__header-content {
   text-align: left;
 }
 
-/* Catalog pane height context (ruled 2026-07-21): a fill-mode field table
-   takes ALL the vertical height available in its container — the pane is
-   that container, so it must be a definite-height flex column for the fill
-   chain (frame flex:1 → table height:100%) to resolve against. */
+/* Catalog pane height context (ruled 2026-07-21): the pane is the height
+   budget a fill-mode field table may use — a definite-height flex column.
+   Shrink-to-fit fill (same ruling): entries hug their content when short,
+   and only shrink+scroll when the rows overflow this height, so the wrapper
+   must allow shrink without forcing growth. */
 .jtf-catalog-pane {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 240px);
 }
-/* The entry component's root (usually a caption Stack) must pass the height
-   down, or the frame's flex:1 resolves inside a content-sized wrapper. */
 .jtf-catalog-pane > * {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
 }

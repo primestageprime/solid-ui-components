@@ -69,7 +69,12 @@ th:has(.sui-field-th-center) .hud-table__header-content {
 .sui-field-frame--fill {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  /* Shrink-to-fit fill (ruled 2026-07-21): few rows → the frame hugs its
+     content (no grow); more rows than the container allows → the frame
+     shrinks to the available height (min-height:0) and the inner
+     ScrollFillColumn scrolls. `flex:1` (always grow) stretched a 4-row table
+     into a mostly-empty full-height frame. */
+  flex: 0 1 auto;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
