@@ -45,25 +45,14 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
   const resolved = resolveFields(props.fields, props.registry, {
     sortable: props.sortable,
   });
-  // Trailing auto spacer (ruled 2026-07-21): under table-layout: fixed,
-  // stretch slack distributes proportionally across every column carrying a
-  // width — inflating "fixed" columns — UNLESS an auto column exists, in
-  // which case specified widths hold exactly and the auto column absorbs the
-  // slack. The spacer is that column: empty header, empty cells, no width,
-  // zero geometry (excluded from the frame budget); it collapses to nothing
-  // when the table sits at its minimum.
-  const spacerCol = {
-    id: "__spacer",
-    header: "",
-    geo: { minCh: 0, maxCh: 0 },
-    accessor: () => "",
-  } as (typeof resolved.columns)[number];
   // Sortability is a table-level mode: flip on every column that carries a
   // comparable value. Columns without a sortValue have no valid sort.
-  const realColumns = props.sortable
+  // (The 2026-07-21 spacer column is retired: under table-layout AUTO the
+  // width model needs no slack absorber — columns grow to their max, the
+  // table caps at Σmax, and the surplus stays outside the table.)
+  const columns = props.sortable
     ? resolved.columns.map((c) => ({ ...c, sortable: c.sortValue != null }))
     : resolved.columns;
-  const columns = [...realColumns, spacerCol];
   // `fill` is implicit: no maxRows cap ⇒ the composed BaseTable runs in fill
   // mode (ClipFillColumnFlush + inner ScrollFillColumn, height:100%), which
   // only resolves against a definite-height flex ancestor. The frame must BE
@@ -77,10 +66,12 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
         "--sui-field-table-max": resolved.maxW,
       }}
     >
+      {/* table-layout AUTO (ruled 2026-07-21): the legacy auto algorithm is
+          the width model — surplus over minimums distributes ∝ (max − min);
+          fixed layout cannot express min+max and is retired for fields. */}
       <DataTable
         data={props.data as object[]}
         columns={columns as unknown as TableColumn<object>[]}
-        fixedLayout
         fill={fill}
         maxHeight={props.maxRows ? rowCapEm(props.maxRows) : undefined}
         emptyMessage={props.emptyMessage}

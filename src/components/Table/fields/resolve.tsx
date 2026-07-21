@@ -134,20 +134,26 @@ export function resolveFields<T>(
     };
     return { ...c, geo, width: geo.css ?? c.width };
   };
-  // A flexible column (no fixed css) must EMIT its floored minCh as a width:
-  // table-layout: fixed splits leftover space equally among width-less
-  // columns and ignores minCh entirely, so the label floor (ruled 2026-07-21)
-  // is only real when the min becomes the proportional basis.
-  // Same convention as the fixed geos' css: the width INCLUDES the cell
-  // chrome (border-box), so the content box keeps the full minCh.
-  const flexBasis = (c: FieldCol<T>): FieldCol<T> =>
-    c.geo.css || c.width != null
-      ? c
-      : { ...c, width: `calc(${c.geo.minCh}ch + ${c.geo.padPx ?? 0}px)` };
+  // The width model under table-layout: AUTO (ruled 2026-07-21): every
+  // column emits width = its MAX (auto layout's preferred width — the legacy
+  // algorithm distributes the surplus over minimums ∝ (preferred − min),
+  // which IS the model's range-proportional rule) and min-width = its MIN.
+  // Widths include the cell chrome (border-box). A variable column
+  // (minCh < maxCh) additionally renders its cells inside the size-contained
+  // clip block, so content cannot inflate the minimum past min-width.
+  const withModelWidths = (c: FieldCol<T>): FieldCol<T> => {
+    const pad = c.geo.padPx ?? 0;
+    return {
+      ...c,
+      width: c.geo.css ?? c.width ?? `calc(${c.geo.maxCh}ch + ${pad}px)`,
+      minWidth: `calc(${c.geo.minCh}ch + ${pad}px)`,
+      contained: c.geo.maxCh > c.geo.minCh,
+    };
+  };
   const columns = pipe(
     flatMap(expandSpec, specs),
     map(widenForSort),
-    map(flexBasis),
+    map(withModelWidths),
   );
   const minCh = pipe(columns, map((c) => c.geo.minCh), sum);
   const maxCh = pipe(columns, map((c) => c.geo.maxCh), sum);

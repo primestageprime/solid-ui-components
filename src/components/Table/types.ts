@@ -14,6 +14,12 @@ export interface TableColumn<T> {
   header: string | JSX.Element;
   accessor: keyof T | ((row: T) => JSX.Element | string | number);
   width?: string;
+  /** Column floor under auto layout (the width-model min; width is the max). */
+  minWidth?: string;
+  /** Wrap the cell content in a size-contained clip block, so long nowrap
+   *  content cannot inflate the column's minimum past `minWidth` — required
+   *  for a variable column to shrink between its bounds (ruled 2026-07-21). */
+  contained?: boolean;
   align?: "left" | "center" | "right";
   /**
    * Clip overflowing content with an ellipsis even when no fixed `width` is set —

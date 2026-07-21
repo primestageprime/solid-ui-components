@@ -34,25 +34,24 @@ describe("FieldTable", () => {
     expect(container.querySelectorAll("tbody tr").length).toBe(2);
   });
 
-  it("appends a trailing auto spacer column that absorbs stretch slack (ruled 2026-07-21)", () => {
+  it("renders the width model per column: width = max, min-width = min, no spacer (ruled 2026-07-21)", () => {
     const { container } = render(() => (
       <FieldTable
         data={ROWS}
-        fields={["hours"]}
-        registry={{ hours: intCol<Row>("hours") }}
+        fields={["note", "hours"]}
+        registry={{ note: textCol<Row>("note"), hours: intCol<Row>("hours") }}
       />
     ));
-    const headerCells = container.querySelectorAll("thead th");
-    // one real column + the spacer
-    expect(headerCells.length).toBe(2);
-    const spacer = headerCells[headerCells.length - 1] as HTMLElement;
-    expect(spacer.textContent).toBe("");
-    // auto width — the spacer, not the fixed columns, absorbs table stretch
-    expect(spacer.style.width).toBe("");
-    // and every body row carries the matching empty cell
-    const firstRowCells = container.querySelectorAll("tbody tr:first-child td");
-    expect(firstRowCells.length).toBe(2);
-    expect((firstRowCells[1] as HTMLElement).textContent).toBe("");
+    const headerCells = [...container.querySelectorAll("thead th")] as HTMLElement[];
+    expect(headerCells.length).toBe(2); // no trailing spacer under auto layout
+    // note (variable text): width at max, min-width at min, cells contained
+    expect(headerCells[0].style.width).toBe("calc(40ch + 16px)");
+    expect(headerCells[0].style.minWidth).toBe("calc(8ch + 16px)");
+    const noteCell = container.querySelector("tbody td") as HTMLElement;
+    expect(noteCell.querySelector(".hud-table__contained")).toBeTruthy();
+    // hours (content-fit int): width at the css cap, min-width at its floor
+    expect(headerCells[1].style.width).toBe("calc(9ch + 18px)");
+    expect(headerCells[1].style.minWidth).toBe("calc(5ch + 18px)"); // "Hours" floor
   });
 
   it("renders emptyMessage when data is empty", () => {
@@ -199,11 +198,10 @@ describe("FieldTable grouped headers", () => {
     );
     expect(groups.map((g) => g.textContent)).toEqual(["FTIR I", "SCR"]);
     expect(groups.map((g) => g.getAttribute("colspan"))).toEqual(["2", "2"]);
-    // The five body columns still render, plus the trailing spacer cell
-    // (ruled 2026-07-21).
+    // The five body columns render as five cells (spacer retired 2026-07-21).
     expect(
       container.querySelectorAll("tbody tr")[0].querySelectorAll("td").length,
-    ).toBe(6);
+    ).toBe(5);
   });
 
   it("spans an ungrouped leading column across both header rows", () => {
@@ -220,8 +218,7 @@ describe("FieldTable grouped headers", () => {
     const rowspanned = container.querySelectorAll(
       ".hud-table__header-cell--rowspan",
     );
-    // Hour plus the trailing spacer, both ungrouped (ruled 2026-07-21).
-    expect(rowspanned.length).toBe(2);
+    expect(rowspanned.length).toBe(1);
     expect(rowspanned[0].textContent).toContain("Hour");
     expect(rowspanned[0].getAttribute("rowspan")).toBe("2");
     // The two grouped members appear as sub-headers in the second row.

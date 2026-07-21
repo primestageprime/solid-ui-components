@@ -658,3 +658,16 @@
 .sui-virtual-table__row--hoverable:hover {
   background: rgba(var(--sui-accent-rgb), 0.04);
 }
+
+/* Width-model containment (ruled 2026-07-21): a variable column's cell
+   content renders inside this size-contained block, so nowrap text cannot
+   inflate the column's minimum past the column's min-width — without it,
+   auto layout clamps the minimum at the CONTENT (or max-width) and the
+   column can never shrink between its bounds. */
+.hud-table__contained {
+  contain: inline-size;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

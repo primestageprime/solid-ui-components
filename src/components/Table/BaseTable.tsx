@@ -199,11 +199,22 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     return {
       "text-align": column.align || "left",
       "max-width": column.width,
+      "min-width": column.minWidth,
       overflow: clip ? "hidden" : undefined,
       "text-overflow": clip ? "ellipsis" : undefined,
       "white-space": clip ? "nowrap" : undefined,
     };
   };
+
+  /** Cell content, optionally inside the size-contained clip block: a
+   *  contained column's nowrap content cannot inflate the column minimum, so
+   *  the width-model shrink between min and max is real (ruled 2026-07-21). */
+  const cellContent = (row: T, column: TableColumn<T>) =>
+    column.contained ? (
+      <div class="hud-table__contained">{getCellValue(row, column)}</div>
+    ) : (
+      getCellValue(row, column)
+    );
 
   /** Render a sortable <th> for a single column */
   const renderColumnTh = (
@@ -216,6 +227,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
       style={{
         width: column.width,
         "max-width": column.width,
+        "min-width": column.minWidth,
         "text-align": column.align || "left",
       }}
       rowspan={rowspan}
@@ -367,7 +379,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                                   class="hud-table__cell"
                                   style={cellStyle(column)}
                                 >
-                                  {getCellValue(row, column)}
+                                  {cellContent(row, column)}
                                 </td>
                               )}
                             </For>
@@ -394,7 +406,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                               class="hud-table__cell"
                               style={cellStyle(column)}
                             >
-                              {getCellValue(row, column)}
+                              {cellContent(row, column)}
                             </td>
                           )}
                         </For>
