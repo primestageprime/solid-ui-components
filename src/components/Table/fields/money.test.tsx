@@ -25,7 +25,8 @@ describe("money field module", () => {
     expect(col.width).toBe("calc(18ch + 18px)");
     expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
     expect(typeof col.sortValue).toBe("function");
-    expect(col.geo).toBe(geo);
+    // "Amount" (6 glyphs × 1.17 tracking → 8ch) floors the 6ch data minimum.
+    expect(col.geo).toEqual({ ...geo, minCh: 8 });
   });
 
   it("humanizes the header, stripping the ' Cents' storage suffix", () => {

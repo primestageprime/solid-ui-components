@@ -701,7 +701,9 @@ function FtirGapsTable() {
     ),
   ];
   return (
-    <FieldTable data={FTIR_GAPS} fields={gapFields} registry={{}} maxRows={7} />
+    // No row cap (ruled 2026-07-21): 8 gaps with room to render all of them —
+    // fill mode hugs the content and only scrolls when the pane runs out.
+    <FieldTable data={FTIR_GAPS} fields={gapFields} registry={{}} />
   );
 }
 
@@ -742,7 +744,7 @@ export const ENTRIES: TableEntry[] = [
     route: "/tools/ftir-gap-fill",
     name: "FTIR Gap-Fill Gaps",
     status: "sui",
-    note: "Migrated to FieldTable — fields.col customs (int/dateTime/duration geometries) with registry {} and maxRows 7.",
+    note: "Migrated to FieldTable — fields.col customs (int/dateTime/duration geometries) with registry {}; no row cap — fill hugs all 8 gaps.",
     component: FtirGapsTable,
   },
 ];

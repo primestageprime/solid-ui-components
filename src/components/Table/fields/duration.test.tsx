@@ -21,8 +21,8 @@ describe("duration field module", () => {
     expect(typeof col.sortValue).toBe("function");
     expect(col.align).toBe("right");
     expect(col.width).toBe(geo.css);
-    // "Elapsed" (7ch) floors minCh above the 5ch data minimum (ruled 2026-07-21).
-    expect(col.geo).toEqual({ ...geo, minCh: 7 });
+    // "Elapsed" (7 glyphs × 1.17 header tracking → 9ch) floors the 5ch data minimum.
+    expect(col.geo).toEqual({ ...geo, minCh: 9 });
   });
 
   it("cell renders a formatted duration, defaulting to seconds", () => {

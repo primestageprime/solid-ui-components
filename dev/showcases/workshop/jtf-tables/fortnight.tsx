@@ -348,9 +348,11 @@ const MISSING_INFO_REGISTRY = {
   name: fields.textCol<MissingInfoRowStub>("name"),
   street: fields.textCol<MissingInfoRowStub>("street"),
   city: fields.textCol<MissingInfoRowStub>("city"),
-  state: fields.textCol<MissingInfoRowStub>("state"),
-  postal_code: fields.textCol<MissingInfoRowStub>("postal_code"),
-  phone: fields.textCol<MissingInfoRowStub>("phone"),
+  // Fixed-format short strings ride the sized text set (ruled 2026-07-21):
+  // pick the smallest class the values fit instead of flexing 8–40ch.
+  state: fields.text5Col<MissingInfoRowStub>("state"),
+  postal_code: fields.text10Col<MissingInfoRowStub>("postal_code"),
+  phone: fields.text15Col<MissingInfoRowStub>("phone"),
   email: fields.textCol<MissingInfoRowStub>("email"),
 };
 

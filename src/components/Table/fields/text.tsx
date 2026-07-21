@@ -17,23 +17,45 @@ export interface TextColOpts<T> {
   tone?: ToneFn<T, string>;
 }
 
-/** A secondary-text column for `key`: humanized left header, sortable, clipped. */
-export const textCol = <T,>(key: keyof T, opts: TextColOpts<T> = {}): FieldCol<T> => {
-  const label = humanize(String(key));
-  return {
-  id: String(key),
-  header: label,
-  ellipsis: true,
-  sortValue: (row) => String(row[key] ?? ""),
-  geo: floorGeoAtLabel(geo, label),
-  accessor: (row) => {
-    const value = String(row[key] ?? "");
-    // Blank, not the legacy em-dash (ruled 2026-07-18: no empty markers).
-    if (value === "") return "";
-    return toneWrap(
-      opts.tone?.(value, row),
-      <LongTextCell value={value} clampLines={1} reveal="tooltip" />,
-    );
-  },
+const makeTextCol =
+  (colGeo: FieldGeo) =>
+  <T,>(key: keyof T, opts: TextColOpts<T> = {}): FieldCol<T> => {
+    const label = humanize(String(key));
+    return {
+      id: String(key),
+      header: label,
+      ellipsis: true,
+      sortValue: (row) => String(row[key] ?? ""),
+      geo: floorGeoAtLabel(colGeo, label),
+      accessor: (row) => {
+        const value = String(row[key] ?? "");
+        // Blank, not the legacy em-dash (ruled 2026-07-18: no empty markers).
+        if (value === "") return "";
+        return toneWrap(
+          opts.tone?.(value, row),
+          <LongTextCell value={value} clampLines={1} reveal="tooltip" />,
+        );
+      },
+    };
   };
-};
+
+/** A secondary-text column for `key`: humanized left header, sortable, clipped. */
+export const textCol = makeTextCol(geo);
+
+/** Fixed-width text geometry for a size class: content-fit at N ch. */
+const sized = (n: number): FieldGeo => ({
+  minCh: n,
+  maxCh: n,
+  padPx: 16,
+  css: `calc(${n}ch + 16px)`,
+});
+
+/** Curried sized text (ruled 2026-07-21): a set of FIXED-width text columns
+ *  for short strings whose length class is known at configure time — codes,
+ *  phone numbers, short ids. Pick the smallest class the values fit; the
+ *  column stops flexing (textCol's 8–40ch) and reads as a fixed field.
+ *  Same clipped-with-tooltip cell as textCol, floored at the header label. */
+export const text5Col = makeTextCol(sized(5));
+export const text10Col = makeTextCol(sized(10));
+export const text15Col = makeTextCol(sized(15));
+export const text20Col = makeTextCol(sized(20));

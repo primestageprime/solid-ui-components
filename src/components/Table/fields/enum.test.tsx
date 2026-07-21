@@ -53,9 +53,9 @@ describe("enumCol — geometry", () => {
     const col = enumCol<Row>("period", ["Yes", "No"], {
       header: "Operational Status", // 18ch > the 3ch member geometry
     });
-    expect(col.geo.minCh).toBe(18);
-    expect(col.geo.maxCh).toBe(18);
-    expect(col.width).toBe("calc(18ch + 16px)");
+    expect(col.geo.minCh).toBe(22); // 18-glyph header × 1.17 tracking
+    expect(col.geo.maxCh).toBe(22);
+    expect(col.width).toBe("calc(22ch + 16px)");
   });
 });
 

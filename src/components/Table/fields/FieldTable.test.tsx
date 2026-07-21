@@ -51,7 +51,7 @@ describe("FieldTable", () => {
     expect(noteCell.querySelector(".hud-table__contained")).toBeTruthy();
     // hours (content-fit int): width at the css cap, min-width at its floor
     expect(headerCells[1].style.width).toBe("calc(9ch + 18px)");
-    expect(headerCells[1].style.minWidth).toBe("calc(5ch + 18px)"); // "Hours" floor
+    expect(headerCells[1].style.minWidth).toBe("calc(6ch + 18px)"); // "Hours" × 1.17 tracking floor
   });
 
   it("renders emptyMessage when data is empty", () => {

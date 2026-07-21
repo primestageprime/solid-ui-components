@@ -23,7 +23,7 @@ describe("int field", () => {
     expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
     expect(typeof col.sortValue).toBe("function");
     // "Hours" (5ch) floors minCh above the 4ch data minimum (ruled 2026-07-21).
-    expect(col.geo).toEqual({ ...geo, minCh: 5 });
+    expect(col.geo).toEqual({ ...geo, minCh: 6 }); // "Hours" × 1.17 tracking
   });
 
   it("header is the humanized key, centered", () => {
@@ -43,9 +43,9 @@ describe("int field", () => {
 
   it("width floors at the header label — a column is never narrower than its own name (ruled 2026-07-21)", () => {
     const col = intCol<Row>("hours", { header: "Postal Code" }); // 11ch > 9ch data cap
-    expect(col.width).toBe("calc(11ch + 18px)");
-    expect(col.geo?.minCh).toBe(11);
-    expect(col.geo?.maxCh).toBe(11);
+    expect(col.width).toBe("calc(13ch + 18px)");
+    expect(col.geo?.minCh).toBe(13);
+    expect(col.geo?.maxCh).toBe(13);
   });
 
   it("short labels keep the data-driven geometry", () => {

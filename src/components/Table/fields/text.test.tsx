@@ -33,7 +33,7 @@ describe("textCol — factory shape", () => {
     const col = textCol<{ operational_band_share: string }>(
       "operational_band_share", // "Operational Band Share" = 22ch > 8ch min
     );
-    expect(col.geo?.minCh).toBe(22);
+    expect(col.geo?.minCh).toBe(26); // 22 glyphs × 1.17 header tracking
     expect(col.geo?.maxCh).toBe(40); // flexible cap unchanged
     expect(col.geo?.css).toBeUndefined();
   });
@@ -74,5 +74,28 @@ describe("textCol — cell rendering", () => {
       asFn(col.accessor)({ displayName: "x", note: null }),
     );
     expect(container.textContent).toBe("");
+  });
+});
+
+// Sized text set (ruled 2026-07-21): fixed-width text columns for short
+// strings whose length class is known — 5/10/15/20 ch, floored at the label.
+import { text5Col, text10Col, text15Col, text20Col } from "./text";
+
+describe("sized text set", () => {
+  it("each size class is content-fit FIXED at its width", () => {
+    interface R { code: string }
+    expect(text10Col<R>("code").geo).toEqual({
+      minCh: 10, maxCh: 10, padPx: 16, css: "calc(10ch + 16px)",
+    });
+    expect(text15Col<R>("code").geo?.maxCh).toBe(15);
+    expect(text20Col<R>("code").geo?.maxCh).toBe(20);
+  });
+
+  it("floors at the tracked header label when it exceeds the size class", () => {
+    interface R { state: string }
+    // "State" (5 glyphs × 1.17 tracking → 6ch) floors the 5ch class.
+    expect(text5Col<R>("state").geo).toEqual({
+      minCh: 6, maxCh: 6, padPx: 16, css: "calc(6ch + 16px)",
+    });
   });
 });

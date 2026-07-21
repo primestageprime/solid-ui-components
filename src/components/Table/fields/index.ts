@@ -18,7 +18,7 @@ export { nameCol } from "./name";
 export type { NameColOpts } from "./name";
 export { identityLinkCol } from "./identity-link";
 export type { IdentityLinkColOpts } from "./identity-link";
-export { textCol } from "./text";
+export { textCol, text5Col, text10Col, text15Col, text20Col } from "./text";
 export type { TextColOpts } from "./text";
 export { enumCol } from "./enum";
 export type { EnumColOpts } from "./enum";

@@ -17,7 +17,7 @@ describe("resolveFields — the width model under auto layout (ruled 2026-07-21)
     };
     const { columns } = resolveFields<Row>(["postal_code", "note"], registry);
     expect(columns[0].width).toBe("calc(40ch + 16px)");
-    expect(columns[0].minWidth).toBe("calc(11ch + 16px)");
+    expect(columns[0].minWidth).toBe("calc(13ch + 16px)"); // "Postal Code" × 1.17 tracking
     expect(columns[0].contained).toBe(true);
     expect(columns[1].width).toBe("calc(40ch + 16px)");
     expect(columns[1].minWidth).toBe("calc(8ch + 16px)");
@@ -48,6 +48,6 @@ describe("resolveFields — the width model under auto layout (ruled 2026-07-21)
     });
     expect(columns[0].width).toBe("calc(11ch + 18px)"); // 9ch cap + 2ch glyph
     expect(columns[1].width).toBe("calc(42ch + 16px)"); // 40ch max + 2ch glyph
-    expect(columns[1].minWidth).toBe("calc(13ch + 16px)"); // 11ch floor + 2ch glyph
+    expect(columns[1].minWidth).toBe("calc(15ch + 16px)"); // 13ch tracked floor + 2ch glyph
   });
 });

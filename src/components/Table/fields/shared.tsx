@@ -120,8 +120,18 @@ export const idOf = <T, V>(source: ValueSource<T, V>, id?: string): string => {
  *  a short-data column ("90802") under a long header ("Postal Code") widens
  *  instead of letting the header paint over its neighbor. Fixed geos widen
  *  their css; flexible geos only raise minCh. */
+/** Header glyph cost in ch. BaseTable headers render UPPERCASE with 0.1em
+ *  letter-spacing (~0.17ch per glyph at the frame's 12px mono basis), which a
+ *  raw char count under-budgets — an 18-glyph "CAPTURE EFFICIENCY" overflowed
+ *  its column and ran into the neighboring header (bug 2026-07-21). Headers
+ *  must ALWAYS keep the inter-column gap visible (ruled 2026-07-21), so the
+ *  label floor budgets the tracking. */
+const HEADER_TRACKING = 1.17;
+export const headerCh = (label: string): number =>
+  Math.ceil(label.length * HEADER_TRACKING);
+
 export const floorGeoAtLabel = (geo: FieldGeo, label: string): FieldGeo => {
-  const labelCh = label.length;
+  const labelCh = headerCh(label);
   if (labelCh <= geo.minCh && labelCh <= geo.maxCh) return geo;
   const maxCh = Math.max(geo.maxCh, labelCh);
   return {
