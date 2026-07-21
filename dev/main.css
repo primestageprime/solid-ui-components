@@ -2712,3 +2712,41 @@ th:has(.tf-th-center) .hud-table__header-content {
 .wm-css__cell--fixed .wm-css__value {
   text-align: left;
 }
+
+/* Width Model — NATIVE <table> variant. table-layout: AUTO (fixed cannot do
+   min+max at all). The legacy auto algorithm distributes the surplus over
+   column minimums ∝ (preferred − min) — the same range-proportional rule.
+   • preferred (max) comes from `width` on the column's cells;
+   • minimum comes from `min-width`;
+   • a contained inner div stops nowrap text from inflating the minimum;
+   • the table caps at the one Σmax var and floors at Σ col minimums. */
+.wm-native__table {
+  table-layout: auto;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: calc(var(--maxSumN) * 1px);
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+}
+.wm-native__table th,
+.wm-native__table td {
+  border-bottom: 1px solid var(--sui-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+.wm-native__col--fixed {
+  width: calc(var(--content) + 16px);
+  min-width: calc(var(--content) + 16px);
+  text-align: center;
+}
+.wm-native__col--var {
+  width: calc(var(--maxN) * 1px);
+  min-width: calc(var(--minN) * 1px);
+}
+.wm-native__clip {
+  contain: inline-size;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}

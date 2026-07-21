@@ -256,6 +256,57 @@ function CssCase(props: { available: number }): JSX.Element {
   );
 }
 
+/** NATIVE <table> variant: table-layout AUTO with width-as-max +
+ *  min-width-as-min on the cells; the legacy auto algorithm distributes the
+ *  surplus over minimums ∝ (preferred − min) — the same range rule. */
+function NativeCase(props: { available: number }): JSX.Element {
+  const cellStyle = (c: ColSpec): Record<string, string> =>
+    isVariable(c)
+      ? { "--minN": String(c.min), "--maxN": String(c.max) }
+      : { "--content": `${c.content}px` };
+  const cellClass = (c: ColSpec): string =>
+    isVariable(c) ? "wm-native__col--var" : "wm-native__col--fixed";
+  return (
+    <ContentStack>
+      <TextBody>{`Native <table> @ ${props.available}px`}</TextBody>
+      <div class="width-model__frame" style={{ width: `${props.available}px` }}>
+        <div class="wm-css__frame">
+          <table class="wm-native__table" style={{ "--maxSumN": String(maxSum) }}>
+            <thead>
+              <tr>
+                <For each={COLS}>
+                  {(c) => (
+                    <th class={cellClass(c)} style={cellStyle(c)}>
+                      <div class="wm-native__clip">
+                        <TextSublabel>{c.header}</TextSublabel>
+                      </div>
+                    </th>
+                  )}
+                </For>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={[0, 1, 2]}>
+                {() => (
+                  <tr>
+                    <For each={COLS}>
+                      {(c) => (
+                        <td class={cellClass(c)} style={cellStyle(c)}>
+                          <div class="wm-native__clip">{c.sample}</div>
+                        </td>
+                      )}
+                    </For>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ContentStack>
+  );
+}
+
 const WidthModelBench: Component = () => {
   const [live, setLive] = createSignal(700);
   return (
@@ -294,6 +345,17 @@ const WidthModelBench: Component = () => {
         </TextBody>
         <For each={CASES}>{(c) => <CssCase available={c.available} />}</For>
         <CssCase available={live()} />
+        <SectionTitle>{"Native <table> — how close auto layout gets"}</SectionTitle>
+        <TextBody>
+          table-layout: auto (fixed cannot express min+max at all). Cell width
+          = the column's max (auto layout treats it as the preferred width),
+          min-width = the min; the legacy auto algorithm distributes the
+          surplus over minimums proportionally to (preferred − min) — the same
+          range rule. A contained inner div keeps nowrap text from inflating
+          the column minimum.
+        </TextBody>
+        <For each={CASES}>{(c) => <NativeCase available={c.available} />}</For>
+        <NativeCase available={live()} />
       </ContentStack>
     </div>
   );
