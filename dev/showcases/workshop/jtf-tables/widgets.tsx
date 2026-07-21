@@ -357,14 +357,16 @@ const stddevRangeCol = fields.col<MetricRow>(
     if (lo == null || hi == null) return "";
     return `${lo.toFixed(2)} - ${hi.toFixed(2)}`;
   },
-  "text",
+  // Sized (ruled 2026-07-21): "3.15 - 88.40" ≤ 13ch → the 15 class; the old
+  // "text" flex absorbed the table's slack and read as a too-wide column.
+  "text15",
   (row) => (isCachedMetric(row) ? row.stddev_min : null),
 );
 const coverageCol = fields.col<MetricRow>(
   "coverage",
   "Coverage",
   (row) => (isCachedMetric(row) ? `${row.coverage_mins}m (${row.coverage_pct.toFixed(1)}%)` : ""),
-  "text",
+  "text15", // "19820m (98.3%)" = 14ch
   (row) => (isCachedMetric(row) ? row.coverage_pct : null),
 );
 

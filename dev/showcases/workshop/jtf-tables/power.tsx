@@ -12,7 +12,7 @@ import {
   IntCell,
   MinuteDateTimeCell,
 } from "../../../../src/components/Table";
-import { FieldTable, SortableFieldTable, group, textCol, col, intCol, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
+import { FieldTable, SortableFieldTable, group, textCol, text5Col, col, intCol, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
@@ -96,7 +96,9 @@ const OCR_ENTRIES: PowerLogEntry[] = [
 ];
 
 const ocrRegistry = {
-  hour: textCol<PowerLogEntry>("hour"),
+  // "01:00" = 5ch, a known short format → the 5 class (ruled 2026-07-21),
+  // not the 8–40ch flex that made HOUR the widest column in the table.
+  hour: text5Col<PowerLogEntry>("hour"),
 };
 
 // Aux cells keep the null → blank rule; custom cols with "int" geometry.
@@ -262,7 +264,7 @@ export const ENTRIES: TableEntry[] = [
     route: "/tools/power-log-ocr",
     name: "OCR extracted entries",
     status: "sui",
-    note: "Migrated to FieldTable: textCol hour, col() aux cells with null→blank on int geometry, computed avg col, maxRows 12.",
+    note: "Migrated to FieldTable: text5Col hour, col() aux cells with null→blank on int geometry, computed avg col, maxRows 12.",
     component: PowerLogOcrTable,
   },
   {

@@ -43,7 +43,7 @@ const makeTextCol =
 export const textCol = makeTextCol(geo);
 
 /** Fixed-width text geometry for a size class: content-fit at N ch. */
-const sized = (n: number): FieldGeo => ({
+export const sizedTextGeo = (n: number): FieldGeo => ({
   minCh: n,
   maxCh: n,
   padPx: 16,
@@ -55,7 +55,7 @@ const sized = (n: number): FieldGeo => ({
  *  phone numbers, short ids. Pick the smallest class the values fit; the
  *  column stops flexing (textCol's 8–40ch) and reads as a fixed field.
  *  Same clipped-with-tooltip cell as textCol, floored at the header label. */
-export const text5Col = makeTextCol(sized(5));
-export const text10Col = makeTextCol(sized(10));
-export const text15Col = makeTextCol(sized(15));
-export const text20Col = makeTextCol(sized(20));
+export const text5Col = makeTextCol(sizedTextGeo(5));
+export const text10Col = makeTextCol(sizedTextGeo(10));
+export const text15Col = makeTextCol(sizedTextGeo(15));
+export const text20Col = makeTextCol(sizedTextGeo(20));

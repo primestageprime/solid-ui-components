@@ -9,7 +9,7 @@ import type { FieldCol, FieldGeo, FieldSpec, FieldType } from "./shared";
 import { centered, floorGeoAtLabel, isFieldGroup } from "./shared";
 import { geo as selectionGeo } from "./selection";
 import { geo as nameGeo } from "./name";
-import { geo as textGeo } from "./text";
+import { geo as textGeo, sizedTextGeo } from "./text";
 import { geo as dateGeo } from "./date";
 import { geo as dateTimeGeo } from "./date-time";
 import { geo as intGeo } from "./int";
@@ -27,6 +27,10 @@ export const GEO: Record<Exclude<FieldType, "actions">, FieldGeo> = {
   selection: selectionGeo,
   name: nameGeo,
   text: textGeo,
+  text5: sizedTextGeo(5),
+  text10: sizedTextGeo(10),
+  text15: sizedTextGeo(15),
+  text20: sizedTextGeo(20),
   date: dateGeo,
   dateTime: dateTimeGeo,
   int: intGeo,
@@ -48,7 +52,9 @@ export const col = <T,>(
   sortValue?: (row: T) => string | number | null | undefined,
 ): FieldCol<T> => {
   const geo = floorGeoAtLabel(GEO[fieldType], header);
-  const flowing = fieldType === "name" || fieldType === "text";
+  // Sized text classes are flowing text at a fixed width — same alignment
+  // rules as text, not the centered fixed-value treatment.
+  const flowing = fieldType === "name" || fieldType.startsWith("text");
   // Alignment follows the REAL factory of the named geometry (bug 2026-07-21:
   // col() centered numeric customs while intCol/floatCol right-align, so a
   // dotted-header metric column read differently from its plain siblings).
