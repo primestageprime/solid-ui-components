@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.108.2
+
+### Fixed
+
+- **`FieldTable`: fixed columns stay fixed when the table stretches** — a trailing auto spacer column (empty header/cells, zero geometry) absorbs stretch slack; without it, `table-layout: fixed` inflated every width-carrying column proportionally (a stretched two-column table ballooned its 19ch timestamp). The spacer collapses to nothing at the table's minimum width.
+
 ## 0.108.1
 
 ### Fixed
