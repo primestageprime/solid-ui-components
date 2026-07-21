@@ -22,6 +22,7 @@ import {
   type FieldGeo,
   type ToneFn,
 } from "./shared";
+import { filter, map } from "../../../fn";
 
 /** Longest an enum member may be; a longer set belongs in textCol. */
 const MAX_MEMBER_CH = 20;
@@ -45,14 +46,15 @@ export const enumCol = <T,>(
   values: readonly string[],
   opts: EnumColOpts<T> = {},
 ): FieldCol<T> => {
-  const tooLong = values.find((v) => v.length > MAX_MEMBER_CH);
+  const memberCh = map((v: string) => v.length, values as string[]);
+  const [tooLong] = filter((v: string) => v.length > MAX_MEMBER_CH, values as string[]);
   if (tooLong !== undefined)
     throw new Error(
       `enumCol("${String(key)}"): member ${JSON.stringify(tooLong)} exceeds ` +
         `${MAX_MEMBER_CH}ch — use textCol for variable-length text.`,
     );
   const label = opts.header ?? humanize(String(key));
-  const longest = values.reduce((m, v) => Math.max(m, v.length), 0);
+  const longest = Math.max(0, ...memberCh);
   const baseGeo: FieldGeo = {
     minCh: longest,
     maxCh: longest,

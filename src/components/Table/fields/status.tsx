@@ -11,6 +11,8 @@ import type { Component } from "solid-js";
 import type { Tone } from "../../../types";
 import type { FieldCol, FieldGeo } from "./shared";
 import { centered, floorGeoAtLabel, humanize, toneWrap } from "./shared";
+// `map` is this factory's parameter name — alias the fn helper.
+import { map as fnMap } from "../../../fn";
 import {
   createStatusBadge,
   type StatusBadgeVariant,
@@ -67,10 +69,8 @@ export const statusCol = <T,>(
   // time, same rule as enumCol): content-fit fixed at the longest label, with
   // the badge chrome budgeted on top of the cell chrome — the static 9ch geo
   // remains only as the col() fallback for custom status-typed cells.
-  const longest = Object.values(map).reduce(
-    (m, s) => Math.max(m, s.label.length),
-    0,
-  );
+  const mappings: StatusColMapping[] = Object.values(map);
+  const longest = Math.max(0, ...fnMap((s: StatusColMapping) => s.label.length, mappings));
   const padPx = (geo.padPx ?? 0) + BADGE_CHROME_PX;
   const badgeGeo: FieldGeo = {
     minCh: longest,
