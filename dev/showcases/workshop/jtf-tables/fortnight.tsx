@@ -620,7 +620,7 @@ const VIOLATION_REGISTRY: Record<string, FieldCol<ViolationDisplayStub>> = {
     href: (r) => `#/detail/${r.vessel_call_id}`,
     glyph: vesselGlyph,
   }),
-  asset_id: fields.textCol<ViolationDisplayStub>("asset_id"),
+  asset_id: fields.text10Col<ViolationDisplayStub>("asset_id"),
   connected_at: fields.dateTimeCol<ViolationDisplayStub>("connected_at"),
   duration: fields.col<ViolationDisplayStub>(
     "duration",

@@ -14,6 +14,7 @@ import {
   identityLinkCol,
   identityLink20Col,
   textCol,
+  text10Col,
   dateTimeCol,
   durationCol,
   floatCol,
@@ -224,7 +225,7 @@ const CACHED_REGISTRY = {
     href: (row) => `/detail/${row.id}`,
     glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
   }),
-  asset_id: textCol<CachedVesselCall>("asset_id"),
+  asset_id: text10Col<CachedVesselCall>("asset_id"),
   connected_at: dateTimeCol<CachedVesselCall>("connected_at"),
   duration: durationCol<CachedVesselCall>(cachedCallMinutes, "m", {
     id: "duration",
@@ -344,7 +345,7 @@ const DURABILITY_REGISTRY = {
     href: (row) => `/detail/${row.id}`,
     glyph: (row) => <>{TYPE_GLYPH[row.vessel_type] ?? "▢"}&nbsp;</>,
   }),
-  asset_id: textCol<DurabilityRow>("asset_id"),
+  asset_id: text10Col<DurabilityRow>("asset_id"),
   connected_at: dateTimeCol<DurabilityRow>("connected_at"),
   // Nullable end → BLANK (ruled 2026-07-18): no 'In Progress' placeholder.
   disconnected_at: dateTimeCol<DurabilityRow>("disconnected_at"),

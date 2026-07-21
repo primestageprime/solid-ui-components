@@ -22,6 +22,7 @@ import {
   identityLinkCol,
   linkedCountCol,
   textCol,
+  text10Col,
   dateTimeCol,
   durationCol,
   actionCol,
@@ -395,7 +396,7 @@ function NoxPreviewReplica(): JSX.Element {
       "text",
       (row) => row.vessel_name,
     ),
-    asset_id: textCol<VesselCall>("asset_id"),
+    asset_id: text10Col<VesselCall>("asset_id"),
     connected_at: dateTimeCol<VesselCall>("connected_at"),
     // Nullable end → BLANK; the old "In Progress" placeholder dies.
     disconnected_at: dateTimeCol<VesselCall>("disconnected_at"),
@@ -444,7 +445,7 @@ function NoxReportBagReplica(): JSX.Element {
       href: (row) => `/detail/${row.id}`,
       glyph: (row) => <>{TYPE_GLYPH[row.vessel_type.toUpperCase()] ?? "▢"}&nbsp;</>,
     }),
-    asset_id: textCol<VesselCall>("asset_id"),
+    asset_id: text10Col<VesselCall>("asset_id"),
     connected_at: dateTimeCol<VesselCall>("connected_at"),
     disconnected_at: dateTimeCol<VesselCall>("disconnected_at"),
     duration: durationCol<VesselCall>(bagMinutes, "m", {
