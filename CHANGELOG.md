@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.111.1
+
+### Fixed
+
+- Build fix: the barrel no longer exports an uncommitted module (0.111.0 failed to publish). No API change from 0.111.0.
+
 ## 0.111.0
 
 ### Added
