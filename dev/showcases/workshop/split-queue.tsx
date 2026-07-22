@@ -1,20 +1,18 @@
-// Workshop — Split Queue as a THREE-section progression (ruled 2026-07-22).
-// A work item's lifecycle as three ALWAYS-present sections stacked into one
-// full-height bar:
-//   • TERMINAL-HAPPY   (top)    — done, good outcome
-//   • TERMINAL-UNHAPPY (middle) — done, bad outcome
-//   • TRANSIENT        (bottom) — still in flight
+// Workshop — Split Queue as a THREE-section progression, modeled on the JTF
+// FORTNIGHT sidebar (ruled 2026-07-22): the report's vessel calls bucketed by
+// compliance into one full-height progression bar:
+//   • COMPLIANT     (top)    terminal-happy   — reviewed, nox & rog both pass
+//   • NON-COMPLIANT (middle) terminal-unhappy — reviewed, nox or rog fails
+//   • IN REVIEW     (bottom) transient        — not yet evaluated
+// The `bucketOf` derivation and sizing here are the logic to promote into the
+// live fortnight route.
 //
-// SIZING MODEL (ruled 2026-07-22): no wasted space.
-//   • An EMPTY section collapses to just its summary line (header + total).
-//   • A POPULATED section shrink-wraps to its content.
-//   • When the populated sections' content OVERFLOWS the available height they
-//     share the space weighted 1:1:2 (transient double) — but a section never
-//     takes more than its content needs; a section that shrink-wraps under its
-//     share hands the surplus back, and the others expand to fill it.
-// That's a weighted water-fill (proportional share, capped at content,
-// redistribute surplus), computed here from measured content heights — flexbox
-// can't express "grow to a weighted share, but only up to content".
+// SIZING MODEL: no wasted space. An EMPTY section collapses to its summary line
+// (header + total). A POPULATED section shrink-wraps. When the populated
+// sections overflow the available height they share it weighted 1:1:2 (transient
+// double), each capped at its content so a section that shrinks hands the
+// surplus back and the others expand to fill. Neutral chrome; role color rides a
+// dot beside each section name.
 import {
   type Component,
   type JSX,
@@ -38,63 +36,84 @@ import { NarrowStack, SpreadRow, ClusterRow } from "../../../src/components/Layo
 
 type QState = "happy" | "unhappy" | "transient";
 
-interface QueueItem {
-  id: string;
-  vessel: string;
-  asset: string;
-  at: string;
-  state: QState;
+// Subset of the real VesselCallAsset contract the card needs. Compliance is
+// nullable — null means "not yet evaluated" (the call is still in review).
+interface Call {
+  vessel_call_id: string;
+  vessel_name: string;
+  asset_id: string;
+  connected_at: string;
+  nox_compliant: boolean | null;
+  rog_compliant: boolean | null;
 }
 
-const item = (
-  id: string,
+// THE derivation to promote: a call with any unevaluated metric is In Review;
+// otherwise Compliant iff both metrics pass, else Non-compliant.
+const bucketOf = (c: Call): QState => {
+  if (c.nox_compliant == null || c.rog_compliant == null) return "transient";
+  return c.nox_compliant && c.rog_compliant ? "happy" : "unhappy";
+};
+
+const call = (
+  n: number,
   vessel: string,
   asset: string,
-  at: string,
-  state: QState,
-): QueueItem => ({ id, vessel, asset, at, state });
+  connected: string,
+  nox: boolean | null,
+  rog: boolean | null,
+): Call => ({
+  vessel_call_id: `vc-${n}`,
+  vessel_name: vessel,
+  asset_id: asset,
+  connected_at: connected,
+  nox_compliant: nox,
+  rog_compliant: rog,
+});
 
-const POOL: QueueItem[] = [
-  item("vc-01", "Ever Steadfast", "BE-104", "2026-06-10 21:15", "happy"),
-  item("vc-03", "Coral Dawn", "BE-112", "2026-06-12 07:00", "happy"),
-  item("vc-06", "Ever Resolute", "BE-215", "2026-06-15 05:20", "happy"),
-  item("vc-08", "Northern Crane", "BE-118", "2026-06-17 02:40", "happy"),
-  item("vc-02", "Pacific Meridian", "BE-207", "2026-06-11 04:30", "unhappy"),
-  item("vc-04", "Harbor Vigilant", "BE-104", "2026-06-13 15:10", "unhappy"),
-  item("vc-05", "Golden Horizon", "BE-309", "2026-06-14 23:45", "unhappy"),
-  item("vc-07", "Iron Halcyon", "BE-221", "2026-06-16 11:05", "transient"),
-  item("vc-09", "Silver Marlin", "BE-303", "2026-06-18 19:55", "transient"),
-  item("vc-10", "Blue Sentinel", "BE-142", "2026-06-19 08:30", "transient"),
-  item("vc-11", "Cape Ranger", "BE-256", "2026-06-20 13:12", "transient"),
-  item("vc-12", "Tide Warden", "BE-190", "2026-06-21 22:48", "transient"),
+const NAMES = [
+  "Ever Steadfast", "Coral Dawn", "Ever Resolute", "Northern Crane",
+  "Pacific Meridian", "Harbor Vigilant", "Golden Horizon", "Iron Halcyon",
+  "Silver Marlin", "Blue Sentinel", "Cape Ranger", "Tide Warden",
 ];
 
-const withState = (s: QState) => (i: QueueItem): QueueItem => ({ ...i, state: s });
+// N calls with a given compliance pair (null/null → in review).
+const gen = (n: number, nox: boolean | null, rog: boolean | null, tag: string): Call[] =>
+  Array.from({ length: n }, (_, k) =>
+    call(
+      `${tag}${k}` as unknown as number,
+      NAMES[k % NAMES.length],
+      `BE-${104 + (k % 12)}`,
+      `2026-06-${String(10 + (k % 18)).padStart(2, "0")} ${String(6 + (k % 16)).padStart(2, "0")}:15`,
+      nox,
+      rog,
+    ),
+  );
 
-// N items of one state, cycling the pool for believable rows with unique ids.
-const gen = (n: number, state: QState, tag: string): QueueItem[] =>
-  Array.from({ length: n }, (_, k) => ({
-    ...POOL[k % POOL.length],
-    id: `${tag}-${k}`,
-    state,
-  }));
-
-const SCENARIOS: Record<string, QueueItem[]> = {
+// Realistic fortnight distributions. Compliance drives the bucket via bucketOf.
+const SCENARIOS: Record<string, Call[]> = {
   none: [],
-  recent: POOL.filter((i) => i.state !== "transient").slice(0, 4),
-  resolvedNc: POOL.filter((i) => i.state === "unhappy"),
-  mix: POOL,
-  // All three overflow their share → clean 1:1:2 (transient double).
-  overflow: [...gen(8, "happy", "h"), ...gen(8, "unhappy", "u"), ...gen(24, "transient", "t")],
-  // Transient shrinks to its 4 rows; the two heavy terminals expand 1:1 into
-  // the freed space (the surplus-redistribution case).
-  terminalHeavy: [...gen(20, "happy", "h"), ...gen(20, "unhappy", "u"), ...gen(4, "transient", "t")],
+  fresh: gen(6, null, null, "r"), // just synced — nothing evaluated yet
+  reviewed: [
+    ...gen(4, true, true, "c"),
+    ...gen(3, false, true, "n"), // nox fails
+  ],
+  mix: [
+    ...gen(4, true, true, "c"),
+    ...gen(3, true, false, "n"), // rog fails
+    ...gen(5, null, null, "r"),
+  ],
+  overflow: [...gen(8, true, true, "c"), ...gen(8, false, false, "n"), ...gen(24, null, null, "r")],
+  terminalHeavy: [
+    ...gen(20, true, true, "c"),
+    ...gen(20, false, true, "n"),
+    ...gen(4, null, null, "r"),
+  ],
 };
 
 const SCENARIO_OPTIONS = [
-  { value: "none", label: "No data" },
-  { value: "recent", label: "Just recent" },
-  { value: "resolvedNc", label: "Resolved non-compliant" },
+  { value: "none", label: "Empty report" },
+  { value: "fresh", label: "Fresh (all in review)" },
+  { value: "reviewed", label: "Reviewed" },
   { value: "mix", label: "Full mix" },
   { value: "overflow", label: "Overflow (1:1:2)" },
   { value: "terminalHeavy", label: "20 / 20 / 4" },
@@ -118,20 +137,13 @@ const GAP = 8;
 // fits; when the populated sections overflow the pool, share it by weight —
 // capping each at its content and redistributing the surplus to the ones still
 // short. Empty sections are fixed at their summary-line (header) height.
-const allocate = (
-  natural: number[], // content height per section (header only for empty ones)
-  counts: number[],
-  available: number,
-): number[] => {
+const allocate = (natural: number[], counts: number[], available: number): number[] => {
   const out = natural.map((h) => h);
   let pool = available - GAP * (natural.length - 1);
   let active: number[] = [];
   natural.forEach((h, i) => {
-    if (counts[i] === 0) pool -= h; // empty: fixed at its summary line
-    else {
-      pool -= 0;
-      active.push(i);
-    }
+    if (counts[i] === 0) pool -= h;
+    else active.push(i);
   });
   active.forEach((i) => (out[i] = 0));
   while (active.length && pool > 0.5) {
@@ -158,7 +170,7 @@ const allocate = (
   return out;
 };
 
-const ItemRow = (i: QueueItem): JSX.Element => (
+const Row = (c: Call): JSX.Element => (
   <div
     class="prog-bar__row"
     style={{
@@ -168,8 +180,8 @@ const ItemRow = (i: QueueItem): JSX.Element => (
   >
     <SpreadRow>
       <NarrowStack>
-        <EllipsizedTitle>{i.vessel}</EllipsizedTitle>
-        <FadedNowrapSublabel>{`${i.asset} · ${i.at}`}</FadedNowrapSublabel>
+        <EllipsizedTitle>{c.vessel_name}</EllipsizedTitle>
+        <FadedNowrapSublabel>{`${c.asset_id} · ${c.connected_at}`}</FadedNowrapSublabel>
       </NarrowStack>
     </SpreadRow>
   </div>
@@ -177,16 +189,15 @@ const ItemRow = (i: QueueItem): JSX.Element => (
 
 const SplitQueueBench: Component = () => {
   const [scenario, setScenario] = createSignal("mix");
-  const items = createMemo(() => SCENARIOS[scenario()]);
-  const rowsIn = (role: QState) => items().filter((i) => i.state === role);
-  const counts = createMemo(() => SECTIONS.map((s) => rowsIn(s.role).length));
+  const calls = createMemo(() => SCENARIOS[scenario()]);
+  const callsIn = (role: QState) => calls().filter((c) => bucketOf(c) === role);
+  const counts = createMemo(() => SECTIONS.map((s) => callsIn(s.role).length));
 
-  // Available height = viewport bottom − the bar's own top (measured, not a
-  // hardcoded offset), so the bar always fills exactly the space below the
-  // controls regardless of window size. The natural height of a section is
-  // deterministic from its row count — one measured row + header (recalibrated
-  // on resize/zoom) — avoiding per-section DOM measurement, which goes stale the
-  // moment a section's body unmounts.
+  // Available height = viewport bottom − the bar's measured top, so the bar
+  // fills exactly the space below the controls at any window size. Section
+  // natural heights are deterministic from row counts (one measured row +
+  // header, recalibrated on resize) — no per-section body measurement, which
+  // goes stale when a section's body unmounts.
   const BOTTOM_MARGIN = 24;
   let barRef: HTMLDivElement | undefined;
   let rowRef: HTMLDivElement | undefined;
@@ -205,13 +216,12 @@ const SplitQueueBench: Component = () => {
 
   onMount(() => {
     window.addEventListener("resize", measure);
+    measure();
     requestAnimationFrame(measure);
     onCleanup(() => window.removeEventListener("resize", measure));
   });
-  // Recalibrate the row/header sample after the item set changes (a scenario
-  // with content must have rendered a row before we can measure one).
   createEffect(() => {
-    items();
+    calls();
     requestAnimationFrame(measure);
   });
 
@@ -224,10 +234,10 @@ const SplitQueueBench: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Split Queue</SectionTitle>
       <MutedBody>
-        Three always-present sections as one progression bar. Empty sections
-        collapse to a summary line; populated sections shrink-wrap; when content
-        overflows, the sections share the height 1:1:2 (transient double) and
-        hand back any surplus they don't need.
+        The fortnight report's vessel calls bucketed by compliance — Compliant
+        (top), Non-compliant (middle), In review (bottom). Empty sections
+        collapse to a summary line; populated sections shrink-wrap; on overflow
+        they share the height 1:1:2 and hand back any surplus they don't need.
       </MutedBody>
 
       <ClusterRow>
@@ -236,7 +246,7 @@ const SplitQueueBench: Component = () => {
       </ClusterRow>
 
       <div style={{ "max-width": "460px", "margin-top": "12px" }}>
-        <div class="prog-bar" ref={barRef} style={{ height: `${Math.round(barH())}px` }}>
+        <div class="prog-bar" ref={(el) => (barRef = el)} style={{ height: `${Math.round(barH())}px` }}>
           <For each={SECTIONS}>
             {(s, i) => {
               const count = () => counts()[i()];
@@ -254,10 +264,10 @@ const SplitQueueBench: Component = () => {
                   </div>
                   <Show when={count() > 0}>
                     <div class="prog-bar__body">
-                      <For each={rowsIn(s.role)}>
-                        {(r, ri) => (
-                          <div ref={(el) => (i() === 0 && ri() === 0 ? (rowRef = el) : undefined)}>
-                            {ItemRow(r)}
+                      <For each={callsIn(s.role)}>
+                        {(c, ci) => (
+                          <div ref={(el) => (i() === 0 && ci() === 0 ? (rowRef = el) : undefined)}>
+                            {Row(c)}
                           </div>
                         )}
                       </For>
