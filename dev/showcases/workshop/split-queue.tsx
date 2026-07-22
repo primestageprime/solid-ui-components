@@ -1,14 +1,31 @@
 // Workshop — Split Queue as a THREE-section progression (ruled 2026-07-22).
-// The control shows a work item's lifecycle as three ALWAYS-present sections
-// stacked into one full-height bar:
-//   • TERMINAL-HAPPY  (top)    — done, good outcome
+// A work item's lifecycle as three ALWAYS-present sections stacked into one
+// full-height bar:
+//   • TERMINAL-HAPPY   (top)    — done, good outcome
 //   • TERMINAL-UNHAPPY (middle) — done, bad outcome
-//   • TRANSIENT       (bottom) — still in flight
-// Every section is displayed at all times with its count; a 0-count section
-// still shows its header + count and a "No <name>" line. Each section flex-grows
-// by its count so the bar reads as a live progression, and the bar fills the
-// full vertical area available. Framed here as a compliance-review queue.
-import { type Component, type JSX, createSignal, createMemo, For, Show } from "solid-js";
+//   • TRANSIENT        (bottom) — still in flight
+//
+// SIZING MODEL (ruled 2026-07-22): no wasted space.
+//   • An EMPTY section collapses to just its summary line (header + total).
+//   • A POPULATED section shrink-wraps to its content.
+//   • When the populated sections' content OVERFLOWS the available height they
+//     share the space weighted 1:1:2 (transient double) — but a section never
+//     takes more than its content needs; a section that shrink-wraps under its
+//     share hands the surplus back, and the others expand to fill it.
+// That's a weighted water-fill (proportional share, capped at content,
+// redistribute surplus), computed here from measured content heights — flexbox
+// can't express "grow to a weighted share, but only up to content".
+import {
+  type Component,
+  type JSX,
+  createSignal,
+  createMemo,
+  createEffect,
+  onMount,
+  onCleanup,
+  For,
+  Show,
+} from "solid-js";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import {
   SectionTitle,
@@ -18,7 +35,6 @@ import {
   FadedNowrapSublabel,
 } from "../../../src/components/Text";
 import { NarrowStack, SpreadRow, ClusterRow } from "../../../src/components/Layout";
-import { toneWrap } from "../../../src/components/Table/fields";
 
 type QState = "happy" | "unhappy" | "transient";
 
@@ -38,7 +54,6 @@ const item = (
   state: QState,
 ): QueueItem => ({ id, vessel, asset, at, state });
 
-// One shared pool spanning all three states so scenarios slice believable data.
 const POOL: QueueItem[] = [
   item("vc-01", "Ever Steadfast", "BE-104", "2026-06-10 21:15", "happy"),
   item("vc-03", "Coral Dawn", "BE-112", "2026-06-12 07:00", "happy"),
@@ -56,18 +71,17 @@ const POOL: QueueItem[] = [
 
 const withState = (s: QState) => (i: QueueItem): QueueItem => ({ ...i, state: s });
 
-// Each scenario is a set of items; the bar buckets them by state. These are the
-// states worth eyeballing: empty (all "No <name>"), terminal-only, single-verdict,
-// typical mix, and a transient-heavy backlog.
 const SCENARIOS: Record<string, QueueItem[]> = {
   none: [],
   recent: POOL.filter((i) => i.state !== "transient").slice(0, 4),
   resolvedNc: POOL.filter((i) => i.state === "unhappy"),
   mix: POOL,
-  backlog: [
-    ...POOL.filter((i) => i.state === "happy").slice(0, 1),
-    ...POOL.filter((i) => i.state === "unhappy").slice(0, 1),
-    ...POOL.map(withState("transient")).slice(0, 10),
+  // All three overflow their share → clean 1:1:2 (transient double).
+  overflow: [
+    ...POOL.slice(0, 8).map(withState("happy")),
+    ...POOL.slice(0, 8).map((i) => ({ ...i, id: i.id + "-u" })).map(withState("unhappy")),
+    ...POOL.map((i) => ({ ...i, id: i.id + "-t" })).map(withState("transient")),
+    ...POOL.map((i) => ({ ...i, id: i.id + "-t2" })).map(withState("transient")),
   ],
 };
 
@@ -76,25 +90,75 @@ const SCENARIO_OPTIONS = [
   { value: "recent", label: "Just recent" },
   { value: "resolvedNc", label: "Resolved non-compliant" },
   { value: "mix", label: "Full mix" },
-  { value: "backlog", label: "Large backlog" },
+  { value: "overflow", label: "Overflow (1:1:2)" },
 ];
 
-// Section definitions, top → bottom. `role` drives the toned chrome; `title` is
-// the header label; `empty` is the "No <name>" line shown at count 0.
 interface SectionDef {
   role: QState;
   title: string;
-  empty: string;
-  tone: "success" | "danger" | "accent";
+  weight: number;
 }
+// Top → bottom; weights apply only when content overflows the available height.
 const SECTIONS: SectionDef[] = [
-  { role: "happy", title: "Compliant", empty: "No compliant calls", tone: "success" },
-  { role: "unhappy", title: "Non-compliant", empty: "No non-compliant calls", tone: "danger" },
-  { role: "transient", title: "In review", empty: "No calls in review", tone: "accent" },
+  { role: "happy", title: "Compliant", weight: 1 },
+  { role: "unhappy", title: "Non-compliant", weight: 1 },
+  { role: "transient", title: "In review", weight: 2 },
 ];
 
+const GAP = 8;
+
+// Weighted water-fill: give each populated section its content height when it
+// fits; when the populated sections overflow the pool, share it by weight —
+// capping each at its content and redistributing the surplus to the ones still
+// short. Empty sections are fixed at their summary-line (header) height.
+const allocate = (
+  natural: number[], // content height per section (header only for empty ones)
+  counts: number[],
+  available: number,
+): number[] => {
+  const out = natural.map((h) => h);
+  let pool = available - GAP * (natural.length - 1);
+  let active: number[] = [];
+  natural.forEach((h, i) => {
+    if (counts[i] === 0) pool -= h; // empty: fixed at its summary line
+    else {
+      pool -= 0;
+      active.push(i);
+    }
+  });
+  active.forEach((i) => (out[i] = 0));
+  while (active.length && pool > 0.5) {
+    const wSum = active.reduce((a, i) => a + SECTIONS[i].weight, 0);
+    let capped = -1;
+    for (const i of active) {
+      const share = (pool * SECTIONS[i].weight) / wSum;
+      const room = natural[i] - out[i];
+      if (share >= room - 0.5) {
+        capped = i;
+        break;
+      }
+    }
+    if (capped >= 0) {
+      const room = natural[capped] - out[capped];
+      out[capped] += room;
+      pool -= room;
+      active = active.filter((i) => i !== capped);
+    } else {
+      active.forEach((i) => (out[i] += (pool * SECTIONS[i].weight) / wSum));
+      pool = 0;
+    }
+  }
+  return out;
+};
+
 const ItemRow = (i: QueueItem): JSX.Element => (
-  <div style={{ padding: "6px 12px", "border-top": "1px solid var(--sui-border-subtle, rgba(127,127,127,0.15))" }}>
+  <div
+    class="prog-bar__row"
+    style={{
+      padding: "6px 12px",
+      "border-top": "1px solid var(--sui-border-subtle, rgba(127,127,127,0.15))",
+    }}
+  >
     <SpreadRow>
       <NarrowStack>
         <EllipsizedTitle>{i.vessel}</EllipsizedTitle>
@@ -107,52 +171,87 @@ const ItemRow = (i: QueueItem): JSX.Element => (
 const SplitQueueBench: Component = () => {
   const [scenario, setScenario] = createSignal("mix");
   const items = createMemo(() => SCENARIOS[scenario()]);
-  const inState = (role: QState) => items().filter((i) => i.state === role);
+  const rowsIn = (role: QState) => items().filter((i) => i.state === role);
+  const counts = createMemo(() => SECTIONS.map((s) => rowsIn(s.role).length));
+
+  // The natural height of a section is deterministic from its row count — one
+  // measured row + header (recalibrated on resize/zoom, fallbacks for the first
+  // paint). This avoids per-section DOM measurement, which goes stale the moment
+  // a section's body unmounts.
+  let barRef: HTMLDivElement | undefined;
+  let rowRef: HTMLDivElement | undefined;
+  let headRef: HTMLDivElement | undefined;
+  const [barH, setBarH] = createSignal(0);
+  const [rowH, setRowH] = createSignal(54);
+  const [headH, setHeadH] = createSignal(34);
+
+  const measure = () => {
+    if (barRef) setBarH(barRef.clientHeight);
+    if (rowRef?.offsetHeight) setRowH(rowRef.offsetHeight);
+    if (headRef?.offsetHeight) setHeadH(headRef.offsetHeight);
+  };
+
+  onMount(() => {
+    const ro = new ResizeObserver(() => measure());
+    if (barRef) ro.observe(barRef);
+    measure();
+    onCleanup(() => ro.disconnect());
+  });
+  // Recalibrate the row/header sample after the item set changes (a scenario
+  // with content must have rendered a row before we can measure one).
+  createEffect(() => {
+    items();
+    requestAnimationFrame(measure);
+  });
+
+  const natural = createMemo(() =>
+    counts().map((c) => (c === 0 ? headH() + 2 : headH() + c * rowH() + 2)),
+  );
+  const heights = createMemo(() => allocate(natural(), counts(), barH()));
 
   return (
-    <div class="component-section component-section--full" style={{ display: "flex", "flex-direction": "column", height: "calc(100vh - 200px)" }}>
+    <div
+      class="component-section component-section--full"
+      style={{ display: "flex", "flex-direction": "column", height: "calc(100vh - 200px)" }}
+    >
       <SectionTitle>Split Queue</SectionTitle>
       <MutedBody>
-        Three always-present sections as one full-height progression bar —
-        terminal-happy (top), terminal-unhappy (middle), transient (bottom). Each
-        keeps its count and a "No &lt;name&gt;" line when empty, and grows by its
-        count so the bar reads as a live distribution.
+        Three always-present sections as one progression bar. Empty sections
+        collapse to a summary line; populated sections shrink-wrap; when content
+        overflows, the sections share the height 1:1:2 (transient double) and
+        hand back any surplus they don't need.
       </MutedBody>
 
       <ClusterRow>
         <SubsectionTitle>Scenario</SubsectionTitle>
-        <SegmentedControl
-          options={SCENARIO_OPTIONS}
-          value={scenario()}
-          onValueChange={setScenario}
-        />
+        <SegmentedControl options={SCENARIO_OPTIONS} value={scenario()} onValueChange={setScenario} />
       </ClusterRow>
 
       <div style={{ "max-width": "460px", flex: "1 1 auto", "min-height": "0", "margin-top": "12px" }}>
-        <div class="prog-bar">
+        <div class="prog-bar" ref={barRef}>
           <For each={SECTIONS}>
-            {(s) => {
-              const rows = createMemo(() => inState(s.role));
-              const count = () => rows().length;
+            {(s, i) => {
+              const count = () => counts()[i()];
               return (
                 <div
                   class={`prog-bar__section prog-bar__section--${s.role}`}
-                  style={{ "flex-grow": Math.max(count(), 0.5) }}
+                  style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}
                 >
-                  <div class="prog-bar__header">
+                  <div class="prog-bar__header" ref={(el) => (i() === 0 ? (headRef = el) : undefined)}>
                     <span>{s.title}</span>
-                    <span class="prog-bar__count">
-                      {toneWrap(count() > 0 ? s.tone : "muted", String(count()))}
-                    </span>
+                    <span class="prog-bar__count">{count()}</span>
                   </div>
-                  <div class="prog-bar__body">
-                    <Show
-                      when={count() > 0}
-                      fallback={<div class="prog-bar__empty">{s.empty}</div>}
-                    >
-                      <For each={rows()}>{(i) => ItemRow(i)}</For>
-                    </Show>
-                  </div>
+                  <Show when={count() > 0}>
+                    <div class="prog-bar__body">
+                      <For each={rowsIn(s.role)}>
+                        {(r, ri) => (
+                          <div ref={(el) => (i() === 0 && ri() === 0 ? (rowRef = el) : undefined)}>
+                            {ItemRow(r)}
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
                 </div>
               );
             }}

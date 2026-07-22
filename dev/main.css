@@ -2615,8 +2615,7 @@ th:has(.tf-th-center) .hud-table__header-content {
 .prog-bar__section {
   display: flex;
   flex-direction: column;
-  flex-basis: 0;
-  min-height: 3.4rem;
+  flex: none; /* height is computed (weighted water-fill), never flex-stretched */
   border: 1px solid var(--sui-border);
   border-radius: var(--sui-radius-md, 4px);
   overflow: hidden;
