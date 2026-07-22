@@ -12,6 +12,7 @@ export type { ColorVariant, CornerStyle } from "./types";
 
 // Components
 export * from "./components/Layout";
+export * from "./components/Placeholder";
 export * from "./components/Text";
 export * from "./components/ResponsiveMoney";
 export * from "./components/InlineText";

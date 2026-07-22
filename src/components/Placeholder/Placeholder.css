@@ -1,0 +1,36 @@
+/* Placeholder — appearance + sizing only (no flex/grid geometry; centering
+   comes from the composed CenteredStack, per layout purity). */
+.sui-placeholder {
+  background: var(--sui-bg-elevated);
+  border: 1px dashed var(--sui-border-bright);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+/* width axis */
+.sui-placeholder--fit {
+  width: fit-content;
+}
+.sui-placeholder--fill {
+  width: 100%;
+}
+
+/* line axis */
+.sui-placeholder--line {
+  min-height: 34px;
+  white-space: nowrap;
+}
+.sui-placeholder--block {
+  min-height: 96px;
+}
+
+/* tile size presets */
+.sui-placeholder--sm {
+  min-height: 60px;
+}
+.sui-placeholder--md {
+  min-height: 120px;
+}
+.sui-placeholder--lg {
+  min-height: 200px;
+}

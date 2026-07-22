@@ -233,16 +233,34 @@ export const ScrubChart = <C extends Cell>(
     const el = axisScrollEl;
     if (!el) return;
     const n = props.cells.length;
-    // Use the measured per-cell width (see windowCells) and clamp the target to
-    // the scrollable range, so centering on the last cell pins it to the right
-    // edge instead of overshooting.
-    const w = n > 0 && el.scrollWidth > 0 ? el.scrollWidth / n : cellWidth();
-    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-    const target = Math.min(
-      maxScroll,
-      Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
-    );
-    el.scrollTo({ left: target, behavior: "smooth" });
+    if (n === 0) return;
+    // A centerOn requested on first mount can fire BEFORE the ribbon has laid
+    // out its cells, when `scrollWidth` is still 0 (or equals clientWidth). At
+    // that point maxScroll clamps to 0 and the recenter collapses to a no-op —
+    // the ribbon stays parked at the first cell. Defer to the next frame(s)
+    // until the content is measurably scrollable, then position instantly
+    // (a long smooth animation from a cold offset looks janky); once laid out,
+    // an explicit recenter animates smoothly.
+    const MAX_LAYOUT_FRAMES = 12;
+    const canDefer = typeof requestAnimationFrame === "function";
+    const applyScroll = (attempt: number) => {
+      // Content not yet wider than the viewport → layout not ready; retry.
+      if (el.scrollWidth <= el.clientWidth && attempt < MAX_LAYOUT_FRAMES) {
+        if (canDefer) requestAnimationFrame(() => applyScroll(attempt + 1));
+        return;
+      }
+      // Use the measured per-cell width (see windowCells) and clamp the target
+      // to the scrollable range, so centering on the last cell pins it to the
+      // right edge instead of overshooting.
+      const w = el.scrollWidth > 0 ? el.scrollWidth / n : cellWidth();
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      const target = Math.min(
+        maxScroll,
+        Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
+      );
+      el.scrollTo({ left: target, behavior: attempt === 0 ? "smooth" : "auto" });
+    };
+    applyScroll(0);
   });
 
   // Map the axis's scroll window onto cell indices using the axis's ACTUAL
