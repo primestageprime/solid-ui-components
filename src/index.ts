@@ -16,7 +16,6 @@ export * from "./components/Text";
 export * from "./components/ResponsiveMoney";
 export * from "./components/InlineText";
 export * from "./components/Surface";
-export * from "./components/Placeholder";
 export * from "./components/Badge";
 export * from "./components/BulkActionBar";
 export * from "./components/SlotFillBar";
