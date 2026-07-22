@@ -71,18 +71,24 @@ const POOL: QueueItem[] = [
 
 const withState = (s: QState) => (i: QueueItem): QueueItem => ({ ...i, state: s });
 
+// N items of one state, cycling the pool for believable rows with unique ids.
+const gen = (n: number, state: QState, tag: string): QueueItem[] =>
+  Array.from({ length: n }, (_, k) => ({
+    ...POOL[k % POOL.length],
+    id: `${tag}-${k}`,
+    state,
+  }));
+
 const SCENARIOS: Record<string, QueueItem[]> = {
   none: [],
   recent: POOL.filter((i) => i.state !== "transient").slice(0, 4),
   resolvedNc: POOL.filter((i) => i.state === "unhappy"),
   mix: POOL,
   // All three overflow their share → clean 1:1:2 (transient double).
-  overflow: [
-    ...POOL.slice(0, 8).map(withState("happy")),
-    ...POOL.slice(0, 8).map((i) => ({ ...i, id: i.id + "-u" })).map(withState("unhappy")),
-    ...POOL.map((i) => ({ ...i, id: i.id + "-t" })).map(withState("transient")),
-    ...POOL.map((i) => ({ ...i, id: i.id + "-t2" })).map(withState("transient")),
-  ],
+  overflow: [...gen(8, "happy", "h"), ...gen(8, "unhappy", "u"), ...gen(24, "transient", "t")],
+  // Transient shrinks to its 4 rows; the two heavy terminals expand 1:1 into
+  // the freed space (the surplus-redistribution case).
+  terminalHeavy: [...gen(20, "happy", "h"), ...gen(20, "unhappy", "u"), ...gen(4, "transient", "t")],
 };
 
 const SCENARIO_OPTIONS = [
@@ -91,6 +97,7 @@ const SCENARIO_OPTIONS = [
   { value: "resolvedNc", label: "Resolved non-compliant" },
   { value: "mix", label: "Full mix" },
   { value: "overflow", label: "Overflow (1:1:2)" },
+  { value: "terminalHeavy", label: "20 / 20 / 4" },
 ];
 
 interface SectionDef {
