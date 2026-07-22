@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.111.0
+
+### Added
+
+- **`ProgressionQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present sections into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every section shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty section collapses to just its summary line; a populated section shrink-wraps; when the populated sections overflow the height they share it by `weight`, each capped at its content, so a section that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each section label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `sections`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
+
 ## 0.110.0
 
 ### Changed
