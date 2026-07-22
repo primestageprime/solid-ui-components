@@ -12,7 +12,7 @@ import {
   IntCell,
   MinuteDateTimeCell,
 } from "../../../../src/components/Table";
-import { FieldTable, SortableFieldTable, group, textCol, text5Col, col, intCol, floatCol, avgCol, aggregateCol } from "../../../../src/components/Table/fields";
+import { FieldTable, SortableFieldTable, group, textCol, text5Col, col, intCol, floatCol, aggregateCol } from "../../../../src/components/Table/fields";
 import { InlineText } from "../../../../src/components/InlineText";
 import { pipe, filter, sum } from "../../../../src/fn";
 import type { TableEntry } from "./shared";
@@ -57,11 +57,11 @@ const perTrainKw = (values: number[]): number | null => {
 // cells are plain floatCol (weight nuance dies, null → BLANK, no '—' literals).
 const CACHE_REGISTRY = {
   hour: col<AuxHourlyRow>("hour", "Date / Hour", (row) => row.hour_utc.slice(0, 16), "dateTime", (row) => row.hour_utc),
-  aux1: floatCol<AuxHourlyRow>("aux_1", { precision: 0, header: "Aux. 1" }),
-  aux2: floatCol<AuxHourlyRow>("aux_2", { precision: 0, header: "Aux. 2" }),
-  aux3: floatCol<AuxHourlyRow>("aux_3", { precision: 0, header: "Aux. 3" }),
-  aux4: floatCol<AuxHourlyRow>("aux_4", { precision: 0, header: "Aux. 4" }),
-  avg: aggregateCol<AuxHourlyRow>(AUX_KEYS, perTrainKw, { id: "avg_kw", header: "Avg (kW)", precision: 0 }),
+  aux1: floatCol<AuxHourlyRow>("aux_1", { header: "Aux. 1" }),
+  aux2: floatCol<AuxHourlyRow>("aux_2", { header: "Aux. 2" }),
+  aux3: floatCol<AuxHourlyRow>("aux_3", { header: "Aux. 3" }),
+  aux4: floatCol<AuxHourlyRow>("aux_4", { header: "Aux. 4" }),
+  avg: aggregateCol<AuxHourlyRow>(AUX_KEYS, perTrainKw, { id: "avg_kw", header: "Avg (kW)" }),
 };
 
 const PowerLogCacheTable: Component = () => (
@@ -108,12 +108,14 @@ const ocrFields = [
   col<PowerLogEntry>("aux_2", "Aux. 2", (row) => (row.aux_2 !== null ? row.aux_2.toFixed(0) : ""), "int"),
   col<PowerLogEntry>("aux_3", "Aux. 3", (row) => (row.aux_3 !== null ? row.aux_3.toFixed(0) : ""), "int"),
   col<PowerLogEntry>("aux_4", "Aux. 4", (row) => (row.aux_4 !== null ? row.aux_4.toFixed(0) : ""), "int"),
-  // The aggregate field (ruled 2026-07-18): configured with the avg targets,
-  // accent tone by default — mirrors jtf's migrated form.
-  avgCol<PowerLogEntry>(["aux_1", "aux_2", "aux_3", "aux_4"], {
-    header: "Avg (kW)",
-    precision: 0,
-  }),
+  // Rounded mean (ruled 2026-07-22): floatCol/avgCol display AS GIVEN, so a
+  // whole-kW average is the COMBINE's job — aggregateCol with a rounding mean,
+  // not a display precision. The raw mean of e.g. [433,407,215] is 351.67.
+  aggregateCol<PowerLogEntry>(
+    ["aux_1", "aux_2", "aux_3", "aux_4"],
+    (vals) => (vals.length ? Math.round(sum(vals) / vals.length) : null),
+    { header: "Avg (kW)" },
+  ),
 ];
 
 const PowerLogOcrTable: Component = () => (
@@ -241,7 +243,7 @@ const HourlyPivotTable: Component = () => {
       (row) => row.timestamp,
     ),
     ...PIVOT_METRICS.map((m) =>
-      floatCol<PivotRow>((row) => row.values.get(m) ?? null, { id: m, header: m, precision: 2 }),
+      floatCol<PivotRow>((row) => row.values.get(m) ?? null, { id: m, header: m }),
     ),
   ];
   return (

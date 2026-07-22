@@ -36,7 +36,6 @@ const NOX_PERIOD_REGISTRY = {
   }),
   pct: fields.intCol<NoxPeriodRow>("pct", { suffix: "%", header: "Share" }),
   nox: fields.floatCol<NoxPeriodRow>("nox", {
-    precision: 1,
     header: "NOx (ppm)",
     tone: (_v, row) => (row.highlight === "during" ? "success" : "warning"),
   }),
@@ -78,7 +77,6 @@ const ROG_PERIOD_REGISTRY = {
   }),
   pct: fields.intCol<RogPeriodRow>("pct", { suffix: "%", header: "Share" }),
   fidThc: fields.floatCol<RogPeriodRow>("fidThc", {
-    precision: 1,
     header: "FID THC",
     tone: (_v, row) => (row.highlight === "during" ? "success" : "warning"),
   }),
@@ -130,12 +128,11 @@ const PERIOD_STATS_REGISTRY = {
   ),
   count: fields.intCol<PeriodStatsRow>("count", { header: "Data Points" }),
   avgNOx: fields.floatCol<PeriodStatsRow>("avgNOx", {
-    precision: 2,
     header: "Avg NOx (ppm)",
     tone: (_v, row) => (row.highlight ? "success" : "warning"),
   }),
-  avgNO: fields.floatCol<PeriodStatsRow>("avgNO", { precision: 2, header: "Avg NO (ppm)" }),
-  avgNO2: fields.floatCol<PeriodStatsRow>("avgNO2", { precision: 2, header: "Avg NO₂ (ppm)" }),
+  avgNO: fields.floatCol<PeriodStatsRow>("avgNO", { header: "Avg NO (ppm)" }),
+  avgNO2: fields.floatCol<PeriodStatsRow>("avgNO2", { header: "Avg NO₂ (ppm)" }),
 };
 
 const NoxPeriodStatsTable = () => (
@@ -183,7 +180,6 @@ const CE_PROJECTION_REGISTRY = {
     header: "Capture Efficiency",
   }),
   projected: fields.floatCol<CeProjectionRow>("projected", {
-    precision: 2,
     header: "Projected NOx (ppm)",
     tone: (_v, row) => (row.compliant ? "success" : "danger"),
   }),

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 0.110.0
+
+### Changed
+
+- **`floatCol` displays the value AS GIVEN — it no longer rounds, and the `precision` prop is removed** (ruled 2026-07-22). Rounding a displayed number is a DATA decision, not a display one: it belongs at the storage/query layer (or the calculation function deriving the value) so every view of the same figure agrees, and so a table can't paper over storage imprecision. `floatCol` now groups thousands (pure presentation) and renders exactly the number it's handed. **BREAKING — `floatCol(source, { precision })` no longer compiles; move the rounding to where the value is produced.** If a float shows too many digits, round it in SQL / the store / the calc fn, not in the column.
+- **`aggregateCol` and `avgCol` drop `precision` too** — same rule. An aggregate's precision is the `combine` function's job: `avgCol` shows the RAW mean (a mean is rarely a clean number), so a rounded average is `aggregateCol(keys, (v) => Math.round(mean(v)), …)` — the rounding lives in the calculation, never a display knob.
+- The low-level `FloatCell` renderer is unchanged and keeps its `precision` prop — it's the primitive escape hatch (`col(…, "float")`, `columnHelpers`), not the curried column. The doctrine applies to the curried `floatCol`/`aggregateCol`/`avgCol` surface.
+
 ## 0.109.0
 
 ### Changed

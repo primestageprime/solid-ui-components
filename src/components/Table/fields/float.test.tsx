@@ -36,14 +36,18 @@ describe("float field", () => {
 
   it("accessor renders a FloatCell at the default precision of 2", () => {
     const col = floatCol<Row>("ratio");
-    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: Math.PI })}</>);
-    expect(container.querySelector(".cell-float")?.textContent).toBe("3.14");
+    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: 12.5 })}</>);
+    // Display AS GIVEN (ruled 2026-07-22): the value is rendered unchanged, not
+    // forced to 2 fraction digits.
+    expect(container.querySelector(".cell-float")?.textContent).toBe("12.5");
   });
 
-  it("accessor honors an explicit precision", () => {
-    const col = floatCol<Row>("ratio", { precision: 4 });
-    const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: Math.PI })}</>);
-    expect(container.querySelector(".cell-float")?.textContent).toBe("3.1416");
+  it("displays the value AS GIVEN — never rounds, only groups thousands", () => {
+    const col = floatCol<Row>("ratio");
+    const render1 = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: 3.14159 })}</>);
+    expect(render1.container.querySelector(".cell-float")?.textContent).toBe("3.14159");
+    const render2 = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ ratio: 1234567.8 })}</>);
+    expect(render2.container.querySelector(".cell-float")?.textContent).toBe("1,234,567.8");
   });
 });
 

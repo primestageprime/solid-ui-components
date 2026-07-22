@@ -1,4 +1,4 @@
-// Table field — aggregate (Depth 1: composes FloatCell).
+// Table field — aggregate (Depth 1: a derived numeric column).
 // The GENERIC aggregate column (ruled 2026-07-20): declares the sibling
 // fields it aggregates; the MATH is a configure-time pure function
 // `combine(values, row)` — the generic shape is curried, the custom math is
@@ -8,8 +8,7 @@
 // mean sugar over this type. First consumers: power-log-ocr (true mean),
 // PowerLogCacheView per-train kW (sum of positive readings ÷ trains — the
 // column DECLARES its math, so it can never again be "fixed" into a mean).
-import { FloatCell } from "../numericCells";
-import { geo as floatGeo } from "./float";
+import { geo as floatGeo, asGiven } from "./float";
 import { pipe, map, filter } from "../../../fn";
 import { centered, floorGeoAtLabel, humanize, toneWrap, type FieldCol, type ToneFn } from "./shared";
 
@@ -21,8 +20,6 @@ export interface AggregateColOpts<T> {
   id?: string;
   /** Header label (default: humanized id). */
   header?: string;
-  /** Fraction digits (default 2, matching floatCol). */
-  precision?: number;
   /** Treatment override — default is the accent tone (derived value). */
   tone?: ToneFn<T, number>;
 }
@@ -55,9 +52,11 @@ export const aggregateCol = <T,>(
     accessor: (row) => {
       const v = value(row);
       if (v == null || Number.isNaN(v)) return "";
+      // Display as given (ruled 2026-07-22): the `combine` fn is the calculation
+      // and owns precision — round there, never here. See float.tsx module note.
       return toneWrap(
         opts.tone?.(v, row) ?? "accent",
-        <FloatCell value={v} precision={opts.precision ?? 2} />,
+        <span class="cell-float">{asGiven(v)}</span>,
       );
     },
   };

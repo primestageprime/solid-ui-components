@@ -28,7 +28,6 @@ describe("aggregateCol", () => {
   const col = aggregateCol<Row>(["aux_1", "aux_2"], perTrainKw, {
     id: "avg_kw",
     header: "Avg",
-    precision: 0,
   });
 
   it("combine receives the finite members and the row — exact math preserved", () => {

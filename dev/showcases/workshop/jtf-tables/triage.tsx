@@ -147,7 +147,7 @@ const TRIAGE_REGISTRY = {
     "Explained + Good to Go — calls cleared for reporting",
     floatCol<TriageAsset>(
       (a) => (classified(a) > 0 ? (a.resolved / classified(a)) * 100 : null),
-      { id: "resolved", header: "Resolved", suffix: "%", precision: 0 },
+      { id: "resolved", header: "Resolved", suffix: "%" },
     ),
   ),
   status: withHint(
@@ -289,7 +289,6 @@ function QaqcChecksWeeklyReplica(): JSX.Element {
         floatCol<WeeklyRow>("pct_at_band", {
           id: "pctatband",
           header: "% of At-Band Time",
-          precision: 0,
           suffix: "%",
         }),
       ),

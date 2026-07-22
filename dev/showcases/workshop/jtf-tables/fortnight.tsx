@@ -62,7 +62,6 @@ function makeMinuteTable(cols: MetricColSpec[]): Component {
   };
   for (const c of cols) {
     registry[c.key] = fields.floatCol<MetricRow>(c.key, {
-      precision: c.precision,
       header: c.header,
     });
   }
@@ -631,7 +630,7 @@ const VIOLATION_REGISTRY: Record<string, FieldCol<ViolationDisplayStub>> = {
   ),
   ce_level: fields.floatCol<ViolationDisplayStub>("ce_level"),
   nox_ppm: fields.floatCol<ViolationDisplayStub>("nox_ppm"),
-  mso_f2_avg: fields.floatCol<ViolationDisplayStub>("mso_f2_avg", { precision: 1 }),
+  mso_f2_avg: fields.floatCol<ViolationDisplayStub>("mso_f2_avg", {}),
   engine_kw: fields.col<ViolationDisplayStub>(
     "engine_kw",
     "Engine kW",

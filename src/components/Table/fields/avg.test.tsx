@@ -31,13 +31,10 @@ describe("avg field", () => {
   });
 
   it("averages the configured keys, skipping nulls, accent by default", () => {
-    const { container } = renderCell(
-      { aux_1: 912, aux_2: 946, aux_3: null },
-      { precision: 0 },
-    );
+    const { container } = renderCell({ aux_1: 912, aux_2: 946, aux_3: null });
     const toned = container.querySelector(".sui-field-tone--accent");
     expect(toned).toBeTruthy();
-    expect(toned?.textContent).toBe("929"); // (912 + 946) / 2
+    expect(toned?.textContent).toBe("929"); // (912 + 946) / 2 — exact, as given
   });
 
   it("renders blank when no member is numeric (ruled 2026-07-18)", () => {

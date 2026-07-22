@@ -236,13 +236,11 @@ const CACHED_REGISTRY = {
   nox: floatCol<CachedVesselCall>("nox_value", {
     id: "nox",
     header: "NOx",
-    precision: 2,
     tone: (_v, row) => (row.nox_compliant ? "accent" : "danger"),
   }),
   rog: floatCol<CachedVesselCall>("rog_value", {
     id: "rog",
     header: "ROG",
-    precision: 4,
     tone: (_v, row) => (row.rog_compliant ? "accent" : "danger"),
   }),
   ftir_i: coverageCol("ftir_i", "FTIR.I"),
@@ -616,7 +614,6 @@ const THOUSAND_HOUR_REGISTRY = {
   ),
   // Traffic light: the '%' rides in-cell; the tone reads the data-layer band.
   completeness: floatCol<ThousandHourVesselCall>("completeness_pct", {
-    precision: 1,
     suffix: "%",
     header: "Data Completeness",
     tone: (_v, row) =>

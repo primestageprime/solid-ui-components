@@ -14,8 +14,6 @@ export interface AvgColOpts<T> {
   id?: string;
   /** Header label (default "Avg"). */
   header?: string;
-  /** Fraction digits (default 2, matching floatCol). */
-  precision?: number;
   /** Treatment override — default is the accent tone (derived value). */
   tone?: ToneFn<T, number>;
 }
@@ -25,7 +23,11 @@ export interface AvgColOpts<T> {
 const meanOrNull = (values: number[]): number | null =>
   values.length === 0 ? null : mean(values);
 
-/** The mean of `keys` per row — aggregateCol with `meanOrNull`. */
+/** The mean of `keys` per row — aggregateCol with `meanOrNull`. Displays the
+ *  RAW mean as given (ruled 2026-07-22: no display rounding). A mean is a
+ *  calculation, so if you want it rounded, that is the calculation's job —
+ *  use `aggregateCol` with a rounding combine (e.g. `(v) => Math.round(mean(v))`),
+ *  not a display knob. */
 export const avgCol = <T,>(
   keys: (keyof T)[],
   opts: AvgColOpts<T> = {},
@@ -33,6 +35,5 @@ export const avgCol = <T,>(
   aggregateCol<T>(keys, meanOrNull, {
     id: opts.id ?? "avg",
     header: opts.header ?? "Avg",
-    precision: opts.precision,
     tone: opts.tone,
   });
