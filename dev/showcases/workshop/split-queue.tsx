@@ -174,10 +174,13 @@ const SplitQueueBench: Component = () => {
   const rowsIn = (role: QState) => items().filter((i) => i.state === role);
   const counts = createMemo(() => SECTIONS.map((s) => rowsIn(s.role).length));
 
-  // The natural height of a section is deterministic from its row count — one
-  // measured row + header (recalibrated on resize/zoom, fallbacks for the first
-  // paint). This avoids per-section DOM measurement, which goes stale the moment
-  // a section's body unmounts.
+  // Available height = viewport bottom − the bar's own top (measured, not a
+  // hardcoded offset), so the bar always fills exactly the space below the
+  // controls regardless of window size. The natural height of a section is
+  // deterministic from its row count — one measured row + header (recalibrated
+  // on resize/zoom) — avoiding per-section DOM measurement, which goes stale the
+  // moment a section's body unmounts.
+  const BOTTOM_MARGIN = 24;
   let barRef: HTMLDivElement | undefined;
   let rowRef: HTMLDivElement | undefined;
   let headRef: HTMLDivElement | undefined;
@@ -186,16 +189,17 @@ const SplitQueueBench: Component = () => {
   const [headH, setHeadH] = createSignal(34);
 
   const measure = () => {
-    if (barRef) setBarH(barRef.clientHeight);
+    if (!barRef) return;
+    const top = barRef.getBoundingClientRect().top;
+    setBarH(Math.max(120, window.innerHeight - top - BOTTOM_MARGIN));
     if (rowRef?.offsetHeight) setRowH(rowRef.offsetHeight);
     if (headRef?.offsetHeight) setHeadH(headRef.offsetHeight);
   };
 
   onMount(() => {
-    const ro = new ResizeObserver(() => measure());
-    if (barRef) ro.observe(barRef);
-    measure();
-    onCleanup(() => ro.disconnect());
+    window.addEventListener("resize", measure);
+    requestAnimationFrame(measure);
+    onCleanup(() => window.removeEventListener("resize", measure));
   });
   // Recalibrate the row/header sample after the item set changes (a scenario
   // with content must have rendered a row before we can measure one).
@@ -210,10 +214,7 @@ const SplitQueueBench: Component = () => {
   const heights = createMemo(() => allocate(natural(), counts(), barH()));
 
   return (
-    <div
-      class="component-section component-section--full"
-      style={{ display: "flex", "flex-direction": "column", height: "calc(100vh - 200px)" }}
-    >
+    <div class="component-section component-section--full">
       <SectionTitle>Split Queue</SectionTitle>
       <MutedBody>
         Three always-present sections as one progression bar. Empty sections
@@ -227,8 +228,8 @@ const SplitQueueBench: Component = () => {
         <SegmentedControl options={SCENARIO_OPTIONS} value={scenario()} onValueChange={setScenario} />
       </ClusterRow>
 
-      <div style={{ "max-width": "460px", flex: "1 1 auto", "min-height": "0", "margin-top": "12px" }}>
-        <div class="prog-bar" ref={barRef}>
+      <div style={{ "max-width": "460px", "margin-top": "12px" }}>
+        <div class="prog-bar" ref={barRef} style={{ height: `${Math.round(barH())}px` }}>
           <For each={SECTIONS}>
             {(s, i) => {
               const count = () => counts()[i()];
