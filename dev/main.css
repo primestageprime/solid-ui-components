@@ -2647,26 +2647,28 @@ th:has(.tf-th-center) .hud-table__header-content {
   color: var(--sui-text-muted);
   font-style: italic;
 }
-.prog-bar__section--happy {
-  border-color: var(--sui-success);
+/* Borders and header text stay thematically NEUTRAL (ruled 2026-07-22): the
+   only role color is a small dot beside the section name. */
+.prog-bar__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-.prog-bar__section--happy .prog-bar__header {
-  color: var(--sui-success);
-  border-bottom-color: var(--sui-success);
+.prog-bar__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sui-text-muted);
 }
-.prog-bar__section--unhappy {
-  border-color: var(--sui-danger);
+.prog-bar__section--happy .prog-bar__dot {
+  background: var(--sui-success);
 }
-.prog-bar__section--unhappy .prog-bar__header {
-  color: var(--sui-danger);
-  border-bottom-color: var(--sui-danger);
+.prog-bar__section--unhappy .prog-bar__dot {
+  background: var(--sui-danger);
 }
-.prog-bar__section--transient {
-  border-color: var(--sui-accent);
-}
-.prog-bar__section--transient .prog-bar__header {
-  color: var(--sui-accent);
-  border-bottom-color: var(--sui-accent);
+.prog-bar__section--transient .prog-bar__dot {
+  background: var(--sui-accent);
 }
 
 /* Catalog pane height context (ruled 2026-07-21): the pane is the height

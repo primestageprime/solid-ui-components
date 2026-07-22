@@ -239,7 +239,10 @@ const SplitQueueBench: Component = () => {
                   style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}
                 >
                   <div class="prog-bar__header" ref={(el) => (i() === 0 ? (headRef = el) : undefined)}>
-                    <span>{s.title}</span>
+                    <span class="prog-bar__title">
+                      <span class="prog-bar__dot" />
+                      {s.title}
+                    </span>
                     <span class="prog-bar__count">{count()}</span>
                   </div>
                   <Show when={count() > 0}>
