@@ -898,6 +898,33 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
     />
     ```
 
+## ProgressionQueue
+- **ProgressionQueue** — Composite (Depth 2). Owns `ProgressionQueue.css`. N always-present sections stacked as one full-height bar, bucketing items through their lifecycle as a **progression** (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). **Every section is shown at all times with its count.** Generic over `T`; the consumer owns the data and row content — `sections: ProgressionSection[]` (top → bottom, each `{ key, label, tone, weight? }`), `items: T[]`, `bucketOf: (item) => sectionKey`, `keyOf`, `renderItem`. **Sizing (ruled 2026-07-22 — a weighted water-fill measured in JS; pure CSS can't express it):** an **empty** section collapses to just its summary line (label + count); a **populated** section **shrink-wraps** to its content; when the populated sections **overflow** the available height they share it by `weight`, each **capped at its content**, so a section that shrinks under its share hands the surplus back and the others expand to fill (default weights make e.g. a doubly-weighted transient take 2× share until it shrinks). The bar fills its parent's height (drop it in a definite-height flex column) or an explicit `height` in px. **Chrome is thematically NEUTRAL** — uniform border + default header text; the only role color is a small **dot** beside each section label (`tone` → theme var). **Selection is controlled + optional:** pass `onSelect(key)` to make rows clickable (fires the item's `keyOf`), and `selectedKey` rings the matching row; omit `onSelect` for a read-only bar. Key props: `sections`, `items: T[]`, `bucketOf: (item: T) => string`, `keyOf: (item: T) => string`, `renderItem: (item: T) => JSX.Element`, `selectedKey?`, `onSelect?: (key: string) => void`, `height?` (omit to fill parent), `class?`. The pure sizing core is exported as `allocateHeights(input): number[]` (with the `AllocateInput` type) for callers who need the water-fill math outside the component. No factory — the data/sections are per-call, so the base component is already curried. Use for: a compliance/triage sidebar where items live in a few lifecycle states you always want visible with counts (fortnight vessel calls by compliance, review queues split happy/unhappy/pending).
+  - Example:
+    ```tsx
+    import { ProgressionQueue } from "solid-ui-components";
+
+    <ProgressionQueue<VesselCall>
+      sections={[
+        { key: "compliant", label: "Compliant", tone: "success" },
+        { key: "non-compliant", label: "Non-compliant", tone: "danger" },
+        { key: "in-review", label: "In review", tone: "accent", weight: 2 },
+      ]}
+      items={calls()}
+      bucketOf={(c) =>
+        c.nox_compliant == null || c.rog_compliant == null
+          ? "in-review"
+          : c.nox_compliant && c.rog_compliant
+            ? "compliant"
+            : "non-compliant"
+      }
+      keyOf={(c) => c.vessel_call_id}
+      renderItem={(c) => <span>{c.vessel_name}</span>}
+      selectedKey={selected()}
+      onSelect={setSelected}
+    />
+    ```
+
 ## MutableList
 - **MutableList** — Composite (Depth 3). Owns `MutableList.css`. A `SortableList` specialized into editable, deletable cards: it composes `<SortableList>` (inheriting the grip, placeholder gap, and live drag-reflow from the headless `createDnDReorder` hook) and supplies a `renderItem` card built from `ClusterRow`/`ContentStack`/`ActionSlot` Layout variants — an inline-editable name button on the left (click → bare `<input>`; Enter commits, Escape reverts, blur commits) and a hover-revealed `IconOnlyButton` × delete on the right. During editing it toggles the enclosing `.sui-sortable-list__row`'s native `draggable` off (interactive zones also carry `draggable={false}`) so the input keeps its caret/selection. Generic over `T`; all props are data/callbacks: `items: T[]` (controlled order), `getId: (item) => string`, `getName: (item) => string`, `onReorder: (orderedIds: string[]) => void`, `onRename: (id, name) => void` (fires only on a changed, non-empty commit — never on unchanged/cleared/Escape), `onDelete: (id) => void` (consumer owns confirmation), `label?`, `renderDetail?: (item) => JSX.Element` (secondary line below the name). NO curried variant by rule — data-only components are already zero-config at the call site. Use for: editable ordered card lists (rename + reorder + delete), e.g. category or line-item managers.
   - Example:
