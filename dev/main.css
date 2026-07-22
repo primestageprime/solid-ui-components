@@ -2599,6 +2599,77 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 0 12px;
 }
 
+/* Split Queue progression bar (workshop). Three ALWAYS-present sections stacked
+   as one full-height bar — a progression: terminal-happy (top), terminal-unhappy
+   (middle), transient (bottom). Each section flex-grows by its count so the bar
+   reads as a live distribution; an empty section keeps a floor so its header,
+   count, and "No <name>" line stay visible. Section chrome is toned by role
+   (theme vars only). */
+.prog-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+.prog-bar__section {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 0;
+  min-height: 3.4rem;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+  overflow: hidden;
+}
+.prog-bar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex: none;
+  padding: 6px 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--sui-border);
+}
+.prog-bar__count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+.prog-bar__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.prog-bar__empty {
+  padding: 8px 12px;
+  color: var(--sui-text-muted);
+  font-style: italic;
+}
+.prog-bar__section--happy {
+  border-color: var(--sui-success);
+}
+.prog-bar__section--happy .prog-bar__header {
+  color: var(--sui-success);
+  border-bottom-color: var(--sui-success);
+}
+.prog-bar__section--unhappy {
+  border-color: var(--sui-danger);
+}
+.prog-bar__section--unhappy .prog-bar__header {
+  color: var(--sui-danger);
+  border-bottom-color: var(--sui-danger);
+}
+.prog-bar__section--transient {
+  border-color: var(--sui-accent);
+}
+.prog-bar__section--transient .prog-bar__header {
+  color: var(--sui-accent);
+  border-bottom-color: var(--sui-accent);
+}
+
 /* Catalog pane height context (ruled 2026-07-21): the pane is the height
    budget a fill-mode field table may use — a definite-height flex column.
    Shrink-to-fit fill (same ruling): entries hug their content when short,
