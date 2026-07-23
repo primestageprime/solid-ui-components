@@ -145,8 +145,8 @@ export const AuthShowcase: Component = () => {
           </li>
           <li>
             <strong>ManagedListSection</strong> — BorderedSection, NarrowStack,
-            ClusterRow, TextSublabel, TextBody, NoteText, SmallGhostButton,
-            SmallPrimaryButton
+            DataList (DTable/DRow/DT/DD), ClusterRow, TextSublabel, TextBody,
+            NoteText, SmallGhostButton, SmallPrimaryButton
           </li>
         </ul>
       </div>

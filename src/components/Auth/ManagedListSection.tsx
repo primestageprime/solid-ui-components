@@ -16,6 +16,7 @@
 import { For, Show, createSignal, onMount, type JSX } from "solid-js";
 import { BorderedSection } from "../Section/variants";
 import { NarrowStack, ClusterRow } from "../Layout/variants";
+import { DTable, DRow, DT, DD } from "../DataList";
 import { TextSublabel, TextBody, NoteText } from "../Text/variants";
 import { SmallGhostButton, SmallPrimaryButton } from "../Button/variants";
 import type { AuthApi, AuthIdentity, ConnectionEntry } from "./types";
@@ -170,24 +171,33 @@ export function ManagedListSection(props: ManagedListSectionProps) {
             </>
           }
         >
-          <For each={identities()}>
-            {(i) => (
-              <ClusterRow>
-                <TextSublabel>
-                  {label(i.provider)}
-                  {isPrimary(i) ? " (primary)" : ""}
-                </TextSublabel>
-                <Show when={isPrimary(i) && email()}>
-                  <TextBody>{email()}</TextBody>
-                </Show>
-                <Show when={!isPrimary(i)}>
-                  <SmallGhostButton onClick={() => removeMethod(i)} disabled={busy()}>
-                    {removeArmed() === rowKey(i) ? "Confirm remove?" : "Remove"}
-                  </SmallGhostButton>
-                </Show>
-              </ClusterRow>
-            )}
-          </For>
+          {/* DataList table: method / account / action each align in a column
+              across rows — table semantics without header chrome, proportionate
+              to a catalog-bounded 2–3 sparse rows (via /design-options,
+              2026-07-23; see docs/agents/design-decision-tree.md). */}
+          <DTable>
+            <For each={identities()}>
+              {(i) => (
+                <DRow border>
+                  <DT>
+                    {label(i.provider)}
+                    {isPrimary(i) ? " (primary)" : ""}
+                  </DT>
+                  <DD>{isPrimary(i) ? email() : ""}</DD>
+                  <DD>
+                    <Show when={!isPrimary(i)}>
+                      <SmallGhostButton
+                        onClick={() => removeMethod(i)}
+                        disabled={busy()}
+                      >
+                        {removeArmed() === rowKey(i) ? "Confirm remove?" : "Remove"}
+                      </SmallGhostButton>
+                    </Show>
+                  </DD>
+                </DRow>
+              )}
+            </For>
+          </DTable>
         </Show>
         <Show when={sub()}>
           <For each={addable()}>
