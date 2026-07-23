@@ -67,13 +67,21 @@ export function ManagedListSection(props: ManagedListSectionProps) {
   // provider nor already linked (unloaded list → still offer; a stale click
   // just gets the friendly "already linked" message from the API). With a
   // two-method catalog this reduces to the original "the other one" flip.
+  // Identities match on `connection` (not `provider`) — the reliable
+  // comparand for catalog-driven offers, since e.g. an Auth0 database
+  // connection has provider "auth0" but connection
+  // "Username-Password-Authentication". The `c.connection !== provider()`
+  // check below is session-side (compares against the sub's provider, not
+  // connection) and stays load-bearing only while identities are unloaded;
+  // once loaded, the primary appears in the identities list and the
+  // connection match above covers it too.
   const addable = (): ConnectionEntry[] =>
     props.auth
       .connections()
       .filter(
         (c) =>
           c.connection !== provider() &&
-          !(identities()?.some((i) => i.provider === c.connection) ?? false),
+          !(identities()?.some((i) => i.connection === c.connection) ?? false),
       );
 
   const loadIdentities = async () => {

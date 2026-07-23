@@ -52,10 +52,11 @@ export function DismissibleNoticeBanner(props: DismissibleNoticeBannerProps) {
       <NoticeBar class={props.class} style={props.style}>
         <GrowBox>
           <TextBody>
-            You also have a <strong>{props.auth.connectionLabel(sibling()!)}</strong>{" "}
-            sign-in for this email that isn't linked to this account. Link them
-            in Settings → Login methods — its data is combined into this
-            account, and afterwards either sign-in opens the same account.
+            You also have a sign-in via{" "}
+            <strong>{props.auth.connectionLabel(sibling()!)}</strong> for this
+            email that isn't linked to this account. Link them in Settings →
+            Login methods — its data is combined into this account, and
+            afterwards either sign-in opens the same account.
           </TextBody>
         </GrowBox>
         <NavLink href={props.settingsHref}>Open Settings</NavLink>
