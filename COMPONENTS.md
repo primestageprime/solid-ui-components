@@ -1605,3 +1605,19 @@ The renderers family is a set of small, composable components for displaying fie
 
     <CensusView tables={tables} onSelect={(t) => console.log(t?.key)} />
     ```
+
+## Auth
+- **ManagedListSection** — Composite (Depth 2). Composes `BorderedSection` + `NarrowStack` + `ClusterRow` + `TextSublabel`/`TextBody`/`NoteText` + `SmallGhostButton`/`SmallPrimaryButton`. Zero CSS. User-confirmed Auth0 account linking — "add a way to sign in to this account" plus removal of linked methods — for an app's Settings page (only reachable signed in). Add is direction-safe since merge-on-link preserves data from either side; removal only offers **secondary** identities (Auth0 can't unlink the primary — its `sub` IS the account), so self-lockout is structurally impossible. First-use Add failures ("Unable to open a popup") arm a two-click retry: the Management-API permission popup consumes the first click's popup allowance but the grant sticks, so a second click goes straight to the re-auth popup. Remove is a two-click confirm ("Remove" → "Confirm remove?"). Key props: `auth` (`AuthApi`), `mergeBeforeLink` (`(secondaryAccessToken: string) => Promise<void>` — the app's server-side merge caller, run BEFORE the Auth0 link so ordering never leaves an unmerged secondary), `class?`, `style?`. Exported type: `ManagedListSectionProps`. Use for: a Settings → Login methods panel where users add/remove ways to sign in to one account.
+- **DismissibleNoticeBanner** — Composite (Depth 2). Composes `NoticeBar` (Surface) + `GrowBox` + `TextBody` + `NavLink` + `SmallGhostButton`. Zero CSS. Non-blocking banner shown when the tenant's post-login Action detects another account with the same verified email that is NOT linked to this one (read via `auth.getUnlinkedSiblingHint()`, a custom id_token claim). Detection only — never calls a link API itself; points the user at the app's settings page via `settingsHref`. Dismissal is per-account (keyed by `sub`) and persisted in `localStorage`, since the claim rides every login's id_token and linking clears it at the next login anyway. Key props: `auth` (`AuthApi`), `settingsHref` (string — the app's login-methods settings route), `class?`, `style?`. Exported type: `DismissibleNoticeBannerProps`. Use for: a top-of-app or top-of-settings notice nudging users toward linking a detected sibling account.
+- **DI note (both):** each takes the auth API as the `auth` prop — pass `authApi` from `@primestageprime/auth0-stdb-client` (or any structural match); SUI has no dependency on it. The shared shape (`AuthApi`, `AuthIdentity`, `ConnectionEntry`) lives in `Auth/types.ts` as a structural mirror of that package's `authApi` export — dependency injection keeps the library pure and the flows testable/showcasable with fakes.
+- Example:
+  ```tsx
+  import { ManagedListSection, DismissibleNoticeBanner } from "solid-ui-components";
+  import { authApi } from "@primestageprime/auth0-stdb-client";
+
+  <DismissibleNoticeBanner auth={authApi} settingsHref="/settings#login-methods" />
+  <ManagedListSection auth={authApi} mergeBeforeLink={mergeSecondaryIntoAccount} />
+  ```
+
+## NoticeBar
+- **NoticeBar** — Surface Curried Variant (`createSurface`, ruled 2026-07-22). Full-width, edge-to-edge informational bar: row-arranged, center-aligned, accent-tinted like `InfoSurface` but flush (`radius: none`) so it sits against app chrome. Shipping consumer: the Auth sibling banner (`DismissibleNoticeBanner`). Use for: top-of-app notices with text + action + dismiss.

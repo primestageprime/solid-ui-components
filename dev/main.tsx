@@ -115,6 +115,7 @@ import { StackShowcase } from "./showcases/stack";
 import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
+import { AuthShowcase } from "./showcases/auth";
 import { AlertBoxShowcase } from "./showcases/alert-box";
 import { ChartShowcase } from "./showcases/chart";
 import { ChangeRendererShowcase } from "./showcases/change-renderer";
@@ -742,6 +743,12 @@ const items: Item[] = [
     tags: ["depth:0", "layout", "container"],
   },
 
+  {
+    id: "auth",
+    label: "Auth",
+    component: AuthShowcase,
+    tags: ["depth:2", "form", "feedback", "list"],
+  },
   {
     id: "alert-box",
     label: "AlertBox",
