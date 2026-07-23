@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.112.0
+
 ### Added
 
 - **`Auth/` category — `ManagedListSection` + `DismissibleNoticeBanner`** (ruled 2026-07-22): user-confirmed Auth0 account linking (add/remove login methods, two-click confirms, first-use popup-retry) and the unlinked-sibling notice banner, migrated from thorcasting-ui. Both take the auth API via the `auth` Data Prop (structural `AuthApi` in `Auth/types.ts`) — dependency injection; SUI gains no dependency. Apps pass `authApi` from `@primestageprime/auth0-stdb-client`.
