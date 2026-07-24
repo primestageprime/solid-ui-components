@@ -47,3 +47,9 @@
   border-color: var(--sui-accent);
   box-shadow: 0 0 15px rgba(var(--sui-accent-rgb), 0.3);
 }
+
+/* Drop shadow for elevated/floating surfaces (popover/menu panels).
+   Decoration only — box-shadow, never geometry (layout-purity). */
+.surface--shadow {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}

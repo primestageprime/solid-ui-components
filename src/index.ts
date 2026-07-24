@@ -73,7 +73,10 @@ export * as fn from "./fn";
 // Fields-as-functions table system: namespaced (columnHelpers still owns the
 // bare intCol/textCol/... names until step ③ swaps them out of the barrel).
 export * as fields from "./components/Table/fields";
-export { FieldTable, SortableFieldTable } from "./components/Table/fields/FieldTable";
+export {
+  FieldTable,
+  SortableFieldTable,
+} from "./components/Table/fields/FieldTable";
 export type { FieldTableProps } from "./components/Table/fields/FieldTable";
 export * from "./components/PivotGrid";
 export * from "./components/ValueMatrix";
@@ -89,6 +92,7 @@ export * from "./components/TabbedSidePanel";
 export * from "./components/ButtonGroup";
 export * from "./components/List";
 export * from "./components/PopoverMenu";
+export * from "./components/NotificationCenter";
 export * from "./components/Selector";
 export * from "./components/TitledTimeRangeHeader";
 export * from "./components/DataList";

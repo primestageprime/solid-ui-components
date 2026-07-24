@@ -405,3 +405,12 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   **`DRow border` dividers** — rows read as rows ("floating out in the
   ether" without them); striping is noise at 2–3 rows, boxes would imply
   row clickability that isn't there.
+- **2026-07-24 · SUI NotificationCenter · dropdown notification item format** —
+  item carries title + optional detail + optional CTA link; list is NOT
+  status-grouped → **three-line card canon: CompactSurface box → TightStack →
+  [SpreadRow(TextValue title left, trailing transient spinner as status),
+  MutedBody detail sandwich, accent action link]**. Non-interactive container
+  (CompactSurface, not InteractiveCard) because the click target is the explicit
+  CTA, not the whole row. Chosen over the original bare TightStack (too flat —
+  the complaint that triggered this) and over per-item dividers. Adlai, via team
+  execution.

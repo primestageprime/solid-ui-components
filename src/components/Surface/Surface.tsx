@@ -17,6 +17,7 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   borderColor?: string;
   interactive?: boolean;
   active?: boolean;
+  shadow?: boolean;
   direction?: "row" | "column";
   align?: "start" | "center" | "stretch";
   gap?: "none" | "sm" | "md" | "lg";
@@ -38,6 +39,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     "borderColor",
     "interactive",
     "active",
+    "shadow",
     "direction",
     "align",
     "gap",
@@ -57,6 +59,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     if (local.gap) classList.push(`surface--gap-${local.gap}`);
     if (local.interactive) classList.push("surface--interactive");
     if (local.active) classList.push("surface--active");
+    if (local.shadow) classList.push("surface--shadow");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -118,6 +121,7 @@ export type SurfaceOverrides = Pick<
   | "bg"
   | "borderColor"
   | "interactive"
+  | "shadow"
   | "direction"
   | "align"
   | "gap"
