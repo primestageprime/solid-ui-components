@@ -81,6 +81,7 @@ import { LegendShowcase } from "./showcases/legend";
 import { StatusLightShowcase } from "./showcases/status-light";
 import { DropdownShowcase } from "./showcases/dropdown";
 import { PopoverMenuShowcase } from "./showcases/popover-menu";
+import { NotificationCenterShowcase } from "./showcases/notification-center";
 import { ProgressCheckShowcase } from "./showcases/progress-check";
 import { SprintSelectorShowcase } from "./showcases/sprint-selector";
 import { WorkerCardShowcase } from "./showcases/worker-card";
@@ -146,7 +147,6 @@ import { TitledTimeRangeHeaderShowcase } from "./showcases/titled-time-range-hea
 
 // Depth 4
 import { ResultPanelShowcase } from "./showcases/result-panel";
-
 
 // Sandbox / design exploration
 import { PillVariantsShowcase } from "./showcases/pill-variants";
@@ -518,6 +518,12 @@ const items: Item[] = [
     label: "PopoverMenu",
     component: PopoverMenuShowcase,
     tags: ["depth:0", "navigation", "feedback"],
+  },
+  {
+    id: "notification-center",
+    label: "NotificationCenter",
+    component: NotificationCenterShowcase,
+    tags: ["depth:2", "feedback", "navigation"],
   },
   {
     id: "progress-check",
