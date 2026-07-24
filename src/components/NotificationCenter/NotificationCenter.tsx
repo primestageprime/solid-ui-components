@@ -5,7 +5,7 @@
 // Owns NotificationCenter.css for overlay chrome ONLY — the static positioning
 // of the trigger + its corner overlays (the same carve-out PopoverMenu/Dropdown
 // take). All content arrangement composes Icon, CountBadge, PopoverSurface,
-// Layout/Text/Button variants + NavLink; no hand-rolled geometry. The dynamic
+// Layout/Text/Button variants + Link; no hand-rolled geometry. The dynamic
 // panel position rides inline via the computed panelStyle() (overlay anchor).
 // Router-agnostic + domain-agnostic: consumer supplies items and navigates
 // via onAction. See docs/superpowers/plans/2026-07-24-sui-notification-center.md
@@ -23,11 +23,11 @@ import {
 import { Portal } from "solid-js/web";
 import { Icon } from "../Icon/Icon";
 import { CountBadge } from "../Badge/CountBadge";
-import { PopoverSurface, CompactSurface } from "../Surface/variants";
-import { TightStack, SpreadRow, ScrollColumn } from "../Layout/variants";
+import { PopoverSurface } from "../Surface/variants";
+import { ListRowStack, ClusterRow, ScrollColumn } from "../Layout/variants";
 import { TextValue, MutedBody } from "../Text/variants";
 import { TextButton } from "../Button/variants";
-import { NavLink } from "../Navigation/NavLink";
+import { Link } from "../Navigation/Link";
 import "./NotificationCenter.css";
 
 export interface NotificationAction {
@@ -198,59 +198,62 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
                 <ScrollColumn>
                   <Index each={props.items}>
                     {(item) => (
-                      // Three-line card canon (design-decision-tree › Card
-                      // formats): CompactSurface box → TightStack → [title-left/
-                      // status-right row, muted detail sandwich, action]. Not
-                      // InteractiveCard — the click target is the CTA, not the row.
-                      <CompactSurface>
-                        <TightStack>
-                          <SpreadRow>
-                            <TextValue>{item().title}</TextValue>
-                            <Show when={item().transient}>
-                              <Icon
-                                name="spinner"
-                                size="sm"
-                                aria-hidden="true"
-                              />
-                            </Show>
-                          </SpreadRow>
-                          <Show when={item().detail}>
-                            <MutedBody>{item().detail}</MutedBody>
+                      // Flat list-row format (design-decision-tree › Rows inside
+                      // a panel): ListRowStack → [ClusterRow(leading transient
+                      // spinner, title), muted detail sandwich, accent action].
+                      // NOT a per-item Surface — these rows already sit inside
+                      // the bordered PopoverSurface, and a box per item reads as
+                      // boxes-inside-a-box. Separation is spacing only (the row's
+                      // own padding + ScrollColumn's gap); no dividers.
+                      <ListRowStack>
+                        <ClusterRow>
+                          <Show when={item().transient}>
+                            <Icon name="spinner" size="sm" aria-hidden="true" />
                           </Show>
-                          <Show when={item().action && !item().transient}>
-                            {(() => {
-                              const it = item();
-                              const a = it.action as NotificationAction;
-                              return (
-                                <Show
-                                  when={a.href}
-                                  fallback={
-                                    // Peer of the anchor's `color="accent"` — a
-                                    // semantic tone prop on Button's public API,
-                                    // not a raw style override. Label sits directly
-                                    // in the button (symmetric with the NavLink
-                                    // branch), so the interactive element owns it.
-                                    <TextButton
-                                      tone="accent"
-                                      onClick={() => activate(it)}
-                                    >
-                                      {`${a.label} →`}
-                                    </TextButton>
-                                  }
-                                >
-                                  <NavLink
-                                    color="accent"
-                                    href={a.href}
-                                    onClick={(e) => activate(it, e)}
+                          <TextValue>{item().title}</TextValue>
+                        </ClusterRow>
+                        <Show when={item().detail}>
+                          <MutedBody>{item().detail}</MutedBody>
+                        </Show>
+                        <Show when={item().action && !item().transient}>
+                          {(() => {
+                            const it = item();
+                            const a = it.action as NotificationAction;
+                            return (
+                              <Show
+                                when={a.href}
+                                fallback={
+                                  // Peer of the anchor — a semantic tone prop on
+                                  // Button's public API, not a raw style override.
+                                  // Label sits directly in the button (symmetric
+                                  // with the Link branch), so the interactive
+                                  // element owns it.
+                                  <TextButton
+                                    tone="accent"
+                                    onClick={() => activate(it)}
                                   >
                                     {`${a.label} →`}
-                                  </NavLink>
-                                </Show>
-                              );
-                            })()}
-                          </Show>
-                        </TightStack>
-                      </CompactSurface>
+                                  </TextButton>
+                                }
+                              >
+                                {/* `Link`, NOT `NavLink`: NavLink bakes sidebar
+                                    nav-item chrome (`padding: 8px 16px`), which
+                                    indents the CTA 16px off the row's left edge
+                                    and disagrees with the flush TextButton
+                                    branch. `Link` is the bare accent anchor —
+                                    no padding, no border, no fill — so both
+                                    branches align under the title. */}
+                                <Link
+                                  href={a.href}
+                                  onClick={(e) => activate(it, e)}
+                                >
+                                  {`${a.label} →`}
+                                </Link>
+                              </Show>
+                            );
+                          })()}
+                        </Show>
+                      </ListRowStack>
                     )}
                   </Index>
                 </ScrollColumn>

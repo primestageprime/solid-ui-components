@@ -175,6 +175,59 @@ Historical note: `ActionListItem` (2026-07-02) put a fixed-width status pill
 LEFT of the title. That predates this canon; treat it as that component's
 established look, not a pattern to copy into new card/list designs.
 
+**The canon above governs the CONTENT of a repeated item — which facts go on
+which line, and where.** It does NOT decide whether that item gets a box. That
+is the next question.
+
+## Rows inside a panel (card-in-panel vs flat list-row)
+
+The card canon says a card is `Surface`/`CardSurface` box → `TightStack` → the
+lines. But a *box* is a claim: "this item is a standalone object with its own
+edge." Repeat that claim inside a container that already has an edge and you
+get **boxes inside a box** — N accent hairlines nested in a bordered popover,
+which reads as visual noise for what is really a dense list of short lines
+(the complaint that produced this branch: SUI `NotificationCenter`, 2026-07-24).
+
+**The discriminator is: does the item need its own EDGE?** Two answers, and
+almost always one of the following three facts settles it without asking:
+
+- **Card-in-panel (keep the per-item Surface)** when *any* of:
+  - **the ROW ITSELF is the click target** — a box implies clickability, so a
+    box is the honest affordance (`InteractiveCard`; see also *Record rows in a
+    section* › Row delineation, which reaches the same conclusion);
+  - **items are heterogeneous or content-rich** — mixed media, multi-region
+    bodies, per-item actions clusters: the edge tells the eye where one object
+    ends and the next begins because spacing alone can't;
+  - **the container is NOT itself bordered** — cards on a bare page/canvas need
+    their own edge or they float.
+- **Flat list-row (no per-item Surface)** when the items are **short, uniform
+  status/task lines inside an already-bordered container** and the click target
+  is an explicit inner control (a CTA link), not the row. Compose:
+  `ListRowStack` → [title row, muted detail sandwich, flat accent CTA].
+  `ListRowStack` (Layout/variants.ts) is the padded-row counterpart to
+  `CompactSurface`: same `sm` inset, `xs` line gap, start-aligned, **no border,
+  no background, no radius**.
+
+Separation for flat rows, in preference order (same escalation as *Record rows
+in a section*): **spacing alone** (the row's own padding + the list's gap) →
+**a single hairline between rows** if they read as undifferentiated → never a
+bordered box per item. If you find yourself wanting the box back, re-check the
+discriminators above: usually the real answer is that the row IS the click
+target, and the fix is `InteractiveCard`, not a decorative border.
+
+Line-level geometry snaps to the Layout scale like everything else: a design
+comp calling for a 2px line gap ships as `xs` (4px) and an 8px inset as `sm` —
+`Stack`/`Row` gaps are `xs`/`sm`, full stop (`STYLE_GUIDE.md` ruling 2).
+
+**A flat row's inline CTA must be an UNPADDED atom** — `Link` (bare accent
+anchor) for the `href` case, `TextButton` (`padding: 8px 0`) for the callback
+case. **Not `NavLink`**: it bakes sidebar nav-item chrome (`padding: 8px 16px`),
+which indents the CTA 16px off the row's left edge. Inside a padded card box
+that indent hides; on a flat row it reads as a misalignment, and it disagrees
+with the flush `TextButton` branch when the same list mixes both. General form:
+dropping the box removes the padding that was masking every atom's own inset —
+re-check each composed atom's intrinsic padding when you flatten a row.
+
 ## Detail container (the center "selected thing" region)
 
 - Sections of read-mostly fact → `InfoPanel` per section (title framing).
@@ -413,4 +466,24 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   (CompactSurface, not InteractiveCard) because the click target is the explicit
   CTA, not the whole row. Chosen over the original bare TightStack (too flat —
   the complaint that triggered this) and over per-item dividers. Adlai, via team
-  execution.
+  execution. **SUPERSEDED 2026-07-24 (see next entry)** — the LINE CONTENT
+  (title / detail sandwich / trailing action) survives; the per-item BOX does not.
+- **2026-07-24 · SUI NotificationCenter · flat list-rows, not card-in-panel** —
+  the consumer flagged the migrated dropdown as heavier/boxier than the
+  hand-rolled original. Discriminators (*Rows inside a panel*, added in this
+  change): row is NOT the click target (the CTA is) · items short + uniform
+  (title / one-line detail / one CTA) · the container IS already bordered
+  (`PopoverSurface`) → **flat list-row: `ListRowStack` → [`ClusterRow`(leading
+  transient spinner, `TextValue` title), `MutedBody` detail, accent
+  `Link`/`TextButton` CTA]**, separation by spacing alone. Chosen over
+  card-in-panel (`CompactSurface`) — bordered boxes stacked inside a bordered
+  popover is "boxes inside a box" — and over the hairline-between-rows fallback
+  (unnecessary at this density; kept as the documented escalation). Title row
+  moved `SpreadRow` → `ClusterRow`: the spinner is a leading progress mark
+  beside the title, not a trailing status pushed to the far edge, so spreading
+  it edge-to-edge over-weighted it. Reconciliation, NOT an override: the card
+  canon still governs *what goes on each line*; this branch decides *whether the
+  item gets an edge*, which the canon never addressed. New Layout variant
+  `ListRowStack` (padding without a Surface had no home). Scale snaps per
+  STYLE_GUIDE ruling 2: the reference design's 2px line gap → `xs` (4px), its
+  8px inset → `sm`. Adlai, via team execution.

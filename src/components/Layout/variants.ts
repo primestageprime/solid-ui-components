@@ -383,6 +383,23 @@ export const PaddedStack: Component<StackDataProps> = createStack({
   style: { padding: "16px" },
 });
 
+// ListRowStack — ONE ROW of a flat, dense list: `sm` (8px) inset padding, an
+// `xs` (4px) gap between its stacked lines, start-aligned so each line (and a
+// trailing text CTA) sits at its intrinsic width against the left edge. The
+// point is what it does NOT have: no border, no background, no radius — it is
+// the padded-row counterpart to `CompactSurface`, for rows that already live
+// inside a bordered container (a popover panel, an InfoPanel). Reach for it
+// when a per-item Surface would read as "boxes inside a box"; reach for
+// `CompactSurface` when the row must stand alone as a card. Padding without a
+// surface has no other home — `PaddedStack` is the `sm`-gap/16px content
+// region, not a list row. See `docs/agents/design-decision-tree.md` ›
+// *Rows inside a panel*. Shipping consumer: NotificationCenter's dropdown items.
+export const ListRowStack: Component<StackDataProps> = createStack({
+  gap: "xs",
+  align: "start",
+  style: { padding: "var(--sui-space-2, 8px)" },
+});
+
 // --- Page-structure columns / rows (full-height layout skeleton) ---
 // These bake the fill/flex/overflow plumbing so route code never hand-rolls
 // `createStack({ fill, style:{flex,min-height,overflow} })` at the call site.

@@ -114,7 +114,7 @@ describe("NotificationCenter items", () => {
     ));
     // SUI Button wraps its content in <span class="sui-btn__content">, so the
     // label's nearest interactive ancestor is the <button> (vs the anchor branch,
-    // where NavLink renders the label directly in an <a>).
+    // where Link renders the label directly in an <a>).
     const label = screen.getByText("Review →");
     expect(label.closest("button")).toBeTruthy();
     expect(label.closest("a")).toBeNull();
@@ -124,26 +124,45 @@ describe("NotificationCenter items", () => {
     expect(document.body.querySelector(".jtf-icon--spinning")).toBeTruthy();
     expect(screen.queryByText(/→/)).toBeNull();
   });
+  it("places the transient spinner BEFORE the title in a left-packed row", () => {
+    render(() => <NotificationCenter items={[syncing()]} open />);
+    // "Syncing…" also appears in the sr-only live region — take the rendered
+    // title, i.e. the TextValue inside the panel.
+    const title = screen
+      .getAllByText("Syncing…")
+      .find((el) => el.classList.contains("text--value")) as HTMLElement;
+    const titleRow = title.parentElement as HTMLElement;
+    // The title row is a ClusterRow (left-packed), not a SpreadRow — and the
+    // spinner is its FIRST child, sitting immediately left of the title.
+    expect(titleRow.classList).toContain("row");
+    expect(titleRow.classList).not.toContain("row--justify-between");
+    const [first, second] = Array.from(titleRow.children);
+    expect(
+      first.contains(document.body.querySelector(".jtf-icon--spinning")),
+    ).toBe(true);
+    expect(second).toBe(title);
+  });
   it("empty items shows the empty label", () => {
     render(() => (
       <NotificationCenter items={[]} open emptyLabel="All caught up." />
     ));
     expect(screen.getByText("All caught up.")).toBeTruthy();
   });
-  it("wraps each item in its own card surface (three-line card canon)", () => {
+  it("renders items as flat rows — no per-item surface inside the panel", () => {
     render(() => (
       <NotificationCenter
         items={[task(), task({ id: "t2", title: "Second" })]}
         open
       />
     ));
-    // Each item is a CompactSurface card; the shadowed .surface is the panel
-    // (PopoverSurface), so the item cards are the non-shadow surfaces.
-    const cards = document.body.querySelectorAll(
-      ".surface:not(.surface--shadow)",
-    );
-    expect(cards.length).toBe(2);
-    expect(screen.getByText("Set balance").closest(".surface")).toBe(cards[0]);
+    // The ONLY .surface in the panel is the PopoverSurface itself (the shadowed
+    // one). Any non-shadow surface would be a per-item box — the "boxes inside a
+    // box" this format exists to avoid.
+    expect(
+      document.body.querySelectorAll(".surface:not(.surface--shadow)").length,
+    ).toBe(0);
+    const title = screen.getByText("Set balance");
+    expect(title.closest(".surface")?.classList).toContain("surface--shadow");
   });
 });
 

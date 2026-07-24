@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`ListRowStack`** (Layout Curried Variant) — ONE ROW of a flat, dense list: `sm` (8px) inset padding, `xs` (4px) line gap, start-aligned, and deliberately **no border, background, or radius**. The padded-row counterpart to `CompactSurface`, for rows that already sit inside a bordered container. Padding without a Surface previously had no home (`PaddedStack` is the 16px content region, not a list row).
+
+### Changed
+
+- **`NotificationCenter` items render as flat rows instead of per-item cards.** Each item was wrapped in `CompactSurface`, whose base `.surface` always paints a border + filled background — so N bordered boxes stacked inside the already-bordered `PopoverSurface` ("boxes inside a box"), which the consumer flagged as heavier than the hand-rolled dropdown it replaced. The wrapper is now `ListRowStack` (padding, no surface); the panel is the only bordered box, and rows separate by spacing alone (no dividers). The title row moved `SpreadRow` → `ClusterRow`: the transient spinner is a small leading progress mark beside the title rather than a status pushed to the far edge. The `href` branch of the item CTA now renders `Link` instead of `NavLink`: `NavLink` bakes sidebar nav-item chrome (`padding: 8px 16px`), which indented the CTA 16px off the row's left edge and disagreed with the flush `TextButton` branch used for actions without an `href` — invisible inside a padded card box, obvious on a flat row. `Link` is the bare accent anchor (no padding, border, or fill), so both branches now align under the title. Still an `<a href>`, so modifier/middle-click new-tab gestures are unaffected. Otherwise line content is unchanged (title / muted detail sandwich / flat accent CTA ending in "→"), as are the public API, item contract, badge/busy/empty behavior, overlay positioning, and a11y. Scale snaps per `STYLE_GUIDE.md` ruling 2 — the reference design's **2px line gap → `xs` (4px)** and its **8px inset → `sm`**. The design-system reconciliation (card-in-panel vs flat list-row, and the discriminator between them) is recorded in `docs/agents/design-decision-tree.md` › *Rows inside a panel*; it refines the three-line card canon rather than overriding it — the canon governs what goes on each line, the new branch governs whether the item gets an edge.
+
 ## 0.113.1
 
 ### Fixed

@@ -19,7 +19,7 @@ const seldonItems: NotificationItem[] = [
     id: "relay",
     title: "Trantor sector relay drift",
     detail: "Sector 7 hyperwave relay is 0.4 parsecs off its plotted node.",
-    // No href → renders as an accent TextButton instead of a NavLink.
+    // No href → renders as an accent TextButton instead of a Link.
     action: { label: "Recalibrate relay" },
   },
   {
@@ -39,8 +39,34 @@ const withSyncing: NotificationItem[] = [
   ...seldonItems,
 ];
 
+// A dense feed of short status/task lines — the case the flat row format is
+// for. Mixed shapes (title-only, title+detail, title+detail+CTA, transient) so
+// the rows must read as rows on spacing alone, without a box each.
+const denseFeed: NotificationItem[] = [
+  { id: "d1", title: "Psychohistory model recalculating…", transient: true },
+  {
+    id: "d2",
+    title: "Encyclopedia Galactica volume 41 ready",
+    action: { label: "Read it", href: "#/encyclopedia/41" },
+  },
+  {
+    id: "d3",
+    title: "Anacreon envoy awaiting reply",
+    detail: "Third request in two days.",
+    action: { label: "Draft reply", href: "#/envoys/anacreon" },
+  },
+  { id: "d4", title: "Terminus power grid nominal" },
+  {
+    id: "d5",
+    title: "Second Foundation ping missed",
+    detail: "Star's End has not answered the scheduled hyperwave check.",
+    action: { label: "Retry the ping" },
+  },
+];
+
 export const NotificationCenterShowcase: Component = () => {
   const [last, setLast] = createSignal<string>("");
+  const [denseOpen, setDenseOpen] = createSignal(true);
 
   // Controlled example: the consumer owns `open` via a signal and can auto-open
   // the panel when new activity arrives — here, when a fresh crisis lands.
@@ -67,6 +93,15 @@ export const NotificationCenterShowcase: Component = () => {
         notifications. Router-agnostic: the consumer supplies <code>items</code>{" "}
         and navigates inside <code>onAction</code>. Zero component CSS — it only
         anchors the portaled overlay. Closes on click-outside and Escape.
+      </p>
+      <p class="text-meta">
+        Items render as <strong>flat rows</strong> (<code>ListRowStack</code>) —
+        inset padding, no per-item border or background. Only the outer{" "}
+        <code>PopoverSurface</code> is a box; nesting a bordered card per item
+        inside an already-bordered panel reads as "boxes inside a box". Rows
+        separate by spacing alone, no dividers. See{" "}
+        <code>docs/agents/design-decision-tree.md</code> ›{" "}
+        <em>Rows inside a panel</em>.
       </p>
 
       <h3>Feed with a transient syncing row (uncontrolled)</h3>
@@ -137,6 +172,27 @@ export const NotificationCenterShowcase: Component = () => {
         </Row>
       </div>
 
+      <h3>Dense feed, opened (flat rows)</h3>
+      <p class="text-meta">
+        Held open so the row treatment is visible without a click — this is the
+        case the flat format exists for: many short status/task lines in one
+        panel. Each row is padding + three tight lines; the only border on
+        screen is the panel's own. Check it in both light and dark.
+      </p>
+      <div class="example-group">
+        <Row gap="sm" align="center">
+          <NotificationCenter
+            items={denseFeed}
+            open={denseOpen()}
+            onOpenChange={setDenseOpen}
+            onAction={(item) => setLast(item.title)}
+          />
+          <span class="text-meta">
+            open: {String(denseOpen())} — click the bell to toggle
+          </span>
+        </Row>
+      </div>
+
       <div class="depth2-atoms">
         <h3>Composed from</h3>
 
@@ -155,9 +211,11 @@ export const NotificationCenterShowcase: Component = () => {
             </div>
           </div>
           <div class="depth2-atom">
-            <div class="depth2-atom__label">NavLink</div>
+            <div class="depth2-atom__label">Link</div>
             <div class="text-meta">
-              action link for items with an href (SPA-navigates)
+              flat accent action link for items with an href (SPA-navigates) —
+              the bare anchor, not <code>NavLink</code>, whose nav-item padding
+              would indent the CTA off the row's left edge
             </div>
           </div>
         </div>
@@ -168,12 +226,6 @@ export const NotificationCenterShowcase: Component = () => {
             <div class="depth2-atom__label">PopoverSurface</div>
             <div class="text-meta">elevated dropdown panel chrome</div>
           </div>
-          <div class="depth2-atom">
-            <div class="depth2-atom__label">CompactSurface</div>
-            <div class="text-meta">
-              per-item card box (three-line card canon; non-interactive)
-            </div>
-          </div>
         </div>
 
         <div class="depth2-atom-group">
@@ -183,13 +235,16 @@ export const NotificationCenterShowcase: Component = () => {
             <div class="text-meta">scrolling list of notification rows</div>
           </div>
           <div class="depth2-atom">
-            <div class="depth2-atom__label">TightStack</div>
-            <div class="text-meta">title / detail / action stack per card</div>
+            <div class="depth2-atom__label">ListRowStack</div>
+            <div class="text-meta">
+              the flat row itself — 8px inset padding, 4px line gap, no border
+              or background
+            </div>
           </div>
           <div class="depth2-atom">
-            <div class="depth2-atom__label">SpreadRow</div>
+            <div class="depth2-atom__label">ClusterRow</div>
             <div class="text-meta">
-              title left, trailing transient spinner as status
+              left-packed title row: transient spinner, then the title
             </div>
           </div>
         </div>
