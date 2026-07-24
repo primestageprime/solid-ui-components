@@ -20,7 +20,7 @@ import {
 import { allocateHeights } from "./layout";
 import { bucketItems } from "./bucketing";
 import { map } from "../../fn";
-import type { ProgressionQueueProps } from "./types";
+import type { ProgressionQueueProps, ProgressionSection } from "./types";
 import "./ProgressionQueue.css";
 
 export type { ProgressionQueueProps, ProgressionSection } from "./types";
@@ -91,6 +91,23 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
     }),
   );
 
+  // Select mode is on iff the consumer is managing a checked set. An empty Set
+  // means "mode on, nothing checked" — the state select mode starts in.
+  const selectModeOn = () => props.checkedKeys != null;
+  const checkableIn = (section: ProgressionSection) =>
+    selectModeOn() && section.selectable === true;
+
+  // The single activation branch — shared by click (here) and Enter/Space (the
+  // keyboard module). A row either toggles its check or selects; never both.
+  const activate = (
+    key: string,
+    section: ProgressionSection,
+    modifiers: { shift: boolean; meta: boolean },
+  ) => {
+    if (checkableIn(section)) props.onToggleCheck?.(key, modifiers);
+    else props.onSelect?.(key);
+  };
+
   return (
     <div
       class={`prog-queue${props.class ? ` ${props.class}` : ""}`}
@@ -121,18 +138,44 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                   <For each={itemsIn(section.key)}>
                     {(it, ri) => {
                       const key = props.keyOf(it);
-                      const interactive = () => props.onSelect != null;
+                      const interactive = () =>
+                        props.onSelect != null || checkableIn(section);
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
                       return (
                         <div
                           ref={(el) => { if (i() === 0 && ri() === 0) rowRef = el; }}
+                          data-pq-key={key}
                           class={
                             "prog-queue__row" +
                             (interactive() ? " prog-queue__row--interactive" : "") +
                             (selected() ? " prog-queue__row--selected" : "")
                           }
-                          onClick={interactive() ? () => props.onSelect?.(key) : undefined}
+                          classList={{
+                            "prog-queue__row--checked":
+                              checkableIn(section) && props.checkedKeys?.has(key) === true,
+                          }}
+                          onClick={
+                            interactive()
+                              ? (e: MouseEvent) =>
+                                  activate(key, section, {
+                                    shift: e.shiftKey,
+                                    meta: e.metaKey || e.ctrlKey,
+                                  })
+                              : undefined
+                          }
                         >
+                          <Show when={checkableIn(section)}>
+                            <span
+                              class="prog-queue__checkbox"
+                              classList={{
+                                "prog-queue__checkbox--checked":
+                                  props.checkedKeys?.has(key) === true,
+                              }}
+                              aria-hidden="true"
+                            >
+                              {props.checkedKeys?.has(key) === true ? "✓" : ""}
+                            </span>
+                          </Show>
                           {props.renderItem(it)}
                         </div>
                       );
