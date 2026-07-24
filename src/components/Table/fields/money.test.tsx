@@ -38,6 +38,6 @@ describe("money field module", () => {
   it("renders the cell as currency, dividing integer cents by 100", () => {
     const col = moneyCol<Row>("amountCents");
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ amountCents: 812_500 })}</>);
-    expect(container.querySelector(".cell-money")?.textContent).toBe("$8,125.00");
+    expect(container.querySelector(".sui-value-money")?.textContent).toBe("$8,125.00");
   });
 });

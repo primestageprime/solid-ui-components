@@ -56,7 +56,7 @@ export const aggregateCol = <T,>(
       // and owns precision — round there, never here. See float.tsx module note.
       return toneWrap(
         opts.tone?.(v, row) ?? "accent",
-        <span class="cell-float">{asGiven(v)}</span>,
+        <span class="sui-value-float">{asGiven(v)}</span>,
       );
     },
   };

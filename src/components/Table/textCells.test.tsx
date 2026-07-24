@@ -78,7 +78,7 @@ describe("LongTextCell — clamp + tooltip reveal (ellipsis iff tooltip)", () =>
       <LongTextCell value="" clampLines={1} reveal="tooltip" />
     ));
     expect(hasTooltip(container)).toBe(false);
-    expect(container.querySelector(".cell-empty")).not.toBeNull();
+    expect(container.querySelector(".sui-value-empty")).not.toBeNull();
   });
 });
 
@@ -95,15 +95,15 @@ describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const fits = render(() => <StringCell value="ok" />);
     expect(hasTooltip(fits.container)).toBe(false);
-    expect(fits.container.querySelector(".cell-string")?.textContent).toBe("ok");
+    expect(fits.container.querySelector(".sui-value-string")?.textContent).toBe("ok");
   });
 
-  it("IdCell tooltips a clipped id and keeps the .cell-id pill", () => {
+  it("IdCell tooltips a clipped id and keeps the .sui-value-id pill", () => {
     vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => <IdCell value="veryLongIdentifier-0001" />);
     expect(hasTooltip(container)).toBe(true);
-    expect(container.querySelector(".cell-id")?.textContent).toContain("veryLongIdentifier");
+    expect(container.querySelector(".sui-value-id")?.textContent).toContain("veryLongIdentifier");
   });
 
   it("renders the empty fallback (never a tooltip) for null", () => {
@@ -111,7 +111,7 @@ describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => <StringCell value={null} />);
     expect(hasTooltip(container)).toBe(false);
-    expect(container.querySelector(".cell-empty")?.textContent).toBe("—");
+    expect(container.querySelector(".sui-value-empty")?.textContent).toBe("—");
   });
 });
 
@@ -120,14 +120,14 @@ describe("LongTextCell — inline char-count reveal (unchanged behavior)", () =>
     const { container } = render(() => (
       <LongTextCell value={"x".repeat(80)} maxLength={40} />
     ));
-    expect(container.querySelector(".cell-longtext__more")).not.toBeNull();
+    expect(container.querySelector(".sui-value-longtext__more")).not.toBeNull();
   });
 
   it("renders the whole value with no affordance when it fits", () => {
     const { container } = render(() => (
       <LongTextCell value="short" maxLength={40} />
     ));
-    expect(container.querySelector(".cell-longtext__more")).toBeNull();
+    expect(container.querySelector(".sui-value-longtext__more")).toBeNull();
     expect(container.textContent).toContain("short");
   });
 });

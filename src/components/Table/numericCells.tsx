@@ -1,4 +1,6 @@
-/* Table cell renderers — numeric cells (Money, Duration, Float, Int, MetricValue). */
+/* Numeric value renderers (Money, Duration, Float, Int, MetricValue).
+ * Container-agnostic — render equally in a table cell, a definition-list <dd>,
+ * or a card slot; each owns its styling via the co-located CSS below. */
 import { type Component, Show } from "solid-js";
 import {
   CURRENCY_DEFAULT_MAX,
@@ -6,6 +8,9 @@ import {
   fieldWidthForChars,
 } from "../../internal/fieldWidth/fieldWidth";
 import type { CellRendererProps } from "./cellStyle";
+import { InlineText } from "../InlineText/InlineText";
+import "./numericCells.css";
+import "./cellEmpty.css";
 
 // ============================================
 // Money Renderer
@@ -54,9 +59,9 @@ export const MoneyCell: Component<MoneyCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-money" style={{ "max-width": maxRem() }}>
+      <span class="sui-value-money" style={{ "max-width": maxRem() }}>
         {formatted()}
       </span>
     </Show>
@@ -110,9 +115,9 @@ export const DurationCell: Component<DurationCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-duration">{formatted()}</span>
+      <span class="sui-value-duration">{formatted()}</span>
     </Show>
   );
 };
@@ -140,9 +145,9 @@ export const FloatCell: Component<FloatCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-float">{formatted()}</span>
+      <span class="sui-value-float">{formatted()}</span>
     </Show>
   );
 };
@@ -167,9 +172,9 @@ export const IntCell: Component<IntCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-int">{formatted()}</span>
+      <span class="sui-value-int">{formatted()}</span>
     </Show>
   );
 };
@@ -205,11 +210,11 @@ export const MetricValueCell: Component<MetricValueCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-metric-value" style={{ color: color() }}>
+      <InlineText class="sui-value-metric-value" color={color()}>
         {formatted()}
-      </span>
+      </InlineText>
     </Show>
   );
 };

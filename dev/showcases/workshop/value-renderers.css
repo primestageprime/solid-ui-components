@@ -1,0 +1,38 @@
+/* Value Renderers bench — static layout styling extracted from inline styles. */
+
+.vr-ellipsis-host {
+  display: inline-block;
+  max-width: 120px;
+}
+
+.vr-demo-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.vr-demo-table th {
+  text-align: left;
+  padding: 4px 8px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.vr-demo-table td {
+  padding: 4px 8px;
+  border-top: 1px solid var(--sui-border, #334);
+}
+
+.vr-column {
+  flex: 1 1 320px;
+  min-width: 300px;
+}
+
+.vr-column-body {
+  margin-top: 8px;
+}
+
+.vr-host-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}

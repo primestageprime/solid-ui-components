@@ -1,5 +1,6 @@
 // Placeholder — a themed "fill me in" box for section/tile SKELETONS during the
 // sections-first build phase (COMMANDMENTS #16/#17), before real content lands.
+// Composite (Depth 2, owns CSS) — composes CenteredStack (Layout) + TextSublabel.
 //
 // Two behavior axes let a skeleton show how pieces will ARRANGE before real
 // components exist:

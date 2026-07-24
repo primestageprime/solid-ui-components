@@ -1,0 +1,110 @@
+/* EntityCard — the unified sidebar/list card (see EntityCard.tsx). Pure layout:
+   grid, region placement, selection affordance, and the hover-remove control.
+   The content of each region is the client's; this file styles only the frame. */
+
+.sui-entity-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 6px 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-left-color 0.12s ease;
+}
+
+.sui-entity-card:hover {
+  background: rgba(var(--sui-accent-rgb), 0.04);
+}
+
+.sui-entity-card--selected {
+  border-left-color: var(--sui-accent);
+  background: rgba(var(--sui-accent-rgb), 0.08);
+}
+
+/* Top-left identifier */
+.sui-entity-card__id {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--sui-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Top-right status */
+.sui-entity-card__status {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+/* Middle detail line (spans full width) */
+.sui-entity-card__detail {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  color: var(--sui-text-secondary);
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Bottom row: timing (left) · progress (center) · counts (right) */
+.sui-entity-card__bottom {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8em;
+  color: var(--sui-text-muted);
+}
+
+.sui-entity-card__timing {
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.sui-entity-card__progress {
+  justify-self: center;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.sui-entity-card__counts {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* Hover-revealed remove control — overlays the top-right, above the status. */
+.sui-entity-card__remove {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  display: none;
+  border: none;
+  background: var(--sui-bg-elevated, #142535);
+  color: var(--sui-text-muted);
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 5px;
+  font-size: 0.8em;
+}
+
+.sui-entity-card:hover .sui-entity-card__remove {
+  display: block;
+}
+
+.sui-entity-card__remove:hover {
+  color: var(--sui-danger);
+}

@@ -38,7 +38,7 @@ export const listCol = <T, I = string>(
     // Tooltip iff the full list is hidden: either the inline text is clipped by
     // the cell (measured by EllipsisText) or items collapsed into "+N more".
     return (
-      <EllipsisText class="cell-string" tooltip={full} alsoWhen={() => extra > 0}>
+      <EllipsisText class="sui-value-string" tooltip={full} alsoWhen={() => extra > 0}>
         {shown}
         {extra > 0 ? toneWrap("muted", ` +${extra} more`) : null}
       </EllipsisText>

@@ -1,7 +1,11 @@
-/* Table cell renderers — date/time cells (Date, DateTime, MinuteDateTime) plus
- * the shared date-formatting helpers. */
+/* Date/time value renderers (Date, DateTime, MinuteDateTime) plus the shared
+ * date-formatting helpers. Container-agnostic — render equally in a table cell,
+ * a definition-list <dd>, or a card slot; each owns its styling via the
+ * co-located CSS below. */
 import { type Component, Show } from "solid-js";
 import type { CellRendererProps } from "./cellStyle";
+import "./dateCells.css";
+import "./cellEmpty.css";
 
 // ============================================
 // Date Format Helpers
@@ -151,9 +155,9 @@ export const DateCell: Component<DateCellProps> = (props) => {
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-date">{formatted()}</span>
+      <span class="sui-value-date">{formatted()}</span>
     </Show>
   );
 };
@@ -183,7 +187,7 @@ export interface DateTimeCellProps
    * Empty-state variant.
    * - `"default"` (default): italic em-dash, preserves pre-0.12 appearance.
    * - `"plain"`: non-italic em-dash — matches downstream `DateRenderer` styling.
-   * Advanced consumers can also override `--cell-empty-font-style` on a wrapper
+   * Advanced consumers can also override `--sui-value-empty-font-style` on a wrapper
    * element to restyle the italic default globally.
    */
   emptyVariant?: "default" | "plain";
@@ -283,8 +287,8 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
 
   const emptyClass = () =>
     props.emptyVariant === "plain"
-      ? "cell-empty cell-empty--plain"
-      : "cell-empty";
+      ? "sui-value-empty sui-value-empty--plain"
+      : "sui-value-empty";
 
   return (
     <Show
@@ -294,13 +298,13 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
       <Show
         when={useCustomFormat()}
         fallback={
-          <span class="cell-datetime">
-            <span class="cell-datetime__date">{dateStr()}</span>
-            <span class="cell-datetime__time">{timeStr()}</span>
+          <span class="sui-value-datetime">
+            <span class="sui-value-datetime__date">{dateStr()}</span>
+            <span class="sui-value-datetime__time">{timeStr()}</span>
           </span>
         }
       >
-        <span class="cell-datetime cell-datetime--single">{formatted()}</span>
+        <span class="sui-value-datetime sui-value-datetime--single">{formatted()}</span>
       </Show>
     </Show>
   );
@@ -329,9 +333,9 @@ export const MinuteDateTimeCell: Component<MinuteDateTimeCellProps> = (
   return (
     <Show
       when={formatted() != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class="cell-datetime cell-datetime--single">{formatted()}</span>
+      <span class="sui-value-datetime sui-value-datetime--single">{formatted()}</span>
     </Show>
   );
 };

@@ -51,7 +51,7 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
     vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => (
-      <EllipsisText class="cell-string" tooltip="1200 Really Long Street Name" />
+      <EllipsisText class="sui-value-string" tooltip="1200 Really Long Street Name" />
     ));
     expect(hasTooltip(container)).toBe(true);
     expect(container.querySelector(".sui-ellipsis-text")?.textContent).toContain("1200");
@@ -61,17 +61,17 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
     vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
-      <EllipsisText class="cell-string" tooltip="Reno" />
+      <EllipsisText class="sui-value-string" tooltip="Reno" />
     ));
     expect(hasTooltip(container)).toBe(false);
-    expect(container.querySelector(".cell-string")?.textContent).toBe("Reno");
+    expect(container.querySelector(".sui-value-string")?.textContent).toBe("Reno");
   });
 
   it("forces the tooltip via alsoWhen even when the text is not clipped", () => {
     vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
-      <EllipsisText class="cell-string" tooltip="A, B, C, D" alsoWhen={() => true}>
+      <EllipsisText class="sui-value-string" tooltip="A, B, C, D" alsoWhen={() => true}>
         A, B, C +1 more
       </EllipsisText>
     ));
@@ -82,7 +82,7 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
     vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
-      <EllipsisText class="cell-string" tooltip="full value">
+      <EllipsisText class="sui-value-string" tooltip="full value">
         visible
       </EllipsisText>
     ));

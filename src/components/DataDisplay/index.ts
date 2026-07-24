@@ -21,3 +21,5 @@ export {
 export type { VarDef, FormulaConfig } from "./FormulaDecomposition";
 export { NumberWithUnits } from "./NumberWithUnits";
 export type { NumberWithUnitsProps } from "./NumberWithUnits";
+export { EllipsisText } from "./EllipsisText";
+export type { EllipsisTextProps } from "./EllipsisText";

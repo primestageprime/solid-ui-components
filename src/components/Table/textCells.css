@@ -1,0 +1,91 @@
+/* Text value renderers (Id, String, LongText). Co-located with textCells.tsx so
+   each travels with its own styling into any host — table cell, <dd>, card slot.
+   (The ellipsis clip itself lives with EllipsisText in DataDisplay/.) */
+
+/* ID Cell */
+.sui-value-id {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--sui-text-secondary);
+  padding: 2px 6px;
+  background: rgba(var(--sui-accent-rgb), 0.05);
+  border: 1px solid rgba(var(--sui-accent-rgb), 0.15);
+  clip-path: polygon(
+    4px 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%,
+    0 4px
+  );
+}
+
+/* String Cell */
+.sui-value-string {
+  color: var(--sui-text-primary);
+}
+
+/* Long Text Cell */
+.sui-value-longtext {
+  display: inline;
+  font-size: 13px;
+  color: var(--sui-text-primary);
+  line-height: 1.4;
+}
+
+.sui-value-longtext__text {
+  word-break: break-word;
+}
+
+/* Clamp mode — the text element carries inline styles for
+   `-webkit-line-clamp`. This class is a hook for consumers to override
+   glyph behavior (letter-spacing, kerning) without needing to target the
+   inline-styled element. Cursor signals the value is hover-revealable. */
+.sui-value-longtext__text--clamped {
+  cursor: help;
+}
+
+/* Tooltip reveal mode — when LongTextCell composes the Kobalte Tooltip,
+   the Tooltip trigger wraps the text. The `sui-value-longtext--tooltip` class
+   is applied to the trigger so tooltip-mode cells can be targeted
+   distinctly (e.g., to make the trigger fill the host width). */
+.sui-value-longtext.sui-value-longtext--tooltip {
+  display: inline-block;
+  max-width: 100%;
+  /* The trigger is a <button>: neutralize the UA button chrome so a clamped
+     cell is visually identical to its untruncated .sui-value-longtext siblings
+     except for the ellipsis. font-size and color come from .sui-value-longtext
+     itself (do NOT inherit them — that would pull the host's values instead). */
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  /* Tooltip.css's .sui-tooltip__trigger { color: inherit } loads later and
+     would pull the host's secondary color — pin the cell's own primary. */
+  color: var(--sui-text-primary);
+  text-align: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: help;
+}
+
+.sui-value-longtext__more,
+.sui-value-longtext__less {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--sui-accent);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: all 0.15s ease;
+}
+
+.sui-value-longtext__more:hover,
+.sui-value-longtext__less:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px var(--sui-accent);
+}

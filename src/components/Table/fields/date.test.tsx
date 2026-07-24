@@ -30,7 +30,7 @@ describe("date field module", () => {
     const { container } = render(() => (
       <>{(col.accessor as (row: Row) => JSX.Element)({ createdAt: "2026-07-15T12:00:00" })}</>
     ));
-    expect(container.querySelector(".cell-date")?.textContent).toBe(
+    expect(container.querySelector(".sui-value-date")?.textContent).toBe(
       "2026-07-15",
     );
   });

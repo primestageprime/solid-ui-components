@@ -63,7 +63,7 @@ describe("textCol — cell rendering", () => {
     const { container } = render(() =>
       asFn(col.accessor)({ displayName: "x", note: "Prefers mornings" }),
     );
-    expect(container.querySelector(".cell-longtext")?.textContent).toBe(
+    expect(container.querySelector(".sui-value-longtext")?.textContent).toBe(
       "Prefers mornings",
     );
   });
