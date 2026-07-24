@@ -18,7 +18,14 @@ export const ICON_GROUPS = {
     "chevron-right",
     "arrow-right",
   ] as const,
-  data: ["data", "table", "chart-bar", "chart-line", "chart-area", "dependency"] as const,
+  data: [
+    "data",
+    "table",
+    "chart-bar",
+    "chart-line",
+    "chart-area",
+    "dependency",
+  ] as const,
   time: ["clock", "hourglass"] as const,
   actions: [
     "plus",

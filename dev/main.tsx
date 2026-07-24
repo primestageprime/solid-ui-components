@@ -523,7 +523,7 @@ const items: Item[] = [
     id: "notification-center",
     label: "NotificationCenter",
     component: NotificationCenterShowcase,
-    tags: ["depth:2", "feedback", "navigation"],
+    tags: ["depth:3", "feedback", "navigation"],
   },
   {
     id: "progress-check",
