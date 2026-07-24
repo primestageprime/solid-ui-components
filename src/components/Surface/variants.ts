@@ -116,6 +116,18 @@ export const CenteredSurface: Component<SurfaceDataProps> = createSurface({
   gap: "sm",
 });
 
+/** Elevated floating panel for overlay controls (popover/menu dropdowns):
+ *  elevated bg, hairline border, md radius, drop shadow, 280–360px wide. */
+export const PopoverSurface = createSurface({
+  padding: "sm",
+  radius: "md",
+  bg: "var(--sui-bg-elevated)",
+  borderColor: "var(--sui-border)",
+  shadow: true,
+  minWidth: "280px",
+  maxWidth: "360px",
+});
+
 // NoticeBar — full-width, edge-to-edge informational bar (ruled 2026-07-22):
 // row-arranged, center-aligned, accent-tinted like InfoSurface but flush
 // (radius none) so it sits against app chrome. For top-of-app notices with
