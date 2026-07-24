@@ -6,6 +6,9 @@ export * from "./variants";
 // CountChip has no design-config props — already effectively curried, re-exported as-is.
 export { CountChip } from "./CountChip";
 export type { CountChipProps } from "./CountChip";
+// CountBadge — count-only rolling corner pill (Badge-family sibling of CountChip).
+export { CountBadge } from "./CountBadge";
+export type { CountBadgeProps } from "./CountBadge";
 // BaselineDot has no design-config props — re-exported as-is.
 export { BaselineDot } from "./BaselineDot";
 export type { BaselineDotProps } from "./BaselineDot";
