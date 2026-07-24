@@ -44,15 +44,27 @@
   table-layout: fixed;
 }
 
-/* Fit: shrink-wrap the frame + table to content width (capped at the container)
-   instead of stretching full-width. For all-fixed-content tables so columns sit
-   together with no dead gap; the frame hugs the table and left-aligns. */
+/* Fit: size the table to its CONTENT — pack columns to the sum of their natural
+   (max-content) widths instead of stretching full-width and spreading columns
+   apart with dead gaps — and SCROLL horizontally when that packed width exceeds
+   the container instead of hard-clipping the rightmost column.
+   The scroll region is a shrinkable scroll container (overflow-x:auto +
+   min-width:0), which does two things at once: (a) a too-wide packed table
+   scrolls WITHIN the frame, and (b) because a scroll container contributes a
+   min-content of 0, a fit table dropped into a flex/grid cell collapses to the
+   track and scrolls inside it rather than blowing the track out past the
+   viewport (the classic auto-fit-minmax overflow). The frame spans its
+   container (capped at 100%); the packed table left-aligns inside it. */
 .hud-table--fit {
-  width: fit-content;
   max-width: 100%;
+  min-width: 0;
+}
+.hud-table--fit .hud-table__scroll {
+  overflow-x: auto;
+  min-width: 0;
 }
 .hud-table--fit .hud-table__table {
-  width: auto;
+  width: max-content;
 }
 
 /* Header */

@@ -134,6 +134,9 @@
     "src/components/ServiceHealthDot/ServiceHealthDot.tsx": [
       "paint"
     ],
+    "src/components/SlotCard/SlotCard.tsx": [
+      "measured"
+    ],
     "src/components/SlotFillBar/SlotFillBar.tsx": [
       "proportion",
       "paint"
@@ -227,6 +230,9 @@
     ],
     "dev/showcases/workshop/animation-lab.tsx": [
       "cssvar"
+    ],
+    "dev/showcases/workshop/slot-cards.tsx": [
+      "measured"
     ]
   }
 }

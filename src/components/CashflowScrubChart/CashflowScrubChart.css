@@ -14,7 +14,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 60px;
+  /* Width follows the DateAxis cell-width var (set from ScrubChart's cellWidth
+     prop), defaulting to 60px — so a caller can widen cells to change the
+     visible window (e.g. month-grained charts showing ~a year at a time). At the
+     default 60px this is identical to the previous fixed width. */
+  width: var(--sui-date-axis-cell-width, 60px);
   height: 72px;
   box-sizing: border-box;
   padding: 3px 4px 4px;

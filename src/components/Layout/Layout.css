@@ -2,6 +2,14 @@
 .stack {
   display: flex;
   flex-direction: column;
+  /* A vertical stack must never let a wide descendant dictate its width: as a
+     flex item its default `min-width: auto` resolves to the child's min-content,
+     so a horizontally-scrolling child (e.g. a ScrubChart's day-cell ribbon)
+     would blow the stack — and the whole page — out to the child's full content
+     width instead of letting the child scroll. `min-width: 0` is the horizontal
+     analog of the `min-height: 0` on `.stack--fill`; it lets the stack shrink to
+     its container so `overflow-x: auto` descendants scroll within it. */
+  min-width: 0;
 }
 
 .stack--gap-xs {

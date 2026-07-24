@@ -40,6 +40,6 @@ describe("dateTime field", () => {
     const { container } = render(() => (
       <>{accessor({ createdAt: "2026-01-15T08:30:00" })}</>
     ));
-    expect(container.querySelector(".cell-datetime")).not.toBeNull();
+    expect(container.querySelector(".sui-value-datetime")).not.toBeNull();
   });
 });

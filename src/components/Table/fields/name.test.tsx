@@ -49,7 +49,7 @@ describe("name field — cell render", () => {
     const col = nameCol<Row>();
     const accessor = col.accessor as (row: Row) => JSX.Element;
     const { container } = render(() => accessor(ROW));
-    expect(container.querySelector(".cell-longtext")?.textContent).toBe(
+    expect(container.querySelector(".sui-value-longtext")?.textContent).toBe(
       "Adlai Arnold",
     );
   });

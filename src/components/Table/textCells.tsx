@@ -1,9 +1,13 @@
-/* Table cell renderers — text cells (Id, String, LongText). */
+/* Text value renderers (Id, String, LongText). Container-agnostic — render
+ * equally in a table cell, a definition-list <dd>, or a card slot; each owns
+ * its styling via the co-located CSS below. */
 import { type Component, type JSX, Show, createSignal } from "solid-js";
 import { Tooltip } from "../Tooltip";
 import { EllipsisText } from "./EllipsisText";
 import { createTruncationObserver } from "../../hooks/createTruncationObserver";
 import type { CellRendererProps } from "./cellStyle";
+import "./textCells.css";
+import "./cellEmpty.css";
 
 // ============================================
 // ID Renderer
@@ -14,9 +18,9 @@ export const IdCell: Component<
   return (
     <Show
       when={props.value != null && props.value !== ""}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <EllipsisText class="cell-id" tooltip={String(props.value)} />
+      <EllipsisText class="sui-value-id" tooltip={String(props.value)} />
     </Show>
   );
 };
@@ -30,9 +34,9 @@ export const StringCell: Component<
   return (
     <Show
       when={props.value != null && props.value !== ""}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <EllipsisText class="cell-string" tooltip={String(props.value)} />
+      <EllipsisText class="sui-value-string" tooltip={String(props.value)} />
     </Show>
   );
 };
@@ -135,8 +139,8 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
   const renderText = () => (
     <span
       ref={setClampEl}
-      class="cell-longtext__text"
-      classList={{ "cell-longtext__text--clamped": isClampMode() }}
+      class="sui-value-longtext__text"
+      classList={{ "sui-value-longtext__text--clamped": isClampMode() }}
       style={clampStyle()}
     >
       {displayText()}
@@ -146,17 +150,17 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
   return (
     <Show
       when={props.value != null && props.value !== ""}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
       <Show
         when={revealMode() === "tooltip"}
         fallback={
-          <span class="cell-longtext">
+          <span class="sui-value-longtext">
             {renderText()}
             <Show when={!isClampMode() && isTruncated() && !expanded()}>
               <button
                 type="button"
-                class="cell-longtext__more"
+                class="sui-value-longtext__more"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (props.expandable !== false) setExpanded(true);
@@ -168,7 +172,7 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
             <Show when={!isClampMode() && expanded()}>
               <button
                 type="button"
-                class="cell-longtext__less"
+                class="sui-value-longtext__less"
                 onClick={(e) => {
                   e.stopPropagation();
                   setExpanded(false);
@@ -182,12 +186,12 @@ export const LongTextCell: Component<LongTextCellProps> = (props) => {
       >
         <Show
           when={isTruncated()}
-          fallback={<span class="cell-longtext">{renderText()}</span>}
+          fallback={<span class="sui-value-longtext">{renderText()}</span>}
         >
           <Tooltip
             content={() => props.value ?? ""}
             placement={props.tooltipPlacement ?? "top"}
-            class="cell-longtext cell-longtext--tooltip"
+            class="sui-value-longtext sui-value-longtext--tooltip"
           >
             {renderText()}
           </Tooltip>

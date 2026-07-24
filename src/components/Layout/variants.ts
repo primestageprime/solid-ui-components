@@ -554,3 +554,28 @@ export const CompactAppHeader: Component<AppHeaderDataProps> = createAppHeader({
 export const InlineAppHeader: Component<AppHeaderDataProps> = createAppHeader({
   inline: true,
 });
+
+// CardGrid — a responsive dashboard/tile grid: cells wrap into as many equal
+// columns as fit (each ≥ 280px), collapsing to a single column on a phone and
+// filling a wide monitor with every tile visible at once (CSS `auto-fit` +
+// `minmax`, no media queries). For KPI strips and breakdown-widget dashboards.
+export const CardGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "xs",
+});
+
+// WideCardGrid — same responsive auto-fit behavior as CardGrid but with a wider
+// minimum tile (≥ 420px), for tiles that host a chart or table and need room
+// before they wrap.
+export const WideCardGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(420px, 1fr))",
+  gap: "xs",
+});
+
+// ChipGrid — a tight responsive grid of small equal cells (≥ 150px), for rows
+// of chips / compact controls (filter bars, header meta) that pack many-across
+// on a wide screen and collapse toward one-per-row on a phone.
+export const ChipGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: "xs",
+});

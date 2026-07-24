@@ -80,7 +80,7 @@ export const floatCol = <T,>(
         <>
           {toneWrap(
             opts.tone?.(value, row),
-            <span class="cell-float">{asGiven(value)}</span>,
+            <span class="sui-value-float">{asGiven(value)}</span>,
           )}
           {opts.suffix ? (
             <span class="sui-field-suffix"> {opts.suffix}</span>

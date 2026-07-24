@@ -1,0 +1,15 @@
+/* Empty-state fallback — shared by every value renderer's null branch (the
+   `—` em-dash). Co-located here and imported by each renderer module so a
+   renderer styles its empty state in ANY host (table cell, <dd>, card slot),
+   not only when the whole table CSS bundle is present. */
+.sui-value-empty {
+  color: var(--sui-text-muted);
+  /* Consumers can override globally by setting --sui-value-empty-font-style
+     on an ancestor (e.g. a table wrapper). Default preserves italic. */
+  font-style: var(--sui-value-empty-font-style, italic);
+}
+
+/* Non-italic per-instance opt-out (DateTimeCell emptyVariant="plain"). */
+.sui-value-empty.sui-value-empty--plain {
+  font-style: normal;
+}

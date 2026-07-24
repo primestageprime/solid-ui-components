@@ -74,7 +74,7 @@ describe("withWhen", () => {
   it("renders the cell only when the predicate holds — blank otherwise", () => {
     const gated = withWhen<Row>((r) => r.flow > 0, intCol<Row>("flow"));
     const shown = renderCell(gated, ROW);
-    expect(shown.container.querySelector(".cell-int")?.textContent).toBe("22");
+    expect(shown.container.querySelector(".sui-value-int")?.textContent).toBe("22");
     const hidden = renderCell(gated, { ...ROW, flow: 0 });
     expect(hidden.container.textContent).toBe("");
   });

@@ -28,7 +28,7 @@ describe("duration field module", () => {
   it("cell renders a formatted duration, defaulting to seconds", () => {
     const col = durationCol<Row>("elapsed");
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ elapsed: 754 })}</>);
-    expect(container.querySelector(".cell-duration")?.textContent).toBe(
+    expect(container.querySelector(".sui-value-duration")?.textContent).toBe(
       "12m 34s",
     );
   });
@@ -36,7 +36,7 @@ describe("duration field module", () => {
   it("honors the input unit (minutes)", () => {
     const col = durationCol<Row>("elapsed", "m");
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ elapsed: 90 })}</>);
-    expect(container.querySelector(".cell-duration")?.textContent).toBe(
+    expect(container.querySelector(".sui-value-duration")?.textContent).toBe(
       "1h 30m",
     );
   });

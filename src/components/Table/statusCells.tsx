@@ -1,6 +1,10 @@
-/* Table cell renderers — status-style cells (Tag, Status, Checkbox). */
+/* Status-style value renderers (Tag, Status, Checkbox). Container-agnostic —
+ * render equally in a table cell, a definition-list <dd>, or a card slot; each
+ * owns its styling via the co-located CSS below. */
 import { type Component, Show } from "solid-js";
 import type { CellRendererProps } from "./cellStyle";
+import "./statusCells.css";
+import "./cellEmpty.css";
 
 // ============================================
 // Tag Renderer
@@ -16,9 +20,9 @@ export const TagCell: Component<TagCellProps> = (props) => {
   return (
     <Show
       when={props.value != null && props.value !== ""}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <span class={`cell-tag cell-tag--${variant()}`}>{props.value}</span>
+      <span class={`sui-value-tag sui-value-tag--${variant()}`}>{props.value}</span>
     </Show>
   );
 };
@@ -88,9 +92,9 @@ export const StatusCell: Component<StatusCellProps> = (props) => {
   };
 
   const inner = () => (
-    <span class={`cell-status cell-status--${statusInfo()?.variant}`}>
-      <span class="cell-status__indicator" />
-      <span class="cell-status__label">
+    <span class={`sui-value-status sui-value-status--${statusInfo()?.variant}`}>
+      <span class="sui-value-status__indicator" />
+      <span class="sui-value-status__label">
         {statusInfo()?.label || props.value}
       </span>
     </span>
@@ -99,11 +103,11 @@ export const StatusCell: Component<StatusCellProps> = (props) => {
   return (
     <Show
       when={props.value != null && props.value !== ""}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
       <Show when={props.href} fallback={inner()}>
         <a
-          class="cell-status__link"
+          class="sui-value-status__link"
           href={props.href}
           target="_blank"
           rel="noopener noreferrer"
@@ -128,16 +132,16 @@ export const CheckboxCell: Component<CheckboxCellProps> = (props) => {
   return (
     <Show
       when={props.value != null}
-      fallback={<span class="cell-empty">—</span>}
+      fallback={<span class="sui-value-empty">—</span>}
     >
-      <label class="cell-checkbox">
+      <label class="sui-value-checkbox">
         <input
           type="checkbox"
           checked={props.value || false}
           disabled={props.disabled}
           onChange={(e) => props.onChange?.(e.currentTarget.checked)}
         />
-        <span class="cell-checkbox__indicator" />
+        <span class="sui-value-checkbox__indicator" />
       </label>
     </Show>
   );

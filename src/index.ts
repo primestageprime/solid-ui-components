@@ -12,6 +12,7 @@ export type { ColorVariant, CornerStyle } from "./types";
 
 // Components
 export * from "./components/Layout";
+export * from "./components/Placeholder";
 export * from "./components/Text";
 export * from "./components/ResponsiveMoney";
 export * from "./components/InlineText";
@@ -50,6 +51,8 @@ export * from "./components/Button";
 export * from "./components/HotkeyButton";
 export * from "./components/Fab";
 export * from "./components/Card";
+export * from "./components/EntityCard";
+export * from "./components/SlotCard";
 export * from "./components/DataDisplay";
 export * from "./components/Feedback";
 export * from "./components/Checkbox";
@@ -78,6 +81,12 @@ export {
   SortableFieldTable,
 } from "./components/Table/fields/FieldTable";
 export type { FieldTableProps } from "./components/Table/fields/FieldTable";
+// EllipsisText: explicit re-export from its committed Table location, so the barrel
+// exports it independently of any in-progress DataDisplay refactor. An explicit
+// named re-export takes precedence over the `export *` sub-barrels above, so this
+// does not collide even while a DataDisplay copy is also (transiently) exported.
+export { EllipsisText } from "./components/Table/EllipsisText";
+export type { EllipsisTextProps } from "./components/Table/EllipsisText";
 export * from "./components/PivotGrid";
 export * from "./components/ValueMatrix";
 export * from "./components/Section";

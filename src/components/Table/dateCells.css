@@ -1,0 +1,35 @@
+/* Date/time value renderers (Date, DateTime, MinuteDateTime). Co-located with
+   dateCells.tsx so each travels with its own styling into any host — table
+   cell, <dd>, card slot. */
+
+/* Date Cell */
+.sui-value-date {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--sui-text-secondary);
+  white-space: nowrap;
+}
+
+/* DateTime Cell */
+.sui-value-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sui-value-datetime__date {
+  color: var(--sui-text-primary);
+}
+
+.sui-value-datetime__time {
+  color: var(--sui-text-secondary);
+  font-size: 11px;
+}
+
+.sui-value-datetime--single {
+  flex-direction: row;
+  color: var(--sui-text-secondary);
+}

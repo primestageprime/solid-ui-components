@@ -2320,13 +2320,6 @@
             "kind": "type"
           }
         ],
-        "BlockPlaceholder": [
-          {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
-            "kind": "named"
-          }
-        ],
         "BoardTable": [
           {
             "file": "src/routes/transfer.tsx",
@@ -2336,15 +2329,99 @@
         ],
         "CaptionLabel": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
         "CardGrid": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
             "line": 15,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
+            "kind": "named"
+          }
+        ],
+        "CashflowCell": [
+          {
+            "file": "src/components/daysnapshot/createDaySnapshot.ts",
+            "line": 33,
+            "kind": "type"
+          }
+        ],
+        "CashflowScrubChart": [
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -2378,8 +2455,8 @@
         ],
         "ChipLabel": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
@@ -2413,8 +2490,65 @@
         ],
         "ContentStack": [
           {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlySalesOrders.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReturnsCreditsReport.tsx",
+            "line": 22,
+            "kind": "named"
+          },
+          {
             "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "line": 14,
+            "kind": "named"
+          }
+        ],
+        "EllipsisText": [
+          {
+            "file": "src/components/AccountMenu.tsx",
+            "line": 13,
             "kind": "named"
           }
         ],
@@ -2434,8 +2568,8 @@
         ],
         "FitPlaceholder": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
@@ -2482,6 +2616,13 @@
             "kind": "named"
           }
         ],
+        "LabeledDivider": [
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          }
+        ],
         "LargeModal": [
           {
             "file": "src/components/SettingsModal.tsx",
@@ -2503,8 +2644,23 @@
             "kind": "named"
           },
           {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
             "file": "src/components/GrossMargin.tsx",
             "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
             "kind": "named"
           },
           {
@@ -2513,25 +2669,99 @@
             "kind": "named"
           },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
             "line": 15,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
+        "MultiSelectFilter": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          }
+        ],
+        "MultiSelectOption": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 46,
+            "kind": "type"
+          }
+        ],
         "MutedBody": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
           {
             "file": "src/components/ReportSidecar.tsx",
             "line": 11,
             "kind": "named"
           },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "file": "src/components/SettingsPanel.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
             "line": 15,
             "kind": "named"
           },
           {
-            "file": "src/components/SettingsPanel.tsx",
-            "line": 13,
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
@@ -2604,8 +2834,8 @@
         ],
         "RingChart": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
             "kind": "named"
           },
           {
@@ -2616,8 +2846,23 @@
         ],
         "ScrollFillBox": [
           {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
             "file": "src/components/DailySnapshot.tsx",
             "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 35,
             "kind": "named"
           },
           {
@@ -2626,13 +2871,48 @@
             "kind": "named"
           },
           {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/MonthlyPerformance.tsx",
             "line": 18,
             "kind": "named"
           },
           {
+            "file": "src/components/MonthlySalesOrders.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReturnsCreditsReport.tsx",
+            "line": 22,
+            "kind": "named"
+          },
+          {
             "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "line": 14,
             "kind": "named"
           },
           {
@@ -2663,19 +2943,34 @@
         ],
         "SectionTitle": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
         "SegmentedControl": [
           {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
             "file": "src/components/SettingsPanel.tsx",
             "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
         "Select": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
           {
             "file": "src/components/SettingsPanel.tsx",
             "line": 13,
@@ -2683,6 +2978,11 @@
           }
         ],
         "SelectOption": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 46,
+            "kind": "type"
+          },
           {
             "file": "src/components/SettingsPanel.tsx",
             "line": 13,
@@ -2721,6 +3021,11 @@
             "file": "src/components/AppNav.tsx",
             "line": 7,
             "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
+            "kind": "named"
           }
         ],
         "StatusBadgeVariant": [
@@ -2744,8 +3049,18 @@
         ],
         "TableColumn": [
           {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 46,
+            "kind": "type"
+          },
+          {
             "file": "src/components/DailySnapshot.tsx",
             "line": 30,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 19,
             "kind": "type"
           },
           {
@@ -2817,6 +3132,13 @@
             "kind": "type"
           }
         ],
+        "ThemedInput": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          }
+        ],
         "ThroughputChart": [
           {
             "file": "src/routes/overview.tsx",
@@ -2838,8 +3160,8 @@
         ],
         "TightClusterRow": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           }
         ],
@@ -2850,13 +3172,13 @@
             "kind": "named"
           },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/SettingsPanel.tsx",
+            "line": 13,
             "kind": "named"
           },
           {
-            "file": "src/components/SettingsPanel.tsx",
-            "line": 13,
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
             "kind": "named"
           },
           {
@@ -2867,8 +3189,33 @@
         ],
         "TightStack": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
@@ -2886,15 +3233,13 @@
         ],
         "TrendSparkline": [
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 7,
             "kind": "named"
-          }
-        ],
-        "WideCardGrid": [
+          },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
@@ -2924,13 +3269,30 @@
             "kind": "named"
           },
           {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
             "file": "src/components/MonthlyPerformance.tsx",
             "line": 18,
             "kind": "named"
           },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 15,
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
+            "line": 7,
+            "kind": "named"
+          }
+        ],
+        "WrappedClusterRow": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
             "kind": "named"
           }
         ],
@@ -2950,6 +3312,16 @@
         ],
         "createBaseTable": [
           {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 120,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/components/DailySnapshot.tsx",
             "line": 15,
             "kind": "factory-call"
@@ -2962,6 +3334,16 @@
           {
             "file": "src/components/DailySnapshot.tsx",
             "line": 59,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 27,
             "kind": "factory-call"
           },
           {
@@ -2991,7 +3373,7 @@
           },
           {
             "file": "src/components/ReportSidecar.tsx",
-            "line": 15,
+            "line": 20,
             "kind": "factory-call"
           },
           {
@@ -3001,7 +3383,7 @@
           },
           {
             "file": "src/routes/reports/[code].tsx",
-            "line": 63,
+            "line": 79,
             "kind": "factory-call"
           }
         ],
@@ -3199,7 +3581,7 @@
           },
           {
             "file": "src/routes/reports/[code].tsx",
-            "line": 57,
+            "line": 73,
             "kind": "factory-call"
           },
           {
@@ -3400,7 +3782,7 @@
           },
           {
             "file": "src/routes/reports/[code].tsx",
-            "line": 58,
+            "line": 74,
             "kind": "factory-call"
           }
         ],
@@ -4331,6 +4713,20 @@
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
+          }
+        ],
+        "EntityCard": [
+          {
+            "file": "src/components/ui/EntityCard.tsx",
+            "line": 11,
+            "kind": "reexport"
+          }
+        ],
+        "EntityCardProps": [
+          {
+            "file": "src/components/ui/EntityCard.tsx",
+            "line": 11,
+            "kind": "reexport"
           }
         ],
         "FieldTable": [
@@ -5377,6 +5773,20 @@
             "kind": "named"
           }
         ],
+        "ProgressionQueue": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
+        "ProgressionSection": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
         "ProportionalItem": [
           {
             "file": "src/components/ui/layout.tsx",
@@ -5388,6 +5798,13 @@
           {
             "file": "src/components/ui/layout.tsx",
             "line": 6,
+            "kind": "named"
+          }
+        ],
+        "RangeCountStatus": [
+          {
+            "file": "src/routes/reports/fortnight/[id].tsx",
+            "line": 3,
             "kind": "named"
           }
         ],
@@ -5425,7 +5842,7 @@
         "ScrollRegion": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 148,
+            "line": 145,
             "kind": "named"
           }
         ],
@@ -5490,11 +5907,6 @@
           }
         ],
         "SidebarSelectorItem": [
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 4,
-            "kind": "type"
-          },
           {
             "file": "src/routes/reports/fortnight/[id].tsx",
             "line": 3,
@@ -6462,6 +6874,37 @@
             "kind": "named"
           }
         ],
+        "TitleAssetDate": [
+          {
+            "file": "src/routes/metric-explorer.tsx",
+            "line": 41,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/timesleuth.tsx",
+            "line": 46,
+            "kind": "named"
+          }
+        ],
+        "TitleDotsMeta": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 145,
+            "kind": "named"
+          }
+        ],
+        "TitleMetaCount": [
+          {
+            "file": "src/components/qaqcTriage/CallFilterList.tsx",
+            "line": 12,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CallList.tsx",
+            "line": 12,
+            "kind": "named"
+          }
+        ],
         "TitledTimeRangeHeader": [
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallNoxDetail.tsx",
@@ -6504,11 +6947,6 @@
           {
             "file": "src/components/ColorblindToggle.tsx",
             "line": 1,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 4,
             "kind": "named"
           },
           {
@@ -6820,7 +7258,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 50,
+            "line": 51,
             "kind": "factory-call"
           }
         ],
@@ -6943,7 +7381,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 55,
+            "line": 56,
             "kind": "factory-call"
           },
           {
@@ -7033,7 +7471,7 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 70,
+            "line": 75,
             "kind": "factory-call"
           },
           {
@@ -7098,7 +7536,7 @@
           },
           {
             "file": "src/routes/tools/timesleuth.tsx",
-            "line": 55,
+            "line": 56,
             "kind": "factory-call"
           }
         ],
@@ -7184,7 +7622,7 @@
           },
           {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 21,
+            "line": 22,
             "kind": "factory-call"
           },
           {
@@ -7194,7 +7632,7 @@
           },
           {
             "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 19,
+            "line": 20,
             "kind": "factory-call"
           },
           {
@@ -7224,7 +7662,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 53,
+            "line": 54,
             "kind": "factory-call"
           },
           {
@@ -7294,7 +7732,7 @@
           },
           {
             "file": "src/routes/tools/timesleuth.tsx",
-            "line": 54,
+            "line": 55,
             "kind": "factory-call"
           }
         ],
@@ -7408,7 +7846,7 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 238,
+            "line": 253,
             "kind": "factory-call"
           },
           {
@@ -7418,7 +7856,7 @@
           },
           {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
-            "line": 23,
+            "line": 24,
             "kind": "factory-call"
           },
           {
@@ -7428,12 +7866,12 @@
           },
           {
             "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 21,
+            "line": 22,
             "kind": "factory-call"
           },
           {
             "file": "src/components/qaqcTriage/CallList.tsx",
-            "line": 27,
+            "line": 28,
             "kind": "factory-call"
           },
           {
@@ -7580,7 +8018,7 @@
           },
           {
             "file": "src/components/NoxWidgets.tsx",
-            "line": 239,
+            "line": 254,
             "kind": "factory-call"
           },
           {
@@ -7689,21 +8127,6 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 140,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 142,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 144,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/components/ui/PageHeader.tsx",
             "line": 15,
             "kind": "named"
@@ -7765,12 +8188,12 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 72,
+            "line": 77,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
-            "line": 73,
+            "line": 78,
             "kind": "factory-call"
           },
           {
@@ -9212,9 +9635,6 @@
     "BigNumberInput": [
       "thorcasting-ui"
     ],
-    "BlockPlaceholder": [
-      "goose-ui"
-    ],
     "BoardTable": [
       "goose-ui"
     ],
@@ -9254,9 +9674,11 @@
       "thorcasting-ui"
     ],
     "CashflowCell": [
+      "goose-ui",
       "thorcasting-ui"
     ],
     "CashflowScrubChart": [
+      "goose-ui",
       "thorcasting-ui"
     ],
     "CensusTable": [
@@ -9453,11 +9875,20 @@
     "DurationCell": [
       "amygdala-ui"
     ],
+    "EllipsisText": [
+      "goose-ui"
+    ],
     "EmphasisBody": [
       "jtf-ui"
     ],
     "EmptyState": [
       "dside-ui",
+      "jtf-ui"
+    ],
+    "EntityCard": [
+      "jtf-ui"
+    ],
+    "EntityCardProps": [
       "jtf-ui"
     ],
     "ExtractionBoardConfig": [
@@ -9583,6 +10014,7 @@
       "dside-ui"
     ],
     "LabeledDivider": [
+      "goose-ui",
       "jtf-ui"
     ],
     "LargeModal": [
@@ -9638,7 +10070,11 @@
       "thorcasting-ui"
     ],
     "MultiSelectFilter": [
-      "dside-ui"
+      "dside-ui",
+      "goose-ui"
+    ],
+    "MultiSelectOption": [
+      "goose-ui"
     ],
     "MutedBody": [
       "dside-ui",
@@ -9731,6 +10167,12 @@
     "ProductGridWorkCounts": [
       "dside-ui"
     ],
+    "ProgressionQueue": [
+      "jtf-ui"
+    ],
+    "ProgressionSection": [
+      "jtf-ui"
+    ],
     "ProportionalItem": [
       "jtf-ui"
     ],
@@ -9742,6 +10184,9 @@
     ],
     "RangeAmountGroup": [
       "thorcasting-ui"
+    ],
+    "RangeCountStatus": [
+      "jtf-ui"
     ],
     "ReferenceLine": [
       "goose-ui"
@@ -9997,6 +10442,7 @@
     "ThemedInput": [
       "amygdala-ui",
       "dside-ui",
+      "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -10034,6 +10480,15 @@
       "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
+    ],
+    "TitleAssetDate": [
+      "jtf-ui"
+    ],
+    "TitleDotsMeta": [
+      "jtf-ui"
+    ],
+    "TitleMetaCount": [
+      "jtf-ui"
     ],
     "TitledTimeRangeHeader": [
       "jtf-ui"
@@ -10126,9 +10581,6 @@
     "WeeklyChartBar": [
       "thorcasting-ui"
     ],
-    "WideCardGrid": [
-      "goose-ui"
-    ],
     "WorkerCard": [
       "goose-ui"
     ],
@@ -10140,6 +10592,7 @@
       "jtf-ui"
     ],
     "WrappedClusterRow": [
+      "goose-ui",
       "jtf-ui"
     ],
     "XAxis": [

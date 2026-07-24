@@ -32,14 +32,14 @@ describe("linkedCountCol", () => {
     const { container } = renderCell(col, { flow: 22, asset: "B-14" });
     const link = container.querySelector("a.sui-field-link");
     expect(link?.getAttribute("href")).toBe("/detail?asset=B-14&bucket=flow");
-    expect(link?.querySelector(".cell-int")?.textContent).toBe("22");
+    expect(link?.querySelector(".sui-value-int")?.textContent).toBe("22");
   });
 
   it("a zero count renders the plain cell — never a dead link", () => {
     const col = linkedCountCol<Row>("flow", { href: detailHref });
     const { container } = renderCell(col, { flow: 0, asset: "B-14" });
     expect(container.querySelector("a")).toBeNull();
-    expect(container.querySelector(".cell-int")?.textContent).toBe("0");
+    expect(container.querySelector(".sui-value-int")?.textContent).toBe("0");
   });
 
   it("a null count renders blank with no link (inherited intCol ruling)", () => {

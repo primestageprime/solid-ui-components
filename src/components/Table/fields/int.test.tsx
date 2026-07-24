@@ -55,6 +55,6 @@ describe("int field", () => {
   it("accessor renders a locale-formatted integer", () => {
     const col = intCol<Row>("hours");
     const { container } = render(() => <>{(col.accessor as (row: Row) => JSX.Element)({ hours: 9_999_999 })}</>);
-    expect(container.querySelector(".cell-int")?.textContent).toBe("9,999,999");
+    expect(container.querySelector(".sui-value-int")?.textContent).toBe("9,999,999");
   });
 });

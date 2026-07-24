@@ -36,6 +36,14 @@ currentColor (thematic) — never emoji glyphs (colored emoji break the theme;
 "the clock looks weird" — Peter, 2026-07-14). Gap noted: no chain/link icon
 for dependency semantics yet — add one to Icon when dependency children ship.
 
+## Terseness (applies to EVERY decision below)
+
+Make displays as TERSE as possible by default (Peter, 2026-07-18). Do NOT add
+visual separators / section chrome — titled `BorderedSection` boxes, dividers,
+labeled bands — unless explicitly asked. Sections are conceptual: stack the
+content grids in a `ContentStack`; the tiles' own labels carry the grouping.
+Add separators only on request.
+
 ## Layout purity (applies to EVERY decision below)
 
 All box-model geometry — rows, columns, gaps, alignment, spreads, fills,
@@ -341,6 +349,31 @@ Row delineation (rows must read as ROWS, not float in the section —
   branchier). Purely indicative progress → `ProgressCheck` /
   `StackedProgressBar`.
 
+## Report / dashboard page sections (a report route: header + filters + data)
+
+Build order (COMMANDMENTS #16/#17): **sections first, responsive-gated, then
+components.** Design the vertical regions and land them as an empty skeleton
+(placeholder text per region) that renders well on a phone AND a 4K monitor
+before any content component goes in. Fill one region per round.
+
+Discriminators for the section breakdown:
+- **Header** is always its own band: report title (`SectionTitle`) + a muted
+  provenance sub-line (cadence · timestamp · audience, `TextSublabel` in a
+  `ClusterRow`) + purpose (`MutedBody`). (Provenance-metadata rule, above.)
+- **Filters** are always their own one-line band (`WrapRow` of `Select` /
+  `DatePicker`), directly under the header.
+- **Body grouping** — how many titled data sections below the filters?
+  - Scalar KPIs read differently from measure-splits → **two sections**:
+    `Summary` (the scalar tiles + target + trend) and `Breakdowns` (everything
+    that splits a measure across a dimension, incl. top-N rankings). Default.
+  - Rankings read differently from dimensional splits → **three sections**
+    (Summary / Rankings / Breakdowns).
+  - No meaningful grouping (few tiles, equal weight) → **one flat** dashboard
+    grid, no sub-section titles.
+- **Section container** — titled data sections use a curried `Section` variant
+  (`BorderedSection`); the responsive tile grid inside each is `CardGrid`
+  (KPIs) / `WideCardGrid` (chart/table tiles). Never a raw grid/factory.
+
 ---
 
 ## Precedents (append-only)
@@ -393,6 +426,7 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   above): triage actions change item STATE; deferral is just not deciding
   (arrow-down skips) and queue ORDER belongs to the todo view's drag-sort.
   Final row: [c]laim [a]gentic [b]lock [s]nooze [d]epends.
+- **2026-07-18 · goose:reports/SR-01a (Daily Sales Orders Snapshot) · report page sections** — sections designed before components (COMMANDMENTS #17). Discriminators: scalar KPIs read differently from measure-splits, top-N not distinct enough from dimensional splits to warrant its own band → **4 sections: Header · Filters · Summary · Breakdowns** (top-N tiles live inside Breakdowns). Chosen over Summary/Rankings/Breakdowns (5) and flat dashboard (3). Skeleton: ScrollFillBox › ContentStack › [TightStack header, MutedBody filters band, BorderedSection "Summary", BorderedSection "Breakdowns"]; tile grids CardGrid/WideCardGrid. Landed empty-with-placeholders first, responsive-gated (phone 1-col / 4K fills) before component fill-in. Component picks (pending fill-in): breakdown tiles = Chart+BarSeries (horizontal bars); top-N = ranked DataTable; TOTAL/#ORDERS = MetricCard; vs-target = RingChart; trend = TrendSparkline.
 - **2026-07-23 · Auth/ManagedListSection · identities rows (list vs table)** —
   fields recur in comparable positions (method / account / action); rows ≤3
   (bounded by the connection catalog); cells sparse (email primary-only,
