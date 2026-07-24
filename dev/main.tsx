@@ -116,6 +116,7 @@ import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
+import { AuthShowcase } from "./showcases/auth";
 import { ChartShowcase } from "./showcases/chart";
 import { ChangeRendererShowcase } from "./showcases/change-renderer";
 import { DateRangePickerShowcase } from "./showcases/date-range-picker";
@@ -747,6 +748,12 @@ const items: Item[] = [
     label: "AlertBox",
     component: AlertBoxShowcase,
     tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "auth",
+    label: "Auth",
+    component: AuthShowcase,
+    tags: ["depth:2", "form", "feedback", "list"],
   },
   {
     id: "chart",

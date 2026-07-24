@@ -310,6 +310,38 @@ surface to what the action needs (Peter, 2026-07-14):
 All share the shell: FillColumn(title bar with mode hint, Divider,
 ScrollColumn(inputs), pinned confirm). Nothing mutates until commit.
 
+## Record rows in a section (list vs table)
+
+For a small collection displayed inside a settings/detail section, where each
+item carries a few facts and maybe an action (login methods, API keys,
+members). The load-bearing discriminator is **whether the same fields recur
+in comparable positions across rows** — recurring fields want COLUMN
+alignment; prose-like rows don't:
+
+- **1–2 fields per row, no recurring positions** → canon list rows:
+  `SpreadRow` (identity left, status/action trailing right). A table would
+  be aligning nothing.
+- **Recurring fields (method / identifier / action), few rows (bounded
+  catalog), sparse cells, no cross-row comparison** → `DataList`
+  (`DTable`/`DRow`/`DT`/`DD`): real table semantics so every field aligns in
+  its column, but no header row or striping — alignment without chrome the
+  data doesn't fill. Sparse cells (a value only some rows have) are exactly
+  what breaks `SpreadRow` here: different trailing content per row leaves
+  the right edge ragged; only a column grid aligns it.
+- **3+ uniform columns AND the user scans/compares across many rows** →
+  `BaseTable` (compact, header names the columns). The header earns its
+  space only when column meaning isn't obvious from the values.
+
+Row delineation (rows must read as ROWS, not float in the section —
+"floating out in the ether" is the failure mode). Choose by affordance:
+- **Default: hairline dividers** — `DRow border` (`List dividers` for the
+  list branch). The minimal mark of row-ness; the last row's rule also
+  separates the collection from what follows in the section.
+- **Zebra striping** (`BaseTable striped`) only when many rows / wide gaps
+  make the eye lose its row — noise at rail-of-3 scale.
+- **Boxed/card rows** only when the ROW ITSELF is a click target — a box
+  implies clickability; don't promise it when only an inner control acts.
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
@@ -395,3 +427,15 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   (arrow-down skips) and queue ORDER belongs to the todo view's drag-sort.
   Final row: [c]laim [a]gentic [b]lock [s]nooze [d]epends.
 - **2026-07-18 · goose:reports/SR-01a (Daily Sales Orders Snapshot) · report page sections** — sections designed before components (COMMANDMENTS #17). Discriminators: scalar KPIs read differently from measure-splits, top-N not distinct enough from dimensional splits to warrant its own band → **4 sections: Header · Filters · Summary · Breakdowns** (top-N tiles live inside Breakdowns). Chosen over Summary/Rankings/Breakdowns (5) and flat dashboard (3). Skeleton: ScrollFillBox › ContentStack › [TightStack header, MutedBody filters band, BorderedSection "Summary", BorderedSection "Breakdowns"]; tile grids CardGrid/WideCardGrid. Landed empty-with-placeholders first, responsive-gated (phone 1-col / 4K fills) before component fill-in. Component picks (pending fill-in): breakdown tiles = Chart+BarSeries (horizontal bars); top-N = ranked DataTable; TOTAL/#ORDERS = MetricCard; vs-target = RingChart; trend = TrendSparkline.
+- **2026-07-23 · Auth/ManagedListSection · identities rows (list vs table)** —
+  fields recur in comparable positions (method / account / action); rows ≤3
+  (bounded by the connection catalog); cells sparse (email primary-only,
+  Remove secondary-only); no cross-row comparison → **DataList
+  (`DTable`/`DRow`/`DT`/`DD`)**. Chosen over BaseTable (header + column
+  machinery over 2 rows the data doesn't fill) and over the original
+  `ClusterRow` rows (ragged inline alignment — the complaint that triggered
+  the redesign; Adlai, via /design-options). SpreadRow rejected: sparse
+  trailing content per row leaves the right edge ragged. Delineation:
+  **`DRow border` dividers** — rows read as rows ("floating out in the
+  ether" without them); striping is noise at 2–3 rows, boxes would imply
+  row clickability that isn't there.

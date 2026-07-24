@@ -25,6 +25,7 @@ import {
   type SlotCardProps,
   type SlotValues,
 } from "../../../src";
+import "./slot-cards.css";
 
 interface TemplateSpec {
   name: string;
@@ -78,7 +79,7 @@ function ResponsiveStrip(props: { spec: TemplateSpec }): ReturnType<Component> {
           {(w) => (
             <TightStack>
               <TextSublabel>{`${w}px`}</TextSublabel>
-              <div style={{ width: `${w}px` }}>
+              <div class={`slot-strip-w${w}`}>
                 <props.spec.Card values={props.spec.values} {...props.spec.props} maxWidth={w} />
               </div>
             </TightStack>

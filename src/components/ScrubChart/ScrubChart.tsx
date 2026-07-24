@@ -37,6 +37,7 @@ import {
 import { scaleLinear } from "d3-scale";
 import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
 import { ScrubChartAxes } from "./ScrubChartAxes";
 import {
@@ -371,7 +372,7 @@ export const ScrubChart = <C extends Cell>(
     if (!chartGesture.panActive) {
       if (Math.abs(dx) < CHART_PAN_THRESHOLD_PX) return;
       chartGesture.panActive = true;
-      (e.currentTarget as Element).setPointerCapture?.(chartGesture.pointerId);
+      safeSetPointerCapture(e.currentTarget as Element, chartGesture.pointerId);
     }
     const pitch = dayPitch();
     if (pitch <= 0) return;

@@ -1,5 +1,7 @@
 import { createSignal } from "solid-js";
 
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
+
 export type Transform = { x: number; y: number; scale: number };
 
 const MIN_SCALE = 0.2;
@@ -21,18 +23,7 @@ export function createPanZoom() {
   const onPointerDown = (e: PointerEvent) => {
     dragging = true;
     lastPointer = { x: e.clientX, y: e.clientY };
-    const el = e.currentTarget as SVGElement | null;
-    if (el && typeof el.setPointerCapture === "function") {
-      try {
-        el.setPointerCapture(e.pointerId);
-      } catch (err) {
-        if (
-          !(err instanceof DOMException && err.name === "InvalidStateError")
-        ) {
-          console.warn("[DagChart] setPointerCapture threw:", err);
-        }
-      }
-    }
+    safeSetPointerCapture(e.currentTarget as SVGElement | null, e.pointerId);
   };
 
   const onPointerMove = (e: PointerEvent) => {

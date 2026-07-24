@@ -115,3 +115,17 @@ export const CenteredSurface: Component<SurfaceDataProps> = createSurface({
   align: "center",
   gap: "sm",
 });
+
+// NoticeBar — full-width, edge-to-edge informational bar (ruled 2026-07-22):
+// row-arranged, center-aligned, accent-tinted like InfoSurface but flush
+// (radius none) so it sits against app chrome. For top-of-app notices with
+// text + action + dismiss. Shipping consumer: the Auth sibling banner.
+export const NoticeBar = createSurface({
+  direction: "row",
+  align: "center",
+  gap: "sm",
+  padding: "sm",
+  radius: "none",
+  bg: "rgba(var(--sui-accent-rgb), 0.05)",
+  borderColor: "rgba(var(--sui-accent-rgb), 0.3)",
+});
