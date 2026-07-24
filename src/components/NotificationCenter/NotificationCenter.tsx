@@ -1,10 +1,12 @@
 // lastReviewedAt: 2026-07-24
 // lastReviewedBy: adlai.arnold
 // ============================================
-// NotificationCenter — Composed (Depth 3)
-// Zero CSS. Composes Icon, CountBadge, PopoverSurface, Layout/Text/Button
-// variants + NavLink. Declares ONLY overlay position anchoring (Portal +
-// fixed, measured from the trigger — the overlay carve-out of Layout Purity).
+// NotificationCenter — Composed (Depth 3, overlay control)
+// Owns NotificationCenter.css for overlay chrome ONLY — the static positioning
+// of the trigger + its corner overlays (the same carve-out PopoverMenu/Dropdown
+// take). All content arrangement composes Icon, CountBadge, PopoverSurface,
+// Layout/Text/Button variants + NavLink; no hand-rolled geometry. The dynamic
+// panel position rides inline via the computed panelStyle() (overlay anchor).
 // Router-agnostic + domain-agnostic: consumer supplies items and navigates
 // via onAction. See docs/superpowers/plans/2026-07-24-sui-notification-center.md
 // ============================================
@@ -26,6 +28,7 @@ import { TightStack, SpreadRow, ScrollColumn } from "../Layout/variants";
 import { TextValue, MutedBody } from "../Text/variants";
 import { TextButton } from "../Button/variants";
 import { NavLink } from "../Navigation/NavLink";
+import "./NotificationCenter.css";
 
 export interface NotificationAction {
   label: string;
@@ -149,34 +152,25 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
   };
 
   return (
-    <span
-      ref={containerRef}
-      style={{ position: "relative", display: "inline-block" }}
-    >
+    <span ref={containerRef} class="sui-notification-center">
       <button
         ref={triggerRef}
         type="button"
+        class="sui-notification-center__trigger"
         aria-label={label()}
         aria-haspopup="true"
         aria-expanded={isOpen()}
         aria-busy={props.busy ? "true" : undefined}
         onClick={toggle}
-        style={{
-          position: "relative",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--sui-text-secondary)",
-        }}
       >
         <Icon name="bell" size="md" />
         <Show when={props.busy}>
-          <span style={{ position: "absolute", top: "-2px", right: "-2px" }}>
+          <span class="sui-notification-center__corner sui-notification-center__corner--busy">
             <Icon name="spinner" size="xs" />
           </span>
         </Show>
         <Show when={badge() > 0}>
-          <span style={{ position: "absolute", top: "-4px", right: "-4px" }}>
+          <span class="sui-notification-center__corner sui-notification-center__corner--badge">
             <CountBadge count={badge()} aria-hidden="true" />
           </span>
         </Show>
