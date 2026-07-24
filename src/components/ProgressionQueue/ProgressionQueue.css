@@ -94,3 +94,30 @@
   color: var(--sui-text-muted);
   font-size: 0.85rem;
 }
+
+/* SELECT MODE (bag-of-stuff grouping): a checked row gets a neutral accent
+   tint, and a small box that fills with a check. The whole row is the click
+   target, so the box is a non-interactive indicator, not an <input>. */
+.prog-queue__row--checked {
+  background: var(--sui-accent-dim);
+}
+.prog-queue__checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-sm);
+  font-size: 0.625rem;
+  line-height: 1;
+  background: var(--sui-bg-secondary);
+  vertical-align: middle;
+}
+.prog-queue__checkbox--checked {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+  color: var(--sui-bg-secondary);
+}
