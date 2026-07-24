@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## 0.113.1
+
+### Fixed
+
+- **`NotificationCenter` overlay chrome moved to CSS.** 0.113.0 shipped the component with its trigger + corner-badge positioning as inline `style={{…}}` object literals, which regressed the `health` vision ratchet (`styleRubricViolations` 0→4, `inlineStyleSrc` 75→79) — ADR-0003's inline-style rubric can't categorize `position`/`display`/`cursor`/`border`. The static positioning chrome now lives in a minimal `NotificationCenter.css` (the same overlay-chrome exception `PopoverMenu`/`Dropdown`/`Toast`/`Fab` take); only the dynamic panel position rides inline via the computed `panelStyle()`. No public API or visual change.
+
+## 0.113.0
+
+### Added
+
+- **`NotificationCenter`** (Depth 3) — generic, router-agnostic notification center: a bell trigger with a rolling count badge and a dropdown of notification items (title + optional detail + optional CTA), built as a zero-CSS composite. Handles open/close (controlled **and** uncontrolled `open`), outside-click/Esc close, a busy spinner, and a polite `aria-live` announcement; the consumer supplies `items` and navigates via the `onAction` callback — no `@solidjs/router` dependency and no dependence on consumer CSS. Items render as the three-line card canon (`CompactSurface` → title row / muted detail / accent action). Extracted from thorcasting-ui. `badgeTone` and item `tone` are reserved in the exported types (a single non-danger treatment ships now — minimal-variant rule).
+- **`CountBadge`** (Badge family) — count-only rolling corner pill (composes `DigitRoller`) for overlaying a trigger's corner.
+- **`PopoverSurface`** Surface Curried Variant + **`Surface` `shadow` prop** — elevated floating panel (bg-elevated, hairline border, drop shadow, 280–360px wide) for overlay controls.
+- **`Icon` `bell` glyph** (outline + solid).
+- **`.sui-sr-only`** global utility — screen-reader-only clip technique for `aria-live` status regions.
+
 ## 0.112.1
 
 ### Fixed

@@ -6,6 +6,7 @@ import {
   CardSurface,
   ContentSurface,
   CenteredSurface,
+  PopoverSurface,
 } from "./index";
 
 describe("Surface", () => {
@@ -61,5 +62,21 @@ describe("Surface", () => {
     expect(container.firstElementChild!.className).toMatch(
       /surface--align-center/,
     );
+  });
+});
+
+describe("Surface shadow", () => {
+  it("adds .surface--shadow when shadow is set", () => {
+    const { container } = render(() => <Surface shadow>x</Surface>);
+    expect(
+      container.firstElementChild?.classList.contains("surface--shadow"),
+    ).toBe(true);
+  });
+  it("PopoverSurface is elevated + shadowed + width-bounded", () => {
+    const { container } = render(() => <PopoverSurface>x</PopoverSurface>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.classList.contains("surface--shadow")).toBe(true);
+    expect(el.style.minWidth).toBe("280px");
+    expect(el.style.maxWidth).toBe("360px");
   });
 });
