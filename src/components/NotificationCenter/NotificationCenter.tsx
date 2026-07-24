@@ -21,8 +21,8 @@ import {
 import { Portal } from "solid-js/web";
 import { Icon } from "../Icon/Icon";
 import { CountBadge } from "../Badge/CountBadge";
-import { PopoverSurface } from "../Surface/variants";
-import { TightStack, ClusterRow, ScrollColumn } from "../Layout/variants";
+import { PopoverSurface, CompactSurface } from "../Surface/variants";
+import { TightStack, SpreadRow, ScrollColumn } from "../Layout/variants";
 import { TextValue, MutedBody } from "../Text/variants";
 import { TextButton } from "../Button/variants";
 import { NavLink } from "../Navigation/NavLink";
@@ -204,49 +204,59 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
                 <ScrollColumn>
                   <Index each={props.items}>
                     {(item) => (
-                      <TightStack>
-                        <ClusterRow>
-                          <Show when={item().transient}>
-                            <Icon name="spinner" size="sm" aria-hidden="true" />
+                      // Three-line card canon (design-decision-tree › Card
+                      // formats): CompactSurface box → TightStack → [title-left/
+                      // status-right row, muted detail sandwich, action]. Not
+                      // InteractiveCard — the click target is the CTA, not the row.
+                      <CompactSurface>
+                        <TightStack>
+                          <SpreadRow>
+                            <TextValue>{item().title}</TextValue>
+                            <Show when={item().transient}>
+                              <Icon
+                                name="spinner"
+                                size="sm"
+                                aria-hidden="true"
+                              />
+                            </Show>
+                          </SpreadRow>
+                          <Show when={item().detail}>
+                            <MutedBody>{item().detail}</MutedBody>
                           </Show>
-                          <TextValue>{item().title}</TextValue>
-                        </ClusterRow>
-                        <Show when={item().detail}>
-                          <MutedBody>{item().detail}</MutedBody>
-                        </Show>
-                        <Show when={item().action && !item().transient}>
-                          {(() => {
-                            const it = item();
-                            const a = it.action as NotificationAction;
-                            return (
-                              <Show
-                                when={a.href}
-                                fallback={
-                                  // Peer of the anchor's `color="accent"` — a
-                                  // semantic tone prop on Button's public API,
-                                  // not a raw style override. Label sits directly
-                                  // in the button (symmetric with the NavLink
-                                  // branch), so the interactive element owns it.
-                                  <TextButton
-                                    tone="accent"
-                                    onClick={() => activate(it)}
+                          <Show when={item().action && !item().transient}>
+                            {(() => {
+                              const it = item();
+                              const a = it.action as NotificationAction;
+                              return (
+                                <Show
+                                  when={a.href}
+                                  fallback={
+                                    // Peer of the anchor's `color="accent"` — a
+                                    // semantic tone prop on Button's public API,
+                                    // not a raw style override. Label sits directly
+                                    // in the button (symmetric with the NavLink
+                                    // branch), so the interactive element owns it.
+                                    <TextButton
+                                      tone="accent"
+                                      onClick={() => activate(it)}
+                                    >
+                                      {`${a.label} →`}
+                                    </TextButton>
+                                  }
+                                >
+                                  <NavLink
+                                    color="accent"
+                                    href={a.href}
+                                    onClick={(e) => activate(it, e)}
                                   >
                                     {`${a.label} →`}
-                                  </TextButton>
-                                }
-                              >
-                                <NavLink
-                                  color="accent"
-                                  href={a.href}
-                                  onClick={(e) => activate(it, e)}
-                                >
-                                  {`${a.label} →`}
-                                </NavLink>
-                              </Show>
-                            );
-                          })()}
-                        </Show>
-                      </TightStack>
+                                  </NavLink>
+                                </Show>
+                              );
+                            })()}
+                          </Show>
+                        </TightStack>
+                      </CompactSurface>
                     )}
                   </Index>
                 </ScrollColumn>

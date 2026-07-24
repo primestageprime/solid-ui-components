@@ -130,6 +130,21 @@ describe("NotificationCenter items", () => {
     ));
     expect(screen.getByText("All caught up.")).toBeTruthy();
   });
+  it("wraps each item in its own card surface (three-line card canon)", () => {
+    render(() => (
+      <NotificationCenter
+        items={[task(), task({ id: "t2", title: "Second" })]}
+        open
+      />
+    ));
+    // Each item is a CompactSurface card; the shadowed .surface is the panel
+    // (PopoverSurface), so the item cards are the non-shadow surfaces.
+    const cards = document.body.querySelectorAll(
+      ".surface:not(.surface--shadow)",
+    );
+    expect(cards.length).toBe(2);
+    expect(screen.getByText("Set balance").closest(".surface")).toBe(cards[0]);
+  });
 });
 
 describe("NotificationCenter busy a11y", () => {
