@@ -168,6 +168,12 @@ export const NotificationCenterShowcase: Component = () => {
             <div class="depth2-atom__label">PopoverSurface</div>
             <div class="text-meta">elevated dropdown panel chrome</div>
           </div>
+          <div class="depth2-atom">
+            <div class="depth2-atom__label">CompactSurface</div>
+            <div class="text-meta">
+              per-item card box (three-line card canon; non-interactive)
+            </div>
+          </div>
         </div>
 
         <div class="depth2-atom-group">
@@ -178,12 +184,12 @@ export const NotificationCenterShowcase: Component = () => {
           </div>
           <div class="depth2-atom">
             <div class="depth2-atom__label">TightStack</div>
-            <div class="text-meta">title / detail / action stack per row</div>
+            <div class="text-meta">title / detail / action stack per card</div>
           </div>
           <div class="depth2-atom">
-            <div class="depth2-atom__label">ClusterRow</div>
+            <div class="depth2-atom__label">SpreadRow</div>
             <div class="text-meta">
-              spinner-plus-title row for transient items
+              title left, trailing transient spinner as status
             </div>
           </div>
         </div>
