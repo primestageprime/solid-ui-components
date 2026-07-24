@@ -23,6 +23,7 @@ import {
   onMount,
 } from "solid-js";
 import "./DateAxis.css";
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { pipe, filter, join } from "../../fn";
 import type { Cell } from "./cells";
 
@@ -267,7 +268,7 @@ export const DateAxis = <C extends Cell = Cell>(
     if (!panState.active) {
       if (Math.abs(dx) < PAN_THRESHOLD_PX) return;
       panState.active = true;
-      scrollEl.setPointerCapture?.(panState.pointerId);
+      safeSetPointerCapture(scrollEl, panState.pointerId);
       // User grabbed the ribbon mid-recentre — drop programmatic control so
       // their drag is treated as a user scroll (and isn't fought by the flag).
       endProgrammaticScroll();

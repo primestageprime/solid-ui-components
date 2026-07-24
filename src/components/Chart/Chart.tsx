@@ -14,6 +14,7 @@ import {
   splitProps,
 } from "solid-js";
 import { insetSpan } from "../../internal/geometry/insetSpan";
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import {
   ChartContext,
   type ChartContextValue,
@@ -238,8 +239,10 @@ export const Chart: Component<ChartProps> = (props) => {
     setCommittedDragRange(null);
     // Capture the pointer so move/up keep firing on this <svg> even after the
     // pointer leaves its bounds — this is what lets a release OFF the chart
-    // still end (and commit) the drag. (jsdom lacks these methods; guard.)
-    svgEl?.setPointerCapture?.(e.pointerId);
+    // still end (and commit) the drag. Guarded: the ref can be disconnected by
+    // the time this runs (reactive re-render), which makes the browser throw
+    // InvalidStateError; a disconnected element can't capture anyway.
+    safeSetPointerCapture(svgEl, e.pointerId);
   };
   const onPointerUp = (e: PointerEvent) => {
     if (dragAnchor != null) {
