@@ -2414,7 +2414,7 @@
         "CashflowCell": [
           {
             "file": "src/components/daysnapshot/createDaySnapshot.ts",
-            "line": 27,
+            "line": 33,
             "kind": "type"
           }
         ],
@@ -2958,6 +2958,11 @@
             "file": "src/components/SettingsPanel.tsx",
             "line": 13,
             "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
+            "kind": "named"
           }
         ],
         "Select": [
@@ -3015,6 +3020,11 @@
           {
             "file": "src/components/AppNav.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayScrubChart.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
