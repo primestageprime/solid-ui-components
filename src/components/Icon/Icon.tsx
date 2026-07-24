@@ -30,7 +30,7 @@ export const ICON_GROUPS = {
     "download",
     "pause",
   ] as const,
-  ui: ["spinner", "menu", "settings", "external-link"] as const,
+  ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
     "cache-minutes",
@@ -80,6 +80,7 @@ export type IconName =
   | "menu"
   | "settings"
   | "external-link"
+  | "bell"
   // Auth
   | "log-out"
   | "log-in"
@@ -315,6 +316,14 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
     "external-link": {
       outline: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Bell body with clapper — the notification trigger glyph.
+    bell: {
+      outline: `<path d="M8 2a3 3 0 0 0-3 3c0 3.5-1.5 4.5-1.5 4.5h9S11 8.5 11 5a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M6.8 11.5a1.3 1.3 0 0 0 2.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M8 2a3 3 0 0 0-3 3c0 3.5-1.5 4.5-1.5 4.5h9S11 8.5 11 5a3 3 0 0 0-3-3Z" fill="currentColor"/>
+            <path d="M6.8 11.5a1.3 1.3 0 0 0 2.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>`,
     },
 
     // === AUTH ICONS ===
