@@ -1,0 +1,39 @@
+/* NotificationCenter — overlay-control chrome only.
+ * Owns just the static positioning of the trigger + its corner overlays (the
+ * overlay carve-out that PopoverMenu/Dropdown/Toast also take). ALL content
+ * arrangement still comes from composed Layout variants — the only geometry
+ * here is the trigger intrinsically centering its own glyph (allowed intrinsic
+ * element styling), never child arrangement. The dynamic panel position rides
+ * inline via the computed panelStyle(). No hand-rolled flex/grid/gap layout. */
+
+.sui-notification-center {
+  position: relative;
+  display: inline-block;
+}
+
+/* The bell button: transparent chrome, self-centers its single glyph, and is
+ * the positioned ancestor for the corner overlays below. */
+.sui-notification-center__trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--sui-text-secondary);
+}
+
+/* Badge / spinner overlays anchored to the trigger's top-right corner. */
+.sui-notification-center__corner {
+  position: absolute;
+}
+
+.sui-notification-center__corner--busy {
+  top: -2px;
+  right: -2px;
+}
+
+.sui-notification-center__corner--badge {
+  top: -4px;
+  right: -4px;
+}
