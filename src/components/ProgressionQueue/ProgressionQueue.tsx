@@ -18,7 +18,8 @@ import {
   onCleanup,
 } from "solid-js";
 import { allocateHeights } from "./layout";
-import { filter, map } from "../../fn";
+import { bucketItems } from "./bucketing";
+import { map } from "../../fn";
 import type { ProgressionQueueProps } from "./types";
 import "./ProgressionQueue.css";
 
@@ -30,11 +31,13 @@ const ROW_FALLBACK = 54;
 const GAP = 8;
 
 export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Element {
-  const itemsIn = (key: string) =>
-    filter((it: T) => props.bucketOf(it) === key, props.items);
-  const counts = createMemo(() =>
-    map((s) => itemsIn(s.key).length, props.sections),
+  const sectionKeys = createMemo(() => map((s) => s.key, props.sections));
+  // ONE pass per items change: the per-section rows AND the key → section map.
+  const buckets = createMemo(() =>
+    bucketItems(props.items, sectionKeys(), props.bucketOf, props.keyOf),
   );
+  const itemsIn = (key: string): T[] => buckets().bySection.get(key) ?? [];
+  const counts = createMemo(() => map((s) => itemsIn(s.key).length, props.sections));
 
   // The bar fills its allotted height; the natural height of each section is
   // deterministic from its row count (one measured row + header, recalibrated on
@@ -67,7 +70,16 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
   });
 
   const natural = createMemo(() =>
-    map((c) => (c === 0 ? headH() + 2 : headH() + c * rowH() + 2), counts()),
+    map((c: number, idx: number) => {
+      const section = props.sections[idx];
+      // Empty: the summary line, plus one line for the empty copy if declared.
+      if (c === 0) return headH() + (section?.emptyLabel != null ? rowH() : 0) + 2;
+      // `capRows` caps the section's NATURAL height, so it holds at the cap and
+      // its body scrolls; the weighted water-fill below is unchanged.
+      const rows =
+        section?.capRows != null ? Math.min(c, Math.max(1, section.capRows)) : c;
+      return headH() + rows * rowH() + 2;
+    }, counts()),
   );
   const heights = createMemo(() =>
     allocateHeights({
@@ -90,14 +102,21 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
           const count = () => counts()[i()];
           return (
             <div class="prog-queue__section" style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}>
-              <div class="prog-queue__header" ref={(el) => (i() === 0 ? (headRef = el) : undefined)}>
+              <div class="prog-queue__header" ref={(el) => { if (i() === 0) headRef = el; }}>
                 <span class="prog-queue__title">
                   <span class={`prog-queue__dot prog-queue__dot--${section.tone}`} />
                   {section.label}
                 </span>
                 <span class="prog-queue__count">{count()}</span>
               </div>
-              <Show when={count() > 0}>
+              <Show
+                when={count() > 0}
+                fallback={
+                  <Show when={section.emptyLabel != null}>
+                    <div class="prog-queue__empty">{section.emptyLabel}</div>
+                  </Show>
+                }
+              >
                 <div class="prog-queue__body">
                   <For each={itemsIn(section.key)}>
                     {(it, ri) => {
@@ -106,7 +125,7 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
                       return (
                         <div
-                          ref={(el) => (i() === 0 && ri() === 0 ? (rowRef = el) : undefined)}
+                          ref={(el) => { if (i() === 0 && ri() === 0) rowRef = el; }}
                           class={
                             "prog-queue__row" +
                             (interactive() ? " prog-queue__row--interactive" : "") +
