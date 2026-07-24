@@ -74,4 +74,95 @@ describe("ProgressionQueue", () => {
     });
     expect(container.querySelector(".prog-queue__row--selected")).toBeTruthy();
   });
+
+  it("renders a section's emptyLabel when it has no items", () => {
+    const sections: ProgressionSection[] = [
+      { key: "a", label: "Alpha", tone: "success" },
+      { key: "b", label: "Beta", tone: "accent", emptyLabel: "All clear" },
+    ];
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={sections}
+        items={[{ id: "1", bucket: "a" }]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    expect(container.querySelector(".prog-queue__empty")?.textContent).toBe("All clear");
+  });
+
+  it("omits the empty strip when a section declares no emptyLabel", () => {
+    const { container } = renderQueue([{ id: "1", bucket: "a" }]);
+    expect(container.querySelector(".prog-queue__empty")).toBeNull();
+  });
+
+  it("renders nothing for an item whose bucket matches no section", () => {
+    const { container } = renderQueue([
+      { id: "real", bucket: "a" },
+      { id: "ghost", bucket: "nowhere" },
+    ]);
+    expect(container.textContent).toContain("real");
+    expect(container.textContent).not.toContain("ghost");
+  });
+
+  // Sizing is deterministic in jsdom: measurement returns 0, so the component
+  // keeps its fallbacks (header 34, row 54, +2 border). With height=600 and
+  // three sections at gap 8, the two empty sections take 36 each, leaving
+  // ample pool — so each populated section gets exactly its natural height.
+  const FIVE_IN_A: Item[] = [1, 2, 3, 4, 5].map((n) => ({
+    id: String(n),
+    bucket: "a",
+  }));
+
+  const sectionHeights = (container: HTMLElement) =>
+    [...container.querySelectorAll(".prog-queue__section")].map(
+      (s) => (s as HTMLElement).style.height,
+    );
+
+  it("shrink-wraps a section to its content when it declares no capRows", () => {
+    const { container } = renderQueue(FIVE_IN_A);
+    expect(sectionHeights(container)[0]).toBe("306px"); // 34 + 5*54 + 2
+  });
+
+  it("caps a section at capRows and keeps every row mounted so the body scrolls", () => {
+    const capped: ProgressionSection[] = [
+      { key: "a", label: "Alpha", tone: "success", capRows: 2 },
+      { key: "b", label: "Beta", tone: "danger" },
+      { key: "c", label: "Gamma", tone: "accent" },
+    ];
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={capped}
+        items={FIVE_IN_A}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    expect(sectionHeights(container)[0]).toBe("144px"); // 34 + 2*54 + 2
+    // Capping is a viewport, not a filter — all five rows stay in the DOM.
+    expect(container.querySelectorAll(".prog-queue__row")).toHaveLength(5);
+  });
+
+  it("ignores capRows larger than the row count", () => {
+    const capped: ProgressionSection[] = [
+      { key: "a", label: "Alpha", tone: "success", capRows: 99 },
+      { key: "b", label: "Beta", tone: "danger" },
+      { key: "c", label: "Gamma", tone: "accent" },
+    ];
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={capped}
+        items={FIVE_IN_A}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    expect(sectionHeights(container)[0]).toBe("306px"); // still content-driven
+  });
 });
