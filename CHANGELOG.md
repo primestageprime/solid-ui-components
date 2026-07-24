@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.112.1
+
+### Fixed
+
+- **`setPointerCapture` no longer crashes a drag gesture when its element is disconnected.** `Chart.onPointerDown` called `setPointerCapture` on a stored `svgEl` ref (not `e.currentTarget`); when a reactive re-render or mid-gesture unmount detached that ref, Chromium threw `InvalidStateError`, which propagated uncaught through Solid's event delegation and crashed the consumer app (Vite overlay). The `?.` only guarded the method being absent (jsdom), not it throwing. New shared helper `safeSetPointerCapture()` swallows the two benign, expected failures — `InvalidStateError` (element disconnected) and `NotFoundError` (no active pointer) — and warns on anything else; all four capture sites (`Chart`, `DateAxis`, `ScrubChart`, `DagChart`) route through it, folding `DagChart`'s existing inline try/catch into the shared helper. (Log prefix changed from `[DagChart] setPointerCapture threw:` to `[SUI] setPointerCapture threw:`.)
+
 ## 0.112.0
 
 ### Added
