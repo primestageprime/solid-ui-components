@@ -1,0 +1,105 @@
+/* ProgressionQueue — keyboard navigation & roving tabindex.
+ *
+ * Sections are exposed as `role="listbox"`es of `role="option"` rows so
+ * assistive tech announces each as a selectable list. Rows are reachable via a
+ * ROVING TABINDEX: exactly one row is in the tab order (tabindex 0), the rest
+ * are -1. Arrow/Home/End move DOM focus, treating every section as one
+ * top→bottom sequence, and DO NOT WRAP (movement clamps at both ends).
+ * Enter/Space activate the row through the shell's select-vs-toggle branch.
+ *
+ * Ported from SplitQueueList/keyboard.ts with its behavior intact; the two
+ * additions are `onFocusChange` emission and the injected `onActivate`. */
+import { createMemo, createSignal } from "solid-js";
+import { clamp } from "../../internal/math/clamp";
+
+export interface RowKeyboardDeps {
+  /** The component root the rows are queried within (may be undefined pre-mount). */
+  getRootEl: () => HTMLElement | undefined;
+  /** All row keys in render order, top section first. */
+  allKeys: () => string[];
+  /** The controlled focus, if any. */
+  focusedKey: () => string | undefined;
+  /** The controlled selection, if any. */
+  selectedKey: () => string | undefined;
+  /** Activate a row (mirrors a click — selects, or toggles in select mode). */
+  onActivate: (key: string) => void;
+  /** Report that keyboard focus moved. */
+  onFocusChange: (key: string | null) => void;
+}
+
+export interface RowKeyboard {
+  /** Which row currently holds the tab stop (tabindex 0). */
+  tabbableKey: () => string | null;
+  /** Record the row the user focused (e.g. from the row's onFocus). */
+  setActiveKey: (key: string | null) => void;
+  /** keydown handler for a row, bound to its key. */
+  onRowKeyDown: (e: KeyboardEvent, key: string) => void;
+}
+
+export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
+  const [activeKey, setActiveKey] = createSignal<string | null>(null);
+
+  // Exactly one tab stop, chosen by precedence: the row the user last focused,
+  // then the controlled selection, then the controlled focus, then the first
+  // row. A stale key that is no longer rendered is skipped.
+  const tabbableKey = createMemo(() => {
+    const allKeys = deps.allKeys();
+    const active = activeKey();
+    if (active && allKeys.includes(active)) return active;
+    const fk = deps.focusedKey();
+    if (fk && allKeys.includes(fk)) return fk;
+    const sel = deps.selectedKey();
+    if (sel && allKeys.includes(sel)) return sel;
+    return allKeys[0] ?? null;
+  });
+
+  // Move DOM focus across ALL sections as one sequence, driven off live DOM
+  // order so it tracks the rendered rows without threading indices through
+  // state. Clamped — the queue does not wrap.
+  const moveFocus = (fromKey: string, dir: 1 | -1 | "home" | "end") => {
+    const rootEl = deps.getRootEl();
+    if (!rootEl) return;
+    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-pq-key]")];
+    if (rows.length === 0) return;
+    const idx = rows.findIndex((r) => r.dataset.pqKey === fromKey);
+    const target =
+      dir === "home"
+        ? rows[0]
+        : dir === "end"
+          ? rows[rows.length - 1]
+          : rows[clamp(idx + dir, 0, rows.length - 1)];
+    if (!target) return;
+    const key = target.dataset.pqKey ?? null;
+    setActiveKey(key);
+    target.focus();
+    deps.onFocusChange(key);
+  };
+
+  const onRowKeyDown = (e: KeyboardEvent, key: string) => {
+    switch (e.key) {
+      case "Enter":
+      case " ":
+        e.preventDefault(); // Space would otherwise scroll the section body
+        deps.onActivate(key);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        moveFocus(key, 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        moveFocus(key, -1);
+        break;
+      case "Home":
+        e.preventDefault();
+        moveFocus(key, "home");
+        break;
+      case "End":
+        e.preventDefault();
+        moveFocus(key, "end");
+        break;
+    }
+  };
+
+  return { tabbableKey, setActiveKey, onRowKeyDown };
+}

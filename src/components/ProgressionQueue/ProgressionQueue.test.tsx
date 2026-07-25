@@ -251,4 +251,95 @@ describe("ProgressionQueue", () => {
     fireEvent.click(rowFor(container, "check"), { ctrlKey: true });
     expect(mods).toEqual({ shift: false, meta: true });
   });
+
+  const rows = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-pq-key]")] as HTMLElement[];
+
+  it("gives exactly one row the tab stop", () => {
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+      ],
+      { onSelect: () => {} },
+    );
+    const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable).toHaveLength(1);
+  });
+
+  it("prefers focusedKey for the tab stop", () => {
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+      ],
+      { onSelect: () => {}, focusedKey: "2" },
+    );
+    expect(rowFor(container, "2").getAttribute("tabindex")).toBe("0");
+    expect(rowFor(container, "1").getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("moves focus DOWN across a section boundary and reports it", () => {
+    const moved: (string | null)[] = [];
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+      ],
+      { onSelect: () => {}, onFocusChange: (k: string | null) => moved.push(k) },
+    );
+    fireEvent.keyDown(rowFor(container, "1"), { key: "ArrowDown" });
+    expect(moved).toEqual(["2"]);
+  });
+
+  it("does not wrap at either end", () => {
+    const moved: (string | null)[] = [];
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+      ],
+      { onSelect: () => {}, onFocusChange: (k: string | null) => moved.push(k) },
+    );
+    fireEvent.keyDown(rowFor(container, "1"), { key: "ArrowUp" });
+    fireEvent.keyDown(rowFor(container, "2"), { key: "ArrowDown" });
+    expect(moved).toEqual(["1", "2"]);
+  });
+
+  it("Home and End jump to the first and last row", () => {
+    const moved: (string | null)[] = [];
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+        { id: "3", bucket: "c" },
+      ],
+      { onSelect: () => {}, onFocusChange: (k: string | null) => moved.push(k) },
+    );
+    fireEvent.keyDown(rowFor(container, "1"), { key: "End" });
+    fireEvent.keyDown(rowFor(container, "3"), { key: "Home" });
+    expect(moved).toEqual(["3", "1"]);
+  });
+
+  it("Enter selects the focused row", () => {
+    let selected: string | undefined;
+    const { container } = renderQueue([{ id: "1", bucket: "a" }], {
+      onSelect: (k: string) => (selected = k),
+    });
+    fireEvent.keyDown(rowFor(container, "1"), { key: "Enter" });
+    expect(selected).toBe("1");
+  });
+
+  it("Space toggles the check on a selectable row in select mode", () => {
+    let toggled: string | undefined;
+    let selected: string | undefined;
+    const { container } = renderSelectable({
+      onSelect: (k: string) => (selected = k),
+      checkedKeys: new Set<string>(),
+      onToggleCheck: (k: string) => (toggled = k),
+    });
+    fireEvent.keyDown(rowFor(container, "check"), { key: " " });
+    expect(toggled).toBe("check");
+    expect(selected).toBeUndefined();
+  });
 });
