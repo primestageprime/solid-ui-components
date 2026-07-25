@@ -2061,7 +2061,7 @@ Stop the dev server when done.
 
 - [ ] **Step 5: Write the component README**
 
-Create `src/components/ProgressionQueue/README.md` covering: the mental model (one flat list + `bucketOf`; a move is one atomic mutation), a quick-start with the three-section example, the full prop table, select mode (presence of `checkedKeys`), keyboard behavior, the sizing model (weighted water-fill, plus per-section `capRows` and its one difference from `SplitQueueList` — no slack absorption past the cap), and a "Motion" section stating that the choreographer seam is the swap point for a flying-clone implementation, pointing at the ADR. Model its structure on `src/components/SplitQueueList/README.md`.
+Create `src/components/ProgressionQueue/README.md` covering: the mental model (one flat list + `bucketOf`; a move is one atomic mutation), a quick-start with the three-section example, the full prop table, select mode (presence of `checkedKeys`), keyboard behavior (**including that only INTERACTIVE rows are keyboard-reachable — a row in a section that is neither selectable nor served by `onSelect` is skipped by arrows and never takes the tab stop**), the sizing model (weighted water-fill, plus per-section `capRows` and its one difference from `SplitQueueList` — no slack absorption past the cap), and a "Motion" section stating that the choreographer seam is the swap point for a flying-clone implementation, pointing at the ADR. Model its structure on `src/components/SplitQueueList/README.md`.
 
 - [ ] **Step 6: Write the ADR**
 
