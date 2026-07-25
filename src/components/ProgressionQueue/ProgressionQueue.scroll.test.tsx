@@ -1,7 +1,9 @@
-// ProgressionQueue — scrollToKey. Split from ProgressionQueue.test.tsx
-// (2026-07-24) to stay under the repo's 500-line file limit; the two
-// scrollToKey tests are unchanged in substance from their original home (see
-// git history).
+// ProgressionQueue — scrollToKey and the transfer animation. Split from
+// ProgressionQueue.test.tsx (2026-07-24) to stay under the repo's 500-line
+// file limit; the two scrollToKey tests are unchanged in substance from
+// their original home (see git history). Only the reduced-motion and
+// arrival-reveal paths are testable in jsdom — the motion itself is verified
+// in the dev showcase (see docs/adr/0004-one-queue-component-and-the-motion-seam.md).
 import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
@@ -105,5 +107,55 @@ describe("ProgressionQueue — scrollToKey", () => {
     setKey("2");
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     expect(calls).toEqual(["2", "2"]);
+  });
+});
+
+describe("ProgressionQueue — transfer animation", () => {
+  it("reveals the arriving row after an item changes bucket", async () => {
+    const calls: string[] = [];
+    recordScrollIntoView(calls);
+    const [items, setItems] = createSignal<Item[]>([
+      { id: "1", bucket: "b" },
+      { id: "2", bucket: "b" },
+    ]);
+    render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={items()}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    calls.length = 0;
+    setItems([
+      { id: "1", bucket: "a" }, // moved b → a
+      { id: "2", bucket: "b" },
+    ]);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(calls).toContain("1");
+  });
+
+  it("does not reveal anything when no item changed bucket", async () => {
+    const calls: string[] = [];
+    recordScrollIntoView(calls);
+    const [items, setItems] = createSignal<Item[]>([{ id: "1", bucket: "a" }]);
+    render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={items()}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    calls.length = 0;
+    setItems([{ id: "1", bucket: "a" }, { id: "2", bucket: "a" }]); // an add, not a move
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(calls).toEqual([]);
   });
 });

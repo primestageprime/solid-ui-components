@@ -21,6 +21,8 @@ import {
 import { allocateHeights } from "./layout";
 import { bucketItems } from "./bucketing";
 import { createRowKeyboard } from "./keyboard";
+import { createSlotMotion } from "./motion";
+import { diffTransfers } from "./transfer";
 import { map } from "../../fn";
 import type { ProgressionQueueProps, ProgressionSection } from "./types";
 import "./ProgressionQueue.css";
@@ -158,6 +160,52 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
     const key = props.scrollToKey;
     if (!key) return;
     revealRow(key);
+  });
+
+  // Motion is CURRIED, not a prop (STYLE_GUIDE › Ambient Motion): the queue
+  // animates its own transfers with no call-site specification. Swap
+  // `createSlotMotion` for a different TransferChoreographer to change the feel.
+  const motion = createSlotMotion();
+  const DURATION_MS = 260;
+
+  const reducedMotion = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+
+  // Re-snapshot after every paint so a transfer detected on the next change has
+  // the previous frame's geometry to animate from.
+  createEffect(() => {
+    buckets();
+    requestAnimationFrame(() => {
+      if (rootRef) motion.capture(rootRef);
+    });
+  });
+
+  // A move is an item whose bucket changed — one atomic `items` mutation, so
+  // there is no intermediate frame in which it belongs nowhere.
+  let prevSectionOf: ReadonlyMap<string, string> = new Map();
+  createEffect(() => {
+    const next = buckets().sectionOf;
+    const moves = diffTransfers(prevSectionOf, next, sectionKeys());
+    prevSectionOf = next;
+    if (moves.length === 0) return;
+    queueMicrotask(async () => {
+      const root = rootRef;
+      if (!root) return;
+      const ctx = {
+        root,
+        rowEl: (key: string) =>
+          [...root.querySelectorAll<HTMLElement>("[data-pq-key]")].find(
+            (n) => n.dataset.pqKey === key,
+          ),
+        durationMs: DURATION_MS,
+        reducedMotion: reducedMotion(),
+      };
+      await Promise.all(moves.map((t) => motion.play(t, ctx)));
+      // Arrival reveal — the general form of SplitQueueList's scroll-pin: you
+      // always see where the last-moved row landed.
+      revealRow(moves[moves.length - 1].key);
+    });
   });
 
   return (
