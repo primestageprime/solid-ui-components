@@ -57,8 +57,11 @@
 .prog-queue__row--interactive:hover {
   background: var(--sui-bg-hover, rgba(127, 127, 127, 0.08));
 }
+/* SELECTED — the accent bar ONLY, never a fill. A persistent background behind
+   row text reads at too low a contrast once the pointer leaves, and because a
+   consumer typically auto-selects a row, that state is almost always on screen.
+   Hover owns the fill, exactly as it does for an unselected row. */
 .prog-queue__row--selected {
-  background: var(--sui-bg-selected, rgba(0, 212, 255, 0.1));
   box-shadow: inset 2px 0 0 var(--sui-accent);
 }
 
