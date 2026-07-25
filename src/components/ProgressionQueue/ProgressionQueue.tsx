@@ -12,6 +12,7 @@ import {
   For,
   Show,
   type JSX,
+  createEffect,
   createMemo,
   createSignal,
   onMount,
@@ -136,6 +137,27 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
       if (section) activate(key, section, { shift: false, meta: false });
     },
     onFocusChange: (key) => props.onFocusChange?.(key),
+  });
+
+  // Bring a row into view inside its section body. Matched by dataset rather
+  // than a `[data-pq-key="…"]` selector so arbitrary key strings (colons,
+  // quotes) need no escaping. Deferred one frame so a row that was just added
+  // or moved has laid out first. Standalone (not inlined below) — Task 7's
+  // transfer animation calls this directly once a moved row settles.
+  const revealRow = (key: string) => {
+    requestAnimationFrame(() => {
+      const candidates = rootRef?.querySelectorAll<HTMLElement>("[data-pq-key]");
+      const match = candidates && [...candidates].find((n) => n.dataset.pqKey === key);
+      match?.scrollIntoView?.({ block: "nearest" });
+    });
+  };
+
+  // Reacts on CHANGE of `scrollToKey`, so a consumer can re-request the same
+  // key by clearing then re-setting it. No-op when undefined or unmatched.
+  createEffect(() => {
+    const key = props.scrollToKey;
+    if (!key) return;
+    revealRow(key);
   });
 
   return (

@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { ProgressionQueue, type ProgressionSection } from "./ProgressionQueue";
 
 afterEach(cleanup);
@@ -393,18 +394,35 @@ describe("ProgressionQueue", () => {
   });
 
   it("skips non-interactive rows on arrow navigation and never reports them via onFocusChange", () => {
+    // Three sections — selectable / non-selectable / selectable — with the
+    // inert row sandwiched between two interactive ones, so ArrowDown from
+    // the first interactive row has an inert row to actually skip over.
+    const SANDWICH: ProgressionSection[] = [
+      { key: "a", label: "Alpha", tone: "success", selectable: true },
+      { key: "b", label: "Beta", tone: "danger" },
+      { key: "c", label: "Gamma", tone: "accent", selectable: true },
+    ];
     const moved: (string | null)[] = [];
-    const { container } = renderMixed({
-      checkedKeys: new Set<string>(),
-      onToggleCheck: () => {},
-      onFocusChange: (k: string | null) => moved.push(k),
-    });
-    // Only "live-1" is interactive, so ArrowDown from it (the sole tab stop)
-    // must clamp in place rather than landing on either inert row.
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={SANDWICH}
+        items={[
+          { id: "live-1", bucket: "a" },
+          { id: "inert-1", bucket: "b" },
+          { id: "live-2", bucket: "c" },
+        ]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+        checkedKeys={new Set<string>()}
+        onToggleCheck={() => {}}
+        onFocusChange={(k: string | null) => moved.push(k)}
+      />
+    ));
     fireEvent.keyDown(rowFor(container, "live-1"), { key: "ArrowDown" });
-    expect(moved).toEqual(["live-1"]);
+    expect(moved).toEqual(["live-2"]);
     expect(moved).not.toContain("inert-1");
-    expect(moved).not.toContain("inert-2");
   });
 
   it("has zero tab stops and does not throw for a fully read-only queue", () => {
@@ -414,5 +432,56 @@ describe("ProgressionQueue", () => {
     ]);
     const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
     expect(tabbable).toHaveLength(0);
+  });
+
+  it("scrolls the matching row into view when scrollToKey changes", async () => {
+    const calls: string[] = [];
+    // jsdom has no scrollIntoView; record the row it is called on.
+    (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
+      function (this: Element) {
+        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+      };
+    const [key, setKey] = createSignal<string | undefined>(undefined);
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={[
+          { id: "1", bucket: "a" },
+          { id: "2", bucket: "b" },
+        ]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+        scrollToKey={key()}
+      />
+    ));
+    expect(container).toBeTruthy();
+    setKey("2");
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(calls).toEqual(["2"]);
+  });
+
+  it("is a no-op when scrollToKey matches no row", async () => {
+    const calls: string[] = [];
+    (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
+      function (this: Element) {
+        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+      };
+    const [key, setKey] = createSignal<string | undefined>(undefined);
+    render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={[{ id: "1", bucket: "a" }]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+        scrollToKey={key()}
+      />
+    ));
+    setKey("nope");
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(calls).toEqual([]);
   });
 });
