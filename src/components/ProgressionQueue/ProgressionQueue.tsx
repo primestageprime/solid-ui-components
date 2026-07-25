@@ -116,10 +116,19 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
     return props.sections.find((s) => s.key === sectionKey);
   };
 
+  // A row is interactive iff it can be activated: either the queue has a
+  // global onSelect, or the row's own section is checkable in select mode.
+  // Non-interactive rows still render (data-pq-key, for scrollToKey/transfer)
+  // but never join the roving-tabindex sequence.
+  const interactiveIn = (section: ProgressionSection) =>
+    props.onSelect != null || checkableIn(section);
+
   const keyboard = createRowKeyboard({
     getRootEl: () => rootRef,
     allKeys: () =>
-      props.sections.flatMap((s) => itemsIn(s.key).map((it) => props.keyOf(it))),
+      props.sections.flatMap((s) =>
+        interactiveIn(s) ? itemsIn(s.key).map((it) => props.keyOf(it)) : [],
+      ),
     focusedKey: () => props.focusedKey,
     selectedKey: () => props.selectedKey,
     onActivate: (key) => {
@@ -163,8 +172,7 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                   <For each={itemsIn(section.key)}>
                     {(it, ri) => {
                       const key = props.keyOf(it);
-                      const interactive = () =>
-                        props.onSelect != null || checkableIn(section);
+                      const interactive = () => interactiveIn(section);
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
                       const checked = () => props.checkedKeys?.has(key) === true;
                       return (
@@ -172,6 +180,7 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                         <div
                           ref={(el) => { if (i() === 0 && ri() === 0) rowRef = el; }}
                           data-pq-key={key}
+                          data-pq-interactive={interactive() ? "" : undefined}
                           class={
                             "prog-queue__row" +
                             (interactive() ? " prog-queue__row--interactive" : "") +
@@ -195,8 +204,12 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                                   })
                               : undefined
                           }
-                          onKeyDown={(e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)}
-                          onFocus={() => keyboard.setActiveKey(key)}
+                          onKeyDown={
+                            interactive()
+                              ? (e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)
+                              : undefined
+                          }
+                          onFocus={interactive() ? () => keyboard.setActiveKey(key) : undefined}
                         >
                           <Show when={checkableIn(section)}>
                             <span

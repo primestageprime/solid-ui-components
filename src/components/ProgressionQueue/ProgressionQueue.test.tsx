@@ -342,4 +342,77 @@ describe("ProgressionQueue", () => {
     expect(toggled).toBe("check");
     expect(selected).toBeUndefined();
   });
+
+  it("prefers focusedKey over selectedKey for the tab stop", () => {
+    const { container } = renderQueue(
+      [
+        { id: "1", bucket: "a" },
+        { id: "2", bucket: "b" },
+      ],
+      { onSelect: () => {}, focusedKey: "2", selectedKey: "1" },
+    );
+    expect(rowFor(container, "2").getAttribute("tabindex")).toBe("0");
+    expect(rowFor(container, "1").getAttribute("tabindex")).toBe("-1");
+  });
+
+  // A row is interactive iff onSelect is set OR its section is selectable in
+  // select mode. With no onSelect and only "b" selectable, "a"'s rows are
+  // inert — they must never take the tab stop or an arrow-key landing, even
+  // though a non-selectable, non-first-rendered section's row is what the
+  // ported (unfiltered) allKeys/moveFocus would have fallen through to.
+  const MIXED: ProgressionSection[] = [
+    { key: "a", label: "Alpha", tone: "success" },
+    { key: "b", label: "Beta", tone: "accent", selectable: true },
+  ];
+
+  const renderMixed = (extra: Record<string, unknown>) =>
+    render(() => (
+      <ProgressionQueue<Item>
+        sections={MIXED}
+        items={[
+          { id: "inert-1", bucket: "a" },
+          { id: "inert-2", bucket: "a" },
+          { id: "live-1", bucket: "b" },
+        ]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+        {...extra}
+      />
+    ));
+
+  it("gives the tab stop to the selectable section's row when a non-selectable section renders first", () => {
+    const { container } = renderMixed({
+      checkedKeys: new Set<string>(),
+      onToggleCheck: () => {},
+    });
+    const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable).toHaveLength(1);
+    expect(tabbable[0].dataset.pqKey).toBe("live-1");
+  });
+
+  it("skips non-interactive rows on arrow navigation and never reports them via onFocusChange", () => {
+    const moved: (string | null)[] = [];
+    const { container } = renderMixed({
+      checkedKeys: new Set<string>(),
+      onToggleCheck: () => {},
+      onFocusChange: (k: string | null) => moved.push(k),
+    });
+    // Only "live-1" is interactive, so ArrowDown from it (the sole tab stop)
+    // must clamp in place rather than landing on either inert row.
+    fireEvent.keyDown(rowFor(container, "live-1"), { key: "ArrowDown" });
+    expect(moved).toEqual(["live-1"]);
+    expect(moved).not.toContain("inert-1");
+    expect(moved).not.toContain("inert-2");
+  });
+
+  it("has zero tab stops and does not throw for a fully read-only queue", () => {
+    const { container } = renderQueue([
+      { id: "1", bucket: "a" },
+      { id: "2", bucket: "b" },
+    ]);
+    const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable).toHaveLength(0);
+  });
 });
