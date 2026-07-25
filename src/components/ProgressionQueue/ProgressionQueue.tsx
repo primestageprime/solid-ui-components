@@ -19,6 +19,7 @@ import {
 } from "solid-js";
 import { allocateHeights } from "./layout";
 import { bucketItems } from "./bucketing";
+import { createRowKeyboard } from "./keyboard";
 import { map } from "../../fn";
 import type { ProgressionQueueProps, ProgressionSection } from "./types";
 import "./ProgressionQueue.css";
@@ -108,6 +109,26 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
     else props.onSelect?.(key);
   };
 
+  // The section a row lives in, for the activation branch (keyboard has only
+  // the key; click has the section in scope).
+  const sectionForKey = (key: string): ProgressionSection | undefined => {
+    const sectionKey = buckets().sectionOf.get(key);
+    return props.sections.find((s) => s.key === sectionKey);
+  };
+
+  const keyboard = createRowKeyboard({
+    getRootEl: () => rootRef,
+    allKeys: () =>
+      props.sections.flatMap((s) => itemsIn(s.key).map((it) => props.keyOf(it))),
+    focusedKey: () => props.focusedKey,
+    selectedKey: () => props.selectedKey,
+    onActivate: (key) => {
+      const section = sectionForKey(key);
+      if (section) activate(key, section, { shift: false, meta: false });
+    },
+    onFocusChange: (key) => props.onFocusChange?.(key),
+  });
+
   return (
     <div
       class={`prog-queue${props.class ? ` ${props.class}` : ""}`}
@@ -134,14 +155,20 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                   </Show>
                 }
               >
-                <div class="prog-queue__body">
+                <div
+                  class="prog-queue__body"
+                  role="listbox"
+                  aria-label={section.label}
+                >
                   <For each={itemsIn(section.key)}>
                     {(it, ri) => {
                       const key = props.keyOf(it);
                       const interactive = () =>
                         props.onSelect != null || checkableIn(section);
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
+                      const checked = () => props.checkedKeys?.has(key) === true;
                       return (
+                        // biome-ignore lint/a11y/useFocusableInteractive: option rows carry a roving tabindex (0/-1) driven by createRowKeyboard; they are focusable.
                         <div
                           ref={(el) => { if (i() === 0 && ri() === 0) rowRef = el; }}
                           data-pq-key={key}
@@ -150,9 +177,14 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                             (interactive() ? " prog-queue__row--interactive" : "") +
                             (selected() ? " prog-queue__row--selected" : "")
                           }
+                          role="option"
+                          aria-selected={selected()}
+                          tabindex={
+                            interactive() && keyboard.tabbableKey() === key ? 0 : -1
+                          }
                           classList={{
-                            "prog-queue__row--checked":
-                              checkableIn(section) && props.checkedKeys?.has(key) === true,
+                            "prog-queue__row--checked": checkableIn(section) && checked(),
+                            "prog-queue__row--focused": props.focusedKey === key,
                           }}
                           onClick={
                             interactive()
@@ -163,17 +195,18 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                                   })
                               : undefined
                           }
+                          onKeyDown={(e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)}
+                          onFocus={() => keyboard.setActiveKey(key)}
                         >
                           <Show when={checkableIn(section)}>
                             <span
                               class="prog-queue__checkbox"
                               classList={{
-                                "prog-queue__checkbox--checked":
-                                  props.checkedKeys?.has(key) === true,
+                                "prog-queue__checkbox--checked": checked(),
                               }}
                               aria-hidden="true"
                             >
-                              {props.checkedKeys?.has(key) === true ? "✓" : ""}
+                              {checked() ? "✓" : ""}
                             </span>
                           </Show>
                           {props.renderItem(it)}

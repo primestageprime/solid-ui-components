@@ -121,3 +121,12 @@
   border-color: var(--sui-accent);
   color: var(--sui-bg-secondary);
 }
+
+/* FOCUS — a ring only. No background fill: a persistent fill behind row text is
+   exactly the readability problem the selected-row treatment was fixed for, and
+   a marker glyph that appears only on focus would shift the row's content. */
+.prog-queue__row--focused,
+.prog-queue__row:focus-visible {
+  outline: 1px solid var(--sui-border-focus);
+  outline-offset: -1px;
+}
