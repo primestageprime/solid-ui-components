@@ -95,6 +95,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         map((s) => s.balanceCents(c, i), series),
       ),
     ]);
+    // Tight, zero-independent domain: frame the visible line(s) with symmetric
+    // padding so a narrow-band line uses the full height. `yMax` still wins.
+    if (!hasManualMax && props.yPadFraction != null && values.length) {
+      const dataLo = values.reduce((m, v) => Math.min(m, v), Infinity);
+      const dataHi = values.reduce((m, v) => Math.max(m, v), -Infinity);
+      // Flat series → pad around the value itself (or ±1 when it's zero).
+      const spread = dataHi - dataLo || Math.abs(dataHi) || 1;
+      const pad = spread * props.yPadFraction;
+      return [dataLo - pad, dataHi + pad];
+    }
     // Reduce (not Math.min(...spread)) to stay safe on long ranges.
     const lo = values.reduce((m, v) => Math.min(m, v), 0);
     const hi = hasManualMax
