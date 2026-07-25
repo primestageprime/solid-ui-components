@@ -15,7 +15,9 @@ import { clamp } from "../../internal/math/clamp";
 export interface RowKeyboardDeps {
   /** The component root the rows are queried within (may be undefined pre-mount). */
   getRootEl: () => HTMLElement | undefined;
-  /** All row keys in render order, top section first. */
+  /** Interactive row keys only, in render order, top section first. A row with
+   *  no way to activate it (no onSelect, not checkable) never joins the roving
+   *  sequence — it is neither a tab-stop candidate nor an arrow-key target. */
   allKeys: () => string[];
   /** The controlled focus, if any. */
   focusedKey: () => string | undefined;
@@ -40,8 +42,9 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
   const [activeKey, setActiveKey] = createSignal<string | null>(null);
 
   // Exactly one tab stop, chosen by precedence: the row the user last focused,
-  // then the controlled selection, then the controlled focus, then the first
-  // row. A stale key that is no longer rendered is skipped.
+  // then the controlled focus, then the controlled selection, then the first
+  // interactive row — or none, if there is no interactive row at all. A stale
+  // key that is no longer rendered (or not interactive) is skipped.
   const tabbableKey = createMemo(() => {
     const allKeys = deps.allKeys();
     const active = activeKey();
@@ -55,11 +58,14 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
 
   // Move DOM focus across ALL sections as one sequence, driven off live DOM
   // order so it tracks the rendered rows without threading indices through
-  // state. Clamped — the queue does not wrap.
+  // state. Clamped — the queue does not wrap. Scoped to [data-pq-interactive]
+  // so a non-interactive row (rendered with [data-pq-key] for scrollToKey /
+  // the transfer animation, but no way to activate it) is never an arrow-key
+  // target.
   const moveFocus = (fromKey: string, dir: 1 | -1 | "home" | "end") => {
     const rootEl = deps.getRootEl();
     if (!rootEl) return;
-    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-pq-key]")];
+    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-pq-interactive]")];
     if (rows.length === 0) return;
     const idx = rows.findIndex((r) => r.dataset.pqKey === fromKey);
     const target =
