@@ -16,7 +16,7 @@
 - **Role color is confined to the section dot.** Checks, focus rings, and selection cues use neutral/accent tokens — never success/danger/warning.
 - **No new required props.** Every addition is optional.
 - **There is no `selectMode` prop.** Select mode is on iff `checkedKeys` is present. An empty `Set` means "mode on, nothing checked".
-- **No file over 500 lines**; this plan targets no file over 250.
+- **500 lines is the repo's hard limit** (global CLAUDE.md, split by concern). The ~250 figure elsewhere in this plan is a target for *new* modules, not a per-task gate — `ProgressionQueue.tsx` legitimately accumulates across Tasks 2-7 and passing 250 is expected, not a violation to report. Two real thresholds: if `ProgressionQueue.tsx` approaches **350**, extract the row render into a sibling module; `ProgressionQueue.test.tsx` was **487 lines after Task 5** and MUST be split by concern before it crosses 500 (Task 7 owns that split).
 - **Functional style:** pure functions, `const` arrow exports, prefer `fn` combinators (`src/fn`) or array methods over `for`/`while`. Local mutation inside a pure function is fine.
 - **After every commit run:** `npx tsc --noEmit` (must be clean) and the SCOPED lint `npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`.
 - **Do NOT gate on `npx biome lint src`.** The repo baseline is **14 errors / 31 warnings** in files this work never touches; a whole-`src` gate can never go green and is not your job to fix. Verified 2026-07-24.
