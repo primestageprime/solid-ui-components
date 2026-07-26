@@ -43,13 +43,33 @@ const canAnimate = (el: Element): boolean =>
 // has already left its source section in the DOM.
 const sectionOf = (el: Element): Element | null => el.closest("[data-pq-section]");
 
+// The scrolling ancestor whose scrollTop can move a row between two
+// measurements without the row itself having moved in the DOM.
+const scrollerOf = (el: Element): Element | null => el.closest(".prog-queue__body");
+
+// A row's top in its scroll container's CONTENT space rather than viewport
+// space. getBoundingClientRect() alone reports viewport coordinates, which a
+// scroll of `.prog-queue__body` (overflow-y: auto) changes for every row in
+// that body even though none of them moved relative to their content. Adding
+// back the scroller's own scrollTop cancels that out, so snapshot() and the
+// dy computation below agree regardless of what scrolled between them.
+const topOf = (el: HTMLElement): number => {
+  const scroller = scrollerOf(el);
+  const top = el.getBoundingClientRect().top;
+  return scroller
+    ? top - scroller.getBoundingClientRect().top + scroller.scrollTop
+    : top;
+};
+
 // True when `el` comes after `arriving` in document order.
 const isFollowing = (arriving: Element, el: Element): boolean =>
   (arriving.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 
 export const createSlotMotion = (): TransferChoreographer => {
-  // Rects of every keyed row as of the last paint — the "First" in FLIP.
-  const prevRects = new Map<string, DOMRect>();
+  // Content-space top of every keyed row as of the last paint — the "First"
+  // in FLIP. Content space (not viewport space) so a scroll between snapshot
+  // and play doesn't read as displacement; see topOf() above.
+  const prevRects = new Map<string, number>();
   // Animations from the last play(), retained so a transfer that lands
   // inside the previous one's window can cancel it before measuring, rather
   // than composing a second animation on top of a still-running one. Also
@@ -62,7 +82,7 @@ export const createSlotMotion = (): TransferChoreographer => {
     prevRects.clear();
     for (const el of root.querySelectorAll<HTMLElement>("[data-pq-key]")) {
       const key = el.dataset.pqKey;
-      if (key) prevRects.set(key, el.getBoundingClientRect());
+      if (key) prevRects.set(key, topOf(el));
     }
   };
 
@@ -119,7 +139,10 @@ export const createSlotMotion = (): TransferChoreographer => {
         const key = el.dataset.pqKey;
         if (!key || arrivingKeys.has(key) || !canAnimate(el)) continue;
         const before = prevRects.get(key);
-        if (!before) continue;
+        // Explicit undefined check, not falsy: prevRects now holds numbers
+        // (content-space tops), and a row sitting exactly at its scroller's
+        // top has a legitimate before of 0.
+        if (before === undefined) continue;
         // A missing data-pq-section marker makes sectionOf() return null
         // for every row; null === null would then exclude every row from
         // FLIP with no error. Guard it explicitly so a dropped marker
@@ -133,8 +156,7 @@ export const createSlotMotion = (): TransferChoreographer => {
           );
         });
         if (displacedByArrival) continue;
-        const after = el.getBoundingClientRect();
-        const dy = before.top - after.top;
+        const dy = before - topOf(el);
         if (Math.abs(dy) < 1) continue;
         flipPlans.push({ el, dy });
       }
