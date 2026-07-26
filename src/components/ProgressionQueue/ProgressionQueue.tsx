@@ -1,5 +1,7 @@
-// ProgressionQueue — Composite (Depth 2). N always-present sections stacked as
-// one full-height progression bar, each bucketing the items by `bucketOf`.
+// ProgressionQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
+// Layout Purity). Owns ProgressionQueue.css: the weighted water-fill sizes each
+// section in JS, which no CSS rule can express. N always-present sections stacked
+// as one full-height progression bar, bucketing items by `bucketOf`.
 //
 // Sizing (ruled 2026-07-22): an empty section collapses to just its summary line
 // (label + count); a populated section shrink-wraps to its content; when the
