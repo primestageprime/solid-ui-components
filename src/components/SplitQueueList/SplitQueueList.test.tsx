@@ -78,6 +78,39 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
     expect(toggled).toBe("2");
   });
 
+  it("caps the resolved section at topCapRows and keeps every row mounted so the body scrolls", () => {
+    const resolved = [1, 2, 3, 4, 5].map((n) => ({ id: String(n), label: `done-${n}` }));
+    const { container } = renderQueue(resolved, [], { topCapRows: 2, height: 600 });
+    const sections = container.querySelectorAll(".prog-queue__section");
+    // 34 (header fallback) + 2*54 (row fallback) + 2 (border) — capRows is a
+    // ceiling on the section's natural height, not a filter on its rows.
+    expect((sections[0] as HTMLElement).style.height).toBe("144px");
+    expect(sections[0].querySelectorAll(".prog-queue__row")).toHaveLength(5);
+  });
+
+  it("defaults topCapRows to 3 when omitted", () => {
+    const resolved = [1, 2, 3, 4, 5].map((n) => ({ id: String(n), label: `done-${n}` }));
+    const { container } = renderQueue(resolved, [], { height: 600 });
+    const sections = container.querySelectorAll(".prog-queue__section");
+    expect((sections[0] as HTMLElement).style.height).toBe("198px"); // 34 + 3*54 + 2
+    expect(sections[0].querySelectorAll(".prog-queue__row")).toHaveLength(5);
+  });
+
+  it("selectMode={false} opts out even with a populated checkedKeys", () => {
+    let selected: string | undefined;
+    let toggled: string | undefined;
+    const { container } = renderQueue([], [{ id: "2", label: "todo-1" }], {
+      selectMode: false,
+      checkedKeys: new Set(["2"]),
+      onSelect: (k: string) => (selected = k),
+      onToggleCheck: (k: string) => (toggled = k),
+    });
+    expect(container.querySelector(".prog-queue__checkbox")).toBeNull();
+    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(selected).toBe("2");
+    expect(toggled).toBeUndefined();
+  });
+
   it("still delegates `static` mode to StaticSplitLayout", () => {
     const { container } = render(() => (
       <SplitQueueList<Txn>
