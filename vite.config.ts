@@ -112,7 +112,18 @@ export default defineConfig(({ command, mode }) => {
             },
           }
         : {
-            // Client/browser build — unchanged from v0.4.0 behavior.
+            // Client/browser build.
+            // minify:false keeps identifier NAMES in the dist. Consumers bundle
+            // + re-minify SUI in their own build, so shipping unminified is fine
+            // — and it prevents a nasty dev-only footgun: when a consumer's dev
+            // server runs Solid HMR (solid-refresh) over this dist, solid-refresh
+            // wraps any CAPITALIZED top-level function as a component. A minifier
+            // was renaming d3's `scaleLinear` to a capitalized `Li`, so it got
+            // wrapped and called with a props arg -> `scaleLinear(undefined)` ->
+            // ScrubChart crash. Preserving names keeps d3's lowercase identifiers
+            // (scaleLinear/continuous/…) untouched; only real (capitalized)
+            // components are wrapped, which is correct.
+            minify: false,
             lib: {
               entry: resolve(__dirname, "src/index.ts"),
               name: "SolidUIComponents",
