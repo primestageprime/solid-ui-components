@@ -166,7 +166,6 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
   // animates its own transfers with no call-site specification. Swap
   // `createSlotMotion` for a different TransferChoreographer to change the feel.
   const motion = createSlotMotion();
-  const DURATION_MS = 260;
 
   const reducedMotion = () =>
     typeof window !== "undefined" &&
@@ -198,10 +197,9 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
           [...root.querySelectorAll<HTMLElement>("[data-pq-key]")].find(
             (n) => n.dataset.pqKey === key,
           ),
-        durationMs: DURATION_MS,
         reducedMotion: reducedMotion(),
       };
-      await Promise.all(moves.map((t) => motion.play(t, ctx)));
+      await motion.play(moves, ctx);
       // Arrival reveal — the general form of SplitQueueList's scroll-pin: you
       // always see where the last-moved row landed.
       revealRow(moves[moves.length - 1].key);
@@ -218,7 +216,11 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
         {(section, i) => {
           const count = () => counts()[i()];
           return (
-            <div class="prog-queue__section" style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}>
+            <div
+              class="prog-queue__section"
+              data-pq-section={section.key}
+              style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}
+            >
               <div class="prog-queue__header" ref={(el) => { if (i() === 0) headRef = el; }}>
                 <span class="prog-queue__title">
                   <span class={`prog-queue__dot prog-queue__dot--${section.tone}`} />
