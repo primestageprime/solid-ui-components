@@ -16,9 +16,14 @@ import {
 import {
   SubsectionTitle,
   MutedBody,
+  EllipsizedTitle,
   FadedNowrapSublabel,
 } from "../../src/components/Text";
-import { NarrowStack, WrappedClusterRow } from "../../src/components/Layout";
+import {
+  NarrowStack,
+  WrappedClusterRow,
+  SpreadRow,
+} from "../../src/components/Layout";
 
 /* Demo item type — the same "transaction to categorize" framing as
  * SplitQueueList's showcase, now spread across THREE sections rather than a
@@ -39,7 +44,15 @@ const SECTIONS: ProgressionSection[] = [
     selectable: true,
     emptyLabel: "All clear — every suggestion categorized",
   },
-  { key: "hold", label: "In progress", tone: "muted", emptyLabel: "Nothing parked" },
+  {
+    key: "hold",
+    label: "In progress",
+    tone: "muted",
+    emptyLabel: "Nothing parked",
+    // Exercises the scrolling path: the section holds at 3 rows tall and its
+    // body scrolls once "hold" has more than that (it starts with 6 below).
+    capRows: 3,
+  },
 ];
 
 const SEED: QueueItem[] = [
@@ -51,17 +64,23 @@ const SEED: QueueItem[] = [
   { id: "t6", label: "GitHub seats", amount: "$84.00", bucket: "todo" },
   { id: "t7", label: "Notion team", amount: "$120.00", bucket: "hold" },
   { id: "t8", label: "Legal retainer", amount: "$4,000.00", bucket: "hold" },
+  { id: "t9", label: "Zoom annual", amount: "$199.00", bucket: "hold" },
+  { id: "t10", label: "1Password teams", amount: "$95.88", bucket: "hold" },
+  { id: "t11", label: "Datadog", amount: "$620.00", bucket: "hold" },
+  { id: "t12", label: "Linear seats", amount: "$96.00", bucket: "hold" },
 ];
 
-// Shared row renderer. A plain inline span, not a flex row: `.prog-queue__row`
-// has no `display: flex` of its own (unlike SplitQueueList's `.sui-sql__row`,
-// which does), so a full-width flex child here would wrap onto its own line
-// below the select-mode checkbox rather than sitting beside it. Keeping the
-// content inline is what coexists correctly with that checkbox span.
+// Shared row renderer: label left, right-aligned amount — the same SpreadRow
+// idiom SplitQueueList's showcase uses. `.prog-queue__row` lays this out beside
+// the select-mode checkbox via its own flex row + `.prog-queue__content`
+// wrapper (see ProgressionQueue.css / ProgressionQueue.tsx), so a full-width
+// flex child here sits correctly beside the checkbox rather than wrapping
+// below it.
 const renderItem = (i: QueueItem): JSX.Element => (
-  <span>
-    {i.label} <FadedNowrapSublabel>{i.amount}</FadedNowrapSublabel>
-  </span>
+  <SpreadRow>
+    <EllipsizedTitle>{i.label}</EllipsizedTitle>
+    <FadedNowrapSublabel>{i.amount}</FadedNowrapSublabel>
+  </SpreadRow>
 );
 
 // ── Select, move between sections, and select mode ──────────────────────────
@@ -195,6 +214,10 @@ export const ProgressionQueueShowcase: Component = () => {
         <strong>In progress</strong> rows keep selecting on click even while
         select mode is on. Arrow keys / Home / End walk every interactive row
         across all three sections with no wrap; Tab lands on one roving stop.
+        <strong>In progress</strong> also declares <code>capRows: 3</code>, so
+        it holds at three rows tall and its own body scrolls once it has more
+        than that — move an item into it to see the arrival scroll into view
+        inside a capped, already-scrolling section.
       </p>
       <ProgressionQueueDemo />
     </div>
