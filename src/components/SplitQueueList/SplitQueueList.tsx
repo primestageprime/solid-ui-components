@@ -26,7 +26,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       items: props.topItems ?? props.resolved,
       renderItem: props.renderTop ?? props.renderItem,
       bottomContent: props.bottomContent,
-      label: props.label ?? props.resolvedLabel,
+      label: props.resolvedLabel,
       emptyLabel: props.allClearLabel,
       capRows: props.topCapRows,
       rowHeight: props.rowHeight,

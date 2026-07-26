@@ -67,9 +67,10 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
       measure();
       return;
     }
+    measure();
+    if (typeof ResizeObserver === "undefined") return; // jsdom/SSR
     const ro = new ResizeObserver(() => measure());
     if (rootRef) ro.observe(rootRef);
-    measure();
     onCleanup(() => ro.disconnect());
   });
 

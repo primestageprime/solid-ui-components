@@ -9,6 +9,7 @@ import {
   renderQueue,
   FIVE_IN_A,
   sectionHeights,
+  SECTIONS,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -97,6 +98,24 @@ describe("ProgressionQueue — rendering & sizing", () => {
     expect(sectionHeights(container)[0]).toBe("144px"); // 34 + 2*54 + 2
     // Capping is a viewport, not a filter — all five rows stay in the DOM.
     expect(container.querySelectorAll(".prog-queue__row")).toHaveLength(5);
+  });
+
+  // No ResizeObserver stub in this file on purpose — jsdom in this repo has
+  // no ResizeObserver at all (see src/test-setup.ts), so omitting `height`
+  // exercises the real "fill the parent" branch's guard. Without the guard
+  // in ProgressionQueue.tsx, this throws `ReferenceError: ResizeObserver is
+  // not defined` before anything renders.
+  it("renders without a height prop even when ResizeObserver is unavailable", () => {
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={[{ id: "1", bucket: "a" }, { id: "2", bucket: "b" }]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+      />
+    ));
+    expect(container.querySelectorAll(".prog-queue__row")).toHaveLength(2);
   });
 
   it("ignores capRows larger than the row count", () => {

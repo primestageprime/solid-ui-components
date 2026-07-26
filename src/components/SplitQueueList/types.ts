@@ -77,10 +77,6 @@ export interface SplitQueueListProps<T> {
    * will be removed in the next major.
    */
   static?: boolean;
-  /** @deprecated STATIC mode only — alias for `resolvedLabel`, matching
-   * {@link StaticSplitLayoutProps.label} directly. Takes precedence over
-   * `resolvedLabel` when both are set. */
-  label?: string;
   /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Items for
    * the read-only TOP section; falls back to `resolved` when omitted. */
   topItems?: T[];
