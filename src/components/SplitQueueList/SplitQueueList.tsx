@@ -68,7 +68,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
       onSelect={(k) => props.onSelect?.(k)}
       focusedKey={props.focusedKey}
       onFocusChange={(k) => props.onFocusChange?.(k)}
-      checkedKeys={props.selectMode === false ? undefined : props.checkedKeys}
+      checkedKeys={props.selectMode ? (props.checkedKeys ?? new Set<string>()) : undefined}
       onToggleCheck={props.onToggleCheck}
       scrollToKey={props.scrollToKey}
       height={props.height}

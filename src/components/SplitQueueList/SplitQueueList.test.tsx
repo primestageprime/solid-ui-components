@@ -71,6 +71,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
   it("toggles checks on unresolved rows in select mode", () => {
     let toggled: string | undefined;
     const { container } = renderQueue([], [{ id: "2", label: "todo-1" }], {
+      selectMode: true,
       checkedKeys: new Set<string>(),
       onToggleCheck: (k: string) => (toggled = k),
     });
@@ -109,6 +110,36 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
     fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
     expect(selected).toBe("2");
     expect(toggled).toBeUndefined();
+  });
+
+  it("selectMode omitted opts out even with a populated checkedKeys", () => {
+    // Old behavior (fc056e8 SplitQueueList.tsx:270): `selecting` gated on
+    // `!!props.selectMode` alone, so a consumer holding a checked set with no
+    // selectMode prop got plain onSelect, not check affordances.
+    let selected: string | undefined;
+    let toggled: string | undefined;
+    const { container } = renderQueue([], [{ id: "2", label: "todo-1" }], {
+      checkedKeys: new Set(["2"]),
+      onSelect: (k: string) => (selected = k),
+      onToggleCheck: (k: string) => (toggled = k),
+    });
+    expect(container.querySelector(".prog-queue__checkbox")).toBeNull();
+    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(selected).toBe("2");
+    expect(toggled).toBeUndefined();
+  });
+
+  it("selectMode={true} opts in even with checkedKeys omitted", () => {
+    // Old behavior: selectMode alone turned select mode ON, with nothing
+    // checked until the consumer populated checkedKeys.
+    let toggled: string | undefined;
+    const { container } = renderQueue([], [{ id: "2", label: "todo-1" }], {
+      selectMode: true,
+      onToggleCheck: (k: string) => (toggled = k),
+    });
+    expect(container.querySelector(".prog-queue__checkbox")).toBeTruthy();
+    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(toggled).toBe("2");
   });
 
   it("still delegates `static` mode to StaticSplitLayout", () => {
