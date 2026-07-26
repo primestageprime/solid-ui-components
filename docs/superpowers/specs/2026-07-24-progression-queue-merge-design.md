@@ -260,23 +260,50 @@ export interface TransferChoreographer {
   /** Snapshot row rects. Called after every paint, so a detected transfer
    *  always has the previous frame's geometry to animate from. */
   capture(root: HTMLElement): void;
-  /** Play one move; resolves when settled. */
-  play(t: Transfer, ctx: MotionContext): Promise<void>;
+  /** Play a COHERENT SET of moves in one pass; resolves when settled.
+   *  Takes the whole batch, not one transfer, so a single FLIP pass covers one
+   *  consistent before/after pair — a per-transfer signature stacks N competing
+   *  animations on every row during a bulk multi-select move. */
+  play(transfers: readonly Transfer[], ctx: MotionContext): Promise<void>;
 }
 
 export interface MotionContext {
   root: HTMLElement;
   rowEl: (key: string) => HTMLElement | undefined;
-  durationMs: number;
   reducedMotion: boolean;
 }
+```
+
+**Duration belongs to the choreographer, not the component.** It is a property of
+the choreography — a clone arcing over the bar wants a different one than a slot
+opening — so it lives inside the implementation. Leaving it in `MotionContext`
+would mean swapping implementations required editing the component, breaking the
+one-file guarantee below.
+
+**Rows and sections must both be resolvable from the DOM.** Every row carries
+`data-pq-key`; every section carries `data-pq-section={section.key}`. The
+deferred clone implementation cross-fades source treatment into destination
+treatment, and by the time it runs the moved row has already left its source
+section — without a section marker the source is unreachable and the clone
+cannot be built without editing the component.
+
+```ts
 ```
 
 **`slotMotion` (ships now):** the arriving row expands from zero height while
 every row whose position changed FLIP-slides to its new spot, which is what
 closes the vacated slot — Solid has already removed the moved row's old element
 from the source section, so there is nothing left there to collapse. Section
-heights re-lerp through `allocateHeights`. This is what
+heights re-lerp through `allocateHeights`.
+
+**One subtlety the first implementation got wrong:** `height` is a layout
+property, so animating the arriving row from 0 already carries its following
+siblings *within the same section* — they are pushed down as it grows. Applying
+a FLIP transform to those rows as well double-counts the same displacement and
+makes them overshoot by a full row before sliding back. Rows following an
+arriving row inside that row's own section are therefore **excluded** from the
+FLIP pass; every other row (the source section, other sections) still needs it,
+because nothing else moves them. This is what
 auto-animate and most list libraries do — robust, generalizes to any pair of
 sections, roughly 120 lines against `play.ts`'s 481.
 
