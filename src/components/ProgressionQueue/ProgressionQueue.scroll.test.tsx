@@ -135,7 +135,34 @@ describe("ProgressionQueue — transfer animation", () => {
     ]);
     await new Promise((r) => setTimeout(r, 0));
     await new Promise((r) => requestAnimationFrame(() => r(null)));
-    expect(calls).toContain("1");
+    expect(calls).toEqual(["1"]);
+  });
+
+  it("reveals only the last moved row when multiple items change bucket at once", async () => {
+    const calls: string[] = [];
+    recordScrollIntoView(calls);
+    const [items, setItems] = createSignal<Item[]>([
+      { id: "1", bucket: "a" },
+      { id: "2", bucket: "b" },
+    ]);
+    render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={items()}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    calls.length = 0;
+    setItems([
+      { id: "1", bucket: "b" }, // moved a → b
+      { id: "2", bucket: "c" }, // moved b → c
+    ]);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(calls).toEqual(["2"]);
   });
 
   it("does not reveal anything when no item changed bucket", async () => {
