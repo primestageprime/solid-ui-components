@@ -1,19 +1,6 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
 import { SplitQueueList } from "./SplitQueueList";
-
-// The shim omits `height`, so ProgressionQueue measures its own allotted
-// height via ResizeObserver, which jsdom does not provide. Stub a no-op (same
-// pattern as Card.test.tsx / DagChart.test.tsx) so it mounts under test.
-beforeAll(() => {
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
-});
 
 afterEach(cleanup);
 
@@ -98,7 +85,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
         topItems={[{ id: "1", label: "recent" }]}
         renderTop={(t) => <span>{t.label}</span>}
         keyOf={(t) => t.id}
-        label="done · today"
+        resolvedLabel="done · today"
         bottomContent={<div>bottom block</div>}
       />
     ));
