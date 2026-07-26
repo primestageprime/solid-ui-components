@@ -6,10 +6,12 @@ import type { JSX } from "solid-js";
  * @deprecated Use `ProgressionQueueProps` — `SplitQueueList` is now a shim over
  * {@link ProgressionQueue} and is removed in the next major. `topCapRows` maps
  * to the resolved section's `capRows`; `topOnly`, `topFloorRows`, `animationMs`
- * and `rowHeight` are accepted but IGNORED (the merged component measures rows,
- * collapses empty sections, and owns its own motion). `static` mode is
- * unaffected — it still delegates to StaticSplitLayout, which is not
- * deprecated.
+ * and `rowHeight` are accepted but IGNORED on the animated path (the merged
+ * component measures rows, collapses empty sections, and owns its own
+ * motion). `static` mode is a separate story: it still delegates to
+ * StaticSplitLayout (not deprecated), which keeps forwarding and actively
+ * using both `rowHeight` and `topCapRows` — only `topOnly`, `topFloorRows`,
+ * and `animationMs` go unread there too.
  */
 export interface SplitQueueListProps<T> {
   /** Resolved (processed) items — rendered top list, oldest first. Required for
@@ -90,7 +92,10 @@ export interface SplitQueueListProps<T> {
    * scrolls with the newest row pinned at the seam. Default 3. */
   topCapRows?: number;
   /** Floor on the top pane, in rows. Default 0 — at 0 categorized the top
-   * collapses to its header only and grows as cards resolve. */
+   * collapses to its header only and grows as cards resolve.
+   * IGNORED — `ProgressionQueue` sizes a section from its own content
+   * (`capRows` only sets a ceiling, not a floor) and `static` mode has no
+   * equivalent either. Kept only so existing call sites keep compiling. */
   topFloorRows?: number;
   /** Per-row height in px. Used as the initial estimate; the component measures
    * the real rendered row height and sizes from that. Default 40. */
@@ -100,13 +105,16 @@ export interface SplitQueueListProps<T> {
    * height as its layout total, stretching to the bottom of a flex / `height:100%`
    * container. 420 is only the pre-measure / unmeasurable floor (e.g. jsdom). */
   height?: number;
-  /** Slide duration in ms. Default 800. */
+  /** Slide duration in ms. Default 800.
+   * IGNORED — `ProgressionQueue` owns its own motion; there is no dial for it.
+   * Kept only so existing call sites keep compiling. */
   animationMs?: number;
   /** Render ONLY the top (resolved / "categorized") panel at full height —
-   * omit the bottom "to categorize" list and the seam. The resolve animation's
-   * enter/grow into the top still plays; the bottom-collapse half is naturally
-   * skipped (there is no bottom list). Default false (full two-panel layout,
-   * baseline behavior unchanged). */
+   * omit the bottom "to categorize" list and the seam. Default false.
+   * IGNORED — the shim always declares both sections and `ProgressionQueue`
+   * renders every declared section, so the bottom list is never omitted.
+   * `static` mode has no equivalent either (compose `bottomContent` yourself
+   * there). Kept only so existing call sites keep compiling. */
   topOnly?: boolean;
   class?: string;
 }

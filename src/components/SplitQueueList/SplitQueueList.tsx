@@ -8,7 +8,7 @@
 //
 // `static` mode is a separate concern (no queue, no animation) and still
 // delegates to StaticSplitLayout, which is NOT deprecated.
-import type { JSX } from "solid-js";
+import { type JSX, createMemo } from "solid-js";
 import { ProgressionQueue } from "../ProgressionQueue/ProgressionQueue";
 import type { ProgressionSection } from "../ProgressionQueue/types";
 import { StaticSplitLayout } from "./StaticSplitLayout";
@@ -35,7 +35,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
     });
 
   const keyOf = (item: T): string => (props.keyOf ?? ((x) => String(x)))(item);
-  const resolvedKeys = () => new Set((props.resolved ?? []).map(keyOf));
+  // Memoized: bucketOf calls this per item, and without a memo each call would
+  // rebuild the Set, turning the shim's bucketing into O(n·m) instead of O(n+m).
+  const resolvedKeys = createMemo(() => new Set((props.resolved ?? []).map(keyOf)));
 
   const sections = (): ProgressionSection[] => [
     {
