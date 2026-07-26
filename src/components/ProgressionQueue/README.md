@@ -132,7 +132,7 @@ navigation and never takes the tab stop; it still renders (and still
 participates in `scrollToKey` / the transfer animation), it just isn't part of
 the keyboard sequence.
 
-Tab-stop precedence: last-focused row → `selectedKey` → `focusedKey` → first
+Tab-stop precedence: last-focused row → `focusedKey` → `selectedKey` → first
 interactive row.
 
 ## Sizing

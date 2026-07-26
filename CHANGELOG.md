@@ -22,7 +22,9 @@
 
 ### Removed
 - `SplitQueueList`'s two-pane animation engine (`flight`, `play`, `flip`,
-  `arrival`, `animation`, its `layout` and `keyboard` modules) — ~2,700 lines.
+  `arrival`, `animation`, and its `layout` module) — ~2,700 lines. Its
+  `keyboard` module was not removed — it moved (and was adapted) to
+  `ProgressionQueue/keyboard.ts`.
 
 ### Migration
 Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
