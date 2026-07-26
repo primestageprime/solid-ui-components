@@ -2,6 +2,15 @@
  * and the static layout (./StaticSplitLayout) so neither imports the other. */
 import type { JSX } from "solid-js";
 
+/**
+ * @deprecated Use `ProgressionQueueProps` — `SplitQueueList` is now a shim over
+ * {@link ProgressionQueue} and is removed in the next major. `topCapRows` maps
+ * to the resolved section's `capRows`; `topOnly`, `topFloorRows`, `animationMs`
+ * and `rowHeight` are accepted but IGNORED (the merged component measures rows,
+ * collapses empty sections, and owns its own motion). `static` mode is
+ * unaffected — it still delegates to StaticSplitLayout, which is not
+ * deprecated.
+ */
 export interface SplitQueueListProps<T> {
   /** Resolved (processed) items — rendered top list, oldest first. Required for
    * the animated queue; ignored in `static` mode (use `topItems`). */
@@ -68,6 +77,10 @@ export interface SplitQueueListProps<T> {
    * will be removed in the next major.
    */
   static?: boolean;
+  /** @deprecated STATIC mode only — alias for `resolvedLabel`, matching
+   * {@link StaticSplitLayoutProps.label} directly. Takes precedence over
+   * `resolvedLabel` when both are set. */
+  label?: string;
   /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Items for
    * the read-only TOP section; falls back to `resolved` when omitted. */
   topItems?: T[];
