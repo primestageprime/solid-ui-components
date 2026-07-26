@@ -185,4 +185,27 @@ describe("ProgressionQueue — transfer animation", () => {
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     expect(calls).toEqual([]);
   });
+
+  // motion.ts's FLIP exclusion rule identifies "same section" by comparing
+  // the nearest [data-pq-section] ancestor of two rows. That marker is read
+  // by no other code in the component, which makes it exactly the kind of
+  // attribute someone deletes as unused — silently degrading every FLIP
+  // pass to a no-op (see motion.ts's null-guard comment). Pin it down.
+  it("marks each section element with its section key for the motion seam", () => {
+    const { container } = render(() => (
+      <ProgressionQueue<Item>
+        sections={SECTIONS}
+        items={[{ id: "1", bucket: "a" }]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    for (const section of SECTIONS) {
+      expect(
+        container.querySelector(`[data-pq-section="${section.key}"]`),
+      ).toBeTruthy();
+    }
+  });
 });
