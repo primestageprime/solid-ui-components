@@ -1589,6 +1589,10 @@
 .split-queue-list-demo__narrow {
   width: 320px;
 }
+.progression-queue-demo {
+  width: 360px;
+  height: 460px;
+}
 .removable-item-card-demo {
   max-width: 280px;
 }
