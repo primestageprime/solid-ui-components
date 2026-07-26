@@ -47,6 +47,13 @@
   overflow-y: auto;
 }
 .prog-queue__row {
+  /* A horizontal line: the checkbox indicator (select mode) is a fixed leading
+     slot (see .prog-queue__checkbox's `flex: none`) and .prog-queue__content
+     grows beside it. With no checkbox rendered (select mode off) this is a
+     single flex child spanning the row — indistinguishable from the previous
+     block layout. Mirrors SplitQueueList's .sui-sql__row/__marker/__content. */
+  display: flex;
+  align-items: center;
   border-top: 1px solid var(--sui-border-subtle, rgba(127, 127, 127, 0.15));
   /* A row opening from height:0 (the arrival animation, see ./motion.ts)
      animates `height` only — `overflow` itself is not animatable — so without
@@ -112,6 +119,7 @@
 }
 .prog-queue__checkbox {
   display: inline-flex;
+  flex: none; /* fixed leading slot — never shrinks to make room for content */
   align-items: center;
   justify-content: center;
   width: 14px;
@@ -124,6 +132,15 @@
   line-height: 1;
   background: var(--sui-bg-secondary);
   vertical-align: middle;
+}
+
+/* The consumer's renderItem output. Grows to fill the rest of the row beside
+   the (optional) checkbox; min-width: 0 lets a shrinking flex child go below
+   its content's intrinsic width, which is what allows a consumer's own
+   ellipsis/nowrap styling to actually clip instead of forcing row overflow. */
+.prog-queue__content {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .prog-queue__checkbox--checked {
   background: var(--sui-accent);

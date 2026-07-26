@@ -297,7 +297,7 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
                               {checked() ? "✓" : ""}
                             </span>
                           </Show>
-                          {props.renderItem(it)}
+                          <span class="prog-queue__content">{props.renderItem(it)}</span>
                         </div>
                       );
                     }}

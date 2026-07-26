@@ -3,6 +3,9 @@
 // unchanged from the original tests, see git history for prior home.
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { ProgressionQueue, type ProgressionSection } from "./ProgressionQueue";
 import {
   type Item,
@@ -10,6 +13,8 @@ import {
   FIVE_IN_A,
   sectionHeights,
   SECTIONS,
+  SELECTABLE,
+  rowFor,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -135,5 +140,61 @@ describe("ProgressionQueue — rendering & sizing", () => {
       />
     ));
     expect(sectionHeights(container)[0]).toBe("306px"); // still content-driven
+  });
+
+  // Regression for the select-mode layout bug found while verifying task 9:
+  // `.prog-queue__row` used to be a plain block, so a checkbox (select mode)
+  // followed by a block/flex-row renderItem forced a line break between them
+  // instead of laying them out side by side. jsdom applies no stylesheet
+  // (see styling.test.ts's comment), so the CSS contract is asserted by
+  // reading the source rule, and the wiring that depends on it — the
+  // renderItem output actually being wrapped in the flex-growing content slot
+  // — is asserted on the rendered DOM.
+  describe("row layout beside the select-mode checkbox", () => {
+    const cssPath = join(dirname(fileURLToPath(import.meta.url)), "./ProgressionQueue.css");
+    const css = readFileSync(cssPath, "utf8");
+    const ruleBody = (selector: string): string => {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const match = css.match(new RegExp(`(?:^|\\n)\\s*${escaped}\\s*[{,]`));
+      if (!match) throw new Error(`rule not found: ${selector}`);
+      const open = css.indexOf("{", match.index! + match[0].length - 1);
+      return css.slice(open + 1, css.indexOf("}", open));
+    };
+
+    it("declares the row a flex line with a non-shrinking checkbox and a growing content slot", () => {
+      expect(ruleBody(".prog-queue__row")).toMatch(/display\s*:\s*flex/);
+      expect(ruleBody(".prog-queue__row")).toMatch(/align-items\s*:\s*center/);
+      expect(ruleBody(".prog-queue__checkbox")).toMatch(/flex\s*:\s*none/);
+      expect(ruleBody(".prog-queue__content")).toMatch(/flex\s*:\s*1 1 auto/);
+      expect(ruleBody(".prog-queue__content")).toMatch(/min-width\s*:\s*0/);
+    });
+
+    it("renders the checkbox and the renderItem output as siblings, content wrapped for the growing slot", () => {
+      const { container } = render(() => (
+        <ProgressionQueue<Item>
+          sections={SELECTABLE}
+          items={[
+            { id: "plain", bucket: "a" },
+            { id: "check", bucket: "b" },
+          ]}
+          bucketOf={(i) => i.bucket}
+          keyOf={(i) => i.id}
+          // A block-level, full-width renderItem — the shape that wrapped onto
+          // its own line under the old block-row layout.
+          renderItem={(i) => <div style={{ display: "flex", width: "100%" }}>{i.id}</div>}
+          checkedKeys={new Set<string>()}
+          height={600}
+        />
+      ));
+      const row = rowFor(container, "check");
+      expect(row.children).toHaveLength(2);
+      expect(row.children[0]!.classList.contains("prog-queue__checkbox")).toBe(true);
+      const content = row.children[1]!;
+      expect(content.classList.contains("prog-queue__content")).toBe(true);
+      // The renderItem output is a child of the content slot, not a sibling of
+      // the checkbox in its own right — it's the content slot that carries the
+      // flex-grow contract that lets it sit beside the checkbox.
+      expect(content.querySelector("div")).not.toBeNull();
+    });
   });
 });
