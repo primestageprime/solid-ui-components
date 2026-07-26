@@ -43,11 +43,12 @@ carried three separate defenses against (an item briefly belonging to neither
 array because the consumer's two setter calls weren't batched).
 
 Motion lives behind a swappable seam, `TransferChoreographer`
-(`capture(root)` / `play(transfers, ctx)`), selected by a module-level constant
-in `ProgressionQueue.tsx` — **never a prop**, per STYLE_GUIDE's Ambient Motion
-rule. The shipped implementation, `slotMotion`, expands the arriving row from
-zero height while FLIP-sliding every other displaced row to its new position in
-one batched pass per coherent set of transfers.
+(`capture(root)` / `play(transfers, ctx)`), selected by a per-instance
+`const motion = createSlotMotion()` inside `ProgressionQueue.tsx`'s component
+body — **never a prop**, per STYLE_GUIDE's Ambient Motion rule. The shipped
+implementation, `createSlotMotion`, expands the arriving row from zero height
+while FLIP-sliding every other displaced row to its new position in one
+batched pass per coherent set of transfers.
 
 ## Considered and deferred: `flightMotion`
 
@@ -71,12 +72,18 @@ resolvable from the DOM (`data-pq-section={section.key}`), because the flying
 clone needs to read the *source* section's treatment after the moved row has
 already left it, and nothing else in the rendered tree carries that key.
 
-**This is the note to act on if the slot animation disappoints in use.** The
-seam was verified swappable end-to-end (source rect, destination rect, both
-sections' elements and their tone, duration/easing, direction, and reduced
-motion are all reachable through the existing contract with no component edit)
-— building `flightMotion` is exactly as cheap as advertised, not aspirationally
-so.
+**This is the note to act on if the slot animation disappoints in use.** Most
+of the seam was verified swappable end-to-end: source rect, destination rect,
+both sections' elements and their tone, duration/easing, direction, and
+reduced motion are all reachable through the existing contract with no
+component edit. One caveat the contract doesn't close: the arrival reveal
+(the scroll that brings a newly-arrived row into view) is component-owned and
+hard-sequenced after `play()` resolves. A flying clone needs to land on the
+destination row's *final on-screen* rect, which means it wants that reveal
+*before or during* its flight, not after — so `flightMotion` would also need a
+`ProgressionQueue.tsx` edit to move the reveal into the seam, not just the
+one-file, one-identifier swap described below. `capture(root)` / `play(...)`
+still cover everything else.
 
 ### Carried limitations of the shipped `slotMotion`
 
@@ -98,9 +105,13 @@ task-7 motion review:
   `overflow: hidden` to close this (verified against the resting state: no
   clipping of row content, the focus ring, or the selected accent bar).
 - **An overlapping second transfer inside the first's ~260ms window FLIPs from
-  a stale-but-never-polluted baseline** — the last settled geometry the eye
-  actually saw, not the mid-flight position at the moment of interruption. This
-  self-heals within one frame once transfers stop overlapping.
+  a stale baseline** — the last settled geometry the eye actually saw, not the
+  mid-flight position at the moment of interruption. This self-heals within
+  one frame once transfers stop overlapping. The baseline itself is measured
+  in each row's scroll container's content space, not viewport space, so a
+  scroll of `.prog-queue__body` between capture and play does not also
+  pollute it — an earlier version of this component measured in viewport
+  space and a scroll read as spurious displacement; see `motion.ts`'s `topOf`.
 - **An interrupted transfer still fires its own arrival-reveal scroll**, a
   moment before the interrupting transfer's own reveal — the final scroll
   position is correct, but there is a spurious intermediate one.

@@ -7,8 +7,10 @@
  * top→bottom sequence, and DO NOT WRAP (movement clamps at both ends).
  * Enter/Space activate the row through the shell's select-vs-toggle branch.
  *
- * Ported from SplitQueueList/keyboard.ts with its behavior intact; the two
- * additions are `onFocusChange` emission and the injected `onActivate`. */
+ * Ported from SplitQueueList/keyboard.ts with three changes: `onFocusChange`
+ * emission, the injected `onActivate`, and the tab-stop precedence — the port
+ * checks `focusedKey` before `selectedKey`, where the original checked
+ * `selectedKey` first. */
 import { createMemo, createSignal } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 

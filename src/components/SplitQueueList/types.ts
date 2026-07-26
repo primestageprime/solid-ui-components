@@ -26,10 +26,10 @@ export interface SplitQueueListProps<T> {
   /** Stable identity for an item — drives the resolve animation. Required for the
    * animated queue; optional in `static` mode. */
   keyOf?: (item: T) => string;
-  /** Key of the focused unresolved item (controlled) — the row painted with the
-   * orange ▸ fill. When omitted/stale NO row is painted focused (the highlight is
-   * strictly opt-in), though the keyboard's default tab stop still lands on the
-   * unresolved head. */
+  /** Key of the focused unresolved item (controlled) — the row painted with a
+   * `1px` focus outline. When omitted/stale NO row is painted focused (the
+   * highlight is strictly opt-in), though the keyboard's default tab stop still
+   * lands on the unresolved head. */
   focusedKey?: string;
   /** Fires when focus should move (e.g. after a resolve auto-advances). */
   onFocusChange?: (key: string | null) => void;
@@ -38,8 +38,8 @@ export interface SplitQueueListProps<T> {
    * the swap). Kept optional for back-compat; unused. */
   onResolve?: (key: string) => void;
   /** Key of the user-SELECTED card in EITHER panel (controlled). The matching
-   * resolved-or-unresolved row gets `sui-sql__row--selected` (a subtle ring,
-   * distinct from the focused orange ▸ fill). Drives a consumer-owned detail
+   * resolved-or-unresolved row gets an inset accent-colored bar (no fill),
+   * distinct from the focused row's outline. Drives a consumer-owned detail
    * panel. */
   selectedKey?: string;
   /** Fires when ANY row is clicked (resolved or unresolved), with its key. The
@@ -88,8 +88,11 @@ export interface SplitQueueListProps<T> {
   /** @deprecated STATIC mode only — see {@link StaticSplitLayoutProps}. Arbitrary
    * content for the BOTTOM section (nested as-is below the seam). */
   bottomContent?: JSX.Element;
-  /** Soft cap on the top (resolved) pane, in rows. Beyond this the top pane
-   * scrolls with the newest row pinned at the seam. Default 3. */
+  /** Soft cap on the top (resolved) pane, in rows. Maps to the resolved
+   * section's `capRows`: beyond this many rows the section holds at
+   * `header + capRows × rowHeight` and its body scrolls, rather than growing
+   * further. Unlike the old top pane, it never grows past the cap to absorb
+   * slack from a short bottom pane. Default 3. */
   topCapRows?: number;
   /** Floor on the top pane, in rows. Default 0 — at 0 categorized the top
    * collapses to its header only and grows as cards resolve.
@@ -97,13 +100,19 @@ export interface SplitQueueListProps<T> {
    * (`capRows` only sets a ceiling, not a floor) and `static` mode has no
    * equivalent either. Kept only so existing call sites keep compiling. */
   topFloorRows?: number;
-  /** Per-row height in px. Used as the initial estimate; the component measures
-   * the real rendered row height and sizes from that. Default 40. */
+  /** Per-row height in px, used as the initial layout estimate before the real
+   * rendered row height is measured. Default 40.
+   * IGNORED on the animated path — `ProgressionQueue` measures its own row
+   * height and sizes from that. Still read (and used the same way) in `static`
+   * mode by `StaticSplitLayout`. */
   rowHeight?: number;
   /** Total height of the sidebar in px. Optional — when omitted, the sidebar
-   * fills its parent (root is `height:100%`) and measures the parent-allotted
-   * height as its layout total, stretching to the bottom of a flex / `height:100%`
-   * container. 420 is only the pre-measure / unmeasurable floor (e.g. jsdom). */
+   * fills its parent (root is `height:100%`), stretching to the bottom of a
+   * flex / `height:100%` container. On the animated path `ProgressionQueue`
+   * additionally measures the parent-allotted height via `ResizeObserver` to
+   * drive its water-fill sizing; there is no fallback floor, so before that
+   * first measurement (e.g. jsdom, or a not-yet-laid-out parent) the allotted
+   * height reads as 0. */
   height?: number;
   /** Slide duration in ms. Default 800.
    * IGNORED — `ProgressionQueue` owns its own motion; there is no dial for it.
