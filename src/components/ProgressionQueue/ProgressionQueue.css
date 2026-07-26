@@ -1,7 +1,8 @@
-/* ProgressionQueue — Composite (Depth 2). N always-present sections stacked as
-   one full-height bar; each section's height is computed (weighted water-fill),
-   never flex-stretched. Chrome is thematically NEUTRAL — the only role color is
-   a dot beside each section label. */
+/* ProgressionQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
+   Layout Purity). N always-present sections stacked as one full-height bar;
+   each section's height is computed (weighted water-fill), never flex-stretched.
+   Chrome is thematically NEUTRAL — the only role color is a dot beside each
+   section label. */
 .prog-queue {
   display: flex;
   flex-direction: column;
@@ -47,6 +48,11 @@
 }
 .prog-queue__row {
   border-top: 1px solid var(--sui-border-subtle, rgba(127, 127, 127, 0.15));
+  /* A row opening from height:0 (the arrival animation, see ./motion.ts)
+     animates `height` only — `overflow` itself is not animatable — so without
+     this the content would spill out of the collapsing box instead of being
+     revealed by it. */
+  overflow: hidden;
 }
 .prog-queue__row:first-child {
   border-top: none;

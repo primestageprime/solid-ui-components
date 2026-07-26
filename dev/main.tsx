@@ -91,6 +91,7 @@ import { CheckboxShowcase } from "./showcases/checkbox";
 import { MultiSelectFilterShowcase } from "./showcases/multi-select-filter";
 import { PickersShowcase } from "./showcases/pickers";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
+import { ProgressionQueueShowcase } from "./showcases/progression-queue";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
@@ -641,8 +642,14 @@ const items: Item[] = [
   },
   {
     id: "split-queue-list",
-    label: "SplitQueueList",
+    label: "SplitQueueList (deprecated)",
     component: SplitQueueListShowcase,
+    tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
+    id: "progression-queue",
+    label: "ProgressionQueue",
+    component: ProgressionQueueShowcase,
     tags: ["depth:1", "list", "navigation", "container"],
   },
   {
