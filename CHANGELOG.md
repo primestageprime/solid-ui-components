@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Changed
+- **`ProgressionQueue` is now the library's single queue component.** It gains
+  multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to sections
+  marked `selectable`), roving-focus keyboard navigation
+  (`focusedKey` / `onFocusChange`), `scrollToKey`, per-section `emptyLabel`, and
+  a transfer animation played whenever an item's `bucketOf` result changes.
+- **A selected row no longer paints a background fill** — it keeps only the inset
+  accent bar, and hover owns the fill. The previous persistent fill sat behind
+  row text at too low a contrast.
+
+### Deprecated
+- **`SplitQueueList` is a compile shim over `ProgressionQueue`** and is removed in
+  the next major. It is **not** pixel-identical — the merged component draws its
+  own chrome. `topCapRows` maps to the resolved section's `capRows`;
+  `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
+  ignored. `static` mode still delegates to
+  `StaticSplitLayout`, which is **not** deprecated.
+
+### Removed
+- `SplitQueueList`'s two-pane animation engine (`flight`, `play`, `flip`,
+  `arrival`, `animation`, its `layout` and `keyboard` modules) — ~2,700 lines.
+
+### Migration
+Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
+
+```tsx
+<ProgressionQueue<T>
+  sections={[
+    { key: "done", label: "Categorized", tone: "success" },
+    { key: "todo", label: "Suggestions", tone: "accent", selectable: true },
+  ]}
+  items={[...resolved, ...unresolved]}
+  bucketOf={(i) => (isDone(i) ? "done" : "todo")}
+  keyOf={(i) => i.key}
+  renderItem={renderRow}
+/>
+```
+
+There is no `selectMode` prop — pass `checkedKeys` to turn select mode on.
+
 ## 0.113.1
 
 ### Fixed
