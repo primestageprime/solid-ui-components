@@ -287,9 +287,6 @@ treatment, and by the time it runs the moved row has already left its source
 section — without a section marker the source is unreachable and the clone
 cannot be built without editing the component.
 
-```ts
-```
-
 **`slotMotion` (ships now):** the arriving row expands from zero height while
 every row whose position changed FLIP-slides to its new spot, which is what
 closes the vacated slot — Solid has already removed the moved row's old element
