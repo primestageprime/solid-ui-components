@@ -38,6 +38,7 @@ import { Legend } from "../Legend";
 import { SpreadRow } from "../Layout/variants";
 import { mean, pluck, sortBy } from "../../fn";
 import "./ThroughputChart.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export interface ThroughputPoint {
   timestamp: number; // epoch ms
@@ -250,14 +251,13 @@ function CompletionView(props: ThroughputChartProps) {
       if (rect.width > 0) setWidth(Math.floor(rect.width));
       return;
     }
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width;
-      if (w && w > 0) setWidth(Math.floor(w));
-    });
-    ro.observe(containerRef);
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        if (size.width > 0) setWidth(size.width);
+      }),
+    );
     const rect = containerRef.getBoundingClientRect();
     if (rect.width > 0) setWidth(Math.floor(rect.width));
-    onCleanup(() => ro.disconnect());
   });
 
   // Bucket the completions into one slot per hour, carrying the cumulative %.

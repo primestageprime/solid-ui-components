@@ -35,6 +35,7 @@ import {
   onMount,
 } from "solid-js";
 import { scaleLinear } from "d3-scale";
+import { observeSize } from "../../internal/dom/observeSize";
 import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
@@ -98,13 +99,12 @@ export const ScrubChart = <C extends Cell>(
   let frameEl: HTMLDivElement | undefined;
   onMount(() => {
     if (!frameEl) return;
-    if (typeof ResizeObserver === "undefined") return;
-    const obs = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) setChartWidth(entry.contentRect.width);
-    });
-    obs.observe(frameEl);
-    onCleanup(() => obs.disconnect());
+    // observeSize change-guards and rAF-defers the write. Setting chartWidth
+    // synchronously inside the observer dispatch re-rendered the chart (and the
+    // page around it) mid-delivery, which re-queued this same observer and made
+    // the browser emit "ResizeObserver loop completed with undelivered
+    // notifications" during a window drag. See internal/dom/observeSize.
+    onCleanup(observeSize(frameEl, (size) => setChartWidth(size.width)));
   });
 
   // Vertical plot region — independent of y-axis width.
@@ -219,11 +219,9 @@ export const ScrubChart = <C extends Cell>(
     el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
       passive: true,
     });
-    if (typeof ResizeObserver !== "undefined") {
-      const ro = new ResizeObserver(() => setAxisViewportWidth(el.clientWidth));
-      ro.observe(el);
-      onCleanup(() => ro.disconnect());
-    }
+    // Re-measure clientWidth (NOT the observed content box) so the scrollbar
+    // accounting is unchanged; observeSize only governs when this runs.
+    onCleanup(observeSize(el, () => setAxisViewportWidth(el.clientWidth)));
   };
 
   // Recenter request — scroll the axis so the requested cell is centered.

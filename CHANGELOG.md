@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## 0.113.3
+
+### Fixed
+
+- **`observeSize` applied library-wide — all 16 remaining measuring components migrated.** 0.113.2 fixed three components; every other component still constructed a raw `ResizeObserver` writing signals synchronously, so the warning kept reproducing (several offenders render many times per page — `ResponsiveMoney` once per money cell, `createTruncationObserver` once per truncatable cell, `MultiSelectFilter` once per filter). Migrated: `MultiSelectFilter`, `ResponsiveMoney`, `createTruncationObserver`, `useContainerNarrow`, `ScrollRegion`, `OverflowNav`, `ProgressionQueue`, `SplitQueueList`, `StaticSplitLayout`, `MessageBubble`, `CashflowChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`, `ThroughputChart`, `StatusFlowChart`, `DagChart`. No public props changed; each component's measurement logic is untouched — only the scheduling. `src` now contains exactly one `new ResizeObserver`, inside the primitive.
+- **`MessageBubble` leaked its ResizeObserver.** It was never disconnected (the component didn't even import `onCleanup`), so the observer outlived every unmounted bubble. Now disposed via `onCleanup`.
+- **`observeSize` tolerates entries without size data.** Polyfills and test doubles dispatch minimal `{ target }` entries; the primitive now falls back to measuring the element rather than throwing on `contentRect.width`.
+- `CashflowChart` and `AnimatedSwimlaneChart` had grown their own private rAF workarounds for this warning; both now defer to the shared primitive, so the behaviour is defined in one place.
+
+## 0.113.2
+
+### Fixed
+
+- **Measuring components no longer trigger "ResizeObserver loop completed with undelivered notifications."** `ScrubChart` (both observers — the chart frame and the inner `DateAxis` scroll element), `DateAxis` (its own viewport observer) and `StatusCard` wrote signals **synchronously inside** the `ResizeObserver` callback. That write re-renders during the browser's own notification-delivery phase, which mutates layout and re-queues the observer in the same frame; the browser aborts the loop and emits the warning. Reproduced on a window drag over a `ScrubChart`. New shared helper `observeSize()` (`src/internal/dom/observeSize`) applies the two defences together: a **change-guard** (an unchanged rounded box size never reaches the callback — most fires during a drag carry an identical size) and **rAF deferral with coalescing** (the surviving call runs after delivery finishes; a pending frame is cancelled and rescheduled so only the newest measurement lands, and the disposer cancels it so an unmounted component can't write to a disposed signal). Deliberately not a debounce — that would make the chart visibly lag a drag. Folds in the private workarounds this pattern had already grown ad hoc (`CashflowChart`, `AnimatedSwimlaneChart` keep their own equivalents for now). No public API, prop or visual change; `ScrubChart`/`CashflowScrubChart` consumers are unaffected. Two behavioural notes: measured sizes are now **rounded** (sub-pixel layout jitter was a primary loop driver and no consumer needs sub-pixel resolution), and a measurement now lands **one frame after** the resize rather than synchronously — including that a component mounted in a background tab measures when the tab is next rendered, since `requestAnimationFrame` is frozen while hidden.
+
 ## 0.113.1
 
 ### Fixed

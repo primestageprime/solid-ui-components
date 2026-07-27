@@ -27,6 +27,7 @@ export type {
   StatusFlowColumn,
   StatusFlowBreakpoint,
 } from "./columns";
+import { observeSize } from "../../internal/dom/observeSize";
 
 /**
  * Render context passed to a consumer's `renderNode`.
@@ -126,11 +127,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   onMount(() => {
     if (!containerRef) return;
     setWidth(containerRef.clientWidth);
-    const ro = new ResizeObserver(([entry]) => {
-      if (entry) setWidth(entry.contentRect.width);
-    });
-    ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(observeSize(containerRef, (size) => setWidth(size.width)));
   });
 
   // visibleCols → maxDepth (symmetric, so maxDepth = (visibleCols - 1) / 2).

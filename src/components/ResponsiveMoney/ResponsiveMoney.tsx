@@ -18,6 +18,7 @@ import {
   onMount,
   splitProps,
 } from "solid-js";
+import { observeSize } from "../../internal/dom/observeSize";
 import { formatMoneyLadder } from "../../internal/format/money";
 import { Text, type TextVariant } from "../Text/Text";
 import "./ResponsiveMoney.css";
@@ -62,11 +63,7 @@ export const ResponsiveMoney: Component<ResponsiveMoneyProps> = (props) => {
   onMount(() => {
     if (!containerRef) return;
     setAvailable(containerRef.clientWidth);
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) setAvailable(entry.contentRect.width);
-    });
-    ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(observeSize(containerRef, (size) => setAvailable(size.width)));
   });
 
   // Widest candidate that fits the measured box; falls back to the

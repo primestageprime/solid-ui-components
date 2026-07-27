@@ -11,13 +11,37 @@ class FakeResizeObserver {
     this.callback = cb;
     lastObserver = this;
   }
-  observe() {}
+  target?: Element;
+  observe(el: Element) {
+    this.target = el;
+  }
   unobserve() {}
   disconnect() {}
-  fire() {
-    this.callback([], this as unknown as ResizeObserver);
+  /** Simulate a layout pass. A real ResizeObserver always delivers at least one
+   *  entry carrying the new box, and the measurement pipeline change-guards on
+   *  that box — so a fire that means "the box changed" must carry a size that
+   *  actually differs from the previous one. */
+  fire(width = 100, height = 20) {
+    this.callback(
+      [
+        {
+          target: this.target ?? document.createElement("span"),
+          contentRect: { width, height } as DOMRectReadOnly,
+        } as ResizeObserverEntry,
+      ],
+      this as unknown as ResizeObserver,
+    );
   }
 }
+
+/** observeSize defers the write out of the observer dispatch, so a fire lands
+ *  on the next frame. */
+const frame = () =>
+  new Promise<void>((resolve) => {
+    if (typeof requestAnimationFrame === "function")
+      requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 0);
+  });
 
 const withMockedMetrics = (
   el: HTMLElement,
@@ -103,11 +127,14 @@ describe("createTruncationObserver", () => {
       const [ref] = createSignal(el);
       const isTruncated = createTruncationObserver(ref);
       await tick();
-      lastObserver!.fire();
+      lastObserver!.fire(200, 20);
+      await frame();
       expect(isTruncated()).toBe(false);
-      // Column later narrows (no window resize): the element now clips.
+      // Column later narrows (no window resize): the element now clips. The
+      // narrower box is what the observer reports.
       withMockedMetrics(el, { scrollWidth: 300, clientWidth: 100, scrollHeight: 20, clientHeight: 20 });
-      lastObserver!.fire();
+      lastObserver!.fire(100, 20);
+      await frame();
       expect(isTruncated()).toBe(true);
       dispose();
     });

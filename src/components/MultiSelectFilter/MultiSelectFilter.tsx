@@ -32,6 +32,7 @@ import {
   GrowClusterRow,
   GrowWrapRow,
 } from "../Layout/variants";
+import { observeSize } from "../../internal/dom/observeSize";
 import "./MultiSelectFilter.css";
 
 export interface MultiSelectOption {
@@ -80,11 +81,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   onMount(() => {
     if (!containerRef) return;
     setContainerWidth(containerRef.clientWidth);
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) setContainerWidth(e.contentRect.width);
-    });
-    ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(observeSize(containerRef, (size) => setContainerWidth(size.width)));
 
     const onDocClick = (e: MouseEvent) => {
       if (!menuOpen()) return;

@@ -17,6 +17,7 @@ import { StaticSplitLayout } from "./StaticSplitLayout";
 import type { SplitQueueListProps } from "./types";
 import "./SplitQueueList.css";
 import { map } from "../../fn";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export type { SplitQueueListProps } from "./types";
 
@@ -141,15 +142,12 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   };
   // Measure after mount (fonts/borders applied), and on every container resize
   // so the JS-computed pane heights track the real available space.
-  let resizeObserver: ResizeObserver | undefined;
+  let disposeResizeObserver: (() => void) | undefined;
   onMount(() => {
     requestAnimationFrame(measure);
-    if (typeof ResizeObserver !== "undefined" && rootEl) {
-      resizeObserver = new ResizeObserver(() => measure());
-      resizeObserver.observe(rootEl);
-    }
+    if (rootEl) disposeResizeObserver = observeSize(rootEl, () => measure());
   });
-  onCleanup(() => resizeObserver?.disconnect());
+  onCleanup(() => disposeResizeObserver?.());
 
   // Scroll a requested row into view. Reacts on `scrollToKey` change: when it
   // names a row currently in the DOM, scroll that row into its scrollable pane.

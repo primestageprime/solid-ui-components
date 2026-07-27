@@ -21,6 +21,7 @@ import { allocateHeights } from "./layout";
 import { filter, map } from "../../fn";
 import type { ProgressionQueueProps } from "./types";
 import "./ProgressionQueue.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export type { ProgressionQueueProps, ProgressionSection } from "./types";
 
@@ -60,10 +61,8 @@ export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Elemen
       measure();
       return;
     }
-    const ro = new ResizeObserver(() => measure());
-    if (rootRef) ro.observe(rootRef);
+    if (rootRef) onCleanup(observeSize(rootRef, () => measure()));
     measure();
-    onCleanup(() => ro.disconnect());
   });
 
   const natural = createMemo(() =>

@@ -52,6 +52,7 @@ export type {
   WeeklyCashflowChartData,
   WeeklyCashflowChartProps,
 } from "./types";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
   props,
@@ -81,35 +82,15 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
 
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-    // The observer callback must be loop-safe: if it synchronously set the size
-    // signals, the resulting re-render could change the observed element's box
-    // and re-trigger the observer within the same frame, which the browser
-    // surfaces as "ResizeObserver loop completed with undelivered
-    // notifications." We break that cycle by (a) deferring the signal update to
-    // the next animation frame and (b) skipping no-op updates so an unchanged
-    // measurement never re-triggers downstream layout.
-    let rafId: number | null = null;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[entries.length - 1];
-      if (!entry) return;
-      // Prefer the (rounded) border-box size when available; fall back to the
-      // rounded contentRect otherwise.
-      const box = entry.borderBoxSize?.[0];
-      const w = Math.round(box ? box.inlineSize : entry.contentRect.width);
-      const ht = Math.round(box ? box.blockSize : entry.contentRect.height);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (w !== measuredWidth()) setMeasuredWidth(w);
-        if (ht !== measuredHeight()) setMeasuredHeight(ht);
-      });
-    });
-    observer.observe(containerRef);
-    onCleanup(() => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      observer.disconnect();
-    });
+    // This component grew the loop-safe measurement pattern privately; it now
+    // uses the shared primitive (see internal/dom/observeSize), which does the
+    // same change-guard + rAF deferral for every measuring component.
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        if (size.width !== measuredWidth()) setMeasuredWidth(size.width);
+        if (size.height !== measuredHeight()) setMeasuredHeight(size.height);
+      }),
+    );
   });
 
   const scales = createMemo(() => {

@@ -19,6 +19,7 @@ import { clipPolyline, buildEdgePath, polylineMidpoint } from "./edge-path";
 import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import "./DagChart.css";
 import { map } from "../../fn";
+import { observeSize } from "../../internal/dom/observeSize";
 
 const _RESPONSIVE_BREAKPOINT = 640;
 
@@ -256,23 +257,17 @@ export function DagChart<T>(props: DAGProps<T>) {
   // Auto-detect direction from container width via ResizeObserver
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setContainerWidth(width);
-      setContainerHeight(height);
-      if (!props.direction) {
-        // Default to vertical (most DAGs are deeper than wide). Only switch to
-        // horizontal when the container is very wide and short (e.g. landscape > 2:1).
-        setAutoDirection(width > height * 2 ? "horizontal" : "vertical");
-      }
-    });
-
-    observer.observe(containerRef);
-    onCleanup(() => observer.disconnect());
+    onCleanup(
+      observeSize(containerRef, ({ width, height }) => {
+        setContainerWidth(width);
+        setContainerHeight(height);
+        if (!props.direction) {
+          // Default to vertical (most DAGs are deeper than wide). Only switch to
+          // horizontal when the container is very wide and short (e.g. landscape > 2:1).
+          setAutoDirection(width > height * 2 ? "horizontal" : "vertical");
+        }
+      }),
+    );
   });
 
   const handleNodeClick = (nodeId: string) => {
