@@ -1,9 +1,9 @@
-/* ProgressionQueue — keyboard navigation & roving tabindex.
+/* BucketQueue — keyboard navigation & roving tabindex.
  *
- * Sections are exposed as `role="listbox"`es of `role="option"` rows so
+ * Buckets are exposed as `role="listbox"`es of `role="option"` rows so
  * assistive tech announces each as a selectable list. Rows are reachable via a
  * ROVING TABINDEX: exactly one row is in the tab order (tabindex 0), the rest
- * are -1. Arrow/Home/End move DOM focus, treating every section as one
+ * are -1. Arrow/Home/End move DOM focus, treating every bucket as one
  * top→bottom sequence, and DO NOT WRAP (movement clamps at both ends).
  * Enter/Space activate the row through the shell's select-vs-toggle branch.
  *
@@ -17,7 +17,7 @@ import { clamp } from "../../internal/math/clamp";
 export interface RowKeyboardDeps {
   /** The component root the rows are queried within (may be undefined pre-mount). */
   getRootEl: () => HTMLElement | undefined;
-  /** Interactive row keys only, in render order, top section first. A row with
+  /** Interactive row keys only, in render order, top bucket first. A row with
    *  no way to activate it (no onSelect, not checkable) never joins the roving
    *  sequence — it is neither a tab-stop candidate nor an arrow-key target. */
   allKeys: () => string[];
@@ -58,18 +58,18 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
     return allKeys[0] ?? null;
   });
 
-  // Move DOM focus across ALL sections as one sequence, driven off live DOM
+  // Move DOM focus across ALL buckets as one sequence, driven off live DOM
   // order so it tracks the rendered rows without threading indices through
-  // state. Clamped — the queue does not wrap. Scoped to [data-pq-interactive]
-  // so a non-interactive row (rendered with [data-pq-key] for scrollToKey /
+  // state. Clamped — the queue does not wrap. Scoped to [data-bq-interactive]
+  // so a non-interactive row (rendered with [data-bq-key] for scrollToKey /
   // the transfer animation, but no way to activate it) is never an arrow-key
   // target.
   const moveFocus = (fromKey: string, dir: 1 | -1 | "home" | "end") => {
     const rootEl = deps.getRootEl();
     if (!rootEl) return;
-    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-pq-interactive]")];
+    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-bq-interactive]")];
     if (rows.length === 0) return;
-    const idx = rows.findIndex((r) => r.dataset.pqKey === fromKey);
+    const idx = rows.findIndex((r) => r.dataset.bqKey === fromKey);
     const target =
       dir === "home"
         ? rows[0]
@@ -77,7 +77,7 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
           ? rows[rows.length - 1]
           : rows[clamp(idx + dir, 0, rows.length - 1)];
     if (!target) return;
-    const key = target.dataset.pqKey ?? null;
+    const key = target.dataset.bqKey ?? null;
     setActiveKey(key);
     target.focus();
     deps.onFocusChange(key);
@@ -87,7 +87,7 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
     switch (e.key) {
       case "Enter":
       case " ":
-        e.preventDefault(); // Space would otherwise scroll the section body
+        e.preventDefault(); // Space would otherwise scroll the bucket body
         deps.onActivate(key);
         break;
       case "ArrowDown":

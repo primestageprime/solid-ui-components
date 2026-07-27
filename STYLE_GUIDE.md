@@ -74,7 +74,7 @@ Three categories are exempt — everything else migrates:
 
 1. **`layout`-tagged components** — the Layout family itself (`Stack`, `Row`,
    `Box`, `AppShell`) **plus** `ThreePanelLayout`, `Page`, `ScrollRegion`,
-   `ProgressionQueue`, `StaticSplitLayout`, `Section`, `CollapsiblePanel`,
+   `BucketQueue`, `StaticSplitLayout`, `Section`, `CollapsiblePanel`,
    `Modal`, `BottomSheet`, and `ButtonGroup` (the last DEPRECATED-as-such — see
    ruling 5 below). These
    components **are** the arrangement vocabulary — they are allowed (and

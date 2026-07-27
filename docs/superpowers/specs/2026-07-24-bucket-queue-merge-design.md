@@ -1,4 +1,4 @@
-# ProgressionQueue: collapse SplitQueueList into it
+# BucketQueue: collapse SplitQueueList into it
 
 **Date:** 2026-07-24
 **Status:** Design — approved, not yet implemented
@@ -7,7 +7,7 @@
 
 ## Why this supersedes the incoming spec
 
-The incoming spec asked for four additive capabilities on `ProgressionQueue`
+The incoming spec asked for four additive capabilities on `BucketQueue`
 (grouping, `scrollToKey`, keyboard nav, a selected-row contrast fix) and ruled
 `SplitQueueList` explicitly out of scope: "Do not touch `SplitQueueList` — it
 keeps its own consumers."
@@ -19,13 +19,13 @@ That premise doesn't survive a consumer audit:
 | `SplitQueueList` (animated path) | `thorcasting-ui/src/components/screens/configure/queuePanel.tsx` — **the one migrating away** |
 | `SplitQueueList` (`static` flag) | `dside-ui` `TeamRail` — delegates to `StaticSplitLayout`, a separate component |
 | `SplitQueueList` `topOnly` | none |
-| `ProgressionQueue` | none |
+| `BucketQueue` | none |
 
 The animated queue has exactly one consumer, and that consumer is leaving.
 
 "Add four props to the newer component and keep both" therefore leaves two
 overlapping queue components in the catalog — `SplitQueueList/` is ~3,700 lines
-across 15 files, `ProgressionQueue/` ~500 across 7 — the older of which has zero
+across 15 files, `BucketQueue/` ~500 across 7 — the older of which has zero
 consumers the day the migration lands.
 
 This design collapses them instead. It delivers everything the incoming spec
@@ -33,7 +33,7 @@ asked for, and additionally retires the duplicate.
 
 ## Goal
 
-One queue component: `ProgressionQueue`, with the union of both feature sets and
+One queue component: `BucketQueue`, with the union of both feature sets and
 a smaller public surface than either. `SplitQueueList` becomes a deprecated shim
 for one release.
 
@@ -43,7 +43,7 @@ One flat list plus a bucketing function. `sections` is ordered top → bottom an
 every section is always rendered with its count.
 
 ```ts
-export interface ProgressionSection {
+export interface Bucket {
   key: string;
   label: string;
   /** The ONLY role color — the dot beside the label. Chrome stays neutral. */
@@ -87,8 +87,8 @@ an unknown section key renders nowhere (existing behavior, now documented).
 Fourteen props, down from `SplitQueueList`'s twenty-seven.
 
 ```ts
-export interface ProgressionQueueProps<T> {
-  sections: ProgressionSection[];
+export interface BucketQueueProps<T> {
+  sections: Bucket[];
   items: T[];
   bucketOf: (item: T) => string;
   keyOf: (item: T) => string;
@@ -168,7 +168,7 @@ than three.
 `capRows` restores the absolute rule per section: it caps the section's
 **natural** height at `header + capRows × rowHeight`, leaving the water-fill
 logic untouched. A capped section holds at that height and its body scrolls
-(`.prog-queue__body` already has `overflow-y: auto`).
+(`.bucket-queue__body` already has `overflow-y: auto`).
 
 One deliberate simplification against `SplitQueueList`: the old top pane could
 grow *past* its cap when the bottom pane was short and slack flowed up. A capped
@@ -220,15 +220,15 @@ component: ~900, no file over 250 (the 500-line limit is a global rule; this
 stays well inside it).
 
 ```
-src/components/ProgressionQueue/
-  types.ts               public props + ProgressionSection
-  ProgressionQueue.tsx   reactive shell: measure → allocate → render → wire   (~200)
+src/components/BucketQueue/
+  types.ts               public props + Bucket
+  BucketQueue.tsx   reactive shell: measure → allocate → render → wire   (~200)
   bucketing.ts           items → Map<sectionKey, T[]> AND Map<key, sectionKey> (~40)
   transfer.ts            PURE diff: (prevMap, nextMap) → Transfer[], no DOM    (~40)
   motion.ts              the choreographer seam + slot implementation          (~120)
   keyboard.ts            roving focus (ported)                                 (~110)
   layout.ts              allocateHeights water-fill (existing, unchanged)
-  ProgressionQueue.css
+  BucketQueue.css
   index.ts
   README.md
 ```
@@ -281,7 +281,7 @@ would mean swapping implementations required editing the component, breaking the
 one-file guarantee below.
 
 **Rows and sections must both be resolvable from the DOM.** Every row carries
-`data-pq-key`; every section carries `data-pq-section={section.key}`. The
+`data-bq-key`; every section carries `data-bq-bucket={section.key}`. The
 deferred clone implementation cross-fades source treatment into destination
 treatment, and by the time it runs the moved row has already left its source
 section — without a section marker the source is unreachable and the clone
@@ -330,7 +330,7 @@ under `docs/adr/`.
   JS-computed section heights. The weighted water-fill cannot be expressed in
   CSS, which places it in the "genuine full-height scroll plumbing" category the
   migration doc grants `EXEMPT-AS-LAYOUT`. `STYLE_GUIDE.md`'s exemption list
-  names `SplitQueueList` explicitly; that entry becomes `ProgressionQueue` — a
+  names `SplitQueueList` explicitly; that entry becomes `BucketQueue` — a
   succession, not a new exemption. **`StaticSplitLayout` must be added to the
   list by name**: it rides `SplitQueueList`'s entry implicitly today and would
   be orphaned by the rename. That is the only genuinely new name.
@@ -344,7 +344,7 @@ under `docs/adr/`.
   heights — data-driven geometry inside a layout-exempt component, exactly what
   `SplitQueueList` does today.
 - **Rule #2 (minimal surface, expansion gated).** The prop count falls from 27
-  to 14. Three new `ProgressionSection` fields exist — `selectable`,
+  to 14. Three new `Bucket` fields exist — `selectable`,
   `emptyLabel`, `capRows` — of which only `selectable` is genuinely new surface:
   `emptyLabel` relocates `allClearLabel` from the component to the section, and
   `capRows` succeeds `topCapRows`. All three **approved by Adlai, 2026-07-24**;
@@ -354,7 +354,7 @@ under `docs/adr/`.
   not remount rows — the current code is correct and the rule's failure mode
   (`.map()` rebuilding objects) does not apply here. Memoized bucketing keeps it
   that way once rows animate and remounts would be visible.
-- **Naming: shapes, not domains.** `ProgressionQueue`, `sections`, `bucketOf`
+- **Naming: shapes, not domains.** `BucketQueue`, `sections`, `bucketOf`
   are shape-named. `resolved` / `unresolved` were the domain-flavored pair, and
   they are going.
 
@@ -364,7 +364,7 @@ under `docs/adr/`.
 |---|---|
 | `transfer.test.ts` *(new, pure)* | move up, move down, multi-move in one update, add, remove, reorder-in-place, unknown bucket |
 | `layout.test.ts` *(kept)* | water-fill allocation |
-| `ProgressionQueue.test.tsx` | click → select vs toggle (selectable vs plain section); select mode off when `checkedKeys` undefined; keyboard traversal across section boundaries; Home/End; no wrap; Enter/Space branch; `scrollToKey`; `onFocusChange` emission; reduced-motion instant placement; **selected row carries no background fill** |
+| `BucketQueue.test.tsx` | click → select vs toggle (selectable vs plain section); select mode off when `checkedKeys` undefined; keyboard traversal across section boundaries; Home/End; no wrap; Enter/Space branch; `scrollToKey`; `onFocusChange` emission; reduced-motion instant placement; **selected row carries no background fill** |
 | `SplitQueueList.test.tsx` *(reduced)* | the shim maps arrays → sections and still renders |
 
 Behavioral cases port from the existing 1,133-line suite; the two-pane geometry
@@ -373,15 +373,15 @@ cases retire with the geometry.
 ## 8. Deliverables
 
 **Adds**
-- `src/components/ProgressionQueue/{bucketing,transfer,motion,keyboard}.ts`
-- `src/components/ProgressionQueue/README.md`
-- `dev/showcases/progression-queue.tsx` — there is none today; must include a
+- `src/components/BucketQueue/{bucketing,transfer,motion,keyboard}.ts`
+- `src/components/BucketQueue/README.md`
+- `dev/showcases/bucket-queue.tsx` — there is none today; must include a
   visual case proving a selected, unhovered row is readable
 - `docs/adr/0004-one-queue-component-and-the-motion-seam.md` — queue components
   collapsed; motion behind a choreographer seam; flying clone deferred
 
 **Rewrites**
-- `src/components/ProgressionQueue/{types.ts, ProgressionQueue.tsx, ProgressionQueue.css}`
+- `src/components/BucketQueue/{types.ts, BucketQueue.tsx, BucketQueue.css}`
 - `src/components/SplitQueueList/SplitQueueList.tsx` → a deprecated shim: the
   animated path maps `resolved`/`unresolved` onto `sections` + `items` +
   `bucketOf`; the `static` path keeps delegating to `StaticSplitLayout`
@@ -391,29 +391,29 @@ cases retire with the geometry.
 - `SplitQueueList/layout.test.ts`, most of `SplitQueueList.test.tsx`
 
 **Edits**
-- `STYLE_GUIDE.md` — exemption list (`SplitQueueList` → `ProgressionQueue`, add
+- `STYLE_GUIDE.md` — exemption list (`SplitQueueList` → `BucketQueue`, add
   `StaticSplitLayout`)
-- `COMPONENTS.md` — rewrite the `ProgressionQueue` entry; mark `SplitQueueList`
+- `COMPONENTS.md` — rewrite the `BucketQueue` entry; mark `SplitQueueList`
   deprecated with a pointer
 - `CHANGELOG.md`, `scripts/style-rubric.json`, `dev/main.tsx`
 
 ## 9. Consumer contract
 
 After this lands, `queuePanel.tsx` swaps `SplitQueueList` for
-`ProgressionQueue`. This must compile and behave:
+`BucketQueue`. This must compile and behave:
 
 ```tsx
-import { ProgressionQueue, type ProgressionSection } from "@primestageprime/solid-ui-components";
+import { BucketQueue, type Bucket } from "@primestageprime/solid-ui-components";
 import type { QueueItem } from "~/lib/configureQueue";
 
-const SECTIONS: ProgressionSection[] = [
+const SECTIONS: Bucket[] = [
   { key: "categorized", label: "Categorized", tone: "success" },
   { key: "suggestions",  label: "Suggestions", tone: "accent", selectable: true,
     emptyLabel: "All clear — every item configured" },
   { key: "hold",         label: "In progress", tone: "muted" },
 ];
 
-<ProgressionQueue<QueueItem>
+<BucketQueue<QueueItem>
   sections={SECTIONS}
   items={allItems()}              // one flat list; bucket by status
   bucketOf={(i) => i.section}
@@ -434,7 +434,7 @@ consumer-owned. The component holds no selection state.
 
 ## 10. Rollout
 
-1. **SUI:** build the merged component behind the existing `ProgressionQueue`
+1. **SUI:** build the merged component behind the existing `BucketQueue`
    export; land the shim; update docs, showcase, ADR, tests.
 2. **Verify:** `npm link` from SUI, `npm link @primestageprime/solid-ui-components`
    in thorcasting-ui (its `app.config.ts` auto-detects the link and serves SUI
@@ -451,7 +451,7 @@ consumer-owned. The component holds no selection state.
 
 ## 11. Acceptance criteria
 
-- One queue component. `ProgressionQueue` supports N sections, controlled
+- One queue component. `BucketQueue` supports N sections, controlled
   selection, controlled roving-focus keyboard nav, `scrollToKey`, and
   select-mode grouping scoped to `selectable` sections.
 - Select mode is on iff `checkedKeys` is present; there is no `selectMode` prop.

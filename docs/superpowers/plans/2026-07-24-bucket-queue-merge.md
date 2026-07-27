@@ -1,14 +1,14 @@
-# ProgressionQueue Merge Implementation Plan
+# BucketQueue Merge Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Collapse `SplitQueueList` into `ProgressionQueue` so the library ships one queue component with the union of both feature sets and a smaller public surface than either.
+**Goal:** Collapse `SplitQueueList` into `BucketQueue` so the library ships one queue component with the union of both feature sets and a smaller public surface than either.
 
-**Architecture:** `ProgressionQueue` already models N sections via `sections` + `bucketOf`. This plan adds the capabilities `SplitQueueList` had — multi-select grouping, roving-focus keyboard nav, `scrollToKey`, and transfer animation — by (a) extracting a pure core that answers "what moved" as a map diff with no DOM, (b) putting the animation behind a one-interface choreographer seam so the shipped slot animation can later be swapped for a flying clone without touching the component, and (c) reducing `SplitQueueList` to a deprecated compile shim over the merged component.
+**Architecture:** `BucketQueue` already models N sections via `sections` + `bucketOf`. This plan adds the capabilities `SplitQueueList` had — multi-select grouping, roving-focus keyboard nav, `scrollToKey`, and transfer animation — by (a) extracting a pure core that answers "what moved" as a map diff with no DOM, (b) putting the animation behind a one-interface choreographer seam so the shipped slot animation can later be swapped for a flying clone without touching the component, and (c) reducing `SplitQueueList` to a deprecated compile shim over the merged component.
 
 **Tech Stack:** SolidJS, TypeScript, Vitest + `@solidjs/testing-library` (jsdom), Biome, Vite.
 
-**Spec:** `docs/superpowers/specs/2026-07-24-progression-queue-merge-design.md` — read it before starting.
+**Spec:** `docs/superpowers/specs/2026-07-24-bucket-queue-merge-design.md` — read it before starting.
 
 ## Global Constraints
 
@@ -16,11 +16,11 @@
 - **Role color is confined to the section dot.** Checks, focus rings, and selection cues use neutral/accent tokens — never success/danger/warning.
 - **No new required props.** Every addition is optional.
 - **There is no `selectMode` prop.** Select mode is on iff `checkedKeys` is present. An empty `Set` means "mode on, nothing checked".
-- **500 lines is the repo's hard limit** (global CLAUDE.md, split by concern). The ~250 figure elsewhere in this plan is a target for *new* modules, not a per-task gate — `ProgressionQueue.tsx` legitimately accumulates across Tasks 2-7 and passing 250 is expected, not a violation to report. Two real thresholds: if `ProgressionQueue.tsx` approaches **350**, extract the row render into a sibling module; `ProgressionQueue.test.tsx` was **487 lines after Task 5** and MUST be split by concern before it crosses 500 (Task 7 owns that split).
+- **500 lines is the repo's hard limit** (global CLAUDE.md, split by concern). The ~250 figure elsewhere in this plan is a target for *new* modules, not a per-task gate — `BucketQueue.tsx` legitimately accumulates across Tasks 2-7 and passing 250 is expected, not a violation to report. Two real thresholds: if `BucketQueue.tsx` approaches **350**, extract the row render into a sibling module; `BucketQueue.test.tsx` was **487 lines after Task 5** and MUST be split by concern before it crosses 500 (Task 7 owns that split).
 - **Functional style:** pure functions, `const` arrow exports, prefer `fn` combinators (`src/fn`) or array methods over `for`/`while`. Local mutation inside a pure function is fine.
-- **After every commit run:** `npx tsc --noEmit` (must be clean) and the SCOPED lint `npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`.
+- **After every commit run:** `npx tsc --noEmit` (must be clean) and the SCOPED lint `npx biome lint src/components/BucketQueue src/components/SplitQueueList`.
 - **Do NOT gate on `npx biome lint src`.** The repo baseline is **14 errors / 31 warnings** in files this work never touches; a whole-`src` gate can never go green and is not your job to fix. Verified 2026-07-24.
-- **The scoped lint baseline is 4 errors**, all in `ProgressionQueue.tsx`: two `noAssignInExpressions` (the `ref={(el) => (cond ? (ref = el) : undefined)}` idiom) and two a11y errors on the row div (`useKeyWithClickEvents`, `noStaticElementInteractions`). Your task must never *increase* this count. Task 2 clears the two `noAssignInExpressions`; Task 4 clears the two a11y errors by giving rows `role="option"` and a keydown handler. **From Task 4 onward the scoped lint must report zero errors.**
+- **The scoped lint baseline is 4 errors**, all in `BucketQueue.tsx`: two `noAssignInExpressions` (the `ref={(el) => (cond ? (ref = el) : undefined)}` idiom) and two a11y errors on the row div (`useKeyWithClickEvents`, `noStaticElementInteractions`). Your task must never *increase* this count. Task 2 clears the two `noAssignInExpressions`; Task 4 clears the two a11y errors by giving rows `role="option"` and a keydown handler. **From Task 4 onward the scoped lint must report zero errors.**
 - **Solid reactivity:** never destructure `props`. Read `props.x` at the point of use.
 - **jsdom has no layout.** `getBoundingClientRect()` returns zeros and `Element.prototype.animate` is undefined. All motion code must feature-detect and short-circuit; visual verification happens in the dev showcase, not in tests.
 
@@ -31,20 +31,20 @@
 Two DOM-free modules. `bucketItems` does one pass over `items` producing both the per-section row arrays and the key→section map; `diffTransfers` answers "what moved" as a map diff.
 
 **Files:**
-- Create: `src/components/ProgressionQueue/bucketing.ts`
-- Create: `src/components/ProgressionQueue/bucketing.test.ts`
-- Create: `src/components/ProgressionQueue/transfer.ts`
-- Create: `src/components/ProgressionQueue/transfer.test.ts`
+- Create: `src/components/BucketQueue/bucketing.ts`
+- Create: `src/components/BucketQueue/bucketing.test.ts`
+- Create: `src/components/BucketQueue/transfer.ts`
+- Create: `src/components/BucketQueue/transfer.test.ts`
 
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
-  - `bucketItems<T>(items: readonly T[], sectionKeys: readonly string[], bucketOf: (item: T) => string, keyOf: (item: T) => string): Buckets<T>` where `Buckets<T> = { bySection: Map<string, T[]>; sectionOf: Map<string, string> }`
+  - `bucketItems<T>(items: readonly T[], sectionKeys: readonly string[], bucketOf: (item: T) => string, keyOf: (item: T) => string): BucketIndex<T>` where `BucketIndex<T> = { bySection: Map<string, T[]>; sectionOf: Map<string, string> }`
   - `diffTransfers(prev: ReadonlyMap<string, string>, next: ReadonlyMap<string, string>, sectionOrder: readonly string[]): Transfer[]` where `Transfer = { key: string; from: string; to: string; direction: 1 | -1 }`
 
 - [ ] **Step 1: Write the failing bucketing test**
 
-Create `src/components/ProgressionQueue/bucketing.test.ts`:
+Create `src/components/BucketQueue/bucketing.test.ts`:
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -106,20 +106,20 @@ describe("bucketItems", () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npx vitest run src/components/ProgressionQueue/bucketing.test.ts`
+Run: `npx vitest run src/components/BucketQueue/bucketing.test.ts`
 Expected: FAIL — `Failed to resolve import "./bucketing"`.
 
 - [ ] **Step 3: Implement `bucketing.ts`**
 
-Create `src/components/ProgressionQueue/bucketing.ts`:
+Create `src/components/BucketQueue/bucketing.ts`:
 
 ```ts
-// ProgressionQueue — bucketing. ONE pass over `items` produces BOTH the
+// BucketQueue — bucketing. ONE pass over `items` produces BOTH the
 // per-section row arrays the render needs AND the key → section map the
 // transfer diff needs, so the two can never disagree about where an item is.
 // (The accumulator is mutated locally; the function itself is pure.)
 
-export interface Buckets<T> {
+export interface BucketIndex<T> {
   /** Section key → its items in `items` order. Every section key is present. */
   bySection: Map<string, T[]>;
   /** Item key → the section key it landed in. Unknown buckets are omitted. */
@@ -131,8 +131,8 @@ export const bucketItems = <T>(
   sectionKeys: readonly string[],
   bucketOf: (item: T) => string,
   keyOf: (item: T) => string,
-): Buckets<T> =>
-  items.reduce<Buckets<T>>(
+): BucketIndex<T> =>
+  items.reduce<BucketIndex<T>>(
     (acc, item) => {
       // An item whose bucket matches no declared section renders nowhere.
       const rows = acc.bySection.get(bucketOf(item));
@@ -150,12 +150,12 @@ export const bucketItems = <T>(
 
 - [ ] **Step 4: Run it to verify it passes**
 
-Run: `npx vitest run src/components/ProgressionQueue/bucketing.test.ts`
+Run: `npx vitest run src/components/BucketQueue/bucketing.test.ts`
 Expected: PASS — 5 tests.
 
 - [ ] **Step 5: Write the failing transfer test**
 
-Create `src/components/ProgressionQueue/transfer.test.ts`:
+Create `src/components/BucketQueue/transfer.test.ts`:
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -210,15 +210,15 @@ describe("diffTransfers", () => {
 
 - [ ] **Step 6: Run it to verify it fails**
 
-Run: `npx vitest run src/components/ProgressionQueue/transfer.test.ts`
+Run: `npx vitest run src/components/BucketQueue/transfer.test.ts`
 Expected: FAIL — `Failed to resolve import "./transfer"`.
 
 - [ ] **Step 7: Implement `transfer.ts`**
 
-Create `src/components/ProgressionQueue/transfer.ts`:
+Create `src/components/BucketQueue/transfer.ts`:
 
 ```ts
-// ProgressionQueue — "what moved", as a pure map diff. An item MOVED iff it was
+// BucketQueue — "what moved", as a pure map diff. An item MOVED iff it was
 // present before and its section changed; adds, removes and intra-section
 // reorders are not moves. Because a move is one atomic mutation of `items`,
 // there is no intermediate state where an item belongs to no section — the
@@ -251,19 +251,19 @@ export const diffTransfers = (
 
 - [ ] **Step 8: Run it to verify it passes**
 
-Run: `npx vitest run src/components/ProgressionQueue/transfer.test.ts`
+Run: `npx vitest run src/components/BucketQueue/transfer.test.ts`
 Expected: PASS — 8 tests.
 
 - [ ] **Step 9: Verify the whole suite and the type/lint gates**
 
-Run: `npx vitest run src/components/ProgressionQueue && npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx vitest run src/components/BucketQueue && npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: all pass.
 
 - [ ] **Step 10: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/bucketing.ts src/components/ProgressionQueue/bucketing.test.ts src/components/ProgressionQueue/transfer.ts src/components/ProgressionQueue/transfer.test.ts
-git commit -m "feat(progression-queue): add pure bucketing + transfer-diff core"
+git add src/components/BucketQueue/bucketing.ts src/components/BucketQueue/bucketing.test.ts src/components/BucketQueue/transfer.ts src/components/BucketQueue/transfer.test.ts
+git commit -m "feat(bucket-queue): add pure bucketing + transfer-diff core"
 ```
 
 ---
@@ -273,27 +273,27 @@ git commit -m "feat(progression-queue): add pure bucketing + transfer-diff core"
 Replace the props interface with the merged 14-prop surface and rewire the component to the memoized bucketing. Behavior visible in this task: `section.emptyLabel` renders in an empty section's collapsed strip.
 
 **Files:**
-- Modify: `src/components/ProgressionQueue/types.ts` (full rewrite)
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.tsx:32-130`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.css` (append the empty-strip rule)
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.test.tsx` (append)
+- Modify: `src/components/BucketQueue/types.ts` (full rewrite)
+- Modify: `src/components/BucketQueue/BucketQueue.tsx:32-130`
+- Modify: `src/components/BucketQueue/BucketQueue.css` (append the empty-strip rule)
+- Modify: `src/components/BucketQueue/BucketQueue.test.tsx` (append)
 
 **Interfaces:**
 - Consumes: `bucketItems` from Task 1.
-- Produces: `ProgressionQueueProps<T>` and `ProgressionSection` with the fields listed below — every later task adds behavior against these exact names.
+- Produces: `BucketQueueProps<T>` and `Bucket` with the fields listed below — every later task adds behavior against these exact names.
 
 - [ ] **Step 1: Write the failing test**
 
-Append inside the existing `describe("ProgressionQueue", …)` block in `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
+Append inside the existing `describe("BucketQueue", …)` block in `src/components/BucketQueue/BucketQueue.test.tsx`:
 
 ```tsx
   it("renders a section's emptyLabel when it has no items", () => {
-    const sections: ProgressionSection[] = [
+    const sections: Bucket[] = [
       { key: "a", label: "Alpha", tone: "success" },
       { key: "b", label: "Beta", tone: "accent", emptyLabel: "All clear" },
     ];
     const { container } = render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={sections}
         items={[{ id: "1", bucket: "a" }]}
         bucketOf={(i) => i.bucket}
@@ -302,12 +302,12 @@ Append inside the existing `describe("ProgressionQueue", …)` block in `src/com
         height={600}
       />
     ));
-    expect(container.querySelector(".prog-queue__empty")?.textContent).toBe("All clear");
+    expect(container.querySelector(".bucket-queue__empty")?.textContent).toBe("All clear");
   });
 
   it("omits the empty strip when a section declares no emptyLabel", () => {
     const { container } = renderQueue([{ id: "1", bucket: "a" }]);
-    expect(container.querySelector(".prog-queue__empty")).toBeNull();
+    expect(container.querySelector(".bucket-queue__empty")).toBeNull();
   });
 
   it("renders nothing for an item whose bucket matches no section", () => {
@@ -329,7 +329,7 @@ Append inside the existing `describe("ProgressionQueue", …)` block in `src/com
   }));
 
   const sectionHeights = (container: HTMLElement) =>
-    [...container.querySelectorAll(".prog-queue__section")].map(
+    [...container.querySelectorAll(".bucket-queue__section")].map(
       (s) => (s as HTMLElement).style.height,
     );
 
@@ -339,13 +339,13 @@ Append inside the existing `describe("ProgressionQueue", …)` block in `src/com
   });
 
   it("caps a section at capRows and keeps every row mounted so the body scrolls", () => {
-    const capped: ProgressionSection[] = [
+    const capped: Bucket[] = [
       { key: "a", label: "Alpha", tone: "success", capRows: 2 },
       { key: "b", label: "Beta", tone: "danger" },
       { key: "c", label: "Gamma", tone: "accent" },
     ];
     const { container } = render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={capped}
         items={FIVE_IN_A}
         bucketOf={(i) => i.bucket}
@@ -356,17 +356,17 @@ Append inside the existing `describe("ProgressionQueue", …)` block in `src/com
     ));
     expect(sectionHeights(container)[0]).toBe("144px"); // 34 + 2*54 + 2
     // Capping is a viewport, not a filter — all five rows stay in the DOM.
-    expect(container.querySelectorAll(".prog-queue__row")).toHaveLength(5);
+    expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(5);
   });
 
   it("ignores capRows larger than the row count", () => {
-    const capped: ProgressionSection[] = [
+    const capped: Bucket[] = [
       { key: "a", label: "Alpha", tone: "success", capRows: 99 },
       { key: "b", label: "Beta", tone: "danger" },
       { key: "c", label: "Gamma", tone: "accent" },
     ];
     const { container } = render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={capped}
         items={FIVE_IN_A}
         bucketOf={(i) => i.bucket}
@@ -381,24 +381,24 @@ Append inside the existing `describe("ProgressionQueue", …)` block in `src/com
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `npx vitest run src/components/ProgressionQueue/ProgressionQueue.test.tsx`
-Expected: FAIL — `emptyLabel` is not a known property, and `.prog-queue__empty` is null.
+Run: `npx vitest run src/components/BucketQueue/BucketQueue.test.tsx`
+Expected: FAIL — `emptyLabel` is not a known property, and `.bucket-queue__empty` is null.
 
 - [ ] **Step 3: Rewrite `types.ts`**
 
-Replace the whole of `src/components/ProgressionQueue/types.ts`:
+Replace the whole of `src/components/BucketQueue/types.ts`:
 
 ```ts
-// ProgressionQueue — public props. One queue component: N always-present
+// BucketQueue — public props. One queue component: N always-present
 // sections, a flat `items` list bucketed by `bucketOf`, controlled selection /
 // focus / checking, and a transfer animation played whenever an item's bucket
 // changes. Supersedes SplitQueueList (see
-// docs/superpowers/specs/2026-07-24-progression-queue-merge-design.md).
+// docs/superpowers/specs/2026-07-24-bucket-queue-merge-design.md).
 import type { JSX } from "solid-js";
 import type { Tone } from "../../types";
 
 /** One section of the progression bar. */
-export interface ProgressionSection {
+export interface Bucket {
   /** Stable key; `bucketOf` returns one of these. */
   key: string;
   /** Header label. */
@@ -423,9 +423,9 @@ export interface ProgressionSection {
   capRows?: number;
 }
 
-export interface ProgressionQueueProps<T> {
+export interface BucketQueueProps<T> {
   /** Sections top → bottom. Every section is always shown, with its count. */
-  sections: ProgressionSection[];
+  sections: Bucket[];
   /** All items; each is bucketed into a section by `bucketOf`. An item whose
    *  bucket matches no section renders nowhere. */
   items: T[];
@@ -475,23 +475,23 @@ export interface ProgressionQueueProps<T> {
 
 - [ ] **Step 4: Rewire the component to bucketing and render the empty strip**
 
-In `src/components/ProgressionQueue/ProgressionQueue.tsx`, replace the import of `filter, map` and the `itemsIn` / `counts` definitions at lines 20-36 with:
+In `src/components/BucketQueue/BucketQueue.tsx`, replace the import of `filter, map` and the `itemsIn` / `counts` definitions at lines 20-36 with:
 
 ```tsx
 import { allocateHeights } from "./layout";
 import { bucketItems } from "./bucketing";
 import { map } from "../../fn";
-import type { ProgressionQueueProps } from "./types";
-import "./ProgressionQueue.css";
+import type { BucketQueueProps } from "./types";
+import "./BucketQueue.css";
 
-export type { ProgressionQueueProps, ProgressionSection } from "./types";
+export type { BucketQueueProps, Bucket } from "./types";
 
 // Pre-measure fallbacks (jsdom / first paint) — real values are measured.
 const HEADER_FALLBACK = 34;
 const ROW_FALLBACK = 54;
 const GAP = 8;
 
-export function ProgressionQueue<T>(props: ProgressionQueueProps<T>): JSX.Element {
+export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const sectionKeys = createMemo(() => map((s) => s.key, props.sections));
   // ONE pass per items change: the per-section rows AND the key → section map.
   const buckets = createMemo(() =>
@@ -508,11 +508,11 @@ Then in the JSX, replace the `<Show when={count() > 0}>` block (lines 100-123) w
                 when={count() > 0}
                 fallback={
                   <Show when={section.emptyLabel != null}>
-                    <div class="prog-queue__empty">{section.emptyLabel}</div>
+                    <div class="bucket-queue__empty">{section.emptyLabel}</div>
                   </Show>
                 }
               >
-                <div class="prog-queue__body">
+                <div class="bucket-queue__body">
                   <For each={itemsIn(section.key)}>
                     {(it, ri) => {
                       const key = props.keyOf(it);
@@ -522,9 +522,9 @@ Then in the JSX, replace the `<Show when={count() > 0}>` block (lines 100-123) w
                         <div
                           ref={(el) => (i() === 0 && ri() === 0 ? (rowRef = el) : undefined)}
                           class={
-                            "prog-queue__row" +
-                            (interactive() ? " prog-queue__row--interactive" : "") +
-                            (selected() ? " prog-queue__row--selected" : "")
+                            "bucket-queue__row" +
+                            (interactive() ? " bucket-queue__row--interactive" : "") +
+                            (selected() ? " bucket-queue__row--selected" : "")
                           }
                           onClick={interactive() ? () => props.onSelect?.(key) : undefined}
                         >
@@ -542,7 +542,7 @@ Note: `filter` is no longer imported. `<For>` is correct here — the per-sectio
 While you are rewriting these exact lines, clear the two pre-existing `noAssignInExpressions` lint errors by replacing the ternary-assignment `ref` idiom with a statement body. Both the header probe and the row probe change:
 
 ```tsx
-              <div class="prog-queue__header" ref={(el) => { if (i() === 0) headRef = el; }}>
+              <div class="bucket-queue__header" ref={(el) => { if (i() === 0) headRef = el; }}>
 ```
 
 ```tsx
@@ -574,12 +574,12 @@ so the water-fill logic itself stays untouched. Replace the `natural` memo with:
 
 - [ ] **Step 5: Add the empty-strip style**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
+Append to `src/components/BucketQueue/BucketQueue.css`:
 
 ```css
 /* Collapsed strip shown in a section with no items (opt-in via
    `section.emptyLabel`). Muted, one line, never a big empty box. */
-.prog-queue__empty {
+.bucket-queue__empty {
   padding: 6px 12px;
   color: var(--sui-text-muted);
   font-size: 0.85rem;
@@ -588,19 +588,19 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
 
 - [ ] **Step 6: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — the three new tests plus the six existing ones.
 
 - [ ] **Step 7: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass. `tsc` will flag any consumer of the removed props — there should be none inside `src/` yet.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "feat(progression-queue): merged props surface + memoized bucketing + section emptyLabel"
+git add src/components/BucketQueue/
+git commit -m "feat(bucket-queue): merged props surface + memoized bucketing + section emptyLabel"
 ```
 
 ---
@@ -608,27 +608,27 @@ git commit -m "feat(progression-queue): merged props surface + memoized bucketin
 ### Task 3: Select mode — `checkedKeys`, `onToggleCheck`, `section.selectable`
 
 **Files:**
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.tsx` (the row render)
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.css`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+- Modify: `src/components/BucketQueue/BucketQueue.tsx` (the row render)
+- Modify: `src/components/BucketQueue/BucketQueue.css`
+- Modify: `src/components/BucketQueue/BucketQueue.test.tsx`
 
 **Interfaces:**
-- Consumes: `ProgressionQueueProps.checkedKeys`, `.onToggleCheck`, `ProgressionSection.selectable` from Task 2.
-- Produces: `activate(key: string, section: ProgressionSection, modifiers: { shift: boolean; meta: boolean }): void` — the single select-vs-toggle branch, reused by Task 4's keyboard handler. Row markup gains `data-pq-key={key}`, relied on by Tasks 4, 5 and 7.
+- Consumes: `BucketQueueProps.checkedKeys`, `.onToggleCheck`, `Bucket.selectable` from Task 2.
+- Produces: `activate(key: string, section: Bucket, modifiers: { shift: boolean; meta: boolean }): void` — the single select-vs-toggle branch, reused by Task 4's keyboard handler. Row markup gains `data-bq-key={key}`, relied on by Tasks 4, 5 and 7.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
+Append to `src/components/BucketQueue/BucketQueue.test.tsx`:
 
 ```tsx
-  const SELECTABLE: ProgressionSection[] = [
+  const SELECTABLE: Bucket[] = [
     { key: "a", label: "Alpha", tone: "success" },
     { key: "b", label: "Beta", tone: "accent", selectable: true },
   ];
 
   const renderSelectable = (extra: Record<string, unknown>) =>
     render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={SELECTABLE}
         items={[
           { id: "plain", bucket: "a" },
@@ -643,11 +643,11 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
     ));
 
   const rowFor = (container: HTMLElement, key: string) =>
-    container.querySelector(`[data-pq-key="${key}"]`) as HTMLElement;
+    container.querySelector(`[data-bq-key="${key}"]`) as HTMLElement;
 
   it("renders no check affordance when checkedKeys is absent", () => {
     const { container } = renderSelectable({ onSelect: () => {} });
-    expect(container.querySelector(".prog-queue__checkbox")).toBeNull();
+    expect(container.querySelector(".bucket-queue__checkbox")).toBeNull();
   });
 
   it("renders the check affordance only in selectable sections when checkedKeys is present", () => {
@@ -656,8 +656,8 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
       checkedKeys: new Set<string>(),
       onToggleCheck: () => {},
     });
-    expect(rowFor(container, "check").querySelector(".prog-queue__checkbox")).toBeTruthy();
-    expect(rowFor(container, "plain").querySelector(".prog-queue__checkbox")).toBeNull();
+    expect(rowFor(container, "check").querySelector(".bucket-queue__checkbox")).toBeTruthy();
+    expect(rowFor(container, "plain").querySelector(".bucket-queue__checkbox")).toBeNull();
   });
 
   it("marks a row checked when its key is in checkedKeys", () => {
@@ -666,7 +666,7 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
       checkedKeys: new Set(["check"]),
       onToggleCheck: () => {},
     });
-    expect(rowFor(container, "check").classList.contains("prog-queue__row--checked")).toBe(true);
+    expect(rowFor(container, "check").classList.contains("bucket-queue__row--checked")).toBe(true);
   });
 
   it("toggles instead of selecting when a selectable row is clicked in select mode", () => {
@@ -710,25 +710,25 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `npx vitest run src/components/ProgressionQueue/ProgressionQueue.test.tsx`
-Expected: FAIL — `rowFor` returns null (`data-pq-key` doesn't exist yet).
+Run: `npx vitest run src/components/BucketQueue/BucketQueue.test.tsx`
+Expected: FAIL — `rowFor` returns null (`data-bq-key` doesn't exist yet).
 
 - [ ] **Step 3: Implement the row branch**
 
-In `src/components/ProgressionQueue/ProgressionQueue.tsx`, add above the `return` of the component:
+In `src/components/BucketQueue/BucketQueue.tsx`, add above the `return` of the component:
 
 ```tsx
   // Select mode is on iff the consumer is managing a checked set. An empty Set
   // means "mode on, nothing checked" — the state select mode starts in.
   const selectModeOn = () => props.checkedKeys != null;
-  const checkableIn = (section: ProgressionSection) =>
+  const checkableIn = (section: Bucket) =>
     selectModeOn() && section.selectable === true;
 
   // The single activation branch — shared by click (here) and Enter/Space (the
   // keyboard module). A row either toggles its check or selects; never both.
   const activate = (
     key: string,
-    section: ProgressionSection,
+    section: Bucket,
     modifiers: { shift: boolean; meta: boolean },
   ) => {
     if (checkableIn(section)) props.onToggleCheck?.(key, modifiers);
@@ -736,10 +736,10 @@ In `src/components/ProgressionQueue/ProgressionQueue.tsx`, add above the `return
   };
 ```
 
-`ProgressionSection` must be imported as a type in the component:
+`Bucket` must be imported as a type in the component:
 
 ```tsx
-import type { ProgressionQueueProps, ProgressionSection } from "./types";
+import type { BucketQueueProps, Bucket } from "./types";
 ```
 
 Replace the row element from Task 2 with:
@@ -747,14 +747,14 @@ Replace the row element from Task 2 with:
 ```tsx
                         <div
                           ref={(el) => (i() === 0 && ri() === 0 ? (rowRef = el) : undefined)}
-                          data-pq-key={key}
+                          data-bq-key={key}
                           class={
-                            "prog-queue__row" +
-                            (interactive() ? " prog-queue__row--interactive" : "") +
-                            (selected() ? " prog-queue__row--selected" : "")
+                            "bucket-queue__row" +
+                            (interactive() ? " bucket-queue__row--interactive" : "") +
+                            (selected() ? " bucket-queue__row--selected" : "")
                           }
                           classList={{
-                            "prog-queue__row--checked":
+                            "bucket-queue__row--checked":
                               checkableIn(section) && props.checkedKeys?.has(key) === true,
                           }}
                           onClick={
@@ -769,9 +769,9 @@ Replace the row element from Task 2 with:
                         >
                           <Show when={checkableIn(section)}>
                             <span
-                              class="prog-queue__checkbox"
+                              class="bucket-queue__checkbox"
                               classList={{
-                                "prog-queue__checkbox--checked":
+                                "bucket-queue__checkbox--checked":
                                   props.checkedKeys?.has(key) === true,
                               }}
                               aria-hidden="true"
@@ -792,16 +792,16 @@ Also widen `interactive()` so a checkable row is clickable even when the consume
 
 - [ ] **Step 4: Add the select-mode styles**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
+Append to `src/components/BucketQueue/BucketQueue.css`:
 
 ```css
 /* SELECT MODE (bag-of-stuff grouping): a checked row gets a neutral accent
    tint, and a small box that fills with a check. The whole row is the click
    target, so the box is a non-interactive indicator, not an <input>. */
-.prog-queue__row--checked {
+.bucket-queue__row--checked {
   background: var(--sui-accent-dim);
 }
-.prog-queue__checkbox {
+.bucket-queue__checkbox {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -816,7 +816,7 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
   background: var(--sui-bg-secondary);
   vertical-align: middle;
 }
-.prog-queue__checkbox--checked {
+.bucket-queue__checkbox--checked {
   background: var(--sui-accent);
   border-color: var(--sui-accent);
   color: var(--sui-bg-secondary);
@@ -827,19 +827,19 @@ The `display: inline-flex; align-items: center` on the checkbox is intrinsic ele
 
 - [ ] **Step 5: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — six new tests plus all previous.
 
 - [ ] **Step 6: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "feat(progression-queue): select mode scoped to selectable sections"
+git add src/components/BucketQueue/
+git commit -m "feat(bucket-queue): select mode scoped to selectable sections"
 ```
 
 ---
@@ -847,22 +847,22 @@ git commit -m "feat(progression-queue): select mode scoped to selectable section
 ### Task 4: Keyboard navigation and roving focus
 
 **Files:**
-- Create: `src/components/ProgressionQueue/keyboard.ts`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.tsx`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.css`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+- Create: `src/components/BucketQueue/keyboard.ts`
+- Modify: `src/components/BucketQueue/BucketQueue.tsx`
+- Modify: `src/components/BucketQueue/BucketQueue.css`
+- Modify: `src/components/BucketQueue/BucketQueue.test.tsx`
 
 **Interfaces:**
-- Consumes: `activate` and `data-pq-key` from Task 3.
+- Consumes: `activate` and `data-bq-key` from Task 3.
 - Produces: `createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard` where `RowKeyboard = { tabbableKey: () => string | null; setActiveKey: (key: string | null) => void; onRowKeyDown: (e: KeyboardEvent, key: string) => void }`.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
+Append to `src/components/BucketQueue/BucketQueue.test.tsx`:
 
 ```tsx
   const rows = (container: HTMLElement) =>
-    [...container.querySelectorAll("[data-pq-key]")] as HTMLElement[];
+    [...container.querySelectorAll("[data-bq-key]")] as HTMLElement[];
 
   it("gives exactly one row the tab stop", () => {
     const { container } = renderQueue(
@@ -955,15 +955,15 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `npx vitest run src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+Run: `npx vitest run src/components/BucketQueue/BucketQueue.test.tsx`
 Expected: FAIL — rows carry no `tabindex` and ignore keydown.
 
 - [ ] **Step 3: Create `keyboard.ts`**
 
-Create `src/components/ProgressionQueue/keyboard.ts`:
+Create `src/components/BucketQueue/keyboard.ts`:
 
 ```ts
-/* ProgressionQueue — keyboard navigation & roving tabindex.
+/* BucketQueue — keyboard navigation & roving tabindex.
  *
  * Sections are exposed as `role="listbox"`es of `role="option"` rows so
  * assistive tech announces each as a selectable list. Rows are reachable via a
@@ -1024,9 +1024,9 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
   const moveFocus = (fromKey: string, dir: 1 | -1 | "home" | "end") => {
     const rootEl = deps.getRootEl();
     if (!rootEl) return;
-    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-pq-key]")];
+    const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-bq-key]")];
     if (rows.length === 0) return;
-    const idx = rows.findIndex((r) => r.dataset.pqKey === fromKey);
+    const idx = rows.findIndex((r) => r.dataset.bqKey === fromKey);
     const target =
       dir === "home"
         ? rows[0]
@@ -1034,7 +1034,7 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
           ? rows[rows.length - 1]
           : rows[clamp(idx + dir, 0, rows.length - 1)];
     if (!target) return;
-    const key = target.dataset.pqKey ?? null;
+    const key = target.dataset.bqKey ?? null;
     setActiveKey(key);
     target.focus();
     deps.onFocusChange(key);
@@ -1074,7 +1074,7 @@ Note the tab-stop precedence puts `focusedKey` **above** `selectedKey`, unlike `
 
 - [ ] **Step 4: Wire the keyboard into the component**
 
-In `src/components/ProgressionQueue/ProgressionQueue.tsx`, add the import:
+In `src/components/BucketQueue/BucketQueue.tsx`, add the import:
 
 ```tsx
 import { createRowKeyboard } from "./keyboard";
@@ -1085,7 +1085,7 @@ Add after the `activate` helper:
 ```tsx
   // The section a row lives in, for the activation branch (keyboard has only
   // the key; click has the section in scope).
-  const sectionForKey = (key: string): ProgressionSection | undefined => {
+  const sectionForKey = (key: string): Bucket | undefined => {
     const sectionKey = buckets().sectionOf.get(key);
     return props.sections.find((s) => s.key === sectionKey);
   };
@@ -1108,7 +1108,7 @@ Give the section body the listbox role and the row the option role plus the rovi
 
 ```tsx
                 <div
-                  class="prog-queue__body"
+                  class="bucket-queue__body"
                   // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA <listbox/option> pattern — the listbox role belongs on the element owning the option rows.
                   role="listbox"
                   aria-label={section.label}
@@ -1125,9 +1125,9 @@ and the row element gains, alongside its existing attributes:
                             interactive() && keyboard.tabbableKey() === key ? 0 : -1
                           }
                           classList={{
-                            "prog-queue__row--checked":
+                            "bucket-queue__row--checked":
                               checkableIn(section) && props.checkedKeys?.has(key) === true,
-                            "prog-queue__row--focused": props.focusedKey === key,
+                            "bucket-queue__row--focused": props.focusedKey === key,
                           }}
                           onKeyDown={(e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)}
                           onFocus={() => keyboard.setActiveKey(key)}
@@ -1135,14 +1135,14 @@ and the row element gains, alongside its existing attributes:
 
 - [ ] **Step 5: Add the focus style**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
+Append to `src/components/BucketQueue/BucketQueue.css`:
 
 ```css
 /* FOCUS — a ring only. No background fill: a persistent fill behind row text is
    exactly the readability problem the selected-row treatment was fixed for, and
    a marker glyph that appears only on focus would shift the row's content. */
-.prog-queue__row--focused,
-.prog-queue__row:focus-visible {
+.bucket-queue__row--focused,
+.bucket-queue__row:focus-visible {
   outline: 1px solid var(--sui-border-focus);
   outline-offset: -1px;
 }
@@ -1150,19 +1150,19 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.css`:
 
 - [ ] **Step 6: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — seven new tests plus all previous.
 
 - [ ] **Step 7: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "feat(progression-queue): roving-focus keyboard nav across sections"
+git add src/components/BucketQueue/
+git commit -m "feat(bucket-queue): roving-focus keyboard nav across sections"
 ```
 
 ---
@@ -1170,16 +1170,16 @@ git commit -m "feat(progression-queue): roving-focus keyboard nav across section
 ### Task 5: `scrollToKey` and the shared reveal helper
 
 **Files:**
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.tsx`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+- Modify: `src/components/BucketQueue/BucketQueue.tsx`
+- Modify: `src/components/BucketQueue/BucketQueue.test.tsx`
 
 **Interfaces:**
-- Consumes: `data-pq-key` from Task 3.
+- Consumes: `data-bq-key` from Task 3.
 - Produces: `revealRow(key: string): void` — used by `scrollToKey` here and by Task 7's arrival reveal.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`. `scrollIntoView` does not exist in jsdom, so stub it:
+Append to `src/components/BucketQueue/BucketQueue.test.tsx`. `scrollIntoView` does not exist in jsdom, so stub it:
 
 ```tsx
   it("scrolls the matching row into view when scrollToKey changes", async () => {
@@ -1187,11 +1187,11 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`. `scrollIn
     // jsdom has no scrollIntoView; record the row it is called on.
     (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
       function (this: Element) {
-        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+        calls.push((this as HTMLElement).dataset.bqKey ?? "");
       };
     const [key, setKey] = createSignal<string | undefined>(undefined);
     const { container } = render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={SECTIONS}
         items={[
           { id: "1", bucket: "a" },
@@ -1214,11 +1214,11 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`. `scrollIn
     const calls: string[] = [];
     (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
       function (this: Element) {
-        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+        calls.push((this as HTMLElement).dataset.bqKey ?? "");
       };
     const [key, setKey] = createSignal<string | undefined>(undefined);
     render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={SECTIONS}
         items={[{ id: "1", bucket: "a" }]}
         bucketOf={(i) => i.bucket}
@@ -1242,22 +1242,22 @@ import { createSignal } from "solid-js";
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `npx vitest run src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+Run: `npx vitest run src/components/BucketQueue/BucketQueue.test.tsx`
 Expected: FAIL — `calls` is empty; nothing reacts to `scrollToKey`.
 
 - [ ] **Step 3: Implement the reveal**
 
-In `src/components/ProgressionQueue/ProgressionQueue.tsx`, add `createEffect` to the Solid import and add after the keyboard wiring:
+In `src/components/BucketQueue/BucketQueue.tsx`, add `createEffect` to the Solid import and add after the keyboard wiring:
 
 ```tsx
   // Bring a row into view inside its section body. Matched by dataset rather
-  // than a `[data-pq-key="…"]` selector so arbitrary key strings (colons,
+  // than a `[data-bq-key="…"]` selector so arbitrary key strings (colons,
   // quotes) need no escaping. Deferred one frame so a row that was just added
   // or moved has laid out first.
   const revealRow = (key: string) => {
     requestAnimationFrame(() => {
-      const candidates = rootRef?.querySelectorAll<HTMLElement>("[data-pq-key]");
-      const match = candidates && [...candidates].find((n) => n.dataset.pqKey === key);
+      const candidates = rootRef?.querySelectorAll<HTMLElement>("[data-bq-key]");
+      const match = candidates && [...candidates].find((n) => n.dataset.bqKey === key);
       match?.scrollIntoView?.({ block: "nearest" });
     });
   };
@@ -1273,19 +1273,19 @@ In `src/components/ProgressionQueue/ProgressionQueue.tsx`, add `createEffect` to
 
 - [ ] **Step 4: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — two new tests plus all previous.
 
 - [ ] **Step 5: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "feat(progression-queue): scrollToKey reveals a row on change"
+git add src/components/BucketQueue/
+git commit -m "feat(bucket-queue): scrollToKey reveals a row on change"
 ```
 
 ---
@@ -1295,8 +1295,8 @@ git commit -m "feat(progression-queue): scrollToKey reveals a row on change"
 The selected row must have **no background fill** when unhovered. Because jsdom does not apply imported stylesheets, the guard is a test that reads the CSS file and asserts the rule's content — a real regression gate, unlike an assertion on computed style that would pass vacuously.
 
 **Files:**
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.css:60-63`
-- Create: `src/components/ProgressionQueue/styling.test.ts`
+- Modify: `src/components/BucketQueue/BucketQueue.css:60-63`
+- Create: `src/components/BucketQueue/styling.test.ts`
 
 **Interfaces:**
 - Consumes: nothing.
@@ -1304,7 +1304,7 @@ The selected row must have **no background fill** when unhovered. Because jsdom 
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/components/ProgressionQueue/styling.test.ts`:
+Create `src/components/BucketQueue/styling.test.ts`:
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -1314,7 +1314,7 @@ import { fileURLToPath } from "node:url";
 // jsdom does not apply imported stylesheets, so a computed-style assertion here
 // would pass no matter what the CSS says. Reading the rule is the honest gate.
 const css = readFileSync(
-  fileURLToPath(new URL("./ProgressionQueue.css", import.meta.url)),
+  fileURLToPath(new URL("./BucketQueue.css", import.meta.url)),
   "utf8",
 );
 
@@ -1325,15 +1325,15 @@ const ruleBody = (selector: string): string => {
   return css.slice(open + 1, css.indexOf("}", open));
 };
 
-describe("ProgressionQueue styling contract", () => {
+describe("BucketQueue styling contract", () => {
   it("gives a selected row NO background fill — only the accent bar", () => {
-    const body = ruleBody(".prog-queue__row--selected");
+    const body = ruleBody(".bucket-queue__row--selected");
     expect(body).not.toMatch(/(^|[^-])background\s*:/);
     expect(body).toContain("inset 2px 0 0 var(--sui-accent)");
   });
 
   it("keeps the hover fill so hover still owns the background", () => {
-    expect(ruleBody(".prog-queue__row--interactive:hover")).toMatch(/background\s*:/);
+    expect(ruleBody(".bucket-queue__row--interactive:hover")).toMatch(/background\s*:/);
   });
 
   it("hardcodes no colors — every color is a --sui-* token", () => {
@@ -1344,19 +1344,19 @@ describe("ProgressionQueue styling contract", () => {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `npx vitest run src/components/ProgressionQueue/styling.test.ts`
+Run: `npx vitest run src/components/BucketQueue/styling.test.ts`
 Expected: FAIL on the first test — the current rule sets `background: var(--sui-bg-selected, rgba(0, 212, 255, 0.1))`.
 
 - [ ] **Step 3: Apply the fix**
 
-In `src/components/ProgressionQueue/ProgressionQueue.css`, replace the `.prog-queue__row--selected` rule:
+In `src/components/BucketQueue/BucketQueue.css`, replace the `.bucket-queue__row--selected` rule:
 
 ```css
 /* SELECTED — the accent bar ONLY, never a fill. A persistent background behind
    row text reads at too low a contrast once the pointer leaves, and because a
    consumer typically auto-selects a row, that state is almost always on screen.
    Hover owns the fill, exactly as it does for an unselected row. */
-.prog-queue__row--selected {
+.bucket-queue__row--selected {
   box-shadow: inset 2px 0 0 var(--sui-accent);
 }
 ```
@@ -1365,19 +1365,19 @@ If the third test fails, replace any literal hex color elsewhere in the file wit
 
 - [ ] **Step 4: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — all three styling tests plus everything prior.
 
 - [ ] **Step 5: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "fix(progression-queue): selected row keeps the accent bar, drops the fill"
+git add src/components/BucketQueue/
+git commit -m "fix(bucket-queue): selected row keeps the accent bar, drops the fill"
 ```
 
 ---
@@ -1387,31 +1387,31 @@ git commit -m "fix(progression-queue): selected row keeps the accent bar, drops 
 The animation goes behind one interface so the deferred flying-clone implementation is a drop-in swap. Only the reduced-motion and arrival-reveal paths are testable in jsdom; the motion itself is verified in the showcase (Task 9).
 
 **Files:**
-- Create: `src/components/ProgressionQueue/motion.ts`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.tsx`
-- Modify: `src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+- Create: `src/components/BucketQueue/motion.ts`
+- Modify: `src/components/BucketQueue/BucketQueue.tsx`
+- Modify: `src/components/BucketQueue/BucketQueue.test.tsx`
 
 **Interfaces:**
-- Consumes: `Transfer` (Task 1), `revealRow` (Task 5), `data-pq-key` (Task 3).
+- Consumes: `Transfer` (Task 1), `revealRow` (Task 5), `data-bq-key` (Task 3).
 - Produces: `createSlotMotion(): TransferChoreographer`, `TransferChoreographer`, `MotionContext`.
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
+Append to `src/components/BucketQueue/BucketQueue.test.tsx`:
 
 ```tsx
   it("reveals the arriving row after an item changes bucket", async () => {
     const calls: string[] = [];
     (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
       function (this: Element) {
-        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+        calls.push((this as HTMLElement).dataset.bqKey ?? "");
       };
     const [items, setItems] = createSignal<Item[]>([
       { id: "1", bucket: "b" },
       { id: "2", bucket: "b" },
     ]);
     render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={SECTIONS}
         items={items()}
         bucketOf={(i) => i.bucket}
@@ -1434,11 +1434,11 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
     const calls: string[] = [];
     (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
       function (this: Element) {
-        calls.push((this as HTMLElement).dataset.pqKey ?? "");
+        calls.push((this as HTMLElement).dataset.bqKey ?? "");
       };
     const [items, setItems] = createSignal<Item[]>([{ id: "1", bucket: "a" }]);
     render(() => (
-      <ProgressionQueue<Item>
+      <BucketQueue<Item>
         sections={SECTIONS}
         items={items()}
         bucketOf={(i) => i.bucket}
@@ -1457,15 +1457,15 @@ Append to `src/components/ProgressionQueue/ProgressionQueue.test.tsx`:
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `npx vitest run src/components/ProgressionQueue/ProgressionQueue.test.tsx`
+Run: `npx vitest run src/components/BucketQueue/BucketQueue.test.tsx`
 Expected: FAIL on the first — nothing detects the bucket change yet.
 
 - [ ] **Step 3: Create `motion.ts`**
 
-Create `src/components/ProgressionQueue/motion.ts`:
+Create `src/components/BucketQueue/motion.ts`:
 
 ```ts
-/* ProgressionQueue — the transfer choreographer seam.
+/* BucketQueue — the transfer choreographer seam.
  *
  * The component knows only this interface. `createSlotMotion` is the shipped
  * implementation: the vacated slot closes, the arriving row opens from zero,
@@ -1473,7 +1473,7 @@ Create `src/components/ProgressionQueue/motion.ts`:
  * deferred alternative — a clone flying over the bar from source rect to
  * destination rect, cross-fading its treatment en route — implements the SAME
  * interface, so trying it is one new file and one changed identifier in
- * ProgressionQueue.tsx. See docs/adr/0004-one-queue-component-and-the-motion-seam.md.
+ * BucketQueue.tsx. See docs/adr/0004-one-queue-component-and-the-motion-seam.md.
  *
  * All DOM work is feature-detected: without `Element.animate` (jsdom) or under
  * `prefers-reduced-motion`, every path degrades to instant placement. */
@@ -1506,8 +1506,8 @@ export const createSlotMotion = (): TransferChoreographer => {
   return {
     capture(root) {
       prevRects.clear();
-      for (const el of root.querySelectorAll<HTMLElement>("[data-pq-key]")) {
-        const key = el.dataset.pqKey;
+      for (const el of root.querySelectorAll<HTMLElement>("[data-bq-key]")) {
+        const key = el.dataset.bqKey;
         if (key) prevRects.set(key, el.getBoundingClientRect());
       }
     },
@@ -1534,8 +1534,8 @@ export const createSlotMotion = (): TransferChoreographer => {
       );
 
       // Every other row that shifted slides from where it was to where it is.
-      for (const el of ctx.root.querySelectorAll<HTMLElement>("[data-pq-key]")) {
-        const key = el.dataset.pqKey;
+      for (const el of ctx.root.querySelectorAll<HTMLElement>("[data-bq-key]")) {
+        const key = el.dataset.bqKey;
         if (!key || key === transfer.key || !canAnimate(el)) continue;
         const before = prevRects.get(key);
         if (!before) continue;
@@ -1558,7 +1558,7 @@ export const createSlotMotion = (): TransferChoreographer => {
 
 - [ ] **Step 4: Wire it into the component**
 
-In `src/components/ProgressionQueue/ProgressionQueue.tsx` add the imports:
+In `src/components/BucketQueue/BucketQueue.tsx` add the imports:
 
 ```tsx
 import { createSlotMotion } from "./motion";
@@ -1601,8 +1601,8 @@ and add after `revealRow`:
       const ctx = {
         root,
         rowEl: (key: string) =>
-          [...root.querySelectorAll<HTMLElement>("[data-pq-key]")].find(
-            (n) => n.dataset.pqKey === key,
+          [...root.querySelectorAll<HTMLElement>("[data-bq-key]")].find(
+            (n) => n.dataset.bqKey === key,
           ),
         durationMs: DURATION_MS,
         reducedMotion: reducedMotion(),
@@ -1617,19 +1617,19 @@ and add after `revealRow`:
 
 - [ ] **Step 5: Run the tests**
 
-Run: `npx vitest run src/components/ProgressionQueue`
+Run: `npx vitest run src/components/BucketQueue`
 Expected: PASS — two new tests plus all previous.
 
 - [ ] **Step 6: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/components/ProgressionQueue/
-git commit -m "feat(progression-queue): transfer animation behind a choreographer seam"
+git add src/components/BucketQueue/
+git commit -m "feat(bucket-queue): transfer animation behind a choreographer seam"
 ```
 
 ---
@@ -1647,7 +1647,7 @@ The animated machinery is deleted and `SplitQueueList` becomes a compile shim ma
 - Modify: `src/components/SplitQueueList/index.ts` if it exports a deleted module
 
 **Interfaces:**
-- Consumes: `ProgressionQueue`, `ProgressionSection` (Tasks 2-7).
+- Consumes: `BucketQueue`, `Bucket` (Tasks 2-7).
 - Produces: `SplitQueueList<T>(props: SplitQueueListProps<T>)` — unchanged call signature for both existing consumers.
 
 - [ ] **Step 1: Write the failing shim test**
@@ -1684,7 +1684,7 @@ const renderQueue = (
     />
   ));
 
-describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
+describe("SplitQueueList (deprecated shim over BucketQueue)", () => {
   it("renders both lists with their labels and counts", () => {
     const { container } = renderQueue(
       [{ id: "1", label: "done-1" }],
@@ -1695,7 +1695,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
     );
     expect(container.textContent).toContain("Categorized");
     expect(container.textContent).toContain("Suggestions");
-    const counts = [...container.querySelectorAll(".prog-queue__count")].map((c) => c.textContent);
+    const counts = [...container.querySelectorAll(".bucket-queue__count")].map((c) => c.textContent);
     expect(counts).toEqual(["1", "2"]);
   });
 
@@ -1704,7 +1704,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       [{ id: "1", label: "done-1" }],
       [{ id: "2", label: "todo-1" }],
     );
-    const sections = container.querySelectorAll(".prog-queue__section");
+    const sections = container.querySelectorAll(".bucket-queue__section");
     expect(sections[0].textContent).toContain("done-1");
     expect(sections[1].textContent).toContain("todo-1");
   });
@@ -1716,7 +1716,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       [{ id: "2", label: "todo-1" }],
       { onSelect: (k: string) => (picked = k) },
     );
-    fireEvent.click(container.querySelector('[data-pq-key="1"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[data-bq-key="1"]') as HTMLElement);
     expect(picked).toBe("1");
   });
 
@@ -1731,7 +1731,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       checkedKeys: new Set<string>(),
       onToggleCheck: (k: string) => (toggled = k),
     });
-    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[data-bq-key="2"]') as HTMLElement);
     expect(toggled).toBe("2");
   });
 
@@ -1757,26 +1757,26 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run src/components/SplitQueueList/SplitQueueList.test.tsx`
-Expected: FAIL — the old component renders `.sui-sql__*`, not `.prog-queue__*`.
+Expected: FAIL — the old component renders `.sui-sql__*`, not `.bucket-queue__*`.
 
 - [ ] **Step 3: Rewrite the shim**
 
 Replace the whole of `src/components/SplitQueueList/SplitQueueList.tsx`:
 
 ```tsx
-// SplitQueueList — DEPRECATED. A compile shim over ProgressionQueue, kept for
+// SplitQueueList — DEPRECATED. A compile shim over BucketQueue, kept for
 // one release so existing call sites keep working; removed in the next major.
 //
 // This is NOT a pixel-identical shim: the merged component draws its own
-// chrome, so the rendered result is ProgressionQueue's, not the old two-pane
-// seam. Migrate to ProgressionQueue directly — declare your sections and bucket
+// chrome, so the rendered result is BucketQueue's, not the old two-pane
+// seam. Migrate to BucketQueue directly — declare your sections and bucket
 // your items — rather than relying on this mapping.
 //
 // `static` mode is a separate concern (no queue, no animation) and still
 // delegates to StaticSplitLayout, which is NOT deprecated.
 import type { JSX } from "solid-js";
-import { ProgressionQueue } from "../ProgressionQueue/ProgressionQueue";
-import type { ProgressionSection } from "../ProgressionQueue/types";
+import { BucketQueue } from "../BucketQueue/BucketQueue";
+import type { Bucket } from "../BucketQueue/types";
 import { StaticSplitLayout } from "./StaticSplitLayout";
 import type { SplitQueueListProps } from "./types";
 
@@ -1785,7 +1785,7 @@ export type { SplitQueueListProps } from "./types";
 const RESOLVED = "resolved";
 const UNRESOLVED = "unresolved";
 
-/** @deprecated Use {@link ProgressionQueue}. Removed in the next major. */
+/** @deprecated Use {@link BucketQueue}. Removed in the next major. */
 export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   if (props.static)
     return StaticSplitLayout({
@@ -1803,7 +1803,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const keyOf = (item: T): string => (props.keyOf ?? ((x) => String(x)))(item);
   const resolvedKeys = () => new Set((props.resolved ?? []).map(keyOf));
 
-  const sections = (): ProgressionSection[] => [
+  const sections = (): Bucket[] => [
     {
       key: RESOLVED,
       label: props.resolvedLabel ?? "Resolved",
@@ -1822,7 +1822,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   ];
 
   return (
-    <ProgressionQueue<T>
+    <BucketQueue<T>
       sections={sections()}
       items={[...(props.resolved ?? []), ...(props.unresolved ?? [])]}
       bucketOf={(item) => (resolvedKeys().has(keyOf(item)) ? RESOLVED : UNRESOLVED)}
@@ -1848,8 +1848,8 @@ In `src/components/SplitQueueList/types.ts`, keep `SplitQueueListProps<T>` and `
 
 ```ts
 /**
- * @deprecated Use `ProgressionQueueProps` — `SplitQueueList` is now a shim over
- * {@link ProgressionQueue} and is removed in the next major. `topCapRows` maps
+ * @deprecated Use `BucketQueueProps` — `SplitQueueList` is now a shim over
+ * {@link BucketQueue} and is removed in the next major. `topCapRows` maps
  * to the resolved section's `capRows`; `topOnly`, `topFloorRows`, `animationMs`
  * and `rowHeight` are accepted but IGNORED (the merged component measures rows,
  * collapses empty sections, and owns its own motion). `static` mode is
@@ -1882,14 +1882,14 @@ Expected: PASS. Any failure naming a deleted module means something still import
 
 - [ ] **Step 7: Verify the gates**
 
-Run: `npx tsc --noEmit && npx biome lint src/components/ProgressionQueue src/components/SplitQueueList`
+Run: `npx tsc --noEmit && npx biome lint src/components/BucketQueue src/components/SplitQueueList`
 Expected: both pass.
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add -A src/components/SplitQueueList/
-git commit -m "refactor(split-queue-list)!: reduce to a deprecated shim over ProgressionQueue"
+git commit -m "refactor(split-queue-list)!: reduce to a deprecated shim over BucketQueue"
 ```
 
 ---
@@ -1899,15 +1899,15 @@ git commit -m "refactor(split-queue-list)!: reduce to a deprecated shim over Pro
 Everything the library requires of a component that changed shape: the manifest entry, the showcase, the exemption list, the ADR, the changelog, the rubric.
 
 **Files:**
-- Create: `src/components/ProgressionQueue/README.md`
-- Create: `dev/showcases/progression-queue.tsx`
+- Create: `src/components/BucketQueue/README.md`
+- Create: `dev/showcases/bucket-queue.tsx`
 - Create: `docs/adr/0004-one-queue-component-and-the-motion-seam.md`
 - Modify: `dev/main.tsx`
 - Modify: `STYLE_GUIDE.md:75-81`
 - Modify: `COMPONENTS.md:874-910`
 - Modify: `CHANGELOG.md`
 - Modify: `scripts/style-rubric.json`
-- Modify: `src/components/ProgressionQueue/index.ts`
+- Modify: `src/components/BucketQueue/index.ts`
 
 **Interfaces:**
 - Consumes: everything from Tasks 1-8.
@@ -1915,11 +1915,11 @@ Everything the library requires of a component that changed shape: the manifest 
 
 - [ ] **Step 1: Export the new modules**
 
-Replace `src/components/ProgressionQueue/index.ts`:
+Replace `src/components/BucketQueue/index.ts`:
 
 ```ts
-export { ProgressionQueue } from "./ProgressionQueue";
-export type { ProgressionQueueProps, ProgressionSection } from "./types";
+export { BucketQueue } from "./BucketQueue";
+export type { BucketQueueProps, Bucket } from "./types";
 export { allocateHeights } from "./layout";
 export type { AllocateInput } from "./layout";
 ```
@@ -1928,11 +1928,11 @@ export type { AllocateInput } from "./layout";
 
 - [ ] **Step 2: Build the showcase**
 
-Create `dev/showcases/progression-queue.tsx`. It must cover: three sections with a live transfer, select mode scoped to one section, and the selected-row readability case.
+Create `dev/showcases/bucket-queue.tsx`. It must cover: three sections with a live transfer, select mode scoped to one section, and the selected-row readability case.
 
 ```tsx
 import { createSignal, For } from "solid-js";
-import { ProgressionQueue, type ProgressionSection } from "../../src/components/ProgressionQueue";
+import { BucketQueue, type Bucket } from "../../src/components/BucketQueue";
 
 interface Row {
   id: string;
@@ -1940,7 +1940,7 @@ interface Row {
   bucket: string;
 }
 
-const SECTIONS: ProgressionSection[] = [
+const SECTIONS: Bucket[] = [
   { key: "done", label: "Categorized", tone: "success" },
   { key: "todo", label: "Suggestions", tone: "accent", selectable: true, emptyLabel: "All clear" },
   { key: "hold", label: "In progress", tone: "muted", emptyLabel: "Nothing parked" },
@@ -1953,7 +1953,7 @@ const SEED: Row[] = [
   { id: "d", label: "AWS — us-east-1", bucket: "done" },
 ];
 
-export function ProgressionQueueShowcase() {
+export function BucketQueueShowcase() {
   const [items, setItems] = createSignal<Row[]>(SEED);
   const [selected, setSelected] = createSignal<string | undefined>("a");
   const [focused, setFocused] = createSignal<string | undefined>(undefined);
@@ -1976,7 +1976,7 @@ export function ProgressionQueueShowcase() {
 
   return (
     <div>
-      <h2>ProgressionQueue</h2>
+      <h2>BucketQueue</h2>
       <p>
         One queue component: N sections, controlled selection / focus / checking, and a
         transfer animation played whenever an item's bucket changes. Select a row, then
@@ -1999,7 +1999,7 @@ export function ProgressionQueueShowcase() {
       </p>
 
       <div style={{ height: "420px", width: "360px" }}>
-        <ProgressionQueue<Row>
+        <BucketQueue<Row>
           sections={SECTIONS}
           items={items()}
           bucketOf={(r) => r.bucket}
@@ -2030,16 +2030,16 @@ Match the surrounding showcases' section conventions (`dev/showcases/split-queue
 In `dev/main.tsx`, add the import beside the others:
 
 ```tsx
-import { ProgressionQueueShowcase } from "./showcases/progression-queue";
+import { BucketQueueShowcase } from "./showcases/bucket-queue";
 ```
 
 and the entry beside `split-queue-list`:
 
 ```tsx
   {
-    id: "progression-queue",
-    label: "ProgressionQueue",
-    component: ProgressionQueueShowcase,
+    id: "bucket-queue",
+    label: "BucketQueue",
+    component: BucketQueueShowcase,
     tags: ["depth:1", "list", "navigation", "container"],
   },
 ```
@@ -2048,7 +2048,7 @@ Leave the `split-queue-list` entry in place; relabel it `SplitQueueList (depreca
 
 - [ ] **Step 4: Verify it renders**
 
-Run: `npm run dev` and open `http://localhost:6006`, then the ProgressionQueue entry.
+Run: `npm run dev` and open `http://localhost:6006`, then the BucketQueue entry.
 
 Check, and fix anything that fails:
 1. A selected, **unhovered** row is fully readable and shows only the accent bar.
@@ -2061,46 +2061,46 @@ Stop the dev server when done.
 
 - [ ] **Step 5: Write the component README**
 
-Create `src/components/ProgressionQueue/README.md` covering: the mental model (one flat list + `bucketOf`; a move is one atomic mutation), a quick-start with the three-section example, the full prop table, select mode (presence of `checkedKeys`), keyboard behavior (**including that only INTERACTIVE rows are keyboard-reachable — a row in a section that is neither selectable nor served by `onSelect` is skipped by arrows and never takes the tab stop**), the sizing model (weighted water-fill, plus per-section `capRows` and its one difference from `SplitQueueList` — no slack absorption past the cap), and a "Motion" section stating that the choreographer seam is the swap point for a flying-clone implementation, pointing at the ADR. Model its structure on `src/components/SplitQueueList/README.md`.
+Create `src/components/BucketQueue/README.md` covering: the mental model (one flat list + `bucketOf`; a move is one atomic mutation), a quick-start with the three-section example, the full prop table, select mode (presence of `checkedKeys`), keyboard behavior (**including that only INTERACTIVE rows are keyboard-reachable — a row in a section that is neither selectable nor served by `onSelect` is skipped by arrows and never takes the tab stop**), the sizing model (weighted water-fill, plus per-section `capRows` and its one difference from `SplitQueueList` — no slack absorption past the cap), and a "Motion" section stating that the choreographer seam is the swap point for a flying-clone implementation, pointing at the ADR. Model its structure on `src/components/SplitQueueList/README.md`.
 
 - [ ] **Step 6: Write the ADR**
 
 Create `docs/adr/0004-one-queue-component-and-the-motion-seam.md` in the format of the existing ADRs (read `docs/adr/0003-inline-style-rubric-and-series-tokens.md` first). It must record:
 - **Context:** two overlapping queue components; the animated `SplitQueueList` had one consumer, and that consumer was migrating.
-- **Decision:** collapse into `ProgressionQueue`; `SplitQueueList` becomes a deprecated shim; a move is a bucket change; motion lives behind `TransferChoreographer`.
+- **Decision:** collapse into `BucketQueue`; `SplitQueueList` becomes a deprecated shim; a move is a bucket change; motion lives behind `TransferChoreographer`.
 - **Considered and deferred:** `flightMotion` — a clone flying over the bar, cross-fading source→destination treatment; the N-section successor to the two-clipped-clone seam repaint. Deferred for simplicity on the explicit condition that adopting it stays a one-file, one-identifier change. **This is the note to act on if the slot animation disappoints in use.**
 - **Also rejected:** adjacent-sections-only cloning (inconsistent behavior between adjacent and non-adjacent moves).
 - **Consequences:** the eye no longer tracks a card across the gap; a capped section no longer absorbs slack from a short neighbour the way `SplitQueueList`'s top pane did; the two-array diff bug class is gone.
 
 - [ ] **Step 7: Update the Layout Purity exemption list**
 
-In `STYLE_GUIDE.md`, in the `layout`-tagged exemption list (§ *Exemptions*, item 1), replace `SplitQueueList` with `ProgressionQueue`, **and add `StaticSplitLayout`** — it rode `SplitQueueList`'s entry implicitly and would otherwise be orphaned. The list becomes:
+In `STYLE_GUIDE.md`, in the `layout`-tagged exemption list (§ *Exemptions*, item 1), replace `SplitQueueList` with `BucketQueue`, **and add `StaticSplitLayout`** — it rode `SplitQueueList`'s entry implicitly and would otherwise be orphaned. The list becomes:
 
 ```
    components **plus** `ThreePanelLayout`, `Page`, `ScrollRegion`,
-   `ProgressionQueue`, `StaticSplitLayout`, `Section`, `CollapsiblePanel`,
+   `BucketQueue`, `StaticSplitLayout`, `Section`, `CollapsiblePanel`,
    `Modal`, `BottomSheet`, and `ButtonGroup` (the last DEPRECATED-as-such — see
    ruling 5 below).
 ```
 
 - [ ] **Step 8: Fix the component's own classification comment**
 
-The header comment in `ProgressionQueue.tsx` currently claims "Composite (Depth 2)" while the component owns a CSS file, which `CONTEXT.md` defines as impossible. Replace the first two lines with:
+The header comment in `BucketQueue.tsx` currently claims "Composite (Depth 2)" while the component owns a CSS file, which `CONTEXT.md` defines as impossible. Replace the first two lines with:
 
 ```tsx
-// ProgressionQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
-// Layout Purity). Owns ProgressionQueue.css: the weighted water-fill sizes each
+// BucketQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
+// Layout Purity). Owns BucketQueue.css: the weighted water-fill sizes each
 // section in JS, which no CSS rule can express. N always-present sections stacked
 // as one full-height progression bar, bucketing items by `bucketOf`.
 ```
 
-Make the same correction to the first line of `ProgressionQueue.css`.
+Make the same correction to the first line of `BucketQueue.css`.
 
 - [ ] **Step 9: Update the manifest**
 
 In `COMPONENTS.md`:
-1. Rewrite the `ProgressionQueue` entry (line ~903) to document the merged component: `sections` (with `selectable` and `emptyLabel`), the flat `items` + `bucketOf` model, the transfer animation on bucket change, select mode via `checkedKeys` presence (**no `selectMode` prop**), keyboard nav, `scrollToKey`, the selected-row treatment (accent bar, no fill), and the full 14-prop list. Point at `src/components/ProgressionQueue/README.md`.
-2. Mark the `SplitQueueList` entry (line ~874) deprecated: one paragraph saying it is a compile shim over `ProgressionQueue`, is **not** pixel-identical, is removed next major, that `topCapRows` maps to the resolved section's `capRows`, and that `topOnly` / `topFloorRows` / `animationMs` / `rowHeight` are accepted but ignored. Keep the `StaticSplitLayout` sub-entry as-is and note it is **not** deprecated.
+1. Rewrite the `BucketQueue` entry (line ~903) to document the merged component: `sections` (with `selectable` and `emptyLabel`), the flat `items` + `bucketOf` model, the transfer animation on bucket change, select mode via `checkedKeys` presence (**no `selectMode` prop**), keyboard nav, `scrollToKey`, the selected-row treatment (accent bar, no fill), and the full 14-prop list. Point at `src/components/BucketQueue/README.md`.
+2. Mark the `SplitQueueList` entry (line ~874) deprecated: one paragraph saying it is a compile shim over `BucketQueue`, is **not** pixel-identical, is removed next major, that `topCapRows` maps to the resolved section's `capRows`, and that `topOnly` / `topFloorRows` / `animationMs` / `rowHeight` are accepted but ignored. Keep the `StaticSplitLayout` sub-entry as-is and note it is **not** deprecated.
 3. Delete the stale claims in the old `SplitQueueList` entry about a checkbox-click that `stopPropagation`s and a modifier-click that selects — the code never did that, and the merged component's contract is "a click on a checkable row toggles".
 
 - [ ] **Step 10: Update the changelog and the rubric**
@@ -2109,7 +2109,7 @@ Add a `CHANGELOG.md` entry under a new version heading:
 
 ```markdown
 ### Changed
-- **`ProgressionQueue` is now the library's single queue component.** It gains
+- **`BucketQueue` is now the library's single queue component.** It gains
   multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to sections
   marked `selectable`), roving-focus keyboard navigation
   (`focusedKey` / `onFocusChange`), `scrollToKey`, per-section `emptyLabel`, and
@@ -2119,7 +2119,7 @@ Add a `CHANGELOG.md` entry under a new version heading:
   row text at too low a contrast.
 
 ### Deprecated
-- **`SplitQueueList` is a compile shim over `ProgressionQueue`** and is removed in
+- **`SplitQueueList` is a compile shim over `BucketQueue`** and is removed in
   the next major. It is **not** pixel-identical — the merged component draws its
   own chrome. `topCapRows` maps to the resolved section's `capRows`;
   `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
@@ -2134,7 +2134,7 @@ Add a `CHANGELOG.md` entry under a new version heading:
 Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
 
 \`\`\`tsx
-<ProgressionQueue<T>
+<BucketQueue<T>
   sections={[
     { key: "done", label: "Categorized", tone: "success" },
     { key: "todo", label: "Suggestions", tone: "accent", selectable: true },
@@ -2159,7 +2159,7 @@ Run each and confirm all pass:
 ```bash
 npx vitest run
 npx tsc --noEmit
-npx biome lint src/components/ProgressionQueue src/components/SplitQueueList
+npx biome lint src/components/BucketQueue src/components/SplitQueueList
 npm run build
 ```
 
@@ -2169,7 +2169,7 @@ The scoped lint must now report **zero** errors. `npx biome lint src` will still
 
 ```bash
 git add -A
-git commit -m "docs(progression-queue): manifest, README, showcase, ADR, exemption list, changelog"
+git commit -m "docs(bucket-queue): manifest, README, showcase, ADR, exemption list, changelog"
 ```
 
 ---
@@ -2184,5 +2184,5 @@ Not a code task — the acceptance gate before a release tag.
 
 ## Decisions already taken (do not re-litigate)
 
-- **Rule #2 expansion approved by Adlai, 2026-07-24** for all three new `ProgressionSection` fields: `selectable`, `emptyLabel`, `capRows`. Peter's separate blessing was offered and not taken. Do not pause execution to re-ask.
+- **Rule #2 expansion approved by Adlai, 2026-07-24** for all three new `Bucket` fields: `selectable`, `emptyLabel`, `capRows`. Peter's separate blessing was offered and not taken. Do not pause execution to re-ask.
 - **`capRows` ships in this pass**, so `topCapRows` keeps an exact successor and there is no sizing regression to accept. The one deliberate difference from `SplitQueueList`: a capped section never grows past its cap to absorb slack from a short neighbour.

@@ -3,8 +3,8 @@
 ## [Unreleased]
 
 ### Changed
-- **`ProgressionQueue` is now the library's single queue component.** It gains
-  multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to sections
+- **`BucketQueue` is now the library's single queue component.** It gains
+  multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to buckets
   marked `selectable`), roving-focus keyboard navigation
   (`focusedKey` / `onFocusChange`), `scrollToKey`, per-section `emptyLabel`, and
   a transfer animation played whenever an item's `bucketOf` result changes.
@@ -13,7 +13,7 @@
   row text at too low a contrast.
 
 ### Deprecated
-- **`SplitQueueList` is a compile shim over `ProgressionQueue`** and is removed in
+- **`SplitQueueList` is a compile shim over `BucketQueue`** and is removed in
   the next major. It is **not** pixel-identical — the merged component draws its
   own chrome. `topCapRows` maps to the resolved section's `capRows`;
   `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
@@ -24,14 +24,14 @@
 - `SplitQueueList`'s two-pane animation engine (`flight`, `play`, `flip`,
   `arrival`, `animation`, and its `layout` module) — ~2,700 lines. Its
   `keyboard` module was not removed — it moved (and was adapted) to
-  `ProgressionQueue/keyboard.ts`.
+  `BucketQueue/keyboard.ts`.
 
 ### Migration
 Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
 
 ```tsx
-<ProgressionQueue<T>
-  sections={[
+<BucketQueue<T>
+  buckets={[
     { key: "done", label: "Categorized", tone: "success" },
     { key: "todo", label: "Suggestions", tone: "accent", selectable: true },
   ]}
@@ -83,7 +83,7 @@ There is no `selectMode` prop — pass `checkedKeys` to turn select mode on.
 
 ### Added
 
-- **`ProgressionQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present sections into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every section shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty section collapses to just its summary line; a populated section shrink-wraps; when the populated sections overflow the height they share it by `weight`, each capped at its content, so a section that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each section label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `sections`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
+- **`BucketQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present buckets into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every bucket shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty bucket collapses to just its summary line; a populated bucket shrink-wraps; when the populated buckets overflow the height they share it by `weight`, each capped at its content, so a bucket that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each bucket label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `buckets`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
 
 ## 0.110.0
 

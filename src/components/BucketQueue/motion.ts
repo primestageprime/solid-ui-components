@@ -1,4 +1,4 @@
-/* ProgressionQueue — the transfer choreographer seam.
+/* BucketQueue — the transfer choreographer seam.
  *
  * The component knows only this interface. `createSlotMotion` is the shipped
  * implementation: the vacated slot closes, each arriving row opens from zero,
@@ -6,7 +6,7 @@
  * deferred alternative — a clone flying over the bar from source rect to
  * destination rect, cross-fading its treatment en route — implements the SAME
  * interface, so trying it is one new file and one changed identifier in
- * ProgressionQueue.tsx. See docs/adr/0004-one-queue-component-and-the-motion-seam.md.
+ * BucketQueue.tsx. See docs/adr/0004-one-queue-component-and-the-motion-seam.md.
  *
  * All DOM work is feature-detected: without `Element.animate` (jsdom) or under
  * `prefers-reduced-motion`, every path degrades to instant placement. */
@@ -38,18 +38,18 @@ const DURATION_MS = 260;
 const canAnimate = (el: Element): boolean =>
   typeof (el as HTMLElement).animate === "function";
 
-// The section a row lives in, keyed by the data-pq-section marker on each
-// section element — the only way to compare "same section" once a moved row
-// has already left its source section in the DOM.
-const sectionOf = (el: Element): Element | null => el.closest("[data-pq-section]");
+// The bucket a row lives in, keyed by the data-bq-bucket marker on each
+// bucket element — the only way to compare "same bucket" once a moved row
+// has already left its source bucket in the DOM.
+const bucketElOf = (el: Element): Element | null => el.closest("[data-bq-bucket]");
 
 // The scrolling ancestor whose scrollTop can move a row between two
 // measurements without the row itself having moved in the DOM.
-const scrollerOf = (el: Element): Element | null => el.closest(".prog-queue__body");
+const scrollerOf = (el: Element): Element | null => el.closest(".bucket-queue__body");
 
 // A row's top in its scroll container's CONTENT space rather than viewport
 // space. getBoundingClientRect() alone reports viewport coordinates, which a
-// scroll of `.prog-queue__body` (overflow-y: auto) changes for every row in
+// scroll of `.bucket-queue__body` (overflow-y: auto) changes for every row in
 // that body even though none of them moved relative to their content. Adding
 // back the scroller's own scrollTop cancels that out, so snapshot() and the
 // dy computation below agree regardless of what scrolled between them.
@@ -80,8 +80,8 @@ export const createSlotMotion = (): TransferChoreographer => {
   // play()'s own post-settle re-capture below.
   const snapshot = (root: HTMLElement) => {
     prevRects.clear();
-    for (const el of root.querySelectorAll<HTMLElement>("[data-pq-key]")) {
-      const key = el.dataset.pqKey;
+    for (const el of root.querySelectorAll<HTMLElement>("[data-bq-key]")) {
+      const key = el.dataset.bqKey;
       if (key) prevRects.set(key, topOf(el));
     }
   };
@@ -120,38 +120,48 @@ export const createSlotMotion = (): TransferChoreographer => {
       // animation. Once an animate() call below applies its first keyframe,
       // a later getBoundingClientRect() would see t=0 layout instead of the
       // row's final resting position — so all reads happen first.
-      const arrivalPlans = arrivals.map(({ el }) => ({
-        el,
-        targetHeight: el.getBoundingClientRect().height,
-      }));
+      // The row's vertical padding is read too, because a padded box cannot be
+      // shorter than its own padding: `height: 0` on a row padded 6px top and
+      // bottom still occupies 12px, so the slot would pop open from 12px
+      // instead of from nothing. Collapsing the padding alongside the height
+      // restores a true zero-height first keyframe.
+      const arrivalPlans = arrivals.map(({ el }) => {
+        const style = getComputedStyle(el);
+        return {
+          el,
+          targetHeight: el.getBoundingClientRect().height,
+          padTop: style.paddingTop,
+          padBottom: style.paddingBottom,
+        };
+      });
 
       // Every other row that shifted slides from where it was to where it
-      // is — EXCEPT a row that lives in the same section as an arriving row
+      // is — EXCEPT a row that lives in the same bucket as an arriving row
       // and follows it in document order. The browser's own layout already
       // animates that row's displacement for the full duration, as a side
       // effect of the arriving row's height growing from zero: FLIP-
       // translating it too would double-count the same motion. Rows in the
-      // arriving row's SOURCE section still need FLIP — the departing
+      // arriving row's SOURCE bucket still need FLIP — the departing
       // element is already gone from the DOM, so nothing else moves them.
       const arrivingKeys = new Set(arrivals.map((a) => a.transfer.key));
       const flipPlans: { el: HTMLElement; dy: number }[] = [];
-      for (const el of ctx.root.querySelectorAll<HTMLElement>("[data-pq-key]")) {
-        const key = el.dataset.pqKey;
+      for (const el of ctx.root.querySelectorAll<HTMLElement>("[data-bq-key]")) {
+        const key = el.dataset.bqKey;
         if (!key || arrivingKeys.has(key) || !canAnimate(el)) continue;
         const before = prevRects.get(key);
         // Explicit undefined check, not falsy: prevRects now holds numbers
         // (content-space tops), and a row sitting exactly at its scroller's
         // top has a legitimate before of 0.
         if (before === undefined) continue;
-        // A missing data-pq-section marker makes sectionOf() return null
+        // A missing data-bq-bucket marker makes bucketElOf() return null
         // for every row; null === null would then exclude every row from
         // FLIP with no error. Guard it explicitly so a dropped marker
         // disables the exclusion rule instead of disabling the animation.
         const displacedByArrival = arrivals.some(({ el: arriving }) => {
-          const arrivingSection = sectionOf(arriving);
+          const arrivingBucket = bucketElOf(arriving);
           return (
-            arrivingSection != null &&
-            arrivingSection === sectionOf(el) &&
+            arrivingBucket != null &&
+            arrivingBucket === bucketElOf(el) &&
             isFollowing(arriving, el)
           );
         });
@@ -164,11 +174,23 @@ export const createSlotMotion = (): TransferChoreographer => {
       // Write phase: start every animation only now that all geometry for
       // this play has been read.
       const animations = [
-        ...arrivalPlans.map(({ el, targetHeight }) =>
+        ...arrivalPlans.map(({ el, targetHeight, padTop, padBottom }) =>
           el.animate(
             [
-              { height: "0px", opacity: 0, overflow: "hidden" },
-              { height: `${targetHeight}px`, opacity: 1, overflow: "hidden" },
+              {
+                height: "0px",
+                paddingTop: "0px",
+                paddingBottom: "0px",
+                opacity: 0,
+                overflow: "hidden",
+              },
+              {
+                height: `${targetHeight}px`,
+                paddingTop: padTop,
+                paddingBottom: padBottom,
+                opacity: 1,
+                overflow: "hidden",
+              },
             ],
             { duration: DURATION_MS, easing: EASING },
           ),
