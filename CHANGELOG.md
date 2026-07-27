@@ -2,6 +2,73 @@
 
 ## [Unreleased]
 
+## 0.115.0
+
+### Added
+- **`NotificationCenter` gained `when`, `read`, and `onMarkAllRead`.** `when` is
+  a pre-formatted relative time the consumer humanizes ("2m", "1d") — SUI ships
+  no date formatter, so the string crosses the boundary already rendered. `read`
+  drops an item's unread dot and removes it from the derived badge count.
+  `onMarkAllRead` is what MOUNTS the pinned footer action: omit it and neither
+  the footer nor its divider render, so the panel never shows a dead affordance.
+  `markAllReadLabel` overrides the wording. All three are optional and additive.
+- **`NotificationItem.tone` is now live.** It was declared in the props from the
+  start and never rendered. It now colours the row's glyph well and picks the
+  glyph (`info` → info, `task` → clock, `warning` → warning), defaulting to
+  `info`.
+- **`GrowTightStack`** — a Layout variant that grows to fill its share of a
+  parent row and may shrink past its content (`flex:1; min-width:0`) while
+  stacking its children with an `xs` gap. The tight sibling of `GrowStack`
+  (whose `sm` gap reads as separate sections) for the text column of a
+  media-object row. Added because the geometry had no variant — per the
+  layout-purity rule, the missing variant is the finding.
+
+### Changed
+- **`NotificationCenter`'s panel is now an inbox, not a card stack.** Pinned
+  header (label + de-emphasized count lozenge), scrolling rows, optional pinned
+  footer. Rows became unboxed media objects — unread gutter, tone glyph well,
+  text column — washed and bordered only on hover, so a long feed stays quiet at
+  rest. This supersedes the three-line `CompactSurface` card canon the component
+  shipped with; the only `Surface` in the panel is now the `PopoverSurface`.
+  Precedent recorded in `docs/agents/design-decision-tree.md`, which also gains
+  a *Notification / activity panel* branch it was missing.
+- **`NotificationCenter`'s bell now has hover and open states.** It previously
+  had neither — a bare transparent button, with nothing tying it to the panel
+  hanging off it. It now takes a faint accent wash on hover, and while open an
+  accent-tinted well with an accent border **plus** the glyph swapping
+  `outline`→`solid`. Two independent signals, so the state survives a monochrome
+  or colourblind theme. The open skin matches
+  `.sui-dropdown--subtle.sui-dropdown--open`. The trigger also gained a fixed
+  32px box so its corner badge clears the glyph instead of sitting on it, and
+  the badge is ringed in the background colour to punch out of the open tint.
+- **The derived badge count now excludes `read` items** as well as `transient`
+  ones. Unchanged for consumers that never set `read`.
+
+### Fixed
+- **`Link` now carries a type scale (13px/500) instead of inheriting one.** It
+  declared only colour, decoration, and cursor, and appears in no theme — so it
+  rendered at whatever font-size it happened to inherit, the document's 16px in
+  practice. Inside any dense component that made an inline link *larger than the
+  0.875rem title above it*, and made it silently disagree with a sibling
+  `TextButton` rendering the same affordance. 13px/500 matches `.sui-btn` in
+  `themes/_baseline.css` deliberately: a text button and an inline link are
+  alternate renderings of the same inline action — one navigates, one calls back
+  — so a component that picks between them by `href` presence must not change
+  size as a result. **Consumer-visible**: an app using `<Link>` in 16px prose
+  will see those links render at 13px; wrap them in the appropriate `Text`
+  variant if you want the prose scale back.
+- **`NotificationCenter`'s two action branches no longer sit at different
+  indents.** The `href` branch used `NavLink`, which is a nav-RAIL item and bakes
+  `padding-left:16px` — so a link CTA rendered ~16px right of a `TextButton` CTA
+  in the row above it. It now uses `Link` (the unpadded accent anchor, the right
+  atom for an inline CTA), and both branches are wrapped in a `ClusterRow` so
+  they size to their content and left-pack instead of stretching as column
+  children and centring their own labels.
+- **`NotificationCenter` item titles use `TextTitle` instead of `TextValue`.**
+  `TextValue` is `1.5rem/600` — the metric-readout variant, for numbers like
+  "42.3". Against the `0.75rem` detail line that was a 2× scale jump inside a
+  340px popover, so a long title rendered as a five-line headline slab.
+
 ## 0.114.0
 
 ### Added

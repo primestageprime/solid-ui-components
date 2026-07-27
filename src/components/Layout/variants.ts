@@ -442,6 +442,18 @@ export const GrowStack: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-width": "0" },
 });
 
+/** GrowTightStack — the `xs`-gap sibling of `GrowStack`: grows to fill its share
+ *  of a parent ROW, may shrink past its content (`flex:1; min-width:0`), and
+ *  stacks its children TIGHTLY. For the text column of a media-object row — a
+ *  leading glyph/avatar beside a title/detail/action stack whose lines belong to
+ *  one another (NotificationCenter's inbox rows). `GrowStack`'s `sm` gap reads
+ *  as separate sections there; `TightStack` alone can't take its share of the
+ *  row or shrink to let long titles wrap instead of overflowing. */
+export const GrowTightStack: Component<StackDataProps> = createStack({
+  gap: "xs",
+  style: { flex: "1", "min-width": "0" },
+});
+
 /** Flex column that scrolls its own overflow — `flex:1; min-width:0;
  *  overflow:auto`. The main/detail pane beside a Sidebar. */
 export const ScrollColumn: Component<StackDataProps> = createStack({

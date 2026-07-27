@@ -342,6 +342,59 @@ Row delineation (rows must read as ROWS, not float in the section —
 - **Boxed/card rows** only when the ROW ITSELF is a click target — a box
   implies clickability; don't promise it when only an inner control acts.
 
+## Notification / activity panel (a popover feed hanging off a trigger)
+
+A bell/inbox popover is NOT just "a list in a panel" — the load-bearing
+discriminator is **whether the user acts on the collection, or only on
+individual items**:
+
+- **Items only** (read it, click through, done) → a plain `ScrollColumn` of
+  rows inside the `PopoverSurface`. No header, no footer — the trigger's badge
+  already says how many there are, and terseness wins.
+- **The collection too** (mark all read, clear, "see all") → the **inbox
+  shell**: `FillColumn` → pinned header (`SpreadRow`: label + de-emphasized
+  count lozenge) → `Divider` → `ScrollColumn(rows)` → `Divider` → pinned
+  footer action. Same pinned-action-row idiom as the detail-container branch:
+  the bulk action must not scroll away, and a header gives the panel identity
+  once it's tall enough to lose it.
+  - **Mount the footer from the handler's presence**, never as a disabled
+    control — no dead affordance in a popover that small.
+
+Row format inside the panel — a **media object**, not a card:
+`TopClusterRow(unread gutter, tone well, GrowTightStack(title/when row, detail,
+action))`. The discriminators against the card canon:
+
+- **Rows are unboxed at rest, boxed on hover.** A feed is SCANNED, and a stack
+  of bordered cards in a 340px popover reads as a ribbed slab (the complaint
+  that superseded the 2026-07-24 canon here). Hover chrome promises
+  clickability only when there is some.
+- **A leading glyph well replaces the box.** Something must make an unboxed row
+  read as a unit; a 28px tinted square does it at a fraction of a border's
+  visual cost, and it carries tone as a bonus.
+- **The unread slot is always rendered, only its fill changes** — read and
+  unread rows must share a text origin or the column jitters as things are read.
+- **Titles are `TextTitle`, never `TextValue`.** `TextValue` is 1.5rem/600, the
+  metric-readout variant; against a 0.75rem detail line it turns a long title
+  into a headline slab. This is the single most common way a dense panel goes
+  ugly.
+- **Inline CTAs use `Link`, not `NavLink`** — `NavLink` is a nav-RAIL item and
+  bakes `padding-left:16px`, so it silently indents past a sibling `TextButton`
+  branch. Wrap the action in a `ClusterRow` so it sizes to content and left-packs
+  (both branches are `inline-flex` and otherwise stretch as column children and
+  centre their own labels).
+
+Trigger state for ANY overlay control (the panel is invisible when closed, so
+the trigger is the only thing saying "this is open"):
+- Baseline: `.sui-dropdown--subtle.sui-dropdown--open` — transparent at rest,
+  faint accent wash on hover, accent tint + border while open. Every subtle
+  overlay trigger marks open the same way.
+- **Icon-only triggers add a second, colour-independent signal** — swap the
+  glyph `outline`→`solid`. A lone tinted 32px square is easy to miss, and the
+  tint alone dies under a monochrome/colourblind theme.
+- Size the trigger so a corner badge CLEARS the glyph rather than sitting on
+  it, and ring the badge in the background colour so it punches out of the
+  trigger's own tint when open.
+
 ## Flow / stage visualization
 
 - Stage progression the user can act on → `DagChart` (nodes clickable,
@@ -447,4 +500,27 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   (CompactSurface, not InteractiveCard) because the click target is the explicit
   CTA, not the whole row. Chosen over the original bare TightStack (too flat —
   the complaint that triggered this) and over per-item dividers. Adlai, via team
-  execution.
+  execution. **SUPERSEDED 2026-07-27** — see below.
+- **2026-07-27 · SUI NotificationCenter · panel + item treatment + trigger
+  state** — supersedes the 2026-07-24 card canon for this surface. Diagnosis
+  first: the "ugly" was mostly ONE line — the title used `TextValue`
+  (1.5rem/600, the metric-readout variant) against a 0.75rem detail, a 2× jump
+  in a 340px popover; plus `ScrollColumn`'s gap collapsed so the CompactSurface
+  borders fused into a ribbed slab, and `tone` was declared in the props and
+  never rendered. Discriminators: the user acts on the COLLECTION (mark all
+  read), and the feed is scanned rather than picked through → **inbox shell**
+  (FillColumn: pinned header + count lozenge · ScrollColumn rows · pinned
+  footer) with **unboxed media-object rows** (unread gutter · 28px tone glyph
+  well · GrowTightStack), boxed only on hover. Chosen over: tone rail on a kept
+  CompactSurface, hairline divider rows (nothing binds a CTA to its own item),
+  and tone-tinted Warning/Info surfaces (spends the tint budget on tone when
+  tint is the better unread carrier). Adlai, via /design-options presented as
+  rendered HTML/CSS comparisons rather than an option menu — worth repeating
+  when the decision is visual rather than structural. Trigger: **tinted well +
+  outline→solid glyph**, chosen over well-only (the strict
+  `.sui-dropdown--subtle` precedent — too quiet on a lone icon button) and
+  glyph-only. Two findings fixed in the same change: `NavLink` bakes
+  `padding-left:16px` and was indenting the anchor CTA past the button branch
+  (→ `Link`), and no Layout variant both grew and kept a tight gap (→ added
+  `GrowTightStack`). `badgeTone` remains dead API — `CountBadge` is
+  deliberately single-tone per the #2 Rule.
