@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.114.0
+
 ### Added
 - **`fn.find`, `fn.findLast`, `fn.findIndex`, `fn.some`** — four more data-last
   helpers in the same dual (curried / direct) shape as `map` and `filter`.
