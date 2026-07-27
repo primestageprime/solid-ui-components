@@ -27,7 +27,7 @@ const renderQueue = (
     />
   ));
 
-describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
+describe("SplitQueueList (deprecated shim over BucketQueue)", () => {
   it("renders both lists with their labels and counts", () => {
     const { container } = renderQueue(
       [{ id: "1", label: "done-1" }],
@@ -38,7 +38,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
     );
     expect(container.textContent).toContain("Categorized");
     expect(container.textContent).toContain("Suggestions");
-    const counts = [...container.querySelectorAll(".prog-queue__count")].map((c) => c.textContent);
+    const counts = [...container.querySelectorAll(".bucket-queue__count")].map((c) => c.textContent);
     expect(counts).toEqual(["1", "2"]);
   });
 
@@ -47,7 +47,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       [{ id: "1", label: "done-1" }],
       [{ id: "2", label: "todo-1" }],
     );
-    const sections = container.querySelectorAll(".prog-queue__section");
+    const sections = container.querySelectorAll(".bucket-queue__bucket");
     expect(sections[0].textContent).toContain("done-1");
     expect(sections[1].textContent).toContain("todo-1");
   });
@@ -59,7 +59,7 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       [{ id: "2", label: "todo-1" }],
       { onSelect: (k: string) => (picked = k) },
     );
-    fireEvent.click(container.querySelector('[data-pq-key="1"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[data-bq-key="1"]') as HTMLElement);
     expect(picked).toBe("1");
   });
 
@@ -75,26 +75,26 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       checkedKeys: new Set<string>(),
       onToggleCheck: (k: string) => (toggled = k),
     });
-    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    fireEvent.click(container.querySelector('[data-bq-key="2"]') as HTMLElement);
     expect(toggled).toBe("2");
   });
 
   it("caps the resolved section at topCapRows and keeps every row mounted so the body scrolls", () => {
     const resolved = [1, 2, 3, 4, 5].map((n) => ({ id: String(n), label: `done-${n}` }));
     const { container } = renderQueue(resolved, [], { topCapRows: 2, height: 600 });
-    const sections = container.querySelectorAll(".prog-queue__section");
+    const sections = container.querySelectorAll(".bucket-queue__bucket");
     // 34 (header fallback) + 2*54 (row fallback) + 2 (border) — capRows is a
     // ceiling on the section's natural height, not a filter on its rows.
     expect((sections[0] as HTMLElement).style.height).toBe("144px");
-    expect(sections[0].querySelectorAll(".prog-queue__row")).toHaveLength(5);
+    expect(sections[0].querySelectorAll(".bucket-queue__row")).toHaveLength(5);
   });
 
   it("defaults topCapRows to 3 when omitted", () => {
     const resolved = [1, 2, 3, 4, 5].map((n) => ({ id: String(n), label: `done-${n}` }));
     const { container } = renderQueue(resolved, [], { height: 600 });
-    const sections = container.querySelectorAll(".prog-queue__section");
+    const sections = container.querySelectorAll(".bucket-queue__bucket");
     expect((sections[0] as HTMLElement).style.height).toBe("198px"); // 34 + 3*54 + 2
-    expect(sections[0].querySelectorAll(".prog-queue__row")).toHaveLength(5);
+    expect(sections[0].querySelectorAll(".bucket-queue__row")).toHaveLength(5);
   });
 
   it("selectMode={false} opts out even with a populated checkedKeys", () => {
@@ -106,8 +106,8 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       onSelect: (k: string) => (selected = k),
       onToggleCheck: (k: string) => (toggled = k),
     });
-    expect(container.querySelector(".prog-queue__checkbox")).toBeNull();
-    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(container.querySelector(".bucket-queue__checkbox")).toBeNull();
+    fireEvent.click(container.querySelector('[data-bq-key="2"]') as HTMLElement);
     expect(selected).toBe("2");
     expect(toggled).toBeUndefined();
   });
@@ -123,8 +123,8 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       onSelect: (k: string) => (selected = k),
       onToggleCheck: (k: string) => (toggled = k),
     });
-    expect(container.querySelector(".prog-queue__checkbox")).toBeNull();
-    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(container.querySelector(".bucket-queue__checkbox")).toBeNull();
+    fireEvent.click(container.querySelector('[data-bq-key="2"]') as HTMLElement);
     expect(selected).toBe("2");
     expect(toggled).toBeUndefined();
   });
@@ -137,8 +137,8 @@ describe("SplitQueueList (deprecated shim over ProgressionQueue)", () => {
       selectMode: true,
       onToggleCheck: (k: string) => (toggled = k),
     });
-    expect(container.querySelector(".prog-queue__checkbox")).toBeTruthy();
-    fireEvent.click(container.querySelector('[data-pq-key="2"]') as HTMLElement);
+    expect(container.querySelector(".bucket-queue__checkbox")).toBeTruthy();
+    fireEvent.click(container.querySelector('[data-bq-key="2"]') as HTMLElement);
     expect(toggled).toBe("2");
   });
 

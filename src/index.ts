@@ -214,7 +214,7 @@ export * from "./components/ScrubChart";
 export * from "./components/CashflowScrubChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
-export * from "./components/ProgressionQueue";
+export * from "./components/BucketQueue";
 export * from "./components/SortableList";
 export * from "./components/ServiceHealthDot";
 export * from "./components/MutableList";

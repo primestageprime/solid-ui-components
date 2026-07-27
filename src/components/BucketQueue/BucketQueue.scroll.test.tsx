@@ -1,5 +1,5 @@
-// ProgressionQueue — scrollToKey and the transfer animation. Split from
-// ProgressionQueue.test.tsx (2026-07-24) to stay under the repo's 500-line
+// BucketQueue — scrollToKey and the transfer animation. Split from
+// BucketQueue.test.tsx (2026-07-24) to stay under the repo's 500-line
 // file limit; the two scrollToKey tests are unchanged in substance from
 // their original home (see git history). Only the reduced-motion and
 // arrival-reveal paths are testable in jsdom — the motion itself is verified
@@ -7,8 +7,8 @@
 import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
-import { ProgressionQueue } from "./ProgressionQueue";
-import { SECTIONS, type Item } from "./testHelpers";
+import { BucketQueue } from "./BucketQueue";
+import { BUCKETS, type Item } from "./testHelpers";
 
 afterEach(cleanup);
 
@@ -34,18 +34,18 @@ afterEach(() => {
 const recordScrollIntoView = (calls: string[]) => {
   (Element.prototype as unknown as { scrollIntoView: () => void }).scrollIntoView =
     function (this: Element) {
-      calls.push((this as HTMLElement).dataset.pqKey ?? "");
+      calls.push((this as HTMLElement).dataset.bqKey ?? "");
     };
 };
 
-describe("ProgressionQueue — scrollToKey", () => {
+describe("BucketQueue — scrollToKey", () => {
   it("scrolls the matching row into view when scrollToKey changes", async () => {
     const calls: string[] = [];
     recordScrollIntoView(calls);
     const [key, setKey] = createSignal<string | undefined>(undefined);
     const { container } = render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={[
           { id: "1", bucket: "a" },
           { id: "2", bucket: "b" },
@@ -68,8 +68,8 @@ describe("ProgressionQueue — scrollToKey", () => {
     recordScrollIntoView(calls);
     const [key, setKey] = createSignal<string | undefined>(undefined);
     render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={[{ id: "1", bucket: "a" }]}
         bucketOf={(i) => i.bucket}
         keyOf={(i) => i.id}
@@ -88,8 +88,8 @@ describe("ProgressionQueue — scrollToKey", () => {
     recordScrollIntoView(calls);
     const [key, setKey] = createSignal<string | undefined>(undefined);
     render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={[
           { id: "1", bucket: "a" },
           { id: "2", bucket: "b" },
@@ -110,7 +110,7 @@ describe("ProgressionQueue — scrollToKey", () => {
   });
 });
 
-describe("ProgressionQueue — transfer animation", () => {
+describe("BucketQueue — transfer animation", () => {
   it("reveals the arriving row after an item changes bucket", async () => {
     const calls: string[] = [];
     recordScrollIntoView(calls);
@@ -119,8 +119,8 @@ describe("ProgressionQueue — transfer animation", () => {
       { id: "2", bucket: "b" },
     ]);
     render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={items()}
         bucketOf={(i) => i.bucket}
         keyOf={(i) => i.id}
@@ -146,8 +146,8 @@ describe("ProgressionQueue — transfer animation", () => {
       { id: "2", bucket: "b" },
     ]);
     render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={items()}
         bucketOf={(i) => i.bucket}
         keyOf={(i) => i.id}
@@ -170,8 +170,8 @@ describe("ProgressionQueue — transfer animation", () => {
     recordScrollIntoView(calls);
     const [items, setItems] = createSignal<Item[]>([{ id: "1", bucket: "a" }]);
     render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={items()}
         bucketOf={(i) => i.bucket}
         keyOf={(i) => i.id}
@@ -186,15 +186,15 @@ describe("ProgressionQueue — transfer animation", () => {
     expect(calls).toEqual([]);
   });
 
-  // motion.ts's FLIP exclusion rule identifies "same section" by comparing
-  // the nearest [data-pq-section] ancestor of two rows. That marker is read
+  // motion.ts's FLIP exclusion rule identifies "same bucket" by comparing
+  // the nearest [data-bq-bucket] ancestor of two rows. That marker is read
   // by no other code in the component, which makes it exactly the kind of
   // attribute someone deletes as unused — silently degrading every FLIP
   // pass to a no-op (see motion.ts's null-guard comment). Pin it down.
-  it("marks each section element with its section key for the motion seam", () => {
+  it("marks each bucket element with its bucket key for the motion seam", () => {
     const { container } = render(() => (
-      <ProgressionQueue<Item>
-        sections={SECTIONS}
+      <BucketQueue<Item>
+        buckets={BUCKETS}
         items={[{ id: "1", bucket: "a" }]}
         bucketOf={(i) => i.bucket}
         keyOf={(i) => i.id}
@@ -202,9 +202,9 @@ describe("ProgressionQueue — transfer animation", () => {
         height={600}
       />
     ));
-    for (const section of SECTIONS) {
+    for (const bucket of BUCKETS) {
       expect(
-        container.querySelector(`[data-pq-section="${section.key}"]`),
+        container.querySelector(`[data-bq-bucket="${bucket.key}"]`),
       ).toBeTruthy();
     }
   });

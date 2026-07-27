@@ -3,8 +3,8 @@
 import type { JSX } from "solid-js";
 
 /**
- * @deprecated Use `ProgressionQueueProps` — `SplitQueueList` is now a shim over
- * {@link ProgressionQueue} and is removed in the next major. `topCapRows` maps
+ * @deprecated Use `BucketQueueProps` — `SplitQueueList` is now a shim over
+ * {@link BucketQueue} and is removed in the next major. `topCapRows` maps
  * to the resolved section's `capRows`; `topOnly`, `topFloorRows`, `animationMs`
  * and `rowHeight` are accepted but IGNORED on the animated path (the merged
  * component measures rows, collapses empty sections, and owns its own
@@ -96,31 +96,31 @@ export interface SplitQueueListProps<T> {
   topCapRows?: number;
   /** Floor on the top pane, in rows. Default 0 — at 0 categorized the top
    * collapses to its header only and grows as cards resolve.
-   * IGNORED — `ProgressionQueue` sizes a section from its own content
+   * IGNORED — `BucketQueue` sizes a section from its own content
    * (`capRows` only sets a ceiling, not a floor) and `static` mode has no
    * equivalent either. Kept only so existing call sites keep compiling. */
   topFloorRows?: number;
   /** Per-row height in px, used as the initial layout estimate before the real
    * rendered row height is measured. Default 40.
-   * IGNORED on the animated path — `ProgressionQueue` measures its own row
+   * IGNORED on the animated path — `BucketQueue` measures its own row
    * height and sizes from that. Still read (and used the same way) in `static`
    * mode by `StaticSplitLayout`. */
   rowHeight?: number;
   /** Total height of the sidebar in px. Optional — when omitted, the sidebar
    * fills its parent (root is `height:100%`), stretching to the bottom of a
-   * flex / `height:100%` container. On the animated path `ProgressionQueue`
+   * flex / `height:100%` container. On the animated path `BucketQueue`
    * additionally measures the parent-allotted height via `ResizeObserver` to
    * drive its water-fill sizing; there is no fallback floor, so before that
    * first measurement (e.g. jsdom, or a not-yet-laid-out parent) the allotted
    * height reads as 0. */
   height?: number;
   /** Slide duration in ms. Default 800.
-   * IGNORED — `ProgressionQueue` owns its own motion; there is no dial for it.
+   * IGNORED — `BucketQueue` owns its own motion; there is no dial for it.
    * Kept only so existing call sites keep compiling. */
   animationMs?: number;
   /** Render ONLY the top (resolved / "categorized") panel at full height —
    * omit the bottom "to categorize" list and the seam. Default false.
-   * IGNORED — the shim always declares both sections and `ProgressionQueue`
+   * IGNORED — the shim always declares both sections and `BucketQueue`
    * renders every declared section, so the bottom list is never omitted.
    * `static` mode has no equivalent either (compose `bottomContent` yourself
    * there). Kept only so existing call sites keep compiling. */

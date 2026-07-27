@@ -5,17 +5,17 @@ const ORDER = ["done", "todo", "hold"];
 const m = (pairs: [string, string][]) => new Map(pairs);
 
 describe("diffTransfers", () => {
-  it("reports nothing when no item changed section", () => {
+  it("reports nothing when no item changed bucket", () => {
     const prev = m([["1", "todo"]]);
     expect(diffTransfers(prev, m([["1", "todo"]]), ORDER)).toEqual([]);
   });
 
-  it("reports a move UP the section order with direction -1", () => {
+  it("reports a move UP the bucket order with direction -1", () => {
     const moves = diffTransfers(m([["1", "todo"]]), m([["1", "done"]]), ORDER);
     expect(moves).toEqual([{ key: "1", from: "todo", to: "done", direction: -1 }]);
   });
 
-  it("reports a move DOWN the section order with direction 1", () => {
+  it("reports a move DOWN the bucket order with direction 1", () => {
     const moves = diffTransfers(m([["1", "done"]]), m([["1", "todo"]]), ORDER);
     expect(moves).toEqual([{ key: "1", from: "done", to: "todo", direction: 1 }]);
   });
@@ -40,7 +40,7 @@ describe("diffTransfers", () => {
     expect(diffTransfers(m([["1", "todo"]]), m([]), ORDER)).toEqual([]);
   });
 
-  it("does not report a reorder inside one section", () => {
+  it("does not report a reorder inside one bucket", () => {
     const prev = m([["1", "todo"], ["2", "todo"]]);
     const next = m([["2", "todo"], ["1", "todo"]]);
     expect(diffTransfers(prev, next, ORDER)).toEqual([]);

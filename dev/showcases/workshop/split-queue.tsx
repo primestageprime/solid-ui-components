@@ -1,10 +1,10 @@
-// Workshop — ProgressionQueue driven by fortnight vessel-call compliance.
+// Workshop — BucketQueue driven by fortnight vessel-call compliance.
 // Exercises the promoted SUI component across realistic fortnight distributions.
 // The bucketOf derivation here is the one the live fortnight route uses: a call
 // with any unevaluated metric is In review; otherwise Compliant iff both pass,
 // else Non-compliant.
 import { type Component, type JSX, createSignal, createMemo } from "solid-js";
-import { ProgressionQueue, type ProgressionSection } from "../../../src/components/ProgressionQueue";
+import { BucketQueue, type Bucket } from "../../../src/components/BucketQueue";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import {
   SectionTitle,
@@ -65,21 +65,21 @@ const SCENARIO_OPTIONS = [
 ];
 
 // Top → bottom: terminal-happy, terminal-unhappy, transient (double weight).
-const SECTIONS: ProgressionSection[] = [
+const BUCKETS: Bucket[] = [
   { key: "compliant", label: "Compliant", tone: "success" },
   { key: "non-compliant", label: "Non-compliant", tone: "danger" },
   { key: "in-review", label: "In review", tone: "accent", weight: 2 },
 ];
 
+// Bare content — `.bucket-queue__row` owns the padding, so a renderItem that
+// padded itself would double it.
 const renderCall = (c: Call): JSX.Element => (
-  <div style={{ padding: "6px 12px" }}>
-    <SpreadRow>
-      <NarrowStack>
-        <EllipsizedTitle>{c.vessel_name}</EllipsizedTitle>
-        <FadedNowrapSublabel>{`${c.asset_id} · ${c.connected_at}`}</FadedNowrapSublabel>
-      </NarrowStack>
-    </SpreadRow>
-  </div>
+  <SpreadRow>
+    <NarrowStack>
+      <EllipsizedTitle>{c.vessel_name}</EllipsizedTitle>
+      <FadedNowrapSublabel>{`${c.asset_id} · ${c.connected_at}`}</FadedNowrapSublabel>
+    </NarrowStack>
+  </SpreadRow>
 );
 
 const SplitQueueBench: Component = () => {
@@ -91,7 +91,7 @@ const SplitQueueBench: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Split Queue</SectionTitle>
       <MutedBody>
-        The promoted <code>ProgressionQueue</code> driven by fortnight vessel-call
+        The promoted <code>BucketQueue</code> driven by fortnight vessel-call
         compliance — Compliant (top), Non-compliant (middle), In review (bottom).
         Empty sections collapse to a summary line; populated sections shrink-wrap;
         on overflow they share the height 1:1:2 and hand back any surplus.
@@ -111,14 +111,17 @@ const SplitQueueBench: Component = () => {
 
       {/* A definite-height flex context so the fill-parent bar has a height. */}
       <div style={{ "max-width": "460px", "margin-top": "12px", height: "calc(100vh - 220px)", display: "flex" }}>
-        <ProgressionQueue<Call>
-          sections={SECTIONS}
+        <BucketQueue<Call>
+          buckets={BUCKETS}
           items={calls()}
           bucketOf={bucketOf}
           keyOf={(c) => c.vessel_call_id}
           renderItem={renderCall}
           selectedKey={selected()}
-          onSelect={setSelected}
+          // Not `onSelect={setSelected}`: the queue emits `null` when the
+          // worked section drains, and a Solid Setter would store that null
+          // rather than clearing the signal.
+          onSelect={(k) => setSelected(k ?? undefined)}
         />
       </div>
     </div>

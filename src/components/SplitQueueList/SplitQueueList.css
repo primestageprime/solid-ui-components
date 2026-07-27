@@ -3,7 +3,7 @@
  * (background + border) is composed from the base Surface primitive.
  *
  * Only `StaticSplitLayout` imports this file now (the animated queue moved to
- * `ProgressionQueue.css`), so every rule here is scoped to what that component
+ * `BucketQueue.css`), so every rule here is scoped to what that component
  * actually renders. */
 
 /* The container CHROME — background + 1px border — is provided by the base

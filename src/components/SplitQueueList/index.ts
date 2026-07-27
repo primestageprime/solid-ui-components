@@ -1,4 +1,4 @@
-/* SplitQueueList — DEPRECATED compile shim over ProgressionQueue; kept for one
+/* SplitQueueList — DEPRECATED compile shim over BucketQueue; kept for one
  * release for back-compat. See ./SplitQueueList.tsx. StaticSplitLayout is the
  * non-deprecated non-animated layout the `static` flag still delegates to. */
 

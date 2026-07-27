@@ -1,10 +1,10 @@
-// ProgressionQueue — keyboard navigation & roving tabindex. Split from
-// ProgressionQueue.test.tsx (2026-07-24) to stay under the repo's 500-line
+// BucketQueue — keyboard navigation & roving tabindex. Split from
+// BucketQueue.test.tsx (2026-07-24) to stay under the repo's 500-line
 // file limit; substance unchanged from the original tests, see git history
 // for prior home.
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
-import { ProgressionQueue, type ProgressionSection } from "./ProgressionQueue";
+import { BucketQueue, type Bucket } from "./BucketQueue";
 import {
   renderQueue,
   renderSelectable,
@@ -15,7 +15,7 @@ import {
 
 afterEach(cleanup);
 
-describe("ProgressionQueue — keyboard navigation", () => {
+describe("BucketQueue — keyboard navigation", () => {
   it("gives exactly one row the tab stop", () => {
     const { container } = renderQueue(
       [
@@ -40,7 +40,7 @@ describe("ProgressionQueue — keyboard navigation", () => {
     expect(rowFor(container, "1").getAttribute("tabindex")).toBe("-1");
   });
 
-  it("moves focus DOWN across a section boundary and reports it", () => {
+  it("moves focus DOWN across a bucket boundary and reports it", () => {
     const moved: (string | null)[] = [];
     const { container } = renderQueue(
       [
@@ -116,29 +116,29 @@ describe("ProgressionQueue — keyboard navigation", () => {
     expect(rowFor(container, "1").getAttribute("tabindex")).toBe("-1");
   });
 
-  it("gives the tab stop to the selectable section's row when a non-selectable section renders first", () => {
+  it("gives the tab stop to the selectable bucket's row when a non-selectable bucket renders first", () => {
     const { container } = renderMixed({
       checkedKeys: new Set<string>(),
       onToggleCheck: () => {},
     });
     const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
     expect(tabbable).toHaveLength(1);
-    expect(tabbable[0].dataset.pqKey).toBe("live-1");
+    expect(tabbable[0].dataset.bqKey).toBe("live-1");
   });
 
   it("skips non-interactive rows on arrow navigation and never reports them via onFocusChange", () => {
-    // Three sections — selectable / non-selectable / selectable — with the
+    // Three buckets — selectable / non-selectable / selectable — with the
     // inert row sandwiched between two interactive ones, so ArrowDown from
     // the first interactive row has an inert row to actually skip over.
-    const SANDWICH: ProgressionSection[] = [
+    const SANDWICH: Bucket[] = [
       { key: "a", label: "Alpha", tone: "success", selectable: true },
       { key: "b", label: "Beta", tone: "danger" },
       { key: "c", label: "Gamma", tone: "accent", selectable: true },
     ];
     const moved: (string | null)[] = [];
     const { container } = render(() => (
-      <ProgressionQueue<{ id: string; bucket: string }>
-        sections={SANDWICH}
+      <BucketQueue<{ id: string; bucket: string }>
+        buckets={SANDWICH}
         items={[
           { id: "live-1", bucket: "a" },
           { id: "inert-1", bucket: "b" },

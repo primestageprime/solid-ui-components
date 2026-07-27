@@ -1,16 +1,16 @@
-// SplitQueueList — DEPRECATED. A compile shim over ProgressionQueue, kept for
+// SplitQueueList — DEPRECATED. A compile shim over BucketQueue, kept for
 // one release so existing call sites keep working; removed in the next major.
 //
 // This is NOT a pixel-identical shim: the merged component draws its own
-// chrome, so the rendered result is ProgressionQueue's, not the old two-pane
-// seam. Migrate to ProgressionQueue directly — declare your sections and bucket
+// chrome, so the rendered result is BucketQueue's, not the old two-pane
+// seam. Migrate to BucketQueue directly — declare your sections and bucket
 // your items — rather than relying on this mapping.
 //
 // `static` mode is a separate concern (no queue, no animation) and still
 // delegates to StaticSplitLayout, which is NOT deprecated.
 import { type JSX, createMemo } from "solid-js";
-import { ProgressionQueue } from "../ProgressionQueue/ProgressionQueue";
-import type { ProgressionSection } from "../ProgressionQueue/types";
+import { BucketQueue } from "../BucketQueue/BucketQueue";
+import type { Bucket } from "../BucketQueue/types";
 import { StaticSplitLayout } from "./StaticSplitLayout";
 import type { SplitQueueListProps } from "./types";
 
@@ -19,7 +19,7 @@ export type { SplitQueueListProps } from "./types";
 const RESOLVED = "resolved";
 const UNRESOLVED = "unresolved";
 
-/** @deprecated Use {@link ProgressionQueue}. Removed in the next major. */
+/** @deprecated Use {@link BucketQueue}. Removed in the next major. */
 export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   if (props.static)
     return StaticSplitLayout({
@@ -39,7 +39,7 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   // rebuild the Set, turning the shim's bucketing into O(n·m) instead of O(n+m).
   const resolvedKeys = createMemo(() => new Set((props.resolved ?? []).map(keyOf)));
 
-  const sections = (): ProgressionSection[] => [
+  const buckets = (): Bucket[] => [
     {
       key: RESOLVED,
       label: props.resolvedLabel ?? "Resolved",
@@ -58,14 +58,21 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   ];
 
   return (
-    <ProgressionQueue<T>
-      sections={sections()}
+    <BucketQueue<T>
+      buckets={buckets()}
       items={[...(props.resolved ?? []), ...(props.unresolved ?? [])]}
       bucketOf={(item) => (resolvedKeys().has(keyOf(item)) ? RESOLVED : UNRESOLVED)}
       keyOf={keyOf}
       renderItem={(item) => (props.renderItem ?? (() => null))(item)}
       selectedKey={props.selectedKey}
-      onSelect={(k) => props.onSelect?.(k)}
+      // BucketQueue also emits `null` here, to say the section being
+      // worked just drained. The deprecated prop is `(key: string) => void` and
+      // cannot express a deselect, and no existing call site is written to
+      // expect one — so the shim swallows it rather than widening the old API.
+      // Migrate to BucketQueue to get the "queue empty" signal.
+      onSelect={(k) => {
+        if (k != null) props.onSelect?.(k);
+      }}
       focusedKey={props.focusedKey}
       onFocusChange={(k) => props.onFocusChange?.(k)}
       checkedKeys={props.selectMode ? (props.checkedKeys ?? new Set<string>()) : undefined}
