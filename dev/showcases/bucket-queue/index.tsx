@@ -6,9 +6,9 @@ import { PipelineDemo } from "./pipeline";
 export const BucketQueueShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>BucketQueue — N-section progression bar</h2>
+      <h2>BucketQueue — N-bucket progression bar</h2>
       <p class="text-meta">
-        One queue component: N always-present sections, one flat{" "}
+        One queue component: N always-present buckets, one flat{" "}
         <code>items</code> list bucketed by <code>bucketOf</code>, controlled
         selection / roving-focus keyboard navigation / checking, and a transfer
         animation played whenever an item's bucket changes — there is no
@@ -18,25 +18,25 @@ export const BucketQueueShowcase: Component = () => {
       </p>
 
       <SubsectionTitle>
-        Row cards — select, move between sections, and select mode
+        Row cards — select, move between buckets, and select mode
       </SubsectionTitle>
       <p class="text-meta">
         Click any row to select it, or use the buttons below to move the
-        selection into a different section. Arrow keys / Home / End walk every
-        interactive row across all three sections with no wrap; Tab lands on one
+        selection into a different bucket. Arrow keys / Home / End walk every
+        interactive row across all three buckets with no wrap; Tab lands on one
         roving stop. <strong>In progress</strong> declares <code>capRows: 3</code>,
         so it holds at three rows tall and its own body scrolls once it has more
         than that — move an item into it to see the arrival scroll into view
-        inside a capped, already-scrolling section.
+        inside a capped, already-scrolling bucket.
       </p>
       <p class="text-meta">
-        <strong>Multi-select across queues:</strong> all three sections declare{" "}
+        <strong>Multi-select across queues:</strong> all three buckets declare{" "}
         <code>selectable: true</code>, so entering select mode turns the whole
-        bar into checkboxes and a batch can span sections — check two{" "}
+        bar into checkboxes and a batch can span buckets — check two{" "}
         <strong>Suggestions</strong> and one <strong>In progress</strong> and
         send all three somewhere in one move. <code>selectable</code> is
-        per-section so this is a choice: set it on only the working queue and
-        every other section's rows keep selecting on click while select mode is
+        per-bucket so this is a choice: set it on only the working queue and
+        every other bucket's rows keep selecting on click while select mode is
         on. The cost of turning it on everywhere is that no row is left to
         single-select, so click-to-select is suspended until you leave the mode.
       </p>
@@ -45,7 +45,7 @@ export const BucketQueueShowcase: Component = () => {
         check set (their labels say how many). It goes out as <em>one</em>{" "}
         mutation, so the queue diffs it as a single set of transfers — every row
         animates together in one FLIP pass rather than competing ones, even when
-        they leave from different sections.
+        they leave from different buckets.
       </p>
       <p class="text-meta">
         <strong>A bulk action is a detour, so it ends itself.</strong> Once the
@@ -56,7 +56,7 @@ export const BucketQueueShowcase: Component = () => {
         showcase policy, not queue behavior: the component can&rsquo;t leave
         select mode (the mode <em>is</em> the presence of <code>checkedKeys</code>,
         which the consumer owns) and it never singles out a &ldquo;primary&rdquo;
-        section. Where the bulk reset and the per-row advance disagree, the
+        bucket. Where the bulk reset and the per-row advance disagree, the
         reset wins.
       </p>
       <p class="text-meta">
@@ -65,8 +65,8 @@ export const BucketQueueShowcase: Component = () => {
         waiting in <strong>Suggestions</strong> rather than trailing the row
         into Categorized, so the whole queue can be processed from one button.
         The advance skips anything that left in the same batch and falls back{" "}
-        <em>up</em> when the last item in a section is processed. Keep going to
-        the end: emptying the section fires <code>onSelect(null)</code>, which
+        <em>up</em> when the last item in a bucket is processed. Keep going to
+        the end: emptying the bucket fires <code>onSelect(null)</code>, which
         is how a consumer knows to close its detail panel and show a
         &ldquo;nothing left&rdquo; state.
       </p>
@@ -77,11 +77,11 @@ export const BucketQueueShowcase: Component = () => {
 
       <SubsectionTitle>Large cards — the same queue, taller rows</SubsectionTitle>
       <p class="text-meta">
-        Identical sections, data and interactions; the only change is a{" "}
+        Identical buckets, data and interactions; the only change is a{" "}
         <code>renderItem</code> that draws a two-line card (title over a muted
         meta line) instead of a one-line row — the shape the workshop{" "}
         <code>split-queue</code> bench uses. <strong>Row height is not a prop.</strong>{" "}
-        The queue measures a real row and derives every section's natural height
+        The queue measures a real row and derives every bucket's natural height
         from that measurement, so the water-fill, the <code>capRows: 3</code>{" "}
         scroll cap on <strong>In progress</strong>, and the transfer animation
         all re-scale on their own. Worth pressure-testing here: the select-mode
@@ -96,12 +96,12 @@ export const BucketQueueShowcase: Component = () => {
 
       <SubsectionTitle>Five stages — N is not three</SubsectionTitle>
       <p class="text-meta">
-        <strong>Nothing in the component is fixed at three sections.</strong> The
+        <strong>Nothing in the component is fixed at three buckets.</strong> The
         sizing, the render, the counts and the keyboard sequence are all maps and
-        loops over <code>sections</code>; direction and distance fall out of
-        section order, so <em>Ship it</em> moves a ticket four stages in one hop
+        loops over <code>buckets</code>; direction and distance fall out of
+        bucket order, so <em>Ship it</em> moves a ticket four stages in one hop
         with no special casing. This bar is five stages deep, and{" "}
-        <strong>Blocked</strong> starts empty on purpose — an empty section
+        <strong>Blocked</strong> starts empty on purpose — an empty bucket
         <em>between</em> populated ones is the case where the water-fill has to
         collapse it to a summary line instead of handing it a share.{" "}
         <strong>In progress</strong> carries <code>weight: 2</code> for a double

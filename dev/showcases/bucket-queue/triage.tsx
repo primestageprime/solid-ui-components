@@ -20,7 +20,7 @@ import {
 } from "../../../src/components/Layout";
 
 /* Demo item type — the same "transaction to categorize" framing as
- * SplitQueueList's showcase, now spread across THREE sections rather than a
+ * SplitQueueList's showcase, now spread across THREE buckets rather than a
  * resolved/unresolved pair. */
 interface QueueItem {
   id: string;
@@ -32,16 +32,16 @@ interface QueueItem {
 }
 
 // The queue being WORKED — where triage starts and returns to. The component
-// has no such concept: sections are an ordered list and it never singles one
+// has no such concept: buckets are an ordered list and it never singles one
 // out. Which one is primary is application policy, so it is named here.
 const PRIMARY_BUCKET = "todo";
 
-// EVERY section is `selectable`, so select mode spans the whole bar and a batch
+// EVERY bucket is `selectable`, so select mode spans the whole bar and a batch
 // can be assembled across queues — check two Suggestions and one In progress
 // and send all three somewhere in a single move.
 //
-// `selectable` is per-section precisely so this is a CHOICE: setting it on only
-// the working queue scopes checking there and leaves every other section's rows
+// `selectable` is per-bucket precisely so this is a CHOICE: setting it on only
+// the working queue scopes checking there and leaves every other bucket's rows
 // still selecting on click while select mode is on. The trade-off of turning it
 // on everywhere is that there is then no row left to single-select, so
 // click-to-select is suspended for as long as select mode is on.
@@ -61,7 +61,7 @@ const BUCKETS: Bucket[] = [
     tone: "muted",
     selectable: true,
     emptyLabel: "Nothing parked",
-    // Exercises the scrolling path: the section holds at 3 rows tall and its
+    // Exercises the scrolling path: the bucket holds at 3 rows tall and its
     // body scrolls once "hold" has more than that (it starts with 6 below).
     capRows: 3,
   },
@@ -123,7 +123,7 @@ export const renderCard = (i: QueueItem): JSX.Element => (
 // makes the queue animate a transfer — there is no separate resolve() call.
 //
 // Parameterized by the row renderer ALONE, so the two showcase instances drive
-// the same sections, data and interactions and the only difference on screen is
+// the same buckets, data and interactions and the only difference on screen is
 // what `renderItem` draws. Each instance owns its own state.
 export function BucketQueueDemo(props: {
   renderItem: (item: QueueItem) => JSX.Element;
@@ -135,7 +135,7 @@ export function BucketQueueDemo(props: {
   const [selectMode, setSelectMode] = createSignal(false);
   const [checked, setChecked] = createSignal<ReadonlySet<string>>(new Set());
 
-  // The section the last move pulled FROM. Captured before the mutation — once
+  // The bucket the last move pulled FROM. Captured before the mutation — once
   // the item has moved it reports its DESTINATION, so there is no way to name
   // the drained queue after the fact. Only used for the "empty" copy below.
   const [lastSource, setLastSource] = createSignal<string | undefined>(undefined);
@@ -198,7 +198,7 @@ export function BucketQueueDemo(props: {
   //
   // This lives here, not in the queue, for two reasons: the component cannot
   // leave select mode (the mode is on iff `checkedKeys` is passed, which is
-  // consumer state), and sections are just an ordered list to it — WHICH one is
+  // consumer state), and buckets are just an ordered list to it — WHICH one is
   // primary is application policy. Splitting the behavior across that seam would
   // put half of one decision in each place.
   //
@@ -278,7 +278,7 @@ export function BucketQueueDemo(props: {
               inset accent bar, never a background fill, so it stays readable
               once the pointer moves away. Moving it plays the transfer
               animation, scrolls the arriving row into view, and advances this
-              selection to the next item still waiting in the section it left,
+              selection to the next item still waiting in the bucket it left,
               so you can process the queue without re-clicking.
             </>
           )}
@@ -293,7 +293,7 @@ export function BucketQueueDemo(props: {
           keyOf={(i) => i.id}
           renderItem={props.renderItem}
           selectedKey={selected()}
-          // `null` = the section being worked just drained. A real consumer
+          // `null` = the bucket being worked just drained. A real consumer
           // clears its detail panel here; this demo drops to the "queue empty"
           // copy below.
           onSelect={(k) => {

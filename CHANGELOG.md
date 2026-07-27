@@ -2,12 +2,72 @@
 
 ## [Unreleased]
 
+### Added
+- **`fn.find`, `fn.findLast`, `fn.findIndex`, `fn.some`** — four more data-last
+  helpers in the same dual (curried / direct) shape as `map` and `filter`.
+  `find` and `findLast` carry the type-guard overload. `findLast` exists so a
+  backward search needs no `.reverse()` link, which the house style forbids.
+
+### Fixed
+- **`Icon`'s `edit` and `trash` glyphs are now visible in the gallery.** Both
+  existed in `ICON_PATHS` and were exported, but neither appeared in any
+  `ICON_GROUPS` array — and the showcase renders the groups, so the two were
+  undiscoverable to anyone browsing the icon set. A test now asserts that
+  `ICON_GROUPS` covers every `ICON_PATHS` entry exactly once, and that no group
+  lists a name with no path. No API change; both names already worked.
+- **Bucket sizing no longer assumes a particular `renderItem`.** Four fixes, all
+  in service of a consumer rendering whatever it likes:
+  `.bucket-queue__row:first-child` used `border-top: none`, making that one row
+  1px shorter than the rest — since sizing measures one row and multiplies by
+  the count, every bucket under-counted by `(rows − 1)` px and scrolled a sliver
+  it had room for (it now hides the border with `transparent` rather than
+  removing it); the measured row is taken from the first *populated* bucket
+  (bucket 0 is routinely empty, and measuring nothing left everything on the
+  `ROW_FALLBACK` constant); the empty strip is measured too, since `emptyLabel`
+  is consumer JSX and can wrap; and the `ResizeObserver` now watches the
+  row/header/strip rather than only the root, on the `border-box` — a theme
+  switch, a late web font or a changed `renderItem` resizes a row without
+  resizing the root, so a root-only content-box observer never re-fired.
+
+  **Known limitation:** the model measures one row and multiplies, so rows must
+  be uniform within a queue. A `renderItem` whose height varies per item makes
+  each bucket's natural height an estimate.
+
 ### Changed
+- **BREAKING — `ProgressionQueue` is renamed `BucketQueue`.** 0.113.1 exported
+  `ProgressionQueue`; that name is gone, with no alias. "Progression" implied
+  stepwise forward movement the component never had — direction and distance
+  fall out of bucket order, and a move from bucket 3 to bucket 1 is not
+  special-cased. Renamed with it: the `sections` prop is now `buckets`, the
+  `ProgressionSection` type is now `Bucket`, and the `.prog-queue__*` /
+  `data-pq-*` hooks are now `.bucket-queue__*` / `data-bq-*` (`.prog-queue__section`
+  specifically becomes `.bucket-queue__bucket`). Consumers importing only
+  `SplitQueueList` are unaffected.
+- **BREAKING — `onSelect` widens to `(key: string | null) => void`.** `null`
+  means the worked bucket drained, so a consumer can clear its detail panel. It
+  fires only from the triage advance, never from a click. **`strict: true` does
+  not reliably catch this**: passing a Solid `Setter` directly
+  (`onSelect={setSelected}`) still compiles, because `Setter`'s overloads absorb
+  the wider parameter — and then stores `null` in your signal. Grep for
+  `onSelect={setX}` rather than trusting the compiler; the fixed form is
+  `onSelect={(k) => setSelected(k ?? undefined)}`.
 - **`BucketQueue` is now the library's single queue component.** It gains
   multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to buckets
   marked `selectable`), roving-focus keyboard navigation
-  (`focusedKey` / `onFocusChange`), `scrollToKey`, per-section `emptyLabel`, and
+  (`focusedKey` / `onFocusChange`), `scrollToKey`, per-bucket `emptyLabel`, and
   a transfer animation played whenever an item's `bucketOf` result changes.
+- **Moving the selected item advances the selection** to the next item still
+  waiting in the bucket it left (successor taken from the source bucket's
+  pre-move order, skipping anything that departed in the same batch). Processing
+  the tail falls back *up* rather than jumping to the top; draining the bucket
+  fires `onSelect(null)`. The roving tab stop follows; DOM focus deliberately
+  does not move.
+- **`renderItem` now returns bare content** — the row owns its padding, so a
+  selected row's accent bar can never touch consumer content and the header,
+  rows and empty strip share one left edge.
+- **Checked rows no longer paint a background fill.** Checking is a bulk action,
+  so the tint became a band of low-contrast rows that fought the hover fill. The
+  filled checkbox is now the entire treatment.
 - **A selected row no longer paints a background fill** — it keeps only the inset
   accent bar, and hover owns the fill. The previous persistent fill sat behind
   row text at too low a contrast.
@@ -15,7 +75,7 @@
 ### Deprecated
 - **`SplitQueueList` is a compile shim over `BucketQueue`** and is removed in
   the next major. It is **not** pixel-identical — the merged component draws its
-  own chrome. `topCapRows` maps to the resolved section's `capRows`;
+  own chrome. `topCapRows` maps to the resolved bucket's `capRows`;
   `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
   ignored. `static` mode still delegates to
   `StaticSplitLayout`, which is **not** deprecated.

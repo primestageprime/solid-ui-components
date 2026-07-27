@@ -1,5 +1,7 @@
-// SplitQueueList — DEPRECATED. A compile shim over BucketQueue, kept for
-// one release so existing call sites keep working; removed in the next major.
+// SplitQueueList — Composite (Depth 2: renders BucketQueue and
+// StaticSplitLayout, both Primitives). DEPRECATED — a compile shim over
+// BucketQueue, kept for one release so existing call sites keep working;
+// removed in the next major.
 //
 // This is NOT a pixel-identical shim: the merged component draws its own
 // chrome, so the rendered result is BucketQueue's, not the old two-pane
@@ -9,6 +11,7 @@
 // `static` mode is a separate concern (no queue, no animation) and still
 // delegates to StaticSplitLayout, which is NOT deprecated.
 import { type JSX, createMemo } from "solid-js";
+import { map } from "../../fn";
 import { BucketQueue } from "../BucketQueue/BucketQueue";
 import type { Bucket } from "../BucketQueue/types";
 import { StaticSplitLayout } from "./StaticSplitLayout";
@@ -37,7 +40,9 @@ export function SplitQueueList<T>(props: SplitQueueListProps<T>): JSX.Element {
   const keyOf = (item: T): string => (props.keyOf ?? ((x) => String(x)))(item);
   // Memoized: bucketOf calls this per item, and without a memo each call would
   // rebuild the Set, turning the shim's bucketing into O(n·m) instead of O(n+m).
-  const resolvedKeys = createMemo(() => new Set((props.resolved ?? []).map(keyOf)));
+  const resolvedKeys = createMemo(
+    () => new Set(map(keyOf, props.resolved ?? [])),
+  );
 
   const buckets = (): Bucket[] => [
     {

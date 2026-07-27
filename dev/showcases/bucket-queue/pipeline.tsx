@@ -1,9 +1,9 @@
-// FIVE sections, and a different shape of work from the triage demo next door.
+// FIVE buckets, and a different shape of work from the triage demo next door.
 //
 // Triage is "one working queue, items leave it for terminal buckets". A
-// PIPELINE is "every section is a stage, and an item walks the whole chain".
-// Nothing about the component changes: `sections` is just a longer array, and
-// direction/distance still fall out of section order, so Inbox → Shipped is one
+// PIPELINE is "every bucket is a stage, and an item walks the whole chain".
+// Nothing about the component changes: `buckets` is just a longer array, and
+// direction/distance still fall out of bucket order, so Inbox → Shipped is one
 // four-hop transfer with no special casing.
 import { type JSX, createSignal, Show } from "solid-js";
 import {
@@ -32,7 +32,7 @@ interface Ticket {
   stage: string;
 }
 
-// Five stages in flow order. Two carry per-section sizing rules so the
+// Five stages in flow order. Two carry per-bucket sizing rules so the
 // water-fill has something to do at N=5 rather than just splitting evenly:
 // "In progress" takes a double share of any overflow, and "Blocked" is capped
 // so a pile-up there scrolls instead of squeezing the stages around it.
@@ -56,7 +56,7 @@ const STAGES: Bucket[] = [
   { key: "shipped", label: "Shipped", tone: "success", emptyLabel: "Nothing shipped yet" },
 ];
 
-// "Blocked" starts EMPTY on purpose: an empty section in the middle of a
+// "Blocked" starts EMPTY on purpose: an empty bucket in the middle of a
 // populated bar is the case where the water-fill has to collapse it to its
 // summary line rather than hand it a share.
 const TICKETS: Ticket[] = [

@@ -2,6 +2,7 @@
 // exported from ./index.ts, so it never enters the published bundle (see
 // src/index.ts, which only re-exports the component and its types).
 import { render } from "@solidjs/testing-library";
+import { map } from "../../fn";
 import { BucketQueue, type Bucket } from "./BucketQueue";
 
 export interface Item {
@@ -38,15 +39,15 @@ export const rowFor = (container: HTMLElement, key: string) =>
 // keeps its fallbacks (header 34, row 54, +2 border). With height=600 and
 // three buckets at gap 8, the two empty buckets take 36 each, leaving
 // ample pool — so each populated bucket gets exactly its natural height.
-export const FIVE_IN_A: Item[] = [1, 2, 3, 4, 5].map((n) => ({
-  id: String(n),
-  bucket: "a",
-}));
+export const FIVE_IN_A: Item[] = map(
+  (n) => ({ id: String(n), bucket: "a" }),
+  [1, 2, 3, 4, 5],
+);
 
 export const bucketHeights = (container: HTMLElement) =>
-  [...container.querySelectorAll(".bucket-queue__bucket")].map(
-    (s) => (s as HTMLElement).style.height,
-  );
+  map((s) => (s as HTMLElement).style.height, [
+    ...container.querySelectorAll(".bucket-queue__bucket"),
+  ]);
 
 export const SELECTABLE: Bucket[] = [
   { key: "a", label: "Alpha", tone: "success" },

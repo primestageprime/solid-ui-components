@@ -2,6 +2,7 @@
 // per-bucket row arrays the render needs AND the key → bucket map the
 // transfer diff needs, so the two can never disagree about where an item is.
 // (The accumulator is mutated locally; the function itself is pure.)
+import { map } from "../../fn";
 
 export interface BucketIndex<T> {
   /** Bucket key → its items in `items` order. Every bucket key is present. */
@@ -26,7 +27,7 @@ export const bucketItems = <T>(
       return acc;
     },
     {
-      byBucket: new Map(bucketKeys.map((k) => [k, [] as T[]])),
+      byBucket: new Map(map((k) => [k, [] as T[]], bucketKeys)),
       bucketByKey: new Map(),
     },
   );

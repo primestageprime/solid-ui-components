@@ -1,5 +1,5 @@
-// BucketQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
-// Layout Purity). Owns BucketQueue.css: the weighted water-fill sizes each
+// BucketQueue — layout-tagged Primitive (Depth 1; EXEMPT-AS-LAYOUT, STYLE_GUIDE
+// § Layout Purity). Owns BucketQueue.css: the weighted water-fill sizes each
 // bucket in JS, which no CSS rule can express. N always-present buckets stacked
 // as one full-height progression bar, bucketing items by `bucketOf`.
 //
@@ -27,7 +27,7 @@ import { createRowKeyboard } from "./keyboard";
 import { createSlotMotion } from "./motion";
 import { advanceSelection } from "./selection";
 import { diffTransfers } from "./transfer";
-import { map } from "../../fn";
+import { find, findIndex, flatMap, map } from "../../fn";
 import type { BucketQueueProps, Bucket } from "./types";
 import "./BucketQueue.css";
 
@@ -59,9 +59,10 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const keysByBucket = createMemo(
     () =>
       new Map(
-        [...buckets().byBucket].map(
+        map(
           ([bucket, items]) =>
-            [bucket, items.map((it) => props.keyOf(it))] as const,
+            [bucket, map((it) => props.keyOf(it), items)] as const,
+          [...buckets().byBucket],
         ),
       ),
   );
@@ -150,10 +151,13 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   // literal first bucket meant measuring nothing and sizing every bucket from
   // ROW_FALLBACK — a constant that is wrong for any consumer whose renderItem
   // is taller or shorter than the one it was tuned against.
-  const firstPopulated = createMemo(() => counts().findIndex((c) => c > 0));
+  const firstPopulated = createMemo(() => findIndex((c) => c > 0, counts()));
   // Likewise for the empty strip: measure the first one actually rendered.
   const firstEmptyLabelled = createMemo(() =>
-    counts().findIndex((c, i) => c === 0 && props.buckets[i]?.emptyLabel != null),
+    findIndex(
+      (c, i) => c === 0 && props.buckets[i]?.emptyLabel != null,
+      counts(),
+    ),
   );
 
   const natural = createMemo(() =>
@@ -203,7 +207,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   // the key; click has the bucket in scope).
   const bucketForKey = (key: string): Bucket | undefined => {
     const bucketKey = buckets().bucketByKey.get(key);
-    return props.buckets.find((s) => s.key === bucketKey);
+    return find((s) => s.key === bucketKey, props.buckets);
   };
 
   // A row is interactive iff it can be activated: either the queue has a
@@ -216,8 +220,10 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const keyboard = createRowKeyboard({
     getRootEl: () => rootRef,
     allKeys: () =>
-      props.buckets.flatMap((s) =>
-        interactiveIn(s) ? itemsIn(s.key).map((it) => props.keyOf(it)) : [],
+      flatMap(
+        (s) =>
+          interactiveIn(s) ? map((it) => props.keyOf(it), itemsIn(s.key)) : [],
+        props.buckets,
       ),
     focusedKey: () => props.focusedKey,
     selectedKey: () => props.selectedKey,
@@ -236,7 +242,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const revealRow = (key: string) => {
     requestAnimationFrame(() => {
       const candidates = rootRef?.querySelectorAll<HTMLElement>("[data-bq-key]");
-      const match = candidates && [...candidates].find((n) => n.dataset.bqKey === key);
+      const match =
+        candidates && find((n) => n.dataset.bqKey === key, [...candidates]);
       match?.scrollIntoView?.({ block: "nearest" });
     });
   };
@@ -300,7 +307,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       const selectedKey = props.selectedKey;
       const onSelect = props.onSelect;
       if (selectedKey == null || onSelect == null) return;
-      const moved = moves.find((m) => m.key === selectedKey);
+      const moved = find((m) => m.key === selectedKey, moves);
       if (!moved) return;
       const advance = advanceSelection({
         selectedKey,
@@ -318,9 +325,9 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       const ctx = {
         root,
         rowEl: (key: string) =>
-          [...root.querySelectorAll<HTMLElement>("[data-bq-key]")].find(
-            (n) => n.dataset.bqKey === key,
-          ),
+          find((n) => n.dataset.bqKey === key, [
+            ...root.querySelectorAll<HTMLElement>("[data-bq-key]"),
+          ]),
         reducedMotion: reducedMotion(),
       };
       await motion.play(moves, ctx);

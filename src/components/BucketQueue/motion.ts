@@ -10,6 +10,7 @@
  *
  * All DOM work is feature-detected: without `Element.animate` (jsdom) or under
  * `prefers-reduced-motion`, every path degrades to instant placement. */
+import { filter, map, some } from "../../fn";
 import type { Transfer } from "./transfer";
 
 export interface MotionContext {
@@ -108,12 +109,18 @@ export const createSlotMotion = (): TransferChoreographer => {
 
       if (ctx.reducedMotion || transfers.length === 0) return;
 
-      const arrivals = transfers
-        .map((transfer) => ({ transfer, el: ctx.rowEl(transfer.key) }))
-        .filter(
-          (a): a is { transfer: Transfer; el: HTMLElement } =>
-            a.el != null && canAnimate(a.el),
-        );
+      // Named rather than inlined into `filter`: the type-guard overload has to
+      // infer its element type from the array argument, and a nested generic
+      // call there leaves the predicate's parameter `unknown`.
+      const candidates = map(
+        (transfer) => ({ transfer, el: ctx.rowEl(transfer.key) }),
+        transfers,
+      );
+      const arrivals = filter(
+        (a): a is { transfer: Transfer; el: HTMLElement } =>
+          a.el != null && canAnimate(a.el),
+        candidates,
+      );
       if (arrivals.length === 0) return;
 
       // Read phase: measure every rect this play needs before starting any
@@ -125,7 +132,7 @@ export const createSlotMotion = (): TransferChoreographer => {
       // bottom still occupies 12px, so the slot would pop open from 12px
       // instead of from nothing. Collapsing the padding alongside the height
       // restores a true zero-height first keyframe.
-      const arrivalPlans = arrivals.map(({ el }) => {
+      const arrivalPlans = map(({ el }) => {
         const style = getComputedStyle(el);
         return {
           el,
@@ -133,7 +140,7 @@ export const createSlotMotion = (): TransferChoreographer => {
           padTop: style.paddingTop,
           padBottom: style.paddingBottom,
         };
-      });
+      }, arrivals);
 
       // Every other row that shifted slides from where it was to where it
       // is — EXCEPT a row that lives in the same bucket as an arriving row
@@ -143,7 +150,7 @@ export const createSlotMotion = (): TransferChoreographer => {
       // translating it too would double-count the same motion. Rows in the
       // arriving row's SOURCE bucket still need FLIP — the departing
       // element is already gone from the DOM, so nothing else moves them.
-      const arrivingKeys = new Set(arrivals.map((a) => a.transfer.key));
+      const arrivingKeys = new Set(map((a) => a.transfer.key, arrivals));
       const flipPlans: { el: HTMLElement; dy: number }[] = [];
       for (const el of ctx.root.querySelectorAll<HTMLElement>("[data-bq-key]")) {
         const key = el.dataset.bqKey;
@@ -157,14 +164,14 @@ export const createSlotMotion = (): TransferChoreographer => {
         // for every row; null === null would then exclude every row from
         // FLIP with no error. Guard it explicitly so a dropped marker
         // disables the exclusion rule instead of disabling the animation.
-        const displacedByArrival = arrivals.some(({ el: arriving }) => {
+        const displacedByArrival = some(({ el: arriving }) => {
           const arrivingBucket = bucketElOf(arriving);
           return (
             arrivingBucket != null &&
             arrivingBucket === bucketElOf(el) &&
             isFollowing(arriving, el)
           );
-        });
+        }, arrivals);
         if (displacedByArrival) continue;
         const dy = before - topOf(el);
         if (Math.abs(dy) < 1) continue;
@@ -174,37 +181,46 @@ export const createSlotMotion = (): TransferChoreographer => {
       // Write phase: start every animation only now that all geometry for
       // this play has been read.
       const animations = [
-        ...arrivalPlans.map(({ el, targetHeight, padTop, padBottom }) =>
-          el.animate(
-            [
-              {
-                height: "0px",
-                paddingTop: "0px",
-                paddingBottom: "0px",
-                opacity: 0,
-                overflow: "hidden",
-              },
-              {
-                height: `${targetHeight}px`,
-                paddingTop: padTop,
-                paddingBottom: padBottom,
-                opacity: 1,
-                overflow: "hidden",
-              },
-            ],
-            { duration: DURATION_MS, easing: EASING },
-          ),
+        ...map(
+          ({ el, targetHeight, padTop, padBottom }) =>
+            el.animate(
+              [
+                {
+                  height: "0px",
+                  paddingTop: "0px",
+                  paddingBottom: "0px",
+                  opacity: 0,
+                  overflow: "hidden",
+                },
+                {
+                  height: `${targetHeight}px`,
+                  paddingTop: padTop,
+                  paddingBottom: padBottom,
+                  opacity: 1,
+                  overflow: "hidden",
+                },
+              ],
+              { duration: DURATION_MS, easing: EASING },
+            ),
+          arrivalPlans,
         ),
-        ...flipPlans.map(({ el, dy }) =>
-          el.animate(
-            [{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }],
-            { duration: DURATION_MS, easing: EASING },
-          ),
+        ...map(
+          ({ el, dy }) =>
+            el.animate(
+              [
+                { transform: `translateY(${dy}px)` },
+                { transform: "translateY(0)" },
+              ],
+              { duration: DURATION_MS, easing: EASING },
+            ),
+          flipPlans,
         ),
       ];
 
       running = animations;
-      await Promise.all(animations.map((a) => a.finished.catch(() => undefined)));
+      await Promise.all(
+        map((a) => a.finished.catch(() => undefined), animations),
+      );
 
       // Settled. Re-snapshot now, against genuinely final layout, before the
       // component's own capture() rAF gets a chance to run — that keeps

@@ -8,6 +8,7 @@
 //
 // Pure: the caller supplies the source bucket's ordering before the move and
 // its membership after, and gets back what should happen to the selection.
+import { find, findLast } from "../../fn";
 
 export interface AdvanceInput {
   /** The currently selected key, if any. */
@@ -53,16 +54,18 @@ export const advanceSelection = ({
   after,
 }: AdvanceInput): Advance => {
   if (selectedKey == null) return KEEP;
+  const survives = (key: string) => after.has(key);
   const idx = before.indexOf(selectedKey);
   // Not in this bucket, or still in it — either way the user's row did not
   // leave the queue they are working, so nothing should move.
   if (idx < 0 || after.has(selectedKey)) return KEEP;
   // Forward first: the next item still waiting is the one the user would have
   // reached next anyway.
-  const forward = before.slice(idx + 1).find((key) => after.has(key));
+  const forward = find(survives, before.slice(idx + 1));
   if (forward != null) return { kind: "select", key: forward };
   // The processed item was at the tail, so fall BACK to the nearest survivor
-  // above it rather than jumping to the top of the queue.
-  const backward = before.slice(0, idx).reverse().find((key) => after.has(key));
+  // above it rather than jumping to the top of the queue. `findLast` scans the
+  // prefix from its end, which IS "nearest above" — no reversing copy needed.
+  const backward = findLast(survives, before.slice(0, idx));
   return backward != null ? { kind: "select", key: backward } : { kind: "clear" };
 };

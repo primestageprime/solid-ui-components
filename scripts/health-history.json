@@ -1709,6 +1709,37 @@
     }
   },
   {
+    "at": "2026-07-23T18:11:50.141Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 75,
+      "inlineStyleShowcases": 22,
+      "dotChains": 56,
+      "collectionMethodCalls": 225,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 2,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 75,
+      "inlineStyleShowcases": 27,
+      "dotChains": 55,
+      "collectionMethodCalls": 223,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 7,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    }
+  },
+  {
     "at": "2026-07-23T18:46:16.252Z",
     "metrics": {
       "bareHexCss": 0,
@@ -1917,6 +1948,99 @@
       "inlineStyleShowcases": 22,
       "dotChains": 56,
       "collectionMethodCalls": 225,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 2,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    }
+  },
+  {
+    "at": "2026-07-27T21:14:52.052Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 71,
+      "inlineStyleShowcases": 21,
+      "dotChains": 63,
+      "collectionMethodCalls": 246,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 1,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 2
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 75,
+      "inlineStyleShowcases": 22,
+      "dotChains": 57,
+      "collectionMethodCalls": 228,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 2,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    }
+  },
+  {
+    "at": "2026-07-27T21:18:02.377Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 71,
+      "inlineStyleShowcases": 21,
+      "dotChains": 63,
+      "collectionMethodCalls": 246,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 1,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 75,
+      "inlineStyleShowcases": 22,
+      "dotChains": 57,
+      "collectionMethodCalls": 228,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 2,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    }
+  },
+  {
+    "at": "2026-07-27T21:24:26.171Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 71,
+      "inlineStyleShowcases": 21,
+      "dotChains": 55,
+      "collectionMethodCalls": 222,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 1,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 75,
+      "inlineStyleShowcases": 22,
+      "dotChains": 57,
+      "collectionMethodCalls": 228,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 2,
       "cssTypedProps": 14,

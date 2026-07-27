@@ -12,6 +12,7 @@
  * checks `focusedKey` before `selectedKey`, where the original checked
  * `selectedKey` first. */
 import { createMemo, createSignal } from "solid-js";
+import { findIndex } from "../../fn";
 import { clamp } from "../../internal/math/clamp";
 
 export interface RowKeyboardDeps {
@@ -69,7 +70,7 @@ export function createRowKeyboard(deps: RowKeyboardDeps): RowKeyboard {
     if (!rootEl) return;
     const rows = [...rootEl.querySelectorAll<HTMLElement>("[data-bq-interactive]")];
     if (rows.length === 0) return;
-    const idx = rows.findIndex((r) => r.dataset.bqKey === fromKey);
+    const idx = findIndex((r) => r.dataset.bqKey === fromKey, rows);
     const target =
       dir === "home"
         ? rows[0]

@@ -51,6 +51,10 @@ form shown and a direct form that appends the array (`map(fn, array) => U[]`,
 | `pipe(v, …fns)` | value-first composition | typed to 12 args / 11 stages, no untyped rest fallback; unary — no direct form |
 | `map(fn)` | `(readonly T[]) => U[]` | + direct `map(fn, arr)`; wrapper over `Array.prototype.map` |
 | `filter(pred)` | `(readonly T[]) => T[]` | + direct `filter(pred, arr)`; type-guard overload narrows in both forms |
+| `find(pred)` | `(readonly T[]) => T \| undefined` | + direct `find(pred, arr)`; type-guard overload narrows to `S \| undefined` in both forms. `undefined` on no match |
+| `findLast(pred)` | `(readonly T[]) => T \| undefined` | + direct `findLast(pred, arr)`; `find` scanning from the end. Exists so a backward search needs no `.reverse()` link. Non-mutating; `undefined` on no match |
+| `findIndex(pred)` | `(readonly T[]) => number` | + direct `findIndex(pred, arr)`; `-1` on no match. No guard overload — the result is a position, not an element |
+| `some(pred)` | `(readonly T[]) => boolean` | + direct `some(pred, arr)`; short-circuits on the first match; `false` on empty |
 | `prop(key)` | `(obj) => obj[key]` | + direct `prop(key, obj)`; function-first property access. Direct form is `T[K]`-typed; a curried `prop(key)` passed as an argument loses its value type — see caveat below |
 | `pluck(key)` | `(readonly T[]) => T[key][]` | + direct `pluck(key, arr)`; the `xs.map(x => x.key)` shape in one step |
 | `sortBy(keyFn)` | `(readonly T[]) => T[]` | + direct `sortBy(keyFn, arr)`; ascending, **stable**, **copies** (non-mutating). Direct form infers the key-fn param from the array |
