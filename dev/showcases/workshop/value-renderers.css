@@ -5,34 +5,54 @@
   max-width: 120px;
 }
 
-.vr-demo-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.vr-demo-table th {
-  text-align: left;
-  padding: 4px 8px;
-  font-size: 11px;
-  opacity: 0.6;
-}
-
-.vr-demo-table td {
-  padding: 4px 8px;
-  border-top: 1px solid var(--sui-border, #334);
-}
-
-.vr-column {
-  flex: 1 1 320px;
-  min-width: 300px;
-}
-
-.vr-column-body {
+.vr-section-body {
   margin-top: 8px;
 }
 
-.vr-host-row {
+/* Table cells as one wide data row — each renderer a column, content-sized,
+   scrolling horizontally when wider than the screen. */
+.vr-wide-scroll {
+  overflow-x: auto;
+}
+
+.vr-row-table {
+  border-collapse: collapse;
+  width: auto;
+}
+
+.vr-row-table th {
+  text-align: left;
+  padding: 4px 12px;
+  font-size: 11px;
+  opacity: 0.6;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--sui-border, #334);
+}
+
+.vr-row-table td {
+  padding: 10px 12px;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-right: 1px solid var(--sui-border, #334);
+}
+
+.vr-row-table td:last-child {
+  border-right: none;
+}
+
+/* Bottom band: narrow 200px card sidebar + definition data filling the rest. */
+.vr-bottom-row {
   display: flex;
   gap: 32px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.vr-cards-sidebar {
+  flex: 0 0 200px;
+  width: 200px;
+}
+
+.vr-deflist {
+  flex: 1 1 auto;
+  min-width: 0;
 }

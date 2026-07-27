@@ -1,0 +1,29 @@
+/* Marketing demo bench. */
+
+/* Tiled flow graphs — fixed 300px-wide tiles that wrap in a WrapRow. */
+.mkt-tile {
+  width: 300px;
+}
+
+/* Tone-colored flow lines/areas. SVG presentation attributes don't resolve CSS
+   var()s, so the per-pipe tone is painted here via a class (two-class selector
+   to beat the base .sui-chart__line/area stroke). */
+.sui-chart__line.mkt-flow--success {
+  stroke: var(--sui-success, #3a3);
+}
+.sui-chart__line.mkt-flow--warning {
+  stroke: var(--sui-warning, #d98);
+}
+.sui-chart__line.mkt-flow--danger {
+  stroke: var(--sui-danger, #d33);
+}
+
+.sui-chart__area.mkt-flow-area--success {
+  fill: var(--sui-success, #3a3);
+}
+.sui-chart__area.mkt-flow-area--warning {
+  fill: var(--sui-warning, #d98);
+}
+.sui-chart__area.mkt-flow-area--danger {
+  fill: var(--sui-danger, #d33);
+}

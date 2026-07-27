@@ -37,6 +37,7 @@ import {
   TextBody,
   TextSublabel,
   PageStack,
+  ContentStack,
   TightStack,
   SpreadRow,
 } from "../../../src";
@@ -87,30 +88,25 @@ const RENDERERS: { label: string; el: () => JSX.Element }[] = [
   },
 ];
 
-// Host 1 — real table cells.
-const TableHost: Component = () => (
-  <table class="vr-demo-table">
-    <thead>
-      <tr>
-        <th>renderer</th>
-        <th>in &lt;td&gt;</th>
-      </tr>
-    </thead>
-    <tbody>
-      <For each={RENDERERS}>
-        {(r) => (
-          <tr>
-            <td>
-              <TextSublabel>{r.label}</TextSublabel>
-            </td>
-            <td>
-              {r.el()}
-            </td>
-          </tr>
-        )}
-      </For>
-    </tbody>
-  </table>
+// Host 1 — real table cells, laid out as ONE wide data row: each renderer is a
+// column (label in the header), the rendered cell sits in its <td> below. This
+// is how the cells actually appear side by side in a real table; the row scrolls
+// horizontally when it's wider than the screen.
+const TableRowHost: Component = () => (
+  <div class="vr-wide-scroll">
+    <table class="vr-row-table">
+      <thead>
+        <tr>
+          <For each={RENDERERS}>{(r) => <th>{r.label}</th>}</For>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <For each={RENDERERS}>{(r) => <td>{r.el()}</td>}</For>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 );
 
 // Host 2 — definition data (DataList DT/DD).
@@ -143,12 +139,12 @@ const CardHost: Component = () => (
   </TightStack>
 );
 
-const Column: Component<{ title: string; hint: string; children: JSX.Element }> = (props) => (
-  <div class="vr-column">
+const Section: Component<{ title: string; hint: string; children: JSX.Element }> = (props) => (
+  <ContentStack>
     <SubsectionTitle>{props.title}</SubsectionTitle>
     <TextSublabel>{props.hint}</TextSublabel>
-    <div class="vr-column-body">{props.children}</div>
-  </div>
+    <div class="vr-section-body">{props.children}</div>
+  </ContentStack>
 );
 
 const ValueRenderersBench: Component = () => (
@@ -156,21 +152,28 @@ const ValueRenderersBench: Component = () => (
     <SectionTitle>Value Renderers — one primitive, three hosts</SectionTitle>
     <TextBody>
       Each renderer owns its styling (co-located CSS) and assumes no{" "}
-      <code>&lt;td&gt;</code>. The same component is rendered in a real table cell, a
-      DataList <code>&lt;dd&gt;</code>, and a card slot. Identical output across the
-      three columns is the proof that the renderers are container-agnostic.
+      <code>&lt;td&gt;</code>. The same component is rendered as a real table row, a
+      DataList <code>&lt;dd&gt;</code>, and a narrow card slot. Identical output
+      across the hosts is the proof that the renderers are container-agnostic.
     </TextBody>
     <PageStack>
-      <div class="vr-host-row">
-        <Column title="Table cell" hint="rendered inside a real <td>">
-          <TableHost />
-        </Column>
-        <Column title="Definition data" hint="DataList <dt>/<dd>">
-          <DefListHost />
-        </Column>
-        <Column title="Card slot" hint="positional, inside a CompactSurface">
-          <CardHost />
-        </Column>
+      {/* Table cells as one full-width tabular row, spanning the screen. */}
+      <Section title="Table cell" hint="rendered inside real <td>s — one row, every renderer a column">
+        <TableRowHost />
+      </Section>
+
+      {/* Cards in a narrow 200px sidebar, definition data next to it. */}
+      <div class="vr-bottom-row">
+        <div class="vr-cards-sidebar">
+          <Section title="Card slot" hint="positional, 200px sidebar">
+            <CardHost />
+          </Section>
+        </div>
+        <div class="vr-deflist">
+          <Section title="Definition data" hint="DataList <dt>/<dd>">
+            <DefListHost />
+          </Section>
+        </div>
       </div>
     </PageStack>
   </div>

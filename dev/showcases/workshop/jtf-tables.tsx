@@ -1,8 +1,13 @@
-// Workshop bench — JTF Table Catalog (2026-07-17).
-// Every table in jtf-ui, replicated with realistic stub data and tagged
-// SUI-compliant (FieldTable/fields/ValueMatrix) or raw (still on BaseTable
-// with call-site geometry/color). Sidebar lists route + table name; clicking
-// renders the replica. The catalog is the migration worklist made visible.
+// Workshop bench — Goose Table Catalog (2026-07-25).
+// The unique table types across the Goose reporting UI, each replicated with
+// realistic stub data (deliberately enough rows to exercise scrolling). Sidebar
+// lists source + table name; clicking renders the replica. Being driven report
+// by report: SR-01a "Daily Sales Orders" first, which drives the design for the
+// rest.
+//
+// (The prior JTF table catalog entries — fortnight / widgets / power / routes /
+// triage — still live under ./jtf-tables/ and can be re-added to ALL below;
+// they're cleared from the aggregator for the Goose pass.)
 import type { Component } from "solid-js";
 import { createSignal, For, Show, onCleanup, onMount } from "solid-js";
 import { SectionTitle, TextBody, TextSublabel } from "../../../src/components/Text";
@@ -20,20 +25,12 @@ import { CompliantBadge, WarningBadge } from "../../../src/components/Badge";
 import { SmallGhostButton } from "../../../src/components/Button";
 import { InteractiveCard } from "../../../src/components/Surface";
 import type { TableEntry } from "./jtf-tables/shared";
-import { ENTRIES as fortnightEntries } from "./jtf-tables/fortnight";
-import { ENTRIES as widgetEntries } from "./jtf-tables/widgets";
-import { ENTRIES as powerEntries } from "./jtf-tables/power";
-import { ENTRIES as routeEntries } from "./jtf-tables/routes";
-import { ENTRIES as triageEntries } from "./jtf-tables/triage";
+import { ENTRIES as sr01aEntries } from "./jtf-tables/goose-sr01a";
 
-// Raw first — they're the migration worklist; stable sort keeps each
-// group's internal order.
+// Goose reporting tables, grouped by report. Raw first (stable sort) so any
+// not-yet-SUI table surfaces at the top as the worklist.
 const ALL: TableEntry[] = [
-  ...fortnightEntries,
-  ...widgetEntries,
-  ...powerEntries,
-  ...routeEntries,
-  ...triageEntries,
+  ...sr01aEntries,
 ].sort((a, b) => (a.status === b.status ? 0 : a.status === "raw" ? -1 : 1));
 
 // Stable slug per entry for the ?t= hash param (deep-linkable selection).
@@ -160,12 +157,12 @@ const JtfTablesBench: Component = () => {
 
   return (
     <div class="component-section component-section--full">
-      <SectionTitle>JTF Table Catalog</SectionTitle>
+      <SectionTitle>Goose Table Catalog</SectionTitle>
       <ClusterRow>
         <TextBody>
-          {`Every table in jtf-ui with realistic stub data — ${suiCount} of ${ALL.length} SUI-compliant${
+          {`Unique Goose report table types with realistic stub data — ${ALL.length} ${ALL.length === 1 ? "type" : "types"} (${suiCount} SUI)${
             resolved().size ? ` · ${resolved().size} resolved (hidden)` : ""
-          }.`}
+          }. SR-01a "Daily Sales Orders" first.`}
         </TextBody>
         <Show when={resolved().size > 0}>
           <SmallGhostButton onClick={clearResolved}>

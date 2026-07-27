@@ -2561,23 +2561,13 @@ th:has(.tf-th-center) .hud-table__header-content {
   justify-content: center;
 }
 
-/* JTF table catalog (workshop bench) — replicas hug their content instead of
-   stretching to the pane, so fixed-width columns (time, numerics) stay fixed
-   and the table width adjusts. Gallery furniture, same category as .demo-frame. */
-.jtf-catalog-pane .hud-table {
-  width: fit-content;
-  max-width: 100%;
-}
-.jtf-catalog-pane .hud-table .hud-table__table {
-  width: auto;
-}
-/* …but NOT inside a field frame: `table-layout: fixed` is ignored when the
-   table's width is auto, and auto layout squeezes the ellipsis (name) column
-   below its geometry. Field frames own their sizing (Σmin floor + overflow-x
-   on the frame), so the table keeps its definite width there. */
-.jtf-catalog-pane .sui-field-frame .hud-table__table {
-  width: 100%;
-}
+/* Goose table catalog (workshop bench) — replicas render in their NATIVE table
+   mode: a `fit` table hugs its content via its own `.hud-table--fit` CSS, while
+   a `fixedLayout` table (e.g. the Day Breakdown Grid, bound in a SectionTable)
+   fills its container so its header count aligns with the table's right edge.
+   The old blanket `width: fit-content` override was removed 2026-07-25 because it
+   forced every table to hug and broke that fill. Gallery furniture, same
+   category as .demo-frame. */
 /* The catalog rail scrolls internally so selecting far-down entries never
    scrolls the rendered table off the scene. */
 .jtf-catalog-rail {
