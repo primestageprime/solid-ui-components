@@ -41,7 +41,11 @@ import { NumberWithUnits } from "../DataDisplay/NumberWithUnits";
 import { Dot } from "../Dot/Dot";
 import { SmStatusBadge } from "../Badge/variants";
 import { EllipsisText } from "../DataDisplay/EllipsisText";
+import { pipe, flatMap, filter, length } from "../../fn";
 import "./SlotCard.css";
+
+/** Flattening a row's groups needs a name for the identity step. */
+const identity = <T,>(value: T): T => value;
 
 export type AccentTone = "info" | "success" | "warning" | "danger";
 
@@ -213,10 +217,10 @@ function createSlotCard(config: SlotCardConfig) {
             // empty row would still take the stack's gap. This is what lets a
             // template carry a conditional row (e.g. `error`) without the
             // no-failure card growing a blank line.
+            const hasValue = (spec: SlotSpec): boolean =>
+              props.values[specName(spec)] !== undefined;
             const filled = () =>
-              row.some((group) =>
-                group.some((spec) => props.values[specName(spec)] !== undefined),
-              );
+              pipe(row, flatMap(identity), filter(hasValue), length) > 0;
             const groups = (
               <For each={row}>
                 {(group, gi) => (

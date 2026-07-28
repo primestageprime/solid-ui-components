@@ -123,6 +123,7 @@ import { ChangeRendererShowcase } from "./showcases/change-renderer";
 import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
+import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -802,6 +803,12 @@ const items: Item[] = [
     label: "EmptyState",
     component: EmptyStateShowcase,
     tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "file-drop-zone",
+    label: "FileDropZone",
+    component: FileDropZoneShowcase,
+    tags: ["depth:2", "form", "container"],
   },
   {
     id: "heatstream-grid",
