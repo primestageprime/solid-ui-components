@@ -30,11 +30,11 @@ const GALLERY = join(root, "dev");
 // Names that are exported values in PascalCase but are not components: type
 // carriers, enums-as-objects, and the `create*` factories (which are exercised
 // through their curried variants, not directly).
-const NOT_A_COMPONENT = /^(create[A-Z]|use[A-Z])/;
-const EXPLICIT_NON_COMPONENTS = new Set([
-  "ICON_PATHS",
-  "Fields",
-]);
+const NOT_A_COMPONENT = [
+  /^(create[A-Z]|use[A-Z])/, // factories and hooks — exercised through variants
+  /^[A-Z0-9_]+$/, // SCREAMING_SNAKE constants (ICON_PATHS, DEFAULT_TOTAL_MS)
+  /^HUD/, // legacy back-compat aliases of components that are showcased
+];
 
 const walk = (dir, pred) => {
   const out = [];
@@ -64,7 +64,7 @@ const components = [];
 for (const sym of checker.getExportsOfModule(moduleSymbol)) {
   const name = sym.getName();
   if (!/^[A-Z]/.test(name)) continue;
-  if (NOT_A_COMPONENT.test(name) || EXPLICIT_NON_COMPONENTS.has(name)) continue;
+  if (NOT_A_COMPONENT.some((re) => re.test(name))) continue;
 
   // Resolve aliases (`export * from`) to the real declaration, then keep only
   // VALUES — a type-only export (props interfaces, unions like AccentTone) is

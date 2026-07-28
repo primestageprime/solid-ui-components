@@ -10,6 +10,11 @@ import {
   OutlinedButton,
   TextButton,
   IconOnlyButton,
+  LargePrimaryButton,
+  SmallButton,
+  SmallOutlinedButton,
+  SmallWarningButton,
+  SmallDangerButton,
 } from "../../src/components/Button";
 import { Stack } from "../../src/components/Layout/Stack";
 import {
@@ -279,6 +284,21 @@ export const ButtonShowcase: Component = () => {
             form — emphasis is chosen by name, never by a `variant` prop.
           </div>
         </NarrowStack>
+      </div>
+
+      <div class="example-group">
+        <h3>Size-Locked Variants</h3>
+        <div class="text-meta">
+          Size is part of the name too — a dense toolbar reaches for Small*, a
+          page's primary action for Large*. Neither takes a `size` prop.
+        </div>
+        <WrappedClusterRow>
+          <LargePrimaryButton>Large Primary</LargePrimaryButton>
+          <SmallButton>Small</SmallButton>
+          <SmallOutlinedButton>Small Outlined</SmallOutlinedButton>
+          <SmallWarningButton>Small Warning</SmallWarningButton>
+          <SmallDangerButton>Small Danger</SmallDangerButton>
+        </WrappedClusterRow>
       </div>
     </div>
   );
