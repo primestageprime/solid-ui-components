@@ -4,18 +4,25 @@
 //
 // The centrepiece is a PROTOTYPE distribution sparkline (defined locally at the
 // bottom of this file, deliberately NOT in src/ until the encoding is settled).
-// It tries to say five things at once about a series:
+// It says four things at once about a series:
 //
 //   min / max       solid outlined translucent box, the full range
-//   typical         dashed box inside it, the percentile pair
+//   typical         dashed box inside it, the LOCAL percentile band
 //   average         hairline across the whole width, at the mean
-//   outliers        hollow rings on the points outside the typical band
 //   direction       colour AND shading — green/red/grey for end-vs-start, with
 //                   the fill densest at the end the series finished on
 //
-// Twelve shapes are plotted on ONE shared domain, because that is the only way
-// the min/max box means anything: on a per-series auto-scale every box would
-// fill its rect and the encoding would collapse.
+// TWO SCALES, and the distinction is the whole point:
+//
+//   the y-axis      belongs to the SET. Every cell shares it, so heights are
+//                   comparable across cells. It is the p95 band of the POOLED
+//                   values, not their true extremes — one spike would otherwise
+//                   flatten all twelve into hairlines. Anything outside is
+//                   CLIPPED, and the stat line says how much.
+//   the dashed box  belongs to the SERIES. It is that one series' own p95 band,
+//                   computed independently of the shared axis.
+//
+// The box geometry never changes: the same rect, same height, every cell.
 import { type Component, For } from "solid-js";
 import {
   MutedBody,
@@ -157,13 +164,13 @@ const EXAMPLES: Example[] = [
   },
 ];
 
-/** One shared domain for every example — see the header note. */
-const DOMAIN: [number, number] = [0, 100];
-
-/** The percentile pair the dashed box spans. Open question: p10/p90 here,
- *  p25/p75 in the comparison row below, and p95 was floated too. */
-const TYPICAL: [number, number] = [0.1, 0.9];
+/** The percentile band the dashed box spans, computed per series. p95 by
+ *  default; the comparison row below runs it against a tighter pair. */
+const TYPICAL: [number, number] = [0.05, 0.95];
 const TIGHT: [number, number] = [0.25, 0.75];
+
+/** The percentile band the SHARED y-axis spans, computed over the pooled set. */
+const AXIS: [number, number] = [0.05, 0.95];
 
 // ── The prototype ────────────────────────────────────────────────────────────
 
@@ -182,6 +189,16 @@ const percentile = (p: number, values: number[]): number => {
   return s[lo] + (s[hi] - s[lo]) * (at - lo);
 };
 
+/** The shared y-axis: the pooled set's p95 band, NOT its true extremes. A
+ *  single spike in one series would otherwise squash every other series into a
+ *  hairline — the axis describes where the set lives, and the few samples
+ *  outside it are clipped rather than allowed to rescale everything. */
+const POOLED: number[] = EXAMPLES.flatMap((e) => e.values);
+const DOMAIN: [number, number] = [
+  percentile(AXIS[0], POOLED),
+  percentile(AXIS[1], POOLED),
+];
+
 interface Summary {
   min: number;
   max: number;
@@ -189,21 +206,21 @@ interface Summary {
   bandLo: number;
   bandHi: number;
   trend: SparklineTrend;
-  outliers: number;
+  /** Samples outside the SHARED axis — the ones the rect cannot show. */
+  clipped: number;
 }
 
 const summarize = (values: number[], band: [number, number]): Summary => {
-  const bandLo = percentile(band[0], values);
-  const bandHi = percentile(band[1], values);
-  const outside = (v: number): boolean => v < bandLo || v > bandHi;
+  const beyondAxis = (v: number): boolean =>
+    v < DOMAIN[0] || v > DOMAIN[1];
   return {
     min: Math.min(...values),
     max: Math.max(...values),
     avg: mean(values),
-    bandLo,
-    bandHi,
+    bandLo: percentile(band[0], values),
+    bandHi: percentile(band[1], values),
     trend: trendOf(values[0], values[length(values) - 1]),
-    outliers: length(values.filter(outside)),
+    clipped: length(values.filter(beyondAxis)),
   };
 };
 
@@ -235,16 +252,6 @@ const DistributionSparkline: Component<DistributionSparklineProps> = (props) => 
     return join(" ", map(at, props.values));
   };
 
-  const outlying = (): Array<{ cx: number; cy: number }> => {
-    const n = length(props.values);
-    const s = stats();
-    const marked = map(
-      (v: number, i: number) => ({ v, cx: (i / (n - 1)) * W, cy: yOf(v) }),
-      props.values,
-    );
-    return marked.filter((p) => p.v < s.bandLo || p.v > s.bandHi);
-  };
-
   return (
     <svg
       class={`gs-dist__svg gs-dist--${stats().trend}`}
@@ -254,40 +261,45 @@ const DistributionSparkline: Component<DistributionSparklineProps> = (props) => 
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <rect
-        class="gs-dist__range"
-        x={0.5}
-        width={W - 1}
-        y={boxOf(stats().min, stats().max).y}
-        height={boxOf(stats().min, stats().max).height}
-        fill={`url(#gs-grad-${stats().trend})`}
-      />
-      <rect
-        class="gs-dist__typical"
-        x={4.5}
-        width={W - 9}
-        y={boxOf(stats().bandLo, stats().bandHi).y}
-        height={boxOf(stats().bandLo, stats().bandHi).height}
-      />
-      <line
-        class="gs-dist__mean"
-        x1={0}
-        x2={W}
-        y1={yOf(stats().avg)}
-        y2={yOf(stats().avg)}
-      />
-      <polyline class="gs-dist__line" points={points()} />
-      <For each={outlying()}>
-        {(p) => <circle class="gs-dist__outlier" cx={p.cx} cy={p.cy} r={2.5} />}
-      </For>
+      {/* Everything is clipped to the rect: a sample beyond the shared axis
+          runs off the edge rather than rescaling the whole set. */}
+      <g clip-path="url(#gs-clip)">
+        <rect
+          class="gs-dist__range"
+          x={0.5}
+          width={W - 1}
+          y={boxOf(stats().min, stats().max).y}
+          height={boxOf(stats().min, stats().max).height}
+          fill={`url(#gs-grad-${stats().trend})`}
+        />
+        <rect
+          class="gs-dist__typical"
+          x={4.5}
+          width={W - 9}
+          y={boxOf(stats().bandLo, stats().bandHi).y}
+          height={boxOf(stats().bandLo, stats().bandHi).height}
+        />
+        <line
+          class="gs-dist__mean"
+          x1={0}
+          x2={W}
+          y1={yOf(stats().avg)}
+          y2={yOf(stats().avg)}
+        />
+        <polyline class="gs-dist__line" points={points()} />
+      </g>
     </svg>
   );
 };
 
-/** The three gradients, defined once per page and referenced by id. */
+/** The gradients and the clip rect, defined once per page and referenced by
+ *  id. Every sparkline is the same size, so one clip serves all of them. */
 const SparkGradientDefs: Component = () => (
   <svg class="gs-defs" aria-hidden="true">
     <defs>
+      <clipPath id="gs-clip">
+        <rect x={0} y={0} width={W} height={H} />
+      </clipPath>
       {/* Strong at the TOP: the series ended above where it began. */}
       <linearGradient id="gs-grad-up" class="gs-grad gs-grad--up" x1="0" y1="1" x2="0" y2="0">
         <stop offset="0%" />
@@ -311,7 +323,8 @@ const round = (v: number): string => v.toFixed(0);
 
 const statLine = (values: number[], band: [number, number]): string => {
   const s = summarize(values, band);
-  return `min ${round(s.min)} · typical ${round(s.bandLo)}–${round(s.bandHi)} · mean ${round(s.avg)} · max ${round(s.max)} · ${s.outliers} outside`;
+  const clipped = s.clipped > 0 ? ` · ${s.clipped} clipped` : "";
+  return `min ${round(s.min)} · typical ${round(s.bandLo)}–${round(s.bandHi)} · mean ${round(s.avg)} · max ${round(s.max)}${clipped}`;
 };
 
 const bandName = (band: [number, number]): string =>
@@ -381,10 +394,14 @@ const HEARTBEAT = [
 const BAND_COMPARISON = [EXAMPLES[4], EXAMPLES[7], EXAMPLES[8]];
 
 const OPEN_QUESTIONS = [
-  "Is five encodings in one 200×56 rect too many? The honest alternative is dropping the mean hairline — it is the one a reader can reconstruct.",
-  "Which percentile pair is 'typical'? p10/p90 above, p25/p75 in the comparison row. p95 alone would be a one-sided 'how bad does it get' mark instead of a band.",
+  "A tight axis and a true-extremes box fight each other: with the axis at p5–p95, most series have a real min or max outside it, so the solid box saturates to the full rect and stops distinguishing them (compare 'Trending up' and 'Periodic, damping' — different series, identical box). Either the solid box becomes a WIDER percentile band (p1–p99) instead of true extremes, or a saturated box has to be read as 'this one leaves the axis', which is what the clipped count already says.",
+  "The axis is the pooled p5–p95 — a CENTRAL band, not a one-sided p95, because a series that dips near zero would flatten everything just as badly as one that spikes. If you meant a hard 0 floor with only the top trimmed, that is a one-line change.",
+  "What is the set, in the real page? Here it is the twelve cells on screen. In goose it is presumably the sources in one summary row — but if the row is filtered, does the axis re-derive (cells stay legible, but heights stop being comparable to what you saw a second ago) or stay pinned to the unfiltered set?",
+  "Clipping is silent apart from the stat line. Should a clipped series get a visible mark at the edge it exits through — a notch, a thickened border — or is the count enough?",
+  "Is four encodings in one 200×56 rect too many? The honest candidate for removal is the mean hairline — it is the one a reader can approximate from the line itself.",
+  "Which percentile pair is 'typical' for the dashed box? p5–p95 above, p25–p75 in the comparison row.",
   "'Step change' shows the failure mode of any central measure: the mean sits at 52, where no sample ever was. Do we want a bimodality hint, or is that out of scope for a sparkline?",
-  "Outliers are currently 'outside the typical band', which by construction is ~20% of EVERY series — look at 'Trending up': its 'outliers' are just its first and last few points, which is nonsense. A fixed rule (>1.5 IQR, or beyond a threshold we actually care about) would mark nothing on a clean ramp and plenty on 'Spiky', which is the behaviour we want.",
+  "Per-point outlier marks are gone (they were rings on everything outside the band, which by construction was ~20% of every series — on a clean ramp they just marked its endpoints). Outliers now show up as the thing they are: samples the shared axis refuses to rescale for.",
   "Direction is first-vs-last. 'Random walk' and 'Dip and recover' show why that is fragile — would first-third-mean vs last-third-mean be better?",
   "For rows-remaining, DOWN is good. Invert the colour per metric, or make the caller pass the trend in (TrendSparkline already lets them)?",
   "Shared domain is assumed here. When sources differ by 10×, a small one flattens to a line inside its box — accept that, or normalise each series and lose comparability?",
@@ -417,13 +434,10 @@ const GooseSparklineSummariesBench: Component = () => (
                 Solid translucent box — the full min..max range.
               </TextSublabel>
               <TextSublabel>
-                Dashed box inside it — the typical band (p{TYPICAL[0] * 100}–p
-                {TYPICAL[1] * 100}).
+                Dashed box inside it — this SERIES' own p{TYPICAL[1] * 100} band
+                ({bandName(TYPICAL)}), computed independently of the axis.
               </TextSublabel>
               <TextSublabel>Hairline across the width — the mean.</TextSublabel>
-              <TextSublabel>
-                Hollow rings — the points outside the typical band.
-              </TextSublabel>
               <TextSublabel>
                 Colour AND shading — green rising, red falling, grey neither;
                 the fill is densest at the end it finished on.
@@ -437,10 +451,13 @@ const GooseSparklineSummariesBench: Component = () => (
         Region 1 — twelve shapes, one shared domain
       </SubsectionTitle>
       <MutedBody>
-        Every cell is scaled to {DOMAIN[0]}..{DOMAIN[1]}, so the boxes are
-        comparable across cells. That is the whole reason the range box carries
-        information: on a per-series auto-scale it would fill the rect every
-        time.
+        The axis belongs to the SET, not the cell: every rect here spans{" "}
+        {round(DOMAIN[0])}..{round(DOMAIN[1])}, the {bandName(AXIS)} band of all{" "}
+        {length(POOLED)} pooled samples. Not their true extremes — "Spiky"
+        touches 90, and letting it set the ceiling would squash the other
+        eleven. Samples past the edge are clipped, and each cell says how many.
+        On a per-series auto-scale none of this would mean anything: every range
+        box would fill its rect every time.
       </MutedBody>
       <CardGrid>
         <For each={EXAMPLES}>{(e) => <ExampleCell example={e} />}</For>
@@ -448,11 +465,11 @@ const GooseSparklineSummariesBench: Component = () => (
 
       <SubsectionTitle>Region 2 — which band is "typical"?</SubsectionTitle>
       <MutedBody>
-        The same three series twice: p{TYPICAL[0] * 100}–p{TYPICAL[1] * 100} on
-        the left of each pair, p{TIGHT[0] * 100}–p{TIGHT[1] * 100} on the right.
-        The tighter band reads as "where it usually sits" and marks far more
-        outliers; the wider one reads as "the working range" and marks almost
-        none.
+        The dashed box is the only thing that changes here — the axis is the
+        set's and stays put, so the pairs are directly comparable. The same
+        three series twice: {bandName(TYPICAL)} on the left of each pair,{" "}
+        {bandName(TIGHT)} on the right. The tighter box reads as "where it
+        usually sits"; the wider one as "the working range".
       </MutedBody>
       <CardGrid>
         <For each={BAND_COMPARISON}>

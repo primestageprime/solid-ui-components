@@ -87,13 +87,6 @@
   stroke: var(--sui-danger);
 }
 
-/* Points outside the typical band — hollow so they read as marks, not data. */
-.gs-dist__outlier {
-  fill: var(--sui-bg-primary);
-  stroke: var(--sui-warning);
-  stroke-width: 1;
-}
-
 /* The legend's swatch column, so the sample sits beside its sentence. */
 .gs-legend-swatch {
   flex: 0 0 auto;
