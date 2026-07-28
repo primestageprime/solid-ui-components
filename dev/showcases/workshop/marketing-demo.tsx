@@ -2,7 +2,7 @@
 // Leaky Pipe Problem", is built out with stub flow data; the rest are stubs to
 // be filled in. Pure SUI composition — no inline styles (ratchet-clean).
 import { type Component, createSignal, For, Show, Switch, Match } from "solid-js";
-import { Tabs, type Tab } from "../../../src/components/Tabs";
+import { UnderlineTabs, type Tab } from "../../../src/components/Tabs";
 import { DataTransferScenario } from "./marketing-demo/transfer";
 import { BiReportsScenario } from "./marketing-demo/reports";
 import {
@@ -189,12 +189,7 @@ const MarketingDemoBench: Component = () => {
     <div class="component-section component-section--full">
       <ContentStack>
         <SectionTitle>Marketing demo</SectionTitle>
-        <Tabs
-          tabs={TABS}
-          activeTab={active()}
-          onTabChange={setActive}
-          variant="underline"
-        />
+        <UnderlineTabs tabs={TABS} activeTab={active()} onTabChange={setActive} />
         <Switch
           fallback={
             <ContentStack>
