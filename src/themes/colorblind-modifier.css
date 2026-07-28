@@ -18,9 +18,12 @@
    theme is untouched.
    ============================================ */
 html[data-colorblind="true"] {
-  /* Semantic pair: red→vermilion, green→blue, amber kept. */
-  --sui-danger: #e66100;
-  --sui-danger-rgb: 230, 97, 0;
+  /* Semantic pair: red→vermilion, green→blue, amber kept.
+     danger matches colorblind.css — lifted from #e66100 so it stays readable
+     as text on its own 15% wash (the danger button's hover). Tuned against the
+     dark base themes this modifier is meant to layer onto. */
+  --sui-danger: #ea7723;
+  --sui-danger-rgb: 234, 119, 35;
   --sui-success: #3b82f6;
   --sui-success-rgb: 59, 130, 246;
   --sui-warning: #e6a700;

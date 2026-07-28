@@ -56,11 +56,21 @@ body {
   /* ---- Accent ---- */
   --sui-accent: #c96442;
   --sui-accent-rgb: 201, 100, 66;
-  --sui-accent-dim: #a85234;
+  /* Text-safe accent — see default.css. Deepened from #a85234 (light theme, so
+     the safe direction is darker) to clear 4.6:1 as a button hover label on the
+     8-12% accent washes. */
+  --sui-accent-dim: #9e4d31;
+
+  /* Label colour for accent/warning fills. Light theme, so white — but note
+     white does NOT clear 4.5:1 on --sui-accent itself (3.90:1), which is why
+     the primary button below uses --sui-accent-dim as its fill. */
+  --sui-on-accent: #ffffff;
+  --sui-on-warning: #ffffff;
 
   /* ---- Semantic ---- */
-  --sui-danger: #a8443a;
-  --sui-danger-rgb: 168, 68, 58;
+  /* Deepened from #a8443a so danger stays >= 4.6:1 as text on its own 15% wash. */
+  --sui-danger: #953c33;
+  --sui-danger-rgb: 149, 60, 51;
   --sui-warning: #926621;
   --sui-warning-rgb: 146, 102, 33;
   --sui-success: #577657;
@@ -175,6 +185,30 @@ body {
   background: var(--sui-text-primary);
   border-color: var(--sui-text-primary);
   color: var(--sui-bg-elevated);
+}
+
+/* Primary fill. The baseline fills with --sui-accent, but bronze's rust accent
+   sits in the middle of the lightness range: white reads 3.90:1 on it and dark
+   ink 4.18:1, so NO label colour clears 4.5:1. Fill with the deeper accent-dim
+   instead (white = 5.90:1) and darken further on hover, keeping one white label
+   throughout rather than flipping tone mid-interaction. */
+.sui-btn--primary {
+  background: var(--sui-accent-dim);
+  border-color: var(--sui-accent-dim);
+}
+
+.sui-btn--primary:hover:not(:disabled) {
+  background: #8b442b;
+  border-color: #8b442b;
+  color: var(--sui-on-accent, #ffffff);
+}
+
+/* The baseline's 90%-warning hover LIGHTENS the fill against a bone page,
+   dropping the white label to 4.23:1. Darken on hover instead. */
+.sui-btn--warning:hover:not(:disabled) {
+  background: #7d571c;
+  border-color: #7d571c;
+  color: var(--sui-on-warning, #ffffff);
 }
 
 /* Panel glows: default.css uses rgba(0,0,0,0.2..0.3) which is

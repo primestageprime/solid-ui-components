@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { THEMES } from "../manifest";
+import { contrastRatio, over, parseColor, parseTokens } from "./_contrastMath";
 
 // ============================================================================
 // WCAG contrast contract test
 // ============================================================================
-// Self-contained token parser + WCAG 2.x relative-luminance/contrast math
-// (no imports outside this repo). Verifies every theme's text/mark tokens
+// Colour math lives in `_contrastMath.ts`, shared with
+// `buttonHoverContrast.test.ts`. Verifies every theme's text/mark tokens
 // clear the thresholds below when composited over the surfaces apps actually
 // render them on. This is the token policy agreed for the WCAG retune:
 //
@@ -26,91 +27,6 @@ import { THEMES } from "../manifest";
 //    does not authorize changing them.
 //  - --sui-border only needs a 1.3:1 visibility nudge on bg-primary.
 // ============================================================================
-
-type Tokens = Record<string, string>;
-
-function parseTokens(css: string): Tokens {
-  const tokens: Tokens = {};
-  // First `--name: value;` declaration wins (themes rarely repeat a :root
-  // block, and the standalone :root always precedes any modifier block).
-  for (const m of css.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-    if (!(m[1] in tokens)) tokens[m[1]] = m[2].trim();
-  }
-  return tokens;
-}
-
-type RGBA = [number, number, number, number];
-
-function parseColor(raw: string | undefined, tokens: Tokens, depth = 0): RGBA | null {
-  if (!raw || depth > 8) return null;
-  const v = raw.trim();
-
-  // var(--name) or var(--name, fallback)
-  const varMatch = v.match(/^var\((--[\w-]+)(?:\s*,\s*(.+))?\)$/);
-  if (varMatch) {
-    return parseColor(tokens[varMatch[1]] ?? varMatch[2], tokens, depth + 1);
-  }
-
-  // #rrggbb
-  let m = v.match(/^#([0-9a-f]{6})$/i);
-  if (m) {
-    const n = parseInt(m[1], 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255, 1];
-  }
-  // #rgb
-  m = v.match(/^#([0-9a-f]{3})$/i);
-  if (m) {
-    const [r, g, b] = [...m[1]].map((c) => parseInt(c + c, 16));
-    return [r, g, b, 1];
-  }
-
-  // rgb()/rgba(), including a leading var(--x-rgb) triplet reference, e.g.
-  // "rgba(var(--sui-accent-rgb), 0.3)" where --sui-accent-rgb = "0, 212, 255"
-  m = v.match(/^rgba?\(([^)]+)\)$/);
-  if (m) {
-    const inner = m[1].trim();
-    const varTripletMatch = inner.match(/^var\((--[\w-]+)\)\s*,\s*([\d.]+)\s*$/);
-    if (varTripletMatch) {
-      const triplet = tokens[varTripletMatch[1]];
-      const alpha = parseFloat(varTripletMatch[2]);
-      if (triplet) {
-        const parts = triplet.split(",").map((s) => parseFloat(s));
-        if (parts.length >= 3) return [parts[0], parts[1], parts[2], alpha];
-      }
-      return null;
-    }
-    const parts = inner.split(",").map((s) => parseFloat(s));
-    if (parts.length >= 3 && parts.slice(0, 3).every((n) => !Number.isNaN(n))) {
-      return [parts[0], parts[1], parts[2], parts.length > 3 ? parts[3] : 1];
-    }
-    return null;
-  }
-
-  return null;
-}
-
-// Composite a (possibly translucent) foreground over an opaque background.
-function over(fg: RGBA, bg: [number, number, number]): [number, number, number] {
-  if (fg[3] >= 1) return [fg[0], fg[1], fg[2]];
-  return [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3])) as [
-    number,
-    number,
-    number,
-  ];
-}
-
-function relLuminance([r, g, b]: [number, number, number]): number {
-  const f = (c: number) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-}
-
-function contrastRatio(a: [number, number, number], b: [number, number, number]): number {
-  const [lighter, darker] = [relLuminance(a), relLuminance(b)].sort((x, y) => y - x);
-  return (lighter + 0.05) / (darker + 0.05);
-}
 
 interface Pair {
   fg: string;
