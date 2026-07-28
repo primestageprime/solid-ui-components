@@ -4010,6 +4010,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
@@ -4831,6 +4836,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -4948,6 +4958,11 @@
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
             "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -5191,6 +5206,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -5347,6 +5367,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -5414,6 +5439,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -5551,6 +5581,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -5695,6 +5730,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -5970,6 +6010,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -6118,6 +6163,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
@@ -6255,6 +6305,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -6532,6 +6587,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -6689,6 +6749,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
@@ -6763,6 +6828,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -6866,6 +6936,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -6904,6 +6979,11 @@
           {
             "file": "src/routes/metric-explorer.tsx",
             "line": 9,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -7015,6 +7095,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
@@ -7029,6 +7114,11 @@
           {
             "file": "src/routes/metric-explorer.tsx",
             "line": 41,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -7283,6 +7373,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           }
         ],
@@ -7700,6 +7795,16 @@
             "kind": "factory-call"
           },
           {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 42,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "named"
@@ -7893,6 +7998,16 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 88,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 40,
             "kind": "factory-call"
           },
           {

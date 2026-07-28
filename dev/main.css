@@ -2577,22 +2577,6 @@ th:has(.tf-th-center) .hud-table__header-content {
   justify-content: center;
 }
 
-/* Goose table catalog (workshop bench) — replicas render in their NATIVE table
-   mode: a `fit` table hugs its content via its own `.hud-table--fit` CSS, while
-   a `fixedLayout` table (e.g. the Day Breakdown Grid, bound in a SectionTable)
-   fills its container so its header count aligns with the table's right edge.
-   The old blanket `width: fit-content` override was removed 2026-07-25 because it
-   forced every table to hug and broke that fill. Gallery furniture, same
-   category as .demo-frame. */
-/* The catalog rail scrolls internally so selecting far-down entries never
-   scrolls the rendered table off the scene. */
-.jtf-catalog-rail {
-  max-height: calc(100vh - 240px);
-  overflow-y: auto;
-}
-/* Right rail: the not-yet-curried field-type demands. Same internal scroll;
-   fixed width so the table pane keeps the slack. */
-
 /* PopoverMenu showcase — the short overflow:hidden ancestor that would clip
    a non-portalled panel (static demo chrome; no dynamic geometry). */
 .popover-menu-demo__clipframe {
@@ -2605,30 +2589,8 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 0 12px;
 }
 
-/* Catalog pane height context (ruled 2026-07-21): the pane is the height
-   budget a fill-mode field table may use — a definite-height flex column.
-   Shrink-to-fit fill (same ruling): entries hug their content when short,
-   and only shrink+scroll when the rows overflow this height, so the wrapper
-   must allow shrink without forcing growth. */
-.jtf-catalog-pane {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 240px);
-}
-.jtf-catalog-pane > * {
-  flex: 0 1 auto;
-  min-height: 0;
-}
-
 /* Bench frames — a showcase's demo geometry belongs in a class, not an inline
    style, so the teaching surface models what the rule asks of src. */
-
-/* goose-sr01a: the table unit is capped to a tile-like width so the record
-   count aligns with the table's right edge. */
-.sr01a-table-unit {
-  width: 34rem;
-  max-width: 100%;
-}
 
 /* split-queue: a definite-height flex context, so the fill-parent bar has a
    height to fill. */
