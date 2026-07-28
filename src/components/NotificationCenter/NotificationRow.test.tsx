@@ -202,3 +202,57 @@ describe("action activation", () => {
     expect(document.body.textContent).toContain("View");
   });
 });
+
+describe("body slot", () => {
+  it("renders arbitrary content between the detail line and the action row", () => {
+    render(() => (
+      <NotificationCenter
+        items={[
+          item({
+            detail: "Sector 7",
+            body: () => <progress data-testid="bar" value={0.8} />,
+            actions: [{ label: "View", href: "/x" }],
+          }),
+        ]}
+        open
+      />
+    ));
+    const row = document.body.querySelector(".sui-notification-center__row");
+    const bar = document.body.querySelector("[data-testid='bar']");
+    expect(bar).toBeTruthy();
+    const order = Array.from(row?.querySelectorAll("*") ?? []);
+    expect(order.indexOf(bar as Element)).toBeGreaterThan(
+      order.indexOf(screen.getByText("Sector 7")),
+    );
+    expect(order.indexOf(bar as Element)).toBeLessThan(
+      order.indexOf(document.body.querySelector("a.link") as Element),
+    );
+  });
+
+  it("is not invoked for items that do not define it", () => {
+    const body = vi.fn(() => <span>never</span>);
+    render(() => (
+      <NotificationCenter
+        items={[item({ id: "a" }), item({ id: "b", body })]}
+        open
+      />
+    ));
+    expect(body).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).toContain("never");
+  });
+
+  it("tracks a signal read inside the thunk", () => {
+    // This is the whole justification for a thunk over `string | JSX.Element`:
+    // construction is deferred into the row's reactive scope.
+    const [pct, setPct] = createSignal(10);
+    render(() => (
+      <NotificationCenter
+        items={[item({ body: () => <span>{pct()}%</span> })]}
+        open
+      />
+    ));
+    expect(document.body.textContent).toContain("10%");
+    setPct(90);
+    expect(document.body.textContent).toContain("90%");
+  });
+});

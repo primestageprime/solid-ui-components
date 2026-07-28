@@ -85,6 +85,12 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
         <Show when={item().detail}>
           <TextSublabel>{item().detail}</TextSublabel>
         </Show>
+        {/* Consumer-owned region. The chrome above (gutter, well, title,
+            timestamp) and below (actions) is invariant, which is what keeps a
+            heterogeneous feed scanning as one inbox rather than a pile of
+            cards. Invoked HERE, inside the row's reactive scope — that is the
+            whole point of taking a thunk (see types.ts). */}
+        <Show when={item().body}>{(body) => <>{body()()}</>}</Show>
         <Show when={!item().transient && actions().length > 0}>
           {/* Wrapping row — Toast's action-row geometry. Several actions on one
               notification wrap rather than growing an overflow menu; six
