@@ -9,7 +9,7 @@
 // squeeze truncated the primary identity while every other column kept its
 // data; the table scrolls instead). The 50 is data-driven: the 2026-07-17
 // production survey (docs/superpowers/plans/2026-07-17-name-length-survey.md,
-// 171,926 values across rhinotools/jtf/dside/thorcasting) found p95 = 29ch,
+// 171,926 values across four production consumer apps) found p95 = 29ch,
 // p99 = 41ch, and the longest LEGITIMATE name at 43ch — everything past ~48ch
 // is dirty data (addresses, emails, notes in name columns) that SHOULD
 // truncate; ellipsis remains for exactly that case.

@@ -68,7 +68,7 @@ const REQUIRED_TOKENS: readonly string[] = [
 
 // Themes to validate — derived from the manifest so a newly registered theme
 // (whose id matches its filename) is covered automatically. This closed the
-// gap where stax.css shipped without joining the hand-maintained list.
+// gap where a theme shipped without joining the hand-maintained list.
 const THEME_FILES: readonly string[] = Object.keys(THEMES).map(
   (id) => `${id}.css`,
 );

@@ -255,7 +255,7 @@ export function createDropdown(
 
 /** Compact inline picker: small trigger that reads as plain text until
  *  hovered. The form used beside values in dense editors/panes
- *  (thorcasting's option editor + explore pane). */
+ *  (option editors, explore panes). */
 export const InlineSubtleDropdown = createDropdown({
   size: "sm",
   subtle: true,

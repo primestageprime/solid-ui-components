@@ -2,7 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // WeeklyCashflowChart — Composite (Depth 2). Composes CashflowBars + CashflowPopover (each Depth 1).
 // CashflowChart — weekly revenue/expense bars with a running-balance ("coffers")
-// line, ported from the Thorcasting app. Container-driven sizing: the chart FILLS
+// line, extracted from a financial-runway app. Container-driven sizing: the chart FILLS
 // the height its layout box allots it (via a ResizeObserver that measures the
 // container) rather than growing to a width-locked aspect ratio. The SVG is
 // width:100% height:100% and its viewBox height tracks the measured container

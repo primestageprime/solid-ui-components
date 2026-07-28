@@ -5,9 +5,10 @@
 // 2026-07-17 ruling: consumers configure functions (value, row, col) → Tone
 // and (row, col) → selected; the component owns all geometry and color.
 //
-// Generalizes jtf's ComplianceThresholdTable (CE levels × power sources,
-// tone by threshold compliance, selected = chosen CE/source) and fits any
-// scenario grid, e.g. thorcasting's viable price × salaries-to-pay.
+// Generalizes the compliance-threshold table shape (certification levels ×
+// power sources, tone by threshold compliance, selected = the chosen
+// level/source pair) and fits any scenario grid — e.g. viable price ×
+// salaries-to-pay in a financial forecast.
 // ============================================
 import { mergeProps, type JSX } from "solid-js";
 import type { Tone } from "../../types";
