@@ -59,11 +59,19 @@ body {
   /* ---- Accent / Primary ---- */
   --sui-accent: #00d4ff;
   --sui-accent-rgb: 0, 212, 255;
-  --sui-accent-dim: #0099bb;
+  /* Text-safe accent — see default.css. Nudged from #0099bb so it clears
+     4.6:1 as a button hover label on the 8-12% accent washes, not just on
+     bare bg-primary. */
+  --sui-accent-dim: #0a9dbe;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic Colors ---- */
-  --sui-danger: #ff3366;
-  --sui-danger-rgb: 255, 51, 102;
+  /* Retuned from #ff3366 so danger stays >= 4.6:1 as text on its own 20% wash. */
+  --sui-danger: #ff4e7b;
+  --sui-danger-rgb: 255, 78, 123;
   --sui-warning: #ffaa00;
   --sui-warning-rgb: 255, 170, 0;
   --sui-success: #00ff88;
@@ -436,10 +444,12 @@ body {
   letter-spacing: 0.05em;
 }
 
+/* Label uses --sui-accent-dim (the text-safe accent), not --sui-accent, which
+   is a fill token — see the matching note in _baseline.css. */
 .sui-btn:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.1);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn:disabled {
@@ -449,18 +459,21 @@ body {
 .sui-btn--active {
   background: rgba(var(--sui-accent-rgb), 0.2);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--primary {
   background: var(--sui-accent);
   border-color: var(--sui-accent);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-accent, #ffffff);
 }
 
+/* `color` is mandatory — see the matching note in _baseline.css. Matches this
+   variant's rest state so the label does not change tone on hover. */
 .sui-btn--primary:hover:not(:disabled) {
   background: var(--sui-accent-dim);
   box-shadow: 0 0 20px rgba(var(--sui-accent-rgb), 0.4);
+  color: var(--sui-on-accent, #ffffff);
 }
 
 .sui-btn--danger {
@@ -471,6 +484,7 @@ body {
 .sui-btn--danger:hover:not(:disabled) {
   background: rgba(var(--sui-danger-rgb), 0.2);
   border-color: var(--sui-danger);
+  color: var(--sui-danger);
 }
 
 .sui-btn--ghost {
@@ -498,32 +512,33 @@ body {
 .sui-btn--warning {
   background: var(--sui-warning);
   border-color: var(--sui-warning);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-warning, #ffffff);
 }
 
 .sui-btn--warning:hover:not(:disabled) {
   background: rgba(var(--sui-warning-rgb), 0.85);
   border-color: var(--sui-warning);
   box-shadow: 0 0 20px rgba(var(--sui-warning-rgb), 0.4);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-warning, #ffffff);
 }
 
+/* Accent-forward variants carry the text-safe accent — see _baseline.css. */
 .sui-btn--outlined {
   background: transparent;
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--outlined:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.12);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--text {
   background: transparent;
   border-color: transparent;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding-left: 0;
   padding-right: 0;
 }
@@ -538,7 +553,7 @@ body {
 .sui-btn--icon-only {
   background: transparent;
   border: none;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding: 0;
   width: 1.4rem;
   height: 1.4rem;
@@ -547,7 +562,7 @@ body {
 
 .sui-btn--icon-only:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.12);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 /* Toggled state for icon-only buttons. Caller signals "on" via

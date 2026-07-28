@@ -2,6 +2,105 @@
 
 ## [Unreleased]
 
+## 0.119.0
+
+Every SUI `Button` variant now clears WCAG 4.5:1 for its label, at rest and on
+hover, in all six themes. Getting there took a cascade fix, two new tokens, and
+a retune of two existing ones per theme — details below.
+
+### Fixed
+- **`variant="primary"` labels vanished on hover, in every theme.**
+  `.sui-btn:hover` sets a `color` for all buttons and sits at the same
+  specificity (0,3,0) as `.sui-btn--primary:hover`, so it won for any property
+  the variant rule didn't declare. The variant declared `background` but not
+  `color`, so the label rendered accent-on-accent-dim — **1.05:1** in the
+  default theme, i.e. the same colour as its own fill. The variant's rest-state
+  `color: #ffffff` was never involved; `:hover` outranks it.
+- **`variant="danger"` lost its danger semantics on hover** — same cascade trap,
+  so the label turned accent-blue over a red wash. It now stays
+  `var(--sui-danger)`.
+- **`--sui-accent` was used as label text** by `.sui-btn:hover`,
+  `.sui-btn--active`, and the `outlined` / `text` / `icon-only` variants —
+  despite `contrast.test.ts` documenting it as a fill token explicitly exempt
+  from passing as text. Those labels now use `--sui-accent-dim`, which is
+  retuned below to actually be text-safe on the surfaces buttons use.
+
+### Added
+- **`--sui-on-accent` / `--sui-on-warning`** — per-theme label colours for
+  accent and warning FILLS. A filled control needs its own label token: white
+  reads 3.68:1 on the default theme's accent and 1.82:1 on STAX's lime, so
+  there is no cross-theme constant that works. Dark themes resolve these to
+  `--sui-bg-deep`; light themes to white or ink. `_baseline.css` reads them with
+  a `#ffffff` fallback, so a third-party theme predating the tokens still
+  renders.
+- **`src/themes/__tests__/buttonHoverContrast.test.ts`** — two-layer contract,
+  covering every variant in both rest and hover states.
+  - *Layer 1, structural:* any `.sui-btn*:hover` rule that sets a `background`
+    must also set a `color`. Token-independent, so it fires on the next filled
+    variant added regardless of palette — this is the layer that stops
+    recurrence. `--ghost` is exempt with a recorded reason.
+  - *Layer 2, resolved cascade:* builds `_baseline.css` + theme CSS, resolves
+    each variant's `color`/`background` by specificity then document order,
+    composites with alpha, and asserts 4.5:1. `contrast.test.ts` cannot catch
+    this class of bug — it checks token *pairs*, and the bug was a token
+    becoming text by cascade accident.
+  - `PALETTE_DEBT` is the escape hatch for a pair the team decides not to fix.
+    It is currently **empty**. The contract is two-sided: an entry may not
+    regress below its recorded ratio, and once a palette change lifts it past
+    4.5:1 the test fails until the entry is deleted.
+- **`src/themes/__tests__/_contrastMath.ts` / `_cssRules.ts`** — WCAG colour
+  math extracted from `contrast.test.ts` and shared, so alpha compositing has
+  one implementation rather than two that can diverge, plus a small CSS rule
+  scanner. Two latent bugs fixed while extracting:
+  - `parseColor`'s `rgba(var(--x-rgb), a)` branch matched on `[^)]+`, which
+    cannot span the nested `var(...)` — that branch was dead code.
+  - `parseTokens` did not strip comments, so a comment mentioning a token by
+    name parsed as a declaration whose value ran to the next `;`, swallowing the
+    real declaration after it.
+
+  No token value exercised either path, so `contrast.test.ts`'s existing results
+  are unchanged.
+
+### Changed
+**Token values retuned.** `--sui-accent-dim` and `--sui-danger` were tuned to
+clear 4.5:1 on bare `--sui-bg-primary` and cleared it by so little that any
+tinted surface pushed them under — both are rendered as text on *their own*
+translucent washes (a button's hover fill), which tints the backdrop toward the
+label. Each moves away from its theme's page (lighter on dark themes, darker on
+light) by 1–17%; hues are preserved. `--sui-danger-rgb` moves in lockstep.
+
+| theme | `--sui-accent-dim` | `--sui-danger` |
+|---|---|---|
+| default | `#5585ef` → `#618ef0` | `#f05151` → `#f47979` |
+| hud | `#0099bb` → `#0a9dbe` | `#ff3366` → `#ff4e7b` |
+| bronze | `#a85234` → `#9e4d31` | `#a8443a` → `#953c33` |
+| bronze-dark | `#c56940` → `#ca754f` | `#d55b51` → `#dd7b72` |
+| stax | `#5f7a20` → `#5a741e` | `#b3372c` → `#a33228` |
+| colorblind | `#3888d3` → `#4a93d7` | `#e66100` → `#ea7723` |
+
+`colorblind`'s vermilion keeps its hue (a 4% lift toward white), so the
+blue/orange confusion-axis separation the CB-safe palette is built on is
+unchanged. `colorblind-modifier.css` carries the same new value.
+
+**Visible changes to expect:**
+- Filled `primary` and `warning` buttons in the four dark themes now carry a
+  near-black label instead of white — white never cleared 4.5:1 on those fills.
+- Hover labels on `default` / `ghost` / `outlined` / `icon-only` are the
+  text-safe accent rather than the raw accent: slightly deeper on light themes,
+  slightly brighter on dark.
+- `bronze`'s primary button fills with `--sui-accent-dim` and darkens on hover.
+  Its rust accent sits mid-lightness — white reads 3.90:1 on it and dark ink
+  4.18:1, so *no* label colour clears 4.5:1 and the fill had to move.
+- `stax`'s primary button now **lightens** on hover instead of darkening. Its
+  lime accent is very light, so the label is dark ink (7.67:1); darkening to
+  `--sui-accent-dim` would have dropped that label to 2.63:1.
+- `bronze` and `stax` warning buttons darken on hover. The shared 90%-warning
+  wash lightens against a light page, which cost the white label its margin.
+
+**Consumer note:** apps that hardcode these token values, or that override
+`.sui-btn--primary` / `.sui-btn--warning` colours locally, should re-check
+against the new tokens.
+
 ## 0.118.0
 
 ### Added

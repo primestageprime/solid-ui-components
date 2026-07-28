@@ -73,12 +73,21 @@ body {
   /* ---- Accent / Primary (cyan — safe across CVD types) ---- */
   --sui-accent: #3aa0ff;
   --sui-accent-rgb: 58, 160, 255;
-  --sui-accent-dim: #3888d3;
+  /* Text-safe accent — see default.css. Lifted from #3888d3 to clear 4.6:1 as
+     a button hover label on the 8-12% accent washes. */
+  --sui-accent-dim: #4a93d7;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic Colors — CB-safe blue/orange pair ----
-     danger=vermilion, success=blue, warning=amber. */
-  --sui-danger: #e66100;
-  --sui-danger-rgb: 230, 97, 0;
+     danger=vermilion, success=blue, warning=amber.
+     danger lifted from #e66100 so it stays >= 4.6:1 as text on its own 15%
+     wash. Hue is preserved (a 10% lift toward white), so the blue/orange
+     confusion-axis separation the palette is built on is unchanged. */
+  --sui-danger: #ea7723;
+  --sui-danger-rgb: 234, 119, 35;
   --sui-warning: #e6a700;
   --sui-warning-rgb: 230, 167, 0;
   --sui-success: #3b82f6;
@@ -196,9 +205,11 @@ body {
    `:root` block above is for whole-theme use via the manifest.
    ============================================ */
 html[data-colorblind="true"] {
-  /* Semantic pair: red→vermilion, green→blue, amber kept. */
-  --sui-danger: #e66100;
-  --sui-danger-rgb: 230, 97, 0;
+  /* Semantic pair: red→vermilion, green→blue, amber kept.
+     danger matches the :root block above — lifted from #e66100 so it stays
+     readable as text on its own 15% wash (the danger button's hover). */
+  --sui-danger: #ea7723;
+  --sui-danger-rgb: 234, 119, 35;
   --sui-success: #3b82f6;
   --sui-success-rgb: 59, 130, 246;
   --sui-warning: #e6a700;

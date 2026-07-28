@@ -15,12 +15,25 @@
 :root {
   /* ---- Accent / Primary ---- */
   --sui-accent: #3b82f6;
-  --sui-accent-dim: #5585ef;
+  /* The text-safe accent. Retuned from #5585ef, which cleared 4.5:1 on
+     bg-primary by so little that any tinted surface pushed it under — it read
+     4.31:1 as a button hover label on the 10% accent wash. Now >= 4.6:1 on
+     bg-primary, bg-secondary and the 8-12% accent washes. */
+  --sui-accent-dim: #618ef0;
   --sui-accent-rgb: 59, 130, 246;
 
+  /* Label colour for accent/warning FILLS (filled buttons). --sui-accent is a
+     fill, not a text colour, so a filled control needs its own label token;
+     white does not clear 4.5:1 on this accent (3.68:1). */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
+
   /* ---- Semantic Colors ---- */
-  --sui-danger: #f05151;
-  --sui-danger-rgb: 240, 81, 81;
+  /* Retuned from #f05151 for the same reason as the accent above: danger is
+     rendered as text on its own 15-20% wash (the danger button's hover), which
+     tints the backdrop toward the label. Now >= 4.6:1 there. */
+  --sui-danger: #f47979;
+  --sui-danger-rgb: 244, 121, 121;
   --sui-warning: #f59e0b;
   --sui-warning-rgb: 245, 158, 11;
   --sui-success: #22c55e;

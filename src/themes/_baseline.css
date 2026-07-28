@@ -287,10 +287,13 @@ body {
   letter-spacing: normal;
 }
 
+/* Label uses --sui-accent-dim, not --sui-accent: accent is a FILL token and is
+   not required to pass 4.5:1 as text (see contrast.test.ts). accent-dim is the
+   text-safe accent and is tuned to clear 4.5:1 on these washes specifically. */
 .sui-btn:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.1);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn:disabled {
@@ -300,17 +303,27 @@ body {
 .sui-btn--active {
   background: rgba(var(--sui-accent-rgb), 0.15);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
+/* --sui-on-accent is the label colour for an accent FILL, chosen per theme so
+   it clears 4.5:1 on both --sui-accent (rest) and --sui-accent-dim (hover).
+   White works on neither in most themes — it read 3.68:1 in the default theme.
+   The fallback keeps third-party themes that predate the token rendering. */
 .sui-btn--primary {
   background: var(--sui-accent);
   border-color: var(--sui-accent);
-  color: #ffffff;
+  color: var(--sui-on-accent, #ffffff);
 }
 
+/* `color` is mandatory here, not decoration. `.sui-btn:hover` sets
+   `color: var(--sui-accent)` for every button and sits at the same
+   specificity (0,3,0) as this rule, so it wins for any property this rule
+   does not declare. Without the line below the label renders accent-on-
+   accent-dim — 1.05:1, i.e. invisible. See buttonHoverContrast.test.ts. */
 .sui-btn--primary:hover:not(:disabled) {
   background: var(--sui-accent-dim);
+  color: var(--sui-on-accent, #ffffff);
 }
 
 .sui-btn--danger {
@@ -318,9 +331,12 @@ body {
   color: var(--sui-danger);
 }
 
+/* Same cascade trap: without `color` the label turns accent-blue on hover and
+   the variant loses its danger semantics. */
 .sui-btn--danger:hover:not(:disabled) {
   background: rgba(var(--sui-danger-rgb), 0.15);
   border-color: var(--sui-danger);
+  color: var(--sui-danger);
 }
 
 .sui-btn--ghost {
@@ -345,34 +361,40 @@ body {
   color: #ffffff;
 }
 
+/* White on a warning fill measured 2.15-2.57:1 in the dark themes — warning is
+   a high-luminance hue, so its label wants to be dark, not light.
+   --sui-on-warning carries that choice per theme. */
 .sui-btn--warning {
   background: var(--sui-warning);
   border-color: var(--sui-warning);
-  color: #ffffff;
+  color: var(--sui-on-warning, #ffffff);
 }
 
 .sui-btn--warning:hover:not(:disabled) {
   background: rgba(var(--sui-warning-rgb), 0.9);
   border-color: var(--sui-warning);
-  color: #ffffff;
+  color: var(--sui-on-warning, #ffffff);
 }
 
+/* The accent-forward variants below carry --sui-accent-dim, not --sui-accent,
+   for the same reason as `.sui-btn:hover` — their label IS the accent, so it
+   has to be the text-safe one. */
 .sui-btn--outlined {
   background: transparent;
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--outlined:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.1);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--text {
   background: transparent;
   border-color: transparent;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding-left: 0;
   padding-right: 0;
 }
@@ -406,7 +428,7 @@ body {
 .sui-btn--icon-only {
   background: transparent;
   border: none;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding: 0;
   width: 1.4rem;
   height: 1.4rem;
@@ -415,7 +437,7 @@ body {
 
 .sui-btn--icon-only:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.1);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 /* Toggled state for icon-only buttons. See hud.css for rationale. */

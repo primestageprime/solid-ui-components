@@ -58,11 +58,18 @@ body {
   /* ---- Accent ---- */
   --sui-accent: #e07a4f;
   --sui-accent-rgb: 224, 122, 79;
-  --sui-accent-dim: #c56940;
+  /* Text-safe accent — see default.css. Lifted from #c56940 to clear 4.6:1 as
+     a button hover label on the 8-12% accent washes. */
+  --sui-accent-dim: #ca754f;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic ---- */
-  --sui-danger: #d55b51;
-  --sui-danger-rgb: 213, 91, 81;
+  /* Lifted from #d55b51 so danger stays >= 4.6:1 as text on its own 15% wash. */
+  --sui-danger: #dd7b72;
+  --sui-danger-rgb: 221, 123, 114;
   --sui-warning: #e0a040;
   --sui-warning-rgb: 224, 160, 64;
   --sui-success: #7ba67b;

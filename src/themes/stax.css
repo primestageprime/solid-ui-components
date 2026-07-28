@@ -55,11 +55,20 @@ body {
      ~4.5:1+ on both bg-primary and bg-secondary, same hue/chroma as accent). */
   --sui-accent: #a6ce39;
   --sui-accent-rgb: 166, 206, 57;
-  --sui-accent-dim: #5f7a20;
+  /* Deepened from #5f7a20: it cleared bg-primary/bg-secondary but read only
+     4.31:1 as a button hover label on the 10% accent wash. Now >= 4.6:1 there. */
+  --sui-accent-dim: #5a741e;
+
+  /* Label colour for accent/warning fills. The lime accent is very light, so
+     the primary button's label is dark ink (7.67:1) and the button LIGHTENS on
+     hover rather than darkening — see the .sui-btn--primary override below. */
+  --sui-on-accent: var(--sui-text-primary);
+  --sui-on-warning: #ffffff;
 
   /* ---- Semantic ---- */
-  --sui-danger: #b3372c;
-  --sui-danger-rgb: 179, 55, 44;
+  /* Deepened from #b3372c so danger stays >= 4.6:1 as text on its own 15% wash. */
+  --sui-danger: #a33228;
+  --sui-danger-rgb: 163, 50, 40;
   --sui-warning: #966817;
   --sui-warning-rgb: 150, 104, 23;
   --sui-success: #2f7d4f;
@@ -167,6 +176,25 @@ body {
   background: var(--sui-text-primary);
   border-color: var(--sui-text-primary);
   color: var(--sui-bg-elevated);
+}
+
+/* Primary hover. STAX's lime accent is very light, so the primary button's
+   label is dark ink (7.67:1 on the accent) — which means the baseline's
+   darken-on-hover to --sui-accent-dim would drop that label to 2.63:1. The
+   fill LIGHTENS on hover instead, keeping the ink label and the lime identity;
+   the accent border carries the affordance. */
+.sui-btn--primary:hover:not(:disabled) {
+  background: #b8d95c;
+  border-color: var(--sui-accent);
+  color: var(--sui-on-accent, #ffffff);
+}
+
+/* As in bronze: a 90% warning wash lightens against the off-white page and
+   drops the white label to 4.10:1. Darken on hover instead. */
+.sui-btn--warning:hover:not(:disabled) {
+  background: #7d5613;
+  border-color: #7d5613;
+  color: var(--sui-on-warning, #ffffff);
 }
 
 /* Panel glows: dark-theme rgba(0,0,0) shadows are too heavy on off-white.
