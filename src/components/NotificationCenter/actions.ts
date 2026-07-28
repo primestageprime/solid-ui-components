@@ -16,3 +16,45 @@ export const resolveActions = (item: NotificationItem): NotificationAction[] =>
  *  is the deprecated `action` shape, which predates the flag and always did. */
 export const closesPanel = (a: NotificationAction): boolean =>
   a.dismissPanel ?? (!!a.href || !a.onClick);
+
+// ── Prefab actions ──────────────────────────────────────────────────────────
+// Builders that take the handler, per the Table field-module precedent
+// (`actionCol(id, run)`). None sets `dismissPanel`: the default already gives
+// the right answer — `viewAction` navigates so it closes, the rest are in-place
+// triage so they leave the panel open. `NotificationAction` is public, so a
+// consumer needing a seventh writes an object literal.
+
+/** Navigating CTA — renders as a Link with the → suffix and closes the panel. */
+export const viewAction = (
+  href: string,
+  label = "View",
+): NotificationAction => ({ label, href, tone: "accent" });
+
+/** Clears the notification. The consumer owns removing it from `items`. */
+export const dismissAction = (
+  onClick: () => void,
+  label = "Dismiss",
+): NotificationAction => ({ label, onClick, tone: "muted", icon: "close" });
+
+/** Per-item sibling of the `onMarkAllRead` footer, so the two read as a set. */
+export const markReadAction = (
+  onClick: () => void,
+  label = "Mark read",
+): NotificationAction => ({ label, onClick, tone: "muted", icon: "check" });
+
+export const acceptAction = (
+  onClick: () => void,
+  label = "Accept",
+): NotificationAction => ({ label, onClick, tone: "accent", icon: "check" });
+
+export const declineAction = (
+  onClick: () => void,
+  label = "Decline",
+): NotificationAction => ({ label, onClick, tone: "danger", icon: "close" });
+
+/** Destroys the underlying thing — distinct from `dismissAction`, which only
+ *  clears the notification. */
+export const deleteAction = (
+  onClick: () => void,
+  label = "Delete",
+): NotificationAction => ({ label, onClick, tone: "danger", icon: "trash" });

@@ -9,3 +9,13 @@ export type {
   NotificationActionTone,
   NotificationTone,
 } from "./types";
+export {
+  acceptAction,
+  closesPanel,
+  declineAction,
+  deleteAction,
+  dismissAction,
+  markReadAction,
+  resolveActions,
+  viewAction,
+} from "./actions";
