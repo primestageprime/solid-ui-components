@@ -8,7 +8,8 @@
 //                period-by-period values (throughput, batch counts).
 // Color is driven by the `color` prop (explicit CSS string or custom
 // property). For trend-colored sparklines see TrendSparkline; for
-// connection-health strips see HeartbeatSparkline.
+// connection-health strips see HeartbeatSparkline. For a series whose range
+// and typical band matter as well as its shape, see DistributionSparkline.
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./Sparkline.css";

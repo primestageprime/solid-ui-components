@@ -3064,6 +3064,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
             "file": "src/components/ReportSidecar.tsx",
             "line": 11,
             "kind": "named"
@@ -3161,6 +3166,11 @@
           {
             "file": "src/components/DayBreakdownTile.tsx",
             "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
             "kind": "named"
           },
           {
@@ -3328,6 +3338,11 @@
           {
             "file": "src/components/ReportHeader.tsx",
             "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
+            "line": 15,
             "kind": "named"
           },
           {
@@ -4013,7 +4028,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -4125,6 +4140,20 @@
             "kind": "named"
           }
         ],
+        "Bucket": [
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
+        "BucketQueue": [
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
         "CaptionLabel": [
           {
             "file": "src/components/StatisticsSummary.tsx",
@@ -4133,6 +4162,11 @@
           }
         ],
         "CardSurface": [
+          {
+            "file": "src/components/MetricTimeseriesChart.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
@@ -4184,11 +4218,6 @@
             "kind": "named"
           },
           {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
-            "kind": "named"
-          },
-          {
             "file": "src/routes/reports/qaqc-checks.tsx",
             "line": 2,
             "kind": "named"
@@ -4237,7 +4266,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -4399,7 +4428,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -4415,6 +4444,11 @@
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -4814,6 +4848,13 @@
             "kind": "named"
           }
         ],
+        "EllipsisText": [
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
         "EmphasisBody": [
           {
             "file": "src/components/NoxWidgets.tsx",
@@ -4844,7 +4885,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -4954,7 +4995,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -5214,7 +5255,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -5375,7 +5416,7 @@
         "ListItem": [
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -5445,7 +5486,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -5547,7 +5588,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -5731,7 +5772,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6018,7 +6059,7 @@
         "ScrollList": [
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6141,7 +6182,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6230,7 +6271,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6306,7 +6347,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6389,7 +6430,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -6590,7 +6631,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6717,7 +6758,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6824,7 +6865,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6934,7 +6975,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -6971,7 +7012,7 @@
         "ThemedNumberInput": [
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -6990,7 +7031,7 @@
         "ThreePanelLayout": [
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -7098,7 +7139,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -7125,12 +7166,7 @@
         "TitleAssetDate": [
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 41,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 4,
+            "line": 38,
             "kind": "named"
           },
           {
@@ -7379,7 +7415,7 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -7529,13 +7565,13 @@
         ],
         "createChartCanvas": [
           {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "file": "src/components/MetricTimeseriesChart.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
-            "file": "src/routes/metric-explorer.tsx",
-            "line": 51,
+            "file": "src/components/MetricTimeseriesChart.tsx",
+            "line": 12,
             "kind": "factory-call"
           }
         ],
@@ -7653,12 +7689,12 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 56,
+            "line": 49,
             "kind": "factory-call"
           },
           {
@@ -7813,7 +7849,12 @@
           },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 42,
+            "line": 49,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/metric-sleuth.tsx",
+            "line": 55,
             "kind": "factory-call"
           },
           {
@@ -7944,12 +7985,12 @@
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 9,
+            "line": 8,
             "kind": "named"
           },
           {
             "file": "src/routes/metric-explorer.tsx",
-            "line": 54,
+            "line": 47,
             "kind": "factory-call"
           },
           {
@@ -8019,7 +8060,7 @@
           },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 40,
+            "line": 47,
             "kind": "factory-call"
           },
           {
@@ -9941,6 +9982,12 @@
     "BoxedTabs": [
       "jtf-ui"
     ],
+    "Bucket": [
+      "jtf-ui"
+    ],
+    "BucketQueue": [
+      "jtf-ui"
+    ],
     "BulkActionBar": [
       "thorcasting-ui"
     ],
@@ -10182,7 +10229,8 @@
       "amygdala-ui"
     ],
     "EllipsisText": [
-      "goose-ui"
+      "goose-ui",
+      "jtf-ui"
     ],
     "EmphasisBody": [
       "jtf-ui"

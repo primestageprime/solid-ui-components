@@ -101,6 +101,7 @@ import { RingChartShowcase } from "./showcases/ring-chart";
 import { ChartHeaderShowcase } from "./showcases/chart-header";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
+import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
@@ -571,6 +572,12 @@ const items: Item[] = [
     label: "TrendSparkline",
     component: TrendSparklineShowcase,
     tags: ["depth:1", "chart", "indicator"],
+  },
+  {
+    id: "distribution-sparkline",
+    label: "DistributionSparkline",
+    component: DistributionSparklineShowcase,
+    tags: ["depth:1", "chart", "indicator", "data"],
   },
   {
     id: "sprint-selector",

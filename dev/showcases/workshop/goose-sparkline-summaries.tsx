@@ -1,30 +1,31 @@
 // Bench: Goose Sparkline Summaries (workshop:goose-sparkline-summaries)
 //
-// SKELETON — a page to argue over, not a design.
+// The page the DistributionSparkline encoding was argued out on. The component
+// itself has since been promoted to src/components/DistributionSparkline and
+// has its own gallery page (#/distribution-sparkline); what survives here is
+// the ARGUMENT — twelve deliberately awkward shapes, the percentile-band
+// comparison, and the open questions still on the table.
 //
-// The centrepiece is a PROTOTYPE distribution sparkline (defined locally at the
-// bottom of this file, deliberately NOT in src/ until the encoding is settled).
+// It is also the worked example of the one thing the component does NOT own:
+// deciding what "the set" is and deriving its shared y-domain. For this page
+// the set is the twelve cells on screen, so the axis is p95DomainOf over all
+// twelve. In goose it will be something else, which is exactly why the
+// component takes a domain rather than computing one.
 //
-// THE RULE, which nothing may override: THE PLOT AREA IS THE SAME HEIGHT AND
-// THE SAME Y-AXIS IN EVERY SPARKLINE. Not a default — there is no height or
-// domain prop to pass. The moment one cell rescales itself, no two cells in a
-// row can be compared by eye and every mark below becomes decoration.
+// What the encoding says, each strictly inside the one before it:
 //
-// THREE NESTED THINGS, each strictly inside the one before it:
-//
-//   the plot        50px tall, y-axis fixed, drawn as a visible frame so the
-//                   constancy can be checked at a glance. Spans the SET's p95
-//                   band plus ~18% breathing room — the set's true extremes are
-//                   excluded so one spike cannot flatten the other eleven, and
-//                   samples past the plot are clipped and counted.
+//   the plot        one fixed box per cell, spanning the SET's p95 band plus
+//                   breathing room. The set's true extremes are excluded so
+//                   one spike cannot flatten the other eleven; samples past
+//                   the plot are clipped and counted.
 //   solid box       this SERIES' min..max, with the direction shading.
-//   dashed rules    this SERIES' p95 band — top and bottom only, spanning the
-//                   full width. Necessarily INSIDE the solid box: a percentile
-//                   band cannot escape the range it was computed from.
+//   dashed rules    this SERIES' p95 band — top and bottom only. Necessarily
+//                   INSIDE the solid box: a percentile band cannot escape the
+//                   range it was computed from.
 //
-// Plus the mean as a hairline. Direction is colour AND shading — the solid
-// box's fill is densest at the end the series finished on.
-import { type Component, For } from "solid-js";
+// Plus the mean as a hairline. Direction is colour AND shading — the fill is
+// densest at the end the series finished on.
+import { type Component, For, Show } from "solid-js";
 import {
   MutedBody,
   NoteText,
@@ -53,7 +54,13 @@ import {
 } from "../../../src/components/TrendSparkline";
 import { Sparkline } from "../../../src/components/Sparkline";
 import { HeartbeatSparkline } from "../../../src/components/HeartbeatSparkline";
-import { join, length, map, mean, sortBy } from "../../../src/fn";
+import {
+  P95Sparkline,
+  createDistributionSparkline,
+  p95DomainOf,
+  percentileOf,
+} from "../../../src/components/DistributionSparkline";
+import { length, map, mean, prop } from "../../../src/fn";
 import "./goose-sparkline-summaries.css";
 
 // ── Stub series ──────────────────────────────────────────────────────────────
@@ -173,45 +180,16 @@ const TIGHT: [number, number] = [0.25, 0.75];
 /** The percentile band the SHARED y-axis spans, computed over the pooled set. */
 const AXIS: [number, number] = [0.05, 0.95];
 
-// ── The prototype ────────────────────────────────────────────────────────────
+// ── The component, and this page's modelling of "the set" ───────────────────
+// The sparkline itself now lives in src/. What remains here is the part it
+// deliberately does NOT own: deciding what the set is and deriving its axis.
+// For this page the set is the twelve cells on screen.
 
-const W = 100;
-/** The plot area is 50px tall in EVERY cell — fixed, never derived. */
-const H = 50;
-const INSET = 2;
+const AXIS_SPARKLINE_DOMAIN = p95DomainOf(map(prop("values"), EXAMPLES), AXIS);
 
-/** How much room the axis leaves around the set's p95 box, as a fraction of
- *  that box's span, so the solid outline reads as a box INSIDE the plot area
- *  rather than as the plot area's own border. */
-const AXIS_PAD = 0.18;
-
-const ascending = (values: number[]): number[] => sortBy((v: number) => v, values);
-
-/** Linear-interpolated percentile, 0..1. */
-const percentile = (p: number, values: number[]): number => {
-  const s = ascending(values);
-  const at = (length(s) - 1) * p;
-  const lo = Math.floor(at);
-  const hi = Math.ceil(at);
-  return s[lo] + (s[hi] - s[lo]) * (at - lo);
-};
-
-/** The SET's p95 band — where the whole collection lives. NOT its true
- *  extremes: one spike would otherwise squash every series into a hairline.
- *  This is what the shared y-axis is built from. */
-const POOLED: number[] = EXAMPLES.flatMap((e) => e.values);
-const SET_BAND: [number, number] = [
-  percentile(AXIS[0], POOLED),
-  percentile(AXIS[1], POOLED),
-];
-
-/** The plot area's value range: the set band plus breathing room, so the solid
- *  box sits inside the plot rather than becoming its border. Samples beyond
- *  this are clipped and counted rather than allowed to rescale anything. */
-const DOMAIN: [number, number] = [
-  SET_BAND[0] - (SET_BAND[1] - SET_BAND[0]) * AXIS_PAD,
-  SET_BAND[1] + (SET_BAND[1] - SET_BAND[0]) * AXIS_PAD,
-];
+/** The comparison row's tighter alternative, curried from the same factory —
+ *  the call sites below still pass data only. */
+const IQRSparkline = createDistributionSparkline({ band: TIGHT });
 
 interface Summary {
   min: number;
@@ -226,135 +204,17 @@ interface Summary {
 
 const summarize = (values: number[], band: [number, number]): Summary => {
   const beyondAxis = (v: number): boolean =>
-    v < DOMAIN[0] || v > DOMAIN[1];
+    v < AXIS_SPARKLINE_DOMAIN[0] || v > AXIS_SPARKLINE_DOMAIN[1];
   return {
     min: Math.min(...values),
     max: Math.max(...values),
     avg: mean(values),
-    bandLo: percentile(band[0], values),
-    bandHi: percentile(band[1], values),
+    bandLo: percentileOf(band[0], values),
+    bandHi: percentileOf(band[1], values),
     trend: trendOf(values[0], values[length(values) - 1]),
     clipped: length(values.filter(beyondAxis)),
   };
 };
-
-interface DistributionSparklineProps {
-  values: number[];
-  band?: [number, number];
-}
-
-// HARD RULE: the plot area is the same height and the same y-axis in EVERY
-// sparkline, always. There is deliberately no `height` or `domain` prop — a
-// caller cannot opt out, because the moment one cell rescales, no two cells in
-// the row can be compared by eye and the whole encoding is decoration. H and
-// DOMAIN are module constants and the only source of geometry below.
-const DistributionSparkline: Component<DistributionSparklineProps> = (props) => {
-  const band = (): [number, number] => props.band ?? TYPICAL;
-  const stats = (): Summary => summarize(props.values, band());
-
-  const yOf = (v: number): number => {
-    const span = DOMAIN[1] - DOMAIN[0] || 1;
-    return INSET + (1 - (v - DOMAIN[0]) / span) * (H - INSET * 2);
-  };
-  const boxOf = (lo: number, hi: number): { y: number; height: number } => ({
-    y: yOf(hi),
-    height: Math.max(1, yOf(lo) - yOf(hi)),
-  });
-
-  const points = (): string => {
-    const n = length(props.values);
-    const at = (v: number, i: number): string =>
-      `${((i / (n - 1)) * W).toFixed(1)},${yOf(v).toFixed(1)}`;
-    return join(" ", map(at, props.values));
-  };
-
-  return (
-    <svg
-      class={`gs-dist__svg gs-dist--${stats().trend}`}
-      width={W}
-      height={H}
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      {/* Everything is clipped to the rect: a sample beyond the shared axis
-          runs off the edge rather than rescaling the whole set. */}
-      {/* The plot area itself — same height, same y-axis, every cell. Drawn so
-          the constancy is VISIBLE: without it a flat series looks like a
-          floating line rather than a flat series in a standard frame. */}
-      <rect
-        class="gs-dist__plot"
-        x={0.5}
-        y={0.5}
-        width={W - 1}
-        height={H - 1}
-      />
-      <g clip-path="url(#gs-clip)">
-        {/* This series' full range. */}
-        <rect
-          class="gs-dist__range"
-          x={0.5}
-          width={W - 1}
-          y={boxOf(stats().min, stats().max).y}
-          height={boxOf(stats().min, stats().max).height}
-          fill={`url(#gs-grad-${stats().trend})`}
-        />
-        {/* Its p95 band: two rules, top and bottom, bound by the x-axis rather
-            than closed into a box. Always inside the range above — a
-            percentile band cannot escape the values it came from. */}
-        <line
-          class="gs-dist__typical"
-          x1={0}
-          x2={W}
-          y1={yOf(stats().bandHi)}
-          y2={yOf(stats().bandHi)}
-        />
-        <line
-          class="gs-dist__typical"
-          x1={0}
-          x2={W}
-          y1={yOf(stats().bandLo)}
-          y2={yOf(stats().bandLo)}
-        />
-        <line
-          class="gs-dist__mean"
-          x1={0}
-          x2={W}
-          y1={yOf(stats().avg)}
-          y2={yOf(stats().avg)}
-        />
-        <polyline class="gs-dist__line" points={points()} />
-      </g>
-    </svg>
-  );
-};
-
-/** The gradients and the clip rect, defined once per page and referenced by
- *  id. Every sparkline is the same size, so one clip serves all of them. */
-const SparkGradientDefs: Component = () => (
-  <svg class="gs-defs" aria-hidden="true">
-    <defs>
-      <clipPath id="gs-clip">
-        <rect x={0} y={0} width={W} height={H} />
-      </clipPath>
-      {/* Strong at the TOP: the series ended above where it began. */}
-      <linearGradient id="gs-grad-up" class="gs-grad gs-grad--up" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%" />
-        <stop offset="100%" />
-      </linearGradient>
-      {/* Strong at the BOTTOM: it ended below. */}
-      <linearGradient id="gs-grad-down" class="gs-grad gs-grad--down" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" />
-        <stop offset="100%" />
-      </linearGradient>
-      {/* Even: it ended where it began. */}
-      <linearGradient id="gs-grad-flat" class="gs-grad gs-grad--flat" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" />
-        <stop offset="100%" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
 
 const round = (v: number): string => v.toFixed(0);
 
@@ -377,10 +237,22 @@ const ExampleCell: Component<{ example: Example; band?: [number, number] }> = (
           ? `${props.example.label} · ${bandName(props.band)}`
           : props.example.label}
       </TextLabel>
-      <DistributionSparkline
-        values={props.example.values}
-        band={props.band}
-      />
+      <Show
+        when={props.band === TIGHT}
+        fallback={
+          <P95Sparkline
+            values={props.example.values}
+            yDomain={AXIS_SPARKLINE_DOMAIN}
+            class="gs-cell"
+          />
+        }
+      >
+        <IQRSparkline
+          values={props.example.values}
+          yDomain={AXIS_SPARKLINE_DOMAIN}
+          class="gs-cell"
+        />
+      </Show>
       <TextSublabel>{statLine(props.example.values, props.band ?? TYPICAL)}</TextSublabel>
       <MutedBody>{props.example.note}</MutedBody>
     </TightStack>
@@ -450,12 +322,13 @@ export const meta = { label: "Goose Sparkline Summaries" };
 
 const GooseSparklineSummariesBench: Component = () => (
   <div class="component-section component-section--full">
-    <SparkGradientDefs />
     <SectionTitle>Goose Sparkline Summaries</SectionTitle>
     <MutedBody>
-      Bare page — a skeleton, not a design. The distribution sparkline below is
-      a local prototype, not a SUI component yet; it stays in this file until
-      the encoding is settled.
+      The page this encoding was argued out on. The sparkline itself now lives
+      in SUI as <code>DistributionSparkline</code> (see #/distribution-sparkline
+      for it in a dashboard, a table and a definition list); what is left here
+      is the argument — twelve awkward shapes, the band comparison, and the
+      questions still open.
     </MutedBody>
 
     <ContentStack>
@@ -463,9 +336,11 @@ const GooseSparklineSummariesBench: Component = () => (
       <CompactSurface>
         <TightStack>
           <ClusterRow>
-            <div class="gs-legend-swatch">
-              <DistributionSparkline values={EXAMPLES[2].values} />
-            </div>
+            <P95Sparkline
+              values={EXAMPLES[2].values}
+              yDomain={AXIS_SPARKLINE_DOMAIN}
+              class="gs-legend-swatch"
+            />
             <TightStack>
               <TextSublabel>
                 Outer frame — the plot area. Same height, same y-axis, every
@@ -493,16 +368,17 @@ const GooseSparklineSummariesBench: Component = () => (
         Region 1 — twelve shapes, one shared domain
       </SubsectionTitle>
       <MutedBody>
-        The axis belongs to the SET, not the cell: the plot runs{" "}
-        {round(DOMAIN[0])}..{round(DOMAIN[1])} in all of them, 50px tall — the{" "}
-        {bandName(AXIS)} band of all {length(POOLED)} pooled samples (
-        {round(SET_BAND[0])}..{round(SET_BAND[1])}) plus room around it. Not the
-        set's true extremes: "Spiky" touches 90, and letting it set the ceiling
-        would squash the other eleven, so samples past the plot are clipped and
-        counted instead. Inside that fixed plot, the boxes are this series' —
-        solid for its range, dashed rules for its {bandName(TYPICAL)}. On a
-        per-series auto-scale none of it would mean anything: every box would
-        fill its rect every time.
+        The axis belongs to the SET, not the cell: every plot below runs{" "}
+        {round(AXIS_SPARKLINE_DOMAIN[0])}..{round(AXIS_SPARKLINE_DOMAIN[1])},
+        the {bandName(AXIS)} band of all twelve series pooled, plus room around
+        it. Not the set's true extremes: "Spiky" touches 90, and letting it set
+        the ceiling would squash the other eleven, so samples past the plot are
+        clipped and counted instead. Inside that fixed plot, the boxes are this
+        series' — solid for its range, dashed rules for its{" "}
+        {bandName(TYPICAL)}. On a per-series auto-scale none of it would mean
+        anything: every box would fill its rect every time. Deriving that
+        domain is THIS PAGE's job, not the component's — see the top of the
+        file.
       </MutedBody>
       <CardGrid>
         <For each={EXAMPLES}>{(e) => <ExampleCell example={e} />}</For>

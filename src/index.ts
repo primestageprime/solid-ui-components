@@ -32,6 +32,7 @@ export * from "./components/ChartHeader";
 export * from "./components/Sparkline";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
+export * from "./components/DistributionSparkline";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";

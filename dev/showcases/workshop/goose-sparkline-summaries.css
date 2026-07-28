@@ -1,110 +1,17 @@
-/* Bench-local styling for the distribution sparkline prototype.
-   Deliberately NOT in src/ yet — the encoding is still being argued about.
-   Promote to src/components/DistributionSparkline (+ its own CSS) once the
-   shape is settled. Nothing here is themed beyond the --sui-* tokens. */
+/* Bench-local demo geometry only. The sparkline itself is a real SUI
+   component now (src/components/DistributionSparkline) and brings its own
+   paint — what is left here is the SIZE of the boxes this page hands it,
+   which is the gallery's job, not the component's. */
 
-/* The gradient defs live once per page, out of flow. */
-.gs-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-/* Shading: the fill is DENSER at the end the series finished on — strong at
-   the top when it rose, at the bottom when it fell, flat and even when it
-   neither rose nor fell. Colour says the same thing a second time. */
-.gs-grad stop {
-  stop-color: var(--sui-text-muted);
-}
-.gs-grad--up stop {
-  stop-color: var(--sui-success);
-}
-.gs-grad--down stop {
-  stop-color: var(--sui-danger);
-}
-.gs-grad stop:first-child {
-  stop-opacity: 0.03;
-}
-.gs-grad stop:last-child {
-  stop-opacity: 0.3;
-}
-.gs-grad--flat stop {
-  stop-opacity: 0.11;
-}
-
-/* The plot area is a fixed 100x50 in every cell. It no longer stretches to the
-   card's width: at this size the point is a dense glyph you can put beside a
-   number, not a chart that owns a row. */
-.gs-dist__svg {
-  display: block;
-  width: 100px;
-  max-width: 100%;
+/* An example cell: the sparkline takes the card's width and this height. */
+.gs-cell {
   height: 50px;
 }
 
-/* The plot area — identical in every sparkline, and drawn so you can SEE that
-   it is identical. Neutral, so it never competes with the trend-coloured
-   range box inside it. */
-.gs-dist__plot {
-  fill: var(--sui-bg-deep);
-  fill-opacity: 0.7;
-  stroke: var(--sui-border-bright);
-  stroke-opacity: 0.9;
-  stroke-width: 1;
-}
-
-/* Solid outlined translucent box = the full min..max range. */
-.gs-dist__range {
-  stroke: var(--sui-text-muted);
-  stroke-width: 1;
-}
-.gs-dist--up .gs-dist__range {
-  stroke: var(--sui-success);
-}
-.gs-dist--down .gs-dist__range {
-  stroke: var(--sui-danger);
-}
-
-/* The typical band: two dashed rules, top and bottom, spanning the full width
-   — bound by the x-axis rather than closed into a box. */
-.gs-dist__typical {
-  fill: none;
-  stroke: var(--sui-text-muted);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-  opacity: 0.85;
-}
-.gs-dist--up .gs-dist__typical {
-  stroke: var(--sui-success);
-}
-.gs-dist--down .gs-dist__typical {
-  stroke: var(--sui-danger);
-}
-
-/* The mean, as a hairline across the whole width. */
-.gs-dist__mean {
-  stroke: var(--sui-text-secondary);
-  stroke-width: 1;
-  stroke-dasharray: 1 3;
-}
-
-.gs-dist__line {
-  fill: none;
-  stroke: var(--sui-text-primary);
-  stroke-width: 1.25;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.gs-dist--up .gs-dist__line {
-  stroke: var(--sui-success);
-}
-.gs-dist--down .gs-dist__line {
-  stroke: var(--sui-danger);
-}
-
-/* The legend's swatch column, so the sample sits beside its sentence. */
+/* The legend's sample, sized so it sits beside its sentence rather than
+   stretching across it. */
 .gs-legend-swatch {
   flex: 0 0 auto;
   width: 100px;
+  height: 50px;
 }

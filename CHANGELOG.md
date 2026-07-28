@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`DistributionSparkline`** — the sparkline for a series whose SPREAD
+  matters, not just its direction. Draws a solid box for min..max with the
+  direction shading, two dashed rules for the percentile band, a hairline at
+  the mean, and the series clipped to the plot. `TrendSparkline` is unchanged
+  and remains the right answer when "which way is this heading" is the whole
+  question.
+
+  `yDomain` is **required**, and it is data rather than visual config:
+  auto-scaled, every range box fills its rect and the encoding says nothing.
+  The picture only means something when a whole set shares one domain — and
+  what counts as "the set" (every source, the filtered ones, one source over
+  time) is a modelling decision the client owns, so the component takes the
+  answer instead of guessing it. `p95DomainOf` and `extentDomainOf` ship
+  alongside as the two rules we reach for most; neither is imposed.
+
+  It has no size. The SVG fills its container in both axes and stretches, so
+  it absorbs height from its row and width from its column — the same
+  component serves a 28px table cell, a definition-list row and a 120px
+  dashboard tile with no size prop at any of those call sites. Strokes are
+  non-scaling, so a wide short cell does not produce fat horizontals and
+  hairline verticals. As space runs out the marks thin themselves out via
+  container queries (percentile rules below 100px wide or 40px tall, the mean
+  below 60px/24px), because four horizontal marks in a table row is mud.
+
+  Curried variant `P95Sparkline`; factory `createDistributionSparkline` for
+  currying others.
+
+  ```tsx
+  const axis = p95DomainOf(sources.map((s) => s.values));
+  <P95Sparkline values={source.values} yDomain={axis} />;
+  ```
+
 ## 0.116.0
 
 ### Added

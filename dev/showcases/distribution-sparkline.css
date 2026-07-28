@@ -1,0 +1,53 @@
+/* Demo geometry only — the component has no size of its own, so the gallery
+   supplies the containers it is meant to fill. That IS the demonstration:
+   every box below is a different shape and the sparkline takes each one. */
+
+.dist-spark-tile {
+  height: 72px;
+}
+
+/* The definition-list value column: the sparkline takes the row's text height,
+   which is what makes it sit on the same line as its label. */
+.dist-spark-dl-value {
+  height: 1.5rem;
+  max-width: 180px;
+}
+
+/* The responsive ladder. Widths chosen to straddle the two container-query
+   breakpoints (100px for the percentile rules, 60px for the mean). */
+.dist-spark-w240 {
+  width: 240px;
+  height: 64px;
+}
+.dist-spark-w120 {
+  width: 120px;
+  height: 64px;
+}
+.dist-spark-w90 {
+  width: 90px;
+  height: 64px;
+}
+.dist-spark-w50 {
+  width: 50px;
+  height: 64px;
+}
+
+/* Same width, three heights — the component absorbs whatever its row gives. */
+.dist-spark-h20 {
+  width: 200px;
+  height: 20px;
+}
+.dist-spark-h48 {
+  width: 200px;
+  height: 48px;
+}
+.dist-spark-h120 {
+  width: 200px;
+  height: 120px;
+}
+
+/* The table's sparkline cell: no height of its own, so it takes the row's. */
+.dist-spark-cell {
+  height: 28px;
+  min-width: 120px;
+}
