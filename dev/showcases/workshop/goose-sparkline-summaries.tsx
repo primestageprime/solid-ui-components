@@ -5,13 +5,18 @@
 // The centrepiece is a PROTOTYPE distribution sparkline (defined locally at the
 // bottom of this file, deliberately NOT in src/ until the encoding is settled).
 //
+// THE RULE, which nothing may override: THE PLOT AREA IS THE SAME HEIGHT AND
+// THE SAME Y-AXIS IN EVERY SPARKLINE. Not a default — there is no height or
+// domain prop to pass. The moment one cell rescales itself, no two cells in a
+// row can be compared by eye and every mark below becomes decoration.
+//
 // THREE NESTED THINGS, each strictly inside the one before it:
 //
-//   the plot        100px tall in every cell, spanning the SET's p95 band plus
-//                   ~18% breathing room. Belongs to the set, so heights are
-//                   comparable across cells; excludes the set's true extremes
-//                   so one spike cannot flatten the other eleven. Samples past
-//                   it are clipped and counted.
+//   the plot        100px tall, y-axis fixed, drawn as a visible frame so the
+//                   constancy can be checked at a glance. Spans the SET's p95
+//                   band plus ~18% breathing room — the set's true extremes are
+//                   excluded so one spike cannot flatten the other eleven, and
+//                   samples past the plot are clipped and counted.
 //   solid box       this SERIES' min..max, with the direction shading.
 //   dashed rules    this SERIES' p95 band — top and bottom only, spanning the
 //                   full width. Necessarily INSIDE the solid box: a percentile
@@ -193,8 +198,7 @@ const percentile = (p: number, values: number[]): number => {
 
 /** The SET's p95 band — where the whole collection lives. NOT its true
  *  extremes: one spike would otherwise squash every series into a hairline.
- *  This is what the solid outlined box draws, identically in every cell, so it
- *  is a fixed reference frame the per-series dashed box is read against. */
+ *  This is what the shared y-axis is built from. */
 const POOLED: number[] = EXAMPLES.flatMap((e) => e.values);
 const SET_BAND: [number, number] = [
   percentile(AXIS[0], POOLED),
@@ -236,19 +240,21 @@ const summarize = (values: number[], band: [number, number]): Summary => {
 
 interface DistributionSparklineProps {
   values: number[];
-  /** Shared across a group — a per-series auto-scale makes the range box mean
-   *  nothing, because it would always fill the rect. */
-  domain: [number, number];
   band?: [number, number];
 }
 
+// HARD RULE: the plot area is the same height and the same y-axis in EVERY
+// sparkline, always. There is deliberately no `height` or `domain` prop — a
+// caller cannot opt out, because the moment one cell rescales, no two cells in
+// the row can be compared by eye and the whole encoding is decoration. H and
+// DOMAIN are module constants and the only source of geometry below.
 const DistributionSparkline: Component<DistributionSparklineProps> = (props) => {
   const band = (): [number, number] => props.band ?? TYPICAL;
   const stats = (): Summary => summarize(props.values, band());
 
   const yOf = (v: number): number => {
-    const span = props.domain[1] - props.domain[0] || 1;
-    return INSET + (1 - (v - props.domain[0]) / span) * (H - INSET * 2);
+    const span = DOMAIN[1] - DOMAIN[0] || 1;
+    return INSET + (1 - (v - DOMAIN[0]) / span) * (H - INSET * 2);
   };
   const boxOf = (lo: number, hi: number): { y: number; height: number } => ({
     y: yOf(hi),
@@ -273,6 +279,16 @@ const DistributionSparkline: Component<DistributionSparklineProps> = (props) => 
     >
       {/* Everything is clipped to the rect: a sample beyond the shared axis
           runs off the edge rather than rescaling the whole set. */}
+      {/* The plot area itself — same height, same y-axis, every cell. Drawn so
+          the constancy is VISIBLE: without it a flat series looks like a
+          floating line rather than a flat series in a standard frame. */}
+      <rect
+        class="gs-dist__plot"
+        x={0.5}
+        y={0.5}
+        width={W - 1}
+        height={H - 1}
+      />
       <g clip-path="url(#gs-clip)">
         {/* This series' full range. */}
         <rect
@@ -363,7 +379,6 @@ const ExampleCell: Component<{ example: Example; band?: [number, number] }> = (
       </TextLabel>
       <DistributionSparkline
         values={props.example.values}
-        domain={DOMAIN}
         band={props.band}
       />
       <TextSublabel>{statLine(props.example.values, props.band ?? TYPICAL)}</TextSublabel>
@@ -449,9 +464,13 @@ const GooseSparklineSummariesBench: Component = () => (
         <TightStack>
           <ClusterRow>
             <div class="gs-legend-swatch">
-              <DistributionSparkline values={EXAMPLES[2].values} domain={DOMAIN} />
+              <DistributionSparkline values={EXAMPLES[2].values} />
             </div>
             <TightStack>
+              <TextSublabel>
+                Outer frame — the plot area. Same height, same y-axis, every
+                sparkline, no exceptions.
+              </TextSublabel>
               <TextSublabel>
                 Solid translucent box — this series' full min..max range.
               </TextSublabel>

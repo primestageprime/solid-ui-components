@@ -41,6 +41,16 @@
   height: 100px;
 }
 
+/* The plot area — identical in every sparkline, and drawn so you can SEE that
+   it is identical. Neutral, so it never competes with the trend-coloured
+   range box inside it. */
+.gs-dist__plot {
+  fill: none;
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
 /* Solid outlined translucent box = the full min..max range. */
 .gs-dist__range {
   stroke: var(--sui-text-muted);
