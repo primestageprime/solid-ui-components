@@ -29,7 +29,7 @@ normal dev loop this is paid once per server restart.
 ### 1. Add the `source` condition to your Vite config
 
 ```ts
-// vite.config.ts (in the consumer, e.g. thorcasting)
+// vite.config.ts (in the consumer app)
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import devtools from "solid-devtools/vite";

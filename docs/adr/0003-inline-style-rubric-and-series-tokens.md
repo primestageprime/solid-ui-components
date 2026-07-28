@@ -66,11 +66,11 @@ Public-facing components are **pre-curried**: client repos never pass raw visual
 props (see ADR 0001). A prop that **no shipping consumer configures is dead
 surface** and is frozen into CSS / a curried variant rather than exposed — a
 prop is a public contract with a testing, documentation, and
-don't-break-it cost, and "used" is defined by the production consumers
-(dside, amygdala, jtf, goose, wellappoint, thorcasting), not by tests or
-showcases. A caller audit against those six found that the config-geometry props
-on ChartCanvas/VirtualTable/RingChart/the pickers/RangeAmountGroup/
-SidebarSelector/SortableList and the width configs on StatusChip/CurrencyInput
+don't-break-it cost, and "used" is defined by the production consumer
+repos the usage manifest scans (`scripts/usage-manifest.config.json`), not by
+tests or showcases. A caller audit against those repos found that the
+config-geometry props on ChartCanvas/VirtualTable/RingChart/the pickers/
+RangeAmountGroup/SidebarSelector/SortableList and the width configs on StatusChip/CurrencyInput
 have **no production configurer**; the ones that were pure frozen defaults
 (picker `cellSize`, RangeAmountGroup `breakWidth`, SidebarSelector
 `sidebarWidth`/`maxHeight`, VirtualTable `rowHeight`/`overscan`) were removed and

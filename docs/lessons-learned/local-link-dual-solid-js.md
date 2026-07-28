@@ -1,7 +1,7 @@
 # Lessons learned — dual `solid-js` when SUI is consumed via a local link
 
-Hit while iterating on SUI and a consumer app (`thorcasting-ui`) at the same
-time, with SUI linked into the app's `node_modules` via `file:../solid-ui-components`
+Hit while iterating on SUI and a consumer app at the same time, with SUI
+linked into the app's `node_modules` via `file:../solid-ui-components`
 (equivalently `npm link` / `link:`). Layout components rendered fine; the
 **Chart** crashed at runtime with:
 
@@ -74,5 +74,5 @@ throwing. Worth weighing against the cost of a meaningless default.
 **Bottom line:** local-linking SUI is safe for layout/presentational work;
 anything using `createContext` (today: the Chart) needs a single `solid-js`
 instance, which means consuming the built package, not the symlinked source.
-Seen from the consumer side in `thorcasting-ui` (`/dev` rebuilt from SUI layout
+Seen from the consumer side (a `/dev` page rebuilt from SUI layout
 components with no crash; the linked Chart is what reproduced it).
