@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.118.0
+
 ### Added
 - **`NotificationItem.actions` — any number of actions per notification.** Each
   action carries its own `onClick`, `href`, `tone` (`accent`/`muted`/`danger`),
