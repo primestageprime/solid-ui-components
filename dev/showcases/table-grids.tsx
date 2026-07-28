@@ -15,7 +15,11 @@ import { ScrollList } from "../../src/components/List";
 import { SelectableTreemap } from "../../src/components/Treemap";
 import { StaticSplitLayout } from "../../src/components/SplitQueueList";
 import type { TableColumn } from "../../src/components/Table/types";
-import { ContentStack } from "../../src/components/Layout";
+import {
+  GroupBracket,
+  type GroupBracketPosition,
+} from "../../src/components/GroupBracket";
+import { ContentStack, Column, StretchRow, GrowColumn } from "../../src/components/Layout";
 import { SubsectionTitle, TextSublabel, TextBody } from "../../src/components/Text";
 import { SingleLine } from "../../src/components/SlotCard";
 import "./table-grids.css";
@@ -59,6 +63,53 @@ const BOOKINGS: Booking[] = (() => {
   }
   return out;
 })();
+
+// Bracket rows: the same bookings read as a queue rather than a table, where
+// consecutive calls to one terminal form a run. The bracket is the only cue
+// that says "these four are one visit" — position is derived from where each
+// row sits in its run, never hand-tagged.
+const TERMINAL_COLOR: Record<Terminal, string> = {
+  "Long Beach": "var(--sui-accent)",
+  Oakland: "var(--sui-success)",
+  Seattle: "var(--sui-warning)",
+  Tacoma: "var(--sui-danger)",
+};
+
+interface BracketRow {
+  booking: Booking;
+  position: GroupBracketPosition;
+  color?: string;
+  badge?: string;
+}
+
+// Run lengths chosen to exercise every position: a long run (leader/interior/
+// tail), a single-row run (leader-tail), and an ungrouped row (none).
+const RUNS: Array<{ terminal: Terminal | null; length: number }> = [
+  { terminal: "Long Beach", length: 4 },
+  { terminal: "Oakland", length: 1 },
+  { terminal: null, length: 1 },
+  { terminal: "Seattle", length: 3 },
+  { terminal: "Tacoma", length: 2 },
+];
+
+const positionInRun = (index: number, length: number): GroupBracketPosition => {
+  if (length === 1) return "leader-tail";
+  if (index === 0) return "leader";
+  if (index === length - 1) return "tail";
+  return "interior";
+};
+
+const BRACKET_ROWS: BracketRow[] = RUNS.flatMap(({ terminal, length }, run) => {
+  const pool = terminal
+    ? BOOKINGS.filter((b) => b.terminal === terminal)
+    : [BOOKINGS[199 + run]];
+  return pool.slice(0, length).map((booking, i) => ({
+    booking,
+    position: terminal ? positionInRun(i, length) : ("none" as const),
+    color: terminal ? TERMINAL_COLOR[terminal] : undefined,
+    badge: terminal && i === 0 ? `×${length}` : undefined,
+  }));
+});
 
 const columns: TableColumn<Booking>[] = [
   { id: "vessel", header: "Vessel", align: "left", ellipsis: true, contained: true, minWidth: "0", accessor: (r) => r.vessel },
@@ -254,6 +305,40 @@ export const TableGridsShowcase: Component = () => {
               )}
             </For>
           </ScrollList>
+        </div>
+      </ContentStack>
+
+      <ContentStack>
+        <SubsectionTitle>GroupBracket</SubsectionTitle>
+        <TextSublabel>
+          The same bookings as a queue, where consecutive calls to one terminal
+          are one visit. GroupBracket is a gutter cell, not a list — it only
+          means anything stacked flush against its neighbours, so it is shown
+          inside the rows it annotates. Each row passes where it sits in its run
+          (leader / interior / tail / leader-tail, or none when the row belongs
+          to no group) and the spines join up into one unbroken bracket. The
+          count badge rides on the run leader.
+        </TextSublabel>
+        <div class="table-grid-frame table-grid-frame--narrow">
+          <Column>
+            <For each={BRACKET_ROWS}>
+              {(row) => (
+                <StretchRow class="group-bracket-row">
+                  <GroupBracket
+                    position={row.position}
+                    color={row.color}
+                    badge={row.badge}
+                  />
+                  <GrowColumn>
+                    <TextBody>{row.booking.vessel}</TextBody>
+                    <TextSublabel>
+                      {`${row.booking.terminal} · ${row.booking.category} · ${row.booking.berthHours}h`}
+                    </TextSublabel>
+                  </GrowColumn>
+                </StretchRow>
+              )}
+            </For>
+          </Column>
         </div>
       </ContentStack>
 

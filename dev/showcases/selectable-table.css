@@ -1,0 +1,8 @@
+/* SelectableTable gallery — BulkActionBar is `position: sticky; bottom`, so it
+   needs a scrolling ancestor with a real height to stick inside. The gallery
+   supplies that box; the bar owns everything else. */
+
+.bulk-action-demo__scroll {
+  max-height: 280px;
+  max-width: 520px;
+}

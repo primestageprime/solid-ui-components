@@ -1,5 +1,18 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import { SelectableTable } from "../../src/components/Table";
+import { BulkActionBar } from "../../src/components/BulkActionBar";
+import { ScrollYBox, NarrowStack } from "../../src/components/Layout";
+import { MutedBody } from "../../src/components/Text";
+import "./selectable-table.css";
+
+// A berth queue long enough to scroll inside its own box — the BulkActionBar
+// sticks to the bottom of that scroll region, which is invisible on four rows.
+const QUEUE = Array.from({ length: 24 }, (_, i) => ({
+  id: `q${i + 1}`,
+  vessel: `${["MV Northern Star", "SS Pacific Dawn", "MT Coral Sea", "MV Aurora", "MV Baltic Trader", "MSC Bellissima"][i % 6]} ${i + 1}`,
+  imo: String(9100000 + i * 137),
+  date: `2026-01-${String(28 - (i % 28)).padStart(2, "0")}`,
+}));
 
 const sampleData = [
   { id: "r1", vessel: "MV Northern Star", imo: "9876543", date: "2026-01-15" },
@@ -16,6 +29,7 @@ const columns = [
 
 export const SelectableTableShowcase: Component = () => {
   const [selected, setSelected] = createSignal<Set<string>>(new Set());
+  const [queued, setQueued] = createSignal<Set<string>>(new Set());
 
   return (
     <div class="component-section">
@@ -63,6 +77,43 @@ export const SelectableTableShowcase: Component = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <h3>BulkActionBar — the strip a selection puts at the bottom</h3>
+      <p class="text-meta">
+        The standalone alternative to <code>selectionActions</code>, for when
+        the multi-select lives in something that isn't a SelectableTable (a
+        grid, a canvas, a card wall). It has no visibility logic of its own:
+        render it behind a <code>Show</code> on the selection count, inside the
+        scrolling container it should stick to. Tick some rows and scroll — the
+        bar stays pinned to the bottom of the queue, not the page.
+      </p>
+      <div class="example-group">
+        <NarrowStack>
+          <ScrollYBox class="bulk-action-demo__scroll">
+            <SelectableTable
+              data={QUEUE}
+              columns={columns}
+              getRowId={(row) => row.id}
+              selectionStore={{ selected: queued, setSelected: setQueued }}
+              stickyHeader
+            />
+            <Show when={queued().size > 0}>
+              <BulkActionBar
+                count={queued().size}
+                noun="call"
+                actionLabel="Assign to berth 4"
+                onAction={() => setQueued(new Set<string>())}
+                onClear={() => setQueued(new Set<string>())}
+              />
+            </Show>
+          </ScrollYBox>
+          <MutedBody>
+            {queued().size === 0
+              ? "nothing selected — the bar is not rendered at all"
+              : `${queued().size} selected`}
+          </MutedBody>
+        </NarrowStack>
       </div>
     </div>
   );
