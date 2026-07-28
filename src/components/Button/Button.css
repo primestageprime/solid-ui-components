@@ -52,6 +52,16 @@
   color: var(--sui-text-muted);
 }
 
+/* Filled danger — the destructive peer of --tone-accent. Kept in the matrix so
+   `tone="danger"` is not dead on non-text variants; text buttons get their
+   colour from the baseline override instead (see themes/_baseline.css). */
+.sui-btn--tone-danger {
+  border: 1px solid var(--sui-danger);
+  background: var(--sui-danger);
+  color: var(--sui-bg-deep, #001018);
+  font-weight: 500;
+}
+
 /* Content wrapper — inherits the button's flex layout so multi-element
    children (icons, SVGs, badges, text) align on the vertical center
    instead of the text baseline. */

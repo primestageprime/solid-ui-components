@@ -31,7 +31,7 @@ export interface ButtonProps
    * common "filled accent / outlined accent / muted" trio used by
    * many dside-ui inline button factories.
    */
-  tone?: "accent" | "outline" | "muted";
+  tone?: "accent" | "outline" | "muted" | "danger";
 }
 
 export const Button: Component<ButtonProps> = (props) => {
