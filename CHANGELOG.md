@@ -27,6 +27,18 @@
   resolves correctly for each. `NotificationAction` is public, so a consumer
   needing a seventh writes an object literal.
 - **`Button` gained `tone="danger"`**, the destructive peer of `tone="accent"`.
+- **`ActionWrapRow`** — a wrapping Layout row that centres its cross-axis, for a
+  cluster of inline actions whose labels must share a line. `align` is
+  load-bearing, not cosmetic: an inline action renders as a bare anchor when it
+  navigates and a padded text button when it doesn't, and those have different
+  box heights — under `WrapRow`'s default stretch both boxes fill the line but
+  the anchor keeps its text at the top while the button centres its own, putting
+  the labels ~9px apart.
+- **`InboxPopoverSurface`** — `PopoverSurface`'s wider sibling (400–460px) for a
+  popover whose rows carry inline actions rather than being single-action menu
+  items. The **minWidth** is what does the work: the surface is shrink-to-fit, so
+  a wrapping action row wraps instead of forcing the box wider and a raised cap
+  is never reached. Plain menus and dropdowns keep the narrow 280–360px measure.
 
 ### Changed
 - **`NotificationCenter.onAction` also makes the row body activatable.** It
@@ -52,6 +64,22 @@
   baseline, the same specificity lift `.sui-btn.sui-btn--pill` already takes.
   **Consumer-visible**: a `TextButton` explicitly passing `tone="muted"` now
   renders muted instead of accent. No such call site existed in SUI.
+
+- **`NotificationCenter`'s panel no longer runs off the left edge of the
+  viewport.** The panel hangs from the trigger's right edge, so a trigger near
+  the left of the screen pushed the panel's left edge off-screen — already true
+  at the old 284px measure, and worse now the inbox is 400px. `computePosition`
+  clamps so the panel always keeps an 8px margin of viewport on its left, and
+  re-measures once mounted so the clamp uses the real width. A trigger in the
+  usual top-right header position is unaffected — its natural offset is already
+  inside the clamp.
+
+### Removed
+- **`NotificationCenterProps.badgeTone`.** It was declared, documented as
+  RESERVED, referenced nowhere, and rendered nothing — `CountBadge` is
+  deliberately single-tone per the #2 Rule. Passing it has never had an effect,
+  so removing it changes no rendering; it only stops the type advertising a
+  control that does not exist.
 
 ### Deprecated
 - **`NotificationItem.action`** — superseded by `actions`, which folds it in as

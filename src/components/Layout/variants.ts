@@ -221,6 +221,20 @@ export const WrapRow: Component<RowDataProps> = createRow({
   gap: "xs",
   wrap: true,
 });
+// ActionWrapRow — a wrapping cluster of inline actions whose LABELS share a
+// line. Same geometry as WrapRow plus `align: center`, which is load-bearing
+// rather than cosmetic: an inline action renders as a bare anchor when it
+// navigates and as a padded text button when it doesn't, and those two have
+// different box heights. Under the default stretch both boxes fill the line,
+// but the anchor keeps its text at the top while the button centres its own —
+// so the labels sit ~9px apart. Centring the cross-axis puts them on one line.
+// (Distinct from TagRow, which happens to share the config but describes a run
+// of uniform-height pills — the roles, and so the names, are different.)
+export const ActionWrapRow: Component<RowDataProps> = createRow({
+  gap: "xs",
+  wrap: true,
+  align: "center",
+});
 export const FlexRow: Component<RowDataProps> = createRow({});
 
 // Baseline-aligned wrapping row — a row whose items share a text baseline and

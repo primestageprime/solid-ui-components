@@ -63,7 +63,6 @@ export interface NotificationCenterProps {
   onAction?: (item: NotificationItem) => void;
   emptyLabel?: string;
   label?: string;
-  badgeTone?: "accent" | "neutral" | "danger";
   /** Supplying this renders the pinned footer action; omit it and the footer
    *  (and its divider) never mount — the panel has no dead affordance. */
   onMarkAllRead?: () => void;

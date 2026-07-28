@@ -14,7 +14,7 @@ import {
   GrowTightStack,
   SpreadRow,
   TopClusterRow,
-  WrapRow,
+  ActionWrapRow,
 } from "../Layout/variants";
 import { TextTitle, TextSublabel } from "../Text/variants";
 import { TextButton } from "../Button/variants";
@@ -110,11 +110,12 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
             whole point of taking a thunk (see types.ts). */}
         <Show when={item().body}>{(body) => <>{body()()}</>}</Show>
         <Show when={!item().transient && actions().length > 0}>
-          {/* Wrapping row — Toast's action-row geometry. Several actions on one
-              notification wrap rather than growing an overflow menu; six
-              actions on a notification is a design smell, not a case to
-              engineer for. Left-packed, so each control sizes to its content
-              and the row starts at the text column's edge. */}
+          {/* Left-packed wrapping action row. Centre-aligned (ActionWrapRow,
+              not WrapRow) because the two branches below have different box
+              heights — a bare anchor vs a padded text button — and under the
+              default stretch their labels sit ~9px apart. Wraps rather than
+              growing an overflow menu; the panel is widened instead
+              (InboxPopoverSurface), since three actions is a normal shape. */}
           {/* The onClick is a click-isolation BARRIER, not an affordance: it
               only stops propagation, so an action click never also reaches the
               row's onActivateRow (StatusCard takes the same carve-out). It
@@ -123,7 +124,7 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
               isolation would let a disabled action activate the row. Nothing
               to mirror on the keyboard: the row's key handler already ignores
               events retargeted from a descendant. */}
-          <WrapRow onClick={(e) => e.stopPropagation()}>
+          <ActionWrapRow onClick={(e) => e.stopPropagation()}>
             <Index each={actions()}>
               {(action) => {
                 const a = () => action();
@@ -173,7 +174,7 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
                 );
               }}
             </Index>
-          </WrapRow>
+          </ActionWrapRow>
         </Show>
       </GrowTightStack>
     </TopClusterRow>

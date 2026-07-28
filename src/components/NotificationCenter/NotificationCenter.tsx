@@ -36,7 +36,7 @@ import { Portal } from "solid-js/web";
 import { Icon } from "../Icon/Icon";
 import { CountBadge } from "../Badge/CountBadge";
 import { TagPill } from "../Badge/TagPill";
-import { PopoverSurface } from "../Surface/variants";
+import { InboxPopoverSurface } from "../Surface/variants";
 import { Divider } from "../Divider/Divider";
 import { FillColumn, ScrollColumn, SpreadRow } from "../Layout/variants";
 import { TextTitle, MutedBody } from "../Text/variants";
@@ -89,10 +89,26 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
     return props.busy ? "Working…" : "";
   });
 
+  // The panel hangs from the trigger's RIGHT edge, so a trigger near the left
+  // of the viewport would push its left edge off-screen — the wider the panel,
+  // the sooner. Clamp `right` so the panel always keeps a margin of viewport on
+  // its left. Measured from the panel when it is mounted; on the first open it
+  // is not yet, so fall back to InboxPopoverSurface's 400px floor (the panel is
+  // never narrower) and let the post-mount reposition refine it.
+  const VIEWPORT_MARGIN = 8;
+  const PANEL_MIN_WIDTH = 400;
   const computePosition = () => {
     if (!triggerRef) return;
     const r = triggerRef.getBoundingClientRect();
-    setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    const width = panelRef?.getBoundingClientRect().width || PANEL_MIN_WIDTH;
+    const maxRight = window.innerWidth - width - VIEWPORT_MARGIN;
+    setPos({
+      top: r.bottom + 6,
+      right: Math.max(
+        VIEWPORT_MARGIN,
+        Math.min(window.innerWidth - r.right, maxRight),
+      ),
+    });
   };
   const panelStyle = (): JSX.CSSProperties => {
     const p = pos();
@@ -143,6 +159,9 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
     if (isOpen()) {
       computePosition();
       setupListeners();
+      // Re-measure once the panel exists so the clamp above uses its real
+      // width rather than the floor.
+      requestAnimationFrame(computePosition);
     } else {
       teardownListeners();
     }
@@ -219,7 +238,7 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
               as role="region", without the explicit ARIA role. This raw
               positioned wrapper is the overlay carve-out (Portal + fixed anchor). */}
           <section ref={panelRef} style={panelStyle()} aria-label={label()}>
-            <PopoverSurface>
+            <InboxPopoverSurface>
               {/* Inbox shell: pinned header, scrolling body, pinned footer —
                   the FillColumn + ScrollColumn + last-child idiom the tree
                   specifies for panels with a persistent action row. */}
@@ -267,7 +286,7 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
                   </TextButton>
                 </Show>
               </FillColumn>
-            </PopoverSurface>
+            </InboxPopoverSurface>
           </section>
         </Portal>
       </Show>
