@@ -130,6 +130,7 @@ import { SectionTableShowcase } from "./showcases/section-table";
 import { LayoutVariantsShowcase } from "./showcases/layout-variants";
 import { VariantCoverageShowcase } from "./showcases/variant-coverage";
 import { ChartSlotsShowcase } from "./showcases/chart-slots";
+import { TableGridsShowcase } from "./showcases/table-grids";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -851,6 +852,12 @@ const items: Item[] = [
     label: "Chart slots",
     component: ChartSlotsShowcase,
     tags: ["depth:1", "chart", "data", "status"],
+  },
+  {
+    id: "table-grids",
+    label: "Tables and grids",
+    component: TableGridsShowcase,
+    tags: ["depth:2", "table", "data", "list"],
   },
   {
     id: "heatstream-grid",

@@ -1,0 +1,11 @@
+/* Tables-and-grids gallery — each example is capped to a realistic pane width
+   so the internal scrolling and sticky headers are visible rather than the
+   page taking the scroll. */
+
+.table-grid-frame {
+  max-width: 760px;
+}
+
+.table-grid-frame--narrow {
+  max-width: 460px;
+}
