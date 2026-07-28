@@ -2344,18 +2344,8 @@
             "kind": "named"
           },
           {
-            "file": "src/components/POStatusReport.tsx",
-            "line": 21,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
-            "kind": "named"
-          },
-          {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -2366,6 +2356,11 @@
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           },
           {
@@ -2397,7 +2392,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -2541,7 +2536,7 @@
           },
           {
             "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 14,
+            "line": 20,
             "kind": "named"
           }
         ],
@@ -2549,6 +2544,13 @@
           {
             "file": "src/components/AccountMenu.tsx",
             "line": 13,
+            "kind": "named"
+          }
+        ],
+        "EmptyState": [
+          {
+            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "line": 20,
             "kind": "named"
           }
         ],
@@ -2577,6 +2579,13 @@
           {
             "file": "src/routes/object/[source]/[name].tsx",
             "line": 9,
+            "kind": "named"
+          }
+        ],
+        "GhostButton": [
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           }
         ],
@@ -2675,7 +2684,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -2693,6 +2702,11 @@
           {
             "file": "src/components/CustomerScorecard.tsx",
             "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           }
         ],
@@ -2750,6 +2764,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
             "file": "src/components/daysnapshot/DayMarginKpi.tsx",
             "line": 15,
             "kind": "named"
@@ -2762,6 +2781,16 @@
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           }
         ],
@@ -2835,7 +2864,7 @@
         "RingChart": [
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -2912,7 +2941,7 @@
           },
           {
             "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 14,
+            "line": 20,
             "kind": "named"
           },
           {
@@ -2938,6 +2967,18 @@
           {
             "file": "src/routes/transfer.tsx",
             "line": 12,
+            "kind": "named"
+          }
+        ],
+        "SectionTable": [
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
+            "line": 17,
             "kind": "named"
           }
         ],
@@ -3016,6 +3057,28 @@
             "kind": "named"
           }
         ],
+        "SmallTightStack": [
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReportSidecar.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
+            "line": 17,
+            "kind": "named"
+          }
+        ],
         "SpreadRow": [
           {
             "file": "src/components/AppNav.tsx",
@@ -3060,7 +3123,7 @@
           },
           {
             "file": "src/components/DayBreakdownTile.tsx",
-            "line": 19,
+            "line": 24,
             "kind": "type"
           },
           {
@@ -3075,7 +3138,12 @@
           },
           {
             "file": "src/components/ReportSidecar.tsx",
-            "line": 12,
+            "line": 17,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
+            "line": 23,
             "kind": "type"
           },
           {
@@ -3087,6 +3155,28 @@
             "file": "src/routes/reports/[code].tsx",
             "line": 21,
             "kind": "type"
+          }
+        ],
+        "TableSectionHeader": [
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReportSidecar.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
+            "line": 17,
+            "kind": "named"
           }
         ],
         "TableStatus": [
@@ -3163,6 +3253,11 @@
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
             "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
+            "kind": "named"
           }
         ],
         "TightSpreadRow": [
@@ -3194,13 +3289,18 @@
             "kind": "named"
           },
           {
+            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
             "line": 18,
             "kind": "named"
           },
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -3211,6 +3311,11 @@
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           },
           {
@@ -3234,7 +3339,7 @@
         "TrendSparkline": [
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 7,
+            "line": 8,
             "kind": "named"
           },
           {
@@ -3279,6 +3384,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
             "line": 18,
             "kind": "named"
@@ -3286,6 +3396,11 @@
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/FactFilterChips.tsx",
+            "line": 18,
             "kind": "named"
           }
         ],
@@ -3337,16 +3452,6 @@
             "kind": "factory-call"
           },
           {
-            "file": "src/components/DayBreakdownTile.tsx",
-            "line": 18,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/DayBreakdownTile.tsx",
-            "line": 27,
-            "kind": "factory-call"
-          },
-          {
             "file": "src/components/GrossMargin.tsx",
             "line": 20,
             "kind": "named"
@@ -3373,7 +3478,7 @@
           },
           {
             "file": "src/components/ReportSidecar.tsx",
-            "line": 20,
+            "line": 28,
             "kind": "factory-call"
           },
           {
@@ -3939,6 +4044,13 @@
             "kind": "named"
           }
         ],
+        "AccentTone": [
+          {
+            "file": "src/components/JobQueue/JobCard.tsx",
+            "line": 2,
+            "kind": "type"
+          }
+        ],
         "AppShell": [
           {
             "file": "src/auth/AccessRestricted.tsx",
@@ -4120,11 +4232,6 @@
             "file": "src/routes/reports/thousand-hour/index.tsx",
             "line": 2,
             "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/power-log-ocr.tsx",
-            "line": 2,
-            "kind": "named"
           }
         ],
         "ChartCanvasLg": [
@@ -4205,11 +4312,6 @@
           },
           {
             "file": "src/components/PowerLogCacheView.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/PowerLogDropZone.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -4351,6 +4453,13 @@
             "kind": "named"
           }
         ],
+        "CompactFileDropTarget": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 146,
+            "kind": "named"
+          }
+        ],
         "CompactSurface": [
           {
             "file": "src/components/ApprovalSection.tsx",
@@ -4462,6 +4571,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/index.tsx",
             "line": 7,
             "kind": "named"
@@ -4555,11 +4669,6 @@
         ],
         "DangerSublabel": [
           {
-            "file": "src/components/PowerLogDropZone.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
             "file": "src/components/fortnight/AutomationLauncher.tsx",
             "line": 2,
             "kind": "named"
@@ -4647,9 +4756,21 @@
             "kind": "named"
           }
         ],
+        "DenseStatusNote": [
+          {
+            "file": "src/components/JobQueue/JobCard.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "Divider": [
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -4772,6 +4893,18 @@
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/power-log-ocr.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "FileDropTarget": [
+          {
+            "file": "src/components/PowerLogCacheView.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -4935,6 +5068,13 @@
             "kind": "named"
           }
         ],
+        "GrowColumn": [
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "HeatStreamGrid": [
           {
             "file": "src/routes/index.tsx",
@@ -5026,11 +5166,6 @@
             "kind": "named"
           },
           {
-            "file": "src/components/JobQueue/JobCard.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
             "file": "src/components/JobQueue/JobQueueIcon.tsx",
             "line": 2,
             "kind": "named"
@@ -5046,11 +5181,6 @@
             "kind": "named"
           },
           {
-            "file": "src/components/PowerLogDropZone.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
             "line": 2,
             "kind": "named"
@@ -5058,11 +5188,6 @@
           {
             "file": "src/routes/metric-explorer.tsx",
             "line": 9,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/power-log-ocr.tsx",
-            "line": 2,
             "kind": "named"
           },
           {
@@ -5166,11 +5291,6 @@
         "InteractiveCard": [
           {
             "file": "src/components/violations/PeriodsList.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/tools/power-log-ocr.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -5340,11 +5460,6 @@
           },
           {
             "file": "src/components/PowerLogCacheView.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/PowerLogDropZone.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5593,6 +5708,13 @@
             "kind": "named"
           }
         ],
+        "NoShrinkColumn": [
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "NoWrapSublabel": [
           {
             "file": "src/components/VersionBadge.tsx",
@@ -5603,6 +5725,13 @@
         "NoteText": [
           {
             "file": "src/components/NoxWidgets.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "NowrapBody": [
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -5709,6 +5838,13 @@
           {
             "file": "src/routes/violations/explore.tsx",
             "line": 3,
+            "kind": "named"
+          }
+        ],
+        "PickCard": [
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -5842,7 +5978,7 @@
         "ScrollRegion": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 145,
+            "line": 146,
             "kind": "named"
           }
         ],
@@ -5929,11 +6065,6 @@
           {
             "file": "src/components/DownloadReportButton.tsx",
             "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/JobQueue/JobCard.tsx",
-            "line": 2,
             "kind": "named"
           },
           {
@@ -6185,6 +6316,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 9,
             "kind": "named"
@@ -6334,12 +6470,12 @@
             "kind": "named"
           },
           {
-            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "file": "src/components/qaqcTriage/FocusEditor.tsx",
             "line": 2,
             "kind": "named"
           },
           {
-            "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -6372,6 +6508,11 @@
           },
           {
             "file": "src/components/fortnight/ViolationCardList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -6469,6 +6610,11 @@
           },
           {
             "file": "src/components/qaqcTriage/FocusEditor.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -6854,6 +7000,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-explorer.tsx",
             "line": 9,
             "kind": "named"
@@ -6886,10 +7037,17 @@
             "kind": "named"
           }
         ],
+        "TitleAssetProgress": [
+          {
+            "file": "src/components/JobQueue/JobCard.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
         "TitleDotsMeta": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 145,
+            "line": 146,
             "kind": "named"
           }
         ],
@@ -6967,6 +7125,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/reports/qaqc-checks.tsx",
             "line": 2,
             "kind": "named"
@@ -7019,6 +7182,13 @@
           {
             "file": "src/components/ComplianceThresholdTable.tsx",
             "line": 5,
+            "kind": "named"
+          }
+        ],
+        "VerticalDivider": [
+          {
+            "file": "src/components/reports/ViolationHeatGrid.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -7181,12 +7351,12 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 59,
+            "line": 60,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 62,
+            "line": 63,
             "kind": "factory-call"
           },
           {
@@ -7316,12 +7486,12 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 78,
+            "line": 79,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 80,
+            "line": 81,
             "kind": "factory-call"
           },
           {
@@ -7592,27 +7762,27 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 71,
+            "line": 72,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 73,
+            "line": 74,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 75,
+            "line": 76,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 85,
+            "line": 86,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 90,
+            "line": 91,
             "kind": "factory-call"
           },
           {
@@ -8028,102 +8198,102 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 99,
+            "line": 100,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 101,
+            "line": 102,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 103,
+            "line": 104,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 105,
+            "line": 106,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 107,
+            "line": 108,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 109,
+            "line": 110,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 111,
+            "line": 112,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 113,
+            "line": 114,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 115,
+            "line": 116,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 117,
+            "line": 118,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 119,
+            "line": 120,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 121,
+            "line": 122,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 123,
+            "line": 124,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 126,
+            "line": 127,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 128,
+            "line": 129,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 130,
+            "line": 131,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 132,
+            "line": 133,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 134,
+            "line": 135,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 136,
+            "line": 137,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 138,
+            "line": 139,
             "kind": "factory-call"
           },
           {
@@ -9579,6 +9749,9 @@
     "AccentEmphasisBody": [
       "jtf-ui"
     ],
+    "AccentTone": [
+      "jtf-ui"
+    ],
     "ActionList": [
       "dside-ui"
     ],
@@ -9744,6 +9917,9 @@
     "ComboboxOption": [
       "amygdala-ui"
     ],
+    "CompactFileDropTarget": [
+      "jtf-ui"
+    ],
     "CompactSurface": [
       "goose-ui",
       "jtf-ui"
@@ -9859,6 +10035,9 @@
     "DayOfWeekPicker": [
       "thorcasting-ui"
     ],
+    "DenseStatusNote": [
+      "jtf-ui"
+    ],
     "Divider": [
       "dside-ui",
       "jtf-ui"
@@ -9883,6 +10062,7 @@
     ],
     "EmptyState": [
       "dside-ui",
+      "goose-ui",
       "jtf-ui"
     ],
     "EntityCard": [
@@ -9895,6 +10075,9 @@
       "goose-ui"
     ],
     "FieldTable": [
+      "jtf-ui"
+    ],
+    "FileDropTarget": [
       "jtf-ui"
     ],
     "FillColumn": [
@@ -9930,6 +10113,7 @@
     ],
     "GhostButton": [
       "dside-ui",
+      "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -9940,6 +10124,9 @@
       "goose-ui"
     ],
     "GrowBox": [
+      "jtf-ui"
+    ],
+    "GrowColumn": [
       "jtf-ui"
     ],
     "HeatStreamGrid": [
@@ -10098,6 +10285,9 @@
       "dside-ui",
       "goose-ui"
     ],
+    "NoShrinkColumn": [
+      "jtf-ui"
+    ],
     "NoWrapSublabel": [
       "dside-ui",
       "jtf-ui"
@@ -10109,6 +10299,9 @@
       "goose-ui"
     ],
     "NoteText": [
+      "jtf-ui"
+    ],
+    "NowrapBody": [
       "jtf-ui"
     ],
     "NowrapLabel": [
@@ -10143,6 +10336,9 @@
     ],
     "PendingBadge": [
       "thorcasting-ui"
+    ],
+    "PickCard": [
+      "jtf-ui"
     ],
     "PillTabs": [
       "jtf-ui"
@@ -10223,6 +10419,9 @@
     "SecondaryButton": [
       "amygdala-ui"
     ],
+    "SectionTable": [
+      "goose-ui"
+    ],
     "SectionTitle": [
       "dside-ui",
       "dside-work",
@@ -10278,6 +10477,9 @@
       "dside-ui",
       "jtf-ui",
       "thorcasting-ui"
+    ],
+    "SmallTightStack": [
+      "goose-ui"
     ],
     "SmallWarningButton": [
       "jtf-ui"
@@ -10387,6 +10589,9 @@
     "TableQuickFilter": [
       "jtf-ui"
     ],
+    "TableSectionHeader": [
+      "goose-ui"
+    ],
     "TableStatus": [
       "goose-ui"
     ],
@@ -10484,6 +10689,9 @@
     "TitleAssetDate": [
       "jtf-ui"
     ],
+    "TitleAssetProgress": [
+      "jtf-ui"
+    ],
     "TitleDotsMeta": [
       "jtf-ui"
     ],
@@ -10542,6 +10750,9 @@
     ],
     "ValueRenderer": [
       "amygdala-ui"
+    ],
+    "VerticalDivider": [
+      "jtf-ui"
     ],
     "ViolationBadge": [
       "thorcasting-ui"
