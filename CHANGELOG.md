@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.116.0
+
 ### Added
 
 - **`FileDropZone`** — a drop target that is also a click-to-browse picker
