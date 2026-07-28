@@ -128,6 +128,27 @@ export const PopoverSurface = createSurface({
   maxWidth: "360px",
 });
 
+/** InboxPopoverSurface — PopoverSurface's wider sibling (400–460px) for a
+ *  popover whose ROWS carry inline actions rather than being single-action menu
+ *  items. `PopoverSurface`'s 360px measure is sized for a menu (one label per
+ *  row); once a row pairs a navigating CTA with a couple of triage controls,
+ *  three actions no longer fit. Widen the panel rather than growing an overflow
+ *  menu — three actions on a notification is a normal shape, not an edge case.
+ *
+ *  It is the **minWidth** that does the work, not maxWidth: the surface is
+ *  shrink-to-fit, so a wrapping action row simply wraps instead of forcing the
+ *  box wider, and a raised cap alone is never reached. The floor is what buys
+ *  the room. Kept separate so plain menus/dropdowns keep the narrow measure. */
+export const InboxPopoverSurface = createSurface({
+  padding: "sm",
+  radius: "md",
+  bg: "var(--sui-bg-elevated)",
+  borderColor: "var(--sui-border)",
+  shadow: true,
+  minWidth: "400px",
+  maxWidth: "460px",
+});
+
 // NoticeBar — full-width, edge-to-edge informational bar (ruled 2026-07-22):
 // row-arranged, center-aligned, accent-tinted like InfoSurface but flush
 // (radius none) so it sits against app chrome. For top-of-app notices with

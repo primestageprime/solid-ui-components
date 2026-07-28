@@ -384,6 +384,25 @@ body {
   text-decoration: underline;
 }
 
+/* Tone under the text variant. The tone matrix in Button.css sits at equal
+   specificity (0,1,0) to `.sui-btn--text` and loses on source order — this
+   file is injected into <head> at runtime by themes/loader.ts, after the
+   bundled component CSS. A (0,2,0) selector here is the same specificity lift
+   `.sui-btn.sui-btn--pill` takes in Button.css, and for the same reason.
+   Without this, an inline muted or danger action renders accent. */
+.sui-btn--text.sui-btn--tone-muted {
+  color: var(--sui-text-muted);
+}
+.sui-btn--text.sui-btn--tone-danger {
+  color: var(--sui-danger);
+}
+.sui-btn--text.sui-btn--tone-muted:hover:not(:disabled) {
+  color: var(--sui-text);
+}
+.sui-btn--text.sui-btn--tone-danger:hover:not(:disabled) {
+  color: var(--sui-danger);
+}
+
 .sui-btn--icon-only {
   background: transparent;
   border: none;

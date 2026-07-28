@@ -2,6 +2,92 @@
 
 ## [Unreleased]
 
+## 0.118.0
+
+### Added
+- **`NotificationItem.actions` — any number of actions per notification.** Each
+  action carries its own `onClick`, `href`, `tone` (`accent`/`muted`/`danger`),
+  `icon`, and `disabled`, and renders in a wrapping row. Whether an action
+  closes the panel is now per-action: navigating ones do (you have left the
+  panel), in-place ones don't (you are still triaging), and `dismissPanel`
+  overrides either way. This is what lets a feed be cleared in one pass instead
+  of reopening the bell between every click.
+- **`NotificationItem.body` — consumer-owned row content.** A thunk rendering
+  arbitrary JSX between the detail line and the action row, for the rows a
+  string can't express (a progress bar, a diff, an avatar row). SUI still
+  renders the unread gutter, tone well, title row and action row on every row,
+  so a heterogeneous feed keeps scanning as one inbox rather than a pile of
+  cards. It is a **thunk**, not a `JSX.Element`, deliberately: feeds get built
+  as module-scope arrays, and JSX constructed there escapes the reactive root —
+  anything reactive inside would warn and silently stop tracking. The thunk
+  defers construction into the row's render.
+- **Six prefab action builders** — `viewAction(href, label?)`,
+  `dismissAction(fn, label?)`, `markReadAction(fn, label?)`,
+  `acceptAction(fn, label?)`, `declineAction(fn, label?)`,
+  `deleteAction(fn, label?)`. Builders that take the handler, per the `Table`
+  field-module precedent. None sets `dismissPanel` — the default already
+  resolves correctly for each. `NotificationAction` is public, so a consumer
+  needing a seventh writes an object literal.
+- **`Button` gained `tone="danger"`**, the destructive peer of `tone="accent"`.
+- **`ActionWrapRow`** — a wrapping Layout row that centres its cross-axis, for a
+  cluster of inline actions whose labels must share a line. `align` is
+  load-bearing, not cosmetic: an inline action renders as a bare anchor when it
+  navigates and a padded text button when it doesn't, and those have different
+  box heights — under `WrapRow`'s default stretch both boxes fill the line but
+  the anchor keeps its text at the top while the button centres its own, putting
+  the labels ~9px apart.
+- **`InboxPopoverSurface`** — `PopoverSurface`'s wider sibling (400–460px) for a
+  popover whose rows carry inline actions rather than being single-action menu
+  items. The **minWidth** is what does the work: the surface is shrink-to-fit, so
+  a wrapping action row wraps instead of forcing the box wider and a raised cap
+  is never reached. Plain menus and dropdowns keep the narrow 280–360px measure.
+
+### Changed
+- **`NotificationCenter.onAction` also makes the row body activatable.** It
+  keeps its old meaning (it is still the fallback for an action with no handler
+  of its own) and additionally wires `role="button"`, a tab stop, and
+  Enter/Space onto the row — but **only when supplied**, so a row without it
+  stays inert and advertises nothing. Same conditionally-interactive pattern as
+  `FocusLabelBand` and `HeatStream`.
+- **The `→` suffix now renders only on the `href` branch.** The arrow means
+  "this navigates"; on every action of a multi-action row it read as noise.
+  A non-`href` action's label is now unadorned.
+- **`NotificationCenter` split into `types.ts` / `actions.ts` /
+  `NotificationRow.tsx` / `NotificationCenter.tsx`.** Internal only — every
+  public name still resolves from the same import paths.
+
+### Fixed
+- **`Button`'s tone matrix now reaches text buttons.** `.sui-btn--tone-*` lives
+  in `Button.css` at the same `(0,1,0)` specificity as `.sui-btn--text` in
+  `themes/_baseline.css` — which `themes/loader.ts` injects into `<head>` at
+  runtime, *after* the bundled component CSS, so the variant won every tie.
+  `tone="muted"` on a `TextButton` therefore rendered **accent**, and any new
+  tone would have too. The text-variant tone rules now sit at `(0,2,0)` in the
+  baseline, the same specificity lift `.sui-btn.sui-btn--pill` already takes.
+  **Consumer-visible**: a `TextButton` explicitly passing `tone="muted"` now
+  renders muted instead of accent. No such call site existed in SUI.
+
+- **`NotificationCenter`'s panel no longer runs off the left edge of the
+  viewport.** The panel hangs from the trigger's right edge, so a trigger near
+  the left of the screen pushed the panel's left edge off-screen — already true
+  at the old 284px measure, and worse now the inbox is 400px. `computePosition`
+  clamps so the panel always keeps an 8px margin of viewport on its left, and
+  re-measures once mounted so the clamp uses the real width. A trigger in the
+  usual top-right header position is unaffected — its natural offset is already
+  inside the clamp.
+
+### Removed
+- **`NotificationCenterProps.badgeTone`.** It was declared, documented as
+  RESERVED, referenced nowhere, and rendered nothing — `CountBadge` is
+  deliberately single-tone per the #2 Rule. Passing it has never had an effect,
+  so removing it changes no rendering; it only stops the type advertising a
+  control that does not exist.
+
+### Deprecated
+- **`NotificationItem.action`** — superseded by `actions`, which folds it in as
+  a single-element list. Still honoured, and still closes the panel on
+  activation: an action with no `onClick` routes to `onAction(item)` exactly as
+  before, which is what keeps this release additive rather than breaking.
 ## 0.117.0
 
 ### Added

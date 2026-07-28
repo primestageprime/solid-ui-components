@@ -115,7 +115,9 @@ describe("NotificationCenter items", () => {
     // SUI Button wraps its content in <span class="sui-btn__content">, so the
     // label's nearest interactive ancestor is the <button> (vs the anchor branch,
     // where Link renders the label directly in an <a>).
-    const label = screen.getByText("Review →");
+    // No → suffix: the arrow is the NAVIGATION signal and rides the href branch
+    // only — on every action of a multi-action row it would read as noise.
+    const label = screen.getByText("Review");
     expect(label.closest("button")).toBeTruthy();
     expect(label.closest("a")).toBeNull();
   });
