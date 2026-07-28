@@ -1,0 +1,130 @@
+/* FacetTable — one tile. Tiles are laid out by the bench, not here; this file
+   owns only the card's own chrome and its internal scroll. */
+
+.mm-facet {
+  flex: 1 1 340px;
+  min-width: 300px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mm-facet--filtered {
+  border-color: var(--sui-accent);
+}
+
+.mm-facet__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--sui-border);
+  color: var(--sui-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.mm-facet__title:hover {
+  background: var(--sui-bg-hover, #222);
+  color: var(--sui-accent);
+}
+
+.mm-facet__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sui-text-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.mm-facet__badge {
+  background: var(--sui-accent);
+  color: var(--sui-bg-base, #111);
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+/* Both axes: the six-column tables are wider than a tile, and clipping the
+   last column silently hides data. Scroll, never truncate.
+   The height caps a tile at ~9 rows so the 500-row People table cannot
+   stretch the whole tiled row. */
+.mm-facet__scroll {
+  overflow: auto;
+  max-height: 222px;
+}
+
+.mm-facet__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mm-facet__table th {
+  position: sticky;
+  top: 0;
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-muted);
+  font-weight: 400;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--sui-border);
+  white-space: nowrap;
+}
+
+.mm-facet__table td {
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--sui-border-subtle, rgba(255, 255, 255, 0.05));
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.mm-facet__table .is-start {
+  text-align: left;
+}
+
+.mm-facet__table .is-end {
+  text-align: right;
+}
+
+.mm-facet__row {
+  cursor: pointer;
+}
+
+.mm-facet__row:hover td {
+  background: var(--sui-bg-hover, #222);
+}
+
+.mm-facet__row--active td {
+  background: color-mix(in srgb, var(--sui-accent) 18%, transparent);
+  color: var(--sui-text-primary);
+}
+
+.mm-facet__member {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mm-facet__tick {
+  display: inline-block;
+  width: 11px;
+  color: var(--sui-accent);
+}
+
+.mm-facet__empty {
+  color: var(--sui-text-muted);
+  text-align: center;
+  padding: 12px 8px;
+}

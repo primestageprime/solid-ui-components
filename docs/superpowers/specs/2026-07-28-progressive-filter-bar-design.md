@@ -115,7 +115,10 @@ a pure filter over flat rows:
   earlier outing together. Yes / no.
 - **`partySize`** — `participants.length`, bucketed `2, 3, 4, 5, 6+`.
 - **`genderComposition`** — the canonical sorted multiset of participant
-  genders (`f+f`, `f+m`, `f+f+m`, …). Long-tailed; ~70 observed members.
+  genders (`f+f`, `f+m`, `f+f+m`, …). Long-tailed; ~280 observed members at
+  4,000 outings (the pre-implementation estimate of ~70 badly undercounted the
+  multisets that N-way parties produce — it is a better combobox stress case
+  than expected).
 - **`durationBand`** — `<45m, 45–90m, 90m–2h, 2–4h, 4–8h, 8h+`.
 - **`month`** — `YYYY-MM` of `occurredOn`, 24 months.
 
@@ -136,8 +139,8 @@ count diverge sharply, which is the point of allowing N-way outings.
 | orientation | 7 | joined, set-valued |
 | region | 12 | direct |
 | month | 24 | direct |
-| genderComposition | ~70 | direct, long tail |
-| activity | 140 | direct |
+| genderComposition | ~280 | direct, long tail |
+| activity | 151 | direct |
 | people | ~500 | joined |
 
 Each table carries 4–7 columns. Region, for example:
