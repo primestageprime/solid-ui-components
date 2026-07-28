@@ -266,6 +266,40 @@ When you finish iterating on something in Workshop:
 
 Don't treat the current `workshop.tsx` content as canonical — it gets replaced as work is promoted out.
 
+## `main` is contended — branch, PR, and tag last
+
+Several sessions and agents work this repo **at the same time**. `main` moves
+under you while you work, so anything you decided from a session-start `git log`
+is probably stale by the time you're ready to push.
+
+This is not hypothetical. On 2026-07-28 a single session's work finished to find
+`origin/main` **39 commits ahead**, with **two** releases (`v0.116.0`,
+`v0.117.0`) cut in the meantime. The prepared release commit and tag both
+collided with an already-published version; git rejected the tag with *"would
+clobber existing tag."*
+
+**Branch before your first commit.** Integrate through `gh pr create`. Never
+push local `main` — if you commit to it directly you are guaranteed a diverged
+push and a rebase you could have avoided.
+
+**Re-check the remote immediately before choosing a version.** Not at session
+start:
+
+```bash
+git fetch origin --tags
+git show origin/main:package.json | grep '"version"'
+```
+
+**Never tag a release on an unmerged branch.** Bump the version inside the PR,
+land it, *then* cut the tag. A pushed tag triggers the GitHub Packages publish,
+so a colliding tag can clobber another session's published release. Tagging is
+the one step with no cheap undo.
+
+If you do end up diverged: don't force-push. Preserve the work on a branch,
+`git rebase origin/main`, and expect `CHANGELOG.md` to be the conflict — your
+`[Unreleased]` entries against release sections added at the same anchor. Keep
+yours under `[Unreleased]`, theirs below.
+
 ## Summary
 
 | Situation | Action |
@@ -277,3 +311,6 @@ Don't treat the current `workshop.tsx` content as canonical — it gets replaced
 | Need to pass visual overrides | **STOP** — create a variant instead |
 | Adding a new component | Name it after the *shape*, not the domain |
 | Iterating on a new component | Build in Workshop, then promote to its own Showcase entry |
+| Starting any work | Branch first — never commit to `main` |
+| Picking a release version | `git fetch origin --tags` first; the number you remember is stale |
+| Cutting a tag | Only after the PR merges — never on an unmerged branch |
