@@ -11,17 +11,17 @@ const customerProject: TagDisplayConfig = {
 describe("composeTagPairs", () => {
   it("pairs a rule's two dims into one split lozenge, parent value : child value", () => {
     const tags: SourceTag[] = [
-      { dim: "customer", value: "stax" },
-      { dim: "project", value: "jtf" },
+      { dim: "customer", value: "acme" },
+      { dim: "project", value: "apollo" },
     ];
     const [tag, ...rest] = composeTagPairs(tags, customerProject);
     expect(rest).toHaveLength(0);
-    expect(tag.key).toBe("stax");
-    expect(tag.value).toBe("jtf");
-    expect(tag.title).toBe("customer: stax · project: jtf");
+    expect(tag.key).toBe("acme");
+    expect(tag.value).toBe("apollo");
+    expect(tag.title).toBe("customer: acme · project: apollo");
     expect(tag.sources).toEqual([
-      { dim: "customer", value: "stax" },
-      { dim: "project", value: "jtf" },
+      { dim: "customer", value: "acme" },
+      { dim: "project", value: "apollo" },
     ]);
   });
 
@@ -40,26 +40,26 @@ describe("composeTagPairs", () => {
     const tags: SourceTag[] = [
       { dim: "assignee", value: "ada" },
       { dim: "status", value: "todo" },
-      { dim: "project", value: "jtf" },
+      { dim: "project", value: "apollo" },
       { dim: "owner", value: "peter" },
-      { dim: "customer", value: "stax" },
+      { dim: "customer", value: "acme" },
     ];
     const out = composeTagPairs(tags, customerProject);
     expect(out.map((t) => [t.key, t.value])).toEqual([
-      ["stax", "jtf"], // customer/project rule fires first
+      ["acme", "apollo"], // customer/project rule fires first
       ["peter", "ada"], // owner/assignee rule second
       ["status", "todo"], // leftover, labeled
     ]);
   });
 
   it("does not abbreviate a dim whose pair partner is absent — labeled fallback", () => {
-    const tags: SourceTag[] = [{ dim: "customer", value: "stax" }];
+    const tags: SourceTag[] = [{ dim: "customer", value: "acme" }];
     const [tag, ...rest] = composeTagPairs(tags, customerProject);
     expect(rest).toHaveLength(0);
     expect(tag.key).toBe("customer");
-    expect(tag.value).toBe("stax");
-    expect(tag.title).toBe("customer: stax");
-    expect(tag.sources).toEqual([{ dim: "customer", value: "stax" }]);
+    expect(tag.value).toBe("acme");
+    expect(tag.title).toBe("customer: acme");
+    expect(tag.sources).toEqual([{ dim: "customer", value: "acme" }]);
   });
 
   it("emits unknown dims (no matching rule) in labeled form", () => {
@@ -87,16 +87,16 @@ describe("composeTagPairs", () => {
 
   it("pairs only the first occurrence of a duplicated dim; extras stay labeled", () => {
     const tags: SourceTag[] = [
-      { dim: "customer", value: "stax" },
       { dim: "customer", value: "acme" },
-      { dim: "project", value: "jtf" },
-      { dim: "project", value: "dside" },
+      { dim: "customer", value: "globex" },
+      { dim: "project", value: "apollo" },
+      { dim: "project", value: "borealis" },
     ];
     const out = composeTagPairs(tags, customerProject);
-    expect(out[0]).toMatchObject({ key: "stax", value: "jtf" });
+    expect(out[0]).toMatchObject({ key: "acme", value: "apollo" });
     expect(out.slice(1).map((t) => [t.key, t.value])).toEqual([
-      ["customer", "acme"],
-      ["project", "dside"],
+      ["customer", "globex"],
+      ["project", "borealis"],
     ]);
   });
 

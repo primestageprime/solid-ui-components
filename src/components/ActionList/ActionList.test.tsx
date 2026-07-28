@@ -524,7 +524,7 @@ describe("ActionList — onOpen", () => {
 
 describe("ActionList — onTagClick", () => {
   const tagged: ActionListItemData[] = [
-    { id: "a", name: "first", tags: [{ label: "stax:jtf", active: true }] },
+    { id: "a", name: "first", tags: [{ label: "acme:apollo", active: true }] },
     { id: "b", name: "second", tags: [{ label: "primestage" }] },
   ];
   const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];

@@ -1,15 +1,15 @@
 // ============================================
 // composeTagPairs — pure helper for the Badge family (Depth 0: no component, no
 // CSS, no JSX). Companion to TagPill: it decides HOW a flat list of dim:value
-// tags is presented as split lozenges, so an app renders "stax · jtf" instead
-// of two separate "customer:stax" and "project:jtf" pills. TagPill owns the
+// tags is presented as split lozenges, so an app renders "acme · apollo" instead
+// of two separate "customer:acme" and "project:apollo" pills. TagPill owns the
 // pixels; this owns the composition.
 //
 // The presentation contract:
 //   * A pair RULE names two dims (parent, child). When BOTH are present, the two
 //     tags collapse into ONE split lozenge whose halves are the parent's VALUE
 //     and the child's VALUE — the dim names drop out of sight (they survive in
-//     `title` for hover recovery). customer:stax + project:jtf → "stax │ jtf".
+//     `title` for hover recovery). customer:acme + project:apollo → "acme │ apollo".
 //   * A dim present WITHOUT its partner is not abbreviated — the reader would
 //     have no anchor for a bare value — so it falls through to the labeled form.
 //   * Every unconsumed tag renders labeled: key = dim, value = value.
@@ -25,7 +25,7 @@ export type TagPairRule = { parent: string; child: string };
 /** How to present a tag set: the pair rules plus an optional dim ordering. */
 export type TagDisplayConfig = { pairs: TagPairRule[]; order?: string[] };
 
-/** A raw tag: a dimension and its value (e.g. { dim: "customer", value: "stax" }). */
+/** A raw tag: a dimension and its value (e.g. { dim: "customer", value: "acme" }). */
 export type SourceTag = { dim: string; value: string };
 
 /**

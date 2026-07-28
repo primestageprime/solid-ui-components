@@ -4,10 +4,10 @@ import { TagPill } from "./TagPill";
 
 describe("TagPill", () => {
   it("renders a plain label as a single lozenge", () => {
-    const { container } = render(() => <TagPill tag={{ label: "stax" }} />);
+    const { container } = render(() => <TagPill tag={{ label: "acme" }} />);
     const root = container.firstElementChild!;
     expect(root.className).not.toMatch(/--split/);
-    expect(root.textContent).toBe("stax");
+    expect(root.textContent).toBe("acme");
   });
 
   it("splits a label containing ':' into namespace + value", () => {
@@ -19,14 +19,14 @@ describe("TagPill", () => {
   });
 
   it("renders the explicit key/value shape as a split lozenge", () => {
-    const { container } = render(() => <TagPill tag={{ key: "stax", value: "jtf" }} />);
+    const { container } = render(() => <TagPill tag={{ key: "acme", value: "apollo" }} />);
     expect(container.firstElementChild!.className).toMatch(/--split/);
-    expect(container.querySelector(".sui-tag-pill__ns")?.textContent).toBe("stax");
-    expect(container.querySelector(".sui-tag-pill__val")?.textContent).toBe("jtf");
+    expect(container.querySelector(".sui-tag-pill__ns")?.textContent).toBe("acme");
+    expect(container.querySelector(".sui-tag-pill__val")?.textContent).toBe("apollo");
   });
 
   it("active flag adds the highlight class", () => {
-    const { container } = render(() => <TagPill tag={{ label: "stax", active: true }} />);
+    const { container } = render(() => <TagPill tag={{ label: "acme", active: true }} />);
     expect(container.firstElementChild!.className).toMatch(/--active/);
   });
 });

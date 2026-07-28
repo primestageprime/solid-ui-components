@@ -11,7 +11,7 @@ describe("ActionListItem", () => {
         title="deploy hover"
         status="DOING"
         assignee={{ initials: "P", kind: "person" }}
-        tags={[{ label: "stax:jtf" }]}
+        tags={[{ label: "acme:apollo" }]}
       />
     ));
     expect(getByText("deploy hover")).toBeTruthy();
