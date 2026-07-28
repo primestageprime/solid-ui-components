@@ -1,0 +1,38 @@
+/* Operating-week gallery — both components size to the box they are given:
+   WeekCalendar's grid needs a width to divide into seven columns, and
+   WeeklyCashflowChart measures its container and fills it on both axes. The
+   gallery supplies those boxes; the components own everything inside them. */
+
+.week-demo-calendar {
+  max-width: 900px;
+}
+
+.week-demo-chart {
+  max-width: 900px;
+  height: 340px;
+}
+
+/* Calendar block content. The component positions and clips the block; the
+   caller decides what a job looks like inside it, including filling the
+   block's height rather than hugging its text. */
+.week-demo-block {
+  height: 100%;
+  overflow: hidden;
+  border-left: 3px solid var(--sui-border-bright, var(--sui-border));
+}
+
+.week-demo-block--survey {
+  border-left-color: var(--sui-accent);
+}
+
+.week-demo-block--tow {
+  border-left-color: var(--sui-danger);
+}
+
+.week-demo-block--bunker {
+  border-left-color: var(--sui-warning);
+}
+
+.week-demo-block--maintenance {
+  border-left-color: var(--sui-success);
+}

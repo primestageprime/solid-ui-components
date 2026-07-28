@@ -132,6 +132,7 @@ import { VariantCoverageShowcase } from "./showcases/variant-coverage";
 import { ChartSlotsShowcase } from "./showcases/chart-slots";
 import { TableGridsShowcase } from "./showcases/table-grids";
 import { FormsAndInputsShowcase } from "./showcases/forms-and-inputs";
+import { OperatingWeekShowcase } from "./showcases/operating-week";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -865,6 +866,12 @@ const items: Item[] = [
     label: "Forms and inputs",
     component: FormsAndInputsShowcase,
     tags: ["depth:2", "form", "time", "data"],
+  },
+  {
+    id: "operating-week",
+    label: "Operating week — WeekCalendar + WeeklyCashflowChart",
+    component: OperatingWeekShowcase,
+    tags: ["depth:2", "chart", "time", "data"],
   },
   {
     id: "heatstream-grid",
