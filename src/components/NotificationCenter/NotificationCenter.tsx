@@ -42,6 +42,7 @@ import { FillColumn, ScrollColumn, SpreadRow } from "../Layout/variants";
 import { TextTitle, MutedBody } from "../Text/variants";
 import { TextButton } from "../Button/variants";
 import { NotificationRow } from "./NotificationRow";
+import { closesPanel } from "./actions";
 import type {
   NotificationAction,
   NotificationCenterProps,
@@ -151,7 +152,7 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
 
   const activate = (
     item: NotificationItem,
-    _action: NotificationAction,
+    action: NotificationAction,
     e?: MouseEvent,
   ) => {
     // Preserve new-tab gestures on anchors; SPA-navigate on plain left click.
@@ -161,8 +162,11 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
     )
       return;
     e?.preventDefault();
-    props.onAction?.(item);
-    requestOpen(false);
+    // An action with no handler of its own is the deprecated shape — it routes
+    // to the component-level callback, exactly as it always did.
+    if (action.onClick) action.onClick();
+    else props.onAction?.(item);
+    if (closesPanel(action)) requestOpen(false);
   };
 
   const triggerClass = () =>

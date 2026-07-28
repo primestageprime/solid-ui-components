@@ -8,17 +8,18 @@
 // Exported from the module for direct testing, NOT from the package barrel —
 // the public surface stays `NotificationCenter` plus its types and builders.
 // ============================================
-import { type Component, Show } from "solid-js";
+import { type Component, Index, Show } from "solid-js";
 import { Icon, type IconName } from "../Icon/Icon";
 import {
-  ClusterRow,
   GrowTightStack,
   SpreadRow,
   TopClusterRow,
+  WrapRow,
 } from "../Layout/variants";
 import { TextTitle, TextSublabel } from "../Text/variants";
 import { TextButton } from "../Button/variants";
 import { Link } from "../Navigation/Link";
+import { resolveActions } from "./actions";
 import type {
   NotificationAction,
   NotificationItem,
@@ -51,6 +52,7 @@ const rowClass = (item: NotificationItem) =>
 
 export const NotificationRow: Component<NotificationRowProps> = (props) => {
   const item = () => props.item;
+  const actions = () => resolveActions(item());
 
   return (
     // Media-object row: unread gutter · tone well · text column. Unboxed until
@@ -83,44 +85,59 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
         <Show when={item().detail}>
           <TextSublabel>{item().detail}</TextSublabel>
         </Show>
-        <Show when={item().action && !item().transient}>
-          {(() => {
-            const it = item();
-            const a = it.action as NotificationAction;
-            return (
-              // Left-packed row so the CTA sizes to its content and starts at
-              // the text column's edge. Both branches are inline-flex and would
-              // otherwise stretch as column children and centre their own
-              // labels — which is why the link and button branches used to sit
-              // at different indents.
-              <ClusterRow>
-                <Show
-                  when={a.href}
-                  fallback={
-                    // Peer of the anchor's accent colour — a semantic tone prop
-                    // on Button's public API, not a raw style override.
-                    <TextButton
-                      tone="accent"
-                      onClick={() => props.onActivateAction(it, a)}
-                    >
-                      {`${a.label} →`}
-                    </TextButton>
-                  }
-                >
-                  {/* `Link`, not `NavLink`: NavLink is a nav-RAIL item and bakes
-                      padding-left:16px, which indented the anchor branch ~16px
-                      past the button branch. Link is the unpadded accent anchor
-                      — the right atom for an inline CTA. */}
-                  <Link
-                    href={a.href}
-                    onClick={(e) => props.onActivateAction(it, a, e)}
+        <Show when={!item().transient && actions().length > 0}>
+          {/* Wrapping row — Toast's action-row geometry. Several actions on one
+              notification wrap rather than growing an overflow menu; six
+              actions on a notification is a design smell, not a case to
+              engineer for. Left-packed, so each control sizes to its content
+              and the row starts at the text column's edge. */}
+          <WrapRow>
+            <Index each={actions()}>
+              {(action) => {
+                const a = () => action();
+                const isLink = () => !!a().href && !a().disabled;
+                return (
+                  <Show
+                    when={isLink()}
+                    fallback={
+                      // Tone is a semantic prop on Button's public API, not a
+                      // raw style override. Default accent, so a lone CTA reads
+                      // the same as the anchor branch.
+                      <TextButton
+                        tone={a().tone ?? "accent"}
+                        disabled={a().disabled}
+                        onClick={(e) => {
+                          // Isolation barrier: an action click must not also
+                          // reach the row's own activation handler.
+                          e.stopPropagation();
+                          props.onActivateAction(item(), a());
+                        }}
+                      >
+                        {a().label}
+                      </TextButton>
+                    }
                   >
-                    {`${a.label} →`}
-                  </Link>
-                </Show>
-              </ClusterRow>
-            );
-          })()}
+                    {/* `Link`, not `NavLink`: NavLink is a nav-RAIL item and
+                        bakes padding-left:16px, which indented the anchor
+                        branch ~16px past the button branch. Link is the
+                        unpadded accent anchor — the right atom for an inline
+                        CTA. The → suffix is the NAVIGATION signal, so it rides
+                        only this branch; on every action in a multi-action row
+                        it would read as noise. */}
+                    <Link
+                      href={a().href}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        props.onActivateAction(item(), a(), e);
+                      }}
+                    >
+                      {`${a().label} →`}
+                    </Link>
+                  </Show>
+                );
+              }}
+            </Index>
+          </WrapRow>
         </Show>
       </GrowTightStack>
     </TopClusterRow>
