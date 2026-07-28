@@ -5,22 +5,20 @@
 // The centrepiece is a PROTOTYPE distribution sparkline (defined locally at the
 // bottom of this file, deliberately NOT in src/ until the encoding is settled).
 //
-// TWO p95 BANDS, at two different scopes, and that is the whole idea:
+// THREE NESTED THINGS, each strictly inside the one before it:
 //
-//   solid box       the SET's p95 band. IDENTICAL in every cell — a fixed
-//                   reference frame, not a measurement of this series.
-//   dashed box      the SERIES' own p95 band, computed independently. This is
-//                   the thing that moves, and it is read against the solid box:
-//                   sitting high in the frame, low, wide, or pinched.
+//   the plot        100px tall in every cell, spanning the SET's p95 band plus
+//                   ~18% breathing room. Belongs to the set, so heights are
+//                   comparable across cells; excludes the set's true extremes
+//                   so one spike cannot flatten the other eleven. Samples past
+//                   it are clipped and counted.
+//   solid box       this SERIES' min..max, with the direction shading.
+//   dashed rules    this SERIES' p95 band — top and bottom only, spanning the
+//                   full width. Necessarily INSIDE the solid box: a percentile
+//                   band cannot escape the range it was computed from.
 //
-// Plus the mean as a hairline, and direction as colour AND shading — the solid
+// Plus the mean as a hairline. Direction is colour AND shading — the solid
 // box's fill is densest at the end the series finished on.
-//
-// The plot area is a fixed 100px tall in every cell, spanning the set band plus
-// ~18% breathing room so the solid box reads as a box INSIDE the plot rather
-// than as the plot's own border. Samples beyond the plot are clipped and
-// counted, never allowed to rescale anything — one spike must not flatten the
-// other eleven.
 import { type Component, For } from "solid-js";
 import {
   MutedBody,
@@ -276,22 +274,31 @@ const DistributionSparkline: Component<DistributionSparklineProps> = (props) => 
       {/* Everything is clipped to the rect: a sample beyond the shared axis
           runs off the edge rather than rescaling the whole set. */}
       <g clip-path="url(#gs-clip)">
-        {/* The SET's band — identical in every cell, the frame the dashed box
-            is read against. Only its fill changes, with the direction. */}
+        {/* This series' full range. */}
         <rect
           class="gs-dist__range"
           x={0.5}
           width={W - 1}
-          y={boxOf(SET_BAND[0], SET_BAND[1]).y}
-          height={boxOf(SET_BAND[0], SET_BAND[1]).height}
+          y={boxOf(stats().min, stats().max).y}
+          height={boxOf(stats().min, stats().max).height}
           fill={`url(#gs-grad-${stats().trend})`}
         />
-        <rect
+        {/* Its p95 band: two rules, top and bottom, bound by the x-axis rather
+            than closed into a box. Always inside the range above — a
+            percentile band cannot escape the values it came from. */}
+        <line
           class="gs-dist__typical"
-          x={4.5}
-          width={W - 9}
-          y={boxOf(stats().bandLo, stats().bandHi).y}
-          height={boxOf(stats().bandLo, stats().bandHi).height}
+          x1={0}
+          x2={W}
+          y1={yOf(stats().bandHi)}
+          y2={yOf(stats().bandHi)}
+        />
+        <line
+          class="gs-dist__typical"
+          x1={0}
+          x2={W}
+          y1={yOf(stats().bandLo)}
+          y2={yOf(stats().bandLo)}
         />
         <line
           class="gs-dist__mean"
@@ -408,7 +415,7 @@ const HEARTBEAT = [
 const BAND_COMPARISON = [EXAMPLES[4], EXAMPLES[7], EXAMPLES[8]];
 
 const OPEN_QUESTIONS = [
-  "The solid box is now the same in every cell, which is either the point (a fixed frame to read the dashed box against) or a waste of ink twelve times over. The test: cover the solid boxes with your hand and see whether the dashed ones still tell you anything.",
+  "The dashed rules and the solid edges nearly coincide on the smooth series (look at 'Trending up' or 'Sawtooth'): with 40 evenly-spread samples, p5 and p95 sit almost at the extremes, so the trimmed tail is a pixel or two. The gap only opens where a series has genuine outliers. That is arguably correct — it says 'this one has no tails' — but it does mean four lines are doing the work of two on most cells.",
   "AXIS_PAD is 18% of the set band. Too little and the solid box looks like the plot's border; too much and every series is squeezed into the middle. It is one constant — worth tuning against a real goose row rather than these twelve.",
   "The axis is the pooled p5–p95 — a CENTRAL band, not a one-sided p95, because a series that dips near zero would flatten everything just as badly as one that spikes. If you meant a hard 0 floor with only the top trimmed, that is a one-line change.",
   "What is the set, in the real page? Here it is the twelve cells on screen. In goose it is presumably the sources in one summary row — but if the row is filtered, does the axis re-derive (cells stay legible, but heights stop being comparable to what you saw a second ago) or stay pinned to the unfiltered set?",
@@ -446,12 +453,12 @@ const GooseSparklineSummariesBench: Component = () => (
             </div>
             <TightStack>
               <TextSublabel>
-                Solid translucent box — the SET's {bandName(AXIS)} band. The
-                same in every cell: a reference frame, not a measurement.
+                Solid translucent box — this series' full min..max range.
               </TextSublabel>
               <TextSublabel>
-                Dashed box — this SERIES' own {bandName(TYPICAL)} band. Read it
-                against the solid one: high in the frame, low, wide, pinched.
+                Dashed rules, top and bottom — its {bandName(TYPICAL)} band,
+                always inside that range. The gap between a rule and the solid
+                edge is the tail the percentile trimmed off.
               </TextSublabel>
               <TextSublabel>Hairline across the width — the mean.</TextSublabel>
               <TextSublabel>
@@ -467,14 +474,16 @@ const GooseSparklineSummariesBench: Component = () => (
         Region 1 — twelve shapes, one shared domain
       </SubsectionTitle>
       <MutedBody>
-        The axis belongs to the SET, not the cell. The solid box is the{" "}
-        {bandName(AXIS)} band of all {length(POOLED)} pooled samples —{" "}
-        {round(SET_BAND[0])}..{round(SET_BAND[1])} — and the plot area around it
-        runs {round(DOMAIN[0])}..{round(DOMAIN[1])}, 100px tall in every cell.
-        Not the set's true extremes: "Spiky" touches 90, and letting it set the
-        ceiling would squash the other eleven. Samples past the plot are clipped
-        and counted. On a per-series auto-scale none of this would mean
-        anything — every box would fill its rect every time.
+        The axis belongs to the SET, not the cell: the plot runs{" "}
+        {round(DOMAIN[0])}..{round(DOMAIN[1])} in all of them, 100px tall — the{" "}
+        {bandName(AXIS)} band of all {length(POOLED)} pooled samples (
+        {round(SET_BAND[0])}..{round(SET_BAND[1])}) plus room around it. Not the
+        set's true extremes: "Spiky" touches 90, and letting it set the ceiling
+        would squash the other eleven, so samples past the plot are clipped and
+        counted instead. Inside that fixed plot, the boxes are this series' —
+        solid for its range, dashed rules for its {bandName(TYPICAL)}. On a
+        per-series auto-scale none of it would mean anything: every box would
+        fill its rect every time.
       </MutedBody>
       <CardGrid>
         <For each={EXAMPLES}>{(e) => <ExampleCell example={e} />}</For>

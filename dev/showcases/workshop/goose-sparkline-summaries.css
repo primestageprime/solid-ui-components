@@ -53,7 +53,8 @@
   stroke: var(--sui-danger);
 }
 
-/* Dashed box inside it = the typical band (the percentile pair). */
+/* The typical band: two dashed rules, top and bottom, spanning the full width
+   — bound by the x-axis rather than closed into a box. */
 .gs-dist__typical {
   fill: none;
   stroke: var(--sui-text-muted);
