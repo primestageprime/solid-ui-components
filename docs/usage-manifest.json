@@ -2760,7 +2760,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -3075,7 +3075,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -3180,7 +3180,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -3305,7 +3305,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -3399,13 +3399,8 @@
             "kind": "named"
           },
           {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 20,
-            "kind": "named"
-          },
-          {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 18,
+            "line": 28,
             "kind": "named"
           },
           {
