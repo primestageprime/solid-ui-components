@@ -1,11 +1,11 @@
-// Bench: Goose Filter Bar (workshop:goose-filter-bar)
+// Bench: Report Filter Bar (workshop:report-filter-bar)
 //
 // SKELETON ONLY — a bare page to talk over, not a design. Nothing here is
-// decided: the dimensions below come from goose's
-// docs/2026-07-25-interconnected-report-filtering-design.md ("Date, Order
-// type, Region, Sales rep, Product line, Brand, Item" — AND across
-// dimensions, OR within one), and every box is a Placeholder marking a slot
-// we have not chosen a component for yet.
+// decided: the dimensions below come from a consumer app's
+// interconnected-report-filtering design ("Date, Order type, Region, Sales
+// rep, Product line, Brand, Item" — AND across dimensions, OR within one),
+// and every box is a Placeholder marking a slot we have not chosen a
+// component for yet.
 import { type Component, For } from "solid-js";
 import {
   MutedBody,
@@ -53,15 +53,15 @@ const OPEN_QUESTIONS = [
   "Does a scope count ('1,204 of 38,900 lines') belong in the bar, or down with the results?",
 ];
 
-export const meta = { label: "Goose Filter Bar" };
+export const meta = { label: "Report Filter Bar" };
 
-const GooseFilterBarBench: Component = () => (
+const ReportFilterBarBench: Component = () => (
   <div class="component-section component-section--full">
-    <SectionTitle>Goose Filter Bar</SectionTitle>
+    <SectionTitle>Report Filter Bar</SectionTitle>
     <MutedBody>
-      Bare page — a skeleton for the goose report filter bar, not a design. The
+      Bare page — a skeleton for the report filter bar, not a design. The
       regions below mark WHERE things go so we can argue about the shape before
-      anything gets built. Stub dimensions come from goose's
+      anything gets built. Stub dimensions come from the
       interconnected-report-filtering design; every box is a Placeholder.
     </MutedBody>
 
@@ -102,4 +102,4 @@ const GooseFilterBarBench: Component = () => (
   </div>
 );
 
-export default GooseFilterBarBench;
+export default ReportFilterBarBench;
