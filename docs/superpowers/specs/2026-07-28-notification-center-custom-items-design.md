@@ -168,9 +168,36 @@ carries no misleading affordance.
 The action row gets a click-isolation barrier so action clicks do not bubble to
 the row — the `StatusCard.tsx:194` precedent.
 
-Panel-close resolution, in order: `action.dismissPanel` if set, else `!!href`.
+### Panel-close resolution
+
+The naive rule — `dismissPanel ?? !!href` — also breaks a legacy case. Today
+*every* action closes the panel, including a handler-less, href-less one (the
+showcase's "Recalibrate relay" at `notification-center.tsx:28`). Under the naive
+rule that action would stop closing.
+
+Since a handler-less action is by definition the deprecated shape, it keeps the
+deprecated behavior:
+
+```ts
+/** Explicit `dismissPanel` wins. Otherwise navigating actions close, and so do
+ *  handler-less ones — the deprecated `action` shape, which predates the flag
+ *  and always closed. */
+export const closesPanel = (a: NotificationAction): boolean =>
+  a.dismissPanel ?? (!!a.href || !a.onClick);
+```
+
+Row-body activation always closes, matching the semantics `onAction` has had
+from the start. It is new surface, so nothing constrains it otherwise.
+
 The existing modifier-key guard on anchors (meta/ctrl/shift/alt/non-left-click
 returns early, preserving new-tab gestures) is retained unchanged.
+
+Action controls call `stopPropagation` so their clicks do not also reach the
+row's handler; the row's key handler additionally requires
+`e.target === e.currentTarget`, so Enter on a focused action button does not
+double-fire. `RowProps extends JSX.HTMLAttributes<HTMLDivElement>`
+(`Layout/Row.tsx:12`), so `role` / `tabIndex` / `onKeyDown` pass through
+`TopClusterRow` without a wrapper element.
 
 ## 6. Action row rendering
 
@@ -216,7 +243,7 @@ sibling of the existing `onMarkAllRead` footer, so the two read as a set.
 `dismissAction` clears the notification; `deleteAction` destroys the underlying
 thing — the consumer owns both effects, SUI only names them.
 
-## 8. Button gains a `danger` tone
+## 8. Button gains a `danger` tone — and the tone matrix must reach text buttons
 
 `declineAction` and `deleteAction` need a danger-toned *text* button, which does
 not exist in SUI today.
@@ -227,14 +254,53 @@ not exist in SUI today.
 `createButton({ variant: "text" })` — so the variant path is unreachable for
 these buttons.
 
+### The tone matrix currently does not apply to text buttons
+
+Adding a tone rule to `Button.css` alone would be silently dead. `_baseline.css`
+is **not bundled** — `themes/loader.ts:21` injects it with
+`document.head.appendChild()` at runtime, so it lands after the bundled
+component CSS. `.sui-btn--text` and `.sui-btn--tone-muted` are both `(0,1,0)`
+selectors, so the baseline rule wins on source order:
+
+```css
+.sui-btn--tone-muted { color: var(--sui-text-muted); }  /* Button.css   — loses */
+.sui-btn--text       { color: var(--sui-accent);     }  /* _baseline.css — wins */
+```
+
+This is not only a `danger` problem. `dismissAction` and `markReadAction` are
+`tone: "muted"` and would render **accent**, collapsing the distinction between
+the navigating CTA and the muted triage actions — which is core to this feature.
+
+It also means the existing `<TextButton tone="accent">` at
+`NotificationCenter.tsx:330` is already a no-op, harmless only because accent is
+what `--text` gives anyway.
+
+### The fix
+
 Per `STYLE_GUIDE.md:92` ("the missing variant is the finding, not an excuse for
-an inline style"), the fix is in the atomic, not in `NotificationCenter.css`:
+an inline style"), it lives in the atomic and the theme baseline, never in
+`NotificationCenter.css`. `Button.css:32` already solves this exact collision for
+the pill radius with a lifted-specificity selector, and its comment documents the
+reasoning — tone-under-text gets the same treatment.
 
-- `Button.tsx`: `tone?: "accent" | "outline" | "muted" | "danger"`
-- `Button.css`: `.sui-btn--tone-danger` using `var(--sui-danger)` /
-  `var(--sui-danger-rgb)`, mirroring `.sui-btn--tone-accent`
+- **`Button.tsx`**: `tone?: "accent" | "outline" | "muted" | "danger"`
+- **`Button.css`**: `.sui-btn--tone-danger`, the filled peer of
+  `.sui-btn--tone-accent`, using `var(--sui-danger)`. Keeps the matrix complete
+  so `tone="danger"` is not dead on non-text variants.
+- **`_baseline.css`**: tone-under-text colour rules at `(0,2,0)`, placed after
+  `.sui-btn--text` where `themes/README.md:11` says component visual treatment
+  belongs:
 
-Purely additive; no existing rule changes.
+```css
+.sui-btn--text.sui-btn--tone-muted { color: var(--sui-text-muted); }
+.sui-btn--text.sui-btn--tone-danger { color: var(--sui-danger); }
+.sui-btn--text.sui-btn--tone-muted:hover:not(:disabled) { color: var(--sui-text); }
+.sui-btn--text.sui-btn--tone-danger:hover:not(:disabled) { color: var(--sui-danger); }
+```
+
+Additive: no existing rule is modified, and every currently-rendered button keeps
+its pixels except text buttons that explicitly opt into `tone="muted"` — of which
+there are none today.
 
 ## 9. Module split
 
@@ -270,11 +336,18 @@ to a sibling `NotificationRow.test.tsx` alongside the split.
 - `transient` row renders no actions regardless of `actions`
 - each tone maps to its `sui-btn--tone-*` class, including `danger`
 
+Class assertions are as far as the unit tests go: `_baseline.css` is injected at
+runtime by `loadBaseline()` and is not present in jsdom, so the §8 cascade fix
+cannot be asserted there. It is verified in the showcase (§11), which renders a
+muted, an accent, and a danger action side by side — if the cascade is wrong all
+three render accent, which is visible at a glance.
+
 **Activation**
 - `action.onClick` fires; `onAction` does **not** also fire
 - an action with no `onClick` falls back to `onAction(item)` — the
   backward-compatibility rule
 - panel closes after an `href` action, stays open after a plain `onClick` action
+- panel closes after a handler-less, href-less action (deprecated-shape parity)
 - explicit `dismissPanel` overrides the default in both directions
 - modifier-clicking an anchor does not call `onClick` and does not close the
   panel
@@ -317,6 +390,9 @@ the deprecated singular `action` still works.
 - `CHANGELOG.md` under `[Unreleased]`: **Added** — `NotificationItem.actions`,
   `NotificationItem.body`, the six builders, `Button` `tone="danger"`;
   **Changed** — `onAction` widens to row-body activation, the `→` suffix narrows
-  to the `href` branch; **Deprecated** — `NotificationItem.action`.
+  to the `href` branch; **Fixed** — `Button`'s tone matrix now reaches text
+  buttons (`tone="muted"` on a `TextButton` previously rendered accent, silently
+  losing to `.sui-btn--text` on source order); **Deprecated** —
+  `NotificationItem.action`.
 - `COMPONENTS.md` entry updated for the new surface.
 - Minor version bump. `feat:`, not `feat!:` — §5 is what earns that.
