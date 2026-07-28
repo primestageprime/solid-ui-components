@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.120.0
+
+`BucketQueue` now measures a row per bucket rather than one for the whole bar,
+and a bucket can opt into absorbing the height nobody else wanted. Together
+these close a reported band of dead space under a queue in a fixed column.
+
 ### Fixed
 - **`BucketQueue` sized every bucket from ONE row measurement**, so a queue
   whose buckets have different row heights mis-sized all but the bucket the
