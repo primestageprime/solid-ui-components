@@ -93,6 +93,21 @@ describe("BucketQueue measurement", () => {
     expect(bucketOfEl(rows[0])).toBe("b");
   });
 
+  it("measures a row in EVERY populated bucket, not one row for the whole queue", () => {
+    // Rows are the consumer's JSX, and a queue can pair one-line rows in one
+    // bucket with two-line rows in the next. One sample applied to both sized
+    // the taller bucket from the shorter bucket's row and left the difference
+    // as dead space at the bottom of the queue.
+    renderQ([
+      { id: "b1", bucket: "b" },
+      { id: "c1", bucket: "c" },
+    ]);
+    const rows = observer().observed.filter((el) =>
+      el.classList.contains("bucket-queue__row"),
+    );
+    expect(rows.map(bucketOfEl).sort()).toEqual(["b", "c"]);
+  });
+
   it("observes the row, the header and the empty strip — not just the root", () => {
     const { container } = renderQ([{ id: "b1", bucket: "b" }]);
     const observed = observer().observed;

@@ -123,6 +123,29 @@ describe("BucketQueue — rendering & sizing", () => {
     expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(2);
   });
 
+  it("stretches a fill bucket to swallow the height the others left over", () => {
+    // Without `fill` this bucket shrink-wraps to 306 and 206px of the 600 is
+    // allocated to nobody — the dead band a consumer sees between the last row
+    // and whatever is pinned under the queue.
+    const filling: Bucket[] = [
+      { key: "a", label: "Alpha", tone: "success", fill: true },
+      { key: "b", label: "Beta", tone: "danger" },
+      { key: "c", label: "Gamma", tone: "accent" },
+    ];
+    const { container } = render(() => (
+      <BucketQueue<Item>
+        buckets={filling}
+        items={FIVE_IN_A}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+      />
+    ));
+    // 600 − 2×8 gap − 2×36 empty summary lines = 512, all of it to Alpha.
+    expect(bucketHeights(container)).toEqual(["512px", "36px", "36px"]);
+  });
+
   it("ignores capRows larger than the row count", () => {
     const capped: Bucket[] = [
       { key: "a", label: "Alpha", tone: "success", capRows: 99 },

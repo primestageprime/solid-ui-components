@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`BucketQueue` sized every bucket from ONE row measurement**, so a queue
+  whose buckets have different row heights mis-sized all but the bucket the
+  sample came from. Reported from a pane with two single-line balance rows
+  (31px) above nineteen two-line config rows (50px): Configs' natural height
+  came out `32 + 19×31 + 2 = 623` instead of `984`, the water-fill decided it
+  was satisfied, and **138px of the 865px available was allocated to nobody** —
+  a band of dead space under a bucket whose own body was scrolling.
+
+  The queue now measures **one row per bucket** and sizes each from its own.
+  A bucket with nothing to measure yet borrows the topmost measured sibling
+  before falling back to the constant, and it **keeps its last real
+  measurement** when its rows are momentarily unmounted — rows are re-created
+  whenever `buckets` or `items` gets a new identity, and the replacement's
+  height only lands on the ResizeObserver's next delivery (never, in a
+  backgrounded tab), so dropping it made the bucket borrow a sibling's row
+  height mid-flight.
+
+  Rows must still be uniform *within* a bucket; they no longer need to match
+  *across* buckets.
+
+### Added
+- **`Bucket.fill?: boolean`** — absorb the leftover height instead of
+  shrink-wrapping to content. Once every bucket has been allocated up to its
+  natural height, whatever remains is split among the `fill` buckets in
+  proportion to `weight`.
+
+  Shrink-wrapping leaves the remainder unallocated, which is right for a bar
+  floating in a page and wrong for a queue in a fixed column with a control
+  pinned under it — there the remainder shows up as dead space above that
+  control, and it grows the shorter the list is. Fixing the measurement above
+  only closes that gap while the list happens to overflow.
+
+  ```tsx
+  const buckets: Bucket[] = [
+    // Meant to stay small: capped, and does not fill.
+    { key: "balance", label: "Balances", tone: "success", capRows: 3 },
+    // Reaches the bottom of the column whether it holds 3 configs or 30.
+    { key: "configs", label: "Configs", tone: "accent", fill: true },
+  ];
+  ```
+
+  Two rules: it **overrides `capRows` for that bucket** (the cap exists to stop
+  content-driven growth, not to refuse space nothing else wants), and only a
+  **populated** bucket fills — an empty one stays pinned to its summary line
+  rather than stretching a "nothing here" strip over half the pane. If every
+  `fill` bucket is empty the remainder is left unallocated, as before.
+
+  Purely additive: **a queue declaring no `fill` lays out exactly as it did in
+  0.119.0**, pinned by a test.
+- **`naturalHeights(input)` and `retainRowHeights(keys, measured, prev)`**
+  exported from `BucketQueue` alongside `allocateHeights` (with the
+  `NaturalInput` type), so the whole sizing model is available outside the
+  component. `AllocateInput` gains an optional `fills: boolean[]`.
+- **A `fill` bench in the dev showcase** — one-line Balances rows above
+  two-line Configs rows with a button pinned underneath, and toggles for
+  `fill`, row shape, and list length, so both defects are reproducible by eye.
+
 ## 0.119.0
 
 Every SUI `Button` variant now clears WCAG 4.5:1 for its label, at rest and on
