@@ -1,0 +1,21 @@
+/* App-shell gallery — CollapsiblePanel brings no width of its own (that is the
+   caller's call, and the point of the demo: collapsing returns real space to
+   the centre column). The gallery supplies the expanded width and the panel
+   bodies' scroll height. */
+
+.collapsible-demo__panel {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.collapsible-demo__body {
+  padding: 8px 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.collapsible-demo__center {
+  padding: 12px 16px;
+  min-width: 0;
+  overflow-y: auto;
+}

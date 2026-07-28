@@ -1,0 +1,18 @@
+/* EntityCard gallery — the card fills the width it is given, so the demo caps
+   it at a realistic sidebar width and gives the list a height to scroll in.
+   Everything inside the card is the card's own. */
+
+.entity-card-demo__list {
+  max-width: 460px;
+}
+
+.entity-card-demo__scroll {
+  max-height: 420px;
+}
+
+/* StackedProgressBar carries no intrinsic height — the caller decides how thick
+   the bar is. In a card's bottom row that is a hairline, not a gauge. */
+.entity-card-demo__bar {
+  height: 6px;
+  width: 100%;
+}
