@@ -59,8 +59,8 @@ const DropzoneShowcase = () => (
     <CardCase
       title="Upload dropzone"
       width="360px"
-      routes={["components/PowerLogDropZone.tsx", "/tools/power-log-ocr"]}
-      why="How a PDF enters the tool: a dashed target that is also a click-to-browse picker, showing the prompt on one line. It rejects anything that isn't a PDF with a self-clearing notice, and goes inert (dimmed, no pointer) while the last file is being read. The compact density is the same target tucked into the summary banner row."
+      routes={["/tools/power-log-ocr", "components/PowerLogCacheView.tsx", "fortnight ingest row"]}
+      why="How a file enters a tool: a dashed target that is also a click-to-browse picker, showing the prompt on one line. It rejects anything outside the accepted formats with a self-clearing notice, and goes inert (dimmed, no pointer) while the last file is being read. jtf had two of these — the OCR route's own click-only card and the PDF drop component — and both are now this. The compact density is the same target tucked into the fortnight ingest row."
     >
       <TightStack>
         <FileDropTarget
@@ -228,10 +228,10 @@ export const ENTRIES: CardEntry[] = [
     component: MetricCardShowcase,
   },
   {
-    route: "components/PowerLogDropZone",
+    route: "tools/power-log-ocr",
     name: "Upload dropzone",
     status: "sui",
-    note: "SUI `FileDropTarget` / `CompactFileDropTarget` — dashed drop target + click-to-browse picker, extension check with a self-clearing notice, disabled state. Replaces the inline-styled drop div in PowerLogDropZone.tsx.",
+    note: "SUI `FileDropTarget` / `CompactFileDropTarget` — dashed drop target + click-to-browse picker, extension check with a self-clearing notice, disabled state. Replaces both the OCR route's click-only InteractiveCard (which carried a FLAG asking upstream for this primitive) and the inline-styled PowerLogDropZone div.",
     component: DropzoneShowcase,
   },
   {
