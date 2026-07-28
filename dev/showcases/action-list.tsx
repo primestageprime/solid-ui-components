@@ -62,8 +62,8 @@ const rosterNames = roster.map((p) => p.name);
 /** A flat tag set whose customer/project and owner/assignee dims pair up, plus a
  *  lone `priority` that has no partner rule and stays labeled. */
 const tagSource: SourceTag[] = [
-  { dim: "customer", value: "stax" },
-  { dim: "project", value: "jtf" },
+  { dim: "customer", value: "acme" },
+  { dim: "project", value: "apollo" },
   { dim: "owner", value: "peter" },
   { dim: "assignee", value: "ada" },
   { dim: "priority", value: "high" },
@@ -80,47 +80,47 @@ const seedTasks: ActionListItemData[] = [
     id: "t1",
     name: "deploy minute-level-hover",
     assignee: { initials: "P", kind: "person", active: true },
-    tags: [{ label: "stax:jtf", active: true }],
+    tags: [{ label: "acme:apollo", active: true }],
     status: "DONE",
   },
   {
     id: "t2",
     name: "Get creds to connect to sync spreadsheet",
-    tags: [{ label: "stax:jtf", active: true }],
+    tags: [{ label: "acme:apollo", active: true }],
     status: "DOING",
   },
   {
     id: "t3",
     name: "Initial user flow — how to add account?",
     assignee: { initials: "A", kind: "ai" },
-    tags: [{ label: "primestage:thorcasting", active: true }],
+    tags: [{ label: "globex:borealis", active: true }],
     status: "DOING",
   },
   {
     id: "t4",
     name: 'stray "today" indicator on chart',
     assignee: { initials: "A", kind: "ai" },
-    tags: [{ label: "primestage:thorcasting", active: true }],
+    tags: [{ label: "globex:borealis", active: true }],
     status: "TODO",
   },
   {
     id: "t5",
     name: "wire showcase filter to tag facets",
     assignee: { initials: "DA", kind: "ai" },
-    tags: [{ label: "primestage:dside" }],
+    tags: [{ label: "globex:cirrus" }],
     status: "TODO",
   },
   {
     id: "t6",
-    name: "backfill June hours into the STAX sheet",
+    name: "backfill June hours into the billing sheet",
     assignee: { initials: "P", kind: "person" },
-    tags: [{ label: "stax" }],
+    tags: [{ label: "acme" }],
     status: "TODO",
   },
   {
     id: "t7",
     name: "sketch swimlane card hover states",
-    tags: [{ label: "primestage:thorcasting" }],
+    tags: [{ label: "globex:borealis" }],
     status: "TODO",
   },
 ];
@@ -168,27 +168,27 @@ export const ActionListShowcase: Component = () => {
         { initials: "P", kind: "person", active: true },
         { initials: "DA", kind: "ai" },
       ],
-      tags: [{ key: "primestage", value: "dside", active: false }],
+      tags: [{ key: "globex", value: "cirrus", active: false }],
       status: "DOING",
     },
     {
       id: "d2",
-      name: "backfill STAX June hours",
+      name: "backfill June hours from the billing sheet",
       assignee: { initials: "P", kind: "person" },
-      tags: [{ label: "stax" }],
+      tags: [{ label: "acme" }],
       status: "TODO",
     },
     {
       id: "d3",
-      name: "thorcasting swimlane hovers",
+      name: "borealis swimlane hovers",
       assignee: { initials: "DA", kind: "ai" },
-      tags: [{ key: "primestage", value: "thorcasting" }],
+      tags: [{ key: "globex", value: "borealis" }],
       status: "TODO",
     },
     {
       id: "d4",
       name: "wire showcase filter to tag facets",
-      tags: [{ key: "primestage", value: "dside" }],
+      tags: [{ key: "globex", value: "cirrus" }],
       status: "TODO",
     },
   ]);
@@ -275,7 +275,7 @@ export const ActionListShowcase: Component = () => {
           statusOptions={STATUS_OPTIONS}
           tone={toneFor("TODO")}
           assignee={{ initials: "P", kind: "person", active: true }}
-          tags={[{ label: "stax", active: true }, { label: "jtf" }]}
+          tags={[{ label: "acme", active: true }, { label: "apollo" }]}
           onStatusChange={() => {}}
           onTitleChange={() => {}}
           onDismiss={() => {}}
@@ -289,7 +289,7 @@ export const ActionListShowcase: Component = () => {
         <ActionListItem
           title="with tags"
           tone={toneFor()}
-          tags={[{ label: "jtf" }, { label: "stax", active: true }]}
+          tags={[{ label: "apollo" }, { label: "acme", active: true }]}
         />
         <ActionListItem title="with status" status="DONE" tone={toneFor("DONE")} />
         <ActionListItem
@@ -297,7 +297,7 @@ export const ActionListShowcase: Component = () => {
           status="TODO"
           tone={toneFor("TODO")}
           assignee={{ initials: "P", kind: "person", active: true }}
-          tags={[{ label: "primestage" }]}
+          tags={[{ label: "globex" }]}
           onDismiss={() => {}}
         />
         <ActionListItem
@@ -305,9 +305,9 @@ export const ActionListShowcase: Component = () => {
           status="TODO"
           tone={toneFor("TODO")}
           tags={[
-            { label: "primestage:thorcasting", active: true },
-            { label: "primestage:dside" },
-            { label: "stax" },
+            { label: "globex:borealis", active: true },
+            { label: "globex:cirrus" },
+            { label: "acme" },
           ]}
           onDismiss={() => {}}
         />
@@ -320,7 +320,7 @@ export const ActionListShowcase: Component = () => {
             { initials: "DA", kind: "ai" },
             { initials: "AA", kind: "person" },
           ]}
-          tags={[{ label: "primestage:dside", active: true }]}
+          tags={[{ label: "globex:cirrus", active: true }]}
         />
       </div>
 
@@ -464,7 +464,7 @@ export const ActionListShowcase: Component = () => {
         labeled pill is noise. <code>composeTagPairs(tags, cfg)</code> collapses a
         configured pair (both dims present) into ONE split lozenge of the two VALUES —
         the dim names drop out but survive in the hover <code>title</code>. Here
-        <code>customer:stax + project:jtf</code> becomes <b>stax │ jtf</b> and
+        <code>customer:acme + project:apollo</code> becomes <b>acme │ apollo</b> and
         <code>owner:peter + assignee:ada</code> becomes <b>peter │ ada</b>, while the
         partnerless <code>priority:high</code> falls through to its labeled form. The
         composed output drops straight onto ActionList's <code>tags</code>.

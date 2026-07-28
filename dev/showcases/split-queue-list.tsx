@@ -126,7 +126,7 @@ const renderItem = (i: QueueItem): JSX.Element => (
 // SUI animates the transition. Resolve sorts the card to the to-categorize HEAD
 // first, Unresolve sorts it to the done TAIL first ("sort to the seam, then
 // run the animation"), so forward and reverse are exact mirrors. This is the
-// reference wiring for the Thorcasting Configure accept-flow.
+// reference wiring for a configure/accept flow.
 function SelectionDemo() {
   const ITEMS = POOL.slice(0, 10);
   const [resolved, setResolved] = createSignal<QueueItem[]>([]);
