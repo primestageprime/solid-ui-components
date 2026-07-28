@@ -169,6 +169,13 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
     if (closesPanel(action)) requestOpen(false);
   };
 
+  // Row-body activation closes the panel — the semantics `onAction` has had
+  // from the start (opening a notification takes you elsewhere).
+  const activateRow = (item: NotificationItem) => {
+    props.onAction?.(item);
+    requestOpen(false);
+  };
+
   const triggerClass = () =>
     isOpen()
       ? "sui-notification-center__trigger sui-notification-center__trigger--open"
@@ -241,6 +248,9 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
                         <NotificationRow
                           item={item()}
                           onActivateAction={activate}
+                          onActivateRow={
+                            props.onAction ? activateRow : undefined
+                          }
                         />
                       )}
                     </Index>

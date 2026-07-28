@@ -104,6 +104,12 @@
   border-color: var(--sui-border);
 }
 
+/* Only an activatable row advertises itself as clickable — the row is
+ * interactive exactly when the consumer supplied `onAction`. */
+.sui-notification-center__row[role="button"] {
+  cursor: pointer;
+}
+
 /* Per-tone colour, consumed by the well below. Set on the row so a future
  * tone-driven accent (rail, title colour) has a single source. */
 .sui-notification-center__row--info {

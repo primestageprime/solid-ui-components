@@ -42,6 +42,9 @@ export interface NotificationRowProps {
     action: NotificationAction,
     e?: MouseEvent,
   ) => void;
+  /** Supplying this is what MAKES the row body activatable. Omit it and the
+   *  row carries no role, no tab stop, and no handlers. */
+  onActivateRow?: (item: NotificationItem) => void;
 }
 
 const rowClass = (item: NotificationItem) =>
@@ -57,7 +60,22 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
   return (
     // Media-object row: unread gutter · tone well · text column. Unboxed until
     // hover — the well is what makes it read as a unit at rest.
-    <TopClusterRow class={rowClass(item())}>
+    <TopClusterRow
+      class={rowClass(item())}
+      // Conditionally interactive — wired ONLY when the consumer supplied a row
+      // handler, so a row without one carries no misleading affordance. Same
+      // dual-mode pattern as FocusLabelBand and HeatStream.
+      role={props.onActivateRow ? "button" : undefined}
+      tabIndex={props.onActivateRow ? 0 : undefined}
+      onClick={() => props.onActivateRow?.(item())}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        // Enter on a focused action button must not double-fire the row.
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        props.onActivateRow?.(item());
+      }}
+    >
       <span
         class={
           item().read || item().transient
@@ -97,7 +115,15 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
               actions on a notification is a design smell, not a case to
               engineer for. Left-packed, so each control sizes to its content
               and the row starts at the text column's edge. */}
-          <WrapRow>
+          {/* The onClick is a click-isolation BARRIER, not an affordance: it
+              only stops propagation, so an action click never also reaches the
+              row's onActivateRow (StatusCard takes the same carve-out). It
+              wraps the whole action region rather than each control because a
+              DISABLED control runs no handler of its own — per-control
+              isolation would let a disabled action activate the row. Nothing
+              to mirror on the keyboard: the row's key handler already ignores
+              events retargeted from a descendant. */}
+          <WrapRow onClick={(e) => e.stopPropagation()}>
             <Index each={actions()}>
               {(action) => {
                 const a = () => action();
@@ -112,12 +138,7 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
                       <TextButton
                         tone={a().tone ?? "accent"}
                         disabled={a().disabled}
-                        onClick={(e) => {
-                          // Isolation barrier: an action click must not also
-                          // reach the row's own activation handler.
-                          e.stopPropagation();
-                          props.onActivateAction(item(), a());
-                        }}
+                        onClick={() => props.onActivateAction(item(), a())}
                       >
                         {a().label}
                       </TextButton>
@@ -132,10 +153,7 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
                         it would read as noise. */}
                     <Link
                       href={a().href}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        props.onActivateAction(item(), a(), e);
-                      }}
+                      onClick={(e) => props.onActivateAction(item(), a(), e)}
                     >
                       {`${a().label} →`}
                     </Link>

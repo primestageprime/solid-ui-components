@@ -256,3 +256,50 @@ describe("body slot", () => {
     expect(document.body.textContent).toContain("90%");
   });
 });
+
+describe("row-body activation", () => {
+  const row = () =>
+    document.body.querySelector(".sui-notification-center__row") as HTMLElement;
+
+  it("is inert without onAction — no role, no tabindex", () => {
+    render(() => <NotificationCenter items={[item()]} open />);
+    expect(row().getAttribute("role")).toBeNull();
+    expect(row().getAttribute("tabindex")).toBeNull();
+  });
+
+  it("becomes a button with onAction, and fires on click", () => {
+    const onAction = vi.fn();
+    render(() => (
+      <NotificationCenter items={[item()]} open onAction={onAction} />
+    ));
+    expect(row().getAttribute("role")).toBe("button");
+    expect(row().getAttribute("tabindex")).toBe("0");
+    fireEvent.click(row());
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("fires on Enter and Space", () => {
+    const onAction = vi.fn();
+    render(() => (
+      <NotificationCenter items={[item()]} open onAction={onAction} />
+    ));
+    fireEvent.keyDown(row(), { key: "Enter" });
+    fireEvent.keyDown(row(), { key: " " });
+    expect(onAction).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not fire when an action inside it is clicked", () => {
+    const onAction = vi.fn();
+    const onClick = vi.fn();
+    render(() => (
+      <NotificationCenter
+        items={[item({ actions: [{ label: "Go", onClick }] })]}
+        open
+        onAction={onAction}
+      />
+    ));
+    fireEvent.click(document.body.querySelector("button.sui-btn") as Element);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onAction).not.toHaveBeenCalled();
+  });
+});
