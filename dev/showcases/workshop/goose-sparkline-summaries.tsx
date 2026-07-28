@@ -12,7 +12,7 @@
 //
 // THREE NESTED THINGS, each strictly inside the one before it:
 //
-//   the plot        100px tall, y-axis fixed, drawn as a visible frame so the
+//   the plot        50px tall, y-axis fixed, drawn as a visible frame so the
 //                   constancy can be checked at a glance. Spans the SET's p95
 //                   band plus ~18% breathing room — the set's true extremes are
 //                   excluded so one spike cannot flatten the other eleven, and
@@ -175,9 +175,9 @@ const AXIS: [number, number] = [0.05, 0.95];
 
 // ── The prototype ────────────────────────────────────────────────────────────
 
-const W = 200;
-/** The plot area is 100px tall in EVERY cell — fixed, never derived. */
-const H = 100;
+const W = 100;
+/** The plot area is 50px tall in EVERY cell — fixed, never derived. */
+const H = 50;
 const INSET = 2;
 
 /** How much room the axis leaves around the set's p95 box, as a fraction of
@@ -494,7 +494,7 @@ const GooseSparklineSummariesBench: Component = () => (
       </SubsectionTitle>
       <MutedBody>
         The axis belongs to the SET, not the cell: the plot runs{" "}
-        {round(DOMAIN[0])}..{round(DOMAIN[1])} in all of them, 100px tall — the{" "}
+        {round(DOMAIN[0])}..{round(DOMAIN[1])} in all of them, 50px tall — the{" "}
         {bandName(AXIS)} band of all {length(POOLED)} pooled samples (
         {round(SET_BAND[0])}..{round(SET_BAND[1])}) plus room around it. Not the
         set's true extremes: "Spiky" touches 90, and letting it set the ceiling

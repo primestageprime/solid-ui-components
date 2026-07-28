@@ -33,12 +33,14 @@
   stop-opacity: 0.11;
 }
 
-/* The plot area is a fixed 100px in every cell — the width flexes with the
-   card, the height never does. */
+/* The plot area is a fixed 100x50 in every cell. It no longer stretches to the
+   card's width: at this size the point is a dense glyph you can put beside a
+   number, not a chart that owns a row. */
 .gs-dist__svg {
   display: block;
-  width: 100%;
-  height: 100px;
+  width: 100px;
+  max-width: 100%;
+  height: 50px;
 }
 
 /* The plot area — identical in every sparkline, and drawn so you can SEE that
@@ -104,5 +106,5 @@
 /* The legend's swatch column, so the sample sits beside its sentence. */
 .gs-legend-swatch {
   flex: 0 0 auto;
-  width: 200px;
+  width: 100px;
 }
