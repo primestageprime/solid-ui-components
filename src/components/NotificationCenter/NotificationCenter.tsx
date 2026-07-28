@@ -1,4 +1,4 @@
-// lastReviewedAt: 2026-07-27
+// lastReviewedAt: 2026-07-28
 // lastReviewedBy: adlai.arnold
 // ============================================
 // NotificationCenter — Composed (Depth 3, overlay control)
@@ -15,7 +15,8 @@
 // action — the FillColumn/ScrollColumn pinned-action-row idiom. Rows are
 // unboxed until hover but still read as units via the leading tone well, so a
 // long feed stays quiet at rest. Supersedes the 2026-07-24 CompactSurface card
-// canon for this surface.
+// canon for this surface. The row itself lives in NotificationRow.tsx; this
+// file owns the trigger, the overlay positioning, and the panel shell.
 //
 // Router-agnostic + domain-agnostic: consumer supplies items (including the
 // pre-formatted `when` string — no date library in SUI) and navigates via
@@ -32,66 +33,31 @@ import {
   onCleanup,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-import { Icon, type IconName } from "../Icon/Icon";
+import { Icon } from "../Icon/Icon";
 import { CountBadge } from "../Badge/CountBadge";
 import { TagPill } from "../Badge/TagPill";
 import { PopoverSurface } from "../Surface/variants";
 import { Divider } from "../Divider/Divider";
-import {
-  FillColumn,
-  ScrollColumn,
-  SpreadRow,
-  ClusterRow,
-  TopClusterRow,
-  GrowTightStack,
-} from "../Layout/variants";
-import { TextTitle, MutedBody, TextSublabel } from "../Text/variants";
+import { FillColumn, ScrollColumn, SpreadRow } from "../Layout/variants";
+import { TextTitle, MutedBody } from "../Text/variants";
 import { TextButton } from "../Button/variants";
-import { Link } from "../Navigation/Link";
+import { NotificationRow } from "./NotificationRow";
+import type {
+  NotificationAction,
+  NotificationCenterProps,
+  NotificationItem,
+} from "./types";
 import "./NotificationCenter.css";
 
-export type NotificationTone = "info" | "task" | "warning";
-
-export interface NotificationAction {
-  label: string;
-  href?: string;
-}
-export interface NotificationItem {
-  id: string;
-  title: string;
-  detail?: string;
-  action?: NotificationAction;
-  transient?: boolean;
-  tone?: NotificationTone;
-  /** Pre-formatted relative time ("2m", "1d"). SUI ships no date formatter —
-   *  the consumer owns humanization and its locale. */
-  when?: string;
-  /** Already seen. Read items lose the unread dot and leave the badge count. */
-  read?: boolean;
-}
-export interface NotificationCenterProps {
-  items: NotificationItem[];
-  badgeCount?: number;
-  busy?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onAction?: (item: NotificationItem) => void;
-  emptyLabel?: string;
-  label?: string;
-  badgeTone?: "accent" | "neutral" | "danger";
-  /** Supplying this renders the pinned footer action; omit it and the footer
-   *  (and its divider) never mount — the panel has no dead affordance. */
-  onMarkAllRead?: () => void;
-  markAllReadLabel?: string;
-}
-
-// Tone → glyph. `task` reads as pending work, so it borrows the clock rather
-// than a status glyph; an item with no tone is plain information.
-const TONE_ICON: Record<NotificationTone, IconName> = {
-  info: "info",
-  task: "clock",
-  warning: "warning",
-};
+// Re-exported so `from "./NotificationCenter"` keeps resolving the types it
+// used to declare — the split is internal, not a consumer-visible move.
+export type {
+  NotificationAction,
+  NotificationActionTone,
+  NotificationCenterProps,
+  NotificationItem,
+  NotificationTone,
+} from "./types";
 
 export const NotificationCenter: Component<NotificationCenterProps> = (
   props,
@@ -183,7 +149,11 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
 
   const toggle = () => requestOpen(!isOpen());
 
-  const activate = (item: NotificationItem, e?: MouseEvent) => {
+  const activate = (
+    item: NotificationItem,
+    _action: NotificationAction,
+    e?: MouseEvent,
+  ) => {
     // Preserve new-tab gestures on anchors; SPA-navigate on plain left click.
     if (
       e &&
@@ -199,12 +169,6 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
     isOpen()
       ? "sui-notification-center__trigger sui-notification-center__trigger--open"
       : "sui-notification-center__trigger";
-
-  const rowClass = (item: NotificationItem) => {
-    const c = ["sui-notification-center__row"];
-    c.push(`sui-notification-center__row--${item.tone ?? "info"}`);
-    return c.join(" ");
-  };
 
   return (
     <span ref={containerRef} class="sui-notification-center">
@@ -270,88 +234,10 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
                   <ScrollColumn>
                     <Index each={props.items}>
                       {(item) => (
-                        // Media-object row: unread gutter · tone well · text
-                        // column. Unboxed until hover — the well is what makes
-                        // it read as a unit at rest.
-                        <TopClusterRow class={rowClass(item())}>
-                          <span
-                            class={
-                              item().read || item().transient
-                                ? "sui-notification-center__unread"
-                                : "sui-notification-center__unread sui-notification-center__unread--on"
-                            }
-                            aria-hidden="true"
-                          />
-                          <span class="sui-notification-center__well">
-                            <Icon
-                              name={
-                                item().transient
-                                  ? "spinner"
-                                  : TONE_ICON[item().tone ?? "info"]
-                              }
-                              size="sm"
-                              aria-hidden="true"
-                            />
-                          </span>
-                          <GrowTightStack>
-                            <SpreadRow>
-                              <TextTitle>{item().title}</TextTitle>
-                              <Show when={item().when}>
-                                <TextSublabel class="sui-notification-center__when">
-                                  {item().when}
-                                </TextSublabel>
-                              </Show>
-                            </SpreadRow>
-                            <Show when={item().detail}>
-                              <TextSublabel>{item().detail}</TextSublabel>
-                            </Show>
-                            <Show when={item().action && !item().transient}>
-                              {(() => {
-                                const it = item();
-                                const a = it.action as NotificationAction;
-                                return (
-                                  // Left-packed row so the CTA sizes to its
-                                  // content and starts at the text column's
-                                  // edge. Both branches are inline-flex and
-                                  // would otherwise stretch as column children
-                                  // and centre their own labels — which is why
-                                  // the link and button branches used to sit at
-                                  // different indents.
-                                  <ClusterRow>
-                                    <Show
-                                      when={a.href}
-                                      fallback={
-                                        // Peer of the anchor's accent colour — a
-                                        // semantic tone prop on Button's public API,
-                                        // not a raw style override. Label sits directly
-                                        // in the button (symmetric with the Link
-                                        // branch), so the interactive element owns it.
-                                        <TextButton
-                                          tone="accent"
-                                          onClick={() => activate(it)}
-                                        >
-                                          {`${a.label} →`}
-                                        </TextButton>
-                                      }
-                                    >
-                                      {/* `Link`, not `NavLink`: NavLink is a nav-RAIL
-                                          item and bakes padding-left:16px, which indented
-                                          the anchor branch ~16px past the button branch.
-                                          Link is the unpadded accent anchor — the right
-                                          atom for an inline CTA. */}
-                                      <Link
-                                        href={a.href}
-                                        onClick={(e) => activate(it, e)}
-                                      >
-                                        {`${a.label} →`}
-                                      </Link>
-                                    </Show>
-                                  </ClusterRow>
-                                );
-                              })()}
-                            </Show>
-                          </GrowTightStack>
-                        </TopClusterRow>
+                        <NotificationRow
+                          item={item()}
+                          onActivateAction={activate}
+                        />
                       )}
                     </Index>
                   </ScrollColumn>
