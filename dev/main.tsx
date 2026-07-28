@@ -129,6 +129,7 @@ import { SlotCardShowcase } from "./showcases/slot-card";
 import { SectionTableShowcase } from "./showcases/section-table";
 import { LayoutVariantsShowcase } from "./showcases/layout-variants";
 import { VariantCoverageShowcase } from "./showcases/variant-coverage";
+import { ChartSlotsShowcase } from "./showcases/chart-slots";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -844,6 +845,12 @@ const items: Item[] = [
     label: "Variant coverage",
     component: VariantCoverageShowcase,
     tags: ["depth:1", "feedback", "navigation", "form"],
+  },
+  {
+    id: "chart-slots",
+    label: "Chart slots",
+    component: ChartSlotsShowcase,
+    tags: ["depth:1", "chart", "data", "status"],
   },
   {
     id: "heatstream-grid",

@@ -1,0 +1,12 @@
+/* Chart-slots gallery — a chart needs a definite box to project its scales
+   into, so the gallery supplies one per example. The slots themselves own no
+   size; that is what makes them slots. */
+
+.chart-slot-frame {
+  max-width: 720px;
+  height: 220px;
+}
+
+.chart-canvas-frame {
+  width: 320px;
+}

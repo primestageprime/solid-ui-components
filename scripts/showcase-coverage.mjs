@@ -12,6 +12,14 @@
 // variant and never renders it teaches nothing, and the cheapest honest proxy
 // for "rendered" is "the name appears in a gallery file".
 //
+// A component is ALSO covered when another component renders it internally and
+// that component is showcased — DataList composes DataValuePrimary, so looking
+// at the DataList showcase IS looking at DataValuePrimary. Contriving a
+// separate demo for something that never stands on its own teaches nothing;
+// worse, it invents a call-site shape nobody should copy. Only components a
+// CLIENT composes itself (a chart slot dropped into <Chart>, a card, a whole
+// control) need their own place in the gallery.
+//
 //   node scripts/showcase-coverage.mjs           # summary + nonzero exit if any are missing
 //   node scripts/showcase-coverage.mjs --list    # the missing names, one per line
 //   node scripts/showcase-coverage.mjs --json    # machine-readable
@@ -85,24 +93,83 @@ const galleryText = walk(GALLERY, (p) => /\.tsx?$/.test(p) && !p.includes(".test
   .map((f) => readFileSync(f, "utf8"))
   .join("\n");
 
-const missing = components.filter(
-  (name) => !new RegExp(`\\b${name}\\b`).test(galleryText),
+const referencedInGallery = (name) =>
+  new RegExp(`\\b${name}\\b`).test(galleryText);
+
+// ── what other components render internally ──────────────────────────────────
+// family(X) = the src/components/<dir> a component is defined in. A component
+// is implicitly covered when a file in a DIFFERENT, showcased family renders
+// it. One hop only: the point is "you can already see this thing", and a chain
+// of invisible parents doesn't make anything visible.
+const familyOf = new Map();
+const sourceFiles = walk(join(root, "src/components"), (p) => /\.tsx?$/.test(p) && !p.includes(".test."));
+// Comments are stripped before matching: SlotCard's header explains how it
+// differs from EntityCard, and a component named in prose is not a component
+// rendered.
+const stripComments = (src) =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .split("\n")
+    .map((l) => (/^\s*(\/\/|\*)/.test(l) ? "" : l))
+    .join("\n");
+const fileText = new Map(
+  sourceFiles.map((f) => [f, stripComments(readFileSync(f, "utf8"))]),
+);
+const familyOfFile = (f) => f.split("src/components/")[1]?.split("/")[0];
+
+for (const name of components) {
+  for (const [f, text] of fileText) {
+    if (new RegExp(`export (const|function|class) ${name}\\b`).test(text)) {
+      familyOf.set(name, familyOfFile(f));
+      break;
+    }
+  }
+}
+
+// A family is showcased when any of its own exports is referenced in dev/.
+const showcasedFamilies = new Set(
+  components.filter(referencedInGallery).map((n) => familyOf.get(n)),
 );
 
+const renderedByShowcasedFamily = (name) => {
+  const own = familyOf.get(name);
+  for (const [f, text] of fileText) {
+    const fam = familyOfFile(f);
+    if (fam === own || !showcasedFamilies.has(fam)) continue;
+    if (new RegExp(`\\b${name}\\b`).test(text)) return fam;
+  }
+  return null;
+};
+
+const implicit = new Map();
+const missing = [];
+for (const name of components) {
+  if (referencedInGallery(name)) continue;
+  const parent = renderedByShowcasedFamily(name);
+  if (parent) implicit.set(name, parent);
+  else missing.push(name);
+}
+
 export function run() {
-  return { components, missing };
+  return { components, missing, implicit };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const asJson = process.argv.includes("--json");
   const list = process.argv.includes("--list");
   if (asJson) {
-    console.log(JSON.stringify({ total: components.length, missing }, null, 2));
+    console.log(
+      JSON.stringify(
+        { total: components.length, missing, implicit: Object.fromEntries(implicit) },
+        null,
+        2,
+      ),
+    );
   } else if (list) {
     for (const m of missing) console.log(m);
   } else {
     console.log(
-      `componentsWithoutShowcase: ${missing.length}   (of ${components.length} exported components)`,
+      `componentsWithoutShowcase: ${missing.length}   (of ${components.length} exported components; ${implicit.size} covered inside a showcased parent)`,
     );
     for (const m of missing) console.log(`  ${m}`);
   }
