@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.117.0
+
 ### Added
 
 - **`DistributionSparkline`** — the sparkline for a series whose SPREAD
