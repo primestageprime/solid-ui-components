@@ -144,6 +144,17 @@ export interface CashflowScrubChartProps {
    */
   yMax?: number | null;
   /**
+   * Opt into a TIGHT y-domain that frames the visible line(s) instead of being
+   * anchored to zero. When set (e.g. `0.1`), the domain becomes
+   * `[min − pad, max + pad]` where `pad = fraction × (max − min)` over the drawn
+   * balance values — so a line that lives in a narrow band (e.g. a zoomed-in
+   * window of an always-positive cumulative total) fills the vertical space
+   * instead of hugging the top. The zero-line is no longer forced into view.
+   * Ignored when `yMax` is provided (fixed-range mode wins). Default
+   * `undefined` = the zero-anchored behavior (no change for current callers).
+   */
+  yPadFraction?: number;
+  /**
    * Override source for the PRIMARY running-balance LINE (and the plotline
    * markers/dots that sit on it), DECOUPLED from the ribbon. When provided, the
    * solid balance polyline, the selected/hover dots, and the marker dots read

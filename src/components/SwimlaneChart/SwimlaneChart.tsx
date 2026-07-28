@@ -62,6 +62,7 @@ export type {
   SwimlaneChartOverrides,
   SwimlaneChartDataProps,
 } from "./types";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   let svgRef: SVGSVGElement | undefined;
@@ -377,18 +378,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // ResizeObserver — capture container size for centering math.
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setContainerWidth(width);
-      setContainerHeight(height);
-    });
-
-    observer.observe(containerRef);
-    onCleanup(() => observer.disconnect());
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        setContainerWidth(size.width);
+        setContainerHeight(size.height);
+      }),
+    );
   });
 
   const handleNodeClick = (nodeId: string) => {

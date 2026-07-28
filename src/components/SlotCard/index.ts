@@ -4,6 +4,7 @@ export {
   TitleCount,
   RangeCountStatus,
   DenseStatusRow,
+  DenseStatusNote,
   ChipNote,
   IdStatusRange,
   SingleLine,
@@ -11,6 +12,7 @@ export {
   TitleMeta3,
   TitleAssetDate,
   TitleProgress,
+  TitleAssetProgress,
   TitleDotsMeta,
   TitleMetaCount,
   // Overlay + tile

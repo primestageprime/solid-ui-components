@@ -1,5 +1,6 @@
 import { createSignal, createEffect, onCleanup, type Accessor } from "solid-js";
 import { isServer } from "solid-js/web";
+import { observeSize } from "../internal/dom/observeSize";
 
 /**
  * Reactive container-width hook.
@@ -34,20 +35,9 @@ export function useContainerNarrow(
   createEffect(() => {
     const el = ref();
     if (!el) return;
-    let rafId: number | null = null;
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width ?? 0;
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        setIsNarrow(w < thresholdPx);
-      });
-    });
-    ro.observe(el);
-    onCleanup(() => {
-      ro.disconnect();
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    });
+    // observeSize subsumes the hand-rolled rAF coalescing this hook used to do,
+    // and adds the change-guard it lacked.
+    onCleanup(observeSize(el, (size) => setIsNarrow(size.width < thresholdPx)));
   });
 
   return isNarrow;

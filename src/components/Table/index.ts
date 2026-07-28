@@ -3,6 +3,8 @@ export * from "./BaseTable";
 export * from "./GroupedTable";
 export { FilterableTable } from "./FilterableTable";
 export type { FilterableTableProps } from "./FilterableTable";
+export { SectionTable } from "./SectionTable";
+export type { SectionTableProps } from "./SectionTable";
 export { TableQuickFilter } from "./TableQuickFilter";
 export type { TableQuickFilterProps } from "./TableQuickFilter";
 export * from "./SelectableTable";

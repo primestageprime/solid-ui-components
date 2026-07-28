@@ -25,6 +25,7 @@ import {
   createEffect,
   onCleanup,
 } from "solid-js";
+import { observeSize } from "../../internal/dom/observeSize";
 import { Surface } from "../Surface/Surface";
 import {
   BaselineSpreadRow,
@@ -103,10 +104,15 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
   const attachRef = (el: HTMLSpanElement) => {
     descRef = el;
     queueMicrotask(measure);
-    if (typeof ResizeObserver === "undefined") return; // jsdom/SSR
-    const ro = new ResizeObserver(() => measure());
-    ro.observe(el);
-    onCleanup(() => ro.disconnect());
+    // Partly self-guarding already — `overflowing` is a boolean, so Solid's
+    // signal equality check swallows the (common) re-measure that lands on the
+    // same value and no render happens. But when it genuinely FLIPS, the "more"
+    // affordance appears/disappears and resizes this very element from inside
+    // the observer's dispatch — the same loop shape as ScrubChart, just rarer
+    // because a boolean saturates. `measure` also forces a synchronous layout
+    // read (scrollHeight/clientHeight) mid-dispatch. observeSize fixes both:
+    // no-op box changes never reach `measure`, and real ones run next frame.
+    onCleanup(observeSize(el, () => measure()));
   };
 
   const classes = () => {

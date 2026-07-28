@@ -19,6 +19,7 @@ import {
 import { Surface } from "../Surface/Surface";
 import type { StaticSplitLayoutProps } from "./types";
 import "./SplitQueueList.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 const DEFAULT_HEADER_HEIGHT = 28;
 
@@ -50,15 +51,12 @@ export function StaticSplitLayout<T>(
       if (rh > 0) setRowHeight(rh);
     }
   };
-  let resizeObserver: ResizeObserver | undefined;
+  let disposeResizeObserver: (() => void) | undefined;
   onMount(() => {
     requestAnimationFrame(measure);
-    if (typeof ResizeObserver !== "undefined" && rootEl) {
-      resizeObserver = new ResizeObserver(() => measure());
-      resizeObserver.observe(rootEl);
-    }
+    if (rootEl) disposeResizeObserver = observeSize(rootEl, () => measure());
   });
-  onCleanup(() => resizeObserver?.disconnect());
+  onCleanup(() => disposeResizeObserver?.());
 
   // Fill the parent by default so the rail tracks the available height; an
   // explicit `height` prop pins a fixed px height instead.

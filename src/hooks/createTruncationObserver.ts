@@ -2,6 +2,7 @@
 // only; no library imports).
 import { createSignal, createEffect, onCleanup, type Accessor } from "solid-js";
 import { isServer } from "solid-js/web";
+import { observeSize } from "../internal/dom/observeSize";
 
 /**
  * Reactive text-truncation hook.
@@ -56,9 +57,10 @@ export function createTruncationObserver(
     const el = ref();
     if (!el) return;
     measure();
-    const ro = new ResizeObserver(() => measure());
-    ro.observe(el);
-    onCleanup(() => ro.disconnect());
+    // `measure` re-reads scrollWidth/clientWidth off the element itself, so the
+    // reported size is ignored — observeSize only governs WHEN it runs (change-
+    // guarded + rAF-deferred out of the observer's dispatch phase).
+    onCleanup(observeSize(el, () => measure()));
   });
 
   // Content can change the clip state without resizing the box (same width,

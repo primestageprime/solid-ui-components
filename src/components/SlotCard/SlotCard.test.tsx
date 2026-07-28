@@ -4,6 +4,8 @@ import {
   TitleStatus,
   TitleDotsMeta,
   DenseStatusRow,
+  DenseStatusNote,
+  TitleAssetProgress,
   PickCard,
   type SlotValues,
 } from "./index";
@@ -86,5 +88,60 @@ describe("SlotCard", () => {
     expect(remove).toBeTruthy();
     remove.click();
     expect(removed).toBe(true);
+  });
+
+  it("renders the error slot as a danger line only when a failure is present", () => {
+    const ok = render(() => (
+      <DenseStatusNote
+        values={{
+          name: { text: "Pacific Trader" },
+          status: { tone: "success", label: "completed" },
+        }}
+      />
+    ));
+    expect(ok.queryByText(/timeout/)).toBeNull();
+
+    const failed = render(() => (
+      <DenseStatusNote
+        values={{
+          name: { text: "Nordic Star" },
+          status: { tone: "danger", label: "failed" },
+          error: "Upstream timeout fetching FTIR series",
+        }}
+      />
+    ));
+    expect(failed.getByText("Upstream timeout fetching FTIR series")).toBeTruthy();
+  });
+
+  it("drops a row entirely when every slot in it is absent", () => {
+    const { container } = render(() => (
+      <DenseStatusNote values={{ name: { text: "Pacific Trader" } }} />
+    ));
+    // Header row only — the error row contributes no element (and so no gap).
+    expect(container.querySelectorAll(".sui-slot-card__lead").length).toBe(1);
+  });
+
+  it("renders the trailing action only when the host wires it, and isolates its click", () => {
+    let selected = 0;
+    let cancelled = 0;
+    const { getByText, queryByText } = render(() => (
+      <>
+        <TitleAssetProgress
+          values={{ name: { text: "Aframax Horizon" }, string: "xbox1-1" }}
+          onSelect={() => {
+            selected += 1;
+          }}
+          action={{ label: "Cancel", onClick: () => {
+            cancelled += 1;
+          } }}
+        />
+        <TitleAssetProgress values={{ name: { text: "MSC Bellissima" }, string: "xbox3-2" }} />
+      </>
+    ));
+    // Exactly one Cancel — the second card wired no action.
+    expect(queryByText("Cancel")).toBeTruthy();
+    (getByText("Cancel") as HTMLElement).click();
+    expect(cancelled).toBe(1);
+    expect(selected).toBe(0);
   });
 });

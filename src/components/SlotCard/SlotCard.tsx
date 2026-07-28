@@ -29,13 +29,23 @@ import {
   StretchRow,
   ClusterRow,
 } from "../Layout/variants";
-import { TextBody, TextSublabel, CaptionLabel } from "../Text/variants";
+import {
+  TextBody,
+  TextSublabel,
+  CaptionLabel,
+  DangerSublabel,
+} from "../Text/variants";
+import { SmallGhostButton } from "../Button/variants";
 import { Icon } from "../Icon/Icon";
 import { NumberWithUnits } from "../DataDisplay/NumberWithUnits";
 import { Dot } from "../Dot/Dot";
 import { SmStatusBadge } from "../Badge/variants";
 import { EllipsisText } from "../DataDisplay/EllipsisText";
+import { pipe, flatMap, filter, length } from "../../fn";
 import "./SlotCard.css";
+
+/** Flattening a row's groups needs a name for the identity step. */
+const identity = <T,>(value: T): T => value;
 
 export type AccentTone = "info" | "success" | "warning" | "danger";
 
@@ -59,6 +69,9 @@ export interface SlotValues {
   value?: { value: number | string; units?: string };
   label?: string;
   icon?: { name: string; tone?: AccentTone };
+  /** Failure reason — a danger-toned line under the card's main rows. Present
+   *  only when the thing the card describes actually failed. */
+  error?: string;
 }
 export type SlotName = keyof SlotValues;
 
@@ -133,6 +146,7 @@ const SLOT_RENDERERS: { [K in SlotName]: (v: NonNullable<SlotValues[K]>) => JSX.
       <Icon name={v.name as never} size="sm" />
     </span>
   ),
+  error: (v) => <DangerSublabel>{v}</DangerSublabel>,
 };
 
 // Tone → BEM modifier class (paints via a token in SlotCard.css). Keeps the
@@ -143,7 +157,9 @@ const toneClass = (base: string, tone?: AccentTone): string =>
 // Default drop-priority by slot type. 1 = never drops (primary), 2 = mid,
 // 3 = first to go. Overridable per slot in a template config.
 const DEFAULT_PRIO: Record<SlotName, 1 | 2 | 3> = {
-  name: 1, range: 1, label: 1, text: 1,
+  // `error` never drops — a failure reason is the whole point of the card it
+  // appears on.
+  name: 1, range: 1, label: 1, text: 1, error: 1,
   status: 2, count: 2, dots: 2, value: 2, icon: 2,
   string: 3, date: 3, duration: 3, relTime: 3,
 };
@@ -162,6 +178,9 @@ interface SlotCardConfig {
   accent?: boolean;
   corner?: boolean;
   removable?: boolean;
+  /** Template offers a trailing action button (SUI picks the button; the
+   *  client supplies label + handler). */
+  action?: boolean;
   /** Upper bound on card width — the primary slot caps here and ellipsises.
    *  Default 40ch (~40 characters). A list card should never stretch to fill a
    *  wide pane. */
@@ -175,6 +194,10 @@ export interface SlotCardProps {
   accent?: AccentTone;
   corner?: JSX.Element | string;
   onRemove?: () => void;
+  /** Trailing action on templates configured with `action` — e.g. Cancel on a
+   *  queued job. Typed rather than a JSX slot so SUI keeps owning the button
+   *  variant; the click is isolated from the whole-card onSelect. */
+  action?: { label: string; onClick: () => void };
   /** Override the card's baked max-width (in px) for a specific host (e.g. a
    *  wider or narrower rail). A layout dimension, not a visual variant. */
   maxWidth?: number;
@@ -185,11 +208,24 @@ function createSlotCard(config: SlotCardConfig) {
   return (props: SlotCardProps): JSX.Element => {
     const Surface = config.density === "compact" ? CompactSurface : InteractiveCard;
 
+    // A card with overlays reserves top room for them (see SlotCard.css).
+    const bodyClass = `sui-slot-card__body${
+      config.corner || config.removable ? " sui-slot-card__body--overlaid" : ""
+    }`;
+
     const rows = (
       <TightStack>
         <For each={config.rows}>
           {(row) => {
             const multi = row.length > 1;
+            // A row whose every slot is absent renders nothing at all — an
+            // empty row would still take the stack's gap. This is what lets a
+            // template carry a conditional row (e.g. `error`) without the
+            // no-failure card growing a blank line.
+            const hasValue = (spec: SlotSpec): boolean =>
+              props.values[specName(spec)] !== undefined;
+            const filled = () =>
+              pipe(row, flatMap(identity), filter(hasValue), length) > 0;
             const groups = (
               <For each={row}>
                 {(group, gi) => (
@@ -213,15 +249,36 @@ function createSlotCard(config: SlotCardConfig) {
                 )}
               </For>
             );
-            return multi ? <SpreadRow>{groups}</SpreadRow> : <FlexRow>{groups}</FlexRow>;
+            return (
+              <Show when={filled()}>
+                {multi ? <SpreadRow>{groups}</SpreadRow> : <FlexRow>{groups}</FlexRow>}
+              </Show>
+            );
           }}
         </For>
+        {/* Trailing action row — only on templates that offer one, and only
+            while the host wires it (e.g. Cancel on a queued job, gone once the
+            job starts). The click never reaches the card's onSelect. */}
+        <Show when={config.action ? props.action : undefined}>
+          {(action) => (
+            <ClusterRow>
+              <SmallGhostButton
+                onClick={(e: MouseEvent) => {
+                  e.stopPropagation();
+                  action().onClick();
+                }}
+              >
+                {action().label}
+              </SmallGhostButton>
+            </ClusterRow>
+          )}
+        </Show>
       </TightStack>
     );
 
     const card = (
       <Surface class="sui-slot-card" active={props.active} onClick={props.onSelect}>
-        <div class="sui-slot-card__body">
+        <div class={bodyClass}>
           <Show when={config.corner && props.corner !== undefined}>
             <div class="sui-slot-card__corner">{props.corner}</div>
           </Show>
@@ -274,6 +331,14 @@ export const DenseStatusRow = createSlotCard({
   rows: [[["icon", "name"], ["status", "duration", "relTime"]]],
   accent: true,
 });
+// DenseStatusNote — DenseStatusRow plus a failure line. The error row is
+// absent entirely when there's no error, so a succeeded card is byte-identical
+// to DenseStatusRow. For history lists where a failed entry must carry its
+// reason (job queues, import runs).
+export const DenseStatusNote = createSlotCard({
+  rows: [[["icon", "name"], ["status", "duration", "relTime"]], [["error"]]],
+  accent: true,
+});
 export const ChipNote = createSlotCard({ rows: [[["status", "text"]]], accent: true });
 export const IdStatusRange = createSlotCard({ rows: [[["string", "status", "range"]]] });
 // SingleLine — minimal carrier; still composes the modifiers (accent + selectable).
@@ -287,6 +352,14 @@ export const TitleAssetDate = createSlotCard({ rows: [[["name"]], [["string"], [
 export const TitleProgress = createSlotCard({
   rows: [[["name"], ["status"]], [["text"], ["relTime"]]],
   accent: true,
+});
+// TitleAssetProgress — TitleProgress with a sub-identifier beside the name and
+// a conditional trailing action. The running/queued card of a work queue: what
+// it is, what state it's in, how far along, and the one thing you can do to it.
+export const TitleAssetProgress = createSlotCard({
+  rows: [[["name", "string"], ["status"]], [["text"], ["relTime"]]],
+  accent: true,
+  action: true,
 });
 // TitleDotsMeta — name + a group of indicator dots (e.g. per-metric compliance),
 // over a meta row of sub-id / date / duration. The meta row is the card's

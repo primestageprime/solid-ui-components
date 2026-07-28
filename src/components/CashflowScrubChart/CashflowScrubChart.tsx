@@ -58,6 +58,19 @@ export type {
   CashflowSeriesFill,
 };
 
+// Lowest and highest of a non-empty series in ONE pass. A named step rather
+// than a pair of `.reduce`s (function-first convention), and a loop rather
+// than `Math.min(...values)` — a long range would blow the argument limit.
+function extentOf(values: readonly number[]): [number, number] {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of values) {
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  return [lo, hi];
+}
+
 export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   props,
 ) => {
@@ -95,6 +108,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         map((s) => s.balanceCents(c, i), series),
       ),
     ]);
+    // Tight, zero-independent domain: frame the visible line(s) with symmetric
+    // padding so a narrow-band line uses the full height. `yMax` still wins.
+    if (!hasManualMax && props.yPadFraction != null && values.length) {
+      const [dataLo, dataHi] = extentOf(values);
+      // Flat series → pad around the value itself (or ±1 when it's zero).
+      const spread = dataHi - dataLo || Math.abs(dataHi) || 1;
+      const pad = spread * props.yPadFraction;
+      return [dataLo - pad, dataHi + pad];
+    }
     // Reduce (not Math.min(...spread)) to stay safe on long ranges.
     const lo = values.reduce((m, v) => Math.min(m, v), 0);
     const hi = hasManualMax

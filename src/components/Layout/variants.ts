@@ -432,6 +432,15 @@ export const GrowColumn: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-width": "0" },
 });
 
+/** NoShrinkColumn — a column that keeps its intrinsic width in a flex ROW
+ *  (`flex-shrink:0`), while stacking its own children. The column sibling of
+ *  `NoShrinkClusterRow`, and the counterpart to `GrowColumn`: pair them when a
+ *  fixed data column (timestamps, IDs — content that must not be squeezed into
+ *  wrapping or overflow) sits beside a prose column that absorbs the slack. */
+export const NoShrinkColumn: Component<StackDataProps> = createStack({
+  style: { "flex-shrink": 0 },
+});
+
 /** GrowStack — a column that grows to fill its share of a parent ROW and may
  *  shrink past its content (`flex:1; min-width:0`) AND stacks its own children
  *  with an `sm` gap. The gapped sibling of `GrowColumn` (which bakes no gap):

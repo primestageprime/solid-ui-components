@@ -58,6 +58,7 @@ export * from "./components/Feedback";
 export * from "./components/Checkbox";
 export * from "./components/Icon";
 export * from "./components/Inputs";
+export * from "./components/FileDropZone";
 export * from "./components/Navigation";
 export * from "./components/OverflowNav";
 export * from "./components/Toggle";
@@ -87,6 +88,10 @@ export type { FieldTableProps } from "./components/Table/fields/FieldTable";
 // does not collide even while a DataDisplay copy is also (transiently) exported.
 export { EllipsisText } from "./components/Table/EllipsisText";
 export type { EllipsisTextProps } from "./components/Table/EllipsisText";
+// TableSectionHeader: composable table/section header — title + record count on
+// one line (space-between). Explicit re-export from its committed location.
+export { TableSectionHeader } from "./components/Table/TableSectionHeader";
+export type { TableSectionHeaderProps } from "./components/Table/TableSectionHeader";
 export * from "./components/PivotGrid";
 export * from "./components/ValueMatrix";
 export * from "./components/Section";

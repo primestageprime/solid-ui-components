@@ -110,7 +110,7 @@ const SplitQueueBench: Component = () => {
       </ClusterRow>
 
       {/* A definite-height flex context so the fill-parent bar has a height. */}
-      <div style={{ "max-width": "460px", "margin-top": "12px", height: "calc(100vh - 220px)", display: "flex" }}>
+      <div class="split-queue-frame">
         <BucketQueue<Call>
           buckets={BUCKETS}
           items={calls()}

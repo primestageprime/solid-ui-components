@@ -1,34 +1,18 @@
 // JTF Card Catalog — qaqc-triage cards.
-// The canned-explanation picker card (raw `.canned-card` with a corner number
-// badge + hover delete) and the recurring empty/loading-state card.
+// The canned-explanation picker card (SlotCard's PickCard — corner number badge
+// + hover delete) and the recurring empty/loading-state card.
 import { For } from "solid-js";
 import {
   CardSurface,
-  InteractiveCard,
+  PickCard,
   TightStack,
   NarrowStack,
   MutedBody,
-  TextBody,
 } from "../../../../src";
 import { CardBench, CardCase } from "./case";
 import type { CardEntry } from "./shared";
-import "./catalog.css";
 
-// Canned explanation: bordered rounded card, numbered badge in the top-left
-// notch (1–9), hover-revealed delete × top-right, click-to-pick body text.
-function CannedCard(props: { n: number; text: string }) {
-  return (
-    <div class="jtf-canned-card">
-      <InteractiveCard>
-        <div class="jtf-canned-card__badge">{props.n}</div>
-        <span class="jtf-canned-card__delete" title="Delete">
-          ×
-        </span>
-        <TextBody>{props.text}</TextBody>
-      </InteractiveCard>
-    </div>
-  );
-}
+const noop = () => undefined;
 
 const CannedShowcase = () => (
   <CardBench>
@@ -36,7 +20,7 @@ const CannedShowcase = () => (
       title="Canned Explanation picker"
       width="320px"
       routes={["components/qaqcTriage/CannedExplanations.tsx", "/tools/asset-triage/:id"]}
-      why="A grid of reusable explanations the reviewer clicks to apply to a call. Numbered corner badge (1–9) doubles as a keyboard shortcut; a hover-revealed delete × removes a canned entry. The whole card is the click target."
+      why="A grid of reusable explanations the reviewer clicks to apply to a call. Numbered corner badge (1–9) doubles as a keyboard shortcut; a hover-revealed delete × removes a canned entry. The whole card is the click target — SlotCard's PickCard template, which owns exactly this overlay pair."
     >
       <NarrowStack>
         <For
@@ -47,7 +31,14 @@ const CannedShowcase = () => (
             "FTIR calibration drift; corrected with QA reference gas.",
           ]}
         >
-          {(text, i) => <CannedCard n={i() + 1} text={text} />}
+          {(text, i) => (
+            <PickCard
+              values={{ text }}
+              corner={i() + 1}
+              onSelect={noop}
+              onRemove={noop}
+            />
+          )}
         </For>
       </NarrowStack>
     </CardCase>
@@ -81,8 +72,8 @@ export const ENTRIES: CardEntry[] = [
   {
     route: "qaqcTriage/CannedExplanations",
     name: "Canned Explanation card",
-    status: "raw",
-    note: "Bordered pick card with a numbered corner badge (1–9) and a hover-revealed delete ×, click-to-pick body text. Raw `.canned-card` CSS — badge/delete ride on call-site geometry here.",
+    status: "sui",
+    note: "SlotCard `PickCard` — click-to-pick body text with a numbered corner badge (1–9) and a hover-revealed remove ✕. Replaces the raw `.canned-card` rules that still live in jtf-ui's global app.css.",
     component: CannedShowcase,
   },
   {

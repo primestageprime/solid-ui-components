@@ -8,6 +8,7 @@ import {
   splitProps,
 } from "solid-js";
 import "./ScrollRegion.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 /**
  * ScrollRegion — Atomic Primitive (Depth 1). Owns `ScrollRegion.css`.
@@ -74,12 +75,16 @@ export const ScrollRegion: Component<ScrollRegionProps> = (props) => {
 
   onMount(() => {
     if (!scroller) return;
-    const observer = new ResizeObserver(recompute);
     // Observe the viewport (its clientHeight can change) AND the content wrapper
     // (its height tracks total scrollHeight — rows added/removed, data loaded —
     // which neither onScroll nor a viewport resize would otherwise catch).
-    observer.observe(scroller);
-    if (content) observer.observe(content);
+    // Two observeSize calls rather than one observer over two elements: each
+    // element then gets its own change-guard, and `recompute` reads both boxes
+    // itself regardless of which one fired.
+    const disposeScroller = observeSize(scroller, () => recompute());
+    const disposeContent = content
+      ? observeSize(content, () => recompute())
+      : undefined;
     // A child add/remove can change scrollHeight without firing scroll or — in
     // some flex configs — resize; the mutation observer guarantees a recompute
     // so a fade is never left stuck on when the content no longer overflows.
@@ -87,7 +92,8 @@ export const ScrollRegion: Component<ScrollRegionProps> = (props) => {
     mutations?.observe(content!, { childList: true, subtree: true });
     recompute();
     onCleanup(() => {
-      observer.disconnect();
+      disposeScroller();
+      disposeContent?.();
       mutations?.disconnect();
     });
   });

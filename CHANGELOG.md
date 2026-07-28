@@ -2,6 +2,74 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`FileDropZone`** — a drop target that is also a click-to-browse picker
+  (`FileDropTarget`, `CompactFileDropTarget`). It validates the extension,
+  shows a self-clearing rejection notice derived from `accept`
+  (`PDF only — drop a .pdf file`), and hands the file to the caller; upload,
+  parsing and results stay the caller's. Keyboard-operable (Enter/Space,
+  without the page scrolling under it) and `aria`-labelled. Owns a minimal
+  structural CSS file for the dashed outline, its drag-over/disabled states
+  and the two densities — the same documented exception `Fab` carries, because
+  a dashed target is not expressible as a `Surface` variant and the drag-over
+  highlight is a state of the component, not of the surface scale. Added
+  because two consumers had hand-rolled it, one of them carrying a code
+  comment asking upstream for exactly this.
+- **`SlotCard` gained an `error` slot, an `action` prop, and two templates.**
+  `error` is a danger-toned line at priority 1 (a failure reason never drops).
+  `action` (`{ label, onClick }`) mounts a trailing SUI-chosen ghost button on
+  templates configured for it — typed rather than a JSX slot so SUI keeps
+  owning the button variant — and its click never reaches the card's
+  `onSelect`. New templates: `DenseStatusNote` (`DenseStatusRow` plus the
+  failure line) and `TitleAssetProgress` (`TitleProgress` plus a
+  sub-identifier and the action). Together they cover a work queue's running,
+  queued and finished cards.
+- **`NoShrinkColumn`** — a Layout variant that keeps its intrinsic width in a
+  flex row (`flex-shrink:0`) while stacking its children. The column sibling
+  of `NoShrinkClusterRow`: pair it with `GrowColumn` when a fixed data column
+  (timestamps, IDs) sits beside a prose column that absorbs the slack.
+- **`SectionTable` + `TableSectionHeader`** — a table that groups its rows
+  under section headers, and the composable header itself (title + record
+  count on one line).
+- **`CashflowScrubChart` gained `yPadFraction`** — an optional tight,
+  zero-independent y-domain.
+
+### Fixed
+
+- **A `SlotCard` row whose every slot is absent now renders no element at
+  all**, so it costs neither markup nor the stack's gap. This is what lets a
+  template carry a conditional row (`DenseStatusNote`'s error line) without a
+  succeeded card growing a blank line.
+- **`SlotCard`'s overlay cards reserve room for their overlays.** The corner
+  badge and the remove glyph were landing on the first line of text as soon as
+  the text was long enough to reach the corners. The remove ✕ is now revealed
+  on hover or keyboard focus rather than always showing, so a resting list
+  isn't a wall of ✕.
+- **A vertical `Divider` collapsed to nothing in its most common host.**
+  `height: 100%` has no definite basis to resolve against in a flex row sized
+  by its content, so the rule simply didn't render. It now spans the row via
+  `align-self: stretch`, keeping `min-height: 100%` for parents that do have a
+  definite height.
+- **`observeSize` applied library-wide.** Every remaining measuring component
+  constructed a raw `ResizeObserver` writing signals synchronously, which
+  re-queues the observer inside the browser's own delivery phase and produces
+  "ResizeObserver loop completed with undelivered notifications" (several
+  offenders render many times per page — `ResponsiveMoney` once per money
+  cell, `createTruncationObserver` once per truncatable cell). Migrated:
+  `MultiSelectFilter`, `ResponsiveMoney`, `createTruncationObserver`,
+  `useContainerNarrow`, `ScrollRegion`, `OverflowNav`, `StaticSplitLayout`,
+  `MessageBubble`, `CashflowChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`,
+  `ThroughputChart`, `StatusFlowChart`, `DagChart`. No public props changed
+  and no measurement logic moved — only the scheduling. (`BucketQueue`, which
+  landed on main after this work, still runs its own multi-element observer.)
+- **`MessageBubble` leaked its ResizeObserver** — it was never disconnected,
+  so the observer outlived every unmounted bubble. Now disposed via
+  `onCleanup`.
+- **`observeSize` tolerates entries without size data.** Polyfills and test
+  doubles dispatch minimal `{ target }` entries; the primitive falls back to
+  measuring the element rather than throwing on `contentRect.width`.
+
 ## 0.115.0
 
 ### Added

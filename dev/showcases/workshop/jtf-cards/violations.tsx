@@ -1,20 +1,23 @@
 // JTF Card Catalog — violations cards.
 // The compact violation-period sub-item (expands under an EntityCard row) and
 // the ViolationHeatGrid hover popover card (per-call bucketed violations).
-import { For } from "solid-js";
+import { type JSX, For, Show } from "solid-js";
 import {
   InteractiveCard,
   CompactSurface,
-  CardSurface,
   TightStack,
   NarrowStack,
-  SpreadRow,
-  TopClusterRow,
-  Column,
+  ClusterRow,
+  StretchRow,
+  NoShrinkColumn,
+  GrowColumn,
   Divider,
+  VerticalDivider,
+  Tooltip,
   TextTitle,
   TextLabel,
   TextBody,
+  NowrapBody,
   TextSublabel,
 } from "../../../../src";
 import { CardBench, CardCase } from "./case";
@@ -50,36 +53,78 @@ const PeriodListShowcase = () => (
   </CardBench>
 );
 
-// The floating popover shown when hovering a heat-grid cell: header
-// (vessel — bucket) over a two-column body (timestamp ranges | explanation).
+// The popover shown when hovering a heat-grid cell. Anchoring, viewport
+// flipping and the elevated panel chrome all come from SUI's Tooltip (Kobalte
+// under the hood), so the card here is only the content: a header naming the
+// vessel and bucket, over the violation windows beside the reviewer's
+// explanation.
+interface HeatCell {
+  bucket: string;
+  count: number;
+  periods: string[];
+  explanation: string;
+}
+
+const CELLS: HeatCell[] = [
+  {
+    bucket: "Outlet THC Threshold",
+    count: 3,
+    periods: [
+      "12-01 14:05 → 14:32 (27m)",
+      "12-01 16:10 → 16:24 (14m)",
+      "12-01 19:47 → 20:15 (28m)",
+    ],
+    explanation: "FID drift during ramp; corrected with QA reference gas. Two windows excluded per SOP-14.",
+  },
+  {
+    bucket: "Inlet Pressure Threshold",
+    count: 1,
+    periods: ["12-01 09:12 → 09:20 (8m)"],
+    explanation: "",
+  },
+];
+
+function PopoverBody(props: { cell: HeatCell }): JSX.Element {
+  return (
+    <TightStack>
+      <TextLabel>{`MSC Bellissima — ${props.cell.bucket}`}</TextLabel>
+      <Divider />
+      <StretchRow>
+        <NoShrinkColumn>
+          <TextSublabel>{`Violations (${props.cell.periods.length})`}</TextSublabel>
+          <For each={props.cell.periods}>{(p) => <NowrapBody>{p}</NowrapBody>}</For>
+        </NoShrinkColumn>
+        <VerticalDivider />
+        <GrowColumn>
+          <TextSublabel>Explanation</TextSublabel>
+          <Show when={props.cell.explanation} fallback={<TextSublabel>—</TextSublabel>}>
+            <TextBody>{props.cell.explanation}</TextBody>
+          </Show>
+        </GrowColumn>
+      </StretchRow>
+    </TightStack>
+  );
+}
+
 const HeatGridPopoverShowcase = () => (
   <CardBench>
     <CardCase
       title="Heat-grid hover popover"
       width="420px"
       routes={["components/reports/ViolationHeatGrid.tsx", "/reports/thousand-hour"]}
-      why="Floats over a heat-grid cell on hover. Header names the vessel and the bucket that lit up; the body pairs the violation windows against the reviewer's explanation, so the whole story reads without leaving the grid."
+      why="Hover a cell to open it. The header names the vessel and the bucket that lit up; the body pairs the violation windows against the reviewer's explanation, so the whole story reads without leaving the grid. A cell with no explanation shows an em dash rather than an empty column."
     >
-      <CardSurface>
-        <TightStack>
-          <TextTitle>MSC Bellissima — Outlet THC</TextTitle>
-          <Divider />
-          <TopClusterRow>
-            <Column>
-              <TextLabel>Periods</TextLabel>
-              <For
-                each={["14:05 → 14:32 · 27m", "16:10 → 16:24 · 14m", "19:47 → 20:15 · 28m"]}
-              >
-                {(p) => <TextSublabel>{p}</TextSublabel>}
-              </For>
-            </Column>
-            <Column>
-              <TextLabel>Explanation</TextLabel>
-              <TextBody>FID drift during ramp; corrected with QA reference gas. Two windows excluded per SOP-14.</TextBody>
-            </Column>
-          </TopClusterRow>
-        </TightStack>
-      </CardSurface>
+      <ClusterRow>
+        <For each={CELLS}>
+          {(cell) => (
+            <Tooltip content={<PopoverBody cell={cell} />}>
+              <CompactSurface>
+                <TextTitle>{cell.count}</TextTitle>
+              </CompactSurface>
+            </Tooltip>
+          )}
+        </For>
+      </ClusterRow>
     </CardCase>
   </CardBench>
 );
@@ -95,8 +140,8 @@ export const ENTRIES: CardEntry[] = [
   {
     route: "reports/ViolationHeatGrid",
     name: "Heat-grid hover popover",
-    status: "raw",
-    note: "Floating card shown on heat-grid cell hover: header (vessel — bucket) over a two-column body (violation timestamp ranges | explanation). Raw floating popover — rebuilt from Surface + Layout.",
+    status: "sui",
+    note: "SUI `Tooltip` carrying a Layout/Text body: header (vessel — bucket) over violation windows beside the explanation. Anchoring, viewport flipping and panel chrome come from Tooltip — replaces the hand-rolled fixed-position div with its own clamping math.",
     component: HeatGridPopoverShowcase,
   },
 ];
