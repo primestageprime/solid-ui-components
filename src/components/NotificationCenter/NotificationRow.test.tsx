@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent, cleanup, screen } from "@solidjs/testing-library";
 import { NotificationCenter } from "./index";
-import { resolveActions, closesPanel } from "./actions";
+import { resolveActions, closesPanel, dismissAction } from "./actions";
 import type { NotificationItem } from "./types";
 
 // The panel portals to document.body, so row queries go to the body via
@@ -301,5 +301,27 @@ describe("row-body activation", () => {
     fireEvent.click(document.body.querySelector("button.sui-btn") as Element);
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onAction).not.toHaveBeenCalled();
+  });
+});
+
+describe("action icons", () => {
+  it("renders the action's glyph inside the control, hidden from AT", () => {
+    render(() => (
+      <NotificationCenter
+        items={[item({ actions: [dismissAction(() => {})] })]}
+        open
+      />
+    ));
+    const btn = document.body.querySelector("button.sui-btn") as HTMLElement;
+    // Icon renders a <span role="img"> wrapper with the svg injected via
+    // innerHTML, so aria-hidden lands on the wrapper — which is what actually
+    // suppresses it, and also suppresses Icon's own aria-label (the raw glyph
+    // name, "close", which would otherwise be announced alongside the label).
+    const glyph = btn.querySelector(".jtf-icon");
+    expect(glyph).toBeTruthy();
+    expect(glyph?.querySelector("svg")).toBeTruthy();
+    expect(glyph?.getAttribute("aria-hidden")).toBe("true");
+    // The label still carries the accessible name.
+    expect(btn.textContent).toContain("Dismiss");
   });
 });

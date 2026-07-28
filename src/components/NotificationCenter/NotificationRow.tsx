@@ -140,6 +140,13 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
                         disabled={a().disabled}
                         onClick={() => props.onActivateAction(item(), a())}
                       >
+                        {/* Decoration — the label carries the accessible
+                            name, so the glyph is hidden from AT. */}
+                        <Show when={a().icon}>
+                          {(name) => (
+                            <Icon name={name()} size="sm" aria-hidden="true" />
+                          )}
+                        </Show>
                         {a().label}
                       </TextButton>
                     }
@@ -155,6 +162,11 @@ export const NotificationRow: Component<NotificationRowProps> = (props) => {
                       href={a().href}
                       onClick={(e) => props.onActivateAction(item(), a(), e)}
                     >
+                      <Show when={a().icon}>
+                        {(name) => (
+                          <Icon name={name()} size="sm" aria-hidden="true" />
+                        )}
+                      </Show>
                       {`${a().label} →`}
                     </Link>
                   </Show>
