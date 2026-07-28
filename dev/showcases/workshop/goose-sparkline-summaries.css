@@ -1,0 +1,101 @@
+/* Bench-local styling for the distribution sparkline prototype.
+   Deliberately NOT in src/ yet — the encoding is still being argued about.
+   Promote to src/components/DistributionSparkline (+ its own CSS) once the
+   shape is settled. Nothing here is themed beyond the --sui-* tokens. */
+
+/* The gradient defs live once per page, out of flow. */
+.gs-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Shading: the fill is DENSER at the end the series finished on — strong at
+   the top when it rose, at the bottom when it fell, flat and even when it
+   neither rose nor fell. Colour says the same thing a second time. */
+.gs-grad stop {
+  stop-color: var(--sui-text-muted);
+}
+.gs-grad--up stop {
+  stop-color: var(--sui-success);
+}
+.gs-grad--down stop {
+  stop-color: var(--sui-danger);
+}
+.gs-grad stop:first-child {
+  stop-opacity: 0.03;
+}
+.gs-grad stop:last-child {
+  stop-opacity: 0.3;
+}
+.gs-grad--flat stop {
+  stop-opacity: 0.11;
+}
+
+.gs-dist__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Solid outlined translucent box = the full min..max range. */
+.gs-dist__range {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+.gs-dist--up .gs-dist__range {
+  stroke: var(--sui-success);
+}
+.gs-dist--down .gs-dist__range {
+  stroke: var(--sui-danger);
+}
+
+/* Dashed box inside it = the typical band (the percentile pair). */
+.gs-dist__typical {
+  fill: none;
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.85;
+}
+.gs-dist--up .gs-dist__typical {
+  stroke: var(--sui-success);
+}
+.gs-dist--down .gs-dist__typical {
+  stroke: var(--sui-danger);
+}
+
+/* The mean, as a hairline across the whole width. */
+.gs-dist__mean {
+  stroke: var(--sui-text-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+}
+
+.gs-dist__line {
+  fill: none;
+  stroke: var(--sui-text-primary);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.gs-dist--up .gs-dist__line {
+  stroke: var(--sui-success);
+}
+.gs-dist--down .gs-dist__line {
+  stroke: var(--sui-danger);
+}
+
+/* Points outside the typical band — hollow so they read as marks, not data. */
+.gs-dist__outlier {
+  fill: var(--sui-bg-primary);
+  stroke: var(--sui-warning);
+  stroke-width: 1;
+}
+
+/* The legend's swatch column, so the sample sits beside its sentence. */
+.gs-legend-swatch {
+  flex: 0 0 auto;
+  width: 200px;
+}
