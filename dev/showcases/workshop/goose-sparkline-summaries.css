@@ -33,10 +33,12 @@
   stop-opacity: 0.11;
 }
 
+/* The plot area is a fixed 100px in every cell — the width flexes with the
+   card, the height never does. */
 .gs-dist__svg {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100px;
 }
 
 /* Solid outlined translucent box = the full min..max range. */

@@ -4,25 +4,23 @@
 //
 // The centrepiece is a PROTOTYPE distribution sparkline (defined locally at the
 // bottom of this file, deliberately NOT in src/ until the encoding is settled).
-// It says four things at once about a series:
 //
-//   min / max       solid outlined translucent box, the full range
-//   typical         dashed box inside it, the LOCAL percentile band
-//   average         hairline across the whole width, at the mean
-//   direction       colour AND shading — green/red/grey for end-vs-start, with
-//                   the fill densest at the end the series finished on
+// TWO p95 BANDS, at two different scopes, and that is the whole idea:
 //
-// TWO SCALES, and the distinction is the whole point:
+//   solid box       the SET's p95 band. IDENTICAL in every cell — a fixed
+//                   reference frame, not a measurement of this series.
+//   dashed box      the SERIES' own p95 band, computed independently. This is
+//                   the thing that moves, and it is read against the solid box:
+//                   sitting high in the frame, low, wide, or pinched.
 //
-//   the y-axis      belongs to the SET. Every cell shares it, so heights are
-//                   comparable across cells. It is the p95 band of the POOLED
-//                   values, not their true extremes — one spike would otherwise
-//                   flatten all twelve into hairlines. Anything outside is
-//                   CLIPPED, and the stat line says how much.
-//   the dashed box  belongs to the SERIES. It is that one series' own p95 band,
-//                   computed independently of the shared axis.
+// Plus the mean as a hairline, and direction as colour AND shading — the solid
+// box's fill is densest at the end the series finished on.
 //
-// The box geometry never changes: the same rect, same height, every cell.
+// The plot area is a fixed 100px tall in every cell, spanning the set band plus
+// ~18% breathing room so the solid box reads as a box INSIDE the plot rather
+// than as the plot's own border. Samples beyond the plot are clipped and
+// counted, never allowed to rescale anything — one spike must not flatten the
+// other eleven.
 import { type Component, For } from "solid-js";
 import {
   MutedBody,
@@ -175,8 +173,14 @@ const AXIS: [number, number] = [0.05, 0.95];
 // ── The prototype ────────────────────────────────────────────────────────────
 
 const W = 200;
-const H = 56;
+/** The plot area is 100px tall in EVERY cell — fixed, never derived. */
+const H = 100;
 const INSET = 2;
+
+/** How much room the axis leaves around the set's p95 box, as a fraction of
+ *  that box's span, so the solid outline reads as a box INSIDE the plot area
+ *  rather than as the plot area's own border. */
+const AXIS_PAD = 0.18;
 
 const ascending = (values: number[]): number[] => sortBy((v: number) => v, values);
 
@@ -189,14 +193,22 @@ const percentile = (p: number, values: number[]): number => {
   return s[lo] + (s[hi] - s[lo]) * (at - lo);
 };
 
-/** The shared y-axis: the pooled set's p95 band, NOT its true extremes. A
- *  single spike in one series would otherwise squash every other series into a
- *  hairline — the axis describes where the set lives, and the few samples
- *  outside it are clipped rather than allowed to rescale everything. */
+/** The SET's p95 band — where the whole collection lives. NOT its true
+ *  extremes: one spike would otherwise squash every series into a hairline.
+ *  This is what the solid outlined box draws, identically in every cell, so it
+ *  is a fixed reference frame the per-series dashed box is read against. */
 const POOLED: number[] = EXAMPLES.flatMap((e) => e.values);
-const DOMAIN: [number, number] = [
+const SET_BAND: [number, number] = [
   percentile(AXIS[0], POOLED),
   percentile(AXIS[1], POOLED),
+];
+
+/** The plot area's value range: the set band plus breathing room, so the solid
+ *  box sits inside the plot rather than becoming its border. Samples beyond
+ *  this are clipped and counted rather than allowed to rescale anything. */
+const DOMAIN: [number, number] = [
+  SET_BAND[0] - (SET_BAND[1] - SET_BAND[0]) * AXIS_PAD,
+  SET_BAND[1] + (SET_BAND[1] - SET_BAND[0]) * AXIS_PAD,
 ];
 
 interface Summary {
@@ -264,12 +276,14 @@ const DistributionSparkline: Component<DistributionSparklineProps> = (props) => 
       {/* Everything is clipped to the rect: a sample beyond the shared axis
           runs off the edge rather than rescaling the whole set. */}
       <g clip-path="url(#gs-clip)">
+        {/* The SET's band — identical in every cell, the frame the dashed box
+            is read against. Only its fill changes, with the direction. */}
         <rect
           class="gs-dist__range"
           x={0.5}
           width={W - 1}
-          y={boxOf(stats().min, stats().max).y}
-          height={boxOf(stats().min, stats().max).height}
+          y={boxOf(SET_BAND[0], SET_BAND[1]).y}
+          height={boxOf(SET_BAND[0], SET_BAND[1]).height}
           fill={`url(#gs-grad-${stats().trend})`}
         />
         <rect
@@ -394,7 +408,8 @@ const HEARTBEAT = [
 const BAND_COMPARISON = [EXAMPLES[4], EXAMPLES[7], EXAMPLES[8]];
 
 const OPEN_QUESTIONS = [
-  "A tight axis and a true-extremes box fight each other: with the axis at p5–p95, most series have a real min or max outside it, so the solid box saturates to the full rect and stops distinguishing them (compare 'Trending up' and 'Periodic, damping' — different series, identical box). Either the solid box becomes a WIDER percentile band (p1–p99) instead of true extremes, or a saturated box has to be read as 'this one leaves the axis', which is what the clipped count already says.",
+  "The solid box is now the same in every cell, which is either the point (a fixed frame to read the dashed box against) or a waste of ink twelve times over. The test: cover the solid boxes with your hand and see whether the dashed ones still tell you anything.",
+  "AXIS_PAD is 18% of the set band. Too little and the solid box looks like the plot's border; too much and every series is squeezed into the middle. It is one constant — worth tuning against a real goose row rather than these twelve.",
   "The axis is the pooled p5–p95 — a CENTRAL band, not a one-sided p95, because a series that dips near zero would flatten everything just as badly as one that spikes. If you meant a hard 0 floor with only the top trimmed, that is a one-line change.",
   "What is the set, in the real page? Here it is the twelve cells on screen. In goose it is presumably the sources in one summary row — but if the row is filtered, does the axis re-derive (cells stay legible, but heights stop being comparable to what you saw a second ago) or stay pinned to the unfiltered set?",
   "Clipping is silent apart from the stat line. Should a clipped series get a visible mark at the edge it exits through — a notch, a thickened border — or is the count enough?",
@@ -431,11 +446,12 @@ const GooseSparklineSummariesBench: Component = () => (
             </div>
             <TightStack>
               <TextSublabel>
-                Solid translucent box — the full min..max range.
+                Solid translucent box — the SET's {bandName(AXIS)} band. The
+                same in every cell: a reference frame, not a measurement.
               </TextSublabel>
               <TextSublabel>
-                Dashed box inside it — this SERIES' own p{TYPICAL[1] * 100} band
-                ({bandName(TYPICAL)}), computed independently of the axis.
+                Dashed box — this SERIES' own {bandName(TYPICAL)} band. Read it
+                against the solid one: high in the frame, low, wide, pinched.
               </TextSublabel>
               <TextSublabel>Hairline across the width — the mean.</TextSublabel>
               <TextSublabel>
@@ -451,13 +467,14 @@ const GooseSparklineSummariesBench: Component = () => (
         Region 1 — twelve shapes, one shared domain
       </SubsectionTitle>
       <MutedBody>
-        The axis belongs to the SET, not the cell: every rect here spans{" "}
-        {round(DOMAIN[0])}..{round(DOMAIN[1])}, the {bandName(AXIS)} band of all{" "}
-        {length(POOLED)} pooled samples. Not their true extremes — "Spiky"
-        touches 90, and letting it set the ceiling would squash the other
-        eleven. Samples past the edge are clipped, and each cell says how many.
-        On a per-series auto-scale none of this would mean anything: every range
-        box would fill its rect every time.
+        The axis belongs to the SET, not the cell. The solid box is the{" "}
+        {bandName(AXIS)} band of all {length(POOLED)} pooled samples —{" "}
+        {round(SET_BAND[0])}..{round(SET_BAND[1])} — and the plot area around it
+        runs {round(DOMAIN[0])}..{round(DOMAIN[1])}, 100px tall in every cell.
+        Not the set's true extremes: "Spiky" touches 90, and letting it set the
+        ceiling would squash the other eleven. Samples past the plot are clipped
+        and counted. On a per-series auto-scale none of this would mean
+        anything — every box would fill its rect every time.
       </MutedBody>
       <CardGrid>
         <For each={EXAMPLES}>{(e) => <ExampleCell example={e} />}</For>
