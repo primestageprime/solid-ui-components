@@ -131,6 +131,7 @@ import { LayoutVariantsShowcase } from "./showcases/layout-variants";
 import { VariantCoverageShowcase } from "./showcases/variant-coverage";
 import { ChartSlotsShowcase } from "./showcases/chart-slots";
 import { TableGridsShowcase } from "./showcases/table-grids";
+import { FormsAndInputsShowcase } from "./showcases/forms-and-inputs";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -858,6 +859,12 @@ const items: Item[] = [
     label: "Tables and grids",
     component: TableGridsShowcase,
     tags: ["depth:2", "table", "data", "list"],
+  },
+  {
+    id: "forms-and-inputs",
+    label: "Forms and inputs",
+    component: FormsAndInputsShowcase,
+    tags: ["depth:2", "form", "time", "data"],
   },
   {
     id: "heatstream-grid",
