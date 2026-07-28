@@ -125,6 +125,8 @@ import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
+import { SlotCardShowcase } from "./showcases/slot-card";
+import { SectionTableShowcase } from "./showcases/section-table";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -816,6 +818,18 @@ const items: Item[] = [
     label: "FileDropZone",
     component: FileDropZoneShowcase,
     tags: ["depth:2", "form", "container"],
+  },
+  {
+    id: "slot-card",
+    label: "SlotCard",
+    component: SlotCardShowcase,
+    tags: ["depth:2", "list", "container", "data"],
+  },
+  {
+    id: "section-table",
+    label: "SectionTable",
+    component: SectionTableShowcase,
+    tags: ["depth:2", "table", "data"],
   },
   {
     id: "heatstream-grid",

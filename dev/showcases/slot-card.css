@@ -1,0 +1,15 @@
+/* SlotCard showcase — fixed demo-strip widths. The strip renders the SAME card
+   at each width so the container-query slot-drop progression is visible; the
+   container needs a definite width for the card to react to. */
+
+.slot-strip-w200 {
+  width: 200px;
+}
+
+.slot-strip-w280 {
+  width: 280px;
+}
+
+.slot-strip-w380 {
+  width: 380px;
+}
