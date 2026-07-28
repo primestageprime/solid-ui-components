@@ -45,9 +45,21 @@ import { ParticipantNameLabel } from "../../src/components/ParticipantNameLabel"
 import { ParticipantTimeLabel } from "../../src/components/ParticipantTimeLabel";
 import { PrimaryButton, GhostButton } from "../../src/components/Button";
 import { BlockPlaceholder, FitPlaceholder } from "../../src/components/Placeholder";
+import { Assignees, MdAssigneeChips } from "../../src/components/AssigneeChips";
 import "./variant-coverage.css";
 
 const noop = () => undefined;
+
+// AssigneeChips takes ids plus the caller's resolver — the chips never know
+// where names come from, so the demo carries a roster like a real app would.
+const ROSTER: Record<string, string> = {
+  "u-ps": "Peter S.",
+  "u-ak": "Adlai A.",
+  "u-mb": "Mira B.",
+  "u-ln": "Lena N.",
+  "u-rt": "Ravi T.",
+};
+const nameOf = (id: string): string => ROSTER[id] ?? id;
 
 const Family: Component<{ title: string; note: string; children: import("solid-js").JSX.Element }> = (
   props,
@@ -214,6 +226,22 @@ export const VariantCoverageShowcase: Component = () => {
           <ParticipantNameLabel color="var(--sui-accent)">Peter</ParticipantNameLabel>
           <ParticipantTimeLabel>08:14</ParticipantTimeLabel>
         </ClusterRow>
+      </Family>
+
+      <Family
+        title="Assignee chips"
+        note="Who is on a work item, resolved from ids. The size is in the name — call sites pass ids and a resolver, never a size."
+      >
+        <NarrowStack>
+          <ClusterRow>
+            <TextBody>Assignees (sm) — dense rows, a table cell or a card footer</TextBody>
+          </ClusterRow>
+          <Assignees ids={["u-ps", "u-ak", "u-mb"]} resolveName={nameOf} />
+          <ClusterRow>
+            <TextBody>MdAssigneeChips — a detail pane, where the chips are the content</TextBody>
+          </ClusterRow>
+          <MdAssigneeChips ids={["u-ps", "u-ak", "u-mb", "u-ln", "u-rt"]} resolveName={nameOf} />
+        </NarrowStack>
       </Family>
 
       <Family title="Message bubbles" note="Whose message it is decides the bubble, not a prop.">

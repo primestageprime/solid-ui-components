@@ -69,6 +69,11 @@ const entrySource = program.getSourceFile(ENTRY);
 const moduleSymbol = checker.getSymbolAtLocation(entrySource);
 
 const components = [];
+// Renaming re-exports (`export { SwimlaneChart as SwimlaneChartStatic }`) are
+// the SAME component under a second public name. Looking at the SwimlaneChart
+// showcase IS looking at SwimlaneChartStatic, so the alias is covered whenever
+// its target is — remember the underlying declaration name to check later.
+const aliasTargetOf = new Map();
 for (const sym of checker.getExportsOfModule(moduleSymbol)) {
   const name = sym.getName();
   if (!/^[A-Z]/.test(name)) continue;
@@ -84,6 +89,8 @@ for (const sym of checker.getExportsOfModule(moduleSymbol)) {
     (ts.SymbolFlags.Variable | ts.SymbolFlags.Function | ts.SymbolFlags.Class);
   if (!isValue) continue;
 
+  const targetName = target.getName();
+  if (targetName !== name) aliasTargetOf.set(name, targetName);
   components.push(name);
 }
 components.sort();
@@ -93,8 +100,13 @@ const galleryText = walk(GALLERY, (p) => /\.tsx?$/.test(p) && !p.includes(".test
   .map((f) => readFileSync(f, "utf8"))
   .join("\n");
 
-const referencedInGallery = (name) =>
-  new RegExp(`\\b${name}\\b`).test(galleryText);
+const nameInGallery = (name) => new RegExp(`\\b${name}\\b`).test(galleryText);
+
+const referencedInGallery = (name) => {
+  if (nameInGallery(name)) return true;
+  const alias = aliasTargetOf.get(name);
+  return alias !== undefined && nameInGallery(alias);
+};
 
 // ── what other components render internally ──────────────────────────────────
 // family(X) = the src/components/<dir> a component is defined in. A component

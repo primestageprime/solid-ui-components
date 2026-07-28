@@ -1,6 +1,10 @@
 import { type Component, createSignal } from "solid-js";
 import {
   SidebarSelector,
+  SidebarSelectorDemo,
+  EpisodeCard,
+  EpisodeSelection,
+  type EpisodeCardData,
   type SidebarSelectorItem,
 } from "../../src/components/Selector";
 import { TextBody } from "../../src/components/Text";
@@ -46,8 +50,93 @@ const items: SidebarSelectorItem<DemoItem>[] = [
   },
 ];
 
+// A season's worth of episodes for the EpisodeCard / EpisodeSelection pair —
+// enough rows that the sidebar scrolls and the focus colours repeat, which is
+// what those two renderers were shaped for.
+const EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
+  {
+    id: "e1",
+    data: {
+      title: "Cold Open",
+      season: 1,
+      episode: 1,
+      primaryCharacter: "Renner",
+      characterColor: "var(--sui-accent)",
+      airDate: "Mar 3, 2026",
+      synopsis:
+        "A night shift at the harbour office ends with a container that nobody logged.",
+    },
+  },
+  {
+    id: "e2",
+    data: {
+      title: "Manifest",
+      season: 1,
+      episode: 2,
+      primaryCharacter: "Okonjo",
+      characterColor: "var(--sui-success)",
+      airDate: "Mar 10, 2026",
+      synopsis:
+        "Two manifests disagree by one line. Okonjo starts pulling on it and the berth schedule unravels.",
+    },
+  },
+  {
+    id: "e3",
+    data: {
+      title: "Deadweight",
+      season: 1,
+      episode: 3,
+      primaryCharacter: "Renner",
+      characterColor: "var(--sui-accent)",
+      airDate: "Mar 17, 2026",
+      synopsis:
+        "The tanker rides too high in the water and the crane crew notices before the paperwork does.",
+    },
+  },
+  {
+    id: "e4",
+    data: {
+      title: "Demurrage",
+      season: 1,
+      episode: 4,
+      primaryCharacter: "Vance",
+      characterColor: "var(--sui-warning)",
+      airDate: "Mar 24, 2026",
+      synopsis:
+        "Every hour alongside costs someone money, and Vance has to decide whose.",
+    },
+  },
+  {
+    id: "e5",
+    data: {
+      title: "Slack Water",
+      season: 1,
+      episode: 5,
+      primaryCharacter: "Okonjo",
+      characterColor: "var(--sui-success)",
+      airDate: "Mar 31, 2026",
+      synopsis:
+        "A tide window closes. The only berth left belongs to a ship that hasn't arrived.",
+    },
+  },
+  {
+    id: "e6",
+    data: {
+      title: "Bill of Lading",
+      season: 1,
+      episode: 6,
+      primaryCharacter: "Vance",
+      characterColor: "var(--sui-danger)",
+      airDate: "Apr 7, 2026",
+      synopsis:
+        "The season ends where it opened: one unlogged container, and a signature that shouldn't exist.",
+    },
+  },
+];
+
 export const SidebarSelectorShowcase: Component = () => {
   const [selected, setSelected] = createSignal<string | undefined>("a");
+  const [episode, setEpisode] = createSignal<string | undefined>("e2");
 
   return (
     <div class="component-section">
@@ -126,6 +215,41 @@ export const SidebarSelectorShowcase: Component = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <h3>EpisodeCard + EpisodeSelection — the packaged renderer pair</h3>
+      <p class="text-meta">
+        SidebarSelector's two render slots are just callbacks, so SUI ships one
+        worked pair for the episode-browsing shape: <code>EpisodeCard</code> is
+        the sidebar card (season/episode number, focus character, title) and{" "}
+        <code>EpisodeSelection</code> is the detail pane (badge, title, focus,
+        air date, synopsis). Neither stands alone — they are shown here in the
+        parent that positions them, over a season list rather than three
+        invented rows.
+      </p>
+      <div class="example-group">
+        <SidebarSelector
+          items={EPISODES}
+          selectedId={episode()}
+          onSelect={(item) => setEpisode(item.id)}
+          renderCard={(data, isSelected) => (
+            <EpisodeCard episode={data} isSelected={isSelected} />
+          )}
+          renderSelection={(data) => <EpisodeSelection episode={data} />}
+          height="320px"
+          label="Season 1"
+        />
+      </div>
+
+      <h3>SidebarSelectorDemo — the pre-wired demo export</h3>
+      <p class="text-meta">
+        The same three pieces wired together with their own fixture data, as a
+        single zero-prop component. It exists to demonstrate the family rather
+        than to be composed into an app: a client that renders it inherits SUI's
+        demo dataset, which is never what a client wants.
+      </p>
+      <div class="example-group">
+        <SidebarSelectorDemo />
       </div>
     </div>
   );

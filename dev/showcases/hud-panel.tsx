@@ -7,6 +7,7 @@ import {
   SuccessPanel,
   CompactPanel,
   DecoratedPanel,
+  SpaciousPanel,
 } from "../../src/components/Panel";
 import { Panel } from "../../src/components/Panel/Panel";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -100,6 +101,17 @@ export const PanelShowcase: Component = () => {
               <div class="text-meta">
                 CompactPanel — size: "sm", corners: "clip", glow: "none"
               </div>
+            </div>
+            <div>
+              <SpaciousPanel title="SpaciousPanel">
+                <MutedBody>
+                  large padding — the size at the other end of the ladder from
+                  CompactPanel. Use it when the panel body is a form or a
+                  paragraph rather than a readout, so the content isn't pinned
+                  to the frame.
+                </MutedBody>
+              </SpaciousPanel>
+              <div class="text-meta">SpaciousPanel — size: "lg"</div>
             </div>
             <div>
               <DecoratedPanel title="DecoratedPanel">
