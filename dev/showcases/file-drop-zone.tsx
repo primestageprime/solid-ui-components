@@ -20,7 +20,7 @@ export const FileDropZoneShowcase: Component = () => {
         notice.
       </p>
 
-      <Stack gap="lg">
+      <Stack gap="sm">
         <Stack gap="sm">
           <h3>FileDropTarget — a file tool's empty state</h3>
           <FileDropTarget

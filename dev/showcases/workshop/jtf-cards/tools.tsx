@@ -7,7 +7,6 @@ import {
   MetricCard,
   CardSurface,
   CompactSurface,
-  InteractiveCard,
   TightStack,
   NarrowStack,
   WrapRow,
@@ -16,7 +15,6 @@ import {
   ClusterRow,
   SpreadRow,
   GrowBox,
-  CenteredStack,
   TextTitle,
   TextLabel,
   TextBody,
@@ -25,11 +23,14 @@ import {
   MutedBody,
   Icon,
 } from "../../../../src";
+import { FileDropTarget, CompactFileDropTarget } from "../../../../src";
 import { SmStatusBadge } from "../../../../src/components/Badge";
 import { SmallGhostButton } from "../../../../src/components/Button";
 import { CardBench, CardCase } from "./case";
 import type { CardEntry } from "./shared";
 import "./catalog.css";
+
+const noop = () => undefined;
 
 // 1. MetricCard row — the SUI stat tile reused across the live tool routes
 //    power-log-ocr and ftir-gap-fill. (StatisticsSummary also renders it but
@@ -52,24 +53,33 @@ const MetricCardShowcase = () => (
   </CardBench>
 );
 
-// 2. Upload dropzone — dashed InteractiveCard, centered icon + prompt + hint.
+// 2. Upload dropzone — SUI FileDropZone at both densities.
 const DropzoneShowcase = () => (
   <CardBench>
     <CardCase
       title="Upload dropzone"
       width="360px"
-      routes={["/tools/power-log-ocr", "/tools/ftir-gap-fill"]}
-      why="The empty state of a file tool: a dashed, full-card drop target with an icon, a one-line prompt, and an accepted-format hint. Click or drag; it swaps to a processing/error state in place."
+      routes={["components/PowerLogDropZone.tsx", "/tools/power-log-ocr"]}
+      why="How a PDF enters the tool: a dashed target that is also a click-to-browse picker, showing the prompt on one line. It rejects anything that isn't a PDF with a self-clearing notice, and goes inert (dimmed, no pointer) while the last file is being read. The compact density is the same target tucked into the summary banner row."
     >
-      <div class="jtf-dropzone">
-        <InteractiveCard>
-          <CenteredStack>
-            <Icon name="download" size="lg" />
-            <TextBody>Drop a power log photo or click to upload</TextBody>
-            <MutedBody>PNG or JPG · up to 10 MB</MutedBody>
-          </CenteredStack>
-        </InteractiveCard>
-      </div>
+      <TightStack>
+        <FileDropTarget
+          accept={[".pdf"]}
+          label="Drop power-log PDF here, or click to browse"
+          onFile={noop}
+        />
+        <CompactFileDropTarget
+          accept={[".pdf"]}
+          label="Drop power-log PDF here, or click to browse"
+          onFile={noop}
+        />
+        <FileDropTarget
+          accept={[".pdf"]}
+          label="Reading the power log…"
+          disabled
+          onFile={noop}
+        />
+      </TightStack>
     </CardCase>
   </CardBench>
 );
@@ -218,10 +228,10 @@ export const ENTRIES: CardEntry[] = [
     component: MetricCardShowcase,
   },
   {
-    route: "tools/power-log-ocr",
+    route: "components/PowerLogDropZone",
     name: "Upload dropzone",
-    status: "raw",
-    note: "Dashed InteractiveCard dropzone: centered icon + prompt + hint (+ processing/error text). Dashed border rides on call-site geometry here.",
+    status: "sui",
+    note: "SUI `FileDropTarget` / `CompactFileDropTarget` — dashed drop target + click-to-browse picker, extension check with a self-clearing notice, disabled state. Replaces the inline-styled drop div in PowerLogDropZone.tsx.",
     component: DropzoneShowcase,
   },
   {

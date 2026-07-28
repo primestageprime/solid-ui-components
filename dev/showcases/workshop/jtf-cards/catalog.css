@@ -34,13 +34,7 @@
 .jtf-card-frame--w460 { width: 460px; }
 .jtf-card-frame--w500 { width: 500px; }
 
-/* --- tools.tsx: dropzone + flow-diagnosis chip -------------------------- */
-
-/* Empty-state upload target: a dashed, rounded full-card border. */
-.jtf-dropzone {
-  border: 2px dashed var(--sui-border, #556);
-  border-radius: 8px;
-}
+/* --- tools.tsx: flow-diagnosis chip ------------------------------------- */
 
 /* Flow-diagnosis classification chip: a tone-colored left border + a solid
    tone-filled category pill. Tone is one of danger/warning/success. */
@@ -60,55 +54,6 @@
 .jtf-flow-chip--danger .jtf-flow-chip__badge { background: var(--sui-danger, #d33); }
 .jtf-flow-chip--warning .jtf-flow-chip__badge { background: var(--sui-warning, #d98); }
 .jtf-flow-chip--success .jtf-flow-chip__badge { background: var(--sui-success, #3a3); }
-
-/* --- triage.tsx: canned-explanation pick card --------------------------- */
-
-/* Positioning context for the corner badge + hover delete overlays. */
-.jtf-canned-card {
-  position: relative;
-}
-/* Numbered corner badge (1–9), pinned to the top-left notch. */
-.jtf-canned-card__badge {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--sui-color-accent, #3aa);
-  color: var(--sui-color-on-accent, #fff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7em;
-}
-/* Hover-revealed delete affordance, pinned to the top-right. */
-.jtf-canned-card__delete {
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  color: var(--sui-danger, #d33);
-  opacity: 0.6;
-}
-
-/* --- job-queue.tsx: JobCard frame + recent-row glyph -------------------- */
-
-/* Status-colored left accent border on the job card frame. Base reserves the
-   3px so the card doesn't shift when a status tone is applied. */
-.jtf-job-frame {
-  border-left: 3px solid transparent;
-}
-.jtf-job-frame--queued { border-left-color: var(--sui-warning, #d98); }
-.jtf-job-frame--in_progress { border-left-color: var(--sui-info, #48c); }
-.jtf-job-frame--completed { border-left-color: var(--sui-success, #3a3); }
-.jtf-job-frame--failed { border-left-color: var(--sui-danger, #d33); }
-.jtf-job-frame--cancelled { border-left-color: var(--sui-warning, #d98); }
-
-/* The status glyph in a recent-row, tinted by outcome (currentColor drives the
-   SVG stroke). */
-.jtf-job-glyph--completed { color: var(--sui-success, #3a3); }
-.jtf-job-glyph--failed { color: var(--sui-danger, #d33); }
-.jtf-job-glyph--cancelled { color: var(--sui-warning, #d98); }
 
 /* --- entity.tsx: NOx/ROG compliance mark -------------------------------- */
 

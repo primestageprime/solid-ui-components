@@ -208,6 +208,11 @@ function createSlotCard(config: SlotCardConfig) {
   return (props: SlotCardProps): JSX.Element => {
     const Surface = config.density === "compact" ? CompactSurface : InteractiveCard;
 
+    // A card with overlays reserves top room for them (see SlotCard.css).
+    const bodyClass = `sui-slot-card__body${
+      config.corner || config.removable ? " sui-slot-card__body--overlaid" : ""
+    }`;
+
     const rows = (
       <TightStack>
         <For each={config.rows}>
@@ -273,7 +278,7 @@ function createSlotCard(config: SlotCardConfig) {
 
     const card = (
       <Surface class="sui-slot-card" active={props.active} onClick={props.onSelect}>
-        <div class="sui-slot-card__body">
+        <div class={bodyClass}>
           <Show when={config.corner && props.corner !== undefined}>
             <div class="sui-slot-card__corner">{props.corner}</div>
           </Show>

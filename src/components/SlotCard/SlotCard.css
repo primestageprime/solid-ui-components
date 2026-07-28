@@ -17,6 +17,13 @@
   position: relative;
 }
 
+/* Overlaid body — a card carrying the corner badge and/or the remove glyph
+   reserves a strip of top room for them, so neither ever lands on the first
+   line of text (the real content is long enough to reach both corners). */
+.sui-slot-card__body--overlaid {
+  padding-top: 12px;
+}
+
 /* Corner count/label badge — pinned to the top-left, accent-filled pill. */
 .sui-slot-card__corner {
   position: absolute;
@@ -34,14 +41,25 @@
   font-size: 0.7em;
 }
 
-/* Remove affordance — muted danger glyph pinned to the top-right. */
+/* Remove affordance — muted danger glyph pinned to the top-right, revealed on
+   hover or keyboard focus so a resting list isn't a wall of ✕. */
 .sui-slot-card__remove {
   position: absolute;
-  top: 0;
+  top: -2px;
   right: 0;
   color: var(--sui-danger, #d33);
-  opacity: 0.6;
+  opacity: 0;
   cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.sui-slot-card:hover .sui-slot-card__remove,
+.sui-slot-card__remove:focus-visible {
+  opacity: 0.6;
+}
+
+.sui-slot-card .sui-slot-card__remove:hover {
+  opacity: 1;
 }
 
 /* Accent rail — a tone-colored left border. Base reserves the space so the
