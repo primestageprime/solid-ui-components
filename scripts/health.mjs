@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./style-rubric.mjs";
+import { run as runShowcaseCoverage } from "./showcase-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 import { length, mapValues } from "./fn.mjs";
 
@@ -189,6 +190,11 @@ const showcaseRubricHits = showcaseRubric.violations.map(
   (v) => `${v.file}:${v.line} [${v.kind}] ${v.prop} — ${v.detail}`,
 );
 
+// Showcase coverage: exported components with nothing to look at in the dev
+// gallery. A variant nobody can see gets adopted by guessing from its type,
+// which is how override props and hand-rolled geometry come back. Expected 0.
+const { missing: componentsWithoutShowcase } = runShowcaseCoverage();
+
 // ONE source of truth: metric name → offending-item list. `hits` spreads in
 // wholesale (every collector pushes to a named key); the rubric and coverage
 // sources merge alongside. Counts derive from it by iteration — adding a
@@ -201,6 +207,7 @@ const detail = {
   foldersWithoutTests,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
+  componentsWithoutShowcase,
 };
 
 const metrics = mapValues(length, detail);

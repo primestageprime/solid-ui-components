@@ -3968,6 +3968,18 @@
             "line": 9,
             "kind": "named"
           }
+        ],
+        "trendOf": [
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 9,
+            "kind": "named"
+          }
         ]
       }
     },
@@ -11107,6 +11119,7 @@
       "amygdala-ui"
     ],
     "trendOf": [
+      "goose-ui",
       "thorcasting-ui"
     ]
   }

@@ -128,6 +128,7 @@ import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
 import { SlotCardShowcase } from "./showcases/slot-card";
 import { SectionTableShowcase } from "./showcases/section-table";
 import { LayoutVariantsShowcase } from "./showcases/layout-variants";
+import { VariantCoverageShowcase } from "./showcases/variant-coverage";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -837,6 +838,12 @@ const items: Item[] = [
     label: "Layout variants",
     component: LayoutVariantsShowcase,
     tags: ["depth:0", "layout", "container"],
+  },
+  {
+    id: "variant-coverage",
+    label: "Variant coverage",
+    component: VariantCoverageShowcase,
+    tags: ["depth:1", "feedback", "navigation", "form"],
   },
   {
     id: "heatstream-grid",
