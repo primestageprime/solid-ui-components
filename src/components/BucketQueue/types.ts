@@ -28,8 +28,26 @@ export interface Bucket {
   /** Soft cap in rows: the bucket stops growing past this many rows and its
    *  body scrolls. Omit to shrink-wrap to content. Succeeds SplitQueueList's
    *  `topCapRows`. Unlike that pane, a capped bucket never grows past its cap
-   *  to absorb slack from a short neighbour. */
+   *  to absorb slack from a short neighbour — unless it also declares `fill`,
+   *  which overrides that for this bucket (see below). */
   capRows?: number;
+  /** Absorb leftover height instead of shrink-wrapping to content. Once every
+   *  bucket has been allocated up to its natural height, whatever is left is
+   *  split among the `fill` buckets in proportion to `weight`.
+   *
+   *  Reach for this when the queue sits in a fixed column with a control pinned
+   *  under it: without it a short list shrink-wraps and leaves a band of dead
+   *  space between the last row and that control.
+   *
+   *  Overrides the `capRows` note above FOR THIS BUCKET: a filling bucket may
+   *  exceed its cap, because the cap exists to stop CONTENT-driven growth, not
+   *  to refuse space nothing else wants.
+   *
+   *  Only a POPULATED bucket fills — an empty one stays pinned to its summary
+   *  line rather than stretching a "nothing here" strip over half the pane.
+   *
+   *  Default false: omit and the bucket shrink-wraps exactly as before. */
+  fill?: boolean;
 }
 
 export interface BucketQueueProps<T> {

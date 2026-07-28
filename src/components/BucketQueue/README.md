@@ -91,6 +91,7 @@ function Categorize(props: { initial: Txn[] }) {
 | `selectable?` | `boolean` | Rows in this bucket render the check affordance and toggle instead of select when `checkedKeys` is present. Default false. |
 | `emptyLabel?` | `JSX.Element` | Copy for the collapsed strip when this bucket has no items. Omit for the bare summary line. |
 | `capRows?` | `number` | Soft cap in rows — the bucket stops growing past this many rows and its body scrolls. Omit to shrink-wrap to content. |
+| `fill?` | `boolean` | Absorb the leftover height instead of shrink-wrapping to content, so the queue reaches the bottom of its column at any list length. Overrides `capRows` for this bucket; only applies while the bucket is populated. Default false. |
 
 ## Working a queue
 
@@ -163,10 +164,12 @@ matches the bucket header and the empty strip, so a bucket's label, its rows
 and its "nothing here" copy all share one left edge.
 
 **Row height is a consequence of what you render, not a prop.** The queue
-measures a real row and derives every bucket's natural height from that
-measurement, so a one-line row, a two-line card, or anything else works with no
-configuration; the water-fill, `capRows`, and the transfer animation re-scale on
-their own.
+measures a real row **in each bucket** and derives that bucket's natural height
+from its own measurement, so a one-line row, a two-line card, or anything else
+works with no configuration; the water-fill, `capRows`, and the transfer
+animation re-scale on their own. Buckets may differ freely from one another — a
+short bucket of one-line balance rows above a long bucket of two-line config
+rows sizes both correctly.
 
 ### What gets measured, and when
 
@@ -180,16 +183,19 @@ rather than leaving it sized for whatever was on screen at mount:
 - a web font that lands after first paint
 
 It watches the **border box**, because the measurement reads `offsetHeight` —
-observing the default content box would miss a padding or border change. And the
-row it measures comes from the first **populated** bucket, not literally the
-first bucket, which is routinely empty in a queue you've already worked.
+observing the default content box would miss a padding or border change. The row
+sample is **per bucket**: each populated bucket's first row is measured and used
+for that bucket alone. A bucket with nothing to measure yet (empty, or the frame
+before its first row mounts) borrows the topmost measured sibling, and falls
+back to a constant only when the whole queue is unmeasured.
 
-### The one thing it does assume: uniform rows
+### The one thing it does assume: uniform rows *within* a bucket
 
-The measurement is taken from **one** row and multiplied by the count, so rows
-must be the same height within a queue. A `renderItem` whose height varies with
-the item — a description that wraps to two lines for some items and one for
-others — makes each bucket's natural height an estimate, and buckets can end up
+The measurement is taken from **one** row per bucket and multiplied by that
+bucket's count, so rows must be the same height within a bucket — but not
+across buckets. A `renderItem` whose height varies with the item *inside a
+single bucket* — a description that wraps to two lines for some items and one
+for others — makes that bucket's natural height an estimate, and it can end up
 slightly over- or under-sized. Give rows a fixed height (or clamp the variable
 part with `line-clamp` / `nowrap`) if you need the sizing to be exact.
 
@@ -344,9 +350,43 @@ was short; a capped `BucketQueue` bucket cannot — surplus height goes to
 the other buckets, or goes unused. Predictable beats clever, and no shipped
 consumer depended on the slack behavior.
 
-The pure sizing core is exported as `allocateHeights(input): number[]` (with
-the `AllocateInput` type) for callers who need the water-fill math outside the
-component.
+### `fill` — when shrink-wrapping is the wrong default
+
+Shrink-wrapping means a queue whose content is *shorter* than its box leaves the
+remainder **unallocated**. That is correct for a bar floating in a page and
+wrong for the common layout of a queue in a fixed column with a control pinned
+under it: the remainder shows up as a band of dead space between the last row
+and that control, and it grows the shorter the list is.
+
+`fill: true` nominates a bucket to take that remainder. After every bucket has
+been allocated up to its natural height, whatever is left is split among the
+`fill` buckets in proportion to `weight`.
+
+```tsx
+const buckets: Bucket[] = [
+  // Meant to stay small: capped, and does not fill.
+  { key: "balance", label: "Balances", tone: "success", capRows: 3 },
+  // Reaches the bottom of the column whether it holds 3 configs or 30.
+  { key: "configs", label: "Configs", tone: "accent", fill: true },
+];
+```
+
+Two rules are worth knowing:
+
+- **It overrides `capRows` for that bucket.** A filling bucket may exceed its
+  cap. The cap exists to stop *content-driven* growth, not to refuse space
+  nothing else wants.
+- **Only a populated bucket fills.** An empty bucket stays pinned to its summary
+  line — a filling-but-empty bucket would stretch a "nothing here" strip over
+  half the pane. If every `fill` bucket is empty the remainder is left
+  unallocated, exactly as it is with no `fill` at all.
+
+The flag is purely additive: declare no `fill` and the queue lays out exactly as
+it did before the flag existed.
+
+The pure sizing core is exported as `naturalHeights(input): number[]` and
+`allocateHeights(input): number[]` (with the `NaturalInput` / `AllocateInput`
+types) for callers who need the sizing math outside the component.
 
 ## Motion
 

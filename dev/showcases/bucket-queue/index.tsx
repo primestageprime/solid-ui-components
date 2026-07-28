@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import { SubsectionTitle } from "../../../src/components/Text";
 import { BucketQueueDemo, renderRow, renderCard } from "./triage";
 import { PipelineDemo } from "./pipeline";
+import { FillDemo } from "./fill";
 
 export const BucketQueueShowcase: Component = () => {
   return (
@@ -118,6 +119,32 @@ export const BucketQueueShowcase: Component = () => {
         overrides it, because it owns the selection outright. No prop, no mode.
       </p>
       <PipelineDemo />
+
+      <SubsectionTitle>
+        fill — reaching the bottom, and one row height per bucket
+      </SubsectionTitle>
+      <p class="text-meta">
+        The base model <strong>shrink-wraps</strong>: populated buckets take
+        their content and any leftover height simply goes unallocated. That is
+        right for a bar floating in a page and wrong for a queue in a fixed
+        column with a control pinned under it — the leftover shows up as a band
+        of dead space above that control, and it grows the shorter the list is.{" "}
+        <code>fill</code> is the opt-in that gives the remainder to a nominated
+        bucket. It <em>overrides</em> <code>capRows</code> for that bucket: the
+        cap exists to stop content-driven growth, not to refuse space nothing
+        else wants. Only a populated bucket fills, so an empty one never
+        stretches its &ldquo;nothing here&rdquo; strip over the pane.
+      </p>
+      <p class="text-meta">
+        This bench also pins the sizing fix that shipped with it. The queue
+        measures <strong>one row per bucket</strong>, not one row for the whole
+        bar: here single-line <strong>Balances</strong> rows sit above two-line{" "}
+        <strong>Configs</strong> rows, and sizing the second from the first left
+        it roughly half as tall as its content while its body scrolled. A bucket
+        with nothing to measure yet borrows the topmost measured sibling before
+        falling back to a constant.
+      </p>
+      <FillDemo />
     </div>
   );
 };
