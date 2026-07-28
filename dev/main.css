@@ -1589,6 +1589,22 @@
 .split-queue-list-demo__narrow {
   width: 320px;
 }
+.bucket-queue-demo {
+  width: 360px;
+  height: 460px;
+}
+/* Same bar, two-line cards — a taller box so the water-fill has room to show
+   populated sections shrink-wrapping rather than immediately overflowing. */
+.bucket-queue-cards-demo {
+  width: 400px;
+  height: 620px;
+}
+/* Five stages: deliberately SHORTER than five sections' natural content so the
+   water-fill is actually in overflow and the weights/caps do visible work. */
+.bucket-queue-pipeline-demo {
+  width: 400px;
+  height: 520px;
+}
 .removable-item-card-demo {
   max-width: 280px;
 }
@@ -2602,4 +2618,23 @@ th:has(.tf-th-center) .hud-table__header-content {
 .jtf-catalog-pane > * {
   flex: 0 1 auto;
   min-height: 0;
+}
+
+/* Bench frames — a showcase's demo geometry belongs in a class, not an inline
+   style, so the teaching surface models what the rule asks of src. */
+
+/* goose-sr01a: the table unit is capped to a tile-like width so the record
+   count aligns with the table's right edge. */
+.sr01a-table-unit {
+  width: 34rem;
+  max-width: 100%;
+}
+
+/* split-queue: a definite-height flex context, so the fill-parent bar has a
+   height to fill. */
+.split-queue-frame {
+  max-width: 460px;
+  margin-top: 12px;
+  height: calc(100vh - 220px);
+  display: flex;
 }

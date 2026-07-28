@@ -2,20 +2,244 @@
 
 ## [Unreleased]
 
-## 0.113.3
+### Added
+
+- **`FileDropZone`** — a drop target that is also a click-to-browse picker
+  (`FileDropTarget`, `CompactFileDropTarget`). It validates the extension,
+  shows a self-clearing rejection notice derived from `accept`
+  (`PDF only — drop a .pdf file`), and hands the file to the caller; upload,
+  parsing and results stay the caller's. Keyboard-operable (Enter/Space,
+  without the page scrolling under it) and `aria`-labelled. Owns a minimal
+  structural CSS file for the dashed outline, its drag-over/disabled states
+  and the two densities — the same documented exception `Fab` carries, because
+  a dashed target is not expressible as a `Surface` variant and the drag-over
+  highlight is a state of the component, not of the surface scale. Added
+  because two consumers had hand-rolled it, one of them carrying a code
+  comment asking upstream for exactly this.
+- **`SlotCard` gained an `error` slot, an `action` prop, and two templates.**
+  `error` is a danger-toned line at priority 1 (a failure reason never drops).
+  `action` (`{ label, onClick }`) mounts a trailing SUI-chosen ghost button on
+  templates configured for it — typed rather than a JSX slot so SUI keeps
+  owning the button variant — and its click never reaches the card's
+  `onSelect`. New templates: `DenseStatusNote` (`DenseStatusRow` plus the
+  failure line) and `TitleAssetProgress` (`TitleProgress` plus a
+  sub-identifier and the action). Together they cover a work queue's running,
+  queued and finished cards.
+- **`NoShrinkColumn`** — a Layout variant that keeps its intrinsic width in a
+  flex row (`flex-shrink:0`) while stacking its children. The column sibling
+  of `NoShrinkClusterRow`: pair it with `GrowColumn` when a fixed data column
+  (timestamps, IDs) sits beside a prose column that absorbs the slack.
+- **`SectionTable` + `TableSectionHeader`** — a table that groups its rows
+  under section headers, and the composable header itself (title + record
+  count on one line).
+- **`CashflowScrubChart` gained `yPadFraction`** — an optional tight,
+  zero-independent y-domain.
 
 ### Fixed
 
-- **`observeSize` applied library-wide — all 16 remaining measuring components migrated.** 0.113.2 fixed three components; every other component still constructed a raw `ResizeObserver` writing signals synchronously, so the warning kept reproducing (several offenders render many times per page — `ResponsiveMoney` once per money cell, `createTruncationObserver` once per truncatable cell, `MultiSelectFilter` once per filter). Migrated: `MultiSelectFilter`, `ResponsiveMoney`, `createTruncationObserver`, `useContainerNarrow`, `ScrollRegion`, `OverflowNav`, `ProgressionQueue`, `SplitQueueList`, `StaticSplitLayout`, `MessageBubble`, `CashflowChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`, `ThroughputChart`, `StatusFlowChart`, `DagChart`. No public props changed; each component's measurement logic is untouched — only the scheduling. `src` now contains exactly one `new ResizeObserver`, inside the primitive.
-- **`MessageBubble` leaked its ResizeObserver.** It was never disconnected (the component didn't even import `onCleanup`), so the observer outlived every unmounted bubble. Now disposed via `onCleanup`.
-- **`observeSize` tolerates entries without size data.** Polyfills and test doubles dispatch minimal `{ target }` entries; the primitive now falls back to measuring the element rather than throwing on `contentRect.width`.
-- `CashflowChart` and `AnimatedSwimlaneChart` had grown their own private rAF workarounds for this warning; both now defer to the shared primitive, so the behaviour is defined in one place.
+- **A `SlotCard` row whose every slot is absent now renders no element at
+  all**, so it costs neither markup nor the stack's gap. This is what lets a
+  template carry a conditional row (`DenseStatusNote`'s error line) without a
+  succeeded card growing a blank line.
+- **`SlotCard`'s overlay cards reserve room for their overlays.** The corner
+  badge and the remove glyph were landing on the first line of text as soon as
+  the text was long enough to reach the corners. The remove ✕ is now revealed
+  on hover or keyboard focus rather than always showing, so a resting list
+  isn't a wall of ✕.
+- **A vertical `Divider` collapsed to nothing in its most common host.**
+  `height: 100%` has no definite basis to resolve against in a flex row sized
+  by its content, so the rule simply didn't render. It now spans the row via
+  `align-self: stretch`, keeping `min-height: 100%` for parents that do have a
+  definite height.
+- **`observeSize` applied library-wide.** Every remaining measuring component
+  constructed a raw `ResizeObserver` writing signals synchronously, which
+  re-queues the observer inside the browser's own delivery phase and produces
+  "ResizeObserver loop completed with undelivered notifications" (several
+  offenders render many times per page — `ResponsiveMoney` once per money
+  cell, `createTruncationObserver` once per truncatable cell). Migrated:
+  `MultiSelectFilter`, `ResponsiveMoney`, `createTruncationObserver`,
+  `useContainerNarrow`, `ScrollRegion`, `OverflowNav`, `StaticSplitLayout`,
+  `MessageBubble`, `CashflowChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`,
+  `ThroughputChart`, `StatusFlowChart`, `DagChart`. No public props changed
+  and no measurement logic moved — only the scheduling. (`BucketQueue`, which
+  landed on main after this work, still runs its own multi-element observer.)
+- **`MessageBubble` leaked its ResizeObserver** — it was never disconnected,
+  so the observer outlived every unmounted bubble. Now disposed via
+  `onCleanup`.
+- **`observeSize` tolerates entries without size data.** Polyfills and test
+  doubles dispatch minimal `{ target }` entries; the primitive falls back to
+  measuring the element rather than throwing on `contentRect.width`.
 
-## 0.113.2
+## 0.115.0
+
+### Added
+- **`NotificationCenter` gained `when`, `read`, and `onMarkAllRead`.** `when` is
+  a pre-formatted relative time the consumer humanizes ("2m", "1d") — SUI ships
+  no date formatter, so the string crosses the boundary already rendered. `read`
+  drops an item's unread dot and removes it from the derived badge count.
+  `onMarkAllRead` is what MOUNTS the pinned footer action: omit it and neither
+  the footer nor its divider render, so the panel never shows a dead affordance.
+  `markAllReadLabel` overrides the wording. All three are optional and additive.
+- **`NotificationItem.tone` is now live.** It was declared in the props from the
+  start and never rendered. It now colours the row's glyph well and picks the
+  glyph (`info` → info, `task` → clock, `warning` → warning), defaulting to
+  `info`.
+- **`GrowTightStack`** — a Layout variant that grows to fill its share of a
+  parent row and may shrink past its content (`flex:1; min-width:0`) while
+  stacking its children with an `xs` gap. The tight sibling of `GrowStack`
+  (whose `sm` gap reads as separate sections) for the text column of a
+  media-object row. Added because the geometry had no variant — per the
+  layout-purity rule, the missing variant is the finding.
+
+### Changed
+- **`NotificationCenter`'s panel is now an inbox, not a card stack.** Pinned
+  header (label + de-emphasized count lozenge), scrolling rows, optional pinned
+  footer. Rows became unboxed media objects — unread gutter, tone glyph well,
+  text column — washed and bordered only on hover, so a long feed stays quiet at
+  rest. This supersedes the three-line `CompactSurface` card canon the component
+  shipped with; the only `Surface` in the panel is now the `PopoverSurface`.
+  Precedent recorded in `docs/agents/design-decision-tree.md`, which also gains
+  a *Notification / activity panel* branch it was missing.
+- **`NotificationCenter`'s bell now has hover and open states.** It previously
+  had neither — a bare transparent button, with nothing tying it to the panel
+  hanging off it. It now takes a faint accent wash on hover, and while open an
+  accent-tinted well with an accent border **plus** the glyph swapping
+  `outline`→`solid`. Two independent signals, so the state survives a monochrome
+  or colourblind theme. The open skin matches
+  `.sui-dropdown--subtle.sui-dropdown--open`. The trigger also gained a fixed
+  32px box so its corner badge clears the glyph instead of sitting on it, and
+  the badge is ringed in the background colour to punch out of the open tint.
+- **The derived badge count now excludes `read` items** as well as `transient`
+  ones. Unchanged for consumers that never set `read`.
 
 ### Fixed
+- **`Link` now carries a type scale (13px/500) instead of inheriting one.** It
+  declared only colour, decoration, and cursor, and appears in no theme — so it
+  rendered at whatever font-size it happened to inherit, the document's 16px in
+  practice. Inside any dense component that made an inline link *larger than the
+  0.875rem title above it*, and made it silently disagree with a sibling
+  `TextButton` rendering the same affordance. 13px/500 matches `.sui-btn` in
+  `themes/_baseline.css` deliberately: a text button and an inline link are
+  alternate renderings of the same inline action — one navigates, one calls back
+  — so a component that picks between them by `href` presence must not change
+  size as a result. **Consumer-visible**: an app using `<Link>` in 16px prose
+  will see those links render at 13px; wrap them in the appropriate `Text`
+  variant if you want the prose scale back.
+- **`NotificationCenter`'s two action branches no longer sit at different
+  indents.** The `href` branch used `NavLink`, which is a nav-RAIL item and bakes
+  `padding-left:16px` — so a link CTA rendered ~16px right of a `TextButton` CTA
+  in the row above it. It now uses `Link` (the unpadded accent anchor, the right
+  atom for an inline CTA), and both branches are wrapped in a `ClusterRow` so
+  they size to their content and left-pack instead of stretching as column
+  children and centring their own labels.
+- **`NotificationCenter` item titles use `TextTitle` instead of `TextValue`.**
+  `TextValue` is `1.5rem/600` — the metric-readout variant, for numbers like
+  "42.3". Against the `0.75rem` detail line that was a 2× scale jump inside a
+  340px popover, so a long title rendered as a five-line headline slab.
 
-- **Measuring components no longer trigger "ResizeObserver loop completed with undelivered notifications."** `ScrubChart` (both observers — the chart frame and the inner `DateAxis` scroll element), `DateAxis` (its own viewport observer) and `StatusCard` wrote signals **synchronously inside** the `ResizeObserver` callback. That write re-renders during the browser's own notification-delivery phase, which mutates layout and re-queues the observer in the same frame; the browser aborts the loop and emits the warning. Reproduced on a window drag over a `ScrubChart`. New shared helper `observeSize()` (`src/internal/dom/observeSize`) applies the two defences together: a **change-guard** (an unchanged rounded box size never reaches the callback — most fires during a drag carry an identical size) and **rAF deferral with coalescing** (the surviving call runs after delivery finishes; a pending frame is cancelled and rescheduled so only the newest measurement lands, and the disposer cancels it so an unmounted component can't write to a disposed signal). Deliberately not a debounce — that would make the chart visibly lag a drag. Folds in the private workarounds this pattern had already grown ad hoc (`CashflowChart`, `AnimatedSwimlaneChart` keep their own equivalents for now). No public API, prop or visual change; `ScrubChart`/`CashflowScrubChart` consumers are unaffected. Two behavioural notes: measured sizes are now **rounded** (sub-pixel layout jitter was a primary loop driver and no consumer needs sub-pixel resolution), and a measurement now lands **one frame after** the resize rather than synchronously — including that a component mounted in a background tab measures when the tab is next rendered, since `requestAnimationFrame` is frozen while hidden.
+## 0.114.0
+
+### Added
+- **`fn.find`, `fn.findLast`, `fn.findIndex`, `fn.some`** — four more data-last
+  helpers in the same dual (curried / direct) shape as `map` and `filter`.
+  `find` and `findLast` carry the type-guard overload. `findLast` exists so a
+  backward search needs no `.reverse()` link, which the house style forbids.
+
+### Fixed
+- **`Icon`'s `edit` and `trash` glyphs are now visible in the gallery.** Both
+  existed in `ICON_PATHS` and were exported, but neither appeared in any
+  `ICON_GROUPS` array — and the showcase renders the groups, so the two were
+  undiscoverable to anyone browsing the icon set. A test now asserts that
+  `ICON_GROUPS` covers every `ICON_PATHS` entry exactly once, and that no group
+  lists a name with no path. No API change; both names already worked.
+- **Bucket sizing no longer assumes a particular `renderItem`.** Four fixes, all
+  in service of a consumer rendering whatever it likes:
+  `.bucket-queue__row:first-child` used `border-top: none`, making that one row
+  1px shorter than the rest — since sizing measures one row and multiplies by
+  the count, every bucket under-counted by `(rows − 1)` px and scrolled a sliver
+  it had room for (it now hides the border with `transparent` rather than
+  removing it); the measured row is taken from the first *populated* bucket
+  (bucket 0 is routinely empty, and measuring nothing left everything on the
+  `ROW_FALLBACK` constant); the empty strip is measured too, since `emptyLabel`
+  is consumer JSX and can wrap; and the `ResizeObserver` now watches the
+  row/header/strip rather than only the root, on the `border-box` — a theme
+  switch, a late web font or a changed `renderItem` resizes a row without
+  resizing the root, so a root-only content-box observer never re-fired.
+
+  **Known limitation:** the model measures one row and multiplies, so rows must
+  be uniform within a queue. A `renderItem` whose height varies per item makes
+  each bucket's natural height an estimate.
+
+### Changed
+- **BREAKING — `ProgressionQueue` is renamed `BucketQueue`.** 0.113.1 exported
+  `ProgressionQueue`; that name is gone, with no alias. "Progression" implied
+  stepwise forward movement the component never had — direction and distance
+  fall out of bucket order, and a move from bucket 3 to bucket 1 is not
+  special-cased. Renamed with it: the `sections` prop is now `buckets`, the
+  `ProgressionSection` type is now `Bucket`, and the `.prog-queue__*` /
+  `data-pq-*` hooks are now `.bucket-queue__*` / `data-bq-*` (`.prog-queue__section`
+  specifically becomes `.bucket-queue__bucket`). Consumers importing only
+  `SplitQueueList` are unaffected.
+- **BREAKING — `onSelect` widens to `(key: string | null) => void`.** `null`
+  means the worked bucket drained, so a consumer can clear its detail panel. It
+  fires only from the triage advance, never from a click. **`strict: true` does
+  not reliably catch this**: passing a Solid `Setter` directly
+  (`onSelect={setSelected}`) still compiles, because `Setter`'s overloads absorb
+  the wider parameter — and then stores `null` in your signal. Grep for
+  `onSelect={setX}` rather than trusting the compiler; the fixed form is
+  `onSelect={(k) => setSelected(k ?? undefined)}`.
+- **`BucketQueue` is now the library's single queue component.** It gains
+  multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to buckets
+  marked `selectable`), roving-focus keyboard navigation
+  (`focusedKey` / `onFocusChange`), `scrollToKey`, per-bucket `emptyLabel`, and
+  a transfer animation played whenever an item's `bucketOf` result changes.
+- **Moving the selected item advances the selection** to the next item still
+  waiting in the bucket it left (successor taken from the source bucket's
+  pre-move order, skipping anything that departed in the same batch). Processing
+  the tail falls back *up* rather than jumping to the top; draining the bucket
+  fires `onSelect(null)`. The roving tab stop follows; DOM focus deliberately
+  does not move.
+- **`renderItem` now returns bare content** — the row owns its padding, so a
+  selected row's accent bar can never touch consumer content and the header,
+  rows and empty strip share one left edge.
+- **Checked rows no longer paint a background fill.** Checking is a bulk action,
+  so the tint became a band of low-contrast rows that fought the hover fill. The
+  filled checkbox is now the entire treatment.
+- **A selected row no longer paints a background fill** — it keeps only the inset
+  accent bar, and hover owns the fill. The previous persistent fill sat behind
+  row text at too low a contrast.
+
+### Deprecated
+- **`SplitQueueList` is a compile shim over `BucketQueue`** and is removed in
+  the next major. It is **not** pixel-identical — the merged component draws its
+  own chrome. `topCapRows` maps to the resolved bucket's `capRows`;
+  `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
+  ignored. `static` mode still delegates to
+  `StaticSplitLayout`, which is **not** deprecated.
+
+### Removed
+- `SplitQueueList`'s two-pane animation engine (`flight`, `play`, `flip`,
+  `arrival`, `animation`, and its `layout` module) — ~2,700 lines. Its
+  `keyboard` module was not removed — it moved (and was adapted) to
+  `BucketQueue/keyboard.ts`.
+
+### Migration
+Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
+
+```tsx
+<BucketQueue<T>
+  buckets={[
+    { key: "done", label: "Categorized", tone: "success" },
+    { key: "todo", label: "Suggestions", tone: "accent", selectable: true },
+  ]}
+  items={[...resolved, ...unresolved]}
+  bucketOf={(i) => (isDone(i) ? "done" : "todo")}
+  keyOf={(i) => i.key}
+  renderItem={renderRow}
+/>
+```
+
+There is no `selectMode` prop — pass `checkedKeys` to turn select mode on.
 
 ## 0.113.1
 
@@ -56,7 +280,7 @@
 
 ### Added
 
-- **`ProgressionQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present sections into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every section shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty section collapses to just its summary line; a populated section shrink-wraps; when the populated sections overflow the height they share it by `weight`, each capped at its content, so a section that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each section label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `sections`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
+- **`BucketQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present buckets into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every bucket shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty bucket collapses to just its summary line; a populated bucket shrink-wraps; when the populated buckets overflow the height they share it by `weight`, each capped at its content, so a bucket that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each bucket label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `buckets`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
 
 ## 0.110.0
 

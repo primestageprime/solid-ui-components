@@ -1,4 +1,5 @@
-// TableSectionHeader — a composable header for a table/section: the title on the
+// TableSectionHeader — Composite (Depth 2, zero CSS).
+// A composable header for a table/section: the title on the
 // left and a record count (or custom meta) pushed to the RIGHT on the SAME line
 // (space-between, baseline-aligned). Pairs a section title with its row count
 // above a table without stacking two separate lines.

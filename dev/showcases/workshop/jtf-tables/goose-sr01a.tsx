@@ -120,7 +120,7 @@ function DayBreakdownGridDemo() {
       {/* TABLE UNIT — header + table bound together (SectionTable). Capped to a
           tile-like width; the record count aligns with the table's right edge
           because they share this one container. Plain div only sizes the unit. */}
-      <div style={{ width: "34rem", "max-width": "100%" }}>
+      <div class="sr01a-table-unit">
         <SectionTable
           title="Top Customers"
           total={TOP_CUSTOMERS.length}

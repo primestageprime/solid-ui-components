@@ -189,7 +189,7 @@
       "proportion",
       "paint"
     ],
-    "src/components/ProgressionQueue/ProgressionQueue.tsx": [
+    "src/components/BucketQueue/BucketQueue.tsx": [
       "measured"
     ]
   },

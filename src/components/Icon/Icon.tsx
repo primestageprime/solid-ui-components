@@ -36,6 +36,8 @@ export const ICON_GROUPS = {
     "refresh",
     "download",
     "pause",
+    "edit",
+    "trash",
   ] as const,
   ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
