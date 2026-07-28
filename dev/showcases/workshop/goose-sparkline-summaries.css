@@ -45,10 +45,11 @@
    it is identical. Neutral, so it never competes with the trend-coloured
    range box inside it. */
 .gs-dist__plot {
-  fill: none;
-  stroke: var(--sui-border);
+  fill: var(--sui-bg-deep);
+  fill-opacity: 0.7;
+  stroke: var(--sui-border-bright);
+  stroke-opacity: 0.9;
   stroke-width: 1;
-  opacity: 0.55;
 }
 
 /* Solid outlined translucent box = the full min..max range. */
