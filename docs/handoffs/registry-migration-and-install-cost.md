@@ -290,8 +290,25 @@ build on a resolve path that has only ever been exercised in local dev. It will
 resolve SUI to `src/index.ts` and compile SUI's source rather than consuming the
 prebuilt `dist`.
 
-This consequence is read from the code, **not measured** — nobody has yet built
-thorcasting-ui against v0.126.0. Doing so is a reasonable first step.
+### The detection is confirmed broken, and the fix confirmed correct
+
+Measured against a real v0.126.0 install and a real symlink, rather than
+inferred:
+
+| | `existsSync(pkg/src)` (current) | `lstatSync(pkg).isSymbolicLink()` (fix) |
+|---|---|---|
+| Normal install, v0.126.0 | **`true`** ❌ | `false` ✅ |
+| Symlinked, as `npm link` produces | `true` ✅ | `true` ✅ |
+
+The current check returns `true` in **both** cases — against v0.126.0 it carries
+no signal at all and can never select dist mode again. The proposed check is
+correct in both directions. thorcasting-ui declares no npm `workspaces`, so
+nothing else in that repo symlinks packages into `node_modules` and would
+confuse the new check.
+
+**Still unmeasured:** what a full thorcasting-ui production build against
+v0.126.0 actually does downstream once source mode engages. Building it in a
+throwaway branch remains a reasonable first step.
 
 ### Fix
 
