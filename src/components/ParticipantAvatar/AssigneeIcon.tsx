@@ -27,7 +27,7 @@
 // "P"), derive them once with `deriveInitials(names)` from ./initials and feed
 // the result in — this component does not disambiguate on its own.
 // ============================================
-import { Component, JSX, Show, mergeProps } from "solid-js";
+import { type Component, type JSX, Show, mergeProps } from "solid-js";
 import "./AssigneeIcon.css";
 
 export interface AssigneeIconProps {

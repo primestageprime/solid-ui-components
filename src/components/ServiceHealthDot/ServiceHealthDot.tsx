@@ -55,11 +55,21 @@ export const ServiceHealthDot: Component<ServiceHealthDotProps> = (props) => {
   const rootClass = () =>
     `sui-service-health-dot sui-service-health-dot--${isAlive() ? "alive" : "dead"}`;
 
+  // Disclosure button, not a decorative span: the popover is the only place
+  // the sparkline and age readout exist, so a hover-only trigger hides them
+  // outright from keyboard and AT users. A real <button> earns tab-order
+  // placement natively; focus/blur mirror enter/leave so both routes reveal
+  // the same thing. Activation is deliberately a no-op — reaching the control
+  // (by pointer or by tab) is itself the reveal.
   return (
-    <span
+    <button
+      type="button"
       class={rootClass()}
+      aria-expanded={hovered()}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
     >
       <span
         class="sui-service-health-dot__dot"
@@ -73,11 +83,14 @@ export const ServiceHealthDot: Component<ServiceHealthDotProps> = (props) => {
         {props.name}
       </span>
 
+      {/* <span>s, not <div>s: the root is a <button>, whose content model is
+          phrasing content. CSS gives them block/flex display, so the rendered
+          box model is unchanged. */}
       <Show when={hovered()}>
-        <div class="sui-service-health-dot__popover">
-          <div class="sui-service-health-dot__popover-header">
+        <span class="sui-service-health-dot__popover">
+          <span class="sui-service-health-dot__popover-header">
             {props.name} — {ageLabel()}
-          </div>
+          </span>
           <HeartbeatSparkline
             state={isAlive() ? "connected" : "error"}
             samples={props.samples}
@@ -85,12 +98,12 @@ export const ServiceHealthDot: Component<ServiceHealthDotProps> = (props) => {
             height={24}
             pulse={isAlive()}
           />
-          <div class="sui-service-health-dot__popover-footer">
+          <span class="sui-service-health-dot__popover-footer">
             <span>{Math.round(threshold() / 1000)}s ago</span>
             <span>now</span>
-          </div>
-        </div>
+          </span>
+        </span>
       </Show>
-    </span>
+    </button>
   );
 };

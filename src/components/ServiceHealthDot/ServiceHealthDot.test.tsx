@@ -51,4 +51,26 @@ describe("ServiceHealthDot", () => {
     fireEvent.mouseEnter(container.querySelector(".sui-service-health-dot")!);
     expect(container.querySelector(".sui-service-health-dot__popover")).toBeTruthy();
   });
+  it("keyboard focus reveals the popover, blur hides it", () => {
+    const { container } = render(() => (
+      <ServiceHealthDot name="broker" ageMs={1000} samples={[0.1, 0.2]} />
+    ));
+    const root = container.querySelector(".sui-service-health-dot") as HTMLElement;
+    fireEvent.focus(root);
+    expect(container.querySelector(".sui-service-health-dot__popover")).toBeTruthy();
+    fireEvent.blur(root);
+    expect(container.querySelector(".sui-service-health-dot__popover")).toBeNull();
+  });
+  it("the root is focusable and announces its disclosure state", () => {
+    const { container } = render(() => (
+      <ServiceHealthDot name="broker" ageMs={1000} samples={[0.1, 0.2]} />
+    ));
+    const root = container.querySelector(".sui-service-health-dot") as HTMLElement;
+    // A real <button> — reachable in the tab order with no tabindex juggling.
+    expect(root.tagName).toBe("BUTTON");
+    expect(root.getAttribute("type")).toBe("button");
+    expect(root.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.focus(root);
+    expect(root.getAttribute("aria-expanded")).toBe("true");
+  });
 });

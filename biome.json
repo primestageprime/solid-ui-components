@@ -53,6 +53,30 @@
   },
   "overrides": [
     {
+      "includes": ["src/fn/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noArguments": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "src/test-utils/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "recommended": false
+          },
+          "suspicious": {
+            "noExplicitAny": "warn",
+            "noApproximativeNumericConstant": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["dev/**"],
       "linter": {
         "rules": {

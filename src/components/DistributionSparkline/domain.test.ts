@@ -26,7 +26,7 @@ describe("percentileOf", () => {
 describe("p95DomainOf", () => {
   it("excludes the extremes so one spike cannot set the scale", () => {
     const quiet = Array.from({ length: 100 }, () => 50);
-    const [lo, hi] = p95DomainOf([quiet, [50, 50, 1000]]);
+    const [, hi] = p95DomainOf([quiet, [50, 50, 1000]]);
     // The spike is way outside the returned domain — that is the point.
     expect(hi).toBeLessThan(1000);
   });

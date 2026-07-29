@@ -6,7 +6,7 @@
 // completion bar, colored by severity (all-done green → mostly-remaining red).
 // Data-only (no curried variant needed — everything is data, like SortableList).
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import "./GapCell.css";
 
 export type GapSeverity = "success" | "warning" | "danger";

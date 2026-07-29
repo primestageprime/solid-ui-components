@@ -39,7 +39,8 @@ export const DayOfWeekPicker: Component<DayOfWeekPickerProps> = (props) => {
   // size is the frozen --dom-cell-size fallback (3.5rem) shared with
   // DayOfMonthPicker — baked into the columns track and cell CSS.
   return (
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the day-of-week cell layout
+    // a11y — intentional ARIA grid pattern; native <table> would break the
+    // day-of-week cell layout.
     <Grid
       columns="repeat(7, var(--dom-cell-size, 3.5rem))"
       gap="xs"

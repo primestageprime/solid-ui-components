@@ -51,11 +51,23 @@ export function EntityCard(props: EntityCardProps): JSX.Element {
     props.progress !== undefined ||
     props.counts !== undefined;
   return (
+    // Conditionally interactive: `role`/`tabIndex`/`aria-pressed`/keydown are
+    // wired together or not at all, so whenever `aria-pressed` is present the
+    // element genuinely IS `role="button"` and Enter/Space activate it (see the
+    // keyboard test). Biome evaluates each attribute independently and cannot
+    // see that correlation, hence the two suppressions below.
+    //
+    // This deliberately stays a <div role="button"> rather than a real
+    // <button>: the card hosts the `onRemove` ✕ button, and nesting a button
+    // inside a button is invalid HTML that browsers reparent — which would
+    // break the remove control outright.
+    // biome-ignore lint/a11y/noStaticElementInteractions: see above — the click handler ships together with role="button", tabIndex and an Enter/Space keydown handler; the div is interactive exactly when the handlers exist.
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: see above — `aria-pressed` is only ever emitted on the same condition that emits role="button", where it is a supported attribute.
     <div
       class={`sui-entity-card${props.class ? ` ${props.class}` : ""}`}
       classList={{ "sui-entity-card--selected": !!props.selected }}
       role={props.onClick ? "button" : undefined}
-      tabindex={props.onClick ? 0 : undefined}
+      tabIndex={props.onClick ? 0 : undefined}
       aria-pressed={props.onClick ? !!props.selected : undefined}
       onClick={() => props.onClick?.()}
       onKeyDown={(e) => {

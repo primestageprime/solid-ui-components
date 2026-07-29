@@ -84,6 +84,7 @@
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
     "lint": "biome lint src",
+    "lint:ci": "biome lint src --error-on-warnings",
     "lint:fix": "biome lint --write src",
     "lint:all": "biome lint",
     "format": "biome format",

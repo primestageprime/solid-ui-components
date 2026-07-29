@@ -13,7 +13,7 @@
 // The raw props on the base are escape hatches only. Centering comes from the
 // composed CenteredStack; the box owns only appearance + width/min-height
 // (no flex/grid geometry) — layout purity.
-import { type Component } from "solid-js";
+import type { Component } from "solid-js";
 import { CenteredStack } from "../Layout";
 import { TextSublabel } from "../Text";
 import "./Placeholder.css";
