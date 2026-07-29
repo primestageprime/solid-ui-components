@@ -16,7 +16,9 @@ describe("assertModifierClass", () => {
   let warn: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    document.head.querySelectorAll("style").forEach((s) => s.remove());
+    for (const el of Array.from(document.head.querySelectorAll("style"))) {
+      el.remove();
+    }
     warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.resetModules();
   });
