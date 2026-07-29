@@ -67,6 +67,10 @@
   "files": [
     "dist"
   ],
+  "_sideEffects": "PAIRED with output.preserveModules in vite.config.ts — see docs/adr/0005-per-module-dist-and-sideeffects.md. Neither setting does anything alone; together they let a consumer's bundler delete unused SUI modules AND the heavyweight deps they import (katex, d3-dag). Removing either silently re-adds ~318 KB to every consumer bundle. Guarded by scripts/build-config.test.ts.",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite --port 6006",
     "build": "npm run build:client && npm run build:server",
