@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.126.0
+
 ### Fixed
 - **`dist/index.css` was 78.1% base64-encoded KaTeX fonts**, downloaded by every
   user of every SUI-consuming app on first load, render-blocking — even though
