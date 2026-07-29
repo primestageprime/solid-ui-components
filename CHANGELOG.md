@@ -2,6 +2,91 @@
 
 ## [Unreleased]
 
+## 0.123.0
+
+### Added
+
+- **`WrapItemStack`, `LooseWrapRow`, `LooseCardGrid`** (Layout curried
+  variants). Purely additive — no existing variant or behaviour changed, no new
+  dependency, and the `--gap-xs` token is untouched (redefining 4px→8px would
+  collapse two scale steps across every consumer).
+  `WrapItemStack` holds ONE item in a `WrapRow` at its content's **natural**
+  width (`min-width:0; max-width:100%`, gap:xs). Deliberately **not** `flex:1`,
+  which is what separates it from every other `min-width:0` column
+  (`GrowStack`, `GrowTightStack`, `GrowColumn`, `ScrollColumn`, `GrowBox`): in a
+  WRAPPING row `flex:1` equalises the items, destroying the natural-width
+  packing a wrap row exists to do. Measured in a 600px row against a
+  567px-natural table — guards 567px, `GrowTightStack` 25px (crushed), bare
+  `TightStack` 567px; and with content wider than the row (1415px table) —
+  guards capped at 600 and scrolling internally, bare `TightStack` 1415px,
+  blowing the row out. Both guards are load-bearing.
+  `LooseWrapRow` and `LooseCardGrid` are the `sm` (8px) siblings of `WrapRow`
+  and `CardGrid`, which sit at `xs`. `LooseWrapRow` leaves `align` **unset**,
+  exactly as `WrapRow` does, so items take the flex default `stretch` and tiles
+  sharing a line render at equal height — the whole reason it exists rather
+  than reusing an `sm` wrap row that already ships (`WrappedClusterRow` centres
+  a short tile in a tall neighbour's band; `BaselineWrapRow` aligns by first
+  text line). `LooseCardGrid` keeps `CardGrid`'s auto-fit `minmax(280px, 1fr)`
+  tracks; only the gutter differs.
+
+### Fixed
+
+- **`MetricCard` fills its slot on both axes instead of shrink-wrapping.** It
+  was `display: inline-block`, so it filled its slot only when the slot happened
+  to match its content width; dropped into a grid cell, or inside a stretching
+  wrapper such as a `Tooltip` trigger, it rendered visibly narrower and ragged
+  beside un-wrapped siblings (measured on a report KPI row: triggers at
+  312/417px holding cards at 102–198px). `height: 100%` is the same defect on
+  the other axis — the wrapper already stretches to the row height but the card
+  stayed at its content height, so one taller sibling left the rest short
+  (triggers 106px, cards 79px). Both axes are fixed on the CARD, not by making
+  the trigger a flex container: that route was measured and rejected because it
+  stretches the card vertically but makes it shrink-wrap horizontally again as a
+  flex item, re-breaking the width (309px back to 213–217px), and it would stop
+  the trigger hugging its content — which is what places a glossed table header
+  inside a right-aligned `th`. Shrink-to-fit is unaffected where it applies: a
+  flex child sizes from `flex-basis: auto`, so a card in a flex row keeps its
+  content width (showcase: all 12 cards byte-identical on both axes). No API
+  change; a card that was shrink-wrapping inside a plain BLOCK container now
+  fills it — wrap it in a flex parent to restore the old sizing.
+- **`.sui-tooltip__trigger` inherits the text properties `font` does not
+  cover.** The trigger set `font: inherit`, but the shorthand covers only
+  family/size/weight/style/variant/line-height — not `text-transform`,
+  `letter-spacing`, `word-spacing` or `text-align` — and the trigger is a
+  Kobalte `<button>`, whose UA stylesheet resets them, so any content wrapped in
+  `<Tooltip>` lost an ancestor's casing and tracking. Most visible in table
+  headers, where `Table.css` pairs `text-transform: uppercase` with a
+  `letter-spacing` on every `th` rule. `text-align` is narrower than it looks:
+  the trigger is an inline-block, so while it hugs its text the ancestor's
+  alignment places the whole box; it surfaces once the content WRAPS — a
+  multi-word header in a narrow column fills that column and centres its text
+  inside what may be a right-aligned cell (measured: `Gross Profit Margin` in a
+  116px right-aligned `th` filled 114px and centred). The `--cell` modifier
+  still pins `left` for its own clip/ellipsis reasons. No API change.
+- **`BucketQueue` no longer constructs its own `ResizeObserver`.** It landed
+  after the 0.113.3 migration with a raw observer, putting `src` back to holding
+  one outside the primitive; it now routes through `observeSize`, so `src`
+  again contains exactly one `new ResizeObserver`, inside the primitive. Its
+  per-bucket row measurement (0.120.0) is unchanged — the re-pointing is now a
+  per-slot disposer map keyed by bucket rather than `unobserve`/`observe` on a
+  shared observer.
+
+### Changed
+
+- **`observeSize(el, cb, options?)`** takes an optional third argument,
+  forwarded verbatim to `observe()`. It exists for `{ box: "border-box" }`:
+  default content-box observation does not fire when only padding or a border
+  changes, so a callback measuring the BORDER box (`offsetHeight`) silently
+  stops responding to a themed padding change — no error, no warning, just stale
+  metrics. **Strictly additive**: omit it and behaviour is byte-identical, and no
+  existing caller changed. The change-guard and the rAF coalescing sit on the
+  single dispatch path, so they apply on the border-box path too — a `box`
+  option cannot become a way around the loop-safety the primitive exists for.
+- **`GrowStack` doc comment** now describes the variant rather than its first
+  call site — comment only, no API or behaviour change. It read "for a main
+  content column that takes its share of a two-column row", which excluded the
+  full-width page-column case it has always supported.
+
 ## 0.122.0
 
 ### Fixed
