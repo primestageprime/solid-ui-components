@@ -113,6 +113,12 @@ export interface DateCellProps
   /** Preset format or custom pattern string (e.g., "YYYY-MM-DD") */
   format?: "short" | "medium" | "long" | "iso" | string;
   locale?: string;
+  /**
+   * IANA time-zone identifier (e.g. "America/Los_Angeles"). When set, the date is
+   * formatted in that zone; when unset (default) the host system's local zone is
+   * used — identical behavior to before this prop existed. Matches `DateTimeCell`.
+   */
+  timeZone?: string;
 }
 
 export const DateCell: Component<DateCellProps> = (props) => {
@@ -126,7 +132,7 @@ export const DateCell: Component<DateCellProps> = (props) => {
 
     // Handle ISO format (default)
     if (format === "iso") {
-      return formatDatePattern(date, "YYYY-MM-DD");
+      return formatDatePattern(date, "YYYY-MM-DD", props.timeZone);
     }
 
     // Handle custom pattern strings (contains YYYY, MM, DD, etc.)
@@ -135,7 +141,7 @@ export const DateCell: Component<DateCellProps> = (props) => {
       format.includes("MM") ||
       format.includes("DD")
     ) {
-      return formatDatePattern(date, format);
+      return formatDatePattern(date, format, props.timeZone);
     }
 
     // Handle preset formats
@@ -146,10 +152,10 @@ export const DateCell: Component<DateCellProps> = (props) => {
       long: { month: "long", day: "numeric", year: "numeric" },
     };
 
-    return new Intl.DateTimeFormat(
-      locale,
-      formatOptions[format] || formatOptions.medium,
-    ).format(date);
+    return new Intl.DateTimeFormat(locale, {
+      ...(formatOptions[format] || formatOptions.medium),
+      ...(props.timeZone && { timeZone: props.timeZone }),
+    }).format(date);
   };
 
   return (

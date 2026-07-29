@@ -86,6 +86,25 @@ describe("CellRenderers — value + empty rendering", () => {
     expect(m.container.textContent).toContain("2026-01-15 08:30");
   });
 
+  it("DateCell honors timeZone, unlike the default host-local formatting", () => {
+    // A UTC instant just after midnight: still Jan 16 in UTC, but Jan 15
+    // in a zone west of UTC — the exact off-by-a-day case #68 reported.
+    const instant = new Date("2026-01-16T04:30:00Z");
+    const utc = render(() => (
+      <DateCell value={instant} format="iso" timeZone="UTC" />
+    ));
+    expect(utc.container.querySelector(".sui-value-date")?.textContent).toBe(
+      "2026-01-16",
+    );
+    cleanup();
+    const la = render(() => (
+      <DateCell value={instant} format="iso" timeZone="America/Los_Angeles" />
+    ));
+    expect(la.container.querySelector(".sui-value-date")?.textContent).toBe(
+      "2026-01-15",
+    );
+  });
+
   it("StatusCell renders a status pill with a label", () => {
     const { container } = render(() => <StatusCell value="active" />);
     expect(container.querySelector(".sui-value-status")).toBeTruthy();
