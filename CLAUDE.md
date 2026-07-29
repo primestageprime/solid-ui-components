@@ -17,14 +17,19 @@ Default canonical names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready
 
 Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
-### Cross-repo handoffs
+### Handoffs
 
-Work spanning SUI and its consumer repos goes in `docs/handoffs/` — a plan an
-agent in *another* repo can execute, with measurements and blockers already
-established so nothing gets re-derived. **If that directory exists, read it
-before touching consumption, packaging, or install behaviour.** It is absent
-whenever no such work is in flight: a handoff is deleted once its tasks land,
-and anything worth keeping moves to `docs/adr/` first.
+`docs/handoffs/` holds plans a fresh agent can pick up — in-flight work with its
+measurements, blockers and out-of-scope traps already established, so nothing
+gets re-derived. Sometimes that work spans SUI and a consumer repo; sometimes it
+is a map of the open issues here.
+
+**Read `docs/handoffs/open-work.md` before starting substantial work in this
+repo** — it lists what is open, what is deliberately *not* to be "fixed", and the
+ratchet/CI rules that will otherwise fail your PR.
+
+A handoff is deleted once its tasks land, and anything worth keeping long-term
+moves to `docs/adr/` first.
 
 ## Memory
 
