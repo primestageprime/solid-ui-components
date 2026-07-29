@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.125.1",
+  "version": "0.125.2",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -88,13 +88,13 @@
     "usage-manifest": "node scripts/usage-manifest.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
-    "lint": "biome lint src",
-    "lint:ci": "biome lint src --error-on-warnings",
+    "lint": "node scripts/lint-ci.mjs lint src",
+    "lint:ci": "node scripts/lint-ci.mjs lint src --error-on-warnings",
     "lint:fix": "biome lint --write src",
     "lint:all": "biome lint",
     "format": "biome format",
     "format:write": "biome format --write",
-    "check": "biome lint src && tsc --noEmit",
+    "check": "node scripts/lint-ci.mjs lint src && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -300,6 +300,33 @@ If you do end up diverged: don't force-push. Preserve the work on a branch,
 `[Unreleased]` entries against release sections added at the same anchor. Keep
 yours under `[Unreleased]`, theirs below.
 
+## Never verify with `npx <tool>` — it can resolve a different package
+
+**`npx biome` is not the linter.** The bare name resolves an unrelated package
+called `biome` (v0.3.3) from the registry, which exits 0 having linted nothing.
+On 2026-07-29 `@biomejs/biome` was declared in devDependencies and present in
+the lockfile but **not installed**, an agent verified its work with `npx biome`
+all day, and every "lint clean" it reported was a different tool succeeding at
+nothing. Three lint failures reached `main`, and one let a release publish from
+a red commit. The first was misdiagnosed as "I ran a narrower command than CI",
+and the same mistake was then repeated twice *on that diagnosis* — a wrong root
+cause does not merely fail to fix, it explains away the next instances.
+
+**Run the repo's own scripts** — `npm run lint`, `npm run lint:ci`, `npm run
+check`. They go through `scripts/lint-ci.mjs`, which resolves the SCOPED package,
+verifies the resolved name, and **exits non-zero with instructions if it cannot
+find the real thing**. It can never report success without having run.
+
+The general rule, which is the part worth carrying to other repos: **"tool
+absent" and "tool ran, all clean" must never be indistinguishable at the call
+site.** A missing gate that reports green is strictly worse than no gate — a
+repo with no linter is honest about it; a repo whose linter silently isn't there
+manufactures confidence. When a check never fails, suspect the checker.
+
+And when you add a gate, demonstrate **three** cases, not two: it passes clean,
+it fails on a real error, and **it fails when the tool is made unresolvable**.
+The third is the one nobody tests and the one that rots.
+
 ## Verifying in a browser: check the viewport before trusting geometry
 
 A tab that has never laid out reports `innerWidth`/`innerHeight` of **0×0**, and

@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+## 0.125.2
+
+### Fixed
+
+- **`lint`, `lint:ci` and `check` can no longer report success without having
+  run.** `@biomejs/biome` was declared in devDependencies and present in the
+  lockfile but **not installed**; verifying locally with `npx biome` resolved an
+  unrelated registry package called `biome` (v0.3.3) that exits 0 having linted
+  nothing. Every local "lint clean" was a different tool succeeding at nothing,
+  three lint findings reached `main`, and one let a release publish from a
+  commit whose CI then failed.
+
+  The defect is not "the tool was missing" — it is that **"tool absent" and
+  "tool ran, all clean" were indistinguishable at the call site.** That is
+  strictly worse than having no linter: a repo with no linter is honest about
+  it; a repo whose linter silently isn't there manufactures confidence.
+
+  These scripts now go through `scripts/lint-ci.mjs`, which resolves the
+  **scoped** package (so a stray `biome` on `PATH` or in the registry cannot
+  satisfy it), verifies the resolved name, prefers the package's own bin, and
+  **exits non-zero with instructions** if it cannot find the real thing.
+  Demonstrated against all three cases, including the one that normally goes
+  untested: passes clean (exit 0), fails on a real lint error (exit 1), and
+  fails loudly when `@biomejs/biome` is made unresolvable (exit 1, actionable
+  message) rather than passing vacuously.
+- **`AGENT_GUIDE.md`** records the hazard directly: never verify with
+  `npx <tool>`, run the repo's own scripts; when a check never fails, suspect
+  the checker; and a new gate must demonstrate three cases — clean, real
+  failure, and **tool unresolvable**.
+
 ## 0.125.1
 
 ### Changed
