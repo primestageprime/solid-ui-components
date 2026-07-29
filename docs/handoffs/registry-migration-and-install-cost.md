@@ -8,6 +8,22 @@ land.
 
 ---
 
+## Needs a human, not an agent
+
+Two things gate this work and no agent can resolve either:
+
+1. **`NPM_TOKEN` in thorcasting-ui's Cloudflare Pages build environment.** That
+   configuration lives outside every repo, so it cannot be read or set from a
+   checkout. **All of Task 1 waits on it, and doing Task 1 without it breaks the
+   production deploy.**
+2. **A review of [amygdala-ui#211](https://github.com/primestageprime/amygdala-ui/pull/211).**
+   One-line pin change plus lockfile. See "Already done" below for exactly what
+   was verified on it, so the review doesn't have to re-derive that.
+
+Everything else in this document is agent-executable.
+
+---
+
 ## Background: what the problem actually is
 
 `solid-ui-components/package.json` contains:
@@ -41,6 +57,30 @@ what happens**:
 **`prepack` is therefore the correct hook for "produce `dist` for the tarball"**
 — it fires for publishing and not for git-dep installs. But it only becomes safe
 to switch once no consumer resolves SUI via git.
+
+Because that table contradicts npm's published documentation, here is the probe
+that produced it — rebuild it rather than trusting either source:
+
+```jsonc
+// package.json of a throwaway package, committed to a local git repo
+{
+  "name": "hook-probe",
+  "version": "1.0.0",
+  "main": "index.js",
+  "files": ["index.js", "ran-*.txt"],
+  "scripts": {
+    "prepare": "node -e \"require('fs').writeFileSync('ran-prepare.txt','yes')\"",
+    "prepack": "node -e \"require('fs').writeFileSync('ran-prepack.txt','yes')\""
+  }
+}
+```
+
+Listing `ran-*.txt` in `files` is the trick: any hook that fires before packing
+leaves a marker *inside the installed package*. Then, from a separate consumer
+directory, `npm install "git+file:///path/to/hook-probe"` and list
+`node_modules/hook-probe/`. Only `ran-prepare.txt` appears. The control — plain
+`npm pack` in the probe itself — produces both markers, which is what proves the
+probe can detect `prepack` at all.
 
 ### The cost, measured
 
@@ -81,7 +121,26 @@ publish an empty package silently.
 **`amygdala-ui` — PR #211 open, awaiting merge.** `github:…#v0.98.0` →
 `npm:@primestageprime/solid-ui-components@0.98.0`. Same version; mechanism
 change only. All infrastructure was already present and merely unused for this
-dependency.
+dependency: `.npmrc` scoping `@primestageprime` to GitHub Packages, `NPM_TOKEN`
+in `ci.yml`, and a BuildKit secret mount in the `Dockerfile`.
+
+Verified before opening the PR, so a review need not repeat it:
+
+- `pnpm install --frozen-lockfile --prod=false` — the exact command the
+  Dockerfile runs — succeeds in **2s**. This matters because `--frozen-lockfile`
+  hard-fails on any lockfile/manifest mismatch, so it is also the check that the
+  regenerated `pnpm-lock.yaml` is correct.
+- Resolves `@primestageprime/solid-ui-components@0.98.0`; `dist/index.js` and
+  `dist/index.css` present.
+- `pnpm build` completes — vinxi client, server-fns, and Nitro server all built,
+  `.output/server/index.mjs` emitted.
+- Lockfile diff is 10 insertions / 6 deletions; only the SUI entry moved. It now
+  carries an `integrity` sha512, which the git-tarball entry did not have.
+
+**Not verified:** nothing exercised the running app, only the build. And 0.98.0
+is 28 minor versions behind current — deliberately left alone, since bundling an
+upgrade into a mechanism change would make any regression impossible to
+attribute.
 
 ## Consumer inventory
 
