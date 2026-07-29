@@ -102,6 +102,33 @@ Checked against `docs/usage-manifest.json`:
   (a bare `false` would ship unstyled components). Splitting CSS per component
   is a separate, unsolved problem.
 
+## The package also ships `src/`, and consumers must not read that as "linked"
+
+`files` is `["dist", "src"]` — `src/` became part of the published package in
+`ef99119`, first released in **v0.126.0**. That is deliberate: the `exports` map
+carries `"source": "./src/index.ts"` entries, and shipping `src` is what lets a
+consumer opt into source mode via the `source` resolve condition.
+
+**The consequence caught a consumer.** thorcasting-ui detected "SUI is
+npm-linked for local development" with
+`existsSync("node_modules/@primestageprime/solid-ui-components/src")`, on the
+premise that only a linked checkout has a `src/`. Measured against a real
+v0.126.0 install:
+
+| | `existsSync(pkg/src)` | `lstatSync(pkg).isSymbolicLink()` |
+|---|---|---|
+| Normal install | **`true`** ❌ | `false` ✅ |
+| Symlinked (`npm link`) | `true` ✅ | `true` ✅ |
+
+The path check returns `true` unconditionally from v0.126.0 onward — it carries
+no signal and can never select dist mode again, so a *production* build silently
+compiles SUI from source. The fix is to test for the symlink, which is what
+`npm link` actually creates, and it belongs in the consumer: removing `src` from
+`files` here would fix the misdetection by deleting the feature being
+misdetected.
+
+If another consumer grows source-mode detection, this is the trap to check for.
+
 ## Enforcement
 
 `scripts/build-config.test.ts` asserts both settings and fails with the

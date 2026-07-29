@@ -19,11 +19,12 @@ Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs
 
 ### Cross-repo handoffs
 
-`docs/handoffs/` holds in-flight work that spans SUI and its consumer repos —
-plans an agent in *another* repo needs, with the measurements and blockers
-already established so nothing gets re-derived. **Check it before starting work
-on consumption, packaging, or install behaviour**, and delete a handoff once its
-tasks have all landed.
+Work spanning SUI and its consumer repos goes in `docs/handoffs/` — a plan an
+agent in *another* repo can execute, with measurements and blockers already
+established so nothing gets re-derived. **If that directory exists, read it
+before touching consumption, packaging, or install behaviour.** It is absent
+whenever no such work is in flight: a handoff is deleted once its tasks land,
+and anything worth keeping moves to `docs/adr/` first.
 
 ## Memory
 
