@@ -13,6 +13,7 @@ import {
   TopSpreadRow,
   BaselineClusterRow,
   BaselineWrapRow,
+  LooseWrapRow,
   IconClusterRow,
   GrowClusterRow,
   GrowCenterRow,
@@ -28,6 +29,7 @@ import {
   PaddedStack,
   GrowColumn,
   GrowStack,
+  WrapItemStack,
   NoShrinkColumn,
   ClipColumn,
   ClipFillColumn,
@@ -44,6 +46,7 @@ import {
   NoShrinkScrollBox,
   // grids
   CardGrid,
+  LooseCardGrid,
   WideCardGrid,
   ChipGrid,
   LabelValueGrid,
@@ -84,6 +87,7 @@ const ROWS: VariantSpec[] = [
   { name: "TopSpreadRow", note: "title left, badge right, both pinned to the FIRST text line", Variant: TopSpreadRow },
   { name: "BaselineClusterRow", note: "a cluster sharing one text baseline — value + units", Variant: BaselineClusterRow },
   { name: "BaselineWrapRow", note: "the same, allowed to wrap on narrow widths", Variant: BaselineWrapRow },
+  { name: "LooseWrapRow", note: "WrapRow at the sm (8px) step — align left UNSET so tiles sharing a line stretch to equal height", Variant: LooseWrapRow },
   { name: "IconClusterRow", note: "icon-only buttons spaced ~one glyph apart", Variant: IconClusterRow },
   { name: "GrowClusterRow", note: "a cluster that itself grows inside a toolbar row", Variant: GrowClusterRow },
   { name: "GrowCenterRow", note: "grows and centres its content — a meta cell", Variant: GrowCenterRow },
@@ -102,6 +106,7 @@ const COLUMNS: VariantSpec[] = [
   { name: "GrowColumn", note: "takes its share of a row and may shrink past its content", Variant: GrowColumn },
   { name: "GrowStack", note: "the same with an sm gap between sections", Variant: GrowStack },
   { name: "NoShrinkColumn", note: "fixed data column beside a GrowColumn that absorbs the slack", Variant: NoShrinkColumn },
+  { name: "WrapItemStack", note: "one item in a WrapRow at its NATURAL width — shrinks so an inner fit table scrolls, capped at the row; deliberately not flex:1, which would equalise wrap items", Variant: WrapItemStack },
   { name: "ClipColumn", note: "clips whatever overflows rather than scrolling", Variant: ClipColumn, kind: "tall", bounded: true },
   { name: "ClipFillColumn", note: "fills the height it is given, clips the rest", Variant: ClipFillColumn, kind: "tall", bounded: true },
   { name: "ClipFillColumnFlush", note: "the same with no gap between children", Variant: ClipFillColumnFlush, kind: "tall", bounded: true },
@@ -121,6 +126,7 @@ const BOXES: VariantSpec[] = [
 
 const GRIDS: VariantSpec[] = [
   { name: "CardGrid", note: "dashboard tiles ≥280px, as many columns as fit", Variant: CardGrid, kind: "blocks" },
+  { name: "LooseCardGrid", note: "the same at the sm (8px) gutter — for a KPI strip needing more air", Variant: LooseCardGrid, kind: "blocks" },
   { name: "WideCardGrid", note: "the same for wide cards (≥420px)", Variant: WideCardGrid, kind: "wide" },
   { name: "ChipGrid", note: "many small equal cells (≥150px) — a filter bar", Variant: ChipGrid, kind: "chips" },
   { name: "LabelValueGrid", note: "a label column sized to its content beside a value column", Variant: LabelValueGrid, kind: "pairs" },

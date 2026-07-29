@@ -235,6 +235,22 @@ export const ActionWrapRow: Component<RowDataProps> = createRow({
   wrap: true,
   align: "center",
 });
+/** LooseWrapRow — `WrapRow` at the `sm` (8px) step instead of `xs` (4px), for
+ *  tile-to-tile spacing on a dashboard of breakdown widgets where the tighter
+ *  gap reads as crowding.
+ *
+ *  `align` is deliberately UNSET, exactly as in `WrapRow`. Items therefore take
+ *  the flex default `stretch`, which is what makes tiles sharing a line render
+ *  at equal height — the thing that separates this from the two `sm` wrap rows
+ *  that already exist. `WrappedClusterRow` (`align:center`) floats a short tile
+ *  in the middle of a tall neighbour's band, and `BaselineWrapRow`
+ *  (`align:baseline`) lines tiles up by their first text line, which lands
+ *  arbitrarily across tiles with different header heights. Do not add an align
+ *  here: this variant differs from `WrapRow` in the gap and nothing else. */
+export const LooseWrapRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  wrap: true,
+});
 export const FlexRow: Component<RowDataProps> = createRow({});
 
 // Baseline-aligned wrapping row — a row whose items share a text baseline and
@@ -455,11 +471,17 @@ export const NoShrinkColumn: Component<StackDataProps> = createStack({
   style: { "flex-shrink": 0 },
 });
 
-/** GrowStack — a column that grows to fill its share of a parent ROW and may
- *  shrink past its content (`flex:1; min-width:0`) AND stacks its own children
- *  with an `sm` gap. The gapped sibling of `GrowColumn` (which bakes no gap):
- *  for a main content column that takes its share of a two-column row and
- *  spaces its stacked sections. */
+/** GrowStack — a column that grows to fill its share of its parent
+ *  (`flex:1; min-width:0`) and spaces its children with an `sm` gap.
+ *
+ *  The `sm`-gap sibling of `ContentStack` (identical but for its `xs` gap) and
+ *  the gapped sibling of `GrowColumn` (which bakes no gap). Use for ANY
+ *  grow-and-space column — a main content column taking its share of a
+ *  two-column row, or a full-width page content column. The "share of a row"
+ *  phrasing this carried previously described its first call site rather than
+ *  the variant, and read as excluding the full-width case, which it has always
+ *  supported: with no competing flex sibling, `flex:1` simply fills the
+ *  parent. */
 export const GrowStack: Component<StackDataProps> = createStack({
   gap: "sm",
   style: { flex: "1", "min-width": "0" },
@@ -475,6 +497,25 @@ export const GrowStack: Component<StackDataProps> = createStack({
 export const GrowTightStack: Component<StackDataProps> = createStack({
   gap: "xs",
   style: { flex: "1", "min-width": "0" },
+});
+
+/** WrapItemStack — ONE item inside a `WrapRow`, held at its content's NATURAL
+ *  width (`min-width:0; max-width:100%`, gap:xs).
+ *
+ *  Deliberately NOT `flex:1`, which is what separates it from `GrowTightStack`
+ *  and every other `min-width:0` column here: in a WRAP row `flex:1` equalises
+ *  the items, so wide content gets crammed and narrow content stretched — it
+ *  destroys the natural-width packing the wrap row exists to do. Here the item
+ *  sizes to its content and simply wraps when the row fills.
+ *
+ *  The two guards do different jobs. `min-width:0` lets the item shrink past
+ *  its content so an inner element that owns its own scroll (a `fit` table)
+ *  scrolls internally instead of overflowing the page. `max-width:100%` caps it
+ *  at the row, so content wider than the entire row can't blow out the page
+ *  width. For a grid of naturally-sized table tiles. */
+export const WrapItemStack: Component<StackDataProps> = createStack({
+  gap: "xs",
+  style: { "min-width": "0", "max-width": "100%" },
 });
 
 /** Flex column that scrolls its own overflow — `flex:1; min-width:0;
@@ -597,6 +638,14 @@ export const InlineAppHeader: Component<AppHeaderDataProps> = createAppHeader({
 export const CardGrid: Component<GridDataProps> = createGrid({
   columns: "repeat(auto-fit, minmax(280px, 1fr))",
   gap: "xs",
+});
+
+// LooseCardGrid — CardGrid at the `sm` (8px) step instead of `xs` (4px). Same
+// auto-fit track sizing (≥ 280px); only the gutter differs. For a KPI strip
+// whose cards need more air between them than the tight default gives.
+export const LooseCardGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "sm",
 });
 
 // WideCardGrid — same responsive auto-fit behavior as CardGrid but with a wider

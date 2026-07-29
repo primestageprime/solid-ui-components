@@ -12,6 +12,13 @@ import {
   PageCanvas,
   ScrollPanel,
   PaddedStack,
+  WrapItemStack,
+  GrowTightStack,
+  WrapRow,
+  LooseWrapRow,
+  CardGrid,
+  LooseCardGrid,
+  WrappedClusterRow,
 } from "./index";
 
 describe("Layout primitives", () => {
@@ -48,6 +55,68 @@ describe("Layout curried variants", () => {
     const cls = container.firstElementChild!.className;
     expect(cls).toMatch(/row--gap-sm/);
     expect(cls).toMatch(/row--align-center/);
+  });
+
+  it("WrapItemStack carries both wrap-item guards at gap-xs", () => {
+    const { container } = render(() => <WrapItemStack>x</WrapItemStack>);
+    const el = container.firstElementChild!;
+    const style = el.getAttribute("style") ?? "";
+    expect(el.className).toMatch(/stack--gap-xs/);
+    // min-width:0 lets an inner `fit` table scroll instead of overflowing.
+    expect(style).toMatch(/min-width: ?0/);
+    // max-width:100% caps it at the row so it can't blow out the page.
+    expect(style).toMatch(/max-width: ?100%/);
+  });
+
+  it("WrapItemStack does NOT grow — that is what separates it from GrowTightStack", () => {
+    // flex:1 would equalise items in a wrap row, destroying the natural-width
+    // packing the wrap row exists for. This is the whole reason the variant
+    // exists rather than reusing GrowTightStack.
+    const { container } = render(() => <WrapItemStack>x</WrapItemStack>);
+    expect(container.firstElementChild!.getAttribute("style") ?? "").not.toMatch(
+      /flex: ?1/,
+    );
+    const grow = render(() => <GrowTightStack>x</GrowTightStack>);
+    expect(grow.container.firstElementChild!.getAttribute("style") ?? "").toMatch(
+      /flex: ?1/,
+    );
+  });
+
+  it("LooseWrapRow is WrapRow at the sm step — gap is the ONLY difference", () => {
+    const loose = render(() => <LooseWrapRow>x</LooseWrapRow>);
+    const tight = render(() => <WrapRow>x</WrapRow>);
+    const lc = loose.container.firstElementChild!.className;
+    const tc = tight.container.firstElementChild!.className;
+    expect(lc).toMatch(/row--gap-sm/);
+    expect(tc).toMatch(/row--gap-xs/);
+    // Same wrap, and everything else about the two must agree.
+    expect(lc).toMatch(/row--wrap/);
+    expect(lc.replace(/row--gap-sm/, "GAP")).toBe(tc.replace(/row--gap-xs/, "GAP"));
+  });
+
+  it("LooseWrapRow sets NO align — tiles on a line stretch to equal height", () => {
+    // The load-bearing detail: an explicit align would change the look beyond
+    // the gap. WrappedClusterRow is the sm wrap row that DOES centre, and is
+    // exactly what this variant exists to avoid.
+    const { container } = render(() => <LooseWrapRow>x</LooseWrapRow>);
+    expect(container.firstElementChild!.className).not.toMatch(/row--align-/);
+    const centred = render(() => <WrappedClusterRow>x</WrappedClusterRow>);
+    expect(centred.container.firstElementChild!.className).toMatch(
+      /row--align-center/,
+    );
+  });
+
+  it("LooseCardGrid is CardGrid at the sm step — same tracks, looser gutter", () => {
+    const loose = render(() => <LooseCardGrid>x</LooseCardGrid>);
+    const base = render(() => <CardGrid>x</CardGrid>);
+    expect(loose.container.firstElementChild!.className).toMatch(/grid--gap-sm/);
+    expect(base.container.firstElementChild!.className).toMatch(/grid--gap-xs/);
+    // Track sizing must be untouched — only the gutter differs.
+    const tracks = (el: Element) =>
+      (el.getAttribute("style") ?? "").match(/repeat\(auto-fit[^;]*/)?.[0];
+    expect(tracks(loose.container.firstElementChild!)).toBe(
+      tracks(base.container.firstElementChild!),
+    );
   });
 
   it("DelineatedSidebar produces a stack with min-width 400", () => {
