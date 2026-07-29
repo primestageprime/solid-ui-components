@@ -24,6 +24,13 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = join(root, "scripts", "health.mjs");
 
+// Each case spawns a real health run, which walks all of src/ and executes three
+// rubric scripts. That is ~1.5s locally but ~4.7s on a CI runner, which
+// overshoots vitest's 5s default — the first version of this file passed here
+// and timed out in CI. Set generously and per-file: raising the global timeout
+// would also let a genuinely hung component test sit for 30s.
+const SPAWN_TIMEOUT_MS = 30_000;
+
 // The committed baseline is the source of truth for which metrics exist and
 // what the real counts are; tests perturb a COPY via --baseline-path so a
 // failing run can never leave a wrong ceiling behind.
@@ -73,7 +80,7 @@ describe("health ratchet: a ceiling may not loosen by accident", () => {
     expect(r.after[METRIC], "the stale ceiling must survive the refusal").toBe(
       lowered,
     );
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it("naming one risen metric does not bless a second one", () => {
     const others = Object.entries(realBaseline()).filter(
@@ -88,7 +95,7 @@ describe("health ratchet: a ceiling may not loosen by accident", () => {
     expect(r.status, r.output).toBe(1);
     expect(r.output).toContain(other);
     expect(r.output).toMatch(/were not named/);
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it("naming a metric explicitly does raise it", () => {
     const r = runHealth(
@@ -98,7 +105,7 @@ describe("health ratchet: a ceiling may not loosen by accident", () => {
     expect(r.status, r.output).toBe(0);
     expect(r.after[METRIC]).toBe(ACTUAL);
     expect(r.output).toMatch(/raised, as named/);
-  });
+  }, SPAWN_TIMEOUT_MS);
 });
 
 describe("health ratchet: a gain may not leak back", () => {
@@ -108,14 +115,14 @@ describe("health ratchet: a gain may not leak back", () => {
     const r = runHealth({ [METRIC]: ACTUAL + 10 });
     expect(r.status, r.output).toBe(1);
     expect(r.output).toMatch(/Improvements are not locked in/);
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it("the bare flag locks the improvement in", () => {
     const r = runHealth({ [METRIC]: ACTUAL + 10 }, "--update-baseline");
     expect(r.status, r.output).toBe(0);
     expect(r.after[METRIC]).toBe(ACTUAL);
     expect(r.output).toMatch(/locked in/);
-  });
+  }, SPAWN_TIMEOUT_MS);
 });
 
 describe("health ratchet: operator errors surface", () => {
@@ -125,10 +132,10 @@ describe("health ratchet: operator errors surface", () => {
     const r = runHealth({}, "--update-baseline=notAMetric");
     expect(r.status, r.output).toBe(1);
     expect(r.output).toMatch(/unknown metric/);
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it("a clean tree with tight ceilings passes", () => {
     const r = runHealth({});
     expect(r.status, r.output).toBe(0);
-  });
+  }, SPAWN_TIMEOUT_MS);
 });
