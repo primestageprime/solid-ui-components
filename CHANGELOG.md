@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed
+- **`health` is now a required status check on `main`**, alongside `test`,
+  `typecheck` and `build`. It previously reported without gating, which is how
+  the ratchet drift below went unnoticed — a loosened ceiling never blocked
+  anything.
+
+  Contributor-visible consequence: a PR that *improves* a metric is now blocked
+  until the tightened baseline is committed (`npm run health --
+  --update-baseline`). That is the point — an unrecorded gain is one a later
+  change can undo. The failure message names the exact command.
+
+  `lint` remains ungated. Branch protection lives in repo settings, not in this
+  repo, so it is not visible from a checkout:
+  `gh api repos/primestageprime/solid-ui-components/branches/main/protection`.
+  Note `enforce_admins` is `false`, so an admin pushing directly to `main` still
+  bypasses all of these; the gate binds PR merges.
+
 ### Fixed
 - **The health ratchet was drifting upward, not holding.** `--update-baseline`
   rewrote *every* metric at once, and it was the only escape hatch — so
