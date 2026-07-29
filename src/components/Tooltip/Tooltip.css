@@ -9,6 +9,24 @@
   padding: 0;
   margin: 0;
   font: inherit;
+  /* The `font` shorthand covers family/size/weight/style/variant/line-height —
+     it does NOT cover the other inherited text properties, and the trigger is a
+     <button>, whose UA stylesheet resets them. Without these, any content
+     wrapped in <Tooltip> silently loses an ancestor's casing and tracking:
+     a glossed `th` rendered mixed-case next to uppercase siblings, because
+     Table.css pairs `text-transform: uppercase` with `letter-spacing` on every
+     header rule. The trigger is a transparent wrapper — it must inherit
+     everything about how its content is rendered. */
+  text-transform: inherit;
+  letter-spacing: inherit;
+  word-spacing: inherit;
+  /* Invisible while the trigger hugs its text (an inline-block shrink-wraps, so
+     the ANCESTOR's alignment already places the whole box). It becomes visible
+     the moment the content wraps — a multi-word header in a narrow column fills
+     that column, and the button's UA `text-align: center` then centres the text
+     inside a right-aligned cell. `--cell` below still pins left for its own
+     reasons; equal specificity, declared later, so it keeps winning. */
+  text-align: inherit;
   cursor: inherit;
 }
 
