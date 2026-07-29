@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.122.0
+
 ### Fixed
 - **Every consumer was bundling KaTeX and `d3-dag` whether or not it used them.**
   A consumer importing a single `DefaultButton` shipped **332,999 bytes**, of
