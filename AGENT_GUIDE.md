@@ -321,6 +321,21 @@ Before trusting ANY measurement taken through browser automation:
 if (innerWidth === 0 || innerHeight === 0) throw new Error("tab never laid out");
 ```
 
+**The sharpest form of this trap, learned the hard way on 2026-07-29:** a DOM
+probe against rAF-scheduled geometry shows *identical* output for a healthy
+build and a broken one. Two agents independently measured a component as
+"never collapses, content clipped" — one on a genuinely broken version, one on
+the fixed version — and the readings were the same, because in a hidden tab the
+measurement simply never ran in either. **Forcing a paint is what makes the
+numbers change; the fix is what makes them correct once a paint happens.** So a
+measurement taken without a forced paint cannot distinguish the two, and is not
+evidence about the code at all.
+
+The corollary for automated checks: anything asserting on rAF-scheduled geometry
+from a headless or background context **passes vacuously**. If you add a visual
+assertion to CI or a harness, force a paint or assert `visibilityState` first,
+or it will report success having tested nothing.
+
 Two related traps in the same family:
 
 - **`requestAnimationFrame` is frozen while a tab is hidden.** Anything that

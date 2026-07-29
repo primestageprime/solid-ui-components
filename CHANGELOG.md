@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## 0.125.1
+
+### Changed
+
+- **Documentation correction — the 0.124.1 `FilterBar` cause was misattributed.**
+  That entry blamed SSR/hydration for the empty ref array. It was wrong: the
+  affected consumer runs `ssr: false` and never hydrates the component.
+  Object-identity churn through `For` was also tested and ruled out. The
+  changelog entry and the code comment now say the trigger is **unknown**, so
+  nobody hitting this later chases a hydration bug that cannot apply. The fix is
+  unchanged and does not depend on the answer — refusing a zero-width reading is
+  correct regardless of what produced it.
+- **`AGENT_GUIDE.md`** records the sharpest form of the browser-verification
+  trap: a DOM probe against rAF-scheduled geometry returns *identical* output
+  for a healthy build and a broken one, because in a hidden tab the measurement
+  never runs in either. Forcing a paint is what makes the numbers change; the
+  fix is what makes them correct once a paint happens. Includes the corollary
+  that any automated visual assertion from a headless or background context
+  passes vacuously unless it forces a paint or guards on `visibilityState`.
+
 ## 0.125.0
 
 ### Added
@@ -38,12 +58,11 @@
 
 ### Fixed
 
-- **`FilterBar` tier-three overflow did not fire under hydration — active
+- **`FilterBar` tier-three overflow did not fire in a real consumer — active
   filters were clipped instead of collapsing.** The width measurement collected
   per-group element refs into a positional array from inside the `For`
   (`ref={(el) => { groupEls[i()] = el; }}`) and read `offsetWidth` from it.
-  Where those refs don't populate as expected — an SSR/hydration consumer, as
-  opposed to the client-rendered dev harness this was verified in — every width
+  In the affected consumer that array came back empty, so every width
   read `0`, and **zero widths are indistinguishable from "everything fits"**: the
   bar set `visibleGroups` to the total, rendered every group, and let the
   `overflow: hidden` row clip the surplus. Measured in a real consumer at
@@ -65,6 +84,16 @@
   than latching. The single measurement taken on trust is replaced by a bounded
   per-frame retry (20 frames), and `observeSize` re-measures when it has no
   usable widths instead of recomputing against stale ones.
+
+  **The trigger is not understood, and is deliberately not claimed here.** An
+  earlier version of this entry blamed SSR/hydration; that was wrong — the
+  affected consumer runs `ssr: false` and never hydrates this component.
+  Object-identity churn through `For` was also tested and ruled out. If you are
+  reading this because you hit something similar, do not go looking for a
+  hydration bug. What is known is only that the positional ref array read empty
+  where the live DOM did not; the fix is shaped to be correct without knowing
+  why, which is why it refuses a zero-width reading rather than trying to time
+  the measurement better.
 
 ## 0.124.0
 

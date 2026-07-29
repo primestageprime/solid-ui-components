@@ -206,13 +206,20 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
   };
 
   // Measure the LIVE DOM, not a ref array. An earlier version collected element
-  // refs from the `For` into an array indexed by position; that couples
-  // measurement to ref identity and ordering, and any environment where those
-  // refs don't land as expected — hydration being the obvious one — yields an
-  // array of zeros. Zero widths look exactly like "everything fits", so the bar
-  // silently stops collapsing and clips instead, which is the one failure this
-  // whole tier exists to prevent. Reading the rendered children has no such
-  // failure mode: if the elements are there, the measurement is right.
+  // refs from the `For` into an array indexed by position, which couples
+  // measurement to ref identity and ordering. In a real consumer that array
+  // came back empty and every width read 0 — and zero widths look exactly like
+  // "everything fits", so the bar stopped collapsing and clipped instead, which
+  // is the one failure this whole tier exists to prevent.
+  //
+  // THE TRIGGER IS NOT UNDERSTOOD. Hydration is the obvious suspect and was
+  // wrong: the consumer runs `ssr: false` and never hydrates this component.
+  // Object-identity churn through `For` was tested and ruled out too. Don't
+  // treat the cause as known — the point of this shape is that it doesn't need
+  // to be. Reading the rendered children has no ref-identity failure mode at
+  // all: if the elements are there, the measurement is right; and a reading
+  // containing a zero is REFUSED rather than cached, so a bad measurement
+  // cannot latch whatever produced it.
   //
   // Returns whether it managed to take a usable measurement.
   const measureGroups = (): boolean => {
