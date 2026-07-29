@@ -104,3 +104,66 @@ describe("build config: KaTeX fonts stay external", () => {
     expect(src, KATEX_WHY).toMatch(/import ["']katex\/dist\/katex\.min\.css["']/);
   });
 });
+
+// ============================================
+// `prepare` builds; CI installs with --ignore-scripts
+// ============================================
+//
+// These two look like each other's workaround — `prepare` runs a full build on
+// every root install, and every workflow then opts out of it. The tempting
+// "real fix" is to move the build to `prepack`. Do not: `prepack` does NOT run
+// for `npm link` or for git-dependency installs, so that change silently ships
+// an empty package to both. npm's own documentation is wrong on the git-dep
+// row; it was measured with a probe package. See
+// docs/adr/0007-prepare-keeps-the-build-ci-ignores-scripts.md.
+const LIFECYCLE_WHY = `
+See docs/adr/0007-prepare-keeps-the-build-ci-ignores-scripts.md.
+
+Verified npm hook matrix (measured, not from the docs — the docs are wrong):
+
+                                   prepare   prepack
+  root npm install / npm ci           yes       no
+  npm link (inside SUI)               yes       no
+  git-dependency install              yes       no
+  npm pack / npm publish              yes      yes
+
+So \`prepare\` is the ONLY hook that produces dist/ for \`npm link\` and for
+consumers pinning a git tag. Moving the build to \`prepack\` breaks both with no
+error — they just resolve an empty package.
+
+And because \`prepare\` fires on every root install, CI must opt out per-call or
+it pays a ~33s build in front of every job. Measured: 464s -> 265s of runner
+time per CI run, and the publish job stopped building SUI three times.
+`;
+
+describe("build config: install-time build lifecycle", () => {
+  it("prepare still runs the build", () => {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    expect(pkg.scripts?.prepare, LIFECYCLE_WHY).toMatch(/npm run build/);
+  });
+
+  it("CI installs never trigger it", () => {
+    const ci = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8");
+    // Every `npm ci` must carry the flag — a job added later without it
+    // silently reintroduces the build for that job alone. Match `run:`
+    // invocations only; both workflows discuss these commands in comments.
+    const installs = ci.match(/run:\s*npm ci\b[^\n]*/g) ?? [];
+    expect(installs.length, LIFECYCLE_WHY).toBeGreaterThan(0);
+    for (const line of installs) {
+      expect(line, LIFECYCLE_WHY).toContain("--ignore-scripts");
+    }
+  });
+
+  it("publish installs and packs without re-triggering it", () => {
+    const pub = readFileSync(join(root, ".github/workflows/publish.yml"), "utf8");
+    const cmds = pub.match(/run:\s*npm (ci|publish)\b[^\n]*/g) ?? [];
+    expect(cmds.length, LIFECYCLE_WHY).toBe(2);
+    for (const line of cmds) {
+      expect(line, LIFECYCLE_WHY).toContain("--ignore-scripts");
+    }
+    // With --ignore-scripts on publish, the explicit Build step is the only
+    // thing populating dist/. This guard step is what turns "someone deleted
+    // the Build step" into a failed publish instead of an empty package.
+    expect(pub, LIFECYCLE_WHY).toMatch(/Verify build output before packing/);
+  });
+});
