@@ -2464,6 +2464,20 @@
             "kind": "named"
           }
         ],
+        "FilterBar": [
+          {
+            "file": "src/components/daysnapshot/ReportFilterBar.tsx",
+            "line": 24,
+            "kind": "named"
+          }
+        ],
+        "FilterGroup": [
+          {
+            "file": "src/components/daysnapshot/ReportFilterBar.tsx",
+            "line": 25,
+            "kind": "type"
+          }
+        ],
         "FitPlaceholder": [
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
@@ -2809,9 +2823,19 @@
             "file": "src/components/daysnapshot/FactFilterChips.tsx",
             "line": 18,
             "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/ReportFilterBar.tsx",
+            "line": 24,
+            "kind": "named"
           }
         ],
         "NarrowStack": [
+          {
+            "file": "src/components/ReportCharts.tsx",
+            "line": 12,
+            "kind": "named"
+          },
           {
             "file": "src/components/SettingsPanel.tsx",
             "line": 13,
@@ -3330,6 +3354,11 @@
           {
             "file": "src/components/daysnapshot/FactFilterChips.tsx",
             "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/ReportFilterBar.tsx",
+            "line": 24,
             "kind": "named"
           }
         ],
@@ -3864,21 +3893,6 @@
           {
             "file": "src/components/MonthlyPerformance.tsx",
             "line": 76,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/ReportCharts.tsx",
-            "line": 12,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/ReportCharts.tsx",
-            "line": 38,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/ReportCharts.tsx",
-            "line": 39,
             "kind": "factory-call"
           },
           {
@@ -10254,6 +10268,12 @@
     ],
     "FillColumnFlush": [
       "jtf-ui"
+    ],
+    "FilterBar": [
+      "goose-ui"
+    ],
+    "FilterGroup": [
+      "goose-ui"
     ],
     "FitPlaceholder": [
       "goose-ui"
