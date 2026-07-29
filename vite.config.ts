@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
-import { mkdirSync, readdirSync, copyFileSync } from "fs";
+import { mkdirSync, readdirSync, copyFileSync, readFileSync, writeFileSync } from "fs";
 import devtools from "solid-devtools/vite";
 
 function copyThemes(): Plugin {
@@ -17,6 +17,85 @@ function copyThemes(): Plugin {
           copyFileSync(resolve(srcDir, file), resolve(distDir, file));
         }
       }
+    },
+  };
+}
+
+// MathFormula.tsx keeps `import "katex/dist/katex.min.css"` so that dev/serve
+// and source-linked consumers style formulas correctly. In the LIBRARY BUILD
+// only, that import is stubbed to an empty stylesheet — the real one ships as
+// dist/katex.css beside real font files (see copyKatexAssets below). Without
+// the stub, Vite inlines all 60 fonts into dist/index.css as base64.
+const KATEX_CSS_ID = "katex/dist/katex.min.css";
+const KATEX_CSS_STUB = "\0sui-katex-css-stub.css";
+
+function stubKatexCss(): Plugin {
+  return {
+    name: "stub-katex-css",
+    enforce: "pre",
+    resolveId(id) {
+      return id === KATEX_CSS_ID ? KATEX_CSS_STUB : null;
+    },
+    load(id) {
+      // Empty stylesheet: the rules arrive via dist/katex.css instead.
+      return id === KATEX_CSS_STUB ? "" : null;
+    },
+  };
+}
+
+// KaTeX's stylesheet ships as a real file next to real font files, instead of
+// being `import`ed by MathFormula.tsx. See
+// docs/adr/0006-katex-css-fonts-not-inlined.md.
+//
+// The problem: Vite's LIBRARY mode inlines every referenced asset as a base64
+// `data:` URI regardless of size — `assetsInlineLimit` is ignored there
+// (verified: setting it to 0 changed nothing). So a single
+// `import "katex/dist/katex.min.css"` embedded all 60 KaTeX font files into
+// dist/index.css: 1,436,824 bytes, 78.5% of the stylesheet, shipped eagerly to
+// every consumer even though four of the five render no formulas at all.
+// Inlining also defeats the two things @font-face normally does for free —
+// fonts download lazily, and only in the ONE format the browser picks. Inlined,
+// all three formats (woff2 + woff + ttf) download unconditionally.
+//
+// The fix: copy katex.min.css to dist/katex.css and its fonts to dist/fonts/.
+// KaTeX references its fonts as `url(fonts/…)`, so that relative path resolves
+// as-is with no rewriting. dist/index.css then gets an `@import "./katex.css"`
+// prepended (see prependKatexImport), which keeps every existing consumer
+// working untouched while the ~1.1 MB of fonts stay external and lazy.
+function copyKatexAssets(): Plugin {
+  return {
+    name: "copy-katex-assets",
+    closeBundle() {
+      const katexDist = resolve(__dirname, "node_modules/katex/dist");
+      copyFileSync(
+        resolve(katexDist, "katex.min.css"),
+        resolve(__dirname, "dist/katex.css"),
+      );
+      const fontsOut = resolve(__dirname, "dist/fonts");
+      mkdirSync(fontsOut, { recursive: true });
+      for (const file of readdirSync(resolve(katexDist, "fonts"))) {
+        copyFileSync(
+          resolve(katexDist, "fonts", file),
+          resolve(fontsOut, file),
+        );
+      }
+    },
+  };
+}
+
+// `@import` must precede every other rule in a stylesheet, so this prepends
+// rather than appends. Bundlers inline the @import at build time, so consumers
+// pay no extra round trip; a raw <link> resolves ./katex.css as a sibling in
+// dist/. Idempotent — re-running a build must not stack duplicate imports.
+function prependKatexImport(): Plugin {
+  return {
+    name: "prepend-katex-import",
+    closeBundle() {
+      const cssPath = resolve(__dirname, "dist/index.css");
+      const css = readFileSync(cssPath, "utf8");
+      const directive = '@import "./katex.css";';
+      if (css.startsWith(directive)) return;
+      writeFileSync(cssPath, `${directive}\n${css}`);
     },
   };
 }
@@ -82,7 +161,14 @@ export default defineConfig(({ command, mode }) => {
         insertTypesEntry: true,
       }),
       // Only copy themes once — during the client build (the default target).
+      // Library builds only — dev/serve must load the real katex stylesheet.
+      // Applies to BOTH client and server builds so neither inlines fonts.
+      !isDev && !isServe && stubKatexCss(),
       !isDev && !isServerBuild && copyThemes(),
+      // Order matters: copy katex.css into dist BEFORE prepending the @import
+      // that points at it.
+      !isDev && !isServerBuild && copyKatexAssets(),
+      !isDev && !isServerBuild && prependKatexImport(),
     ].filter(Boolean),
     root: isDev ? "dev" : undefined,
     build: isDev

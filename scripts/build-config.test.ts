@@ -53,3 +53,54 @@ describe("build config: the tree-shaking pair", () => {
     expect(cfg, WHY).toMatch(/preserveModulesRoot:\s*["']src["']/);
   });
 });
+
+// ============================================
+// KaTeX fonts must not be inlined
+// ============================================
+//
+// Vite's library mode inlines every referenced asset as a base64 `data:` URI
+// regardless of size — `assetsInlineLimit` is ignored there (verified: setting
+// it to 0 changed nothing). A plain `import "katex/dist/katex.min.css"` in a
+// component therefore embedded all 60 KaTeX font files into dist/index.css:
+// 1,436,824 bytes, 78.5% of the stylesheet, downloaded eagerly by every
+// consumer — four of the five render no formulas at all.
+//
+// Three pieces cooperate, and removing any one silently restores ~1.4 MB:
+//   stubKatexCss()       — blanks the import in the LIBRARY build only, so
+//                          dev/serve and source-linked consumers keep styling
+//   copyKatexAssets()    — ships katex.min.css + fonts/ as real files
+//   prependKatexImport() — wires dist/katex.css into dist/index.css so
+//                          existing consumers need no changes
+const KATEX_WHY = `
+KaTeX font inlining guard — see docs/adr/0006-katex-css-fonts-not-inlined.md.
+
+Vite lib mode inlines ALL assets as base64 regardless of assetsInlineLimit.
+Without the stub + copy + prepend trio, dist/index.css goes from 375,755 B
+back to 1,831,489 B (brotli: 68,761 B -> 883,432 B), and the fonts stop being
+lazy: inlined data: URIs download unconditionally, in all three formats, even
+for consumers that never render a formula.
+`;
+
+describe("build config: KaTeX fonts stay external", () => {
+  const cfg = readFileSync(join(root, "vite.config.ts"), "utf8");
+
+  it("stubs the katex CSS import in library builds only", () => {
+    expect(cfg, KATEX_WHY).toMatch(/function stubKatexCss/);
+    // Must NOT apply during `vite serve` — the dev gallery and source-linked
+    // consumers need the real stylesheet or formulas render unstyled.
+    expect(cfg, KATEX_WHY).toMatch(/!isServe\s*&&\s*stubKatexCss\(\)/);
+  });
+
+  it("ships katex.css and its fonts as real files", () => {
+    expect(cfg, KATEX_WHY).toMatch(/function copyKatexAssets/);
+    expect(cfg, KATEX_WHY).toMatch(/function prependKatexImport/);
+  });
+
+  it("MathFormula still imports the stylesheet for dev/source consumers", () => {
+    const src = readFileSync(
+      join(root, "src/components/MathFormula/MathFormula.tsx"),
+      "utf8",
+    );
+    expect(src, KATEX_WHY).toMatch(/import ["']katex\/dist\/katex\.min\.css["']/);
+  });
+});

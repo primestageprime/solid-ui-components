@@ -17,6 +17,12 @@ import {
   type Accessor,
 } from "solid-js";
 import katex from "katex";
+// Kept so dev/serve and source-linked consumers (SUI_SOURCE_LINKED) style
+// formulas correctly. The LIBRARY BUILD stubs this import to empty and ships
+// the stylesheet as a real file with real fonts instead — Vite's lib mode
+// would otherwise inline all 60 font files as base64, 78.5% of dist/index.css.
+// See stubKatexCss() in vite.config.ts and
+// docs/adr/0006-katex-css-fonts-not-inlined.md.
 import "katex/dist/katex.min.css";
 import "./MathFormula.css";
 import { splitLatexSegments, hasSplittableOperators } from "./latexSegments";
