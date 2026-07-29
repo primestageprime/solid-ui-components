@@ -89,6 +89,51 @@ Spacing does not vary by theme — only the typographic / decorative tokens do. 
 
 ---
 
+## Patterns
+
+Compositions the library does not ship as a component — because the reactive
+model belongs to the consuming app — but which have a settled shape and a
+working bench. Read the bench before rebuilding one of these; the behaviours
+listed are each a bug if omitted, not polish.
+
+### Cross-filtering breakdown tiles
+
+**Bench:** `dev/showcases/workshop/cross-filtering.tsx` (dev harness → Workshop →
+Cross-Filtering Tiles). Runs on static fixture data — no data layer to connect.
+
+Several breakdown tiles over one row-grain fact, each grouping by its own
+dimension, all sharing one filter. A row click toggles that member; every tile
+and the metric row re-aggregate. The same filter is editable from a
+`MultiSelectFilter` chip row. Composition is **AND across dimensions, OR within
+one**.
+
+Built entirely from existing exports — `SectionTable` (its `onRowClick` is a
+behaviour prop, so interactive rows need no new component), `MultiSelectFilter`,
+`MetricCard`, `WrapRow`/`TightStack`, `GhostButton`. **No SUI component owns the
+filter state**: it is a signal in the consuming app, because filter state is
+per-viewer and its persistence (URL, storage, none) is an app decision.
+
+Four behaviours carry the pattern:
+
+1. **Two-way toggle** — a row click adds the member, the same click again
+   removes it. Chips and rows edit one filter, so they cannot disagree.
+2. **Own-dimension exclusion** — a tile applies every active filter *except its
+   own*. Without it a selected tile collapses to one row, and since toggle-off
+   lives on the rows, the selection becomes unclearable.
+3. **Rank before cap, then pin** — rank the full list, cap after, then append a
+   selected member that fell below the cap **carrying its true rank**.
+   Cap-then-rank silently drops the selection out of a capped tile, which then
+   keeps showing unfiltered rows while everything else has narrowed.
+4. **Empty means all** — no selection in a dimension is no filter on it. This is
+   already `MultiSelectFilter`'s own convention, so no "all" pseudo-member is
+   needed.
+
+Active rows are marked **in the data** (a leading `›` glyph in the rank cell),
+not by styling the row: there is no active-row visual for a plain table, and
+adding one at the call site would be custom styling.
+
+---
+
 ## Badge
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 - **StatusLight** — Atomic. Small colored indicator dot (LED-style) with optional keepalive pulse animation. Key props: `variant` (`success`|`warning`|`danger`|`info`|`idle`), `size` (`sm`|`md`|`lg`), `pulse` (animates a slow expanding halo — use when the source is actively reporting), `label` (optional inline text rendered to the right). Honors `prefers-reduced-motion`. Uses `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-info`, `--sui-text-muted`. Use for: dispatcher liveness, connection state, daemon keepalive, sensor health.
@@ -679,6 +724,7 @@ State derivation:
       onChange={setStatuses}
     />
     ```
+  - Building a filter bar that drives breakdown tables? See **Patterns → Cross-filtering breakdown tiles** and its bench; the empty-means-all convention above is load-bearing there.
 
 ## Dropdown
 - **Dropdown** — Atomic (Depth 1). Trigger button plus popover listbox for single selection, with full keyboard support: roving-tabindex options, ArrowUp/Down to open and move focus, Home/End, Escape and click-outside to close (refocusing the trigger), and Tab to leave the widget. Global mousedown/keydown listeners live only while open. Key props: `items` (`DropdownItem[]`, each `{ id: string; label: string; color?: string }` — an optional color renders as an indicator dot), `value` (`string`, the selected id), `onChange` (`(id: string) => void`), `placeholder` (`string`, default `"Select..."`), `footer` (`JSX.Element`, e.g. an "Add new" action rendered below the list), `size` (`"sm" | "md"`, default `"md"`), `subtle` (`boolean` — trigger looks like read-only text until hovered), `class` (`string`). Exported types: `DropdownItem`, `DropdownProps`, `DropdownOverrides`, `DropdownDataProps`. Factory: `createDropdown({ size, subtle })`; curried variant **`InlineSubtleDropdown`** (`size:"sm"`, `subtle:true`) — the compact inline picker that reads as plain text until hovered. Use for: single-value selection with optional color indicators and a menu footer action (status pickers, category selectors). Theming: `Dropdown.css` owns its colors via `--sui-*` tokens (like Button/NavLink/PopoverMenu), so it adapts to any loaded theme with zero per-theme rules — trigger `color: var(--sui-text-primary)`, opaque menu `background: var(--sui-bg-elevated)` + `border: var(--sui-border-bright)` + plain elevation shadow, `--subtle` transparent-until-hover reading legible text. (The token-driven color layer was added 2026-07-20; before that the component CSS was structural-only, leaving the trigger dark-on-dark and the menu transparent under every theme except `hud`, which ships its own explicit dropdown skin that still wins under hud.)
@@ -871,7 +917,9 @@ State derivation:
 
 Any component that measures an element with a `ResizeObserver` and writes the result to a signal **must** go through `observeSize(el, onSize)` from `src/internal/dom/observeSize` — never `new ResizeObserver(...)` directly. Writing a signal synchronously inside the observer callback re-renders during the browser's notification-delivery phase, which mutates layout, re-queues the observer in the same frame, and makes the browser emit *"ResizeObserver loop completed with undelivered notifications."* `observeSize` change-guards (an unchanged rounded box size never reaches the callback) and rAF-defers with coalescing (only the newest measurement lands per frame, so there is no lag behind a drag — unlike a debounce). It returns a disposer for `onCleanup`, and is a no-op where `ResizeObserver` is undefined, so callers need no SSR/jsdom guard of their own.
 
-The callback may ignore the supplied size and re-measure the element itself (`clientWidth`, `scrollHeight`, …) — the size argument governs *when* the callback runs, not what it must use. Two consequences to design around: sizes are **rounded**, and a measurement lands **one frame after** the resize (and not at all while the tab is hidden, since `requestAnimationFrame` is frozen — it lands when the tab is next rendered). **Every** measuring component routes through it — `src` contains exactly one `new ResizeObserver`, inside the primitive itself. Treat a raw `new ResizeObserver` in a review as a defect. Where a component needs to watch two elements (`ScrollRegion` watches its viewport and its content wrapper), call `observeSize` once per element and dispose both; each element then gets its own change-guard.
+The callback may ignore the supplied size and re-measure the element itself (`clientWidth`, `scrollHeight`, …) — the size argument governs *when* the callback runs, not what it must use. Two consequences to design around: sizes are **rounded**, and a measurement lands **one frame after** the resize (and not at all while the tab is hidden, since `requestAnimationFrame` is frozen — it lands when the tab is next rendered). **Every** measuring component routes through it — `src` contains exactly one `new ResizeObserver`, inside the primitive itself. Treat a raw `new ResizeObserver` in a review as a defect. Where a component needs to watch several elements (`ScrollRegion` watches its viewport and its content wrapper; `BucketQueue` watches its root, row, header and empty strip), call `observeSize` once per element and dispose each; every element then gets its own change-guard. To re-point at a swapped-in element, dispose that slot's observation and start a fresh one — a new observation always delivers its first measurement, so re-pointing re-measures.
+
+**If the callback measures the BORDER box** (`offsetHeight`), pass `{ box: "border-box" }` as the third argument. Default content-box observation does not fire when only padding or a border changes, so a themed padding change — or a consumer's render slot swapping its own padding — would silently stop updating the component: no error, no warning, just stale metrics. Observe the box you measure. The change-guard and rAF coalescing apply on every path, so the option changes only *when* the observer fires.
 
 ### Fixed-width fields convention
 
@@ -890,7 +938,7 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
 - **Row** — Flex-row container. Key props: `gap`, `align`, `justify`, `wrap`, `fill` (`width: 100%; min-width: 0` — forwards width through, the horizontal mirror of `Stack` `fill`). Use for: horizontal arrangement of elements.
 - **Box** — Flex child with grow/shrink control. Key props: `grow`, `shrink`. Use for: controlling flex item sizing.
 - **ResizableContainer** — Container with draggable edge handles for manual resize. Key props: `directions` (array of `"top"`|`"right"`|`"bottom"`|`"left"`, default `["right", "bottom"]`), `minWidth`/`maxWidth`/`initialWidth`, `minHeight`/`maxHeight`/`initialHeight`, `onResize` (called with `{ width, height }` during drag), `gridMode` (skip inline width/height when parent grid controls sizing), `externalWidth` (accessor that syncs internal width from an external source). Exports `ResizeDirection` and `ResizeDimensions` types. Use for: side panels, resizable columns, draggable split views. Uses `--sui-accent-rgb` for handle hover color. Note: the `onResize` callback intentionally uses the `{ width, height }` object shape rather than positional `(width, height)` arguments — this is the upstream-canonical signature; downstream callers using the legacy positional form must adapt.
-- Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `ConversationStack` (capped reading-width column tuned for multi-participant chat trees — `max-width: 110ch`, conversation typography), `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `TightSpreadRow` (4px-gap, baseline-aligned key+count row for compact data displays — pairs with `ChipLabel` + `CountText`), `ClusterRow`, `WrappedClusterRow` (center-aligned cluster that wraps on overflow — for header rows where a name + timestamp pair must collapse onto a second line on narrow widths), `ActionSlot`, `GrowBox` (the "growing column" — `flex: 1 1 0%` + `min-width: 0`; fills remaining space while letting fixed siblings keep their width, and shrinks past its content so wide tables/panes don't force a content-width layout — the min-width:0 is the load-bearing part), `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
+- Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `ConversationStack` (capped reading-width column tuned for multi-participant chat trees — `max-width: 110ch`, conversation typography), `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `TightSpreadRow` (4px-gap, baseline-aligned key+count row for compact data displays — pairs with `ChipLabel` + `CountText`), `ClusterRow`, `WrappedClusterRow` (center-aligned cluster that wraps on overflow — for header rows where a name + timestamp pair must collapse onto a second line on narrow widths), `ActionSlot`, `GrowBox` (the "growing column" — `flex: 1 1 0%` + `min-width: 0`; fills remaining space while letting fixed siblings keep their width, and shrinks past its content so wide tables/panes don't force a content-width layout — the min-width:0 is the load-bearing part), `FadedBox`, `ConstrainedBox`, `LooseWrapRow` (`WrapRow` at the `sm` 8px step instead of `xs` — tile-to-tile spacing on a dashboard of breakdown widgets. `align` is deliberately **unset**, as in `WrapRow`, so items take the flex default `stretch` and tiles sharing a line render at equal height; that is what separates it from the two `sm` wrap rows that already exist — `WrappedClusterRow` centres a short tile in a tall neighbour's band, `BaselineWrapRow` aligns by first text line. It differs from `WrapRow` in the gap and nothing else), `LooseCardGrid` (`CardGrid` at the `sm` gutter; identical auto-fit tracks ≥280px, only the gutter differs — for a KPI strip needing more air), `WrapItemStack` (ONE item inside a `WrapRow`, held at its content's **natural** width — `min-width:0; max-width:100%`, gap:xs. Deliberately **not** `flex:1`, which is what separates it from `GrowTightStack`/`GrowStack`/`GrowBox`: in a wrapping row `flex:1` equalises the items, cramming wide content and stretching narrow, which destroys the natural-width packing a wrap row exists to do. `min-width:0` lets the item shrink past its content so an inner element that owns its own scroll — a `fit` table — scrolls internally instead of overflowing the page; `max-width:100%` caps it at the row so content wider than the whole row can't blow out the page width. For a grid of naturally-sized table tiles). Use for: common layout patterns without manual gap/align configuration.
 
 ## List
 - **List** — Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`, `scroll` (fills its flex parent and scrolls internally on overflow: `flex: 1; min-height: 0; overflow-y: auto`). Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists. Has `createList` factory for curried variants.
