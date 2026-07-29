@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Every consumer was bundling KaTeX and `d3-dag` whether or not it used them.**
+  A consumer importing a single `DefaultButton` shipped **332,999 bytes**, of
+  which **318 KB was libraries the button never calls** — KaTeX (~227 KB, via
+  `MathFormula`) and `d3-dag` (~63 KB, via `DagChart`). The same import is now
+  **14,938 bytes**, a 96% reduction.
+
+  Component-level tree-shaking was never the problem; Rollup was already
+  discarding the other 143 components correctly. The leak was that `katex` and
+  `d3-dag` declare no `sideEffects` in their own `package.json`, so a bundler
+  must keep their `import` statements even after discarding the only component
+  that used them — and from inside a single-file `dist` there is no way to undo
+  that.
+
+  The fix is entirely in build config: the client build now emits **one file per
+  module** (`output.preserveModules`) and the package **declares its side
+  effects** (`"sideEffects": ["**/*.css"]`). **No component source changed, and
+  no rendering behavior changed.**
+
+  ⚠️ **These two settings are a pair, and each is completely inert alone** —
+  `sideEffects` by itself measured zero change, `preserveModules` by itself
+  measured zero change. Removing either silently restores the 318 KB with no
+  test failure or visible symptom in this repo. `scripts/build-config.test.ts`
+  guards them; `docs/adr/0005-per-module-dist-and-sideeffects.md` records the
+  measurements and the rejected alternative (lazy `import()`, which was 7×
+  worse and made rendering async).
+
+  Consumer-visible packaging change: `dist` now contains ~1,300 files rather
+  than ~10. The `exports` map is unchanged, so the per-module files are present
+  but NOT addressable — this does not widen the public API. `.` still resolves
+  to `dist/index.js`, and `dist/index.css` is unaffected (still all-or-nothing;
+  per-component CSS remains a separate, unsolved problem).
+
 ## 0.121.0
 
 Biome lint is now a CI gate, at **zero errors and zero warnings**. It had

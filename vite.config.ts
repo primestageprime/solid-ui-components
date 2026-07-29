@@ -133,6 +133,23 @@ export default defineConfig(({ command, mode }) => {
             rollupOptions: {
               external: CLIENT_ROLLUP_EXTERNALS,
               output: {
+                // PAIRED with `"sideEffects"` in package.json — see
+                // docs/adr/0005-per-module-dist-and-sideeffects.md. Do not
+                // remove one without the other; each is inert alone, which is
+                // exactly how they get deleted as "dead config".
+                //
+                // One file per source module instead of a single bundled
+                // index.js. That granularity is what `sideEffects` acts ON: a
+                // consumer's bundler can drop a whole unused module file, and
+                // with it the module-scope imports of heavyweight deps that
+                // only one component needs (katex ~227 KB via MathFormula,
+                // d3-dag ~63 KB via DagChart). Those deps declare no
+                // `sideEffects` of their own, so in a single-bundle build they
+                // are unremovable — a consumer importing one Button shipped
+                // 333 KB, of which 318 KB was libraries it never called.
+                // With both settings: 15 KB. Measured, see the ADR.
+                preserveModules: true,
+                preserveModulesRoot: "src",
                 globals: {
                   "solid-js": "solidJs",
                   "solid-js/web": "solidJsWeb",
