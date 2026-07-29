@@ -18,9 +18,15 @@ Two things gate this work and no agent can resolve either:
    production deploy.**
 2. **A review of [amygdala-ui#211](https://github.com/primestageprime/amygdala-ui/pull/211).**
    One-line pin change plus lockfile. See "Already done" below for exactly what
-   was verified on it, so the review doesn't have to re-derive that.
+   was verified on it, so the review doesn't have to re-derive that. **There is
+   no agent task in `amygdala-ui`** — the work there is finished and merging is
+   a human call.
 
-Everything else in this document is agent-executable.
+## What is actually actionable right now
+
+Only **Task 2**. Task 1 is held by blocker 1 above, Task 3 is held by Task 1,
+and amygdala-ui needs a reviewer rather than an agent. An agent handed Task 1
+today will correctly stop at its prerequisite and do nothing.
 
 ---
 
@@ -169,10 +175,18 @@ reference to `NPM_TOKEN` anywhere in the repo.
 
 ### Steps
 
+**Before anything: `thorcasting-ui` had six modified files uncommitted on `main`
+as of 2026-07-29.** Check `git status` and do not sweep that work into a commit.
+Branch from a clean state or ask the owner what to do with it first.
+
 `docs/sui-github-packages.md` already exists in that repo and describes this
 migration. It was written when SUI was at 0.43.0 and predates the Cloudflare
-question — treat its mechanics as correct and its "no urgency" framing as
-superseded by this document.
+question, so treat its "no urgency" framing as superseded by this document.
+Its mechanics are broadly right with **one stale step**: it says to run
+`npm install solid-js d3-scale katex` to declare peer deps. SUI's
+`peerDependencies` are only `d3-scale` and `solid-js`, both of which
+thorcasting-ui already declares — and `katex` is a regular *dependency* of SUI,
+so installing it in the consumer is unnecessary. Skip that step.
 
 1. Add a committed `.npmrc` (copy `dside-ui`'s, which is the working model):
    ```ini
