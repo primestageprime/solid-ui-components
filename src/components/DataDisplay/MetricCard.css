@@ -8,7 +8,29 @@
    ============================================ */
 
 .sui-metric-card {
-  display: inline-block;
+  /* `block`, not `inline-block`. As an inline-block the card shrink-wrapped its
+     text, so it filled its slot only when the slot happened to be the same
+     width as its content: dropped into a grid cell, or inside a stretching
+     wrapper such as a Tooltip trigger, it rendered visibly narrower and ragged
+     beside un-wrapped siblings (measured on a report KPI row: triggers at
+     312/417px holding cards at 102–198px). As a block it fills the slot it is
+     given. Shrink-to-fit is unaffected where it actually applies — a flex
+     child still sizes from `flex-basis: auto`, so a card in a flex row keeps
+     its content width exactly as before (verified against the showcase: all 12
+     cards byte-identical). */
+  display: block;
+  /* The other axis of the same defect. A wrapper such as a Tooltip trigger
+     already stretches to the row height on its own, but the card inside stayed
+     at its content height, so one taller sibling left the rest visibly short
+     (measured on a report KPI row: triggers at 106px holding cards at 79px).
+     `height:100%` fills the wrapper. Not a flex fix on the WRAPPER: making the
+     trigger a flex container does stretch the card vertically, but the card
+     then shrink-wraps horizontally again as a flex item — it re-breaks the
+     width this same rule set just fixed (measured: 309px back to 213–217px).
+     Fixing both axes on the card keeps the trigger hugging its content, which
+     other tooltip-wrapped content relies on (a glossed table header is placed
+     by its `th`'s text-align only because the trigger shrink-wraps). */
+  height: 100%;
   padding: 1rem;
   background: rgba(var(--sui-accent-rgb), 0.05);
   border: 1px solid var(--sui-border);
