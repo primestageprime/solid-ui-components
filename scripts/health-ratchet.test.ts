@@ -2,159 +2,196 @@
 // Health ratchet guard — a ceiling must never loosen by accident
 // ============================================
 //
-// `--update-baseline` used to write EVERY metric at once. It was the only
-// escape hatch, so accepting one deliberate increase silently blessed every
-// unrelated drift in the same command. The damage is in the git history:
-// `dotChains` was burned down 127 → 55 and `collectionMethodCalls` 362 → 225 by
-// real work, then both crept back to 59 / 230 as side effects of commits about
-// other things (`e72db8f` "bless baseline for Auth composites", `6cc7609`
-// "fix(themes): button labels clear WCAG 4.5:1"). A ratchet whose last recorded
-// action was loosening is not a ratchet.
+// `--update-baseline` used to write EVERY metric at once. It was the only escape
+// hatch, so accepting one deliberate increase silently blessed every unrelated
+// drift in the same command. The damage is in the git history: `dotChains` was
+// burned down 127 → 55 and `collectionMethodCalls` 362 → 225 by real work, then
+// both crept back to 59 / 230 as side effects of commits about other things
+// (`e72db8f` "bless baseline for Auth composites", `6cc7609` "fix(themes):
+// button labels clear WCAG 4.5:1"). A ratchet whose last recorded action was
+// loosening is not a ratchet. Separately, `cssTypedProps` had TWO exemption
+// routes — scripts/prop-rubric.json, which demands a justification string, and
+// the baseline, which demanded nothing. `67b89c7` took the silent one.
 //
-// These tests pin the three rules that fixed it. The tempting "simplification"
-// is to go back to one unconditional write of `metrics` — that is precisely
-// what must keep failing here.
+// These tests pin the rules against the PURE layer (scripts/health-ratchet.mjs)
+// with hand-built metric objects. An earlier version spawned
+// `node scripts/health.mjs` once per case; each spawn walks all of src/ and runs
+// the TypeScript compiler API, and nine of them inside the jsdom suite hung CI
+// until it was cancelled at 15 minutes. One subprocess smoke test remains, to
+// prove the CLI is actually wired to these rules.
+//
+// The tempting "simplification" is to go back to one unconditional write of
+// `metrics` — that is exactly what must keep failing here.
 import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = join(root, "scripts", "health.mjs");
 
-// Each case spawns a real health run, which walks all of src/ and executes three
-// rubric scripts. That is ~1.5s locally but ~4.7s on a CI runner, which
-// overshoots vitest's 5s default — the first version of this file passed here
-// and timed out in CI. Set generously and per-file: raising the global timeout
-// would also let a genuinely hung component test sit for 30s.
-const SPAWN_TIMEOUT_MS = 30_000;
+/** Two metrics is enough to prove "named one, not the other". */
+const BASE = { alpha: 10, beta: 20 };
+const plan = (
+  metrics: Record<string, number>,
+  raisable: string[] = [],
+  reason?: string,
+  baseline: Record<string, unknown> = BASE,
+) =>
+  planBaselineUpdate({
+    metrics,
+    baseline,
+    raisable: new Set(raisable),
+    reason,
+  });
 
-// The committed baseline is the source of truth for which metrics exist and
-// what the real counts are; tests perturb a COPY via --baseline-path so a
-// failing run can never leave a wrong ceiling behind.
-const realBaseline = () =>
-  JSON.parse(readFileSync(join(root, "scripts", "health-baseline.json"), "utf8"));
-
-/** Write a temp baseline with `overrides` applied, run health, return the result. */
-const runHealth = (overrides: Record<string, number>, ...args: string[]) => {
-  const dir = mkdtempSync(join(tmpdir(), "sui-ratchet-"));
-  const path = join(dir, "baseline.json");
-  writeFileSync(path, JSON.stringify({ ...realBaseline(), ...overrides }, null, 2));
-  let status = 0;
-  let output = "";
-  try {
-    output = execFileSync(
-      process.execPath,
-      [SCRIPT, `--baseline-path=${path}`, ...args],
-      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+describe("health ratchet: classify", () => {
+  it("splits rises from gains, and ignores metrics with no ceiling yet", () => {
+    const { regressions, improvements } = classify(
+      { alpha: 12, beta: 18, gamma: 5 },
+      BASE,
     );
-  } catch (e: any) {
-    status = e.status ?? 1;
-    output = `${e.stdout ?? ""}${e.stderr ?? ""}`;
-  }
-  return { status, output, after: JSON.parse(readFileSync(path, "utf8")) };
-};
-
-// A metric with a real, non-zero count, so it can be perturbed in both
-// directions. Chosen from the baseline rather than hardcoded, so renaming a
-// metric fails loudly here instead of silently skipping the assertions.
-const [METRIC, ACTUAL] = (() => {
-  const entry = Object.entries(realBaseline()).find(
-    ([, v]) => typeof v === "number" && (v as number) > 5,
-  );
-  if (!entry) throw new Error("no non-trivial metric in health-baseline.json");
-  return entry as [string, number];
-})();
+    expect(regressions).toEqual([{ k: "alpha", base: 10, v: 12 }]);
+    expect(improvements).toEqual([{ k: "beta", base: 20, v: 18 }]);
+    // `gamma` has no baseline — it is neither a rise nor a gain.
+  });
+});
 
 describe("health ratchet: a ceiling may not loosen by accident", () => {
   it("the bare flag REFUSES to raise a ceiling", () => {
-    // The exact 6cc7609 failure: a metric rose as a side effect of unrelated
-    // work, and the blanket update would have written it in as the new normal.
-    const lowered = ACTUAL - 5;
-    const r = runHealth({ [METRIC]: lowered }, "--update-baseline");
-    expect(r.status, r.output).toBe(1);
-    expect(r.output).toMatch(/Refusing to update the baseline/);
-    // Nothing may be written — not even the metrics that were fine.
-    expect(r.after[METRIC], "the stale ceiling must survive the refusal").toBe(
-      lowered,
-    );
-  }, SPAWN_TIMEOUT_MS);
+    const r = plan({ alpha: 12, beta: 20 });
+    expect(r.error?.kind).toBe("unblessed-rise");
+    expect(r.error?.detail).toEqual([{ k: "alpha", base: 10, v: 12 }]);
+    // The whole write is refused — a partial one would report success while
+    // the ceiling it failed to raise still fails the next run.
+    expect(r.next).toBeUndefined();
+  });
 
   it("naming one risen metric does not bless a second one", () => {
-    const others = Object.entries(realBaseline()).filter(
-      ([k, v]) => k !== METRIC && typeof v === "number" && (v as number) > 5,
-    );
-    if (others.length === 0) return; // only one non-trivial metric; nothing to prove
-    const [other, otherVal] = others[0] as [string, number];
-    const r = runHealth(
-      { [METRIC]: ACTUAL - 5, [other]: otherVal - 5 },
-      `--update-baseline=${METRIC}`,
-      "--reason=guard test",
-    );
-    expect(r.status, r.output).toBe(1);
-    expect(r.output).toContain(other);
-    expect(r.output).toMatch(/were not named/);
-  }, SPAWN_TIMEOUT_MS);
+    const r = plan({ alpha: 12, beta: 22 }, ["alpha"], "deliberate");
+    expect(r.error?.kind).toBe("unblessed-rise");
+    expect(r.error?.detail).toEqual([{ k: "beta", base: 20, v: 22 }]);
+  });
 
-  it("naming a metric without a reason is refused", () => {
-    // `67b89c7` raised cssTypedProps 13 -> 14 with the message "bless
-    // TableColumn.minWidth" and never touched scripts/prop-rubric.json, whose
-    // entire purpose is to hold the justification. The baseline was a second,
-    // silent exemption route. A raise must now carry its own reason.
-    const r = runHealth({ [METRIC]: ACTUAL - 5 }, `--update-baseline=${METRIC}`);
-    expect(r.status, r.output).toBe(1);
-    expect(r.output).toMatch(/requires --reason/);
-    expect(r.after[METRIC], "nothing may be written").toBe(ACTUAL - 5);
-  }, SPAWN_TIMEOUT_MS);
-
-  it("naming a metric with a reason raises it and records why", () => {
-    const r = runHealth(
-      { [METRIC]: ACTUAL - 5 },
-      `--update-baseline=${METRIC}`,
-      "--reason=deliberate, for the guard test",
-    );
-    expect(r.status, r.output).toBe(0);
-    expect(r.after[METRIC]).toBe(ACTUAL);
-    expect(r.output).toMatch(/raised, as named/);
-    // The reason must survive in the baseline, not just the commit message.
-    expect(r.after._raises?.[METRIC]).toEqual({
-      from: ACTUAL - 5,
-      to: ACTUAL,
-      reason: "deliberate, for the guard test",
-    });
-  }, SPAWN_TIMEOUT_MS);
+  it("the bare flag still lowers, and never raises, in one pass", () => {
+    // Mixed movement with nothing named: refused outright rather than
+    // cherry-picking the gain and leaving the rise unrecorded.
+    expect(plan({ alpha: 12, beta: 18 }).error?.kind).toBe("unblessed-rise");
+    // Gains alone: clamped down, no rises possible.
+    const r = plan({ alpha: 8, beta: 18 });
+    expect(r.next).toEqual({ alpha: 8, beta: 18 });
+    expect(r.raised).toEqual([]);
+  });
 });
 
-describe("health ratchet: a gain may not leak back", () => {
-  it("an unrecorded improvement fails the run", () => {
-    // Left as a passing advisory, a gain sits behind a ceiling that still
-    // permits undoing it — with CI green the entire time.
-    const r = runHealth({ [METRIC]: ACTUAL + 10 });
-    expect(r.status, r.output).toBe(1);
-    expect(r.output).toMatch(/Improvements are not locked in/);
-  }, SPAWN_TIMEOUT_MS);
+describe("health ratchet: raising demands a written reason", () => {
+  it("a named metric without a reason is refused", () => {
+    // `67b89c7` raised cssTypedProps 13 -> 14 with the message "bless
+    // TableColumn.minWidth" and never touched scripts/prop-rubric.json, whose
+    // whole purpose is to hold that justification. It is now unavoidable.
+    const r = plan({ alpha: 12, beta: 20 }, ["alpha"]);
+    expect(r.error?.kind).toBe("missing-reason");
+    expect(r.next).toBeUndefined();
+  });
 
-  it("the bare flag locks the improvement in", () => {
-    const r = runHealth({ [METRIC]: ACTUAL + 10 }, "--update-baseline");
-    expect(r.status, r.output).toBe(0);
-    expect(r.after[METRIC]).toBe(ACTUAL);
-    expect(r.output).toMatch(/locked in/);
-  }, SPAWN_TIMEOUT_MS);
+  it("a named metric with a reason rises, and the reason is recorded", () => {
+    const r = plan({ alpha: 12, beta: 20 }, ["alpha"], "ch-unit column needs it");
+    expect(r.error).toBeUndefined();
+    expect(r.next?.alpha).toBe(12);
+    expect(r.raised).toEqual([["alpha", 12]]);
+    // The reason must outlive the commit message.
+    expect((r.next as any)._raises).toEqual({
+      alpha: { from: 10, to: 12, reason: "ch-unit column needs it" },
+    });
+  });
+
+  it("previously recorded reasons are carried forward, not dropped", () => {
+    const withHistory = {
+      ...BASE,
+      _raises: { beta: { from: 19, to: 20, reason: "earlier decision" } },
+    };
+    const r = plan({ alpha: 12, beta: 20 }, ["alpha"], "new decision", withHistory);
+    expect((r.next as any)._raises).toEqual({
+      beta: { from: 19, to: 20, reason: "earlier decision" },
+      alpha: { from: 10, to: 12, reason: "new decision" },
+    });
+  });
+
+  it("_raises is metadata, never treated as a metric", () => {
+    const withHistory = {
+      ...BASE,
+      _raises: { beta: { from: 19, to: 20, reason: "x" } },
+    };
+    const { regressions, improvements } = classify({ alpha: 10, beta: 20 }, withHistory);
+    expect(regressions).toEqual([]);
+    expect(improvements).toEqual([]);
+  });
 });
 
 describe("health ratchet: operator errors surface", () => {
   it("an unknown metric name is rejected rather than ignored", () => {
     // Silently failing to bless a typo'd name would then error about the
     // "unexpected" regression, sending the reader down the wrong path.
-    const r = runHealth({}, "--update-baseline=notAMetric");
-    expect(r.status, r.output).toBe(1);
-    expect(r.output).toMatch(/unknown metric/);
-  }, SPAWN_TIMEOUT_MS);
+    const r = plan({ alpha: 10, beta: 20 }, ["alfa"], "reason");
+    expect(r.error?.kind).toBe("unknown-metric");
+    expect(r.error?.detail).toEqual(["alfa"]);
+  });
 
-  it("a clean tree with tight ceilings passes", () => {
-    const r = runHealth({});
-    expect(r.status, r.output).toBe(0);
-  }, SPAWN_TIMEOUT_MS);
+  it("a typo is reported ahead of a missing reason", () => {
+    // Given both mistakes, the misspelling is the more useful one to surface.
+    expect(plan({ alpha: 10, beta: 20 }, ["alfa"]).error?.kind).toBe(
+      "unknown-metric",
+    );
+  });
+
+  it("a clean tree with tight ceilings changes nothing", () => {
+    const r = plan({ alpha: 10, beta: 20 });
+    expect(r.error).toBeUndefined();
+    expect(r.lowered).toEqual([]);
+    expect(r.raised).toEqual([]);
+  });
+});
+
+// One end-to-end case, so a refactor cannot leave the CLI wired to nothing.
+// Deliberately a single spawn: see the header note about CI.
+describe("health ratchet: the CLI is wired to these rules", () => {
+  it("refuses a bare raise against a real baseline", () => {
+    const realBaseline = JSON.parse(
+      readFileSync(join(root, "scripts", "health-baseline.json"), "utf8"),
+    );
+    const metric = Object.entries(realBaseline).find(
+      ([, v]) => typeof v === "number" && (v as number) > 5,
+    );
+    if (!metric) throw new Error("no non-trivial metric in health-baseline.json");
+    const [name, value] = metric as [string, number];
+
+    const dir = mkdtempSync(join(tmpdir(), "sui-ratchet-"));
+    const path = join(dir, "baseline.json");
+    // Set the ceiling BELOW the real count, so the run sees an unnamed rise.
+    writeFileSync(path, JSON.stringify({ ...realBaseline, [name]: value - 5 }));
+
+    let status = 0;
+    let output = "";
+    try {
+      output = execFileSync(
+        process.execPath,
+        [
+          join(root, "scripts", "health.mjs"),
+          `--baseline-path=${path}`,
+          "--update-baseline",
+        ],
+        { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      );
+    } catch (e: any) {
+      status = e.status ?? 1;
+      output = `${e.stdout ?? ""}${e.stderr ?? ""}`;
+    }
+
+    expect(status, output).toBe(1);
+    expect(output).toMatch(/Refusing to update the baseline/);
+    // And the stale ceiling survived.
+    expect(JSON.parse(readFileSync(path, "utf8"))[name]).toBe(value - 5);
+  }, 60_000);
 });
