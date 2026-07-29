@@ -12,10 +12,12 @@ land.
 
 Two things gate this work and no agent can resolve either:
 
-1. **`NPM_TOKEN` in thorcasting-ui's Cloudflare Pages build environment.** That
-   configuration lives outside every repo, so it cannot be read or set from a
-   checkout. **All of Task 1 waits on it, and doing Task 1 without it breaks the
-   production deploy.**
+1. **`NPM_TOKEN` added to thorcasting-ui's DigitalOcean App Platform spec.** It
+   is not there today. **All of Task 1 waits on it, and doing Task 1 without it
+   breaks the production deploy**, which is `deploy_on_push: true` on `main` —
+   so a merge deploys immediately, with no gate between a bad spec and prod.
+   The change itself is a one-line spec edit (see Task 1); it needs a human only
+   because it touches production configuration and requires the token value.
 2. **A review of [amygdala-ui#211](https://github.com/primestageprime/amygdala-ui/pull/211).**
    One-line pin change plus lockfile. See "Already done" below for exactly what
    was verified on it, so the review doesn't have to re-derive that. **There is
@@ -163,15 +165,56 @@ attribute.
 
 **Repo: `thorcasting-ui`.**
 
+### Where thorcasting-ui actually deploys
+
+**DigitalOcean App Platform**, as a **static site** — app id
+`8a178a90-bf79-4303-a663-e4b7bff2218c`, `doctl` context `primestage`, serving
+`thorcasting.com` and `thorcasting.primestagetechnology.com`. Read the spec with:
+
+```sh
+doctl apps spec get 8a178a90-bf79-4303-a663-e4b7bff2218c --context primestage
+```
+
+`deploy_on_push: true` on `main`, so **a merge deploys straight to production**
+with nothing in between.
+
+> Note for agents: the `ship` skill's routing table states thorcasting-ui is on
+> Cloudflare and that its deploy config is "NOT in the repo". Both halves are
+> wrong — it is DigitalOcean, and the spec is readable and editable via `doctl`.
+> That claim cost real time on 2026-07-29; do not re-derive the blocker from it.
+
 ### Blocking prerequisite — confirm before touching any file
 
-`NPM_TOKEN` (a PAT with `read:packages`) must exist in the **Cloudflare Pages
-build environment**. thorcasting-ui's deploy configuration is not in the repo,
-so this cannot be verified from a checkout. **If the token is not set, this
-change breaks the production deploy.** Confirm with the repo owner first.
+The current build command exists **entirely to make git dependencies resolve**:
 
-`thorcasting-ui` today has no `.npmrc`, no GitHub Actions workflows, and no
-reference to `NPM_TOKEN` anywhere in the repo.
+```sh
+git config --global url."https://oauth2:${GIT_TOKEN}@github.com/".insteadOf ssh://git@github.com/ \
+  && npm ci && npm run build
+```
+
+`GIT_TOKEN` is already a `BUILD_TIME` `SECRET`. **`NPM_TOKEN` is not set at
+all**, and the registry install cannot authenticate without it. Add it as a
+`BUILD_TIME` `SECRET` with a PAT carrying `read:packages`:
+
+```sh
+doctl apps spec get 8a178a90-bf79-4303-a663-e4b7bff2218c --context primestage > /tmp/spec.yaml
+# add:  - key: NPM_TOKEN
+#         scope: BUILD_TIME
+#         type: SECRET
+#         value: <pat>
+doctl apps update 8a178a90-bf79-4303-a663-e4b7bff2218c --spec /tmp/spec.yaml --context primestage
+shred -u /tmp/spec.yaml
+```
+
+Existing secrets round-trip safely — `spec get` returns them as encrypted
+`EV[...]` ciphertext. **Never commit the plaintext spec.** Applying it triggers
+a redeploy, so do this while someone can watch the build.
+
+**`GIT_TOKEN` and the URL-rewrite must stay.** thorcasting-ui has a *second*
+git dependency, `@primestageprime/auth0-stdb-client#v0.1.4`, which this change
+does not touch. Do not "clean up" the build command back to a bare `npm ci`.
+
+`thorcasting-ui` also has no `.npmrc` and no GitHub Actions workflows.
 
 ### Steps
 
@@ -180,8 +223,9 @@ as of 2026-07-29.** Check `git status` and do not sweep that work into a commit.
 Branch from a clean state or ask the owner what to do with it first.
 
 `docs/sui-github-packages.md` already exists in that repo and describes this
-migration. It was written when SUI was at 0.43.0 and predates the Cloudflare
-question, so treat its "no urgency" framing as superseded by this document.
+migration. It was written when SUI was at 0.43.0 and predates the deploy
+question above, so treat its "no urgency" framing as superseded by this
+document.
 Its mechanics are broadly right with **one stale step**: it says to run
 `npm install solid-js d3-scale katex` to declare peer deps. SUI's
 `peerDependencies` are only `d3-scale` and `solid-js`, both of which
@@ -344,7 +388,7 @@ publish-time one.
 
 | Task | Repo | Blocked by |
 |---|---|---|
-| 1 — resolve SUI from the registry | **`thorcasting-ui`** | `NPM_TOKEN` in the Cloudflare Pages build env (human decision) |
+| 1 — resolve SUI from the registry | **`thorcasting-ui`** | `NPM_TOKEN` in the DigitalOcean app spec (human decision) |
 | 2 — fix `SUI_SOURCE_LINKED` | **`thorcasting-ui`** | nothing — can start now |
 | 3 — `prepare` → `prepack` | **`solid-ui-components`** | Task 1 + amygdala-ui#211 |
 | merge PR #211 | **`amygdala-ui`** | review only |
