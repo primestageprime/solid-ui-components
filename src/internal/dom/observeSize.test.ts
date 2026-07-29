@@ -6,6 +6,7 @@ type Cb = (entries: ResizeObserverEntry[]) => void;
 let dispatch: Cb | null = null;
 let disconnected = 0;
 let observed: Element[] = [];
+let observeCalls: { el: Element; options?: ResizeObserverOptions }[] = [];
 
 const entryFor = (width: number, height: number): ResizeObserverEntry =>
   ({
@@ -18,8 +19,9 @@ class FakeRO {
   constructor(cb: Cb) {
     dispatch = cb;
   }
-  observe(el: Element) {
+  observe(el: Element, options?: ResizeObserverOptions) {
     observed.push(el);
+    observeCalls.push({ el, options });
   }
   disconnect() {
     disconnected += 1;
@@ -40,6 +42,7 @@ describe("observeSize", () => {
     dispatch = null;
     disconnected = 0;
     observed = [];
+    observeCalls = [];
     frames = [];
     vi.stubGlobal("ResizeObserver", FakeRO);
     vi.stubGlobal("requestAnimationFrame", (f: () => void) => {
@@ -142,6 +145,34 @@ describe("observeSize", () => {
     // An unmounted consumer must never receive a write.
     expect(seen).toEqual([]);
     expect(disconnected).toBe(1);
+  });
+
+  it("forwards observe options, and omitting them passes nothing", () => {
+    const el = document.createElement("div");
+    observeSize(el, () => {});
+    expect(observeCalls).toEqual([{ el, options: undefined }]);
+
+    observeCalls = [];
+    const opts: ResizeObserverOptions = { box: "border-box" };
+    observeSize(el, () => {}, opts);
+    expect(observeCalls).toEqual([{ el, options: opts }]);
+  });
+
+  it("keeps the guard and the rAF deferral on the border-box path", () => {
+    // A `box` option must not become a way to bypass the loop-safety the
+    // primitive exists for.
+    const el = document.createElement("div");
+    const seen: ObservedSize[] = [];
+    observeSize(el, (s) => seen.push(s), { box: "border-box" });
+
+    dispatch?.([entryFor(300, 100)]);
+    expect(seen).toEqual([]); // still deferred, not synchronous
+    pump();
+    expect(seen).toEqual([{ width: 300, height: 100 }]);
+
+    dispatch?.([entryFor(300, 100)]); // unchanged — still guarded
+    pump();
+    expect(seen).toHaveLength(1);
   });
 
   it("is a no-op where ResizeObserver is unavailable (SSR / jsdom)", () => {

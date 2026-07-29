@@ -3,11 +3,16 @@
 // `renderItem` and `emptyLabel` are the consumer's, so the sizing model cannot
 // assume a row height; it measures one. These tests pin the two things that
 // makes correct: the measured elements are ones that actually EXIST, and the
-// observer watches those elements rather than only the root — otherwise
+// observers watch those elements rather than only the root — otherwise
 // anything that changes row height without resizing the root (a theme switch, a
 // late web font, a swapped renderItem) leaves every bucket sized from stale
 // metrics. jsdom reports every offsetHeight as 0, so the honest gate is which
 // elements are observed, not the numbers that come back.
+//
+// `observeSize` owns ONE observer per element, so "what is observed" is the
+// union across live instances; disposing an observation disconnects its own
+// observer, which drops it from that union. The assertions below are unchanged
+// in intent — only the way the observed set is collected.
 import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { createSignal } from "solid-js";
 import { cleanup, render } from "@solidjs/testing-library";
@@ -34,6 +39,7 @@ class FakeResizeObserver {
   }
   disconnect() {
     this.observed = [];
+    this.boxes = [];
   }
 }
 
@@ -71,10 +77,11 @@ const renderQ = (items: Item[]) => {
   return { ...r, setRows };
 };
 
-const observer = () => {
-  expect(FakeResizeObserver.instances).toHaveLength(1);
-  return FakeResizeObserver.instances[0];
-};
+// Everything currently observed, across every live observer.
+const observer = () => ({
+  observed: FakeResizeObserver.instances.flatMap((o) => o.observed),
+  boxes: FakeResizeObserver.instances.flatMap((o) => o.boxes),
+});
 const bucketOfEl = (el: Element) =>
   (el.closest("[data-bq-bucket]") as HTMLElement | null)?.dataset.bqBucket;
 

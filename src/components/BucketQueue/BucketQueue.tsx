@@ -32,6 +32,7 @@ import { diffTransfers } from "./transfer";
 import { find, findIndex, flatMap, map } from "../../fn";
 import type { BucketQueueProps, Bucket } from "./types";
 import "./BucketQueue.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export type { BucketQueueProps, Bucket } from "./types";
 
@@ -92,7 +93,6 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   // The queue then sized the taller bucket from the shorter one's row and left
   // the difference as dead space at the bottom.
   const rowRefs = new Map<string, HTMLDivElement>();
-  let ro: ResizeObserver | undefined;
   const [availH, setAvailH] = createSignal(props.height ?? 0);
   const [rowHs, setRowHs] = createSignal<ReadonlyMap<string, number>>(new Map());
   const [headH, setHeadH] = createSignal(HEADER_FALLBACK);
@@ -114,25 +114,49 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     setRowHs((prev) => retainRowHeights(bucketKeys(), live, prev));
   };
 
-  // Re-point the observer when the render swaps a measured element out — a new
-  // first row after a transfer, a bucket that just emptied. `observe()` fires
-  // immediately with the element's current size, so re-pointing re-measures.
+  // `observeSize` owns ONE observer per element and hands back a disposer, so
+  // re-pointing disposes the old element's observation and starts a fresh one
+  // rather than unobserve/observe against a shared observer. Each slot keeps
+  // its own disposer; a fresh observation always delivers its first
+  // measurement (nothing to change-guard against yet), so re-pointing still
+  // re-measures — a frame later, like every other write in the library.
+  // Fixed slots plus one per BUCKET row — `row:<bucketKey>` — because the row
+  // sample is per bucket, not global.
+  type Slot = "root" | "head" | "empty" | `row:${string}`;
+  const disposers = new Map<Slot, () => void>();
+  let observing = false;
+  const observeSlot = (slot: Slot, el: HTMLDivElement) => {
+    disposers.get(slot)?.();
+    disposers.set(slot, observeSize(el, () => measure(), METRIC_BOX));
+  };
+  const releaseSlot = (slot: Slot) => {
+    disposers.get(slot)?.();
+    disposers.delete(slot);
+  };
+
+  // Re-point when the render swaps a measured element out — a new first row
+  // after a transfer, a bucket that just emptied. Refs fire during render,
+  // before mount, so pre-mount calls only record the element; onMount observes
+  // whatever is present by then.
   const tracker =
-    (get: () => HTMLDivElement | undefined, set: (el: HTMLDivElement) => void) =>
+    (
+      slot: Slot,
+      get: () => HTMLDivElement | undefined,
+      set: (el: HTMLDivElement) => void,
+    ) =>
     (el: HTMLDivElement) => {
       const prev = get();
       if (prev === el) return;
-      if (prev) ro?.unobserve(prev);
       set(el);
-      ro?.observe(el, METRIC_BOX);
+      if (observing) observeSlot(slot, el);
     };
-  // The per-bucket form of the same re-pointing, over the row map.
+  // The per-bucket form of the same re-pointing, over the row map. Disposing
+  // the previous observation is what `unobserve` did on the shared observer.
   const trackRow = (key: string, el: HTMLDivElement) => {
     const prev = rowRefs.get(key);
     if (prev === el) return;
-    if (prev) ro?.unobserve(prev);
     rowRefs.set(key, el);
-    ro?.observe(el, METRIC_BOX);
+    if (observing) observeSlot(`row:${key}`, el);
   };
   // Runs when a tracked row unmounts. Guarded on IDENTITY because a replaced
   // first row disposes at a moment of Solid's choosing relative to its
@@ -142,16 +166,18 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   // watched is released.
   const untrackRow = (key: string, el: HTMLDivElement | undefined) => {
     if (!el || rowRefs.get(key) !== el) return;
-    ro?.unobserve(el);
+    releaseSlot(`row:${key}`);
     rowRefs.delete(key);
   };
   const trackHead = tracker(
+    "head",
     () => headRef,
     (el) => {
       headRef = el;
     },
   );
   const trackEmpty = tracker(
+    "empty",
     () => emptyRef,
     (el) => {
       emptyRef = el;
@@ -160,18 +186,23 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
 
   onMount(() => {
     measure();
-    if (typeof ResizeObserver === "undefined") return; // jsdom/SSR
-    ro = new ResizeObserver(() => measure());
+    observing = true;
     // The root supplies the ALLOTTED height; the row/header/empty strip supply
     // the CONTENT metrics. Both are needed — see the note above.
-    for (const el of [rootRef, headRef, emptyRef, ...rowRefs.values()])
-      if (el) ro.observe(el, METRIC_BOX);
-    // A web font landing after mount re-lays-out the row, which the observer
-    // above does catch — but ask directly rather than depend on the timing.
+    const fixed: [Slot, HTMLDivElement | undefined][] = [
+      ["root", rootRef],
+      ["head", headRef],
+      ["empty", emptyRef],
+    ];
+    for (const [slot, el] of fixed) if (el) observeSlot(slot, el);
+    for (const [key, el] of rowRefs) if (el) observeSlot(`row:${key}`, el);
+    // A web font landing after mount re-lays-out the row, which the observers
+    // above do catch — but ask directly rather than depend on the timing.
     document.fonts?.ready.then(measure).catch(() => undefined);
     onCleanup(() => {
-      ro?.disconnect();
-      ro = undefined;
+      observing = false;
+      for (const dispose of disposers.values()) dispose();
+      disposers.clear();
     });
   });
 

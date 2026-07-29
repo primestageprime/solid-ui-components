@@ -45,6 +45,15 @@ export interface ObservedSize {
  * itself (`clientWidth`, `scrollHeight`, ...) — the size argument governs *when*
  * the callback runs, not what it must use.
  *
+ * `options` is forwarded verbatim to `observe()`. It exists for `{ box:
+ * "border-box" }`: the default content-box observation does NOT fire when only
+ * padding or a border changes, so a callback that measures the BORDER box
+ * (`offsetHeight`) would silently stop responding to a themed padding change or
+ * a consumer's `renderItem` swapping its own padding — no error, no warning,
+ * just a component that quietly stops updating. Observe the box you measure.
+ * Omitting `options` leaves behaviour byte-identical; the change-guard and the
+ * rAF coalescing apply on every path.
+ *
  * @returns a disposer that disconnects the observer and cancels any pending
  * frame. Call it from `onCleanup` so an unmounted component can never write to
  * a disposed signal.
@@ -52,6 +61,7 @@ export interface ObservedSize {
 export function observeSize(
   el: Element,
   onSize: (size: ObservedSize) => void,
+  options?: ResizeObserverOptions,
 ): () => void {
   if (typeof ResizeObserver === "undefined") return () => {};
 
@@ -117,7 +127,10 @@ export function observeSize(
       : (setTimeout(flush, 0) as unknown as number);
   });
 
-  observer.observe(el);
+  // The guard and the rAF coalescing above are on the single dispatch path, so
+  // they apply whatever box is observed — `options` changes only WHEN the
+  // observer fires, never how the write is scheduled.
+  observer.observe(el, options);
 
   return () => {
     cancelFrame();
