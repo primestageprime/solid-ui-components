@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`dist/index.css` was 78.1% base64-encoded KaTeX fonts**, downloaded by every
+  user of every SUI-consuming app on first load, render-blocking — even though
+  four of the five consumers render no formulas at all.
+
+  | | Raw | gzip | brotli |
+  |---|---|---|---|
+  | Before | 1,843,596 | 1,044,358 | 885,277 |
+  | **After** | **384,820** | **89,466** | **70,460** |
+
+  A **92% reduction in transfer size**. The compression ratio was the tell: CSS
+  normally compresses to ~10–15% of raw, but this only reached 43%, because
+  base64 binary is already-compressed data gzip cannot squeeze.
+
+  Cause: a plain `import "katex/dist/katex.min.css"` in `MathFormula.tsx`.
+  **Vite's library mode inlines every referenced asset as a `data:` URI
+  regardless of size — `assetsInlineLimit` does not apply there** (verified:
+  setting it to 0 changed nothing). That embedded all 60 KaTeX font files, in
+  three formats. Inlining also defeats what `@font-face` does for free: fonts
+  stop downloading lazily, and format negotiation dies, so the woff + ttf
+  copies — 1,089,952 bytes — were pure waste to every modern browser, which
+  only ever uses woff2.
+
+  KaTeX's stylesheet now ships as `dist/katex.css` beside real font files in
+  `dist/fonts/`, wired in via an `@import` at the top of `dist/index.css`. Fonts
+  are fetched lazily, only when a formula actually paints, and only in the
+  format the browser picks — a consumer that renders no formulas now downloads
+  **zero** font bytes.
+
+  **Non-breaking**: consumers importing
+  `@primestageprime/solid-ui-components/index.css` need no changes. Bundlers
+  inline the `@import` at build time, so there is no extra round trip in
+  production. `MathFormula.tsx` keeps its import so `vite serve` and
+  source-linked consumers (`SUI_SOURCE_LINKED`) still style formulas — the
+  stub applies to library builds only.
+
+  See `docs/adr/0006-katex-css-fonts-not-inlined.md`; guarded by
+  `scripts/build-config.test.ts`.
+
 ## 0.125.2
 
 ### Fixed
