@@ -148,7 +148,16 @@ const stripComments = (src) =>
 // noise here; they still count as chain links above).
 const ITERATION_METHODS =
   "map|filter|reduce|reduceRight|flatMap|forEach|some|every|find|findIndex|findLast|sort|toSorted";
-const METHOD_CALL = new RegExp(`\\.(?:${ITERATION_METHODS})\\(`, "g");
+// The negative lookbehind excludes SPREADS of a function-first call:
+// `Math.max(...map(f, xs))` ends in `...map(`, whose third dot is not a
+// member-access dot at all. Without it, this metric counted 10 sites that had
+// ALREADY been converted to the style it exists to encourage — penalising the
+// fix and making those files impossible to clean. `xs.map(`, `a.b.map(` and
+// `xs?.map(` are all still matched; only a dot preceded by a dot is skipped.
+const METHOD_CALL = new RegExp(
+  `(?<!\\.)\\.(?:${ITERATION_METHODS})\\(`,
+  "g",
+);
 
 hits.dotChains = [];
 hits.collectionMethodCalls = [];
