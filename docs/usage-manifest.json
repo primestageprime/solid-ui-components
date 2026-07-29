@@ -2335,17 +2335,12 @@
           },
           {
             "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
+            "line": 41,
             "kind": "named"
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
             "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
             "kind": "named"
           },
           {
@@ -2361,48 +2356,6 @@
           {
             "file": "src/components/daysnapshot/FactFilterChips.tsx",
             "line": 18,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
-            "kind": "named"
-          }
-        ],
-        "CardGrid": [
-          {
-            "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/POStatusReport.tsx",
-            "line": 21,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
-            "line": 15,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
             "kind": "named"
           }
         ],
@@ -2483,63 +2436,6 @@
             "kind": "named"
           }
         ],
-        "ContentStack": [
-          {
-            "file": "src/components/CustomerScorecard.tsx",
-            "line": 35,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/GrossMarginReport.tsx",
-            "line": 17,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/InvoiceSnapshot.tsx",
-            "line": 17,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/MonthlyInvoiceRevenue.tsx",
-            "line": 18,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/MonthlySalesOrders.tsx",
-            "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/POStatusReport.tsx",
-            "line": 21,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/ReturnsCreditsReport.tsx",
-            "line": 22,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 20,
-            "kind": "named"
-          }
-        ],
         "EllipsisText": [
           {
             "file": "src/components/AccountMenu.tsx",
@@ -2596,6 +2492,63 @@
             "kind": "named"
           }
         ],
+        "GrowStack": [
+          {
+            "file": "src/components/CustomerScorecard.tsx",
+            "line": 35,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 41,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlySalesOrders.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReturnsCreditsReport.tsx",
+            "line": 22,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "line": 20,
+            "kind": "named"
+          }
+        ],
         "Icon": [
           {
             "file": "src/app.tsx",
@@ -2646,6 +2599,70 @@
             "kind": "named"
           }
         ],
+        "LooseCardGrid": [
+          {
+            "file": "src/components/ExecDashboard.tsx",
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/FulfillmentReport.tsx",
+            "line": 41,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayKpiCards.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayMarginKpi.tsx",
+            "line": 15,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 24,
+            "kind": "named"
+          }
+        ],
+        "LooseWrapRow": [
+          {
+            "file": "src/components/DailySnapshot.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/GrossMargin.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyPerformance.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
+            "line": 37,
+            "kind": "named"
+          }
+        ],
         "MetricCard": [
           {
             "file": "src/components/DailySnapshot.tsx",
@@ -2659,7 +2676,7 @@
           },
           {
             "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
+            "line": 41,
             "kind": "named"
           },
           {
@@ -2683,18 +2700,18 @@
             "kind": "named"
           },
           {
-            "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
             "file": "src/components/daysnapshot/DayMarginKpi.tsx",
             "line": 15,
             "kind": "named"
           },
           {
+            "file": "src/components/daysnapshot/KpiCard.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
             "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
+            "line": 24,
             "kind": "named"
           }
         ],
@@ -2735,7 +2752,7 @@
           },
           {
             "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
+            "line": 41,
             "kind": "named"
           },
           {
@@ -2760,12 +2777,12 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 28,
+            "line": 37,
             "kind": "named"
           },
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
+            "line": 20,
             "kind": "named"
           },
           {
@@ -2864,7 +2881,7 @@
         "RingChart": [
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
+            "line": 20,
             "kind": "named"
           },
           {
@@ -2891,7 +2908,7 @@
           },
           {
             "file": "src/components/FulfillmentReport.tsx",
-            "line": 35,
+            "line": 41,
             "kind": "named"
           },
           {
@@ -3075,13 +3092,20 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 28,
+            "line": 37,
             "kind": "named"
           },
           {
             "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
             "line": 17,
             "kind": "named"
+          }
+        ],
+        "SparklineTrend": [
+          {
+            "file": "src/components/daysnapshot/KpiCard.tsx",
+            "line": 13,
+            "kind": "type"
           }
         ],
         "SpreadRow": [
@@ -3128,7 +3152,7 @@
           },
           {
             "file": "src/components/DayBreakdownTile.tsx",
-            "line": 24,
+            "line": 25,
             "kind": "type"
           },
           {
@@ -3180,7 +3204,7 @@
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 28,
+            "line": 37,
             "kind": "named"
           },
           {
@@ -3294,26 +3318,6 @@
         ],
         "TightStack": [
           {
-            "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/SalesOrdersSnapshot.tsx",
-            "line": 20,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 28,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
             "file": "src/components/daysnapshot/DayScrubChart.tsx",
             "line": 8,
             "kind": "named"
@@ -3327,14 +3331,14 @@
             "file": "src/components/daysnapshot/FactFilterChips.tsx",
             "line": 18,
             "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
-            "kind": "named"
           }
         ],
         "Tooltip": [
+          {
+            "file": "src/components/DayBreakdownTile.tsx",
+            "line": 18,
+            "kind": "named"
+          },
           {
             "file": "src/components/ReportHeader.tsx",
             "line": 8,
@@ -3346,6 +3350,16 @@
             "kind": "named"
           },
           {
+            "file": "src/components/daysnapshot/KpiCard.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
+            "line": 24,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/reports.tsx",
             "line": 14,
             "kind": "named"
@@ -3353,13 +3367,8 @@
         ],
         "TrendSparkline": [
           {
-            "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
+            "file": "src/components/daysnapshot/KpiCard.tsx",
+            "line": 13,
             "kind": "named"
           }
         ],
@@ -3377,32 +3386,24 @@
             "kind": "type"
           }
         ],
-        "WrapRow": [
-          {
-            "file": "src/components/DailySnapshot.tsx",
-            "line": 20,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/GrossMargin.tsx",
-            "line": 20,
-            "kind": "named"
-          },
+        "WrapItemStack": [
           {
             "file": "src/components/InventoryHealthReport.tsx",
             "line": 19,
             "kind": "named"
           },
           {
-            "file": "src/components/MonthlyPerformance.tsx",
-            "line": 18,
+            "file": "src/components/SalesOrdersSnapshot.tsx",
+            "line": 20,
             "kind": "named"
           },
           {
             "file": "src/components/daysnapshot/DayBreakdownGrid.tsx",
-            "line": 28,
+            "line": 37,
             "kind": "named"
-          },
+          }
+        ],
+        "WrapRow": [
           {
             "file": "src/components/daysnapshot/DaySnapshotHeader.tsx",
             "line": 7,
@@ -3982,12 +3983,12 @@
         "trendOf": [
           {
             "file": "src/components/daysnapshot/DayKpiCards.tsx",
-            "line": 8,
+            "line": 20,
             "kind": "named"
           },
           {
             "file": "src/components/daysnapshot/MonthKpiCards.tsx",
-            "line": 9,
+            "line": 24,
             "kind": "named"
           }
         ]
@@ -7566,7 +7567,7 @@
           },
           {
             "file": "src/components/MetricTimeseriesChart.tsx",
-            "line": 12,
+            "line": 13,
             "kind": "factory-call"
           }
         ],
@@ -10006,9 +10007,6 @@
       "goose-ui",
       "jtf-ui"
     ],
-    "CardGrid": [
-      "goose-ui"
-    ],
     "CardSurface": [
       "dside-ui",
       "dside-work",
@@ -10103,7 +10101,6 @@
       "dside-ui"
     ],
     "ContentStack": [
-      "goose-ui",
       "jtf-ui"
     ],
     "ContentSurface": [
@@ -10299,6 +10296,9 @@
     "GrowColumn": [
       "jtf-ui"
     ],
+    "GrowStack": [
+      "goose-ui"
+    ],
     "HeatStreamGrid": [
       "jtf-ui"
     ],
@@ -10396,6 +10396,12 @@
     ],
     "LongTextCell": [
       "amygdala-ui"
+    ],
+    "LooseCardGrid": [
+      "goose-ui"
+    ],
+    "LooseWrapRow": [
+      "goose-ui"
     ],
     "Markdown": [
       "dside-ui",
@@ -10662,6 +10668,9 @@
     ],
     "SpacedStack": [
       "dside-work"
+    ],
+    "SparklineTrend": [
+      "goose-ui"
     ],
     "SplitQueueList": [
       "dside-ui",
@@ -10966,6 +10975,9 @@
       "goose-ui"
     ],
     "WorkerStatus": [
+      "goose-ui"
+    ],
+    "WrapItemStack": [
       "goose-ui"
     ],
     "WrapRow": [
