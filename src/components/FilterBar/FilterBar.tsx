@@ -179,7 +179,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
   // cache each group's natural width, recompute against the container.
   const [visibleGroups, setVisibleGroups] = createSignal(Number.POSITIVE_INFINITY);
   const [naturalWidths, setNaturalWidths] = createSignal<number[]>([]);
-  let groupEls: (HTMLDivElement | undefined)[] = [];
+  const groupEls: (HTMLDivElement | undefined)[] = [];
 
   const recomputeOverflow = () => {
     const widths = naturalWidths();
