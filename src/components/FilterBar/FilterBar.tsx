@@ -179,7 +179,6 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
   // cache each group's natural width, recompute against the container.
   const [visibleGroups, setVisibleGroups] = createSignal(Number.POSITIVE_INFINITY);
   const [naturalWidths, setNaturalWidths] = createSignal<number[]>([]);
-  const groupEls: (HTMLDivElement | undefined)[] = [];
 
   const recomputeOverflow = () => {
     const widths = naturalWidths();
@@ -206,24 +205,62 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
     setVisibleGroups(count);
   };
 
-  const measureGroups = () => {
+  // Measure the LIVE DOM, not a ref array. An earlier version collected element
+  // refs from the `For` into an array indexed by position; that couples
+  // measurement to ref identity and ordering, and any environment where those
+  // refs don't land as expected — hydration being the obvious one — yields an
+  // array of zeros. Zero widths look exactly like "everything fits", so the bar
+  // silently stops collapsing and clips instead, which is the one failure this
+  // whole tier exists to prevent. Reading the rendered children has no such
+  // failure mode: if the elements are there, the measurement is right.
+  //
+  // Returns whether it managed to take a usable measurement.
+  const measureGroups = (): boolean => {
+    if (!groupsRef) return false;
+    const els = groupsRef.querySelectorAll<HTMLElement>(
+      ".sui-filter-bar__group",
+    );
+    const total = renderGroups().length;
+    // Every group must be rendered — we measure natural widths, so this is only
+    // valid while nothing is trimmed.
+    if (els.length !== total || total === 0) return false;
+    // A zero width means layout hasn't happened yet (or the bar is
+    // display:none). Caching that would latch "everything fits" permanently.
     const widths: number[] = [];
-    for (let i = 0; i < renderGroups().length; i++) {
-      const el = groupEls[i];
-      widths.push(el ? el.offsetWidth : 0);
+    for (let i = 0; i < els.length; i += 1) {
+      const w = els[i].offsetWidth;
+      if (w === 0) return false;
+      widths.push(w);
     }
     setNaturalWidths(widths);
     recomputeOverflow();
+    return true;
   };
 
-  // Render everything inline for one frame so each group can be measured at its
-  // natural width, then trim.
+  /** Measure if we have no usable widths yet, otherwise just re-fit. */
+  const sync = () => {
+    if (naturalWidths().length === renderGroups().length) recomputeOverflow();
+    else measureGroups();
+  };
+
+  // Render everything inline, then trim once measured. The measurement is
+  // RETRIED rather than taken once and trusted: the first frame after mount can
+  // land before layout or before the stylesheet applies, and a single early
+  // measurement would cache zeros forever. Bounded so a permanently hidden bar
+  // can't spin.
+  const MAX_MEASURE_FRAMES = 20;
   createEffect(() => {
     const n = renderGroups().length;
     setVisibleGroups(Number.POSITIVE_INFINITY);
-    if (typeof requestAnimationFrame !== "function") return;
-    void n;
-    requestAnimationFrame(measureGroups);
+    setNaturalWidths([]);
+    if (typeof requestAnimationFrame !== "function" || n === 0) return;
+    let attempt = 0;
+    const tick = () => {
+      if (measureGroups()) return;
+      if (++attempt >= MAX_MEASURE_FRAMES) return;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   });
 
   // Split once, read twice — the shown/hidden pair is one decision, and
@@ -237,7 +274,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
   const hiddenGroups = () => splitGroups()[1];
 
   onMount(() => {
-    if (groupsRef) onCleanup(observeSize(groupsRef, () => recomputeOverflow()));
+    if (groupsRef) onCleanup(observeSize(groupsRef, () => sync()));
     const onDocClick = (event: MouseEvent) => {
       if (!openMenu() || !barRef) return;
       if (!barRef.contains(event.target as Node)) closeMenu();
@@ -311,13 +348,8 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
 
         <div class="sui-filter-bar__groups" ref={groupsRef}>
           <For each={shownGroups()}>
-            {(group, i) => (
-              <div
-                class="sui-filter-bar__group"
-                ref={(el) => {
-                  groupEls[i()] = el;
-                }}
-              >
+            {(group) => (
+              <div class="sui-filter-bar__group">
                 <button
                   type="button"
                   class="sui-filter-bar__group-label"

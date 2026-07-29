@@ -2413,6 +2413,16 @@
             "file": "src/components/AppNav.tsx",
             "line": 7,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/census/[source].tsx",
+            "line": 26,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/object/[source]/[name].tsx",
+            "line": 9,
+            "kind": "named"
           }
         ],
         "CompactSurface": [
@@ -2648,6 +2658,11 @@
             "file": "src/components/daysnapshot/MonthKpiCards.tsx",
             "line": 24,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/overview.tsx",
+            "line": 9,
+            "kind": "named"
           }
         ],
         "LooseWrapRow": [
@@ -2832,12 +2847,37 @@
         ],
         "NarrowStack": [
           {
+            "file": "src/components/DailySnapshot.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/GrossMargin.tsx",
+            "line": 20,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyPerformance.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/ReportCharts.tsx",
             "line": 12,
             "kind": "named"
           },
           {
             "file": "src/components/SettingsPanel.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/census.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/reports/[code].tsx",
             "line": 13,
             "kind": "named"
           }
@@ -3149,6 +3189,13 @@
             "file": "src/lib/reportStatus.ts",
             "line": 3,
             "kind": "type"
+          }
+        ],
+        "StretchRow": [
+          {
+            "file": "src/routes/transfer.tsx",
+            "line": 12,
+            "kind": "named"
           }
         ],
         "THEMES": [
@@ -3488,7 +3535,7 @@
           },
           {
             "file": "src/components/DailySnapshot.tsx",
-            "line": 59,
+            "line": 58,
             "kind": "factory-call"
           },
           {
@@ -3498,7 +3545,7 @@
           },
           {
             "file": "src/components/GrossMargin.tsx",
-            "line": 85,
+            "line": 84,
             "kind": "factory-call"
           },
           {
@@ -3508,7 +3555,7 @@
           },
           {
             "file": "src/components/MonthlyPerformance.tsx",
-            "line": 78,
+            "line": 77,
             "kind": "factory-call"
           },
           {
@@ -3528,7 +3575,7 @@
           },
           {
             "file": "src/routes/reports/[code].tsx",
-            "line": 79,
+            "line": 78,
             "kind": "factory-call"
           }
         ],
@@ -3560,17 +3607,17 @@
           },
           {
             "file": "src/routes/census/[source].tsx",
+            "line": 39,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/census/[source].tsx",
             "line": 40,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/census/[source].tsx",
-            "line": 41,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/census/[source].tsx",
-            "line": 43,
+            "line": 42,
             "kind": "factory-call"
           },
           {
@@ -3580,17 +3627,17 @@
           },
           {
             "file": "src/routes/object/[source]/[name].tsx",
+            "line": 27,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/object/[source]/[name].tsx",
+            "line": 28,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/object/[source]/[name].tsx",
             "line": 29,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 30,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 31,
             "kind": "factory-call"
           }
         ],
@@ -3617,7 +3664,7 @@
           },
           {
             "file": "src/routes/object/[source]/[name].tsx",
-            "line": 36,
+            "line": 34,
             "kind": "factory-call"
           }
         ],
@@ -3629,7 +3676,7 @@
           },
           {
             "file": "src/routes/transfer.tsx",
-            "line": 53,
+            "line": 52,
             "kind": "factory-call"
           }
         ],
@@ -3686,17 +3733,17 @@
           },
           {
             "file": "src/routes/object/[source]/[name].tsx",
+            "line": 22,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/object/[source]/[name].tsx",
+            "line": 23,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/object/[source]/[name].tsx",
             "line": 24,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 25,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 26,
             "kind": "factory-call"
           },
           {
@@ -3706,17 +3753,17 @@
           },
           {
             "file": "src/routes/overview.tsx",
+            "line": 24,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/overview.tsx",
             "line": 25,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/overview.tsx",
             "line": 26,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/overview.tsx",
-            "line": 27,
             "kind": "factory-call"
           },
           {
@@ -3736,6 +3783,11 @@
           },
           {
             "file": "src/routes/transfer.tsx",
+            "line": 36,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/transfer.tsx",
             "line": 37,
             "kind": "factory-call"
           },
@@ -3747,58 +3799,6 @@
           {
             "file": "src/routes/transfer.tsx",
             "line": 39,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/transfer.tsx",
-            "line": 40,
-            "kind": "factory-call"
-          }
-        ],
-        "createRow": [
-          {
-            "file": "src/routes/census/[source].tsx",
-            "line": 26,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/census/[source].tsx",
-            "line": 39,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 9,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 22,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/object/[source]/[name].tsx",
-            "line": 23,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/overview.tsx",
-            "line": 9,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/overview.tsx",
-            "line": 23,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/transfer.tsx",
-            "line": 12,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/transfer.tsx",
-            "line": 35,
             "kind": "factory-call"
           }
         ],
@@ -3840,7 +3840,7 @@
           },
           {
             "file": "src/routes/overview.tsx",
-            "line": 24,
+            "line": 23,
             "kind": "factory-call"
           },
           {
@@ -3860,59 +3860,7 @@
           },
           {
             "file": "src/routes/transfer.tsx",
-            "line": 36,
-            "kind": "factory-call"
-          }
-        ],
-        "createStack": [
-          {
-            "file": "src/components/DailySnapshot.tsx",
-            "line": 20,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/DailySnapshot.tsx",
-            "line": 56,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/GrossMargin.tsx",
-            "line": 20,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/GrossMargin.tsx",
-            "line": 83,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/MonthlyPerformance.tsx",
-            "line": 18,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/MonthlyPerformance.tsx",
-            "line": 76,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/census.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/census.tsx",
-            "line": 19,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/routes/reports/[code].tsx",
-            "line": 13,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/reports/[code].tsx",
-            "line": 74,
+            "line": 35,
             "kind": "factory-call"
           }
         ],
@@ -3944,7 +3892,7 @@
           },
           {
             "file": "src/routes/object/[source]/[name].tsx",
-            "line": 34,
+            "line": 32,
             "kind": "factory-call"
           },
           {
@@ -3954,7 +3902,7 @@
           },
           {
             "file": "src/routes/overview.tsx",
-            "line": 28,
+            "line": 27,
             "kind": "factory-call"
           },
           {
@@ -3976,7 +3924,7 @@
           },
           {
             "file": "src/routes/census.tsx",
-            "line": 21,
+            "line": 20,
             "kind": "factory-call"
           }
         ],
@@ -10730,6 +10678,7 @@
       "dside-ui"
     ],
     "StretchRow": [
+      "goose-ui",
       "jtf-ui"
     ],
     "StringCell": [
@@ -11083,7 +11032,6 @@
     ],
     "createRow": [
       "dside-ui",
-      "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -11098,7 +11046,6 @@
     ],
     "createStack": [
       "dside-ui",
-      "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],

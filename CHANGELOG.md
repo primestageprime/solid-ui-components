@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+## 0.124.1
+
+### Fixed
+
+- **`FilterBar` tier-three overflow did not fire under hydration — active
+  filters were clipped instead of collapsing.** The width measurement collected
+  per-group element refs into a positional array from inside the `For`
+  (`ref={(el) => { groupEls[i()] = el; }}`) and read `offsetWidth` from it.
+  Where those refs don't populate as expected — an SSR/hydration consumer, as
+  opposed to the client-rendered dev harness this was verified in — every width
+  read `0`, and **zero widths are indistinguishable from "everything fits"**: the
+  bar set `visibleGroups` to the total, rendered every group, and let the
+  `overflow: hidden` row clip the surplus. Measured in a real consumer at
+  1512px: eight groups, no chip, `scrollWidth` 1863 against `clientWidth` 1055,
+  four groups rendered outside the box — invisible, unremovable, and still
+  filtering. That is the exact failure the tier exists to prevent, and strictly
+  worse than the reflow it replaces, because reflow is at least honest.
+
+  It also could not recover: the widths were cached in a signal and re-measured
+  only on a group-count change, which re-measured into the same zeros. So a
+  resize, or removing a group, faithfully redid the arithmetic on stale numbers
+  and reached the same wrong answer.
+
+  The measurement now reads the **live DOM** —
+  `groupsRef.querySelectorAll(".sui-filter-bar__group")` — with no ref array and
+  therefore no ref-identity or ordering coupling to break. Two guards refuse to
+  cache a bad reading: the rendered element count must match the group count
+  (so nothing is measured while trimmed), and **any zero width aborts** rather
+  than latching. The single measurement taken on trust is replaced by a bounded
+  per-frame retry (20 frames), and `observeSize` re-measures when it has no
+  usable widths instead of recomputing against stale ones.
+
 ## 0.124.0
 
 ### Added
