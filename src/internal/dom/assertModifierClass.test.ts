@@ -3,7 +3,6 @@
 // fires on the real defect, and it stays quiet the rest of the time — a warning
 // that cries wolf gets muted, and then it protects nothing.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { assertModifierClass } from "./assertModifierClass";
 
 const addSheet = (css: string) => {
   const style = document.createElement("style");
