@@ -2,6 +2,61 @@
 
 ## [Unreleased]
 
+## 0.124.0
+
+### Added
+
+- **`FilterBar`** (Depth 1) — promoted from the matchmaking workshop bench into
+  the catalog. A progressive-disclosure filter bar **height-locked to one line,
+  with every expansion rendered as an overlay**, so filtering never pushes the
+  content below it down — the reason it exists, and the fix for a chip bar that
+  reflows the page while you use it. **OR within a dimension, AND across
+  dimensions**, and an empty/absent group means *all*, matching
+  `MultiSelectFilter`'s empty-means-all so a consumer's cross-filtering state
+  layer needs no translation. Presentational and fully controlled: it never sees
+  rows and holds no filter state. Exports `FilterBarProps`, `FilterGroup`,
+  `FilterMember`.
+
+  Three changes from the bench version, each driven by a real consumer
+  requirement rather than the demo:
+  - **`FilterMember.count` is now optional.** An honest facet count for a member
+    of dimension *d* must be computed with *d*'s own filter excluded, or every
+    unselected member of an active dimension reads 0 and the picker looks broken
+    exactly when someone is switching selections. A required field that invites a
+    wrong answer is worse than an absent one — omit it rather than guess.
+  - **"Added but empty" is internal state, and `onAddFilter` is gone from the
+    API.** Picking a dimension from `(+)` is a disclosure detail, not a filter;
+    reporting it would force any consumer serialising filter state (e.g. to a
+    URL) to encode a half-made filter that means nothing to a reader of that URL.
+  - **Tier-three overflow is implemented.** The spec described three tiers; the
+    bench had two, because it never had enough dimensions to reach the third.
+    With eight active dimensions and a row that is `overflow: hidden`, trailing
+    groups were not collapsing — they were being **clipped**: invisible,
+    unremovable, and still filtering. That is worse than the reflow the bar
+    replaces, so trailing groups now collapse into a `+N` chip whose overlay
+    lists them, each reachable and removable. It is a width decision, measured
+    through `internal/dom/observeSize` (same approach as `OverflowNav`).
+
+### Fixed
+
+- **The published package now ships `src`, so its `source` export condition
+  resolves.** `exports` declared `"source": "./src/index.ts"` across 11 subpaths
+  while `files` was `["dist"]`, so the condition dangled for anyone installing
+  from the registry — invisible through a local symlink, where `src/` exists.
+  The condition was added deliberately for local consumers reading SUI from
+  source, so it is kept and honoured rather than dropped. Consumers that do not
+  request the `source` condition still resolve `dist` exactly as before, so the
+  per-module bundle win from 0.122.0 is untouched.
+
+### Changed
+
+- **`AGENT_GUIDE.md`** documents the browser-verification traps that nearly
+  caused a phantom regression to be reported: a tab that never laid out reports
+  a 0×0 viewport and coordinates in the hundreds of thousands, `rAF` is frozen
+  while a tab is hidden (so anything landing via `observeSize` waits for a frame
+  that never comes), and grid cards must be grouped by row before their heights
+  are compared.
+
 ## 0.123.0
 
 ### Added

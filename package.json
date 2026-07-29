@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.123.0",
+  "version": "0.124.0",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -65,7 +65,8 @@
     "./index.css": "./dist/index.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "_sideEffects": "PAIRED with output.preserveModules in vite.config.ts — see docs/adr/0005-per-module-dist-and-sideeffects.md. Neither setting does anything alone; together they let a consumer's bundler delete unused SUI modules AND the heavyweight deps they import (katex, d3-dag). Removing either silently re-adds ~318 KB to every consumer bundle. Guarded by scripts/build-config.test.ts.",
   "sideEffects": [

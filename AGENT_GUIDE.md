@@ -300,6 +300,40 @@ If you do end up diverged: don't force-push. Preserve the work on a branch,
 `[Unreleased]` entries against release sections added at the same anchor. Keep
 yours under `[Unreleased]`, theirs below.
 
+## Verifying in a browser: check the viewport before trusting geometry
+
+A tab that has never laid out reports `innerWidth`/`innerHeight` of **0×0**, and
+every `getBoundingClientRect()` reading from it is garbage that *looks like
+data* — element tops in the hundreds of thousands, siblings that share a row
+reported on four different rows. It does not look like an empty result; it looks
+like a catastrophic layout regression.
+
+This nearly cost a good release: KPI cards measured on such a tab read as
+wildly mis-sized, which would have been escalated as a blocker and reverted a
+correct change. The readings were discarded and re-taken on a tab with a real
+viewport, where everything was fine.
+
+Before trusting ANY measurement taken through browser automation:
+
+```js
+// Assert the tab has actually laid out. 0×0 means it never rendered —
+// discard the reading, don't interpret it.
+if (innerWidth === 0 || innerHeight === 0) throw new Error("tab never laid out");
+```
+
+Two related traps in the same family:
+
+- **`requestAnimationFrame` is frozen while a tab is hidden.** Anything that
+  lands via rAF — which is every measurement written through
+  `internal/dom/observeSize` — will not arrive until the tab is next rendered.
+  A screenshot or `zoom` capture forces a frame and unblocks it. Code that
+  looks broken under automation is often just waiting for a frame that never
+  comes.
+- **Group measurements by their row before comparing them.** Cards in a
+  responsive grid that has collapsed to one column are each on their own row,
+  and comparing their heights as if they shared one reports a phantom raggedness.
+  Compare like with like, keyed on `getBoundingClientRect().top`.
+
 ## Summary
 
 | Situation | Action |

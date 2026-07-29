@@ -154,6 +154,7 @@ import { DataListShowcase } from "./showcases/data-list";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
 import { InteractiveFormulaShowcase } from "./showcases/interactive-formula";
 import { MetricCardShowcase } from "./showcases/metric-card";
+import { FilterBarShowcase } from "./showcases/filter-bar";
 import { ResultDisplayShowcase } from "./showcases/result-display";
 import { TitledTimeRangeHeaderShowcase } from "./showcases/titled-time-range-header";
 
@@ -977,6 +978,12 @@ const items: Item[] = [
     label: "InteractiveFormula",
     component: InteractiveFormulaShowcase,
     tags: ["depth:3", "form", "math"],
+  },
+  {
+    id: "filter-bar",
+    label: "FilterBar",
+    component: FilterBarShowcase,
+    tags: ["depth:1", "form", "navigation", "container"],
   },
   {
     id: "metric-card",
