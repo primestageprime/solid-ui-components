@@ -26,7 +26,7 @@
 // (`tag` / `key` / `value` / `active`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { DigitRoller } from "../DataDisplay/DigitRoller";
 import "./TagPill.css";
 

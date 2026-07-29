@@ -149,7 +149,9 @@ export async function choreograph(
   const mine: RunningSequence = {
     fastForward: () => {
       cancelled = true;
-      live.forEach((a) => a.cancel());
+      live.forEach((a) => {
+        a.cancel();
+      });
       for (; idx < steps.length; idx++) {
         const s = steps[idx];
         if (s.kind === "commit") s.fn();
@@ -203,7 +205,9 @@ const canAnimate = (el: HTMLElement): boolean =>
  *  fill:forwards hold, an interrupted gesture) so this effect owns it. */
 const takeOver = (el: HTMLElement) => {
   if (typeof el.getAnimations === "function")
-    el.getAnimations().forEach((a) => a.cancel());
+    el.getAnimations().forEach((a) => {
+      a.cancel();
+    });
 };
 
 // ─── the verbs ───────────────────────────────────────────────────────────

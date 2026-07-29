@@ -42,10 +42,10 @@ function normStatusVariant(s: NormStatus): StatusBadgeVariant {
   return "info";
 }
 
-/** Build per-bucket column definitions. Columns are the same for all buckets. */
-function buildColumns(
-  onSelect: (t: CensusTable) => void,
-): TableColumn<CensusTable>[] {
+/** Build per-bucket column definitions. Columns are the same for all buckets.
+ *  Row activation is the Table's own `onRowClick`, so no callback is threaded
+ *  through here. */
+function buildColumns(): TableColumn<CensusTable>[] {
   return [
     {
       id: "entity",
@@ -270,7 +270,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
                     fixedLayout
                     maxHeight={props.tableMaxHeight}
                     data={b.tables}
-                    columns={buildColumns(select)}
+                    columns={buildColumns()}
                     onRowClick={(t) => select(t)}
                     getRowClass={(t) =>
                       t.key === selKey() ? "hud-table__row--selected" : ""

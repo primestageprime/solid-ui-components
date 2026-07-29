@@ -50,7 +50,8 @@ export const MonthOfYearPicker: Component<MonthOfYearPickerProps> = (props) => {
   // size is the frozen --moy-cell-size fallback (3.5rem) baked into the columns
   // track and cell CSS — no per-instance override.
   return (
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the month cell layout
+    // a11y — intentional ARIA grid pattern; native <table> would break the
+    // month cell layout.
     <Grid
       columns="repeat(4, var(--moy-cell-size, 3.5rem))"
       gap="xs"

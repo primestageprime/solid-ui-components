@@ -22,7 +22,7 @@
 //  - Dismiss is the flipped semicircle cap (border-radius 999px 0 0 999px) flush
 //    to the row's right edge via negative margins.
 // ============================================
-import { Component, For, Show, createSignal, onCleanup } from "solid-js";
+import { type Component, For, Show, createSignal, onCleanup } from "solid-js";
 import {
   ClusterRow,
   NoShrinkClusterRow,

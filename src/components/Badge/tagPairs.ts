@@ -81,7 +81,7 @@ export function composeTagPairs(tags: SourceTag[], cfg: TagDisplayConfig): Compo
     .map((tag, idx) => ({ tag, idx }))
     .filter(({ idx }) => !consumed[idx]);
 
-  if (cfg.order && cfg.order.length) {
+  if (cfg.order?.length) {
     const rank = (dim: string) => {
       const k = cfg.order!.indexOf(dim);
       return k === -1 ? cfg.order!.length : k;

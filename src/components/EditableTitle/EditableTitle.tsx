@@ -18,7 +18,7 @@
 // callback (`title` / `onChange`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { Component, Show, createSignal } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import "./EditableTitle.css";
 
 /** What gesture opens the inline editor.
@@ -138,6 +138,7 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
               role/tabindex) means the row, not the label, is the selectable
               unit; editing is the power gesture, mirroring a file-list rename. */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: deliberate — the label must stay a non-interactive text node so its single click reaches the enclosing row's selection handler; opening the editor is the row's opt-in editTrigger affordance, not an independent control. */}
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: same rationale — a keyboard handler here would make the label an independent control. The keyboard route to renaming is the real <button> rendered by the sibling branch above; this span is the pointer-only power gesture. */}
           <span
             class="sui-editable-title__text"
             onClick={onTextClick}

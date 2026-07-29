@@ -27,6 +27,31 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - run: npm ci
+      # Biome over `src/`, at zero errors AND zero warnings as of this job's
+      # introduction — `--error-on-warnings` (via `lint:ci`) is what keeps it
+      # there, the same ratchet spirit as scripts/health.mjs. Plain `npm run
+      # lint` stays warning-tolerant for local iteration.
+      #
+      # The a11y rules are the load-bearing ones: this is a component library,
+      # so a keyboard trap or a bogus ARIA attribute ships to every consumer.
+      # Deliberate exceptions carry an inline `biome-ignore` with a rationale;
+      # blanket per-directory relaxations live in `biome.json` overrides.
+      #
+      # KNOWN BLIND SPOT: Biome's a11y rules only analyze intrinsic (lowercase)
+      # JSX elements. SUI composes most markup from Layout variants — <Grid>,
+      # <ClusterRow>, <NarrowStack> — which are custom components and therefore
+      # invisible to these rules. A green check here is NOT a11y coverage.
+      - run: npm run lint:ci
+
   typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 10

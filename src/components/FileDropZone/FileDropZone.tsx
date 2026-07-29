@@ -106,6 +106,13 @@ export const FileDropZone: Component<FileDropZoneProps> = (rawProps) => {
   };
 
   return (
+    // Stays a <div role="button"> rather than a real <button>: this element is
+    // the drop TARGET, and it wraps the hidden <input type="file"> that the
+    // click delegates to. A <button> wrapping a form control is invalid, and
+    // dragging a file onto a native button is not a reliable drop surface
+    // across browsers. Focusability and Enter/Space activation are wired
+    // explicitly below, so the keyboard route is equivalent to a button's.
+    // biome-ignore lint/a11y/useSemanticElements: see above — the drop-target + wrapped file input rules out a native <button>.
     <div
       class={classes()}
       role="button"

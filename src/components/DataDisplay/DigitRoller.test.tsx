@@ -48,6 +48,7 @@ describe("DigitRoller", () => {
     // value depends on BOTH signals — `tick` models a parent rebuilding its
     // props object while the derived string stays equal (TagPill's tag).
     const { container } = render(() => (
+      // biome-ignore lint/complexity/noCommaOperator: deliberate — reading `tick()` for its dependency alone is the whole point of the test; the comma keeps the subscription while the rendered value stays `n()`.
       <DigitRoller value={(tick(), n())} />
     ));
     setN("2");

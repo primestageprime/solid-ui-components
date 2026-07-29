@@ -61,7 +61,8 @@ export const DayOfMonthPicker: Component<DayOfMonthPickerProps> = (props) => {
   // intrinsic. Cell size is the frozen --dom-cell-size fallback (3.5rem) baked
   // into the columns track and the cell CSS — no per-instance override.
   return (
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA grid pattern; native <table> would break the calendar cell layout
+    // a11y — intentional ARIA grid pattern; native <table> would break the
+    // calendar cell layout.
     <Grid
       columns="repeat(7, var(--dom-cell-size, 3.5rem))"
       gap="xs"

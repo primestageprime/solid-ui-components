@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+Biome lint is now a CI gate, at **zero errors and zero warnings**. It had
+drifted to 15 errors and 37 warnings while `ci.yml` ran only
+test/typecheck/health/build, and the a11y errors among them were shipping to
+every consumer. The new `lint` job runs `lint:ci`
+(`biome lint src --error-on-warnings`) so the clean state ratchets, in the same
+spirit as `scripts/health.mjs`; plain `npm run lint` stays warning-tolerant for
+local iteration.
+
+Worth knowing about the new gate: Biome's a11y rules only analyze intrinsic
+(lowercase) JSX elements. SUI composes most markup from Layout variants —
+`<Grid>`, `<ClusterRow>`, `<NarrowStack>` — which are custom components and
+therefore invisible to those rules. Nine of the removed warnings were
+`biome-ignore` directives sitting on such components, where they could never
+have fired. **A green lint job is not a11y coverage.**
+
+### Fixed
+- **`ServiceHealthDot`'s sparkline popover was unreachable by keyboard.** The
+  root was a `<span>` revealing the popover on `mouseenter` only, so the age
+  readout and heartbeat sparkline — which exist nowhere else — were invisible
+  to keyboard and AT users. The root is now a `<button type="button">` with
+  `aria-expanded`, and `focus`/`blur` mirror `mouseenter`/`mouseleave`.
+  Activation stays a no-op: reaching the control is itself the reveal.
+- **`SlotCard`'s remove control could never be focused.** It was a `<span>`
+  with an `onClick`, while `SlotCard.css` already carried a `:focus-visible`
+  rule for it that could never match. It is now a `<button type="button">`
+  with an `aria-label`, so it is tab-reachable independently of the card's
+  `onSelect`.
+- **`SortableList.css` declared `.sui-sortable-list__grip` after the more
+  specific `--bare` variant rule.** Specificity still resolved it correctly, so
+  there is no visual change; the base rule now precedes its variants so the
+  cascade reads in ascending order.
+
+Both tag changes preserve every existing class name; only the element name
+differs, and the UA button chrome is reset so rendering is unchanged.
+
+### Changed
+- `EntityCard`, `FileDropZone` and `EditableTitle` carry documented
+  `biome-ignore` rationales where a native element is genuinely wrong —
+  `EntityCard` hosts its own remove `<button>` (nesting buttons is invalid
+  HTML), `FileDropZone` wraps the hidden `<input type="file">` it delegates to,
+  and `EditableTitle`'s fall-through label is pointer-only by design with the
+  keyboard route on its sibling branch.
+- `biome.json` gains scoped overrides: `src/fn/**` exempts `noArguments` (the
+  helpers dispatch on `arguments.length`, as `src/fn/README.md` describes), and
+  test files relax the a11y rules, `noExplicitAny` and
+  `noApproximativeNumericConstant` (π-shaped decimals are sample float data,
+  not constants).
+- Nine inert `biome-ignore` directives became plain comments. They sat on
+  custom components, which Biome does not analyze, so they suppressed nothing —
+  but their rationale is worth keeping, so the prose survives verbatim minus
+  the directive. Suppressions on raw DOM elements in the same files (e.g. the
+  pickers' `<button role="gridcell">`) are live and untouched.
+- Dead code removed: an unused `onSelect` parameter on `CensusView`'s
+  `buildColumns` (row activation is the Table's own `onRowClick`), an unused
+  `vi` import in `Toast.test`, an unused binding in `DistributionSparkline`'s
+  domain test, and an `as any` cast in `date-time.test` that the real
+  `string | JSX.Element` type never needed.
+
 ## 0.120.0
 
 `BucketQueue` now measures a row per bucket rather than one for the whole bar,

@@ -19,6 +19,17 @@
   gap: var(--sui-sortable-gap, var(--sui-space-2));
 }
 
+/* The drag-grip affordance — the ⠿ handle that signals the row is draggable.
+   Decorative; the whole row is the drag source. Declared BEFORE the `--bare`
+   and `:active` grip rules below so specificity ascends down the file. */
+.sui-sortable-list__grip {
+  flex: none;
+  opacity: 0.45;
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+}
+
 /* "bare" row chrome — strips the Surface border / bg / padding so a self-styled
    row content (e.g. ActionListItem) is the row's only surface, tightens the
    grip↔content gap, and hides the grip until the row is hovered. Graduated from
@@ -67,16 +78,6 @@
 
 .sui-sortable-list .sui-sortable-list__row:hover {
   border-color: var(--sui-border-bright, var(--sui-border));
-}
-
-/* The drag-grip affordance — the ⠿ handle that signals the row is draggable.
-   Decorative; the whole row is the drag source. */
-.sui-sortable-list__grip {
-  flex: none;
-  opacity: 0.45;
-  font-size: 12px;
-  line-height: 1;
-  cursor: grab;
 }
 
 .sui-sortable-list__row:active .sui-sortable-list__grip {

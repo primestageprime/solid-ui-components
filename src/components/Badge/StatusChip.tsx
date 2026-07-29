@@ -21,7 +21,7 @@
 // callback (`status` / `options` / `onChange` / `highlight` / `title`), nothing
 // presentational to freeze. Same data-only exemption as SortableList.
 // ============================================
-import { Component, For, Show, createSignal } from "solid-js";
+import { type Component, For, Show, createSignal } from "solid-js";
 import "./StatusChip.css";
 
 export interface StatusChipProps {

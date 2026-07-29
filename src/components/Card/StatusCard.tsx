@@ -197,8 +197,10 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
             </ClipFillBox>
           </Show>
           <Show when={local.actions != null}>
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so action clicks don't bubble to the card onSelect; not an interactive control. */}
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only calls stopPropagation — there is no action to mirror on the keyboard (keyboard events don't bubble as clicks to the card). */}
+            {/* a11y — click-isolation barrier so action clicks don't bubble to
+                the card onSelect; not an interactive control. The onClick only
+                calls stopPropagation, so there is no action to mirror on the
+                keyboard (keyboard events don't bubble as clicks to the card). */}
             <TagRow
               class="sui-status-card__actions"
               onClick={(e: MouseEvent) => e.stopPropagation()}

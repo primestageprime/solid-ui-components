@@ -28,7 +28,7 @@ describe("dateTime field", () => {
 
   it("header is centered and humanized — trailing ' At' is stripped", () => {
     const col = dateTimeCol<Row>("createdAt");
-    const { container } = render(() => col.header as any);
+    const { container } = render(() => col.header);
     const th = container.querySelector(".sui-field-th-center");
     expect(th?.textContent).toBe("Created");
   });

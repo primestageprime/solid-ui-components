@@ -89,7 +89,9 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // where a doubled-class rule wins over the Stack's sm gap); kept for zero
     // breaking changes, not a scale value (same shape as ButtonGroup's runtime
     // layout props).
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
+    // a11y — intentional ARIA <list>; a native <ul>/<ol> would require <li>
+    // children, but the rows are Surface components in a flex column —
+    // swapping would break the drag layout.
     <NarrowStack
       class="sui-sortable-list"
       classList={{ "sui-sortable-list--bare": bare() }}

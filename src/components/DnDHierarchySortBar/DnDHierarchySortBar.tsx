@@ -67,7 +67,9 @@ export const DnDHierarchySortBar: Component<DnDHierarchySortBarProps> = (
     // the label, and the empty space past the last pill — where a per-pill
     // dragover never fires. The handler reads each item's live geometry via the
     // `data-dnd-id` stamps below.
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ol>/<ul> would require <li> children, but the pills are <span>s in a flex row — swapping would break the drag layout.
+    // a11y — intentional ARIA <list>; a native <ol>/<ul> would require <li>
+    // children, but the pills are <span>s in a flex row — swapping would break
+    // the drag layout.
     <WrappedClusterRow
       class="sui-dnd-hierarchy-sort-bar"
       role="list"

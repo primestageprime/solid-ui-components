@@ -42,7 +42,7 @@
 // bar) and SegmentedControl (a single-select toggle) are unrelated.
 // ============================================
 import {
-  Component,
+  type Component,
   For,
   Show,
   createEffect,

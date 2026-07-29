@@ -282,14 +282,20 @@ function createSlotCard(config: SlotCardConfig) {
           <Show when={config.corner && props.corner !== undefined}>
             <div class="sui-slot-card__corner">{props.corner}</div>
           </Show>
+          {/* A real <button>, not a styled span: the remove control must be
+              reachable and activatable by keyboard independently of the card's
+              own onSelect. SlotCard.css already carries a `:focus-visible`
+              rule for it, which a span could never satisfy. */}
           <Show when={config.removable && props.onRemove}>
-            <span
+            <button
+              type="button"
               class="sui-slot-card__remove"
               title="Remove"
+              aria-label="Remove"
               onClick={(e) => { e.stopPropagation(); props.onRemove?.(); }}
             >
               ✕
-            </span>
+            </button>
           </Show>
           {rows}
         </div>
