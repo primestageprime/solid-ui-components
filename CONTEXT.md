@@ -102,7 +102,7 @@ A `--sui-*` CSS custom property defined in a **Theme**. Tokens cover colors, spa
 _Avoid_: theme variable, CSS custom property (verbose).
 
 **Migration**:
-The workflow of extracting a reusable pattern OUT of a Consumer App and INTO `solid-ui-components` as a new Primitive or Composite. Tracked in `TODO.md`'s DONE checklist.
+The workflow of extracting a reusable pattern OUT of a Consumer App and INTO `solid-ui-components` as a new Primitive or Composite. Tracked in GitHub Issues (see `docs/agents/issue-tracker.md`); the 2026-05 migration sweep is recorded in `CHANGELOG.md` and git history.
 _Avoid_: Extraction, port.
 
 **Adoption**:
@@ -140,7 +140,7 @@ _Avoid_: Style, render spec.
 ## Flagged ambiguities
 
 - **"variant"** — overloaded between a runtime prop value (e.g. `<Button variant="primary">`) and a **Curried Variant** (a definition-time named component). Resolved: the noun "Variant" in this codebase always means the latter; runtime-prop usage is referred to as a "variant prop value" in prose.
-- **"migration" in `TODO.md`** — the file's top header reads "Visual Component Migration" but its checklist mixes **Migration** (extracting into the library) with **Adoption** (replacing inline markup in a Consumer App). Resolved: the two are distinct workflows; future TODO sections should label each accordingly.
+- **"migration" vs "adoption"** — the retired `TODO.md` was headed "Visual Component Migration" but mixed **Migration** (extracting a pattern into the library) with **Adoption** (replacing inline markup in a Consumer App). Resolved: they are distinct workflows and must be labelled as such. Worth knowing because the conflation also misattributed work — an item filed as a consumer change turned out to be blocked in SUI itself (issue #69).
 - **"slot"** — unqualified "slot" in this codebase means the chart **Slot** (a context-aware Solid child of `<Chart>`). The `sidebar` / `detail` JSX props on `MockBaseline` are *regions*, not slots — that wording is reserved for the chart concept to avoid confusion.
 - **"inline style on Composites"** — Composites own zero CSS *files* AND zero inline `style={}`. The only exception is `style={props.style}` passthrough (forwarding the consumer's `style` prop). Three failure modes the rule addresses:
   - **Static styling inlined as a shortcut** (e.g. `<Foo style={{ "font-weight": 600, padding: "8px" }}>`) — must be a **Curried Variant**.

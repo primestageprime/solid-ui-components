@@ -264,6 +264,19 @@ const raisable = new Set(
     .map((s) => s.trim())
     .filter(Boolean),
 );
+// Raising a ceiling requires a WRITTEN REASON, recorded in the baseline under
+// `_raises`. Without this, the reason lives only in a commit message and is
+// effectively lost: `67b89c7` ("bless TableColumn.minWidth") raised
+// cssTypedProps 13 → 14 while never touching scripts/prop-rubric.json, whose
+// whole purpose is to hold a justification string for exactly that exemption.
+// The rubric's header says the manifest is the only way to grant one; the
+// baseline was a second, silent way. Now every raise carries its own why.
+const reasonArg = process.argv
+  .find((a) => a.startsWith("--reason="))
+  ?.split("=")
+  .slice(1)
+  .join("=")
+  .trim();
 const verbose = process.argv.includes("--verbose");
 const baseline = existsSync(BASELINE_PATH)
   ? JSON.parse(readFileSync(BASELINE_PATH, "utf8"))
@@ -292,6 +305,18 @@ if (length(unknown) > 0) {
     `✗ --update-baseline names unknown metric(s): ${unknown.join(", ")}`,
   );
   console.error(`  Known metrics: ${Object.keys(metrics).join(", ")}`);
+  process.exit(1);
+}
+
+// Checked AFTER the typo guard: given both a misspelled name and a missing
+// reason, the misspelling is the more useful thing to report first.
+if (raisable.size > 0 && !reasonArg) {
+  console.error(
+    `✗ Raising a ceiling requires --reason="…" explaining why.\n` +
+      `  It is stored in the baseline under \`_raises\`, so it outlives the\n` +
+      `  commit message. Example:\n` +
+      `    npm run health -- --update-baseline=${[...raisable].join(",")} --reason="TableColumn needs a raw CSS width until CssLength lands (#64)"`,
+  );
   process.exit(1);
 }
 
@@ -352,6 +377,13 @@ if (updateBaseline && regressed) {
       return [k, Math.min(v, base)];
     }),
   );
+  // Carry forward previously recorded reasons, and record one for each ceiling
+  // raised now. Keys beginning with `_` are metadata, not metrics — the
+  // comparison loop above iterates the COMPUTED metrics, so it never sees them.
+  const raises = { ...(baseline?._raises ?? {}) };
+  for (const { k, base, v } of regressions)
+    raises[k] = { from: base, to: v, reason: reasonArg };
+  if (Object.keys(raises).length > 0) next._raises = raises;
   writeFileSync(BASELINE_PATH, JSON.stringify(next, null, 2) + "\n");
   const lowered = Object.entries(next).filter(
     ([k, v]) => baseline?.[k] !== undefined && v < baseline[k],

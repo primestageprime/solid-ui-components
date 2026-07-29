@@ -3,6 +3,34 @@
 ## [Unreleased]
 
 ### Changed
+- **Raising a health ceiling now requires `--reason="…"`**, recorded in
+  `scripts/health-baseline.json` under `_raises` so it outlives the commit
+  message.
+
+  `cssTypedProps` had **two** ways to grant an exemption: `scripts/prop-rubric.json`,
+  which demands a justification string and prints it in `--report`, and the
+  health baseline, which is just a number. The rubric's own header states the
+  manifest is the only route ("Peter ruled: no escape hatches") — but `67b89c7`,
+  message *"bless TableColumn.minWidth"*, raised the baseline 13 → 14 and never
+  touched the manifest. That reason is gone.
+
+  Fixed generally rather than per-metric, since the hole was in the baseline
+  mechanism, not in one metric.
+
+- **`TODO.md` is retired.** `CLAUDE.md` names GitHub Issues as the tracker, and
+  the file had not been touched since 2026-05-15 (68 items done, 4 open). Each
+  open item was verified before migrating rather than filed blind:
+
+  | Item | Outcome |
+  |---|---|
+  | `SurfaceDataProps` strips overrides | still real → issue #66 |
+  | `SpreadCenterRow` variant | still real (`align` *is* in `RowOverrides`) → issue #67 |
+  | `ComplianceThresholdTable.label` widening | **misattributed** — the blocker is SUI's `ValueMatrix.colLabel: => string` → issue #69 |
+  | ISO-date locale shift in `routes/index.tsx` | **stale** — jtf-ui no longer uses `DateCell` there. Investigating it surfaced a real gap: `DateCell` has no `timeZone` prop while `DateTimeCell` does → issue #68 |
+
+  References in `README.md`, `CONTEXT.md` and `COMPONENTS.md` updated so the
+  deletion leaves no dangling pointers.
+
 - **`health` is now a required status check on `main`**, alongside `test`,
   `typecheck` and `build`. It previously reported without gating, which is how
   the ratchet drift below went unnoticed — a loosened ceiling never blocked

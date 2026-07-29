@@ -91,20 +91,39 @@ describe("health ratchet: a ceiling may not loosen by accident", () => {
     const r = runHealth(
       { [METRIC]: ACTUAL - 5, [other]: otherVal - 5 },
       `--update-baseline=${METRIC}`,
+      "--reason=guard test",
     );
     expect(r.status, r.output).toBe(1);
     expect(r.output).toContain(other);
     expect(r.output).toMatch(/were not named/);
   }, SPAWN_TIMEOUT_MS);
 
-  it("naming a metric explicitly does raise it", () => {
+  it("naming a metric without a reason is refused", () => {
+    // `67b89c7` raised cssTypedProps 13 -> 14 with the message "bless
+    // TableColumn.minWidth" and never touched scripts/prop-rubric.json, whose
+    // entire purpose is to hold the justification. The baseline was a second,
+    // silent exemption route. A raise must now carry its own reason.
+    const r = runHealth({ [METRIC]: ACTUAL - 5 }, `--update-baseline=${METRIC}`);
+    expect(r.status, r.output).toBe(1);
+    expect(r.output).toMatch(/requires --reason/);
+    expect(r.after[METRIC], "nothing may be written").toBe(ACTUAL - 5);
+  }, SPAWN_TIMEOUT_MS);
+
+  it("naming a metric with a reason raises it and records why", () => {
     const r = runHealth(
       { [METRIC]: ACTUAL - 5 },
       `--update-baseline=${METRIC}`,
+      "--reason=deliberate, for the guard test",
     );
     expect(r.status, r.output).toBe(0);
     expect(r.after[METRIC]).toBe(ACTUAL);
     expect(r.output).toMatch(/raised, as named/);
+    // The reason must survive in the baseline, not just the commit message.
+    expect(r.after._raises?.[METRIC]).toEqual({
+      from: ACTUAL - 5,
+      to: ACTUAL,
+      reason: "deliberate, for the guard test",
+    });
   }, SPAWN_TIMEOUT_MS);
 });
 
