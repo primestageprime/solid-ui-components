@@ -7,14 +7,18 @@ if ! npm run --silent health; then
   {
     echo ""
     echo "══════════════════════════════════════════════════════════════"
-    echo " ✗ PUSH BLOCKED — SUI health ratchet regressed above baseline"
+    echo " ✗ PUSH BLOCKED — SUI health ratchet"
     echo ""
-    echo " The regressed check(s) and offending file:line locations are"
-    echo " listed above. Commits are never gated — fix and push again."
+    echo " Either a metric rose above its ceiling, or one improved and the"
+    echo " ceiling was not tightened to match. Details are above; commits"
+    echo " are never gated — fix and push again."
     echo ""
     echo "   full offender lists:  npm run health -- --verbose"
-    echo "   deliberate increase:  npm run health -- --update-baseline"
-    echo "                         (commit the baseline with your change)"
+    echo "   lock in a GAIN:       npm run health -- --update-baseline"
+    echo "   accept an INCREASE:   npm run health -- --update-baseline=<metric>[,<metric>]"
+    echo "                         (the bare flag cannot raise a ceiling —"
+    echo "                          name the metric to say you meant it)"
+    echo "                         commit the baseline with your change"
     echo "══════════════════════════════════════════════════════════════"
   } >&2
   exit 1

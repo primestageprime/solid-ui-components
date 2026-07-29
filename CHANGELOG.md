@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Fixed
+- **The health ratchet was drifting upward, not holding.** `--update-baseline`
+  rewrote *every* metric at once, and it was the only escape hatch — so
+  accepting one deliberate increase silently blessed every unrelated drift in
+  the same command. The git history shows the damage: `dotChains` was burned
+  down 127 → 55 and `collectionMethodCalls` 362 → 225 by real work, then both
+  crept back to **59 / 230** as side effects of commits about other things
+  (`e72db8f` "bless baseline for Auth composites", `6cc7609` "fix(themes):
+  button labels clear WCAG 4.5:1"). A ratchet whose most recent action was
+  loosening isn't a ratchet.
+
+  Three rules now hold it:
+
+  | | Behaviour |
+  |---|---|
+  | `--update-baseline` | **Only lowers.** Locks in gains; cannot raise any ceiling. |
+  | `--update-baseline=a,b` | Additionally permits `a` and `b` to rise — and nothing else. |
+  | an unnamed metric that rose | Fails the run, and **refuses the whole write** rather than applying it partially. |
+  | an improvement not locked in | Fails too, so a gain can't leak back later with CI green throughout. |
+
+  Unknown metric names are rejected up front, since a typo would otherwise fail
+  to bless silently and then report the "unexpected" regression.
+
+  Guarded by `scripts/health-ratchet.test.ts` (7 tests), each negative-tested by
+  reverting to the blanket write and confirming failure. `scripts/health.mjs`
+  gains `--baseline-path=` so those tests run against throwaway files instead of
+  mutating the committed baseline.
+
 ### Changed
 - **CI no longer rebuilds SUI on every job.** `package.json`'s `prepare` runs
   `npm run build`, and npm fires `prepare` on every root `npm ci` — bolting a
