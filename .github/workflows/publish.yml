@@ -1,14 +1,32 @@
 name: Publish to GitHub Packages
 
+# GATED ON CI. This used to trigger directly on a push touching package.json,
+# which meant publish raced CI rather than following it: on 2026-07-29 a
+# version was published from a commit whose lint job then failed. That it was
+# harmless (a `let` that should have been `const`) was established by reading
+# the diff afterwards — which is precisely the check a gate is supposed to make
+# unnecessary. A publish that can outrun its gate is not gated.
+#
+# `workflow_run` is used because `needs:` cannot reference a job in another
+# workflow. The path filter is dropped with it — `workflow_run` does not
+# support one — which costs nothing, because the "already published" step below
+# is the real idempotency guard: this runs after every green CI on main and
+# publishes only when package.json carries a version the registry lacks.
+
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    paths:
-      - package.json
   workflow_dispatch:
 
 jobs:
   publish:
+    # A manual dispatch is deliberate and trusted; an automatic run must follow
+    # a CI run that actually passed.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -18,6 +36,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          # workflow_run defaults to the default branch's HEAD, not the commit
+          # CI actually validated. Pin to the SHA that passed, or the gate
+          # verifies one tree and publishes another.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Setup Node.js (with GitHub Packages registry)
         uses: actions/setup-node@v5
