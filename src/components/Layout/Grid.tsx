@@ -6,6 +6,7 @@
 // Factory: createGrid(); see the LabelValueGrid curried variant in variants.ts.
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { assertModifierClass } from "../../internal/dom/assertModifierClass";
 import "./Layout.css";
 
 export interface GridProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -28,8 +29,14 @@ export const Grid: Component<GridProps> = (rawProps) => {
     "children",
   ]);
   const classes = () => {
-    const cls = ["grid", `grid--gap-${local.gap}`];
-    if (local.align) cls.push(`grid--align-${local.align}`);
+    const gapClass = `grid--gap-${local.gap}`;
+    assertModifierClass("Grid", "gap", String(local.gap), gapClass);
+    const cls = ["grid", gapClass];
+    if (local.align) {
+      const c = `grid--align-${local.align}`;
+      assertModifierClass("Grid", "align", String(local.align), c);
+      cls.push(c);
+    }
     if (local.class) cls.push(local.class);
     return cls.join(" ");
   };

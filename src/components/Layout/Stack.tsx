@@ -7,6 +7,7 @@
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { mergeStyle } from "./mergeStyle";
+import { assertModifierClass } from "../../internal/dom/assertModifierClass";
 import "./Layout.css";
 
 export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -30,9 +31,21 @@ export const Stack: Component<StackProps> = (props) => {
 
   const classes = () => {
     const classList = ["stack"];
-    if (local.gap) classList.push(`stack--gap-${local.gap}`);
-    if (local.align) classList.push(`stack--align-${local.align}`);
-    if (local.justify) classList.push(`stack--justify-${local.justify}`);
+    if (local.gap) {
+      const c = `stack--gap-${local.gap}`;
+      assertModifierClass("Stack", "gap", String(local.gap), c);
+      classList.push(c);
+    }
+    if (local.align) {
+      const c = `stack--align-${local.align}`;
+      assertModifierClass("Stack", "align", String(local.align), c);
+      classList.push(c);
+    }
+    if (local.justify) {
+      const c = `stack--justify-${local.justify}`;
+      assertModifierClass("Stack", "justify", String(local.justify), c);
+      classList.push(c);
+    }
     if (local.fill) classList.push("stack--fill");
     if (local.class) classList.push(local.class);
     return classList.join(" ");

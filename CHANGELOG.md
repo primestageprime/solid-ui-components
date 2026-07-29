@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+## 0.125.0
+
+### Added
+
+- **Dev-time warning when a templated modifier class has no CSS rule behind
+  it.** `Stack`, `Row` and `Grid` build their modifier classes by string
+  template — `` `row--gap-${gap}` `` — so ANY value yields a class name, and a
+  value with no matching rule renders as **nothing at all**: no crash, no
+  fallback, just no spacing. A consumer passing `gap="md"` to `Row` (whose scale
+  is `xs | sm`) got `.row--gap-md`, and three pages rendered at zero gap for two
+  weeks before anyone noticed. The type system should catch this and normally
+  does; it didn't there because that consumer had no `typecheck` script and its
+  bundler strips types rather than checking them. Render is the last place left
+  to catch it, so that is where this looks.
+
+  The message names the component, the prop, the value and the dead class, so
+  it's actionable without a hunt, and it points at the fix (a named curried
+  variant rather than passing the prop at all). It fires **once per class**, and
+  it asks the STYLESHEET rather than a hard-coded list of valid values — the CSS
+  is the source of truth for which modifiers exist, so the check cannot drift
+  from it the way a duplicated list would.
+
+  Dev only: `import.meta.env.DEV` is statically replaced, so the whole thing
+  dead-codes out of a production bundle (verified — the warning text is absent
+  from `dist`). Also SSR-safe.
+
+  **A miss re-collects the stylesheets before warning.** Caching the class set
+  on the first call that sees any rule reported perfectly good classes as
+  missing when it happened to run before `Layout.css` arrived — observed
+  accusing `.stack--gap-sm` on a page where it plainly exists. A warning that
+  cries wolf gets muted, and then it protects nothing.
+
 ## 0.124.1
 
 ### Fixed

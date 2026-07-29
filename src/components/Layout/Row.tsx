@@ -7,6 +7,7 @@
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { mergeStyle } from "./mergeStyle";
+import { assertModifierClass } from "../../internal/dom/assertModifierClass";
 import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -32,9 +33,21 @@ export const Row: Component<RowProps> = (props) => {
 
   const classes = () => {
     const classList = ["row"];
-    if (local.gap) classList.push(`row--gap-${local.gap}`);
-    if (local.align) classList.push(`row--align-${local.align}`);
-    if (local.justify) classList.push(`row--justify-${local.justify}`);
+    if (local.gap) {
+      const c = `row--gap-${local.gap}`;
+      assertModifierClass("Row", "gap", String(local.gap), c);
+      classList.push(c);
+    }
+    if (local.align) {
+      const c = `row--align-${local.align}`;
+      assertModifierClass("Row", "align", String(local.align), c);
+      classList.push(c);
+    }
+    if (local.justify) {
+      const c = `row--justify-${local.justify}`;
+      assertModifierClass("Row", "justify", String(local.justify), c);
+      classList.push(c);
+    }
     if (local.wrap) classList.push("row--wrap");
     if (local.fill) classList.push("row--fill");
     if (local.class) classList.push(local.class);
