@@ -37,6 +37,7 @@ import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./styl
 import { run as runShowcaseCoverage } from "./showcase-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 import { length, mapValues } from "./fn.mjs";
+import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -264,6 +265,19 @@ const raisable = new Set(
     .map((s) => s.trim())
     .filter(Boolean),
 );
+// Raising a ceiling requires a WRITTEN REASON, recorded in the baseline under
+// `_raises`. Without this, the reason lives only in a commit message and is
+// effectively lost: `67b89c7` ("bless TableColumn.minWidth") raised
+// cssTypedProps 13 → 14 while never touching scripts/prop-rubric.json, whose
+// whole purpose is to hold a justification string for exactly that exemption.
+// The rubric's header says the manifest is the only way to grant one; the
+// baseline was a second, silent way. Now every raise carries its own why.
+const reasonArg = process.argv
+  .find((a) => a.startsWith("--reason="))
+  ?.split("=")
+  .slice(1)
+  .join("=")
+  .trim();
 const verbose = process.argv.includes("--verbose");
 const baseline = existsSync(BASELINE_PATH)
   ? JSON.parse(readFileSync(BASELINE_PATH, "utf8"))
@@ -284,20 +298,8 @@ if (writeHistory && JSON.stringify(last?.metrics) !== JSON.stringify(metrics)) {
   writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2) + "\n");
 }
 
-// Naming a metric that does not exist would silently fail to bless it and then
-// error about the "unexpected" regression, so reject typos up front.
-const unknown = [...raisable].filter((k) => !(k in metrics));
-if (length(unknown) > 0) {
-  console.error(
-    `✗ --update-baseline names unknown metric(s): ${unknown.join(", ")}`,
-  );
-  console.error(`  Known metrics: ${Object.keys(metrics).join(", ")}`);
-  process.exit(1);
-}
-
 console.log("SUI health check (lower is better; 0 is the goal)\n");
-const regressions = [];
-const improvements = [];
+const { regressions, improvements } = classify(metrics, baseline);
 for (const [k, v] of Object.entries(metrics)) {
   const base = baseline?.[k];
   const status =
@@ -308,8 +310,6 @@ for (const [k, v] of Object.entries(metrics)) {
         : v < base
           ? `  ✓ improved (baseline ${base})`
           : "  = at baseline";
-  if (base !== undefined && v > base) regressions.push({ k, base, v });
-  if (base !== undefined && v < base) improvements.push({ k, base, v });
   console.log(`  ${k.padEnd(24)} ${String(v).padStart(4)}${status}`);
 }
 // A regression the caller explicitly named is a deliberate ceiling raise, not
@@ -325,46 +325,45 @@ if (verbose) {
   }
 }
 
-if (updateBaseline && regressed) {
-  // Refuse the whole write rather than partially applying it. A run that
-  // blessed the named metrics but left an unnamed regression unrecorded would
-  // report success while the ceiling it just failed to raise still fails CI.
-  console.error("\n✗ Refusing to update the baseline.");
-  console.error(
-    "  These metrics rose but were not named, so they cannot be blessed:",
-  );
-  for (const { k, base, v } of unblessed)
-    console.error(`    ${k}: ${base} → ${v} (+${v - base})`);
-  console.error(
-    `\n  Fix them, or state the intent explicitly:\n    npm run health -- --update-baseline=${unblessed
-      .map(({ k }) => k)
-      .join(",")}`,
-  );
-  process.exit(1);
-} else if (updateBaseline) {
-  // Only named metrics may rise; every other ceiling is clamped to the better
-  // of (current, existing). So the bare flag is incapable of loosening
-  // anything — the failure mode that let 6cc7609 add +4/+8 by accident.
-  const next = Object.fromEntries(
-    Object.entries(metrics).map(([k, v]) => {
-      const base = baseline?.[k];
-      if (base === undefined || raisable.has(k)) return [k, v];
-      return [k, Math.min(v, base)];
-    }),
-  );
-  writeFileSync(BASELINE_PATH, JSON.stringify(next, null, 2) + "\n");
-  const lowered = Object.entries(next).filter(
-    ([k, v]) => baseline?.[k] !== undefined && v < baseline[k],
-  );
-  const raised = Object.entries(next).filter(
-    ([k, v]) => baseline?.[k] !== undefined && v > baseline[k],
-  );
+if (updateBaseline) {
+  // All rule decisions live in scripts/health-ratchet.mjs so they can be tested
+  // without running a health check; this branch is only I/O and exit codes.
+  const plan = planBaselineUpdate({ metrics, baseline, raisable, reason: reasonArg });
+  if (plan.error) {
+    const { kind, detail } = plan.error;
+    if (kind === "unknown-metric") {
+      console.error(`\n✗ --update-baseline names unknown metric(s): ${detail.join(", ")}`);
+      console.error(`  Known metrics: ${Object.keys(metrics).join(", ")}`);
+    } else if (kind === "missing-reason") {
+      console.error(
+        `\n✗ Raising a ceiling requires --reason="…" explaining why.\n` +
+          `  It is stored in the baseline under \`_raises\`, so it outlives the\n` +
+          `  commit message. Example:\n` +
+          `    npm run health -- --update-baseline=${detail.join(",")} --reason="TableColumn needs a raw CSS width until CssLength lands (#64)"`,
+      );
+    } else {
+      // Refuse the WHOLE write rather than applying it partially: a run that
+      // blessed the named metrics but left an unnamed rise unrecorded would
+      // report success while the ceiling it failed to raise still fails CI.
+      console.error("\n✗ Refusing to update the baseline.");
+      console.error("  These metrics rose but were not named, so they cannot be blessed:");
+      for (const { k, base, v } of detail)
+        console.error(`    ${k}: ${base} → ${v} (+${v - base})`);
+      console.error(
+        `\n  Fix them, or state the intent explicitly:\n    npm run health -- --update-baseline=${detail
+          .map(({ k }) => k)
+          .join(",")} --reason="…"`,
+      );
+    }
+    process.exit(1);
+  }
+  writeFileSync(BASELINE_PATH, JSON.stringify(plan.next, null, 2) + "\n");
   console.log(`\nBaseline updated: ${BASELINE_PATH}`);
-  for (const [k, v] of lowered)
+  for (const [k, v] of plan.lowered)
     console.log(`  ↓ ${k}: ${baseline[k]} → ${v} (locked in)`);
-  for (const [k, v] of raised)
+  for (const [k, v] of plan.raised)
     console.log(`  ↑ ${k}: ${baseline[k]} → ${v} (raised, as named)`);
-  if (length(lowered) === 0 && length(raised) === 0)
+  if (length(plan.lowered) === 0 && length(plan.raised) === 0)
     console.log("  (no ceilings changed)");
 } else if (regressed) {
   // Offenders in locally-changed files are almost always the culprits of a
