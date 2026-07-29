@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Changed
+- **CI no longer rebuilds SUI on every job.** `package.json`'s `prepare` runs
+  `npm run build`, and npm fires `prepare` on every root `npm ci` — bolting a
+  ~33s full client+server build onto the front of all five CI jobs, four of
+  which never read `dist/`. Measured on run `30478430052`: the `lint` job took
+  **55s, 33s of it building**, while Biome's actual work is 206ms. The `build`
+  job built twice (once via `prepare`, once explicitly), and `publish.yml`
+  built **three** times — `npm ci`, the Build step, and again when `npm publish`
+  fired `prepare` while packing.
+
+  All installs in both workflows now pass `--ignore-scripts`; the one job that
+  genuinely needs `dist` builds it explicitly. This is a workflow-only change —
+  no published artifact differs, and `prepare` still builds, because it is the
+  only lifecycle hook npm runs for consumers pinning SUI as a git dependency.
+
+  Verified in a clean clone with no `dist/` present: 2686 tests, `lint:ci`,
+  `tsc --noEmit`, `typecheck:dev` and `health` all pass. A new guard step in
+  `publish.yml` asserts `dist/{index.js,server.js,index.d.ts,index.css}` are
+  non-empty before packing, so deleting the Build step fails the publish
+  loudly instead of shipping an empty package.
+
 ## 0.126.0
 
 ### Fixed

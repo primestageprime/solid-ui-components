@@ -49,11 +49,31 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: "@primestageprime"
 
+      # `--ignore-scripts` suppresses package.json's `prepare` (= a full
+      # build). Without it this job built SUI THREE times: once here via
+      # `prepare`, once in the Build step below, and once more when `npm
+      # publish` fires `prepare` again as part of packing. See ci.yml for the
+      # measurements and for why `prepare` itself must keep building.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build
         run: npm run build
+
+      # The Build step above is now the ONLY thing that populates `dist`, and
+      # `npm publish --ignore-scripts` below packs whatever it finds without
+      # rebuilding. Deleting that step would therefore publish an empty
+      # package — silently, since npm does not care. This asserts otherwise.
+      - name: Verify build output before packing
+        run: |
+          for f in dist/index.js dist/server.js dist/index.d.ts dist/index.css; do
+            if [ ! -s "$f" ]; then
+              echo "::error::$f is missing or empty — refusing to publish."
+              echo "The Build step is what creates it; installs here use --ignore-scripts."
+              exit 1
+            fi
+          done
+          echo "dist OK ($(find dist -type f | wc -l) files)"
 
       - name: Check if this version is already published
         id: check
@@ -72,11 +92,14 @@ jobs:
             echo "Version $PKG_VERSION not yet published."
           fi
 
+      # `--ignore-scripts` here too: `npm publish` runs `prepare` as part of
+      # packing, which would be a third full build of a tree the Build step
+      # already produced and the step above already verified.
       - name: Publish to GitHub Packages
         if: steps.check.outputs.already_published == 'false'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+        run: npm publish --ignore-scripts
 
       - name: Notify consumers (amygdala-ui)
         if: steps.check.outputs.already_published == 'false'
