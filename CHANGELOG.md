@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.121.0
+
 Biome lint is now a CI gate, at **zero errors and zero warnings**. It had
 drifted to 15 errors and 37 warnings while `ci.yml` ran only
 test/typecheck/health/build, and the a11y errors among them were shipping to
