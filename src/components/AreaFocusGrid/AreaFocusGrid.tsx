@@ -22,7 +22,7 @@ import {
   mergeProps,
 } from "solid-js";
 import "./AreaFocusGrid.css";
-import { map } from "../../fn";
+import { map, filter, join } from "../../fn";
 
 /** One focus sub-column within an area. */
 export interface AreaFocusGridFocus {
@@ -93,11 +93,14 @@ interface AreaFocusGridLayout {
 const buildLayout = (
   areas: readonly AreaFocusGridArea[],
 ): AreaFocusGridLayout => {
-  const occupied = areas.filter((a) => a.focuses.length > 0);
+  const occupied = filter((a) => a.focuses.length > 0, areas);
 
-  const subCols: AreaFocusCellKey[] = occupied.flatMap((area) =>
-    area.focuses.map((focus) => ({ area, focus })),
-  );
+  const subCols: AreaFocusCellKey[] = [];
+  for (const area of occupied) {
+    for (const focus of area.focuses) {
+      subCols.push({ area, focus });
+    }
+  }
 
   const areaSpans = occupied.reduce<
     { area: AreaFocusGridArea; startSubCol: number; span: number }[]
@@ -116,7 +119,7 @@ const buildLayout = (
   );
 
   // A vsep between every pair of consecutive sub-cols (even-indexed tracks).
-  const interSubColVseps = subCols.slice(1).map((_, k) => 2 * (k + 1));
+  const interSubColVseps = map((_, k) => 2 * (k + 1), subCols.slice(1));
 
   return { subCols, areaSpans, areaBoundaryCols, interSubColVseps };
 };
@@ -133,11 +136,12 @@ const gridTemplate = (
   const N = layout.subCols.length;
   const totalCols = Math.max(2 * N - 1, 1);
   const areaBoundarySet = new Set(layout.areaBoundaryCols);
-  const cols = Array.from({ length: totalCols }, (_, i) => {
+  const colTracks = Array.from({ length: totalCols }, (_, i) => {
     const col = i + 1;
     if (col % 2 === 1) return `minmax(${subColumnMinWidth}, 1fr)`;
     return areaBoundarySet.has(col) ? "3px" : "1px";
-  }).join(" ");
+  });
+  const cols = join(" ", colTracks);
   return {
     "grid-template-columns": cols,
     // Rows: header | hsep | above | hsep | label | hsep | below
