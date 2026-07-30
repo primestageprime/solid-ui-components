@@ -7,6 +7,7 @@ import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
 import { clickableCursor } from "../../internal/style/clickable";
 import { useChart } from "./context";
 import type { ClickHandler, HoverHandler, Id } from "./slot-types";
+import { find } from "../../fn";
 
 /**
  * Opacity multiplier applied to selected segments. The base `fillOpacity` is
@@ -89,7 +90,7 @@ export function HighlightSegments<
   const hoveredId = createMemo<Id | null>(() => {
     const hx = ctx.hoverX();
     if (hx === null) return null;
-    const found = merged.data.find((s) => hx >= s.start && hx <= s.end);
+    const found = find((s) => hx >= s.start && hx <= s.end, merged.data);
     return found ? found.id : null;
   });
 
