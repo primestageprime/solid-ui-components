@@ -60,6 +60,7 @@ import type { EditTrigger } from "../EditableTitle/EditableTitle";
 import { idRange, foldRange, type RangeSelectMode } from "./selection";
 import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import type { TagPillData } from "../Badge/TagPill";
+import { filter, pluck } from "../../fn";
 import "./ActionList.css";
 
 /** A tag — a plain/`"ns:value"` label, or the explicit `{ key, value }` form. */
@@ -208,7 +209,9 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   const plainToggle = (id: string, shiftKey = false) => {
     setAnchorId(id);
     const cur = selection();
-    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+    const next = cur.includes(id)
+      ? filter((x) => x !== id, cur)
+      : [...cur, id];
     emit(next, { kind: "toggle", clickedId: id, shiftKey });
   };
   // Shift-click: fold the contiguous span [anchor..target] into the selection per
@@ -218,7 +221,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   // shift-click re-ranges from it. With no usable anchor, falls back to a plain
   // toggle (carrying shiftKey through so the meta stays honest).
   const rangeToggle = (id: string) => {
-    const order = props.items.map((i) => i.id);
+    const order = pluck("id", props.items);
     const anchor = anchorId();
     const range = idRange(order, anchor, id);
     if (!range) {
@@ -235,10 +238,10 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   // `items` only — untrack the selection read so this doesn't loop on toggle.
   createEffect(() => {
     if (controlled()) return;
-    const live = new Set(props.items.map((i) => i.id));
+    const live = new Set(pluck("id", props.items));
     untrack(() => {
       const cur = internalIds();
-      const pruned = cur.filter((id) => live.has(id));
+      const pruned = filter((id) => live.has(id), cur);
       if (pruned.length !== cur.length) emit(pruned);
     });
   });
