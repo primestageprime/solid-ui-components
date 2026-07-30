@@ -75,4 +75,22 @@ describe("ValueMatrix", () => {
     expect(chosen.length).toBe(1);
     expect(chosen[0]?.textContent).toBe("0.21 g/kWh");
   });
+
+  it("renders JSX from rowLabel/colLabel as elements, not stringified", () => {
+    const { container } = render(() => (
+      <ValueMatrix
+        rows={CE_LEVELS}
+        cols={SOURCES}
+        rowLabel={(ce) => <strong class="row-label">{ce}%</strong>}
+        colLabel={(s) => <em class="col-label">{s.label}</em>}
+        value={(ce, s) => VALUES[s.key][ce]}
+      />
+    ));
+    expect(container.querySelector("strong.row-label")?.textContent).toBe(
+      "90%",
+    );
+    expect(container.querySelector("em.col-label")?.textContent).toBe(
+      "Shore",
+    );
+  });
 });

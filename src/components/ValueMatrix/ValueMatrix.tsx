@@ -22,9 +22,9 @@ export interface ValueMatrixProps<R, C> {
   /** Column-axis values (one value column per entry). */
   cols: C[];
   /** Row-axis display label, e.g. 90 → "90%". */
-  rowLabel: (row: R) => string;
+  rowLabel: (row: R) => string | JSX.Element;
   /** Column header label, e.g. source → "Shore". */
-  colLabel: (col: C) => string;
+  colLabel: (col: C) => string | JSX.Element;
   /** Header over the row-axis column, e.g. "CE". Empty when omitted. */
   rowAxisLabel?: string;
   /** The matrix: value at (row, col); null renders BLANK (ruled 2026-07-18:

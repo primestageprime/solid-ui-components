@@ -14,9 +14,9 @@ export interface PivotGridProps<
   /** Column identities, left-to-right. Caller sorts. */
   columns: readonly ColKey[];
   /** Display label for a row's sticky-left header cell. */
-  rowLabel: (row: RowKey) => string;
+  rowLabel: (row: RowKey) => string | JSX.Element;
   /** Display label for a column's sticky-top header cell. */
-  colLabel: (col: ColKey) => string;
+  colLabel: (col: ColKey) => string | JSX.Element;
   /** Cell value lookup. Return `null` for "no data" (rendered via `emptyCell`). */
   cell: (row: RowKey, col: ColKey) => Cell | null;
   /**
