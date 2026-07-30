@@ -29,6 +29,7 @@ import { Row } from "../Layout/Row";
 import { NavLink, type NavLinkColor } from "../Navigation/NavLink";
 import { PopoverMenu, type PopoverMenuItem } from "../PopoverMenu/PopoverMenu";
 import { observeSize } from "../../internal/dom/observeSize";
+import { map, find } from "../../fn";
 
 export interface OverflowNavItem {
   /** Stable id — used as the PopoverMenu select id when this item overflows. */
@@ -177,14 +178,14 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   const menuItems = (): [PopoverMenuItem, ...PopoverMenuItem[]] | null => {
     const spill = overflowItems();
     if (spill.length === 0) return null;
-    return spill.map((item) => ({ id: item.id, label: item.label })) as [
+    return map((item) => ({ id: item.id, label: item.label }), spill) as [
       PopoverMenuItem,
       ...PopoverMenuItem[],
     ];
   };
 
   const handleMenuSelect = (id: string) => {
-    const item = props.items.find((x) => x.id === id);
+    const item = find((x) => x.id === id, props.items);
     if (!item) return;
     if (item.onClick) {
       item.onClick();

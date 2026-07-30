@@ -26,7 +26,7 @@ import { SlotFillBar } from "../SlotFillBar";
 import { Treemap, type TreemapSidebar } from "../Treemap";
 import { ChipLabel, CountText, EllipsizedChipLabel } from "../Text/variants";
 import { TightSpreadRow } from "../Layout/variants";
-import { pipe, map, pluck, sortBy } from "../../fn";
+import { pipe, map, pluck, sortBy, sum } from "../../fn";
 import {
   bucketByDims,
   type PivotAccessors,
@@ -77,15 +77,11 @@ const toWeighted = (b: PivotBucket): WeightedBucket => ({
  *  PivotTreemap doesn't drive). */
 const outerSlots = (
   b: PivotBucket,
-): { slots: number; done: number; doing: number } =>
-  b.children.reduce(
-    (acc, c) => ({
-      slots: acc.slots + c.total,
-      done: acc.done + (c.metrics?.done ?? 0),
-      doing: acc.doing + (c.metrics?.doing ?? 0),
-    }),
-    { slots: 0, done: 0, doing: 0 },
-  );
+): { slots: number; done: number; doing: number } => ({
+  slots: sum(pluck("total", b.children)),
+  done: sum(map((c) => c.metrics?.done ?? 0, b.children)),
+  doing: sum(map((c) => c.metrics?.doing ?? 0, b.children)),
+});
 
 export function PivotTreemap<T, Dim extends string>(
   p: PivotTreemapProps<T, Dim>,

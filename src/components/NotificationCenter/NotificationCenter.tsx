@@ -48,6 +48,7 @@ import type {
   NotificationCenterProps,
   NotificationItem,
 } from "./types";
+import { pipe, filter, map, join } from "../../fn";
 import "./NotificationCenter.css";
 
 // Re-exported so `from "./NotificationCenter"` keeps resolving the types it
@@ -78,14 +79,16 @@ export const NotificationCenter: Component<NotificationCenterProps> = (
   // that don't track read state.
   const badge = () =>
     props.badgeCount ??
-    props.items.filter((i) => !i.transient && !i.read).length;
+    filter((i) => !i.transient && !i.read, props.items).length;
   const label = () => props.label ?? "Notifications";
   const empty = () => props.items.length === 0;
   const announce = createMemo(() => {
-    const transients = props.items
-      .filter((i) => i.transient)
-      .map((i) => i.title);
-    if (transients.length) return transients.join(", ");
+    const transients = pipe(
+      props.items,
+      filter((i) => !!i.transient),
+      map((i) => i.title),
+    );
+    if (transients.length) return join(", ", transients);
     return props.busy ? "Working…" : "";
   });
 

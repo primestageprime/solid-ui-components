@@ -33,6 +33,7 @@ import {
   GrowWrapRow,
 } from "../Layout/variants";
 import { observeSize } from "../../internal/dom/observeSize";
+import { filter, find } from "../../fn";
 import "./MultiSelectFilter.css";
 
 export interface MultiSelectOption {
@@ -103,7 +104,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const onChipClick = (v: string) => {
     const cur = props.selected;
     if (cur.includes(v)) {
-      props.onChange(cur.filter((x) => x !== v));
+      props.onChange(filter((x) => x !== v, cur));
     } else if (cur.length === 0) {
       props.onChange([v]);
     } else {
@@ -114,7 +115,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const summary = createMemo(() => {
     if (props.selected.length === 0) return props.allLabel ?? "all";
     if (props.selected.length === 1) {
-      const opt = props.options.find((o) => o.value === props.selected[0]);
+      const opt = find((o) => o.value === props.selected[0], props.options);
       return opt ? labelOf(opt) : props.selected[0];
     }
     return `${props.selected.length} selected`;
