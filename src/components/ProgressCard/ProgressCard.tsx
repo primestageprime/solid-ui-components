@@ -18,6 +18,7 @@ import {
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
 import { ClusterRow, TightClusterRow, ActionSlot } from "../Layout/variants";
+import { map, findIndex } from "../../fn";
 import "./ProgressCard.css";
 
 export type ProgressStatus = "pending" | "active" | "completed" | "error";
@@ -208,19 +209,23 @@ export function createWorkflowProgressCard(config: {
     const derivedSteps = (): ProgressStep[] => {
       // When completed, all steps are completed
       if (local.status === "completed") {
-        return config.steps.map((template) => ({
-          id: template.id,
-          label: template.label,
-          status: "completed" as ProgressStatus,
-          icon: template.icon,
-        }));
+        return map(
+          (template) => ({
+            id: template.id,
+            label: template.label,
+            status: "completed" as ProgressStatus,
+            icon: template.icon,
+          }),
+          config.steps,
+        );
       }
 
-      const currentIdx = config.steps.findIndex(
+      const currentIdx = findIndex(
         (s) => s.id === local.currentStep,
+        config.steps,
       );
 
-      return config.steps.map((template, idx) => {
+      return map((template, idx) => {
         let stepStatus: ProgressStatus;
         if (idx < currentIdx) {
           stepStatus = "completed";
@@ -235,7 +240,7 @@ export function createWorkflowProgressCard(config: {
           status: stepStatus,
           icon: template.icon,
         };
-      });
+      }, config.steps);
     };
 
     return (

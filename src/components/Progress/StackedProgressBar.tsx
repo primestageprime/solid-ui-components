@@ -6,6 +6,7 @@
 // Multi-segment progress bar with horizontal/vertical orientation.
 // ============================================
 import { type Component, type JSX, splitProps, For, Show } from "solid-js";
+import { pipe, filter, map } from "../../fn";
 import "./StackedProgressBar.css";
 
 export interface StackedSegment {
@@ -45,13 +46,15 @@ export const StackedProgressBar: Component<StackedProgressBarProps> = (
   // Track cumulative offset for stacking
   const segmentsWithOffset = () => {
     let offset = 0;
-    return local.segments
-      .filter((s) => s.percentage > 0)
-      .map((s) => {
+    return pipe(
+      local.segments,
+      filter((s) => s.percentage > 0),
+      map((s) => {
         const seg = { ...s, offset };
         offset += s.percentage;
         return seg;
-      });
+      }),
+    );
   };
 
   return (

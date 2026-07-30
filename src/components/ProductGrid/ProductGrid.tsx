@@ -33,7 +33,7 @@ import {
 } from "../AreaFocusGrid";
 import { ProductGridCard } from "../ProductGridCard";
 import { FocusLabelBand } from "../FocusLabelBand";
-import { pipe, filter, map, pluck } from "../../fn";
+import { pipe, filter, map, pluck, find, every, sum } from "../../fn";
 
 export interface ProductGridWorkCounts {
   todo: number;
@@ -143,7 +143,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const workOf = (id: string): ProductGridWorkCounts | undefined => {
     const w = props.work?.[id];
     if (w) return w;
-    return props.items.find((it) => it.id === id)?.work;
+    return find((it) => it.id === id, props.items)?.work;
   };
 
   // ----- derived state ------------------------------------------------------
@@ -161,7 +161,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const isNeedMet = (need: ProductGridItem): boolean => {
     if (!need.solvedBy || need.solvedBy.length === 0) return false;
     const lookup = satisfiedById();
-    return need.solvedBy.every((id) => lookup.get(id) === true);
+    return every((id) => lookup.get(id) === true, need.solvedBy);
   };
 
   const selectedItemIds = createMemo<Set<string>>(() => {
@@ -176,7 +176,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         ),
       );
     }
-    const it = props.items.find((x) => x.id === sel.id);
+    const it = find((x) => x.id === sel.id, props.items);
     if (!it) return new Set();
     const ids = new Set<string>([sel.id]);
     if (it.position === "below") {
@@ -291,19 +291,17 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         s.focus === key.focus.label
       );
     };
-    const aboveTotals = () =>
-      above.reduce(
-        (acc, it) => {
-          const w = workOf(it.id);
-          if (w) {
-            acc.todo += w.todo;
-            acc.doing += w.doing;
-            acc.done += w.done;
-          }
-          return acc;
-        },
-        { todo: 0, doing: 0, done: 0 },
+    const aboveTotals = () => {
+      const works = filter(
+        (w): w is ProductGridWorkCounts => !!w,
+        map((it) => workOf(it.id), above),
       );
+      return {
+        todo: sum(pluck("todo", works)),
+        doing: sum(pluck("doing", works)),
+        done: sum(pluck("done", works)),
+      };
+    };
     const aboveSegmentsAccessor = () => workSegments(aboveTotals());
     const metCount = () => filter((n) => isNeedMet(n), below).length;
     const belowSegmentsAccessor = () => {

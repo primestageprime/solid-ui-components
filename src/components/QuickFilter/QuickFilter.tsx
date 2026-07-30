@@ -13,7 +13,7 @@ import { type JSX, createSignal, createMemo, splitProps } from "solid-js";
 import { NarrowStack, ActionSlot } from "../Layout/variants";
 import { ThemedInput } from "../Inputs";
 import "./QuickFilter.css";
-import { pipe, map, filter } from "../../fn";
+import { pipe, map, filter, every } from "../../fn";
 
 export interface QuickFilterProps<T> {
   items: readonly T[];
@@ -69,10 +69,10 @@ export function QuickFilter<T>(rawProps: QuickFilterProps<T>) {
     const q = query().trim();
     if (!q) return local.items;
     const ts = tokens(q);
-    return local.items.filter((item) => {
+    return filter((item) => {
       const hay = extract()(item).toLowerCase();
-      return ts.every((t) => hay.includes(t));
-    });
+      return every((t) => hay.includes(t), ts);
+    }, local.items);
   });
 
   const onInput = (e: InputEvent & { currentTarget: HTMLInputElement }) => {
