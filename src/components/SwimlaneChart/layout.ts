@@ -244,9 +244,9 @@ export function computeSwimlaneLayout<T>(
   // 9. Initial rank = current order within each col.
   const rank = new Map<string, number>();
   for (const col of orderedCols) {
-    visibleCols.get(col)!.forEach((id, i) => {
+    for (const [i, id] of visibleCols.get(col)!.entries()) {
       rank.set(id, i);
-    });
+    }
   }
 
   // 10. Barycentric sweep. Alternate L→R and R→L per pass.
@@ -265,15 +265,18 @@ export function computeSwimlaneLayout<T>(
         bary.set(id, sum / ns.length);
       }
     }
-    ids.sort((a, b) => {
-      const da = bary.get(a)!;
-      const db = bary.get(b)!;
-      if (da !== db) return da - db;
-      return rank.get(a)! - rank.get(b)!;
-    });
-    ids.forEach((id, i) => {
+    // Two stable sortBy passes, secondary key first (per src/fn/README.md's
+    // two-key convention): existing rank breaks ties on equal bary values.
+    // sortBy copies, so this also drops the in-place mutation of `ids` the
+    // native .sort() did — the new order is re-stored via visibleCols.set.
+    const sorted = sortBy(
+      (id: string) => bary.get(id)!,
+      sortBy((id: string) => rank.get(id)!, ids),
+    );
+    visibleCols.set(col, sorted);
+    for (const [i, id] of sorted.entries()) {
       rank.set(id, i);
-    });
+    }
   };
   for (let sweep = 0; sweep < SWEEPS; sweep++) {
     const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
@@ -309,9 +312,9 @@ export function computeSwimlaneLayout<T>(
     if (ids.length === 0) continue;
     const span = (ids.length - 1) * opts.rowGap;
     const start = -span / 2;
-    ids.forEach((id, i) => {
+    for (const [i, id] of ids.entries()) {
       y.set(id, start + i * opts.rowGap);
-    });
+    }
   }
 
   // 12. Positions map.

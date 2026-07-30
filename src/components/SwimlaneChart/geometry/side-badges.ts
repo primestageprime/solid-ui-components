@@ -4,7 +4,7 @@
  * sits just outside the outermost visible node on each side. Both the edge-view
  * and boundary-badge computations read from here. */
 import type { NodePos, SideBadges } from "./shared";
-import { mean, pluck } from "../../../fn";
+import { map, mean, pluck } from "../../../fn";
 
 /**
  * Side-aware boundary-badge positions. Each badge sits just OUTSIDE the outermost
@@ -42,8 +42,8 @@ export function computeSideBadges(
     }
     if (matches.length === 0) return undefined;
     const avgY = mean(pluck("y")(matches));
-    const topY = Math.min(...matches.map((m) => m.y - m.height / 2));
-    const bottomY = Math.max(...matches.map((m) => m.y + m.height / 2));
+    const topY = Math.min(...map((m) => m.y - m.height / 2, matches));
+    const bottomY = Math.max(...map((m) => m.y + m.height / 2, matches));
     const ref = matches[0];
     return { ref, y: avgY, topY, bottomY };
   };

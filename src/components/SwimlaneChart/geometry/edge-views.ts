@@ -15,7 +15,7 @@ import type {
   SideBadges,
   SummaryLike,
 } from "./shared";
-import { map, filter } from "../../../fn";
+import { map, filter, flatMap } from "../../../fn";
 
 export interface EdgeView {
   d: string;
@@ -102,7 +102,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
     const t = toPortY !== undefined ? { ...to, y: toPortY } : to;
     return bezierAvoidingObstacles(f, t, obstacles);
   };
-  const all = edges.flatMap((e) => {
+  const all = flatMap((e) => {
     // Skip synthetic anchor→summary edges — the boundary-badge memo
     // renders those independently as the side stub. Only real data
     // edges should produce dashed lines to/from the badges.
@@ -234,7 +234,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
         key,
       },
     ];
-  });
+  }, edges);
   // Dedup paths by key — the layout emits both the rewritten real
   // edge and a synthetic anchor→summary edge for boundary badges,
   // and we want exactly one path per (source, target) pair.

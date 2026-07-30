@@ -19,6 +19,7 @@
 // ============================================
 import type { DAGNode } from "../DagChart/types";
 import { DEFAULT_SIZE } from "./types";
+import { map } from "../../fn";
 
 /** Minimum visible arrow length before nodes start collapsing (px). */
 export const MIN_ARROW_PX = 50;
@@ -36,7 +37,7 @@ export const widestNodeWidth = <T>(
   nodes: DAGNode<T>[],
   nodeSize: (node: DAGNode<T>) => [number, number],
 ): number => {
-  const max = nodes.reduce((acc, n) => Math.max(acc, nodeSize(n)[0]), 0);
+  const max = Math.max(0, ...map((n: DAGNode<T>) => nodeSize(n)[0], nodes));
   return max || DEFAULT_SIZE[0];
 };
 
@@ -45,7 +46,7 @@ export const tallestNodeHeight = <T>(
   nodes: DAGNode<T>[],
   nodeSize: (node: DAGNode<T>) => [number, number],
 ): number => {
-  const max = nodes.reduce((acc, n) => Math.max(acc, nodeSize(n)[1]), 0);
+  const max = Math.max(0, ...map((n: DAGNode<T>) => nodeSize(n)[1], nodes));
   return max || DEFAULT_SIZE[1];
 };
 
