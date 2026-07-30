@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // RingChart — Structural (Depth 1). SVG chart; composes no library components.
 import { For, Show } from "solid-js";
+import { map } from "../../fn";
 import "./RingChart.css";
 
 export interface RingChartProps {
@@ -24,14 +25,14 @@ export function RingChart(props: RingChartProps) {
     const t = props.total;
     if (t === 0) return [];
     let offset = 0;
-    return (props.segments ?? []).map((seg) => {
+    return map((seg) => {
       const pct = Math.min(seg.value / t, Math.max(0, 1 - offset));
       const dashLen = pct * circumference();
       const dashGap = circumference() - dashLen;
       const dashOffset = -offset * circumference();
       offset += pct;
       return { ...seg, dashLen, dashGap, dashOffset };
-    });
+    }, props.segments ?? []);
   };
 
   return (

@@ -22,6 +22,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { findIndex } from "../../fn";
 import "./SegmentedInput.css";
 
 export interface SegmentedInputOption {
@@ -61,7 +62,7 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
   ]);
 
   const currentIndex = () =>
-    local.options.findIndex((o) => o.id === local.value);
+    findIndex((o) => o.id === local.value, local.options);
 
   // Step by `delta` (e.g. -1 prev, +1 next), clamped to [0, len-1].
   const step = (delta: number) => {

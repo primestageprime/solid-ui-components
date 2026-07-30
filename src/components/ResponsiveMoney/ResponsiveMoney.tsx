@@ -21,6 +21,7 @@ import {
 import { observeSize } from "../../internal/dom/observeSize";
 import { formatMoneyLadder } from "../../internal/format/money";
 import { Text, type TextVariant } from "../Text/Text";
+import { map, findIndex } from "../../fn";
 import "./ResponsiveMoney.css";
 
 export interface ResponsiveMoneyProps
@@ -53,10 +54,10 @@ export const ResponsiveMoney: Component<ResponsiveMoneyProps> = (props) => {
     const el = measureRef;
     if (!el) return;
     setWidths(
-      candidates.map((candidate) => {
+      map((candidate) => {
         el.textContent = candidate;
         return el.getBoundingClientRect().width;
-      }),
+      }, candidates),
     );
   });
 
@@ -76,7 +77,7 @@ export const ResponsiveMoney: Component<ResponsiveMoneyProps> = (props) => {
     if (budget === 0 || measured.length !== candidates.length) {
       return candidates[0];
     }
-    const fitIndex = candidates.findIndex((_, i) => measured[i] <= budget);
+    const fitIndex = findIndex((_, i) => measured[i] <= budget, candidates);
     return candidates[fitIndex === -1 ? candidates.length - 1 : fitIndex];
   });
 

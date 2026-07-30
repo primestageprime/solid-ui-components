@@ -1,4 +1,5 @@
 import { createSignal, type Accessor } from "solid-js";
+import { filter, some } from "../../fn";
 
 /**
  * Reusable "recently-visited" + "starred" state for arbitrary navigable
@@ -93,7 +94,7 @@ export function createRecentStarredStore(
 
   function pushRecent(item: RecentStarredItem) {
     setRecent((cur) => {
-      const next = [item, ...cur.filter((x) => x.id !== item.id)].slice(
+      const next = [item, ...filter((x) => x.id !== item.id, cur)].slice(
         0,
         limit,
       );
@@ -104,9 +105,9 @@ export function createRecentStarredStore(
 
   function toggleStar(item: RecentStarredItem) {
     setStarred((cur) => {
-      const exists = cur.some((x) => x.id === item.id);
+      const exists = some((x) => x.id === item.id, cur);
       const next = exists
-        ? cur.filter((x) => x.id !== item.id)
+        ? filter((x) => x.id !== item.id, cur)
         : [item, ...cur];
       persist("starred", next);
       return next;
@@ -114,7 +115,7 @@ export function createRecentStarredStore(
   }
 
   function isStarred(id: string) {
-    return starred().some((x) => x.id === id);
+    return some((x) => x.id === id, starred());
   }
 
   function clearAll() {

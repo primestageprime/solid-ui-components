@@ -17,6 +17,7 @@ import {
   SpreadRow,
   TightStack,
 } from "../Layout/variants";
+import { find } from "../../fn";
 import "./SidebarSelector.css";
 
 export interface SidebarSelectorItem<T = unknown> {
@@ -47,7 +48,7 @@ export function SidebarSelector<T>(
   props: SidebarSelectorProps<T>,
 ): JSX.Element {
   const selectedItem = () =>
-    props.items.find((item) => item.id === props.selectedId);
+    find((item) => item.id === props.selectedId, props.items);
 
   const containerClass = () => {
     const classes = ["sidebar-selector"];

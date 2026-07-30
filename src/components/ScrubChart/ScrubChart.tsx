@@ -63,7 +63,7 @@ import type {
   ScrubChartProps,
 } from "./types";
 import "./ScrubChart.css";
-import { map } from "../../fn";
+import { map, filter } from "../../fn";
 
 export type {
   ScrubChartContext,
@@ -198,12 +198,12 @@ export const ScrubChart = <C extends Cell>(
     // Stride the chosen cadence's candidates if still over the cap.
     if (indices.length > maxTicks) {
       const stride = Math.ceil(indices.length / maxTicks);
-      indices = indices.filter((_, i) => i % stride === 0);
+      indices = filter((_, i) => i % stride === 0, indices);
     }
-    return indices.map((i) => ({
+    return map((i) => ({
       x: indexToX(i),
       label: fmt(props.cells[i], chosen),
-    }));
+    }), indices);
   });
 
   // ── Track the inner DateAxis's scroll position + viewport width so we
