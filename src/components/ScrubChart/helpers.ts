@@ -72,7 +72,8 @@ export const defaultFormatX = <C extends Cell>(
   cadence: ResolvedXTickCadence,
 ): string => {
   const start = c.start;
-  const yyShort = String(start.getUTCFullYear()).slice(-2);
+  const yearStr = String(start.getUTCFullYear());
+  const yyShort = yearStr.slice(-2);
   if (cadence === "year") return String(start.getUTCFullYear());
   if (cadence === "quarter") {
     const q = Math.floor(start.getUTCMonth() / 3) + 1;
