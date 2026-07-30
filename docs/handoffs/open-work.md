@@ -1,6 +1,6 @@
 # Handoff: open work in solid-ui-components
 
-**State as of 2026-07-30.** Version `0.127.0`, `main` at `801c0e5`, all checks
+**State as of 2026-07-30.** Version `0.127.0`, `main` at `d94ae65`, all checks
 green, every ratchet ceiling tight. This supersedes the six-issue handoff from
 2026-07-29 — all six are now resolved, triaged-and-closed, or (for #64)
 in-progress below.
@@ -86,12 +86,12 @@ bypasses everything — the gate binds PR merges.
   0.59 dropped the bare export). The requested variant would have shipped as
   a byte-identical duplicate of `SpreadRow`.
 
-## #64 — Function-first burn-down — the long grind, continues
+## #64 — Function-first burn-down — down to the long tail
 
-| Metric | 2026-07-29 | 2026-07-30 (morning) | Now | Target |
+| Metric | 2026-07-29 | 2026-07-30 morning | 2026-07-30 now | Target |
 |---|---|---|---|---|
-| `collectionMethodCalls` | 209 | 139 | **115** | 0 |
-| `dotChains` | 54 | 33 | **26** | 0 |
+| `collectionMethodCalls` | 209 | 139 | **31** | 0 |
+| `dotChains` | 54 | 33 | **7** | 0 |
 | `cssTypedProps` | 14 | 14 | **14** (unchanged) | 0 |
 
 Convert `xs.map(f)` → `map(f, xs)` (direct form outside pipes, curried inside)
@@ -99,42 +99,70 @@ and chains → `fn.pipe` with named stages. Read `src/fn/README.md` first —
 the dual-form convention is precise. `src/fn/` is exempt by construction.
 `fn.every` now exists (mirrors `fn.some`).
 
-**Slices landed 2026-07-29/30** (one component/folder per commit — `git log
---oneline` for the exact diffs): `ParticipantAvatar/initials.ts`,
-`_contrastMath.ts`, `CashflowScrubChart/`, `ConversationTree.tsx`,
-`AnimatedSwimlaneChart/`, `ThroughputChart.tsx`, `StatusFlowChart/`,
-`SwimlaneChart/`, `DagChart/` (`0fb2739`), `Combobox/ComboboxMulti.tsx`
-(`8d11f0c`), `AreaFocusGrid/AreaFocusGrid.tsx` (`03651ae`),
-`hooks/createDnDReorder.ts` (`801c0e5`). Every folder-level slice (small
-sibling files, one component) went as a single PR — see `CashflowScrubChart/`
-or `SwimlaneChart/` for the pattern.
+**~24 slices landed 2026-07-29/30** — `git log --oneline` for the exact
+diffs, from `dfd3e06` (`ParticipantAvatar/initials.ts`, the worked example)
+through `d94ae65`. Folder-level slices (small sibling files, one component)
+went as a single commit — see `CashflowScrubChart/`, `SwimlaneChart/`,
+`DagChart/`, or `ExtractionBoard/` for the pattern. Later slices bundled
+several unrelated single-file fixes into one commit once the natural
+clusters ran out — each such commit's message still breaks down every site
+individually.
 
-**New pattern from the `DagChart/`/`AreaFocusGrid` slices — `flatMap` has no
-`fn` equivalent, and it splits into two different fixes depending on shape:**
-- **0-or-1-per-input** (an early `return []` guard inside the callback):
-  `pipe(items, map(toXOrNull), filter((x): x is X => x !== null))` — map to a
-  nullable result, then filter the misses. Used in `DagChart.tsx`'s
-  `positionedNodes`/`edgePaths` and `collapse.ts`'s `primaryNodes` (there,
-  `filter(has)` narrows the ids first so the subsequent `map` can dereference
-  unconditionally instead of returning nullable).
-- **genuine one-to-many expansion** (`area.flatMap(a => a.children.map(...))`):
-  a nested `for...of` push loop, same rationale as the no-`forEach`
-  convention below — `AreaFocusGrid.tsx`'s `subCols` construction.
+**Two things that changed how the later slices ran, worth reading before
+picking this back up:**
 
-**Densest remaining** (dotChains + collectionMethodCalls combined; run
-`npm run health -- --verbose` for exact line numbers, since the file/line
-counts drift with every slice):
+- **`flatMap` has no `fn` equivalent**, and it splits into two different
+  fixes depending on shape:
+  - **0-or-1-per-input** (an early `return []` guard inside the callback):
+    `pipe(items, map(toXOrNull), filter((x): x is X => x !== null))` — map to
+    a nullable result, then filter the misses. Used in `DagChart.tsx`'s
+    `positionedNodes`/`edgePaths` and `collapse.ts`'s `primaryNodes`.
+  - **genuine one-to-many expansion**
+    (`area.flatMap(a => a.children.map(...))`): a nested `for...of` push
+    loop, same rationale as the no-`forEach` convention — `AreaFocusGrid`'s
+    `subCols`, `HeatStreamGrid`'s `allNonEmptyKeys`.
+- **TS can't contextually type an `fn` call's unannotated callback param
+  when the array argument is a nested call expression** rather than a plain
+  identifier — e.g. `filter(({idx}) => ..., map(...))` fails to infer, but
+  `const indexed = map(...); filter(({idx}) => ..., indexed)` works. Hit
+  repeatedly (`Badge/tagPairs.ts`, `Alarm/alarm.ts`). Always name the
+  intermediate as its own statement when chaining two `fn` calls outside a
+  `pipe`.
+- **`fn.filter`'s predicate must return exactly `boolean`**, unlike native
+  `.filter()` which accepts any truthy/falsy return — a `boolean | undefined`
+  field read directly in the predicate (`i => i.transient`) needs an
+  explicit `!!` coercion (`NotificationCenter.tsx`).
 
-| File / folder | Hits |
-|---|---|
-| `Badge/tagPairs.ts` (+`StatusChip.tsx` 2) | 7 |
-| `internal/animation/choreography.ts` | 5 |
-| `Table/BaseTable.tsx` | 5 |
-| `RecentStarred/store.ts` | 5 |
-| `ExtractionBoard/ExtractionBoard.tsx` (+`cards.tsx` 1) | 6 |
+**0-seeded `Math.max`/`Math.min` reduces are a real, recurring, justified
+exception** — not a one-off. Confirmed sites, all left native: `Chart/Axes.tsx`
+(`estimateMaxLabelWidth`, `measureMaxLabelWidth`), `ScrubChart.tsx`
+(`yAxisWidth`'s `ticks.reduce`), `internal/animation/choreography.ts`
+(`totalWeight`'s `steps.reduce`). A 3-field object-accumulator reduce is
+**not** automatically in this category, though — `PivotTreemap.tsx`'s
+`outerSlots` and `ProductGrid.tsx`'s `aboveTotals` both summed 0-seeded
+fields and converted cleanly to `sum(pluck(...))` / `sum(map(...))`, because
+`sum([]) === 0` matches a 0 seed exactly (no seedless-max behavior-change
+risk). Check what's actually being reduced, not just whether it's 0-seeded.
 
-Everything past that is 1–4 hits scattered across ~65 more files: genuinely
-one-file-at-a-time from here, no more natural folder-level clusters.
+**Remaining** (dotChains + collectionMethodCalls combined; run
+`npm run health -- --verbose` for exact line numbers):
+
+| File | Hits | Note |
+|---|---|---|
+| `Table/BaseTable.tsx` | 5 | |
+| `test-utils/domStructure.ts` | 4 | test infra, not a component — check its own norms before converting |
+| `Chart/Axes.tsx` | 3 | **both sites are the justified 0-seeded-reduce exception above — leave native** |
+| `Table/TableQuickFilter.tsx` | 3 | |
+| `Sparkline/Sparkline.tsx`, `TrendSparkline/TrendSparkline.tsx`, `WeekCalendar/WeekCalendar.tsx`, `Table/dateCells.tsx`, `ValueMatrix/ValueMatrix.tsx` | 2 each | |
+| `ScrubChart/ScrubChart.tsx` | 1 | **the justified 0-seeded-reduce exception above — leave native** |
+| `SprintSelector/`, `TabbedSidePanel/`, `Table/SelectableTable.tsx`, `Table/fields/{FieldTable,actions,resolve}.tsx`, `WorkProgressCard/cardProgress.ts`, `internal/animation/choreography.ts`, `internal/animation/trajectories/{builders,layout}.ts`, `internal/dag-svg/orthogonal-routing.ts`, `themes/__tests__/_cssRules.ts` | 1 each | `choreography.ts`'s is **also the justified reduce exception** — already handled, don't re-touch |
+
+22 files, 38 hits total, but 4 of those hits (2 in `Chart/Axes.tsx`, 1 in
+`ScrubChart.tsx`, 1 in `choreography.ts`) are the confirmed 0-seeded-reduce
+exception and will never go to 0 without changing behavior. Realistic floor
+for `dotChains`+`collectionMethodCalls` combined is **4**, not 0 — update
+`open-work.md`'s "explicitly out of scope" section with these four sites
+once the remaining ~34 hits are cleared, rather than continuing to chase 0.
 
 **Method — `src/components/ParticipantAvatar/initials.ts` is the worked
 example** (17 sites → 1, commit `dfd3e06`), plus `AnimatedSwimlaneChart/`
