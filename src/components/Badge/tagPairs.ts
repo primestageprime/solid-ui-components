@@ -19,6 +19,8 @@
 // most once; a duplicated dim pairs on its first occurrence, extras stay labeled.
 // ============================================
 
+import { map, filter, sortBy } from "../../fn";
+
 /** A pairing rule: when both dims are present, collapse them into one lozenge. */
 export type TagPairRule = { parent: string; child: string };
 
@@ -77,24 +79,30 @@ export function composeTagPairs(tags: SourceTag[], cfg: TagDisplayConfig): Compo
     });
   }
 
-  const remaining = tags
-    .map((tag, idx) => ({ tag, idx }))
-    .filter(({ idx }) => !consumed[idx]);
+  const indexed = map((tag, idx) => ({ tag, idx }), tags);
+  const remaining = filter(({ idx }) => !consumed[idx], indexed);
 
+  // sortBy is stable, and `remaining` is already in idx order, so sorting
+  // by rank alone reproduces the original two-key comparator's tiebreak
+  // (equal rank -> original idx order) without a second pass.
+  let ordered = remaining;
   if (cfg.order?.length) {
     const rank = (dim: string) => {
       const k = cfg.order!.indexOf(dim);
       return k === -1 ? cfg.order!.length : k;
     };
-    remaining.sort((a, b) => rank(a.tag.dim) - rank(b.tag.dim) || a.idx - b.idx);
+    ordered = sortBy(({ tag }) => rank(tag.dim), remaining);
   }
 
-  const labeled: ComposedTag[] = remaining.map(({ tag }) => ({
-    key: tag.dim,
-    value: tag.value,
-    title: `${tag.dim}: ${tag.value}`,
-    sources: [tag],
-  }));
+  const labeled: ComposedTag[] = map(
+    ({ tag }) => ({
+      key: tag.dim,
+      value: tag.value,
+      title: `${tag.dim}: ${tag.value}`,
+      sources: [tag],
+    }),
+    ordered,
+  );
 
   return [...pairs, ...labeled];
 }

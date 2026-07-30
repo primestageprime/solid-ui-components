@@ -20,6 +20,7 @@ import { DTable, DRow, DT, DD } from "../DataList";
 import { TextSublabel, TextBody, NoteText } from "../Text/variants";
 import { SmallGhostButton, SmallPrimaryButton } from "../Button/variants";
 import type { AuthApi, AuthIdentity, ConnectionEntry } from "./types";
+import { filter, some } from "../../fn";
 
 export interface ManagedListSectionProps {
   auth: AuthApi;
@@ -77,13 +78,12 @@ export function ManagedListSection(props: ManagedListSectionProps) {
   // once loaded, the primary appears in the identities list and the
   // connection match above covers it too.
   const addable = (): ConnectionEntry[] =>
-    props.auth
-      .connections()
-      .filter(
-        (c) =>
-          c.connection !== provider() &&
-          !(identities()?.some((i) => i.connection === c.connection) ?? false),
-      );
+    filter(
+      (c) =>
+        c.connection !== provider() &&
+        !some((i) => i.connection === c.connection, identities() ?? []),
+      props.auth.connections(),
+    );
 
   const loadIdentities = async () => {
     setBusy(true);

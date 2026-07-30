@@ -22,6 +22,7 @@
 // presentational to freeze. Same data-only exemption as SortableList.
 // ============================================
 import { type Component, For, Show, createSignal } from "solid-js";
+import { pluck } from "../../fn";
 import "./StatusChip.css";
 
 export interface StatusChipProps {
@@ -45,7 +46,7 @@ export const StatusChip: Component<StatusChipProps> = (props) => {
   const options = () => props.options ?? [];
   // Fixed width: longest option (or current status), in ch of the mono font.
   const widthCh = () =>
-    Math.max(props.status.length, ...options().map((o) => o.length)) + 1;
+    Math.max(props.status.length, ...pluck("length", options())) + 1;
   const commit = (value: string) => {
     setEditing(false);
     setMenuOpen(false);
