@@ -36,7 +36,7 @@ import {
 } from "../Chart";
 import { Legend } from "../Legend";
 import { SpreadRow } from "../Layout/variants";
-import { mean, pluck, sortBy } from "../../fn";
+import { filter, map, mean, pluck, sortBy } from "../../fn";
 import "./ThroughputChart.css";
 import { observeSize } from "../../internal/dom/observeSize";
 
@@ -126,8 +126,9 @@ function RateChart(props: ThroughputChartProps) {
 
   const points = createMemo(() => {
     const { start, end } = timeRange();
-    const inWindow = data().filter(
-      (p) => p.timestamp >= start && p.timestamp <= end,
+    const inWindow = filter(
+      (p: ThroughputPoint) => p.timestamp >= start && p.timestamp <= end,
+      data(),
     );
     return sortBy((p: ThroughputPoint) => p.timestamp)(inWindow);
   });
@@ -144,7 +145,9 @@ function RateChart(props: ThroughputChartProps) {
     const pts = points();
     return pts.length === 0
       ? 0
-      : Math.round(Math.max(...pts.map((p) => p.rowsPerMinute)));
+      : Math.round(
+          Math.max(...map((p: ThroughputPoint) => p.rowsPerMinute, pts)),
+        );
   });
 
   const hourTicks = createMemo(() => {
@@ -265,16 +268,19 @@ function CompletionView(props: ThroughputChartProps) {
     const windowMs = windowHours() * HOUR_MS;
     const windowStart = now() - windowMs;
     const total = props.totalCount ?? 0;
-    const within = (props.completions ?? []).filter(
-      (c) => c.completedAt >= windowStart && c.completedAt <= now(),
+    const within = filter(
+      (c: CompletionPoint) =>
+        c.completedAt >= windowStart && c.completedAt <= now(),
+      props.completions ?? [],
     );
     let running = Math.max(0, props.baselineCompleted ?? 0);
     const raw: Omit<HourBucket, "barScaled">[] = [];
     for (let h = 0; h < windowHours(); h++) {
       const start = windowStart + h * HOUR_MS;
       const end = start + HOUR_MS;
-      const inBucket = within.filter(
-        (c) => c.completedAt >= start && c.completedAt < end,
+      const inBucket = filter(
+        (c: CompletionPoint) => c.completedAt >= start && c.completedAt < end,
+        within,
       ).length;
       running += inBucket;
       raw.push({
@@ -284,11 +290,17 @@ function CompletionView(props: ThroughputChartProps) {
       });
     }
     // Scale the bars onto the shared 0–100 axis (busiest bucket → full height).
-    const max = Math.max(1, ...raw.map((b) => b.completedCount));
-    return raw.map((b) => ({
-      ...b,
-      barScaled: (b.completedCount / max) * 100,
-    }));
+    const max = Math.max(
+      1,
+      ...map((b: Omit<HourBucket, "barScaled">) => b.completedCount, raw),
+    );
+    return map(
+      (b) => ({
+        ...b,
+        barScaled: (b.completedCount / max) * 100,
+      }),
+      raw,
+    );
   });
 
   const xDomain = (): [number, number] => [0, windowHours() - 1];
