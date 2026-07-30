@@ -46,7 +46,7 @@ import type {
   CashflowSeriesFill,
 } from "./types";
 import "./CashflowScrubChart.css";
-import { filter, map } from "../../fn";
+import { filter, flatMap, join, map, pipe } from "../../fn";
 
 // Re-export the public type surface so the folder barrel (and existing
 // consumers importing from this module) keep resolving the same names.
@@ -101,13 +101,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // overlay series — NOT the ribbon `cells` — so the y-scale fits the drawn
     // lines even when the ribbon shows a different scenario.
     const line = lineCells();
-    const values = props.cells.flatMap((c, i) => [
-      ...(line[i] ? [line[i].balanceCents] : []),
-      ...filter(
-        (v): v is number => v != null,
-        map((s) => s.balanceCents(c, i), series),
-      ),
-    ]);
+    const values = flatMap(
+      (c, i) => [
+        ...(line[i] ? [line[i].balanceCents] : []),
+        ...filter(
+          (v): v is number => v != null,
+          map((s) => s.balanceCents(c, i), series),
+        ),
+      ],
+      props.cells,
+    );
     // Tight, zero-independent domain: frame the visible line(s) with symmetric
     // padding so a narrow-band line uses the full height. `yMax` still wins.
     if (!hasManualMax && props.yPadFraction != null && values.length) {
@@ -117,18 +120,18 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       const pad = spread * props.yPadFraction;
       return [dataLo - pad, dataHi + pad];
     }
-    // Reduce (not Math.min(...spread)) to stay safe on long ranges.
-    const lo = values.reduce((m, v) => Math.min(m, v), 0);
-    const hi = hasManualMax
-      ? manualMax
-      : values.reduce((m, v) => Math.max(m, v), 0);
+    // Zero-floored min/max in one pass via extentOf (not Math.min/max(...spread),
+    // which would blow the argument limit on a long range).
+    const [lo, autoHi] = extentOf([0, ...values]);
+    const hi = hasManualMax ? manualMax : autoHi;
     return [lo, hi];
   });
 
   // Largest |cashflow| across the strip — the 100%-height reference bar.
-  const maxAbsCashflow = createMemo(() =>
-    props.cells.reduce((m, c) => Math.max(m, Math.abs(c.cashflowCents)), 0),
-  );
+  const maxAbsCashflow = createMemo(() => {
+    const abs = map((c: CashflowCell) => Math.abs(c.cashflowCents), props.cells);
+    return extentOf([0, ...abs])[1];
+  });
 
   // ── Per-day cell renderer ────────────────────────────────────────────
   const renderCashflowCell = (cell: CashflowCell) => {
@@ -179,55 +182,59 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // The primary line reads its balance from lineCells (decoupled from the
     // ribbon when balanceLineCells is set); geometry (x) stays from ctx.
     const line = lineCells();
-    const points = ctx.cells
-      .map((_, i) =>
+    const points = pipe(
+      ctx.cells,
+      map((_, i) =>
         line[i]
           ? `${ctx.cellToX(i).toFixed(1)},${yToPlot(line[i].balanceCents).toFixed(1)}`
           : null,
-      )
-      .filter((p): p is string => p !== null)
-      .join(" ");
+      ),
+      filter((p): p is string => p !== null),
+      join(" "),
+    );
 
     // Extra balance lines (forecasts, prior periods, other accounts) drawn
     // beneath the primary line. Each may break into multiple segments where
     // its accessor returns null.
-    const extraSeries = (props.balanceSeries ?? []).map((s) => ({
-      id: s.id,
-      class: s.class,
-      segments: buildLineSegments(
-        ctx.cells,
-        ctx.cellToX,
-        yToPlot,
-        s.balanceCents,
-      ),
-    }));
+    const extraSeries = map(
+      (s: CashflowBalanceSeries) => ({
+        id: s.id,
+        class: s.class,
+        segments: buildLineSegments(
+          ctx.cells,
+          ctx.cellToX,
+          yToPlot,
+          s.balanceCents,
+        ),
+      }),
+      props.balanceSeries ?? [],
+    );
 
     // Deviation bands — the coloured area between a `fill`-bearing series and
     // its reference line (primary line by default). Drawn at the very back so
     // the lines and decorations sit on top. Split at crossings by the geometry
     // helper, so each polygon is uniformly green (series above reference) or
     // red (series below reference).
-    const bands = (props.balanceSeries ?? [])
-      .filter((s) => s.fill)
-      .flatMap((s) => {
+    const bands = pipe(
+      props.balanceSeries ?? [],
+      filter((s) => Boolean(s.fill)),
+      flatMap((s) => {
         const fill = s.fill!;
         const reference =
           fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
         const overrideClass = (sign: "positive" | "negative") =>
           sign === "positive" ? fill.positiveClass : fill.negativeClass;
-        return buildDeviationBand(
-          ctx.cells,
-          ctx.cellToX,
-          yToPlot,
-          s.balanceCents,
-          reference,
-        ).map((run, i) => ({
-          key: `${s.id}-${i}`,
-          sign: run.sign,
-          points: run.points,
-          overrideClass: overrideClass(run.sign),
-        }));
-      });
+        return map(
+          (run, i) => ({
+            key: `${s.id}-${i}`,
+            sign: run.sign,
+            points: run.points,
+            overrideClass: overrideClass(run.sign),
+          }),
+          buildDeviationBand(ctx.cells, ctx.cellToX, yToPlot, s.balanceCents, reference),
+        );
+      }),
+    );
 
     // Selection decorations are part of the scrub layer — omitted in plain
     // mode (and whenever the selected index is out of range).
@@ -251,7 +258,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const OVERTOP_EPS_PX = 0.5;
     const overtopPeak = (() => {
       let best: { x: number; value: number } | null = null;
-      ctx.cells.forEach((cell, i) => {
+      // Mutable running-best accumulation across two nested loops (per-cell
+      // candidates, then per-candidate comparison) — a for-of loop, not
+      // forEach (no fn.forEach exists; a functional combinator would only
+      // add noise here, same call made for the min/max loop in extentOf).
+      for (const [i, cell] of ctx.cells.entries()) {
         const candidates: number[] = line[i] ? [line[i].balanceCents] : [];
         for (const s of props.balanceSeries ?? []) {
           const v = s.balanceCents(cell, i);
@@ -263,7 +274,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             if (!best || v > best.value) best = { x: ctx.cellToX(i), value: v };
           }
         }
-      });
+      }
       return best as { x: number; value: number } | null;
     })();
 
@@ -396,7 +407,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         preserveAspectRatio="none"
       >
         <For
-          each={list.filter((m) => m.index >= 0 && m.index < ctx.cells.length)}
+          each={filter(
+            (m) => m.index >= 0 && m.index < ctx.cells.length,
+            list,
+          )}
         >
           {(m) => {
             const x = ctx.cellToX(m.index);
