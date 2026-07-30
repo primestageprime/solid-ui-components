@@ -149,9 +149,9 @@ export async function choreograph(
   const mine: RunningSequence = {
     fastForward: () => {
       cancelled = true;
-      live.forEach((a) => {
+      for (const a of live) {
         a.cancel();
-      });
+      }
       for (; idx < steps.length; idx++) {
         const s = steps[idx];
         if (s.kind === "commit") s.fn();
@@ -186,7 +186,7 @@ export async function choreograph(
     // takeOver will supersede it) — proceeding is always safe.
     if (anims.length)
       await Promise.race([
-        Promise.all(anims.map((a) => a.finished.catch(() => {}))),
+        Promise.all(map((a) => a.finished.catch(() => {}), anims)),
         new Promise((r) => setTimeout(r, ms + 80)),
       ]);
     live = [];
@@ -204,10 +204,10 @@ const canAnimate = (el: HTMLElement): boolean =>
 /** Cancel anything already animating this element (a prior step's
  *  fill:forwards hold, an interrupted gesture) so this effect owns it. */
 const takeOver = (el: HTMLElement) => {
-  if (typeof el.getAnimations === "function")
-    el.getAnimations().forEach((a) => {
-      a.cancel();
-    });
+  if (typeof el.getAnimations !== "function") return;
+  for (const a of el.getAnimations()) {
+    a.cancel();
+  }
 };
 
 // ─── the verbs ───────────────────────────────────────────────────────────
