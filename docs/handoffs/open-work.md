@@ -1,8 +1,8 @@
 # Handoff: open work in solid-ui-components
 
-**State as of 2026-07-29.** Version `0.126.0`, `main` at `867d4be`, all checks green,
-every ratchet ceiling tight. Six open issues, summarised below with enough
-context to start on any one of them without re-deriving anything.
+**State as of 2026-07-30.** Version `0.127.0`, `main` at `6e9a8a9`, all checks green,
+every ratchet ceiling tight. This supersedes the six-issue handoff from
+2026-07-29 — five of those six are resolved or triaged; #64 continues below.
 
 Read **Ground rules** first — several of them will fail your PR if you don't.
 
@@ -29,11 +29,6 @@ bypasses everything — the gate binds PR merges.
 | `--update-baseline` (bare) | Only *lowers*. It cannot raise any ceiling. |
 | Raising a ceiling | Requires naming it **and** a reason: `--update-baseline=dotChains --reason="…"`. Recorded in the baseline under `_raises`. |
 
-This is deliberate. `collectionMethodCalls` was burned 362 → 225 by real work and
-then drifted back to 230 as a side effect of commits about other things, because
-the old blanket `--update-baseline` blessed every metric at once. See
-`scripts/health-ratchet.test.ts` and the #62 / #70 history.
-
 ### Other things that will bite
 
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
@@ -42,164 +37,169 @@ the old blanket `--update-baseline` blessed every metric at once. See
   `missingDepthHeaders` — all at 0.
 - **Shared checkout.** Stage only files you touched; never `git add -A`.
 - **CI installs with `--ignore-scripts`, so there is no `dist/`.** Everything in
-  the test/lint/typecheck/health jobs must work from source. Don't add a test
-  that reads `dist/`.
-- **Don't spawn subprocesses in the vitest suite.** A subprocess that walks
-  `src/` or runs the TS compiler API costs ~5s on a 2-core runner and contends
-  with 273 parallel test files. Nine of them hung the `test` job until CI
-  cancelled it at 15 minutes. Test pure logic directly; if you truly need an
-  end-to-end spawn, one is the budget, with an explicit generous timeout.
-- **CI is ~3× slower than local.** vitest's default 5s timeout is not enough for
-  anything doing real work. Set a per-test timeout, not a global one.
-- **`grep` is unreliable for the metric regexes.** It gave wrong answers twice
-  this session on `\.map\(`-style patterns. Use `node` with the same regex as
-  `health.mjs`, and cross-check totals against `npm run health -- --verbose`.
-- **Biome's a11y rules only see intrinsic (lowercase) JSX elements.** SUI composes
-  most markup from `<Grid>`, `<ClusterRow>`, `<NarrowStack>` — invisible to those
-  rules. A green `lint` is **not** a11y coverage.
+  the test/lint/typecheck/health jobs must work from source.
+- **Don't spawn subprocesses in the vitest suite.** Nine of them hung the `test`
+  job until CI cancelled it at 15 minutes. Test pure logic directly.
+- **CI is ~3× slower than local.** Set a per-test timeout, not a global one.
+- **`grep` is unreliable for the metric regexes.** Use `node` with the same
+  regex as `health.mjs`, and cross-check totals against `npm run health -- --verbose`.
+- **Biome's a11y rules only see intrinsic (lowercase) JSX elements.** A green
+  `lint` is **not** a11y coverage.
+- **Two issues in the prior handoff had premises that didn't survive contact
+  with the code**, despite one claiming "Verified still valid." Don't take a
+  filed issue's stated cause at face value — check it against current `git log`
+  / current CSS / current baked-in defaults before implementing. See #45 and
+  #67 below.
 
 ---
 
-## The six issues
+## Resolved since the last handoff (2026-07-29)
 
-### #66 — Document that `SurfaceDataProps` strips layout overrides · *smallest*
+- **#66** — `SurfaceDataProps` documented in `COMPONENTS.md`. Shipped `fcbdcc4`.
+- **#68** — `DateCell` gained `timeZone`, matching `DateTimeCell`. Shipped `cdc95cd`.
+- **#69** — `ValueMatrix`/`PivotGrid` `colLabel`/`rowLabel` widened to
+  `=> string | JSX.Element`. Shipped `25ac69e`.
+- All three released in **0.127.0** together with the #64 progress below;
+  see `CHANGELOG.md` for the full writeup.
 
-Passing `padding` / `radius` / `bg` / `borderColor` to a curried `WarningSurface`
-fails with **TS2322**, by design (ADR 0001 — visual config is locked at curry
-time). Nothing tells a caller that; `COMPONENTS.md` mentions `SurfaceDataProps`
-**zero times**, and the original note records that this is what made an agent
-reach for an inline override.
+## Triaged, not closed — needs a human decision
 
-**Do:** add a line to the `Surface` entry in `COMPONENTS.md`.
-**Don't:** widen the data-prop type — that undoes the contract ADR 0001 exists to hold.
-**Size:** ~15 minutes, docs only.
+- **#45** — `Stack`/`Row` `gap` typed `"xs" | "sm"`; the issue claims the
+  runtime supports `md`/`lg`. It doesn't, as of today: that CSS was
+  deliberately removed twice (`928651f` 2026-06-26, `9158c75` 2026-07-17)
+  after audits found nothing depended on it. Widening the type without
+  matching CSS would reintroduce the exact silent-zero-gap bug
+  `assertModifierClass` exists to catch. A separate real bug was found while
+  investigating: `Surface.gap` publicly accepts `"md"|"lg"` but silently
+  collapses them to `"sm"` before forwarding to the inner `Row`/`Stack` (no
+  `.surface--gap-md/-lg` CSS exists either) — that's plausibly the actual
+  source of the "runtime supports md/lg" impression, but it's a different
+  component and a different bug shape (type wider than effect, not
+  narrower). Full evidence in the issue comments. **Recommend closing #45 as
+  invalid/stale**, and filing the `Surface.gap` collapse as its own issue if
+  it's worth fixing.
+- **#67** — `SpreadCenterRow` curried variant. `SpreadRow` has baked in both
+  `align: "center"` and `justify: "between"` since the repo's **initial
+  commit** (`feeb575`) — the issue's premise ("SpreadRow strips align") was
+  never true. Checked the cited jtf-ui symptom directly: no matching raw
+  `<Row align="center" justify="between">` exists in `durability.tsx`, and
+  jtf-ui can't even construct a raw `<Row>` from this library anymore (SUI
+  0.59 dropped the bare export). **Recommend closing #67 as invalid** — the
+  requested variant would ship as a byte-identical duplicate of `SpreadRow`.
 
-### #67 — `SpreadCenterRow` curried variant
+Neither was closed by the agent that triaged them — closing someone else's
+issue as invalid is a different kind of call than closing one you fixed.
 
-`SpreadRow` bakes in `justify: "between"` but `align` is in `RowOverrides`
-(`src/components/Layout/Row.tsx:64`), so it's stripped from `RowDataProps`. A
-header row needing both `align="center"` and `justify="between"` can't use the
-curried variant and falls back to raw `<Row>` — the exact escape the curried
-vocabulary exists to prevent.
+## #64 — Function-first burn-down — the long grind, continues
 
-**Do:** add `SpreadCenterRow` to `src/components/Layout/variants.ts` with both
-baked in. Ships with a showcase, a `COMPONENTS.md` line, and a test.
-**Don't:** relax `RowDataProps` to allow `align` — that weakens every Row variant
-to serve one call shape.
-**See also #45** — both are Row/Stack contract holes and may want doing together.
-**Size:** small.
-
-### #68 — `DateCell` has no `timeZone` prop, unlike `DateTimeCell`
-
-| Component | `timeZone`? |
-|---|---|
-| `DateTimeCell` | **yes**, documented |
-| `DateCell` | **no** — only `format` and `locale` |
-
-`DateCell`'s `format="iso"` calls `formatDatePattern(date, "YYYY-MM-DD")` with no
-zone, falling through to `localDateParts()` — the *viewer's* zone. For a UTC
-instant near midnight the rendered date is a day off west of UTC. A consumer can
-ask for a UTC datetime but not a UTC date.
-
-**Do:** add `timeZone?: string` to `DateCellProps` and thread it into
-`formatDatePattern` (which already accepts one), matching `DateTimeCell`'s
-semantics exactly — unset = host local zone, so existing behaviour is unchanged.
-**Not urgent:** no consumer is exposed; jtf-ui uses `DateTimeCell` everywhere.
-**Size:** one-line change plus a test.
-
-### #69 — `ValueMatrix` `colLabel`/`rowLabel` typed `string`
-
-`src/components/ValueMatrix/ValueMatrix.tsx:25,27` type both as `=> string`, but
-`colLabel`'s result goes into `TableColumn.header`, which **already accepts
-`string | JSX.Element`** (`Table/types.ts:14`), and `rowLabel` renders into a
-`<span>`. Both are narrower than what they feed.
-
-Live consequence: jtf-ui's `ComplianceThresholdTable` can't put JSX in a column
-header, so vessel-detail Nox/Rog kW labels still use `.toFixed(0)` instead of
-adopting `NumberWithUnits`.
-
-**Do:** widen both to `=> string | JSX.Element`. Purely additive. `PivotGrid.tsx:19`
-has the identical narrowing — same pass, or leave it with a note. Add a test
-passing an element, to prove the header renders it rather than stringifying it.
-**Then:** jtf-ui widens its own `PowerSource.label` — a follow-up in that repo.
-**Size:** small; unblocks a consumer.
-
-### #45 — `StackProps`/`RowProps` `gap` type too narrow · *untriaged*
-
-`gap` is typed `"xs" | "sm"` but the runtime supports `md`/`lg`. This is the
-layout gap that the retired #48's Phase 3 blamed for showcases passing raw
-overrides. **The only open issue with no triage label**, so it's invisible to
-`ready-for-agent` sweeps — triage it before or alongside #67.
-
-### #64 — Function-first burn-down · *the long grind*
-
-| Metric | Now | Target |
-|---|---|---|
-| `collectionMethodCalls` | **209** | 0 |
-| `dotChains` | **54** | 0 |
-| `cssTypedProps` | **14** | 0 |
+| Metric | 2026-07-29 | Now | Target |
+|---|---|---|---|
+| `collectionMethodCalls` | 209 | **139** | 0 |
+| `dotChains` | 54 | **33** | 0 |
+| `cssTypedProps` | 14 | **14** (unchanged) | 0 |
 
 Convert `xs.map(f)` → `map(f, xs)` (direct form outside pipes, curried inside)
 and chains → `fn.pipe` with named stages. Read `src/fn/README.md` first —
 the dual-form convention is precise. `src/fn/` is exempt by construction.
+`fn.every` now exists (added this round, mirrors `fn.some`).
 
-Densest remaining: `CashflowScrubChart.tsx` (13), `ConversationTree.tsx` (9),
-`_contrastMath.ts` (7), `AnimatedSwimlaneChart.tsx` (7), `ThroughputChart.tsx` (6),
-`StatusFlowChart/columns.ts` (6). Full list: `npm run health -- --verbose`.
+**Slices landed 2026-07-29/30** (one component/folder per commit — `git log
+--oneline` for the exact diffs): `ParticipantAvatar/initials.ts`,
+`_contrastMath.ts`, `CashflowScrubChart/`, `ConversationTree.tsx`,
+`AnimatedSwimlaneChart/`, `ThroughputChart.tsx`, `StatusFlowChart/`,
+`SwimlaneChart/`. Every folder-level slice (small sibling files, one
+component) went as a single PR — see `CashflowScrubChart/` or
+`SwimlaneChart/` for the pattern.
 
-**Method — `src/components/ParticipantAvatar/initials.ts` is the worked example**
-(17 sites → 1, commit `dfd3e06`):
+**Densest remaining** (dotChains + collectionMethodCalls combined; run
+`npm run health -- --verbose` for exact line numbers, since the file/line
+counts drift with every slice):
 
-- **One file per PR.** 209 sites is not one change.
+| File / folder | Hits |
+|---|---|
+| `Combobox/ComboboxMulti.tsx` | 8 |
+| `hooks/createDnDReorder.ts` | 6 |
+| `AreaFocusGrid/AreaFocusGrid.tsx` | 6 |
+| `internal/animation/choreography.ts` | 5 |
+| `Table/BaseTable.tsx` | 5 |
+| `RecentStarred/store.ts` | 5 |
+| `ExtractionBoard/ExtractionBoard.tsx` (+`cards.tsx` 1) | 6 |
+| **`DagChart/`** (`DagChart.tsx` 5, `edge-path.ts` 3, `collapse.ts` 2, `layout.ts` 1) | **11, as a folder** |
+| `Badge/tagPairs.ts` (+`StatusChip.tsx` 2) | 7 |
+
+`DagChart/` is the next natural folder-level slice — same shape as
+`CashflowScrubChart/`/`SwimlaneChart/` (a handful of small sibling files,
+one component). Everything past that is 1–4 hits scattered across ~65 more
+files: genuinely one-file-at-a-time from here, no more natural clusters.
+
+**Method — `src/components/ParticipantAvatar/initials.ts` is the worked
+example** (17 sites → 1, commit `dfd3e06`), plus `AnimatedSwimlaneChart/`
+and `StatusFlowChart/`+`SwimlaneChart/` for the multi-key-sort case:
+
+- **One file (or small sibling-file folder) per PR.**
 - **Prefer pure `.ts` files with existing tests.**
-- **Verify differentially.** For non-obvious semantics, compare against the
-  pre-refactor implementation from `git HEAD` over randomised inputs, then delete
-  the harness. Slice 1 used 3000 rosters + 300 shuffles; the 15 existing tests
-  would not have caught an ordering change.
-- **Watch for mutation.** Slice 1 found two in-place `.sort()` calls on derived
-  arrays — latent bugs, not style. `sortBy` copies; native `sort` doesn't.
+- **Verify differentially when there's no existing test coverage for the
+  exact logic touched.** For a 3-key lane reorder and a topological-rank
+  sort, both untested directly, thousands of randomized trials against the
+  pre-refactor comparator (0 mismatches) stood in for real test coverage —
+  write the throwaway harness in `/tmp`, run it, delete it. Don't skip this
+  just because `tsc`/the broader suite pass; neither exercises the exact
+  ordering edge cases a comparator rewrite can get subtly wrong.
 - **A two-key comparator becomes two stable `sortBy` passes** (secondary key
-  first, then primary). Equivalent, and it drops any defensive `.slice()`.
-- **Separate measurement fixes from real progress.** Slice 1 shipped two commits
-  for exactly this: 11 sites were real work, 10 were a regex false positive.
+  first, then primary); a three-key comparator extends the same technique
+  with a third pass. Equivalent, and it drops any defensive `.slice()`/spread
+  the native `.sort()` needed to avoid mutating a shared array.
+- **`fn` has no `forEach`.** A `.forEach()` that only mutates an outer
+  accumulator (a running Map, a running "best so far") becomes a `for...of`
+  loop, not a functional combinator — forcing `map`/`filter` onto pure
+  side-effecting iteration adds noise, not clarity. This came up repeatedly
+  (`CashflowScrubChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`,
+  `StatusFlowChart`).
+- **Watch for in-place `.sort()`/`.reduce()` that a later step depends on
+  reading back.** `SwimlaneChart/layout.ts`'s `sortCol` mutated a `Map`'s
+  array value in place via `ids.sort(...)`, and later code re-read that same
+  array from the map — replacing it with `sortBy` (which copies) required an
+  explicit `visibleCols.set(col, sorted)` to keep the observable behavior
+  identical. Grep for every later read of the variable before assuming a
+  copy-based replacement is a no-op.
 
-**`cssTypedProps` specifics.** Pure `number` will not work — callers pass
-`"100%"`, `"400px"`, `"8rem"`, `` `${widthCh()}ch` ``. A **template-literal
-union** keeps all of it and satisfies the rubric, which flags the `string`
-*keyword*: `` `${number}px` | `${number}%` | `${number}rem` | "auto" ``. Verified
-— typing `Surface.minWidth` that way drops the count. Define one shared
-`CssLength`; **8 of the 14 are the Table family** and fall in a single PR.
+## `cssTypedProps` — blocked on a cross-repo type, not abandoned
+
+Still 14, unchanged this round. `DataTableContainer.maxHeight` and its
+`Table/`-family siblings are the natural next slice (8 of 14, per the prior
+handoff's own note on the `CssLength` template-literal union), **but**:
+jtf-ui's `HourLevelDataTable`/`HourlyDataTable`/`MinMaxTable` locally type
+`maxHeight?: string` (wider than any `CssLength` union) and forward it
+straight through to `DataTableContainer` — narrowing SUI's prop type would
+break jtf-ui's typecheck even though every actual call site passes a
+literal like `"500px"`. This needs a coordinated bump (widen jtf-ui's local
+prop type first, or accept the cross-repo PR pair), not a solo SUI PR.
+`Surface.minWidth`/`maxWidth`, `Dot.size`, `ChartCanvas.height` are a
+different, simpler fix (`number | string` → `CssLength`) with no such
+cross-repo entanglement — worth doing first if picking this back up.
 
 ---
 
 ## Explicitly out of scope — do not "fix" these
 
 - **`inlineStyleSrc` (71) and `inlineStyleShowcases` (20).** Dominated by
-  sanctioned dynamic geometry. `AreaFocusGrid` alone is 8 computed `grid-column`
-  values. Driving these to zero means custom-property plumbing for computed
-  integers, which makes the code worse. Retired issue #48 established this; its
+  sanctioned dynamic geometry. Retired issue #48 established this; its
   title said "to zero" and its own body disowned that. **Leave them.**
 - **Moving `prepare` to `prepack`.** Evaluated and rejected — see ADR 0007.
-  `prepack` does not fire for `npm link` or git-dependency installs, so the
-  change silently ships an empty package. Guarded by
-  `scripts/build-config.test.ts`.
-- **The `--ignore-scripts` flags in the workflows.** They look like a workaround
-  for `prepare`; they are load-bearing. ADR 0007, same guard test.
-- **`sideEffects` in package.json / `preserveModules` in vite.config.ts.** A pair;
-  each is inert alone, so each looks like dead config. Removing either re-adds
-  ~318 KB to every consumer bundle with no local symptom. ADR 0005.
+  Guarded by `scripts/build-config.test.ts`.
+- **The `--ignore-scripts` flags in the workflows.** Load-bearing, not a
+  leftover. ADR 0007, same guard test.
+- **`sideEffects` in package.json / `preserveModules` in vite.config.ts.**
+  Removing either re-adds ~318 KB to every consumer bundle. ADR 0005.
 - **The KaTeX stub/copy/prepend trio in vite.config.ts.** Removing any one
   silently restores ~1.4 MB to `dist/index.css`. ADR 0006.
-
-## Suggested order
-
-**#66 → #68 → #69** are each an hour or less, independent, and each closes a real
-gap. Triage **#45** and consider it with **#67**. Then chip at **#64** one file per
-PR — safe to do incrementally now that the ratchet holds and gates.
 
 ## Orientation
 
 `CONTEXT.md` (domain + glossary), `STYLE_GUIDE.md` (depth levels, curried-variant
 pattern), `AGENT_GUIDE.md` (conventions), `COMPONENTS.md` (catalogue),
 `docs/adr/0001`–`0007`, `src/fn/README.md`. Issues live in GitHub Issues via `gh`
-(`docs/agents/issue-tracker.md`); labels in `docs/agents/triage-labels.md`.
+(`docs/agents/issue-tracker.md`); labels in `docs/agents/triage-labels.md` — note
+that repo only actually has `wontfix` and `ready-for-agent` as custom labels
+today; the doc's other three (`needs-triage`, `needs-info`, `ready-for-human`)
+don't exist yet.
