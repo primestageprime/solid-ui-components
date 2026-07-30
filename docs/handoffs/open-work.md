@@ -1,8 +1,9 @@
 # Handoff: open work in solid-ui-components
 
-**State as of 2026-07-30.** Version `0.127.0`, `main` at `6e9a8a9`, all checks green,
-every ratchet ceiling tight. This supersedes the six-issue handoff from
-2026-07-29 — five of those six are resolved or triaged; #64 continues below.
+**State as of 2026-07-30.** Version `0.127.0`, `main` at `801c0e5`, all checks
+green, every ratchet ceiling tight. This supersedes the six-issue handoff from
+2026-07-29 — all six are now resolved, triaged-and-closed, or (for #64)
+in-progress below.
 
 Read **Ground rules** first — several of them will fail your PR if you don't.
 
@@ -62,54 +63,63 @@ bypasses everything — the gate binds PR merges.
 - All three released in **0.127.0** together with the #64 progress below;
   see `CHANGELOG.md` for the full writeup.
 
-## Triaged, not closed — needs a human decision
+## Closed as invalid (2026-07-30)
 
-- **#45** — `Stack`/`Row` `gap` typed `"xs" | "sm"`; the issue claims the
-  runtime supports `md`/`lg`. It doesn't, as of today: that CSS was
-  deliberately removed twice (`928651f` 2026-06-26, `9158c75` 2026-07-17)
-  after audits found nothing depended on it. Widening the type without
-  matching CSS would reintroduce the exact silent-zero-gap bug
-  `assertModifierClass` exists to catch. A separate real bug was found while
-  investigating: `Surface.gap` publicly accepts `"md"|"lg"` but silently
-  collapses them to `"sm"` before forwarding to the inner `Row`/`Stack` (no
+- **#45** — `Stack`/`Row` `gap` typed `"xs" | "sm"`; the issue claimed the
+  runtime supports `md`/`lg`. It doesn't: that CSS was deliberately removed
+  twice (`928651f` 2026-06-26, `9158c75` 2026-07-17) after audits found
+  nothing depended on it. Widening the type without matching CSS would have
+  reintroduced the exact silent-zero-gap bug `assertModifierClass` exists to
+  catch. A separate real bug was found while investigating and is still
+  open: `Surface.gap` publicly accepts `"md"|"lg"` but silently collapses
+  them to `"sm"` before forwarding to the inner `Row`/`Stack` (no
   `.surface--gap-md/-lg` CSS exists either) — that's plausibly the actual
   source of the "runtime supports md/lg" impression, but it's a different
   component and a different bug shape (type wider than effect, not
-  narrower). Full evidence in the issue comments. **Recommend closing #45 as
-  invalid/stale**, and filing the `Surface.gap` collapse as its own issue if
-  it's worth fixing.
+  narrower). Not yet filed as its own issue — worth doing if picked up.
 - **#67** — `SpreadCenterRow` curried variant. `SpreadRow` has baked in both
   `align: "center"` and `justify: "between"` since the repo's **initial
   commit** (`feeb575`) — the issue's premise ("SpreadRow strips align") was
-  never true. Checked the cited jtf-ui symptom directly: no matching raw
+  never true. The cited jtf-ui symptom doesn't reproduce: no matching raw
   `<Row align="center" justify="between">` exists in `durability.tsx`, and
   jtf-ui can't even construct a raw `<Row>` from this library anymore (SUI
-  0.59 dropped the bare export). **Recommend closing #67 as invalid** — the
-  requested variant would ship as a byte-identical duplicate of `SpreadRow`.
-
-Neither was closed by the agent that triaged them — closing someone else's
-issue as invalid is a different kind of call than closing one you fixed.
+  0.59 dropped the bare export). The requested variant would have shipped as
+  a byte-identical duplicate of `SpreadRow`.
 
 ## #64 — Function-first burn-down — the long grind, continues
 
-| Metric | 2026-07-29 | Now | Target |
-|---|---|---|---|
-| `collectionMethodCalls` | 209 | **139** | 0 |
-| `dotChains` | 54 | **33** | 0 |
-| `cssTypedProps` | 14 | **14** (unchanged) | 0 |
+| Metric | 2026-07-29 | 2026-07-30 (morning) | Now | Target |
+|---|---|---|---|---|
+| `collectionMethodCalls` | 209 | 139 | **115** | 0 |
+| `dotChains` | 54 | 33 | **26** | 0 |
+| `cssTypedProps` | 14 | 14 | **14** (unchanged) | 0 |
 
 Convert `xs.map(f)` → `map(f, xs)` (direct form outside pipes, curried inside)
 and chains → `fn.pipe` with named stages. Read `src/fn/README.md` first —
 the dual-form convention is precise. `src/fn/` is exempt by construction.
-`fn.every` now exists (added this round, mirrors `fn.some`).
+`fn.every` now exists (mirrors `fn.some`).
 
 **Slices landed 2026-07-29/30** (one component/folder per commit — `git log
 --oneline` for the exact diffs): `ParticipantAvatar/initials.ts`,
 `_contrastMath.ts`, `CashflowScrubChart/`, `ConversationTree.tsx`,
 `AnimatedSwimlaneChart/`, `ThroughputChart.tsx`, `StatusFlowChart/`,
-`SwimlaneChart/`. Every folder-level slice (small sibling files, one
-component) went as a single PR — see `CashflowScrubChart/` or
-`SwimlaneChart/` for the pattern.
+`SwimlaneChart/`, `DagChart/` (`0fb2739`), `Combobox/ComboboxMulti.tsx`
+(`8d11f0c`), `AreaFocusGrid/AreaFocusGrid.tsx` (`03651ae`),
+`hooks/createDnDReorder.ts` (`801c0e5`). Every folder-level slice (small
+sibling files, one component) went as a single PR — see `CashflowScrubChart/`
+or `SwimlaneChart/` for the pattern.
+
+**New pattern from the `DagChart/`/`AreaFocusGrid` slices — `flatMap` has no
+`fn` equivalent, and it splits into two different fixes depending on shape:**
+- **0-or-1-per-input** (an early `return []` guard inside the callback):
+  `pipe(items, map(toXOrNull), filter((x): x is X => x !== null))` — map to a
+  nullable result, then filter the misses. Used in `DagChart.tsx`'s
+  `positionedNodes`/`edgePaths` and `collapse.ts`'s `primaryNodes` (there,
+  `filter(has)` narrows the ids first so the subsequent `map` can dereference
+  unconditionally instead of returning nullable).
+- **genuine one-to-many expansion** (`area.flatMap(a => a.children.map(...))`):
+  a nested `for...of` push loop, same rationale as the no-`forEach`
+  convention below — `AreaFocusGrid.tsx`'s `subCols` construction.
 
 **Densest remaining** (dotChains + collectionMethodCalls combined; run
 `npm run health -- --verbose` for exact line numbers, since the file/line
@@ -117,20 +127,14 @@ counts drift with every slice):
 
 | File / folder | Hits |
 |---|---|
-| `Combobox/ComboboxMulti.tsx` | 8 |
-| `hooks/createDnDReorder.ts` | 6 |
-| `AreaFocusGrid/AreaFocusGrid.tsx` | 6 |
+| `Badge/tagPairs.ts` (+`StatusChip.tsx` 2) | 7 |
 | `internal/animation/choreography.ts` | 5 |
 | `Table/BaseTable.tsx` | 5 |
 | `RecentStarred/store.ts` | 5 |
 | `ExtractionBoard/ExtractionBoard.tsx` (+`cards.tsx` 1) | 6 |
-| **`DagChart/`** (`DagChart.tsx` 5, `edge-path.ts` 3, `collapse.ts` 2, `layout.ts` 1) | **11, as a folder** |
-| `Badge/tagPairs.ts` (+`StatusChip.tsx` 2) | 7 |
 
-`DagChart/` is the next natural folder-level slice — same shape as
-`CashflowScrubChart/`/`SwimlaneChart/` (a handful of small sibling files,
-one component). Everything past that is 1–4 hits scattered across ~65 more
-files: genuinely one-file-at-a-time from here, no more natural clusters.
+Everything past that is 1–4 hits scattered across ~65 more files: genuinely
+one-file-at-a-time from here, no more natural folder-level clusters.
 
 **Method — `src/components/ParticipantAvatar/initials.ts` is the worked
 example** (17 sites → 1, commit `dfd3e06`), plus `AnimatedSwimlaneChart/`
