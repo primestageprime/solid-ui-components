@@ -16,6 +16,7 @@ export { find } from "./find";
 export { findLast } from "./findLast";
 export { findIndex } from "./findIndex";
 export { some } from "./some";
+export { every } from "./every";
 export { prop } from "./prop";
 export { pluck } from "./pluck";
 export { sortBy } from "./sortBy";

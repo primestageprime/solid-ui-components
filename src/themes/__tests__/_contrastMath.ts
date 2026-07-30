@@ -9,6 +9,7 @@
 // compositing rule is exactly how a compositing bug survives in one test and
 // not the other, producing confident-looking numbers that disagree.
 // ============================================================================
+import { every, map, sortBy } from "../../fn";
 
 export type Tokens = Record<string, string>;
 
@@ -73,7 +74,7 @@ export function parseColor(
   // #rgb
   m = v.match(/^#([0-9a-f]{3})$/i);
   if (m) {
-    const [r, g, b] = [...m[1]].map((c) => parseInt(c + c, 16));
+    const [r, g, b] = map((c: string) => parseInt(c + c, 16), [...m[1]]);
     return [r, g, b, 1];
   }
 
@@ -95,15 +96,21 @@ export function parseColor(
         tokens[varTripletMatch[1]] ??
         resolveTriplet(varTripletMatch[2], tokens, depth + 1);
       if (triplet) {
-        const parts = triplet.split(",").map((s) => parseFloat(s));
-        if (parts.length >= 3 && parts.slice(0, 3).every((n) => !Number.isNaN(n))) {
+        const parts = map(parseFloat, triplet.split(","));
+        if (
+          parts.length >= 3 &&
+          every((n: number) => !Number.isNaN(n), parts.slice(0, 3))
+        ) {
           return [parts[0], parts[1], parts[2], alpha];
         }
       }
       return null;
     }
-    const parts = inner.split(",").map((s) => parseFloat(s));
-    if (parts.length >= 3 && parts.slice(0, 3).every((n) => !Number.isNaN(n))) {
+    const parts = map(parseFloat, inner.split(","));
+    if (
+      parts.length >= 3 &&
+      every((n: number) => !Number.isNaN(n), parts.slice(0, 3))
+    ) {
       return [parts[0], parts[1], parts[2], parts.length > 3 ? parts[3] : 1];
     }
     return null;
@@ -115,7 +122,10 @@ export function parseColor(
 // Composite a (possibly translucent) foreground over an opaque background.
 export function over(fg: RGBA, bg: RGB): RGB {
   if (fg[3] >= 1) return [fg[0], fg[1], fg[2]];
-  return [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3])) as RGB;
+  return map(
+    (i: number) => fg[i] * fg[3] + bg[i] * (1 - fg[3]),
+    [0, 1, 2],
+  ) as RGB;
 }
 
 export function relLuminance([r, g, b]: RGB): number {
@@ -127,8 +137,9 @@ export function relLuminance([r, g, b]: RGB): number {
 }
 
 export function contrastRatio(a: RGB, b: RGB): number {
-  const [lighter, darker] = [relLuminance(a), relLuminance(b)].sort(
-    (x, y) => y - x,
+  const [lighter, darker] = sortBy(
+    (n: number) => -n,
+    [relLuminance(a), relLuminance(b)],
   );
   return (lighter + 0.05) / (darker + 0.05);
 }
