@@ -2,7 +2,54 @@
 
 ## [Unreleased]
 
+## 0.127.0
+
+### Added
+- **`DateCell` accepts `timeZone`**, matching `DateTimeCell`'s semantics
+  exactly. Previously `DateCell`'s `format="iso"` path had no way to pin a
+  zone and fell through to the viewer's local one, so a UTC instant near
+  midnight could render as the wrong calendar day west of UTC. Unset behavior
+  is unchanged (host-local, matching pre-existing output). Closes #68.
+- **`ValueMatrix` / `PivotGrid`: `colLabel` / `rowLabel` widened to
+  `=> string | JSX.Element`.** Both already fed straight into JSX
+  (`TableColumn.header`, which already accepted `string | JSX.Element`; a bare
+  `<span>`), so the narrower `=> string` type blocked passing e.g.
+  `NumberWithUnits` in a column header for no runtime reason. Purely
+  additive — unblocks jtf-ui's `ComplianceThresholdTable`. Closes #69.
+
+### Fixed
+- **`SurfaceDataProps` documented in `COMPONENTS.md`.** Passing
+  `padding`/`radius`/`bg`/`borderColor`/etc. to a curried `Surface` variant
+  (e.g. `WarningSurface`) fails with TS2322 by design (ADR 0001 — visual
+  config is locked at curry time) — nothing previously told a caller why.
+  Closes #66.
+
 ### Changed
+- **Function-first burn-down (#64), continued** — `dotChains` 54 → 33,
+  `collectionMethodCalls` 209 → 139, one component (folder) per commit:
+  `_contrastMath.ts`, `CashflowScrubChart/`, `ConversationTree.tsx`,
+  `AnimatedSwimlaneChart/`, `ThroughputChart.tsx`, `StatusFlowChart/`,
+  `SwimlaneChart/`. Adds `fn.every` (mirrors `fn.some`), used here and at
+  several other existing `.every(` call sites. Two native multi-key
+  `.sort()` comparators with no prior direct test coverage — a 3-key lane
+  reorder in `AnimatedSwimlaneChart` and a topological rank in
+  `StatusFlowChart`/`SwimlaneChart` — became chained stable `sortBy` passes
+  per `src/fn/README.md`'s two-key convention, extended to three; verified
+  differentially against the pre-refactor comparators (thousands of
+  randomized trials, 0 mismatches) rather than trusting the translation by
+  inspection alone.
+- **Two of the six issues staged for this burn-down had premises that
+  didn't survive contact with the code.** #45 (`Stack`/`Row` `gap` typed
+  `"xs"|"sm"`, claimed the runtime supports `md`/`lg`) — the `md`/`lg` CSS
+  was deliberately removed twice (`928651f`, `9158c75`) after audits found
+  nothing depended on it; widening the type without matching CSS would
+  reintroduce the exact silent-zero-gap bug `assertModifierClass` exists to
+  catch. #67 (`SpreadCenterRow`, see the corrected TODO.md row below) —
+  `SpreadRow` already bakes in `align: "center"` + `justify: "between"`, so
+  the requested variant would ship as a byte-identical duplicate. Neither
+  was closed unilaterally; both were left commented with the evidence for a
+  maintainer to close.
+
 - **Raising a health ceiling now requires `--reason="…"`**, recorded in
   `scripts/health-baseline.json` under `_raises` so it outlives the commit
   message.
@@ -24,7 +71,7 @@
   | Item | Outcome |
   |---|---|
   | `SurfaceDataProps` strips overrides | still real → issue #66 |
-  | `SpreadCenterRow` variant | still real (`align` *is* in `RowOverrides`) → issue #67 |
+  | `SpreadCenterRow` variant | **correction above** — re-investigation found `SpreadRow` already bakes in `align: "center"` (since the initial commit); `align` being in `RowOverrides` was true but beside the point → issue #67 |
   | `ComplianceThresholdTable.label` widening | **misattributed** — the blocker is SUI's `ValueMatrix.colLabel: => string` → issue #69 |
   | ISO-date locale shift in `routes/index.tsx` | **stale** — jtf-ui no longer uses `DateCell` there. Investigating it surfaced a real gap: `DateCell` has no `timeZone` prop while `DateTimeCell` does → issue #68 |
 
