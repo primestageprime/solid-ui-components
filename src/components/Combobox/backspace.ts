@@ -21,6 +21,7 @@
 //   - `delete`      : caller preventDefaults, clears armed, calls onChange(next)
 
 import type { ComboboxOption } from "./Combobox";
+import { filter } from "../../fn";
 
 export type BackspaceState = {
   inputValue: string;
@@ -42,7 +43,7 @@ export const computeBackspaceAction = (
   if (state.selected.length === 0) return { kind: "passthrough" };
   // Empty input, a chip is already armed → second press deletes it.
   if (state.armedValue !== null) {
-    const next = state.selected.filter((opt) => opt.value !== state.armedValue);
+    const next = filter((opt) => opt.value !== state.armedValue, state.selected);
     return { kind: "delete", value: state.armedValue, next };
   }
   // Empty input, no chip armed → first press arms the last chip.

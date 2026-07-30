@@ -14,6 +14,7 @@ import {
   createSignal,
   splitProps,
 } from "solid-js";
+import { map, filter } from "../../fn";
 import "./DigitRoller.css";
 
 export interface DigitRollerProps {
@@ -177,13 +178,13 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
       return buildColumns(effectivePrev()!, value());
     }
     // Static: just show the value characters
-    return [...value()].map((ch) => {
+    return map((ch) => {
       if (/\d/.test(ch)) {
         const d = parseInt(ch, 10);
         return { type: "digit" as const, from: d, to: d, char: ch };
       }
       return { type: "static" as const, from: 0, to: 0, char: ch };
-    });
+    }, [...value()]);
   };
 
   // Track animation: start from top (showing "from"), then transition to bottom (showing "to")
@@ -207,7 +208,7 @@ export const DigitRoller: Component<DigitRollerProps> = (props) => {
   createEffect(() => {
     if (started()) {
       const cols = columns();
-      const digitCount = cols.filter((c) => c.type === "digit").length;
+      const digitCount = filter((c) => c.type === "digit", cols).length;
       const totalMs = duration() + stagger() * (digitCount - 1);
       const timer = setTimeout(() => {
         local.onAnimationEnd?.();
