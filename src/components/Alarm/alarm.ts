@@ -21,7 +21,7 @@
  *     "barcode only at >N concurrent" doesn't drift with dataset size.
  */
 
-import { pipe, filter, map } from "../../fn";
+import { pipe, filter, map, sortBy, some } from "../../fn";
 
 export type Pt = { readonly x: number; readonly y: number };
 export type Range = { readonly start: number; readonly end: number };
@@ -77,12 +77,14 @@ export function findHotZones(
     events.push({ x: r.start, d: 1 });
     events.push({ x: r.end, d: -1 });
   }
-  // Tie-break: opens before closes at the same x.
-  events.sort((a, b) => a.x - b.x || b.d - a.d);
+  // Tie-break: opens before closes at the same x. Two stable sortBy passes
+  // (secondary key first, then primary) stand in for the two-key comparator.
+  const byCloseFirst = sortBy((e) => -e.d, events);
+  const sortedEvents = sortBy((e) => e.x, byCloseFirst);
   const zones: { start: number; end: number; count: number }[] = [];
   let active = 0;
   let hotStart: number | null = null;
-  for (const e of events) {
+  for (const e of sortedEvents) {
     const prev = active;
     active += e.d;
     if (prev <= threshold && active > threshold) hotStart = e.x;
@@ -110,7 +112,7 @@ export function subtractZones(
 ): Range[] {
   if (zones.length === 0) return map((r) => ({ ...r }), ranges);
   return filter(
-    (r) => !zones.some((z) => r.start < z.end && r.end > z.start),
+    (r) => !some((z) => r.start < z.end && r.end > z.start, zones),
     ranges,
   );
 }

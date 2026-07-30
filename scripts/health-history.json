@@ -3262,5 +3262,38 @@
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0
     }
+  },
+  {
+    "at": "2026-07-30T22:19:33.578Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 71,
+      "inlineStyleShowcases": 20,
+      "dotChains": 24,
+      "collectionMethodCalls": 103,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 71,
+      "inlineStyleShowcases": 20,
+      "dotChains": 24,
+      "collectionMethodCalls": 106,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 14,
+      "foldersWithoutTests": 0,
+      "undocumentedComponents": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0
+    }
   }
 ]
