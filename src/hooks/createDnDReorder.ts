@@ -22,7 +22,7 @@
 // ============================================
 
 import { type Accessor, createMemo, createSignal } from "solid-js";
-import { map } from "../fn";
+import { map, find, filter, findIndex } from "../fn";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -118,9 +118,9 @@ export function previewOrder<T>(
   insertPos: number | null,
 ): T[] {
   if (!dragId || insertPos == null) return items;
-  const moved = items.find((it) => getId(it) === dragId);
+  const moved = find((it) => getId(it) === dragId, items);
   if (!moved) return items;
-  const without = items.filter((it) => getId(it) !== dragId);
+  const without = filter((it) => getId(it) !== dragId, items);
   const clamped = Math.max(0, Math.min(insertPos, without.length));
   return [...without.slice(0, clamped), moved, ...without.slice(clamped)];
 }
@@ -139,8 +139,8 @@ export function hitTestInsertPos<T>(
   after: boolean,
 ): number | null {
   if (overId === dragId) return null;
-  const without = items.filter((it) => getId(it) !== dragId);
-  const k = without.findIndex((it) => getId(it) === overId);
+  const without = filter((it) => getId(it) !== dragId, items);
+  const k = findIndex((it) => getId(it) === overId, without);
   if (k < 0) return null;
   return after ? k + 1 : k;
 }
@@ -271,8 +271,10 @@ export function createDnDReorder<T>(
     // item's slot is its placeholder (also tagged data-dnd-id={dragId}); we skip
     // it so the index is geometric over the other items only.
     const rects: AxisRect[] = [];
-    container.querySelectorAll<HTMLElement>("[data-dnd-id]").forEach((el) => {
-      if (el.getAttribute("data-dnd-id") === current) return;
+    for (const el of container.querySelectorAll<HTMLElement>(
+      "[data-dnd-id]",
+    )) {
+      if (el.getAttribute("data-dnd-id") === current) continue;
       const r = el.getBoundingClientRect();
       rects.push({
         left: r.left,
@@ -280,7 +282,7 @@ export function createDnDReorder<T>(
         top: r.top,
         bottom: r.bottom,
       });
-    });
+    }
     const next = pointerToInsertIndex(rects, coord, axis);
     if (insertPos() !== next) setInsertPos(next);
   };
