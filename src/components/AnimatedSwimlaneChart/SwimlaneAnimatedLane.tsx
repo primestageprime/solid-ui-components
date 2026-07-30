@@ -27,6 +27,7 @@ import type { StatusFlowNode } from "../StatusFlowChart";
 import type { LaneLayoutConfig } from "../../internal/animation/breakpoints";
 import type { RenderNodeContext } from "./defaults";
 import "./SwimlaneAnimatedLane.css";
+import { find } from "../../fn";
 
 export interface SwimlaneAnimatedLaneSpec {
   id: string;
@@ -388,7 +389,7 @@ export const SwimlaneAnimatedLane: Component<SwimlaneAnimatedLaneProps> = (
           const rect = () => card()?.rectAt(t()) ?? null;
           const status = () => card()?.statusAt(t()) ?? "TODO";
           const node = (): StatusFlowNode | undefined =>
-            props.nodes.find((n) => n.id === id) ??
+            find((n) => n.id === id, props.nodes) ??
             (props.spec.parentTitle && id === props.spec.id
               ? {
                   id,
