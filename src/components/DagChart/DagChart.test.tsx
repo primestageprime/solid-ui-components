@@ -144,4 +144,35 @@ describe("DagChart render", () => {
     expect(svg).toBeTruthy();
     expect(svg.getAttribute("aria-label")).toBe("Dependency graph");
   });
+
+  it("renders a collapsed summary node positioned via its beyondId fallback", () => {
+    // a - b - c - d - e : focusing "a" collapses c/d/e behind one summary
+    // node, exercising positionedNodes' fallback-position branch (the
+    // summary node id never appears in fullLayout().positions directly)
+    // and edgePaths' no-fullEdge-match branch (the synthetic b->summary
+    // edge has no counterpart in the real layout edges).
+    const chain: DAGNode[] = ["a", "b", "c", "d", "e"].map((id) => ({
+      id,
+      data: {},
+    }));
+    const chainEdges: DAGEdge[] = [
+      { source: "a", target: "b" },
+      { source: "b", target: "c" },
+      { source: "c", target: "d" },
+      { source: "d", target: "e" },
+    ];
+    const { container } = render(() => (
+      <DagChart
+        nodes={chain}
+        edges={chainEdges}
+        focusedNodeId="a"
+        renderNode={(n) => <div>{n.id}</div>}
+        interactive={false}
+      />
+    ));
+    // Visible: focused "a", adjacent "b", one collapsed summary for c/d/e.
+    expect(container.querySelectorAll(".sui-dag__node-wrapper").length).toBe(
+      3,
+    );
+  });
 });

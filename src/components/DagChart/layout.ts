@@ -159,7 +159,7 @@ export function computeLayout<T>(
     }
   }
 
-  const layoutEdges: LayoutEdge[] = [...dag.links()].map((link) => {
+  const layoutEdges: LayoutEdge[] = map((link) => {
     const sourceId = (link.source.data as { id: string }).id;
     const targetId = (link.target.data as { id: string }).id;
     const points = map(
@@ -168,7 +168,7 @@ export function computeLayout<T>(
       link.points as [number, number][],
     );
     return { sourceId, targetId, points };
-  });
+  }, [...dag.links()]);
 
   const totalWidth = direction === "horizontal" ? layoutHeight : layoutWidth;
   const totalHeight = direction === "horizontal" ? layoutWidth : layoutHeight;

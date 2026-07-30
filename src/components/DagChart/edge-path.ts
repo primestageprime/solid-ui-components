@@ -23,6 +23,8 @@
 // caller's arrays (points are always copied), no side effects.
 // ============================================
 
+import { map } from "../../fn";
+
 /** Axis-aligned box centered at (x, y) with the given extent. */
 export type Rect = { x: number; y: number; width: number; height: number };
 
@@ -58,8 +60,8 @@ export function clipPolyline(
   sourceRect: Rect | undefined,
   targetRect: Rect | undefined,
 ): Point[] {
-  if (points.length < 2) return points.map((p) => ({ ...p }));
-  const pts = points.map((p) => ({ ...p }));
+  if (points.length < 2) return map((p) => ({ ...p }), points);
+  const pts = map((p) => ({ ...p }), points);
 
   if (sourceRect) {
     const center = { x: sourceRect.x, y: sourceRect.y };
@@ -82,7 +84,7 @@ export function clipPolyline(
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   if (pts.length === 2 && dx * dx + dy * dy < 1) {
-    return points.map((p) => ({ ...p }));
+    return map((p) => ({ ...p }), points);
   }
   return pts;
 }
