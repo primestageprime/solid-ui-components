@@ -19,7 +19,7 @@ import { clickableCursor } from "../../internal/style/clickable";
 import { HeatStream, type HeatStreamItem } from "../HeatStream";
 import type { SelectionStore } from "../Table/types";
 import "./HeatStreamGrid.css";
-import { pipe, filter, map } from "../../fn";
+import { pipe, filter, map, every } from "../../fn";
 
 export interface HeatStreamGridProps
   extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -72,7 +72,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
   const toggleKeys = (keys: string[]) => {
     const store = local.selectionStore;
     if (!store) return;
-    const allSelected = keys.every((k) => store.selected().has(k));
+    const allSelected = every((k) => store.selected().has(k), keys);
     store.setSelected((prev) => {
       const next = new Set(prev);
       for (const k of keys) {
@@ -97,8 +97,11 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
       map((row) => cellKey(row, col)),
     );
 
-  const allNonEmptyKeys = () =>
-    local.rows.flatMap((row) => nonEmptyKeysForRow(row));
+  const allNonEmptyKeys = () => {
+    const keys: string[] = [];
+    for (const row of local.rows) keys.push(...nonEmptyKeysForRow(row));
+    return keys;
+  };
 
   const toggleCell = (row: string, col: string) =>
     toggleKeys([cellKey(row, col)]);
@@ -113,7 +116,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
     const keys = nonEmptyKeysForRow(row);
     return (
       keys.length > 0 &&
-      keys.every((k) => local.selectionStore!.selected().has(k))
+      every((k) => local.selectionStore!.selected().has(k), keys)
     );
   };
 
@@ -121,7 +124,7 @@ export const HeatStreamGrid: Component<HeatStreamGridProps> = (props) => {
     const keys = nonEmptyKeysForCol(col);
     return (
       keys.length > 0 &&
-      keys.every((k) => local.selectionStore!.selected().has(k))
+      every((k) => local.selectionStore!.selected().has(k), keys)
     );
   };
 

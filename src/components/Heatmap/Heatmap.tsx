@@ -7,6 +7,7 @@
 // ============================================
 import { type Component, type JSX, splitProps, For, Show } from "solid-js";
 import { clickableCursor } from "../../internal/style/clickable";
+import { some } from "../../fn";
 import "./Heatmap.css";
 
 export type HeatmapCellStatus = "full" | "partial" | "missing" | "empty";
@@ -162,9 +163,10 @@ export const HeatmapMulti: Component<HeatmapMultiProps> = (props) => {
 
   // Check if any category has non-full status (to dim the full bars)
   const hasErrors = (cell: HeatmapMultiCell) => {
-    return local.categoryLabels.some(
+    return some(
       (cat) =>
         cell.categories[cat] !== "full" && cell.categories[cat] !== undefined,
+      local.categoryLabels,
     );
   };
 

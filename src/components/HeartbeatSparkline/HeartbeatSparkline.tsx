@@ -7,6 +7,7 @@
 // 0 = fresh heartbeat, 1 = timeout reached.
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
+import { pipe, map, join } from "../../fn";
 import "./HeartbeatSparkline.css";
 
 export type ConnectionState = "connected" | "disconnected" | "error";
@@ -62,13 +63,15 @@ export const HeartbeatSparkline: Component<HeartbeatSparklineProps> = (
     // Spacing assumes a full window of `cap` samples — partial buffers stay right-anchored.
     const step = c > 1 ? W / (c - 1) : 0;
     const startIdx = c - s.length;
-    return s
-      .map((v, i) => {
+    return pipe(
+      s,
+      map((v, i) => {
         const x = (startIdx + i) * step;
         const y = H - clamp01(v) * H;
         return `${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(" ");
+      }),
+      join(" "),
+    );
   };
 
   const wrapperClass = () => {
