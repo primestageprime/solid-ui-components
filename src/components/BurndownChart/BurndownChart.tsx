@@ -16,6 +16,7 @@ import {
   LineSeries,
   ReferenceLine,
 } from "../Chart";
+import { map } from "../../fn";
 
 export interface BurndownBar {
   label: string;
@@ -75,11 +76,11 @@ export function BurndownChart(props: BurndownChartProps) {
   const yDomain = createMemo<[number, number]>(() => {
     const above = Math.max(
       1,
-      ...props.bars.map((b) => b.planned_complete + b.planned_incomplete),
+      ...map((b) => b.planned_complete + b.planned_incomplete, props.bars),
     );
     const below = Math.max(
       0,
-      ...props.bars.map((b) => b.unplanned_complete + b.unplanned_incomplete),
+      ...map((b) => b.unplanned_complete + b.unplanned_incomplete, props.bars),
     );
     return [-Math.max(below, above * 0.25), above];
   });
@@ -111,7 +112,7 @@ export function BurndownChart(props: BurndownChartProps) {
     return [-0.5, max];
   });
 
-  const tickValues = createMemo(() => props.bars.map((_, i) => i));
+  const tickValues = createMemo(() => map((_, i) => i, props.bars));
 
   const width = () => {
     if (typeof props.width === "number") return props.width;

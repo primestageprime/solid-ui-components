@@ -50,6 +50,7 @@ import {
   type ProgressController,
 } from "../../internal/progress/useProgressEngine";
 import type { BatchState } from "../../internal/progress/engine";
+import { map } from "../../fn";
 
 /** One declarative batch — discrete state, NO fraction. */
 export interface BatchSpec {
@@ -170,11 +171,14 @@ export const BatchBar: Component<BatchBarProps> = (rawProps) => {
   // Feed the engine the declarative batch states whenever they change.
   createEffect(() => {
     if (!declarative()) return;
-    const inputs = specs().map((b, i) => ({
-      id: `${barId()}#${i}`,
-      rows: b.rows,
-      state: b.state,
-    }));
+    const inputs = map(
+      (b, i) => ({
+        id: `${barId()}#${i}`,
+        rows: b.rows,
+        state: b.state,
+      }),
+      specs(),
+    );
     controller().observe(inputs);
   });
 
@@ -186,9 +190,9 @@ export const BatchBar: Component<BatchBarProps> = (rawProps) => {
     const total = Math.max(1, local.totalRows ?? 0);
     const committed = Math.max(0, local.committedRows ?? 0);
     let inflight = 0;
-    specs().forEach((b, i) => {
+    for (const [i, b] of specs().entries()) {
       inflight += controller().engine.fractionOf(`${barId()}#${i}`) * b.rows;
-    });
+    }
     return clampFrac((committed + inflight) / total);
   });
 
