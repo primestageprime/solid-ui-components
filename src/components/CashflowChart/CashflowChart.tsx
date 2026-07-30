@@ -42,7 +42,7 @@ import {
 } from "./format";
 import { CashflowBars } from "./CashflowBars";
 import { CashflowPopover } from "./CashflowPopover";
-import { map, pluck } from "../../fn";
+import { map, pluck, some, find } from "../../fn";
 
 // Public data shapes live in `./types`; re-exported here so consumers (and the
 // folder barrel) keep importing them from CashflowChart unchanged.
@@ -128,11 +128,12 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
     const DEGENERATE_Y_MAX = 100_000; // $1,000 in cents — a small default top
     const hasMeaningfulData =
       bars.length > 0 &&
-      bars.some(
+      some(
         (b) =>
           Math.abs(b.revenue_cents) >= ZERO_EPS ||
           Math.abs(b.expense_cents) >= ZERO_EPS ||
           Math.abs(b.balance_cents) >= ZERO_EPS,
+        bars,
       );
 
     // Auto mode fits the data extent with 10% headroom on each edge so the full
@@ -421,7 +422,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
           const activeWeek = () => hover()?.week_start ?? coffersHover();
           const bar = () =>
             activeWeek()
-              ? props.data.bars.find((b) => b.week_start === activeWeek())
+              ? find((b) => b.week_start === activeWeek(), props.data.bars)
               : undefined;
           const cx = () => {
             const w = activeWeek();

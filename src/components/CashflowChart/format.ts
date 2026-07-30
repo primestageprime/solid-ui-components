@@ -22,6 +22,7 @@
 // part of the public API) that the component re-imports.
 
 import type { WeeklySegmentKind } from "./types";
+import { pipe, map, join } from "../../fn";
 
 /** Floor for the measured container height so the chart never collapses to nothing. */
 export const MIN_CHART_HEIGHT = 160;
@@ -82,9 +83,11 @@ export function formatWeekRange(weekStart: string): {
 /** Build an SVG polyline path "M x y L x y …" from a list of points. */
 export function linePath(points: { x: number; y: number }[]): string {
   if (points.length < 2) return "";
-  return points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
+  return pipe(
+    points,
+    map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`),
+    join(" "),
+  );
 }
 
 /** Chart inner margins. */

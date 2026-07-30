@@ -20,7 +20,7 @@ import {
   WrappedClusterRow,
 } from "../Layout/variants";
 import { DangerBody, MonoMeta } from "../Text/variants";
-import { filter, groupBy, map, pipe } from "../../fn";
+import { filter, groupBy, map, pipe, some, find } from "../../fn";
 import "./CensusView.css";
 
 import {
@@ -193,7 +193,7 @@ const DetailContent: Component<{
       </Show>
 
       {/* Field-type chips */}
-      <Show when={Object.values(fbt()).some((v) => v > 0)}>
+      <Show when={some((v) => v > 0, Object.values(fbt()))}>
         <TagRow>
           <For each={Object.entries(fbt())}>
             {([k, v]) => (
@@ -235,7 +235,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
     props.onSelect?.(t);
   };
   const selected = () =>
-    props.tables.find((t) => t.key === selKey()) ?? null;
+    find((t) => t.key === selKey(), props.tables) ?? null;
 
   return (
     <TopClusterRow class="sui-census-view">
