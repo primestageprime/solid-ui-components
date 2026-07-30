@@ -36,7 +36,7 @@ import {
 import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import type { ComboboxOption, MultiComboboxProps } from "./Combobox";
-import { filter } from "../../fn";
+import { filter, some } from "../../fn";
 
 /** Narrowed local props for multi-mode rendering. */
 export type MultiLocal = Pick<
@@ -78,8 +78,9 @@ export const renderMulti = (
   createEffect(() => {
     const current = highlightedChipValue();
     if (current === null) return;
-    const stillPresent = (local.value?.() ?? []).some(
+    const stillPresent = some(
       (opt) => opt.value === current,
+      local.value?.() ?? [],
     );
     if (!stillPresent) setHighlightedChipValue(null);
   });
@@ -94,12 +95,12 @@ export const renderMulti = (
 
   const handleChange = (next: ComboboxOption[]) => {
     const removed = filter(
-      (prev) => !next.some((n) => n.value === prev.value),
+      (prev) => !some((n) => n.value === prev.value, next),
       prevValue(),
     );
-    removed.forEach((opt) => {
+    for (const opt of removed) {
       local.onRemove?.(opt);
-    });
+    }
     setPrevValue(next);
     local.onChange?.(next);
   };
@@ -155,11 +156,13 @@ export const renderMulti = (
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
-    const existsInOptions = local
-      .options()
-      .some((opt) => opt.label.toLowerCase() === text.toLowerCase());
-    const existsInValue = (local.value?.() ?? []).some(
+    const existsInOptions = some(
       (opt) => opt.label.toLowerCase() === text.toLowerCase(),
+      local.options(),
+    );
+    const existsInValue = some(
+      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
+      local.value?.() ?? [],
     );
     if (existsInOptions || existsInValue) return;
     e.preventDefault();
