@@ -34,6 +34,7 @@ import type {
   TodoItem,
   ExtractionBoardConfig,
 } from "./types";
+import { filter } from "../../fn";
 
 // Card palette + compact number formatting, shared across the vocabulary below.
 const FILL = "var(--sui-success, #22c55e)";
@@ -123,7 +124,7 @@ export function PlaceholderCard() {
 /** Column-type breakdown as centered "icon over count" cells (skips zeros). */
 function ColTypes(props: { colsByType: Record<string, number> } & StatProps) {
   const nonZero = () =>
-    props.dataTypes.filter((dt) => (props.colsByType[dt.id] ?? 0) > 0);
+    filter((dt) => (props.colsByType[dt.id] ?? 0) > 0, props.dataTypes);
   return (
     <CenteredWrapRow class="sui-xb__coltypes">
       <For each={nonZero()}>

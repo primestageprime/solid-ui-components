@@ -65,7 +65,7 @@ import type {
   DoingItem,
   TodoItem,
 } from "./types";
-import { pipe, filter, map, join, sortBy } from "../../fn";
+import { pipe, filter, map, join, sortBy, pluck } from "../../fn";
 
 // ---------------------------------------------------------------------------
 // Defaults + small helpers.
@@ -118,13 +118,13 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   const [local, others] = splitProps(rawProps, ["config", "tables", "class"]);
   const cfg = () => local.config;
 
-  const catOrder = createMemo(() => cfg().categories.map((c) => c.id));
+  const catOrder = createMemo(() => pluck("id", cfg().categories));
   const orderIndex = createMemo(
-    () => new Map(catOrder().map((id, i) => [id, i])),
+    () => new Map(map((id, i) => [id, i] as const, catOrder())),
   );
   const dataTypeOrder = createMemo(() => cfg().dataTypes);
   const iconById = createMemo(
-    () => new Map(cfg().dataTypes.map((d) => [d.id, d])),
+    () => new Map(map((d) => [d.id, d] as const, cfg().dataTypes)),
   );
   const labels = createMemo(() => ({ ...DEFAULT_COLUMNS, ...cfg().columns }));
   const multiBatchAbove = () =>
@@ -259,12 +259,13 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   // the bottom; config order breaks ties. Re-sorts only `resortMs` after the
   // last status transition (debounced), so a lane is seen completing before it
   // sinks. Keys off summary status ONLY.
-  const sortedByStatus = (): string[] =>
-    [...catOrder()].sort((a, b) => {
-      const sum = summaryByCategory();
-      const r = STATUS_RANK[sum[a].status] - STATUS_RANK[sum[b].status];
-      return r !== 0 ? r : orderIndex().get(a)! - orderIndex().get(b)!;
-    });
+  const sortedByStatus = (): string[] => {
+    const sum = summaryByCategory();
+    // Two stable sortBy passes (secondary key first, then primary) stand in
+    // for the two-key comparator: config order as tiebreak, then status rank.
+    const byConfigOrder = sortBy((c) => orderIndex().get(c)!, catOrder());
+    return sortBy((c) => STATUS_RANK[sum[c].status], byConfigOrder);
+  };
 
   const [rowOrder, setRowOrder] = createSignal<string[]>(sortedByStatus());
   let resortTimer: ReturnType<typeof setTimeout> | undefined;

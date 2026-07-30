@@ -16,6 +16,7 @@ import {
   mergeProps,
 } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
+import { find, findIndex } from "../../fn";
 import "./Dropdown.css";
 
 export interface DropdownItem {
@@ -59,7 +60,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   const menuId = createUniqueId();
   const triggerId = createUniqueId();
 
-  const selected = () => merged.items.find((item) => item.id === merged.value);
+  const selected = () => find((item) => item.id === merged.value, merged.items);
 
   const handleClickOutside = (e: MouseEvent) => {
     if (containerRef && !containerRef.contains(e.target as Node)) {
@@ -103,7 +104,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
       let i = 0;
       if (focus === "last") i = count - 1;
       else if (focus === "selected") {
-        const sel = merged.items.findIndex((it) => it.id === merged.value);
+        const sel = findIndex((it) => it.id === merged.value, merged.items);
         i = sel >= 0 ? sel : 0;
       }
       focusOption(i);
