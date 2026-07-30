@@ -20,7 +20,7 @@ import {
   type StatusFlowNode,
 } from "./columns";
 import "./StatusFlowChart.css";
-import { map, filter, pluck } from "../../fn";
+import { map, filter, find, pluck } from "../../fn";
 
 export type {
   StatusFlowNode,
@@ -214,7 +214,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // (multiple stacked lanes) is future work.
   const parent = createMemo<EnrichedNode | undefined>(() => {
     const { childrenByParent } = resolved();
-    return visibleNodes().find((n) => childrenByParent.has(n.id));
+    return find((n) => childrenByParent.has(n.id), visibleNodes());
   });
 
   // Parent's status-based column (e.g. TODO → +1, DOING → 0, DONE → -1).
