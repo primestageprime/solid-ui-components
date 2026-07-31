@@ -18,6 +18,12 @@
 .stack--gap-sm {
   gap: 8px;
 }
+.stack--gap-md {
+  gap: 12px;
+}
+.stack--gap-lg {
+  gap: 16px;
+}
 
 .stack--align-start {
   align-items: flex-start;
@@ -64,6 +70,12 @@
 }
 .row--gap-sm {
   gap: 8px;
+}
+.row--gap-md {
+  gap: 12px;
+}
+.row--gap-lg {
+  gap: 16px;
 }
 
 .row--align-start {

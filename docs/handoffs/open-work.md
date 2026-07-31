@@ -104,6 +104,43 @@ needs its `package.json` pin bumped to `v0.128.0`. Deliberately left to the
 thorcasting-side agent (ruled 2026-07-31); the consumer-side design it unblocks
 is `thorcasting-workspace/docs/superpowers/specs/2026-07-31-discard-staging-design.md`.
 
+## Shipped 2026-07-31 — gap scale widened, `Surface.gap` forwards verbatim
+
+`Stack`/`Row` regained `md` (12px) and `lg` (16px); `Surface.gap` now forwards
+its value straight through instead of snapping everything to `sm`, and accepts
+`xs` too. Full rationale in `CHANGELOG.md`. Three things worth carrying
+forward:
+
+- **#45's "nothing depended on md/lg" was wrong, and the evidence was one repo
+  away.** `thorcasting-ui/src/components/ui.tsx` carries a shim re-implementing
+  `gap`/`align`/`justify` as inline styles over a full `none|xs|sm|md|lg|xl|2xl`
+  scale, headed *"SUI 0.80 regression"*; `jtf-ui`'s `NoxWidgets.tsx` has a
+  `createSurface({ … gap: "md" })` that had been silently 8px. **An audit
+  scoped to this repo cannot answer "does anything depend on this" for a
+  published library** — grep the consumer checkouts under `~/gits/primestage/`
+  (note `jtf-ui`/`thorcasting-ui` live inside `*-workspace/` dirs, so a
+  top-level `*/src` loop misses them).
+- **"The gap scale is `xs|sm`" was never repo-wide.** `Grid` and `AutoStack`
+  have carried `md` at 12px throughout. Only `Stack`/`Row`/`Sidebar`/
+  `ProportionalStack` were trimmed. `Sidebar` and `ProportionalStack` are still
+  `xs|sm` — deliberately left, not overlooked.
+- **SUI's `lg` is 16px; thorcasting's shim used 20px.** A consumer dropping the
+  shim tightens its `gap="lg"` sites by 4px. 16px continues this repo's own
+  4/8/12/16 ramp and 20px appears nowhere in `src/**/*.css`.
+
+**Still open, found while doing this — gap-scale doc drift.** Several
+`COMPONENTS.md` / `DESIGN_LANGUAGE.md` entries document scales their code never
+had; `Stack`, `Row`, and `Surface` were corrected, the rest were left rather
+than sprawl the diff:
+
+- `COMPONENTS.md` **OverflowNav** claims `gap` is `xs|sm|md|lg|xl`; the code is
+  `xs|sm` (and its `gapPx()` budget math only handles those two).
+- `DESIGN_LANGUAGE.md` **ProportionalStack** claims `xs|sm|md|lg|xl`, default
+  `md`; the code is `xs|sm`.
+
+Worth one deliberate sweep that checks every documented scale against its type
+rather than fixing them piecemeal.
+
 ## Resolved since the last handoff (2026-07-29)
 
 - **#66** — `SurfaceDataProps` documented in `COMPONENTS.md`. Shipped `fcbdcc4`.
@@ -121,13 +158,10 @@ is `thorcasting-workspace/docs/superpowers/specs/2026-07-31-discard-staging-desi
   twice (`928651f` 2026-06-26, `9158c75` 2026-07-17) after audits found
   nothing depended on it. Widening the type without matching CSS would have
   reintroduced the exact silent-zero-gap bug `assertModifierClass` exists to
-  catch. A separate real bug was found while investigating and is still
-  open: `Surface.gap` publicly accepts `"md"|"lg"` but silently collapses
-  them to `"sm"` before forwarding to the inner `Row`/`Stack` (no
-  `.surface--gap-md/-lg` CSS exists either) — that's plausibly the actual
-  source of the "runtime supports md/lg" impression, but it's a different
-  component and a different bug shape (type wider than effect, not
-  narrower). Not yet filed as its own issue — worth doing if picked up.
+  catch. A separate real bug was found while investigating: `Surface.gap`
+  publicly accepted `"md"|"lg"` but silently collapsed them to `"sm"` before
+  forwarding to the inner `Row`/`Stack`. **Fixed 2026-07-31 — see "Gap scale
+  widened" below, which also overturns this entry's own premise.**
 - **#67** — `SpreadCenterRow` curried variant. `SpreadRow` has baked in both
   `align: "center"` and `justify: "between"` since the repo's **initial
   commit** (`feeb575`) — the issue's premise ("SpreadRow strips align") was

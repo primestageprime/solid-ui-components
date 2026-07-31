@@ -28,7 +28,7 @@ export const RowShowcase: Component = () => {
       <div class="example-group">
         <h3>Base Component — Gap Sizes</h3>
         <Stack gap="sm">
-          {(["xs", "sm"] as const).map((gap) => (
+          {(["xs", "sm", "md", "lg"] as const).map((gap) => (
             <div>
               <Text variant="sublabel">{gap}</Text>
               <div class="demo-frame">

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Stack } from "./Stack";
+import layoutCss from "./Layout.css?raw";
+import { Stack, type StackProps } from "./Stack";
 import { Row } from "./Row";
 import { Box } from "./Box";
 import {
@@ -181,4 +182,40 @@ describe("ProportionalStack / ProportionalItem", () => {
     const item = container.querySelector(".proportional-item") as HTMLElement;
     expect(item.style.flex).toBe("3 1 0px");
   });
+});
+
+// Stack/Row build their gap class by string template, so a step with no CSS
+// rule renders as no gap at all rather than erroring — see
+// `internal/dom/assertModifierClass.ts`. Asserting the class name alone would
+// pass for a step that does not exist, so assert against the stylesheet.
+describe("Stack/Row gap scale", () => {
+  const STEPS: ReadonlyArray<readonly [NonNullable<StackProps["gap"]>, string]> =
+    [
+      ["xs", "4px"],
+      ["sm", "8px"],
+      ["md", "12px"],
+      ["lg", "16px"],
+    ];
+
+  for (const [step, px] of STEPS) {
+    it(`.stack--gap-${step} and .row--gap-${step} are defined at ${px}`, () => {
+      expect(layoutCss).toMatch(
+        new RegExp(`\\.stack--gap-${step}\\s*\\{\\s*gap:\\s*${px};`),
+      );
+      expect(layoutCss).toMatch(
+        new RegExp(`\\.row--gap-${step}\\s*\\{\\s*gap:\\s*${px};`),
+      );
+    });
+
+    it(`Stack and Row emit the ${step} gap class`, () => {
+      const stack = render(() => <Stack gap={step}>a</Stack>);
+      const row = render(() => <Row gap={step}>a</Row>);
+      expect(stack.container.firstElementChild!.className).toMatch(
+        new RegExp(`stack--gap-${step}`),
+      );
+      expect(row.container.firstElementChild!.className).toMatch(
+        new RegExp(`row--gap-${step}`),
+      );
+    });
+  }
 });
