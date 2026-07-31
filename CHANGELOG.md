@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.130.0
+
 ### Changed
 - **`Dot.size` and `ChartCanvas.height` are numbers of px, not CSS strings**
   (BREAKING for TS callers passing a string). Both were `number | string`,
