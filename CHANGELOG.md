@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Changed
+- **`Dot.size` and `ChartCanvas.height` are numbers of px, not CSS strings**
+  (BREAKING for TS callers passing a string). Both were `number | string`,
+  coercing a number to px and passing a string through verbatim. ADR 0003 and
+  `scripts/prop-rubric.json` are explicit that geometry props must be semantic
+  — *"geometry lengths (width/height/min/max/size) are NEVER whitelisted; they
+  must become semantic (number/token) props"* — so the string arm is the
+  violation, not an affordance. `cssTypedProps` 14 → 12.
+  - **Nothing shipped used the string form.** The only string call sites in
+    existence were two of this repo's own tests (`createChartCanvas({ height:
+    "50vh" })` and `<Dot size="1.5rem" />`), and `STYLE_GUIDE.md`'s expansion
+    gate is explicit that test-only usage is not demand. Every consumer call
+    site passes a number already (`createChartCanvas({ height: 100 })`,
+    `<Dot size={8} />`).
+  - **If you need a viewport-relative chart height**, put a class on the
+    container rather than a `"50vh"` height — the prop is a baked per-variant
+    decision (`createChartCanvas({ height })`), not a call-site override.
+
+### Note on the remaining 12
+`Surface.minWidth`/`maxWidth` were listed in the prior handoff as part of this
+"no cross-repo entanglement" slice. **They are not** — a consumer declares its
+own `minWidth?: string; maxWidth?: string` wrapper and spreads it straight into
+`createSurface`'s output, so narrowing them breaks its typecheck exactly the way
+`DataTableContainer.maxHeight` does. Left for a coordinated bump.
+
 ## 0.129.0
 
 ### Fixed

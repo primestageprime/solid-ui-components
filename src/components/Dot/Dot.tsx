@@ -15,14 +15,11 @@ export interface DotProps
   extends Omit<JSX.HTMLAttributes<HTMLSpanElement>, "color"> {
   /** Any CSS color value (hex, rgb, var(--…), named color). */
   color: string;
-  /** Pixel size, or any CSS length. Default 8px. */
-  size?: number | string;
+  /** Size in px. Default 8. */
+  size?: number;
 }
 
-const toLength = (size: number | string | undefined): string => {
-  if (size === undefined) return "8px";
-  return typeof size === "number" ? `${size}px` : size;
-};
+const toLength = (size: number | undefined): string => `${size ?? 8}px`;
 
 export const Dot: Component<DotProps> = (props) => {
   const [local, others] = splitProps(props, [

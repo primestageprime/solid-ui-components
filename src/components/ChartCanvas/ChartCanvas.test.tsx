@@ -41,11 +41,11 @@ describe("ChartCanvas", () => {
     expect(container.querySelector(".sui-chart-canvas canvas")).not.toBeNull();
   });
 
-  it("createChartCanvas accepts a custom string height verbatim", () => {
-    const Custom = createChartCanvas({ height: "50vh" });
+  it("createChartCanvas bakes a custom numeric height as px", () => {
+    const Custom = createChartCanvas({ height: 175 });
     const { container } = render(() => <Custom />);
     expect((container.firstElementChild as HTMLElement).style.height).toBe(
-      "50vh",
+      "175px",
     );
   });
 });

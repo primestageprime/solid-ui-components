@@ -20,13 +20,6 @@ describe("Dot", () => {
     expect(dot.style.height).toBe("16px");
   });
 
-  it("passes a string size through as a raw CSS length", () => {
-    const { container } = render(() => <Dot color="blue" size="1.5rem" />);
-    const dot = container.querySelector(".sui-dot") as HTMLElement;
-    expect(dot.style.width).toBe("1.5rem");
-    expect(dot.style.height).toBe("1.5rem");
-  });
-
   it("merges an extra class while keeping sui-dot", () => {
     const { container } = render(() => <Dot color="green" class="severity" />);
     const dot = container.querySelector(".sui-dot") as HTMLElement;
