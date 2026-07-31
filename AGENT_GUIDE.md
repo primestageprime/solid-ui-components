@@ -175,14 +175,24 @@ pre-stock the shelf. (See also *Variant Surface: keep it minimal* in
 
 This rule is already load-bearing in the library:
 
-- **`Stack` / `Row` gap scale** was trimmed to **`xs` / `sm`** — the larger gaps
-  had no shipped caller.
 - **`Surface` `padding` / `radius`** were trimmed to **`none` / `sm` / `md`** —
   `md` survived only because it is genuinely load-bearing; the rest were dead
   surface area.
+- **`OverflowNav.gap`** stays `xs` / `sm` even though the `Row` it forwards to
+  now accepts `md` / `lg`: no shipped caller has asked, and its `gapPx()`
+  overflow budget only accounts for the two.
 
 Don't reintroduce a removed value (or add a new one) without a real consumer and
 Peter's sign-off.
+
+**But "no shipped caller" is a claim about consumers, not about this repo.**
+`Stack` / `Row` gaps were trimmed to `xs` / `sm` on exactly that finding and
+restored on 2026-07-31 (0.129.0) when it proved false — `thorcasting-ui` had
+forked the primitives into a local inline-style shim rather than lose the
+steps, and `jtf-ui` had a `createSurface({ … gap: "md" })` quietly rendering at
+8px. Grep the consumer checkouts under `~/gits/primestage/` before removing a
+value; note that `jtf-ui` and `thorcasting-ui` live inside `*-workspace/`
+directories, so a top-level `*/src` sweep misses them entirely.
 
 ## What NOT To Do
 

@@ -7,9 +7,11 @@
 //
 // which means ANY value produces a class name, and a value with no matching CSS
 // rule renders as *nothing at all*. Not a crash, not a fallback — silently no
-// spacing. A consumer passing `gap="md"` to `Row`, whose scale is `xs | sm`,
-// got `.row--gap-md`, a class that has never existed, and three pages rendered
-// at zero gap for two weeks before anyone noticed.
+// spacing. A consumer passing `gap="md"` to `Row` got `.row--gap-md`, a class
+// that did not exist at the time, and three pages rendered at zero gap for two
+// weeks before anyone noticed. (`md` and `lg` are real steps again as of
+// 0.129.0 — the guard is scale-agnostic and asks the stylesheet, so it needed
+// no change; `xl` is today's equivalent dead value.)
 //
 // The type system is supposed to catch that, and usually does. It didn't here
 // because a consumer had no `typecheck` script and its bundler strips types

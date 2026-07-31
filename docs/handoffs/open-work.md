@@ -128,18 +128,42 @@ forward:
   shim tightens its `gap="lg"` sites by 4px. 16px continues this repo's own
   4/8/12/16 ramp and 20px appears nowhere in `src/**/*.css`.
 
-**Still open, found while doing this — gap-scale doc drift.** Several
-`COMPONENTS.md` / `DESIGN_LANGUAGE.md` entries document scales their code never
-had; `Stack`, `Row`, and `Surface` were corrected, the rest were left rather
-than sprawl the diff:
+### Documented-scale sweep (done 2026-07-31)
 
-- `COMPONENTS.md` **OverflowNav** claims `gap` is `xs|sm|md|lg|xl`; the code is
-  `xs|sm` (and its `gapPx()` budget math only handles those two).
-- `DESIGN_LANGUAGE.md` **ProportionalStack** claims `xs|sm|md|lg|xl`, default
-  `md`; the code is `xs|sm`.
+Every string-union prop scale in `COMPONENTS.md` (51 of them) was compared
+against the union actually declared in that component's own `Props` interface,
+plus a manual pass over `DESIGN_LANGUAGE.md` / `STYLE_GUIDE.md` /
+`AGENT_GUIDE.md`. Five doc bugs, all fixed:
 
-Worth one deliberate sweep that checks every documented scale against its type
-rather than fixing them piecemeal.
+| Where | Was | Actual |
+|---|---|---|
+| `COMPONENTS.md` OverflowNav.gap | `xs\|sm\|md\|lg\|xl` | `xs\|sm` |
+| `COMPONENTS.md` Modal.size | omitted `fullscreen` | has it |
+| `COMPONENTS.md` Toggle.variant | omitted `thematic` | has it |
+| `COMPONENTS.md` Text.as | omitted `pre` | has it |
+| `DESIGN_LANGUAGE.md` ProportionalStack.gap | `xs\|sm\|md\|lg\|xl` default `md` | `xs\|sm` default `sm` |
+
+Plus four narrative claims invalidated by 0.129.0 itself: `STYLE_GUIDE.md`'s
+off-scale-gap snapping rule (§ Layout Purity #2 — `12px`/`16px` are exact steps
+now, not snaps), its expansion-gating example, `AGENT_GUIDE.md`'s "this is why
+the scales are short", and the war story in
+`src/internal/dom/assertModifierClass.ts`, which cited `gap="md"` as the dead
+value when `md` is real again (now cites `xl`).
+
+**`OverflowNav.gap` was NOT widened to match its doc** — the doc was narrowed
+to match the code. `STYLE_GUIDE.md`'s expansion gate wants a shipped consumer,
+and no consumer asks for it; its `gapPx()` overflow budget also only accounts
+for `xs`/`sm`. That same gate is what justified widening `Stack`/`Row`, where
+two shipped consumers did demand it.
+
+**If this should not re-drift, the audit is scriptable** — resolve each
+documented ``prop` (`a`|`b`)`` against the component's own Props body, following
+one level of `type Alias = "a" | "b"`. A first pass that fell back to a
+repo-wide search for the prop name produced 19 confident false positives
+(matching `variant` against `Button`'s and `size` against `AssigneeChips`'),
+so the resolution has to be strict and report unresolved separately. Not
+wired into `health.mjs` — adding a ratcheted metric gates every future PR, which
+is a policy call rather than an agent's.
 
 ## Resolved since the last handoff (2026-07-29)
 
