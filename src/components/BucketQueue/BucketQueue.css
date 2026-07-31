@@ -38,6 +38,10 @@
   min-width: 0;
 }
 .bucket-queue__count {
+  /* inline-block so it is transformable: a row arriving in a COLLAPSED bucket
+     has no slot to open, so the count is what acknowledges it (see ./motion).
+     `transform` has no effect on a non-replaced inline box. */
+  display: inline-block;
   font-variant-numeric: tabular-nums;
   font-size: 0.95rem;
 }
@@ -118,6 +122,74 @@
 .bucket-queue__dot--muted,
 .bucket-queue__dot--default {
   background: var(--sui-text-muted);
+}
+
+/* A collapsible, populated bucket's header IS the toggle. The UA button box is
+   reset completely and deliberately: `headH` is measured from bucket 0's
+   header ALONE (see BucketQueue.tsx) and applied to every bucket, so a
+   button's default font-family, padding, margin or border leaking in would
+   mis-size the entire bar — not just this header. `font-family`/`line-height`
+   are named individually rather than via the `font` shorthand, which would
+   also wipe the weight, size and letter-spacing the base rule sets. */
+.bucket-queue__header--toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sui-border);
+  border-radius: 0;
+  color: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.bucket-queue__header--toggle:hover {
+  background: var(--sui-bg-hover, rgba(127, 127, 127, 0.08));
+}
+.bucket-queue__header--toggle:focus-visible {
+  outline: 1px solid var(--sui-border-focus);
+  outline-offset: -1px;
+}
+
+/* The disclosure chevron occupies EXACTLY the tone dot's 8px slot, and
+   replaces it — one role-coloured mark per bucket, same place, so a
+   collapsible bucket's label sits on the same left edge as every other. */
+.bucket-queue__chevron {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  color: var(--sui-text-muted);
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.bucket-queue__chevron--expanded {
+  transform: rotate(90deg);
+}
+.bucket-queue__chevron--success {
+  color: var(--sui-success);
+}
+.bucket-queue__chevron--danger {
+  color: var(--sui-danger);
+}
+.bucket-queue__chevron--warning {
+  color: var(--sui-warning);
+}
+.bucket-queue__chevron--accent {
+  color: var(--sui-accent);
+}
+.bucket-queue__chevron--muted,
+.bucket-queue__chevron--default {
+  color: var(--sui-text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bucket-queue__chevron {
+    transition: none;
+  }
 }
 
 /* Collapsed strip shown in a bucket with no items (opt-in via
