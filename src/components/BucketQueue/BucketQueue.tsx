@@ -160,22 +160,42 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const checkableIn = (bucket: Bucket) =>
     selectModeOn() && bucket.selectable === true;
 
+  // A PER-ITEM veto on checking, consulted only where the bucket already allows
+  // it. Nesting it inside `checkableIn` is what keeps this from becoming a
+  // general row-disable: it can never make a row that would have SELECTED
+  // inert, and it is never consulted outside select mode. An absent predicate
+  // blocks nothing — the prop is deliberately fail-OPEN (see types.ts).
+  const blockedIn = (item: T, bucket: Bucket) =>
+    checkableIn(bucket) && props.isCheckable?.(item) === false;
+
   // The single activation branch — shared by click (here) and Enter/Space (the
-  // keyboard module). A row either toggles its check or selects; never both.
+  // keyboard module). A row either toggles its check, selects, or — when the
+  // consumer's per-item veto refused it — does NOTHING. Both paths funnel
+  // through here, which is why the veto needs no change in ./keyboard at all.
   const activate = (
     key: string,
+    item: T,
     bucket: Bucket,
     modifiers: { shift: boolean; meta: boolean },
   ) => {
-    if (checkableIn(bucket)) props.onToggleCheck?.(key, modifiers);
-    else props.onSelect?.(key);
+    if (checkableIn(bucket)) {
+      // Deliberately no fall-through to onSelect for a refused row: that would
+      // swap the consumer's detail pane in response to a click the user meant
+      // as a check. In select mode a selectable bucket's rows toggle or do
+      // nothing — never a third, unrequested action.
+      if (!blockedIn(item, bucket)) props.onToggleCheck?.(key, modifiers);
+    } else props.onSelect?.(key);
   };
 
-  // The bucket a row lives in, for the activation branch (keyboard has only
-  // the key; click has the bucket in scope).
-  const bucketForKey = (key: string): Bucket | undefined => {
+  // The item AND bucket a row belongs to, for the activation branch — the
+  // keyboard has only the key in hand, where a click has both in scope.
+  const rowForKey = (key: string): { item: T; bucket: Bucket } | undefined => {
     const bucketKey = buckets().bucketByKey.get(key);
-    return find((s) => s.key === bucketKey, props.buckets);
+    if (bucketKey == null) return undefined;
+    const bucket = find((s) => s.key === bucketKey, props.buckets);
+    if (bucket === undefined) return undefined;
+    const item = find((it) => props.keyOf(it) === key, itemsIn(bucketKey));
+    return item === undefined ? undefined : { item, bucket };
   };
 
   // A row is interactive iff it can be activated: either the queue has a
@@ -201,8 +221,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     focusedKey: () => props.focusedKey,
     selectedKey: () => props.selectedKey,
     onActivate: (key) => {
-      const bucket = bucketForKey(key);
-      if (bucket) activate(key, bucket, { shift: false, meta: false });
+      const row = rowForKey(key);
+      if (row) activate(key, row.item, row.bucket, { shift: false, meta: false });
     },
     onFocusChange: (key) => props.onFocusChange?.(key),
   });
@@ -400,7 +420,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                           onClick={
                             interactive()
                               ? (e: MouseEvent) =>
-                                  activate(key, bucket, {
+                                  activate(key, it, bucket, {
                                     shift: e.shiftKey,
                                     meta: e.metaKey || e.ctrlKey,
                                   })

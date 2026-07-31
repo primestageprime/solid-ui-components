@@ -108,6 +108,30 @@ export interface BucketQueueProps<T> {
    *  range/anchor semantics. Never fires outside select mode or for a
    *  non-selectable bucket. */
   onToggleCheck?: (key: string, modifiers: { shift: boolean; meta: boolean }) => void;
+  /** Per-item veto on checking, consulted ONLY for rows in a `selectable`
+   *  bucket while select mode is on. Return false and the row renders inert
+   *  and dimmed: no check toggle, and NO fall-through to selection — a refused
+   *  row does nothing at all, because falling through would swap the consumer's
+   *  detail pane in response to a click the user meant as a check.
+   *
+   *  Omit — or return true — and every row in a selectable bucket is checkable,
+   *  exactly as before. The predicate is fail-OPEN by design: a positive
+   *  "these are checkable" set would have to be exhaustive, and any item the
+   *  consumer forgot would silently become unselectable.
+   *
+   *  Typically derived from `checkedKeys`: close over the checked set and
+   *  refuse items incompatible with what is already checked. With NOTHING
+   *  checked the predicate should return true for everything, which is what
+   *  makes unchecking back to zero restore full checkability with no special
+   *  case in this component. */
+  isCheckable?: (item: T) => boolean;
+  /** Hover / assistive-tech explanation for a row `isCheckable` refused — e.g.
+   *  "different side than your current selection". Rendered as the ROW's
+   *  `title`, which is why this is a prop rather than the consumer's job:
+   *  `renderItem`'s output only occupies the content span and does not cover
+   *  the check affordance, so a consumer-side tooltip goes silent on exactly
+   *  the hover that matters. Consulted only for refused rows. */
+  uncheckableReason?: (item: T) => string | undefined;
 
   /** Set to a key present in any bucket to scroll that row into view. Reacts
    *  on CHANGE: set it (or bump it) to request a scroll, then clear it. No-op

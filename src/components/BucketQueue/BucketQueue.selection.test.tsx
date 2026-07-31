@@ -3,14 +3,19 @@
 // file limit; substance unchanged from the original tests, see git history
 // for prior home.
 import { describe, it, expect, afterEach } from "vitest";
-import { cleanup, fireEvent } from "@solidjs/testing-library";
-import type { Bucket } from "./BucketQueue";
+import { createSignal } from "solid-js";
+import { cleanup, fireEvent, render } from "@solidjs/testing-library";
+import { BucketQueue, type Bucket } from "./BucketQueue";
 import {
   renderQueue,
   renderSelectable,
+  renderVeto,
+  vetoOne,
   rowFor,
   renderBuckets,
   toggleButton,
+  SELECTABLE,
+  type Item,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -119,5 +124,130 @@ describe("BucketQueue — selection & select mode", () => {
     fireEvent.click(toggleButton(container)!); // collapse it
     expect(container.querySelector('[data-bq-key="sel"]')).toBeNull();
     expect(calls).toEqual([]);
+  });
+});
+
+describe("BucketQueue — per-item checkability", () => {
+  const selectModeProps = (extra: Record<string, unknown> = {}) => ({
+    checkedKeys: new Set<string>(),
+    ...extra,
+  });
+
+  it("fires NOTHING when a refused row is clicked — no toggle, no fall-through", () => {
+    let selected: string | undefined;
+    let toggled: string | undefined;
+    const { container } = renderVeto(
+      selectModeProps({
+        onSelect: (k: string) => (selected = k),
+        onToggleCheck: (k: string) => (toggled = k),
+        isCheckable: vetoOne,
+      }),
+    );
+    fireEvent.click(rowFor(container, "veto"));
+    expect(toggled).toBeUndefined();
+    // The important half: falling through to onSelect would swap the
+    // consumer's detail pane on a click the user meant as a check.
+    expect(selected).toBeUndefined();
+  });
+
+  it("fires nothing on Enter or Space either — one guard covers both paths", () => {
+    const calls: string[] = [];
+    const { container } = renderVeto(
+      selectModeProps({
+        onSelect: (k: string) => calls.push(`select:${k}`),
+        onToggleCheck: (k: string) => calls.push(`toggle:${k}`),
+        isCheckable: vetoOne,
+      }),
+    );
+    fireEvent.keyDown(rowFor(container, "veto"), { key: "Enter" });
+    fireEvent.keyDown(rowFor(container, "veto"), { key: " " });
+    expect(calls).toEqual([]);
+  });
+
+  it("leaves the refused row's NEIGHBOUR checkable", () => {
+    let toggled: string | undefined;
+    const { container } = renderVeto(
+      selectModeProps({
+        onSelect: () => {},
+        onToggleCheck: (k: string) => (toggled = k),
+        isCheckable: vetoOne,
+      }),
+    );
+    fireEvent.click(rowFor(container, "ok"));
+    expect(toggled).toBe("ok");
+  });
+
+  it("is NOT consulted for a non-selectable bucket's row", () => {
+    let selected: string | undefined;
+    const { container } = renderVeto(
+      selectModeProps({
+        onSelect: (k: string) => (selected = k),
+        onToggleCheck: () => {},
+        isCheckable: () => false, // refuses everything it is asked about
+      }),
+    );
+    fireEvent.click(rowFor(container, "plain"));
+    expect(selected).toBe("plain");
+  });
+
+  it("is NOT consulted outside select mode", () => {
+    let selected: string | undefined;
+    // No checkedKeys ⇒ select mode off ⇒ the veto must be inert.
+    const { container } = renderVeto({
+      onSelect: (k: string) => (selected = k),
+      isCheckable: () => false,
+    });
+    fireEvent.click(rowFor(container, "veto"));
+    expect(selected).toBe("veto");
+  });
+
+  it("checks every row when isCheckable is omitted (fail-open regression guard)", () => {
+    const toggled: string[] = [];
+    const { container } = renderVeto(
+      selectModeProps({
+        onSelect: () => {},
+        onToggleCheck: (k: string) => toggled.push(k),
+      }),
+    );
+    fireEvent.click(rowFor(container, "ok"));
+    fireEvent.click(rowFor(container, "veto"));
+    expect(toggled).toEqual(["ok", "veto"]);
+  });
+
+  // Rendered inline rather than through renderVeto: the reset is a TRANSITION,
+  // and a plain props object is evaluated once, so the veto would never change.
+  // The signal is what makes the predicate re-run when the checked set changes.
+  it("restores checkability when the checked set drains back to empty (the RESET path)", () => {
+    const toggled: string[] = [];
+    const [checked, setChecked] = createSignal<ReadonlySet<string>>(new Set());
+    const { container } = render(() => (
+      <BucketQueue<Item>
+        buckets={SELECTABLE}
+        items={[
+          { id: "ok", bucket: "b" },
+          { id: "veto", bucket: "b" },
+        ]}
+        bucketOf={(i) => i.bucket}
+        keyOf={(i) => i.id}
+        renderItem={(i) => <span>{i.id}</span>}
+        height={600}
+        checkedKeys={checked()}
+        onToggleCheck={(k: string) => toggled.push(k)}
+        // Stands in for a consumer whose rule only bites once something is
+        // checked. Nothing checked ⇒ no constraint at all.
+        isCheckable={(i) => checked().size === 0 || i.id !== "veto"}
+      />
+    ));
+
+    // Something checked ⇒ "veto" is refused.
+    setChecked(new Set(["ok"]));
+    fireEvent.click(rowFor(container, "veto"));
+    expect(toggled).toEqual([]);
+
+    // Drained back to empty ⇒ checkable again, with nothing in the component
+    // special-casing the empty set.
+    setChecked(new Set<string>());
+    fireEvent.click(rowFor(container, "veto"));
+    expect(toggled).toEqual(["veto"]);
   });
 });
