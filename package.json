@@ -81,6 +81,7 @@
     "preview": "vite preview",
     "prepare": "git config core.hooksPath githooks 2>/dev/null; npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
+    "audit:scales": "node scripts/scale-audit.mjs",
     "health": "node scripts/health.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
     "kpi": "node scripts/kpi-table.mjs",
