@@ -2,7 +2,8 @@
 // (2026-07-24) to stay under the repo's 500-line file limit; substance
 // unchanged from the original tests, see git history for prior home.
 import { describe, it, expect, afterEach } from "vitest";
-import { render, cleanup } from "@solidjs/testing-library";
+import { render, cleanup, fireEvent } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -15,6 +16,9 @@ import {
   BUCKETS,
   SELECTABLE,
   rowFor,
+  COLLAPSIBLE,
+  renderBuckets,
+  toggleButton,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -163,6 +167,101 @@ describe("BucketQueue — rendering & sizing", () => {
       />
     ));
     expect(bucketHeights(container)[0]).toBe("306px"); // still content-driven
+  });
+
+  // A POPULATED bucket rendered as a click-to-expand summary line
+  // (Bucket.collapsible, 2026-07-31). Distinct from the empty-bucket collapse
+  // above: this one has items, shows a chevron instead of its tone dot, and
+  // shows no emptyLabel.
+  describe("collapsible buckets", () => {
+    const ITEMS: Item[] = [
+      { id: "keep", bucket: "a" },
+      { id: "d1", bucket: "b" },
+      { id: "d2", bucket: "b" },
+    ];
+
+    it("renders a collapsedByDefault bucket as its header alone, with its count", () => {
+      const { container } = renderBuckets(COLLAPSIBLE, ITEMS);
+      const buckets = container.querySelectorAll(".bucket-queue__bucket");
+      expect(buckets[1].querySelectorAll(".bucket-queue__row")).toHaveLength(0);
+      expect(buckets[1].querySelector(".bucket-queue__count")?.textContent).toBe("2");
+      expect(bucketHeights(container)[1]).toBe("36px"); // header 34 + 2 border
+    });
+
+    it("shows no empty strip while collapsed — it is populated, not empty", () => {
+      const { container } = renderBuckets(COLLAPSIBLE, ITEMS);
+      expect(container.querySelector(".bucket-queue__empty")).toBeNull();
+    });
+
+    it("replaces the tone dot with a tone-coloured chevron", () => {
+      const { container } = renderBuckets(COLLAPSIBLE, ITEMS);
+      const discard = container.querySelectorAll(".bucket-queue__bucket")[1];
+      expect(discard.querySelector(".bucket-queue__dot")).toBeNull();
+      expect(discard.querySelector(".bucket-queue__chevron--muted")).toBeTruthy();
+      // The other bucket is untouched — still a dot.
+      const alpha = container.querySelectorAll(".bucket-queue__bucket")[0];
+      expect(alpha.querySelector(".bucket-queue__dot--success")).toBeTruthy();
+    });
+
+    it("expands on click, and re-collapses on a second click", () => {
+      const { container } = renderBuckets(COLLAPSIBLE, ITEMS);
+      const button = toggleButton(container)!;
+      expect(button.getAttribute("aria-expanded")).toBe("false");
+
+      fireEvent.click(button);
+      expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(3);
+      expect(toggleButton(container)!.getAttribute("aria-expanded")).toBe("true");
+
+      fireEvent.click(toggleButton(container)!);
+      expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(1);
+    });
+
+    it("renders an EMPTY collapsible bucket exactly as it did before the flag", () => {
+      // Nothing to expand into: no chevron, no button, and its emptyLabel shows.
+      const { container } = renderBuckets(COLLAPSIBLE, [{ id: "keep", bucket: "a" }]);
+      expect(toggleButton(container)).toBeNull();
+      expect(container.querySelector(".bucket-queue__chevron")).toBeNull();
+      expect(container.querySelector(".bucket-queue__dot--muted")).toBeTruthy();
+      expect(container.querySelector(".bucket-queue__empty")?.textContent).toBe(
+        "Nothing discarded",
+      );
+    });
+
+    it("IGNORES collapsedByDefault when the bucket is not collapsible", () => {
+      const buckets: Bucket[] = [
+        { key: "a", label: "Alpha", tone: "success" },
+        { key: "b", label: "Discard", tone: "muted", collapsedByDefault: true },
+      ];
+      const { container } = renderBuckets(buckets, ITEMS);
+      expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(3);
+      expect(toggleButton(container)).toBeNull();
+    });
+
+    it("keeps the user's expansion across the bucket draining and refilling", () => {
+      // Sticky by design: if the user opened the pile, they wanted it open, and
+      // the consumer's "Empty N discards" button must not silently re-close it.
+      const [items, setItems] = createSignal<Item[]>(ITEMS);
+      const { container } = render(() => (
+        <BucketQueue<Item>
+          buckets={COLLAPSIBLE}
+          items={items()}
+          bucketOf={(i) => i.bucket}
+          keyOf={(i) => i.id}
+          renderItem={(i) => <span>{i.id}</span>}
+          height={600}
+        />
+      ));
+
+      fireEvent.click(toggleButton(container)!);
+      expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(3);
+
+      setItems([{ id: "keep", bucket: "a" }]); // "Empty 2 discards"
+      expect(container.querySelector(".bucket-queue__empty")).toBeTruthy();
+
+      setItems([{ id: "keep", bucket: "a" }, { id: "d3", bucket: "b" }]);
+      expect(container.querySelectorAll(".bucket-queue__row")).toHaveLength(2);
+      expect(toggleButton(container)!.getAttribute("aria-expanded")).toBe("true");
+    });
   });
 
   // Regression for the select-mode layout bug found while verifying task 9:
