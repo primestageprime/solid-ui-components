@@ -18,10 +18,10 @@ import "./ChartCanvas.css";
 export interface ChartCanvasProps
   extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "ref" | "style"> {
   /**
-   * Chart-area height. Number → px; string → used verbatim (e.g. "240px").
-   * Static variant decision baked at definition time; not a call-site prop.
+   * Chart-area height in px. Static variant decision baked at definition time;
+   * not a call-site prop.
    */
-  height?: number | string;
+  height?: number;
   /** Canvas element ref — attach your Chart.js instance to this element. */
   ref?: (el: HTMLCanvasElement) => void;
   /** Optional overlay slot rendered above the canvas (e.g. InlineChartErrorOverlay). */
@@ -40,7 +40,7 @@ export const ChartCanvas: Component<ChartCanvasProps> = (props) => {
     local.class ? `sui-chart-canvas ${local.class}` : "sui-chart-canvas";
 
   const height = () =>
-    typeof local.height === "number" ? `${local.height}px` : local.height;
+    local.height === undefined ? undefined : `${local.height}px`;
 
   return (
     <div class={classes()} style={{ height: height() }} {...others}>

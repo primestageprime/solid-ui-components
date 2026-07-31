@@ -306,9 +306,30 @@ and `StatusFlowChart/`+`SwimlaneChart/` for the multi-key-sort case:
 
 ## `cssTypedProps` — 14, and the order matters
 
-**Do this slice first:** `Surface.minWidth`/`maxWidth`, `Dot.size`,
-`ChartCanvas.height` — a plain `number | string` → `CssLength` narrowing with
-nothing else attached.
+**Done 2026-07-31 (0.130.0): `Dot.size` and `ChartCanvas.height`**, 14 → 12.
+Both were `number | string`; the string arm was the violation and nothing
+shipped used it. Two corrections to the prior plan, both found by checking
+rather than trusting it:
+
+- **There is no `CssLength` type, and there should not be.** The earlier note
+  proposed narrowing these to a `CssLength` template-literal union.
+  `scripts/prop-rubric.json` says the opposite in as many words: *"Geometry
+  lengths (width/height/min/max/size) are NEVER whitelisted here — they must
+  become semantic (number/token) props."* The sanctioned target is `number`.
+- **`Surface.minWidth`/`maxWidth` are NOT part of the unblocked slice.** The
+  prior handoff grouped them here as having "no cross-repo entanglement." A
+  consumer declares its own `minWidth?: string; maxWidth?: string` wrapper type
+  and spreads it straight into `createSurface`'s output, so narrowing these
+  breaks its typecheck in exactly the way `DataTableContainer.maxHeight` does.
+  Same blocker, same coordinated-bump requirement.
+
+**Remaining 10**, all `width`/`height`/`maxHeight` typed `string`:
+`StatsTable.width`, `SidebarSelector.height`, `Surface.minWidth`/`maxWidth`,
+`ThreePanelLayout.height`, and the `Table/` family (`DataTableContainer
+.maxHeight`, `GroupedTable` `RowspanColumn.width` + `maxHeight`, `ColOpts
+.width`, `TableColumn.width`/`minWidth`, `BaseTableProps.maxHeight`).
+`SidebarSelector.height` and `ThreePanelLayout.height` are the next candidates
+— check their call sites the same way before assuming they are free.
 
 **Do NOT start with `DataTableContainer.maxHeight`**, tempting as it is at 8 of
 the 14. Narrowing it to a `CssLength` template-literal union is a breaking
