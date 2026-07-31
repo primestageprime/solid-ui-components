@@ -394,7 +394,16 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                       // This bucket's measured row, if this is the one.
                       let myRow: HTMLDivElement | undefined;
                       onCleanup(() => untrackRow(bucket.key, myRow));
-                      const interactive = () => interactiveIn(bucket);
+                      // FOCUSABLE vs ACTIVATABLE. These are the same thing for
+                      // every row except one the consumer's veto refused: it
+                      // keeps its place in the roving sequence (so a keyboard
+                      // user can reach it and hear WHY it is excluded) while
+                      // losing the click handler and the clickable styling.
+                      // They were one flag until now only because nothing had
+                      // ever needed to tell them apart.
+                      const blocked = () => blockedIn(it, bucket);
+                      const focusable = () => interactiveIn(bucket);
+                      const activatable = () => focusable() && !blocked();
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
                       const checked = () => props.checkedKeys?.has(key) === true;
                       return (
@@ -402,23 +411,26 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                         <div
                           ref={(el) => { if (ri() === 0) { myRow = el; trackRow(bucket.key, el); } }}
                           data-bq-key={key}
-                          data-bq-interactive={interactive() ? "" : undefined}
+                          data-bq-interactive={focusable() ? "" : undefined}
                           class={
                             "bucket-queue__row" +
-                            (interactive() ? " bucket-queue__row--interactive" : "") +
+                            (activatable() ? " bucket-queue__row--interactive" : "") +
                             (selected() ? " bucket-queue__row--selected" : "")
                           }
                           role="option"
                           aria-selected={selected()}
+                          aria-disabled={blocked() ? true : undefined}
+                          title={blocked() ? props.uncheckableReason?.(it) : undefined}
                           tabindex={
-                            interactive() && keyboard.tabbableKey() === key ? 0 : -1
+                            focusable() && keyboard.tabbableKey() === key ? 0 : -1
                           }
                           classList={{
                             "bucket-queue__row--checked": checkableIn(bucket) && checked(),
                             "bucket-queue__row--focused": props.focusedKey === key,
+                            "bucket-queue__row--uncheckable": blocked(),
                           }}
                           onClick={
-                            interactive()
+                            activatable()
                               ? (e: MouseEvent) =>
                                   activate(key, it, bucket, {
                                     shift: e.shiftKey,
@@ -426,18 +438,22 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                                   })
                               : undefined
                           }
+                          // focusable(), not activatable() — a refused row must
+                          // still handle the arrow keys. Enter/Space reaching
+                          // `activate` is already a no-op for it.
                           onKeyDown={
-                            interactive()
+                            focusable()
                               ? (e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)
                               : undefined
                           }
-                          onFocus={interactive() ? () => keyboard.setActiveKey(key) : undefined}
+                          onFocus={focusable() ? () => keyboard.setActiveKey(key) : undefined}
                         >
                           <Show when={checkableIn(bucket)}>
                             <span
                               class="bucket-queue__checkbox"
                               classList={{
                                 "bucket-queue__checkbox--checked": checked(),
+                                "bucket-queue__checkbox--disabled": blocked(),
                               }}
                               aria-hidden="true"
                             >

@@ -19,6 +19,8 @@ import {
   COLLAPSIBLE,
   renderBuckets,
   toggleButton,
+  renderVeto,
+  vetoOne,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -318,5 +320,69 @@ describe("BucketQueue — rendering & sizing", () => {
       // flex-grow contract that lets it sit beside the checkbox.
       expect(content.querySelector("div")).not.toBeNull();
     });
+  });
+});
+
+describe("BucketQueue — refused row rendering", () => {
+  const veto = () =>
+    renderVeto({
+      checkedKeys: new Set<string>(),
+      onSelect: () => {},
+      onToggleCheck: () => {},
+      isCheckable: vetoOne,
+      uncheckableReason: () => "different side than your current selection",
+    });
+
+  it("dims the refused row IN PLACE and drops its clickable affordance", () => {
+    const { container } = veto();
+    const row = rowFor(container, "veto");
+    expect(row.classList.contains("bucket-queue__row--uncheckable")).toBe(true);
+    // Dropping --interactive is what removes cursor:pointer and the hover fill.
+    expect(row.classList.contains("bucket-queue__row--interactive")).toBe(false);
+  });
+
+  it("leaves the refused row IN the bucket — dimming, not filtering", () => {
+    const { container } = veto();
+    // The header count and the row itself both stay, which is half of why
+    // dimming beat filtering: the count must not lie about the bucket.
+    expect(rowFor(container, "veto")).toBeTruthy();
+    expect(container.querySelectorAll('[data-bq-bucket="b"] [data-bq-key]')).toHaveLength(2);
+  });
+
+  it("marks the refused row aria-disabled and titles it with the reason", () => {
+    const { container } = veto();
+    const row = rowFor(container, "veto");
+    expect(row.getAttribute("aria-disabled")).toBe("true");
+    expect(row.getAttribute("title")).toBe("different side than your current selection");
+  });
+
+  it("dashes the refused row's checkbox", () => {
+    const { container } = veto();
+    const box = rowFor(container, "veto").querySelector(".bucket-queue__checkbox");
+    expect(box?.classList.contains("bucket-queue__checkbox--disabled")).toBe(true);
+  });
+
+  it("leaves the neighbour untouched", () => {
+    const { container } = veto();
+    const row = rowFor(container, "ok");
+    expect(row.classList.contains("bucket-queue__row--uncheckable")).toBe(false);
+    expect(row.classList.contains("bucket-queue__row--interactive")).toBe(true);
+    expect(row.getAttribute("aria-disabled")).toBeNull();
+    expect(row.getAttribute("title")).toBeNull();
+    expect(
+      row.querySelector(".bucket-queue__checkbox")?.classList.contains(
+        "bucket-queue__checkbox--disabled",
+      ),
+    ).toBe(false);
+  });
+
+  it("sets no title when uncheckableReason is omitted", () => {
+    const { container } = renderVeto({
+      checkedKeys: new Set<string>(),
+      onSelect: () => {},
+      onToggleCheck: () => {},
+      isCheckable: vetoOne,
+    });
+    expect(rowFor(container, "veto").getAttribute("title")).toBeNull();
   });
 });
