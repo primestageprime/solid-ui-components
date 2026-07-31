@@ -1,9 +1,14 @@
 # Handoff: open work in solid-ui-components
 
-**State as of 2026-07-31.** Version `0.128.0`, `main` at `038a394`, all checks
-green, every ratchet ceiling tight, `v0.128.0` tagged and published to GitHub
+**State as of 2026-07-31.** Version `0.129.0`, `main` at `717b868`, all checks
+green, every ratchet ceiling tight, `v0.129.0` tagged and published to GitHub
 Packages. This supersedes the six-issue handoff from 2026-07-29 — all six are
 now resolved, triaged-and-closed, or (for #64) in-progress below.
+
+**Scope: this repo only.** Consumer-side follow-ups belong in the consumer's own
+handoff, not here. Where a consumer constrains work *in this repo* — an API that
+cannot be narrowed without a coordinated bump — that constraint stays, stated as
+a constraint on the SUI change.
 
 Read **Ground rules** first — several of them will fail your PR if you don't.
 
@@ -99,11 +104,6 @@ the code rather than the issue text:
 `BucketHeader.tsx` and the live-measurement/ResizeObserver concern is
 `measurement.ts`. No public API changed.
 
-**`thorcasting-ui` has not picked this up.** It pins SUI by GitHub tag, so it
-needs its `package.json` pin bumped to `v0.128.0`. Deliberately left to the
-thorcasting-side agent (ruled 2026-07-31); the consumer-side design it unblocks
-is `thorcasting-workspace/docs/superpowers/specs/2026-07-31-discard-staging-design.md`.
-
 ## Shipped 2026-07-31 — gap scale widened, `Surface.gap` forwards verbatim
 
 `Stack`/`Row` regained `md` (12px) and `lg` (16px); `Surface.gap` now forwards
@@ -111,22 +111,22 @@ its value straight through instead of snapping everything to `sm`, and accepts
 `xs` too. Full rationale in `CHANGELOG.md`. Three things worth carrying
 forward:
 
-- **#45's "nothing depended on md/lg" was wrong, and the evidence was one repo
-  away.** `thorcasting-ui/src/components/ui.tsx` carries a shim re-implementing
-  `gap`/`align`/`justify` as inline styles over a full `none|xs|sm|md|lg|xl|2xl`
-  scale, headed *"SUI 0.80 regression"*; `jtf-ui`'s `NoxWidgets.tsx` has a
-  `createSurface({ … gap: "md" })` that had been silently 8px. **An audit
-  scoped to this repo cannot answer "does anything depend on this" for a
-  published library** — grep the consumer checkouts under `~/gits/primestage/`
-  (note `jtf-ui`/`thorcasting-ui` live inside `*-workspace/` dirs, so a
-  top-level `*/src` loop misses them).
+- **Never remove a published prop value on an audit of this repo alone.** #45
+  trimmed the scale on a "nothing depends on `md`/`lg`" finding that was an
+  artifact of where it looked: things did depend on it, one of them by forking
+  the primitives outright rather than losing the steps. **"No shipped caller"
+  is a claim about consumers and cannot be established from inside this repo.**
+  Grep the consumer checkouts under `~/gits/primestage/` before deleting a
+  value — and note that some live inside `*-workspace/` directories, so a
+  top-level `*/src` loop reports a clean sweep while missing them entirely.
+  That trap is what made the original finding look solid.
 - **"The gap scale is `xs|sm`" was never repo-wide.** `Grid` and `AutoStack`
   have carried `md` at 12px throughout. Only `Stack`/`Row`/`Sidebar`/
   `ProportionalStack` were trimmed. `Sidebar` and `ProportionalStack` are still
   `xs|sm` — deliberately left, not overlooked.
-- **SUI's `lg` is 16px; thorcasting's shim used 20px.** A consumer dropping the
-  shim tightens its `gap="lg"` sites by 4px. 16px continues this repo's own
-  4/8/12/16 ramp and 20px appears nowhere in `src/**/*.css`.
+- **`lg` is 16px, not 20px.** It continues this repo's own 4/8/12/16 gap ramp;
+  20px appears nowhere in `src/**/*.css`. Picked over the 20px a consumer's
+  local workaround had been using, so a step here always lands on the ramp.
 
 ### Documented-scale sweep (done 2026-07-31)
 
@@ -304,20 +304,20 @@ and `StatusFlowChart/`+`SwimlaneChart/` for the multi-key-sort case:
   identical. Grep for every later read of the variable before assuming a
   copy-based replacement is a no-op.
 
-## `cssTypedProps` — blocked on a cross-repo type, not abandoned
+## `cssTypedProps` — 14, and the order matters
 
-Still 14, unchanged this round. `DataTableContainer.maxHeight` and its
-`Table/`-family siblings are the natural next slice (8 of 14, per the prior
-handoff's own note on the `CssLength` template-literal union), **but**:
-jtf-ui's `HourLevelDataTable`/`HourlyDataTable`/`MinMaxTable` locally type
-`maxHeight?: string` (wider than any `CssLength` union) and forward it
-straight through to `DataTableContainer` — narrowing SUI's prop type would
-break jtf-ui's typecheck even though every actual call site passes a
-literal like `"500px"`. This needs a coordinated bump (widen jtf-ui's local
-prop type first, or accept the cross-repo PR pair), not a solo SUI PR.
-`Surface.minWidth`/`maxWidth`, `Dot.size`, `ChartCanvas.height` are a
-different, simpler fix (`number | string` → `CssLength`) with no such
-cross-repo entanglement — worth doing first if picking this back up.
+**Do this slice first:** `Surface.minWidth`/`maxWidth`, `Dot.size`,
+`ChartCanvas.height` — a plain `number | string` → `CssLength` narrowing with
+nothing else attached.
+
+**Do NOT start with `DataTableContainer.maxHeight`**, tempting as it is at 8 of
+the 14. Narrowing it to a `CssLength` template-literal union is a breaking
+change for a published prop that consumers currently satisfy with a plain
+`string`, and at least one is known to forward `maxHeight?: string` straight
+through, so its typecheck breaks even though every real call site passes a
+literal like `"500px"`. Land it as a deliberate breaking change with the
+consumer bump arranged, not as a routine metric slice — the metric is not worth
+a surprise break.
 
 ---
 
