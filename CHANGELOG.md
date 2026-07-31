@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`Stack`/`Row` regain the `md` and `lg` gap steps, and `Surface.gap` stops
+  lying.** `SurfaceProps.gap` publicly accepted `"md"` and `"lg"`, then
+  collapsed anything non-`none` to `"sm"` before forwarding to the inner
+  `Stack`/`Row` — so `NoteCard`, `WideCard`, and every consumer variant built
+  with `createSurface({ gap: "md" })` rendered at 8px no matter what they
+  asked for. The `surface--gap-*` class Surface emits alongside it has no CSS
+  rule anywhere and never had one; it stays as the inert back-compat hook it
+  already was.
+  - The fix is to make the scale real rather than to narrow the type.
+    `.stack--gap-md`/`.row--gap-md` are **12px** and `.stack--gap-lg`/
+    `.row--gap-lg` are **16px**, continuing this repo's own 4/8/12/16 ramp and
+    matching `.grid--gap-md`/`.auto-stack-row--gap-md`, which have been 12px
+    all along — "the gap scale is `xs|sm`" was only ever true of
+    `Stack`/`Row`/`Sidebar`/`ProportionalStack`, never of `Grid`/`AutoStack`.
+  - `Surface.gap` now forwards **verbatim** and additionally accepts `"xs"`,
+    so its scale is exactly the `Stack`/`Row` scale plus `none`.
+  - **Visual change**: anything that already asked for `gap="md"`/`"lg"` moves
+    from 8px to its declared step. In this repo that is `NoteCard`, `WideCard`,
+    and the `split-queue-list` showcase's `DetailCard`. Nothing that asked for
+    `xs`/`sm`/`none` moves.
+  - This reverses the `xs|sm` trim from `928651f` (2026-06-26) and `9158c75`
+    (2026-07-17). Those landed on the finding that nothing depended on `md`/
+    `lg`; that finding did not survive contact with consumers. `thorcasting-ui`
+    carries a compatibility shim in `src/components/ui.tsx` re-implementing
+    `gap`/`align`/`justify` as inline styles over a full
+    `none|xs|sm|md|lg|xl|2xl` scale, headed *"SUI 0.80 regression"*, and
+    `jtf-ui`'s `NoxWidgets.tsx` builds a `createSurface({ … gap: "md" })` that
+    has been silently 8px. Consumers dropping that shim should note SUI's `lg`
+    is 16px where the shim used 20px.
+  - A `Layout.test.tsx` case now asserts each step against `Layout.css` itself,
+    not just the emitted class name — the class name alone would pass for a
+    step with no rule behind it, which is the exact failure
+    `internal/dom/assertModifierClass.ts` exists to catch.
+
 ## 0.128.0
 
 ### Added

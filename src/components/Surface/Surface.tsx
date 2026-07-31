@@ -20,7 +20,8 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   shadow?: boolean;
   direction?: "row" | "column";
   align?: "start" | "center" | "stretch";
-  gap?: "none" | "sm" | "md" | "lg";
+  /** Forwarded verbatim to the inner Stack/Row — same scale, plus `none`. */
+  gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
 }
@@ -86,12 +87,14 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
   // classes stay as inert back-compat hooks; the actual geometry lives on the
   // inner Layout wrapper, present only when `direction` is set (a bare Surface,
   // like every idle card, stays a plain block div — no wrapper). Surface's gap
-  // scale snaps onto the Stack/Row scale (sm/md/lg → sm); `none` → no gap. The
-  // column wrapper fills the surface height so bottom-pinned meta rows
+  // scale IS the Stack/Row scale, forwarded verbatim; `none` → no gap. It used
+  // to snap sm/md/lg → sm because Stack/Row had no md/lg step, which made the
+  // prop type a lie — every NoteCard/WideCard rendered 8px whatever you asked
+  // for. The column wrapper fills the surface height so bottom-pinned meta rows
   // (margin-top:auto) still reach the card's bottom edge.
   const laidOut = (): JSX.Element => {
     if (!local.direction) return local.children as JSX.Element;
-    const gap = local.gap && local.gap !== "none" ? ("sm" as const) : undefined;
+    const gap = local.gap !== "none" ? local.gap : undefined;
     if (local.direction === "row") {
       return (
         <Row gap={gap} align={local.align}>

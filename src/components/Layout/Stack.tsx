@@ -11,7 +11,8 @@ import { assertModifierClass } from "../../internal/dom/assertModifierClass";
 import "./Layout.css";
 
 export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
-  gap?: "xs" | "sm";
+  /** 4/8/12/16px. Matches Grid and AutoStack, which have carried `md` all along. */
+  gap?: "xs" | "sm" | "md" | "lg";
   align?: "start" | "center" | "end" | "stretch";
   justify?: "start" | "center" | "end" | "between";
   /** Fill the parent's height and forward it through (height:100%; min-height:0)
