@@ -1,6 +1,8 @@
-// BucketQueue — one bucket's header line. Extracted from BucketQueue.tsx
-// (2026-07-31) when the collapsible bucket pushed that file past the repo's
-// 500-line limit.
+// BucketQueue — one bucket's header line. Internal to BucketQueue (Depth 1;
+// EXEMPT-AS-LAYOUT with its parent, STYLE_GUIDE § Layout Purity — it renders
+// into BucketQueue.css's header, which the JS water-fill measures). Extracted
+// from BucketQueue.tsx (2026-07-31) when the collapsible bucket pushed that
+// file past the repo's 500-line limit. Not exported from ./index.ts.
 //
 // A collapsible AND populated bucket renders its header as the disclosure
 // button; every other bucket keeps the plain div it has always had, so nothing
