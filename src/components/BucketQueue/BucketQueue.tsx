@@ -301,6 +301,10 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
           find((n) => n.dataset.bqKey === key, [
             ...root.querySelectorAll<HTMLElement>("[data-bq-key]"),
           ]),
+        bucketEl: (bucketKey: string) =>
+          find((n) => n.dataset.bqBucket === bucketKey, [
+            ...root.querySelectorAll<HTMLElement>("[data-bq-bucket]"),
+          ]),
         reducedMotion: reducedMotion(),
       };
       await motion.play(moves, ctx);
