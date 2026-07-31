@@ -184,6 +184,73 @@ describe("naturalHeights — one row height per bucket", () => {
   });
 });
 
+// A MANUALLY collapsed bucket (Bucket.collapsible, added 2026-07-31) is
+// populated but rendering only its header. It gets exactly the treatment an
+// empty bucket already gets — pinned to the summary line, out of the
+// water-fill, never filling — which is why this is one new disjunct rather
+// than a new sizing mode. Purely additive: omitting `collapsed` must
+// reproduce every result above.
+describe("collapsed — a populated bucket pinned to its header", () => {
+  it("naturalHeights pins it to the header, with NO empty strip", () => {
+    // It is populated, so `emptyLabel` is not showing even if declared.
+    const out = naturalHeights({
+      ...MIXED,
+      counts: [2, 19],
+      rowHeights: [31, 50],
+      hasEmptyLabel: [false, true],
+      emptyH: 21,
+      collapsed: [false, true],
+    });
+    expect(out).toEqual([32 + 2 * 31 + 2, 32 + 2]);
+  });
+
+  it("naturalHeights ignores capRows for a collapsed bucket", () => {
+    const out = naturalHeights({
+      ...MIXED,
+      counts: [2, 19],
+      rowHeights: [31, 50],
+      capRows: [null, 4],
+      collapsed: [false, true],
+    });
+    expect(out[1]).toBe(32 + 2);
+  });
+
+  it("allocateHeights keeps a collapsed bucket out of the water-fill", () => {
+    // The height is deliberately too small for both to reach their natural:
+    // with the collapsed bucket still IN the share it gets squeezed to 21 and
+    // its header is clipped. Pinned, it holds its summary line and the
+    // shortfall lands on the bucket that actually has rows to hide.
+    const counts = [8, 8];
+    const naturals = [34 + 8 * 54 + 2, 36]; // second one already pinned upstream
+    const args = { natural: naturals, counts, weights: [1, 1], available: 50, gap: 8 };
+    expect(allocateHeights(args)).toEqual([21, 21]); // what NOT pinning does
+    const out = allocateHeights({ ...args, collapsed: [false, true] });
+    expect(out[1]).toBe(36); // pinned, not squeezed
+    expect(out[0]).toBeCloseTo(50 - 8 - 36, 6); // the rest is Alpha's
+  });
+
+  it("a collapsed bucket never fills, even when it declares fill", () => {
+    // Same rule as an empty one: stretching a header over half the pane is not
+    // what filling is for.
+    const counts = [4, 4];
+    const naturals = [252, 36];
+    const out = allocateHeights({
+      natural: naturals, counts, weights: [1, 1], available: 900, gap: 8,
+      fills: [true, true], collapsed: [false, true],
+    });
+    expect(out[1]).toBe(36);
+    expect(out[0] + out[1] + 8).toBeCloseTo(900, 6);
+  });
+
+  it("omitting `collapsed` is identical to an all-false `collapsed`", () => {
+    const counts = [4, 3, 5];
+    const args = { natural: natural(counts), counts, weights, available: 900, gap: 8 };
+    expect(allocateHeights({ ...args, collapsed: [false, false, false] })).toEqual(
+      allocateHeights(args),
+    );
+  });
+});
+
 // Rows are re-created whenever `buckets` or `items` gets a new identity, and
 // the replacement's height only lands on the ResizeObserver's NEXT delivery
 // (never, in a backgrounded tab). Found by measuring the live showcase: a

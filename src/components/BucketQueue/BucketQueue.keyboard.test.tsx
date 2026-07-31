@@ -11,6 +11,9 @@ import {
   renderMixed,
   rows,
   rowFor,
+  COLLAPSIBLE,
+  renderBuckets,
+  toggleButton,
 } from "./testHelpers";
 
 afterEach(cleanup);
@@ -165,5 +168,47 @@ describe("BucketQueue — keyboard navigation", () => {
     ]);
     const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
     expect(tabbable).toHaveLength(0);
+  });
+
+  // REGRESSION: `allKeys` is built from the ITEMS, not the DOM. A collapsed
+  // bucket's rows would otherwise stay in the roving sequence while absent
+  // from the page, the single tab stop would be assigned to a row that renders
+  // nowhere, and NO row would carry tabindex="0" — the whole queue silently
+  // leaves the tab order.
+  it("keeps a tab stop on a rendered row when a bucket is collapsed", () => {
+    const buckets: Bucket[] = [
+      {
+        key: "a",
+        label: "Discard",
+        tone: "muted",
+        collapsible: true,
+        collapsedByDefault: true,
+      },
+      { key: "b", label: "Beta", tone: "accent" },
+    ];
+    const { container } = renderBuckets(
+      buckets,
+      [
+        { id: "hidden-1", bucket: "a" },
+        { id: "hidden-2", bucket: "a" },
+        { id: "visible-1", bucket: "b" },
+        { id: "visible-2", bucket: "b" },
+      ],
+      { onSelect: () => {} },
+    );
+
+    const tabbable = container.querySelector('[data-bq-key][tabindex="0"]');
+    expect(tabbable).not.toBeNull();
+    expect((tabbable as HTMLElement).dataset.bqKey).toBe("visible-1");
+  });
+
+  it("exposes the toggle as a real button, so Enter/Space activate it natively", () => {
+    const { container } = renderBuckets(COLLAPSIBLE, [
+      { id: "keep", bucket: "a" },
+      { id: "d1", bucket: "b" },
+    ]);
+    const button = toggleButton(container)!;
+    expect(button.tagName).toBe("BUTTON");
+    expect(button.getAttribute("type")).toBe("button");
   });
 });

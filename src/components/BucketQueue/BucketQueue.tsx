@@ -9,9 +9,12 @@
 // each capped at its content, with the surplus from any bucket that shrinks
 // redistributed to the ones still short (see ./layout). A bucket may opt out of
 // shrink-wrapping with `fill`, taking the height nobody else wanted rather than
-// leaving it as a dead band. The bar fills its parent's height (or an explicit
+// leaving it as a dead band. A bucket may also declare `collapsible`, which
+// lets the user collapse it to that same summary line while it still HAS items,
+// and expand it again; that choice is this component's own state and sticks
+// once made (see ./collapse). The bar fills its parent's height (or an explicit
 // `height`). Chrome is neutral — the only role color is a dot beside each
-// bucket label.
+// bucket label (a chevron, on a collapsible one).
 import {
   For,
   Show,
@@ -19,36 +22,32 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onMount,
+  createUniqueId,
   onCleanup,
   untrack,
 } from "solid-js";
-import { allocateHeights, naturalHeights, retainRowHeights } from "./layout";
+import { allocateHeights, naturalHeights } from "./layout";
+import { BucketHeader } from "./BucketHeader";
 import { bucketItems } from "./bucketing";
+import { createMeasurements } from "./measurement";
+import { collapsedFlags, toggleCollapse, type CollapseOverrides } from "./collapse";
 import { createRowKeyboard } from "./keyboard";
 import { createSlotMotion } from "./motion";
 import { advanceSelection } from "./selection";
 import { diffTransfers } from "./transfer";
-import { find, findIndex, flatMap, map } from "../../fn";
+import { filter, find, findIndex, flatMap, map, pipe } from "../../fn";
 import type { BucketQueueProps, Bucket } from "./types";
 import "./BucketQueue.css";
-import { observeSize } from "../../internal/dom/observeSize";
 
 export type { BucketQueueProps, Bucket } from "./types";
 
-// Pre-measure fallbacks (jsdom / first paint) — real values are measured.
-const HEADER_FALLBACK = 34;
+// Pre-measure fallback for a row (jsdom / first paint); the header's lives in
+// ./measurement, which owns the elements it applies to.
 const ROW_FALLBACK = 54;
 const GAP = 8;
 
-// What `measure()` reads is `offsetHeight` — the BORDER box. ResizeObserver
-// defaults to the content box, which does not change when only padding or a
-// border does, so a themed row-padding change (or a consumer's renderItem
-// swapping its own padding) would resize the row without ever notifying us.
-// Observe the same box we measure.
-const METRIC_BOX: ResizeObserverOptions = { box: "border-box" };
-
 export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
+  let rootRef: HTMLDivElement | undefined;
   const bucketKeys = createMemo(() => map((s) => s.key, props.buckets));
   // ONE pass per items change: the per-bucket rows AND the key → bucket map.
   const buckets = createMemo(() =>
@@ -71,139 +70,54 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   );
   const counts = createMemo(() => map((s) => itemsIn(s.key).length, props.buckets));
 
+  // Expand/collapse is pure UI chrome — it never needs to survive outside this
+  // component or round-trip to a server — so it is component-owned rather than
+  // a controlled prop pair. The controlled surface (`selectedKey`,
+  // `checkedKeys`) stays reserved for state that genuinely needs external
+  // ownership. The map holds only buckets the user has TOUCHED; see ./collapse
+  // for why an absent entry is not the same as one toggled open.
+  const [collapseOverrides, setCollapseOverrides] =
+    createSignal<CollapseOverrides>(new Map());
+  const collapsed = createMemo(() =>
+    collapsedFlags({
+      buckets: props.buckets,
+      counts: counts(),
+      overrides: collapseOverrides(),
+    }),
+  );
+  // The same decision keyed by bucket, for the keyboard sequence below, which
+  // has a bucket in hand rather than an index.
+  const collapsedKeys = createMemo(() => {
+    const flags = collapsed();
+    return new Set(
+      pipe(
+        props.buckets,
+        map((s: Bucket, i: number) => (flags[i] === true ? s.key : null)),
+        filter((k): k is string => k !== null),
+      ),
+    );
+  });
+
   // The bar fills its allotted height; each bucket's natural height is
   // deterministic from its row count (one measured row + header) — no
-  // per-bucket body measurement, which goes stale when a body unmounts.
-  //
-  // NOTHING HERE ASSUMES A SIZE. `renderItem` and `emptyLabel` are the
-  // consumer's, so a row may be a one-line row, a two-line card, or anything
-  // else; the row, the header and the empty strip are each measured live, and
-  // the ResizeObserver watches THOSE ELEMENTS rather than only the root. That
-  // distinction is load-bearing: a theme switch, a late web font or a changed
-  // `renderItem` alters row height without altering the root's size, so a
-  // root-only observer never re-fired and left every bucket sized from whatever
-  // was on screen at mount.
-  let rootRef: HTMLDivElement | undefined;
-  let headRef: HTMLDivElement | undefined;
-  let emptyRef: HTMLDivElement | undefined;
-  // ONE MEASURED ROW PER BUCKET, keyed by bucket key. A single global sample
-  // silently assumed every bucket's rows were the same height, which a queue is
-  // not entitled to assume: `renderItem` is the consumer's, and pairing
-  // one-line rows in one bucket with two-line rows in the next is ordinary.
-  // The queue then sized the taller bucket from the shorter one's row and left
-  // the difference as dead space at the bottom.
-  const rowRefs = new Map<string, HTMLDivElement>();
-  const [availH, setAvailH] = createSignal(props.height ?? 0);
-  const [rowHs, setRowHs] = createSignal<ReadonlyMap<string, number>>(new Map());
-  const [headH, setHeadH] = createSignal(HEADER_FALLBACK);
-  // null until an empty strip exists to measure; `natural` falls back to a row.
-  const [emptyH, setEmptyH] = createSignal<number | null>(null);
-
-  const measure = () => {
-    if (props.height == null && rootRef) setAvailH(rootRef.clientHeight);
-    if (headRef?.offsetHeight) setHeadH(headRef.offsetHeight);
-    setEmptyH(emptyRef?.offsetHeight || null);
-    // Folded over what we already hold, in BUCKET ORDER — see retainRowHeights
-    // for why a bucket keeps its last height rather than dropping out.
-    const live = new Map(
-      flatMap((s: Bucket) => {
-        const h = rowRefs.get(s.key)?.offsetHeight;
-        return h ? [[s.key, h] as const] : [];
-      }, props.buckets),
-    );
-    setRowHs((prev) => retainRowHeights(bucketKeys(), live, prev));
-  };
-
-  // `observeSize` owns ONE observer per element and hands back a disposer, so
-  // re-pointing disposes the old element's observation and starts a fresh one
-  // rather than unobserve/observe against a shared observer. Each slot keeps
-  // its own disposer; a fresh observation always delivers its first
-  // measurement (nothing to change-guard against yet), so re-pointing still
-  // re-measures — a frame later, like every other write in the library.
-  // Fixed slots plus one per BUCKET row — `row:<bucketKey>` — because the row
-  // sample is per bucket, not global.
-  type Slot = "root" | "head" | "empty" | `row:${string}`;
-  const disposers = new Map<Slot, () => void>();
-  let observing = false;
-  const observeSlot = (slot: Slot, el: HTMLDivElement) => {
-    disposers.get(slot)?.();
-    disposers.set(slot, observeSize(el, () => measure(), METRIC_BOX));
-  };
-  const releaseSlot = (slot: Slot) => {
-    disposers.get(slot)?.();
-    disposers.delete(slot);
-  };
-
-  // Re-point when the render swaps a measured element out — a new first row
-  // after a transfer, a bucket that just emptied. Refs fire during render,
-  // before mount, so pre-mount calls only record the element; onMount observes
-  // whatever is present by then.
-  const tracker =
-    (
-      slot: Slot,
-      get: () => HTMLDivElement | undefined,
-      set: (el: HTMLDivElement) => void,
-    ) =>
-    (el: HTMLDivElement) => {
-      const prev = get();
-      if (prev === el) return;
-      set(el);
-      if (observing) observeSlot(slot, el);
-    };
-  // The per-bucket form of the same re-pointing, over the row map. Disposing
-  // the previous observation is what `unobserve` did on the shared observer.
-  const trackRow = (key: string, el: HTMLDivElement) => {
-    const prev = rowRefs.get(key);
-    if (prev === el) return;
-    rowRefs.set(key, el);
-    if (observing) observeSlot(`row:${key}`, el);
-  };
-  // Runs when a tracked row unmounts. Guarded on IDENTITY because a replaced
-  // first row disposes at a moment of Solid's choosing relative to its
-  // replacement's ref — if the slot has already been re-claimed, this is the
-  // outgoing row and there is nothing to release. The bucket's last measured
-  // height deliberately SURVIVES this (see `measure`); only the element being
-  // watched is released.
-  const untrackRow = (key: string, el: HTMLDivElement | undefined) => {
-    if (!el || rowRefs.get(key) !== el) return;
-    releaseSlot(`row:${key}`);
-    rowRefs.delete(key);
-  };
-  const trackHead = tracker(
-    "head",
-    () => headRef,
-    (el) => {
-      headRef = el;
-    },
-  );
-  const trackEmpty = tracker(
-    "empty",
-    () => emptyRef,
-    (el) => {
-      emptyRef = el;
-    },
-  );
-
-  onMount(() => {
-    measure();
-    observing = true;
-    // The root supplies the ALLOTTED height; the row/header/empty strip supply
-    // the CONTENT metrics. Both are needed — see the note above.
-    const fixed: [Slot, HTMLDivElement | undefined][] = [
-      ["root", rootRef],
-      ["head", headRef],
-      ["empty", emptyRef],
-    ];
-    for (const [slot, el] of fixed) if (el) observeSlot(slot, el);
-    for (const [key, el] of rowRefs) if (el) observeSlot(`row:${key}`, el);
-    // A web font landing after mount re-lays-out the row, which the observers
-    // above do catch — but ask directly rather than depend on the timing.
-    document.fonts?.ready.then(measure).catch(() => undefined);
-    onCleanup(() => {
-      observing = false;
-      for (const dispose of disposers.values()) dispose();
-      disposers.clear();
-    });
+  // per-bucket body measurement, which goes stale when a body unmounts. The
+  // live measurement of the row, the header and the empty strip — and the
+  // ResizeObserver wiring that keeps them fresh across a theme switch or a
+  // late web font — is ./measurement.
+  const {
+    availH,
+    rowHs,
+    headH,
+    emptyH,
+    trackRoot,
+    trackHead,
+    trackEmpty,
+    trackRow,
+    untrackRow,
+  } = createMeasurements({
+    buckets: () => props.buckets,
+    bucketKeys,
+    height: () => props.height,
   });
 
   // The measured empty strip has to EXIST: measure the first one actually
@@ -222,6 +136,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       rowHeights: map((s) => rowHs().get(s.key) ?? null, props.buckets),
       capRows: map((s) => s.capRows ?? null, props.buckets),
       hasEmptyLabel: map((s) => s.emptyLabel != null, props.buckets),
+      collapsed: collapsed(),
       headH: headH(),
       emptyH: emptyH(),
       rowFallback: ROW_FALLBACK,
@@ -235,6 +150,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       available: props.height ?? availH(),
       gap: GAP,
       fills: map((s) => s.fill === true, props.buckets),
+      collapsed: collapsed(),
     }),
   );
 
@@ -274,7 +190,12 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     allKeys: () =>
       flatMap(
         (s) =>
-          interactiveIn(s) ? map((it) => props.keyOf(it), itemsIn(s.key)) : [],
+          // A collapsed bucket's rows are NOT on the page. Leaving them here
+          // lets the single tab stop be assigned to a row that renders
+          // nowhere, which puts NO row in the tab order at all.
+          interactiveIn(s) && !collapsedKeys().has(s.key)
+            ? map((it) => props.keyOf(it), itemsIn(s.key))
+            : [],
         props.buckets,
       ),
     focusedKey: () => props.focusedKey,
@@ -380,6 +301,10 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
           find((n) => n.dataset.bqKey === key, [
             ...root.querySelectorAll<HTMLElement>("[data-bq-key]"),
           ]),
+        bucketEl: (bucketKey: string) =>
+          find((n) => n.dataset.bqBucket === bucketKey, [
+            ...root.querySelectorAll<HTMLElement>("[data-bq-bucket]"),
+          ]),
         reducedMotion: reducedMotion(),
       };
       await motion.play(moves, ctx);
@@ -392,29 +317,42 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   return (
     <div
       class={`bucket-queue${props.class ? ` ${props.class}` : ""}`}
-      ref={(el) => (rootRef = el)}
+      ref={(el) => { rootRef = el; trackRoot(el); }}
       style={props.height != null ? { height: `${props.height}px` } : undefined}
     >
       <For each={props.buckets}>
         {(bucket, i) => {
           const count = () => counts()[i()];
+          const isCollapsed = () => collapsed()[i()] === true;
+          // Declared collapsible AND populated — an empty bucket has nothing
+          // to expand into, so it renders as a plain header.
+          const toggleable = () => bucket.collapsible === true && count() > 0;
+          const bodyId = createUniqueId();
           return (
             <div
               class="bucket-queue__bucket"
               data-bq-bucket={bucket.key}
               style={{ height: `${Math.round(heights()[i()] ?? 0)}px` }}
             >
-              <div class="bucket-queue__header" ref={(el) => { if (i() === 0) trackHead(el); }}>
-                <span class="bucket-queue__title">
-                  <span class={`bucket-queue__dot bucket-queue__dot--${bucket.tone}`} />
-                  {bucket.label}
-                </span>
-                <span class="bucket-queue__count">{count()}</span>
-              </div>
+              <BucketHeader
+                bucket={bucket}
+                count={count()}
+                toggleable={toggleable()}
+                collapsed={isCollapsed()}
+                bodyId={bodyId}
+                onToggle={() =>
+                  setCollapseOverrides((prev) =>
+                    toggleCollapse(prev, bucket.key, isCollapsed()),
+                  )
+                }
+                ref={(el) => { if (i() === 0) trackHead(el); }}
+              />
               <Show
-                when={count() > 0}
+                when={count() > 0 && !isCollapsed()}
                 fallback={
-                  <Show when={bucket.emptyLabel != null}>
+                  // `count() === 0` guard: a COLLAPSED bucket is populated, so
+                  // it must never show the "nothing here" strip.
+                  <Show when={count() === 0 && bucket.emptyLabel != null}>
                     <div
                       class="bucket-queue__empty"
                       ref={(el) => { if (i() === firstEmptyLabelled()) trackEmpty(el); }}
@@ -426,6 +364,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
               >
                 <div
                   class="bucket-queue__body"
+                  id={bodyId}
                   role="listbox"
                   aria-label={bucket.label}
                 >

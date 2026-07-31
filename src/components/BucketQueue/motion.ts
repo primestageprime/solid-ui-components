@@ -8,6 +8,10 @@
  * interface, so trying it is one new file and one changed identifier in
  * BucketQueue.tsx. See docs/adr/0004-one-queue-component-and-the-motion-seam.md.
  *
+ * A transfer whose destination cannot render the arriving row — a COLLAPSED
+ * bucket — still closes the vacated slot in its source bucket, and cues the
+ * destination's count so the row is seen being received rather than vanishing.
+ *
  * All DOM work is feature-detected: without `Element.animate` (jsdom) or under
  * `prefers-reduced-motion`, every path degrades to instant placement. */
 import { filter, map, some } from "../../fn";
@@ -16,6 +20,10 @@ import type { Transfer } from "./transfer";
 export interface MotionContext {
   root: HTMLElement;
   rowEl: (key: string) => HTMLElement | undefined;
+  /** The bucket box for a bucket key. Needed because a row arriving in a
+   *  COLLAPSED bucket has no element of its own to animate — the bucket
+   *  renders only its header — so the destination is cued instead. */
+  bucketEl: (bucketKey: string) => HTMLElement | undefined;
   reducedMotion: boolean;
 }
 
@@ -61,6 +69,11 @@ const topOf = (el: HTMLElement): number => {
     ? top - scroller.getBoundingClientRect().top + scroller.scrollTop
     : top;
 };
+
+// The count in a bucket's header — what a collapsed bucket has instead of a
+// slot for the arriving row.
+const countElOf = (bucket: HTMLElement | undefined): HTMLElement | null =>
+  bucket?.querySelector<HTMLElement>(".bucket-queue__count") ?? null;
 
 // True when `el` comes after `arriving` in document order.
 const isFollowing = (arriving: Element, el: Element): boolean =>
@@ -121,7 +134,24 @@ export const createSlotMotion = (): TransferChoreographer => {
           a.el != null && canAnimate(a.el),
         candidates,
       );
-      if (arrivals.length === 0) return;
+      // Destinations that could not render the arriving row — a COLLAPSED
+      // bucket. The row has nowhere to open, but the pile must still be seen
+      // receiving it. A Set because two rows landing in the same collapsed
+      // bucket are one cue, not two competing animations on one element.
+      // (A for…of over an accumulator rather than a combinator: `fn` has no
+      // forEach, and this is pure side-effecting iteration.)
+      const cueEls = new Set<HTMLElement>();
+      for (const { transfer, el } of candidates) {
+        if (el != null) continue;
+        const countEl = countElOf(ctx.bucketEl(transfer.to));
+        if (countEl && canAnimate(countEl)) cueEls.add(countEl);
+      }
+
+      // NO blanket early return on an empty `arrivals`. A transfer with no
+      // destination element still has a SOURCE bucket whose vacated slot must
+      // close — the departing element is already gone from the DOM, so the
+      // FLIP pass below is the only thing that moves those rows. Bailing here
+      // made every row under a discarded one jump.
 
       // Read phase: measure every rect this play needs before starting any
       // animation. Once an animate() call below applies its first keyframe,
@@ -214,6 +244,18 @@ export const createSlotMotion = (): TransferChoreographer => {
               { duration: DURATION_MS, easing: EASING },
             ),
           flipPlans,
+        ),
+        ...map(
+          (el: HTMLElement) =>
+            el.animate(
+              [
+                { transform: "scale(1)" },
+                { transform: "scale(1.15)" },
+                { transform: "scale(1)" },
+              ],
+              { duration: DURATION_MS, easing: EASING },
+            ),
+          [...cueEls],
         ),
       ];
 

@@ -6,6 +6,8 @@
 // short. Empty buckets are fixed at their summary-line (natural) height.
 // A bucket may opt out of shrink-wrapping with `fill` (added 2026-07-28), in
 // which case it claims the height left over once everyone is at their natural.
+// A bucket may also be MANUALLY collapsed (`collapsed`, added 2026-07-31),
+// which pins it to its summary line exactly as being empty does.
 
 import { filter, find, flatMap, map, sum } from "../../fn";
 
@@ -26,6 +28,11 @@ export interface NaturalInput {
   capRows: (number | null)[];
   /** Whether each bucket declares an `emptyLabel`. */
   hasEmptyLabel: boolean[];
+  /** Whether each bucket is MANUALLY collapsed (`Bucket.collapsible` + the
+   *  user's toggle — see ./collapse). A collapsed bucket is POPULATED but
+   *  rendering only its header, so it is pinned to the summary line with no
+   *  empty strip, and its `capRows` is moot. Omit for all-false. */
+  collapsed?: boolean[];
   /** Measured header height. */
   headH: number;
   /** Measured empty-strip height, or null before one exists to measure. */
@@ -44,6 +51,7 @@ export const naturalHeights = ({
   headH,
   emptyH,
   rowFallback,
+  collapsed,
 }: NaturalInput): number[] => {
   // Fallback chain: this bucket's own sample → the first real sample anywhere
   // in the queue → the tuned constant. A sibling's measurement is a guess, but
@@ -51,6 +59,10 @@ export const naturalHeights = ({
   const sampled = find((h: number | null) => h != null, rowHeights) ?? rowFallback;
   const rowH = (i: number): number => rowHeights[i] ?? sampled;
   return map((c: number, i: number) => {
+    // MANUALLY collapsed: the header alone. No empty strip — the bucket is
+    // populated, so `emptyLabel` is not what is showing; and `capRows` caps a
+    // body that is not rendered.
+    if (collapsed?.[i] === true) return headH + BORDERS;
     // Empty: the summary line, plus the empty strip if declared. The strip is
     // MEASURED, not assumed to be one row tall — `emptyLabel` is consumer JSX
     // and can wrap. rowH is only the fallback before a strip exists to measure.
@@ -103,6 +115,11 @@ export interface AllocateInput {
    *  buckets in proportion to `weight`. Omit (or leave every entry false) and
    *  the leftover stays unallocated — the shrink-wrap this model shipped with. */
   fills?: boolean[];
+  /** Whether each bucket is MANUALLY collapsed (see `NaturalInput.collapsed`).
+   *  Treated exactly as an empty bucket is: fixed at its natural (summary
+   *  line) height, kept out of the weighted share, and never filling. Omit for
+   *  all-false. */
+  collapsed?: boolean[];
 }
 
 export const allocateHeights = ({
@@ -112,13 +129,15 @@ export const allocateHeights = ({
   available,
   gap,
   fills,
+  collapsed,
 }: AllocateInput): number[] => {
   const out = [...natural];
   const weightOf = (i: number): number => weights[i] || 1;
   let pool = available - gap * Math.max(0, natural.length - 1);
   const active: number[] = [];
   for (let i = 0; i < natural.length; i++) {
-    if (counts[i] === 0) pool -= natural[i]; // empty: fixed at its summary line
+    // Empty OR manually collapsed: both are pinned to their summary line.
+    if (counts[i] === 0 || collapsed?.[i] === true) pool -= natural[i];
     else {
       out[i] = 0;
       active.push(i);
@@ -153,7 +172,8 @@ export const allocateHeights = ({
   // (none declared, or every one of them empty) → the pool stays unallocated,
   // exactly as before `fill` existed.
   const filling = filter(
-    (i: number) => fills?.[i] === true && counts[i] !== 0,
+    (i: number) =>
+      fills?.[i] === true && counts[i] !== 0 && collapsed?.[i] !== true,
     active,
   );
   if (pool > 0.5 && filling.length) {

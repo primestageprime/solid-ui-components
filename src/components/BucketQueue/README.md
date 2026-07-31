@@ -92,6 +92,8 @@ function Categorize(props: { initial: Txn[] }) {
 | `emptyLabel?` | `JSX.Element` | Copy for the collapsed strip when this bucket has no items. Omit for the bare summary line. |
 | `capRows?` | `number` | Soft cap in rows — the bucket stops growing past this many rows and its body scrolls. Omit to shrink-wrap to content. |
 | `fill?` | `boolean` | Absorb the leftover height instead of shrink-wrapping to content, so the queue reaches the bottom of its column at any list length. Overrides `capRows` for this bucket; only applies while the bucket is populated. Default false. |
+| `collapsible?` | `boolean` | The user can collapse this bucket to its summary line and expand it again. Its header becomes a button and takes a chevron in place of its tone dot. Only applies while the bucket is populated. Default false. |
+| `collapsedByDefault?` | `boolean` | Start collapsed. **Ignored without `collapsible`.** Only the state before the user first toggles the bucket. Default false. |
 
 ## Working a queue
 
@@ -387,6 +389,52 @@ it did before the flag existed.
 The pure sizing core is exported as `naturalHeights(input): number[]` and
 `allocateHeights(input): number[]` (with the `NaturalInput` / `AllocateInput`
 types) for callers who need the sizing math outside the component.
+
+## Collapsible buckets
+
+A bucket collapses to its summary line automatically when it is **empty**. A
+`collapsible` bucket can also be collapsed while it still **has items** — a
+staging pile that shouldn't dominate the queue, but that the user can open to
+see what's in it and pull rows back out.
+
+```tsx
+const buckets: Bucket[] = [
+  { key: "todo", label: "Suggestions", tone: "accent" },
+  { key: "done", label: "Categorized", tone: "success" },
+  // Starts as a one-line summary even holding 20 rows. Click to open.
+  { key: "discard", label: "Discard", tone: "muted",
+    collapsible: true, collapsedByDefault: true,
+    emptyLabel: "Nothing discarded" },
+];
+```
+
+- **The header is the toggle.** It renders as a `<button>` carrying
+  `aria-expanded`, so Enter and Space work with no extra wiring. The disclosure
+  chevron **replaces** the tone dot in the same 8px slot, so labels stay on one
+  left edge and the bucket still has exactly one role-coloured mark.
+- **It applies only while the bucket is populated.** An empty `collapsible`
+  bucket renders exactly as any other empty bucket — its `emptyLabel`, its dot,
+  and no toggle, because there is nothing to expand into.
+- **`collapsedByDefault` needs `collapsible`.** On its own it is ignored; it
+  would otherwise start the bucket collapsed with no way to open it.
+- **The state is the component's, and it sticks.** There is no
+  `expandedKeys`/`onToggleExpand` pair — expand/collapse never needs to leave
+  the component. `collapsedByDefault` is only the state *before the user
+  touches the bucket*; once they toggle it, their choice holds for the life of
+  the component, **including across the bucket draining to empty and
+  refilling**. If the user opened the pile, they wanted it open, and emptying
+  it elsewhere in your UI does not re-close it.
+- **A collapsed bucket sizes exactly like an empty one** — pinned to its
+  summary line, out of the weighted share, and never `fill`ing. `capRows` is
+  moot while collapsed.
+- **Its rows leave the keyboard sequence** while hidden, so the roving tab stop
+  always lands on a row that is actually on the page.
+- **The selection is not moved by a collapse.** If `selectedKey` names a row in
+  a bucket the user collapses, the row hides and nothing fires; `onSelect`
+  still only ever emits `null` from the triage advance.
+- **A row moving into a collapsed bucket** cannot animate into a slot that
+  isn't rendered, so the vacated slot in its source bucket closes as usual and
+  the collapsed bucket's count pulses to show it was received.
 
 ## Motion
 

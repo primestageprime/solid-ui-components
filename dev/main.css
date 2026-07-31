@@ -1613,6 +1613,21 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+/* Discard staging: a fixed column with the commit controls pinned under the
+   queue, so the collapsed pile's one-line footprint (and what it costs when
+   you open it) is visible against a bounded height rather than a page that
+   just grows. */
+.bucket-queue-discard-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 380px;
+  height: 500px;
+}
+.bucket-queue-discard-demo > .bucket-queue {
+  flex: 1 1 auto;
+  min-height: 0;
+}
 /* Five stages: deliberately SHORTER than five sections' natural content so the
    water-fill is actually in overflow and the weights/caps do visible work. */
 .bucket-queue-pipeline-demo {

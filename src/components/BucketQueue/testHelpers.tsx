@@ -70,6 +70,41 @@ export const renderSelectable = (extra: Record<string, unknown>) =>
     />
   ));
 
+export const COLLAPSIBLE: Bucket[] = [
+  { key: "a", label: "Alpha", tone: "success" },
+  {
+    key: "b",
+    label: "Discard",
+    tone: "muted",
+    collapsible: true,
+    collapsedByDefault: true,
+    emptyLabel: "Nothing discarded",
+  },
+];
+
+export const renderBuckets = (
+  buckets: Bucket[],
+  items: Item[],
+  extra: Record<string, unknown> = {},
+) =>
+  render(() => (
+    <BucketQueue<Item>
+      buckets={buckets}
+      items={items}
+      bucketOf={(i) => i.bucket}
+      keyOf={(i) => i.id}
+      renderItem={(i) => <span>{i.id}</span>}
+      height={600}
+      {...extra}
+    />
+  ));
+
+/** The disclosure button of the (single) collapsible bucket on screen. */
+export const toggleButton = (container: HTMLElement) =>
+  container.querySelector(
+    ".bucket-queue__header--toggle",
+  ) as HTMLButtonElement | null;
+
 // A row is interactive iff onSelect is set OR its bucket is selectable in
 // select mode. With no onSelect and only "b" selectable, "a"'s rows are
 // inert — they must never take the tab stop or an arrow-key landing, even

@@ -3,6 +3,7 @@ import { SubsectionTitle } from "../../../src/components/Text";
 import { BucketQueueDemo, renderRow, renderCard } from "./triage";
 import { PipelineDemo } from "./pipeline";
 import { FillDemo } from "./fill";
+import { DiscardStagingDemo } from "./discard";
 
 export const BucketQueueShowcase: Component = () => {
   return (
@@ -145,6 +146,42 @@ export const BucketQueueShowcase: Component = () => {
         falling back to a constant.
       </p>
       <FillDemo />
+
+      <SubsectionTitle>
+        collapsible — a populated bucket that starts as a summary line
+      </SubsectionTitle>
+      <p class="text-meta">
+        An <strong>empty</strong> bucket has always collapsed to its summary
+        line. <code>collapsible</code> lets the <em>user</em> collapse one while
+        it still <strong>has items</strong> — a staging pile that must not
+        dominate the queue but has to be openable, because the point of staging
+        a discard is being able to look at what you staged and pull it back out
+        before committing. The header becomes the toggle, and its disclosure
+        chevron <strong>replaces</strong> the tone dot in the dot&rsquo;s own 8px
+        slot: labels stay on one left edge, and the bucket still carries exactly
+        one role-coloured mark.
+      </p>
+      <p class="text-meta">
+        <strong>Discard a few, and watch the Suggestions gap close.</strong> The
+        row has no slot to arrive into — Discard renders no rows — so the older
+        behaviour was to animate <em>nothing at all</em>, dropping the source
+        bucket&rsquo;s FLIP with it and making every row under the discarded one
+        jump. Now the gap closes as usual and the pile&rsquo;s count pulses to
+        show it was received.
+      </p>
+      <p class="text-meta">
+        <strong>Then open the pile and empty it.</strong> Two rules are easiest
+        to see here: an <em>empty</em> collapsible bucket renders exactly like
+        any other empty bucket — no chevron, no toggle, its{" "}
+        <code>emptyLabel</code> showing — because there is nothing to expand
+        into; and the toggle is <strong>sticky</strong>, so once you have opened
+        the pile it stays open across the drain and refills open.{" "}
+        <code>collapsedByDefault</code> is only the state before you first touch
+        the bucket, and it is <strong>ignored</strong> without{" "}
+        <code>collapsible</code> — on its own it would start the bucket
+        collapsed with no way to open it.
+      </p>
+      <DiscardStagingDemo />
     </div>
   );
 };

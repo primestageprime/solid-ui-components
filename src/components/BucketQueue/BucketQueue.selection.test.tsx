@@ -4,7 +4,14 @@
 // for prior home.
 import { describe, it, expect, afterEach } from "vitest";
 import { cleanup, fireEvent } from "@solidjs/testing-library";
-import { renderQueue, renderSelectable, rowFor } from "./testHelpers";
+import type { Bucket } from "./BucketQueue";
+import {
+  renderQueue,
+  renderSelectable,
+  rowFor,
+  renderBuckets,
+  toggleButton,
+} from "./testHelpers";
 
 afterEach(cleanup);
 
@@ -88,5 +95,29 @@ describe("BucketQueue — selection & select mode", () => {
     });
     fireEvent.click(rowFor(container, "check"), { ctrlKey: true });
     expect(mods).toEqual({ shift: false, meta: true });
+  });
+
+  // Collapsing hides rows; it does not move the selection. Firing onSelect(null)
+  // here would break the contract that `null` ONLY ever comes from the triage
+  // advance (see README), and whether a hidden selection still merits a detail
+  // panel is the consumer's call.
+  it("fires nothing when a bucket holding the selection is collapsed", () => {
+    const calls: (string | null)[] = [];
+    const buckets: Bucket[] = [
+      { key: "a", label: "Alpha", tone: "success" },
+      { key: "b", label: "Discard", tone: "muted", collapsible: true },
+    ];
+    const { container } = renderBuckets(
+      buckets,
+      [
+        { id: "keep", bucket: "a" },
+        { id: "sel", bucket: "b" },
+      ],
+      { selectedKey: "sel", onSelect: (k: string | null) => calls.push(k) },
+    );
+
+    fireEvent.click(toggleButton(container)!); // collapse it
+    expect(container.querySelector('[data-bq-key="sel"]')).toBeNull();
+    expect(calls).toEqual([]);
   });
 });
