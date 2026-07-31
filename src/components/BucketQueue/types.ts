@@ -25,6 +25,19 @@ export interface Bucket {
   /** Copy for the collapsed strip when this bucket has no items. Omit for the
    *  bare summary line (label + count). */
   emptyLabel?: JSX.Element;
+  /** Let the user collapse this bucket to its summary line and expand it again.
+   *  Its header takes a disclosure chevron IN PLACE OF the tone dot and becomes
+   *  the toggle. Only meaningful while the bucket is POPULATED: an empty bucket
+   *  already collapses to its summary line and has nothing to expand into, so
+   *  it renders exactly as it does without this flag — no chevron, header
+   *  inert. Default false. */
+  collapsible?: boolean;
+  /** Start collapsed rather than open. IGNORED without `collapsible` — on its
+   *  own it would strand this bucket's items behind no affordance at all.
+   *  This is only the state BEFORE the user touches the bucket; the first
+   *  toggle pins their choice for the life of the component, including across
+   *  the bucket draining to empty and refilling. Default false. */
+  collapsedByDefault?: boolean;
   /** Soft cap in rows: the bucket stops growing past this many rows and its
    *  body scrolls. Omit to shrink-wrap to content. Succeeds SplitQueueList's
    *  `topCapRows`. Unlike that pane, a capped bucket never grows past its cap
