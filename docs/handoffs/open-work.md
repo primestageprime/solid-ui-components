@@ -1,9 +1,9 @@
 # Handoff: open work in solid-ui-components
 
-**State as of 2026-07-30.** Version `0.127.0`, `main` at `d94ae65`, all checks
-green, every ratchet ceiling tight. This supersedes the six-issue handoff from
-2026-07-29 — all six are now resolved, triaged-and-closed, or (for #64)
-in-progress below.
+**State as of 2026-07-31.** Version `0.128.0`, `main` at `038a394`, all checks
+green, every ratchet ceiling tight, `v0.128.0` tagged and published to GitHub
+Packages. This supersedes the six-issue handoff from 2026-07-29 — all six are
+now resolved, triaged-and-closed, or (for #64) in-progress below.
 
 Read **Ground rules** first — several of them will fail your PR if you don't.
 
@@ -46,6 +46,20 @@ bypasses everything — the gate binds PR merges.
   regex as `health.mjs`, and cross-check totals against `npm run health -- --verbose`.
 - **Biome's a11y rules only see intrinsic (lowercase) JSX elements.** A green
   `lint` is **not** a11y coverage.
+- **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
+  in the file, and it applies to **internal** component files too, not just
+  exported ones. A new `.tsx` under `src/components/` without a depth line in
+  its header comment fails `health` even when it is never exported from
+  `index.ts`. Caught `BucketHeader.tsx` on 2026-07-31.
+- **A showcase's geometry belongs in `dev/main.css`, not an inline `style={{}}`.**
+  `showcaseStyleRubricViolations` is ratcheted at **0** and flags any
+  un-manifested `style={{` in `dev/showcases/`, so a demo that sizes its own
+  container inline fails `health`. Add a `.<component>-demo` class to
+  `dev/main.css` and use that — see `.bucket-queue-fill-demo` /
+  `.bucket-queue-discard-demo` for the fixed-column-with-pinned-control shape.
+- **`scripts/health-history.json` is tracked and changes on every `npm run
+  health` run.** Commit it alongside health-affecting work rather than leaving
+  it dirty in a shared checkout.
 - **Two issues in the prior handoff had premises that didn't survive contact
   with the code**, despite one claiming "Verified still valid." Don't take a
   filed issue's stated cause at face value — check it against current `git log`
@@ -54,6 +68,42 @@ bypasses everything — the gate binds PR merges.
 
 ---
 
+## Shipped 2026-07-31 — BucketQueue collapsible buckets (0.128.0)
+
+A **populated** bucket can now render as a click-to-expand summary line, which
+the component previously only ever did for an **empty** one. `Bucket.collapsible`
+opts in; `Bucket.collapsedByDefault` picks the start state and is inert without
+it. Design: `docs/superpowers/specs/2026-07-31-bucketqueue-collapsible-bucket-design.md`.
+Plan: `docs/superpowers/plans/2026-07-31-bucketqueue-collapsible-bucket.md`.
+
+**Three things a future BucketQueue change should know**, all found by reading
+the code rather than the issue text:
+
+- **Collapse was already the sizing model's central concept, spelled
+  `counts[i] === 0`.** `layout.ts` now takes an optional `collapsed?: boolean[]`
+  and both call sites test `counts[i] === 0 || collapsed?.[i]`. There is no
+  separate "collapsed mode" — `capRows`/`fill`/`weight` compose because a
+  collapsed bucket simply leaves `active`.
+- **`motion.ts` used to bail on the whole batch** when no transfer had a live
+  destination row, which dropped the *source* bucket's gap-closing FLIP too.
+  Fixed; the FLIP pass is independent of arrivals. If you add another case
+  where a destination cannot render its arriving row, the cue path
+  (`MotionContext.bucketEl` → the header count) is where it belongs.
+- **`keyboard.ts`'s `allKeys()` is built from the ITEMS, not the DOM.** Anything
+  that hides rows without removing them from `allKeys` puts the single tab stop
+  on a row that renders nowhere, leaving **no** row with `tabindex="0"` and
+  dropping the whole queue out of the tab order. Pinned by a test in
+  `BucketQueue.keyboard.test.tsx`.
+
+`BucketQueue.tsx` was split to stay under the 500-line rule: the header is now
+`BucketHeader.tsx` and the live-measurement/ResizeObserver concern is
+`measurement.ts`. No public API changed.
+
+**`thorcasting-ui` has not picked this up.** It pins SUI by GitHub tag, so it
+needs its `package.json` pin bumped to `v0.128.0`. Deliberately left to the
+thorcasting-side agent (ruled 2026-07-31); the consumer-side design it unblocks
+is `thorcasting-workspace/docs/superpowers/specs/2026-07-31-discard-staging-design.md`.
+
 ## Resolved since the last handoff (2026-07-29)
 
 - **#66** — `SurfaceDataProps` documented in `COMPONENTS.md`. Shipped `fcbdcc4`.
@@ -61,7 +111,8 @@ bypasses everything — the gate binds PR merges.
 - **#69** — `ValueMatrix`/`PivotGrid` `colLabel`/`rowLabel` widened to
   `=> string | JSX.Element`. Shipped `25ac69e`.
 - All three released in **0.127.0** together with the #64 progress below;
-  see `CHANGELOG.md` for the full writeup.
+  see `CHANGELOG.md` for the full writeup. **0.128.0** followed on 2026-07-31
+  with the BucketQueue work above.
 
 ## Closed as invalid (2026-07-30)
 
