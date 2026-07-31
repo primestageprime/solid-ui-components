@@ -228,7 +228,7 @@ A column or row that **always uses all available space** in its parent and split
 ```ts
 interface ProportionalStackProps {
   direction?: "column" | "row";   // default "column"
-  gap?: "xs" | "sm" | "md" | "lg" | "xl"; // default "md"
+  gap?: "xs" | "sm";              // default "sm"
 }
 
 interface ProportionalItemProps {

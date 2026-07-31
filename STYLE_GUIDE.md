@@ -118,14 +118,16 @@ Four situations that have no obvious Layout home were adjudicated:
    change only if it holds up. Fall back to BLOCKED-with-reason only if a
    faithful real-element replacement genuinely can't match. Rationale: deeper
    components shouldn't have to think about styling or accidentally override it.
-2. **Off-scale gaps: snap to the scale — always (final, 2026-07-14).** The
-   `Stack`/`Row` gap scale is `xs`(4px)/`sm`(8px), full stop — no `md`/`lg`.
-   **Every** off-scale gap snaps to the nearest existing step, even when the
-   change is visible: `6px`→`sm`, `12px`→`sm`, `16px`→`sm`. There is no ±2–4px
+2. **Off-scale gaps: snap to the scale — always (final, 2026-07-14; scale
+   widened 2026-07-31).** The `Stack`/`Row` gap scale is `xs`(4px)/`sm`(8px)/
+   `md`(12px)/`lg`(16px). **Every** off-scale gap snaps to the nearest existing
+   step, even when the change is visible: `6px`→`sm`, `10px`→`md`, `20px`→`lg`.
+   `12px` and `16px` are now exact steps rather than snaps. There is no ±2–4px
    tolerance gate and nothing blocks on gap size. Note each snap in the commit
-   message so visual diffs are attributable. (`Grid` and `AutoStackRow` are
-   separate primitives that carry their own `md`(12px) step for genuine 2-D /
-   responsive gaps; this rule governs `Stack`/`Row`.)
+   message so visual diffs are attributable. (`Grid` and `AutoStackRow` carry
+   the same `md`(12px) step; they always did, which is why "the scale is
+   `xs`/`sm`" was only ever true of `Stack`/`Row`. `Sidebar` and
+   `ProportionalStack` remain `xs`/`sm`.)
 3. **Missing 2-D / responsive layouts: add the primitive.** Two shipped:
    `AutoStackRow` + `AutoStackItem` (responsive side-by-side → stacked via a
    `breakWidth` prop — the "holy-albatross" behavior) and `Grid` + the
@@ -186,7 +188,7 @@ interface SurfaceInternalProps extends JSX.HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
   direction?: "row" | "column";
   align?: "start" | "center" | "stretch";
-  gap?: "none" | "sm" | "md" | "lg";
+  gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
   // Data
@@ -221,7 +223,7 @@ When client apps use curried variants, TypeScript prevents them from passing ove
 </InteractiveCard>
 
 // ❌ TypeScript error — 'padding' is not in SurfaceDataProps
-<InteractiveCard padding="lg" active={isSelected()}>
+<InteractiveCard padding="sm" active={isSelected()}>
   <TextLabel>{item.name}</TextLabel>
 </InteractiveCard>
 ```
@@ -298,8 +300,19 @@ the states you must preserve).
 `AGENT_GUIDE.md`: start with one variant and expand only on real demand. Growing
 the set of variants/sizes/tokens/props requires confirming with Peter first
 (why + why important), and **test-only / showcase-only usage does not count as
-demand** — only a shipped consumer does. This is why `Stack`/`Row` gaps were
-trimmed to `xs`/`sm` and `Surface` `padding`/`radius` to `none`/`sm`/`md`.
+demand** — only a shipped consumer does. This is why `Surface`
+`padding`/`radius` are `none`/`sm`/`md`, and why `OverflowNav.gap` stays
+`xs`/`sm` even though the `Row` it forwards to accepts more.
+
+**The gate cuts both ways, and `Stack`/`Row` gaps are the cautionary tale.**
+They were trimmed to `xs`/`sm` on the finding that no one used `md`/`lg`, then
+restored on 2026-07-31 when that finding turned out to be an artifact of where
+the audit looked: `thorcasting-ui` had forked the primitives into a local
+inline-style shim rather than lose the steps, and `jtf-ui` had a
+`createSurface({ … gap: "md" })` silently rendering at 8px. **For a published
+library, "nothing depends on this" cannot be established from inside this
+repo** — grep the consumer checkouts before removing a prop value, the same way
+you would before adding one.
 
 ## List Identity: For vs Index
 
