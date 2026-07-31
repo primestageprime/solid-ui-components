@@ -2,6 +2,57 @@
 
 ## [Unreleased]
 
+## 0.128.0
+
+### Added
+- **`BucketQueue`: collapsible buckets.** Two additive `Bucket` fields let a
+  **populated** bucket render as a click-to-expand summary line, which the
+  component previously only ever did for an **empty** one. `collapsible: true`
+  opts a bucket in; `collapsedByDefault: true` starts it collapsed and is
+  **ignored without `collapsible`**, since on its own it would strand the
+  bucket's items behind no affordance. Built for a staging pile — a discard
+  queue that must not dominate the bar but has to be openable to pull rows back
+  out before committing.
+  - The header becomes a `<button aria-expanded>` and takes a **tone-coloured
+    chevron in place of its tone dot**, in the dot's own 8px slot: labels stay
+    on one left edge and the bucket still carries exactly one role-coloured
+    mark, so nothing about a non-collapsible queue's rail changes.
+  - The state is the **component's own and sticky**. There is no
+    `expandedKeys`/`onToggleExpand` pair — expand/collapse never needs to leave
+    the component. `collapsedByDefault` applies only until the user first
+    toggles the bucket, after which their choice holds for the component's
+    life, **including across the bucket draining to empty and refilling**: if
+    the user opened the pile, they wanted it open, and emptying it elsewhere in
+    the consumer's UI does not silently re-close it.
+  - A collapsed bucket **sizes exactly as an empty one** — pinned to its
+    summary line, out of the weighted water-fill, and never `fill`ing, with
+    `capRows` moot — so those flags compose with no special-casing. Its rows
+    leave the keyboard sequence, and `selectedKey` is left untouched (`onSelect`
+    still only ever emits `null` from the triage advance).
+  - An **empty** `collapsible` bucket is indistinguishable from any other empty
+    bucket: its `emptyLabel`, its dot, and no toggle, because there is nothing
+    to expand into.
+  - `naturalHeights` / `allocateHeights` gain an optional `collapsed?: boolean[]`.
+    Both are exported public API; omitting it is byte-identical to before.
+
+### Fixed
+- **`BucketQueue`: a transfer into a bucket that renders no rows no longer
+  suppresses the source bucket's animation.** `play()` narrowed a batch of
+  transfers to those with a live destination row and then bailed on the
+  **whole batch** when none survived — so the vacated slot's gap-closing FLIP
+  went with it and every row beneath a departing one jumped. The FLIP pass is
+  independent of arrivals; only the arrival animation needs a destination
+  element. Reachable only via a collapsed bucket today (an item moving into an
+  *empty* bucket makes it populated, so it renders), but the bug was in the
+  choreographer, not the new feature. A row landing in a collapsed bucket now
+  closes its source gap as usual and pulses the destination's count so it is
+  seen being received. `MotionContext` gains `bucketEl` for this.
+
+### Changed
+- **`BucketQueue` internals split for the 500-line limit.** The header moved to
+  `BucketHeader.tsx` and the live-measurement concern (the row/header/empty-strip
+  `ResizeObserver` wiring) to `measurement.ts`. No public API change.
+
 ## 0.127.0
 
 ### Added
