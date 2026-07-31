@@ -160,22 +160,42 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   const checkableIn = (bucket: Bucket) =>
     selectModeOn() && bucket.selectable === true;
 
+  // A PER-ITEM veto on checking, consulted only where the bucket already allows
+  // it. Nesting it inside `checkableIn` is what keeps this from becoming a
+  // general row-disable: it can never make a row that would have SELECTED
+  // inert, and it is never consulted outside select mode. An absent predicate
+  // blocks nothing — the prop is deliberately fail-OPEN (see types.ts).
+  const blockedIn = (item: T, bucket: Bucket) =>
+    checkableIn(bucket) && props.isCheckable?.(item) === false;
+
   // The single activation branch — shared by click (here) and Enter/Space (the
-  // keyboard module). A row either toggles its check or selects; never both.
+  // keyboard module). A row either toggles its check, selects, or — when the
+  // consumer's per-item veto refused it — does NOTHING. Both paths funnel
+  // through here, which is why the veto needs no change in ./keyboard at all.
   const activate = (
     key: string,
+    item: T,
     bucket: Bucket,
     modifiers: { shift: boolean; meta: boolean },
   ) => {
-    if (checkableIn(bucket)) props.onToggleCheck?.(key, modifiers);
-    else props.onSelect?.(key);
+    if (checkableIn(bucket)) {
+      // Deliberately no fall-through to onSelect for a refused row: that would
+      // swap the consumer's detail pane in response to a click the user meant
+      // as a check. In select mode a selectable bucket's rows toggle or do
+      // nothing — never a third, unrequested action.
+      if (!blockedIn(item, bucket)) props.onToggleCheck?.(key, modifiers);
+    } else props.onSelect?.(key);
   };
 
-  // The bucket a row lives in, for the activation branch (keyboard has only
-  // the key; click has the bucket in scope).
-  const bucketForKey = (key: string): Bucket | undefined => {
+  // The item AND bucket a row belongs to, for the activation branch — the
+  // keyboard has only the key in hand, where a click has both in scope.
+  const rowForKey = (key: string): { item: T; bucket: Bucket } | undefined => {
     const bucketKey = buckets().bucketByKey.get(key);
-    return find((s) => s.key === bucketKey, props.buckets);
+    if (bucketKey == null) return undefined;
+    const bucket = find((s) => s.key === bucketKey, props.buckets);
+    if (bucket === undefined) return undefined;
+    const item = find((it) => props.keyOf(it) === key, itemsIn(bucketKey));
+    return item === undefined ? undefined : { item, bucket };
   };
 
   // A row is interactive iff it can be activated: either the queue has a
@@ -201,8 +221,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     focusedKey: () => props.focusedKey,
     selectedKey: () => props.selectedKey,
     onActivate: (key) => {
-      const bucket = bucketForKey(key);
-      if (bucket) activate(key, bucket, { shift: false, meta: false });
+      const row = rowForKey(key);
+      if (row) activate(key, row.item, row.bucket, { shift: false, meta: false });
     },
     onFocusChange: (key) => props.onFocusChange?.(key),
   });
@@ -374,7 +394,16 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                       // This bucket's measured row, if this is the one.
                       let myRow: HTMLDivElement | undefined;
                       onCleanup(() => untrackRow(bucket.key, myRow));
-                      const interactive = () => interactiveIn(bucket);
+                      // FOCUSABLE vs ACTIVATABLE. These are the same thing for
+                      // every row except one the consumer's veto refused: it
+                      // keeps its place in the roving sequence (so a keyboard
+                      // user can reach it and hear WHY it is excluded) while
+                      // losing the click handler and the clickable styling.
+                      // They were one flag until now only because nothing had
+                      // ever needed to tell them apart.
+                      const blocked = () => blockedIn(it, bucket);
+                      const focusable = () => interactiveIn(bucket);
+                      const activatable = () => focusable() && !blocked();
                       const selected = () => props.selectedKey != null && props.selectedKey === key;
                       const checked = () => props.checkedKeys?.has(key) === true;
                       return (
@@ -382,42 +411,49 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                         <div
                           ref={(el) => { if (ri() === 0) { myRow = el; trackRow(bucket.key, el); } }}
                           data-bq-key={key}
-                          data-bq-interactive={interactive() ? "" : undefined}
+                          data-bq-interactive={focusable() ? "" : undefined}
                           class={
                             "bucket-queue__row" +
-                            (interactive() ? " bucket-queue__row--interactive" : "") +
+                            (activatable() ? " bucket-queue__row--interactive" : "") +
                             (selected() ? " bucket-queue__row--selected" : "")
                           }
                           role="option"
                           aria-selected={selected()}
+                          aria-disabled={blocked() ? true : undefined}
+                          title={blocked() ? props.uncheckableReason?.(it) : undefined}
                           tabindex={
-                            interactive() && keyboard.tabbableKey() === key ? 0 : -1
+                            focusable() && keyboard.tabbableKey() === key ? 0 : -1
                           }
                           classList={{
                             "bucket-queue__row--checked": checkableIn(bucket) && checked(),
                             "bucket-queue__row--focused": props.focusedKey === key,
+                            "bucket-queue__row--uncheckable": blocked(),
                           }}
                           onClick={
-                            interactive()
+                            activatable()
                               ? (e: MouseEvent) =>
-                                  activate(key, bucket, {
+                                  activate(key, it, bucket, {
                                     shift: e.shiftKey,
                                     meta: e.metaKey || e.ctrlKey,
                                   })
                               : undefined
                           }
+                          // focusable(), not activatable() — a refused row must
+                          // still handle the arrow keys. Enter/Space reaching
+                          // `activate` is already a no-op for it.
                           onKeyDown={
-                            interactive()
+                            focusable()
                               ? (e: KeyboardEvent) => keyboard.onRowKeyDown(e, key)
                               : undefined
                           }
-                          onFocus={interactive() ? () => keyboard.setActiveKey(key) : undefined}
+                          onFocus={focusable() ? () => keyboard.setActiveKey(key) : undefined}
                         >
                           <Show when={checkableIn(bucket)}>
                             <span
                               class="bucket-queue__checkbox"
                               classList={{
                                 "bucket-queue__checkbox--checked": checked(),
+                                "bucket-queue__checkbox--disabled": blocked(),
                               }}
                               aria-hidden="true"
                             >

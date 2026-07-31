@@ -43,6 +43,20 @@ export const BucketQueueShowcase: Component = () => {
         single-select, so click-to-select is suspended until you leave the mode.
       </p>
       <p class="text-meta">
+        <strong>Refusing incompatible rows:</strong> the demo&rsquo;s grouping
+        rule is that a batch must be all <em>money in</em> or all{" "}
+        <em>money out</em>. Check <strong>Stripe payout</strong> and every
+        outflow dims — it keeps its place and its keyboard tab stop, but its
+        checkbox goes dashed and clicking it does nothing at all (it does{" "}
+        <em>not</em> fall through to selecting). Uncheck everything and they all
+        come back. That is <code>isCheckable</code>, a per-item predicate the
+        consumer derives from its own checked set; <code>uncheckableReason</code>{" "}
+        supplies the hover text. The component knows nothing about money — it
+        only asks. Rows are dimmed rather than <em>filtered out</em> on purpose:
+        filtering would pull them out from under the pointer mid-selection and
+        leave the header count disagreeing with the bucket.
+      </p>
+      <p class="text-meta">
         <strong>Moving a batch:</strong> the Move buttons retarget to the whole
         check set (their labels say how many). It goes out as <em>one</em>{" "}
         mutation, so the queue diffs it as a single set of transfers — every row

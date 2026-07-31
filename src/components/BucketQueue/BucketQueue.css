@@ -242,6 +242,28 @@
   color: var(--sui-bg-secondary);
 }
 
+/* REFUSED — a row the consumer's `isCheckable` turned down. Dimmed IN PLACE
+   rather than filtered out: filtering pulls rows out from under the pointer the
+   moment the first item is checked, and makes the header count disagree with
+   what the bucket holds. It also destroys the context that explains why the
+   current selection constrains further picks.
+
+   Only opacity and cursor here — deliberately no background tint, the same
+   readability rule as `--selected` and `--checked` above. There is nothing to
+   suppress a hover fill with, because a refused row never receives
+   `--interactive` in the first place; that omission is what removes both the
+   fill and the pointer cursor. The row KEEPS its tab stop and stays an
+   arrow-key target (aria-disabled, not removed) — see ./keyboard. */
+.bucket-queue__row--uncheckable {
+  opacity: 0.38;
+  cursor: default;
+}
+/* Dashed rather than a colour change, so the refusal still reads where opacity
+   is flattened — forced-colors / high-contrast modes drop it entirely. */
+.bucket-queue__checkbox--disabled {
+  border-style: dashed;
+}
+
 /* FOCUS — a ring only. No background fill: a persistent fill behind row text is
    exactly the readability problem the selected-row treatment was fixed for, and
    a marker glyph that appears only on focus would shift the row's content. */

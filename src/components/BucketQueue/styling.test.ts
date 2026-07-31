@@ -95,6 +95,22 @@ describe("BucketQueue styling contract", () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 
+  it("dims a refused row without tinting it — opacity and cursor only", () => {
+    // Same reasoning as the selected and checked rows: no background fill
+    // behind row text. Hover owns the background, and a refused row has no
+    // hover fill at all because it never gets --interactive.
+    expect(declaredProperties(ruleBody(".bucket-queue__row--uncheckable"))).toEqual([
+      "cursor",
+      "opacity",
+    ]);
+  });
+
+  it("dashes the refused checkbox, so the refusal survives a flattened opacity", () => {
+    expect(ruleBody(".bucket-queue__checkbox--disabled")).toMatch(
+      /border-style\s*:\s*dashed/,
+    );
+  });
+
   it("detects regressions: allow-list catches background-color reintroduction", () => {
     // Inline CSS that would fail the allow-list gate
     const fakeCSS = `.bucket-queue__row--selected { box-shadow: inset 2px 0 0 var(--sui-accent); background-color: red; }`;

@@ -9,6 +9,8 @@ import {
   renderQueue,
   renderSelectable,
   renderMixed,
+  renderVeto,
+  vetoOne,
   rows,
   rowFor,
   COLLAPSIBLE,
@@ -210,5 +212,39 @@ describe("BucketQueue — keyboard navigation", () => {
     const button = toggleButton(container)!;
     expect(button.tagName).toBe("BUTTON");
     expect(button.getAttribute("type")).toBe("button");
+  });
+});
+
+describe("BucketQueue — a refused row stays keyboard-reachable", () => {
+  const veto = (extra: Record<string, unknown> = {}) =>
+    renderVeto({
+      checkedKeys: new Set<string>(),
+      onSelect: () => {},
+      onToggleCheck: () => {},
+      isCheckable: vetoOne,
+      ...extra,
+    });
+
+  // Dropping refused rows from the roving sequence is the KEYBOARD equivalent
+  // of filtering them out of the list — they would vanish from under the arrow
+  // keys the instant the first item is checked. ARIA's guidance for a disabled
+  // option in a listbox is keep-focusable + aria-disabled, not remove.
+  it("keeps the refused row as an arrow-key target", () => {
+    const moved: (string | null)[] = [];
+    const { container } = veto({ onFocusChange: (k: string | null) => moved.push(k) });
+    fireEvent.keyDown(rowFor(container, "ok"), { key: "ArrowDown" });
+    expect(moved).toEqual(["veto"]);
+  });
+
+  it("keeps exactly one tab stop in the queue", () => {
+    const { container } = veto();
+    const tabbable = rows(container).filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable).toHaveLength(1);
+  });
+
+  it("still gives the refused row a tabindex rather than removing it", () => {
+    const { container } = veto();
+    expect(rowFor(container, "veto").getAttribute("tabindex")).not.toBeNull();
+    expect(rowFor(container, "veto").hasAttribute("data-bq-interactive")).toBe(true);
   });
 });

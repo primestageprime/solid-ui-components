@@ -70,6 +70,29 @@ export const renderSelectable = (extra: Record<string, unknown>) =>
     />
   ));
 
+// Two rows in the SELECTABLE bucket, so a per-item veto can refuse one while
+// its neighbour stays checkable — the exact shape `isCheckable` exists for.
+// `plain` lives in the NON-selectable bucket and must be untouched by the veto.
+export const renderVeto = (extra: Record<string, unknown>) =>
+  render(() => (
+    <BucketQueue<Item>
+      buckets={SELECTABLE}
+      items={[
+        { id: "plain", bucket: "a" },
+        { id: "ok", bucket: "b" },
+        { id: "veto", bucket: "b" },
+      ]}
+      bucketOf={(i) => i.bucket}
+      keyOf={(i) => i.id}
+      renderItem={(i) => <span>{i.id}</span>}
+      height={600}
+      {...extra}
+    />
+  ));
+
+/** Refuses exactly the item keyed "veto"; everything else stays checkable. */
+export const vetoOne = (i: Item) => i.id !== "veto";
+
 export const COLLAPSIBLE: Bucket[] = [
   { key: "a", label: "Alpha", tone: "success" },
   {

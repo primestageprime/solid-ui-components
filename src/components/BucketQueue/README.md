@@ -76,6 +76,8 @@ function Categorize(props: { initial: Txn[] }) {
 | `onFocusChange?` | `(key: string \| null) => void` | Fires when keyboard focus moves. |
 | `checkedKeys?` | `ReadonlySet<string>` | **Presence turns select mode on.** An empty `Set` means "mode on, nothing checked." Scoped to `selectable` buckets. |
 | `onToggleCheck?` | `(key, { shift, meta }) => void` | Fires when a checkable row is activated while select mode is on. |
+| `isCheckable?` | `(item: T) => boolean` | Per-item veto, consulted only in a `selectable` bucket in select mode. A refused row dims in place and is inert — see [Refusing individual rows](#refusing-individual-rows). |
+| `uncheckableReason?` | `(item: T) => string \| undefined` | `title` for a row `isCheckable` refused. Consulted only for refused rows. |
 | `scrollToKey?` | `string` | Reacts on CHANGE: set (or bump) to request a scroll, then clear it. |
 | `height?` | `number` | Total height in px. Omit to fill the parent. |
 | `class?` | `string` | Extra class on the root. |
@@ -311,6 +313,51 @@ Three things are yours to handle:
   one frame. Nothing is corrupted — the FLIP baseline re-snapshots by key, so
   the next real transfer still animates correctly — but the merge itself is a
   cut. `scrollToKey` is the affordance that stands in for it.
+
+### Refusing individual rows
+
+`selectable` is bucket-level: every row in a selectable bucket is checkable.
+When the validity of a check depends on what is *already* checked — merging
+items that must share an attribute, say — pass `isCheckable`:
+
+```tsx
+const batchSide = () => items().find((i) => checked().has(i.id))?.side;
+
+<BucketQueue<Txn>
+  checkedKeys={checked()}
+  onToggleCheck={toggle}
+  isCheckable={(i) => batchSide() === undefined || i.side === batchSide()}
+  uncheckableReason={() => "different side than your current selection"}
+/>
+```
+
+A refused row **dims in place** rather than disappearing, keeps its tab stop and
+arrow-key targeting with `aria-disabled="true"`, and is completely inert on
+click and Enter/Space — it does **not** fall through to `onSelect`. Falling
+through would swap your detail pane in response to a click the user meant as a
+check.
+
+Three things worth knowing:
+
+- **It is fail-open.** Omitting the predicate, or returning `true`, is exactly
+  the behavior without it. This is why it is a predicate and not a
+  `checkableKeys` set: a positive set would have to be exhaustive, and any item
+  you forgot — a row arriving mid-selection — would go silently unselectable.
+- **It is scoped to select mode.** The predicate is consulted only where
+  `selectable` already applies, so it can never disable a row that would have
+  selected.
+- **Reset is free.** With nothing checked your rule has no constraint to apply
+  and returns `true` throughout, so unchecking back to zero restores everything
+  without reset logic on either side.
+
+Rows are dimmed rather than filtered out deliberately: filtering pulls rows out
+from under the pointer the moment the first item is checked, leaves the header
+count disagreeing with the bucket, and — for keyboard users — deletes rows from
+the arrow sequence mid-task.
+
+`uncheckableReason` exists because `renderItem`'s output only fills the row's
+content span. It cannot reach the checkbox, which is the one thing the user is
+aiming at when the refusal happens.
 
 ## Keyboard
 

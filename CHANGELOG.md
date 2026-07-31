@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added
+- **`BucketQueue` — per-item checkability in select mode.** `selectable` was
+  bucket-level only, so a consumer could not refuse an item that is
+  incompatible with what is *already* checked; the invalid selection was made,
+  and the failure only showed up (silently) on commit. Two new fail-open props
+  close that:
+  - **`isCheckable?: (item: T) => boolean`** — consulted only for rows in a
+    `selectable` bucket while select mode is on. A refused row is inert: no
+    toggle, and deliberately no fall-through to `onSelect`, which would swap
+    the consumer's detail pane in response to a click meant as a check.
+  - **`uncheckableReason?: (item: T) => string | undefined`** — the refused
+    row's `title`. A prop rather than the consumer's job because `renderItem`'s
+    output does not cover the check affordance, which is exactly what the user
+    is aiming at when the refusal happens.
+
+  A refused row **dims in place** and keeps its place in the roving-tabindex
+  sequence with `aria-disabled="true"`. Filtering refused rows out instead
+  would pull them from under the pointer mid-selection, leave the header count
+  disagreeing with the bucket, and delete rows from the arrow sequence for
+  keyboard users.
+
+  A predicate rather than a `checkableKeys` set on purpose: a positive set must
+  be exhaustive, so any item the consumer forgot would silently become
+  *un*selectable — a fail-closed, which is the same class of silent failure
+  this feature exists to remove.
+
+  Purely additive: omit both props and behavior is unchanged.
+  Design: `docs/superpowers/specs/2026-07-31-bucketqueue-item-checkability-design.md`.
+
 ## 0.130.0
 
 ### Changed
