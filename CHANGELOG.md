@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.131.0
+
 ### Added
 - **`BucketQueue` — per-item checkability in select mode.** `selectable` was
   bucket-level only, so a consumer could not refuse an item that is
