@@ -29,6 +29,9 @@ interface QueueItem {
   /** Second line — only the card renderer below uses it. */
   meta: string;
   bucket: string;
+  /** Money in or money out. The demo's grouping rule: a batch must be all one
+   *  side — the same single rule thorcasting's server enforces on a group. */
+  side: "in" | "out";
 }
 
 // The queue being WORKED — where triage starts and returns to. The component
@@ -67,19 +70,22 @@ const BUCKETS: Bucket[] = [
   },
 ];
 
+// t3 and t6 are the two INFLOWS, both in the primary queue, and t3 is also the
+// initially-selected row — so the per-item veto below is reachable by flipping
+// select mode and checking one row, with nothing else to set up.
 const SEED: QueueItem[] = [
-  { id: "t1", label: "AWS — invoice 8841", amount: "$1,204.00", meta: "Infrastructure · Apr 02", bucket: "done" },
-  { id: "t2", label: "Figma annual", amount: "$540.00", meta: "Software · Apr 02", bucket: "done" },
-  { id: "t3", label: "Coffee — Blue Bottle", amount: "$6.75", meta: "Uncategorized · Apr 03", bucket: "todo" },
-  { id: "t4", label: "Rent — April", amount: "$3,500.00", meta: "Uncategorized · Apr 01", bucket: "todo" },
-  { id: "t5", label: "Payroll — ACH", amount: "$22,910.12", meta: "Uncategorized · Apr 05", bucket: "todo" },
-  { id: "t6", label: "GitHub seats", amount: "$84.00", meta: "Uncategorized · Apr 06", bucket: "todo" },
-  { id: "t7", label: "Notion team", amount: "$120.00", meta: "Awaiting receipt · Apr 07", bucket: "hold" },
-  { id: "t8", label: "Legal retainer", amount: "$4,000.00", meta: "Awaiting receipt · Apr 08", bucket: "hold" },
-  { id: "t9", label: "Zoom annual", amount: "$199.00", meta: "Awaiting receipt · Apr 09", bucket: "hold" },
-  { id: "t10", label: "1Password teams", amount: "$95.88", meta: "Awaiting receipt · Apr 10", bucket: "hold" },
-  { id: "t11", label: "Datadog", amount: "$620.00", meta: "Awaiting receipt · Apr 11", bucket: "hold" },
-  { id: "t12", label: "Linear seats", amount: "$96.00", meta: "Awaiting receipt · Apr 12", bucket: "hold" },
+  { id: "t1", label: "AWS — invoice 8841", amount: "$1,204.00", meta: "Infrastructure · Apr 02", bucket: "done", side: "out" },
+  { id: "t2", label: "Figma annual", amount: "$540.00", meta: "Software · Apr 02", bucket: "done", side: "out" },
+  { id: "t3", label: "Stripe payout", amount: "$4,210.00", meta: "Uncategorized · Apr 03", bucket: "todo", side: "in" },
+  { id: "t4", label: "Rent — April", amount: "$3,500.00", meta: "Uncategorized · Apr 01", bucket: "todo", side: "out" },
+  { id: "t5", label: "Payroll — ACH", amount: "$22,910.12", meta: "Uncategorized · Apr 05", bucket: "todo", side: "out" },
+  { id: "t6", label: "Consulting invoice — Acme", amount: "$1,800.00", meta: "Uncategorized · Apr 06", bucket: "todo", side: "in" },
+  { id: "t7", label: "Notion team", amount: "$120.00", meta: "Awaiting receipt · Apr 07", bucket: "hold", side: "out" },
+  { id: "t8", label: "Legal retainer", amount: "$4,000.00", meta: "Awaiting receipt · Apr 08", bucket: "hold", side: "out" },
+  { id: "t9", label: "Zoom annual", amount: "$199.00", meta: "Awaiting receipt · Apr 09", bucket: "hold", side: "out" },
+  { id: "t10", label: "1Password teams", amount: "$95.88", meta: "Awaiting receipt · Apr 10", bucket: "hold", side: "out" },
+  { id: "t11", label: "Datadog", amount: "$620.00", meta: "Awaiting receipt · Apr 11", bucket: "hold", side: "out" },
+  { id: "t12", label: "Linear seats", amount: "$96.00", meta: "Awaiting receipt · Apr 12", bucket: "hold", side: "out" },
 ];
 
 // ROW CARDS — one line: label left, right-aligned amount. The same SpreadRow
@@ -134,6 +140,12 @@ export function BucketQueueDemo(props: {
   const [focused, setFocused] = createSignal<string | undefined>(undefined);
   const [selectMode, setSelectMode] = createSignal(false);
   const [checked, setChecked] = createSignal<ReadonlySet<string>>(new Set());
+
+  // The side the assembled batch has committed to — the FIRST checked row sets
+  // it. Nothing checked ⇒ undefined ⇒ no constraint, which is exactly why
+  // unchecking back to zero restores full checkability with no reset logic
+  // anywhere: the predicate simply stops refusing.
+  const batchSide = () => items().find((i) => checked().has(i.id))?.side;
 
   // The bucket the last move pulled FROM. Captured before the mutation — once
   // the item has moved it reports its DESTINATION, so there is no way to name
@@ -308,6 +320,12 @@ export function BucketQueueDemo(props: {
           onFocusChange={(k) => setFocused(k ?? undefined)}
           checkedKeys={selectMode() ? checked() : undefined}
           onToggleCheck={(k) => toggle(k)}
+          isCheckable={(i) => batchSide() === undefined || i.side === batchSide()}
+          uncheckableReason={(i) =>
+            i.side === "in"
+              ? "money in — this batch is money out"
+              : "money out — this batch is money in"
+          }
         />
       </div>
 
