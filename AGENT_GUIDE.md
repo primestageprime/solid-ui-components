@@ -185,6 +185,14 @@ This rule is already load-bearing in the library:
 Don't reintroduce a removed value (or add a new one) without a real consumer and
 Peter's sign-off.
 
+**When you do change a scale, run `npm run audit:scales`.** It compares every
+string-union prop scale documented in `COMPONENTS.md` against the union actually
+declared on that component's own `Props`, and it is the only thing that catches
+doc drift — nothing else fails when a doc and a type disagree. It is not part of
+`health`, so it will not fail your PR; read the OVERCLAIMS section (the doc
+promising a value the type rejects) and treat those as bugs. UNDERCLAIMS and
+UNRESOLVED need a human — intentional shorthand like `h1`..`h4` lands there.
+
 **But "no shipped caller" is a claim about consumers, not about this repo.**
 `Stack` / `Row` gaps were trimmed to `xs` / `sm` on exactly that finding and
 restored on 2026-07-31 (0.129.0) when it proved false — `thorcasting-ui` had
