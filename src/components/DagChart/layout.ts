@@ -19,19 +19,31 @@ function layeringSourcesFirst(
   sep: (a: unknown, b: unknown) => number,
 ): number {
   let max = 0;
+  // Track the y we assign to each node ourselves, rather than reading it back
+  // off the node. For a CYCLIC graph — dside workflows legitimately have
+  // Backward/return transitions, so the stage graph is not a DAG —
+  // `topological()` yields an order in which a back-edge parent can appear
+  // AFTER its child. Reading d3-dag's `.y` getter on a not-yet-placed node
+  // throws ("can't get `y` when `uy` is undefined"), which crashed sugiyama and
+  // forced the topological-grid fallback (plus a console.warn) on every render.
+  // Reading our own map, defaulting an unplaced parent to 0, tolerates the
+  // cycle: forward parents still drive placement and back edges render as
+  // return curves.
+  const assignedY = new Map<unknown, number>();
   for (const node of graph.topological()) {
-    const parents = [...node.parents()] as { y: number }[];
+    const parents = [...node.parents()];
     let y: number;
     if (parents.length === 0) {
       y = sep(undefined, node);
     } else {
       y = 0;
       for (const p of parents) {
-        const candidate = p.y + sep(p, node);
+        const candidate = (assignedY.get(p) ?? 0) + sep(p, node);
         if (candidate > y) y = candidate;
       }
     }
     node.y = y;
+    assignedY.set(node, y);
     const bottom = y + sep(node, undefined);
     if (bottom > max) max = bottom;
   }
