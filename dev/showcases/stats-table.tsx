@@ -149,7 +149,7 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
             }
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Row Variants</h3>
+          <h3 class="showcase-heading-gap">Composed — Row Variants</h3>
           <StatsTable
             columns={statusColumns}
             rows={statusRows}
@@ -162,7 +162,7 @@ export const StatsTableShowcase: Component<Depth2Props> = (props) => {
             }
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Engine Data</h3>
+          <h3 class="showcase-heading-gap">Composed — Engine Data</h3>
           <StatsTable
             caption="Engine Performance Summary"
             columns={engineColumns}

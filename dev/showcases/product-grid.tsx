@@ -20,7 +20,7 @@ import {
   NarrowStack,
   ContentStack,
   ClusterRow,
-  FlexRow,
+  TightClusterRow,
 } from "../../src/components/Layout";
 import { TextLabel, MutedBody, PageTitle } from "../../src/components/Text";
 import { BaseTable, type TableColumn } from "../../src/components/Table";
@@ -554,8 +554,8 @@ export const ProductGridShowcase: Component = () => {
   ];
 
   return (
-    <NarrowStack style={{ padding: "20px 24px" }}>
-      <PageTitle style={{ margin: 0, "font-size": "1.25rem" }}>
+    <NarrowStack class="product-grid-demo__page">
+      <PageTitle class="product-grid-demo__title">
         ProductGrid
       </PageTitle>
       <MutedBody>
@@ -565,7 +565,7 @@ export const ProductGridShowcase: Component = () => {
         focus to highlight its whole sub-column. Work flows todo → doing → done
         one unit per tick.
       </MutedBody>
-      <ClusterRow gap="xs">
+      <TightClusterRow>
         <For each={DATASETS}>
           {(ds) => {
             const active = () => activeDatasetId() === ds.id;
@@ -573,28 +573,15 @@ export const ProductGridShowcase: Component = () => {
               <button
                 onClick={() => setActiveDatasetId(ds.id)}
                 title={ds.hint}
-                style={{
-                  padding: "4px 12px",
-                  "border-radius": "999px",
-                  border: active()
-                    ? "1px solid var(--sui-accent, #4ea1ff)"
-                    : "1px solid var(--sui-border)",
-                  background: active()
-                    ? "color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent)"
-                    : "transparent",
-                  color: active()
-                    ? "var(--sui-accent, #4ea1ff)"
-                    : "var(--sui-text-muted, #888)",
-                  cursor: "pointer",
-                  "font-size": "12px",
-                }}
+                class="product-grid-demo__chip"
+                classList={{ "product-grid-demo__chip--active": active() }}
               >
                 {ds.label}
               </button>
             );
           }}
         </For>
-      </ClusterRow>
+      </TightClusterRow>
       <ProductGrid
         items={dataset().items}
         areaOrder={dataset().areaOrder}
@@ -603,30 +590,22 @@ export const ProductGridShowcase: Component = () => {
         onSelectionChange={setSelection}
       />
       <ContentStack>
-        <FlexRow gap="sm" align="center">
+        <ClusterRow>
           <TextLabel>
             items{" "}
-            <span style={{ color: "var(--sui-text-muted)" }}>
+            <span class="product-grid-demo__count">
               {tableRows().length} of {dataset().items.length}
             </span>
           </TextLabel>
           <Show when={selection()}>
             <button
               onClick={() => setSelection(null)}
-              style={{
-                "font-size": "12px",
-                padding: "3px 10px",
-                border: "1px solid var(--sui-border)",
-                background: "transparent",
-                color: "var(--sui-text-muted, #888)",
-                "border-radius": "10px",
-                cursor: "pointer",
-              }}
+              class="product-grid-demo__clear"
             >
               clear filter
             </button>
           </Show>
-        </FlexRow>
+        </ClusterRow>
         <BaseTable
           data={tableRows()}
           columns={columns}

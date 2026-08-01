@@ -1,5 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { DigitRoller } from "../../src/components/DataDisplay";
+import { ClusterRow, NarrowStack } from "../../src/components/Layout";
+import { TextSublabel, TextUnits } from "../../src/components/Text";
 
 export const DigitRollerShowcase: Component = () => {
   const [rollerAnimating, setRollerAnimating] = createSignal(false);
@@ -26,25 +28,13 @@ export const DigitRollerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Animated Transition</h3>
-        <p
-          style={{
-            color: "var(--sui-text-muted)",
-            "font-size": "12px",
-            margin: "0 0 12px",
-          }}
-        >
+        <NarrowStack>
+        <TextSublabel>
           Vertical digit rolling animation for transitioning between numeric
           values.
-        </p>
-        <div style={{ display: "flex", "align-items": "center", gap: "20px" }}>
-          <span
-            style={{
-              "font-size": "1.5rem",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-              "font-variant-numeric": "tabular-nums",
-            }}
-          >
+        </TextSublabel>
+        <ClusterRow>
+          <span class="digit-roller-demo__value digit-roller-demo__value--tnum">
             <DigitRoller
               value={rollerCurrent()}
               previousValue={rollerPrev()}
@@ -52,45 +42,27 @@ export const DigitRollerShowcase: Component = () => {
               onAnimationEnd={() => setRollerAnimating(false)}
             />
           </span>
-          <span
-            style={{
-              color: "var(--sui-text-secondary)",
-              "font-size": "0.9rem",
-            }}
-          >
-            g/kWh
-          </span>
+          <TextUnits>g/kWh</TextUnits>
           <button class="demo-btn" onClick={triggerRoll}>
             Roll to{" "}
             {rollerCurrent() === rollerValueA()
               ? rollerValueB()
               : rollerValueA()}
           </button>
-        </div>
+        </ClusterRow>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Static (no animation)</h3>
-        <div
-          style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-text-primary)",
-          }}
-        >
+        <div class="digit-roller-demo__value">
           <DigitRoller value="0.1250" />
         </div>
       </div>
 
       <div class="example-group">
         <h3>Tabular digits</h3>
-        <div
-          style={{
-            "font-size": "1.5rem",
-            "font-weight": "600",
-            color: "var(--sui-accent)",
-          }}
-        >
+        <div class="digit-roller-demo__value digit-roller-demo__value--accent">
           <DigitRoller value="42.00" />
         </div>
       </div>

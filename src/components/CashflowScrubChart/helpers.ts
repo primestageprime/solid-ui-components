@@ -71,17 +71,20 @@ export const buildLineSegments = (
 ): string[] => {
   const segments: string[] = [];
   let current: string[] = [];
-  cells.forEach((cell, i) => {
+  // A for-of loop, not forEach (no fn.forEach exists; the mutable
+  // current/segments accumulation across the scan isn't expressible as a
+  // map/filter).
+  for (const [i, cell] of cells.entries()) {
     const v = value(cell, i);
     if (v == null) {
       if (current.length > 0) {
         segments.push(current.join(" "));
         current = [];
       }
-      return;
+      continue;
     }
     current.push(`${cellToX(i).toFixed(1)},${yToPlot(v).toFixed(1)}`);
-  });
+  }
   if (current.length > 0) segments.push(current.join(" "));
   return segments;
 };

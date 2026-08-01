@@ -22,6 +22,7 @@ import {
   mergeProps,
 } from "solid-js";
 import "./AreaFocusGrid.css";
+import { map, filter, join } from "../../fn";
 
 /** One focus sub-column within an area. */
 export interface AreaFocusGridFocus {
@@ -92,11 +93,14 @@ interface AreaFocusGridLayout {
 const buildLayout = (
   areas: readonly AreaFocusGridArea[],
 ): AreaFocusGridLayout => {
-  const occupied = areas.filter((a) => a.focuses.length > 0);
+  const occupied = filter((a) => a.focuses.length > 0, areas);
 
-  const subCols: AreaFocusCellKey[] = occupied.flatMap((area) =>
-    area.focuses.map((focus) => ({ area, focus })),
-  );
+  const subCols: AreaFocusCellKey[] = [];
+  for (const area of occupied) {
+    for (const focus of area.focuses) {
+      subCols.push({ area, focus });
+    }
+  }
 
   const areaSpans = occupied.reduce<
     { area: AreaFocusGridArea; startSubCol: number; span: number }[]
@@ -109,12 +113,13 @@ const buildLayout = (
 
   // The vsep between the last sub-col of area i and the first of area i+1
   // lives at grid-column = 2 * (lastSubCol).
-  const areaBoundaryCols = areaSpans
-    .slice(0, -1)
-    .map((a) => 2 * (a.startSubCol + a.span - 1));
+  const areaBoundaryCols = map(
+    (a) => 2 * (a.startSubCol + a.span - 1),
+    areaSpans.slice(0, -1),
+  );
 
   // A vsep between every pair of consecutive sub-cols (even-indexed tracks).
-  const interSubColVseps = subCols.slice(1).map((_, k) => 2 * (k + 1));
+  const interSubColVseps = map((_, k) => 2 * (k + 1), subCols.slice(1));
 
   return { subCols, areaSpans, areaBoundaryCols, interSubColVseps };
 };
@@ -131,11 +136,12 @@ const gridTemplate = (
   const N = layout.subCols.length;
   const totalCols = Math.max(2 * N - 1, 1);
   const areaBoundarySet = new Set(layout.areaBoundaryCols);
-  const cols = Array.from({ length: totalCols }, (_, i) => {
+  const colTracks = Array.from({ length: totalCols }, (_, i) => {
     const col = i + 1;
     if (col % 2 === 1) return `minmax(${subColumnMinWidth}, 1fr)`;
     return areaBoundarySet.has(col) ? "3px" : "1px";
-  }).join(" ");
+  });
+  const cols = join(" ", colTracks);
   return {
     "grid-template-columns": cols,
     // Rows: header | hsep | above | hsep | label | hsep | below
@@ -175,10 +181,7 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
           return (
             <div
               class="sui-area-focus-grid__area-header"
-              style={{
-                "grid-row": "1",
-                "grid-column": `${startCol} / span ${colSpan}`,
-              }}
+              style={{ "grid-column": `${startCol} / span ${colSpan}` }}
             >
               {props.renderAreaHeader(a.area)}
             </div>
@@ -189,22 +192,19 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
       <For each={layout().areaBoundaryCols}>
         {(col) => (
           <div
-            class="sui-area-focus-grid__sep--major"
-            style={{ "grid-row": "1", "grid-column": `${col}` }}
+            class="sui-area-focus-grid__sep--major sui-area-focus-grid__vsep-r1"
+            style={{ "grid-column": `${col}` }}
           />
         )}
       </For>
       {/* Row 2 — full-width major hsep under headers. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "2", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--under-headers" />
       {/* Row 3 — above-the-line cell stacks. */}
       <For each={layout().subCols}>
         {(sc, i) => (
           <div
             class="sui-area-focus-grid__cell-stack sui-area-focus-grid__cell-stack--anchor-bottom"
-            style={{ "grid-row": "3", "grid-column": `${2 * (i() + 1) - 1}` }}
+            style={{ "grid-column": `${2 * (i() + 1) - 1}` }}
           >
             {props.renderAboveCell(sc)}
           </div>
@@ -213,22 +213,19 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
       <For each={layout().interSubColVseps}>
         {(col) => (
           <div
-            class={sepClassFor(col, areaBoundarySet())}
-            style={{ "grid-row": "3", "grid-column": `${col}` }}
+            class={`${sepClassFor(col, areaBoundarySet())} sui-area-focus-grid__vsep-r3`}
+            style={{ "grid-column": `${col}` }}
           />
         )}
       </For>
       {/* Row 4 — full-width major hsep above the label band. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "4", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--above-labels" />
       {/* Row 5 — focus labels. */}
       <For each={layout().subCols}>
         {(sc, i) => (
           <div
             class="sui-area-focus-grid__focus"
-            style={{ "grid-row": "5", "grid-column": `${2 * (i() + 1) - 1}` }}
+            style={{ "grid-column": `${2 * (i() + 1) - 1}` }}
           >
             {props.renderFocusLabel(sc)}
           </div>
@@ -237,22 +234,19 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
       <For each={layout().interSubColVseps}>
         {(col) => (
           <div
-            class={sepClassFor(col, areaBoundarySet())}
-            style={{ "grid-row": "5", "grid-column": `${col}` }}
+            class={`${sepClassFor(col, areaBoundarySet())} sui-area-focus-grid__vsep-r5`}
+            style={{ "grid-column": `${col}` }}
           />
         )}
       </For>
       {/* Row 6 — full-width major hsep below the label band. */}
-      <div
-        class="sui-area-focus-grid__sep--major"
-        style={{ "grid-row": "6", "grid-column": "1 / -1" }}
-      />
+      <div class="sui-area-focus-grid__sep--major sui-area-focus-grid__hsep sui-area-focus-grid__hsep--below-labels" />
       {/* Row 7 — below-the-line cell stacks. */}
       <For each={layout().subCols}>
         {(sc, i) => (
           <div
             class="sui-area-focus-grid__cell-stack sui-area-focus-grid__cell-stack--anchor-top"
-            style={{ "grid-row": "7", "grid-column": `${2 * (i() + 1) - 1}` }}
+            style={{ "grid-column": `${2 * (i() + 1) - 1}` }}
           >
             {props.renderBelowCell(sc)}
           </div>
@@ -261,8 +255,8 @@ export const AreaFocusGrid: Component<AreaFocusGridProps> = (props) => {
       <For each={layout().interSubColVseps}>
         {(col) => (
           <div
-            class={sepClassFor(col, areaBoundarySet())}
-            style={{ "grid-row": "7", "grid-column": `${col}` }}
+            class={`${sepClassFor(col, areaBoundarySet())} sui-area-focus-grid__vsep-r7`}
+            style={{ "grid-column": `${col}` }}
           />
         )}
       </For>

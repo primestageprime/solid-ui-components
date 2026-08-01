@@ -1,0 +1,18 @@
+/* Tables-and-grids gallery — each example is capped to a realistic pane width
+   so the internal scrolling and sticky headers are visible rather than the
+   page taking the scroll. */
+
+.table-grid-frame {
+  max-width: 760px;
+}
+
+.table-grid-frame--narrow {
+  max-width: 460px;
+}
+
+/* GroupBracket rows stack FLUSH so consecutive spines join into one bracket;
+   the padding is the row's own, giving the badge (which centres 18px from the
+   row top by default) a line to sit against. */
+.group-bracket-row {
+  padding: 6px 0;
+}

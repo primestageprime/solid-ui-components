@@ -1,4 +1,5 @@
 import type { DAGNode, DAGEdge, NodeRenderState } from "./types";
+import { map, filter, pluck, some, pipe } from "../../fn";
 
 export type CollapseResult<T> = {
   visibleNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }>;
@@ -42,17 +43,21 @@ export function collapseGraph<T>(
   edges: DAGEdge[],
   focusedNodeId: string | undefined,
 ): CollapseResult<T> {
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  const knownIds = new Set(nodes.map((n) => n.id));
-  const validEdges = edges.filter(
+  const nodeMap = new Map(map((n) => [n.id, n], nodes));
+  const knownIds = new Set(pluck("id", nodes));
+  const validEdges = filter(
     (e) => knownIds.has(e.source) && knownIds.has(e.target),
+    edges,
   );
 
   const fullGraph = {
-    visibleNodes: nodes.map((n) => ({
-      node: n,
-      state: { kind: "normal" as const },
-    })),
+    visibleNodes: map(
+      (n) => ({
+        node: n,
+        state: { kind: "normal" as const },
+      }),
+      nodes,
+    ),
     visibleEdges: validEdges,
   };
 
@@ -83,11 +88,11 @@ export function collapseGraph<T>(
       // If this hidden node's subtree already has a summary, add an edge (if not duplicate)
       const existingSummary = hiddenToSummary.get(beyondId);
       if (existingSummary) {
-        if (
-          !summaryEdges.some(
-            (se) => se.source === neighborId && se.target === existingSummary,
-          )
-        ) {
+        const alreadyLinked = some(
+          (se) => se.source === neighborId && se.target === existingSummary,
+          summaryEdges,
+        );
+        if (!alreadyLinked) {
           summaryEdges.push({ source: neighborId, target: existingSummary });
         }
         continue;
@@ -109,22 +114,25 @@ export function collapseGraph<T>(
     }
   }
 
-  const primaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> = [
-    ...visibleIds,
-  ].flatMap((id) => {
-    const node = nodeMap.get(id);
-    if (!node) return [];
-    const state: NodeRenderState =
-      id === focusedNodeId ? { kind: "focused" } : { kind: "adjacent" };
-    return [{ node, state }];
-  });
+  const primaryNodes: Array<{ node: DAGNode<T>; state: NodeRenderState }> =
+    pipe(
+      [...visibleIds],
+      filter((id): id is string => nodeMap.has(id)),
+      map((id) => {
+        const node = nodeMap.get(id)!;
+        const state: NodeRenderState =
+          id === focusedNodeId ? { kind: "focused" } : { kind: "adjacent" };
+        return { node, state };
+      }),
+    );
 
   const visibleNodes = [...primaryNodes, ...summaryNodes];
-  const allVisibleIds = new Set(visibleNodes.map((v) => v.node.id));
+  const allVisibleIds = new Set(map((v) => v.node.id, visibleNodes));
 
   const visibleEdges = [
-    ...validEdges.filter(
+    ...filter(
       (e) => allVisibleIds.has(e.source) && allVisibleIds.has(e.target),
+      validEdges,
     ),
     ...summaryEdges,
   ];

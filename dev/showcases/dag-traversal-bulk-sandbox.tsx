@@ -455,7 +455,6 @@ export const DagTraversalBulkSandboxShowcase: Component = () => {
         <svg
           viewBox={`0 0 ${layout().width} ${layout().height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ width: "100%", height: "auto", "max-height": "70vh" }}
         >
           <defs>
             <marker

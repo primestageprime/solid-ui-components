@@ -5,12 +5,12 @@
 // Owns CSS (Icon.css), no component imports.
 // SVG icon set with outline/solid variants, 5 sizes.
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./Icon.css";
 
 // Icon groups for organization and documentation
 export const ICON_GROUPS = {
-  status: ["check", "error", "warning", "info"] as const,
+  status: ["check", "error", "warning", "info", "stethoscope"] as const,
   navigation: [
     "chevron-down",
     "chevron-up",
@@ -18,7 +18,14 @@ export const ICON_GROUPS = {
     "chevron-right",
     "arrow-right",
   ] as const,
-  data: ["data", "table", "chart-bar", "chart-line", "chart-area"] as const,
+  data: [
+    "data",
+    "table",
+    "chart-bar",
+    "chart-line",
+    "chart-area",
+    "dependency",
+  ] as const,
   time: ["clock", "hourglass"] as const,
   actions: [
     "plus",
@@ -28,9 +35,12 @@ export const ICON_GROUPS = {
     "filter",
     "refresh",
     "download",
+    "pause",
+    "edit",
+    "trash",
   ] as const,
-  ui: ["spinner", "menu", "settings", "external-link"] as const,
-  auth: ["log-out", "log-in", "user"] as const,
+  ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
+  auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
     "cache-minutes",
     "cache-hours",
@@ -46,6 +56,7 @@ export type IconName =
   | "error"
   | "warning"
   | "info"
+  | "stethoscope"
   // Navigation
   | "chevron-down"
   | "chevron-up"
@@ -58,6 +69,7 @@ export type IconName =
   | "chart-bar"
   | "chart-line"
   | "chart-area"
+  | "dependency"
   // Time
   | "clock"
   | "hourglass"
@@ -69,15 +81,20 @@ export type IconName =
   | "filter"
   | "refresh"
   | "download"
+  | "pause"
+  | "edit"
+  | "trash"
   // UI
   | "spinner"
   | "menu"
   | "settings"
   | "external-link"
+  | "bell"
   // Auth
   | "log-out"
   | "log-in"
   | "user"
+  | "agent"
   // Cache
   | "cache-minutes"
   | "cache-hours"
@@ -119,6 +136,18 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M8 7V11M8 5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
       solid: `<circle cx="8" cy="8" r="7" fill="currentColor"/>
             <path d="M8 7V11M8 5V5.5" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round"/>`,
+    },
+
+    // Earpiece fork descending into a tube that ends at the chest-piece
+    // bell — the "health check" glyph.
+    stethoscope: {
+      outline: `<path d="M4 1.5v4a3 3 0 006 0v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M7 8.5v2.5a3 3 0 006 0v-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <circle cx="13" cy="7.5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
+      solid: `<path d="M4 1.5v4a3 3 0 006 0v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M7 8.5v2.5a3 3 0 006 0v-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="13" cy="7.5" r="2.5" fill="currentColor"/>
+            <circle cx="13" cy="7.5" r="1" fill="var(--sui-bg-primary)"/>`,
     },
 
     // === NAVIGATION ICONS ===
@@ -182,6 +211,19 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
             <path d="M2 12L5.5 8L8.5 10L14 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
+    // Dependency tree: root node branching to two children — the DAG edge
+    // a "depends on" relationship draws.
+    dependency: {
+      outline: `<rect x="6" y="1.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="1.5" y="10.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="10.5" y="10.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 5.5V8M8 8H3.5v2.5M8 8h4.5v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<rect x="6" y="1" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <rect x="1.5" y="10.5" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <rect x="10.5" y="10.5" width="4" height="4" rx="0.5" fill="currentColor"/>
+            <path d="M8 5V8M8 8H3.5v2.5M8 8h4.5v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+    },
+
     // === TIME ICONS ===
     clock: {
       outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
@@ -236,6 +278,33 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
             <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
+    // Two vertical bars — the universal "paused / on hold" glyph.
+    pause: {
+      outline: `<rect x="4" y="3" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="9.5" y="3" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
+      solid: `<rect x="4" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>
+            <rect x="9" y="3" width="3" height="10" rx="0.5" fill="currentColor"/>`,
+    },
+
+    // Pencil at 45° — the standard edit affordance for table action columns.
+    edit: {
+      outline: `<path d="M10.5 2.5l3 3L5 14l-3.5.5L2 11l8.5-8.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+              <path d="M9 4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+      solid: `<path d="M10.5 2l3.5 3.5L5.5 14 1.5 14.5 2 10.5 10.5 2Z" fill="currentColor"/>
+            <path d="M9.5 3.5l3 3" stroke="var(--sui-bg-primary)" stroke-width="1" stroke-linecap="round"/>`,
+    },
+    // Lidded bin — the standard delete affordance for table action columns.
+    trash: {
+      outline: `<path d="M2.5 4.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M4 4.5l.6 8.5a1 1 0 001 .9h4.8a1 1 0 001-.9l.6-8.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M6.5 7v4M9.5 7v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
+      solid: `<path d="M2.5 4.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M4 5h8l-.6 8.6a1 1 0 01-1 .9H5.6a1 1 0 01-1-.9L4 5Z" fill="currentColor"/>
+            <path d="M6.5 7v4M9.5 7v4" stroke="var(--sui-bg-primary)" stroke-width="1.2" stroke-linecap="round"/>`,
+    },
+
     // === UI ICONS ===
     spinner: {
       outline: `<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.25"/>
@@ -256,6 +325,14 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
     "external-link": {
       outline: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Bell body with clapper — the notification trigger glyph.
+    bell: {
+      outline: `<path d="M8 2a3 3 0 0 0-3 3c0 3.5-1.5 4.5-1.5 4.5h9S11 8.5 11 5a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M6.8 11.5a1.3 1.3 0 0 0 2.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M8 2a3 3 0 0 0-3 3c0 3.5-1.5 4.5-1.5 4.5h9S11 8.5 11 5a3 3 0 0 0-3-3Z" fill="currentColor"/>
+            <path d="M6.8 11.5a1.3 1.3 0 0 0 2.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>`,
     },
 
     // === AUTH ICONS ===
@@ -279,6 +356,21 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M7 3h5a1 1 0 011 1v8a1 1 0 01-1 1H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M2 8h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Robot head: antenna + rounded head with two eyes — the automated
+    // counterpart to `user` (dside Species: Human | Agent).
+    agent: {
+      outline: `<rect x="3" y="6" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 6V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <circle cx="8" cy="2.5" r="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
+              <circle cx="6" cy="9.5" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+              <circle cx="10" cy="9.5" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1"/>`,
+      solid: `<rect x="3" y="6" width="10" height="7.5" rx="1.5" fill="currentColor"/>
+            <path d="M8 6V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <circle cx="8" cy="2.5" r="1.2" fill="currentColor"/>
+            <circle cx="6" cy="9.5" r="1" fill="var(--sui-bg-primary)"/>
+            <circle cx="10" cy="9.5" r="1" fill="var(--sui-bg-primary)"/>`,
     },
 
     // === CACHE ICONS ===
@@ -342,3 +434,18 @@ export const Icon: Component<IconProps> = (props) => {
     />
   );
 };
+
+/** Presentational knobs — locked at variant-definition time. `name` stays a
+ *  DATA prop (which glyph is semantic, per-call-site information). */
+export type IconOverrides = Pick<IconProps, "variant" | "size">;
+export type IconDataProps = Omit<IconProps, keyof IconOverrides>;
+
+export function createIcon(
+  defaults: Partial<Omit<IconProps, "children">>,
+): Component<IconDataProps> {
+  return (props) => <Icon {...mergeProps(defaults, props as IconProps)} />;
+}
+
+/** Inline icon beside sublabel/meta text (outline, xs) — the glyph that
+ *  rides in a row like `⏱ 2d4h` or `👤 Ryan`. */
+export const InlineMetaIcon = createIcon({ variant: "outline", size: "xs" });

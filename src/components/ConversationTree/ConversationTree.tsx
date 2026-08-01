@@ -28,6 +28,7 @@ import { ParticipantNameLabel } from "../ParticipantNameLabel";
 import { ParticipantTimeLabel } from "../ParticipantTimeLabel";
 import { LabeledDivider } from "../LabeledDivider";
 import { ThreadGroup } from "../ThreadGroup/ThreadGroup";
+import { filter, join, map, pipe, sortBy } from "../../fn";
 
 export interface Participant {
   id: string;
@@ -83,12 +84,13 @@ const colorForId = (id: string): string => {
 };
 
 const initialsOf = (name: string): string =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]!.toUpperCase())
-    .join("") || "?";
+  pipe(
+    name.split(/\s+/),
+    filter((w) => w.length > 0),
+    (words) => words.slice(0, 2),
+    map((p) => p[0]!.toUpperCase()),
+    join(""),
+  ) || "?";
 
 const sameDay = (a: number, b: number): boolean => {
   const da = new Date(a);
@@ -133,11 +135,11 @@ interface TreeNode {
 
 const buildTree = (msgs: ConversationMessage[]): TreeNode[] => {
   const byId = new Map<string, TreeNode>();
-  msgs.forEach((m) => {
+  for (const m of msgs) {
     byId.set(m.id, { msg: m, children: [], depth: 0 });
-  });
+  }
   const roots: TreeNode[] = [];
-  msgs.forEach((m) => {
+  for (const m of msgs) {
     const node = byId.get(m.id)!;
     if (m.replyToId && byId.has(m.replyToId)) {
       const parent = byId.get(m.replyToId)!;
@@ -146,16 +148,16 @@ const buildTree = (msgs: ConversationMessage[]): TreeNode[] => {
     } else {
       roots.push(node);
     }
-  });
+  }
   // Sort children by timestamp at every level.
-  const sortRec = (nodes: TreeNode[]) => {
-    nodes.sort((a, b) => toMs(a.msg.timestamp) - toMs(b.msg.timestamp));
-    nodes.forEach((n) => {
-      sortRec(n.children);
-    });
+  const sortRec = (nodes: TreeNode[]): TreeNode[] => {
+    const sorted = sortBy((n: TreeNode) => toMs(n.msg.timestamp))(nodes);
+    for (const n of sorted) {
+      n.children = sortRec(n.children);
+    }
+    return sorted;
   };
-  sortRec(roots);
-  return roots;
+  return sortRec(roots);
 };
 
 // Flatten with grouping. Within a parent (same depth, same thread context),
@@ -218,20 +220,20 @@ const flattenWithGrouping = (
     }
 
     lastMs = ts;
-    node.children.forEach(visit);
+    for (const child of node.children) visit(child);
   };
 
-  roots.forEach(visit);
+  for (const root of roots) visit(root);
   return items;
 };
 
 const bubbleBg = (color: string, isSelf: boolean): string =>
   isSelf
-    ? `color-mix(in srgb, ${color} 70%, #0a1525 30%)`
+    ? `color-mix(in srgb, ${color} 70%, var(--sui-bg-deep, #0a1525) 30%)`
     : `color-mix(in srgb, ${color} 12%, transparent)`;
 
 const bubbleTextColor = (isSelf: boolean): string | undefined =>
-  isSelf ? "#f4f8ff" : undefined;
+  isSelf ? "var(--sui-text-primary, #f4f8ff)" : undefined;
 
 export const ConversationTree: Component<ConversationTreeProps> = (props) => {
   const groupWithinMs = () => props.groupWithinMs ?? 5 * 60_000;
@@ -241,17 +243,17 @@ export const ConversationTree: Component<ConversationTreeProps> = (props) => {
 
   const participantById = createMemo(() => {
     const m = new Map<string, Participant>();
-    props.participants.forEach((p) => {
+    for (const p of props.participants) {
       m.set(p.id, p);
-    });
+    }
     return m;
   });
 
   const colorById = createMemo(() => {
     const m = new Map<string, string>();
-    props.participants.forEach((p) => {
+    for (const p of props.participants) {
       m.set(p.id, p.color ?? colorForId(p.id));
-    });
+    }
     return m;
   });
 

@@ -23,7 +23,7 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed — Default</h3>
-          <Stack gap="sm" style={{ "max-width": "280px" }}>
+          <Stack gap="sm" class="removable-item-card-demo">
             <RemovableItemCard
               title="ITEM ALPHA"
               details={
@@ -35,8 +35,8 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
             />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Active + Remove</h3>
-          <Stack gap="sm" style={{ "max-width": "280px" }}>
+          <h3 class="showcase-heading-gap">Composed — Active + Remove</h3>
+          <Stack gap="sm" class="removable-item-card-demo">
             <RemovableItemCard
               title="ITEM BRAVO"
               active
@@ -50,8 +50,8 @@ export const RemovableItemCardShowcase: Component<Depth2Props> = (props) => {
             />
           </Stack>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Sidebar List</h3>
-          <Stack gap="sm" style={{ "max-width": "280px" }}>
+          <h3 class="showcase-heading-gap">Composed — Sidebar List</h3>
+          <Stack gap="sm" class="removable-item-card-demo">
             {!isRemoved("v1") && (
               <RemovableItemCard
                 title="ITEM CHARLIE"

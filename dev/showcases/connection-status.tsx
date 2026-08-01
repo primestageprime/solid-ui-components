@@ -78,7 +78,7 @@ export const ConnectionStatusShowcase: Component = () => {
             />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>
+          <h3 class="showcase-heading-gap--lg">
             LiveHeartbeatTrace — Depth 1 (raw)
           </h3>
           <p class="text-meta">
@@ -112,7 +112,7 @@ export const ConnectionStatusShowcase: Component = () => {
             />
           </Row>
 
-          <h3 style={{ "margin-top": "32px" }}>
+          <h3 class="showcase-heading-gap--lg">
             HeartbeatSparkline — Primitive (Depth 0, hand-fed)
           </h3>
           <p class="text-meta">
@@ -150,9 +150,7 @@ export const ConnectionStatusShowcase: Component = () => {
           >
             {(row) => (
               <Row gap="sm" align="center">
-                <span style={{ "min-width": "22rem", "font-size": "0.8rem" }}>
-                  {row.label}
-                </span>
+                <span class="connection-status-demo__label">{row.label}</span>
                 <HeartbeatSparkline
                   state={row.state}
                   samples={row.samples}

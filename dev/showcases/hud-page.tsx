@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { Page } from "../../src/components/Page";
 import { Stack } from "../../src/components/Layout/Stack";
+import { MutedBody } from "../../src/components/Text";
 
 export const PageShowcase: Component = () => {
   return (
@@ -16,10 +17,8 @@ export const PageShowcase: Component = () => {
         <Stack gap="sm">
           <div>
             <div class="text-meta">default — dark bg, no pattern</div>
-            <Page style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
-                Default page shell
-              </p>
+            <Page class="hud-page-demo__frame">
+              <MutedBody>Default page shell</MutedBody>
             </Page>
           </div>
 
@@ -27,11 +26,9 @@ export const PageShowcase: Component = () => {
             <div class="text-meta">gridPattern — 40px accent grid overlay</div>
             <Page
               gridPattern
-              style={{ height: "120px", "min-height": "unset" }}
+              class="hud-page-demo__frame"
             >
-              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
-                Grid pattern background
-              </p>
+              <MutedBody>Grid pattern background</MutedBody>
             </Page>
           </div>
 
@@ -39,10 +36,8 @@ export const PageShowcase: Component = () => {
             <div class="text-meta">
               scanLines — animated horizontal scan line effect
             </div>
-            <Page scanLines style={{ height: "120px", "min-height": "unset" }}>
-              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
-                Scan lines overlay
-              </p>
+            <Page scanLines class="hud-page-demo__frame">
+              <MutedBody>Scan lines overlay</MutedBody>
             </Page>
           </div>
 
@@ -53,11 +48,9 @@ export const PageShowcase: Component = () => {
             <Page
               gridPattern
               scanLines
-              style={{ height: "120px", "min-height": "unset" }}
+              class="hud-page-demo__frame"
             >
-              <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
-                Both effects combined
-              </p>
+              <MutedBody>Both effects combined</MutedBody>
             </Page>
           </div>
         </Stack>

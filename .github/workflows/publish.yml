@@ -1,14 +1,32 @@
 name: Publish to GitHub Packages
 
+# GATED ON CI. This used to trigger directly on a push touching package.json,
+# which meant publish raced CI rather than following it: on 2026-07-29 a
+# version was published from a commit whose lint job then failed. That it was
+# harmless (a `let` that should have been `const`) was established by reading
+# the diff afterwards — which is precisely the check a gate is supposed to make
+# unnecessary. A publish that can outrun its gate is not gated.
+#
+# `workflow_run` is used because `needs:` cannot reference a job in another
+# workflow. The path filter is dropped with it — `workflow_run` does not
+# support one — which costs nothing, because the "already published" step below
+# is the real idempotency guard: this runs after every green CI on main and
+# publishes only when package.json carries a version the registry lacks.
+
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    paths:
-      - package.json
   workflow_dispatch:
 
 jobs:
   publish:
+    # A manual dispatch is deliberate and trusted; an automatic run must follow
+    # a CI run that actually passed.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -18,6 +36,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          # workflow_run defaults to the default branch's HEAD, not the commit
+          # CI actually validated. Pin to the SHA that passed, or the gate
+          # verifies one tree and publishes another.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Setup Node.js (with GitHub Packages registry)
         uses: actions/setup-node@v5
@@ -26,11 +49,31 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: "@primestageprime"
 
+      # `--ignore-scripts` suppresses package.json's `prepare` (= a full
+      # build). Without it this job built SUI THREE times: once here via
+      # `prepare`, once in the Build step below, and once more when `npm
+      # publish` fires `prepare` again as part of packing. See ci.yml for the
+      # measurements and for why `prepare` itself must keep building.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build
         run: npm run build
+
+      # The Build step above is now the ONLY thing that populates `dist`, and
+      # `npm publish --ignore-scripts` below packs whatever it finds without
+      # rebuilding. Deleting that step would therefore publish an empty
+      # package — silently, since npm does not care. This asserts otherwise.
+      - name: Verify build output before packing
+        run: |
+          for f in dist/index.js dist/server.js dist/index.d.ts dist/index.css; do
+            if [ ! -s "$f" ]; then
+              echo "::error::$f is missing or empty — refusing to publish."
+              echo "The Build step is what creates it; installs here use --ignore-scripts."
+              exit 1
+            fi
+          done
+          echo "dist OK ($(find dist -type f | wc -l) files)"
 
       - name: Check if this version is already published
         id: check
@@ -49,11 +92,14 @@ jobs:
             echo "Version $PKG_VERSION not yet published."
           fi
 
+      # `--ignore-scripts` here too: `npm publish` runs `prepare` as part of
+      # packing, which would be a third full build of a tree the Build step
+      # already produced and the step above already verified.
       - name: Publish to GitHub Packages
         if: steps.check.outputs.already_published == 'false'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+        run: npm publish --ignore-scripts
 
       - name: Notify consumers (amygdala-ui)
         if: steps.check.outputs.already_published == 'false'

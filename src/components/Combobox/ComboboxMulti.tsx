@@ -1,5 +1,6 @@
 // ============================================
 // Combobox — Multi-mode render (internal sibling of Combobox.tsx)
+// Atomic (Depth 1) — internal render half of the Combobox Kobalte-wrapping Primitive.
 // ============================================
 // Extracted from Combobox.tsx to keep each module under the ~500-line
 // guideline. This is NOT a public export — the folder barrel (index.ts)
@@ -26,9 +27,16 @@
 // ============================================
 import { Combobox as KobalteCombobox } from "@kobalte/core/combobox";
 import { type Accessor, createEffect, createSignal, For, Show } from "solid-js";
+import {
+  NarrowStack,
+  SpreadRow,
+  TagRow,
+  TightClusterRow,
+} from "../Layout/variants";
 import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import type { ComboboxOption, MultiComboboxProps } from "./Combobox";
+import { filter, some } from "../../fn";
 
 /** Narrowed local props for multi-mode rendering. */
 export type MultiLocal = Pick<
@@ -70,8 +78,9 @@ export const renderMulti = (
   createEffect(() => {
     const current = highlightedChipValue();
     if (current === null) return;
-    const stillPresent = (local.value?.() ?? []).some(
+    const stillPresent = some(
       (opt) => opt.value === current,
+      local.value?.() ?? [],
     );
     if (!stillPresent) setHighlightedChipValue(null);
   });
@@ -85,12 +94,13 @@ export const renderMulti = (
   };
 
   const handleChange = (next: ComboboxOption[]) => {
-    const removed = prevValue().filter(
-      (prev) => !next.some((n) => n.value === prev.value),
+    const removed = filter(
+      (prev) => !some((n) => n.value === prev.value, next),
+      prevValue(),
     );
-    removed.forEach((opt) => {
+    for (const opt of removed) {
       local.onRemove?.(opt);
-    });
+    }
     setPrevValue(next);
     local.onChange?.(next);
   };
@@ -146,11 +156,13 @@ export const renderMulti = (
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
-    const existsInOptions = local
-      .options()
-      .some((opt) => opt.label.toLowerCase() === text.toLowerCase());
-    const existsInValue = (local.value?.() ?? []).some(
+    const existsInOptions = some(
       (opt) => opt.label.toLowerCase() === text.toLowerCase(),
+      local.options(),
+    );
+    const existsInValue = some(
+      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
+      local.value?.() ?? [],
     );
     if (existsInOptions || existsInValue) return;
     e.preventDefault();
@@ -202,8 +214,8 @@ export const renderMulti = (
         {(state) => (
           <>
             <Show when={chipsEnabled() && state.selectedOptions().length > 0}>
-              <div class="sui-combobox__chips">
-                <div class="sui-combobox__chips-header">
+              <NarrowStack class="sui-combobox__chips">
+                <SpreadRow class="sui-combobox__chips-header">
                   <span class="sui-combobox__chips-count">
                     Selected ({state.selectedOptions().length})
                   </span>
@@ -216,8 +228,8 @@ export const renderMulti = (
                   >
                     Clear all
                   </button>
-                </div>
-                <div class="sui-combobox__chip-list">
+                </SpreadRow>
+                <TagRow class="sui-combobox__chip-list">
                   <For each={state.selectedOptions()}>
                     {(option) => (
                       <span
@@ -249,10 +261,10 @@ export const renderMulti = (
                       </span>
                     )}
                   </For>
-                </div>
-              </div>
+                </TagRow>
+              </NarrowStack>
             </Show>
-            <div class="sui-combobox__input-row">
+            <TightClusterRow class="sui-combobox__input-row">
               <KobalteCombobox.Input
                 id={local.id}
                 class="sui-combobox__input"
@@ -275,7 +287,7 @@ export const renderMulti = (
                   />
                 </KobalteCombobox.Icon>
               </KobalteCombobox.Trigger>
-            </div>
+            </TightClusterRow>
           </>
         )}
       </KobalteCombobox.Control>

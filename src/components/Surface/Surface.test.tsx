@@ -6,6 +6,7 @@ import {
   CardSurface,
   ContentSurface,
   CenteredSurface,
+  PopoverSurface,
 } from "./index";
 
 describe("Surface", () => {
@@ -61,5 +62,54 @@ describe("Surface", () => {
     expect(container.firstElementChild!.className).toMatch(
       /surface--align-center/,
     );
+  });
+});
+
+describe("Surface gap forwarding", () => {
+  it("forwards gap to the inner Stack at the step the caller asked for", () => {
+    const { container } = render(() => (
+      <Surface direction="column" gap="md">
+        x
+      </Surface>
+    ));
+    expect(container.querySelector(".stack")!.className).toMatch(
+      /stack--gap-md/,
+    );
+  });
+
+  it("forwards gap to the inner Row at the step the caller asked for", () => {
+    const { container } = render(() => (
+      <Surface direction="row" gap="lg">
+        x
+      </Surface>
+    ));
+    expect(container.querySelector(".row")!.className).toMatch(/row--gap-lg/);
+  });
+
+  it("gap='none' produces no gap class at all", () => {
+    const { container } = render(() => (
+      <Surface direction="column" gap="none">
+        x
+      </Surface>
+    ));
+    expect(container.querySelector(".stack")!.className).not.toMatch(
+      /stack--gap-/,
+    );
+  });
+});
+
+describe("Surface shadow", () => {
+  it("adds .surface--shadow when shadow is set", () => {
+    const { container } = render(() => <Surface shadow>x</Surface>);
+    expect(
+      container.firstElementChild?.classList.contains("surface--shadow"),
+    ).toBe(true);
+  });
+  it("PopoverSurface is elevated + shadowed + width-bounded", () => {
+    const { container } = render(() => <PopoverSurface>x</PopoverSurface>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.classList.contains("surface--shadow")).toBe(true);
+    expect(el.style.minWidth).toBe("280px");
+    expect(el.style.maxWidth).toBe("360px");
   });
 });

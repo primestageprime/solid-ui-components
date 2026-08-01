@@ -25,15 +25,13 @@
 // actually differs, so typing never fights the prop.
 // Factory: createBigNumberInput() for curried variants.
 //
-// `prefix` / `sign` are DEPRECATED static chrome from the pre-Intl
-// API. They are retained only as optional escape hatches and render
-// as static glyphs alongside the bare number; they do NOT participate
-// in currency masking and are ignored for the parsed value.
+// The pre-Intl `prefix`/`sign` static-glyph props were pruned
+// 2026-07-15 — unused by every production consumer; currency masking
+// supersedes them.
 // ============================================
 import {
   type Component,
   type JSX,
-  Show,
   createSignal,
   createEffect,
   mergeProps,
@@ -44,7 +42,7 @@ import "./BigNumberInput.css";
 export interface BigNumberInputProps
   extends Omit<
     JSX.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value" | "type" | "prefix"
+    "onChange" | "value" | "type"
   > {
   /** Current numeric value (controlled). */
   value: number;
@@ -61,16 +59,6 @@ export interface BigNumberInputProps
    * Default `"USD"`.
    */
   currency?: string;
-  /**
-   * @deprecated Superseded by currency masking. Optional static prefix
-   * glyph rendered before the bare number (non-currency escape hatch).
-   */
-  prefix?: string;
-  /**
-   * @deprecated Superseded by currency masking. Optional leading sign
-   * glyph; "none" (default) renders nothing.
-   */
-  sign?: "+" | "-" | "none";
   /** Text alignment of the number. Default "left". */
   align?: "left" | "right";
   /**
@@ -135,8 +123,6 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
     "onChange",
     "locale",
     "currency",
-    "prefix",
-    "sign",
     "align",
     "class",
     "selectOnFocus",
@@ -210,27 +196,16 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
   const rootClass = () =>
     local.class ? `sui-big-number ${local.class}` : "sui-big-number";
 
-  const signGlyph = () =>
-    local.sign && local.sign !== "none" ? local.sign : null;
-
   return (
     <div class={rootClass()}>
-      <Show when={signGlyph()}>
-        <span class="sui-big-number__sign" aria-hidden="true">
-          {signGlyph()}
-        </span>
-      </Show>
-      <Show when={local.prefix}>
-        <span class="sui-big-number__prefix" aria-hidden="true">
-          {local.prefix}
-        </span>
-      </Show>
       <input
         ref={inputEl}
         type="text"
         inputmode="decimal"
         class="sui-big-number__input"
-        style={{ "text-align": local.align ?? "left" }}
+        classList={{
+          "sui-big-number__input--right": local.align === "right",
+        }}
         value={display()}
         onInput={handleInput}
         onFocus={handleFocus}

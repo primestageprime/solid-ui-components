@@ -1,0 +1,8 @@
+/* SectionTable showcase — the table unit is capped to a tile-like width so the
+   bound record count visibly aligns with the TABLE's right edge rather than the
+   viewport's. Gallery furniture, same category as .demo-frame. */
+
+.section-table-unit {
+  width: 34rem;
+  max-width: 100%;
+}

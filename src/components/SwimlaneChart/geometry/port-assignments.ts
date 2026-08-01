@@ -4,6 +4,7 @@
  * vertical extent so parallel connections fan out instead of stacking, for
  * orthogonal routing. */
 import type { EdgePorts, LayoutEdgeLike, NodePos } from "./shared";
+import { sortBy } from "../../../fn";
 
 /**
  * Per-edge port assignment for orthogonal routing. For each visible node, its
@@ -43,17 +44,20 @@ export function computePortAssignments(
     for (const [nodeId, es] of list) {
       const p = positions.get(nodeId);
       if (!p) continue;
-      es.sort((a, b) => a.otherY - b.otherY);
-      const n = es.length;
+      const sorted = sortBy(
+        (e: { edgeKey: string; otherY: number }) => e.otherY,
+        es,
+      );
+      const n = sorted.length;
       const top = p.y - p.height / 2;
       const h = p.height;
-      es.forEach((e, i) => {
+      for (const [i, e] of sorted.entries()) {
         const y = top + (h * (i + 1)) / (n + 1);
         const cur = portY.get(e.edgeKey) ?? { from: p.y, to: p.y };
         if (side === "out") cur.from = y;
         else cur.to = y;
         portY.set(e.edgeKey, cur);
-      });
+      }
     }
   };
   assign("out", outgoing);

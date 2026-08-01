@@ -28,7 +28,7 @@ export const ListShowcase: Component = () => {
             </ListItem>
           </List>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Menu List</h3>
+          <h3 class="showcase-heading-gap">Composed — Menu List</h3>
           <List variant="menu">
             <ListItem interactive>Dashboard</ListItem>
             <ListItem interactive selected>
@@ -38,7 +38,7 @@ export const ListShowcase: Component = () => {
             <ListItem interactive>Settings</ListItem>
           </List>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Compact</h3>
+          <h3 class="showcase-heading-gap">Composed — Compact</h3>
           <List compact dividers>
             <ListItem>Item one</ListItem>
             <ListItem>Item two</ListItem>

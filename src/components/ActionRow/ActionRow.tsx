@@ -8,6 +8,13 @@
 // Extracted from dside-ui DesignView (CarryoverRow + focus-mode rows).
 // ============================================
 import { type Component, For, type JSX, Show, mergeProps } from "solid-js";
+import {
+  NarrowStack,
+  ClusterRow,
+  NoShrinkClusterRow,
+  GrowBox,
+  EndWrapRow,
+} from "../Layout/variants";
 import "./ActionRow.css";
 
 export type ActionRowTone = "default" | "danger" | "accent";
@@ -48,19 +55,28 @@ export const ActionRow: Component<ActionRowProps> = (rawProps) => {
     return c.join(" ");
   };
 
+  // Arrangement composed from Layout: outer column (NarrowStack), the main row
+  // (ClusterRow) with a growing body (GrowBox) between no-shrink leading/trailing
+  // clusters, and the hover-revealed action bar (EndWrapRow). Gaps snapped to the
+  // xs/sm scale: root 6px->sm, main 8px=sm, leading/trailing 6px->sm, actions
+  // 5px->xs. The BEM hook classes carry the remaining intrinsic styling.
   return (
-    <div class={rowClass()}>
-      <div class="sui-action-row__main">
+    <NarrowStack class={rowClass()}>
+      <ClusterRow class="sui-action-row__main">
         <Show when={props.leading}>
-          <div class="sui-action-row__leading">{props.leading}</div>
+          <NoShrinkClusterRow class="sui-action-row__leading">
+            {props.leading}
+          </NoShrinkClusterRow>
         </Show>
-        <div class="sui-action-row__body">{props.children}</div>
+        <GrowBox class="sui-action-row__body">{props.children}</GrowBox>
         <Show when={props.trailing}>
-          <div class="sui-action-row__trailing">{props.trailing}</div>
+          <NoShrinkClusterRow class="sui-action-row__trailing">
+            {props.trailing}
+          </NoShrinkClusterRow>
         </Show>
-      </div>
+      </ClusterRow>
       <Show when={props.actions && props.actions.length > 0}>
-        <div class="sui-action-row__actions">
+        <EndWrapRow class="sui-action-row__actions">
           <For each={props.actions}>
             {(a) => (
               <button
@@ -74,9 +90,9 @@ export const ActionRow: Component<ActionRowProps> = (rawProps) => {
               </button>
             )}
           </For>
-        </div>
+        </EndWrapRow>
       </Show>
-    </div>
+    </NarrowStack>
   );
 };
 

@@ -2,6 +2,7 @@ import { type Component, createMemo, createSignal, For } from "solid-js";
 import { ScrubChart } from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
 import { cashflowAt, cashflowDayCell, fmtDollars } from "./cashflow-day-cell";
+import { NarrowStack } from "../../src/components/Layout";
 
 type CashflowCell = Cell & {
   cashflowCents: number;
@@ -58,7 +59,7 @@ const renderCashflowChart = (
     <svg
       viewBox={`0 0 ${ctx.width} ${ctx.height}`}
       preserveAspectRatio="none"
-      style={{ width: "100%", height: "100%", display: "block" }}
+      class="scrub-chart-demo__svg"
     >
       <line
         x1={0}
@@ -113,34 +114,32 @@ export const ScrubChartShowcase: Component = () => {
           inside the window.
         </p>
 
-        <ScrubChart<CashflowCell>
-          cells={cells}
-          selected={selectedIdx()}
-          onScrub={(i) => setSelectedIdx(i)}
-          today={PINNED_TODAY}
-          renderCell={cashflowDayCell}
-          renderChart={renderCashflowChart}
-        />
+        <NarrowStack>
+          <ScrubChart<CashflowCell>
+            cells={cells}
+            selected={selectedIdx()}
+            onScrub={(i) => setSelectedIdx(i)}
+            today={PINNED_TODAY}
+            renderCell={cashflowDayCell}
+            renderChart={renderCashflowChart}
+          />
 
-        <div
-          style={{
-            "margin-top": "16px",
-            "font-size": "13px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
-          Selected:{" "}
-          <strong style={{ color: "var(--sui-text-primary)" }}>
-            {fmtDate(cell().start)}
-          </strong>
-          {" — "}
-          Balance:{" "}
-          <strong style={{ color: "var(--sui-text-primary)" }}>
-            {fmtDollars(cell().balanceCents / 100)}
-          </strong>
-          {" · Day cashflow: "}
-          <span>{fmtDollars(cell().cashflowCents / 100)}</span>
-        </div>
+          <div
+            class="scrub-chart-demo__readout"
+          >
+            Selected:{" "}
+            <strong class="scrub-chart-demo__strong">
+              {fmtDate(cell().start)}
+            </strong>
+            {" — "}
+            Balance:{" "}
+            <strong class="scrub-chart-demo__strong">
+              {fmtDollars(cell().balanceCents / 100)}
+            </strong>
+            {" · Day cashflow: "}
+            <span>{fmtDollars(cell().cashflowCents / 100)}</span>
+          </div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">

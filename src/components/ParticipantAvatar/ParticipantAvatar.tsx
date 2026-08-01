@@ -15,6 +15,7 @@ import {
   splitProps,
 } from "solid-js";
 import "./ParticipantAvatar.css";
+import { pipe, filter, join } from "../../fn";
 
 export type ParticipantAvatarSize = "sm" | "md" | "lg";
 
@@ -33,7 +34,11 @@ export interface ParticipantAvatarProps
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const ParticipantAvatar: Component<ParticipantAvatarProps> = (props) => {
   const [local, others] = splitProps(props, [

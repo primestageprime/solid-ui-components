@@ -12,8 +12,29 @@ import {
   SmallPrimaryButton,
   SmallGhostButton,
 } from "../../src/components/Button/variants";
-import { TextTitle, MutedBody } from "../../src/components/Text";
-import { CardSurface } from "../../src/components/Surface";
+import {
+  SubsectionTitle,
+  MutedBody,
+  EllipsizedTitle,
+  FadedNowrapSublabel,
+} from "../../src/components/Text";
+import {
+  NarrowStack,
+  ClusterRow,
+  TopClusterRow,
+  WrappedClusterRow,
+  SpreadRow,
+} from "../../src/components/Layout";
+import { createSurface } from "../../src/components/Surface";
+
+// Consumer-composed detail panel — a column card with md gap. App-specific
+// composition curried at module top so no visual config sits at the call site.
+const DetailCard = createSurface({
+  padding: "md",
+  radius: "md",
+  direction: "column",
+  gap: "md",
+});
 
 /* Demo item type — a small "transaction to categorize" record so the
  * resolved/unresolved framing reads naturally. */
@@ -92,16 +113,10 @@ const CARD_H = 120;
 
 // Shared row renderer: label left, right-aligned tabular amount.
 const renderItem = (i: QueueItem): JSX.Element => (
-  <span
-    style={{ display: "flex", "justify-content": "space-between", gap: "8px" }}
-  >
-    <span style={{ overflow: "hidden", "text-overflow": "ellipsis" }}>
-      {i.label}
-    </span>
-    <span style={{ "font-variant-numeric": "tabular-nums", opacity: 0.8 }}>
-      {i.amount}
-    </span>
-  </span>
+  <SpreadRow>
+    <EllipsizedTitle>{i.label}</EllipsizedTitle>
+    <FadedNowrapSublabel>{i.amount}</FadedNowrapSublabel>
+  </SpreadRow>
 );
 
 // ── Selection + detail panel + resolve/unresolve ────────────────────────────
@@ -111,7 +126,7 @@ const renderItem = (i: QueueItem): JSX.Element => (
 // SUI animates the transition. Resolve sorts the card to the to-categorize HEAD
 // first, Unresolve sorts it to the done TAIL first ("sort to the seam, then
 // run the animation"), so forward and reverse are exact mirrors. This is the
-// reference wiring for the Thorcasting Configure accept-flow.
+// reference wiring for a configure/accept flow.
 function SelectionDemo() {
   const ITEMS = POOL.slice(0, 10);
   const [resolved, setResolved] = createSignal<QueueItem[]>([]);
@@ -215,15 +230,8 @@ function SelectionDemo() {
   onCleanup(() => timer && clearTimeout(timer));
 
   return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          "align-items": "center",
-          "flex-wrap": "wrap",
-        }}
-      >
+    <NarrowStack>
+      <WrappedClusterRow>
         <SmallGhostButton onClick={prev} disabled={resolved().length === 0}>
           ◂ Prev
         </SmallGhostButton>
@@ -246,15 +254,13 @@ function SelectionDemo() {
           value={String(speed())}
           onValueChange={(v) => setSpeed(Number(v))}
         />
-        <span class="text-meta" style={{ "align-self": "center" }}>
+        <span class="text-meta">
           {resolved().length} resolved · {unresolved().length} left
         </span>
-      </div>
+      </WrappedClusterRow>
 
-      <div
-        style={{ display: "flex", gap: "24px", "align-items": "flex-start" }}
-      >
-        <div style={{ width: "340px" }}>
+      <TopClusterRow>
+        <div class="split-queue-list-demo__left">
           <SplitQueueList<QueueItem>
             resolved={resolved()}
             unresolved={unresolved()}
@@ -278,8 +284,8 @@ function SelectionDemo() {
         </div>
 
         {/* Detail panel — CONSUMER-composed; the component only emits selection. */}
-        <div style={{ width: "260px", position: "sticky", top: "16px" }}>
-          <CardSurface direction="column" gap="md">
+        <div class="split-queue-list-demo__sticky">
+          <DetailCard>
             <Show
               when={currentItem()}
               fallback={
@@ -288,7 +294,7 @@ function SelectionDemo() {
             >
               {(item) => (
                 <>
-                  <TextTitle as="h3">{item().label}</TextTitle>
+                  <SubsectionTitle>{item().label}</SubsectionTitle>
                   <MutedBody>
                     {item().amount} ·{" "}
                     {currentIsResolved() ? "Categorized" : "To categorize"}
@@ -312,10 +318,10 @@ function SelectionDemo() {
                 </>
               )}
             </Show>
-          </CardSurface>
+          </DetailCard>
         </div>
-      </div>
-    </div>
+      </TopClusterRow>
+    </NarrowStack>
   );
 }
 
@@ -374,40 +380,26 @@ function QueueDemo(props: { height: number }) {
   onCleanup(() => timer && clearTimeout(timer));
 
   return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "16px",
-          "align-items": "center",
-          "flex-wrap": "wrap",
-        }}
-      >
-        <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+    <NarrowStack>
+      <WrappedClusterRow>
+        <ClusterRow>
           <span class="text-meta">Items</span>
           <SegmentedControl
             options={LENGTH_OPTIONS}
             value={String(count())}
             onValueChange={(v) => loadCount(Number(v))}
           />
-        </div>
-        <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+        </ClusterRow>
+        <ClusterRow>
           <span class="text-meta">Speed</span>
           <SegmentedControl
             options={SPEED_OPTIONS}
             value={String(speed())}
             onValueChange={(v) => setSpeed(Number(v))}
           />
-        </div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          "align-items": "center",
-          "flex-wrap": "wrap",
-        }}
-      >
+        </ClusterRow>
+      </WrappedClusterRow>
+      <WrappedClusterRow>
         <SmallPrimaryButton
           onClick={resolveNext}
           disabled={unresolved().length === 0}
@@ -421,11 +413,11 @@ function QueueDemo(props: { height: number }) {
           {auto() ? "Pause" : "Auto-play"}
         </SmallGhostButton>
         <SmallGhostButton onClick={reset}>Reset</SmallGhostButton>
-        <span class="text-meta" style={{ "align-self": "center" }}>
+        <span class="text-meta">
           {resolved().length} resolved · {unresolved().length} left
         </span>
-      </div>
-      <div style={{ width: "320px" }}>
+      </WrappedClusterRow>
+      <div class="split-queue-list-demo__narrow">
         <SplitQueueList<QueueItem>
           resolved={resolved()}
           unresolved={unresolved()}
@@ -442,7 +434,7 @@ function QueueDemo(props: { height: number }) {
           renderItem={renderItem}
         />
       </div>
-    </div>
+    </NarrowStack>
   );
 }
 
@@ -481,7 +473,7 @@ export const SplitQueueListShowcase: Component = () => {
       </p>
       <SelectionDemo />
 
-      <h3 style={{ "margin-top": "32px" }}>Layout at every length</h3>
+      <h3>Layout at every length</h3>
       <p class="text-meta">
         Use the <strong>Items</strong> toggle to see the layout at every length:
         <strong> 0</strong> (empty → "all clear" strip, top fills),
@@ -491,7 +483,7 @@ export const SplitQueueListShowcase: Component = () => {
         visible at each length.
       </p>
 
-      <div style={{ display: "flex", gap: "40px", "flex-wrap": "wrap" }}>
+      <div class="example-row">
         <div>
           <h3>Tall (760px) — top caps at 3, newest at the seam</h3>
           <p class="text-meta">

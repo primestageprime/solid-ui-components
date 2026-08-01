@@ -1,5 +1,20 @@
+/* Link — the unpadded accent anchor for inline CTAs.
+ *
+ * The type scale is deliberate, not incidental. `Link` previously declared only
+ * colour/decoration/cursor and appears in NO theme, so it rendered at whatever
+ * font-size it happened to inherit — the document's 16px in practice. That made
+ * an inline link LARGER than the 0.875rem title above it wherever it sat in a
+ * dense component (caught in NotificationCenter, 2026-07-27), and made it
+ * silently disagree with a sibling `TextButton` rendering the same affordance.
+ *
+ * 13px/500 matches `.sui-btn` in themes/_baseline.css on purpose: a text button
+ * and an inline link are alternate renderings of the SAME inline action — one
+ * navigates, one calls back — and a component that picks between them by
+ * `href` presence must not change size as a result. Pair them freely. */
 .link {
   color: var(--sui-accent);
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
 }

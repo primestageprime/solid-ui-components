@@ -1,5 +1,15 @@
 import { type Component, createSignal } from "solid-js";
-import { Tabs } from "../../src/components/Tabs";
+import { createTabs } from "../../src/components/Tabs";
+import { BoxedTabs, PillTabs, Tabs } from "../../src/components/Tabs/variants";
+
+// Local prop-matrix instances — this showcase demonstrates the orientation
+// axis, which no shipped variant bakes. Factory-curried at module top so the
+// visual config still lives in one place, not at the call site.
+const VerticalTabs = createTabs({ orientation: "vertical" });
+const VerticalBoxedTabs = createTabs({
+  orientation: "vertical",
+  variant: "boxed",
+});
 
 export const TabsShowcase: Component = () => {
   const [active, setActive] = createSignal("overview");
@@ -21,23 +31,13 @@ export const TabsShowcase: Component = () => {
           <h3>Composed — Default (Underline)</h3>
           <Tabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Boxed</h3>
-          <Tabs
-            tabs={tabs}
-            activeTab={active()}
-            onTabChange={setActive}
-            variant="boxed"
-          />
+          <h3 class="showcase-heading-gap">Composed — Boxed</h3>
+          <BoxedTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Pill</h3>
-          <Tabs
-            tabs={tabs}
-            activeTab={active()}
-            onTabChange={setActive}
-            variant="pill"
-          />
+          <h3 class="showcase-heading-gap">Composed — Pill</h3>
+          <PillTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — With Status</h3>
+          <h3 class="showcase-heading-gap">Composed — With Status</h3>
           <Tabs
             tabs={[
               { id: "a", label: "Clean" },
@@ -48,55 +48,28 @@ export const TabsShowcase: Component = () => {
             onTabChange={() => {}}
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Vertical (Default)
           </h3>
-          <div
-            style={{
-              display: "flex",
-              "min-height": "180px",
-              border: "1px dashed var(--sui-border)",
-            }}
-          >
-            <Tabs
+          <div class="hud-tabs-demo__row">
+            <VerticalTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
-              orientation="vertical"
             />
-            <div
-              style={{
-                flex: 1,
-                padding: "16px",
-                color: "var(--sui-text-muted)",
-              }}
-            >
+            <div class="hud-tabs-demo__pane">
               Active tab: <strong>{active()}</strong>
             </div>
           </div>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical (Boxed)</h3>
-          <div
-            style={{
-              display: "flex",
-              "min-height": "180px",
-              border: "1px dashed var(--sui-border)",
-            }}
-          >
-            <Tabs
+          <h3 class="showcase-heading-gap">Composed — Vertical (Boxed)</h3>
+          <div class="hud-tabs-demo__row">
+            <VerticalBoxedTabs
               tabs={tabs}
               activeTab={active()}
               onTabChange={setActive}
-              orientation="vertical"
-              variant="boxed"
             />
-            <div
-              style={{
-                flex: 1,
-                padding: "16px",
-                color: "var(--sui-text-muted)",
-              }}
-            >
+            <div class="hud-tabs-demo__pane">
               Active tab: <strong>{active()}</strong>
             </div>
           </div>

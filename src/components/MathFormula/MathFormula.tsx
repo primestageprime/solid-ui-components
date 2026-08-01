@@ -17,9 +17,16 @@ import {
   type Accessor,
 } from "solid-js";
 import katex from "katex";
+// Kept so dev/serve and source-linked consumers (SUI_SOURCE_LINKED) style
+// formulas correctly. The LIBRARY BUILD stubs this import to empty and ships
+// the stylesheet as a real file with real fonts instead — Vite's lib mode
+// would otherwise inline all 60 font files as base64, 78.5% of dist/index.css.
+// See stubKatexCss() in vite.config.ts and
+// docs/adr/0006-katex-css-fonts-not-inlined.md.
 import "katex/dist/katex.min.css";
 import "./MathFormula.css";
 import { splitLatexSegments, hasSplittableOperators } from "./latexSegments";
+import { find, map } from "../../fn";
 
 // ============================================
 // Formula Highlight Context
@@ -106,20 +113,21 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     // Find all elements with formula-var class
     const varElements = containerRef.querySelectorAll(".formula-var");
 
-    varElements.forEach((el) => {
+    for (const el of varElements) {
       // Extract varId from class list (formula-var-{id})
       const classes = Array.from(el.classList);
-      const varClass = classes.find(
+      const varClass = find(
         (c) => c.startsWith("formula-var-") && c !== "formula-var",
+        classes,
       );
-      if (!varClass) return;
+      if (!varClass) continue;
 
       const varId = varClass.replace("formula-var-", "");
       (el as HTMLElement).dataset.formulaVar = varId;
 
       el.addEventListener("mouseenter", () => ctx.setHoveredVar(varId));
       el.addEventListener("mouseleave", () => ctx.setHoveredVar(null));
-    });
+    }
   };
 
   // Render a single chunk of LaTeX to a KaTeX HTML string.
@@ -142,14 +150,14 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
   // even though each term is rendered in inline (non-display) mode.
   const renderWrapped = (): string => {
     const segments = splitLatexSegments(props.latex);
-    const pieces = segments.map((seg) => {
+    const pieces = map((seg) => {
       const cls = seg.kind === "op" ? "math-formula-op" : "math-formula-term";
       const body =
         seg.kind === "op"
           ? renderChunk(seg.latex, false)
           : renderChunk(`\\displaystyle ${seg.latex}`, false);
       return `<span class="${cls}">${body}</span>`;
-    });
+    }, segments);
     return `<span class="math-formula-row">${pieces.join("")}</span>`;
   };
 
@@ -185,14 +193,14 @@ export const MathFormula: Component<MathFormulaProps> = (props) => {
     const hoveredId = ctx.hoveredVar();
     const varElements = containerRef.querySelectorAll(".formula-var");
 
-    varElements.forEach((el) => {
+    for (const el of varElements) {
       const elVarId = (el as HTMLElement).dataset.formulaVar;
       if (elVarId === hoveredId) {
         el.classList.add("formula-var-highlight");
       } else {
         el.classList.remove("formula-var-highlight");
       }
-    });
+    }
   });
 
   return (

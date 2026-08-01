@@ -59,11 +59,19 @@ body {
   /* ---- Accent / Primary ---- */
   --sui-accent: #00d4ff;
   --sui-accent-rgb: 0, 212, 255;
-  --sui-accent-dim: #0099bb;
+  /* Text-safe accent — see default.css. Nudged from #0099bb so it clears
+     4.6:1 as a button hover label on the 8-12% accent washes, not just on
+     bare bg-primary. */
+  --sui-accent-dim: #0a9dbe;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic Colors ---- */
-  --sui-danger: #ff3366;
-  --sui-danger-rgb: 255, 51, 102;
+  /* Retuned from #ff3366 so danger stays >= 4.6:1 as text on its own 20% wash. */
+  --sui-danger: #ff4e7b;
+  --sui-danger-rgb: 255, 78, 123;
   --sui-warning: #ffaa00;
   --sui-warning-rgb: 255, 170, 0;
   --sui-success: #00ff88;
@@ -79,7 +87,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #e0f4ff;
   --sui-text-secondary: #7aa8c0;
-  --sui-text-muted: #4a6a80;
+  --sui-text-muted: #5d86a2;
 
   /* ---- Borders ---- */
   --sui-border: rgba(var(--sui-accent-rgb), 0.3);
@@ -126,13 +134,13 @@ body {
   --status-full: #00d4ff;
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
-  --status-missing: #ff0040;
+  --status-missing: #ff0a48;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
      reference labels). Cool blue-gray reads as quiet HUD chrome against the
      deep-navy backgrounds. */
-  --sui-chart-tick-color: #4a6a80;
+  --sui-chart-tick-color: #5d86a2;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css for the rationale. HUD's brighter red (#ff0040) matches
@@ -150,6 +158,21 @@ body {
   --chart-series-4: #00ff88;
   --chart-series-5: #b388ff;
   --chart-series-6: #ff66cc;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     Cyan-forward set matched to the HUD mood (higher chroma "neon" read),
+     validated for the OKLCH lightness band, adjacent CVD floor (min ΔE ≥ 8),
+     chroma floor, and ≥3:1 on the HUD chart surface (--sui-bg-elevated
+     #142535). Colour series by index (var(--sui-series-N)); status tokens
+     stay reserved and are never a series slot. See default.css for the full note. */
+  --sui-series-1: #0d9298;
+  --sui-series-2: #bb6802;
+  --sui-series-3: #0b8bc0;
+  --sui-series-4: #e62b34;
+  --sui-series-5: #516efe;
+  --sui-series-6: #019a46;
+  --sui-series-7: #b744cf;
+  --sui-series-8: #918112;
 }
 
 /* ============================================
@@ -421,10 +444,12 @@ body {
   letter-spacing: 0.05em;
 }
 
+/* Label uses --sui-accent-dim (the text-safe accent), not --sui-accent, which
+   is a fill token — see the matching note in _baseline.css. */
 .sui-btn:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.1);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn:disabled {
@@ -434,18 +459,21 @@ body {
 .sui-btn--active {
   background: rgba(var(--sui-accent-rgb), 0.2);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--primary {
   background: var(--sui-accent);
   border-color: var(--sui-accent);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-accent, #ffffff);
 }
 
+/* `color` is mandatory — see the matching note in _baseline.css. Matches this
+   variant's rest state so the label does not change tone on hover. */
 .sui-btn--primary:hover:not(:disabled) {
   background: var(--sui-accent-dim);
   box-shadow: 0 0 20px rgba(var(--sui-accent-rgb), 0.4);
+  color: var(--sui-on-accent, #ffffff);
 }
 
 .sui-btn--danger {
@@ -456,6 +484,7 @@ body {
 .sui-btn--danger:hover:not(:disabled) {
   background: rgba(var(--sui-danger-rgb), 0.2);
   border-color: var(--sui-danger);
+  color: var(--sui-danger);
 }
 
 .sui-btn--ghost {
@@ -483,32 +512,33 @@ body {
 .sui-btn--warning {
   background: var(--sui-warning);
   border-color: var(--sui-warning);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-warning, #ffffff);
 }
 
 .sui-btn--warning:hover:not(:disabled) {
   background: rgba(var(--sui-warning-rgb), 0.85);
   border-color: var(--sui-warning);
   box-shadow: 0 0 20px rgba(var(--sui-warning-rgb), 0.4);
-  color: var(--sui-bg-deep);
+  color: var(--sui-on-warning, #ffffff);
 }
 
+/* Accent-forward variants carry the text-safe accent — see _baseline.css. */
 .sui-btn--outlined {
   background: transparent;
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--outlined:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.12);
   border-color: var(--sui-accent);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 .sui-btn--text {
   background: transparent;
   border-color: transparent;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding-left: 0;
   padding-right: 0;
 }
@@ -523,7 +553,7 @@ body {
 .sui-btn--icon-only {
   background: transparent;
   border: none;
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
   padding: 0;
   width: 1.4rem;
   height: 1.4rem;
@@ -532,7 +562,7 @@ body {
 
 .sui-btn--icon-only:hover:not(:disabled) {
   background: rgba(var(--sui-accent-rgb), 0.12);
-  color: var(--sui-accent);
+  color: var(--sui-accent-dim);
 }
 
 /* Toggled state for icon-only buttons. Caller signals "on" via

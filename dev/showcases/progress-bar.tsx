@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
 import { StackedProgressBar } from "../../src/components/Progress";
+import { ClusterRow, NarrowStack } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 export const ProgressBarShowcase: Component = () => {
   return (
@@ -12,56 +14,36 @@ export const ProgressBarShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Horizontal (default)</h3>
-        <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
-          <StackedProgressBar
-            segments={[
-              { percentage: 30, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
-            ]}
-            label={5}
-            style={{
-              width: "120px",
-              height: "20px",
-              "font-size": "11px",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-            }}
-          />
-          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
-            30% partial + 20% missing
-          </span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            "align-items": "center",
-            "margin-top": "8px",
-          }}
-        >
-          <StackedProgressBar
-            segments={[
-              { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
-              { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
-            ]}
-            label={0}
-            style={{
-              width: "120px",
-              height: "20px",
-              "font-size": "11px",
-              color: "var(--sui-text-muted)",
-            }}
-          />
-          <span style={{ color: "var(--sui-text-muted)", "font-size": "12px" }}>
-            Empty — no errors
-          </span>
-        </div>
+        <NarrowStack>
+          <ClusterRow>
+            <StackedProgressBar
+              segments={[
+                { percentage: 30, color: "rgba(255, 204, 0, 0.6)" },
+                { percentage: 20, color: "rgba(var(--sui-danger-rgb), 0.7)" },
+              ]}
+              label={5}
+              class="progress-bar-demo__h"
+            />
+            <TextSublabel>30% partial + 20% missing</TextSublabel>
+          </ClusterRow>
+          <ClusterRow>
+            <StackedProgressBar
+              segments={[
+                { percentage: 0, color: "rgba(255, 204, 0, 0.6)" },
+                { percentage: 0, color: "rgba(var(--sui-danger-rgb), 0.7)" },
+              ]}
+              label={0}
+              class="progress-bar-demo__h progress-bar-demo__h--empty"
+            />
+            <TextSublabel>Empty — no errors</TextSublabel>
+          </ClusterRow>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Vertical</h3>
         <div
-          style={{ display: "flex", gap: "12px", "align-items": "flex-end" }}
+          class="progress-bar-demo__vrow"
         >
           <StackedProgressBar
             direction="vertical"
@@ -70,13 +52,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 40, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={7}
-            style={{
-              width: "24px",
-              height: "80px",
-              "font-size": "11px",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-            }}
+            class="progress-bar-demo__v"
           />
           <StackedProgressBar
             direction="vertical"
@@ -85,13 +61,7 @@ export const ProgressBarShowcase: Component = () => {
               { percentage: 10, color: "rgba(var(--sui-danger-rgb), 0.7)" },
             ]}
             label={3}
-            style={{
-              width: "24px",
-              height: "80px",
-              "font-size": "11px",
-              "font-weight": "600",
-              color: "var(--sui-text-primary)",
-            }}
+            class="progress-bar-demo__v"
           />
         </div>
       </div>

@@ -15,12 +15,25 @@
 :root {
   /* ---- Accent / Primary ---- */
   --sui-accent: #3b82f6;
-  --sui-accent-dim: #2563eb;
+  /* The text-safe accent. Retuned from #5585ef, which cleared 4.5:1 on
+     bg-primary by so little that any tinted surface pushed it under — it read
+     4.31:1 as a button hover label on the 10% accent wash. Now >= 4.6:1 on
+     bg-primary, bg-secondary and the 8-12% accent washes. */
+  --sui-accent-dim: #618ef0;
   --sui-accent-rgb: 59, 130, 246;
 
+  /* Label colour for accent/warning FILLS (filled buttons). --sui-accent is a
+     fill, not a text colour, so a filled control needs its own label token;
+     white does not clear 4.5:1 on this accent (3.68:1). */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
+
   /* ---- Semantic Colors ---- */
-  --sui-danger: #ef4444;
-  --sui-danger-rgb: 239, 68, 68;
+  /* Retuned from #f05151 for the same reason as the accent above: danger is
+     rendered as text on its own 15-20% wash (the danger button's hover), which
+     tints the backdrop toward the label. Now >= 4.6:1 there. */
+  --sui-danger: #f47979;
+  --sui-danger-rgb: 244, 121, 121;
   --sui-warning: #f59e0b;
   --sui-warning-rgb: 245, 158, 11;
   --sui-success: #22c55e;
@@ -36,7 +49,7 @@
   /* ---- Text ---- */
   --sui-text-primary: #f1f5f9;
   --sui-text-secondary: #94a3b8;
-  --sui-text-muted: #64748b;
+  --sui-text-muted: #7b8aa0;
 
   /* ---- Borders ---- */
   --sui-border: #334155;
@@ -77,13 +90,13 @@
   --status-full: #00d4ff;
   --status-partial: #ffcc00;
   --status-sparse: #ff8800;
-  --status-missing: #ff0040;
+  --status-missing: #ff3769;
 
   /* ---- Chart chrome ----
      Axis tick + label colour, scoped to chart in-plot chrome (axes, ticks,
      reference labels). Held separate from --sui-text-muted so chart chrome
      can be tinted independently from broader app muted text. */
-  --sui-chart-tick-color: #64748b;
+  --sui-chart-tick-color: #7b8aa0;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      Consumed by violation charts (jtf-ui ViolationChart). Held as tokens so a
@@ -108,4 +121,23 @@
   --chart-series-4: #22c55e;
   --chart-series-5: #a855f7;
   --chart-series-6: #ec4899;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     --sui-series-1..8 are the standard data-viz categorical colours. Callers
+     colour chart series / legend swatches / category dots by series INDEX
+     (var(--sui-series-N)) rather than hardcoding hues. Eight slots is the cap;
+     a ninth category needs a redesign, not a ninth colour. The palette is
+     theme-tuned for mood but validated (dataviz validate_palette.js) for an
+     OKLCH mid-lightness band, an adjacent-pair CVD floor (min protan/deutan
+     ΔE ≥ 8), a chroma floor, and ≥3:1 contrast on this theme's chart surface
+     (--sui-bg-elevated). The status tokens (--sui-success / --sui-warning /
+     --sui-danger) are reserved for meaning and never appear as a series slot. */
+  --sui-series-1: #217bf4;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #de3d30;
+  --sui-series-5: #955be3;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #d13d91;
+  --sui-series-8: #8c8309;
 }

@@ -1,0 +1,212 @@
+/* Status-style value renderers (Tag, Status, Checkbox). Co-located with
+   statusCells.tsx so each travels with its own styling into any host — table
+   cell, <dd>, card slot. */
+
+/* Tag Cell */
+.sui-value-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  clip-path: polygon(
+    4px 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%,
+    0 4px
+  );
+}
+
+.sui-value-tag--default {
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-primary);
+  border: 1px solid var(--sui-border-bright);
+}
+
+.sui-value-tag--primary {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-accent);
+  border: 1px solid rgba(var(--sui-accent-rgb), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-accent-rgb), 0.2);
+}
+
+.sui-value-tag--success {
+  background: rgba(var(--sui-success-rgb), 0.15);
+  color: var(--sui-success);
+  border: 1px solid rgba(var(--sui-success-rgb), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-success-rgb), 0.2);
+}
+
+.sui-value-tag--warning {
+  background: rgba(var(--sui-warning-rgb), 0.15);
+  color: var(--sui-warning);
+  border: 1px solid rgba(var(--sui-warning-rgb), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-warning-rgb), 0.2);
+}
+
+.sui-value-tag--danger {
+  background: rgba(var(--sui-danger-rgb), 0.15);
+  color: var(--sui-danger);
+  border: 1px solid rgba(var(--sui-danger-rgb), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-danger-rgb), 0.2);
+}
+
+.sui-value-tag--info {
+  background: rgba(var(--sui-accent-rgb, 102, 153, 255), 0.15);
+  color: var(--sui-accent, #6699ff);
+  border: 1px solid rgba(var(--sui-accent-rgb, 102, 153, 255), 0.3);
+  box-shadow: 0 0 8px rgba(var(--sui-accent-rgb, 102, 153, 255), 0.2);
+}
+
+/* Status Cell */
+.sui-value-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sui-value-status__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sui-value-status--active .sui-value-status__indicator {
+  background: var(--sui-accent);
+  box-shadow: 0 0 8px var(--sui-accent);
+  animation: sui-value-status-pulse 2s ease-in-out infinite;
+}
+
+.sui-value-status--active .sui-value-status__label {
+  color: var(--sui-accent);
+}
+
+.sui-value-status--success .sui-value-status__indicator {
+  background: var(--sui-success);
+  box-shadow: 0 0 8px var(--sui-success);
+}
+
+.sui-value-status--success .sui-value-status__label {
+  color: var(--sui-success);
+}
+
+.sui-value-status--warning .sui-value-status__indicator {
+  background: var(--sui-warning);
+  box-shadow: 0 0 8px var(--sui-warning);
+  animation: sui-value-status-pulse 1.5s ease-in-out infinite;
+}
+
+.sui-value-status--warning .sui-value-status__label {
+  color: var(--sui-warning);
+}
+
+.sui-value-status--error .sui-value-status__indicator {
+  background: var(--sui-danger);
+  box-shadow: 0 0 8px var(--sui-danger);
+  animation: sui-value-status-pulse 1s ease-in-out infinite;
+}
+
+.sui-value-status--error .sui-value-status__label {
+  color: var(--sui-danger);
+}
+
+.sui-value-status--pending .sui-value-status__indicator {
+  background: var(--sui-text-secondary);
+  box-shadow: 0 0 6px rgba(122, 168, 192, 0.5);
+  animation: sui-value-status-pulse 3s ease-in-out infinite;
+}
+
+.sui-value-status--pending .sui-value-status__label {
+  color: var(--sui-text-secondary);
+}
+
+.sui-value-status--inactive .sui-value-status__indicator {
+  background: var(--sui-text-muted);
+  box-shadow: none;
+}
+
+.sui-value-status--inactive .sui-value-status__label {
+  color: var(--sui-text-muted);
+}
+
+@keyframes sui-value-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Linked status cell — the badge itself carries the affordance. */
+.sui-value-status__link {
+  text-decoration: none;
+}
+
+/* Checkbox Cell */
+.sui-value-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.sui-value-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sui-value-checkbox__indicator {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--sui-border);
+  background-color: var(--sui-bg-primary);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(
+    3px 0,
+    100% 0,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    0 100%,
+    0 3px
+  );
+}
+
+.sui-value-checkbox input:checked + .sui-value-checkbox__indicator {
+  background-color: var(--sui-accent);
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 10px var(--sui-accent);
+}
+
+.sui-value-checkbox input:checked + .sui-value-checkbox__indicator::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid var(--sui-bg-deep);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.sui-value-checkbox:hover .sui-value-checkbox__indicator {
+  border-color: var(--sui-accent);
+  box-shadow: 0 0 6px rgba(var(--sui-accent-rgb), 0.3);
+}
+
+.sui-value-checkbox input:disabled + .sui-value-checkbox__indicator {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

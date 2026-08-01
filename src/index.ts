@@ -12,7 +12,9 @@ export type { ColorVariant, CornerStyle } from "./types";
 
 // Components
 export * from "./components/Layout";
+export * from "./components/Placeholder";
 export * from "./components/Text";
+export * from "./components/ResponsiveMoney";
 export * from "./components/InlineText";
 export * from "./components/Surface";
 export * from "./components/Badge";
@@ -26,8 +28,12 @@ export * from "./components/Dot";
 export * from "./components/TruthIndicator";
 export * from "./components/QuickFilter";
 export * from "./components/MultiSelectFilter";
+export * from "./components/FilterBar";
+export * from "./components/ChartHeader";
+export * from "./components/Sparkline";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
+export * from "./components/DistributionSparkline";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
@@ -47,11 +53,14 @@ export * from "./components/Button";
 export * from "./components/HotkeyButton";
 export * from "./components/Fab";
 export * from "./components/Card";
+export * from "./components/EntityCard";
+export * from "./components/SlotCard";
 export * from "./components/DataDisplay";
 export * from "./components/Feedback";
 export * from "./components/Checkbox";
 export * from "./components/Icon";
 export * from "./components/Inputs";
+export * from "./components/FileDropZone";
 export * from "./components/Navigation";
 export * from "./components/OverflowNav";
 export * from "./components/Toggle";
@@ -64,7 +73,29 @@ export * from "./components/HeatStack";
 export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";
+// Data-last functional utilities + typed pipe: namespaced (mirrors `fields`).
+// Self-contained, liftable-to-own-package module — see src/fn/README.md.
+export * as fn from "./fn";
+// Fields-as-functions table system: namespaced (columnHelpers still owns the
+// bare intCol/textCol/... names until step ③ swaps them out of the barrel).
+export * as fields from "./components/Table/fields";
+export {
+  FieldTable,
+  SortableFieldTable,
+} from "./components/Table/fields/FieldTable";
+export type { FieldTableProps } from "./components/Table/fields/FieldTable";
+// EllipsisText: explicit re-export from its committed Table location, so the barrel
+// exports it independently of any in-progress DataDisplay refactor. An explicit
+// named re-export takes precedence over the `export *` sub-barrels above, so this
+// does not collide even while a DataDisplay copy is also (transiently) exported.
+export { EllipsisText } from "./components/Table/EllipsisText";
+export type { EllipsisTextProps } from "./components/Table/EllipsisText";
+// TableSectionHeader: composable table/section header — title + record count on
+// one line (space-between). Explicit re-export from its committed location.
+export { TableSectionHeader } from "./components/Table/TableSectionHeader";
+export type { TableSectionHeaderProps } from "./components/Table/TableSectionHeader";
 export * from "./components/PivotGrid";
+export * from "./components/ValueMatrix";
 export * from "./components/Section";
 export * from "./components/Panel";
 export * from "./components/ScrollRegion";
@@ -77,6 +108,7 @@ export * from "./components/TabbedSidePanel";
 export * from "./components/ButtonGroup";
 export * from "./components/List";
 export * from "./components/PopoverMenu";
+export * from "./components/NotificationCenter";
 export * from "./components/Selector";
 export * from "./components/TitledTimeRangeHeader";
 export * from "./components/DataList";
@@ -135,7 +167,6 @@ export type { StatusFlowNode } from "./components/StatusFlowChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";
-export * from "./components/TagInput";
 export * from "./components/ResizableContainer";
 export * from "./components/Tooltip";
 export * from "./components/Select";
@@ -190,7 +221,9 @@ export * from "./components/ScrubChart";
 export * from "./components/CashflowScrubChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
+export * from "./components/BucketQueue";
 export * from "./components/SortableList";
+export * from "./components/ServiceHealthDot";
 export * from "./components/MutableList";
 // ActionList family — the ActionList Depth-3 list and its Depth-2 row. The
 // four Depth-1 primitives ship inside existing families: AssigneeIcon via
@@ -199,6 +232,8 @@ export * from "./components/MutableList";
 export * from "./components/EditableTitle";
 export * from "./components/ActionListItem";
 export * from "./components/ActionList";
+export * from "./components/CensusView";
+export * from "./components/Auth";
 
 // Styles - import this in your app: import "solid-ui-components/styles.css"
 
@@ -227,3 +262,43 @@ export * from "./components/ProductGrid";
 
 // Hooks
 export * from "./hooks";
+
+// GhostRow — de-emphasized clickable rows (rail children, link rows)
+export * from "./components/GhostRow";
+
+// Choreography — compose + sequence animation effects across components
+// (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/
+// commit/choreograph, and the anim() data-anim spread helper). Public API;
+// the implementation lives beside the other animation engines in
+// src/internal/animation/.
+export {
+  anim,
+  choreograph,
+  step,
+  weightedStep,
+  commit,
+  collapse,
+  expand,
+  fadeIn,
+  fadeOut,
+  slideDown,
+  rollUp,
+  glowIn,
+  settleIn,
+  DEFAULT_TOTAL_MS,
+} from "./internal/animation/choreography";
+export type {
+  EffectFn,
+  EffectInstance,
+  Step,
+} from "./internal/animation/choreography";
+
+// Theme-switching API — see src/themes/README.md.
+export {
+  THEMES,
+  loadTheme,
+  loadBaseline,
+  getPersistedTheme,
+  persistTheme,
+} from "./themes/loader";
+export type { ThemeId, ThemeEntry } from "./themes/manifest";

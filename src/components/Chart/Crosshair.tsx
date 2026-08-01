@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// Crosshair — Structural (Depth 1). SVG chart slot; composes no library components.
 // Chart slot: Crosshair — vertical guide + dot at hovered series points.
 import { For, Show, createMemo } from "solid-js";
 import { useChart } from "./context";

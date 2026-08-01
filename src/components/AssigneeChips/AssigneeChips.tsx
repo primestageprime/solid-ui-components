@@ -7,6 +7,7 @@
 // resolveName to display each label. Promoted from dside-ui.
 // ============================================
 import { type Component, For, Show, mergeProps } from "solid-js";
+import { ChipCluster } from "../Layout/variants";
 import "./AssigneeChips.css";
 
 export interface AssigneeChipsProps {
@@ -18,19 +19,14 @@ export interface AssigneeChipsProps {
 
 export const AssigneeChips: Component<AssigneeChipsProps> = (rawProps) => {
   const props = mergeProps({ size: "sm" as const }, rawProps);
-  const wrapperClass = () => {
-    const c = ["sui-assignee-chips"];
-    if (props.class) c.push(props.class);
-    return c.join(" ");
-  };
   const chipClass = () => `sui-assignee-chip sui-assignee-chip--${props.size}`;
   return (
     <Show when={props.ids.length > 0}>
-      <div class={wrapperClass()}>
+      <ChipCluster class={props.class}>
         <For each={props.ids}>
           {(id) => <span class={chipClass()}>{props.resolveName(id)}</span>}
         </For>
-      </div>
+      </ChipCluster>
     </Show>
   );
 };

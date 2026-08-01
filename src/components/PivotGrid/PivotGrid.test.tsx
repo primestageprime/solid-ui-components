@@ -57,6 +57,18 @@ describe("PivotGrid rendering", () => {
     expect(renderCell).toHaveBeenCalledTimes(4);
   });
 
+  it("renders JSX from rowLabel/colLabel as elements, not stringified", () => {
+    const { container } = render(() => (
+      <PivotGrid
+        {...baseProps}
+        rowLabel={(r: RowId) => <strong class="row-label">{r}</strong>}
+        colLabel={(c: ColId) => <em class="col-label">{c}</em>}
+      />
+    ));
+    expect(container.querySelectorAll("strong.row-label").length).toBe(2);
+    expect(container.querySelectorAll("em.col-label").length).toBe(2);
+  });
+
   it("renders the emptyCell placeholder for null cells", () => {
     const { container } = render(() => (
       <PivotGrid {...baseProps} cell={() => null} />

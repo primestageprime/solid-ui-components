@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// StatusFlowChart — Composite (Depth 2). Composes SwimlaneChart (Depth 1).
 import {
   createMemo,
   createSignal,
@@ -19,12 +20,14 @@ import {
   type StatusFlowNode,
 } from "./columns";
 import "./StatusFlowChart.css";
+import { map, filter, find, pluck } from "../../fn";
 
 export type {
   StatusFlowNode,
   StatusFlowColumn,
   StatusFlowBreakpoint,
 } from "./columns";
+import { observeSize } from "../../internal/dom/observeSize";
 
 /**
  * Render context passed to a consumer's `renderNode`.
@@ -124,11 +127,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   onMount(() => {
     if (!containerRef) return;
     setWidth(containerRef.clientWidth);
-    const ro = new ResizeObserver(([entry]) => {
-      if (entry) setWidth(entry.contentRect.width);
-    });
-    ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(observeSize(containerRef, (size) => setWidth(size.width)));
   });
 
   // visibleCols → maxDepth (symmetric, so maxDepth = (visibleCols - 1) / 2).
@@ -187,7 +186,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // provides `colFor`, that overrides the status-based result per node
   // (an `undefined` from colFor falls back to status-based).
   const cols = createMemo(() => {
-    const ns = visibleNodes().map((n) => ({ ...n, status: n.effectiveStatus }));
+    const ns = map((n) => ({ ...n, status: n.effectiveStatus }), visibleNodes());
     const base = assignColumns(
       ns,
       props.columns,
@@ -215,7 +214,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // (multiple stacked lanes) is future work.
   const parent = createMemo<EnrichedNode | undefined>(() => {
     const { childrenByParent } = resolved();
-    return visibleNodes().find((n) => childrenByParent.has(n.id));
+    return find((n) => childrenByParent.has(n.id), visibleNodes());
   });
 
   // Parent's status-based column (e.g. TODO → +1, DOING → 0, DONE → -1).
@@ -229,20 +228,20 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
 
   const chartChildren = createMemo<EnrichedNode[]>(() => {
     const p = parent();
-    return p ? visibleNodes().filter((n) => n.id !== p.id) : visibleNodes();
+    return p ? filter((n) => n.id !== p.id, visibleNodes()) : visibleNodes();
   });
 
   // SwimlaneChart node shape: { id, data }. We stash the enriched node
   // in `data` so the renderNode callback can read effectiveStatus etc.
   const swimlaneNodes = createMemo((): DAGNode<EnrichedNode>[] =>
-    chartChildren().map((n) => ({ id: n.id, data: n })),
+    map((n) => ({ id: n.id, data: n }), chartChildren()),
   );
 
   // Build edges from each chart child's `dependsOn`. Drop edges that
   // reference a hidden node (parent collapsed its children → those ids
   // aren't rendered, so an arrow to them would dangle).
   const swimlaneEdges = createMemo(() => {
-    const visibleIds = new Set(chartChildren().map((n) => n.id));
+    const visibleIds = new Set(pluck("id", chartChildren()));
     const edges: { source: string; target: string }[] = [];
     for (const n of chartChildren()) {
       for (const src of n.dependsOn ?? []) {
@@ -331,7 +330,7 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
                 // the parent slides between columns when its effective
                 // status changes.
                 transform: `translateX(${parentCol() * columnGap()}px)`,
-                transition: "transform 0.55s ease-out",
+                // transition (static easing) lives in StatusFlowChart.css.
               }}
             >
               {renderInnerForData(parent()!)}

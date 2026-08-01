@@ -1,5 +1,5 @@
 // ============================================
-// Sidebar — Resizable, width-persisting side column.
+// Sidebar — Layout (Depth 1). Resizable, width-persisting side column; composes Stack (Depth 0).
 //
 // A fixed-but-draggable vertical column for the side of a two-pane layout.
 // Bakes the layout plumbing (fixed width, flex-shrink:0, full-height stretch,
@@ -21,6 +21,7 @@ import {
 import { clamp } from "../../internal/math/clamp";
 import { Stack } from "./Stack";
 import "./Sidebar.css";
+import { pipe, filter, join } from "../../fn";
 
 const DEFAULT_WIDTH = 300;
 const MIN_WIDTH = 200;
@@ -138,7 +139,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     }
   };
 
-  const classes = () => ["sidebar", local.class].filter(Boolean).join(" ");
+  const classes = () =>
+    pipe(["sidebar", local.class], filter(Boolean), join(" "));
 
   return (
     <div

@@ -23,6 +23,7 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { TightStack } from "../Layout/variants";
 import { ThemedNumberInput } from "../ThemedNumberInput/ThemedNumberInput";
 import "./RangeAmountGroup.css";
 
@@ -42,11 +43,6 @@ export interface RangeAmountGroupProps
   step?: number;
   /** Name prefix for the inputs (name-0, name-1, name-2). */
   name?: string;
-  /**
-   * Container width (CSS length) below which the trio stacks one-per-line.
-   * Default "30rem".
-   */
-  breakWidth?: string;
   /** Arbitrary triple content — rendered in the responsive container
    *  instead of the built-in number inputs. */
   children?: JSX.Element;
@@ -59,7 +55,6 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
     "slots",
     "step",
     "name",
-    "breakWidth",
     "children",
     "class",
   ]);
@@ -67,12 +62,10 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
     local.class
       ? `sui-range-amount-group ${local.class}`
       : "sui-range-amount-group";
+  // The stack/side breakpoint is the frozen --rag-break fallback (30rem) baked
+  // into the flex-basis calc in CSS — no per-instance override.
   return (
-    <div
-      class={rootClass()}
-      style={{ "--rag-break": local.breakWidth ?? "30rem" }}
-      {...others}
-    >
+    <div class={rootClass()} {...others}>
       <Show
         when={local.children}
         fallback={
@@ -80,7 +73,7 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
           // change — position keying keeps the focused input mounted.
           <Index each={local.slots ?? []}>
             {(slot, i) => (
-              <div class="sui-range-amount-group__slot">
+              <TightStack class="sui-range-amount-group__slot">
                 <span class="sui-range-amount-group__label">
                   {slot().label || DEFAULT_LABELS[i] || ""}
                 </span>
@@ -90,7 +83,7 @@ export const RangeAmountGroup: Component<RangeAmountGroupProps> = (props) => {
                   step={local.step ?? 0.01}
                   onChange={(v: number | undefined) => slot().onChange(v)}
                 />
-              </div>
+              </TightStack>
             )}
           </Index>
         }

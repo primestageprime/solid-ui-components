@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// TimelineBar — Structural (Depth 1). SVG chart slot; composes no library components.
 // Lanes are inferred from data in first-encounter order when `lanes` is
 // omitted (otherwise the caller-supplied order wins, top-to-bottom).
 import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
@@ -56,6 +57,13 @@ export interface TimelineBarProps<
   lanes?: readonly string[];
   selectedId?: Id | null;
   hoveredId?: Id | null;
+  /**
+   * Like `hoveredId`, but flags EVERY bar whose id is in the set with
+   * `data-hovered="true"`. Use when one hover source maps to multiple bars
+   * (e.g. a list row that spans several detected segments). Unioned with
+   * `hoveredId`, so the two channels can coexist. Default `null` (no set).
+   */
+  hoveredIds?: ReadonlySet<Id> | null;
   /**
    * Flags EVERY bar whose `state` equals this value with
    * `data-highlighted="true"`. Unlike `selectedId`/`hoveredId` (single-bar),
@@ -219,7 +227,9 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               laneIdx() * laneHeight() +
               (laneHeight() * (1 - merged.barHeight)) / 2;
             const isSelected = () => merged.selectedId === bar.id;
-            const isHovered = () => merged.hoveredId === bar.id;
+            const isHovered = () =>
+              merged.hoveredId === bar.id ||
+              (merged.hoveredIds?.has(bar.id) ?? false);
             const isHighlighted = () =>
               merged.highlightedState != null &&
               bar.state === merged.highlightedState;
@@ -242,11 +252,10 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
                   onPointerDown={(e) => merged.onBarClick?.(bar, e)}
                   onPointerEnter={(e) => merged.onBarHover?.(bar, e)}
                   onPointerLeave={(e) => merged.onBarHover?.(null, e)}
-                  style={{
-                    cursor:
+                  classList={{
+                    "sui-chart__timeline-bar--interactive": !!(
                       merged.onBarClick || merged.onBarHover
-                        ? "pointer"
-                        : undefined,
+                    ),
                   }}
                 />
               </Show>
@@ -275,7 +284,6 @@ export function TimelineBar<T extends TimelineBarDatum = TimelineBarDatum>(
               ? `translate(-8, ${labelY()}) rotate(-45)`
               : undefined
           }
-          style={{ "pointer-events": "none" }}
         >
           {merged.label}
         </text>

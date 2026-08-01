@@ -18,30 +18,29 @@
   transition: padding-left 120ms ease;
 }
 
-/* Row: avatar + body. `align-items: start` mirrors the original
-   TopClusterRow contract; flex-direction is flipped for the self variant
-   so the avatar sits on the trailing edge. */
-.sui-thread-group__row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--sui-space-2, 8px);
-  width: 100%;
-}
+/* Base row/body/header/bubble arrangements now compose Layout variants
+   (TopClusterRow / ContentStack / WrappedClusterRow / TightStack — see
+   ThreadGroup.tsx); gaps map exactly (row/header sm=8, body/bubbles xs=4).
+   Only the deltas that Row/Stack's API can't express stay here:
+
+   1. The `self` axis reversal (`row-reverse`) + trailing-edge alignment
+      (`align-items: flex-end`) — kept INTRINSIC per team-lead ruling.
+      Row has no `reverse` capability; adding one for a single consumer
+      fails start-minimal. row-reverse flips VISUAL order while preserving
+      avatar→body DOM/reading order (a11y) — a DOM reorder is NOT equivalent.
+      Row reverse = candidate vocabulary if a second reversed-axis consumer
+      appears.
+   2. The header's `row-gap: 0` — WrappedClusterRow's single `gap` sets both
+      axes to 8px; the header wants an 8px column gap but no vertical gap when
+      it wraps. Scoped `.sui-thread-group` prefix so it beats `.row--gap-sm`.
+   3. The body's `max-width: 80%` — non-geometry cap that lets a `self` bubble
+      overlap an `other` bubble (the visual signature of the layout). */
 
 .sui-thread-group--self .sui-thread-group__row {
   flex-direction: row-reverse;
 }
 
-/* Body fills available width up to the bubble cap; bubbles inside size
-   to content. 80% lets a `self` bubble overlap an `other` bubble — the
-   visual signature of the layout. */
 .sui-thread-group__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sui-space-1, 4px);
-  flex: 1;
-  min-width: 0;
   max-width: 80%;
 }
 
@@ -49,27 +48,12 @@
   align-items: flex-end;
 }
 
-/* Header row: participant name + relative timestamp. Wraps onto a
-   second line on narrow widths without a tall row-gap. Mirrors the
-   WrappedClusterRow contract. */
-.sui-thread-group__header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sui-space-2, 8px);
+.sui-thread-group .sui-thread-group__header {
   row-gap: 0;
 }
 
 .sui-thread-group--self .sui-thread-group__header {
   flex-direction: row-reverse;
-}
-
-/* Bubble stack — vertical, tight. */
-.sui-thread-group__bubbles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sui-space-1, 4px);
 }
 
 .sui-thread-group--self .sui-thread-group__bubbles {

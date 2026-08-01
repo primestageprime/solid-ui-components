@@ -112,7 +112,7 @@ describe("ShapeGlyph", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container } = renderSvg({
       color: "#fff",
-      shape: "square" as unknown as Shape,
+      shape: "hexagon" as unknown as Shape,
     });
     expect(container.querySelector("circle")).toBeNull();
     expect(container.querySelector("path")).toBeNull();
@@ -140,5 +140,47 @@ describe("ShapeGlyph", () => {
 
     setShape({ path: secondPath, viewBox: [4, 4] });
     expect(container.querySelector("path")!.getAttribute("d")).toBe(secondPath);
+  });
+
+  it.each(["diamond", "square", "pentagon"] as const)(
+    "renders a filled <path> for the built-in shape '%s'",
+    (shape) => {
+      const { container } = renderSvg({ color: "#fff", shape });
+      const path = container.querySelector("path")!;
+      expect(path).toBeTruthy();
+      expect(path.getAttribute("fill")).toBe("#fff");
+    },
+  );
+
+  it("renders a hollow circle (no fill, colour becomes the stroke)", () => {
+    const { container } = render(() => (
+      <svg role="img" aria-label="test">
+        <ShapeGlyph
+          descriptor={{ color: "var(--sui-accent)", shape: "circle" }}
+          cx={10}
+          cy={10}
+          hollow
+        />
+      </svg>
+    ));
+    const circle = container.querySelector("circle")!;
+    expect(circle.getAttribute("fill")).toBe("none");
+    expect(circle.getAttribute("stroke")).toBe("var(--sui-accent)");
+  });
+
+  it("renders a hollow path shape (no fill, colour becomes the stroke)", () => {
+    const { container } = render(() => (
+      <svg role="img" aria-label="test">
+        <ShapeGlyph
+          descriptor={{ color: "#abc", shape: "diamond" }}
+          cx={10}
+          cy={10}
+          hollow
+        />
+      </svg>
+    ));
+    const path = container.querySelector("path")!;
+    expect(path.getAttribute("fill")).toBe("none");
+    expect(path.getAttribute("stroke")).toBe("#abc");
   });
 });

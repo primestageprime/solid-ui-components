@@ -58,11 +58,18 @@ body {
   /* ---- Accent ---- */
   --sui-accent: #e07a4f;
   --sui-accent-rgb: 224, 122, 79;
-  --sui-accent-dim: #b85f38;
+  /* Text-safe accent — see default.css. Lifted from #c56940 to clear 4.6:1 as
+     a button hover label on the 8-12% accent washes. */
+  --sui-accent-dim: #ca754f;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic ---- */
-  --sui-danger: #d4584e;
-  --sui-danger-rgb: 212, 88, 78;
+  /* Lifted from #d55b51 so danger stays >= 4.6:1 as text on its own 15% wash. */
+  --sui-danger: #dd7b72;
+  --sui-danger-rgb: 221, 123, 114;
   --sui-warning: #e0a040;
   --sui-warning-rgb: 224, 160, 64;
   --sui-success: #7ba67b;
@@ -78,7 +85,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #f4ecd8;
   --sui-text-secondary: #c8b89a;
-  --sui-text-muted: #8c7861;
+  --sui-text-muted: #947e66;
 
   /* ---- Borders ---- */
   --sui-border: #4a3625;
@@ -118,13 +125,13 @@ body {
   --status-full: #7ba67b;
   --status-partial: #e0a040;
   --status-sparse: #e07a4f;
-  --status-missing: #d4584e;
+  --status-missing: #d55b51;
 
   /* ---- Chart chrome ----
-     Axis tick + label colour. Reuses --sui-text-muted (#8C7861) which on
-     dark walnut reads as quietly-warm chrome — the same hex Bronze light
-     uses for --sui-text-secondary, but in dark mode it lands as "muted". */
-  --sui-chart-tick-color: #8c7861;
+     Axis tick + label colour. Matches --sui-text-muted (retuned to #947E66
+     for WCAG 4.5:1 on both bg-primary and bg-secondary) which on dark
+     walnut reads as quietly-warm chrome. */
+  --sui-chart-tick-color: #947e66;
 
   /* ---- Chart semantics (violation / threshold / transition windows) ----
      See default.css. Warm-mapped to the bronze-dark palette. */
@@ -141,4 +148,19 @@ body {
   --chart-series-4: #d48462;
   --chart-series-5: #a07cb4;
   --chart-series-6: #4c9cac;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     Warm-earth set matched to the bronze (dark) mood. Validated for the
+     dark-mode OKLCH lightness band, adjacent CVD floor (min ΔE ≥ 8), chroma
+     floor, and ≥3:1 on the bronze-dark chart surface (--sui-bg-elevated
+     #382617). Colour series by index; status tokens stay reserved. See
+     default.css for the full note. */
+  --sui-series-1: #d44f13;
+  --sui-series-2: #068fa7;
+  --sui-series-3: #ad720d;
+  --sui-series-4: #207fe8;
+  --sui-series-5: #0c994f;
+  --sui-series-6: #9e5cd1;
+  --sui-series-7: #868604;
+  --sui-series-8: #ca488f;
 }

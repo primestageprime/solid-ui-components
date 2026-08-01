@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.94.2",
+  "version": "0.131.0",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -42,6 +42,10 @@
       "source": "./src/themes/bronze-dark.css",
       "default": "./dist/themes/bronze-dark.css"
     },
+    "./themes/stax.css": {
+      "source": "./src/themes/stax.css",
+      "default": "./dist/themes/stax.css"
+    },
     "./themes/colorblind.css": {
       "source": "./src/themes/colorblind.css",
       "default": "./dist/themes/colorblind.css"
@@ -61,7 +65,12 @@
     "./index.css": "./dist/index.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
+  ],
+  "_sideEffects": "PAIRED with output.preserveModules in vite.config.ts — see docs/adr/0005-per-module-dist-and-sideeffects.md. Neither setting does anything alone; together they let a consumer's bundler delete unused SUI modules AND the heavyweight deps they import (katex, d3-dag). Removing either silently re-adds ~318 KB to every consumer bundle. Guarded by scripts/build-config.test.ts.",
+  "sideEffects": [
+    "**/*.css"
   ],
   "scripts": {
     "dev": "vite --port 6006",
@@ -70,16 +79,23 @@
     "build:server": "SUI_BUILD_TARGET=server vite build --mode production --ssr src/index.ts",
     "watch": "vite build --mode production --watch",
     "preview": "vite preview",
-    "prepare": "npm run build",
+    "prepare": "git config core.hooksPath githooks 2>/dev/null; npm run build",
     "audit:styles": "node scripts/audit-inline-styles.mjs",
+    "audit:scales": "node scripts/scale-audit.mjs",
+    "health": "node scripts/health.mjs",
+    "style-rubric": "node scripts/style-rubric.mjs",
+    "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
+    "usage-manifest": "node scripts/usage-manifest.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint src",
+    "typecheck:dev": "tsc -p tsconfig.dev.json",
+    "lint": "node scripts/lint-ci.mjs lint src",
+    "lint:ci": "node scripts/lint-ci.mjs lint src --error-on-warnings",
     "lint:fix": "biome lint --write src",
     "lint:all": "biome lint",
     "format": "biome format",
     "format:write": "biome format --write",
-    "check": "biome lint src && tsc --noEmit",
+    "check": "node scripts/lint-ci.mjs lint src && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

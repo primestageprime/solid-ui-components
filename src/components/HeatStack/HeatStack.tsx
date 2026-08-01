@@ -56,8 +56,10 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
     return list.join(" ");
   };
 
-  // Reverse so first item renders at bottom
-  const reversedItems = () => [...local.items].reverse();
+  // Render in input order — first item at top. (Previously reversed
+  // "stack-style"; Peter ruled that a bug: visual order matches array
+  // order, 2026-07-15.)
+  const orderedItems = () => local.items;
 
   // Track position for fixed preview (compact only)
   const [previewStyle, setPreviewStyle] = createSignal<JSX.CSSProperties>({});
@@ -115,9 +117,9 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
         </div>
       </div>
 
-      {/* Rows: reversed so earliest is at bottom */}
+      {/* Rows: input order, first item at top */}
       <div class="jtf-heatstack__rows">
-        <For each={reversedItems()}>
+        <For each={orderedItems()}>
           {(item) => (
             <div class="jtf-heatstack__row">
               <Show when={local.showLabels !== false}>
@@ -164,7 +166,7 @@ export const HeatStack: Component<HeatStackProps> = (props) => {
             </div>
           </div>
           <div class="jtf-heatstack__preview-rows">
-            <For each={reversedItems()}>
+            <For each={orderedItems()}>
               {(item) => (
                 <div class="jtf-heatstack__preview-row">
                   <div class="jtf-heatstack__preview-label">{item.name}</div>

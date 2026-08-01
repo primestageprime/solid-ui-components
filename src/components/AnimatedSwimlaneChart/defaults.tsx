@@ -16,6 +16,7 @@ import {
   DEFAULT_TIMING,
   type LaneTimingConfig,
 } from "../../internal/animation/trajectories";
+import { map } from "../../fn";
 
 /**
  * What a card renderer is handed: the node plus animation-derived state
@@ -59,13 +60,13 @@ export const DEFAULT_COLUMNS: StatusFlowColumn[] = [
  * against the default layout config and capped at depth 4 (9 visible
  * cols) which is more than any realistic chart needs.
  */
-export const DEFAULT_BREAKPOINTS: StatusFlowBreakpoint[] = computeBreakpoints(
-  DEFAULT_LANE_LAYOUT_CONFIG,
-  4,
-).map((b) => ({
-  minWidth: b.minWidth,
-  visibleCols: b.visibleCols,
-}));
+export const DEFAULT_BREAKPOINTS: StatusFlowBreakpoint[] = map(
+  (b) => ({
+    minWidth: b.minWidth,
+    visibleCols: b.visibleCols,
+  }),
+  computeBreakpoints(DEFAULT_LANE_LAYOUT_CONFIG, 4),
+);
 
 /**
  * Pre-knob default + an arrow-settle window. This mirrors the workshop's

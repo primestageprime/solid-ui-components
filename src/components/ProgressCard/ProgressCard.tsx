@@ -17,6 +17,8 @@ import {
 } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
+import { ClusterRow, TightClusterRow, ActionSlot } from "../Layout/variants";
+import { map, findIndex } from "../../fn";
 import "./ProgressCard.css";
 
 export type ProgressStatus = "pending" | "active" | "completed" | "error";
@@ -106,7 +108,7 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
       style={cardStyle()}
       {...others}
     >
-      <div class="jtf-progress-card__header">
+      <ClusterRow class="jtf-progress-card__header">
         <Text variant="title" as="div" class="jtf-progress-card__title">
           {local.title}
         </Text>
@@ -115,15 +117,15 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
             {local.subtitle}
           </Text>
         </Show>
-      </div>
+      </ClusterRow>
 
       <Show when={steps().length > 0}>
-        <div class="jtf-progress-card__steps">
+        <TightClusterRow class="jtf-progress-card__steps">
           <For each={steps()}>
             {(step, index) => (
               <>
                 <Show when={index() > 0}>
-                  <div
+                  <ActionSlot
                     class={`jtf-progress-card__connector ${
                       steps()[index() - 1]?.status === "completed"
                         ? "jtf-progress-card__connector--completed"
@@ -131,9 +133,9 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
                     }`}
                   >
                     &rarr;
-                  </div>
+                  </ActionSlot>
                 </Show>
-                <div
+                <ActionSlot
                   class={`jtf-progress-card__step jtf-progress-card__step--${step.status}`}
                   title={step.label}
                 >
@@ -147,11 +149,11 @@ export const ProgressCard: Component<ProgressCardProps> = (props) => {
                       innerHTML={`<svg viewBox="0 0 16 16" fill="none">${getStepIcon(step)}</svg>`}
                     />
                   </div>
-                </div>
+                </ActionSlot>
               </>
             )}
           </For>
-        </div>
+        </TightClusterRow>
       </Show>
 
       <Show when={local.message}>
@@ -207,19 +209,23 @@ export function createWorkflowProgressCard(config: {
     const derivedSteps = (): ProgressStep[] => {
       // When completed, all steps are completed
       if (local.status === "completed") {
-        return config.steps.map((template) => ({
-          id: template.id,
-          label: template.label,
-          status: "completed" as ProgressStatus,
-          icon: template.icon,
-        }));
+        return map(
+          (template) => ({
+            id: template.id,
+            label: template.label,
+            status: "completed" as ProgressStatus,
+            icon: template.icon,
+          }),
+          config.steps,
+        );
       }
 
-      const currentIdx = config.steps.findIndex(
+      const currentIdx = findIndex(
         (s) => s.id === local.currentStep,
+        config.steps,
       );
 
-      return config.steps.map((template, idx) => {
+      return map((template, idx) => {
         let stepStatus: ProgressStatus;
         if (idx < currentIdx) {
           stepStatus = "completed";
@@ -234,7 +240,7 @@ export function createWorkflowProgressCard(config: {
           status: stepStatus,
           icon: template.icon,
         };
-      });
+      }, config.steps);
     };
 
     return (

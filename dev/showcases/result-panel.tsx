@@ -19,20 +19,12 @@ export const ResultPanelShowcase: Component = () => {
             units="g/kWh"
             valueColor="var(--sui-success)"
           >
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--sui-border)",
-                "border-radius": "4px",
-                color: "var(--sui-text-secondary)",
-                "font-size": "13px",
-              }}
-            >
+            <div class="result-panel-demo__slot">
               [Formula + variables table slot]
             </div>
           </ResultPanel>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Warning Result</h3>
+          <h3 class="showcase-heading-gap">Composed — Warning Result</h3>
           <ResultPanel
             label="ROG Result"
             value="0.95"
@@ -40,15 +32,7 @@ export const ResultPanelShowcase: Component = () => {
             valueColor="#ffcc00"
             formulaProvider={false}
           >
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--sui-border)",
-                "border-radius": "4px",
-                color: "var(--sui-text-secondary)",
-                "font-size": "13px",
-              }}
-            >
+            <div class="result-panel-demo__slot">
               [Variables table — no formula provider]
             </div>
           </ResultPanel>

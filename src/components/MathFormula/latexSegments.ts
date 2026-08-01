@@ -10,6 +10,8 @@
 // never split.
 // ============================================
 
+import { some } from "../../fn";
+
 /** A single piece of a split formula: either a renderable term or a
  *  binary operator that sits between terms. */
 export type FormulaSegment =
@@ -48,7 +50,8 @@ function leftRight(
  * `}`, `)`, `]`). A leading `-x` or a `(-b …)` stays inside its term.
  */
 function isBinary(beforeTrimmed: string): boolean {
-  const last = beforeTrimmed.trimEnd().slice(-1);
+  const trimmed = beforeTrimmed.trimEnd();
+  const last = trimmed.slice(-1);
   return last !== "" && !OPENERS.has(last) && last !== "\\";
 }
 
@@ -128,5 +131,5 @@ export function splitLatexSegments(latex: string): FormulaSegment[] {
  * Used to decide if the flex-wrap layout buys anything over a single block.
  */
 export function hasSplittableOperators(latex: string): boolean {
-  return splitLatexSegments(latex).some((s) => s.kind === "op");
+  return some((s) => s.kind === "op", splitLatexSegments(latex));
 }

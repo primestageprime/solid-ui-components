@@ -6,6 +6,18 @@
 // Sidebar card list + selection content area.
 // ============================================
 import { type Component, type JSX, For, Show, createSignal } from "solid-js";
+import {
+  CenteredStack,
+  ClipFillColumnFlush,
+  ClusterRow,
+  Column,
+  FillColumnFlush,
+  NoShrinkScrollBox,
+  PaneRow,
+  SpreadRow,
+  TightStack,
+} from "../Layout/variants";
+import { find } from "../../fn";
 import "./SidebarSelector.css";
 
 export interface SidebarSelectorItem<T = unknown> {
@@ -24,10 +36,6 @@ export interface SidebarSelectorProps<T> {
   renderCard: (item: T, isSelected: boolean) => JSX.Element;
   /** Render function for the selection display button */
   renderSelection: (item: T | undefined) => JSX.Element;
-  /** Optional width for the sidebar */
-  sidebarWidth?: string;
-  /** Optional max height for the sidebar scroll area */
-  maxHeight?: string;
   /** Optional fixed height for the entire layout (sidebar + selection fill this) */
   height?: string;
   /** Optional class for the container */
@@ -40,7 +48,7 @@ export function SidebarSelector<T>(
   props: SidebarSelectorProps<T>,
 ): JSX.Element {
   const selectedItem = () =>
-    props.items.find((item) => item.id === props.selectedId);
+    find((item) => item.id === props.selectedId, props.items);
 
   const containerClass = () => {
     const classes = ["sidebar-selector"];
@@ -49,23 +57,18 @@ export function SidebarSelector<T>(
   };
 
   return (
-    <div class={containerClass()}>
+    <FillColumnFlush class={containerClass()}>
       <Show when={props.label}>
         <div class="sidebar-selector__label">{props.label}</div>
       </Show>
-      <div
+      <PaneRow
         class="sidebar-selector__layout"
         style={props.height ? { height: props.height } : undefined}
       >
-        {/* Sidebar with cards */}
-        <div
-          class="sidebar-selector__sidebar"
-          style={{
-            width: props.sidebarWidth || "280px",
-            ...(props.maxHeight ? { "max-height": props.maxHeight } : {}),
-          }}
-        >
-          <div class="sidebar-selector__list">
+        {/* Sidebar with cards — frozen 280px width + scroll geometry live in
+            SidebarSelector.css / NoShrinkScrollBox; no inline geometry here. */}
+        <NoShrinkScrollBox class="sidebar-selector__sidebar">
+          <Column class="sidebar-selector__list">
             <For each={props.items}>
               {(item) => {
                 const isSelected = () => item.id === props.selectedId;
@@ -80,15 +83,15 @@ export function SidebarSelector<T>(
                 );
               }}
             </For>
-          </div>
-        </div>
+          </Column>
+        </NoShrinkScrollBox>
 
         {/* Selection display */}
-        <div class="sidebar-selector__selection">
+        <ClipFillColumnFlush class="sidebar-selector__selection">
           {props.renderSelection(selectedItem()?.data)}
-        </div>
-      </div>
-    </div>
+        </ClipFillColumnFlush>
+      </PaneRow>
+    </FillColumnFlush>
   );
 }
 
@@ -113,8 +116,8 @@ export interface EpisodeCardProps {
 
 export const EpisodeCard: Component<EpisodeCardProps> = (props) => {
   return (
-    <div class="episode-card">
-      <div class="episode-card__header">
+    <TightStack class="episode-card">
+      <SpreadRow class="episode-card__header">
         <span class="episode-card__number">
           S{props.episode.season}E{props.episode.episode}
         </span>
@@ -124,9 +127,9 @@ export const EpisodeCard: Component<EpisodeCardProps> = (props) => {
         >
           {props.episode.primaryCharacter}
         </span>
-      </div>
+      </SpreadRow>
       <div class="episode-card__title">{props.episode.title}</div>
-    </div>
+    </TightStack>
   );
 };
 
@@ -144,9 +147,9 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
       <Show
         when={props.episode}
         fallback={
-          <div class="episode-selection__empty">
+          <CenteredStack class="episode-selection__empty">
             Select an episode from the sidebar
-          </div>
+          </CenteredStack>
         }
       >
         {(ep) => (
@@ -157,7 +160,7 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
               </span>
             </div>
             <h3 class="episode-selection__title">{ep().title}</h3>
-            <div class="episode-selection__meta">
+            <ClusterRow class="episode-selection__meta">
               <span
                 class="episode-selection__character"
                 style={{ color: ep().characterColor || "var(--sui-accent)" }}
@@ -167,7 +170,7 @@ export const EpisodeSelection: Component<EpisodeSelectionProps> = (props) => {
               <Show when={ep().airDate}>
                 <span class="episode-selection__date">{ep().airDate}</span>
               </Show>
-            </div>
+            </ClusterRow>
             <Show when={ep().synopsis}>
               <p class="episode-selection__synopsis">{ep().synopsis}</p>
             </Show>
@@ -190,7 +193,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 1,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Feb 21, 2005",
       synopsis:
         "Katara and Sokka discover Aang, the long-lost Avatar, frozen in an iceberg.",
@@ -203,7 +206,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 3,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Feb 25, 2005",
       synopsis:
         "Aang returns to his childhood home and learns the fate of his people.",
@@ -216,7 +219,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 1,
       episode: 12,
       primaryCharacter: "Zuko",
-      characterColor: "#ff4444",
+      characterColor: "var(--sui-danger)",
       airDate: "Jun 3, 2005",
       synopsis:
         "The pasts of both Aang and Zuko are revealed through flashbacks.",
@@ -229,7 +232,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 2,
       episode: 6,
       primaryCharacter: "Toph",
-      characterColor: "#44cc44",
+      characterColor: "var(--sui-success)",
       airDate: "May 5, 2006",
       synopsis:
         "The gang searches for an earthbending teacher and discovers Toph.",
@@ -242,7 +245,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 2,
       episode: 15,
       primaryCharacter: "Iroh",
-      characterColor: "#ff8844",
+      characterColor: "var(--sui-accent)",
       airDate: "Sep 29, 2006",
       synopsis:
         "A collection of short stories featuring each member of the group.",
@@ -255,7 +258,7 @@ const AVATAR_EPISODES: SidebarSelectorItem<EpisodeCardData>[] = [
       season: 3,
       episode: 21,
       primaryCharacter: "Aang",
-      characterColor: "#ffcc00",
+      characterColor: "var(--sui-warning)",
       airDate: "Jul 19, 2008",
       synopsis: "The final battle. Aang faces Fire Lord Ozai to end the war.",
     },
@@ -270,18 +273,8 @@ export function SidebarSelectorDemo(): JSX.Element {
   };
 
   return (
-    <div style={{ padding: "20px", background: "var(--sui-bg-deep)" }}>
-      <h3
-        style={{
-          color: "var(--sui-accent)",
-          "margin-bottom": "16px",
-          "font-size": "14px",
-          "text-transform": "uppercase",
-          "letter-spacing": "0.1em",
-        }}
-      >
-        Episode Selector
-      </h3>
+    <div class="episode-demo">
+      <h3 class="episode-demo__heading">Episode Selector</h3>
       <SidebarSelector
         items={AVATAR_EPISODES}
         selectedId={selectedId()}
@@ -290,7 +283,7 @@ export function SidebarSelectorDemo(): JSX.Element {
           <EpisodeCard episode={ep} isSelected={isSelected} />
         )}
         renderSelection={(ep) => <EpisodeSelection episode={ep} />}
-        maxHeight="320px"
+        height="320px"
       />
     </div>
   );

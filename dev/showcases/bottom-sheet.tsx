@@ -1,5 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { BottomSheet } from "../../src/components/BottomSheet";
+import { TextBody, MutedBody } from "../../src/components/Text";
+import { FillColumnFlush, NarrowStack } from "../../src/components/Layout";
 
 export const BottomSheetShowcase: Component = () => {
   const [open, setOpen] = createSignal(false);
@@ -32,50 +34,11 @@ export const BottomSheetShowcase: Component = () => {
           Phone-frame: stands in for a bounded app region.
           overflow: hidden hard-clips so nothing bleeds out visually.
         */}
-        <div
-          style={{
-            position: "relative",
-            width: "360px",
-            height: "480px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            background: "var(--sui-bg-elevated)",
-            overflow: "hidden",
-            display: "flex",
-            "flex-direction": "column",
-          }}
-        >
+        <div class="bottom-sheet-demo__frame">
           {/* ── Sibling header strip ABOVE the sheet region ──────────── */}
-          <div
-            style={{
-              "flex-shrink": "0",
-              height: "48px",
-              "border-bottom": "1px solid var(--sui-border)",
-              background: "var(--sui-bg-secondary)",
-              display: "flex",
-              "align-items": "center",
-              padding: "0 16px",
-              gap: "8px",
-            }}
-          >
-            <span
-              style={{
-                "font-size": "12px",
-                "font-weight": "600",
-                color: "var(--sui-text-primary)",
-              }}
-            >
-              App header (sibling above)
-            </span>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-muted)",
-                "margin-left": "auto",
-              }}
-            >
-              never covered
-            </span>
+          <div class="bottom-sheet-demo__header">
+            <TextBody>App header (sibling above)</TextBody>
+            <MutedBody>never covered</MutedBody>
           </div>
 
           {/*
@@ -85,93 +48,48 @@ export const BottomSheetShowcase: Component = () => {
             `inset: 0` of THIS div — not the viewport, not the phone frame,
             not the header.
           */}
-          <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
+          <FillColumnFlush class="bottom-sheet-demo__body">
             {/* Page content — dimmed behind the scrim when sheet is open */}
-            <div
-              style={{
-                padding: "20px 16px",
-                display: "flex",
-                "flex-direction": "column",
-                gap: "10px",
-              }}
-            >
-              <span
-                style={{
-                  "font-size": "13px",
-                  color: "var(--sui-text-primary)",
-                }}
-              >
-                Page content area
-              </span>
-              <span
-                style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}
-              >
+            <NarrowStack>
+              <TextBody>Page content area</TextBody>
+              <MutedBody>
                 The scrim dims this region when the sheet is open, but it stays
                 within the inner container — it cannot reach the header above or
                 the page outside the frame.
-              </span>
+              </MutedBody>
               <button
+                class="demo-btn"
                 type="button"
                 onClick={() => setOpen(true)}
-                style={{
-                  "margin-top": "12px",
-                  padding: "8px 16px",
-                  background: "var(--sui-accent, #00a8cc)",
-                  color: "#fff",
-                  border: "none",
-                  "border-radius": "var(--sui-radius-sm, 4px)",
-                  cursor: "pointer",
-                  "font-size": "13px",
-                  "align-self": "flex-start",
-                }}
               >
                 Open sheet
               </button>
-            </div>
+            </NarrowStack>
 
             <BottomSheet
               open={open()}
               onClose={() => setOpen(false)}
               label="Demo sheet"
             >
-              <p
-                style={{
-                  margin: "0 0 12px",
-                  "font-size": "14px",
-                  color: "var(--sui-text-primary)",
-                }}
-              >
-                Sheet contents
-              </p>
-              <p
-                style={{
-                  margin: "0 0 16px",
-                  "font-size": "12px",
-                  color: "var(--sui-text-secondary)",
-                }}
-              >
-                Tap the grabber at the top or click the scrim (the dimmed area
-                behind this panel) to close. Clicking inside the sheet body does
-                not dismiss it. The sheet top cannot exceed 60% of the inner
-                container, so it never reaches the app header strip above.
-              </p>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                style={{
-                  padding: "8px 16px",
-                  background: "transparent",
-                  color: "var(--sui-text-secondary)",
-                  border: "1px solid var(--sui-border)",
-                  "border-radius": "var(--sui-radius-sm, 4px)",
-                  cursor: "pointer",
-                  "font-size": "12px",
-                }}
-              >
-                Dismiss
-              </button>
+              <NarrowStack>
+                <TextBody>Sheet contents</TextBody>
+                <MutedBody>
+                  Tap the grabber at the top or click the scrim (the dimmed area
+                  behind this panel) to close. Clicking inside the sheet body
+                  does not dismiss it. The sheet top cannot exceed 60% of the
+                  inner container, so it never reaches the app header strip
+                  above.
+                </MutedBody>
+                <button
+                  class="demo-btn"
+                  type="button"
+                  onClick={() => setOpen(false)}
+                >
+                  Dismiss
+                </button>
+              </NarrowStack>
             </BottomSheet>
-          </div>
+          </FillColumnFlush>
         </div>
         <div class="text-meta">
           Dismiss paths: grabber tap, or a direct click on the scrim. A click on

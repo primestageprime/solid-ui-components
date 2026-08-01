@@ -37,45 +37,17 @@ export const cashflowDayCell = (
       : String(cell.start.getUTCDate());
   return (
     <div
+      class="cashflow-day-cell-demo__cell"
       style={{
-        position: "relative",
-        width: "60px",
-        height: "72px",
-        "box-sizing": "border-box",
-        display: "flex",
-        "flex-direction": "column",
-        padding: "3px 4px 4px",
-        gap: "2px",
-        "border-right": "1px solid var(--sui-border)",
         background: up ? "rgba(0,200,120,0.05)" : "rgba(230,70,70,0.05)",
       }}
     >
-      <div
-        style={{
-          "font-size": "9px",
-          "line-height": "1.1",
-          color: "var(--sui-text-muted)",
-          "white-space": "nowrap",
-        }}
-      >
-        {corner}
-      </div>
-      <div style={{ position: "relative", flex: "1", "min-height": "0" }}>
+      <div class="cashflow-day-cell-demo__corner">{corner}</div>
+      <div class="cashflow-day-cell-demo__plot">
+        <div class="cashflow-day-cell-demo__baseline" />
         <div
+          class="cashflow-day-cell-demo__bar"
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: "50%",
-            height: "1px",
-            background: "var(--sui-border)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "24%",
-            right: "24%",
             height: `${(frac * 50).toFixed(0)}%`,
             ...(up
               ? {
@@ -92,13 +64,8 @@ export const cashflowDayCell = (
         />
       </div>
       <div
-        style={{
-          "font-size": "9px",
-          "font-weight": "600",
-          "text-align": "center",
-          "white-space": "nowrap",
-          color: up ? HEAT_GREEN : HEAT_RED,
-        }}
+        class="cashflow-day-cell-demo__value"
+        style={{ color: up ? HEAT_GREEN : HEAT_RED }}
       >
         {fmtDollars(v)}
       </div>

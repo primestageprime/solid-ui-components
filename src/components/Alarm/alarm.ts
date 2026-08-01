@@ -21,6 +21,8 @@
  *     "barcode only at >N concurrent" doesn't drift with dataset size.
  */
 
+import { pipe, filter, map, sortBy, some } from "../../fn";
+
 export type Pt = { readonly x: number; readonly y: number };
 export type Range = { readonly start: number; readonly end: number };
 export type HotZone = Range & { readonly count: number };
@@ -53,9 +55,9 @@ export function padRanges(
   padFraction: number,
   xDomainWidth: number,
 ): Range[] {
-  if (padFraction <= 0) return ranges.map((r) => ({ ...r }));
+  if (padFraction <= 0) return map((r) => ({ ...r }), ranges);
   const pad = padFraction * xDomainWidth;
-  return ranges.map((r) => ({ start: r.start - pad, end: r.end + pad }));
+  return map((r) => ({ start: r.start - pad, end: r.end + pad }), ranges);
 }
 
 /* Sweep-line detection of "hot zones" — contiguous x-regions in which
@@ -75,12 +77,14 @@ export function findHotZones(
     events.push({ x: r.start, d: 1 });
     events.push({ x: r.end, d: -1 });
   }
-  // Tie-break: opens before closes at the same x.
-  events.sort((a, b) => a.x - b.x || b.d - a.d);
+  // Tie-break: opens before closes at the same x. Two stable sortBy passes
+  // (secondary key first, then primary) stand in for the two-key comparator.
+  const byCloseFirst = sortBy((e) => -e.d, events);
+  const sortedEvents = sortBy((e) => e.x, byCloseFirst);
   const zones: { start: number; end: number; count: number }[] = [];
   let active = 0;
   let hotStart: number | null = null;
-  for (const e of events) {
+  for (const e of sortedEvents) {
     const prev = active;
     active += e.d;
     if (prev <= threshold && active > threshold) hotStart = e.x;
@@ -90,12 +94,14 @@ export function findHotZones(
     }
   }
   // Drop zero-width zones and tally source-range count per zone.
-  return zones
-    .filter((z) => z.end > z.start)
-    .map((z) => ({
+  return pipe(
+    zones,
+    filter((z: { start: number; end: number; count: number }) => z.end > z.start),
+    map((z: { start: number; end: number; count: number }) => ({
       ...z,
-      count: ranges.filter((r) => r.start < z.end && r.end > z.start).length,
-    }));
+      count: filter((r) => r.start < z.end && r.end > z.start, ranges).length,
+    })),
+  );
 }
 
 /* Filter out ranges that intersect any zone (the block has replaced them
@@ -104,9 +110,10 @@ export function subtractZones(
   ranges: readonly Range[],
   zones: readonly Range[],
 ): Range[] {
-  if (zones.length === 0) return ranges.map((r) => ({ ...r }));
-  return ranges.filter(
-    (r) => !zones.some((z) => r.start < z.end && r.end > z.start),
+  if (zones.length === 0) return map((r) => ({ ...r }), ranges);
+  return filter(
+    (r) => !some((z) => r.start < z.end && r.end > z.start, zones),
+    ranges,
   );
 }
 
@@ -117,13 +124,15 @@ export function clampRanges<T extends Range>(
   xMin: number,
   xMax: number,
 ): T[] {
-  return ranges
-    .map((r) => ({
+  return pipe(
+    ranges,
+    map((r: T) => ({
       ...r,
       start: Math.max(xMin, r.start),
       end: Math.min(xMax, r.end),
-    }))
-    .filter((r) => r.end > r.start);
+    })),
+    filter((r: T) => r.end > r.start),
+  );
 }
 
 /* Full per-series pipeline in one call. Returns the render-ready

@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
+// ScrubChartAxes — Structural (Depth 1). SVG axis-chrome render fragment; composes no library components.
 // ScrubChart — axis-chrome render fragment (y-axis line + ticks + labels,
 // x-axis line + ticks + labels).
 //

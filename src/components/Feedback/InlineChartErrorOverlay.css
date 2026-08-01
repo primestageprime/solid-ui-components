@@ -1,12 +1,12 @@
+/* Overlay-partial (layout-purity): the flex centering is composed via
+   CenteredStack (align:center, justify:center); only the position:absolute
+   anchoring + visual fill (background, radius) stay here. */
 .inline-chart-error-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: rgba(0, 20, 30, 0.85);
   border-radius: 8px;
 }

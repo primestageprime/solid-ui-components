@@ -1,38 +1,18 @@
 /* ============================================
    Panel Component — Structural
    ============================================ */
+/* The frame's flex-column + overflow:clip geometry is composed from the Layout
+   family: Panel.tsx renders the frame as a `ClipColumn` (flex column that clips
+   the bottom corner-bracket bleed, x-axis sub-pixel rounding, and the
+   corners-clip/notch clip-path overflow) and the inner content region as a
+   `ScrollFillColumn` (flex:1;min-height:0;overflow:auto — the scroll owner, so
+   the absolutely-positioned bottom brackets stay pinned to the visible panel
+   edge instead of riding the scroll content). The panel's PADDING stays on the
+   frame so the header shares it and it is never doubled. Only non-geometry
+   chrome lives here now. */
 .sui-panel {
   position: relative;
   padding: 16px;
-  /* The frame is a flex column so its inner content region is bounded by the
-     frame's height: when the frame is height-bounded (e.g. flex:1;min-height:0
-     in a viewport-locked chain) the region scrolls inside it; when the frame is
-     auto-height (short/unbounded) the region resolves to its content height and
-     simply grows — no scrollbar. */
-  display: flex;
-  flex-direction: column;
-  /* Non-scrolling frame: clips the bottom corner-bracket bleed (bottom:-1px),
-     any x-axis sub-pixel rounding, and the corners-clip/notch clip-path
-     overflow. Scrolling is delegated to .sui-panel__content, so the
-     absolutely-positioned bottom brackets stay pinned to the visible panel edge
-     instead of riding the scroll content. */
-  overflow: clip;
-}
-
-/* Inner content region — ALWAYS present and the scroll owner. flex:1 + min-height:0
-   bounds it to the space the frame leaves after the (optional) header, so it
-   scrolls inside a height-bounded frame and grows in an auto-height one. It is a
-   flex column so children that expect the panel to be a flex-column container
-   (e.g. a child that uses flex:1/min-height:0 to claim the remaining height)
-   resolve their layout against this region exactly as they did when they were
-   direct flex-column children of the frame. The panel's PADDING stays on the
-   frame so the header shares it and it is never doubled. */
-.sui-panel__content {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
 }
 
 /* Panel sizes */
@@ -49,26 +29,21 @@
   padding: 24px;
 }
 
-/* Fill — panel grows to its flex parent's height and lays out as a column so the
-   content region takes the space left after the (optional) title. Lets a
-   flexible child such as a container-sized chart fill the panel vertically
-   instead of forcing its own intrinsic height. */
+/* Fill — the panel grows to its flex parent's height so the ScrollFillColumn
+   content region takes the space left after the (optional) title, letting a
+   flexible child (e.g. a container-sized chart) fill the panel vertically. The
+   frame's flex-column comes from the composed ClipColumn (Stack); only the
+   non-geometry height:100%;min-height:0 lives here (height/min-height are not
+   layout-purity-banned — display/flex-direction/overflow are, and those are on
+   the Layout elements). */
 .sui-panel--fill {
   height: 100%;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.sui-panel--fill > .sui-panel__content {
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
-/* Panel header */
+/* Panel header — the flex/align/gap arrangement is composed from `ClusterRow`
+   (align:center, gap:sm) in Panel.tsx; only the spacing chrome lives here. */
 .sui-panel__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 12px;
   padding-bottom: 8px;
 }

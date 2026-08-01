@@ -8,6 +8,8 @@
 // ============================================
 import { createMemo } from "solid-js";
 import { Chart, Grid, XAxis, YAxis, BarSeries, ChartTooltip } from "../Chart";
+import { ChartHeader } from "../ChartHeader";
+import { map, pipe, pluck, sum } from "../../fn";
 
 export interface CompletionEvent {
   tableName: string;
@@ -89,10 +91,10 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
   });
 
   const yMaxCount = createMemo(() =>
-    Math.max(1, ...buckets().map((b) => b.count)),
+    Math.max(1, ...pluck("count", buckets())),
   );
   const _yMaxCumulative = createMemo(() =>
-    Math.max(1, ...buckets().map((b) => b.cumulative)),
+    Math.max(1, ...pluck("cumulative", buckets())),
   );
 
   // X domain in bucket-index space; tick labels render the bucket start time.
@@ -111,23 +113,11 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
   });
 
   return (
-    <div class="sui-completion-timeline" style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          "justify-content": "space-between",
-          "font-family": '"JetBrains Mono", "Fira Code", monospace',
-          "font-size": "11px",
-          padding: "0 8px 4px",
-        }}
-      >
-        <span style={{ color: "var(--sui-accent)", "font-weight": "600" }}>
-          Completion Timeline
-        </span>
-        <span style={{ color: "var(--sui-text-muted)" }}>
-          {buckets().reduce((s, b) => s + b.count, 0)} completions in window
-        </span>
-      </div>
+    <div class="sui-completion-timeline">
+      <ChartHeader
+        title="Completion Timeline"
+        meta={`${pipe(buckets(), pluck("count"), sum)} completions in window`}
+      />
       <Chart
         width={800}
         height={260}
@@ -152,7 +142,7 @@ export function CompletionTimeline(props: CompletionTimelineProps) {
           bandWidth={0.7}
         />
         <ChartTooltip
-          data={buckets().map((b, i) => ({ ...b, _i: i }))}
+          data={pipe(buckets(), map((b, i) => ({ ...b, _i: i })))}
           x={(b) => b._i}
         >
           {(b) => (

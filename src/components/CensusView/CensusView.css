@@ -1,0 +1,43 @@
+/* CensusView — Composite (Depth 3). Layout now composed from Layout variants
+   (TopClusterRow root, GrowStack buckets column, BaselineClusterRow bucket
+   header, ActionSlot detail rail). Only the non-geometry chrome — the detail
+   rail's fixed width + sticky pinning and the header's bottom margin — remains
+   here. */
+
+.sui-census-view__bucket-header {
+  margin-bottom: var(--sui-space-1, 4px);
+}
+
+/* Buckets container. Default: single vertical column (replicates the former
+   GrowStack — grows to fill, never lets a child sprawl past 0). */
+.sui-census-view__buckets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-4, 16px);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Grid mode (opt-in via the `bucketMinWidth` prop): buckets flow into a
+   responsive dashboard grid — auto-fill packs 2–3 columns by viewport width. */
+.sui-census-view__buckets--grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--sui-census-bucket-min, 360px), 1fr)
+  );
+  align-items: start;
+}
+
+.sui-census-view__detail {
+  /* fixed-width sticky rail; no-shrink comes from ActionSlot */
+  width: 360px;
+  position: sticky;
+  top: 0;
+}
+
+/* Entity subtitle — second line under the entity name in the entity column. */
+.sui-census__entity-subtitle {
+  display: block;
+  font-size: 0.85em;
+}

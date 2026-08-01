@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// PinMarkers — Structural (Depth 1). SVG chart slot (renders ShapeGlyph, a same-dir render helper).
 // `renderPin` is an escape hatch when the descriptor cannot express what
 // the consumer needs (otherwise the slot renders one ShapeGlyph per pin).
 import {
@@ -150,9 +151,9 @@ export function PinMarkers<TPin extends Pin = Pin>(
   return (
     <g
       class={`sui-chart__pin-markers${merged.class ? ` ${merged.class}` : ""}`}
+      classList={{ "sui-chart__pin-markers--inert": !interactive() }}
       clip-path={clipPath()}
       data-lane={merged.lane}
-      style={{ "pointer-events": interactive() ? undefined : "none" }}
     >
       <For each={merged.data}>
         {(pin, i) => {

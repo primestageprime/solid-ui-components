@@ -1,5 +1,6 @@
 // ============================================
 // Combobox — Single-mode render (internal sibling of Combobox.tsx)
+// Atomic (Depth 1) — internal render half of the Combobox Kobalte-wrapping Primitive.
 // ============================================
 // Extracted from Combobox.tsx to keep each module under the ~500-line
 // guideline. This is NOT a public export — the folder barrel (index.ts)
@@ -23,6 +24,7 @@ import { Combobox as KobalteCombobox } from "@kobalte/core/combobox";
 import { type Accessor, createEffect, createSignal, Show } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import type { ComboboxOption, SingleComboboxProps } from "./Combobox";
+import { some } from "../../fn";
 
 /** Narrowed local props for single-mode rendering. */
 export type SingleLocal = Pick<
@@ -68,9 +70,10 @@ export const renderSingle = (
     if (e.key !== "Enter" || !local.onCreate) return;
     const text = inputValue().trim();
     if (!text) return;
-    const exists = local
-      .options()
-      .some((opt) => opt.label.toLowerCase() === text.toLowerCase());
+    const exists = some(
+      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
+      local.options(),
+    );
     if (exists) return;
     e.preventDefault();
     local.onCreate(text);

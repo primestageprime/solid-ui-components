@@ -26,6 +26,14 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import {
+  ActionSlot,
+  GrowBox,
+  GrowClusterRow,
+  GrowWrapRow,
+} from "../Layout/variants";
+import { observeSize } from "../../internal/dom/observeSize";
+import { filter, find } from "../../fn";
 import "./MultiSelectFilter.css";
 
 export interface MultiSelectOption {
@@ -45,11 +53,6 @@ export interface MultiSelectFilterProps {
    * (i.e. all are implicitly active). Default "all".
    */
   allLabel?: string;
-  /**
-   * Pixel budget per option used to estimate whether the bar fits.
-   * Default 90 (room for ~10ch label + padding). Tune up for long labels.
-   */
-  optionWidthEstimate?: number;
 }
 
 const labelOf = (opt: MultiSelectOption): string => opt.label ?? opt.value;
@@ -60,7 +63,9 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [menuOpen, setMenuOpen] = createSignal(false);
 
-  const optionWidth = () => props.optionWidthEstimate ?? 90;
+  // Pixel budget per option for the fits-as-bar estimate (~10ch + padding).
+  // Was a prop; pruned 2026-07-15 — no production caller ever tuned it.
+  const optionWidth = () => 90;
 
   // Width budget required for full button bar mode.
   const requiredWidth = createMemo(() => {
@@ -77,11 +82,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   onMount(() => {
     if (!containerRef) return;
     setContainerWidth(containerRef.clientWidth);
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) setContainerWidth(e.contentRect.width);
-    });
-    ro.observe(containerRef);
-    onCleanup(() => ro.disconnect());
+    onCleanup(observeSize(containerRef, (size) => setContainerWidth(size.width)));
 
     const onDocClick = (e: MouseEvent) => {
       if (!menuOpen()) return;
@@ -103,7 +104,7 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const onChipClick = (v: string) => {
     const cur = props.selected;
     if (cur.includes(v)) {
-      props.onChange(cur.filter((x) => x !== v));
+      props.onChange(filter((x) => x !== v, cur));
     } else if (cur.length === 0) {
       props.onChange([v]);
     } else {
@@ -114,22 +115,22 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
   const summary = createMemo(() => {
     if (props.selected.length === 0) return props.allLabel ?? "all";
     if (props.selected.length === 1) {
-      const opt = props.options.find((o) => o.value === props.selected[0]);
+      const opt = find((o) => o.value === props.selected[0], props.options);
       return opt ? labelOf(opt) : props.selected[0];
     }
     return `${props.selected.length} selected`;
   });
 
   return (
-    <div class="sui-msf" ref={containerRef}>
+    <GrowClusterRow class="sui-msf" ref={containerRef}>
       <Show when={props.label}>
-        <span class="sui-msf__label">{props.label}</span>
+        <ActionSlot class="sui-msf__label">{props.label}</ActionSlot>
       </Show>
 
       <Show
         when={mode() === "bar"}
         fallback={
-          <div class="sui-msf__menu-wrap">
+          <GrowBox class="sui-msf__menu-wrap">
             <button
               type="button"
               class="sui-msf__menu-trigger"
@@ -161,11 +162,14 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
                 </For>
               </div>
             </Show>
-          </div>
+          </GrowBox>
         }
       >
-        {/* biome-ignore lint/a11y/useSemanticElements: native <fieldset> carries default border/margin/padding and its own layout box, which would alter this styled chip-bar's visual output; role="group" preserves the grouping semantics without changing rendering */}
-        <div class="sui-msf__bar" role="group">
+        {/* a11y — a native <fieldset> carries default border/margin/padding and
+            its own layout box, which would alter this styled chip-bar's visual
+            output; role="group" preserves the grouping semantics without
+            changing rendering. */}
+        <GrowWrapRow class="sui-msf__bar" role="group">
           <For each={props.options}>
             {(opt) => (
               <button
@@ -180,8 +184,8 @@ export const MultiSelectFilter: Component<MultiSelectFilterProps> = (props) => {
               </button>
             )}
           </For>
-        </div>
+        </GrowWrapRow>
       </Show>
-    </div>
+    </GrowClusterRow>
   );
 };

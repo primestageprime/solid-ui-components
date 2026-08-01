@@ -14,8 +14,26 @@ export interface TableColumn<T> {
   header: string | JSX.Element;
   accessor: keyof T | ((row: T) => JSX.Element | string | number);
   width?: string;
+  /** Column floor under auto layout (the width-model min; width is the max). */
+  minWidth?: string;
+  /** Wrap the cell content in a size-contained clip block, so long nowrap
+   *  content cannot inflate the column's minimum past `minWidth` — required
+   *  for a variable column to shrink between its bounds (ruled 2026-07-21). */
+  contained?: boolean;
   align?: "left" | "center" | "right";
+  /**
+   * Clip overflowing content with an ellipsis even when no fixed `width` is set —
+   * for the flexible column in a `fixedLayout` table (e.g. a name column that
+   * takes the remaining space and truncates long values).
+   */
+  ellipsis?: boolean;
   sortable?: boolean;
+  /**
+   * Raw value used for sorting when `accessor` returns JSX (a rendered cell
+   * carries no comparable value). When present, the sort comparator reads this
+   * instead of the accessor. Nullish results sort last in either direction.
+   */
+  sortValue?: (row: T) => string | number | null | undefined;
   /** Group label for column grouping — columns sharing the same group string are merged under a colspan header */
   group?: string;
 }
@@ -30,8 +48,30 @@ export interface BaseTableProps<T>
   striped?: boolean;
   hoverable?: boolean;
   compact?: boolean;
+  /**
+   * Use CSS `table-layout: fixed` — column widths are honored exactly, columns
+   * with a `width` stay put, and the one unwidthed column (mark it `ellipsis`)
+   * absorbs the remaining space and truncates. Without this, a `nowrap` cell can
+   * push the table wider than its container.
+   */
+  fixedLayout?: boolean;
+  /**
+   * Shrink-wrap the table to its content width instead of stretching to fill the
+   * container (the default `width: 100%`). For tables whose columns are ALL
+   * fixed/capped-content (counts, money, dates) — a full-width stretch would
+   * leave large dead gaps between columns. `fit` sizes the frame + table to
+   * `fit-content` (capped at 100%) and left-aligns it. Mutually exclusive with
+   * `fixedLayout` (fixed layout is for one flexing/ellipsized column).
+   */
+  fit?: boolean;
   getRowClass?: (row: T, index: number) => string;
   onRowClick?: (row: T, index: number) => void;
+  /**
+   * Row hover callback for cross-highlighting (e.g. a table row ↔ a chart
+   * point). Fires with `(row, index)` on row enter and `(null, -1)` when the
+   * pointer leaves the table body.
+   */
+  onRowHover?: (row: T | null, index: number) => void;
   emptyMessage?: string;
   /**
    * Optional per-row trailing action slot. When provided, an extra cell is
@@ -116,12 +156,13 @@ export function getCellValue<
 /**
  * Inline style for the inner scroll region wrapping the <table>.
  *
- * `maxHeight` is the explicit escape hatch — "cap at 400px and scroll". When
- * it's unset, scrolling is driven by the `fill` prop via the `.hud-table--fill`
- * CSS class (which makes the outer wrapper a clipping flex column and the inner
- * scroll region flex-grow + overflow-y:auto), so no inline style is needed here.
+ * `maxHeight` is the explicit escape hatch — "cap at 400px and scroll". Only the
+ * `max-height` SIZE is set here; the `overflow-y:auto` scroll is composed —
+ * BaseTable renders the scroll region as a `ScrollYBox` when `maxHeight` is set,
+ * or a `ScrollFillColumn` under `fill`. When both are unset the region is a plain
+ * box and needs no inline style.
  */
 export function tableContainerStyle(maxHeight?: string): JSX.CSSProperties {
   if (!maxHeight) return {};
-  return { "max-height": maxHeight, "overflow-y": "auto" };
+  return { "max-height": maxHeight };
 }

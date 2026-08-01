@@ -34,12 +34,12 @@ describe("RangeAmountGroup", () => {
     ]);
   });
 
-  it("sets the responsive break CSS var", () => {
+  it("emits no inline break var (frozen to the CSS --rag-break fallback)", () => {
     const { container } = render(() => (
-      <RangeAmountGroup slots={slots(["a", "b", "c"])} breakWidth="40rem" />
+      <RangeAmountGroup slots={slots(["a", "b", "c"])} />
     ));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--rag-break")).toBe("40rem");
+    expect(root.style.getPropertyValue("--rag-break")).toBe("");
     expect(root.className).toContain("sui-range-amount-group");
   });
 
@@ -58,11 +58,10 @@ describe("RangeAmountGroup", () => {
   });
 
   it("createRangeAmountGroup bakes defaults", () => {
-    const Curried = createRangeAmountGroup({ breakWidth: "20rem" });
+    const Curried = createRangeAmountGroup({ name: "baked" });
     const { container } = render(() => (
       <Curried slots={slots(["x", "y", "z"])} />
     ));
-    const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--rag-break")).toBe("20rem");
+    expect(container.querySelector('input[name="baked-0"]')).toBeTruthy();
   });
 });

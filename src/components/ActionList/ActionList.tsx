@@ -42,7 +42,7 @@
 // bar) and SegmentedControl (a single-select toggle) are unrelated.
 // ============================================
 import {
-  Component,
+  type Component,
   For,
   Show,
   createEffect,
@@ -52,12 +52,15 @@ import {
   onMount,
   untrack,
 } from "solid-js";
+import { NarrowStack, ClusterRow } from "../Layout/variants";
 import { SortableList } from "../SortableList/SortableList";
 import { ActionListItem, type ActionListItemTone } from "../ActionListItem/ActionListItem";
 import { HotkeyButton, isEditableTarget } from "../HotkeyButton";
+import type { EditTrigger } from "../EditableTitle/EditableTitle";
 import { idRange, foldRange, type RangeSelectMode } from "./selection";
 import type { AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import type { TagPillData } from "../Badge/TagPill";
+import { filter, pluck } from "../../fn";
 import "./ActionList.css";
 
 /** A tag — a plain/`"ns:value"` label, or the explicit `{ key, value }` form. */
@@ -116,8 +119,21 @@ export interface ActionListProps {
   onSort?: (orderedIds: string[]) => void;
   /** Enables the × cap; called with the removed id. */
   onDelete?: (id: string) => void;
+  /** Require a two-step confirm on the × cap before `onDelete` fires (the first
+   *  click arms, a second confirms). Off by default. See
+   *  {@link ActionListItemProps.confirmDismiss}. */
+  confirmDelete?: boolean;
   /** Enables inline title edit; called with the id + new name. */
   onRename?: (id: string, name: string) => void;
+  /** Which gesture opens a row's inline title editor. Default `"singleClick"`
+   *  (unchanged behavior). `"doubleClick"` makes a single click on the title
+   *  select the row (like clicking anywhere else on it) and a double click edit
+   *  — only meaningful alongside `onRename`. See {@link EditTrigger}. */
+  editTrigger?: EditTrigger;
+  /** Enables a per-row "open" affordance (a magnifying-glass icon button);
+   *  called with the row id. Clicking it never toggles row selection or opens
+   *  the inline editor. Omit and no button renders. */
+  onOpen?: (id: string) => void;
   /** Enables chip edit/select; called with the id + new status. */
   onStatusChange?: (id: string, status: string) => void;
   /** Batch actions. Presence ENABLES multi-select: rows become click-to-toggle
@@ -193,7 +209,9 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   const plainToggle = (id: string, shiftKey = false) => {
     setAnchorId(id);
     const cur = selection();
-    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+    const next = cur.includes(id)
+      ? filter((x) => x !== id, cur)
+      : [...cur, id];
     emit(next, { kind: "toggle", clickedId: id, shiftKey });
   };
   // Shift-click: fold the contiguous span [anchor..target] into the selection per
@@ -203,7 +221,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   // shift-click re-ranges from it. With no usable anchor, falls back to a plain
   // toggle (carrying shiftKey through so the meta stays honest).
   const rangeToggle = (id: string) => {
-    const order = props.items.map((i) => i.id);
+    const order = pluck("id", props.items);
     const anchor = anchorId();
     const range = idRange(order, anchor, id);
     if (!range) {
@@ -220,10 +238,10 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   // `items` only — untrack the selection read so this doesn't loop on toggle.
   createEffect(() => {
     if (controlled()) return;
-    const live = new Set(props.items.map((i) => i.id));
+    const live = new Set(pluck("id", props.items));
     untrack(() => {
       const cur = internalIds();
-      const pruned = cur.filter((id) => live.has(id));
+      const pruned = filter((id) => live.has(id), cur);
       if (pruned.length !== cur.length) emit(pruned);
     });
   });
@@ -245,9 +263,13 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
   };
 
   return (
-    <div class="sui-action-list">
+    <NarrowStack class="sui-action-list">
       <Show when={selectionEnabled() && selection().length > 0}>
-        <div class="sui-action-list__bar" role="toolbar" aria-label="Selection actions">
+        <ClusterRow
+          class="sui-action-list__bar"
+          role="toolbar"
+          aria-label="Selection actions"
+        >
           <span class="sui-action-list__bar-count">
             {selection().length} selected
           </span>
@@ -263,7 +285,7 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
               </HotkeyButton>
             )}
           </For>
-        </div>
+        </ClusterRow>
       </Show>
       <SortableList
         items={props.items}
@@ -297,11 +319,14 @@ const ActionListBase: Component<ActionListProps & ActionListOverrides> = (props)
             onTitleChange={
               props.onRename ? (name) => props.onRename!(d.id, name) : undefined
             }
+            editTrigger={props.editTrigger}
+            onOpen={props.onOpen ? () => props.onOpen!(d.id) : undefined}
             onDismiss={props.onDelete ? () => props.onDelete!(d.id) : undefined}
+            confirmDismiss={props.confirmDelete}
           />
         )}
       />
-    </div>
+    </NarrowStack>
   );
 };
 

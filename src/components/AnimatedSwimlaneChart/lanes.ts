@@ -1,5 +1,6 @@
 // src/components/AnimatedSwimlaneChart/lanes.ts
 import type { StatusFlowNode } from "../StatusFlowChart";
+import { map, pluck } from "../../fn";
 import {
   computeColFor,
   resolveParentStatuses,
@@ -55,7 +56,7 @@ export interface LaneGroup {
  * relative to the first orphan/standalone it contains.
  */
 export function groupIntoLanes(nodes: StatusFlowNode[]): LaneGroup[] {
-  const ids = new Set(nodes.map((n) => n.id));
+  const ids = new Set(pluck("id")(nodes));
   const parentIds = new Set<string>();
   for (const n of nodes) {
     if (n.parentId && ids.has(n.parentId)) parentIds.add(n.parentId);
@@ -86,9 +87,12 @@ export function groupIntoLanes(nodes: StatusFlowNode[]): LaneGroup[] {
     ensure("default").push(n);
   }
 
-  return laneOrder.map((laneId) => ({
-    id: laneId,
-    parentId: laneId === "default" ? undefined : laneId,
-    nodes: buckets.get(laneId)!,
-  }));
+  return map(
+    (laneId) => ({
+      id: laneId,
+      parentId: laneId === "default" ? undefined : laneId,
+      nodes: buckets.get(laneId)!,
+    }),
+    laneOrder,
+  );
 }

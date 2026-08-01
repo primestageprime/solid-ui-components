@@ -1,7 +1,8 @@
 // lastReviewedAt: 2026-06-17
 // lastReviewedBy: peter.stradinger
 // ============================================
-// ExtractionBoard — Composite swimlane board for an ETL extraction view.
+// ExtractionBoard — Composite (Depth 4) swimlane board for an ETL extraction view.
+// (Composes the ./cards vocabulary (Depth 3, via CountChip Depth 2) + Layout variants.)
 // Owns CSS (ExtractionBoard.css). Composes Surface / Text / StatusBadge /
 // Icon / Tooltip / SlotFillBar / BatchBar / CountChip / ProportionalStack.
 //
@@ -39,6 +40,7 @@ import {
   type JSX,
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
+import { CenteredStack, NarrowStack, StretchRow } from "../Layout/variants";
 import "./ExtractionBoard.css";
 
 import { useProgressEngine } from "../../internal/progress/useProgressEngine";
@@ -63,6 +65,7 @@ import type {
   DoingItem,
   TodoItem,
 } from "./types";
+import { pipe, filter, map, join, sortBy, pluck } from "../../fn";
 
 // ---------------------------------------------------------------------------
 // Defaults + small helpers.
@@ -82,13 +85,19 @@ const STATUS_RANK: Record<CategoryStatus, number> = {
   complete: 2,
 };
 
-/** Two items are the "same card" iff the same table — keeps card refs STABLE
- *  between renders so a card recreates ONLY on a real transition (firing the
- *  slide/slurp), not on a plain rows-fill update (which would flicker). */
-const sameName = (
-  a: { name: string } | null,
-  b: { name: string } | null,
-): boolean => (a?.name ?? null) === (b?.name ?? null);
+/** Two items are the "same card" iff the same table AND the same displayed
+ *  numbers — card refs stay stable across renders so a card recreates only on
+ *  a real transition (firing the slide/slurp) or when its counts actually
+ *  change. Name-only equality froze a card's numbers forever: a totals
+ *  correction arriving AFTER the lane transition (e.g. reconciliation counted
+ *  late) never re-rendered, showing "0 Rows" on a 166K-row Done card. */
+const sameCard = (
+  a: { name: string; totalRows?: number; rows?: number } | null,
+  b: { name: string; totalRows?: number; rows?: number } | null,
+): boolean =>
+  (a?.name ?? null) === (b?.name ?? null) &&
+  a?.totalRows === b?.totalRows &&
+  a?.rows === b?.rows;
 
 // ---------------------------------------------------------------------------
 // Public props.
@@ -109,13 +118,13 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   const [local, others] = splitProps(rawProps, ["config", "tables", "class"]);
   const cfg = () => local.config;
 
-  const catOrder = createMemo(() => cfg().categories.map((c) => c.id));
+  const catOrder = createMemo(() => pluck("id", cfg().categories));
   const orderIndex = createMemo(
-    () => new Map(catOrder().map((id, i) => [id, i])),
+    () => new Map(map((id, i) => [id, i] as const, catOrder())),
   );
   const dataTypeOrder = createMemo(() => cfg().dataTypes);
   const iconById = createMemo(
-    () => new Map(cfg().dataTypes.map((d) => [d.id, d])),
+    () => new Map(map((d) => [d.id, d] as const, cfg().dataTypes)),
   );
   const labels = createMemo(() => ({ ...DEFAULT_COLUMNS, ...cfg().columns }));
   const multiBatchAbove = () =>
@@ -125,7 +134,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   // Only tables whose category is known to the config participate.
   const knownTables = createMemo(() => {
     const known = new Set(catOrder());
-    return local.tables.filter((t) => known.has(t.category));
+    return filter((t) => known.has(t.category), local.tables);
   });
 
   // ---- derived views (pure over `tables`) --------------------------------
@@ -192,9 +201,10 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
 
   /** All currently-extracting tables (flat). */
   const doingFlat = createMemo<DoingItem[]>(() =>
-    knownTables()
-      .filter((t) => t.status === "doing")
-      .map((t) => ({
+    pipe(
+      knownTables(),
+      filter((t: BoardTable) => t.status === "doing"),
+      map((t: BoardTable) => ({
         name: t.name,
         category: t.category,
         colsByType: t.colsByType,
@@ -202,6 +212,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
         transferredRows: t.transferredRows,
         batches: t.totalRows > multiBatchAbove() ? t.batches : undefined,
       })),
+    ),
   );
 
   /** The next queued (todo) table + remaining count per category. */
@@ -248,21 +259,24 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   // the bottom; config order breaks ties. Re-sorts only `resortMs` after the
   // last status transition (debounced), so a lane is seen completing before it
   // sinks. Keys off summary status ONLY.
-  const sortedByStatus = (): string[] =>
-    [...catOrder()].sort((a, b) => {
-      const sum = summaryByCategory();
-      const r = STATUS_RANK[sum[a].status] - STATUS_RANK[sum[b].status];
-      return r !== 0 ? r : orderIndex().get(a)! - orderIndex().get(b)!;
-    });
+  const sortedByStatus = (): string[] => {
+    const sum = summaryByCategory();
+    // Two stable sortBy passes (secondary key first, then primary) stand in
+    // for the two-key comparator: config order as tiebreak, then status rank.
+    const byConfigOrder = sortBy((c) => orderIndex().get(c)!, catOrder());
+    return sortBy((c) => STATUS_RANK[sum[c].status], byConfigOrder);
+  };
 
   const [rowOrder, setRowOrder] = createSignal<string[]>(sortedByStatus());
   let resortTimer: ReturnType<typeof setTimeout> | undefined;
   let lastStatusSig = "";
   createEffect(() => {
     const sum = summaryByCategory();
-    const sig = catOrder()
-      .map((c) => sum[c].status)
-      .join(",");
+    const sig = pipe(
+      catOrder(),
+      map((c: string) => sum[c].status),
+      join(","),
+    );
     if (sig === lastStatusSig) return; // only react to summary status changes
     lastStatusSig = sig;
     clearTimeout(resortTimer);
@@ -293,10 +307,12 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
     }
     sig +=
       "doing>" +
-      doingNow
-        .map((d) => `${d.category}:${d.name}`)
-        .sort()
-        .join(",");
+      pipe(
+        doingNow,
+        map((d: DoingItem) => `${d.category}:${d.name}`),
+        sortBy((s: string) => s),
+        join(","),
+      );
     flip.sync(sig);
   });
 
@@ -309,9 +325,9 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
   const rootClass = () => (local.class ? `sui-xb ${local.class}` : "sui-xb");
 
   return (
-    <div class={rootClass()} ref={flip.setRoot} {...others}>
+    <NarrowStack class={rootClass()} ref={flip.setRoot} {...others}>
       {/* Column headers — equal-width columns that fill the row. */}
-      <div class="sui-xb__row">
+      <StretchRow class="sui-xb__row">
         <CellBox>
           <ColHeading>{labels().summary}</ColHeading>
         </CellBox>
@@ -324,8 +340,8 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
         <CellBox>
           <ColHeading>{labels().todo}</ColHeading>
         </CellBox>
-        <div class="sui-xb__lozenge" />
-      </div>
+        <CenteredStack class="sui-xb__lozenge" />
+      </StretchRow>
 
       <For each={rowOrder()}>
         {(cat) => {
@@ -334,17 +350,17 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
           const done = createMemo<DoneItem | null>(
             () => doneByCategory()[cat],
             null,
-            { equals: sameName },
+            { equals: sameCard },
           );
           const todoNext = createMemo<TodoItem | null>(
             () => todoByCategory()[cat].next,
             null,
-            { equals: sameName },
+            { equals: sameCard },
           );
           const remaining = () => todoByCategory()[cat].remaining;
           const doingCards = () => doingByCategory()[cat] ?? [];
           return (
-            <div class="sui-xb__row">
+            <StretchRow class="sui-xb__row">
               <CellBox>
                 <SummaryCard
                   summary={summaryByCategory()[cat]}
@@ -364,7 +380,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                   when={doingCards().length > 0}
                   fallback={<PlaceholderCard />}
                 >
-                  <div class="sui-xb__doing-stack">
+                  <NarrowStack class="sui-xb__doing-stack">
                     <For each={doingCards()}>
                       {(d) => (
                         <DoingCard
@@ -376,7 +392,7 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                         />
                       )}
                     </For>
-                  </div>
+                  </NarrowStack>
                 </Show>
               </CellBox>
               <CellBox>
@@ -386,14 +402,14 @@ export const ExtractionBoard: Component<ExtractionBoardProps> = (rawProps) => {
                   iconById={iconById()}
                 />
               </CellBox>
-              <div class="sui-xb__lozenge" data-flip-lozenge={cat}>
+              <CenteredStack class="sui-xb__lozenge" data-flip-lozenge={cat}>
                 <LozengeCell remaining={remaining()} />
-              </div>
-            </div>
+              </CenteredStack>
+            </StretchRow>
           );
         }}
       </For>
-    </div>
+    </NarrowStack>
   );
 };
 

@@ -6,6 +6,7 @@
 // grow/shrink control. Factory: createBox().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { mergeStyle } from "./mergeStyle";
 import "./Layout.css";
 
 export interface BoxProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -45,5 +46,13 @@ export type BoxDataProps = Omit<BoxProps, keyof BoxOverrides>;
 export function createBox(
   defaults: Partial<Omit<BoxProps, "children">>,
 ): Component<BoxDataProps> {
-  return (props) => <Box {...mergeProps(defaults, props)} />;
+  // `style` is merged (not clobbered): a caller-passed style deep-merges over the
+  // variant's baked style so e.g. passing `max-height` doesn't wipe a baked
+  // `overflow`. See mergeStyle.
+  return (props) => (
+    <Box
+      {...mergeProps(defaults, props)}
+      style={mergeStyle(defaults.style, props.style)}
+    />
+  );
 }

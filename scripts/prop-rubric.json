@@ -1,0 +1,59 @@
+{
+  "_comment": "Whitelist of geometry/paint props sanctioned by scripts/prop-rubric.mjs. Only caller-OWNED identity / data-driven PAINT is sanctioned here (ADR 0003: a scenario's accent, a participant's colour, a chart series' colour stay as `color: string` because an internal series index would break the caller's contract). Geometry lengths (width/height/min/max/size) are NEVER whitelisted here — they must become semantic (number/token) props. `allow[relativeFilePath][propName] = reason`.",
+  "allow": {
+    "src/components/Badge/ScenarioDot.tsx": {
+      "color": "Scenario's caller-owned accent identity colour (ADR 0003)."
+    },
+    "src/components/Badge/ScenarioGlyph.tsx": {
+      "color": "Scenario's caller-owned accent identity colour (ADR 0003)."
+    },
+    "src/components/Cell/Cell.tsx": {
+      "color": "Caller/data-driven cell text colour (ADR 0003 data-driven paint)."
+    },
+    "src/components/Chart/CurrentValueIndicator.tsx": {
+      "color": "Chart series current-value dot colour, caller/series-owned (ADR 0003)."
+    },
+    "src/components/Chart/GhostArc.tsx": {
+      "color": "Chart annotation stroke colour, caller-driven (ADR 0003)."
+    },
+    "src/components/Chart/Series.tsx": {
+      "color": "Reference-line colour override, caller-driven chart paint (ADR 0003)."
+    },
+    "src/components/DataDisplay/NumberWithUnits.tsx": {
+      "color": "Caller/data-driven value colour (ADR 0003 data-driven paint)."
+    },
+    "src/components/Dot/Dot.tsx": {
+      "color": "Category/status dot identity colour, caller-owned (ADR 0003 Dropdown dot)."
+    },
+    "src/components/GroupBracket/GroupBracket.tsx": {
+      "color": "Consumer-driven bracket tint (ADR 0003)."
+    },
+    "src/components/InlineText/InlineText.tsx": {
+      "color": "Explicitly data-driven text colour, the component's only input (ADR 0003)."
+    },
+    "src/components/ParticipantAvatar/ParticipantAvatar.tsx": {
+      "color": "Per-participant identity colour (ADR 0003)."
+    },
+    "src/components/ParticipantNameLabel/ParticipantNameLabel.tsx": {
+      "color": "Per-participant accent identity colour (ADR 0003)."
+    },
+    "src/components/Progress/StackedProgressBar.tsx": {
+      "background": "Caller-driven track background paint (ADR 0003 data-driven paint)."
+    },
+    "src/components/ResponsiveMoney/ResponsiveMoney.tsx": {
+      "color": "Caller/data-driven figure colour (ADR 0003 data-driven paint)."
+    },
+    "src/components/Sparkline/Sparkline.tsx": {
+      "color": "Sparkline series identity colour, caller-owned (ADR 0003)."
+    },
+    "src/components/Surface/Surface.tsx": {
+      "borderColor": "Caller-driven surface border tint (ADR 0003 data-driven paint)."
+    },
+    "src/components/Text/Text.tsx": {
+      "color": "Caller/data-driven text colour (ADR 0003 data-driven paint)."
+    },
+    "src/components/ThreadGroup/ThreadGroup.tsx": {
+      "color": "Per-thread caller-driven accent identity colour (ADR 0003)."
+    }
+  }
+}

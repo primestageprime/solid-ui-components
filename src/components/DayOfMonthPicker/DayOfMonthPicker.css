@@ -3,13 +3,10 @@
    Compact calendar-style grid for choosing a day
    of the month (1..max). 7-column uniform grid.
    ============================================ */
+/* The fixed 7-column grid (grid-template-columns + gap) is composed from the
+   Layout Grid primitive; only the content-width sizing (tracks sized by
+   --dom-cell-size, only as wide as 7 cells + gaps, left-aligned) lives here. */
 .sui-dom-picker {
-  /* Fixed-size 7-column grid that does NOT stretch to its
-     container: tracks are sized by --dom-cell-size, and the
-     grid is only as wide as 7 cells + gaps, left-aligned. */
-  display: grid;
-  grid-template-columns: repeat(7, var(--dom-cell-size, 3.5rem));
-  gap: var(--sui-space-1, 4px);
   width: fit-content;
 }
 

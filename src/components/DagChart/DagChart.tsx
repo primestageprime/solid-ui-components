@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// DagChart — Structural (Depth 1). SVG chart; renders only internal/dag-svg helpers, no library components.
 import {
   createMemo,
   createEffect,
@@ -10,13 +11,21 @@ import {
   onMount,
   onCleanup,
 } from "solid-js";
-import type { DAGProps, PositionedNode } from "./types";
+import type {
+  DAGProps,
+  DAGNode,
+  DAGEdge,
+  NodeRenderState,
+  PositionedNode,
+} from "./types";
 import { computeLayout, type LayoutResult } from "./layout";
 import { collapseGraph } from "./collapse";
 import { createPanZoom } from "./pan-zoom";
 import { clipPolyline, buildEdgePath, polylineMidpoint } from "./edge-path";
 import { DagArrowMarker, DagSvgNode, DagSvgEdge } from "../../internal/dag-svg";
 import "./DagChart.css";
+import { map, filter, find, pipe } from "../../fn";
+import { observeSize } from "../../internal/dom/observeSize";
 
 const _RESPONSIVE_BREAKPOINT = 640;
 
@@ -70,7 +79,7 @@ export function DagChart<T>(props: DAGProps<T>) {
   );
 
   const _stateMap = createMemo(
-    () => new Map(collapsed().visibleNodes.map((v) => [v.node.id, v.state])),
+    () => new Map(map((v) => [v.node.id, v.state], collapsed().visibleNodes)),
   );
 
   // Merge full-graph positions with collapse state.
@@ -80,40 +89,45 @@ export function DagChart<T>(props: DAGProps<T>) {
 
   const positionedNodes = createMemo((): PositionedNode<T>[] => {
     const positions = fullLayout().positions;
-    return collapsed().visibleNodes.flatMap(({ node, state }) => {
+    const toPositioned = ({
+      node,
+      state,
+    }: {
+      node: DAGNode<T>;
+      state: NodeRenderState;
+    }): PositionedNode<T> | null => {
       const pos = positions.get(node.id);
       if (pos) {
-        return [
-          {
-            node,
-            x: pos.x,
-            y: pos.y,
-            width: pos.width,
-            height: pos.height,
-            state,
-          },
-        ];
+        return {
+          node,
+          x: pos.x,
+          y: pos.y,
+          width: pos.width,
+          height: pos.height,
+          state,
+        };
       }
       // Summary node: extract beyondId from __collapsed_<beyondId> and use its position
       const beyondId = node.id.startsWith("__collapsed_")
         ? node.id.slice(12)
         : null;
       const fallbackPos = beyondId ? positions.get(beyondId) : undefined;
-      if (fallbackPos) {
-        const size = props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
-        return [
-          {
-            node,
-            x: fallbackPos.x,
-            y: fallbackPos.y,
-            width: size[0],
-            height: size[1],
-            state,
-          },
-        ];
-      }
-      return [];
-    });
+      if (!fallbackPos) return null;
+      const size = props.nodeSize ? props.nodeSize(node) : DEFAULT_SIZE;
+      return {
+        node,
+        x: fallbackPos.x,
+        y: fallbackPos.y,
+        width: size[0],
+        height: size[1],
+        state,
+      };
+    };
+    return pipe(
+      collapsed().visibleNodes,
+      map(toPositioned),
+      filter((n): n is PositionedNode<T> => n !== null),
+    );
   });
 
   // Positions map: real nodes from full layout + summary nodes from positionedNodes
@@ -145,13 +159,14 @@ export function DagChart<T>(props: DAGProps<T>) {
     for (const e of props.edges) {
       if (e.label) labelByPair.set(`${e.source}|${e.target}`, e.label);
     }
-    return collapsed().visibleEdges.flatMap((edge) => {
+    const toEdgePath = (edge: DAGEdge) => {
       const sourceRect = pos.get(edge.source);
       const targetRect = pos.get(edge.target);
-      if (!sourceRect || !targetRect) return [];
+      if (!sourceRect || !targetRect) return null;
 
-      const fullEdge = fullEdges.find(
+      const fullEdge = find(
         (e) => e.sourceId === edge.source && e.targetId === edge.target,
+        fullEdges,
       );
       const rawPoints = fullEdge
         ? fullEdge.points
@@ -166,17 +181,20 @@ export function DagChart<T>(props: DAGProps<T>) {
       const clipped = clipPolyline(rawPoints, sourceRect, targetRect);
       const label = labelByPair.get(`${edge.source}|${edge.target}`);
       const mid = polylineMidpoint(clipped);
-      return [
-        {
-          d: buildEdgePath(clipped),
-          label,
-          midX: mid.x,
-          midY: mid.y,
-          source: edge.source,
-          target: edge.target,
-        },
-      ];
-    });
+      return {
+        d: buildEdgePath(clipped),
+        label,
+        midX: mid.x,
+        midY: mid.y,
+        source: edge.source,
+        target: edge.target,
+      };
+    };
+    return pipe(
+      collapsed().visibleEdges,
+      map(toEdgePath),
+      filter((e): e is NonNullable<typeof e> => e !== null),
+    );
   });
 
   // Fit to view: center on focused node if one exists, otherwise fit all visible nodes
@@ -205,8 +223,9 @@ export function DagChart<T>(props: DAGProps<T>) {
   // Find the focused node's position for centering
   const focusedPosition = createMemo(() => {
     if (!props.focusedNodeId) return null;
-    const node = positionedNodes().find(
+    const node = find(
       (n) => n.node.id === props.focusedNodeId,
+      positionedNodes(),
     );
     return node ? { x: node.x, y: node.y } : null;
   });
@@ -254,23 +273,17 @@ export function DagChart<T>(props: DAGProps<T>) {
   // Auto-detect direction from container width via ResizeObserver
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setContainerWidth(width);
-      setContainerHeight(height);
-      if (!props.direction) {
-        // Default to vertical (most DAGs are deeper than wide). Only switch to
-        // horizontal when the container is very wide and short (e.g. landscape > 2:1).
-        setAutoDirection(width > height * 2 ? "horizontal" : "vertical");
-      }
-    });
-
-    observer.observe(containerRef);
-    onCleanup(() => observer.disconnect());
+    onCleanup(
+      observeSize(containerRef, ({ width, height }) => {
+        setContainerWidth(width);
+        setContainerHeight(height);
+        if (!props.direction) {
+          // Default to vertical (most DAGs are deeper than wide). Only switch to
+          // horizontal when the container is very wide and short (e.g. landscape > 2:1).
+          setAutoDirection(width > height * 2 ? "horizontal" : "vertical");
+        }
+      }),
+    );
   });
 
   const handleNodeClick = (nodeId: string) => {
@@ -280,7 +293,7 @@ export function DagChart<T>(props: DAGProps<T>) {
   const [hoveredEdge, setHoveredEdge] = createSignal<string | null>(null);
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div ref={containerRef} class="sui-dag-container">
       <svg
         ref={svgRef}
         class="sui-dag"
@@ -417,10 +430,9 @@ export function DagChart<T>(props: DAGProps<T>) {
                         props.onEdgeClick?.(edge.source, edge.target);
                       }
                     }}
-                    style={{
-                      cursor: "pointer",
-                      opacity: hoveredEdge() === edgeKey ? 1 : 0,
-                      transition: "opacity 0.1s ease",
+                    classList={{
+                      "sui-dag__edge-delete--visible":
+                        hoveredEdge() === edgeKey,
                     }}
                   >
                     {/* Invisible larger hit circle so the badge always has a

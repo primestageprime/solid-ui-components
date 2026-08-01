@@ -19,7 +19,14 @@
 // Factory: createThreadGroup().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  ContentStack,
+  TightStack,
+  TopClusterRow,
+  WrappedClusterRow,
+} from "../Layout/variants";
 import "./ThreadGroup.css";
+import { pipe, filter, join } from "../../fn";
 
 export type ThreadGroupVariant = "self" | "other";
 
@@ -41,7 +48,11 @@ export interface ThreadGroupProps extends JSX.HTMLAttributes<HTMLDivElement> {
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const ThreadGroup: Component<ThreadGroupProps> = (props) => {
   const [local, others] = splitProps(props, [
@@ -77,13 +88,25 @@ export const ThreadGroup: Component<ThreadGroupProps> = (props) => {
 
   return (
     <div class={rootClass()} style={rootStyle()} {...others}>
-      <div class="sui-thread-group__row">
+      {/* Base arrangements compose Layout variants (avatar/body row, body
+          column, header, bubble stack). The `self` variant's axis reversal
+          (row-reverse) + trailing-edge alignment (align-items:flex-end) stay
+          as INTRINSIC CSS overrides on these wrappers — Row/Stack have no
+          `reverse` capability and adding one for a single consumer fails
+          start-minimal. Crucially, row-reverse flips only the VISUAL order
+          while preserving avatar→body DOM/reading order (an a11y property);
+          a DOM reorder is NOT equivalent. See ThreadGroup.css. */}
+      <TopClusterRow class="sui-thread-group__row">
         {local.avatar}
-        <div class="sui-thread-group__body">
-          <div class="sui-thread-group__header">{local.header}</div>
-          <div class="sui-thread-group__bubbles">{local.bubbles}</div>
-        </div>
-      </div>
+        <ContentStack class="sui-thread-group__body">
+          <WrappedClusterRow class="sui-thread-group__header">
+            {local.header}
+          </WrappedClusterRow>
+          <TightStack class="sui-thread-group__bubbles">
+            {local.bubbles}
+          </TightStack>
+        </ContentStack>
+      </TopClusterRow>
     </div>
   );
 };

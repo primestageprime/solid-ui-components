@@ -1,7 +1,8 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// WeeklyCashflowChart — Composite (Depth 2). Composes CashflowBars + CashflowPopover (each Depth 1).
 // CashflowChart — weekly revenue/expense bars with a running-balance ("coffers")
-// line, ported from the Thorcasting app. Container-driven sizing: the chart FILLS
+// line, extracted from a financial-runway app. Container-driven sizing: the chart FILLS
 // the height its layout box allots it (via a ResizeObserver that measures the
 // container) rather than growing to a width-locked aspect ratio. The SVG is
 // width:100% height:100% and its viewBox height tracks the measured container
@@ -41,6 +42,7 @@ import {
 } from "./format";
 import { CashflowBars } from "./CashflowBars";
 import { CashflowPopover } from "./CashflowPopover";
+import { map, pluck, some, find } from "../../fn";
 
 // Public data shapes live in `./types`; re-exported here so consumers (and the
 // folder barrel) keep importing them from CashflowChart unchanged.
@@ -50,6 +52,7 @@ export type {
   WeeklyCashflowChartData,
   WeeklyCashflowChartProps,
 } from "./types";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
   props,
@@ -79,53 +82,33 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
 
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-    // The observer callback must be loop-safe: if it synchronously set the size
-    // signals, the resulting re-render could change the observed element's box
-    // and re-trigger the observer within the same frame, which the browser
-    // surfaces as "ResizeObserver loop completed with undelivered
-    // notifications." We break that cycle by (a) deferring the signal update to
-    // the next animation frame and (b) skipping no-op updates so an unchanged
-    // measurement never re-triggers downstream layout.
-    let rafId: number | null = null;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[entries.length - 1];
-      if (!entry) return;
-      // Prefer the (rounded) border-box size when available; fall back to the
-      // rounded contentRect otherwise.
-      const box = entry.borderBoxSize?.[0];
-      const w = Math.round(box ? box.inlineSize : entry.contentRect.width);
-      const ht = Math.round(box ? box.blockSize : entry.contentRect.height);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (w !== measuredWidth()) setMeasuredWidth(w);
-        if (ht !== measuredHeight()) setMeasuredHeight(ht);
-      });
-    });
-    observer.observe(containerRef);
-    onCleanup(() => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      observer.disconnect();
-    });
+    // This component grew the loop-safe measurement pattern privately; it now
+    // uses the shared primitive (see internal/dom/observeSize), which does the
+    // same change-guard + rAF deferral for every measuring component.
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        if (size.width !== measuredWidth()) setMeasuredWidth(size.width);
+        if (size.height !== measuredHeight()) setMeasuredHeight(size.height);
+      }),
+    );
   });
 
   const scales = createMemo(() => {
     const bars = props.data.bars;
-    const weeks = bars.map((b) => b.week_start);
+    const weeks = pluck("week_start", bars);
 
     const xScale = scaleBand<string>()
       .domain(weeks)
       .range([plotX().start, plotX().end])
       .padding(0.15);
 
-    const maxRevenue = Math.max(0, ...bars.map((b) => b.revenue_cents));
-    const maxExpense = Math.max(0, ...bars.map((b) => b.expense_cents));
+    const maxRevenue = Math.max(0, ...pluck("revenue_cents", bars));
+    const maxExpense = Math.max(0, ...pluck("expense_cents", bars));
     const minBalance = bars.length
-      ? Math.min(0, ...bars.map((b) => b.balance_cents))
+      ? Math.min(0, ...pluck("balance_cents", bars))
       : 0;
     const maxBalance = bars.length
-      ? Math.max(0, ...bars.map((b) => b.balance_cents))
+      ? Math.max(0, ...pluck("balance_cents", bars))
       : 0;
     const FIXED_Y_MIN = -10_000_000; // -$100k in cents (manual/fixed-range floor)
     // Full rendered vertical extent: revenue bars rise from $0, expense bars drop
@@ -145,11 +128,12 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
     const DEGENERATE_Y_MAX = 100_000; // $1,000 in cents — a small default top
     const hasMeaningfulData =
       bars.length > 0 &&
-      bars.some(
+      some(
         (b) =>
           Math.abs(b.revenue_cents) >= ZERO_EPS ||
           Math.abs(b.expense_cents) >= ZERO_EPS ||
           Math.abs(b.balance_cents) >= ZERO_EPS,
+        bars,
       );
 
     // Auto mode fits the data extent with 10% headroom on each edge so the full
@@ -178,10 +162,13 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
     const bw = xScale.bandwidth();
 
     const balancePoints = (subset: WeeklyChartBar[]) =>
-      subset.map((d) => ({
-        x: (xScale(d.week_start) ?? 0) + bw / 2,
-        y: yScale(d.balance_cents),
-      }));
+      map(
+        (d) => ({
+          x: (xScale(d.week_start) ?? 0) + bw / 2,
+          y: yScale(d.balance_cents),
+        }),
+        subset,
+      );
 
     const todayWeek = props.data.todayWeek;
     const todayIdx = todayWeek ? weeks.indexOf(todayWeek) : -1;
@@ -435,7 +422,7 @@ export const WeeklyCashflowChart: Component<WeeklyCashflowChartProps> = (
           const activeWeek = () => hover()?.week_start ?? coffersHover();
           const bar = () =>
             activeWeek()
-              ? props.data.bars.find((b) => b.week_start === activeWeek())
+              ? find((b) => b.week_start === activeWeek(), props.data.bars)
               : undefined;
           const cx = () => {
             const w = activeWeek();

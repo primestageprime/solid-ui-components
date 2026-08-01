@@ -1,6 +1,6 @@
 import { type Component, For, createSignal } from "solid-js";
 import { Legend, type LegendItem } from "../../src/components/Legend";
-import { NarrowStack, TightStack } from "../../src/components/Layout";
+import { ClusterRow, NarrowStack, TightStack } from "../../src/components/Layout";
 import { TextSublabel, MutedBody } from "../../src/components/Text";
 
 // Chart series — the canonical "this color means this line" case. Generic
@@ -55,38 +55,23 @@ const InteractiveLegendExample: Component = () => {
         highlightedLabel={hovered()}
         onItemHover={setHovered}
       />
-      <div style={{ display: "flex", gap: "8px", "margin-top": "8px" }}>
+      <ClusterRow class="legend-demo__swatch-row">
         <For each={CHART_SERIES}>
           {(item) => (
             <div
               onMouseEnter={() => setHovered(item.label)}
               onMouseLeave={() => setHovered(null)}
-              style={{
-                width: "64px",
-                height: "48px",
-                "border-radius": "4px",
-                "background-color": item.color,
-                outline:
-                  hovered() === item.label
-                    ? "2px solid var(--sui-text-primary)"
-                    : "1px solid var(--sui-border-bright)",
-                "outline-offset": "2px",
-                filter: hovered() === item.label ? "brightness(1.2)" : "none",
-                display: "flex",
-                "align-items": "center",
-                "justify-content": "center",
-                color: "var(--sui-text-primary)",
-                "font-size": "11px",
-                "font-weight": "600",
-                cursor: "default",
-                "text-shadow": "0 1px 2px rgba(0,0,0,0.5)",
+              class="legend-demo__swatch"
+              classList={{
+                "legend-demo__swatch--hovered": hovered() === item.label,
               }}
+              style={{ "background-color": item.color }}
             >
               {item.label}
             </div>
           )}
         </For>
-      </div>
+      </ClusterRow>
       <MutedBody>
         Currently hovered: <code>{hovered() ?? "(none)"}</code>
       </MutedBody>
@@ -147,13 +132,7 @@ export const LegendShowcase: Component = () => (
           Horizontal orientation uses <code>flex-wrap</code>, so long legends
           break onto multiple rows in narrow containers.
         </TextSublabel>
-        <div
-          style={{
-            "max-width": "320px",
-            border: "1px dashed var(--sui-border)",
-            padding: "8px",
-          }}
-        >
+        <div class="legend-demo__wrap">
           <Legend items={MANY_ITEMS} />
         </div>
       </NarrowStack>

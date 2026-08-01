@@ -1,6 +1,10 @@
 /* SplitQueueList — linked two-list processing queue with a seam repaint.
  * Styles its structure/animation via --sui-* tokens; the container chrome
- * (background + border) is composed from the base Surface primitive. */
+ * (background + border) is composed from the base Surface primitive.
+ *
+ * Only `StaticSplitLayout` imports this file now (the animated queue moved to
+ * `BucketQueue.css`), so every rule here is scoped to what that component
+ * actually renders. */
 
 /* The container CHROME — background + 1px border — is provided by the base
  * Surface primitive this root composes (bg/borderColor props); the theme-aware
@@ -16,6 +20,7 @@
   box-sizing: border-box;
   font-family: var(--sui-font-family);
   color: var(--sui-text-primary);
+  border-radius: var(--sui-radius-md);
   overflow: hidden;
 }
 
@@ -66,10 +71,6 @@
   flex: 0 0 auto;
 }
 
-.sui-sql__list--collapsed {
-  overflow: hidden;
-}
-
 /* ---- Headers ----------------------------------------------------------- */
 
 .sui-sql__header {
@@ -90,10 +91,6 @@
 
 .sui-sql__header--top {
   border-bottom: 1px solid var(--sui-border);
-}
-
-.sui-sql__header--bottom {
-  border-top: 1px solid var(--sui-border);
 }
 
 .sui-sql__count {
@@ -127,109 +124,6 @@
 
 .sui-sql__row--resolved:hover {
   background: var(--sui-bg-tertiary);
-}
-
-/* On arrival (the transfer just completed) the resolved row's BACKGROUND fades
- * in once — from transparent to its resting bg — while the text and ✓ marker
- * stay fully solid (we animate background-color only, never opacity). A one-shot
- * class, removed on animationend; honors prefers-reduced-motion by not animating.
- */
-@keyframes sui-sql-bg-fade-in {
-  from {
-    background-color: transparent;
-  }
-  to {
-    background-color: var(--sui-bg-secondary);
-  }
-}
-
-.sui-sql__row--arriving {
-  animation: sui-sql-bg-fade-in 220ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sui-sql__row--arriving {
-    animation: none;
-  }
-}
-
-/* UNRESOLVED rows: muted dashed left-border — clearly "pending". Crossing the
- * seam is therefore a visible restyle (dashed muted -> solid accent). */
-.sui-sql__row--unresolved {
-  border-left: 3px dashed var(--sui-border-bright);
-  color: var(--sui-text-primary);
-  cursor: pointer;
-}
-
-.sui-sql__row--unresolved:hover {
-  background: var(--sui-bg-tertiary);
-}
-
-.sui-sql__row--focused {
-  background: var(--sui-accent-dim);
-  border-left-color: var(--sui-accent);
-  outline: 1px solid var(--sui-border-focus);
-  outline-offset: -1px;
-}
-
-/* SELECTED (user clicked it — drives the consumer's detail panel). A subtle
- * inset ring, deliberately distinct from the focused orange FILL: selection is
- * about "you're inspecting this", focus is about "this is next to process".
- * Works on resolved AND unresolved rows; composes with focus (a focused row can
- * also be selected — it shows both the orange fill and the selection ring). */
-.sui-sql__row--selected {
-  box-shadow: inset 0 0 0 2px var(--sui-border-bright);
-  border-radius: var(--sui-radius-sm);
-}
-
-/* Keyboard focus ring — only shown for keyboard navigation (:focus-visible), so
- * mouse selection doesn't paint a ring on top of the --selected inset ring. The
- * rows carry a roving tabindex, so exactly one is a tab stop at a time. */
-.sui-sql__row:focus {
-  outline: none;
-}
-
-.sui-sql__row:focus-visible {
-  outline: 2px solid var(--sui-border-focus);
-  outline-offset: -2px;
-}
-
-/* Visually-hidden live region (screen-reader-only) that announces queue counts.
- * Standard sr-only clip technique — off-screen but still read by assistive tech. */
-.sui-sql__sr-status {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Phase 2 enter clone: appended INSIDE the top list so its overflow clips it as
- * it slides up from under the bottom edge into place. z-index above plain rows
- * but below the sticky header (z-index 2). */
-.sui-sql__phase {
-  z-index: 1;
-  pointer-events: none;
-  box-sizing: border-box;
-  will-change: transform;
-}
-
-/* Phase 1 collapse placeholder: an in-flow row that shrinks its height to 0 so
- * the rows below glide up in lockstep. overflow:hidden clips its content (pinned
- * to the bottom) from the top as it collapses. */
-.sui-sql__collapse {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  min-height: 0;
-  pointer-events: none;
-  box-sizing: border-box;
-  will-change: height;
 }
 
 .sui-sql__marker {
@@ -272,11 +166,4 @@
   color: var(--sui-success);
   background: var(--sui-bg-tertiary);
   letter-spacing: 0.03em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sui-sql__phase,
-  .sui-sql__collapse {
-    will-change: auto;
-  }
 }

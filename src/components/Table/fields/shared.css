@@ -1,0 +1,155 @@
+/* Table fields — shared chrome for the fields-as-functions system. */
+
+/* Centered header for fixed-width field types (ruled 2026-07-17). BaseTable
+   wraps header content in an inline-flex span, so centering must be applied
+   to the wrapper, not inside the label span. */
+.sui-field-th-center {
+  text-align: center;
+}
+th:has(.sui-field-th-center) .hud-table__header-content {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Field-table frame. Consumes the resolver's width budget:
+     <div class="sui-field-frame" style={{ "--sui-field-table-min": `${minCh}ch`,
+                                           "--sui-field-table-max": `${maxCh}ch` }}>
+   and tightens the standard cell chrome to 8px per side (ruled 2026-07-17:
+   the default 16px sides read as twice the intended surround on fixed-width
+   field columns). All field geos assume this 8px chrome (≈1ch per side). */
+.sui-field-frame {
+  min-width: min(var(--sui-field-table-min), 100%);
+  max-width: var(--sui-field-table-max);
+  /* Columns never get squeezed below their geometry (ruled 2026-07-18: a
+     12-column table was crushing the name column to nothing while every
+     other column kept its data). The inner table holds its Σmin budget and
+     the frame scrolls the excess horizontally instead. */
+  overflow-x: auto;
+  /* ONE ch basis. Column widths (th), the frame's width budget, and the cell
+     glyphs must all resolve `ch` against the same font, or the budget and the
+     columns disagree and the slack pools into uneven cell margins (measured:
+     date insets hit 23px while name sat at 8px). 12px mono everywhere. */
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+.sui-field-frame th,
+.sui-field-frame td,
+.sui-field-frame td :is(span, div, button) {
+  /* Same font-size AND family as the frame: `ch` must mean the same width in
+     the frame's budget, the th's column width, and the cell glyphs. Table.css
+     gives headers the sans family, which resolves a different ch and made
+     columns outgrow the frame budget (89.95px column in an 83px frame). */
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+.sui-field-frame th,
+.sui-field-frame td {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Fill mode (ruled 2026-07-21). With no maxRows cap the composed BaseTable runs
+   in `fill`: a ClipFillColumnFlush frame + inner ScrollFillColumn, plus
+   `.hud-table--fill { height:100%; min-height:0 }`. That height:100% only
+   resolves against a definite-height flex ancestor — but the base
+   `.sui-field-frame` above is width-budget-only (no height, no flex), so the
+   fill table's height collapsed to content and never scrolled internally
+   (repro: NOx Report bottom bag table showed only its header). In fill mode the
+   frame must itself BE that definite-height flex context: a flex column that
+   fills whatever definite-height flex parent the call site provides.
+
+   Single scroll owner: the inner ScrollFillColumn already scrolls BOTH axes
+   (overflow:auto) and the inner <table> keeps its own `min-width` budget, so it
+   owns horizontal + vertical scroll. The frame therefore drops the base's
+   `overflow-x:auto` (which, against a `visible` overflow-y, computes overflow-y
+   to `auto` — a SECOND, competing vertical scroll owner) via `overflow:hidden`,
+   and drops the `min-width` floor (which would push the frame past its parent
+   instead of letting the inner region scroll) via `min-width:0`. Non-fill
+   (maxRows-capped) tables get none of this and are unchanged. */
+.sui-field-frame--fill {
+  display: flex;
+  flex-direction: column;
+  /* Shrink-to-fit fill (ruled 2026-07-21): few rows → the frame hugs its
+     content (no grow); more rows than the container allows → the frame
+     shrinks to the available height (min-height:0) and the inner
+     ScrollFillColumn scrolls. `flex:1` (always grow) stretched a 4-row table
+     into a mostly-empty full-height frame. */
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The width floor that makes the geometry real under table-layout: fixed —
+   without it, a 100%-width table inside a pane-capped frame scales every
+   column width down proportionally.
+   The TABLE element needs the mono pin too (bug 2026-07-20): Table.css keeps
+   the <table> on the sans family, so this min-width's `ch` resolved ~4.5%
+   wider than the frame's identical budget (270px table in a 260px frame) —
+   fixed layout stretched every column into the wider table and the frame
+   clipped the last column's right edge. Same ONE-ch-basis rule as th/td. */
+.sui-field-frame .hud-table__table {
+  min-width: var(--sui-field-table-min);
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Semantic tones (ruled 2026-07-17): the configure-time treatment vocabulary.
+   A tone names a meaning; the theme owns the color. Cell renderers that pin
+   their own color (.sui-value-longtext) are re-pointed at the tone via `inherit` —
+   the attribute selector outranks their double-class specificity. */
+.sui-field-tone--success { color: var(--sui-success); }
+.sui-field-tone--warning { color: var(--sui-warning); }
+.sui-field-tone--danger  { color: var(--sui-danger); }
+.sui-field-tone--accent  { color: var(--sui-accent); }
+.sui-field-tone--muted   { color: var(--sui-text-muted); }
+span[class*="sui-field-tone--"] :is(.sui-value-longtext, .sui-value-longtext.sui-value-longtext--tooltip, .sui-value-string) {
+  color: inherit;
+}
+
+/* IdentityLink (ruled 2026-07-18): the entity's name IS the link to its
+   detail page. Accent ink, underline on hover; optional leading glyph. */
+.sui-identity-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  color: var(--sui-accent);
+  text-decoration: none;
+}
+.sui-identity-link:hover {
+  text-decoration: underline;
+}
+.sui-identity-link :is(.sui-value-longtext, .sui-value-longtext.sui-value-longtext--tooltip) {
+  color: inherit;
+}
+/* Recede knob (ruled 2026-07-18): a muted identity still links, in muted ink. */
+.sui-identity-link--muted {
+  color: var(--sui-text-muted);
+}
+
+/* In-cell unit suffix ("%", "ppm", "kW") — quiet ink so the value leads. */
+.sui-field-suffix {
+  color: var(--sui-text-muted);
+}
+
+/* withHref combinator (ruled 2026-07-20): a non-identity linked value —
+   same accent link treatment as the identity link. */
+.sui-field-link {
+  color: var(--sui-accent);
+  text-decoration: none;
+}
+.sui-field-link:hover {
+  text-decoration: underline;
+}
+.sui-field-link :is(.sui-value-longtext, .sui-value-string, .sui-value-int, .sui-value-float) {
+  color: inherit;
+}
+
+/* withHint combinator (ruled 2026-07-20): headers generally accept a hint —
+   dotted underline is the affordance, the tooltip carries the text. */
+.sui-field-th-hint {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}

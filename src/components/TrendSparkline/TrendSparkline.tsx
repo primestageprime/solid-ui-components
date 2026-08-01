@@ -7,6 +7,9 @@
 //   <TrendSparkline values={balances} trend={trendOf(first, last)} />
 // (HeartbeatSparkline is the 0..1 connection-health strip; this one plots
 // arbitrary values — projected balances, totals, …)
+// For a series whose SPREAD matters too — range, typical band, mean — see
+// DistributionSparkline. This one answers direction and nothing else, on
+// purpose.
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./TrendSparkline.css";

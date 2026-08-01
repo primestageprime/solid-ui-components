@@ -5,6 +5,13 @@
   text-underline-offset: 2px;
 }
 
+/* Leading icon — inline spacing beside the label (intrinsic control
+   styling, like __hint's margin: a leaf control laying out its OWN glyph). */
+.sui-hotkey-btn__icon {
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
+}
+
 /* Trailing hint shown when the hotkey char isn't present in the label. */
 .sui-hotkey-btn__hint {
   margin-left: 0.4em;

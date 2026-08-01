@@ -1,0 +1,160 @@
+/* SlotCard — responsive via CONTAINER queries: each card reacts to its own
+   width, so the same card is dense in a wide pane and minimal in a narrow rail.
+   Slots carry a priority (1 = always, 2 = mid, 3 = low); low-priority slots drop
+   first as width shrinks. The primary slot (name/text/range) never drops — it
+   ellipsises instead. Cards are clamped to a 200px minimum. */
+
+/* The shell (min/max-width wrapper) is the query context — no padding, so the
+   breakpoints are on the true card width. The max-width cap is set inline (host
+   override or the template's baked cap); the 200px floor lives here. */
+.sui-slot-card__shell {
+  container-type: inline-size;
+  min-width: 200px;
+}
+
+/* Positioning context for the corner badge / remove affordance overlays. */
+.sui-slot-card__body {
+  position: relative;
+}
+
+/* Overlaid body — a card carrying the corner badge and/or the remove glyph
+   reserves a strip of top room for them, so neither ever lands on the first
+   line of text (the real content is long enough to reach both corners). */
+.sui-slot-card__body--overlaid {
+  padding-top: 12px;
+}
+
+/* Corner count/label badge — pinned to the top-left, accent-filled pill. */
+.sui-slot-card__corner {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--sui-color-accent, #3aa);
+  color: var(--sui-color-on-accent, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+}
+
+/* Remove affordance — muted danger glyph pinned to the top-right, revealed on
+   hover or keyboard focus so a resting list isn't a wall of ✕. */
+/* A <button> (see SlotCard.tsx) — the UA chrome is stripped so it renders
+   exactly as the bare glyph the span used to, while staying focusable. */
+.sui-slot-card__remove {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+  color: var(--sui-danger, #d33);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.sui-slot-card:hover .sui-slot-card__remove,
+.sui-slot-card__remove:focus-visible {
+  opacity: 0.6;
+}
+
+.sui-slot-card .sui-slot-card__remove:hover {
+  opacity: 1;
+}
+
+/* Accent rail — a tone-colored left border. Base reserves the space so the
+   card doesn't shift when a tone is applied. */
+.sui-slot-card__accent {
+  border-left: 3px solid transparent;
+}
+.sui-slot-card__accent--info {
+  border-left-color: var(--sui-info, #48c);
+}
+.sui-slot-card__accent--success {
+  border-left-color: var(--sui-success, #3a3);
+}
+.sui-slot-card__accent--warning {
+  border-left-color: var(--sui-warning, #d98);
+}
+.sui-slot-card__accent--danger {
+  border-left-color: var(--sui-danger, #d33);
+}
+
+/* Icon slot tint — the typed `icon` slot paints its glyph by tone. */
+.sui-slot-card__slot-icon--info {
+  color: var(--sui-info, #48c);
+}
+.sui-slot-card__slot-icon--success {
+  color: var(--sui-success, #3a3);
+}
+.sui-slot-card__slot-icon--warning {
+  color: var(--sui-warning, #d98);
+}
+.sui-slot-card__slot-icon--danger {
+  color: var(--sui-danger, #d33);
+}
+
+/* Leading group grows and is allowed to shrink (so its primary slot can
+   ellipsise); trailing groups hold their intrinsic size. */
+.sui-slot-card__lead {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sui-slot-card__trail {
+  flex: 0 0 auto;
+}
+
+/* The primary slot ellipsises rather than dropping. The chain of min-width:0
+   lets the inner EllipsisText span shrink below its content and clip. */
+.sui-slot-card__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.sui-slot-card__name > * {
+  min-width: 0;
+}
+.sui-slot-card__ell {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.sui-slot-card__strong .sui-ellipsis-text {
+  font-weight: 600;
+}
+
+/* Leading name adornment (glyph or a small domain icon). Sizes any SVG the
+   client passes so it sits a touch above the row text without dominating. */
+.sui-slot-card__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+.sui-slot-card__icon svg {
+  width: 1.4em;
+  height: 1.4em;
+  display: block;
+}
+
+/* Breakpoints on the card's own width. Cards start at a 200px floor, so the
+   priority-1-only state is only reached via the max-width cap, not by shrinking.
+   Below 260px drop priority-3 slots; below 180px (never hit at the 200px floor)
+   also drop priority-2. */
+@container (max-width: 260px) {
+  .sui-slot-card__shell [data-prio="3"] {
+    display: none;
+  }
+}
+@container (max-width: 180px) {
+  .sui-slot-card__shell [data-prio="2"] {
+    display: none;
+  }
+}

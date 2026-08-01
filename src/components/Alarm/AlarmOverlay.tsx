@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// AlarmOverlay — Composite (Depth 2). Composes AlarmBands / AlarmHotZones / AlarmStripeDefs (each Depth 1).
 import { type Component, For } from "solid-js";
 import { useChart } from "../Chart/context";
 import { AlarmBands } from "./AlarmBands";
@@ -13,6 +14,7 @@ import {
   clampRanges,
   type Pt,
 } from "./alarm";
+import { map } from "../../fn";
 
 /**
  * Curried, one-call alarm overlay. Takes raw chart points and emits the
@@ -84,7 +86,7 @@ export const AlarmOverlay: Component<AlarmOverlayProps> = (props) => {
     const width = xMax - xMin;
     const padFrac = props.padFraction ?? 0;
     const depth = props.depthThreshold ?? 5;
-    return props.series.map((s) => {
+    return map((s) => {
       const padded = padRanges(
         detectRanges(s.data, s.threshold),
         padFrac,
@@ -95,7 +97,7 @@ export const AlarmOverlay: Component<AlarmOverlayProps> = (props) => {
         bands: clampRanges(subtractZones(padded, rawZones), xMin, xMax),
         zones: clampRanges(rawZones, xMin, xMax),
       };
-    });
+    }, props.series);
   };
 
   return (

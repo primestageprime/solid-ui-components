@@ -2,12 +2,15 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Toast — Atomic (Depth 1)
-// Owns CSS (Toast.css). No imports from other Atomic/Layout components
-// (per STYLE_GUIDE.md). Kobalte-backed toast built on
-// `@kobalte/core/toast`. Ships the base `Toast` component plus provider
-// atomics (`ToastRegion`, `ToastList`) and a typed `showToast` wrapper over
-// kobalte's `toaster`. Callers needing raw `Toast.Root` / `Toast.Title` /
-// `Toast.Description` etc. should import directly from `@kobalte/core/toast`.
+// Owns CSS (Toast.css). Kobalte-backed toast built on `@kobalte/core/toast`.
+// Composes Layout variants for the plain-div internal rows it owns (content
+// row / text grow-box / actions wrap-row) per the Layout Purity commandment;
+// the Kobalte parts (Root / List / CloseButton / ProgressTrack) keep their own
+// geometry (third-party carve-out — we can only pass `class`). Ships the base
+// `Toast` component plus provider atomics (`ToastRegion`, `ToastList`) and a
+// typed `showToast` wrapper over kobalte's `toaster`. Callers needing raw
+// `Toast.Root` / `Toast.Title` / `Toast.Description` etc. should import
+// directly from `@kobalte/core/toast`.
 // ============================================
 import {
   Toast as KobalteToast,
@@ -17,7 +20,9 @@ import {
   type ToastListProps as KobalteToastListProps,
 } from "@kobalte/core/toast";
 import { type Component, type JSX, For, Show, splitProps } from "solid-js";
+import { GrowBox, TopClusterRow, WrapRow } from "../Layout/variants";
 import "./Toast.css";
+import { pipe, filter, join } from "../../fn";
 
 /** Action button rendered in the toast's action row. */
 export interface ToastAction {
@@ -86,8 +91,8 @@ export const Toast: Component<ToastProps> = (props) => {
 
   return (
     <KobalteToast {...rest} persistent={local.persistent} class={rootClass()}>
-      <div class="sui-toast__content">
-        <div class="sui-toast__text">
+      <TopClusterRow class="sui-toast__content">
+        <GrowBox class="sui-toast__text">
           <KobalteToast.Title class="sui-toast__title">
             {local.title}
           </KobalteToast.Title>
@@ -97,7 +102,7 @@ export const Toast: Component<ToastProps> = (props) => {
             </KobalteToast.Description>
           </Show>
           <Show when={local.actions && local.actions.length > 0}>
-            <div class="sui-toast__actions">
+            <WrapRow class="sui-toast__actions">
               <For each={local.actions}>
                 {(action) => (
                   <button
@@ -114,16 +119,16 @@ export const Toast: Component<ToastProps> = (props) => {
                   </button>
                 )}
               </For>
-            </div>
+            </WrapRow>
           </Show>
-        </div>
+        </GrowBox>
         <KobalteToast.CloseButton
           class="sui-toast__close-button"
           aria-label="Close"
         >
           <CloseGlyph />
         </KobalteToast.CloseButton>
-      </div>
+      </TopClusterRow>
       <Show when={!local.persistent}>
         <KobalteToast.ProgressTrack class="sui-toast__progress-track">
           <KobalteToast.ProgressFill class="sui-toast__progress-fill" />
@@ -180,7 +185,7 @@ export type ToastListCurriedProps = KobalteToastListProps & { class?: string };
 export const ToastList: Component<ToastListCurriedProps> = (props) => {
   const [local, rest] = splitProps(props, ["class"]);
   const listClass = () =>
-    ["sui-toast__list", local.class].filter(Boolean).join(" ");
+    pipe(["sui-toast__list", local.class], filter(Boolean), join(" "));
   return <KobalteToast.List {...rest} class={listClass()} />;
 };
 

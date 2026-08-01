@@ -5,6 +5,7 @@
 // Composes Markdown for preview. 50/50 split: textarea | preview.
 // ============================================
 import { type Component, mergeProps } from "solid-js";
+import { Grid } from "../Layout/Grid";
 import { Markdown } from "./Markdown";
 
 export interface MarkdownEditorProps {
@@ -21,7 +22,7 @@ export const MarkdownEditor: Component<MarkdownEditorProps> = (props) => {
     return c.join(" ");
   };
   return (
-    <div class={cls()}>
+    <Grid columns="1fr 1fr" gap="md" class={cls()}>
       <textarea
         class="sui-markdown-editor__textarea"
         rows={props.rows ?? 12}
@@ -31,7 +32,7 @@ export const MarkdownEditor: Component<MarkdownEditorProps> = (props) => {
       <div class="sui-markdown-editor__preview">
         <Markdown source={props.value} />
       </div>
-    </div>
+    </Grid>
   );
 };
 

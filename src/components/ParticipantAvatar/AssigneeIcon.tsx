@@ -12,11 +12,13 @@
 // ASSIGNED to (person vs AI). Up to two initials sit centered inside the head.
 // Do NOT modify ParticipantAvatar; the two are deliberately distinct roles.
 //
-// NO curried variant — intentional, and by rule. Every prop is data
-// (`initials` / `kind` / `active`); there is nothing presentational
-// (size/variant/tone) to freeze. Per the "curried set" rule the exception is
-// data-only components, exactly like SortableList: the base component is
-// already zero-config at the call site, so a curried drop-in would add no value.
+// One presentational knob: `size` (glyph height, px). The SVG viewBox scales
+// stroke, shapes, and initials together, so a single number is the whole story.
+// It is an Override, frozen by createAssigneeIcon — call sites keep passing
+// data only (`initials` / `kind` / `active`); the bare `AssigneeIcon` export
+// stays the zero-config row-sized default (the SortableList-style data-only
+// exception). Larger roles (e.g. a navbar presence cluster) import a curried
+// variant from variants.ts instead of setting `size` inline.
 // The `active` class hook lights the icon for a filter match; it is a data flag,
 // not a style knob.
 //
@@ -25,7 +27,7 @@
 // "P"), derive them once with `deriveInitials(names)` from ./initials and feed
 // the result in — this component does not disambiguate on its own.
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, type JSX, Show, mergeProps } from "solid-js";
 import "./AssigneeIcon.css";
 
 export interface AssigneeIconProps {
@@ -35,22 +37,45 @@ export interface AssigneeIconProps {
   kind?: "person" | "ai";
   /** Highlighted (e.g. matched the active filter). Data-driven, not a style knob. */
   active?: boolean;
+  /**
+   * Hover text — the FULL name (or richer status line) behind the ambient
+   * initials. Falls back to `initials` when omitted. Data, not styling.
+   */
+  title?: string;
+  /**
+   * Override — glyph height in px (default 23; width keeps the 25:23 box).
+   * Freeze it via createAssigneeIcon; never set it at a call site.
+   */
+  size?: number;
 }
+
+export type AssigneeIconOverrides = Pick<AssigneeIconProps, "size">;
+export type AssigneeIconDataProps = Omit<AssigneeIconProps, keyof AssigneeIconOverrides>;
 
 export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
   const chars = () => props.initials.slice(0, 2);
+  // Scale from one number: height is authoritative, width preserves the
+  // default 25×23 box. Inline so it wins over the stylesheet default.
+  const svgStyle = (): JSX.CSSProperties | undefined =>
+    props.size
+      ? { width: `${Math.round((props.size * 25) / 23)}px`, height: `${props.size}px` }
+      : undefined;
   return (
     <span
       class="sui-assignee-icon"
       classList={{ "sui-assignee-icon--active": props.active }}
-      title={props.initials}
+      title={props.title ?? props.initials}
     >
       <Show
         when={props.kind === "ai"}
         fallback={
           /* Person: classic user icon — head circle (holds the initials) above
              rounded shoulders. */
-          <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (person)`}>
+          <svg
+            viewBox="0 0 28 26"
+            style={svgStyle()}
+            aria-label={`Assigned to ${props.title ?? props.initials} (person)`}
+          >
             <circle cx="14" cy="10" r="8.75" />
             <path d="M5 25 v-0.5 a9 4.5 0 0 1 18 0 v0.5 z" />
             <text x="14" y="13">{chars()}</text>
@@ -58,7 +83,11 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
         }
       >
         {/* AI: robot head with two antennae. */}
-        <svg viewBox="0 0 28 26" aria-label={`Assigned to ${props.initials} (AI)`}>
+        <svg
+          viewBox="0 0 28 26"
+          style={svgStyle()}
+          aria-label={`Assigned to ${props.title ?? props.initials} (AI)`}
+        >
           <line x1="9" y1="10" x2="7" y2="4" />
           <circle class="dot" cx="6.7" cy="3" r="1.6" />
           <line x1="19" y1="10" x2="21" y2="4" />
@@ -70,3 +99,13 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
     </span>
   );
 };
+
+/**
+ * Freeze the presentational Override (`size`) so call sites stay data-only.
+ * Concrete curried variants live in variants.ts.
+ */
+export function createAssigneeIcon(
+  overrides: AssigneeIconOverrides = {},
+): Component<AssigneeIconDataProps> {
+  return (props) => <AssigneeIcon {...mergeProps(overrides, props)} />;
+}

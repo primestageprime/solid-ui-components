@@ -4,6 +4,8 @@ import {
   type CashflowCell,
 } from "../../src/components/CashflowScrubChart";
 import { dailyCells } from "../../src/components/DateAxis";
+import { ClusterRow } from "../../src/components/Layout";
+import { MutedBody } from "../../src/components/Text";
 
 // Deterministic stub for the demo. Real consumers wire this from their own
 // data source — CashflowScrubChart cares only about the per-day `cashflowCents`
@@ -123,25 +125,19 @@ export const CashflowScrubChartShowcase: Component = () => {
           today={PINNED_TODAY}
         />
 
-        <div
-          style={{
-            "margin-top": "16px",
-            "font-size": "13px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <MutedBody>
           Selected:{" "}
-          <strong style={{ color: "var(--sui-text-primary)" }}>
+          <strong class="cashflow-scrub-chart-demo__strong">
             {fmtDate(cell().start)}
           </strong>
           {" — "}
           Balance:{" "}
-          <strong style={{ color: "var(--sui-text-primary)" }}>
+          <strong class="cashflow-scrub-chart-demo__strong">
             {fmtDollars(cell().balanceCents)}
           </strong>
           {" · Day cashflow: "}
           <span>{fmtDollars(cell().cashflowCents)}</span>
-        </div>
+        </MutedBody>
       </div>
 
       <div class="example-group">
@@ -177,8 +173,8 @@ export const CashflowScrubChartShowcase: Component = () => {
           renderHoverTooltip={(c, i) => {
             const opt = forecast(Math.max(0, todayIndex), 40_000)(c, i);
             return (
-              <div style={{ "font-size": "12px", "line-height": 1.5 }}>
-                <div style={{ "font-weight": 600, "margin-bottom": "4px" }}>
+              <div class="cashflow-scrub-chart-demo__tip">
+                <div class="cashflow-scrub-chart-demo__tip-title">
                   {fmtDate(c.start)}
                 </div>
                 <div>Baseline: {fmtDollars(c.balanceCents)}</div>
@@ -259,54 +255,26 @@ export const CashflowScrubChartShowcase: Component = () => {
           ]}
         />
 
-        <div
-          style={{
-            "margin-top": "12px",
-            display: "flex",
-            gap: "18px",
-            "font-size": "12px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <ClusterRow>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "18px",
-                "border-top": "2px solid var(--sui-accent, #00a8cc)",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--actual"
             />
             Actual
           </span>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "18px",
-                "border-top":
-                  "2px dashed var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--positive"
             />
             Optimistic (+$400/day)
           </span>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "18px",
-                "border-top":
-                  "2px dashed var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--negative"
             />
             Pessimistic (−$200/day)
           </span>
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
@@ -348,61 +316,26 @@ export const CashflowScrubChartShowcase: Component = () => {
           ]}
         />
 
-        <div
-          style={{
-            "margin-top": "12px",
-            display: "flex",
-            gap: "18px",
-            "font-size": "12px",
-            color: "var(--sui-text-secondary)",
-          }}
-        >
+        <ClusterRow>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "14px",
-                height: "10px",
-                background:
-                  "var(--sui-cashflow-band-positive, rgba(0,200,120,0.18))",
-                border:
-                  "1px solid var(--sui-cashflow-positive, rgba(0,200,120,0.85))",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--positive"
             />
             Target above actual
           </span>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "14px",
-                height: "10px",
-                background:
-                  "var(--sui-cashflow-band-negative, rgba(230,70,70,0.18))",
-                border:
-                  "1px solid var(--sui-cashflow-negative, rgba(230,70,70,0.85))",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--negative"
             />
             Target below actual
           </span>
           <span>
             <span
-              style={{
-                display: "inline-block",
-                width: "18px",
-                "border-top":
-                  "2px dashed var(--sui-text-secondary, rgba(255,255,255,0.7))",
-                "vertical-align": "middle",
-                "margin-right": "6px",
-              }}
+              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--muted"
             />
             Target line
           </span>
-        </div>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
@@ -411,7 +344,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           Visual customisation hangs off CSS variables — no prop knobs on the
           component itself. Set on a parent element to re-skin:
         </p>
-        <ul class="text-meta" style={{ "padding-left": "20px" }}>
+        <ul class="text-meta cashflow-scrub-chart-demo__token-list">
           <li>
             <code>--sui-cashflow-positive</code> /{" "}
             <code>--sui-cashflow-negative</code> — bar + amount colour

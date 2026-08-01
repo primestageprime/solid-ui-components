@@ -21,7 +21,9 @@
 // value (including `null`) is respected as the caller's chosen output.
 // ============================================
 import { type Component, type JSX, For, Show, mergeProps } from "solid-js";
+import { LabelValueGrid } from "../Layout/variants";
 import "./ValueRenderer.css";
+import { pipe, filter, join } from "../../fn";
 
 /**
  * Optional render override — receives the raw value, returns JSX or
@@ -204,17 +206,17 @@ export const ValueRenderer: Component<ValueRendererProps> = (rawProps) => {
   };
 
   const containerClass = () =>
-    ["sui-value", props.class].filter(Boolean).join(" ");
+    pipe(["sui-value", props.class], filter(Boolean), join(" "));
 
   return (
     <Show
       when={props.label}
       fallback={<div class={containerClass()}>{renderOne(props.value)}</div>}
     >
-      <div class={`${containerClass()} sui-value--with-label`}>
+      <LabelValueGrid class={`${containerClass()} sui-value--with-label`}>
         <span class="sui-value__label">{props.label}:</span>
         <div class="sui-value__body">{renderOne(props.value)}</div>
-      </div>
+      </LabelValueGrid>
     </Show>
   );
 };

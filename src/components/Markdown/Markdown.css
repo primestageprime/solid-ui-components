@@ -65,10 +65,11 @@
 /* ============================================
    MarkdownEditor — Composed
    ============================================ */
+/* Layout composed via the Grid primitive (layout-purity): the 50/50 editor
+   split → <Grid columns="1fr 1fr" gap="md"> (gap 12=md exact). Only the
+   non-geometry sizing (width/min-height) stays here. The __preview keeps its
+   own overflow-y:auto (the preview panel's own content scroll). */
 .sui-markdown-editor {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
   width: 100%;
   min-height: 200px;
 }

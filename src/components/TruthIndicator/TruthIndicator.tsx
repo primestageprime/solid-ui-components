@@ -108,13 +108,6 @@ export const TruthIndicator: Component<TruthIndicatorProps> = (rawProps) => {
         class={wrapperClass()}
         aria-label={ariaLabel()}
         onClick={local.onClick}
-        style={{
-          appearance: "none",
-          background: "transparent",
-          border: "none",
-          color: "inherit",
-          font: "inherit",
-        }}
         {...(others as JSX.ButtonHTMLAttributes<HTMLButtonElement>)}
       >
         {icon()}

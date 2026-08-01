@@ -89,9 +89,55 @@ Spacing does not vary by theme — only the typographic / decorative tokens do. 
 
 ---
 
+## Patterns
+
+Compositions the library does not ship as a component — because the reactive
+model belongs to the consuming app — but which have a settled shape and a
+working bench. Read the bench before rebuilding one of these; the behaviours
+listed are each a bug if omitted, not polish.
+
+### Cross-filtering breakdown tiles
+
+**Bench:** `dev/showcases/workshop/cross-filtering.tsx` (dev harness → Workshop →
+Cross-Filtering Tiles). Runs on static fixture data — no data layer to connect.
+
+Several breakdown tiles over one row-grain fact, each grouping by its own
+dimension, all sharing one filter. A row click toggles that member; every tile
+and the metric row re-aggregate. The same filter is editable from a
+`MultiSelectFilter` chip row. Composition is **AND across dimensions, OR within
+one**.
+
+Built entirely from existing exports — `SectionTable` (its `onRowClick` is a
+behaviour prop, so interactive rows need no new component), `MultiSelectFilter`,
+`MetricCard`, `WrapRow`/`TightStack`, `GhostButton`. **No SUI component owns the
+filter state**: it is a signal in the consuming app, because filter state is
+per-viewer and its persistence (URL, storage, none) is an app decision.
+
+Four behaviours carry the pattern:
+
+1. **Two-way toggle** — a row click adds the member, the same click again
+   removes it. Chips and rows edit one filter, so they cannot disagree.
+2. **Own-dimension exclusion** — a tile applies every active filter *except its
+   own*. Without it a selected tile collapses to one row, and since toggle-off
+   lives on the rows, the selection becomes unclearable.
+3. **Rank before cap, then pin** — rank the full list, cap after, then append a
+   selected member that fell below the cap **carrying its true rank**.
+   Cap-then-rank silently drops the selection out of a capped tile, which then
+   keeps showing unfiltered rows while everything else has narrowed.
+4. **Empty means all** — no selection in a dimension is no filter on it. This is
+   already `MultiSelectFilter`'s own convention, so no "all" pseudo-member is
+   needed.
+
+Active rows are marked **in the data** (a leading `›` glyph in the rank cell),
+not by styling the row: there is no active-row visual for a plain table, and
+adding one at the call site would be custom styling.
+
+---
+
 ## Badge
 - **StatusBadge** — Colored status pill with 5 compliance-themed variants. Key props: `variant` (`compliant`|`violation`|`warning`|`pending`|`info`), `size` (`sm`|`md`), `label`, `href`. Use for: inline status indicators, compliance badges, optionally as links.
 - **StatusLight** — Atomic. Small colored indicator dot (LED-style) with optional keepalive pulse animation. Key props: `variant` (`success`|`warning`|`danger`|`info`|`idle`), `size` (`sm`|`md`|`lg`), `pulse` (animates a slow expanding halo — use when the source is actively reporting), `label` (optional inline text rendered to the right). Honors `prefers-reduced-motion`. Uses `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-info`, `--sui-text-muted`. Use for: dispatcher liveness, connection state, daemon keepalive, sensor health.
+- **CountBadge** — Composed (Depth 2). A tiny numeric pill for overlaying a trigger's corner. Composes `DigitRoller`, so the number **rolls** when it changes. Owns `CountBadge.css` (a deliberate Depth-2 exception — the corner-pill chrome is intrinsic styling no atomic variant expresses, same rationale as `CountChip`). Single non-danger tone (#2 Rule — one visual per component). Accepts standard `<span>` attributes via spread. **The roll requires the instance to survive count changes** — give it a stable position/key at the call site, never remount it. Key props: `count` (number). Exported type: `CountBadgeProps`. Use for: unread counts on a bell/inbox trigger, any corner-anchored numeric badge. Note: `NotificationCenter` already composes this — reach for `CountBadge` directly only when building your own trigger.
 
 ## BulkActionBar
 - **BulkActionBar** — Composite (Depth 2). Composes `CountChip` + `PrimaryButton` (+ optional `GhostButton` for "Clear"). Owns a minimal structural CSS file (`position: sticky; bottom`, centered max-content strip, elevation) — a deliberate Depth-2 CSS exception for the stick-to-bottom geometry, same rationale as `Fab`. A multi-select action strip: a count chip ("N cells") on the left, a primary action on the right ("Align to baseline"), and an optional "Clear" ghost button. **Render it gated behind `<Show when={count > 0}>`** — it has no internal visibility logic. The host scroll/grid container needs `position: relative` so the bar sticks to its bottom edge. Zero-config call site — pass only data + callbacks; the noun auto-pluralizes (trailing `s` when `count !== 1`). Key props: `count` (number), `noun` (singular, e.g. `"cell"`), `actionLabel` (e.g. `"Align to baseline"`), `onAction` (`() => void`), `onClear?` (`() => void` — renders the Clear button when present), `disabled?` (greys the primary action while a bulk op is in flight). Exported type: `BulkActionBarProps`. Uses `--sui-bg-elevated`, `--sui-border-bright`, `--sui-border`, `--sui-radius-md`, `--sui-space-*`. Use for: one-row multi-select bulk actions over a grid (e.g. "Align N cells to baseline" on `/calibrate`), batch operations over any selection that isn't a `SelectableTable`.
@@ -178,6 +224,80 @@ State derivation:
     </Row>
     ```
 
+## ServiceHealthDot
+- **ServiceHealthDot** — Composite (Depth 2). 6px dot + name label for app-shell navbar liveness clusters. Alive: success color, opacity decays `max(0.15, 1 − (ageMs/staleThresholdMs) × 0.85)` as the heartbeat ages toward the staleness horizon. Dead (`ageMs` null/undefined or ≥ threshold): danger color at full opacity with a 1s pulse animation. Hover reveals a popover: service name + age label, a `HeartbeatSparkline` (state `"connected"` or `"error"`), and a `Xs ago / now` footer. **No internal clock** — pure render of caller-supplied `ageMs` + `samples`; the 1 Hz tick and history accumulation live in the caller. **No curried variant** — all props are data props. Key props: `name` (string), `ageMs` (number | null | undefined), `staleThresholdMs` (default 15 000), `samples` (number[] 0..1, oldest first). Uses `--sui-success`, `--sui-danger`, `--sui-text-muted`, `--sui-bg-primary`, `--sui-border`. Use for: navbar/app-shell service heartbeat indicators, dispatcher health clusters.
+  - Example:
+    ```tsx
+    import { ServiceHealthDot } from "solid-ui-components";
+    import { createSignal, onMount, onCleanup } from "solid-js";
+
+    const [ageMs, setAgeMs] = createSignal<number | null>(null);
+    const [samples, setSamples] = createSignal<number[]>([]);
+    const THRESHOLD = 15_000;
+
+    onMount(() => {
+      let lastBeat = Date.now();
+      // Simulate a heartbeat every 2s from an external source.
+      const beatId = setInterval(() => { lastBeat = Date.now(); }, 2_000);
+      // 1 Hz tick owned by the caller — push sample, update ageMs.
+      const tickId = setInterval(() => {
+        const age = Date.now() - lastBeat;
+        setAgeMs(age);
+        setSamples(prev => [...prev.slice(-29), Math.min(1, age / THRESHOLD)]);
+      }, 1_000);
+      onCleanup(() => { clearInterval(beatId); clearInterval(tickId); });
+    });
+
+    <ServiceHealthDot
+      name="broker"
+      ageMs={ageMs()}
+      staleThresholdMs={THRESHOLD}
+      samples={samples()}
+    />
+    ```
+
+## ChartHeader
+- **ChartHeader** — Composed (Depth 2). The standard chart title strip: mono accent title on the left, muted mono meta readout on the right, spread across the chart's top edge (Row + curried Text; owns zero CSS). Data-only call site. Key props: `title` (JSX.Element), `meta` (JSX.Element, optional). Use for: the header line above any chart (counts, windows, units).
+  - Example:
+    ```tsx
+    import { ChartHeader } from "solid-ui-components";
+
+    <ChartHeader title="Completion Timeline" meta={`${total} completions in window`} />
+    ```
+
+## Sparkline
+- **Sparkline** — Atomic (Depth 1). Generic inline SVG polyline: arbitrary values → tiny chart strip. Two render modes: `line` (smooth polyline, default) and `sawtooth` (drops to baseline between samples — per-period values like batch throughput). Color is prop-driven (explicit CSS string or token), no trend-class coupling: for trend-colored sparklines use `TrendSparkline`; for 0..1 connection-health strips use `HeartbeatSparkline`. Owns CSS (structural geometry only). Key props: `values` (number[], oldest first, auto-scaled), `mode` (`"line"`|`"sawtooth"`), `color` (default `var(--sui-accent)`), `width` (default 80), `height` (default 20). Exported types: `SparklineProps`, `SparklineMode`. Use for: inline throughput/count strips where the caller owns the color semantics.
+  - Example:
+    ```tsx
+    import { Sparkline } from "solid-ui-components";
+
+    <Sparkline values={[0, 400, 600, 800, 700, 900]} mode="sawtooth" color="var(--sui-success)" />
+    ```
+
+## TrendSparkline
+- **TrendSparkline** — Atomic (Depth 1). Tiny value sparkline (no axes). Series scaled into a fixed rect, stroked by trajectory — UP green, DOWN red, FLAT grey. Exports `trendOf(initial, final)` as the pure color rule (`final > initial` → `"up"`, `< initial` → `"down"`, equal → `"flat"`). Distinct from `HeartbeatSparkline` (which plots 0..1 connection health): `TrendSparkline` plots arbitrary numeric series — projected balances, rolling totals, any "which direction is this heading?" micro-visual. Owns CSS. Key props: `values` (number[], oldest first), `trend` (`"up"`|`"down"`|`"flat"`), `width` (default 120), `height` (default 24), `capacity` (max points; longer series downsampled, default 80), `yDomain` ([min, max] — shared scale for groups of sparklines; omit for per-series auto-scale). Exported types: `SparklineTrend`, `TrendSparklineProps`. Exported helper: `trendOf`. Use for: projected balances, running totals, any compact "where is this heading?" indicator alongside a value.
+  - Example:
+    ```tsx
+    import { TrendSparkline, trendOf } from "solid-ui-components";
+
+    const values = [10, 18, 15, 25, 22, 30];
+    <TrendSparkline values={values} trend={trendOf(values[0], values[values.length - 1])} width={120} height={24} />
+    ```
+
+## DistributionSparkline
+- **DistributionSparkline** — Atomic (Depth 1). The sparkline for a series whose SPREAD matters, not just its direction: a solid box for min..max filled with the direction shading, two dashed rules for the percentile band (always inside the box — a percentile cannot escape the values it came from), a hairline at the mean, and the series itself clipped to the plot. Distinct from `TrendSparkline`, which answers only "which way is this heading" and is the right choice when that is the whole question. Owns CSS. **`yDomain` is required and is DATA, not visual config**: auto-scaled, every range box fills its rect and the encoding says nothing — the picture only means something when a whole set of sparklines shares one domain. What counts as "the set" (all sources? the filtered ones? one source over time?) is a modelling decision the CLIENT owns; the component takes the answer rather than guessing it. **Responsive with no size prop**: fills its container in both axes and stretches, so it absorbs height from its row and width from its column — one component serves a 28px table row and a 120px dashboard tile. Strokes are non-scaling, so a wide short cell does not produce fat horizontals and hairline verticals. Marks thin themselves out via container queries as space runs out (percentile rules below 100px wide or 40px tall, mean below 60px/24px) — four horizontal marks in a table row is mud. Key props: `values` (number[], oldest first), `yDomain` ([min, max], required), `band` ([lo, hi] percentiles, default `[0.05, 0.95]`), `marks` (`{ range, typical, mean }`, all default true), `capacity` (max points; longer series downsampled, default 80). Exported types: `DistributionSparklineProps`, `DistributionSparklineDataProps`, `DistributionMarks`, `DistributionTrend`. Exported helpers: `p95DomainOf` (pooled percentile band + padding — the common shared-axis rule), `extentDomainOf` (true extremes, nothing clipped), `percentileOf`, `distributionTrendOf`. Factory: `createDistributionSparkline`. Curried variant: `P95Sparkline`. Use for: a dashboard tile, table column or definition list where the reader needs to know how wide the spread is and where the series usually sits, not just where it ended.
+  - Example:
+    ```tsx
+    import { P95Sparkline, p95DomainOf } from "solid-ui-components";
+
+    // ONE domain for the whole set — the caller decides what the set is.
+    const axis = p95DomainOf(sources.map((s) => s.values));
+
+    <For each={sources}>
+      {(s) => <P95Sparkline values={s.values} yDomain={axis} />}
+    </For>
+    ```
+
 ## ConversationTree
 - **ConversationTree** — Pure Composite (Depth 2). Composes `ConversationStack` (Layout Curried Variant) + `LabeledDivider` (semantic alias `DateDivider` available) + `ThreadGroup` + `ParticipantAvatar` + `ParticipantNameLabel` + `ParticipantTimeLabel` + `MessageBubble` + `Duration`. Owns zero CSS and zero inline `style={}` — visual styling lives in the composed Primitives. Multi-participant message thread, optionally tree-structured via `replyToId`. Deterministic per-participant color (HSL hash from `id`, override with `Participant.color`); fallback initials avatar (override with `avatarUrl`); consecutive same-author messages within `groupWithinMs` (default 5min) fold into a single header+body block; day-change or gap > `absoluteAfterMs` (default 1h) inserts a `LabeledDivider` ("Today, 3:14 PM" / "Yesterday, 9:02 AM" / "Mar 4, 11:30 AM"); per-bubble full timestamp on hover via native `title`. Threaded replies indent (`threaded`, default true) with a `ThreadGroup` left rail colored by the replying author. When `currentUserId` matches a participant, that participant's `ThreadGroup` + `MessageBubble` flip to `variant="self"` (right-aligned, accented). Long bubbles collapse behind a (more…) toggle (`clampLines` default 5; `maxLines` default 20). Key props: `participants` (`Participant[]`), `messages` (`ConversationMessage[]` with `id`, `participantId`, `text`, `timestamp`, optional `replyToId`), `groupWithinMs`, `absoluteAfterMs`, `threaded`, `now` (reference for relative time, default `Date.now()`), `currentUserId`, `clampLines`, `maxLines`, `onMessageClick`. Use for: code review threads, ops incident timelines, multi-actor decision logs, team status posts.
   - Example:
@@ -220,7 +340,7 @@ State derivation:
     - `outlined` — transparent fill with accent border + text; mid-emphasis
     - `text` — link-like; no border, no fill, accent text only
     - `icon-only` — 1.4rem square, accent-colored glyph, no border or fill; pair with an icon child
-- **PrimaryButton / SecondaryButton / DangerButton / WarningButton / GhostButton / OutlinedButton / TextButton / IconOnlyButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / SmallWarningButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. Same pattern should be applied to Cell and Layout curried variants when they're first consumed downstream (see TODO.md).
+- **PrimaryButton / SecondaryButton / DangerButton / WarningButton / GhostButton / OutlinedButton / TextButton / IconOnlyButton / SmallPrimaryButton / SmallDangerButton / SmallGhostButton / SmallOutlinedButton / SmallWarningButton / LargePrimaryButton** — Pre-configured curried variants via `createButton()`. Use for: avoiding repetitive variant/size props. Note: these exports carry explicit `Component<ButtonDataProps>` annotations in `variants.ts` for pnpm/github-dep portability — without the annotation, `vite-plugin-dts` can inline solid-js paths through pnpm's ephemeral build-store temp dir (TS2742), stripping the declarations from the shipped `.d.ts` and producing TS2305 downstream. The same annotations were subsequently applied to the Cell variants (`3152ef7`) and the Layout variants (`0c1dba4`).
 
 ## ButtonGroup
 - **ButtonGroup** — Button arrangement container. Key props: `orientation` (`horizontal`|`vertical`), `gap` (`none`|`sm`|`md`|`lg`), `bordered`. Use for: grouping related buttons, toggle-style button groups (use Button's `active` prop for selection state).
@@ -238,8 +358,11 @@ State derivation:
 ## Card
 - **RemovableItemCard** — Composite (Depth 2). Composes `InteractiveCard` (Surface curried variant) + `SpreadRow` (Layout curried variant) + `FlexLabel` (Text curried variant) + `Button` (Atomic Primitive). Interactive card displaying a named item with title, optional remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable list items.
 
+## Placeholder
+- **Placeholder** — Composite (Depth 2, owns CSS). A themed "fill me in" box for section/tile SKELETONS during the sections-first build phase, before real components land — it shows how pieces will ARRANGE without inventing throwaway markup. Owns only appearance + width/min-height (no flex/grid geometry — centering comes from the composed `CenteredStack`, label from `TextSublabel`), so it stays layout-pure. Two behaviour axes plus tile-size presets are baked into curried variants (the raw `fit`/`multiline`/`size` props on the base are escape hatches): `FitPlaceholder` (shrinkwraps to its label, single line — chips/tags), `FillPlaceholder` (fills width, single line — bars/inputs), `BlockPlaceholder` (fills width, tall block — paragraphs/content), and the tile presets `SmallPlaceholder` (60px), `MediumPlaceholder` (120px, KPI tiles), `LargePlaceholder` (200px, chart/table tiles). Data prop: `label`. Factory: `createPlaceholder`. Type: `PlaceholderDataProps`, `PlaceholderProps`, `PlaceholderSize`. Use for: skeleton dashboards / section stubs while composing a page before the real content exists.
+
 ## ChartCanvas
-- **ChartCanvas** — Atomic Primitive (Depth 1). Owns `ChartCanvas.css`; no library-component imports. A positioned container wrapping a Chart.js `<canvas>` — replaces the hand-rolled `<div style={{height}}><canvas ref/></div>` pattern that Chart.js consumers repeat. The container owns `position: relative` + `width: 100%`; the chart-area **height is baked per curried variant** (`createChartCanvas({ height })`) and applied inline by the primitive (a static variant decision, not a call-site override). The relative positioning establishes the containing block for an optional **overlay slot** passed as `children` — typically an `InlineChartErrorOverlay` gated behind a `<Show>` to cover the canvas when data is unavailable. Wire your Chart.js instance to the canvas via the forwarded `ref`. No explicit canvas dimensions are set — Chart.js (`responsive: true, maintainAspectRatio: false`) sizes the canvas to the container's determinate height. **Curried-only exports** (the config-bearing base is not exported): `createChartCanvas({ height })` factory + `ChartCanvasMd` (240px), `ChartCanvasLg` (300px), `ChartCanvasMlg` (350px), `ChartCanvasXl` (420px). `height` accepts a number (→px) or a string (verbatim, e.g. `"50vh"`). Data props at the call site: `ref` (canvas ref callback) + optional `children` (overlay slot); standard `<div>` attributes (`class`, `id`, `data-*`, aria) pass through to the container. Exported type: `ChartCanvasDataProps`. Owns no theme tokens (purely structural — colours come from the chart and the optional overlay). Use for: any Chart.js chart that previously lived in a height-styled wrapper div.
+- **ChartCanvas** — Atomic Primitive (Depth 1). Owns `ChartCanvas.css`; no library-component imports. A positioned container wrapping a Chart.js `<canvas>` — replaces the hand-rolled `<div style={{height}}><canvas ref/></div>` pattern that Chart.js consumers repeat. The container owns `position: relative` + `width: 100%`; the chart-area **height is baked per curried variant** (`createChartCanvas({ height })`) and applied inline by the primitive (a static variant decision, not a call-site override). The relative positioning establishes the containing block for an optional **overlay slot** passed as `children` — typically an `InlineChartErrorOverlay` gated behind a `<Show>` to cover the canvas when data is unavailable. Wire your Chart.js instance to the canvas via the forwarded `ref`. No explicit canvas dimensions are set — Chart.js (`responsive: true, maintainAspectRatio: false`) sizes the canvas to the container's determinate height. **Curried-only exports** (the config-bearing base is not exported): `createChartCanvas({ height })` factory + `ChartCanvasMd` (240px), `ChartCanvasLg` (300px), `ChartCanvasMlg` (350px), `ChartCanvasXl` (420px). `height` is a **number of px** — the raw-CSS-string form was removed in 0.130.0 (ADR 0003: geometry props are semantic, not CSS strings), so a viewport-relative height needs a `class` on the container instead. Data props at the call site: `ref` (canvas ref callback) + optional `children` (overlay slot); standard `<div>` attributes (`class`, `id`, `data-*`, aria) pass through to the container. Exported type: `ChartCanvasDataProps`. Owns no theme tokens (purely structural — colours come from the chart and the optional overlay). Use for: any Chart.js chart that previously lived in a height-styled wrapper div.
   - Example:
     ```tsx
     import { ChartCanvasMd } from "solid-ui-components";
@@ -343,6 +466,79 @@ State derivation:
     <CashflowScrubChart cells={cells} selected={selectedIdx()} onScrub={setSelectedIdx} today={today} />
     ```
 
+## CashflowChart
+- **CashflowChart** — Composite (Depth 2). Weekly revenue/expense cashflow chart: for each week, up to four stacked SVG bars (recurring + project revenue rising from the $0 baseline, recurring + one-time expenses dropping below it) plus a running-balance ("coffers") line — solid for past weeks, dashed for projected — with a "now" marker, optional bankruptcy annotation, and an interactive hover popover breaking down each segment's line items. Container-driven sizing: a ResizeObserver measures the wrapping `div` and the SVG fills that box on both axes (no width-locked aspect ratio, no horizontal scroll); auto-scales the y-domain to the data extent with 10% headroom, degenerate/empty data rests on the $0 baseline. Exported as `WeeklyCashflowChart`. Key prop: `data` (`WeeklyCashflowChartData` — `bars: WeeklyChartBar[]` plus optional `todayWeek`, `bankruptcyWeek`, `bankruptcyDate`); `height` (number, optional — pins an explicit viewBox height, otherwise measured; floor 160px); `yMax` (number | null — pins the top of the y-domain and enables the fixed -$100k floor). Each `WeeklyChartBar` carries per-segment cents (revenue/expense/balance) plus `revenue_items`/`expense_items`/`recurring_expense_items`/`onetime_expense_items` (`BarLineItem[]` of `{ name, amount_cents }`) and `isProjected`. Exported types: `WeeklyCashflowChartProps`, `WeeklyCashflowChartData`, `WeeklyChartBar`, `BarLineItem`. Uses d3-scale (`scaleBand`/`scaleLinear`); CSS tokens `--sui-accent`, `--sui-success`, `--sui-danger`, `--sui-warning`, `--sui-text`, `--sui-text-muted`, `--sui-border`, `--sui-border-bright`, `--sui-bg`, `--sui-bg-elevated`. Use for: financial runway/coffers dashboards, weekly burn-vs-revenue forecasting.
+  - Example:
+    ```tsx
+    import { WeeklyCashflowChart, type WeeklyCashflowChartData } from "solid-ui-components";
+
+    const data: WeeklyCashflowChartData = {
+      todayWeek: "2026-03-02",
+      bars: [
+        {
+          week_start: "2026-03-02",
+          month_label: "Mar '26",
+          revenue_cents: 500000,
+          recurring_revenue_cents: 300000,
+          project_revenue_cents: 200000,
+          product_revenue_cents: 0,
+          expense_cents: 420000,
+          recurring_expense_cents: 350000,
+          onetime_expense_cents: 70000,
+          balance_cents: 80000,
+          revenue_items: [{ name: "Retainer", amount_cents: 300000 }],
+          expense_items: [{ name: "Payroll", amount_cents: 350000 }],
+          recurring_expense_items: [{ name: "Payroll", amount_cents: 350000 }],
+          onetime_expense_items: [{ name: "Laptop", amount_cents: 70000 }],
+          isProjected: false,
+        },
+      ],
+    };
+
+    <div style={{ height: "320px" }}>
+      <WeeklyCashflowChart data={data} />
+    </div>
+    ```
+
+## CompletionTimeline
+- **CompletionTimeline** — Composite (Depth 2). Buckets a stream of completion events into 30-minute slots across a trailing time window and renders them via the `Chart` primitive family (`Chart` + `Grid` + `XAxis`/`YAxis` + `BarSeries` + `ChartTooltip`): bars show per-bucket counts, a header shows the accent-colored title and total completions in window, and hovering a bar reveals its start time, count, and running cumulative total (events before the window seed the cumulative baseline). Fixed 800×260 chart with ~6 evenly-spaced hour ticks. Key props: `completions` (`CompletionEvent[]`, each `{ tableName: string; completedAt: number /* epoch ms */; rowCount: number }`); `windowHours` (number, default 8). Exported types: `CompletionTimelineProps`, `CompletionEvent`. CSS tokens: `--sui-accent`, `--sui-text-muted`. Use for: ETL/ingestion dashboards, activity-over-time monitors showing what completed and cumulative progress.
+  - Example:
+    ```tsx
+    import { CompletionTimeline, type CompletionEvent } from "solid-ui-components";
+
+    const completions: CompletionEvent[] = [
+      { tableName: "orders", completedAt: Date.now() - 3_600_000, rowCount: 12000 },
+      { tableName: "users", completedAt: Date.now() - 1_800_000, rowCount: 340 },
+    ];
+
+    <CompletionTimeline completions={completions} windowHours={8} />
+    ```
+
+## Alarm
+- **Alarm** — Composite (Depth 2). A family of chart-overlay renderers plus a pure pipeline for turning raw time-series points into "alarm" overlays inside a `<Chart>`. Three layers: (1) pure helpers in `alarm.ts`, (2) base SVG renderers, (3) the curried `AlarmOverlay`. Core types: `Pt` (`{ x: number; y: number }`), `Range` (`{ start: number; end: number }`), `HotZone` (`Range & { count: number }`). Use for: marking regions of a chart where a signal crosses a threshold — smooth translucent bands for normal alarms, striped "barcode" blocks with `×N` badges for dense clusters, with per-series lane subdivision when multiple channels share a panel.
+  - **AlarmOverlay** — curried one-call overlay. Props: `series` (`readonly AlarmSeries[]`, each `{ data: readonly Pt[]; threshold: number }`), `padFraction?` (fraction of x-domain to widen each range, default `0`), `depthThreshold?` (absolute concurrent-range count above which a region collapses to a striped block, default `5`), `patternId?`. Reads the chart x-domain from `useChart()` context; runs `detectRanges → padRanges → findHotZones → subtractZones → clampRanges` per series and emits `AlarmStripeDefs` + `AlarmBands` + `AlarmHotZones` in lanes. Exported types `AlarmOverlayProps`, `AlarmSeries`.
+  - **AlarmBands** — pure SVG renderer of translucent red rectangles, one per pre-computed `Range`. Props: `ranges` (`readonly Range[]`), `laneIndex?` (0-based, default 0), `laneCount?` (default 1 = full height). Styled via `--sui-alarm-band-fill` (#ff4040) and `--sui-alarm-band-fill-opacity` (0.22). Type `AlarmBandsProps`.
+  - **AlarmHotZones** — pure renderer of a striped block + thick border + `×N` count badge per `HotZone`. Props: `zones` (`readonly HotZone[]`), `laneIndex?`, `laneCount?`, `patternId?`. Requires an `AlarmStripeDefs` in the same chart so `fill="url(#…)"` resolves. Styled via `--sui-alarm-zone-stroke`, `--sui-alarm-zone-stroke-width`, `--sui-alarm-count-fill`, `--sui-alarm-count-size`, `--sui-alarm-count-font`, `--sui-alarm-count-weight`. Type `AlarmHotZonesProps`.
+  - **AlarmStripeDefs** — SVG `<defs>` registering the diagonal-stripe pattern used by `AlarmHotZones`. Props: `patternId?` (default `"alarm-stripe"`), `spacing?` (numeric tile size, default 10 — numeric because SVG geometry attrs don't resolve `var()`), `strokeWidth?` (default 3). Paint themed via `--sui-alarm-zone-stripe-fill`, `--sui-alarm-zone-stripe-bg-opacity`, `--sui-alarm-zone-stripe-line-opacity`. Type `AlarmStripeDefsProps`.
+  - **Pure helpers** — `detectRanges(data, yThreshold)`, `padRanges(ranges, padFraction, xDomainWidth)`, `findHotZones(ranges, depthThreshold)` (sweep-line), `subtractZones(ranges, zones)`, `clampRanges(ranges, xMin, xMax)`, and `alarmPipeline(data, opts)` (canonical composition returning `{ ranges, padded, hotZones, visibleRanges, visibleHotZones }`). Each is total, deterministic, and render-free — compose them directly for custom overlays.
+  - Example:
+    ```tsx
+    import { Chart, LineSeries, Grid, XAxis, YAxis, AlarmOverlay } from "solid-ui-components";
+
+    <Chart width={480} height={220} xDomain={[0, 199]} yDomain={[0, 100]}>
+      <AlarmOverlay
+        series={[
+          { data: pointsA, threshold: 60 },
+          { data: pointsB, threshold: 40 },
+        ]}
+        padFraction={0.12}
+        depthThreshold={5}
+      />
+      <Grid /><XAxis /><YAxis />
+      <LineSeries data={pointsA} x={(d) => d.x} y={(d) => d.y} stroke="#ff8080" />
+    </Chart>
+    ```
+
 ## SwimlaneChart
 - **SwimlaneChart** — Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: "collapsed", collapsedCount }` for nodes that overflowed the depth window), `maxDepth` (rings on each side of center; default 2), `responsiveCollapse` (default true — shrinks depth to fit `containerWidth`), `centerCol` (default 0), `nodeSize`, `columnGap`, `rowGap`, `interactive`, `arrows`, `onNodeClick`. Nodes outside the visible depth window collapse into boundary badges (circle + count) at the outer edge of the outermost visible anchor. Width budgeting is purely symmetric — chart reserves `depth` columns on each side of center, so DOING-anchored layouts never push content off-screen. Leaving nodes play a 360ms mirrored compress-into-badge animation (rect → circle, shrinks toward the badge side); entering nodes mirror the leave in reverse (emerge from the badge as a circle, expand to rect). Use for: current-step-in-workflow displays, DOING-centered Kanban, dependency chain visualizations with overflow summarization.
 - **LinearFlowSwimlaneChart** — Curried variant of SwimlaneChart pre-configured for "current step in a sequential workflow" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom.
@@ -416,7 +612,7 @@ State derivation:
 - **DateTimeRange** — Composite (Depth 2). Composes the `NowrapBody` Text Curried Variant; the pure formatter lives in `formatDateTimeRange` (also exported) so other Primitives can reuse the rule. Key props: `start`, `end`, `mode` (`date`|`datetime`). Use for: displaying time periods.
 - **formatDateTimeRange(start, end?, mode?)** — Pure-function string helper exported alongside `DateTimeRange`. Same formatting rules. Exists so Atomic Primitives like `TitledTimeRangeHeader` can render the formatted string without composing the `DateTimeRange` Composite — Primitives cannot import library components.
 - **formatCompactDuration(ms)** / **formatCompactRange(start, end)** / **formatStartTimestamp(date)** — Pure-function string helpers exported from `solid-ui-components/Duration`. Vanilla `Date` + `Intl.DateTimeFormat` (no Luxon, matching the DateRangePicker convention). `formatCompactDuration(ms)` renders deterministic compact durations (`Ns` / `Nm` / `Nh Mm` / `Nd Mh` / `Nd Mm`); no wall-clock fallback, keeps a smaller unit when the next-larger is zero (`24h30m → "1d 30m"`). `formatCompactRange(start, end)` keeps both timestamps but strips redundant date fields from the end side (same-day: `May 13 11:35 → 12:05 · 30m`; same-month: `May 13 11:35 → 14 12:05 · 1d 30m`; different month: full both sides), appends the duration via `formatCompactDuration`, and renders `end === null` as `"… → ongoing · <duration>"` (duration vs. `Date.now()`). `formatStartTimestamp(date)` exposes the `"MMM dd HH:mm"` shape for callers that mix custom JSX with `formatCompactRange` output. Use for: alarm-period labels, history lists, "zoomed to" indicators.
-- **DigitRoller** — Atomic Primitive (Depth 1). Owns `DigitRoller.css`. Animated digit-by-digit value transition (slot-machine effect). Key props: `value`, `previousValue`, `animate`, `duration`, `stagger`, `onAnimationEnd`. Use for: animated number reveals in dashboards.
+- **DigitRoller** — Atomic Primitive (Depth 1). Owns `DigitRoller.css`. Animated digit-by-digit value transition — direction-aware mod-10 odometer (increases roll up, decreases roll down, per-digit stagger). **Auto-rolls by default**: with no `previousValue` prop it tracks its own prior value and rolls on every `value` change; pass `previousValue` explicitly only to replay a specific transition; opt out with `animate={false}`. SURVIVAL CONTRACT: the instance must survive the value change — lists that rebuild row objects render with `<Index>`/stable keys, not `<For>` (a remount resets the history; see STYLE_GUIDE "List Identity"). Key props: `value`, `previousValue?`, `animate?` (default true), `duration`, `stagger`, `onAnimationEnd`. Use for: any animated numeric display; `CountChip` and numeric `TagPill` labels compose it automatically.
 - **MetricCard** — Atomic Primitive (Depth 1). Owns `MetricCard.css`; no library-component imports. Labeled value card with optional units and color-tinted value text (`default` | `success` | `warning` | `danger`). When `units` is supplied the value uses the same monospace face as the sibling `NumberWithUnits` Primitive so numeric readouts line up. Key props: `label`, `value`, `units`, `color`. Use for: KPI/metric display tiles.
 - **NumberWithUnits** — Atomic Primitive (Depth 1). Owns `NumberWithUnits.css`; no library-component imports. Monospace value paired with a faded units label, baseline-aligned on a single line. Data-driven `color` flows as inline style on the value span (allowed inside a Primitive per CONTEXT.md). Key props: `value`, `units`, `precision`, `color`. Use for: any numeric display that needs units.
 - **ResultDisplay** — Atomic Primitive (Depth 1). Owns `ResultDisplay.css`; no library-component imports. Header (label + sublabel) over a value+units row with optional badge slot and trailing children area. Data-driven `valueColor` flows as inline style on the value span. Key props: `value`, `units`, `label`, `sublabel`, `badge`, `valueColor`. Use for: primary calculation results.
@@ -478,11 +674,143 @@ State derivation:
     - Downstream uses Luxon for weekday/month formatting and the `MMM d`/`MMMM yyyy` trigger label; upstream uses vanilla `Date` arithmetic plus `Intl.DateTimeFormat`. Behavior and layout match; the library surface does not add Luxon as a dependency.
     - Downstream uses SCSS CSS modules (`dateRangePicker.module.scss`); upstream uses a single plain CSS file (`DateRangePicker.css`) with BEM-ish `.sui-drp__*` class names and `--sui-*` tokens.
 
+## BigNumberInput
+- **BigNumberInput** — Atomic (Depth 1). Editable numeric input rendered at a large `Text variant="value"` headline size for editing a money amount in place. The `value` (`number`, controlled) is masked as localized currency via `Intl.NumberFormat` for display while `onChange` (`(n: number) => void`) always emits the parsed raw `number` — the symbol, grouping and decimal mark are locale-driven presentation, never part of the value. Format-on-blur: while focused it shows the bare editable number (no grouping) so the caret never jumps mid-edit; on blur it reformats to the masked currency string. A local string buffer mirrors the input and only re-syncs from `value` when the parsed number actually diverges, keeping it controlled and loop-free. Key props: `locale` (`string`, default `"en-US"`), `currency` (ISO-4217 `string`, default `"USD"`), `align` (`"left" | "right"`, default `"left"`), `selectOnFocus` (`boolean`, default `true` — selects all contents on focus, deferred one frame). Extends `JSX.InputHTMLAttributes` (minus `onChange`/`value`/`type`). (The pre-Intl `prefix`/`sign` static-glyph props were pruned 2026-07-15 — unused by every production consumer.) Exported types: `BigNumberInputProps`. Factory: `createBigNumberInput(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-space-1`. Use for: inline editing of a headline money/number figure.
+  - Example:
+    ```tsx
+    import { BigNumberInput } from "solid-ui-components";
+
+    <BigNumberInput value={amount()} onChange={setAmount} currency="EUR" locale="de-DE" />
+    ```
+
+## SegmentedInput
+- **SegmentedInput** — Atomic (Depth 1). Single-select segmented control: a horizontal row of connected, keyboard-focusable buttons (`role="radiogroup"`) where the selected segment gets the accent treatment. Key props: `options` (`SegmentedInputOption[]`, each `{ id: string; label: string }`), `value` (`string`, the selected id), `onChange` (`(id: string) => void`), `compact` (`boolean`, default `false`). In compact mode it renders a content-width stepper (`‹ label ›`) instead of the full strip, clamped at the ends (no wrap), with chevron clicks, left/right arrow keys, and swipe (30px threshold). Extends `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exported types: `SegmentedInputProps`, `SegmentedInputOption`. Factory: `createSegmentedInput(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-border`, `--sui-radius-sm/md`, `--sui-text-primary/secondary`, `--sui-space-*`. Use for: mutually-exclusive choices among a small fixed set (view toggles, filters, mode pickers).
+  - Example:
+    ```tsx
+    import { SegmentedInput } from "solid-ui-components";
+
+    <SegmentedInput
+      options={[{ id: "day", label: "Day" }, { id: "week", label: "Week" }]}
+      value={range()}
+      onChange={setRange}
+    />
+    ```
+
+## RangeAmountGroup
+- **RangeAmountGroup** — Atomic (Depth 2). Responsive trio of labeled amount inputs (min / standard / max): all three on one line when there's room, otherwise each on its own line — never the awkward 2+1 wrap (holy-albatross flex basis). Composes `TightStack` (Layout) and `ThemedNumberInput`. Key props: `slots` (`RangeAmountSlot[]`, each `{ label: string; value: number | undefined; onChange: (value: number | undefined) => void }` — empty labels fall back to `Min`/`Standard`/`Max`), `step` (`number`, default `0.01`, forwarded to each input), `name` (`string`, prefixes input names `name-0/1/2`). Pass `children` (`JSX.Element`) instead of `slots` to reuse the responsive container for arbitrary triple inputs (e.g. three date pickers). Extends `JSX.HTMLAttributes<HTMLDivElement>` (minus `children`). Exported types: `RangeAmountGroupProps`, `RangeAmountSlot`. Factory: `createRangeAmountGroup(defaults)` for curried variants. The stack/side breakpoint is frozen at the `--rag-break` CSS fallback (`30rem`) — no runtime prop. CSS tokens: `--rag-break`, `--sui-space-2`, `--sui-text-secondary`. Use for: min/typical/max amount ranges (budget bands, price tiers, estimate spreads).
+  - Example:
+    ```tsx
+    import { RangeAmountGroup } from "solid-ui-components";
+
+    <RangeAmountGroup
+      slots={[
+        { label: "Min", value: min(), onChange: setMin },
+        { label: "p95", value: typical(), onChange: setTypical },
+        { label: "Max", value: max(), onChange: setMax },
+      ]}
+    />
+    ```
+
+## MultiSelectFilter
+- **FilterBar** — Composed (Depth 1). Owns `FilterBar.css`; composes no library components. **Progressive-disclosure filter bar: height-locked to ONE line, with every expansion rendered as an overlay, so filtering never pushes the content below it down.** That is the whole reason it exists — a chip bar that wraps reflows the page while you are using it. Promoted from the matchmaking workshop bench (spec: `docs/superpowers/specs/2026-07-28-progressive-filter-bar-design.md`). Semantics are **OR within a dimension, AND across dimensions**, and an empty/absent group means *all* — the same empty-means-all convention as `MultiSelectFilter`, so the two interoperate and a consumer's cross-filtering state layer needs no translation. **Presentational and controlled**: it never sees rows and holds no filter state; the caller derives `filters` from its own selection and applies the callbacks. Key props: `filters` (`FilterGroup[]` — the ACTIVE groups only), `availableDimensions` (`{id,label}[]`), `scopeLabel`, `onRemoveFilter`, `onAddTerm`, `onRemoveTerm`, `onClearAll`. Exported types: `FilterBarProps`, `FilterGroup`, `FilterMember`. **`FilterMember.count` is optional** and should be omitted rather than guessed: an honest facet count for a member of dimension *d* must be computed with *d*'s own filter excluded, or every unselected member of an active dimension reads 0 and the picker looks broken exactly when someone is switching selections. **"Added but empty" is internal state.** Picking a dimension from `(+)` shows its group and focuses the combobox, but that is a disclosure detail, not a filter — it is never reported to the caller, so a consumer serialising filter state (e.g. to a URL) never encodes a half-made filter. There is deliberately no `onAddFilter`. **Three overflow tiers**, all so the height lock can never hide an active filter: ≤2 terms render inline as lozenges; more collapse to a count chip that opens the overlay; and when the collapsed chips still overrun the line, trailing GROUPS collapse into a `+N` chip whose overlay lists them, each reachable and removable. The third tier is a width decision and is measured through `internal/dom/observeSize` (same approach as `OverflowNav`: cache natural widths, recompute against the container). Without it, a row that is `overflow: hidden` would silently clip active filters — invisible, unremovable, and still filtering, which is worse than the reflow the bar replaces. `INLINE_TERM_LIMIT` is a constant, not a prop: how the bar degrades is the bar's own business and a prop would invite call sites to disagree. Own-dimension exclusion (a tile ignoring its own dimension's filter) belongs to the consumer's query layer, not here — the bar cannot do it, and correspondingly it always offers a dimension's FULL member list minus terms already chosen, so switching a selection is always possible. Use for: a page-level faceted filter over many dimensions whose state several tiles read from.
+- **MultiSelectFilter** — Atomic (Depth 1). Responsive multi-select that renders as a horizontal chip/button bar when the container is wide enough to fit all options, and collapses to a dropdown popover with checkmarks when it isn't (measured via `ResizeObserver`); same data model either way. Composes Layout variants (`GrowClusterRow`, `GrowWrapRow`, `GrowBox`, `ActionSlot`). Selection semantics: an empty `selected` array means "all" (no filter applied, no separate "all" chip) — clicking an inactive chip with an empty selection focuses to just that one (replaces), clicking another inactive chip while some are selected adds it, and clicking an active chip toggles it off (possibly returning to empty=all). Key props: `options` (`readonly MultiSelectOption[]`, each `{ value: string; label?: string }` — label falls back to value), `selected` (`readonly string[]`), `onChange` (`(next: string[]) => void`), `label` (`string`, rendered left of the control), `allLabel` (`string`, default `"all"`, shown in the collapsed trigger when nothing is selected). (Bar-vs-menu fit uses a fixed ~90px-per-option estimate; the `optionWidthEstimate` tuning prop was pruned 2026-07-15 — no production caller ever set it.) Exported types: `MultiSelectFilterProps`, `MultiSelectOption`. No factory / curried variants. CSS tokens: `--sui-accent`, `--sui-accent-hover`, `--sui-bg-base/elevated/hover`, `--sui-border`, `--sui-border-strong`, `--sui-text-primary/muted`. Use for: a compact category/status filter that adapts to available width in toolbars and filter bars.
+  - Example:
+    ```tsx
+    import { MultiSelectFilter } from "solid-ui-components";
+
+    <MultiSelectFilter
+      label="Status"
+      options={[{ value: "open" }, { value: "closed" }, { value: "wip", label: "In progress" }]}
+      selected={statuses()}
+      onChange={setStatuses}
+    />
+    ```
+  - Building a filter bar that drives breakdown tables? See **Patterns → Cross-filtering breakdown tiles** and its bench; the empty-means-all convention above is load-bearing there.
+
+## Dropdown
+- **Dropdown** — Atomic (Depth 1). Trigger button plus popover listbox for single selection, with full keyboard support: roving-tabindex options, ArrowUp/Down to open and move focus, Home/End, Escape and click-outside to close (refocusing the trigger), and Tab to leave the widget. Global mousedown/keydown listeners live only while open. Key props: `items` (`DropdownItem[]`, each `{ id: string; label: string; color?: string }` — an optional color renders as an indicator dot), `value` (`string`, the selected id), `onChange` (`(id: string) => void`), `placeholder` (`string`, default `"Select..."`), `footer` (`JSX.Element`, e.g. an "Add new" action rendered below the list), `size` (`"sm" | "md"`, default `"md"`), `subtle` (`boolean` — trigger looks like read-only text until hovered), `class` (`string`). Exported types: `DropdownItem`, `DropdownProps`, `DropdownOverrides`, `DropdownDataProps`. Factory: `createDropdown({ size, subtle })`; curried variant **`InlineSubtleDropdown`** (`size:"sm"`, `subtle:true`) — the compact inline picker that reads as plain text until hovered. Use for: single-value selection with optional color indicators and a menu footer action (status pickers, category selectors). Theming: `Dropdown.css` owns its colors via `--sui-*` tokens (like Button/NavLink/PopoverMenu), so it adapts to any loaded theme with zero per-theme rules — trigger `color: var(--sui-text-primary)`, opaque menu `background: var(--sui-bg-elevated)` + `border: var(--sui-border-bright)` + plain elevation shadow, `--subtle` transparent-until-hover reading legible text. (The token-driven color layer was added 2026-07-20; before that the component CSS was structural-only, leaving the trigger dark-on-dark and the menu transparent under every theme except `hud`, which ships its own explicit dropdown skin that still wins under hud.)
+  - Example:
+    ```tsx
+    import { Dropdown } from "solid-ui-components";
+
+    <Dropdown
+      items={[
+        { id: "todo", label: "To do", color: "#888" },
+        { id: "done", label: "Done", color: "#3c9" },
+      ]}
+      value={status()}
+      onChange={setStatus}
+    />
+    ```
+
+## DayOfMonthPicker
+- **DayOfMonthPicker** — Atomic (Depth 1). Compact calendar-style ARIA grid (`role="grid"` / `role="gridcell"`) for picking a day of the month, composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap="xs"`; the selected cell gets the accent treatment. Key props: `value` (`number | "last" | null`), `onChange` (`(day: number) => void`, required), `max` (number, default 31 — capped to 28 in lastOfMonth mode), `lastOfMonth` (boolean — replaces the 29/30/31 slots with one wide "Last of month" cell that avoids the short-month scheduling trap), `onSelectLast` (`() => void`, fired when that cell is clicked and shown selected when `value === "last"`). Cell size is frozen at the `--dom-cell-size` CSS fallback (`3.5rem`) — no runtime prop. Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `DayOfMonthPickerProps` and factory `createDayOfMonthPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: monthly recurring-schedule day selection, day-of-month filters.
+  - Example:
+    ```tsx
+    import { DayOfMonthPicker } from "solid-ui-components";
+    const [day, setDay] = createSignal<number | "last" | null>(9);
+    <DayOfMonthPicker
+      value={day()}
+      lastOfMonth
+      onChange={(d) => setDay(d)}
+      onSelectLast={() => setDay("last")}
+    />
+    ```
+
+## DayOfWeekPicker
+- **DayOfWeekPicker** — Atomic (Depth 1). A 7-cell single-select ARIA grid row for Sun..Sat, sibling of DayOfMonthPicker and sharing its `--dom-cell-size` sizing so the two read as a family; composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap="xs"`. Cells are labeled `Sun Mon Tue Wed Thu Fri Sat`; the selected cell gets the accent treatment. Key props: `value` (`number | null`, 0=Sun..6=Sat), `onChange` (`(day: number) => void`, required, receives the 0..6 index). Cell size is frozen at the shared `--dom-cell-size` CSS fallback (`3.5rem`) — no runtime prop. Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `DayOfWeekPickerProps` and factory `createDayOfWeekPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: weekly recurring-schedule day selection, weekday filters.
+  - Example:
+    ```tsx
+    import { DayOfWeekPicker } from "solid-ui-components";
+    const [dow, setDow] = createSignal<number | null>(1);
+    <DayOfWeekPicker value={dow()} onChange={setDow} />
+    ```
+
+## MonthOfYearPicker
+- **MonthOfYearPicker** — Atomic (Depth 1). Compact ARIA grid for picking a month of the year (1..12), the natural sibling of DayOfMonthPicker in the same visual language; composed from the Layout `Grid` primitive as `repeat(4, var(--moy-cell-size, 3.5rem))` with `gap="xs"`. Cells are labeled `Jan..Dec`; the selected cell gets the accent treatment. Key props: `value` (`number | null`, 1..12), `onChange` (`(month: number) => void`, required, receives 1..12). Cell size is frozen at the `--moy-cell-size` CSS fallback (`3.5rem`) — no runtime prop. Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `MonthOfYearPickerProps` and factory `createMonthOfYearPicker(defaults)` for curried variants. CSS tokens: `--sui-accent`, `--sui-bg-deep`, `--sui-bg-elevated`, `--sui-bg-primary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-primary`. Use for: yearly/annual-schedule month selection, month-of-year filters.
+  - Example:
+    ```tsx
+    import { MonthOfYearPicker } from "solid-ui-components";
+    const [month, setMonth] = createSignal<number | null>(4);
+    <MonthOfYearPicker value={month()} onChange={setMonth} />
+    ```
+
+## WeekCalendar
+- **WeekCalendar** — Composite (Depth 2). Pure weekly time-grid layout primitive: a left time gutter with hourly marks plus one column per day, each holding absolute-positioned block slots. Owns its CSS, imports no other components, and delegates block content entirely to a caller-supplied `renderBlock` callback. Times follow the dside convention where bare hours 1–8 are treated as PM (parsed via the exported `parseWeekCalendarTime`). Key props: `days` (string[], column identities), `startHour`/`endHour` (numbers; `endHour` may be fractional like 16.5), `blocks` (`WeekCalendarBlock[]`, each `{ day; startAt: "H"|"H:MM"; durationInHrs; key? }`), `renderBlock` ((block) => JSX.Element), `pxPerHour` (default 60), `dayLabel` (optional `(day, index) => JSX.Element` custom header), `highlight` (`WeekCalendarHighlight | null` — `{ day, startAt }` to flag one block), `gutterWidth` (default 56), `headerHeight` (default 24), `class`. Reactive to `pxPerHour` so a consumer can scale the grid live (e.g. via ResizeObserver). Exported types: `WeekCalendarProps`, `WeekCalendarBlock`, `WeekCalendarHighlight`. Factory: `createWeekCalendar(defaults)` returns a pre-configured component. Exported helper: `parseWeekCalendarTime`. CSS tokens: `--sui-accent`, `--sui-accent-rgb`, `--sui-border`, `--sui-text-primary`, `--sui-text-muted`. Use for: schedule/agenda views, design-session planners, any per-day time-block layout.
+  - Example:
+    ```tsx
+    import { WeekCalendar, type WeekCalendarBlock } from "solid-ui-components";
+
+    const blocks: WeekCalendarBlock[] = [
+      { day: "Mon", startAt: "9:00", durationInHrs: 1.5 },
+      { day: "Wed", startAt: "2", durationInHrs: 2 }, // 2 → 2 PM (dside convention)
+    ];
+
+    <WeekCalendar
+      days={["Mon", "Tue", "Wed", "Thu", "Fri"]}
+      startHour={8}
+      endHour={17}
+      blocks={blocks}
+      renderBlock={(b) => <div>{b.day} · {b.startAt}</div>}
+    />
+    ```
+
+## FormComposite
+- **FormComposite** — Composite (Depth 2, zero CSS). Composes the `AutoStackRow` / `AutoStackItem` Layout primitives — owns only layout (grouping, gap, responsive stacking), never field internals, so field components stay independent and standalone. Slot-based form layout `[[identity][amounts][schedule]]`: `identity?` holds the fields that read the same across variants (name + a single amount), `amounts?` holds an atomic min/typical/max trio kept together between identity and schedule, `schedule?` holds the curry-varying picker (day-of-month, weekday, payday, …). Each provided slot is wrapped in an `AutoStackItem` with class `sui-form-composite__{identity,amounts,schedule}`. Blocks sit side by side when there's room and stack otherwise. Props (extends `JSX.HTMLAttributes<HTMLDivElement>`): `identity?`, `amounts?`, `schedule?` (all `JSX.Element`), `breakWidth?` (CSS length below which blocks stack, default `"38rem"`), `stacked?` (force fully-stacked arrangement at every width). `createFormComposite(defaults)` factory for curried variants. Use for: recurring-payment / schedule forms where a name+amount block pairs with a variant-specific cadence picker.
+  - Example:
+    ```tsx
+    import { FormComposite } from "solid-ui-components";
+    <FormComposite
+      identity={<><NameInput value={name()} onInput={setName} /><AmountInput value={amt()} /></>}
+      schedule={<DayOfMonthPicker value={day()} onChange={setDay} />}
+    />
+    ```
+
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
 
 ## Dot
-- **Dot** — Atomic (Depth 0). Generic colored indicator dot — caller supplies any CSS color via the `color` prop (hex, rgb, `var(--…)`, named color). Domain-agnostic, no variants. Use when `StatusLight`'s fixed variant set doesn't fit — e.g., severity palettes mapped to arbitrary hex colors from a caller-supplied scheme, chart-series legends rendered alongside other labels, etc. Key props: `color` (required CSS color string), `size` (number → px, or any CSS length; default `8px`). Renders an `aria-hidden` `<span>` with `border-radius: 50%`, `flex-shrink: 0`, `display: inline-block`. Owns `Dot.css`.
+- **Dot** — Atomic (Depth 0). Generic colored indicator dot — caller supplies any CSS color via the `color` prop (hex, rgb, `var(--…)`, named color). Domain-agnostic, no variants. Use when `StatusLight`'s fixed variant set doesn't fit — e.g., severity palettes mapped to arbitrary hex colors from a caller-supplied scheme, chart-series legends rendered alongside other labels, etc. Key props: `color` (required CSS color string), `size` (number of px; default `8`). Renders an `aria-hidden` `<span>` with `border-radius: 50%`, `flex-shrink: 0`, `display: inline-block`. Owns `Dot.css`.
   - Example:
     ```tsx
     import { Dot } from "solid-ui-components";
@@ -536,7 +864,7 @@ State derivation:
 - **HeatStreamGrid** — Table where each cell contains a compact HeatStream. Key props: `rows`, `columns`, `keys`, `data` (function returning items per row/col), `onCellClick`, `selectionStore`. Use for: asset-by-time-window data completeness matrices with selection support.
 
 ## Icon
-- **Icon** — SVG icon component with 27 named icons across 6 groups (status, navigation, data, time, actions, UI/cache). Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). Use for: all iconography. Spinner icon auto-animates.
+- **Icon** — SVG icon component with 42 named icons across 8 groups (status, navigation, data, time, actions, UI, auth, cache; includes `pause`, `agent`, `dependency`, `edit`, `trash`). Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). `variant`/`size` are Overrides — curry them via `createIcon`; **`InlineMetaIcon`** (outline, xs) is the shipped variant for icon-beside-sublabel meta rows. Use for: all iconography. Spinner icon auto-animates.
 
 ## Checkbox
 - **Checkbox** — Atomic boolean control: a native `input[type=checkbox]` (visually hidden) behind a themed box + checkmark, with an optional inline label. Mirrors the `Toggle` API so the two are interchangeable. Key props: `checked`, `size` (`sm`|`md`|`lg`), `color` (`ColorVariant`, tints the checked fill), `label`, `labelPosition` (`left`|`right`), `onCheckedChange(checked)` (value handler) plus all native `<input>` attributes and `onChange`. Uses `--sui-accent`, `--sui-border`, `--sui-success`, `--sui-danger`, `--sui-bg-deep` tokens. Curried: `createCheckbox(defaults)`, `SmallCheckbox`, `DoneCheckbox`. Use for: standalone checkboxes (do NOT hand-roll an `<input type=checkbox>`).
@@ -547,6 +875,9 @@ State derivation:
     <CheckboxField id="ci" label="Wire up CI" hint="Lint + test on push"
       checked={done()} onChange={() => setDone((d) => !d)} />
     ```
+
+## FileDropZone
+- **FileDropZone** — Composite (Depth 2, owns minimal structural CSS: the dashed outline, its drag-over/disabled states, and the density padding — same documented exception as `Fab`). A drop target that is also a click-to-browse picker, keyboard-operable (Enter/Space) and screen-reader-labelled. Pure INPUT surface: it validates the extension, shows a self-clearing rejection notice (`PDF only — drop a .pdf file`, derived from `accept`), and hands the file to the caller; upload, parsing, progress, and results are the caller's. Curried variants: `FileDropTarget` (a file tool's empty state) and `CompactFileDropTarget` (tucked into an existing banner/toolbar row). Key props: `accept` (dotted lowercase extensions, e.g. `[".pdf"]` — drives both the browse filter and the notice), `onFile` (`(file: File) => void`), `label` (the one-line prompt, in the caller's domain words), `disabled?`. Override prop (baked into the variants): `density`. Types: `FileDropZoneProps`, `FileDropZoneOverrides`, `FileDropZoneDataProps`. Use for: OCR/import/upload tools — anywhere a file enters the app.
 
 ## Inputs
 - **ThemedInput** — Styled text input with optional label. Key props: `label`, plus all native `<input>` attributes. Use for: themed form text inputs.
@@ -583,6 +914,14 @@ State derivation:
     ```
 - **ThemedTextarea** — Styled textarea with optional label. Key props: `label`, plus all native `<textarea>` attributes. Use for: themed form textareas.
 
+### Element measurement convention
+
+Any component that measures an element with a `ResizeObserver` and writes the result to a signal **must** go through `observeSize(el, onSize)` from `src/internal/dom/observeSize` — never `new ResizeObserver(...)` directly. Writing a signal synchronously inside the observer callback re-renders during the browser's notification-delivery phase, which mutates layout, re-queues the observer in the same frame, and makes the browser emit *"ResizeObserver loop completed with undelivered notifications."* `observeSize` change-guards (an unchanged rounded box size never reaches the callback) and rAF-defers with coalescing (only the newest measurement lands per frame, so there is no lag behind a drag — unlike a debounce). It returns a disposer for `onCleanup`, and is a no-op where `ResizeObserver` is undefined, so callers need no SSR/jsdom guard of their own.
+
+The callback may ignore the supplied size and re-measure the element itself (`clientWidth`, `scrollHeight`, …) — the size argument governs *when* the callback runs, not what it must use. Two consequences to design around: sizes are **rounded**, and a measurement lands **one frame after** the resize (and not at all while the tab is hidden, since `requestAnimationFrame` is frozen — it lands when the tab is next rendered). **Every** measuring component routes through it — `src` contains exactly one `new ResizeObserver`, inside the primitive itself. Treat a raw `new ResizeObserver` in a review as a defect. Where a component needs to watch several elements (`ScrollRegion` watches its viewport and its content wrapper; `BucketQueue` watches its root, row, header and empty strip), call `observeSize` once per element and dispose each; every element then gets its own change-guard. To re-point at a swapped-in element, dispose that slot's observation and start a fresh one — a new observation always delivers its first measurement, so re-pointing re-measures.
+
+**If the callback measures the BORDER box** (`offsetHeight`), pass `{ box: "border-box" }` as the third argument. Default content-box observation does not fire when only padding or a border changes, so a themed padding change — or a consumer's render slot swapping its own padding — would silently stop updating the component: no error, no warning, just stale metrics. Observe the box you measure. The change-guard and rAF coalescing apply on every path, so the option changes only *when* the observer fires.
+
 ### Fixed-width fields convention
 
 Fields whose rendered content has a **known maximum width** should reserve exactly that space and never flex to fill their column. The shared rule lives in `src/internal/fieldWidth` — `fieldWidthForChars(chars, chromeRem)` returns a rem cap of `chars × 0.62rem + chromeRem` (rounded up), where `0.62rem` is a generous tabular-glyph advance at the body font size. **Always pair the cap with `font-variant-numeric: tabular-nums`** so the per-char estimate holds. Currently width-capped:
@@ -596,11 +935,11 @@ Fields whose rendered content has a **known maximum width** should reserve exact
 New fixed-width fields (fixed codes, capped numerics) should derive their cap from `fieldWidthForChars` rather than picking a magic rem.
 
 ## Layout
-- **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg`|`xl`), `align`, `justify`, `fill` (`height: 100%; min-height: 0` — forwards height through so a scrolling child like a `fill` BaseTable has concrete height). Use for: vertical stacking of elements.
-- **Row** — Flex-row container. Key props: `gap`, `align`, `justify`, `wrap`, `fill` (`width: 100%; min-width: 0` — forwards width through, the horizontal mirror of `Stack` `fill`). Use for: horizontal arrangement of elements.
+- **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg` — 4/8/12/16px), `align`, `justify`, `fill` (`height: 100%; min-height: 0` — forwards height through so a scrolling child like a `fill` BaseTable has concrete height). Use for: vertical stacking of elements.
+- **Row** — Flex-row container. Key props: `gap` (`xs`|`sm`|`md`|`lg` — 4/8/12/16px), `align`, `justify`, `wrap`, `fill` (`width: 100%; min-width: 0` — forwards width through, the horizontal mirror of `Stack` `fill`). Use for: horizontal arrangement of elements.
 - **Box** — Flex child with grow/shrink control. Key props: `grow`, `shrink`. Use for: controlling flex item sizing.
 - **ResizableContainer** — Container with draggable edge handles for manual resize. Key props: `directions` (array of `"top"`|`"right"`|`"bottom"`|`"left"`, default `["right", "bottom"]`), `minWidth`/`maxWidth`/`initialWidth`, `minHeight`/`maxHeight`/`initialHeight`, `onResize` (called with `{ width, height }` during drag), `gridMode` (skip inline width/height when parent grid controls sizing), `externalWidth` (accessor that syncs internal width from an external source). Exports `ResizeDirection` and `ResizeDimensions` types. Use for: side panels, resizable columns, draggable split views. Uses `--sui-accent-rgb` for handle hover color. Note: the `onResize` callback intentionally uses the `{ width, height }` object shape rather than positional `(width, height)` arguments — this is the upstream-canonical signature; downstream callers using the legacy positional form must adapt.
-- Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `ConversationStack` (capped reading-width column tuned for multi-participant chat trees — `max-width: 110ch`, conversation typography), `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `TightSpreadRow` (4px-gap, baseline-aligned key+count row for compact data displays — pairs with `ChipLabel` + `CountText`), `ClusterRow`, `WrappedClusterRow` (center-aligned cluster that wraps on overflow — for header rows where a name + timestamp pair must collapse onto a second line on narrow widths), `ActionSlot`, `GrowBox` (the "growing column" — `flex: 1 1 0%` + `min-width: 0`; fills remaining space while letting fixed siblings keep their width, and shrinks past its content so wide tables/panes don't force a content-width layout — the min-width:0 is the load-bearing part), `FadedBox`, `ConstrainedBox`. Use for: common layout patterns without manual gap/align configuration.
+- Curried variants: `TightStack`, `NarrowStack`, `SpacedStack`, `ContentStack`, `CenteredStack`, `ConversationStack` (capped reading-width column tuned for multi-participant chat trees — `max-width: 110ch`, conversation typography), `SmRegion`, `MdRegion`, `LgRegion`, `SpreadRow`, `TightSpreadRow` (4px-gap, baseline-aligned key+count row for compact data displays — pairs with `ChipLabel` + `CountText`), `ClusterRow`, `WrappedClusterRow` (center-aligned cluster that wraps on overflow — for header rows where a name + timestamp pair must collapse onto a second line on narrow widths), `ActionSlot`, `GrowBox` (the "growing column" — `flex: 1 1 0%` + `min-width: 0`; fills remaining space while letting fixed siblings keep their width, and shrinks past its content so wide tables/panes don't force a content-width layout — the min-width:0 is the load-bearing part), `FadedBox`, `ConstrainedBox`, `LooseWrapRow` (`WrapRow` at the `sm` 8px step instead of `xs` — tile-to-tile spacing on a dashboard of breakdown widgets. `align` is deliberately **unset**, as in `WrapRow`, so items take the flex default `stretch` and tiles sharing a line render at equal height; that is what separates it from the two `sm` wrap rows that already exist — `WrappedClusterRow` centres a short tile in a tall neighbour's band, `BaselineWrapRow` aligns by first text line. It differs from `WrapRow` in the gap and nothing else), `LooseCardGrid` (`CardGrid` at the `sm` gutter; identical auto-fit tracks ≥280px, only the gutter differs — for a KPI strip needing more air), `WrapItemStack` (ONE item inside a `WrapRow`, held at its content's **natural** width — `min-width:0; max-width:100%`, gap:xs. Deliberately **not** `flex:1`, which is what separates it from `GrowTightStack`/`GrowStack`/`GrowBox`: in a wrapping row `flex:1` equalises the items, cramming wide content and stretching narrow, which destroys the natural-width packing a wrap row exists to do. `min-width:0` lets the item shrink past its content so an inner element that owns its own scroll — a `fit` table — scrolls internally instead of overflowing the page; `max-width:100%` caps it at the row so content wider than the whole row can't blow out the page width. For a grid of naturally-sized table tiles). Use for: common layout patterns without manual gap/align configuration.
 
 ## List
 - **List** — Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`, `scroll` (fills its flex parent and scrolls internally on overflow: `flex: 1; min-height: 0; overflow-y: auto`). Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists. Has `createList` factory for curried variants.
@@ -608,9 +947,7 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
 - **ScrollList** — Curried `List` with `scroll: true` baked in. Drop into a height-constrained flex column (e.g. a panel with `display: flex; flex-direction: column`) to get a list that fills the remaining height and scrolls internally instead of pushing siblings. Use for: filter-result lists in a sidebar, log-style streams in a fixed-height panel, any vertical list that may overflow its container.
 
 ## SplitQueueList
-- **SplitQueueList** — A linked two-list "processing queue" in one fixed-height column: the **top** = *resolved* (done) items, the **bottom** = *unresolved* (to-process). The user works the bottom; resolving a card moves it up across the seam into the top, so recent work sits adjacent to what's next and is one click away to revisit. **Controlled + generic over the item type `T`: the consumer owns the data and the card content (`renderItem`); SUI owns the layout + animation.** There is **no `resolve()` method** — you drive it by mutating the two arrays and the component detects + animates the change: `unresolved → resolved` (**append**) plays the forward animation, `resolved → unresolved` (**prepend**) plays the **mirrored reverse**. **Sizing (content-driven top, measured in JS via ResizeObserver — pure CSS can't express it):** `topFloorRows` (default **0**) collapses the top to a header-only strip at 0 resolved and grows one row per card; `topCapRows` (default **3**) caps growth and then **scrolls** with the newest row flush at the seam; the bottom pane takes the **remainder** and absorbs slack when short. **Status borders:** resolved rows carry a solid-accent left border + ✓; unresolved rows a dashed-muted left border + a ▸ focus marker. **Animation (SUI owns it; consumer only swaps arrays):** the exiting card height-collapses out of one list while the other pane grows (or scrolls, when capped) to reveal the arriving card — panes always sum to the total height so the seam glides with no gap; the arriving card's background **fades in** on landing. Honors `prefers-reduced-motion` (places without motion). **Selection is controlled; the detail panel is consumer-composed** — `onSelect(key)` fires on any row click (clicking does **not** resolve), `selectedKey` rings the matching row in either panel, and `focusedKey`/`onFocusChange` drive the orange "current" highlight (the two compose). `topOnly` renders just the resolved panel. Key props: `resolved: T[]`, `unresolved: T[]`, `renderItem: (item: T) => JSX.Element`, `keyOf: (item: T) => string`, `focusedKey?`, `onFocusChange?`, `selectedKey?`, `onSelect?`, `resolvedLabel="Resolved"`, `unresolvedLabel="Unresolved"`, `allClearLabel?`, `topCapRows=3`, `topFloorRows=0`, `rowHeight=40` (initial estimate; measured), `height=420`, `animationMs=800`, `topOnly=false`. (`onResolve?` is deprecated/unused — resolve is array-driven.) Use for: triage/review/categorization queues where processed and pending items must stay adjacent (transaction categorization, inbox triage, accept/remaining review). No factory — the data/labels are per-call, so the base component is already curried. **Full usage guide: `src/components/SplitQueueList/README.md`.**
-  - The pure sizing core is exported as `computeSplitLayout(input): SplitLayout` (with `SplitLayoutInput`/`SplitLayout` types) for callers who need the same content-driven-top math outside the component.
-  - **Accessibility:** each pane is a `role="listbox"` of `role="option"` rows with `aria-selected` reflecting `selectedKey`; a **roving tabindex** keeps one tab stop, **Enter/Space** select the focused row, **Arrow/Home/End** move focus across both panes, and a visually-hidden `aria-live` region announces the queue counts.
+- **SplitQueueList** — **DEPRECATED, removed in the next major.** A compile shim over `BucketQueue` (see below), kept for one release so existing call sites keep working. It is **not pixel-identical** — the merged component draws its own chrome, so the rendered result is `BucketQueue`'s, not the old two-pane seam. `topCapRows` maps to the resolved bucket's `capRows`; `topOnly`, `topFloorRows`, `animationMs`, and `rowHeight` are accepted but **ignored** on the animated path (the merged component measures rows, collapses empty buckets, and owns its own motion). `static` mode is unaffected — it still delegates to `StaticSplitLayout` below, which is **not** deprecated and keeps using both `rowHeight` and `topCapRows`. Migrate new call sites straight to `BucketQueue`: declare `buckets` and bucket `items` with `bucketOf` rather than relying on this mapping. Full usage guide: `src/components/SplitQueueList/README.md`.
   - **`StaticSplitLayout`** — a standalone, non-animated sibling: the same chrome (labeled top section + seam + bottom block) with **no queue, animation, selection, or keyboard**. Use it when you want the framing around a read-only list of recent items over a bottom block you compose. Props: `items?: T[]`, `renderItem?`, `bottomContent?`, `label="Resolved"`, `emptyLabel="Nothing yet"`, `capRows=3`, `rowHeight=40`, `height?` (omit to fill parent), `class?`. **Prefer this over the deprecated `static` flag on `SplitQueueList`** (which still works but gates a disjoint prop set behind a boolean; it delegates here and will be removed in the next major).
   - Example:
     ```tsx
@@ -632,6 +969,52 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
       selectedKey={selected() ?? undefined}
       onSelect={setSelected}            // open a consumer-composed detail panel
       height={480}
+    />
+    ```
+
+## BucketQueue
+- **BucketQueue** — Layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE § Layout Purity). Owns `BucketQueue.css`: the weighted water-fill sizes each bucket in JS, which no CSS rule can express. The library's single queue component — supersedes `SplitQueueList` (see `docs/adr/0004-one-queue-component-and-the-motion-seam.md`). N always-present buckets stacked as one full-height bar, bucketing a **flat `items` list** through its lifecycle as a **progression** (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). **Every bucket is shown at all times with its count.** Generic over `T`; the consumer owns the data and row content — `buckets: Bucket[]` (top → bottom, each `{ key, label, tone, weight?, selectable?, emptyLabel?, capRows?, fill?, collapsible?, collapsedByDefault? }`), `items: T[]`, `bucketOf: (item) => bucketKey`, `keyOf`, `renderItem`. **A move is an item whose `bucketOf` result changed** — one atomic `items` mutation plays a transfer animation between whichever two buckets are involved, in either direction; there is no `resolve()`/`unresolve()` pair. **Sizing (ruled 2026-07-22 — a weighted water-fill measured in JS; pure CSS can't express it):** an **empty** bucket collapses to just its summary line (label + count, or `emptyLabel` copy if given); a **populated** bucket **shrink-wraps** to its content; when the populated buckets **overflow** the available height they share it by `weight`. A bucket's `capRows` caps its natural height at that many rows, beyond which its body scrolls — unlike `SplitQueueList`'s old top pane, **a capped bucket never grows past its cap** to absorb slack from a short neighbour. **`fill: true` opts a bucket out of shrink-wrapping**: once every bucket has its natural height, whatever is left over is split among the `fill` buckets by `weight`, so a queue in a fixed column with a control pinned under it reaches the bottom at any list length instead of leaving a dead band. It **overrides `capRows` for that bucket** (the cap refuses content-driven growth, not space nobody wants) and applies only while the bucket is **populated** — an empty one stays on its summary line rather than stretching a "nothing here" strip. Purely additive: declare no `fill` and layout is unchanged. **`collapsible: true` lets the USER collapse a bucket to that same summary line while it still HAS items**, and expand it again — a staging pile (discards, an archive) that must not dominate the queue but has to be openable to pull rows back out. Its header becomes a `<button aria-expanded>` and takes a tone-coloured **chevron in place of its tone dot** (same 8px slot, so labels stay on one left edge and the bucket still carries exactly one role-coloured mark). `collapsedByDefault: true` starts it collapsed and is **ignored without `collapsible`** — alone it would strand the bucket's items behind no affordance. The state is the component's own and **sticks**: `collapsedByDefault` applies only until the user first toggles the bucket, after which their choice holds for the component's life, including across the bucket draining to empty and refilling. A collapsed bucket sizes exactly as an empty one (pinned, out of the water-fill, never fills; `capRows` is moot), drops out of the keyboard sequence, and keeps `selectedKey` untouched. A row moving INTO a collapsed bucket has no slot to open, so the source bucket's gap still closes and the destination's count pulses to show it was received. **Row height is measured PER BUCKET**, so buckets may hold rows of genuinely different heights (one-line rows above two-line cards) and each is sized from its own. The bar fills its parent's height (drop it in a definite-height flex column) or an explicit `height` in px. **Chrome is thematically NEUTRAL** — uniform border + default header text; the only role color is a small **dot** beside each bucket label (`tone` → theme var). **Selection is controlled:** pass `onSelect(key)` / `selectedKey` for click-to-select; a selected row shows only an inset accent bar, **never a background fill** — hover owns the fill, so a selected-and-unhovered row stays fully readable. **Roving-focus keyboard nav (controlled):** `focusedKey` / `onFocusChange`; Up/Down/Home/End traverse every row across all buckets in render order with no wrap, Enter/Space activates. Only **interactive** rows (a global `onSelect`, or a `selectable` bucket in select mode) join the tab sequence — a read-only row still renders but is skipped by arrows and never takes the tab stop. **Select mode is on iff `checkedKeys` is present — there is no `selectMode` prop.** An empty `Set` means "mode on, nothing checked." It applies only to buckets marked `selectable: true`; rows elsewhere keep selecting on click even while select mode is on. `onToggleCheck(key, { shift, meta })` fires instead of `onSelect` for a checkable row's click/Enter/Space; never both. **A consumer can veto individual rows:** `isCheckable?: (item: T) => boolean` is consulted only for rows in a `selectable` bucket while select mode is on, and a row it refuses renders **dimmed in place** — no check toggle, and deliberately no fall-through to `onSelect`, so it is fully inert. It keeps its tab stop and stays an arrow-key target with `aria-disabled="true"`, because dropping refused rows from the roving sequence is the keyboard equivalent of hiding them. `uncheckableReason?: (item: T) => string | undefined` supplies the row's `title` for a refused row — a prop rather than the consumer's job because `renderItem`'s output does not cover the check affordance. Both are **fail-open**: omit them, or return `true`, and every row in a selectable bucket is checkable exactly as before. Typically derived from `checkedKeys`, which is what makes unchecking back to zero restore full checkability with no special case. `scrollToKey` reacts on change to scroll a row into view (also used internally to reveal a row after it transfers). Key props (16 total): `buckets`, `items: T[]`, `bucketOf: (item: T) => string`, `keyOf: (item: T) => string`, `renderItem: (item: T) => JSX.Element`, `selectedKey?`, `onSelect?: (key: string) => void`, `focusedKey?`, `onFocusChange?: (key: string | null) => void`, `checkedKeys?: ReadonlySet<string>`, `onToggleCheck?: (key: string, modifiers: { shift: boolean; meta: boolean }) => void`, `isCheckable?: (item: T) => boolean`, `uncheckableReason?: (item: T) => string | undefined`, `scrollToKey?`, `height?` (omit to fill parent), `class?`. The pure sizing core is exported as `naturalHeights(input): number[]` and `allocateHeights(input): number[]` (with the `NaturalInput` / `AllocateInput` types) for callers who need the sizing math outside the component. No factory — the data/buckets are per-call, so the base component is already curried. Motion (the transfer animation) is curried, not a prop — see the README's Motion bucket and the ADR for the swappable choreographer seam. Use for: a compliance/triage sidebar where items live in a few lifecycle states you always want visible with counts (fortnight vessel calls by compliance, review queues split happy/unhappy/pending, transaction categorization). **Full usage guide: `src/components/BucketQueue/README.md`.**
+  - Example:
+    ```tsx
+    import { BucketQueue, type Bucket } from "solid-ui-components";
+
+    const BUCKETS: Bucket[] = [
+      { key: "compliant", label: "Compliant", tone: "success" },
+      { key: "non-compliant", label: "Non-compliant", tone: "danger" },
+      { key: "in-review", label: "In review", tone: "accent", weight: 2, selectable: true },
+    ];
+
+    <BucketQueue<VesselCall>
+      buckets={BUCKETS}
+      items={calls()}
+      bucketOf={(c) =>
+        c.nox_compliant == null || c.rog_compliant == null
+          ? "in-review"
+          : c.nox_compliant && c.rog_compliant
+            ? "compliant"
+            : "non-compliant"
+      }
+      keyOf={(c) => c.vessel_call_id}
+      renderItem={(c) => <span>{c.vessel_name}</span>}
+      selectedKey={selected()}
+      onSelect={setSelected}
+    />
+    ```
+
+## MutableList
+- **MutableList** — Composite (Depth 3). Owns `MutableList.css`. A `SortableList` specialized into editable, deletable cards: it composes `<SortableList>` (inheriting the grip, placeholder gap, and live drag-reflow from the headless `createDnDReorder` hook) and supplies a `renderItem` card built from `ClusterRow`/`ContentStack`/`ActionSlot` Layout variants — an inline-editable name button on the left (click → bare `<input>`; Enter commits, Escape reverts, blur commits) and a hover-revealed `IconOnlyButton` × delete on the right. During editing it toggles the enclosing `.sui-sortable-list__row`'s native `draggable` off (interactive zones also carry `draggable={false}`) so the input keeps its caret/selection. Generic over `T`; all props are data/callbacks: `items: T[]` (controlled order), `getId: (item) => string`, `getName: (item) => string`, `onReorder: (orderedIds: string[]) => void`, `onRename: (id, name) => void` (fires only on a changed, non-empty commit — never on unchanged/cleared/Escape), `onDelete: (id) => void` (consumer owns confirmation), `label?`, `renderDetail?: (item) => JSX.Element` (secondary line below the name). NO curried variant by rule — data-only components are already zero-config at the call site. Use for: editable ordered card lists (rename + reorder + delete), e.g. category or line-item managers.
+  - Example:
+    ```tsx
+    import { MutableList } from "solid-ui-components";
+    <MutableList
+      items={cats()}
+      getId={(c) => c.id}
+      getName={(c) => c.name}
+      label="Categories"
+      onReorder={(ids) => reorder(ids)}
+      onRename={(id, name) => rename(id, name)}
+      onDelete={(id) => remove(id)}
+      renderDetail={(c) => <span>{c.count} items</span>}
     />
     ```
 
@@ -663,17 +1046,112 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **ActionListItem** — Composite (Depth 2). Owns `ActionListItem.css` as a deliberate Depth-2 exception (structural row geometry only: flex layout, transparent-border hover outline that lights with zero geometry shift, tone opacity, the flipped semicircle dismiss cap with negative margins). The row `[StatusChip][EditableTitle][meta: AssigneeIcon, TagPills, dismiss ×]`. `tone` (`"dim"`/0.25 | `"neutral"`/0.5 | `"highlight"`/1 + chip fill) is a presentational prop supplied by ActionList from its `statusTones` map. INVARIANT: hover reveals via opacity only — never geometry. Multi-select hooks (set by ActionList): `onSelect(e)` makes the row's non-interactive area a click-to-toggle target (a single `closest("button, input, …")` guard excludes every inner control at once) and passes the click through so the parent can branch on `shiftKey` for range select; `selected` lights a persistent accent border + subtle accent wash — both colour-only, so selection is as geometry-stable as hover. `assignees` renders a tight roster of glyphs (wins over singular `assignee`); `onTagClick` turns tag pills into buttons (colour-only hover, `stopPropagation` so they never toggle the row). Key props: `title`, `status?`, `statusOptions?`, `assignee?`, `assignees?`, `tags?`, `tone?`, `selected?`, `onStatusChange?`, `onTitleChange?`, `onDismiss?`, `onSelect?`, `onTagClick?`.
 - **StatusChip** — Atomic Primitive (Depth 1). Owns `StatusChip.css`. Fixed-width (ch of the longest option) editable status chip: centered text, click-text-to-edit inline input, hover-revealed caret opening a select menu, Escape-cancels-without-commit, `highlight` accent fill for the active status. The **editable sibling of `StatusBadge`** (display-only compliance enum) — use StatusBadge to show a status, StatusChip to edit one. Data-only, no curried variant (SortableList exemption). Key props: `status`, `options?`, `onChange?`, `highlight?`, `title`.
 - **EditableTitle** — Atomic Primitive (Depth 1). Owns `EditableTitle.css`. Inert text or hover-underlined click-to-edit title whose inline input is fitted to the rendered text via a hidden inline-grid replica (`::after { content: attr(data-value) }`); Enter/blur commit, Escape cancels via the `cancelled` flag. **Separate from `InlineText`** (a styleless, non-editable `<span>` that only recolors inherited text) because it adds the click-to-edit input + commit/cancel lifecycle. Data-only, no curried variant. Key props: `title`, `onChange?`.
-- **AssigneeIcon** — Atomic Primitive (Depth 1). Owns `AssigneeIcon.css`. The **outline sibling of `ParticipantAvatar`**: where ParticipantAvatar is a filled circular disc for showing who is present, AssigneeIcon is a `currentColor`-driven outline glyph (person silhouette or antennaed robot head) with up-to-2-char centered initials, for showing person/AI assignment. Do NOT modify ParticipantAvatar; the two are distinct roles. `active` is a data class hook. Data-only, no curried variant. Key props: `initials`, `kind?: "person"|"ai"`, `active?`. `initials` is truncated to 2 chars and does NOT disambiguate on its own — to derive roster-consistent initials (so two "Peter …" people don't both read "P"), call **`deriveInitials(names)`** (below) once and feed the result in.
+- **AssigneeIcon** — Atomic Primitive (Depth 1). Owns `AssigneeIcon.css`. The **outline sibling of `ParticipantAvatar`**: where ParticipantAvatar is a filled circular disc for showing who is present, AssigneeIcon is a `currentColor`-driven outline glyph (person silhouette or antennaed robot head) with up-to-2-char centered initials, for showing person/AI assignment. Do NOT modify ParticipantAvatar; the two are distinct roles. `active` is a data class hook. One Override: `size` (glyph height px; width keeps the 25:23 box, viewBox scales stroke + initials) — freeze it via **`createAssigneeIcon({ size })`** (`AssigneeIconOverrides`/`AssigneeIconDataProps` split); the bare export stays the zero-config 23px row default. Data props: `initials`, `kind?: "person"|"ai"`, `active?`, `title?` (full-name hover text; falls back to `initials`). `initials` is truncated to 2 chars and does NOT disambiguate on its own — to derive roster-consistent initials (so two "Peter …" people don't both read "P"), call **`deriveInitials(names)`** (below) once and feed the result in.
 - **deriveInitials** — Pure helper (not a component), shipped from the ParticipantAvatar family (`src/components/ParticipantAvatar/initials.ts`). `deriveInitials(names: string[]) => Map<name, initials>`. Decides WHICH up-to-2 characters each name shows so a roster disambiguates instead of collapsing to a wall of identical "P"s. Rule: default is the first letter of the first word; a colliding name uses **as many letters as necessary** — the shallowest ladder rung (first initial → **word initials** → **first-word letters**) whose value stays globally unique ("Peter Stradinger" + "Peter Falk" → `PS` + `PF`; "Peter Falk" + "Paula Falk" → `Pe` + `Pa`). A name is **not** dragged deeper just because a neighbour must: in {Peter Stradinger, Peter Falk, Paula Falk, Peter Strong} Peter Falk stays at its unique `PF` while Paula drops to `Pa` — Falk is never merged into the Stradinger/Strong pair. Capped at 2 chars (AssigneeIcon's fit): names indistinguishable within the cap ("Peter Stradinger" + "Peter Strong") **share** their longest common initials (`Pe`) and rely on the caller's `title`/tooltip for the full name. Deterministic and order-independent (result is a function of the name SET); unicode-aware (first code point per word). Identical full names collapse to one key → identical initials. Feed the map's values into `AssigneeIcon` / `ParticipantAvatar` `initials`. Use for: assignee rosters, member lists, any avatar cluster that must stay legible when names share letters.
-- **TagPill** — Atomic Primitive (Depth 1). Owns `TagPill.css`. Pill tag; a `":"` in the label (or the explicit `{ key, value }` shape) renders as a split lozenge (bold namespace segment, hairline divider, value segment, same colors both sides); `active` adds the accent tint. The **free-text, filter-oriented sibling of `StatusBadge`/`CountChip`** in the Badge family (those encode a fixed enum / a count; TagPill carries an arbitrary label or namespace:value pair). Data-only, no curried variant. Key prop: `tag` (`TagPillData`).
+- **TagPill** — Composed (Depth 2; owns `TagPill.css` as a deliberate exception — pill chrome is intrinsic). Pill tag; a `":"` in the label (or the explicit `{ key, value }` shape) renders as a split lozenge (bold namespace segment, hairline divider, value segment, same colors both sides); `active` adds the accent tint. A **purely-numeric plain label rolls odometer-style on change** (composes `DigitRoller` — counts roll by default; requires the pill instance to survive the change, see STYLE_GUIDE "List Identity"). The **free-text, filter-oriented sibling of `StatusBadge`/`CountChip`** in the Badge family (those encode a fixed enum / a count; TagPill carries an arbitrary label or namespace:value pair). Data-only, no curried variant. Key prop: `tag` (`TagPillData`).
+- **GhostRow / IndentedGhostRow** — Atomic (Depth 1). Owns `GhostRow.css`. De-emphasized clickable row: dimmed (0.7) unless `selected` (data flag, full strength), pointer cursor only when `onClick` is wired, color/opacity-only hover (geometry-stable). `IndentedGhostRow` bakes the one-step inset for rail children under a section heading (`createGhostRow` factory, `indent` is the Override). Born from the triage bench's right-rail children + dependency-link rows. Key props: `selected?`, `onClick?`, children.
+- **composeTagPairs** — Pure helper (not a component), shipped from the Badge family (`src/components/Badge/tagPairs.ts`, exported from the family index and root barrel). `composeTagPairs(tags: SourceTag[], cfg: TagDisplayConfig) => ComposedTag[]`. Decides HOW a flat list of `{ dim, value }` tags is presented, so an app renders composed split lozenges instead of a row of labeled pills; TagPill owns the pixels, this owns the composition. A pair rule (`{ parent, child }`) whose **both** dims are present collapses those two tags into ONE lozenge of the two VALUES — the dim names drop out but survive in `title` for hover recovery (`customer:acme` + `project:apollo` → key `acme`, value `apollo`, title `customer: acme · project: apollo`, `sources` = `[parent, child]`). A dim present **without** its partner is not abbreviated and falls through to the labeled form (`key = dim`, `value = value`, title `dim: value`). Deterministic: pairs first in rule order, then remaining labeled tags in input order — or by `cfg.order` (unknown dims after, stable) when supplied. Each source tag is consumed at most once; a duplicated dim pairs on its first occurrence and extras stay labeled. Pure, no DOM; empty inputs → `[]`. Each `ComposedTag`'s `{ key, value }` drops straight onto `ActionListTag` / `TagPill`. Use for: turning app-side dimensional tags (customer/project, owner/assignee) into compact tag rows.
+
+## ActionRow
+- **ActionRow** — Composite (Depth 2). A row with an optional leading slot, a growing body (`children`), an optional trailing slot, and a hover/focus-revealed action bar underneath. The action bar stays layout-stable via `visibility` toggling (hidden until `:hover`/`:focus-within` on the row), so rows don't reflow. Arrangement is composed from Layout variants (`NarrowStack` outer column, `ClusterRow` main row, `NoShrinkClusterRow` leading/trailing clusters, `GrowBox` body, `EndWrapRow` action bar); this component owns only intrinsic styling and the hover-reveal. Props: `tone` (`ActionRowTone` = `"default"`|`"danger"`|`"accent"`, default `"default"`; danger/accent tint the border + background), `leading`/`trailing`/`children` (`JSX.Element` slots), `actions` (`ActionRowAction[]`), `class`. Each `ActionRowAction` is `{ label: JSX.Element; onClick: () => void; tone?: ActionRowActionTone; title?: string; disabled?: boolean }` where `ActionRowActionTone` is `"accent"`|`"muted"`|`"outline"`. Exported types: `ActionRowDataProps`, `ActionRowAction`, `ActionRowActionTone`. The base `ActionRow` is intentionally not exported from the barrel — use the `createActionRow(defaults)` factory (returns `Component<ActionRowDataProps>`, baking `tone`/`leading` as `ActionRowOverrides`) or the curried variants `PlainActionRow` (default), `DangerActionRow` (`tone: "danger"`), `AccentActionRow` (`tone: "accent"`). CSS tokens: `--sui-border`, `--sui-text-primary`, `--sui-text-muted`, `--sui-danger`, `--sui-accent`, `--sui-accent-rgb`, `--sui-bg-deep`. Use for: list/table rows that expose per-row actions only on hover, with an optional status slot and destructive/emphasis tinting.
+  - Example:
+    ```tsx
+    import { PlainActionRow, DangerActionRow } from "solid-ui-components";
+
+    <PlainActionRow
+      trailing={<span>3 items</span>}
+      actions={[
+        { label: "Edit", tone: "outline", onClick: () => edit(row) },
+        { label: "Delete", tone: "muted", onClick: () => remove(row) },
+      ]}
+    >
+      {row.name}
+    </PlainActionRow>
+
+    <DangerActionRow actions={[{ label: "Undo", tone: "accent", onClick: undo }]}>
+      Deletion pending
+    </DangerActionRow>
+    ```
+
+## GroupBracket
+- **GroupBracket** — Atomic Primitive (Depth 1). A thin right-edge bracket cue for a single list/table row that marks which rows belong to the same contiguous run of a group; stacking N members renders one unbroken `]`-shape. Renders a `<div>` gutter with a `spine` plus optional top/bottom `stub`s and a `badge`, driven entirely by `position`: `GroupBracketPosition` = `"none"` (not in a group — empty gutter, keeps geometry stable across boundaries), `"interior"` (spine only), `"leader"` (spine + top stub + badge), `"tail"` (spine + bottom stub), `"leader-tail"` (sole row — spine + both stubs + badge). Props: `position` (required), `color?` (stroke + badge border, sets `--sui-group-bracket-color`; falls back to inherited text color), `badgeFill?` (badge fill, sets `--sui-group-bracket-badge-fill`, composited over an opaque base so the spine doesn't read through), `badge?` (`JSX.Element`, typically `×N`, only rendered on `leader`/`leader-tail`), plus all `JSX.HTMLAttributes<HTMLDivElement>` (except `color`) spread onto the root. Colors are the only inline payload (CSS-variable channel); all other styling lives in the stylesheet. Sets `aria-hidden` when no badge is shown. Exported types: `GroupBracketProps`, `GroupBracketPosition`. Use for: a per-row grouping gutter in dense lists/tables where contiguous runs of a group should read as a single visual bracket with an optional count on the leader.
+  - Example:
+    ```tsx
+    import { GroupBracket } from "solid-ui-components";
+
+    <GroupBracket
+      position="leader"
+      color="var(--sui-accent)"
+      badgeFill="rgba(var(--sui-accent-rgb), 0.2)"
+      badge={`×${run.length}`}
+    />
+    ```
+
+## AssigneeChips
+- **AssigneeChips** — Atomic (Depth 1). Renders a filled accent-colored pill per id, applying a caller-supplied `resolveName` to display each label; renders nothing when `ids` is empty. The wrapping chip row is composed from the `ChipCluster` Layout variant; this component owns only the intrinsic pill styling. Props: `ids` (`string[]`), `resolveName` (`(id: string) => string`), `size` (`"sm"`|`"md"`, default `"sm"` — sm is 9px/min-height 12px, md is 10px/min-height 14px), `class`. Exported type `AssigneeChipsDataProps` (`Omit` of `size`). The base `AssigneeChips` is intentionally not exported from the barrel — use the `createAssigneeChips(defaults)` factory (bakes `size` as `AssigneeChipsOverrides`, returns `Component<AssigneeChipsDataProps>`) or the curried variants `Assignees` (default, small) and `MdAssigneeChips` (`size: "md"`). CSS tokens: `--sui-accent` (pill fill), `--sui-bg-deep` (label color). Use for: compact rows of assignee/owner name pills on cards or table rows where the caller owns id→name resolution.
+  - Example:
+    ```tsx
+    import { Assignees } from "solid-ui-components";
+
+    <Assignees ids={task.assigneeIds} resolveName={(id) => users[id]?.name ?? id} />
+    ```
+
+## TruthIndicator
+- **TruthIndicator** — Atomic (Depth 1). Boolean status glyph: a green check for `true`, a red prohibition (circle-with-diagonal-slash) for `false`. Read-only by default (renders a `<span role="img">`); supplying `onClick` upgrades it to a real `<button>` with native click + keyboard activation and reset chrome so the `sui-truth*` classes fully govern appearance. Base `TruthIndicator` is intentionally NOT exported — consume the curried variants or the factory. Key props: `value` (boolean, required), `size` (`"sm"`|`"md"`|`"lg"` → 12/16/22px, default `md`), `label` (string, optional aria-label override; defaults to "true"/"false"), `onClick` ((e: MouseEvent) => void, optional); also spreads remaining `HTMLAttributes`. Factory: `createTruthIndicator(defaults)`. Curried variants (all with `size` baked, `value`/`onClick`/`label` left as runtime data): `TruthIndicator` (md default), `SmallTruthIndicator` (sm, for dense rows), `LargeTruthIndicator` (lg, for prominent status). Exported types: `TruthIndicatorDataProps` (plus `TruthIndicatorOverrides`, `TruthIndicatorSize` internally). CSS tokens: `--sui-success`, `--sui-danger`, `--sui-accent`, `--sui-bg-secondary`. Use for: boolean cells in tables, feature-flag/health status, toggleable yes/no fields.
+  - Example:
+    ```tsx
+    import { TruthIndicator, SmallTruthIndicator, LargeTruthIndicator } from "solid-ui-components";
+
+    <TruthIndicator value={true} />
+    <SmallTruthIndicator value={false} label="unverified" />
+    <LargeTruthIndicator value={true} onClick={() => toggle()} />
+    ```
 
 ## MathFormula
 - **MathFormula** — KaTeX LaTeX renderer with interactive variable highlighting via `\var{id}{content}` syntax. Key props: `latex`, `displayMode`, `class`. Use for: rendering mathematical formulas with hover-linked variables.
 - **FormulaProvider** — Context provider enabling hover interactions between MathFormula variables and table rows. Use for: wrapping formula + variable table pairs.
 - **FormulaVarRow** — Table `<tr>` that highlights when its corresponding formula variable is hovered. Key props: `varId`. Use for: variable definition rows that link to formula terms.
 
+## CodeBlock
+- **CodeBlock** — Atomic Primitive (Depth 1). Owns `CodeBlock.css`, no component imports. Recessed dark monospace `<pre>` for raw code / JSON: preserves whitespace/newlines (`white-space: pre`) and scrolls horizontally on overflow (`overflow: auto`). Extends `JSX.HTMLAttributes<HTMLPreElement>`, so any native `<pre>` attr passes through. Only styling prop is `size?: "sm" | "md" | "lg"` (default `"md"`, mapping to 0.8125/0.875/1rem). Children render literally. `createCodeBlock(defaults)` factory yields curried variants (none pre-defined in-folder). CSS tokens: `--sui-font-mono`, `--sui-space-3`, `--sui-border`, `--sui-radius-sm`, `--sui-bg-deep`, `--sui-text-primary`. Use for: displaying JSON payloads, config snippets, log dumps, raw code in showcases.
+  - Example:
+    ```tsx
+    import { CodeBlock } from "solid-ui-components";
+    <CodeBlock size="sm">{JSON.stringify(payload, null, 2)}</CodeBlock>
+    ```
+
+## Markdown
+- **Markdown / MarkdownEditor** — Atomic + Composite. Owns `Markdown.css`. Tiny hand-rolled markdown viewer (extracted from dside-ui's inline SimpleMarkdown) — no external parser.
+  - **Markdown** — Atomic (Depth 1). Renders `source: string` into a `.sui-markdown` div via `innerHTML`. Supports `#`–`###` headings, `-`/`*` bullet lists, `**bold**`, `*italic*`, `` `code` ``, and blank-line-separated paragraphs; inline HTML in the source is escaped first (`&`,`<`,`>`) before inline markup is applied. Props: `source: string`, `class?`. Exports the pure helper `renderMarkdownHtml(source): string` (the string generator, usable standalone) and `createMarkdown(defaults)` factory.
+  - **MarkdownEditor** — Composite (Depth 2). Composes `Grid` (`columns="1fr 1fr"`, `gap="md"`) for a 50/50 textarea-plus-live-preview split, feeding the textarea value straight into `<Markdown>`. Props: `value: string`, `onChange: (next: string) => void`, `rows?` (default `12`), `class?`. Factory `createMarkdownEditor(defaults)`.
+  - Use for: rendering stored markdown notes/descriptions; the editor for authoring markdown with live preview (design-doc panels).
+  - Example:
+    ```tsx
+    import { Markdown, MarkdownEditor } from "solid-ui-components";
+    const [text, setText] = createSignal("# Notes\n- **first**\n- second");
+    <MarkdownEditor value={text()} onChange={setText} rows={8} />
+    <Markdown source={text()} />
+    ```
+
+## Kbd
+- **Kbd** — Atomic Primitive (Depth 1). Owns `Kbd.css`, no component imports. Renders a `<kbd>` keyboard hint with two mutually-exclusive modes: pass `letter?` (+ optional `rest?`) to get an underlined hotkey letter followed by plain trailing text (`<Kbd letter="C" rest="onfirm" />` → **C**onfirm), or pass `children` for literal content (`<Kbd>Esc</Kbd>`). Presence of `letter` (even `""`) switches to letter mode via `Show`. Props: `letter?`, `rest?`, `children?`, `class?`. `createKbd(defaults)` factory for curried variants. Emits spans `.sui-kbd__letter` / `.sui-kbd__rest`. Use for: command-palette hotkey hints, inline keyboard shortcut labels.
+  - Example:
+    ```tsx
+    import { Kbd } from "solid-ui-components";
+    <Kbd letter="C" rest="onfirm" />
+    <Kbd>Esc</Kbd>
+    ```
+
+## ResponsiveMoney
+- **ResponsiveMoney** — Atomic (Depth 1). Renders the widest dollar rendering of a cents value that still fits its container, stepping down through a candidate ladder (`$330,285 → $330k → $0.3m`) as the container shrinks, measured via a hidden `Text` twin and a `ResizeObserver`. Abbreviation is view-only — callers keep passing exact integer cents; it never rounds the underlying value, only its display. The ladder (`formatMoneyLadder`) adds tiers by magnitude: full always, `k` at |dollars| ≥ 1,000 (0 fraction digits), `m` at ≥ 1,000,000 (1 fraction digit), with the sign rendered once before the `$` (`-$1,234`). Key props: `cents` (number, integer, may be negative), `variant` (`TextVariant`, default `"value"`), `color` (string). Spreads remaining `JSX.HTMLAttributes<HTMLSpanElement>` (minus `children`). Exports type `ResponsiveMoneyProps`. Composes the `Text` component; no curry factory (styling rides on `Text`; owns `.sui-responsive-money` layout). Use for: money figures in width-constrained cells, dashboard KPIs, responsive table columns.
+  - Example:
+    ```tsx
+    import { ResponsiveMoney } from "solid-ui-components";
+    <ResponsiveMoney cents={33028500} variant="value" />
+    ```
+
 ## Modal
-- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`), `showClose`, `footer`. Use for: dialog windows.
+- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`|`fullscreen`), `showClose`, `footer`. Use for: dialog windows.
 
 ## ConfirmationModal
 - **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
@@ -703,7 +1181,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **NewTabLink** — Link that always opens in a new tab (`target="_blank"`). Use for: external links.
 
 ## OverflowNav
-- **OverflowNav** — Pure Composite (Depth 2). Composes `Row` (Layout Primitive) + `NavLink` (Atomic Primitive) + `PopoverMenu` (Atomic Primitive). Owns zero CSS and zero inline `style={}` (other than the `style={props.style}` passthrough on the outer `Row`). Horizontal nav row that automatically collapses items that don't fit horizontally into a trailing kebab (⋮) `PopoverMenu`, re-evaluated on container resize via `ResizeObserver` (rAF-debounced). Items render as full `NavLink`s while they fit; spilled items render as menu entries inside the kebab popover and activate via their `onClick` (or `href` fallback). Measurement strategy: on mount and whenever `items` change, all items render inline for one frame so the component can snapshot each item's natural `offsetWidth`; on subsequent resizes the cached widths drive the trim. A ~48px budget is reserved for the kebab trigger so the boundary case ("fits without kebab" ↔ "fits with kebab") doesn't oscillate. Key props: `items` (`OverflowNavItem[]` — `id`, `label`, optional `href`, `active`, `color` (`accent`|`warning`|`danger`|`success`), `badge`, `onClick`), `gap` (`xs`|`sm`|`md`|`lg`|`xl`, default `"sm"`), `align` (default `"center"`), `class?`, `style?`. Exported types: `OverflowNavProps`, `OverflowNavItem`. Inherits theme styling from `NavLink` (`--sui-*` / theme tokens already wired through `nav-link*` classes) and from `PopoverMenu` (kebab trigger + dropdown panel). Use for: top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping.
+- **OverflowNav** — Pure Composite (Depth 2). Composes `Row` (Layout Primitive) + `NavLink` (Atomic Primitive) + `PopoverMenu` (Atomic Primitive). Owns zero CSS and zero inline `style={}` (other than the `style={props.style}` passthrough on the outer `Row`). Horizontal nav row that automatically collapses items that don't fit horizontally into a trailing kebab (⋮) `PopoverMenu`, re-evaluated on container resize via `ResizeObserver` (rAF-debounced). Items render as full `NavLink`s while they fit; spilled items render as menu entries inside the kebab popover and activate via their `onClick` (or `href` fallback). Measurement strategy: on mount and whenever `items` change, all items render inline for one frame so the component can snapshot each item's natural `offsetWidth`; on subsequent resizes the cached widths drive the trim. A ~48px budget is reserved for the kebab trigger so the boundary case ("fits without kebab" ↔ "fits with kebab") doesn't oscillate. Key props: `items` (`OverflowNavItem[]` — `id`, `label`, optional `href`, `active`, `color` (`accent`|`warning`|`danger`|`success`), `badge`, `onClick`), `gap` (`xs`|`sm`, default `"sm"` — forwarded to `Row`; deliberately narrower than `Row`'s own `xs`|`sm`|`md`|`lg`, since no shipped consumer has asked for the wider steps here and its `gapPx()` overflow budget only accounts for these two), `align` (default `"center"`), `class?`, `style?`. Exported types: `OverflowNavProps`, `OverflowNavItem`. Inherits theme styling from `NavLink` (`--sui-*` / theme tokens already wired through `nav-link*` classes) and from `PopoverMenu` (kebab trigger + dropdown panel). Use for: top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping.
   - Example:
     ```tsx
     import { OverflowNav, type OverflowNavItem } from "solid-ui-components";
@@ -717,6 +1195,30 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ];
 
     <OverflowNav items={items} />
+    ```
+
+## RecentStarred
+- **RecentStarred** — Composite (Depth 2). A reusable "recently-visited" + "starred" shortcut feature for any navigable items (cases, customers, dashboards — anything with a stable id), shipped as a framework-agnostic store plus two bundled UI pieces. Item shape `RecentStarredItem` = `{ id: string; label: string; meta?: Record<string, unknown> }` (meta is a small JSON-safe payload that round-trips through localStorage so a click can navigate without re-fetching). Both lists persist to localStorage; `recent` is newest-first, de-duped, FIFO-capped; `starred` is id-keyed. CSS tokens: `--sui-star-fill`, `--sui-star-empty`, `--sui-star-hover`, `--sui-star-size`, `--sui-recent-bg`, `--sui-recent-border`, `--sui-recent-item-fg`, `--sui-recent-item-hover`, `--sui-recent-item-radius`, `--sui-recent-section-fg`, `--sui-recent-empty-fg`, `--sui-warning`, `--sui-bg-elevated`, `--sui-bg-secondary`, `--sui-border`, `--sui-radius-sm`, `--sui-text-muted`, `--sui-text-secondary`. Exports:
+  - **createRecentStarredStore(opts)** — store factory. `opts: CreateRecentStarredOpts` = `{ storageKey: string; recentLimit?: number }` (default limit 20; writes `<storageKey>.recent` and `<storageKey>.starred`). Returns `RecentStarredStore` = `{ recent: Accessor<RecentStarredItem[]>; starred: Accessor<RecentStarredItem[]>; pushRecent(item); toggleStar(item); isStarred(id): boolean; clearAll() }`.
+  - **StarToggle** — a 5-point star `<button>` that fills when the item is starred; click flips state via `store.toggleStar`. Props `StarToggleProps`: `store` (RecentStarredStore), `item` (RecentStarredItem), `ariaLabel?` (`(isStarred: boolean) => string`, defaults to "Starred"/"Not starred"), `title?` (string tooltip).
+  - **RecentStarredSidebar** — pure sidebar renderer (no navigation/persistence) built on Layout `NarrowStack` + `BaselineSpreadRow`, showing starred and recent sections (both always render, with counts). Props `RecentStarredSidebarProps`: `store`, `onPick` (`(item) => void`, required), `starredTitle?` (default "Starred"), `recentTitle?` (default "Recent"), `starredEmpty?`/`recentEmpty?` (JSX.Element empty-state copy), `renderItem?` (`(item) => JSX.Element` label override), `class?`.
+  - Use for: navbar/sidebar quick-access shortcuts, star-to-pin favorites, recently-viewed lists.
+  - Example:
+    ```tsx
+    import {
+      createRecentStarredStore,
+      StarToggle,
+      RecentStarredSidebar,
+    } from "solid-ui-components";
+
+    const cases = createRecentStarredStore({ storageKey: "rth.cases" });
+    cases.pushRecent({ id: "r123", label: "R12345", meta: { tenant_id } });
+
+    <StarToggle store={cases} item={{ id: "r123", label: "R12345" }} />
+    <RecentStarredSidebar
+      store={cases}
+      onPick={(item) => navigateToCase(item.meta)}
+    />
     ```
 
 ## Page
@@ -734,6 +1236,17 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **SimplePanel** — Small size, no decorations. (Formerly CompactJTFPanel.)
 - **SpaciousPanel** — Large size.
 
+## CollapsiblePanel
+- **CollapsiblePanel** — Composite (Depth 2). A side panel (`<aside>`) that collapses to a vertical strip with a rotated label and a chevron. Expanded, it shows a collapse tab plus a body wrapping `children`; collapsed, it becomes a clickable strip button that expands on click. Optionally mirrors the collapsed boolean to `window.localStorage` under `persistKey` (SSR-safe; reads `"1"`/`"true"` as collapsed). Props: `side` (`"left"`|`"right"` — drives chevron direction and edge styling), `label` (string, shown rotated on the strip and in expand/collapse titles), `persistKey?` (localStorage key), `defaultCollapsed?` (initial state when no persisted value, default `false`), `class?` (extra class on the outer `<aside>`), `children?`. Exported type `CollapsiblePanelProps`. Both the base `CollapsiblePanel` and the `createCollapsiblePanel(defaults)` factory are exported. Use for: dockable left/right sidebars (filters, inspectors, tool panels) that a user can fold to a thin labeled strip and whose state should persist across reloads.
+  - Example:
+    ```tsx
+    import { CollapsiblePanel } from "solid-ui-components";
+
+    <CollapsiblePanel side="left" label="Filters" persistKey="designview.filters">
+      <FilterList />
+    </CollapsiblePanel>
+    ```
+
 ## ScrollRegion
 - **ScrollRegion** — Atomic Primitive (Depth 1). Owns `ScrollRegion.css`; no library-component imports. A self-contained, **DYNAMIC** scroll affordance: a `position: relative` frame wrapping an `overflow-y: auto` viewport (holding `children`) with TOP and BOTTOM fade overlays whose visibility is **computed at runtime from scroll position**, not painted by static CSS. The component evaluates `overflowing = scrollHeight > clientHeight + threshold`, `atTop`, and `atBottom`; the top fade shows only when `overflowing && !atTop`, the bottom only when `overflowing && !atBottom`, and **NEITHER** when the content fits — so a fade always means "there is more content this way you can't see," never "this is the edge." The recompute fires on three triggers wired up on mount and torn down in `onCleanup`: the viewport's `onScroll`, a `ResizeObserver` (watching both the viewport and the content wrapper, so loading data / toggling rows re-evaluates the fades), and a `MutationObserver` (children added/removed change `scrollHeight` without firing scroll or, in some flex configs, resize). The component is **height-agnostic** — it fills its flex parent rather than baking in a fixed height, so a `height: 100%` / flex child resolves against the viewport while real overflow still scrolls. Colours key off `--sui-*` theme tokens; the fade gradients fade `transparent → var(--sui-bg-primary)` so they match the panel/background in every theme. BEM classes: `.sui-scroll-region` (frame), `__viewport`, `__content`, `__fade` + `__fade--top`/`__fade--bottom` with an `is-visible` state class. Props: `children`, `class`/`style` (inner viewport), `frameStyle` (outer frame), `threshold` (rounding tolerance, default 1), plus standard `<div>` attributes (`id`, `data-*`, aria, `ref`) passing through to the frame. The base `ScrollRegion` IS exported (it is the primary, behaviour-bearing API). **Factory + variants** are optional convenience presets for bounded, non-flex call sites: `createScrollRegion({ style | frameStyle | threshold })` plus `ScrollRegionMd` (viewport caps at 240px) and `ScrollRegionLg` (360px) — these only bake a viewport `max-height`, they do not change the fade behaviour. Exported types: `ScrollRegionProps`, `ScrollRegionOverrides`. Use for: any scrollable list/panel where a "more below/above" cue is wanted and a hard edge should read as the end.
 
@@ -741,11 +1254,48 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **PopoverMenu** — Atomic Primitive (Depth 1). Trigger button with positioned action dropdown. Key props: `trigger` (JSX content for the trigger button), `header?` (optional non-interactive JSX rendered above the items — e.g. the signed-in user's email in an account menu; excluded from keyboard nav and menu a11y via `role="presentation"`, separated from the items by a bottom border; omit it and the panel is byte-identical to before), `items` (array of `PopoverMenuItem` with `id`, `label`, optional `icon`), `onSelect` (callback with item `id`), `align` (`left`|`right`), `size` (`sm`|`md`). Internals: native `<button class="sui-popover-menu__trigger">` with inline chevron SVG (via `ICON_PATHS` data import) and `<ul class="sui-popover-menu__panel">` of `<li role="menuitem">` items (the optional header is a leading `<li class="sui-popover-menu__header" role="presentation">`) — no library component imports. Closes on click-outside and Escape; items support `Enter`/`Space` keyboard activation. Use for: action menus, user menus, account menus, context menus.
 - **RightPopoverMenu** — Right-aligned, small trigger (inherits `header`). Use for: header action menus, account dropdowns (email header + Logout).
 
+## NotificationCenter
+- **NotificationCenter** — Composed (Depth 3). A bell trigger with a count badge that opens an **inbox panel** of notifications. Owns a minimal `NotificationCenter.css` for overlay chrome only — the trigger's skin and corner anchoring, plus the row's intrinsic decoration (tone well, unread dot, hover wash) — a deliberate structural exception, the same one `Fab` takes (positioning geometry no atomic variant expresses). All content composes `Icon` (bell + tone glyph + spinner), `CountBadge`, `TagPill` (header count lozenge), `Divider`, `InboxPopoverSurface` (panel), the `FillColumn`/`ScrollColumn`/`SpreadRow`/`WrapRow`/`TopClusterRow`/`GrowTightStack` layout variants, `TextTitle`, `TextSublabel`, `MutedBody`, `TextButton`, and `Link`. **Panel shape — the inbox shell** (see `docs/agents/design-decision-tree.md` › Notification/activity panel): `FillColumn` → pinned header (`SpreadRow`: label + de-emphasized `TagPill` count) → `Divider` → `ScrollColumn` of rows → optional `Divider` + pinned footer action. Each row is a **media object**, unboxed at rest and washed on hover: `TopClusterRow` → [unread gutter dot, tone glyph well, `GrowTightStack` → (`SpreadRow`: `TextTitle` title left / `TextSublabel` `when` right, `TextSublabel` detail, optional consumer `body`, `WrapRow` action row)]. The leading well is what keeps an unboxed row reading as a unit; the `WrapRow` left-packs the actions so the link and button branches share one indent, wraps when several actions don't fit, and doubles as the click-isolation barrier that stops an action click activating the row beneath it. The row itself lives in `NotificationRow.tsx`; `types.ts` and `actions.ts` carry the data contract and the prefab builders. This **supersedes the three-line `CompactSurface` card canon** the component shipped with (2026-07-24) — the only `Surface` in the panel is now the `InboxPopoverSurface` itself. Beyond that chrome CSS, the only inline styling is the dynamic panel position — a `Portal` + `fixed` wrapper measured from the trigger (the sanctioned overlay carve-out of Layout Purity). **Router-agnostic and domain-agnostic**: the consumer supplies `items` and does the navigating inside `onAction` — the component never imports a router, ships no date formatter (hence the pre-formatted `when` string), and needs no consumer CSS. Supports both **uncontrolled** (manages its own open state) and **controlled** (`open` + `onOpenChange`) use; a controlled `open` lets the consumer auto-open on new activity. Closes on click-outside and Escape. **Trigger states**: transparent at rest, a faint accent wash on hover, and while open an accent-tinted well with an accent border **plus** the bell glyph swapping `outline`→`solid` — two independent signals, so the open state survives a monochrome or colourblind theme (matches `.sui-dropdown--subtle.sui-dropdown--open`, so every subtle overlay trigger marks "my panel is showing" the same way). Each action renders as a `Link` with a `→` suffix when it has an `href` (plain left-click SPA-navigates; modifier/middle-clicks fall through so new-tab gestures still work) or as a `TextButton` in its `tone` when it doesn't — the arrow means "this navigates", so it rides the anchor branch only — `Link`, not `NavLink`, because `NavLink` is a nav-RAIL item and bakes `padding-left:16px`. Items marked `transient` show a spinner in their well instead of an action and are excluded from the badge count. Key props: `items` (`NotificationItem[]`), `badgeCount?` (number — defaults to the count of items that are neither `transient` nor `read`), `busy?` (boolean — overlays a spinner on the bell and announces "Working…"), `open?` (boolean — presence switches to controlled mode), `onOpenChange?` (`(open: boolean) => void`), `onAction?` (`(item: NotificationItem) => void` — fires when the row BODY is activated, and as the fallback for an action carrying no `onClick` of its own; **supplying it is also what makes the row body clickable**, wiring `role="button"`, a tab stop, and Enter/Space — omit it and the row is inert), `onMarkAllRead?` (`() => void` — **supplying it is what mounts the pinned footer**; omit it and neither the footer nor its divider render, so the panel never shows a dead affordance), `markAllReadLabel?` (string, default `"Mark all as read"`), `emptyLabel?` (string, default `"You're all caught up."`), `label?` (string, default `"Notifications"` — used as the trigger's `aria-label`, the panel's landmark label, and the header title). Exported types: `NotificationCenterProps`, `NotificationItem` (`id`, `title`, `detail?`, `body?`, `actions?`, `action?` — **deprecated**, `transient?`, `tone?`, `when?`, `read?`), `NotificationAction` (`label`, `onClick?`, `href?`, `tone?`, `icon?`, `disabled?`, `dismissPanel?`), `NotificationActionTone`, `NotificationTone`. **`items[].actions` takes any number of actions**; whether each closes the panel is per-action — navigating ones do, in-place ones don't, `dismissPanel` overrides. **`items[].body`** is a THUNK (`() => JSX.Element`) rendering arbitrary content between the detail line and the action row — a thunk because feeds get built as module-scope arrays, where eagerly-constructed JSX escapes the reactive root and stops tracking. Exported builders: `viewAction(href, label?)`, `dismissAction(fn, label?)`, `markReadAction(fn, label?)`, `acceptAction(fn, label?)`, `declineAction(fn, label?)`, `deleteAction(fn, label?)`, plus the `resolveActions`/`closesPanel` resolvers. `NotificationItem.tone` (`info`|`task`|`warning`, default `info`) is **live** — it colours the row's glyph well and picks the glyph (`info` → info, `task` → clock, `warning` → warning). `when` is a pre-formatted relative time the consumer humanizes ("2m", "1d"); `read` drops the item's unread dot and removes it from the badge count. Accessibility: the trigger carries `aria-label`/`aria-haspopup`/`aria-expanded` and `aria-busy` while working; a visually-hidden `.sui-sr-only` `aria-live="polite"` region announces transient item titles (or "Working…"); the panel is a named `<section aria-label>`, which is an implicit region landmark; the unread dot and tone glyph are `aria-hidden` decoration. Theming: the trigger and well derive from `--sui-accent-rgb`/`--sui-warning-rgb`/`--sui-text-muted`; all other color/spacing comes from the composed atoms and their tokens. Use for: a global notification/inbox bell in an app header, an activity feed with per-item follow-through actions, surfacing background-task progress (transient rows + `busy`).
+
 ## ProgressCheck
 - **ProgressCheck** — Three-state progress indicator: empty checkbox (0%), partial fill (1-99%), green check (100%). Key props: `progress` (0-1 number), `size` (`xs`|`sm`|`md`|`lg`|`xl`, default `sm`). SVG-based, matches Icon sizing. Use for: task completion indicators, goal progress, hierarchical rollup status.
 
 ## BurndownChart
 - **BurndownChart** — SVG burndown bar chart with dual-axis stacked bars and trendline. Key props: `bars` (array of `BurndownBar` with `planned_complete`, `planned_incomplete`, `unplanned_complete`, `unplanned_incomplete`), `onSegmentClick` (callback with `barIndex` and `BurndownSegmentKind`), `height`. Above zero: green (planned complete) on grey (planned incomplete). Below zero: orange (unplanned complete) on red (unplanned incomplete). Trendline projects remaining planned work to zero with "+Nd" annotation. Uses `--sui-*` CSS variables. Use for: sprint burndown tracking, planned vs actual visualization.
+
+## SprintSelector
+- **SprintSelector** — Atomic (Depth 1). Horizontal row of clickable mini stacked bars for selecting a sprint/week. Each sprint renders a `viewBox="0 0 20 100"` SVG bar whose overall height scales to that sprint's share of the max total across all sprints, internally stacked into four segments — planned-complete, planned-incomplete, unplanned-complete, unplanned-incomplete — with a text label beneath. Each bar-group is a keyboard-accessible `role="button"` (Enter/Space activates). Key props: `sprints` (`SprintSummary[]`, each `{ label; planned_complete; planned_incomplete; unplanned_complete; unplanned_incomplete }` counts), `selectedIndex` (number, optional — applies the selected style), `onSelect` ((index: number) => void, optional). Exported types: `SprintSelectorProps`, `SprintSummary`. Styling shares the `sui-burndown__seg--{pc,pi,uc,ui}` segment classes; CSS tokens `--sui-accent`, `--sui-accent-rgb`, `--sui-text-muted`. Use for: sprint pickers, burndown week navigators, compact multi-period selectors.
+  - Example:
+    ```tsx
+    import { SprintSelector, type SprintSummary } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const sprints: SprintSummary[] = [
+      { label: "W1", planned_complete: 6, planned_incomplete: 2, unplanned_complete: 1, unplanned_incomplete: 0 },
+      { label: "W2", planned_complete: 4, planned_incomplete: 3, unplanned_complete: 2, unplanned_incomplete: 1 },
+    ];
+    const [selected, setSelected] = createSignal(0);
+
+    <SprintSelector sprints={sprints} selectedIndex={selected()} onSelect={setSelected} />
+    ```
+
+## RingChart
+- **RingChart** — Atomic (Depth 0). Radial donut gauge: stacked arc segments over a background track ring, with a bold auto-fitting center label and optional sublabel. Pure SVG — no library dependencies. Segment order is clockwise from the top (rotated -90deg). The center label font-size is auto-fitted to the ring diameter and the label's character count. Key props: `segments` (`{ value: number; color: string; animate?: boolean }[]` — animate adds a 2s pulse on the arc), `total` (denominator for all segments), `label` (bold center text, e.g. `"62%"`), `sublabel?` (secondary text below label), `size?` (diameter in px, default 100). Use for: completion gauges, category-breakdown donuts, any "N of total" ring indicator.
+  - Example:
+    ```tsx
+    import { RingChart } from "solid-ui-components";
+
+    <RingChart
+      size={140}
+      total={100}
+      label="62%"
+      sublabel="complete"
+      segments={[
+        { value: 62, color: "var(--sui-success)" },
+        { value: 38, color: "var(--sui-border-bright)" },
+      ]}
+    />
+    ```
 
 ## Progress
 - **StackedProgressBar** — Multi-segment progress bar. Key props: `segments` (array of `{percentage, color}`), `direction` (`horizontal`|`vertical`), `label`, `background`. Use for: multi-category progress visualization, stacked bar charts.
@@ -754,6 +1304,15 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **ProgressCard** — Step-based progress indicator with icons and connectors. Key props: `title`, `subtitle`, `steps` (array of `ProgressStep` with `id`, `label`, `status`, `icon`), `message`. Use for: multi-step workflow status display.
 - **createWorkflowProgressCard** — Factory that derives step statuses from `currentStep` + `status`. Returns a component with props: `title`, `subtitle`, `currentStep`, `status` (`fetching`|`caching`|`completed`|`error`), `message`. Use for: automated workflow progress tracking.
 - **CacheProgressCard** — Pre-built 5-step cache workflow progress card (Minutes, Hours, Stats, Coverage, Calcs). Use for: data caching pipeline status.
+
+## WorkerCard
+- **WorkerCard** — Composed (Depth 2, owns CSS). Card visualizing a single extraction-worker slot. Composes `Surface` + `Text`; owns `WorkerCard.css`. Animated expand/collapse for the plan row (PK range or single-stream summary) and progress row (fill bar + row count). Border color and background tint derive from `status` + `overdue` — no visual props at the call site. Exports `WorkerStatus` type. Key props: `slotId` (1–4), `status` (`"idle"`|`"claimed"`|`"extracting"`|`"writing"`|`"complete"`), `now` (Date.now() — caller drives the clock), `startedAt` (ms when batch was claimed), `extractStartedAt` (ms when extraction began — drives the fill bar), `jobsCompleted`, `avgRatePerSec`, `estimatedS` (expected duration in seconds), `elapsedS?` (final elapsed, set on complete), `overdue?` (true → crimson badge + border), `rows?` (current row count). Batch-mode extras: `pkStart?`, `pkEnd?`, `batchSize?`. Single-stream extras: `totalRecords?`. Other: `columnCount?`, `currentJob?` (label for the in-flight job). Use for: a live ETL extraction dashboard showing per-worker slot state alongside `ExtractionBoard`.
+
+## EntityCard
+- **EntityCard** — Composite (Depth 2, owns CSS). The unified sidebar/list card: SUI owns the fixed 3-column grid, selection affordance (3px left border + accent wash), and hover-revealed remove control; the CLIENT fills each named REGION with its own domain content. A region-slot card (contrast `SlotCard`, whose slots are TYPED and SUI-rendered) — because a region can hold arbitrary domain content, EntityCard carries no value renderers of its own; it is pure layout. Layout: `identifier` (top-left, required) · `status` (top-right) over an optional `detail` line, over a bottom row of `timing` (left) · `progress` (center) · `counts` (right); unused rows collapse. Key props: `identifier` (required), `status?`, `detail?`, `timing?`, `progress?`, `counts?`, `selected?`, `onClick?`, `onRemove?` (hover ✕). Override prop: `class`. Use for: vessel-call pickers, triage queues, report selectors — any list/sidebar card keyed by a domain identifier.
+
+## SlotCard
+- **SlotCard** — Composite (Depth 2, owns CSS). Generic typed-slot card family: each card is a fixed, NAMED layout template whose slots are TYPED (`name` / `status` / `count` / `date` / `dots` / `value` / …), each mapping to a themed SUI display component — the card analogue of the `fields.*` column types that drive FieldTable. Contrast `EntityCard` (region slots filled with client-rendered content); use SlotCard when the slot content is a generic typed value SUI can render. Responsive via CONTAINER queries: every slot carries a drop PRIORITY (1 = always, 2 = mid, 3 = low) and low-priority slots shed as the card narrows; the primary slot ellipsises rather than dropping. The `createSlotCard` factory is SUI-internal and NOT exported — the only public surface is the curried templates: single-line (`TitleStatus`, `TitleCount`, `RangeCountStatus`, `DenseStatusRow`, `DenseStatusNote`, `ChipNote`, `IdStatusRange`, `SingleLine`), two-line (`TitleMeta3`, `TitleAssetDate`, `TitleProgress`, `TitleAssetProgress`, `TitleDotsMeta`, `TitleMetaCount`), and overlay/tile (`PickCard`, `StatTile`). A row whose every slot is absent renders nothing at all (no element, no gap) — which is what lets `DenseStatusNote` carry a conditional `error` line that costs a succeeded card nothing. Key props: `values` (the typed `SlotValues` map), `active?`, `onSelect?`, `accent?` (`info`|`success`|`warning`|`danger` tone rail), `corner?`, `onRemove?`, `action?` (`{ label, onClick }` — a trailing SUI-chosen ghost button on templates configured for it, e.g. Cancel on a queued job; the click never reaches `onSelect`), `maxWidth?` (px override of the baked cap; default 40ch). Types: `SlotCardProps`, `SlotValues`, `SlotName`, `AccentTone`. Use for: list/sidebar cards whose fields are generic typed values (name, status, counts, dates, compliance dots).
 
 ## WorkProgressCard
 - **WorkProgressCard** — Status-aware work card (claimedBy · status / title / progress bar) whose bar is derived **entirely from metadata** — the caller never picks a color or proportion. Data-only props (no visual overrides, so re-exported directly, no factory): `status` (`NEW`|`TODO`|`DOING`|`DONE`|`BLOCKED`|`QUESTION`|`CLOSED`), `title`, `claimedBy?`, `subtitle?`, `estimate?` (number), `actual?` (number, same unit). The bar treatment: in-progress → blue fill to `actual/estimate` + faded-blue remainder; over budget → bar reproportioned so `actual` is full width, estimate's share filled + **crimson** overrun; complete → fill turns **forest green**, unused budget **dark grey**; `BLOCKED`/`QUESTION` → work-so-far in blue, dim remainder, with a ⚠/? sign over the bar; `NEW`/`CLOSED` → empty. Use for: monitor/sprint dashboards showing live task progress vs. estimate.
@@ -831,20 +1390,28 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ```
 
 ## Selector
-- **SidebarSelector** — Sidebar card list with selection content area (generic). Key props: `items`, `selectedId`, `onSelect`, `renderCard`, `renderSelection`, `sidebarWidth`, `maxHeight`, `label`. Use for: master-detail selection patterns, sidebar navigation with preview pane.
+- **SidebarSelector** — Sidebar card list with selection content area (generic). Key props: `items`, `selectedId`, `onSelect`, `renderCard`, `renderSelection`, `height` (optional fixed layout height), `label`. The sidebar width is frozen in CSS (`280px`); there is no `sidebarWidth`/`maxHeight` runtime prop. Use for: master-detail selection patterns, sidebar navigation with preview pane.
 
 ## Surface
-- **Surface** — Themed container primitive with padding, radius, background, and border control. Key props: `padding` (`none`|`sm`|`md`|`lg`), `radius` (`none`|`sm`|`md`|`lg`), `bg`, `borderColor`, `interactive`, `active`. Use for: base container for cards, panels, and interactive areas.
-- Curried variants: `CardSurface`, `CompactSurface`, `InteractiveCard`, `InfoSurface`, `WarningSurface`, `SuccessSurface`, `DangerSurface`. Use for: pre-themed containers for specific contexts (alerts, cards, status surfaces).
+- **Surface** — Themed container primitive with padding, radius, background, and border control. Key props: `padding` (`none`|`sm`|`md`), `radius` (`none`|`sm`|`md`), `gap` (`none`|`xs`|`sm`|`md`|`lg` — forwarded verbatim to the inner Stack/Row, so it is that scale plus `none`; takes effect only when `direction` is set), `bg`, `borderColor`, `interactive`, `active`. Use for: base container for cards, panels, and interactive areas.
+- Curried variants: `CardSurface`, `CompactSurface`, `InteractiveCard`, `InfoSurface`, `WarningSurface`, `SuccessSurface`, `DangerSurface`, `NoticeBar` (full-width flush informational bar — row/center, accent-tinted like `InfoSurface` but `radius: none` so it sits against app chrome; for top-of-app notices). Use for: pre-themed containers for specific contexts (alerts, cards, status surfaces).
+- **`SurfaceDataProps` strips layout overrides.** A curried variant's public type is `SurfaceDataProps = Omit<SurfaceProps, keyof SurfaceOverrides>` — `padding`, `radius`, `bg`, `borderColor`, `interactive`, `shadow`, `direction`, `align`, `gap`, `minWidth`, and `maxWidth` are all baked in at curry time and are **not** accepted at the call site. Passing any of them to e.g. `WarningSurface` fails with TS2322, by design (ADR 0001: visual config is locked at curry time so it can't drift via inline overrides). If a call site needs a different value for one of these, that's a case for a new named variant, not a prop override.
+
+## ValueMatrix
+- **ValueMatrix** — Composite (Depth 2). Composes `BaseTable`; owns `ValueMatrix.css`. A row-axis × column-axis grid of COMPUTED values — not a row table: every cell is `value(row, col)` evaluated across two axes (CE levels × power sources, price points × salary counts). Treatment follows the 2026-07-17 ruling: the consumer configures functions, never CSS — `tone?: (value, row, col) => Tone` maps to theme color classes, `selected?: (row, col) => boolean` marks the chosen scenario (weight + soft halo). Generic over `<R, C>`. Key data props: `rows` (`R[]`), `cols` (`C[]`), `rowLabel` / `colLabel` (axis value → `string | JSX.Element` — widened so a column header or row axis label can carry JSX, e.g. `NumberWithUnits`, not just plain text), `rowAxisLabel?` (header over the row-axis column), `value` (`(row, col) => number | null`; null renders blank — ruled 2026-07-18, empty markers distract from real data), `format?` (`(number) => string`), `tone?`, `selected?`. `Tone` is the shared semantic vocabulary from `src/types.ts` (`default | success | warning | danger | accent | muted`). Factory: `createValueMatrix<R, C>(defaults)` — curries the mapping surface (`ValueMatrixOverrides`: `rowAxisLabel`/`rowLabel`/`colLabel`/`format`/`tone`) into a domain matrix whose call sites pass only `ValueMatrixDataProps` (`rows`/`cols`/`value`/`selected`), generic-preserving like `createTreemap`. Example: `const ComplianceMatrix = createValueMatrix<number, PowerSource>({ rowAxisLabel: "CE", rowLabel: ce => \`${ce}%\`, colLabel: s => s.label, format: v => \`${v.toFixed(2)} g/kWh\`, tone: v => v !== null && v < THRESHOLD ? "success" : "danger" })` → `<ComplianceMatrix rows={ceLevels} cols={sources} value={getValue} selected={isChosen} />`. Use for: compliance/threshold grids, scenario matrices (viable price under N salaries), any "what does the value look like at every combination of two knobs" surface.
 
 ## Table
+- **Table fields (fields-as-functions)** — the composed-table system (Depth 2), exported from the barrel as the `fields` namespace plus the top-level `FieldTable` component. A table is an ordered gesture of field ids resolved against a plain registry object: `<FieldTable data={rows} fields={["selected", "name", "createdAt", "amount", ["edit", "delete"]]} registry={registry} />`. Field types own ALL geometry (ch/em, zoom-proportionate content bounds + cell chrome); clients never see width/align/style. Known-field factories: `fields.selectionCol(selection)`, `nameCol(key?)` (flowing, ellipsis + full-text tooltip, survey-calibrated 50ch cap), `textCol(key, {tone?})`, `dateCol`, `dateTimeCol`, `intCol(key, {tone?})`, `floatCol(key, {precision?, tone?})`, `moneyCol(centsKey)` (divides cents, strips " Cents" from the header), `durationCol(key, unit)`, `actionCol(icon, onAction)` / `clusterCol([...])`. Data-driven color is a configure-time **tone function** `(value, row) => Tone` — never call-site CSS. Weird cells: `fields.col(id, header, row => JSX, fieldType)` — geometry still comes from the named field type. Selection: `fields.createFieldSelection({ rows, key })` → pass to `selectionCol` for a select-all/none header (indeterminate over partial) and shift-click range selection over the current sort order. `FieldTable` props: `data`, `fields`, `registry`, `emptyMessage?`, `maxRows?` (semantic em-based scroll cap). **Fill vs. capped (implicit from `maxRows`):** with `maxRows` the table caps at that many rows and scrolls inline (self-sizing — drop it anywhere). WITHOUT `maxRows` the table runs in **fill mode** — the frame becomes a flex column that fills its parent and scrolls internally (sticky header, both axes). Fill mode therefore **requires a definite-height flex parent** at the call site (e.g. a `Stack fill` / flex-column region with a real height); given one it fills it, given an auto-height parent it collapses. Consumer apps with fill-mode tables get a re-eyeball item on the next SUI bump. Lower-level: `fields.resolveFields(specs, registry)` returns `{columns, minCh, maxCh, minW, maxW}` for hand-assembled frames. `columnHelpers` still owns the bare `intCol`/`textCol`/… names at the barrel root until the step ③ swap. Use for: every standard data table; reach for raw `BaseTable` only for features fields doesn't model (grouped headers, spanRow, getRowClass).
 - **BaseTable** — Sortable data table with sticky header, striped rows, column groups (colspan). Key props: `data`, `columns` (array of `TableColumn`), `maxHeight`, `fill`, `stickyHeader`, `striped`, `hoverable`, `compact`, `getRowClass`, `onRowClick`, `emptyMessage`, `rowActions` (trailing hover-revealed action cell per row), `spanRow`. **`spanRow?: (row, i) => { fromColumnId, content } | null`** is a per-row "tail collapse": for rows where it returns non-null, the columns from `fromColumnId` onward — including the `rowActions` cell, if any — are replaced by a single centered spanning `<td colspan=…>` holding `content`, while columns before `fromColumnId` render normally; return `null`/omit and the row renders cell-by-cell exactly as before. Use for summary/takeover rows (e.g. a partially-evaluated period showing "X of Y evaluated" + a Run button across the stat columns instead of one value per cell). An unknown `fromColumnId` falls back to normal rendering. Implemented by `BaseTable` and `FilterableTable` (which delegates to it); `SelectableTable`/`GroupedTable`/`VirtualTable` render their own bodies and do not honor `spanRow`. Exported type: `TableRowSpan`. Each `TableColumn.header` accepts `string | JSX.Element` — pass a node (e.g. a select-all checkbox) directly, not a function, so Solid keeps the binding live (every renderer inserts `{column.header}` as-is). `RowspanColumn.header` (GroupedTable) mirrors this. `fill` now implies internal scrolling: the table fills its (definite-height or flex) parent and scrolls its body with the header pinned — no `maxHeight="100%"` workaround needed. `maxHeight` remains the explicit "cap at Npx and scroll" escape hatch. Pair with `Stack`/`Row` `fill` (or `FilterableTable` `fill`) to forward height through flex ancestors. Use for: standard sortable data tables, including long lists inside a fixed-height pane.
 - **GroupedTable** — Table with rowspan grouping for merged cells. Key props: `rows` (array of `GroupedRow`), `columns` (array of `RowspanColumn` with `rowspan` flag), `maxHeight`, `compact`. Use for: tables where rows share common group fields (e.g., vessel calls with multiple trains).
+- **SectionTable** — A `BaseTable` BOUND to its own section header (title + record count) as one container: the header spans the table's width, so the record count aligns with the table's right edge (they are one unit, not a header that happens to sit above a table). Extends `BaseTableProps` (pass `columns`, `data`, `compact`, `fixedLayout`, `maxHeight`, … straight through) plus `title`, `total?`, `countNoun?`. The count is derived from the current `data.length` against `total`: "24 records" when they match, "N of 24 records" when a filtered subset is passed. **Owns NO filter UI** — filtering is a separate, disconnected concern (e.g. a dashboard-level control) that just hands this component the already-filtered rows + the unfiltered `total`, keeping filter mechanism and table display decoupled. For a space-between column layout (member absorbs slack; numerics right-aligned at the edge), use `fixedLayout` with the flexing column marked `ellipsis` + `contained`. Use for: a titled report table whose count must track the (possibly externally-filtered) rows.
+- **TableSectionHeader** — Composable header for a table/section: title on the left, a record count (or custom `meta`) pushed to the right on the same baseline. Key props: `title`, `count?`, `total?` (when `> count`, the count reads "N of TOTAL records" — reflects an external filter without owning filter UI), `countNoun?` (default "record"), `meta?` (custom right-side node, replaces the count). Composes Layout + Text only. Use directly for a section header, or via `SectionTable` to bind it to a table.
 - **SelectableTable** — Table with checkbox selection and action bar. Key props: `data`, `columns`, `getRowId`, `selectionStore`, `selectionActions`. Use for: batch operations on table rows.
-- **QuickFilter** — Filter input + BaseTable passthrough. Key props: all BaseTable props + `filterPlaceholder`. Use for: adding text search to any BaseTable.
+- **QuickFilter** — Generic search input that filters a list of items on any text inside them. Key props: `items` (the data), `extract` (optional text extractor; default: JSON.stringify), `placeholder`, `initialQuery`, `onQueryChange`, `children` (render-prop receiving filtered items + query). Use for: text search over any collection — works with lists, tables, trees, or other renderers via the render-prop child.
 - **DataTableContainer** — Scrollable container wrapper. Key props: `maxHeight`, `fill`. Use for: constraining table height with scroll.
 - **createSelectionStore / fromSignal** — Utilities to create or wrap selection state (`SelectionStore<Id>`). Use for: managing checkbox selection state, optionally backed by persistent storage.
-- **PivotGrid<RowKey, ColKey, Cell>** — Dense pivot of runtime-derived rows × runtime-derived columns, with two-axis sticky positioning (top header AND left column), optional clickable cells, and optional continuous heat coloring. Caller passes flat `readonly RowKey[]` + `readonly ColKey[]` arrays (caller sorts), label functions, a `cell(row, col) → Cell | null` lookup, and a `renderCell(cell, row, col) → JSX` formatter. Three optional hooks layer on top: `cellHref` (wraps cells in `<a>` for cross-route navigation), `onCellClick` (button-wrapped fallback for in-page selection), and `getCellHeat → number | null` (the grid does the 0..1 → alpha math). Heat ramp defaults to `Math.sqrt` (perceptual); pass `heatRamp={(v) => v}` for linear. Curried variants `HeatPivotGrid` (type-enforces `getCellHeat`) and `LinkPivotGrid` (type-enforces `cellHref`) ship alongside. Use for: alarm-period grids, ops metrics pivots, flag matrices — anywhere the same row × col × cell shape recurs with dynamic axes.
+- **GapCell** — Remaining-work table cell: bold count + percentage + a 40×4 completion bar, colored by a severity ramp over percent-remaining (`0`→success, `≤50`→warning, `>50`→danger; pure `gapSeverity()` exported). Blank (`—`) when `total === 0` or `remaining` is nullish. Data-only. Key props: `remaining`, `total`. Use for: census/migration gap columns (source − landed).
+- **PivotGrid<RowKey, ColKey, Cell>** — Dense pivot of runtime-derived rows × runtime-derived columns, with two-axis sticky positioning (top header AND left column), optional clickable cells, and optional continuous heat coloring. Caller passes flat `readonly RowKey[]` + `readonly ColKey[]` arrays (caller sorts), label functions (`rowLabel`/`colLabel: (key) => string | JSX.Element`), a `cell(row, col) → Cell | null` lookup, and a `renderCell(cell, row, col) → JSX` formatter. Three optional hooks layer on top: `cellHref` (wraps cells in `<a>` for cross-route navigation), `onCellClick` (button-wrapped fallback for in-page selection), and `getCellHeat → number | null` (the grid does the 0..1 → alpha math). Heat ramp defaults to `Math.sqrt` (perceptual); pass `heatRamp={(v) => v}` for linear. Curried variants `HeatPivotGrid` (type-enforces `getCellHeat`) and `LinkPivotGrid` (type-enforces `cellHref`) ship alongside. Use for: alarm-period grids, ops metrics pivots, flag matrices — anywhere the same row × col × cell shape recurs with dynamic axes.
 - **Column helpers**: `floatCol`, `intCol`, `dateTimeCol`, `dateCol`, `textCol` + curried factories (`floatColWith`, `intColWith`, etc.). Use for: declarative column definitions with built-in cell renderers.
 - **Cell renderers**: `IdCell`, `StringCell`, `TagCell`, `MoneyCell`, `DateCell`, `DateTimeCell`, `MinuteDateTimeCell`, `DurationCell`, `StatusCell`, `CheckboxCell`, `FloatCell`, `IntCell`, `MetricValueCell`, `LongTextCell`. Use for: typed cell formatting in tables. Compose with `withCellStyle` or `withValueColor` for styled/conditional-color variants.
   - **MoneyCell** props: `value` (number cents-or-units), `currency?` (default `"USD"`), `locale?` (default `"en-US"`), `maxValue?` (default `$10B`). Renders with **tabular figures + right alignment** and a **width cap** derived from `maxValue` (see the Fixed-width fields convention) so a money column reserves no more than its widest value; pass `maxValue={null}` to opt out of the cap. It is the display counterpart to `CurrencyInput` — same width discipline so input and column line up.
@@ -855,6 +1422,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
     - `reveal?: "inline" | "tooltip"` (default `"inline"`) — how the full value is revealed. `"inline"` shows "more..."/"less" buttons (existing behavior). `"tooltip"` composes the library's `Tooltip` (viewport-aware, auto-flips) and shows the full value on hover.
     - `tooltipPlacement?: "top" | "bottom" | "left" | "right"` (default `"top"`) — preferred placement when `reveal="tooltip"`; Kobalte flips if the placement would overflow.
   - `DateTimeCell` extras (additive, optional): `timeZone` (IANA, e.g. `"America/Los_Angeles"` — formats in that zone instead of host-local), `showZoneAbbreviation` (boolean — appends `(PDT)`-style suffix via `Intl.DateTimeFormat({ timeZoneName: "short" })`), `emptyVariant` (`"default"` italic em-dash, `"plain"` non-italic em-dash). CSS hook `--cell-empty-font-style` also lets ancestors globally restyle the empty italic default.
+  - `DateCell` also accepts `timeZone` (IANA, same semantics as `DateTimeCell` — unset means host-local, matching pre-existing behavior). Without it, a UTC instant near midnight can render as the wrong calendar day west of UTC; pass `timeZone` when the value is a UTC instant and the caller needs the date in a specific zone rather than the viewer's.
 
 ## TabbedSidePanel
 - **TabbedSidePanel** — Pure Composite (Depth 2). Composes `Tabs` (vertical) + `Row` (Layout Curried Variant). Owns zero CSS — visual styling lives entirely in the composed Primitives. Vertical tab strip whose active tab doubles as the collapse trigger: clicking the active tab toggles `isOpen`, clicking any other tab activates it (and opens the panel if closed). Fully controlled — consumer owns both `activeTab` and `isOpen` state. Key props: `tabs` (`TabbedPanelTab[]` — `{ id, label, content, hint?, status?, disabled? }`), `activeTab`, `onTabChange`, `isOpen`, `onOpenChange`, `side?` (`"left"`|`"right"`, default `"right"` — controls DOM order so the tab strip sits flush against the page edge), `tabsVariant?` (forwarded to inner `Tabs`, default `"default"`), `color?` (`ColorVariant`, forwarded to inner `Tabs`). Consumers pre-filter `tabs` via `createMemo` before passing them in; there is no built-in per-tab `available()` flag. Use for: persistent right- or left-side detail panels where the tab strip itself is the open/close affordance (asset detail panes, inspector panels, secondary navigation rails).
@@ -866,7 +1434,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
 - **Tabs** — Tab bar with multiple style variants. Key props: `tabs` (array of `Tab`), `activeTab`, `onTabChange`, `variant` (`default`|`underline`|`boxed`|`pill`), `color` (`ColorVariant`), `orientation` (`"horizontal"`|`"vertical"`, default `"horizontal"` — vertical stacks tabs in a column, used by `TabbedSidePanel`). `Tab` interface supports optional `hint` (muted text after label, e.g., keyboard shortcut hints). Exports `TabStatus` type (`"warning" | "error"`). Use for: switching between views/panels.
 
 ## Text
-- **Text** — Polymorphic text element with variant and color. Key props: `variant` (`value`|`label`|`title`|`body`|`units`|`sublabel`), `color`, `as` (`span`|`p`|`h1`..`h4`|`div`). Use for: all themed text rendering.
+- **Text** — Polymorphic text element with variant and color. Key props: `variant` (`value`|`label`|`title`|`body`|`units`|`sublabel`), `color`, `as` (`span`|`p`|`pre`|`h1`..`h4`|`div`). Use for: all themed text rendering.
 - **InlineText** — Atomic Primitive (Depth 1, styleless; owns no CSS file). A bare `<span>` that imposes **no typography of its own** — font-size/weight/family all inherit from the surrounding context — with a single optional **data-driven** `color?` applied inline (same pattern as `Duration`/`NumberWithUnits`). Exported directly (no factory/variants — colour is the only input and it's data, not design-config); pass-through standard `<span>` attrs + `children`. Use for: numeric/text cell values whose colour is computed from data (e.g. muted grey when zero/null, normal otherwise) while their size must match the host table/list — where no size-baking `Text` variant fits. Replaces bare `<span style={{color: muted ? "var(--sui-text-muted)" : "inherit"}}>` in dense grids (e.g. `ViolationsPivotGrid` cells).
   - Example:
     ```tsx
@@ -880,7 +1448,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **TextValue** — `variant="value"`. Use for: data values, readouts.
   - **TextLabel** — `variant="label"`. Use for: field labels, captions.
   - **TextTitle** — `variant="title"`. Use for: section/panel titles (renders `<span>`).
-  - **PageTitle** — `variant="title"`, `as="h1"`. Use for: top-level page headings.
+  - **PageTitle / SectionTitle / SubsectionTitle / TopicTitle** — `variant="title"` with `as="h1"`/`"h2"`/`"h3"`/`"h4"`. Use for: semantic document headings — pick the level that matches the outline depth (all share the `title` typography).
   - **TextBody** — `variant="body"`. Use for: paragraph text, descriptions.
   - **TextUnits** — `variant="units"`. Use for: unit labels next to values.
   - **TextSublabel** — `variant="sublabel"`. Use for: secondary labels, footnotes.
@@ -888,6 +1456,12 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **NowrapBody** — Body text that never wraps. Use for: inline formatted values.
   - **MutedBody** — Dim body text. Use for: secondary descriptions, hints.
   - **AccentBody** — Cyan-accented body text. Use for: highlighted descriptions.
+  - **DangerBody / WarningBody / SuccessBody** — Status-tinted body text (`--sui-danger`/`--sui-warning`/`--sui-success`). Use for: inline error reasons, caution notes, confirmation notes in detail panels.
+  - **EmphasisBody** — Inline bold (600) body `<span>`. Use for: emphasizing a word/value inside a table cell or label. **AccentEmphasisBody** — accent-colored sibling for emphasized counts/values.
+  - **NoteText** — Italic sublabel `<span>`. Use for: parenthetical default/fallback annotations beside a value.
+  - **DangerSublabel** — Danger-tinted sublabel `<span>`. Use for: compact inline error captions beside a control.
+  - **CaptionLabel** — Uppercase, letter-spaced, secondary-tone `label` (0.9rem). Use for: small section captions above a table/card group. **AccentCaptionLabel** — accent-colored sibling (0.85rem) for settings-style column headings.
+  - **MonoMeta** — Mono meta text (11px monospace, muted). Use for: panel subtitles, tiny section labels (SOURCE/LOCAL/COLS-style), footnotes beside data readouts. Library-side replacement for the dev-only `.text-meta` showcase class — library components must not use that class.
   - **FlexLabel** — Label that grows to fill available space. Use for: label + value rows.
   - **InlineUnits** — Inherits parent font-size, muted. Use for: appending units inline.
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
@@ -896,7 +1470,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **CountText** — Small muted count/meta text (10px, muted color, `<span>`). Use for: trailing counts beside a `ChipLabel`, compact metadata.
 
 ## ThreePanelLayout
-- **ThreePanelLayout** — Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `"100%"` — any valid CSS length, e.g. `"100vh"` or `"calc(100vh - var(--app-header-height, 64px))"`; upstream intentionally stays decoupled from app-chrome tokens), `fullHeight?` (backwards-compatible alias mapping to `height="100%"` — `height` wins if both are passed), `leftPanelWidth?` (default `"220px"`), `rightPanelWidth?` (default `"240px"`), `class?`. Omitted side-panel slots collapse their grid column to `0` so the center expands fully. Mobile collapse: the content grid switches to a single column at `max-width: 900px`, side panels drop their border and cap at `200px` max-height (matches the downstream `$mobile-width`). Uses `--sui-bg-primary`, `--sui-text-primary`, `--sui-border` theme tokens; spacing is hardcoded (8 / 12 / 16 px) because the library does not yet define `--sui-space-*` tokens. Use for: multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.
+- **ThreePanelLayout** — Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `"100%"` — any valid CSS length, e.g. `"100vh"` or `"calc(100vh - var(--app-header-height, 64px))"`; upstream intentionally stays decoupled from app-chrome tokens), `fullHeight?` (backwards-compatible alias mapping to `height="100%"` — `height` wins if both are passed), `leftPanelWidth?` (default `"220px"`), `rightPanelWidth?` (default `"240px"`), `class?` — the geometry props are Overrides: curry them once per app via **`createThreePanelLayout`** (`const TriageLayout = createThreePanelLayout({ leftPanelWidth: "380px" })`) instead of repeating widths at call sites. Omitted side-panel slots collapse their grid column to `0` so the center expands fully. Mobile collapse: the content grid switches to a single column at `max-width: 900px`, side panels drop their border and cap at `200px` max-height (matches the downstream `$mobile-width`). Uses `--sui-bg-primary`, `--sui-text-primary`, `--sui-border` theme tokens; spacing is hardcoded (8 / 12 / 16 px) because the library does not yet define `--sui-space-*` tokens. Use for: multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.
   - Decision — `height` over app-coupled `headerOffset`: upstream cannot know the host app's header height, so the library exposes a single `height` prop the caller controls explicitly. `fullHeight` stays as a convenience alias for `"100%"` so existing call sites migrate without an API rewrite. For "viewport minus app header" callers pass `height="calc(100vh - var(--app-header-height, 64px))"` (or similar) from the host app.
   - Example:
     ```tsx
@@ -962,7 +1536,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ```
 
 ## Toggle
-- **Toggle** — Checkbox toggle switch with label positioning and accent color. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), `variant` (`default`|`minimal`), `color` (`ColorVariant`), plus all native checkbox attributes. Note: `power` and `circuit` variants have been removed. Use for: boolean on/off controls.
+- **Toggle** — Checkbox toggle switch with label positioning and accent color. Key props: `size` (`sm`|`md`|`lg`), `label`, `labelPosition` (`left`|`right`), `variant` (`default`|`minimal`|`thematic`), `color` (`ColorVariant`), plus all native checkbox attributes. Note: `power` and `circuit` variants have been removed. Use for: boolean on/off controls.
 
 ## Tooltip
 - **Tooltip** — Hover/focus-activated tooltip built on `@kobalte/core/tooltip`. Renders an accessible floating panel with arrow and fade animation. Key props: `content` (`string | JSX.Element` or an accessor returning either — re-evaluated per open), `children` (the trigger), `class` (appended to the Kobalte trigger; pass `"sui-tooltip__trigger--cell"` for the dense-table "cell" semantics), `openDelay` (default `100`; `1000` matches the downstream `TooltipCell` pattern), `closeDelay` (default `100`), plus any `TooltipRootProps` field (`placement`, `gutter`, `open`/`defaultOpen`, `onOpenChange`, `disabled`, `triggerOnFocusOnly`, `forceMount`, etc.) which is forwarded to `Kobalte.Tooltip.Root`. Exported types: `TooltipProps`, `TooltipContent`. Uses `--sui-border`, `--sui-bg-secondary`, `--sui-text-primary`, `--sui-radius-sm`, `--sui-border-focus` theme tokens. Use for: field hints, truncated-cell full-text reveals, keyboard-shortcut legends, anything hover-activated. No separate `TooltipCell` is shipped — inline `<Tooltip openDelay={1000} class="sui-tooltip__trigger--cell">` instead.
@@ -1084,5 +1658,52 @@ The renderers family is a set of small, composable components for displaying fie
     <DnDHierarchySortBar items={items()} onReorder={handleReorder} label="group by" />
     ```
 
+## DragDrop
+- **DragDrop** — Composite (Depth 2). Folder exposing a generic 2x2 quadrant layout for drag-and-drop sorting UIs (the folder currently exports a single component):
+  - **QuadrantGrid** — a generic 2x2 grid of labeled, colored drop zones. Prop `cells` is a fixed 4-tuple of `QuadrantCellConfig` = `{ key: string; label: string; color: string; children: JSX.Element }`, rendered in order top-left, top-right, bottom-left, bottom-right; each cell exposes its accent via the `--sui-quadrant-color` CSS var and renders a label plus a content slot (the intended droppable region, keyed by `key`). Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>`. Exports types `QuadrantGridProps` and `QuadrantCellConfig`; no curry factory. CSS tokens: `--sui-quadrant-color`, `--sui-border`, `--sui-surface`.
+  - Use for: Eisenhower-style priority matrices, 2x2 categorization boards, drag-to-sort quadrant layouts.
+  - Example:
+    ```tsx
+    import { QuadrantGrid } from "solid-ui-components";
+    <QuadrantGrid
+      cells={[
+        { key: "do", label: "Do first", color: "#22c55e", children: <TaskList bucket="do" /> },
+        { key: "schedule", label: "Schedule", color: "#3b82f6", children: <TaskList bucket="schedule" /> },
+        { key: "delegate", label: "Delegate", color: "#f59e0b", children: <TaskList bucket="delegate" /> },
+        { key: "drop", label: "Drop", color: "#ef4444", children: <TaskList bucket="drop" /> },
+      ]}
+    />
+    ```
+
 ## TitledTimeRangeHeader
 - **TitledTimeRangeHeader** — Atomic Primitive (Depth 1). Owns `TitledTimeRangeHeader.css`; no library-component imports — the date formatting comes from the pure `formatDateTimeRange` helper. Title + optional badge + ISO date range + duration + optional asset chip + optional action slot, optionally wrapped in a link. Key props: `title`, `start`, `end`, `assetLabel`, `badge`, `action`, `href`. The `start` / `end` shape matches the sibling `DateTimeRange` Composite (both feed `formatDateTimeRange`). Use for: detail-page and list-item headers for titled records with a time range — sessions, runs, calls, jobs, events.
+
+## CensusView
+- **CensusView** — Composite (Depth 3). Composes `QuickFilter` + `BaseTable` (one per size bucket) + `InfoPanel` (sticky detail rail) + `GapCell` + `StatusBadge` + `NumberWithUnits` + `CountChip`. Renders a bucketed census of data-source tables: tables are grouped by size/access bucket (`< 100 rows`, `< 100k rows`, `< 1M rows`, `≥ 1M rows`, `Single row`, `Uncounted`, `Empty`, `No access`), each bucket shown as a compact sortable `BaseTable`. Clicking a row opens a sticky detail panel (InfoPanel) with row counts, field-type chips, schema list, and an optional source-specific `actions` slot. Key props: `tables` (`CensusTable[]`), `onSelect` (`(t: CensusTable | null) => void`), `selectedKey` (controlled selection; uncontrolled by default), `actions` (`(t: CensusTable) => JSX.Element | null`). Per-source adapters (`adaptNetSuite`, `adaptAcumatica`, etc.) stay in the consuming app — SUI ships only the normalized types + view.
+  - **Exported model types:** `CensusTable`, `CensusColumn`, `NormStatus`, `CensusBucketId`, `CensusViewProps`, `CENSUS_BUCKETS`.
+  - **Exported pure function:** `bucketOf(t: CensusTable): CensusBucketId` — deterministic bucket assignment; status buckets win over size buckets.
+  - **CSS exception:** `CensusView.css` — structural only (two-column grid + `position: sticky` detail rail). No color/spacing atoms.
+  - Example:
+    ```tsx
+    import { CensusView, type CensusTable } from "solid-ui-components";
+
+    const tables: CensusTable[] = [
+      { key: "acct", entity: "Account", fieldCount: 10, sourceRows: 50, localRows: 50, status: "done" },
+      { key: "inv",  entity: "Invoice", fieldCount: 48, sourceRows: 220_000, localRows: 218_500, status: "doing" },
+    ];
+
+    <CensusView tables={tables} onSelect={(t) => console.log(t?.key)} />
+    ```
+
+## Auth
+- **ManagedListSection** — Composite (Depth 2). Composes `BorderedSection` + `NarrowStack` + `ClusterRow` + `TextSublabel`/`TextBody`/`NoteText` + `SmallGhostButton`/`SmallPrimaryButton`. Zero CSS. User-confirmed Auth0 account linking — "add a way to sign in to this account" plus removal of linked methods — for an app's Settings page (only reachable signed in). Add is direction-safe since merge-on-link preserves data from either side; removal only offers **secondary** identities (Auth0 can't unlink the primary — its `sub` IS the account), so self-lockout is structurally impossible. First-use Add failures ("Unable to open a popup") arm a two-click retry: the Management-API permission popup consumes the first click's popup allowance but the grant sticks, so a second click goes straight to the re-auth popup. Remove is a two-click confirm ("Remove" → "Confirm remove?"). Key props: `auth` (`AuthApi`), `mergeBeforeLink` (`(secondaryAccessToken: string) => Promise<void>` — the app's server-side merge caller, run BEFORE the Auth0 link so ordering never leaves an unmerged secondary), `class?`, `style?`. Exported type: `ManagedListSectionProps`. Use for: a Settings → Login methods panel where users add/remove ways to sign in to one account.
+- **DismissibleNoticeBanner** — Composite (Depth 2). Composes `NoticeBar` (Surface) + `GrowBox` + `TextBody` + `NavLink` + `SmallGhostButton`. Zero CSS. Non-blocking banner shown when the tenant's post-login Action detects another account with the same verified email that is NOT linked to this one (read via `auth.getUnlinkedSiblingHint()`, a custom id_token claim). Detection only — never calls a link API itself; points the user at the app's settings page via `settingsHref`. Dismissal is per-account (keyed by `sub`) and persisted in `localStorage`, since the claim rides every login's id_token and linking clears it at the next login anyway. Key props: `auth` (`AuthApi`), `settingsHref` (string — the app's login-methods settings route), `class?`, `style?`. Exported type: `DismissibleNoticeBannerProps`. Use for: a top-of-app or top-of-settings notice nudging users toward linking a detected sibling account.
+- **DI note (both):** each takes the auth API as the `auth` prop — pass `authApi` from `@primestageprime/auth0-stdb-client` (or any structural match); SUI has no dependency on it. The shared shape (`AuthApi`, `AuthIdentity`, `ConnectionEntry`) lives in `Auth/types.ts` as a structural mirror of that package's `authApi` export — dependency injection keeps the library pure and the flows testable/showcasable with fakes.
+- Example:
+  ```tsx
+  import { ManagedListSection, DismissibleNoticeBanner } from "solid-ui-components";
+  import { authApi } from "@primestageprime/auth0-stdb-client";
+
+  <DismissibleNoticeBanner auth={authApi} settingsHref="/settings#login-methods" />
+  <ManagedListSection auth={authApi} mergeBeforeLink={mergeSecondaryIntoAccount} />
+  ```

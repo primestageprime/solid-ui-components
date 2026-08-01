@@ -1,12 +1,9 @@
+/* Layout composed (layout-purity): the both-axis scroll + fill plumbing is
+   composed — DataTableContainer renders a ScrollBox (capped) or ScrollFillBox
+   (fill). Only position:relative stays here so the sticky-header/row children
+   anchor to the scroll container. */
 .data-table-container {
-  overflow-x: auto;
-  overflow-y: auto;
   position: relative;
-}
-
-.data-table-container--fill {
-  flex: 1;
-  min-height: 0;
 }
 
 /* Sticky table header — apply to <thead> for scroll-locked headers */

@@ -12,9 +12,8 @@
    ============================================ */
 
 .sui-action-list-item {
-  display: flex;
-  align-items: center;
-  gap: var(--sui-space-sm, 8px);
+  /* Row arrangement (flex/align:center/gap:sm) is composed from the ClusterRow
+     Layout variant; only the row chrome + sizing lives here. */
   width: 100%;
   min-height: 40px;
   padding: var(--sui-space-sm, 8px) var(--sui-space-md, 12px);
@@ -77,21 +76,13 @@
   opacity: 1;
 }
 
-.sui-action-list-item__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--sui-space-xs, 6px);
-  flex: none;
-}
+/* Meta cluster arrangement (flex:none / align:center / gap) is composed from the
+   NoShrinkClusterRow Layout variant (gap 6→sm). No box-model geometry here. */
 
 /* Assignee roster: a tight cluster of glyphs (each the same size as the lone
    single-assignee icon), sitting a touch closer than the meta gap so the roster
-   reads as one unit. With a single assignee it is visually identical to before. */
-.sui-action-list-item__assignees {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
+   reads as one unit. Arrangement is composed from the TightClusterRow Layout
+   variant (gap 3→xs); with a single assignee it is visually identical. */
 
 /* Clickable tag (only when onTagClick is wired): a bare button wrapper so the
    pill is a real interactive control. The row's closest("button") guard already
@@ -109,6 +100,39 @@
 .sui-action-list-item__tag:hover,
 .sui-action-list-item__tag:focus-visible {
   filter: brightness(1.35);
+}
+
+/* Open affordance (only when onOpen is wired): a small magnifying-glass icon
+   button sitting just left of the dismiss cap. Reveals on row hover via OPACITY
+   only, mirroring the dismiss cap — it always occupies its box, so hover never
+   shifts geometry (principle 3). Rides currentColor; brightens to accent on its
+   own hover. */
+.sui-action-list-item__open {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sui-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.sui-action-list-item__open svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+.sui-action-list-item:hover .sui-action-list-item__open,
+.sui-action-list-item__open:focus-visible {
+  opacity: 1;
+}
+.sui-action-list-item__open:hover {
+  color: var(--sui-accent);
 }
 
 .sui-action-list-item__dismiss {
@@ -140,4 +164,16 @@
 .sui-action-list-item__dismiss:hover {
   border-color: var(--sui-danger);
   color: var(--sui-danger);
+}
+
+/* Armed (awaiting the confirming second click, opt-in via confirmDismiss): the
+   cap stays fully visible even off-hover and reads in the danger colour, so the
+   "click again to delete" state is unmistakable. Geometry is untouched — this
+   is the same cap, only its glyph (× → ✓) and colour change. */
+.sui-action-list-item__dismiss--armed,
+.sui-action-list-item:hover .sui-action-list-item__dismiss--armed {
+  opacity: 1;
+  border-color: var(--sui-danger);
+  color: var(--sui-danger);
+  background: color-mix(in srgb, var(--sui-danger) 14%, transparent);
 }

@@ -15,6 +15,8 @@
 // ============================================
 
 /** Which line is higher across a band run. "positive" = series above reference. */
+import { flatMap, map } from "../../fn";
+
 export type BandSign = "positive" | "negative";
 
 /** One filled region of the deviation band. */
@@ -47,8 +49,8 @@ const rawSign = (diff: number): RawSign =>
 // back, yielding a polygon hugging both lines.
 const polygonPoints = (run: Sample[]): string =>
   [
-    ...run.map((s) => `${fmt(s.x)},${fmt(s.refY)}`),
-    ...[...run].reverse().map((s) => `${fmt(s.x)},${fmt(s.seriesY)}`),
+    ...map((s) => `${fmt(s.x)},${fmt(s.refY)}`, run),
+    ...map((s) => `${fmt(s.x)},${fmt(s.seriesY)}`, [...run].reverse()),
   ].join(" ");
 
 // Split one contiguous span (both lines defined throughout) into same-sign
@@ -115,10 +117,12 @@ export const buildDeviationBand = <T>(
   series: (item: T, index: number) => number | null,
   reference: (item: T, index: number) => number | null,
 ): BandRun[] => {
-  // Partition into contiguous spans where BOTH lines are defined.
+  // Partition into contiguous spans where BOTH lines are defined. A for-of
+  // loop, not forEach (no fn.forEach exists; the mutable span/spans
+  // accumulation across the scan isn't expressible as a map/filter).
   const spans: Sample[][] = [];
   let span: Sample[] = [];
-  items.forEach((item, i) => {
+  for (const [i, item] of items.entries()) {
     const sVal = series(item, i);
     const rVal = reference(item, i);
     if (sVal == null || rVal == null) {
@@ -126,7 +130,7 @@ export const buildDeviationBand = <T>(
         spans.push(span);
         span = [];
       }
-      return;
+      continue;
     }
     span.push({
       x: cellToX(i),
@@ -134,8 +138,8 @@ export const buildDeviationBand = <T>(
       refY: yToPlot(rVal),
       diff: sVal - rVal,
     });
-  });
+  }
   if (span.length > 0) spans.push(span);
 
-  return spans.flatMap(runsForSpan);
+  return flatMap(runsForSpan, spans);
 };

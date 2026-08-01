@@ -13,6 +13,7 @@ import {
   type JSX,
   mergeProps,
   splitProps,
+  createEffect,
   createUniqueId,
 } from "solid-js";
 import type { ColorVariant } from "../../types";
@@ -34,6 +35,12 @@ export interface CheckboxProps
    * `onChange` handler if both are provided.
    */
   onCheckedChange?: (checked: boolean) => void;
+  /**
+   * Mixed state for aggregate checkboxes (a select-all over a partial
+   * selection). Rendered as a dash; maps to the native input's
+   * `indeterminate` property, which is only reachable via JS.
+   */
+  indeterminate?: boolean;
 }
 
 export const Checkbox: Component<CheckboxProps> = (props) => {
@@ -46,7 +53,14 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
     "id",
     "onCheckedChange",
     "onChange",
+    "indeterminate",
   ]);
+
+  // `indeterminate` is a DOM property, not an attribute — sync it via ref.
+  let inputEl: HTMLInputElement | undefined;
+  createEffect(() => {
+    if (inputEl) inputEl.indeterminate = local.indeterminate ?? false;
+  });
 
   const generatedId = createUniqueId();
   const checkboxId = () => local.id || `checkbox-${generatedId}`;
@@ -94,6 +108,7 @@ export const Checkbox: Component<CheckboxProps> = (props) => {
       )}
       <span class="sui-checkbox__control">
         <input
+          ref={inputEl}
           type="checkbox"
           id={checkboxId()}
           class="sui-checkbox__input"

@@ -120,17 +120,9 @@
   animation: sui-toast-swipe-out 100ms ease-out;
 }
 
-.sui-toast__content {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  width: 100%;
-}
-
-.sui-toast__text {
-  flex: 1 1 auto;
-  min-width: 0;
-}
+/* .sui-toast__content (content row: text + close), .sui-toast__text (the
+   growing text column) now compose Layout variants — TopClusterRow (align:start,
+   gap 8=sm exact) and GrowBox (flex-grow + min-width:0). See Toast.tsx. */
 
 .sui-toast__title {
   font-size: 14px;
@@ -199,12 +191,10 @@
   transition: width 250ms linear;
 }
 
+/* The actions row composes WrapRow (wrap, gap 6->xs=4 snap); only the
+   non-geometry top spacing from the description stays here. */
 .sui-toast__actions {
-  display: flex;
-  gap: 6px;
-  width: 100%;
   margin-top: 8px;
-  flex-wrap: wrap;
 }
 
 .sui-toast__action {

@@ -1,6 +1,7 @@
 import { type Component, createMemo, createSignal } from "solid-js";
 import { Combobox, type ComboboxOption } from "../../src/components/Combobox";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 const INITIAL_COUNTRIES: ComboboxOption[] = [
@@ -98,40 +99,44 @@ export const ComboboxShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Single-mode with create-on-Enter</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Type a country and press Enter — the parent appends to `options` and
-          selects it.
-        </div>
-        <div style={{ "max-width": "320px" }}>
-          <Combobox
-            placeholder="Search or create country…"
-            options={countries}
-            value={country}
-            onChange={setCountry}
-            onCreate={addCountry}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            Type a country and press Enter — the parent appends to `options` and
+            selects it.
+          </div>
+          <div class="demo-maxw-320">
+            <Combobox
+              placeholder="Search or create country…"
+              options={countries}
+              value={country}
+              onChange={setCountry}
+              onCreate={addCountry}
+            />
+          </div>
+        </NarrowStack>
         <Text variant="sublabel">Selected: {country()?.label ?? "(none)"}</Text>
       </div>
 
       <div class="example-group">
         <h3>Multi-mode with chips + create</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `multiple` flips to chip list. `showChips` defaults to `true`; set to
-          `false` to hide the chip header and rely on the inline listbox
-          indicators.
-        </div>
-        <div style={{ "max-width": "420px" }}>
-          <Combobox
-            multiple
-            placeholder="Tag or create…"
-            options={tags}
-            value={selectedTags}
-            onChange={setSelectedTags}
-            onCreate={addTag}
-            onRemove={(opt) => console.log("removed", opt.label)}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `multiple` flips to chip list. `showChips` defaults to `true`; set to
+            `false` to hide the chip header and rely on the inline listbox
+            indicators.
+          </div>
+          <div class="demo-maxw-420">
+            <Combobox
+              multiple
+              placeholder="Tag or create…"
+              options={tags}
+              value={selectedTags}
+              onChange={setSelectedTags}
+              onCreate={addTag}
+              onRemove={(opt) => console.log("removed", opt.label)}
+            />
+          </div>
+        </NarrowStack>
         <Stack gap="xs">
           <Text variant="sublabel">
             Selected count: {selectedTags().length}
@@ -147,54 +152,60 @@ export const ComboboxShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Multi-mode, showChips=false</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          No chip list — selected state is indicated via the listbox check marks
-          only.
-        </div>
-        <div style={{ "max-width": "420px" }}>
-          <Combobox
-            multiple
-            showChips={false}
-            placeholder="Pick tags…"
-            options={tags}
-            value={selectedTags}
-            onChange={setSelectedTags}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            No chip list — selected state is indicated via the listbox check
+            marks only.
+          </div>
+          <div class="demo-maxw-420">
+            <Combobox
+              multiple
+              showChips={false}
+              placeholder="Pick tags…"
+              options={tags}
+              value={selectedTags}
+              onChange={setSelectedTags}
+            />
+          </div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Disabled</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `disabled` is forwarded to both the input and the trigger. Opacity
-          drops and pointer events are suppressed.
-        </div>
-        <div style={{ "max-width": "320px" }}>
-          <Combobox
-            placeholder="Locked"
-            options={() => INITIAL_COUNTRIES}
-            value={lockedCountry}
-            disabled
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `disabled` is forwarded to both the input and the trigger. Opacity
+            drops and pointer events are suppressed.
+          </div>
+          <div class="demo-maxw-320">
+            <Combobox
+              placeholder="Locked"
+              options={() => INITIAL_COUNTRIES}
+              value={lockedCountry}
+              disabled
+            />
+          </div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>onInputChange — parent-side filtering</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `onInputChange` fires on every keystroke. Here the parent derives a
-          filtered option list via `createMemo` — type "st" to see only
-          Stainless Steel.
-        </div>
-        <div style={{ "max-width": "320px" }}>
-          <Combobox
-            placeholder="Search materials…"
-            options={filteredCatalog}
-            value={material}
-            onChange={setMaterial}
-            onInputChange={setQuery}
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `onInputChange` fires on every keystroke. Here the parent derives a
+            filtered option list via `createMemo` — type "st" to see only
+            Stainless Steel.
+          </div>
+          <div class="demo-maxw-320">
+            <Combobox
+              placeholder="Search materials…"
+              options={filteredCatalog}
+              value={material}
+              onChange={setMaterial}
+              onInputChange={setQuery}
+            />
+          </div>
+        </NarrowStack>
         <Stack gap="xs">
           <Text variant="sublabel">Query: {query() || "(empty)"}</Text>
           <Text variant="sublabel">

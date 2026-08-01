@@ -3,6 +3,7 @@
 // ============================================
 
 import { scaleTime as d3ScaleTime } from "d3-scale";
+import { map } from "../../fn";
 
 export interface Scale {
   (value: number): number;
@@ -97,7 +98,7 @@ export const scaleTime = (
   fn.invert = (px: number) => d3.invert(px).getTime();
   fn.domain = [d0, d1] as const;
   fn.range = [range[0], range[1]] as const;
-  fn.ticks = (count = 5) => d3.ticks(count).map((t) => t.getTime());
+  fn.ticks = (count = 5) => map((t) => t.getTime(), d3.ticks(count));
   fn.tickFormat = (count = 5, specifier?: string) => {
     const f = d3.tickFormat(count, specifier as string | undefined);
     return (v: number) => f(new Date(v));

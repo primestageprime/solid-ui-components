@@ -1,6 +1,18 @@
 import type { Component } from "solid-js";
-import { ButtonGroup } from "../../src/components/ButtonGroup";
+import {
+  ButtonGroup,
+  createButtonGroup,
+} from "../../src/components/ButtonGroup";
 import { Button } from "../../src/components/Button/Button";
+
+// Local prop-matrix instances — this showcase demonstrates the gap and
+// orientation axes, which no shipped variant bakes. Factory-curried at module
+// top so the visual config stays in one place rather than at the call site.
+const ConnectedButtonGroup = createButtonGroup({ gap: "none" });
+const VerticalGapButtonGroup = createButtonGroup({
+  orientation: "vertical",
+  gap: "sm",
+});
 
 export const ButtonGroupShowcase: Component = () => {
   return (
@@ -20,24 +32,24 @@ export const ButtonGroupShowcase: Component = () => {
             <Button variant="primary">Execute</Button>
           </ButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Connected (gap: none)
           </h3>
-          <ButtonGroup gap="none">
+          <ConnectedButtonGroup>
             <Button active>Day</Button>
             <Button>Week</Button>
             <Button>Month</Button>
             <Button>Year</Button>
-          </ButtonGroup>
+          </ConnectedButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Vertical</h3>
-          <ButtonGroup orientation="vertical" gap="sm">
+          <h3 class="showcase-heading-gap">Composed — Vertical</h3>
+          <VerticalGapButtonGroup>
             <Button>Option A</Button>
             <Button>Option B</Button>
             <Button variant="danger">Delete</Button>
-          </ButtonGroup>
+          </VerticalGapButtonGroup>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Button Variants</h3>
+          <h3 class="showcase-heading-gap">Composed — Button Variants</h3>
           <ButtonGroup>
             <Button>Default</Button>
             <Button variant="primary">Primary</Button>

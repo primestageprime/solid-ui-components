@@ -25,11 +25,16 @@
   border: none;
   padding: 0;
   max-width: 100%;
+  /* inline-block so text-overflow: ellipsis holds for BOTH the <button>
+     (single-click mode) and the <span role="button"> (double-click mode) —
+     buttons are inline-block by default, spans are not. */
+  display: inline-block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: text;
   vertical-align: middle;
+  text-align: inherit;
 }
 .sui-editable-title__text:disabled {
   cursor: default;

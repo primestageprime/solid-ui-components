@@ -2,12 +2,17 @@
    HUD-Style Table Components
    ============================================ */
 
-/* Base Table */
+/* Base Table frame. The frame's fill/clip/overflow geometry is COMPOSED from
+   Layout variants in BaseTable.tsx (layout-purity): non-fill + non-sticky → a
+   `ClipBox` (clips the rounded corners); non-fill + sticky → a plain box
+   (overflow visible so the sticky <thead> isn't trapped); `fill` → a
+   `ClipFillColumnFlush` (clipping flex column) whose scroll region is a
+   `ScrollFillColumn`; `maxHeight` → a `ScrollYBox`. Only the frame's own
+   non-geometry chrome (bg/border/clip-path corners) remains here. */
 .hud-table {
   position: relative;
   background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
-  overflow: hidden;
   /* Clip corners — top-left and bottom-right */
   clip-path: polygon(
     12px 0,
@@ -19,33 +24,47 @@
   );
 }
 
-/* `fill` makes internal scrolling the default: the outer wrapper becomes a
-   clipping flex column (grows to its parent on both a flex-column parent via
-   `flex` and a definite-height block parent via `height: 100%`), and the inner
-   scroll region flex-grows to fill it with its own vertical scrollbar. The
-   sticky <thead> stays put because it sticks relative to that scroll region.
-   `maxHeight` overrides this (inline style on the scroll region) as the
-   explicit "cap at Npx" escape hatch. Higher specificity than
-   `.hud-table--sticky-header { overflow: visible }` so the clip wins. */
+/* `fill` keeps only its SIZES here (height/min-height are not layout-purity-
+   banned) so the composed flex column can fill a definite-height block parent;
+   the flex/overflow come from the composed ClipFillColumnFlush + ScrollFillColumn. */
 .hud-table.hud-table--fill {
   height: 100%;
   min-height: 0;
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.hud-table.hud-table--fill .hud-table__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .hud-table__table {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--sui-font-family);
+}
+
+/* Fixed layout: column widths honored exactly; the one unwidthed (ellipsis)
+   column absorbs the remainder and truncates instead of widening the table. */
+.hud-table--fixed .hud-table__table {
+  table-layout: fixed;
+}
+
+/* Fit: size the table to its CONTENT — pack columns to the sum of their natural
+   (max-content) widths instead of stretching full-width and spreading columns
+   apart with dead gaps — and SCROLL horizontally when that packed width exceeds
+   the container instead of hard-clipping the rightmost column.
+   The scroll region is a shrinkable scroll container (overflow-x:auto +
+   min-width:0), which does two things at once: (a) a too-wide packed table
+   scrolls WITHIN the frame, and (b) because a scroll container contributes a
+   min-content of 0, a fit table dropped into a flex/grid cell collapses to the
+   track and scrolls inside it rather than blowing the track out past the
+   viewport (the classic auto-fit-minmax overflow). The frame spans its
+   container (capped at 100%); the packed table left-aligns inside it. */
+.hud-table--fit {
+  max-width: 100%;
+  min-width: 0;
+}
+.hud-table--fit .hud-table__scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+.hud-table--fit .hud-table__table {
+  width: max-content;
 }
 
 /* Header */
@@ -57,13 +76,10 @@
   );
 }
 
-/* Sticky header requires the wrapper not to clip — `overflow: hidden` on an
-   ancestor traps sticky positioning. When sticky-header is on, the sticky
-   <thead> should follow the *outer* scroll container (e.g. ScrollPanel). */
-.hud-table--sticky-header {
-  overflow: visible;
-}
-
+/* Sticky header requires the frame not to clip — `overflow: hidden` on an
+   ancestor traps sticky positioning. In sticky mode BaseTable renders the frame
+   as a plain box (no composed clip), so overflow stays visible by default and
+   the sticky <thead> follows the outer scroll container. */
 .hud-table--sticky-header .hud-table__head {
   position: sticky;
   top: 0;
@@ -211,6 +227,12 @@
   padding: 6px 12px;
 }
 
+/* Virtual-scroll spacer rows — pure height, no cell chrome. */
+.hud-table__virtual-spacer-cell {
+  padding: 0;
+  border: none;
+}
+
 /* Column Group Headers (two-row thead) */
 .hud-table__header-cell--group {
   text-align: center;
@@ -239,34 +261,21 @@
 /* ============================================
    QuickFilter
    ============================================ */
-.hud-table-quickfilter {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Fill: the quickfilter becomes a filling flex column so its BaseTable child
-   (which carries `hud-table--fill`) has a concrete height to scroll within.
-   Toolbar stays fixed; the table flex-grows into the rest. */
+/* Layout composed (layout-purity): the quickfilter column → NarrowStack, or
+   FillColumn in `--fill` mode (fills so the BaseTable child has a concrete
+   height to scroll within; toolbar stays fixed while the flex:1 table absorbs
+   the growth); the toolbar → SpreadRow (gap 12→sm on the column snap). Only the
+   `--fill` height (a size, not banned) and the toolbar's visual chrome stay. */
 .hud-table-quickfilter--fill {
   height: 100%;
-  min-height: 0;
-  flex: 1 1 0;
 }
 
 .hud-table-quickfilter__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 8px 12px;
   background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
   border-bottom: none;
   clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
-}
-
-.hud-table-quickfilter--fill .hud-table-quickfilter__toolbar {
-  flex: 0 0 auto;
 }
 
 .hud-table-quickfilter__input {
@@ -316,11 +325,10 @@
 /* ============================================
    Selectable Table
    ============================================ */
-.hud-selectable-table {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+/* Layout composed (layout-purity): root column → Column; the selection action
+   bar → ClusterRow; its actions cluster → GrowClusterRow. The .hud-table
+   wrapper composes ScrollYBox for the maxHeight scroll. Only non-geometry chrome
+   (gradient/clip-path/colours) stays in the rules below. */
 
 /* Result count */
 .hud-table__result-count {
@@ -428,9 +436,6 @@
    Selection Action Bar - HUD Style
    ============================================ */
 .hud-selection-action-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 10px 16px;
   background: linear-gradient(90deg, var(--sui-accent), var(--sui-accent-dim));
   color: var(--sui-bg-deep);
@@ -474,11 +479,7 @@
   letter-spacing: 0.08em;
 }
 
-.hud-selection-action-bar__actions {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-}
+/* geometry composed via GrowClusterRow (align:center, gap sm=8, flex:1) */
 
 .hud-selection-action-bar__actions .hud-button {
   background-color: rgba(0, 0, 0, 0.2);
@@ -506,8 +507,8 @@
 }
 
 .hud-selection-action-bar__actions .hud-button--danger:hover {
-  background-color: #ff1a53;
-  box-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+  background-color: color-mix(in srgb, var(--sui-danger, #ff1a53) 85%, white);
+  box-shadow: 0 0 10px rgba(var(--sui-danger-rgb, 255, 51, 102), 0.5);
 }
 
 .hud-selection-action-bar__clear {
@@ -587,6 +588,7 @@
 
 /* Rowspan cells - vertically centered and visually distinct */
 .hud-grouped-table__rowspan-cell {
+  vertical-align: middle;
   background: linear-gradient(
     90deg,
     rgba(var(--sui-accent-rgb), 0.06),
@@ -609,4 +611,75 @@
 /* Remove top border from first group row */
 .hud-grouped-table .hud-table__body .hud-table__row:first-child {
   border-top: none;
+}
+
+/* ── VirtualTable ─────────────────────────────────────────
+   Static chrome for the virtualized table. Dynamic values (virtualizer
+   spacer heights, measured row min-height, maxHeight override) stay
+   inline in the component. */
+
+.sui-virtual-table__scroll {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+}
+
+.sui-virtual-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.sui-virtual-table__table--compact {
+  font-size: 12px;
+}
+
+.sui-virtual-table__head-row {
+  border-bottom: 1px solid var(--sui-border);
+}
+
+.sui-virtual-table__head-row--sticky {
+  position: sticky;
+  top: 0;
+  background: var(--sui-bg-primary);
+  z-index: 2;
+}
+
+.sui-virtual-table__empty-cell {
+  padding: 24px;
+  text-align: center;
+  color: var(--sui-text-muted);
+}
+
+.sui-virtual-table__row {
+  /* Frozen estimated row height (matches the virtualizer's estimateSize). */
+  min-height: 36px;
+  border-bottom: 1px solid rgba(74, 106, 128, 0.15);
+}
+
+.sui-virtual-table__row--clickable {
+  cursor: pointer;
+}
+
+.sui-virtual-table__row--striped {
+  background: rgba(var(--sui-accent-rgb), 0.02);
+}
+
+.sui-virtual-table__row--hoverable:hover {
+  background: rgba(var(--sui-accent-rgb), 0.04);
+}
+
+/* Width-model containment (ruled 2026-07-21): a variable column's cell
+   content renders inside this size-contained block, so nowrap text cannot
+   inflate the column's minimum past the column's min-width — without it,
+   auto layout clamps the minimum at the CONTENT (or max-width) and the
+   column can never shrink between its bounds. */
+.hud-table__contained {
+  contain: inline-size;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

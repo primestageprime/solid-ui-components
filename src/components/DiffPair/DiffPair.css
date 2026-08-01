@@ -5,8 +5,10 @@
    Uses --sui-* tokens from the active theme.
    ============================================ */
 
+/* The labeled form's label|value grid is composed from LabelValueGrid, and the
+   before/arrow/after row from BaselineWrapRow (see DiffPair.tsx). This file owns
+   only intrinsic styling (typography, colors, min-width). */
 .sui-diff-pair {
-  display: block;
   min-width: 0;
   font-family: var(--sui-font-family);
   color: var(--sui-text-primary);
@@ -15,10 +17,6 @@
 }
 
 .sui-diff-pair--with-label {
-  display: grid;
-  grid-template-columns: minmax(80px, max-content) 1fr;
-  gap: 12px;
-  align-items: baseline;
   width: 100%;
 }
 
@@ -29,21 +27,15 @@
 }
 
 .sui-diff-pair__pair {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
   min-width: 0;
-  flex-wrap: wrap;
 }
 
 .sui-diff-pair__side {
   min-width: 0;
-  flex: 0 1 auto;
 }
 
 .sui-diff-pair__arrow {
   color: var(--sui-text-muted);
-  flex: 0 0 auto;
   font-weight: 400;
 }
 

@@ -1,4 +1,5 @@
-import type { Component } from "solid-js";
+import { type Component, type JSX, For } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { Text } from "../../src/components/Text/Text";
 import {
   TextValue,
@@ -14,8 +15,42 @@ import {
   WarningTitle,
   SuccessTitle,
   DangerTitle,
+  AccentCaptionLabel,
+  AccentEmphasisBody,
+  CaptionLabel,
+  DangerBody,
+  DangerSublabel,
+  EmphasisBody,
+  EndSublabel,
+  FormulaVar,
+  MonoDump,
+  MultiplierLabel,
+  NowrapLabel,
+  ScoreValue,
+  SuccessBody,
+  TopicTitle,
+  WarningBody,
 } from "../../src/components/Text";
 import { Stack } from "../../src/components/Layout/Stack";
+
+// Every remaining curried variant, rendered as its own name.
+const REMAINING: Array<[string, Component<{ children: JSX.Element }>]> = [
+  ["TopicTitle", TopicTitle],
+  ["EmphasisBody", EmphasisBody],
+  ["AccentEmphasisBody", AccentEmphasisBody],
+  ["SuccessBody", SuccessBody],
+  ["WarningBody", WarningBody],
+  ["DangerBody", DangerBody],
+  ["CaptionLabel", CaptionLabel],
+  ["AccentCaptionLabel", AccentCaptionLabel],
+  ["MultiplierLabel", MultiplierLabel],
+  ["NowrapLabel", NowrapLabel],
+  ["EndSublabel", EndSublabel],
+  ["DangerSublabel", DangerSublabel],
+  ["ScoreValue", ScoreValue],
+  ["FormulaVar", FormulaVar],
+  ["MonoDump", MonoDump],
+];
 
 export const TextShowcase: Component = () => {
   return (
@@ -142,6 +177,25 @@ export const TextShowcase: Component = () => {
             <DangerTitle>Danger Title</DangerTitle>
             <div class="text-meta">DangerTitle — title + #ff0040</div>
           </div>
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Every Other Curried Variant</h3>
+        <div class="text-meta">
+          The rest of the exported Text surface, each rendered as itself.
+          Choosing a variant by NAME is the whole point — none of these needs a
+          prop at the call site.
+        </div>
+        <Stack gap="sm">
+          <For each={REMAINING}>
+            {([name, Variant]) => (
+              <div>
+                <Dynamic component={Variant}>{name}</Dynamic>
+                <div class="text-meta">{name}</div>
+              </div>
+            )}
+          </For>
         </Stack>
       </div>
     </div>

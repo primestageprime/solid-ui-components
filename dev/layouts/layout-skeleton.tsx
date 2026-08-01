@@ -24,7 +24,7 @@ import { Box } from "../../src/components/Layout/Box";
 import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
 import { Panel } from "../../src/components/Panel/Panel";
 import { Text } from "../../src/components/Text/Text";
-import { Tabs } from "../../src/components/Tabs";
+import { BoxedTabs } from "../../src/components/Tabs";
 import { Dot } from "../../src/components/Dot";
 import { HeartbeatSparkline } from "../../src/components/HeartbeatSparkline";
 import { useMediaQuery } from "../../src/hooks";
@@ -146,14 +146,13 @@ const ItemsTabbed: Component = () => {
   const [tab, setTab] = createSignal("revenue");
   return (
     <Stack gap="sm">
-      <Tabs
+      <BoxedTabs
         tabs={[
           { id: "revenue", label: "Revenue" },
           { id: "expense", label: "Expenses" },
         ]}
         activeTab={tab()}
         onTabChange={setTab}
-        variant="boxed"
       />
       <Panel variant={tab() === "revenue" ? "success" : "danger"} size="sm">
         <Text variant="body">

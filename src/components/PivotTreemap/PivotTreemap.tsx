@@ -26,6 +26,7 @@ import { SlotFillBar } from "../SlotFillBar";
 import { Treemap, type TreemapSidebar } from "../Treemap";
 import { ChipLabel, CountText, EllipsizedChipLabel } from "../Text/variants";
 import { TightSpreadRow } from "../Layout/variants";
+import { pipe, map, pluck, sortBy, sum } from "../../fn";
 import {
   bucketByDims,
   type PivotAccessors,
@@ -65,7 +66,7 @@ interface WeightedBucket extends PivotBucket {
 const toWeighted = (b: PivotBucket): WeightedBucket => ({
   ...b,
   weight: b.total,
-  children: b.children.map(toWeighted),
+  children: map(toWeighted, b.children),
 });
 
 /** Sum child metrics for the outer SlotFillBar. We use child sums (not the
@@ -76,23 +77,17 @@ const toWeighted = (b: PivotBucket): WeightedBucket => ({
  *  PivotTreemap doesn't drive). */
 const outerSlots = (
   b: PivotBucket,
-): { slots: number; done: number; doing: number } =>
-  b.children.reduce(
-    (acc, c) => ({
-      slots: acc.slots + c.total,
-      done: acc.done + (c.metrics?.done ?? 0),
-      doing: acc.doing + (c.metrics?.doing ?? 0),
-    }),
-    { slots: 0, done: 0, doing: 0 },
-  );
+): { slots: number; done: number; doing: number } => ({
+  slots: sum(pluck("total", b.children)),
+  done: sum(map((c) => c.metrics?.done ?? 0, b.children)),
+  doing: sum(map((c) => c.metrics?.doing ?? 0, b.children)),
+});
 
 export function PivotTreemap<T, Dim extends string>(
   p: PivotTreemapProps<T, Dim>,
 ): ReturnType<Component> {
   const buckets = () =>
-    bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics).map(
-      toWeighted,
-    );
+    map(toWeighted, bucketByDims(p.rows, p.outer, p.inner, p.accessors, p.metrics));
   const untagged = () => p.untaggedCount ?? 0;
 
   const isLeafSelected = (ok: string, ik: string): boolean =>
@@ -127,9 +122,11 @@ export function PivotTreemap<T, Dim extends string>(
   // never dominates or vanishes. Lifted out of render-callback territory
   // because it depends on the full bucket list.
   const untaggedWeight = (): number => {
-    const totals = buckets()
-      .map((b) => b.total)
-      .sort((a, b) => a - b);
+    const totals = pipe(
+      buckets(),
+      pluck("total"),
+      sortBy((n: number) => n),
+    );
     const median = totals[Math.floor(totals.length / 2)] ?? untagged();
     return Math.min(untagged(), Math.max(1, median));
   };

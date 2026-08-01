@@ -1,0 +1,25 @@
+/* ============================================
+   ThroughputChart — static chrome. The svg plot and its data-driven
+   geometry stay inline in the component.
+   ============================================ */
+
+/* Positioning context for the crosshair/tooltip overlays. */
+.sui-throughput-chart {
+  position: relative;
+}
+
+/* Header strip typography — layout comes from SpreadRow. */
+.sui-throughput-chart__header {
+  font-family: var(--sui-font-mono, "JetBrains Mono", "Fira Code", monospace);
+  font-size: 11px;
+  padding: 0 8px 4px;
+}
+
+.sui-throughput-chart__header-title {
+  color: var(--sui-success);
+  font-weight: 600;
+}
+
+.sui-throughput-chart__header-meta {
+  color: var(--sui-text-muted);
+}

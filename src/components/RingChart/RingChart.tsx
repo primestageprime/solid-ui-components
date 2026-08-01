@@ -1,6 +1,9 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// RingChart — Structural (Depth 1). SVG chart; composes no library components.
 import { For, Show } from "solid-js";
+import { map } from "../../fn";
+import "./RingChart.css";
 
 export interface RingChartProps {
   segments: { value: number; color: string; animate?: boolean }[];
@@ -9,10 +12,6 @@ export interface RingChartProps {
   sublabel?: string;
   size?: number;
 }
-
-const monoStyle = {
-  "font-family": "'JetBrains Mono', 'Fira Code', monospace",
-};
 
 export function RingChart(props: RingChartProps) {
   const size = () => props.size ?? 100;
@@ -26,26 +25,20 @@ export function RingChart(props: RingChartProps) {
     const t = props.total;
     if (t === 0) return [];
     let offset = 0;
-    return (props.segments ?? []).map((seg) => {
+    return map((seg) => {
       const pct = Math.min(seg.value / t, Math.max(0, 1 - offset));
       const dashLen = pct * circumference();
       const dashGap = circumference() - dashLen;
       const dashOffset = -offset * circumference();
       offset += pct;
       return { ...seg, dashLen, dashGap, dashOffset };
-    });
+    }, props.segments ?? []);
   };
 
   return (
     <div
-      style={{
-        position: "relative",
-        display: "inline-flex",
-        "align-items": "center",
-        "justify-content": "center",
-        width: `${size()}px`,
-        height: `${size()}px`,
-      }}
+      class="sui-ring-chart"
+      style={{ width: `${size()}px`, height: `${size()}px` }}
     >
       <svg
         role="img"
@@ -53,7 +46,7 @@ export function RingChart(props: RingChartProps) {
         width={size()}
         height={size()}
         viewBox={`0 0 ${size()} ${size()}`}
-        style={{ transform: "rotate(-90deg)" }}
+        class="sui-ring-chart__svg"
       >
         {/* background track */}
         <circle
@@ -62,7 +55,7 @@ export function RingChart(props: RingChartProps) {
           r={radius()}
           fill="none"
           stroke-width={strokeWidth}
-          style={{ stroke: "var(--sui-border-bright)" }}
+          class="sui-ring-chart__track"
         />
         <For each={arcs()}>
           {(arc) => (
@@ -86,36 +79,19 @@ export function RingChart(props: RingChartProps) {
         </For>
       </svg>
       {/* center label */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          "text-align": "center",
-          "pointer-events": "none",
-        }}
-      >
+      <div class="sui-ring-chart__center">
         <div
+          class="sui-ring-chart__label"
           style={{
-            ...monoStyle,
-            color: "var(--sui-text-primary)",
-            "font-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
-            "font-weight": "700",
-            "line-height": "1.1",
+            "--ring-label-size": `${Math.max(10, Math.min(size() / 5, ((size() * 0.7) / Math.max(1, props.label.length)) * 1.6))}px`,
           }}
         >
           {props.label}
         </div>
         <Show when={props.sublabel}>
           <div
-            style={{
-              color: "var(--sui-text-secondary)",
-              "font-size": `${Math.max(9, size() / 10)}px`,
-              "text-transform": "uppercase",
-              "letter-spacing": "0.05em",
-              "margin-top": "2px",
-            }}
+            class="sui-ring-chart__sublabel"
+            style={{ "--ring-sublabel-size": `${Math.max(9, size() / 10)}px` }}
           >
             {props.sublabel}
           </div>

@@ -8,6 +8,26 @@ name: CI
 # Each job gets its own status check so branch-protection rules can
 # require them individually (`test`, `typecheck`, `build`) and a failure
 # in one doesn't mask the others.
+#
+# WHY EVERY INSTALL IS `--ignore-scripts`
+# ---------------------------------------
+# package.json's `prepare` runs `npm run build`, and npm fires `prepare` on
+# every root `npm ci`. That is a ~33s full client+server build (10.7s of it
+# vite-plugin-dts alone) bolted onto the front of EVERY job here — four of
+# which never read `dist/` at all. Measured on run 30478430052: the lint job
+# took 55s, 33s of it building; Biome's actual work is 206ms.
+#
+# `prepare` cannot simply drop the build — it is what produces `dist` for
+# consumers that pin SUI as a git dependency (`github:primestageprime/...`),
+# which is the only lifecycle hook npm runs in that path. So the fix is at
+# the call site: skip lifecycle scripts on install, and let the one job that
+# genuinely needs `dist` build it explicitly.
+#
+# Verified in a clean clone with no `dist/` present: 2686 tests, `lint:ci`,
+# `tsc --noEmit`, `typecheck:dev` and `health` all pass. `esbuild` does
+# declare a postinstall (see package-lock.json `hasInstallScript`), but it
+# resolves its binary from the per-platform optional dep at runtime, so
+# skipping it is inert.
 
 on:
   pull_request:
@@ -24,8 +44,33 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - run: npm ci --ignore-scripts
+      # Biome over `src/`, at zero errors AND zero warnings as of this job's
+      # introduction — `--error-on-warnings` (via `lint:ci`) is what keeps it
+      # there, the same ratchet spirit as scripts/health.mjs. Plain `npm run
+      # lint` stays warning-tolerant for local iteration.
+      #
+      # The a11y rules are the load-bearing ones: this is a component library,
+      # so a keyboard trap or a bogus ARIA attribute ships to every consumer.
+      # Deliberate exceptions carry an inline `biome-ignore` with a rationale;
+      # blanket per-directory relaxations live in `biome.json` overrides.
+      #
+      # KNOWN BLIND SPOT: Biome's a11y rules only analyze intrinsic (lowercase)
+      # JSX elements. SUI composes most markup from Layout variants — <Grid>,
+      # <ClusterRow>, <NarrowStack> — which are custom components and therefore
+      # invisible to these rules. A green check here is NOT a11y coverage.
+      - run: npm run lint:ci
 
   typecheck:
     runs-on: ubuntu-latest
@@ -35,11 +80,32 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       # `tsconfig.json` has `noEmit: true`, so this is a pure type-check
       # pass. Vite's build only transpiles — it doesn't type-check — so
       # this job is genuinely separate signal from the build job.
       - run: npx tsc --noEmit
+      # Gallery/bench check: the Overrides/DataProps split makes visual
+      # config (gap/size/variant/…) a compile error at curried call sites,
+      # but only if dev/ is compiled. This keeps benches honest.
+      - run: npm run typecheck:dev
+
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      # Vision-adherence ratchet: mechanical counts (bare hex colors,
+      # inline styles, missing tests/docs/depth headers) may only go
+      # down. Baseline lives in scripts/health-baseline.json; a
+      # deliberate increase requires committing an updated baseline.
+      # npm ci required since the dotChains ratchet: style-rubric.mjs
+      # imports the typescript compiler API.
+      - run: npm ci --ignore-scripts
+      - run: npm run health
 
   build:
     runs-on: ubuntu-latest
@@ -49,8 +115,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       # Builds both `build:client` and `build:server` per package.json.
       # Catches errors that compile cleanly but fail to bundle (circular
       # module-level imports, unresolved aliases, etc.).
+      #
+      # This is the ONE place in CI that needs a build, and with
+      # `--ignore-scripts` above it now happens once instead of twice —
+      # previously `prepare` built during `npm ci` and this step built again.
       - run: npm run build

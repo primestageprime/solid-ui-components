@@ -27,7 +27,7 @@ export const TitledTimeRangeHeaderShowcase: Component = () => {
         }
       />
 
-      <h3 style={{ "margin-top": "24px" }}>Ongoing (no end)</h3>
+      <h3 class="showcase-heading-gap">Ongoing (no end)</h3>
       <TitledTimeRangeHeader
         title="Project Beta"
         start="2026-02-13T08:30:00Z"
@@ -38,7 +38,7 @@ export const TitledTimeRangeHeaderShowcase: Component = () => {
         }
       />
 
-      <h3 style={{ "margin-top": "24px" }}>With asset label + link href</h3>
+      <h3 class="showcase-heading-gap">With asset label + link href</h3>
       <TitledTimeRangeHeader
         title="Project Gamma"
         start="2026-02-10T12:00:00Z"

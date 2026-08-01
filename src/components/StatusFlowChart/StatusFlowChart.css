@@ -38,6 +38,9 @@
 }
 .sui-statusflow__parent-slot {
   position: relative;
+  /* Static easing for the column-tracking transform (the transform itself is
+     data-driven and stays inline). */
+  transition: transform 0.55s ease-out;
 }
 
 /* Chart slot grows to fill remaining height. */

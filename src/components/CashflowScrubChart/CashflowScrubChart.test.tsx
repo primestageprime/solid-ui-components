@@ -457,4 +457,98 @@ describe("CashflowScrubChart hover", () => {
       container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
     ).toBeNull();
   });
+
+  // ── balanceLineCells: decouple the balance LINE from the ribbon ──────────
+  const constCells = (count: number, balanceCents: number): CashflowCell[] =>
+    dailyCells(
+      d("2026-05-01"),
+      d(`2026-05-${String(count).padStart(2, "0")}`),
+    ).map((cell) => ({ ...cell, cashflowCents: 0, balanceCents }));
+
+  const rampCells = (count: number): CashflowCell[] =>
+    dailyCells(
+      d("2026-05-01"),
+      d(`2026-05-${String(count).padStart(2, "0")}`),
+    ).map((cell, i) => ({ ...cell, cashflowCents: 0, balanceCents: i * 10_000 }));
+
+  const lineYs = (container: HTMLElement): number[] =>
+    (container
+      .querySelector(".sui-cashflow-scrub-chart__line")!
+      .getAttribute("points") ?? "")
+      .trim()
+      .split(" ")
+      .filter(Boolean)
+      .map((p) => Number(p.split(",")[1]));
+
+  it("derives the balance LINE from balanceLineCells while the ribbon stays on cells", () => {
+    // Flat ribbon (constant balance) + a rising line source. If the line came
+    // from the ribbon it would be flat; from balanceLineCells it rises.
+    const ribbon = constCells(8, 5_000);
+    const line = rampCells(8);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={ribbon}
+        balanceLineCells={line}
+        selected={0}
+        onScrub={() => {}}
+      />
+    ));
+    // Ribbon cell count follows `cells`.
+    expect(container.querySelectorAll(".sui-cashflow-cell").length).toBe(8);
+    // The line's y-coordinates vary → it followed the ramp, not the flat ribbon.
+    expect(new Set(lineYs(container as HTMLElement)).size).toBeGreaterThan(1);
+  });
+
+  it("falls back to cells for the LINE when balanceLineCells is absent (flat cells → flat line)", () => {
+    const ribbon = constCells(8, 5_000);
+    const { container } = render(() => (
+      <CashflowScrubChart cells={ribbon} selected={0} onScrub={() => {}} />
+    ));
+    // No decoupling → line follows the flat ribbon → one distinct y.
+    expect(new Set(lineYs(container as HTMLElement)).size).toBe(1);
+  });
+
+  // ── stripAccent: a 1px accent border around the whole ribbon ─────────────
+  const ribbonEl = (container: HTMLElement): HTMLElement =>
+    container.querySelector(".sui-scrub-chart__ribbon") as HTMLElement;
+
+  it("wraps the ribbon in a 1px SOLID accent border by default", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        selected={0}
+        onScrub={() => {}}
+        stripAccent="rgb(10, 20, 30)"
+      />
+    ));
+    const border = ribbonEl(container as HTMLElement).style.border;
+    expect(border).toContain("rgb(10, 20, 30)");
+    expect(border).toContain("1px");
+    expect(border).toContain("solid");
+  });
+
+  it("dashes the ribbon border when stripAccentDashed is set (matches a dashed line)", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        selected={0}
+        onScrub={() => {}}
+        stripAccent="rgb(10, 20, 30)"
+        stripAccentDashed
+      />
+    ));
+    const border = ribbonEl(container as HTMLElement).style.border;
+    expect(border).toContain("1px");
+    expect(border).toContain("dashed");
+  });
+
+  it("leaves the ribbon border unstyled when stripAccent is absent", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart cells={cells} selected={0} onScrub={() => {}} />
+    ));
+    expect(ribbonEl(container as HTMLElement).style.border).toBe("");
+  });
 });

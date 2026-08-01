@@ -1,8 +1,9 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
-// Chart — composed root. Owns the single pointer listener on its <svg>
-// (so per-slot listeners would clobber dispatch); slots read scales +
-// pointer state via context.
+// Chart — Structural (Depth 1). SVG chart root; composes no library
+// components (slots arrive as caller children). Owns the single pointer
+// listener on its <svg> (so per-slot listeners would clobber dispatch);
+// slots read scales + pointer state via context.
 import {
   type Component,
   type JSX,
@@ -13,6 +14,7 @@ import {
   splitProps,
 } from "solid-js";
 import { insetSpan } from "../../internal/geometry/insetSpan";
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import {
   ChartContext,
   type ChartContextValue,
@@ -50,6 +52,12 @@ export interface ChartProps {
    *  doesn't eat plot pixels) and ALSO surfaced as the SVG `<title>` for
    *  screen readers. */
   title?: string;
+  /**
+   * Scale the SVG to fill its container width (`width: 100%; height: auto`),
+   * using `width`/`height` only as the `viewBox` aspect ratio. Removes the need
+   * for the caller to measure the container. Default false (fixed pixel size).
+   */
+  responsive?: boolean;
   class?: string;
   style?: JSX.CSSProperties | string;
   children?: JSX.Element;
@@ -91,6 +99,7 @@ export const Chart: Component<ChartProps> = (props) => {
     "margin",
     "annotationLaneHeight",
     "title",
+    "responsive",
     "class",
     "style",
     "children",
@@ -186,6 +195,8 @@ export const Chart: Component<ChartProps> = (props) => {
   let svgEl: SVGSVGElement | undefined;
   let dragAnchor: number | null = null;
 
+  // Hover/anchor mapping: null when the pointer is outside the plot area, so
+  // the crosshair hides and a drag can't start off-plot.
   const pointerDataX = (clientX: number): number | null => {
     if (!svgEl) return null;
     const rect = svgEl.getBoundingClientRect();
@@ -194,14 +205,29 @@ export const Chart: Component<ChartProps> = (props) => {
     return xScale().invert(px);
   };
 
+  // Drag-extension mapping: CLAMPS to the plot edges rather than returning
+  // null, so dragging past an edge reads as "dragged to the end of the chart"
+  // instead of freezing the selection at the last in-bounds pixel.
+  const pointerDataXClamped = (clientX: number): number | null => {
+    if (!svgEl) return null;
+    const rect = svgEl.getBoundingClientRect();
+    const raw = clientX - rect.left - margin().left;
+    const px = Math.max(0, Math.min(innerWidth(), raw));
+    return xScale().invert(px);
+  };
+
   const onPointerMove = (e: PointerEvent) => {
-    const x = pointerDataX(e.clientX);
-    setHoverX(x);
-    if (dragAnchor != null && x != null) {
-      setDragRange({
-        start: Math.min(dragAnchor, x),
-        end: Math.max(dragAnchor, x),
-      });
+    // Crosshair follows the raw (nullable) position.
+    setHoverX(pointerDataX(e.clientX));
+    // The active drag follows the clamped position so it can reach the edges.
+    if (dragAnchor != null) {
+      const x = pointerDataXClamped(e.clientX);
+      if (x != null) {
+        setDragRange({
+          start: Math.min(dragAnchor, x),
+          end: Math.max(dragAnchor, x),
+        });
+      }
     }
   };
   const onPointerDown = (e: PointerEvent) => {
@@ -211,18 +237,32 @@ export const Chart: Component<ChartProps> = (props) => {
     setDragRange({ start: x, end: x });
     // Clear any previous commit so the next pointerup is observably a new event.
     setCommittedDragRange(null);
+    // Capture the pointer so move/up keep firing on this <svg> even after the
+    // pointer leaves its bounds — this is what lets a release OFF the chart
+    // still end (and commit) the drag. Guarded: the ref can be disconnected by
+    // the time this runs (reactive re-render), which makes the browser throw
+    // InvalidStateError; a disconnected element can't capture anyway.
+    safeSetPointerCapture(svgEl, e.pointerId);
   };
-  const onPointerUp = () => {
+  const onPointerUp = (e: PointerEvent) => {
     if (dragAnchor != null) {
       const range = dragRange();
       if (range != null) setCommittedDragRange(range);
     }
     dragAnchor = null;
     // Leave the latest dragRange in place; consumers clear it via setDragRange(null).
+    if (svgEl?.hasPointerCapture?.(e.pointerId)) {
+      svgEl.releasePointerCapture(e.pointerId);
+    }
   };
-  const onPointerLeave = () => {
+  const onPointerLeave = (e: PointerEvent) => {
     setHoverX(null);
-    dragAnchor = null;
+    // Only abandon the drag if we are NOT holding pointer capture. During a
+    // captured drag the browser still routes events here, so leaving the
+    // bounds must not cancel the in-progress selection.
+    if (!svgEl?.hasPointerCapture?.(e.pointerId)) {
+      dragAnchor = null;
+    }
   };
 
   const ctx: ChartContextValue = {
@@ -261,7 +301,7 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div
-        class={`sui-chart${local.class ? ` ${local.class}` : ""}`}
+        class={`sui-chart${local.responsive ? " sui-chart--responsive" : ""}${local.class ? ` ${local.class}` : ""}`}
         style={local.style as JSX.CSSProperties}
       >
         <Show when={local.title}>
@@ -269,7 +309,7 @@ export const Chart: Component<ChartProps> = (props) => {
         </Show>
         <svg
           ref={svgEl}
-          class="sui-chart__svg"
+          class={`sui-chart__svg${local.responsive ? " sui-chart__svg--responsive" : ""}`}
           width={width()}
           height={height()}
           viewBox={`0 0 ${width()} ${height()}`}

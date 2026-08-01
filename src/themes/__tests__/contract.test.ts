@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { THEMES } from "../manifest";
 
 // The contract: every theme MUST declare these. Custom properties not in this
 // list are theme-specific and not required of every theme.
@@ -65,16 +66,12 @@ const REQUIRED_TOKENS: readonly string[] = [
   "--sui-chart-tick-color",
 ];
 
-// Themes to validate. Update as themes are added (Task 6 adds "bronze.css").
-// TODO(manifest): once src/themes/manifest.ts exists, derive this list from THEMES
-// instead of maintaining it by hand.
-const THEME_FILES: readonly string[] = [
-  "default.css",
-  "hud.css",
-  "bronze.css",
-  "bronze-dark.css",
-  "colorblind.css",
-];
+// Themes to validate — derived from the manifest so a newly registered theme
+// (whose id matches its filename) is covered automatically. This closed the
+// gap where a theme shipped without joining the hand-maintained list.
+const THEME_FILES: readonly string[] = Object.keys(THEMES).map(
+  (id) => `${id}.css`,
+);
 
 // ESM-safe equivalent of CJS `__dirname`. We resolve via fileURLToPath rather
 // than `new URL(..).pathname` because jsdom rewrites `import.meta.url` to an

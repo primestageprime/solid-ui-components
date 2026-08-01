@@ -25,6 +25,7 @@ import type { DAGNode } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
+import { map, filter, pluck } from "../../fn";
 import {
   computeBoundaryBadges,
   computeEdgeViews,
@@ -61,6 +62,7 @@ export type {
   SwimlaneChartOverrides,
   SwimlaneChartDataProps,
 } from "./types";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   let svgRef: SVGSVGElement | undefined;
@@ -192,22 +194,22 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   createEffect(
     on(items, (current, prev) => {
       if (!prev) return;
-      const currentIds = new Set(current.map((i) => i.id));
-      const prevIds = new Set(prev.map((i) => i.id));
+      const currentIds = new Set(pluck("id", current));
+      const prevIds = new Set(pluck("id", prev));
 
       // Leavers: in prev but not in current.
-      const newlyLeft = prev.filter((p) => !currentIds.has(p.id));
+      const newlyLeft = filter((p) => !currentIds.has(p.id), prev);
       if (newlyLeft.length > 0) {
         setLeavingItems((prevLeaving) => {
-          const stillLeaving = prevLeaving.filter((p) => !currentIds.has(p.id));
-          const stillLeavingIds = new Set(stillLeaving.map((p) => p.id));
-          const fresh = newlyLeft.filter((n) => !stillLeavingIds.has(n.id));
+          const stillLeaving = filter((p) => !currentIds.has(p.id), prevLeaving);
+          const stillLeavingIds = new Set(pluck("id", stillLeaving));
+          const fresh = filter((n) => !stillLeavingIds.has(n.id), newlyLeft);
           return [...stillLeaving, ...fresh];
         });
-        const removedIds = new Set(newlyLeft.map((n) => n.id));
+        const removedIds = new Set(pluck("id", newlyLeft));
         setTimeout(() => {
           setLeavingItems((prevLeaving) =>
-            prevLeaving.filter((p) => !removedIds.has(p.id)),
+            filter((p) => !removedIds.has(p.id), prevLeaving),
           );
         }, NODE_LEAVE_MS);
       }
@@ -215,9 +217,10 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       // Enterers: in current but not in prev. Skip if the item is also
       // currently in the leaving set (it's re-appearing — let it just
       // slide back without a hard re-enter).
-      const newlyEntered = current
-        .filter((c) => !prevIds.has(c.id))
-        .map((c) => c.id);
+      const newlyEntered = pluck(
+        "id",
+        filter((c) => !prevIds.has(c.id), current),
+      );
       if (newlyEntered.length > 0) {
         setEnteringIds((existing) => {
           const next = new Set(existing);
@@ -305,12 +308,15 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // height overflow at the bottom of the affected column.
   type BottomBadge = SwimlaneBottomBadge;
   const bottomBadges = createMemo<BottomBadge[]>(() =>
-    (layout().rowOverflows ?? []).map((o) => ({
-      key: `rowoverflow|${o.column}`,
-      x: o.x,
-      y: o.bottomY + STUB_LENGTH + BADGE_RADIUS,
-      count: o.count,
-    })),
+    map(
+      (o) => ({
+        key: `rowoverflow|${o.column}`,
+        x: o.x,
+        y: o.bottomY + STUB_LENGTH + BADGE_RADIUS,
+        count: o.count,
+      }),
+      layout().rowOverflows ?? [],
+    ),
   );
   const [bottomBadgesStore, setBottomBadgesStore] = createStore<BottomBadge[]>(
     [],
@@ -372,18 +378,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   // ResizeObserver — capture container size for centering math.
   onMount(() => {
     if (!containerRef) return;
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setContainerWidth(width);
-      setContainerHeight(height);
-    });
-
-    observer.observe(containerRef);
-    onCleanup(() => observer.disconnect());
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        setContainerWidth(size.width);
+        setContainerHeight(size.height);
+      }),
+    );
   });
 
   const handleNodeClick = (nodeId: string) => {
@@ -391,7 +391,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   };
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div ref={containerRef} class="sui-swimlane-container">
       <svg
         ref={svgRef}
         class="sui-swimlane"

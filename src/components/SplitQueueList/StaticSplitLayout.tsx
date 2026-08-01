@@ -1,4 +1,5 @@
-/* SplitQueueList — STATIC mode.
+/* StaticSplitLayout — Composed (Depth 1). Composes Surface (Depth 0).
+ * SplitQueueList — STATIC mode.
  *
  * A non-animated "two stacked labeled sections with a seam" layout: a read-only
  * TOP list of recent items and an arbitrary BOTTOM block the consumer composes.
@@ -18,6 +19,7 @@ import {
 import { Surface } from "../Surface/Surface";
 import type { StaticSplitLayoutProps } from "./types";
 import "./SplitQueueList.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 const DEFAULT_HEADER_HEIGHT = 28;
 
@@ -49,15 +51,12 @@ export function StaticSplitLayout<T>(
       if (rh > 0) setRowHeight(rh);
     }
   };
-  let resizeObserver: ResizeObserver | undefined;
+  let disposeResizeObserver: (() => void) | undefined;
   onMount(() => {
     requestAnimationFrame(measure);
-    if (typeof ResizeObserver !== "undefined" && rootEl) {
-      resizeObserver = new ResizeObserver(() => measure());
-      resizeObserver.observe(rootEl);
-    }
+    if (rootEl) disposeResizeObserver = observeSize(rootEl, () => measure());
   });
-  onCleanup(() => resizeObserver?.disconnect());
+  onCleanup(() => disposeResizeObserver?.());
 
   // Fill the parent by default so the rail tracks the available height; an
   // explicit `height` prop pins a fixed px height instead.
@@ -75,7 +74,7 @@ export function StaticSplitLayout<T>(
       bg="var(--sui-bg-secondary)"
       borderColor="var(--sui-border)"
       style={{
-        "border-radius": "var(--sui-radius-md)",
+        // border-radius (static token) lives in SplitQueueList.css (.sui-sql).
         height: props.height != null ? `${props.height}px` : "100%",
       }}
     >

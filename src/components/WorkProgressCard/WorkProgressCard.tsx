@@ -1,17 +1,14 @@
-// WorkProgressCard — a status-aware work card with a progress bar derived
+// WorkProgressCard — Composed (Depth 1). Composes Surface / Text / Layout variants (each Depth 0).
+// A status-aware work card with a progress bar derived
 // entirely from work metadata. Data-only: the caller passes domain values
 // (status, estimate, actual) and never reasons about colors or proportions —
 // all styling comes from cardProgress.ts. It carries no visual/size overrides,
 // so per the curried-only convention it's re-exported directly (no factory).
 import { For, Show, type Component, type JSX } from "solid-js";
 import { Surface } from "../Surface/Surface";
+import { BaselineSpreadRow } from "../Layout/variants";
 import { Text } from "../Text/Text";
-import {
-  deriveCardBar,
-  statusAccent,
-  CARD_SIGN_COLOR,
-  type WorkStatus,
-} from "./cardProgress";
+import { deriveCardBar, statusAccent, type WorkStatus } from "./cardProgress";
 import "./WorkProgressCard.css";
 
 export interface WorkProgressCardProps {
@@ -58,7 +55,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
       borderColor={accent()}
       style={cardStyle()}
     >
-      <div class="sui-wpc__header">
+      <BaselineSpreadRow class="sui-wpc__header">
         <Text variant="sublabel" as="span" class="sui-wpc__claimed">
           {props.claimedBy}
         </Text>
@@ -70,7 +67,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
         >
           {props.status}
         </Text>
-      </div>
+      </BaselineSpreadRow>
       <Text variant="title" as="div" class="sui-wpc__title">
         {props.title}
       </Text>
@@ -92,13 +89,7 @@ export const WorkProgressCard: Component<WorkProgressCardProps> = (props) => {
         </div>
         <Show when={bar().sign}>
           {(sign) => (
-            <div
-              class="sui-wpc__sign"
-              style={{
-                border: `1px solid ${CARD_SIGN_COLOR}`,
-                color: CARD_SIGN_COLOR,
-              }}
-            >
+            <div class="sui-wpc__sign">
               {sign() === "yield" ? "⚠︎" : "?"}
             </div>
           )}

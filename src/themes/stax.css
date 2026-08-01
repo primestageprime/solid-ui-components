@@ -1,0 +1,228 @@
+/* ============================================
+   STAX Theme — Light, Engineering, Brand
+   ============================================
+   Inspired by STAX Engineering brand: pine teal
+   chrome/ink, lime accent, ocean navy secondary,
+   cool off-white surfaces. System font stack.
+
+   The baseline @import must stay first (CSS requires all
+   @import rules precede other rules); the stax overrides
+   later in this file still win over the imported baseline.
+   ============================================ */
+@import "./_baseline.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--sui-font-family);
+  background-color: var(--sui-bg-primary);
+  color: var(--sui-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Global scrollbar default: thin, themed, quiet. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sui-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--sui-border-bright);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:root {
+  /* ---- Accent — STAX lime ----
+     Raw lime on white is ~1.9:1, so the accent is reserved for fills next to
+     dark ink; --sui-accent-dim is the text-safe darker lime (retuned to
+     ~4.5:1+ on both bg-primary and bg-secondary, same hue/chroma as accent). */
+  --sui-accent: #a6ce39;
+  --sui-accent-rgb: 166, 206, 57;
+  /* Deepened from #5f7a20: it cleared bg-primary/bg-secondary but read only
+     4.31:1 as a button hover label on the 10% accent wash. Now >= 4.6:1 there. */
+  --sui-accent-dim: #5a741e;
+
+  /* Label colour for accent/warning fills. The lime accent is very light, so
+     the primary button's label is dark ink (7.67:1) and the button LIGHTENS on
+     hover rather than darkening — see the .sui-btn--primary override below. */
+  --sui-on-accent: var(--sui-text-primary);
+  --sui-on-warning: #ffffff;
+
+  /* ---- Semantic ---- */
+  /* Deepened from #b3372c so danger stays >= 4.6:1 as text on its own 15% wash. */
+  --sui-danger: #a33228;
+  --sui-danger-rgb: 163, 50, 40;
+  --sui-warning: #966817;
+  --sui-warning-rgb: 150, 104, 23;
+  --sui-success: #2f7d4f;
+  --sui-success-rgb: 47, 125, 79;
+
+  /* ---- Backgrounds — cool off-white family ---- */
+  --sui-bg-deep: #e6ecea;
+  --sui-bg-primary: #f4f7f6;
+  --sui-bg-secondary: #fbfcfc;
+  --sui-bg-tertiary: #eaf2e2;
+  /* Opaque on purpose: sticky table headers use elevated as their backdrop. */
+  --sui-bg-elevated: #ffffff;
+
+  /* ---- Text — pine ink ---- */
+  --sui-text-primary: #12312b;
+  --sui-text-secondary: #40615a;
+  --sui-text-muted: #617570;
+
+  /* ---- Borders ---- */
+  --sui-border: #ced8d3;
+  --sui-border-bright: #b9c9c2;
+  --sui-border-focus: #0d4a42;
+
+  /* ---- Radii ---- */
+  --sui-radius-sm: 4px;
+  --sui-radius-md: 6px;
+  --sui-radius-lg: 10px;
+
+  /* ---- Clip sizes ---- */
+  --sui-clip-sm: 8px;
+  --sui-clip-md: 12px;
+  --sui-clip-lg: 16px;
+  --sui-clip-xl: 24px;
+
+  /* ---- Spacing scale (identical across themes) ---- */
+  --sui-space-0: 0;
+  --sui-space-px: 1px;
+  --sui-space-0-5: 2px;
+  --sui-space-1: 4px;
+  --sui-space-1-5: 6px;
+  --sui-space-2: 8px;
+  --sui-space-2-5: 10px;
+  --sui-space-3: 12px;
+  --sui-space-4: 16px;
+  --sui-space-5: 20px;
+  --sui-space-6: 24px;
+
+  /* ---- Typography — system stack, no webfont dependency ---- */
+  --sui-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sui-font-utility: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sui-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---- Chart status colors ---- */
+  --status-full: #2f7d4f;
+  --status-partial: #9a6b18;
+  --status-sparse: #c74d1b;
+  --status-missing: #b3372c;
+
+  /* ---- Chart chrome ---- */
+  --sui-chart-tick-color: #40615a;
+
+  /* ---- Chart semantics (violation / threshold / transition windows) ---- */
+  --chart-violation-band: rgba(179, 55, 44, 0.12);
+  --chart-violation-band-border: rgba(179, 55, 44, 0.4);
+  --chart-threshold: #b3372c;
+  --chart-warmup: rgba(64, 97, 90, 0.12);
+  --chart-warmup-border: rgba(64, 97, 90, 0.32);
+  --chart-shutdown: rgba(64, 97, 90, 0.12);
+  --chart-shutdown-border: rgba(64, 97, 90, 0.32);
+  --chart-series-1: #16365c;
+  --chart-series-2: #7fa32b;
+  --chart-series-3: #0d7c8c;
+  --chart-series-4: #c96442;
+  --chart-series-5: #7a5c8c;
+  --chart-series-6: #2f7d4f;
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     Reused verbatim from bronze.css: that set is validated for the light-mode
+     OKLCH lightness band, adjacent CVD floor (min ΔE >= 8), chroma floor, and
+     >= 3:1 against a white chart surface — identical conditions here
+     (--sui-bg-elevated #ffffff). See default.css for the full validation note. */
+  --sui-series-1: #c94c18;
+  --sui-series-2: #0c87a7;
+  --sui-series-3: #a56d0f;
+  --sui-series-4: #2279dc;
+  --sui-series-5: #0a924b;
+  --sui-series-6: #9658c6;
+  --sui-series-7: #7f8006;
+  --sui-series-8: #c04688;
+}
+
+/* ============================================
+   Component overrides — light-bg cases where
+   pure tokens are insufficient (mirrors bronze)
+   ============================================ */
+
+/* Solid neutral button: mid-pine tone — text-secondary on white is borderline
+   for a filled control; #35544c sits between secondary and primary (~7:1). */
+.sui-btn--secondary {
+  background: #35544c;
+  border-color: #35544c;
+  color: var(--sui-bg-elevated);
+}
+.sui-btn--secondary:hover:not(:disabled) {
+  background: var(--sui-text-primary);
+  border-color: var(--sui-text-primary);
+  color: var(--sui-bg-elevated);
+}
+
+/* Primary hover. STAX's lime accent is very light, so the primary button's
+   label is dark ink (7.67:1 on the accent) — which means the baseline's
+   darken-on-hover to --sui-accent-dim would drop that label to 2.63:1. The
+   fill LIGHTENS on hover instead, keeping the ink label and the lime identity;
+   the accent border carries the affordance. */
+.sui-btn--primary:hover:not(:disabled) {
+  background: #b8d95c;
+  border-color: var(--sui-accent);
+  color: var(--sui-on-accent, #ffffff);
+}
+
+/* As in bronze: a 90% warning wash lightens against the off-white page and
+   drops the white label to 4.10:1. Darken on hover instead. */
+.sui-btn--warning:hover:not(:disabled) {
+  background: #7d5613;
+  border-color: #7d5613;
+  color: var(--sui-on-warning, #ffffff);
+}
+
+/* Panel glows: dark-theme rgba(0,0,0) shadows are too heavy on off-white.
+   Pine-ink-tinted alphas instead. */
+.sui-panel--glow-subtle {
+  box-shadow: 0 1px 3px rgba(18, 49, 43, 0.06);
+}
+.sui-panel--glow-medium {
+  box-shadow: 0 2px 8px rgba(18, 49, 43, 0.1);
+}
+.sui-panel--glow-strong {
+  box-shadow: 0 4px 16px rgba(18, 49, 43, 0.14);
+}
+
+/* DagChart nodes/edges: white-on-off-white needs firmer strokes (see bronze). */
+.sui-dag__node-bg {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-text-muted);
+  stroke-width: 1.25;
+  filter: drop-shadow(0 1px 3px rgba(18, 49, 43, 0.12));
+}
+.sui-dag__node--clickable:hover .sui-dag__node-bg {
+  stroke: var(--sui-accent-dim);
+  filter: drop-shadow(0 2px 6px rgba(18, 49, 43, 0.18));
+}
+.sui-dag__edge {
+  stroke: var(--sui-text-secondary);
+}
+.sui-dag__arrow {
+  fill: var(--sui-text-secondary);
+}

@@ -1,0 +1,274 @@
+/* BucketQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
+   Layout Purity). N always-present buckets stacked as one full-height bar;
+   each bucket's height is computed (weighted water-fill), never flex-stretched.
+   Chrome is thematically NEUTRAL — the only role color is a dot beside each
+   bucket label. */
+.bucket-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+.bucket-queue__bucket {
+  display: flex;
+  flex-direction: column;
+  flex: none; /* height is set inline from the water-fill allocation */
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+  overflow: hidden;
+}
+.bucket-queue__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex: none;
+  padding: 6px 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--sui-border);
+}
+.bucket-queue__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.bucket-queue__count {
+  /* inline-block so it is transformable: a row arriving in a COLLAPSED bucket
+     has no slot to open, so the count is what acknowledges it (see ./motion).
+     `transform` has no effect on a non-replaced inline box. */
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+.bucket-queue__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.bucket-queue__row {
+  /* A horizontal line: the checkbox indicator (select mode) is a fixed leading
+     slot (see .bucket-queue__checkbox's `flex: none`) and .bucket-queue__content
+     grows beside it. With no checkbox rendered (select mode off) this is a
+     single flex child spanning the row — indistinguishable from the previous
+     block layout. Mirrors SplitQueueList's .sui-sql__row/__marker/__content. */
+  display: flex;
+  align-items: center;
+  /* The ROW owns its padding — `renderItem` supplies bare content and never
+     pads. Two things depend on this being here rather than at the call site:
+     the selected row's 2px inset accent bar is drawn at the row's left edge, so
+     only the row's own padding-left guarantees the bar never touches the
+     content (a consumer that forgot to pad would jam text against it); and the
+     horizontal value matches .bucket-queue__header / .bucket-queue__empty, so a
+     bucket's label, its rows, and its empty strip all share one left edge.
+     box-sizing so the inline `height` the arrival animation drives (see
+     ./motion.ts) is the border-box height it measured. */
+  box-sizing: border-box;
+  padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
+  border-top: 1px solid var(--sui-border-subtle, rgba(127, 127, 127, 0.15));
+  /* A row opening from height:0 (the arrival animation, see ./motion.ts)
+     animates `height` only — `overflow` itself is not animatable — so without
+     this the content would spill out of the collapsing box instead of being
+     revealed by it. */
+  overflow: hidden;
+}
+/* The first row hides its separator rather than dropping it: `border-top: none`
+   would make this ONE row 1px shorter than every other, and the sizing model
+   measures a single row and multiplies by the count (see BucketQueue.tsx), so
+   the odd row out made every bucket under-count by (rows - 1) px and scroll a
+   sliver it should have had room for. Transparent keeps rows UNIFORM, which is
+   what the measurement is entitled to assume. */
+.bucket-queue__row:first-child {
+  border-top-color: transparent;
+}
+.bucket-queue__row--interactive {
+  cursor: pointer;
+}
+.bucket-queue__row--interactive:hover {
+  background: var(--sui-bg-hover, rgba(127, 127, 127, 0.08));
+}
+/* SELECTED — the accent bar ONLY, never a fill. A persistent background behind
+   row text reads at too low a contrast once the pointer leaves, and because a
+   consumer typically auto-selects a row, that state is almost always on screen.
+   Hover owns the fill, exactly as it does for an unselected row. */
+.bucket-queue__row--selected {
+  box-shadow: inset 2px 0 0 var(--sui-accent);
+}
+
+/* Role color lives ONLY in the dot (theme vars). */
+.bucket-queue__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sui-text-muted);
+}
+.bucket-queue__dot--success {
+  background: var(--sui-success);
+}
+.bucket-queue__dot--danger {
+  background: var(--sui-danger);
+}
+.bucket-queue__dot--warning {
+  background: var(--sui-warning);
+}
+.bucket-queue__dot--accent {
+  background: var(--sui-accent);
+}
+.bucket-queue__dot--muted,
+.bucket-queue__dot--default {
+  background: var(--sui-text-muted);
+}
+
+/* A collapsible, populated bucket's header IS the toggle. The UA button box is
+   reset completely and deliberately: `headH` is measured from bucket 0's
+   header ALONE (see BucketQueue.tsx) and applied to every bucket, so a
+   button's default font-family, padding, margin or border leaking in would
+   mis-size the entire bar — not just this header. `font-family`/`line-height`
+   are named individually rather than via the `font` shorthand, which would
+   also wipe the weight, size and letter-spacing the base rule sets. */
+.bucket-queue__header--toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sui-border);
+  border-radius: 0;
+  color: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.bucket-queue__header--toggle:hover {
+  background: var(--sui-bg-hover, rgba(127, 127, 127, 0.08));
+}
+.bucket-queue__header--toggle:focus-visible {
+  outline: 1px solid var(--sui-border-focus);
+  outline-offset: -1px;
+}
+
+/* The disclosure chevron occupies EXACTLY the tone dot's 8px slot, and
+   replaces it — one role-coloured mark per bucket, same place, so a
+   collapsible bucket's label sits on the same left edge as every other. */
+.bucket-queue__chevron {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  color: var(--sui-text-muted);
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.bucket-queue__chevron--expanded {
+  transform: rotate(90deg);
+}
+.bucket-queue__chevron--success {
+  color: var(--sui-success);
+}
+.bucket-queue__chevron--danger {
+  color: var(--sui-danger);
+}
+.bucket-queue__chevron--warning {
+  color: var(--sui-warning);
+}
+.bucket-queue__chevron--accent {
+  color: var(--sui-accent);
+}
+.bucket-queue__chevron--muted,
+.bucket-queue__chevron--default {
+  color: var(--sui-text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bucket-queue__chevron {
+    transition: none;
+  }
+}
+
+/* Collapsed strip shown in a bucket with no items (opt-in via
+   `bucket.emptyLabel`). Muted, one line, never a big empty box. */
+.bucket-queue__empty {
+  padding: 6px 12px;
+  color: var(--sui-text-muted);
+  font-size: 0.85rem;
+}
+
+/* SELECT MODE (bag-of-stuff grouping): the FILLED BOX is the whole treatment.
+   The whole row is the click target, so the box is a non-interactive indicator,
+   not an <input>.
+
+   There is deliberately NO rule for `.bucket-queue__row--checked` — it stays on
+   the DOM as a hook for consumers and tests, but paints nothing. A persistent
+   tint behind row text is the same readability problem the selected row was
+   fixed for (see `.bucket-queue__row--selected`), and it is worse here: checking
+   is a BULK action, so the tint is not one row but a whole band of them, and it
+   also collides with the hover fill that has to keep working on a checked row.
+   Hover owns the background; the box owns the state. */
+.bucket-queue__checkbox {
+  display: inline-flex;
+  flex: none; /* fixed leading slot — never shrinks to make room for content */
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--sui-border-bright);
+  border-radius: var(--sui-radius-sm);
+  font-size: 0.625rem;
+  line-height: 1;
+  background: var(--sui-bg-secondary);
+  vertical-align: middle;
+}
+
+/* The consumer's renderItem output. Grows to fill the rest of the row beside
+   the (optional) checkbox; min-width: 0 lets a shrinking flex child go below
+   its content's intrinsic width, which is what allows a consumer's own
+   ellipsis/nowrap styling to actually clip instead of forcing row overflow. */
+.bucket-queue__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.bucket-queue__checkbox--checked {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+  color: var(--sui-bg-secondary);
+}
+
+/* REFUSED — a row the consumer's `isCheckable` turned down. Dimmed IN PLACE
+   rather than filtered out: filtering pulls rows out from under the pointer the
+   moment the first item is checked, and makes the header count disagree with
+   what the bucket holds. It also destroys the context that explains why the
+   current selection constrains further picks.
+
+   Only opacity and cursor here — deliberately no background tint, the same
+   readability rule as `--selected` and `--checked` above. There is nothing to
+   suppress a hover fill with, because a refused row never receives
+   `--interactive` in the first place; that omission is what removes both the
+   fill and the pointer cursor. The row KEEPS its tab stop and stays an
+   arrow-key target (aria-disabled, not removed) — see ./keyboard. */
+.bucket-queue__row--uncheckable {
+  opacity: 0.38;
+  cursor: default;
+}
+/* Dashed rather than a colour change, so the refusal still reads where opacity
+   is flattened — forced-colors / high-contrast modes drop it entirely. */
+.bucket-queue__checkbox--disabled {
+  border-style: dashed;
+}
+
+/* FOCUS — a ring only. No background fill: a persistent fill behind row text is
+   exactly the readability problem the selected-row treatment was fixed for, and
+   a marker glyph that appears only on focus would shift the row's content. */
+.bucket-queue__row--focused,
+.bucket-queue__row:focus-visible {
+  outline: 1px solid var(--sui-border-focus);
+  outline-offset: -1px;
+}

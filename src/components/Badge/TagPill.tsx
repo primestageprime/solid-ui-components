@@ -1,6 +1,11 @@
 // ============================================
-// TagPill — Atomic Primitive (Depth 1)
-// Owns CSS (TagPill.css), no component imports.
+// TagPill — Composed (Depth 2)
+// Owns CSS (TagPill.css) as a deliberate Depth-2 exception (pill chrome is
+// intrinsic). Composes DigitRoller for one case: a PURELY NUMERIC plain
+// label rolls odometer-style when its value changes (numeric counts roll
+// by default — Peter, 2026-07-14). Non-numeric labels render as before.
+// The roll requires the pill instance to SURVIVE the change — list callers
+// use <Index>/stable keys, not <For> over rebuilt objects.
 // Placement: lives in src/components/Badge/ as a sibling of CountChip (a separate
 // pill primitive, NOT a StatusBadge variant — different data model), to keep
 // pill/lozenge indicators in one family.
@@ -21,8 +26,11 @@
 // (`tag` / `key` / `value` / `active`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
+import { DigitRoller } from "../DataDisplay/DigitRoller";
 import "./TagPill.css";
+
+const isNumericLabel = (s: string) => /^\d+$/.test(s);
 
 /** Free label — a ":" splits it into namespace:value. */
 export interface TagPillLabel {
@@ -76,7 +84,9 @@ export const TagPill: Component<TagPillProps> = (props) => {
           class="sui-tag-pill"
           classList={{ "sui-tag-pill--active": parts().active }}
         >
-          {parts().label}
+          <Show when={isNumericLabel(parts().label)} fallback={parts().label}>
+            <DigitRoller value={parts().label} />
+          </Show>
         </span>
       }
     >

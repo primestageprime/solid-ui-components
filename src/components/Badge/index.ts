@@ -1,4 +1,4 @@
-// Base (StatusBadge) is intentionally NOT exported — use curried variants or createStatusBadge().
+// Base (StatusBadge) is intentionally NOT exported — use curried variants ONLY (no create* factories at call sites — if the variant you need is missing, add it here).
 export { createStatusBadge } from "./StatusBadge";
 // StatusBadgeVariant is the public contract of createStatusBadge({ variant }) — exported so consumers can type the variant arg.
 export type { StatusBadgeDataProps, StatusBadgeVariant } from "./StatusBadge";
@@ -6,15 +6,40 @@ export * from "./variants";
 // CountChip has no design-config props — already effectively curried, re-exported as-is.
 export { CountChip } from "./CountChip";
 export type { CountChipProps } from "./CountChip";
+// CountBadge — count-only rolling corner pill (Badge-family sibling of CountChip).
+export { CountBadge } from "./CountBadge";
+export type { CountBadgeProps } from "./CountBadge";
 // BaselineDot has no design-config props — re-exported as-is.
 export { BaselineDot } from "./BaselineDot";
 export type { BaselineDotProps } from "./BaselineDot";
+// ScenarioDot — the accent-coloured, filled-or-hollow sibling of BaselineDot.
+export { ScenarioDot } from "./ScenarioDot";
+export type { ScenarioDotProps } from "./ScenarioDot";
+// ScenarioGlyph — the SHAPED sibling of ScenarioDot (any ShapeGlyph shape,
+// filled or hollow), so scenarios are recognisable by shape as well as colour.
+export { ScenarioGlyph } from "./ScenarioGlyph";
+export type { ScenarioGlyphProps } from "./ScenarioGlyph";
 // TagPill — free-text / split-lozenge tag; a Badge-family sibling of CountChip
 // (a separate pill primitive in this folder, not a StatusBadge variant, because
 // its data model differs). Data-only, re-exported as-is.
 export { TagPill } from "./TagPill";
-export type { TagPillProps, TagPillData, TagPillLabel, TagPillKeyValue } from "./TagPill";
+export type {
+  TagPillProps,
+  TagPillData,
+  TagPillLabel,
+  TagPillKeyValue,
+} from "./TagPill";
 // StatusChip — the EDITABLE sibling of StatusBadge (inline text edit + select).
 // A separate Badge-family primitive, not a StatusBadge variant. Data-only.
 export { StatusChip } from "./StatusChip";
 export type { StatusChipProps } from "./StatusChip";
+// composeTagPairs — pure helper (no component) deciding HOW a flat dim:value tag
+// list becomes split/labeled lozenges. Feeds TagPill / ActionListTag call sites;
+// companion to the family the way deriveInitials is to ParticipantAvatar.
+export { composeTagPairs } from "./tagPairs";
+export type {
+  TagPairRule,
+  TagDisplayConfig,
+  SourceTag,
+  ComposedTag,
+} from "./tagPairs";

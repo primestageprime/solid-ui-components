@@ -13,10 +13,13 @@ import {
   Show,
   createSignal,
   mergeProps,
+  onCleanup,
   onMount,
   splitProps,
 } from "solid-js";
 import "./MessageBubble.css";
+import { pipe, filter, join } from "../../fn";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export type MessageBubbleVariant = "self" | "other";
 
@@ -39,7 +42,11 @@ export interface MessageBubbleProps
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
-  parts.filter((p): p is string => Boolean(p)).join(" ");
+  pipe(
+    parts,
+    filter((p): p is string => Boolean(p)),
+    join(" "),
+  );
 
 export const MessageBubble: Component<MessageBubbleProps> = (props) => {
   const [local, others] = splitProps(props, [
@@ -72,10 +79,9 @@ export const MessageBubble: Component<MessageBubbleProps> = (props) => {
       requestAnimationFrame(measure);
     });
     setTimeout(measure, 50);
-    if (typeof ResizeObserver !== "undefined" && textRef) {
-      const ro = new ResizeObserver(measure);
-      ro.observe(textRef);
-    }
+    // Previously this observer was never disconnected — it outlived the
+    // component. The disposer is now wired to onCleanup.
+    if (textRef) onCleanup(observeSize(textRef, () => measure()));
   });
 
   const variantClass = () =>

@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// AlarmStripeDefs — Structural (Depth 1). SVG <defs> chart slot; composes no library components.
 import type { Component } from "solid-js";
 import "./Alarm.css";
 

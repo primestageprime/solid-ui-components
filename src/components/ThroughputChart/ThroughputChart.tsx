@@ -35,6 +35,10 @@ import {
   ChartTooltip,
 } from "../Chart";
 import { Legend } from "../Legend";
+import { SpreadRow } from "../Layout/variants";
+import { filter, map, mean, pluck, sortBy } from "../../fn";
+import "./ThroughputChart.css";
+import { observeSize } from "../../internal/dom/observeSize";
 
 export interface ThroughputPoint {
   timestamp: number; // epoch ms
@@ -122,26 +126,28 @@ function RateChart(props: ThroughputChartProps) {
 
   const points = createMemo(() => {
     const { start, end } = timeRange();
-    return data()
-      .filter((p) => p.timestamp >= start && p.timestamp <= end)
-      .sort((a, b) => a.timestamp - b.timestamp);
+    const inWindow = filter(
+      (p: ThroughputPoint) => p.timestamp >= start && p.timestamp <= end,
+      data(),
+    );
+    return sortBy((p: ThroughputPoint) => p.timestamp)(inWindow);
   });
 
   const yMax = createMemo(() =>
-    niceMax(Math.max(0, ...points().map((p) => p.rowsPerMinute))),
+    niceMax(Math.max(0, ...pluck("rowsPerMinute", points()))),
   );
   const avg = createMemo(() => {
     const pts = points();
     if (pts.length === 0) return 0;
-    return Math.round(
-      pts.reduce((s, p) => s + p.rowsPerMinute, 0) / pts.length,
-    );
+    return Math.round(mean(pluck("rowsPerMinute")(pts)));
   });
   const peak = createMemo(() => {
     const pts = points();
     return pts.length === 0
       ? 0
-      : Math.round(Math.max(...pts.map((p) => p.rowsPerMinute)));
+      : Math.round(
+          Math.max(...map((p: ThroughputPoint) => p.rowsPerMinute, pts)),
+        );
   });
 
   const hourTicks = createMemo(() => {
@@ -157,23 +163,15 @@ function RateChart(props: ThroughputChartProps) {
   });
 
   return (
-    <div class="sui-throughput-chart" style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          "justify-content": "space-between",
-          "font-family": '"JetBrains Mono", "Fira Code", monospace',
-          "font-size": "11px",
-          padding: "0 8px 4px",
-        }}
-      >
-        <span style={{ color: "var(--sui-success)", "font-weight": "600" }}>
+    <div class="sui-throughput-chart">
+      <SpreadRow class="sui-throughput-chart__header">
+        <span class="sui-throughput-chart__header-title">
           Extraction Throughput
         </span>
-        <span style={{ color: "var(--sui-text-muted)" }}>
+        <span class="sui-throughput-chart__header-meta">
           avg {fmtNum(avg())} / peak {fmtNum(peak())} rows/min
         </span>
-      </div>
+      </SpreadRow>
       <Chart
         width={800}
         height={props.height ?? 260}
@@ -256,14 +254,13 @@ function CompletionView(props: ThroughputChartProps) {
       if (rect.width > 0) setWidth(Math.floor(rect.width));
       return;
     }
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width;
-      if (w && w > 0) setWidth(Math.floor(w));
-    });
-    ro.observe(containerRef);
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        if (size.width > 0) setWidth(size.width);
+      }),
+    );
     const rect = containerRef.getBoundingClientRect();
     if (rect.width > 0) setWidth(Math.floor(rect.width));
-    onCleanup(() => ro.disconnect());
   });
 
   // Bucket the completions into one slot per hour, carrying the cumulative %.
@@ -271,16 +268,19 @@ function CompletionView(props: ThroughputChartProps) {
     const windowMs = windowHours() * HOUR_MS;
     const windowStart = now() - windowMs;
     const total = props.totalCount ?? 0;
-    const within = (props.completions ?? []).filter(
-      (c) => c.completedAt >= windowStart && c.completedAt <= now(),
+    const within = filter(
+      (c: CompletionPoint) =>
+        c.completedAt >= windowStart && c.completedAt <= now(),
+      props.completions ?? [],
     );
     let running = Math.max(0, props.baselineCompleted ?? 0);
     const raw: Omit<HourBucket, "barScaled">[] = [];
     for (let h = 0; h < windowHours(); h++) {
       const start = windowStart + h * HOUR_MS;
       const end = start + HOUR_MS;
-      const inBucket = within.filter(
-        (c) => c.completedAt >= start && c.completedAt < end,
+      const inBucket = filter(
+        (c: CompletionPoint) => c.completedAt >= start && c.completedAt < end,
+        within,
       ).length;
       running += inBucket;
       raw.push({
@@ -290,11 +290,17 @@ function CompletionView(props: ThroughputChartProps) {
       });
     }
     // Scale the bars onto the shared 0–100 axis (busiest bucket → full height).
-    const max = Math.max(1, ...raw.map((b) => b.completedCount));
-    return raw.map((b) => ({
-      ...b,
-      barScaled: (b.completedCount / max) * 100,
-    }));
+    const max = Math.max(
+      1,
+      ...map((b: Omit<HourBucket, "barScaled">) => b.completedCount, raw),
+    );
+    return map(
+      (b) => ({
+        ...b,
+        barScaled: (b.completedCount / max) * 100,
+      }),
+      raw,
+    );
   });
 
   const xDomain = (): [number, number] => [0, windowHours() - 1];

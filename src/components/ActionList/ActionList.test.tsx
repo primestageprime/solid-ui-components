@@ -46,6 +46,34 @@ describe("ActionList", () => {
     const { queryByLabelText } = render(() => <ActionList items={items} />);
     expect(queryByLabelText("Dismiss first task")).toBeNull();
   });
+
+  it("with confirmDelete, arms on the first click and only deletes on the second", () => {
+    const onDelete = vi.fn();
+    const { getByLabelText, queryByLabelText } = render(() => (
+      <ActionList items={items} onDelete={onDelete} confirmDelete />
+    ));
+    // First click arms rather than deletes — the cap re-labels to "Confirm".
+    fireEvent.click(getByLabelText("Dismiss second task"));
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(queryByLabelText("Dismiss second task")).toBeNull();
+    // Second click on the now-armed cap confirms.
+    fireEvent.click(getByLabelText("Confirm delete second task"));
+    expect(onDelete).toHaveBeenCalledWith("b");
+  });
+
+  it("with confirmDelete, cancels the arm when the pointer leaves the row", () => {
+    const onDelete = vi.fn();
+    const { getByLabelText, queryByLabelText, container } = render(() => (
+      <ActionList items={items} onDelete={onDelete} confirmDelete />
+    ));
+    fireEvent.click(getByLabelText("Dismiss second task"));
+    expect(getByLabelText("Confirm delete second task")).toBeTruthy();
+    fireEvent.mouseLeave(row(container, 1));
+    // Back to the disarmed cap; nothing deleted.
+    expect(getByLabelText("Dismiss second task")).toBeTruthy();
+    expect(queryByLabelText("Confirm delete second task")).toBeNull();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
 });
 
 describe("ActionList — multi-select", () => {
@@ -415,9 +443,88 @@ describe("ActionList — multi-assignee", () => {
   });
 });
 
+describe("ActionList — editTrigger", () => {
+  const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];
+
+  it("singleClick (default): a click on the title edits and does NOT select", () => {
+    const onSelectionChange = vi.fn();
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(getByText("first task"));
+    expect(container.querySelector("input")).toBeTruthy(); // inline editor open
+    expect(onSelectionChange).not.toHaveBeenCalled(); // title click excluded from selection
+  });
+
+  it("doubleClick: a single click on the title selects the row and does NOT edit", () => {
+    const onSelectionChange = vi.fn();
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        editTrigger="doubleClick"
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    fireEvent.click(getByText("first task"));
+    expect(container.querySelector("input")).toBeNull(); // no editor
+    expect(onSelectionChange).toHaveBeenLastCalledWith(["a"], {
+      kind: "toggle",
+      clickedId: "a",
+      shiftKey: false,
+    });
+    expect(row(container, 0).className).toMatch(/--selected/);
+  });
+
+  it("doubleClick: a double click on the title opens the inline editor", () => {
+    const { getByText, container } = render(() => (
+      <ActionList
+        items={items}
+        actions={actions()}
+        onRename={() => {}}
+        editTrigger="doubleClick"
+      />
+    ));
+    fireEvent.dblClick(getByText("first task"));
+    expect(container.querySelector("input")).toBeTruthy();
+  });
+});
+
+describe("ActionList — onOpen", () => {
+  it("renders no open button when onOpen is absent", () => {
+    const { queryByLabelText } = render(() => <ActionList items={items} />);
+    expect(queryByLabelText("Open")).toBeNull();
+  });
+
+  it("fires onOpen with the row id and does not toggle selection", () => {
+    const onOpen = vi.fn();
+    const onSelectionChange = vi.fn();
+    const { container, getAllByLabelText } = render(() => (
+      <ActionList
+        items={items}
+        actions={[{ hotkey: "c", label: "claim", onApply: vi.fn() }]}
+        onOpen={onOpen}
+        onSelectionChange={onSelectionChange}
+      />
+    ));
+    const openButtons = getAllByLabelText("Open");
+    expect(openButtons.length).toBe(items.length);
+    fireEvent.click(openButtons[1]); // the "b" row
+    expect(onOpen).toHaveBeenCalledWith("b");
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    expect(container.querySelector(".sui-action-list-item--selected")).toBeNull();
+  });
+});
+
 describe("ActionList — onTagClick", () => {
   const tagged: ActionListItemData[] = [
-    { id: "a", name: "first", tags: [{ label: "stax:jtf", active: true }] },
+    { id: "a", name: "first", tags: [{ label: "acme:apollo", active: true }] },
     { id: "b", name: "second", tags: [{ label: "primestage" }] },
   ];
   const actions = () => [{ hotkey: "c", label: "claim", onApply: vi.fn() }];

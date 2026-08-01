@@ -1,0 +1,87 @@
+/* /health route — dev-gallery chrome for the SUI health ratchet viewer. */
+
+.health-view {
+  /* Fluid — the ratchet table earns the full viewport. */
+  max-width: none;
+  margin: 0 auto;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.health-view__back {
+  font-size: 12px;
+  color: var(--sui-text-muted);
+  text-decoration: none;
+}
+
+.health-view__back:hover {
+  color: var(--sui-accent);
+}
+
+.health-view__title {
+  margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  color: var(--sui-text-primary);
+}
+
+.health-view__subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--sui-text-muted);
+}
+
+.health-view__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.health-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  background: var(--sui-bg-secondary);
+}
+
+.health-summary-item__label {
+  font-size: 10px;
+  color: var(--sui-text-muted);
+}
+
+.health-summary-item__trend {
+  margin-top: 2px;
+}
+
+.health-summary-item__range {
+  font-size: 10px;
+  color: var(--sui-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.health-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.health-cell--improved {
+  color: var(--sui-success);
+}
+
+.health-cell--regressed {
+  color: var(--sui-danger);
+}
+
+.health-cell__delta {
+  font-size: 10px;
+  opacity: 0.8;
+}

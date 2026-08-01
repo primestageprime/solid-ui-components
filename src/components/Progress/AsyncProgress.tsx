@@ -13,6 +13,7 @@ import {
   createEffect,
   onCleanup,
 } from "solid-js";
+import { TightStack, BaselineSpreadRow } from "../Layout/variants";
 import "./AsyncProgress.css";
 
 export interface AsyncProgressProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -111,14 +112,14 @@ export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
   };
 
   return (
-    <div class={classes()} {...others}>
-      <div class="async-progress__header">
+    <TightStack class={classes()} {...others}>
+      <BaselineSpreadRow class="async-progress__header">
         <span class="async-progress__label">{local.label}</span>
         <span class="async-progress__timing">
           {formatSeconds(elapsed())}
           {maxDuration() > 0 && ` / ~${formatSeconds(maxDuration())}`}
         </span>
-      </div>
+      </BaselineSpreadRow>
       <div class="async-progress__bar-track">
         {percent() !== null ? (
           <div
@@ -126,16 +127,9 @@ export const AsyncProgress: Component<AsyncProgressProps> = (props) => {
             style={{ width: `${Math.min(percent()! * 100, 100)}%` }}
           />
         ) : (
-          <div
-            class="async-progress__bar-fill"
-            style={{
-              width: "30%",
-              animation:
-                "async-progress-indeterminate 1.5s ease-in-out infinite",
-            }}
-          />
+          <div class="async-progress__bar-fill async-progress__bar-fill--indeterminate" />
         )}
       </div>
-    </div>
+    </TightStack>
   );
 };

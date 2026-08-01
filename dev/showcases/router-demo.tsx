@@ -115,32 +115,15 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
       : bezierAvoidingObstacles(fromRect(), toRect(), obstacles());
 
   return (
-    <div
-      style={{
-        display: "flex",
-        "flex-direction": "column",
-        gap: "4px",
-        padding: "8px",
-        background: "var(--sui-bg-secondary)",
-        border: "1px solid var(--sui-border)",
-        "border-radius": "4px",
-      }}
-    >
-      <div
-        style={{
-          "font-family": "ui-monospace, SFMono-Regular, monospace",
-          "font-size": "10px",
-          color: "var(--sui-text-secondary)",
-        }}
-      >
-        <span style={{ color: "var(--sui-accent)" }}>{p.c.id}</span> ·{" "}
-        {p.c.label}
+    <div class="router-demo__cell">
+      <div class="router-demo__cell-label">
+        <span class="router-demo__cell-id">{p.c.id}</span> · {p.c.label}
       </div>
       <svg
         width={CELL_W}
         height={CELL_H}
         viewBox={`0 0 ${CELL_W} ${CELL_H}`}
-        style={{ background: "var(--sui-bg-elevated)", "border-radius": "2px" }}
+        class="router-demo__cell-svg"
       >
         <defs>
           <marker
@@ -219,7 +202,7 @@ const Cell: Component<{ c: Case; style: "orthogonal" | "bezier" }> = (p) => {
           stroke="var(--sui-accent)"
           stroke-width={1.5}
           marker-end={`url(#router-arrow-${p.c.id}-${p.style})`}
-          style={{ color: "var(--sui-accent)" }}
+          class="router-demo__path"
         />
       </svg>
     </div>
@@ -230,12 +213,8 @@ export const RouterDemoGrid: Component<{ style: "orthogonal" | "bezier" }> = (
   p,
 ) => (
   <div
-    style={{
-      display: "grid",
-      "grid-template-columns": `repeat(3, ${CELL_W + 18}px)`,
-      gap: "10px",
-      "margin-top": "12px",
-    }}
+    class="router-demo__grid"
+    style={{ "--router-cell-w": `${CELL_W + 18}px` }}
   >
     <For each={CASES}>{(c) => <Cell c={c} style={p.style} />}</For>
   </div>

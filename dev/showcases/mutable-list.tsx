@@ -1,5 +1,7 @@
 import { type Component, createSignal, For } from "solid-js";
 import { MutableList } from "../../src/components/MutableList";
+import { NarrowStack, WrappedClusterRow } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 // ── Sample data ───────────────────────────────────────────────────────────
 
@@ -30,56 +32,24 @@ const applyReorder = (tags: Tag[], nextIds: string[]): Tag[] => {
 // ── State readout ───────────────────────────────────────────────────────────
 
 const StateReadout: Component<{ tags: Tag[] }> = (props) => (
-  <div style={{ display: "flex", "flex-direction": "column", gap: "6px" }}>
-    <span
-      style={{
-        "font-size": "10px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-        color: "var(--sui-text-muted)",
-      }}
-    >
-      Live state
-    </span>
-    <div
-      style={{
-        display: "flex",
-        gap: "8px",
-        "align-items": "center",
-        "flex-wrap": "wrap",
-      }}
-    >
+  <NarrowStack>
+    <span class="demo-state-readout__label">Live state</span>
+    <WrappedClusterRow>
       <For
         each={props.tags}
-        fallback={
-          <span style={{ "font-size": "11px", color: "var(--sui-text-muted)" }}>
-            (list is empty)
-          </span>
-        }
+        fallback={<TextSublabel>(list is empty)</TextSublabel>}
       >
         {(t, idx) => (
           <>
-            <span
-              style={{
-                "font-size": "11px",
-                color: "var(--sui-text-primary)",
-                "font-family": "monospace",
-              }}
-            >
+            <span class="demo-state-readout__tag">
               {idx() + 1}. {t.id}="{t.name}"
             </span>
-            {idx() < props.tags.length - 1 && (
-              <span
-                style={{ color: "var(--sui-text-muted)", "font-size": "11px" }}
-              >
-                →
-              </span>
-            )}
+            {idx() < props.tags.length - 1 && <TextSublabel>→</TextSublabel>}
           </>
         )}
       </For>
-    </div>
-  </div>
+    </WrappedClusterRow>
+  </NarrowStack>
 );
 
 // ── Main showcase ─────────────────────────────────────────────────────────
@@ -125,18 +95,7 @@ export const MutableListShowcase: Component = () => {
           <code>×</code> button, then click to delete. Every action updates the
           live state below.
         </p>
-        <div
-          style={{
-            padding: "20px 24px",
-            background: "var(--sui-bg-base, var(--sui-bg))",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "var(--sui-radius-md)",
-            display: "flex",
-            "flex-direction": "column",
-            gap: "20px",
-            "max-width": "520px",
-          }}
-        >
+        <div class="demo-state-readout">
           <MutableList
             items={tags()}
             getId={(t) => t.id}

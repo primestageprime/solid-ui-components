@@ -9,6 +9,7 @@ import type {
   SideBadges,
   SummaryLike,
 } from "./shared";
+import { find, flatMap } from "../../../fn";
 
 /** A rendered boundary badge (the "+N" side pill for collapsed columns). */
 export interface BoundaryBadge {
@@ -88,8 +89,9 @@ export function computeBoundaryBadges(
     } else {
       // Tie at centerCol — fall back to the original edge-direction heuristic
       // so the badge still picks a sensible side.
-      const edge = edges.find(
-        (e) => e.sourceId === s.id || e.targetId === s.id,
+      const edge = find(
+        (e: LayoutEdgeLike) => e.sourceId === s.id || e.targetId === s.id,
+        edges,
       );
       const dir = edge && edge.targetId === s.anchorId ? -1 : 1;
       if (dir === -1) leftCount += s.collapsedCount;
@@ -128,7 +130,7 @@ export function computeBoundaryBadges(
   const vpLeftX = -cw / 2 + H_PADDING_PX + BADGE_RADIUS;
   const vpRightX = cw / 2 - H_PADDING_PX - BADGE_RADIUS;
 
-  return sides.flatMap((g) => {
+  return flatMap((g) => {
     const dir = g.dir;
     const anchorPos = g.anchorId ? positions.get(g.anchorId) : undefined;
     const sideInfo = dir === -1 ? sidePos.left : sidePos.right;
@@ -167,5 +169,5 @@ export function computeBoundaryBadges(
         count: g.count,
       },
     ];
-  });
+  }, sides);
 }

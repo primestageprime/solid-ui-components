@@ -51,6 +51,23 @@
   color: var(--sui-text-muted);
 }
 
+.showcase__brand-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.health-link {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--sui-text-muted);
+}
+
+.health-link:hover {
+  color: var(--sui-accent);
+}
+
 .workshop-grid {
   display: grid;
   /* Left column fixed at 300px (titles + JSON panels). Right column
@@ -610,6 +627,7 @@
 .dtb-canvas svg {
   width: 100%;
   height: auto;
+  max-height: 70vh;
   display: block;
 }
 
@@ -1121,12 +1139,50 @@
   max-width: none;
 }
 
+/* Application mode: the showcase fills the content pane down to the bottom
+   of the viewport and its sections scroll INTERNALLY — the content pane
+   itself stops scrolling. Opt in with `component-section--app`. The gallery
+   is already an application layout (.showcase = 100vh flex row); this just
+   extends the fill chain through the content pane to the showcase root. */
+.showcase__content:has(.component-section--app) {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px 16px 0;
+}
+.component-section--app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The showcase's main layout (its last child) takes the remaining height. */
+.component-section--app > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
 /* ── Shared showcase classes ───────────────────────────── */
 
-.component-section h2 {
+/* Direct child only: this styles the showcase's own page heading. A
+   descendant selector here leaks 24px/margin chrome into any SUI title
+   (SectionTitle renders an h2) composed INSIDE a bench — un-thematic. */
+.component-section > h2 {
   margin: 0 0 24px;
   font-size: 24px;
   font-weight: 600;
+}
+
+/* Vertical spacer above a showcase sub-heading that follows a preceding
+   example block. Pure spacing — the heading tag carries its own type
+   styling; --lg is the wider gap used for major section breaks. */
+.showcase-heading-gap {
+  margin-top: 24px;
+}
+
+.showcase-heading-gap--lg {
+  margin-top: 32px;
 }
 
 .example-group {
@@ -1145,6 +1201,25 @@
 .example-row {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Demo frame — dashed outline making invisible layout boxes visible
+   (Stack/Row/alignment demos). Gallery furniture, same category as
+   .example-group; chosen over a library DemoFrame component (Peter
+   ruling 2026-07-15). */
+.demo-frame {
+  margin-top: 8px;
+  border: 1px dashed var(--sui-border);
+  padding: 8px;
+}
+
+/* Side-by-side comparison columns for variant/prop matrices
+   (gap sizes, alignment values, curried-variant lineups). */
+.demo-cols {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
   flex-wrap: wrap;
 }
 
@@ -1345,4 +1420,1212 @@
 .workshop-link--bench {
   padding-left: 24px;
   font-size: 12px;
+}
+
+/* ── Per-showcase demo furniture ───────────────────────────
+   Bespoke demo geometry (fixed frame sizes, demo-width bounds, one-off
+   debug controls) that has no SUI-vocabulary equivalent lives here as
+   scoped showcase classes — same gallery-furniture category as .demo-frame
+   / .example-column / .dts-* (Peter ruling 2026-07-15: gallery furniture is
+   a showcase CSS class, not a library variant). Values are the exact ones
+   that were previously inline, so rendered output is byte-identical. */
+
+.async-progress-demo {
+  max-width: 420px;
+}
+.connection-status-demo__label {
+  min-width: 22rem;
+  font-size: 0.8rem;
+}
+.duration-demo__label {
+  min-width: 10rem;
+}
+.heatstack-demo__compact {
+  width: 80px;
+}
+.quickfilter-atom-demo {
+  max-width: 480px;
+}
+.recent-starred-demo__frame {
+  display: flex;
+  width: 260px;
+  height: 320px;
+}
+.inputs-demo {
+  max-width: 500px;
+}
+.dropdown-demo {
+  max-width: 300px;
+}
+.tooltip-demo__clip {
+  display: inline-block;
+  max-width: 180px;
+}
+/* Host-owned status pill for the ValueRenderer/ChangeRenderer custom-dispatch
+   examples — deliberately NOT a SUI atomic (host owns what a status is). The
+   background-color rides in inline (data-driven identity paint). */
+.demo-status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--sui-text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.section-demo__atom-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.slot-fill-bar-demo__replay {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sui-border);
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 11px;
+  cursor: pointer;
+}
+.status-badge-demo__violation-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--sui-danger);
+}
+.data-table-container-demo__fill-frame {
+  display: flex;
+  flex-direction: column;
+  height: 150px;
+  border: 1px dashed var(--sui-border-bright);
+}
+.inline-chart-error-demo__area {
+  position: relative;
+  width: 420px;
+  height: 220px;
+  max-width: 100%;
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
+  border-radius: 8px;
+}
+.nav-bar-demo__composed {
+  border-bottom: 1px solid var(--sui-border);
+  padding-bottom: 2px;
+}
+
+/* example-row aligned to the top instead of the default stretch. */
+.example-row--top {
+  align-items: flex-start;
+}
+/* demo-frame size modifiers — give layout/alignment demos room to show. */
+.demo-frame--w160 {
+  width: 160px;
+}
+.demo-frame--h120-flex {
+  display: flex;
+  height: 120px;
+}
+.sparkline-demo__caption {
+  color: var(--sui-text-primary);
+}
+.sparkline-demo__inline {
+  vertical-align: middle;
+}
+.service-health-dot-demo__row {
+  padding: 16px 0;
+}
+.result-panel-demo__slot {
+  padding: 12px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  color: var(--sui-text-secondary);
+  font-size: 13px;
+}
+.range-amount-group-demo__wide {
+  width: 560px;
+  max-width: 100%;
+}
+.range-amount-group-demo__narrow {
+  width: 260px;
+}
+.cell-renderers-demo__cell {
+  max-width: 320px;
+}
+.button-demo__slot {
+  display: flex;
+  min-width: 150px;
+}
+.button-demo__col {
+  max-width: 520px;
+}
+.status-card-demo__slot {
+  width: 260px;
+  height: 170px;
+}
+.status-card-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 260px);
+  gap: 16px;
+  justify-content: start;
+}
+/* Host-owned status pill (row-1 badge slot). border-color + color ride in
+   inline when a tone is passed; otherwise these neutral defaults apply. */
+.status-card-demo__pill {
+  padding: 1px 6px;
+  border: 1px solid var(--sui-border);
+  border-radius: 3px;
+  color: var(--sui-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.split-queue-list-demo__left {
+  width: 340px;
+}
+.split-queue-list-demo__sticky {
+  width: 260px;
+  position: sticky;
+  top: 16px;
+}
+.split-queue-list-demo__narrow {
+  width: 320px;
+}
+.bucket-queue-demo {
+  width: 360px;
+  height: 460px;
+}
+/* Same bar, two-line cards — a taller box so the water-fill has room to show
+   populated sections shrink-wrapping rather than immediately overflowing. */
+.bucket-queue-cards-demo {
+  width: 400px;
+  height: 620px;
+}
+/* A FIXED column with a control pinned under the queue — the shape that makes
+   an unallocated remainder visible as a band of dead space. The queue itself
+   has no height prop here; it takes whatever the column leaves it. */
+.bucket-queue-fill-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 380px;
+  height: 520px;
+}
+.bucket-queue-fill-demo > .bucket-queue {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Discard staging: a fixed column with the commit controls pinned under the
+   queue, so the collapsed pile's one-line footprint (and what it costs when
+   you open it) is visible against a bounded height rather than a page that
+   just grows. */
+.bucket-queue-discard-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 380px;
+  height: 500px;
+}
+.bucket-queue-discard-demo > .bucket-queue {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Five stages: deliberately SHORTER than five sections' natural content so the
+   water-fill is actually in overflow and the weights/caps do visible work. */
+.bucket-queue-pipeline-demo {
+  width: 400px;
+  height: 520px;
+}
+.removable-item-card-demo {
+  max-width: 280px;
+}
+.pivot-treemap-demo__h320 {
+  height: 320px;
+}
+.pivot-treemap-demo__h360 {
+  height: 360px;
+}
+/* Shared "live-state readout" furniture — a bordered panel below an
+   interactive demo (MutableList, SortableList, DnDHierarchySortBar) showing
+   the current order/state, with an uppercase caption and mono tag chips. */
+.demo-state-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 520px;
+  padding: 20px 24px;
+  background: var(--sui-bg-base, var(--sui-bg));
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+}
+.demo-state-readout__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+}
+.demo-state-readout__tag {
+  font-size: 11px;
+  color: var(--sui-text-primary);
+  font-family: monospace;
+}
+.legend-demo__swatch-row {
+  margin-top: 8px;
+}
+.legend-demo__swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 48px;
+  border-radius: 4px;
+  outline: 1px solid var(--sui-border-bright);
+  outline-offset: 2px;
+  color: var(--sui-text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: default;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.legend-demo__swatch--hovered {
+  outline: 2px solid var(--sui-text-primary);
+  filter: brightness(1.2);
+}
+.legend-demo__wrap {
+  max-width: 320px;
+  padding: 8px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-modal-demo__footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+/* Shared "Title atom" heading used by depth-2 atom breakdowns. */
+.demo-atom-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.hud-modal-demo__btn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.fab-demo__container {
+  position: relative;
+  width: 320px;
+  height: 200px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  background: var(--sui-bg-secondary);
+}
+.fab-demo__label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+.fab-demo__corner {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+.divider-demo__caption {
+  margin: 0;
+  color: var(--sui-text-secondary);
+}
+.digit-roller-demo__value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.digit-roller-demo__value--tnum {
+  font-variant-numeric: tabular-nums;
+}
+.digit-roller-demo__value--accent {
+  color: var(--sui-accent);
+}
+.bottom-sheet-demo__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  height: 480px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+  background: var(--sui-bg-elevated);
+  overflow: hidden;
+}
+.bottom-sheet-demo__header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--sui-border);
+  background: var(--sui-bg-secondary);
+}
+.bottom-sheet-demo__body {
+  position: relative;
+}
+
+/* Shared demo-width bounds — keep a demo column readable instead of letting
+   it stretch full-bleed (same intent as .example-column's max-width:400). */
+.demo-maxw-240 {
+  max-width: 240px;
+}
+.demo-maxw-280 {
+  max-width: 280px;
+}
+.demo-maxw-320 {
+  max-width: 320px;
+}
+.demo-maxw-420 {
+  max-width: 420px;
+}
+.demo-maxw-700 {
+  max-width: 700px;
+}
+/* Bottom margin under a .text-meta caption that sits above a demo. */
+.demo-caption-gap {
+  margin-bottom: 12px;
+}
+.resizable-container-demo__fill {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+.hud-page-demo__frame {
+  height: 120px;
+  min-height: unset;
+}
+.three-panel-demo__pane {
+  height: 320px;
+  border: 1px solid var(--sui-border);
+}
+.three-panel-demo__brand {
+  color: var(--sui-accent);
+}
+.three-panel-demo__list-title {
+  margin: 0 0 8px;
+  color: var(--sui-text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.three-panel-demo__list-item {
+  padding: 6px 8px;
+  background: var(--sui-bg-secondary);
+  border-left: 2px solid var(--sui-accent);
+  font-size: 13px;
+}
+.three-panel-demo__heading {
+  margin: 0;
+}
+.three-panel-demo__prose {
+  margin: 0;
+  color: var(--sui-text-secondary);
+}
+.progress-bar-demo__h {
+  width: 120px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.progress-bar-demo__h--empty {
+  font-weight: normal;
+  color: var(--sui-text-muted);
+}
+.progress-bar-demo__v {
+  width: 24px;
+  height: 80px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-primary);
+}
+.progress-bar-demo__vrow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.action-list-demo__statusbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--sui-accent);
+  font-size: 0.8125rem;
+}
+.action-list-demo__count {
+  opacity: 0.75;
+}
+.action-list-demo__sep {
+  opacity: 0.5;
+}
+.action-list-demo__reset {
+  padding: 0 6px;
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.action-list-demo__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  color: var(--sui-text);
+}
+.sortable-list-demo__item-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.dnd-hierarchy-demo__panel {
+  max-width: 600px;
+  padding: 20px 24px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+}
+.dnd-hierarchy-demo__panel--flex {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.currency-input-demo__frame {
+  width: 640px;
+  padding: 12px;
+  border: 1px dashed var(--sui-border);
+}
+/* Host-owned SidebarSelector renderCard/renderSelection demo styling. */
+.sidebar-selector-demo__card-title {
+  color: var(--sui-accent);
+  font-weight: normal;
+}
+.sidebar-selector-demo__card-title--selected {
+  font-weight: bold;
+}
+.sidebar-selector-demo__card-status {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--sui-text-secondary);
+}
+.sidebar-selector-demo__selection {
+  padding: 16px;
+}
+.sidebar-selector-demo__sel-title {
+  margin: 0 0 8px;
+  color: var(--sui-accent);
+}
+.sidebar-selector-demo__sel-status {
+  margin-top: 8px;
+}
+.sidebar-selector-demo__sel-status--online {
+  color: var(--sui-success);
+}
+.sidebar-selector-demo__sel-status--offline {
+  color: var(--sui-danger);
+}
+.sidebar-selector-demo__sel-status--other {
+  color: #ffcc00;
+}
+.sidebar-selector-demo__empty {
+  color: var(--sui-text-secondary);
+}
+.router-demo__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--sui-bg-secondary);
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+}
+.router-demo__cell-label {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: var(--sui-text-secondary);
+}
+.router-demo__cell-id {
+  color: var(--sui-accent);
+}
+.router-demo__cell-svg {
+  background: var(--sui-bg-elevated);
+  border-radius: 2px;
+}
+.router-demo__path {
+  color: var(--sui-accent);
+}
+/* grid columns bridge in via --router-cell-w (computed from CELL_W). */
+.router-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--router-cell-w));
+  gap: 10px;
+  margin-top: 12px;
+}
+.date-axis-demo__box {
+  padding: 0 0 4px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.date-axis-demo__box-label {
+  padding: 8px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+  border-bottom: 1px solid var(--sui-border);
+}
+.date-axis-demo__banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-accent);
+  border-radius: var(--sui-radius-md);
+  margin-bottom: 16px;
+}
+.date-axis-demo__emoji {
+  font-size: 20px;
+}
+.date-axis-demo__banner-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sui-text-muted);
+}
+.date-axis-demo__banner-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sui-accent);
+}
+.math-formula-demo__prose {
+  color: var(--sui-text-secondary);
+}
+.math-formula-demo__inline {
+  display: inline-block;
+}
+.math-formula-demo__wide {
+  width: 100%;
+}
+.math-formula-demo__narrow {
+  width: 320px;
+  max-width: 100%;
+  border: 1px dashed var(--sui-border);
+  border-radius: 6px;
+}
+.scroll-region-demo__box {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  height: 200px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-primary);
+}
+.scroll-region-demo__row {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sui-border);
+  color: var(--sui-text-secondary);
+}
+.scroll-region-demo__fill {
+  height: 100%;
+}
+.tabbed-side-panel-demo__col {
+  flex: 1;
+  min-width: 320px;
+}
+.tabbed-side-panel-demo__slot {
+  min-height: 260px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-tabs-demo__row {
+  display: flex;
+  min-height: 180px;
+  border: 1px dashed var(--sui-border);
+}
+.hud-tabs-demo__pane {
+  flex: 1;
+  padding: 16px;
+  color: var(--sui-text-muted);
+}
+.app-shell-demo__frame {
+  height: 320px;
+  border: 1px solid var(--sui-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.app-shell-demo__fill {
+  height: 100%;
+}
+.app-shell-demo__main {
+  overflow-y: auto;
+}
+.app-shell-demo__row-pad {
+  padding: 4px 12px;
+}
+.demo-maxw-600 {
+  max-width: 600px;
+}
+
+/* ── Chart-cluster demos ───────────────────────────────────
+   These size chart nodes/frames from demo constants or plot data-driven
+   bars; the computed geometry rides inline (manifested measured/proportion/
+   cssvar) while the static frame chrome lives here. */
+.swimlane-node-card-demo__node {
+  position: relative;
+}
+.swimlane-node-card-demo__tooltip {
+  position: absolute;
+  left: 0;
+  z-index: 10;
+}
+.swimlane-node-card-demo__page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px;
+}
+.swimlane-node-card-demo__intro {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 640px;
+}
+.work-progress-card-demo__grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--wpc-card-w));
+  gap: 16px;
+  justify-content: start;
+}
+.work-progress-card-demo__live {
+  margin-top: 32px;
+}
+.work-progress-card-demo__page {
+  padding: 24px;
+}
+.work-progress-card-demo__lede {
+  max-width: 760px;
+}
+.cashflow-day-cell-demo__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 60px;
+  height: 72px;
+  padding: 3px 4px 4px;
+  box-sizing: border-box;
+  border-right: 1px solid var(--sui-border);
+}
+.cashflow-day-cell-demo__corner {
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--sui-text-muted);
+  white-space: nowrap;
+}
+.cashflow-day-cell-demo__plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.cashflow-day-cell-demo__baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--sui-border);
+}
+.cashflow-day-cell-demo__bar {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+}
+.cashflow-day-cell-demo__value {
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+.product-grid-demo__page {
+  padding: 20px 24px;
+}
+.product-grid-demo__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.product-grid-demo__chip {
+  padding: 4px 12px;
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+}
+.product-grid-demo__chip--active {
+  border-color: var(--sui-accent, #4ea1ff);
+  background: color-mix(in srgb, var(--sui-accent, #4ea1ff) 18%, transparent);
+  color: var(--sui-accent, #4ea1ff);
+}
+.product-grid-demo__count {
+  color: var(--sui-text-muted);
+}
+.product-grid-demo__clear {
+  padding: 3px 10px;
+  border: 1px solid var(--sui-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sui-text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+}
+.animated-swimlane-demo__page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+}
+.animated-swimlane-demo__intro {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 780px;
+}
+.animated-swimlane-demo__code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.animated-swimlane-demo__controls {
+  display: flex;
+  gap: 8px;
+}
+/* Compound with .surface so these win the Surface base border/layout rules
+   (the collapsed placeholder must read as a dashed box). */
+.surface.swimlane-chart-demo__collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-style: dashed;
+}
+.surface.swimlane-chart-demo__fill {
+  width: 100%;
+  height: 100%;
+}
+.swimlane-chart-demo__stub {
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.swimlane-chart-demo__frame560 {
+  width: 100%;
+  height: 560px;
+  min-width: 360px;
+  border: 1px dashed var(--sui-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.scrub-chart-demo__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.scrub-chart-demo__readout {
+  font-size: 13px;
+  color: var(--sui-text-secondary);
+}
+.scrub-chart-demo__strong {
+  color: var(--sui-text-primary);
+}
+
+/* dotchart composition smoke — hand-built chip row + debug readout/table.
+   Only the per-row accent colour is data-driven (bridged via
+   --dotchart-row-color); everything else is static chrome. */
+.dotchart-demo__chip {
+  padding: 2px 10px;
+  border: 1px solid var(--sui-border, #333);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--sui-font-mono, monospace);
+  font-size: 11px;
+  cursor: pointer;
+}
+.dotchart-demo__chip--active {
+  border-color: var(--sui-accent, #5b8def);
+  background: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__dim6 {
+  opacity: 0.6;
+}
+.dotchart-demo__dim5 {
+  opacity: 0.5;
+}
+.dotchart-demo__proof {
+  margin-top: 16px;
+  max-width: 800px;
+}
+.dotchart-demo__readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border, #333);
+  border-radius: 6px;
+  font-family: var(--sui-font-mono, monospace);
+  font-size: 13px;
+}
+.dotchart-demo__range {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: transparent;
+}
+.dotchart-demo__range--hit {
+  background: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__reached {
+  color: var(--sui-accent, #5b8def);
+}
+.dotchart-demo__table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--sui-font-mono, monospace);
+}
+.dotchart-demo__th {
+  padding: 4px 8px;
+  text-align: left;
+}
+.dotchart-demo__td {
+  padding: 4px 8px;
+}
+.dotchart-demo__td--dim {
+  opacity: 0.7;
+}
+.dotchart-demo__row {
+  background: transparent;
+  border-left: 3px solid var(--dotchart-row-color);
+  cursor: pointer;
+}
+.dotchart-demo__row--hovered {
+  background: var(--sui-bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+/* dag-chart demo nodes. The per-node status colour rides in via
+   --dag-node-status (consumed by the status dot and the focused border). */
+.dag-chart-demo__collapsed-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--sui-bg-elevated);
+  border: 1px dashed var(--sui-border-bright);
+  color: var(--sui-text-secondary);
+  font-size: 12px;
+}
+.dag-chart-demo__node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-elevated);
+  color: var(--sui-text-primary);
+  font-size: 12px;
+  box-sizing: border-box;
+}
+.dag-chart-demo__node--adjacent {
+  border-color: var(--sui-text-muted);
+}
+.dag-chart-demo__node--focused {
+  background: rgba(var(--sui-success-rgb), 0.18);
+  border-color: var(--dag-node-status);
+}
+.dag-chart-demo__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dag-node-status);
+  flex-shrink: 0;
+}
+.dag-chart-demo__node-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+.dag-chart-demo__frame {
+  border: 1px solid var(--sui-border);
+  border-radius: 6px;
+}
+.dag-chart-demo__frame--h420 {
+  height: 420px;
+}
+.dag-chart-demo__frame--h320 {
+  height: 320px;
+}
+.dag-chart-demo__frame--h260 {
+  height: 260px;
+}
+
+/* cashflow-scrub-chart demo readout + legend swatches. */
+.cashflow-scrub-chart-demo__strong {
+  color: var(--sui-text-primary);
+}
+.cashflow-scrub-chart-demo__tip {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cashflow-scrub-chart-demo__tip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.cashflow-scrub-chart-demo__legend-line {
+  display: inline-block;
+  width: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.cashflow-scrub-chart-demo__legend-line--actual {
+  border-top: 2px solid var(--sui-accent, #00a8cc);
+}
+.cashflow-scrub-chart-demo__legend-line--positive {
+  border-top: 2px dashed var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-line--negative {
+  border-top: 2px dashed var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-line--muted {
+  border-top: 2px dashed var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
+}
+.cashflow-scrub-chart-demo__legend-band {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.cashflow-scrub-chart-demo__legend-band--positive {
+  background: var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18));
+  border: 1px solid var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+}
+.cashflow-scrub-chart-demo__legend-band--negative {
+  background: var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18));
+  border: 1px solid var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+}
+.cashflow-scrub-chart-demo__token-list {
+  padding-left: 20px;
+}
+
+/* ── animation-lab workshop bench ──────────────────────────
+   Scratch animation bench. Genuinely-dynamic values (theme fill/stroke/text,
+   computed card geometry, per-edge arrow colour) bridge through custom
+   properties (--anim-*, manifested cssvar); the mount/visibility animation
+   states are modifier classes; everything else is static chrome. */
+.anim-lab__svg {
+  display: block;
+  overflow: visible;
+}
+.anim-lab__svg--center {
+  margin: 0 auto;
+}
+.anim-lab__stage {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px;
+}
+.anim-lab__stage--fill {
+  width: 100%;
+  box-sizing: border-box;
+}
+.anim-lab__stage--bb {
+  box-sizing: border-box;
+}
+.anim-lab__card {
+  position: relative;
+  width: var(--anim-w);
+  height: var(--anim-h);
+  padding: 6px 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--anim-fill);
+  border: 1px solid var(--anim-stroke);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--sui-text, #e6ecf5);
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease-out;
+}
+.anim-lab__card--visible {
+  cursor: pointer;
+  pointer-events: auto;
+}
+.anim-lab__card--shown {
+  opacity: 1;
+}
+.anim-lab__card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 14px;
+}
+.anim-lab__card-status {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--anim-text);
+}
+.anim-lab__theme-text {
+  color: var(--anim-text);
+}
+.anim-lab__card-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  height: 28px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.anim-lab__card-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 260px;
+  padding: 8px 10px;
+  background: #0c141c;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sui-text, #e6ecf5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 10;
+  white-space: normal;
+}
+.anim-lab__popover-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.anim-lab__popover-meta {
+  color: rgba(255, 255, 255, 0.55);
+}
+.anim-lab__node {
+  height: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--anim-fill);
+  border: 1px solid var(--anim-stroke);
+  color: var(--anim-text);
+  font-size: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.anim-lab__node-status {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.anim-lab__chart-popover {
+  width: 260px;
+  padding: 4px 8px;
+  background: #0c141c;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sui-text, #e6ecf5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  box-sizing: border-box;
+}
+.anim-lab__knobs {
+  margin-top: 12px;
+}
+.anim-lab__knob-label {
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.anim-lab__table {
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.anim-lab__accent {
+  color: var(--sui-accent, #00d4ff);
+}
+.anim-lab__hidden {
+  visibility: hidden;
+}
+.anim-lab__grey-arrow {
+  color: rgba(255, 255, 255, 0.45);
+}
+.anim-lab__arrow {
+  color: var(--anim-arrow);
+}
+.anim-lab__subsection {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sui-text, #e6ecf5);
+  margin-bottom: 4px;
+}
+.anim-lab__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.tf-th-center {
+  text-align: center;
+}
+/* Center the fixed-width column's whole header row (label + sort indicator):
+   BaseTable wraps header content in an inline-flex span, so centering must
+   happen on the wrapper, not inside the label span. */
+th:has(.tf-th-center) .hud-table__header-content {
+  width: 100%;
+  justify-content: center;
+}
+
+/* PopoverMenu showcase — the short overflow:hidden ancestor that would clip
+   a non-portalled panel (static demo chrome; no dynamic geometry). */
+.popover-menu-demo__clipframe {
+  height: 48px;
+  overflow: hidden;
+  border: 1px dashed var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+/* Bench frames — a showcase's demo geometry belongs in a class, not an inline
+   style, so the teaching surface models what the rule asks of src. */
+
+/* split-queue: a definite-height flex context, so the fill-parent bar has a
+   height to fill. */
+.split-queue-frame {
+  max-width: 460px;
+  margin-top: 12px;
+  height: calc(100vh - 220px);
+  display: flex;
 }

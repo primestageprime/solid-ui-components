@@ -119,27 +119,11 @@ default — surface it rather than quietly forking to `BaseTable`.
    </HabitCard>
    ```
 
-If the variant is project-specific and unlikely to be reused, you can create it locally in the app using the factory function — but the visual config still lives in one place, not scattered across JSX.
-
-### Local Curried Variants (in app code)
-
-If a variant is truly app-specific:
-
-```tsx
-// In your app's src/components/variants.ts
-import { createSurface, createText } from "solid-ui-components";
-
-export const ScoreCard = createSurface({
-  padding: "lg", radius: "lg",
-  bg: "#111", direction: "column", align: "center",
-});
-
-export const ScoreValue = createText({
-  size: "3xl", weight: "bold", color: "var(--sui-color-accent)",
-});
-```
-
-This is acceptable — the key is that override props are set once, not repeated at every call site.
+There is no app-local path (ruled 2026-07-18): apps use curried variants ONLY —
+never the `create*` factories. Even a "project-specific" variant is defined in
+the library (variants live in one place; a second project wanting it is the
+norm, not the exception). If the variant you need is missing, add it to
+solid-ui-components and export it — that IS the workflow, not a detour.
 
 ## The #2 Rule
 
@@ -191,14 +175,32 @@ pre-stock the shelf. (See also *Variant Surface: keep it minimal* in
 
 This rule is already load-bearing in the library:
 
-- **`Stack` / `Row` gap scale** was trimmed to **`xs` / `sm`** — the larger gaps
-  had no shipped caller.
 - **`Surface` `padding` / `radius`** were trimmed to **`none` / `sm` / `md`** —
   `md` survived only because it is genuinely load-bearing; the rest were dead
   surface area.
+- **`OverflowNav.gap`** stays `xs` / `sm` even though the `Row` it forwards to
+  now accepts `md` / `lg`: no shipped caller has asked, and its `gapPx()`
+  overflow budget only accounts for the two.
 
 Don't reintroduce a removed value (or add a new one) without a real consumer and
 Peter's sign-off.
+
+**When you do change a scale, run `npm run audit:scales`.** It compares every
+string-union prop scale documented in `COMPONENTS.md` against the union actually
+declared on that component's own `Props`, and it is the only thing that catches
+doc drift — nothing else fails when a doc and a type disagree. It is not part of
+`health`, so it will not fail your PR; read the OVERCLAIMS section (the doc
+promising a value the type rejects) and treat those as bugs. UNDERCLAIMS and
+UNRESOLVED need a human — intentional shorthand like `h1`..`h4` lands there.
+
+**But "no shipped caller" is a claim about consumers, not about this repo.**
+`Stack` / `Row` gaps were trimmed to `xs` / `sm` on exactly that finding and
+restored on 2026-07-31 (0.129.0) when it proved false — `thorcasting-ui` had
+forked the primitives into a local inline-style shim rather than lose the
+steps, and `jtf-ui` had a `createSurface({ … gap: "md" })` quietly rendering at
+8px. Grep the consumer checkouts under `~/gits/primestage/` before removing a
+value; note that `jtf-ui` and `thorcasting-ui` live inside `*-workspace/`
+directories, so a top-level `*/src` sweep misses them entirely.
 
 ## What NOT To Do
 
@@ -224,7 +226,7 @@ Peter's sign-off.
 
 // ✅ RIGHT — use the correct variant
 <LargeDangerButton>Delete</LargeDangerButton>
-// Or if it doesn't exist, create it:
+// Or if it doesn't exist, add it to the LIBRARY's variants.ts (never locally):
 // export const LargeDangerButton = createButton({ variant: "danger", size: "lg" });
 ```
 
@@ -234,8 +236,7 @@ Peter's sign-off.
 // ❌ WRONG
 <Stack style={{ gap: "4px", "max-width": "400px" }}>
 
-// ✅ RIGHT — create a variant
-const NarrowTightStack = createStack({ gap: "xs", maxWidth: "400px" });
+// ✅ RIGHT — use (or add to the library) a curried variant
 <NarrowTightStack>
 ```
 
@@ -283,6 +284,177 @@ When you finish iterating on something in Workshop:
 
 Don't treat the current `workshop.tsx` content as canonical — it gets replaced as work is promoted out.
 
+## `main` is contended — branch, PR, and tag last
+
+Several sessions and agents work this repo **at the same time**. `main` moves
+under you while you work, so anything you decided from a session-start `git log`
+is probably stale by the time you're ready to push.
+
+This is not hypothetical. On 2026-07-28 a single session's work finished to find
+`origin/main` **39 commits ahead**, with **two** releases (`v0.116.0`,
+`v0.117.0`) cut in the meantime. The prepared release commit and tag both
+collided with an already-published version; git rejected the tag with *"would
+clobber existing tag."*
+
+**Branch before your first commit.** Integrate through `gh pr create`. Never
+push local `main` — if you commit to it directly you are guaranteed a diverged
+push and a rebase you could have avoided.
+
+**Re-check the remote immediately before choosing a version.** Not at session
+start:
+
+```bash
+git fetch origin --tags
+git show origin/main:package.json | grep '"version"'
+```
+
+**Never tag a release on an unmerged branch.** Bump the version inside the PR,
+land it, *then* cut the tag. A pushed tag triggers the GitHub Packages publish,
+so a colliding tag can clobber another session's published release. Tagging is
+the one step with no cheap undo.
+
+If you do end up diverged: don't force-push. Preserve the work on a branch,
+`git rebase origin/main`, and expect `CHANGELOG.md` to be the conflict — your
+`[Unreleased]` entries against release sections added at the same anchor. Keep
+yours under `[Unreleased]`, theirs below.
+
+## Never verify with `npx <tool>` — it can resolve a different package
+
+**`npx biome` is not the linter.** The bare name resolves an unrelated package
+called `biome` (v0.3.3) from the registry, which exits 0 having linted nothing.
+On 2026-07-29 `@biomejs/biome` was declared in devDependencies and present in
+the lockfile but **not installed**, an agent verified its work with `npx biome`
+all day, and every "lint clean" it reported was a different tool succeeding at
+nothing. Three lint failures reached `main`, and one let a release publish from
+a red commit. The first was misdiagnosed as "I ran a narrower command than CI",
+and the same mistake was then repeated twice *on that diagnosis* — a wrong root
+cause does not merely fail to fix, it explains away the next instances.
+
+**Run the repo's own scripts** — `npm run lint`, `npm run lint:ci`, `npm run
+check`. They go through `scripts/lint-ci.mjs`, which resolves the SCOPED package,
+verifies the resolved name, and **exits non-zero with instructions if it cannot
+find the real thing**. It can never report success without having run.
+
+The general rule, which is the part worth carrying to other repos: **"tool
+absent" and "tool ran, all clean" must never be indistinguishable at the call
+site.** A missing gate that reports green is strictly worse than no gate — a
+repo with no linter is honest about it; a repo whose linter silently isn't there
+manufactures confidence. When a check never fails, suspect the checker.
+
+And when you add a gate, demonstrate **three** cases, not two: it passes clean,
+it fails on a real error, and **it fails when the tool is made unresolvable**.
+The third is the one nobody tests and the one that rots.
+
+## Verifying in a browser: check the viewport before trusting geometry
+
+A tab that has never laid out reports `innerWidth`/`innerHeight` of **0×0**, and
+every `getBoundingClientRect()` reading from it is garbage that *looks like
+data* — element tops in the hundreds of thousands, siblings that share a row
+reported on four different rows. It does not look like an empty result; it looks
+like a catastrophic layout regression.
+
+This nearly cost a good release: KPI cards measured on such a tab read as
+wildly mis-sized, which would have been escalated as a blocker and reverted a
+correct change. The readings were discarded and re-taken on a tab with a real
+viewport, where everything was fine.
+
+Before trusting ANY measurement taken through browser automation:
+
+```js
+// Assert the tab has actually laid out. 0×0 means it never rendered —
+// discard the reading, don't interpret it.
+if (innerWidth === 0 || innerHeight === 0) throw new Error("tab never laid out");
+```
+
+**The sharpest form of this trap, learned the hard way on 2026-07-29:** a DOM
+probe against rAF-scheduled geometry shows *identical* output for a healthy
+build and a broken one. Two agents independently measured a component as
+"never collapses, content clipped" — one on a genuinely broken version, one on
+the fixed version — and the readings were the same, because in a hidden tab the
+measurement simply never ran in either. **Forcing a paint is what makes the
+numbers change; the fix is what makes them correct once a paint happens.** So a
+measurement taken without a forced paint cannot distinguish the two, and is not
+evidence about the code at all.
+
+The corollary for automated checks: anything asserting on rAF-scheduled geometry
+from a headless or background context **passes vacuously**. If you add a visual
+assertion to CI or a harness, force a paint or assert `visibilityState` first,
+or it will report success having tested nothing.
+
+Two related traps in the same family:
+
+- **`requestAnimationFrame` is frozen while a tab is hidden.** Anything that
+  lands via rAF — which is every measurement written through
+  `internal/dom/observeSize` — will not arrive until the tab is next rendered.
+  A screenshot or `zoom` capture forces a frame and unblocks it. Code that
+  looks broken under automation is often just waiting for a frame that never
+  comes.
+- **Group measurements by their row before comparing them.** Cards in a
+  responsive grid that has collapsed to one column are each on their own row,
+  and comparing their heights as if they shared one reports a phantom raggedness.
+  Compare like with like, keyed on `getBoundingClientRect().top`.
+
+## The health ratchet will fail you — including for *improving* a metric
+
+`test`, `typecheck`, `build` and **`health`** all gate merges. `lint` runs but
+does not gate. `enforce_admins` is `false`, so a direct admin push to `main`
+bypasses everything — the gate binds PR merges.
+
+`scripts/health.mjs` enforces four rules (see `scripts/health-ratchet.mjs`):
+
+| Situation | Result |
+|---|---|
+| A metric rose | Fails. |
+| A metric improved and the ceiling wasn't tightened | **Also fails.** Run `npm run health -- --update-baseline` and commit the baseline **with** your change. |
+| `--update-baseline` (bare) | Only *lowers*. It cannot raise any ceiling. |
+| Raising a ceiling | Requires naming it **and** a reason: `--update-baseline=dotChains --reason="…"`. Recorded in the baseline under `_raises`. |
+
+### Other things that will bite
+
+- **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
+  at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
+  Same for `foldersWithoutTests`, `undocumentedComponents` (COMPONENTS.md),
+  `missingDepthHeaders` — all at 0.
+- **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
+  in the file, and it applies to **internal** component files too, not just
+  exported ones. A new `.tsx` under `src/components/` without a depth line in
+  its header comment fails `health` even when it is never exported from
+  `index.ts`. Caught `BucketHeader.tsx` on 2026-07-31.
+- **A showcase's geometry belongs in `dev/main.css`, not an inline `style={{}}`.**
+  `showcaseStyleRubricViolations` is ratcheted at **0** and flags any
+  un-manifested `style={{` in `dev/showcases/`, so a demo that sizes its own
+  container inline fails `health`. Add a `.<component>-demo` class to
+  `dev/main.css` and use that — see `.bucket-queue-fill-demo` /
+  `.bucket-queue-discard-demo` for the fixed-column-with-pinned-control shape.
+- **`scripts/health-history.json` is tracked and changes on every `npm run
+  health` run.** Commit it alongside health-affecting work rather than leaving
+  it dirty in a shared checkout.
+- **Shared checkout.** Stage only files you touched; never `git add -A`.
+- **CI installs with `--ignore-scripts`, so there is no `dist/`.** Everything in
+  the test/lint/typecheck/health jobs must work from source. See ADR 0007.
+- **Don't spawn subprocesses in the vitest suite.** Nine of them hung the `test`
+  job until CI cancelled it at 15 minutes. Test pure logic directly.
+- **CI is ~3× slower than local.** Set a per-test timeout, not a global one.
+- **`grep` is unreliable for the metric regexes.** Use `node` with the same
+  regex as `health.mjs`, and cross-check totals against `npm run health -- --verbose`.
+- **Biome's a11y rules only see intrinsic (lowercase) JSX elements.** A green
+  `lint` is **not** a11y coverage.
+- **Don't take a filed task's stated cause at face value.** Two issues in the
+  2026-07-29 handoff had premises that didn't survive contact with the code,
+  despite one claiming "Verified still valid." Check against current `git log` /
+  current CSS / current baked-in defaults before implementing.
+- **"No shipped caller" cannot be established from inside this repo.** Never
+  remove a published prop value on an audit of this repo alone — grep the
+  consumer checkouts under `~/gits/primestage/`, and note that some live inside
+  `*-workspace/` directories, so a top-level `*/src` loop reports a clean sweep
+  while missing them entirely. That trap is what made a 2026-07-30 finding look
+  solid enough to delete `Stack`/`Row`'s `md`/`lg` gaps, which had to be
+  restored in 0.129.0.
+
+**Some things are deliberately left broken-looking. Read
+`docs/adr/0008-deliberately-unfixed.md` before "fixing" a metric or a config
+oddity** — it lists what has already been evaluated and rejected, and why.
+
 ## Summary
 
 | Situation | Action |
@@ -294,3 +466,6 @@ Don't treat the current `workshop.tsx` content as canonical — it gets replaced
 | Need to pass visual overrides | **STOP** — create a variant instead |
 | Adding a new component | Name it after the *shape*, not the domain |
 | Iterating on a new component | Build in Workshop, then promote to its own Showcase entry |
+| Starting any work | Branch first — never commit to `main` |
+| Picking a release version | `git fetch origin --tags` first; the number you remember is stale |
+| Cutting a tag | Only after the PR merges — never on an unmerged branch |

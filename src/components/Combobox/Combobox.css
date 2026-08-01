@@ -1,7 +1,15 @@
 /* ============================================
    Combobox — Structural
    Kobalte-driven combobox (single + multi). Visuals via `--sui-*` tokens.
-   ============================================ */
+
+   layout-purity CARVE-OUT: the root, `__control`, `__input`, `__item`,
+   `__listbox`, `__content` elements are Kobalte parts (KobalteCombobox.Root /
+   .Control / .Input / .Item / .Listbox / .Content) — we cannot replace them with
+   Layout components, only pass `class`, so their flex/scroll stays here as a
+   third-party carve-out (analogous to the exempt-layout family). The PLAIN-div
+   internal rows we own (`__chips`, `__chips-header`, `__chip-list`,
+   `__input-row`) ARE composed from Layout variants; option items/chips are
+   data-derived content (ruling 4, intrinsic). ============================================ */
 .sui-combobox {
   display: inline-flex;
   flex-direction: column;
@@ -39,10 +47,9 @@
   padding: 8px;
 }
 
+/* The input + trigger row is composed from TightClusterRow (align:center,
+   gap 4=xs); only min-width:0 (not banned) remains so the input can shrink. */
 .sui-combobox__input-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   min-width: 0;
 }
 
@@ -107,21 +114,18 @@
 }
 
 /* ---- Chips (multi-mode) ---- */
+/* Column arrangement composed from NarrowStack (gap 6→sm); only the panel
+   chrome lives here. */
 .sui-combobox__chips {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   padding: 6px;
   background: var(--sui-bg-secondary, rgba(13, 26, 42, 0.8));
   border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
 }
 
+/* Spread arrangement composed from SpreadRow (gap 8=sm); only the type styling
+   lives here. */
 .sui-combobox__chips-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -150,11 +154,8 @@
   border-color: var(--sui-danger);
 }
 
-.sui-combobox__chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
+/* Wrapping chip flow composed from TagRow (gap 4=xs); chips are data-derived
+   content (intrinsic). No box-model geometry here now. */
 
 .sui-combobox__chip {
   display: inline-flex;

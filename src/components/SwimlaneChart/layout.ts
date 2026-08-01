@@ -1,5 +1,6 @@
 import type { DAGNode, DAGEdge, LayoutEdge } from "../DagChart/types";
 import type { LayoutResult } from "../DagChart/layout";
+import { sortBy, filter } from "../../fn";
 
 export type SwimlaneOptions<T> = {
   /**
@@ -94,7 +95,7 @@ export function computeSwimlaneLayout<T>(
   // Center column defaults to 0; can be overridden by opts.centerCol so
   // a consumer can "follow" a different column (e.g. wherever the DOING
   // nodes currently sit) without rewriting node data.
-  const uniqueCols = Array.from(nodesByCol.keys()).sort((a, b) => a - b);
+  const uniqueCols = sortBy((a) => a, Array.from(nodesByCol.keys()));
   const minCol = uniqueCols[0];
   const maxCol = uniqueCols[uniqueCols.length - 1];
   const centerCol = opts.centerCol ?? 0;
@@ -107,7 +108,7 @@ export function computeSwimlaneLayout<T>(
   // Number of unique cols strictly below centerCol (used when centerCol
   // is NOT present in the data — we insert a "virtual" slot for it so
   // cols above the center don't collapse onto the center.
-  const colsBelowCenter = uniqueCols.filter((c) => c < centerCol).length;
+  const colsBelowCenter = filter((c) => c < centerCol, uniqueCols).length;
   const ordinalFor = (col: number): number => {
     const idx = uniqueCols.indexOf(col);
     if (idx >= 0) {
@@ -181,7 +182,7 @@ export function computeSwimlaneLayout<T>(
   // 5. Initial columns map keyed by col value — visible-only.
   const visibleCols = new Map<number, string[]>();
   for (const [col, ids] of nodesByCol) {
-    const filtered = ids.filter(isVisible);
+    const filtered = filter(isVisible, ids);
     if (filtered.length > 0) visibleCols.set(col, filtered);
   }
   // The center column always exists in the visible map if any center-col
@@ -238,14 +239,14 @@ export function computeSwimlaneLayout<T>(
   }
 
   // 8. Stable column order for sweeps + Y assignment.
-  const orderedCols = Array.from(visibleCols.keys()).sort((a, b) => a - b);
+  const orderedCols = sortBy((a) => a, Array.from(visibleCols.keys()));
 
   // 9. Initial rank = current order within each col.
   const rank = new Map<string, number>();
   for (const col of orderedCols) {
-    visibleCols.get(col)!.forEach((id, i) => {
+    for (const [i, id] of visibleCols.get(col)!.entries()) {
       rank.set(id, i);
-    });
+    }
   }
 
   // 10. Barycentric sweep. Alternate L→R and R→L per pass.
@@ -255,7 +256,7 @@ export function computeSwimlaneLayout<T>(
     if (!ids || ids.length < 2) return;
     const bary = new Map<string, number>();
     for (const id of ids) {
-      const ns = neighbors.get(id)!.filter((nid) => colOf.get(nid) !== col);
+      const ns = filter((nid) => colOf.get(nid) !== col, neighbors.get(id)!);
       if (ns.length === 0) {
         bary.set(id, rank.get(id)!);
       } else {
@@ -264,15 +265,18 @@ export function computeSwimlaneLayout<T>(
         bary.set(id, sum / ns.length);
       }
     }
-    ids.sort((a, b) => {
-      const da = bary.get(a)!;
-      const db = bary.get(b)!;
-      if (da !== db) return da - db;
-      return rank.get(a)! - rank.get(b)!;
-    });
-    ids.forEach((id, i) => {
+    // Two stable sortBy passes, secondary key first (per src/fn/README.md's
+    // two-key convention): existing rank breaks ties on equal bary values.
+    // sortBy copies, so this also drops the in-place mutation of `ids` the
+    // native .sort() did — the new order is re-stored via visibleCols.set.
+    const sorted = sortBy(
+      (id: string) => bary.get(id)!,
+      sortBy((id: string) => rank.get(id)!, ids),
+    );
+    visibleCols.set(col, sorted);
+    for (const [i, id] of sorted.entries()) {
       rank.set(id, i);
-    });
+    }
   };
   for (let sweep = 0; sweep < SWEEPS; sweep++) {
     const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
@@ -288,11 +292,11 @@ export function computeSwimlaneLayout<T>(
   if (opts.maxRows && opts.maxRows > 0) {
     for (const col of orderedCols) {
       const ids = visibleCols.get(col)!;
-      const realIds = ids.filter((id) => !id.startsWith("__collapsed_"));
+      const realIds = filter((id) => !id.startsWith("__collapsed_"), ids);
       if (realIds.length <= opts.maxRows) continue;
       const keepReal = realIds.slice(0, opts.maxRows);
       const overflowCount = realIds.length - keepReal.length;
-      const placeholders = ids.filter((id) => id.startsWith("__collapsed_"));
+      const placeholders = filter((id) => id.startsWith("__collapsed_"), ids);
       visibleCols.set(col, [...keepReal, ...placeholders]);
       rowOverflowByCol.set(
         col,
@@ -308,9 +312,9 @@ export function computeSwimlaneLayout<T>(
     if (ids.length === 0) continue;
     const span = (ids.length - 1) * opts.rowGap;
     const start = -span / 2;
-    ids.forEach((id, i) => {
+    for (const [i, id] of ids.entries()) {
       y.set(id, start + i * opts.rowGap);
-    });
+    }
   }
 
   // 12. Positions map.

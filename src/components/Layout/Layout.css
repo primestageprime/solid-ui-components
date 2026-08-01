@@ -2,6 +2,14 @@
 .stack {
   display: flex;
   flex-direction: column;
+  /* A vertical stack must never let a wide descendant dictate its width: as a
+     flex item its default `min-width: auto` resolves to the child's min-content,
+     so a horizontally-scrolling child (e.g. a ScrubChart's day-cell ribbon)
+     would blow the stack — and the whole page — out to the child's full content
+     width instead of letting the child scroll. `min-width: 0` is the horizontal
+     analog of the `min-height: 0` on `.stack--fill`; it lets the stack shrink to
+     its container so `overflow-x: auto` descendants scroll within it. */
+  min-width: 0;
 }
 
 .stack--gap-xs {
@@ -9,6 +17,12 @@
 }
 .stack--gap-sm {
   gap: 8px;
+}
+.stack--gap-md {
+  gap: 12px;
+}
+.stack--gap-lg {
+  gap: 16px;
 }
 
 .stack--align-start {
@@ -56,6 +70,12 @@
 }
 .row--gap-sm {
   gap: 8px;
+}
+.row--gap-md {
+  gap: 12px;
+}
+.row--gap-lg {
+  gap: 16px;
 }
 
 .row--align-start {
@@ -138,6 +158,76 @@
 }
 .proportional-item--scroll {
   overflow: auto;
+}
+
+/* Grid — CSS-grid container. `grid-template-columns` is set inline (from the
+   `columns` override); gap + cross-axis alignment come from these classes. */
+.grid {
+  display: grid;
+}
+.grid--gap-xs {
+  gap: 4px;
+}
+.grid--gap-sm {
+  gap: 8px;
+}
+.grid--gap-md {
+  gap: 12px;
+}
+.grid--align-start {
+  align-items: start;
+}
+.grid--align-center {
+  align-items: center;
+}
+.grid--align-end {
+  align-items: end;
+}
+.grid--align-baseline {
+  align-items: baseline;
+}
+.grid--align-stretch {
+  align-items: stretch;
+}
+
+/* AutoStackRow / AutoStackItem — responsive side-by-side -> stacked row.
+   Items sit side by side while the container is wider than --auto-stack-break,
+   then each takes a full row below it. The "holy albatross": each item's
+   flex-basis is calc((break - 100%) * 999) — a huge positive basis (forces its
+   own row) when the container is narrower than break, clamped to a tiny basis
+   (share the row) when wider. min-width:0 lets items shrink below content. */
+.auto-stack-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.auto-stack-row--gap-xs {
+  gap: 4px;
+}
+.auto-stack-row--gap-sm {
+  gap: 8px;
+}
+.auto-stack-row--gap-md {
+  gap: 12px;
+}
+
+.auto-stack-item {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-basis: calc((var(--auto-stack-break, 38rem) - 100%) * 999);
+  min-width: 0;
+}
+.auto-stack-item--gap-xs {
+  gap: 4px;
+}
+.auto-stack-item--gap-sm {
+  gap: 8px;
+}
+
+/* Forced stacking: every item takes the full row at every width. */
+.auto-stack-row--stacked > .auto-stack-item {
+  flex-basis: 100%;
 }
 
 /* AppShell — full-viewport vertical column. Header doesn't shrink; main fills. */

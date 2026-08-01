@@ -96,3 +96,18 @@
   gap: 12px;
   padding: 16px 20px;
 }
+
+/* ── ConfirmationModal ──────────────────────────────────── */
+
+/* Scrollable body cap so long confirmation content never outgrows the
+   viewport. (Modal family owns its geometry — layout-purity exempt.) */
+.sui-confirmation-modal__body {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.sui-confirmation-modal__description {
+  margin: 0 0 16px;
+  color: var(--sui-text-secondary);
+  font-size: 0.875rem;
+}

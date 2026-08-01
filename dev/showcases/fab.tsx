@@ -1,6 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { Fab } from "../../src/components/Fab";
 import { AddFab } from "../../src/components/Fab";
+import { ClusterRow } from "../../src/components/Layout";
 
 export const FabShowcase: Component = () => {
   const [count, setCount] = createSignal(0);
@@ -22,13 +23,10 @@ export const FabShowcase: Component = () => {
           Default color from Button's default variant. On hover the icon adopts
           the accent color for free (no extra CSS needed).
         </p>
-        <div
-          class="example-row"
-          style={{ "align-items": "center", gap: "24px" }}
-        >
+        <ClusterRow>
           <Fab icon="plus" label="Add item" onClick={() => {}} />
           <Fab icon="plus" label="Add item (disabled)" disabled />
-        </div>
+        </ClusterRow>
         <div class="text-meta">Left: default state. Right: disabled state.</div>
       </div>
 
@@ -40,13 +38,10 @@ export const FabShowcase: Component = () => {
           presentational props permitted by the type. Counter below increments
           on each click to prove the callback wires through.
         </p>
-        <div
-          class="example-row"
-          style={{ "align-items": "center", gap: "24px" }}
-        >
+        <ClusterRow>
           <AddFab label="Add item" onClick={() => setCount((n) => n + 1)} />
           <span class="text-meta">Click count: {count()}</span>
-        </div>
+        </ClusterRow>
         <div class="text-meta">
           Call site:{" "}
           <code>
@@ -63,29 +58,9 @@ export const FabShowcase: Component = () => {
           box places <code>AddFab</code> at its bottom-right corner via a
           positioned wrapper div.
         </p>
-        <div
-          style={{
-            position: "relative",
-            width: "320px",
-            height: "200px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "4px",
-            background: "var(--sui-bg-secondary)",
-          }}
-        >
-          <span
-            class="text-meta"
-            style={{ position: "absolute", top: "12px", left: "12px" }}
-          >
-            Container (320 × 200)
-          </span>
-          <div
-            style={{
-              position: "absolute",
-              bottom: "16px",
-              right: "16px",
-            }}
-          >
+        <div class="fab-demo__container">
+          <span class="text-meta fab-demo__label">Container (320 × 200)</span>
+          <div class="fab-demo__corner">
             <AddFab label="Add item" onClick={() => {}} />
           </div>
         </div>

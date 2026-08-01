@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// AnimatedSwimlaneChart — Composite (Depth 2). Composes SwimlaneAnimatedLane (Depth 1).
 // src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.tsx
 import {
   createEffect,
@@ -30,6 +31,9 @@ import {
 import { ANIMATED_SWIMLANE_DEFAULTS, type RenderNodeContext } from "./defaults";
 import { groupIntoLanes, visibleChildRowCount } from "./lanes";
 import { SwimlaneAnimatedLane } from "./SwimlaneAnimatedLane";
+import "./AnimatedSwimlaneChart.css";
+import { observeSize } from "../../internal/dom/observeSize";
+import { every, find, map, pipe, some, sortBy } from "../../fn";
 
 export type AnimatedSwimlaneChartProps = {
   // ── REQUIRED ──
@@ -128,38 +132,16 @@ export const AnimatedSwimlaneChartBase: Component<
   const [stageWidth, setStageWidth] = createSignal(800);
   onMount(() => {
     if (!containerRef) return;
-    // Coalesce RO writes into a single pending frame. Writing setStageWidth
-    // synchronously inside the observer dispatch mutates the observed
-    // subtree's layout DURING dispatch (stageWidth → maxDepth → lane rows),
-    // which makes the browser defer remaining notifications and emit the
-    // benign "ResizeObserver loop completed with undelivered notifications"
-    // warning. Deferring the write to the next frame lets the dispatch finish
-    // first. Only the newest measured width survives.
-    let rafId: number | null = null;
-    let pendingWidth = 0;
-    const flush = () => {
-      rafId = null;
-      if (pendingWidth > 0)
-        setStageWidth(Math.max(400, Math.floor(pendingWidth)));
-    };
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) pendingWidth = e.contentRect.width;
-      if (rafId == null) {
-        rafId =
-          typeof requestAnimationFrame !== "undefined"
-            ? requestAnimationFrame(flush)
-            : (setTimeout(flush, 0) as unknown as number);
-      }
-    });
-    ro.observe(containerRef);
-    onCleanup(() => {
-      ro.disconnect();
-      if (rafId != null) {
-        if (typeof cancelAnimationFrame !== "undefined")
-          cancelAnimationFrame(rafId);
-        else clearTimeout(rafId);
-      }
-    });
+    // Writing setStageWidth synchronously inside the observer dispatch mutates
+    // the observed subtree's layout DURING dispatch (stageWidth → maxDepth →
+    // lane rows) and re-fires the observer in the same frame. This component
+    // grew that coalescing privately; it now uses the shared primitive (see
+    // internal/dom/observeSize).
+    onCleanup(
+      observeSize(containerRef, (size) => {
+        if (size.width > 0) setStageWidth(Math.max(400, size.width));
+      }),
+    );
   });
 
   const maxDepth = createMemo<number>(() => {
@@ -209,8 +191,11 @@ export const AnimatedSwimlaneChartBase: Component<
   const laneBandRank = (laneNodes: StatusFlowNode[], hasParent: boolean) => {
     const work = hasParent ? laneNodes.slice(1) : laneNodes;
     const pool = work.length > 0 ? work : laneNodes;
-    if (pool.some((n) => n.status === props.centerStatus)) return 0; // DOING → top
-    if (pool.length > 0 && pool.every((n) => n.status === props.terminalStatus))
+    if (some((n) => n.status === props.centerStatus, pool)) return 0; // DOING → top
+    if (
+      pool.length > 0 &&
+      every((n) => n.status === props.terminalStatus, pool)
+    )
       return 2; // DONE → bottom
     return 1; // TODO / mixed-not-done → middle
   };
@@ -307,7 +292,7 @@ export const AnimatedSwimlaneChartBase: Component<
       } else if (!holdTimers.has(g.id)) {
         const handle = setTimeout(() => {
           holdTimers.delete(g.id);
-          const grp = lanes().find((x) => x.id === g.id);
+          const grp = find((x) => x.id === g.id, lanes());
           if (!grp) return;
           displayedBand.set(g.id, laneBandRank(grp.nodes, !!grp.parentId));
           setDisplayBump((v) => v + 1);
@@ -333,7 +318,7 @@ export const AnimatedSwimlaneChartBase: Component<
         clearTimer(rowHoldTimers, g.id);
         const handle = setTimeout(() => {
           rowHoldTimers.delete(g.id);
-          const grp = lanes().find((x) => x.id === g.id);
+          const grp = find((x) => x.id === g.id, lanes());
           if (!grp) return;
           displayedRows.set(g.id, laneRowCount(grp.nodes, !!grp.parentId));
           setDisplayBump((v) => v + 1);
@@ -360,7 +345,7 @@ export const AnimatedSwimlaneChartBase: Component<
     // the emitted `items` so the <Index> below (keyed by position) never
     // re-mounts a lane — only each lane's `laneY` changes, and the lane
     // slides to it. The vertical band ORDER lives entirely in laneY.
-    const measured = groups.map((g, inputIndex) => {
+    const measured = map((g, inputIndex) => {
       const hasParent = !!g.parentId;
       // Use the displayed (possibly held) band for positioning, falling back
       // to the live band before the effect has seen this lane.
@@ -374,16 +359,18 @@ export const AnimatedSwimlaneChartBase: Component<
         height: laneHeightForRows(rows, hasParent),
         band,
       };
-    });
+    }, groups);
 
     // Sorted order: by band; within a band, most recently active first
     // (recency descending), with input order as the final stable tiebreak.
-    const sorted = [...measured].sort(
-      (a, b) =>
-        a.band - b.band ||
-        (laneActivity.get(b.group.id) ?? 0) -
-          (laneActivity.get(a.group.id) ?? 0) ||
-        a.inputIndex - b.inputIndex,
+    // Three stable sortBy passes, least-significant key first (per
+    // src/fn/README.md's two-key-comparator convention, extended to three):
+    // input order, then activity (negated for descending), then band.
+    const sorted = pipe(
+      measured,
+      sortBy((m) => m.inputIndex),
+      sortBy((m) => -(laneActivity.get(m.group.id) ?? 0)),
+      sortBy((m) => m.band),
     );
 
     // Walk the sorted order to assign each lane its vertical offset.
@@ -395,7 +382,7 @@ export const AnimatedSwimlaneChartBase: Component<
     }
 
     // Emit in input order with the sorted laneY.
-    const out = measured.map((m) => {
+    const out = map((m) => {
       const parentNode = m.hasParent ? m.group.nodes[0] : undefined;
       const children = m.hasParent ? m.group.nodes.slice(1) : m.group.nodes;
       return {
@@ -409,7 +396,7 @@ export const AnimatedSwimlaneChartBase: Component<
           children,
         } as import("./SwimlaneAnimatedLane").SwimlaneAnimatedLaneSpec,
       };
-    });
+    }, measured);
     return { items: out, totalH: runningY };
   });
 
@@ -417,7 +404,6 @@ export const AnimatedSwimlaneChartBase: Component<
     <div
       ref={containerRef}
       class="sui-animated-swimlane-chart"
-      style={{ width: "100%" }}
     >
       <svg
         width={stageWidth()}
@@ -425,7 +411,7 @@ export const AnimatedSwimlaneChartBase: Component<
         role="img"
         aria-label="Swimlane chart"
         viewBox={`0 0 ${stageWidth()} ${lanesWithY().totalH}`}
-        style={{ display: "block", overflow: "visible" }}
+        class="sui-animated-swimlane-chart__svg"
       >
         {/* Index, not For: lanesWithY rebuilds its items array on every
             `nodes` change, so a For would re-mount every lane on every

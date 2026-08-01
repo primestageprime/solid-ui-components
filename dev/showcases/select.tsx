@@ -1,6 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import { Select, type SelectOption } from "../../src/components/Select";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 const PRIORITY_OPTIONS: SelectOption[] = [
@@ -48,82 +49,90 @@ export const SelectShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Single-mode (default)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `value: SelectOption | null`. Trigger shows the selected label.
-        </div>
-        <div style={{ "max-width": "240px" }}>
-          <Select
-            label="Priority"
-            description="Defines escalation rules."
-            options={() => PRIORITY_OPTIONS}
-            value={priority}
-            onChange={setPriority}
-          />
-        </div>
-        <Text variant="sublabel">
-          Selected: {priority()?.label ?? "(none)"}
-        </Text>
+        <NarrowStack>
+          <div class="text-meta">
+            `value: SelectOption | null`. Trigger shows the selected label.
+          </div>
+          <div class="demo-maxw-240">
+            <Select
+              label="Priority"
+              description="Defines escalation rules."
+              options={() => PRIORITY_OPTIONS}
+              value={priority}
+              onChange={setPriority}
+            />
+          </div>
+          <Text variant="sublabel">
+            Selected: {priority()?.label ?? "(none)"}
+          </Text>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Multi-mode</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `multiple` flips `value` to `SelectOption[]`. Trigger shows a
-          comma-joined preview with an inline clear button.
-        </div>
-        <div style={{ "max-width": "320px" }}>
-          <Select
-            multiple
-            label="Statuses"
-            placeholder="Filter by status…"
-            options={() => STATUS_OPTIONS}
-            value={statuses}
-            onChange={setStatuses}
-          />
-        </div>
-        <Stack gap="xs">
-          <Text variant="sublabel">Selected count: {statuses().length}</Text>
-          <Text variant="sublabel">
-            Labels:{" "}
-            {statuses()
-              .map((o) => o.label)
-              .join(", ") || "(none)"}
-          </Text>
-        </Stack>
+        <NarrowStack>
+          <div class="text-meta">
+            `multiple` flips `value` to `SelectOption[]`. Trigger shows a
+            comma-joined preview with an inline clear button.
+          </div>
+          <div class="demo-maxw-320">
+            <Select
+              multiple
+              label="Statuses"
+              placeholder="Filter by status…"
+              options={() => STATUS_OPTIONS}
+              value={statuses}
+              onChange={setStatuses}
+            />
+          </div>
+          <Stack gap="xs">
+            <Text variant="sublabel">Selected count: {statuses().length}</Text>
+            <Text variant="sublabel">
+              Labels:{" "}
+              {statuses()
+                .map((o) => o.label)
+                .join(", ") || "(none)"}
+            </Text>
+          </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Disabled</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          `disabled` is forwarded to Kobalte's root — the trigger is
-          non-interactive and the opacity drops to 50%.
-        </div>
-        <div style={{ "max-width": "240px" }}>
-          <Select
-            label="Priority (locked)"
-            options={() => PRIORITY_OPTIONS}
-            value={lockedPriority}
-            disabled
-          />
-        </div>
+        <NarrowStack>
+          <div class="text-meta">
+            `disabled` is forwarded to Kobalte's root — the trigger is
+            non-interactive and the opacity drops to 50%.
+          </div>
+          <div class="demo-maxw-240">
+            <Select
+              label="Priority (locked)"
+              options={() => PRIORITY_OPTIONS}
+              value={lockedPriority}
+              disabled
+            />
+          </div>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Long option list (30 items — scrolling)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-          Validates the listbox `max-height: 280px` overflow rule — the popup
-          should scroll, the trigger should not grow.
-        </div>
-        <div style={{ "max-width": "280px" }}>
-          <Select
-            label="Asset"
-            placeholder="Pick an asset…"
-            options={() => LONG_OPTIONS}
-            value={asset}
-            onChange={setAsset}
-          />
-        </div>
-        <Text variant="sublabel">Selected: {asset()?.label ?? "(none)"}</Text>
+        <NarrowStack>
+          <div class="text-meta">
+            Validates the listbox `max-height: 280px` overflow rule — the popup
+            should scroll, the trigger should not grow.
+          </div>
+          <div class="demo-maxw-280">
+            <Select
+              label="Asset"
+              placeholder="Pick an asset…"
+              options={() => LONG_OPTIONS}
+              value={asset}
+              onChange={setAsset}
+            />
+          </div>
+          <Text variant="sublabel">Selected: {asset()?.label ?? "(none)"}</Text>
+        </NarrowStack>
       </div>
     </div>
   );

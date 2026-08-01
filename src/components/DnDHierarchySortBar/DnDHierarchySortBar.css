@@ -2,12 +2,10 @@
    DnDHierarchySortBar — Atomic (Depth 1). Drag-to-reorder pill row.
    ============================================ */
 
+/* The pill row is composed from WrappedClusterRow (wrap, align:center, gap 8=sm);
+   only the row's base font-size remains here. The pills stay intrinsic (an
+   inline-flex, data-derived, drag-footprint-sized widget). */
 .sui-dnd-hierarchy-sort-bar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
   font-size: 12px;
 }
 

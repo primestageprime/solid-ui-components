@@ -1,0 +1,25 @@
+/* Layout-variants gallery — the frames a variant is demonstrated INSIDE. The
+   variants own no size of their own (that is the point), so the gallery
+   supplies a definite box for each: a width to arrange within, and for the
+   clip/scroll families a height small enough that the overflow behaviour is
+   visible rather than described. */
+
+.layout-demo-frame {
+  max-width: 640px;
+  border: 1px dashed var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+  padding: 8px;
+}
+
+/* Definite height + a flex context, so fill/clip/scroll variants have a height
+   to fill and content that genuinely overflows it. */
+.layout-demo-frame--tall {
+  height: 120px;
+  display: flex;
+}
+
+/* Content deliberately wider than the 640px frame, so a horizontally-scrolling
+   variant has something to scroll. */
+.layout-demo-wide-content {
+  width: 900px;
+}

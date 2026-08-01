@@ -73,12 +73,21 @@ body {
   /* ---- Accent / Primary (cyan — safe across CVD types) ---- */
   --sui-accent: #3aa0ff;
   --sui-accent-rgb: 58, 160, 255;
-  --sui-accent-dim: #2d7fcc;
+  /* Text-safe accent — see default.css. Lifted from #3888d3 to clear 4.6:1 as
+     a button hover label on the 8-12% accent washes. */
+  --sui-accent-dim: #4a93d7;
+
+  /* Label colour for accent/warning fills — see default.css. */
+  --sui-on-accent: var(--sui-bg-deep);
+  --sui-on-warning: var(--sui-bg-deep);
 
   /* ---- Semantic Colors — CB-safe blue/orange pair ----
-     danger=vermilion, success=blue, warning=amber. */
-  --sui-danger: #e66100;
-  --sui-danger-rgb: 230, 97, 0;
+     danger=vermilion, success=blue, warning=amber.
+     danger lifted from #e66100 so it stays >= 4.6:1 as text on its own 15%
+     wash. Hue is preserved (a 10% lift toward white), so the blue/orange
+     confusion-axis separation the palette is built on is unchanged. */
+  --sui-danger: #ea7723;
+  --sui-danger-rgb: 234, 119, 35;
   --sui-warning: #e6a700;
   --sui-warning-rgb: 230, 167, 0;
   --sui-success: #3b82f6;
@@ -94,7 +103,7 @@ body {
   /* ---- Text ---- */
   --sui-text-primary: #eaf1f8;
   --sui-text-secondary: #9fb2c4;
-  --sui-text-muted: #6b7e90;
+  --sui-text-muted: #748798;
 
   /* ---- Borders ---- */
   --sui-border: #2c3a4a;
@@ -142,7 +151,7 @@ body {
   --status-missing: #e66100; /* worst — vermilion */
 
   /* ---- Chart chrome ---- */
-  --sui-chart-tick-color: #6b7e90;
+  --sui-chart-tick-color: #748798;
 
   /* ---- Chart semantics — CB-safe ----
      Violation/threshold move to vermilion (matches --sui-danger). Transition
@@ -162,6 +171,22 @@ body {
   --chart-series-4: #cc79a7; /* reddish purple */
   --chart-series-5: #f0e442; /* yellow */
   --chart-series-6: #0072b2; /* blue */
+
+  /* ---- Categorical series palette (8 slots, fixed order) ----
+     CVD-first set on the deep-navy surfaces: every adjacent pair clears an
+     OKLCH ΔE ≥ 8 under BOTH protan and deutan simulation (min ≈ 11), so the
+     eight categories stay distinct for dichromat readers. Validated for the
+     dark-mode lightness band, chroma floor, and ≥3:1 on the chart surface
+     (--sui-bg-elevated #1c2533). Colour series by index; status tokens stay
+     reserved. See default.css for the full note. */
+  --sui-series-1: #297cef;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #da4336;
+  --sui-series-5: #935edf;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #cd4290;
+  --sui-series-8: #8c8309;
 }
 
 /* ============================================
@@ -180,9 +205,11 @@ body {
    `:root` block above is for whole-theme use via the manifest.
    ============================================ */
 html[data-colorblind="true"] {
-  /* Semantic pair: red→vermilion, green→blue, amber kept. */
-  --sui-danger: #e66100;
-  --sui-danger-rgb: 230, 97, 0;
+  /* Semantic pair: red→vermilion, green→blue, amber kept.
+     danger matches the :root block above — lifted from #e66100 so it stays
+     readable as text on its own 15% wash (the danger button's hover). */
+  --sui-danger: #ea7723;
+  --sui-danger-rgb: 234, 119, 35;
   --sui-success: #3b82f6;
   --sui-success-rgb: 59, 130, 246;
   --sui-warning: #e6a700;
@@ -208,4 +235,15 @@ html[data-colorblind="true"] {
   --chart-series-4: #cc79a7;
   --chart-series-5: #f0e442;
   --chart-series-6: #0072b2;
+
+  /* CVD-safe series palette layered over the base theme (matches the
+     colorblind :root set above; overrides whatever series the base theme set). */
+  --sui-series-1: #297cef;
+  --sui-series-2: #b76b07;
+  --sui-series-3: #108faa;
+  --sui-series-4: #da4336;
+  --sui-series-5: #935edf;
+  --sui-series-6: #0d9b2c;
+  --sui-series-7: #cd4290;
+  --sui-series-8: #8c8309;
 }

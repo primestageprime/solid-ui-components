@@ -50,6 +50,117 @@ This applies at every level — individual components AND modules:
 
 **Example:** DataList defines `Badge` (wraps StatusBadge → Depth 2) and `DTable` (wraps KVTable → Depth 2). DataList module = Depth 3.
 
+## Layout Purity
+
+**No component may own box-model geometry.** Rows, columns, gaps, alignment,
+spreads, fills, scrolls, and pinned edges are expressed by **composing Layout
+components** (`src/components/Layout`: the `Stack`/`Row`/`Box` factories and
+their curried variants — `TightStack`, `SpreadRow`, `ClusterRow`, `GrowBox`,
+`FillColumn`, `ScrollColumn`, `TagRow`, and the rest of `variants.ts`) — **never**
+via `display: flex | grid`, `gap`, `justify-content`, `align-items`,
+`align-self`, `flex-*`, `place-*`, `row-gap`/`column-gap`, or `overflow` in a
+component's own CSS or inline `style={}`.
+
+The Layout family owns the arrangement vocabulary in one place. When a component
+hand-rolls its own flex/grid wrapper it forks that vocabulary: gaps drift off
+the 4px scale, alignment logic is duplicated, and a change to how the app spaces
+things means grepping every CSS file instead of editing one variant. This is the
+same single-place-ownership principle as [The #1 Rule](AGENT_GUIDE.md) (visual
+config lives in curried variants), applied to geometry.
+
+### Exemptions
+
+Three categories are exempt — everything else migrates:
+
+1. **`layout`-tagged components** — the Layout family itself (`Stack`, `Row`,
+   `Box`, `AppShell`) **plus** `ThreePanelLayout`, `Page`, `ScrollRegion`,
+   `BucketQueue`, `StaticSplitLayout`, `Section`, `CollapsiblePanel`,
+   `Modal`, `BottomSheet`, and `ButtonGroup` (the last DEPRECATED-as-such — see
+   ruling 5 below). These
+   components **are** the arrangement vocabulary — they are allowed (and
+   required) to declare flex/grid/overflow/positioning directly.
+2. **svg / canvas rendering** — charts and their render primitives may position
+   freely (the SVG coordinate system is their layout engine, not the box model).
+3. **overlay controls** — components that anchor a floating surface (`Toast`,
+   `PopoverMenu`, `Dropdown`, `Tooltip`, and the popover portions of `Select`,
+   `Combobox`, `DatePicker`, `DateRangePicker`, `MultiSelectFilter`) keep their
+   `position: absolute | fixed` anchoring **only**. Their internal rows and
+   columns still migrate to Layout compositions.
+
+### When a geometry has no Layout variant
+
+**Add the named variant to `Layout/variants.ts` first, then compose it.** A
+missing variant is the finding, not an excuse for an inline style. Each new
+variant gets a role-named export and a comment on when to use it (see the
+existing `FillColumn` / `ScrollColumn` / `PaneRow` entries for the idiom). Note
+the usual guardrail: expanding the underlying `Stack`/`Row` *scales* (new `gap`
+token, new `align` value) still requires Peter's sign-off per
+[The #2 Rule](AGENT_GUIDE.md) — a new *composed variant* over the existing scale
+does not.
+
+### Child arrangement vs intrinsic element styling
+
+Migrate **child arrangement** — a wrapper that lays out multiple children in a
+row/column/grid. Leave (but note) **intrinsic element styling** — a
+self-contained atom centering its *own* single label, e.g. a pill or icon
+button with `display: inline-flex; align-items: center` on the element that
+renders the glyph/text. Don't force an absurd one-child `<Row>` wrapper around a
+pill just to satisfy the letter of the rule; the target is duplicated
+*arrangement* vocabulary, not every `inline-flex`.
+
+### Rulings on the hard cases (Peter, 2026-07-14)
+
+Four situations that have no obvious Layout home were adjudicated:
+
+1. **Pseudo-element layout chrome (`::before`/`::after` with `flex`, etc.):**
+   replace the pseudo-elements with **real elements** (e.g. a `GrowBox` rule
+   line) one at a time, verify the render is visually identical, and keep the
+   change only if it holds up. Fall back to BLOCKED-with-reason only if a
+   faithful real-element replacement genuinely can't match. Rationale: deeper
+   components shouldn't have to think about styling or accidentally override it.
+2. **Off-scale gaps: snap to the scale — always (final, 2026-07-14; scale
+   widened 2026-07-31).** The `Stack`/`Row` gap scale is `xs`(4px)/`sm`(8px)/
+   `md`(12px)/`lg`(16px). **Every** off-scale gap snaps to the nearest existing
+   step, even when the change is visible: `6px`→`sm`, `10px`→`md`, `20px`→`lg`.
+   `12px` and `16px` are now exact steps rather than snaps. There is no ±2–4px
+   tolerance gate and nothing blocks on gap size. Note each snap in the commit
+   message so visual diffs are attributable. (`Grid` and `AutoStackRow` carry
+   the same `md`(12px) step; they always did, which is why "the scale is
+   `xs`/`sm`" was only ever true of `Stack`/`Row`. `Sidebar` and
+   `ProportionalStack` remain `xs`/`sm`.)
+3. **Missing 2-D / responsive layouts: add the primitive.** Two shipped:
+   `AutoStackRow` + `AutoStackItem` (responsive side-by-side → stacked via a
+   `breakWidth` prop — the "holy-albatross" behavior) and `Grid` + the
+   `LabelValueGrid` variant (`minmax(label, max-content) 1fr`). Compose these
+   instead of hand-rolling `flex-basis` calcs or `display: grid`.
+4. **Clipping/masking `overflow: hidden` is NOT an intrinsic carve-out.** Route
+   it through Layout: compose the `ClipBox` curried `Box` variant
+   (`overflow: hidden`) wherever a component clips for a collapse animation or a
+   progress/bar mask. There is no "overflow is fine here" exception.
+5. **ButtonGroup is `layout`-exempt but DEPRECATED-as-such (2026-07-14).** Its
+   job is arranging child buttons, so it joins the exempt list and its internals
+   may use base `Row`/`Stack`. But its runtime `gap`/`orientation` props are
+   legacy: add curried variants (`HButtonGroup`/`VButtonGroup`) so new call sites
+   have the pure path, keep the existing runtime API working unchanged (zero
+   breaking changes), and let consumers migrate opportunistically.
+
+### Migration posture
+
+Forward + opportunistic: new components must comply from the start; existing
+ones migrate via the `layout-purity-refactor` skill
+(`.claude/skills/layout-purity-refactor/SKILL.md`), one component per commit,
+each verified visually identical before moving on.
+
+**Status: the initial migration is COMPLETE (2026-07-14).** Every component in
+the inventory reached a terminal disposition — DONE (geometry composed from
+Layout variants), AUDITED-INTRINSIC (self-contained widget arranging its own
+prop/data-derived parts), or EXEMPT-AS-LAYOUT (the Layout family + genuine
+full-height scroll plumbing + genuine 2-D grid matrices). The full inventory,
+the vocabulary the migration added, and the standing keep-vs-migrate
+discriminators live in
+`docs/superpowers/plans/2026-07-14-layout-purity-migration.md` › *Migration
+complete*. New components still comply from the start.
+
 ## Prop Architecture: Overrides vs Data
 
 Every component has two categories of props:
@@ -77,7 +188,7 @@ interface SurfaceInternalProps extends JSX.HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
   direction?: "row" | "column";
   align?: "start" | "center" | "stretch";
-  gap?: "none" | "sm" | "md" | "lg";
+  gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
   // Data
@@ -112,7 +223,7 @@ When client apps use curried variants, TypeScript prevents them from passing ove
 </InteractiveCard>
 
 // ❌ TypeScript error — 'padding' is not in SurfaceDataProps
-<InteractiveCard padding="lg" active={isSelected()}>
+<InteractiveCard padding="sm" active={isSelected()}>
   <TextLabel>{item.name}</TextLabel>
 </InteractiveCard>
 ```
@@ -189,8 +300,52 @@ the states you must preserve).
 `AGENT_GUIDE.md`: start with one variant and expand only on real demand. Growing
 the set of variants/sizes/tokens/props requires confirming with Peter first
 (why + why important), and **test-only / showcase-only usage does not count as
-demand** — only a shipped consumer does. This is why `Stack`/`Row` gaps were
-trimmed to `xs`/`sm` and `Surface` `padding`/`radius` to `none`/`sm`/`md`.
+demand** — only a shipped consumer does. This is why `Surface`
+`padding`/`radius` are `none`/`sm`/`md`, and why `OverflowNav.gap` stays
+`xs`/`sm` even though the `Row` it forwards to accepts more.
+
+**The gate cuts both ways, and `Stack`/`Row` gaps are the cautionary tale.**
+They were trimmed to `xs`/`sm` on the finding that no one used `md`/`lg`, then
+restored on 2026-07-31 when that finding turned out to be an artifact of where
+the audit looked: `thorcasting-ui` had forked the primitives into a local
+inline-style shim rather than lose the steps, and `jtf-ui` had a
+`createSurface({ … gap: "md" })` silently rendering at 8px. **For a published
+library, "nothing depends on this" cannot be established from inside this
+repo** — grep the consumer checkouts before removing a prop value, the same way
+you would before adding one.
+
+## List Identity: For vs Index
+
+`<For>` keys by **object reference**. Iterating a derived memo that REBUILDS
+its objects on every source change (`createMemo(() => items().map(...))`,
+filter chains, grouping helpers) remounts every row on every change. For
+stateless rows that's invisible waste; for **stateful children it is a bug**:
+animations lose their history (DigitRoller mounts static and never rolls),
+inputs lose focus, timers reset. This shipped as a real defect on
+2026-07-14 — the triage rails rebuilt category objects, `<For>` remounted
+the count pills, and the odometer roll silently never played.
+
+Rules:
+
+- **`<For>` is for stable identities** — arrays whose elements are the same
+  objects across updates (signals of persistent rows, `SEED`-style stores).
+- **Derived/rebuilt arrays take `<Index>`** (keys by position) or a keyed
+  memo that preserves element identity.
+- A component whose value-on-screen depends on **surviving updates**
+  (DigitRoller, anything animating a transition from its own prior state)
+  must say so in its header comment, and its tests must assert node
+  identity across a change: `expect(after).toBe(before)` — same node, not
+  equal-looking node (see `DigitRoller.test.tsx`, "SURVIVAL CONTRACT").
+
+## Ambient Motion: counts roll by default
+
+Numeric counts are never static text: `DigitRoller` auto-tracks its previous
+value and rolls odometer-style (direction-aware) on every change, and the
+count-bearing components (`CountChip`, `TagPill` with a purely-numeric
+label) compose it internally. Callers get the motion with zero
+specification — the same currying principle as visual props: **the
+animation is baked into the component, not passed at the call site**.
+Opt out with `animate={false}`.
 
 ## Quality Checks
 

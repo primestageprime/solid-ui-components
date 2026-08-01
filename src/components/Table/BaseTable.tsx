@@ -15,7 +15,14 @@ import {
   mergeProps,
 } from "solid-js";
 import type { JSX } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { clickableCursor } from "../../internal/style/clickable";
+import {
+  ClipBox,
+  ClipFillColumnFlush,
+  ScrollFillColumn,
+  ScrollYBox,
+} from "../Layout/variants";
 import type { TableColumn, TableRow } from "./types";
 import {
   type BaseTableProps,
@@ -99,8 +106,11 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "striped",
     "hoverable",
     "compact",
+    "fixedLayout",
+    "fit",
     "getRowClass",
     "onRowClick",
+    "onRowHover",
     "emptyMessage",
     "rowActions",
     "spanRow",
@@ -137,10 +147,18 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
 
     return [...local.data].sort((a, b) => {
       const accessor = column.accessor;
-      const aVal: unknown =
-        typeof accessor === "function" ? accessor(a) : a[accessor];
-      const bVal: unknown =
-        typeof accessor === "function" ? accessor(b) : b[accessor];
+      // JSX-rendering columns (field factories) carry their comparable value
+      // in `sortValue`; keyed/primitive accessors compare directly.
+      const aVal: unknown = column.sortValue
+        ? column.sortValue(a)
+        : typeof accessor === "function"
+          ? accessor(a)
+          : a[accessor];
+      const bVal: unknown = column.sortValue
+        ? column.sortValue(b)
+        : typeof accessor === "function"
+          ? accessor(b)
+          : b[accessor];
 
       if (aVal == null) return dir === "asc" ? 1 : -1;
       if (bVal == null) return dir === "asc" ? -1 : 1;
@@ -169,18 +187,34 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     if (local.striped) classList.push("hud-table--striped");
     if (local.hoverable) classList.push("hud-table--hoverable");
     if (local.compact) classList.push("hud-table--compact");
+    if (local.fixedLayout) classList.push("hud-table--fixed");
+    if (local.fit) classList.push("hud-table--fit");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
 
   /** Shared body-cell style — width clamp + alignment. */
-  const cellStyle = (column: TableColumn<T>): JSX.CSSProperties => ({
-    "text-align": column.align || "left",
-    "max-width": column.width,
-    overflow: column.width ? "hidden" : undefined,
-    "text-overflow": column.width ? "ellipsis" : undefined,
-    "white-space": column.width ? "nowrap" : undefined,
-  });
+  const cellStyle = (column: TableColumn<T>): JSX.CSSProperties => {
+    const clip = !!column.width || !!column.ellipsis;
+    return {
+      "text-align": column.align || "left",
+      "max-width": column.width,
+      "min-width": column.minWidth,
+      overflow: clip ? "hidden" : undefined,
+      "text-overflow": clip ? "ellipsis" : undefined,
+      "white-space": clip ? "nowrap" : undefined,
+    };
+  };
+
+  /** Cell content, optionally inside the size-contained clip block: a
+   *  contained column's nowrap content cannot inflate the column minimum, so
+   *  the width-model shrink between min and max is real (ruled 2026-07-21). */
+  const cellContent = (row: T, column: TableColumn<T>) =>
+    column.contained ? (
+      <div class="hud-table__contained">{getCellValue(row, column)}</div>
+    ) : (
+      getCellValue(row, column)
+    );
 
   /** Render a sortable <th> for a single column */
   const renderColumnTh = (
@@ -193,6 +227,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
       style={{
         width: column.width,
         "max-width": column.width,
+        "min-width": column.minWidth,
         "text-align": column.align || "left",
       }}
       rowspan={rowspan}
@@ -207,8 +242,27 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     </th>
   );
 
+  // The table FRAME's fill/clip geometry is composed from Layout variants
+  // (layout-purity): `fill` makes the frame a clipping flex column whose scroll
+  // region grows to fill it; otherwise the frame is a plain box that clips its
+  // rounded corners ONLY when the sticky header is off (a sticky <thead> must
+  // not be trapped by an ancestor `overflow`, so sticky mode leaves overflow
+  // visible = a plain div). `.hud-table--fill { height:100% }` (a size, kept in
+  // CSS) still lets the frame fill a definite-height block parent.
+  const rootComponent = () =>
+    local.fill
+      ? ClipFillColumnFlush
+      : local.stickyHeader === false
+        ? ClipBox
+        : "div";
+  // Inner scroll region: `fill` → flex-fill + scroll (ScrollFillColumn); an
+  // explicit `maxHeight` → a height-capped scroll (ScrollYBox + inline
+  // max-height); otherwise a plain box that doesn't scroll.
+  const scrollComponent = () =>
+    local.fill ? ScrollFillColumn : local.maxHeight ? ScrollYBox : "div";
+
   return (
-    <div class={classes()} {...others}>
+    <Dynamic component={rootComponent()} class={classes()} {...others}>
       <Show when={local.data.length === 0}>
         <div class="hud-table__empty">
           {local.emptyMessage || "No data available"}
@@ -219,7 +273,8 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
         {/* Inner scroll region. Owns the scroll container so the sticky <thead>
             sticks relative to it: maxHeight caps + scrolls inline, while `fill`
             flex-grows it to fill the clipping outer wrapper (see Table.css). */}
-        <div
+        <Dynamic
+          component={scrollComponent()}
           class="hud-table__scroll"
           style={tableContainerStyle(local.maxHeight)}
         >
@@ -262,7 +317,6 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                           <th
                             class="hud-table__header-cell hud-table__header-cell--group"
                             colspan={span.colspan}
-                            style={{ "text-align": "center" }}
                           >
                             {span.label}
                           </th>
@@ -292,7 +346,10 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                 </thead>
               )}
             </Show>
-            <tbody class="hud-table__body">
+            <tbody
+              class="hud-table__body"
+              onMouseLeave={() => local.onRowHover?.(null, -1)}
+            >
               <For each={sortedData()}>
                 {(row, rowIndex) => {
                   // Per-row tail-collapse: index of the column from which the row
@@ -309,6 +366,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                     <tr
                       class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
                       onClick={() => local.onRowClick?.(row, rowIndex())}
+                      onMouseEnter={() => local.onRowHover?.(row, rowIndex())}
                       style={clickableCursor(!!local.onRowClick)}
                     >
                       <Show
@@ -321,7 +379,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                                   class="hud-table__cell"
                                   style={cellStyle(column)}
                                 >
-                                  {getCellValue(row, column)}
+                                  {cellContent(row, column)}
                                 </td>
                               )}
                             </For>
@@ -348,7 +406,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                               class="hud-table__cell"
                               style={cellStyle(column)}
                             >
-                              {getCellValue(row, column)}
+                              {cellContent(row, column)}
                             </td>
                           )}
                         </For>
@@ -370,9 +428,9 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
               </For>
             </tbody>
           </table>
-        </div>
+        </Dynamic>
       </Show>
-    </div>
+    </Dynamic>
   );
 }
 

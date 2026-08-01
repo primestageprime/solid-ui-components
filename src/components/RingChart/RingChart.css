@@ -1,0 +1,51 @@
+/* ============================================
+   RingChart — static chrome. Dynamic geometry (size-driven px values,
+   label font scaling, dash arcs) stays inline in the component.
+   ============================================ */
+
+/* Root — square inline box centering the svg + label overlay. Width/height
+   stay inline (size-driven px values). */
+.sui-ring-chart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rotate so arcs start at 12 o'clock. */
+.sui-ring-chart__svg {
+  transform: rotate(-90deg);
+}
+
+.sui-ring-chart__track {
+  stroke: var(--sui-border-bright);
+}
+
+/* Center label overlay — sized/positioned over the svg. */
+.sui-ring-chart__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Label typography — the font-size PROPERTY lives here; only the computed size
+   (scales with ring size + label length) rides in on the --ring-*-size vars set
+   inline by the component (a cssvar bridge, not a raw inline font-size). */
+.sui-ring-chart__label {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: var(--sui-text-primary);
+  font-weight: 700;
+  line-height: 1.1;
+  font-size: var(--ring-label-size);
+}
+
+.sui-ring-chart__sublabel {
+  color: var(--sui-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+  font-size: var(--ring-sublabel-size);
+}

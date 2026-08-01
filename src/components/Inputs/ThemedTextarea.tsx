@@ -6,6 +6,7 @@
 // Styled textarea with optional label.
 // ============================================
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
+import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
 
 export interface ThemedTextareaProps
@@ -25,14 +26,16 @@ export const ThemedTextarea: Component<ThemedTextareaProps> = (props) => {
     return classList.join(" ");
   };
 
+  // Field column composed from the GrowColumn Layout variant (label above the
+  // textarea, growing in a form row); the label keeps its own margin-bottom.
   return (
-    <div class="themed-input-group">
+    <GrowColumn class="themed-input-group">
       {local.label && (
         <label class="themed-input-label" for={textareaId()}>
           {local.label}
         </label>
       )}
       <textarea id={textareaId()} class={classes()} {...others} />
-    </div>
+    </GrowColumn>
   );
 };

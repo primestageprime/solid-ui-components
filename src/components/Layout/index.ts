@@ -1,17 +1,22 @@
 // Bases (Stack, Row, Box) are intentionally NOT exported — use curried variants
-// (TightStack, SpreadRow, ConstrainedBox, …) or the create* factories.
+// (TightStack, SpreadRow, ConstrainedBox, …) ONLY — no create* factories at call sites; if the variant you need is missing, add it here.
 export { createStack } from "./Stack";
 export type { StackDataProps } from "./Stack";
 export { createRow } from "./Row";
 export type { RowDataProps } from "./Row";
 export { createBox } from "./Box";
 export type { BoxDataProps } from "./Box";
+export { createGrid } from "./Grid";
+export type { GridDataProps } from "./Grid";
 // No-config structural shell components — re-exported as-is.
 export { ProportionalStack, ProportionalItem } from "./ProportionalStack";
 export type {
   ProportionalStackProps,
   ProportionalItemProps,
 } from "./ProportionalStack";
+// Responsive side-by-side -> stacked row (the "holy albatross"). No-config shell.
+export { AutoStackRow, AutoStackItem } from "./AutoStack";
+export type { AutoStackRowProps, AutoStackItemProps } from "./AutoStack";
 // AppShell/AppMain have no design-config — re-exported as-is. AppHeader (size/inline) is curried.
 export { AppShell, AppMain, createAppHeader } from "./AppShell";
 export type {

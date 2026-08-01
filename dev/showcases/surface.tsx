@@ -7,8 +7,14 @@ import {
   WarningSurface,
   SuccessSurface,
   DangerSurface,
+  ContentSurface,
+  CenteredSurface,
+  NoteCard,
+  WideCard,
+  SquareCard,
+  FormulaBlock,
 } from "../../src/components/Surface";
-import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
 
 export const SurfaceShowcase: Component = () => {
@@ -22,7 +28,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Padding</h3>
-        <div class="example-row" style={{ "align-items": "flex-start" }}>
+        <div class="example-row example-row--top">
           {(["none", "sm", "md"] as const).map((padding) => (
             <Surface padding={padding} radius="md">
               <Text variant="body">padding="{padding}"</Text>
@@ -33,7 +39,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Base Component — Border Radius</h3>
-        <div class="example-row" style={{ "align-items": "flex-start" }}>
+        <div class="example-row example-row--top">
           {(["none", "sm", "md"] as const).map((radius) => (
             <Surface padding="md" radius={radius}>
               <Text variant="body">radius="{radius}"</Text>
@@ -44,7 +50,7 @@ export const SurfaceShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Curried Variants — Shape</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <div>
             <CardSurface>
               <Text variant="body">CardSurface</Text>
@@ -61,12 +67,12 @@ export const SurfaceShowcase: Component = () => {
               CompactSurface — padding: "sm", radius: "sm"
             </div>
           </div>
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Curried Variants — Status Colors</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <div>
             <InfoSurface>
               <Text variant="body">InfoSurface</Text>
@@ -99,7 +105,39 @@ export const SurfaceShowcase: Component = () => {
               DangerSurface — card + rgba(255,0,64) bg/border
             </div>
           </div>
-        </Stack>
+        </NarrowStack>
+      </div>
+
+      <div class="example-group">
+        <h3>Role Variants</h3>
+        <div class="text-meta">
+          Surfaces named for the JOB they do, not the padding they carry — the
+          call site picks a role and inherits the geometry.
+        </div>
+        <NarrowStack>
+          <ContentSurface>
+            <Text variant="label">ContentSurface</Text>
+            <Text variant="body">
+              The everyday surface: a column with breathing room between its
+              children.
+            </Text>
+          </ContentSurface>
+          <CenteredSurface>
+            <Text variant="body">CenteredSurface — single-focus content</Text>
+          </CenteredSurface>
+          <NoteCard>
+            <Text variant="body">NoteCard — a soft aside</Text>
+          </NoteCard>
+          <WideCard>
+            <Text variant="body">WideCard — a card that spans its row</Text>
+          </WideCard>
+          <SquareCard>
+            <Text variant="body">SquareCard</Text>
+          </SquareCard>
+          <FormulaBlock>
+            <Text variant="body">FormulaBlock — NOx = (C × Q) / P</Text>
+          </FormulaBlock>
+        </NarrowStack>
       </div>
     </div>
   );

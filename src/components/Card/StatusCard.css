@@ -25,16 +25,13 @@
   --surface-bg: color-mix(in srgb, var(--sui-accent, #00d4ff) 12%, transparent);
 }
 
-/* Row 1 — name + status */
-.sui-status-card__row1 {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
+/* Row 1 — name + status. The baseline/space-between arrangement is composed
+   from the BaselineSpreadRow Layout variant (gap:sm). */
 .sui-status-card__name {
-  flex: 1;
+  /* min-width:0 (not layout-purity-banned) keeps the name shrinkable so it
+     ellipsises; the flex:1 grow was dropped — space-between already separates
+     the pair. overflow:hidden here is the label ellipsising ITSELF (intrinsic
+     text styling, skill step 4), not a layout clip. */
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
@@ -44,32 +41,28 @@
   text-overflow: ellipsis;
 }
 
+/* Status badge slot — a self-contained widget centering its own badge child
+   (intrinsic inline-flex centering, skill step 4); flex-shrink:0 keeps the
+   small badge at its intrinsic size beside the shrinkable name. */
 .sui-status-card__status {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
 }
 
-/* Row 2 — detail area. A flex column: the description grows to fill the gap
-   between the title and the bottom-pinned meta row; optional actions sit at
-   the bottom of the detail area. */
+/* Row 2 — detail area. The fill/clip flex-column (grows to the space between
+   the title and the bottom-pinned meta row, clips the overflow) is composed
+   from the ClipFillColumn Layout variant (gap 6→sm); only position:relative
+   (the "more"/popover anchor) lives here. */
 .sui-status-card__row2 {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  overflow: hidden;
 }
 
 /* Wraps the description so the "more" affordance can anchor to its corner
-   while actions live below it. */
+   while actions live below it. The grow/clip is composed from the ClipFillBox
+   Layout variant; only its position:relative anchor lives here. */
 .sui-status-card__desc-wrap {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .sui-status-card__desc {
@@ -83,14 +76,11 @@
   word-break: break-word;
 }
 
-/* Detail-area actions — pinned below the description, above the meta row. */
-.sui-status-card__actions {
-  flex-shrink: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
+/* Detail-area actions — below the description, above the meta row. The
+   wrapping, center-aligned button cluster is composed from the TagRow Layout
+   variant (gap 6→xs). (The old flex-shrink:0 is dropped — the buttons are
+   content-height and the growing desc-wrap sibling absorbs the column's flex,
+   so actions keep their size.) */
 
 /* "more" affordance — composed from <Button variant="text"> (accent text +
    cursor from the variant). StatusCard pins it into the description's
@@ -158,38 +148,18 @@
   border-radius: 4px;
 }
 
-/* Row 3 — meta strip, pinned to the bottom of the card */
+/* Row 3 — meta strip, pinned to the bottom of the card. The strip arrangement
+   (ClusterRow) and the three cells (GrowWrapRow / GrowCenterRow /
+   TightNoShrinkClusterRow — grow/grow-centered/no-shrink at gap:xs) are composed
+   from Layout variants; margin-top:auto (kept here, not layout-purity-banned)
+   pins the strip to the card's bottom edge inside the fill column. */
 .sui-status-card__row3 {
   margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 10px;
   color: var(--sui-text-muted);
 }
 
-.sui-status-card__meta-left {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-
-.sui-status-card__meta-center {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
+/* Right meta cell keeps its intrinsic no-wrap (not layout geometry). */
 .sui-status-card__meta-right {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
   white-space: nowrap;
 }

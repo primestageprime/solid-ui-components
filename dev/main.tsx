@@ -15,15 +15,20 @@ import "./main.css";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Sandbox } from "./sandbox";
 import { LayoutsGallery } from "./layouts-gallery";
+import { HealthView } from "./health-view";
+import { Icon } from "../src/components/Icon";
 import { TagPill, type PillStats } from "./tag-pill";
 
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
+import { TableFieldsShowcase } from "./showcases/table-fields";
+import { ValueMatrixShowcase } from "./showcases/value-matrix";
 import { ButtonShowcase } from "./showcases/button";
 import { DnDHierarchySortBarShowcase } from "./showcases/dnd-hierarchy-sort-bar";
 import { FabShowcase } from "./showcases/fab";
 import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
+import { GapCellShowcase } from "./showcases/gap-cell";
 import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
@@ -33,6 +38,7 @@ import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
 import { DividerShowcase } from "./showcases/divider";
+import { GhostRowShowcase } from "./showcases/ghost-row";
 import { DotchartShowcase } from "./showcases/dotchart";
 import { HeatmapShowcase } from "./showcases/heatmap";
 import { HeatStreamShowcase } from "./showcases/heatstream";
@@ -52,6 +58,10 @@ import { InputsShowcase } from "./showcases/inputs";
 import { MathFormulaShowcase } from "./showcases/math-formula";
 import { NavItemShowcase } from "./showcases/nav-item";
 import { ProgressBarShowcase } from "./showcases/progress-bar";
+import { AsyncProgressShowcase } from "./showcases/async-progress";
+import { MarkdownEditorShowcase } from "./showcases/markdown-editor";
+import { RangeAmountGroupShowcase } from "./showcases/range-amount-group";
+import { InlineChartErrorOverlayShowcase } from "./showcases/inline-chart-error-overlay";
 import { ScrollRegionShowcase } from "./showcases/scroll-region";
 import { SectionShowcase } from "./showcases/section";
 import { SelectShowcase } from "./showcases/select";
@@ -71,17 +81,27 @@ import { LegendShowcase } from "./showcases/legend";
 import { StatusLightShowcase } from "./showcases/status-light";
 import { DropdownShowcase } from "./showcases/dropdown";
 import { PopoverMenuShowcase } from "./showcases/popover-menu";
+import { NotificationCenterShowcase } from "./showcases/notification-center";
 import { ProgressCheckShowcase } from "./showcases/progress-check";
 import { SprintSelectorShowcase } from "./showcases/sprint-selector";
-import { TagInputShowcase } from "./showcases/tag-input";
 import { WorkerCardShowcase } from "./showcases/worker-card";
 import { WorkProgressCardShowcase } from "./showcases/work-progress-card";
+import { StatusCardShowcase } from "./showcases/status-card";
+import { CheckboxShowcase } from "./showcases/checkbox";
+import { MultiSelectFilterShowcase } from "./showcases/multi-select-filter";
+import { PickersShowcase } from "./showcases/pickers";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
+import { BucketQueueShowcase } from "./showcases/bucket-queue";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
+import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
+import { ChartHeaderShowcase } from "./showcases/chart-header";
+import { SparklineShowcase } from "./showcases/sparkline";
+import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
+import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
@@ -99,11 +119,22 @@ import { SurfaceShowcase } from "./showcases/surface";
 
 // Depth 2
 import { AlertBoxShowcase } from "./showcases/alert-box";
+import { AuthShowcase } from "./showcases/auth";
 import { ChartShowcase } from "./showcases/chart";
 import { ChangeRendererShowcase } from "./showcases/change-renderer";
 import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
+import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
+import { SlotCardShowcase } from "./showcases/slot-card";
+import { SectionTableShowcase } from "./showcases/section-table";
+import { LayoutVariantsShowcase } from "./showcases/layout-variants";
+import { VariantCoverageShowcase } from "./showcases/variant-coverage";
+import { ChartSlotsShowcase } from "./showcases/chart-slots";
+import { TableGridsShowcase } from "./showcases/table-grids";
+import { FormsAndInputsShowcase } from "./showcases/forms-and-inputs";
+import { OperatingWeekShowcase } from "./showcases/operating-week";
+import { EntityCardShowcase } from "./showcases/entity-card";
 import { HeatStreamGridShowcase } from "./showcases/heatstream-grid";
 import { ConfirmationModalShowcase } from "./showcases/hud-confirmation-modal";
 import { NavBarShowcase } from "./showcases/nav-bar";
@@ -113,22 +144,22 @@ import { ProgressCardShowcase } from "./showcases/progress-card";
 import { QuickFilterShowcase } from "./showcases/quick-filter";
 import { SelectableTableShowcase } from "./showcases/selectable-table";
 import { RemovableItemCardShowcase } from "./showcases/removable-item-card";
+import { ServiceHealthDotShowcase } from "./showcases/service-health-dot";
 
 // Depth 3
+import { CensusViewShowcase } from "./showcases/census-view";
 import { ConnectionStatusShowcase } from "./showcases/connection-status";
 import { ConversationTreeShowcase } from "./showcases/conversation-tree";
 import { DataListShowcase } from "./showcases/data-list";
 import { FormulaPanelShowcase } from "./showcases/formula-panel";
 import { InteractiveFormulaShowcase } from "./showcases/interactive-formula";
 import { MetricCardShowcase } from "./showcases/metric-card";
+import { FilterBarShowcase } from "./showcases/filter-bar";
 import { ResultDisplayShowcase } from "./showcases/result-display";
 import { TitledTimeRangeHeaderShowcase } from "./showcases/titled-time-range-header";
 
 // Depth 4
 import { ResultPanelShowcase } from "./showcases/result-panel";
-
-// Hopper
-import { HopperShowcase } from "./showcases/hopper";
 
 // Sandbox / design exploration
 import { PillVariantsShowcase } from "./showcases/pill-variants";
@@ -139,7 +170,15 @@ import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-cha
 import { SwimlaneNodeCardShowcase } from "./showcases/swimlane-node-card";
 import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
-type Item = { id: string; label: string; component: Component; tags: string[] };
+type ShowcaseProps = {
+  onNavigate?: (id: string, pushHash?: boolean) => void;
+};
+type Item = {
+  id: string;
+  label: string;
+  component: Component<ShowcaseProps>;
+  tags: string[];
+};
 
 // Auto-discovered workshop benches (dev/showcases/workshop/*.tsx). Each file
 // default-exports a Component; new benches appear here with no registration edit.
@@ -162,6 +201,18 @@ const items: Item[] = [
     label: "BaseTable",
     component: BaseTableShowcase,
     tags: ["depth:1", "table", "data"],
+  },
+  {
+    id: "table-fields",
+    label: "Table Fields",
+    component: TableFieldsShowcase,
+    tags: ["depth:2", "table", "data"],
+  },
+  {
+    id: "value-matrix",
+    label: "ValueMatrix",
+    component: ValueMatrixShowcase,
+    tags: ["depth:2", "table", "data"],
   },
   {
     id: "button",
@@ -198,6 +249,12 @@ const items: Item[] = [
     label: "CellRenderers",
     component: CellRendererShowcase,
     tags: ["depth:1", "data"],
+  },
+  {
+    id: "gap-cell",
+    label: "GapCell",
+    component: GapCellShowcase,
+    tags: ["depth:2", "table", "data"],
   },
   {
     id: "combobox",
@@ -264,6 +321,12 @@ const items: Item[] = [
     label: "Divider",
     component: DividerShowcase,
     tags: ["depth:0", "layout"],
+  },
+  {
+    id: "ghost-row",
+    label: "GhostRow",
+    component: GhostRowShowcase,
+    tags: ["depth:1", "list", "indicator"],
   },
   {
     id: "heatmap",
@@ -336,6 +399,30 @@ const items: Item[] = [
     label: "ProgressBar",
     component: ProgressBarShowcase,
     tags: ["depth:0", "indicator"],
+  },
+  {
+    id: "async-progress",
+    label: "AsyncProgress",
+    component: AsyncProgressShowcase,
+    tags: ["depth:1", "indicator"],
+  },
+  {
+    id: "markdown-editor",
+    label: "MarkdownEditor",
+    component: MarkdownEditorShowcase,
+    tags: ["depth:2", "data"],
+  },
+  {
+    id: "range-amount-group",
+    label: "RangeAmountGroup",
+    component: RangeAmountGroupShowcase,
+    tags: ["depth:2", "input"],
+  },
+  {
+    id: "inline-chart-error-overlay",
+    label: "InlineChartErrorOverlay",
+    component: InlineChartErrorOverlayShowcase,
+    tags: ["depth:1", "feedback"],
   },
   {
     id: "scroll-region",
@@ -446,6 +533,12 @@ const items: Item[] = [
     tags: ["depth:0", "navigation", "feedback"],
   },
   {
+    id: "notification-center",
+    label: "NotificationCenter",
+    component: NotificationCenterShowcase,
+    tags: ["depth:3", "feedback", "navigation"],
+  },
+  {
     id: "progress-check",
     label: "ProgressCheck",
     component: ProgressCheckShowcase,
@@ -462,6 +555,30 @@ const items: Item[] = [
     label: "RingChart",
     component: RingChartShowcase,
     tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "chart-header",
+    label: "ChartHeader",
+    component: ChartHeaderShowcase,
+    tags: ["depth:2", "chart", "indicator"],
+  },
+  {
+    id: "sparkline",
+    label: "Sparkline",
+    component: SparklineShowcase,
+    tags: ["depth:1", "chart", "indicator"],
+  },
+  {
+    id: "trend-sparkline",
+    label: "TrendSparkline",
+    component: TrendSparklineShowcase,
+    tags: ["depth:1", "chart", "indicator"],
+  },
+  {
+    id: "distribution-sparkline",
+    label: "DistributionSparkline",
+    component: DistributionSparklineShowcase,
+    tags: ["depth:1", "chart", "indicator", "data"],
   },
   {
     id: "sprint-selector",
@@ -500,12 +617,6 @@ const items: Item[] = [
     tags: ["depth:0", "indicator", "status"],
   },
   {
-    id: "tag-input",
-    label: "TagInput",
-    component: TagInputShowcase,
-    tags: ["depth:0", "form"],
-  },
-  {
     id: "throughput-chart",
     label: "ThroughputChart",
     component: ThroughputChartShowcase,
@@ -542,9 +653,21 @@ const items: Item[] = [
     tags: ["depth:1", "container", "indicator", "data", "time"],
   },
   {
+    id: "status-card",
+    label: "StatusCard",
+    component: StatusCardShowcase,
+    tags: ["depth:2", "container", "status", "data"],
+  },
+  {
     id: "split-queue-list",
-    label: "SplitQueueList",
+    label: "SplitQueueList (deprecated)",
     component: SplitQueueListShowcase,
+    tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
+    id: "bucket-queue",
+    label: "BucketQueue",
+    component: BucketQueueShowcase,
     tags: ["depth:1", "list", "navigation", "container"],
   },
   {
@@ -566,6 +689,12 @@ const items: Item[] = [
     tags: ["depth:2", "list", "form", "container"],
   },
   {
+    id: "recent-starred",
+    label: "RecentStarred",
+    component: RecentStarredShowcase,
+    tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
     id: "three-panel-layout",
     label: "ThreePanelLayout",
     component: ThreePanelLayoutShowcase,
@@ -582,6 +711,24 @@ const items: Item[] = [
     label: "Toggle",
     component: ToggleShowcase,
     tags: ["depth:0", "form"],
+  },
+  {
+    id: "checkbox",
+    label: "Checkbox",
+    component: CheckboxShowcase,
+    tags: ["depth:0", "form"],
+  },
+  {
+    id: "multi-select-filter",
+    label: "MultiSelectFilter",
+    component: MultiSelectFilterShowcase,
+    tags: ["depth:1", "form", "filter"],
+  },
+  {
+    id: "pickers",
+    label: "Recurrence pickers",
+    component: PickersShowcase,
+    tags: ["depth:1", "form", "time"],
   },
   {
     id: "segmented-control",
@@ -634,6 +781,12 @@ const items: Item[] = [
     tags: ["depth:1", "feedback"],
   },
   {
+    id: "auth",
+    label: "Auth",
+    component: AuthShowcase,
+    tags: ["depth:2", "form", "feedback", "list"],
+  },
+  {
     id: "chart",
     label: "Chart",
     component: ChartShowcase,
@@ -674,6 +827,66 @@ const items: Item[] = [
     label: "EmptyState",
     component: EmptyStateShowcase,
     tags: ["depth:1", "feedback"],
+  },
+  {
+    id: "file-drop-zone",
+    label: "FileDropZone",
+    component: FileDropZoneShowcase,
+    tags: ["depth:2", "form", "container"],
+  },
+  {
+    id: "slot-card",
+    label: "SlotCard",
+    component: SlotCardShowcase,
+    tags: ["depth:2", "list", "container", "data"],
+  },
+  {
+    id: "section-table",
+    label: "SectionTable",
+    component: SectionTableShowcase,
+    tags: ["depth:2", "table", "data"],
+  },
+  {
+    id: "layout-variants",
+    label: "Layout variants",
+    component: LayoutVariantsShowcase,
+    tags: ["depth:0", "layout", "container"],
+  },
+  {
+    id: "variant-coverage",
+    label: "Variant coverage",
+    component: VariantCoverageShowcase,
+    tags: ["depth:1", "feedback", "navigation", "form"],
+  },
+  {
+    id: "chart-slots",
+    label: "Chart slots",
+    component: ChartSlotsShowcase,
+    tags: ["depth:1", "chart", "data", "status"],
+  },
+  {
+    id: "table-grids",
+    label: "Tables and grids",
+    component: TableGridsShowcase,
+    tags: ["depth:2", "table", "data", "list"],
+  },
+  {
+    id: "forms-and-inputs",
+    label: "Forms and inputs",
+    component: FormsAndInputsShowcase,
+    tags: ["depth:2", "form", "time", "data"],
+  },
+  {
+    id: "operating-week",
+    label: "Operating week — WeekCalendar + WeeklyCashflowChart",
+    component: OperatingWeekShowcase,
+    tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "entity-card",
+    label: "EntityCard",
+    component: EntityCardShowcase,
+    tags: ["depth:2", "list", "container", "status"],
   },
   {
     id: "heatstream-grid",
@@ -719,9 +932,21 @@ const items: Item[] = [
   },
 
   {
+    id: "census-view",
+    label: "CensusView",
+    component: CensusViewShowcase,
+    tags: ["depth:3", "table", "data"],
+  },
+  {
     id: "connection-status",
     label: "ConnectionStatus",
     component: ConnectionStatusShowcase,
+    tags: ["depth:2", "indicator", "status"],
+  },
+  {
+    id: "service-health-dot",
+    label: "ServiceHealthDot",
+    component: ServiceHealthDotShowcase,
     tags: ["depth:2", "indicator", "status"],
   },
   {
@@ -755,6 +980,12 @@ const items: Item[] = [
     tags: ["depth:3", "form", "math"],
   },
   {
+    id: "filter-bar",
+    label: "FilterBar",
+    component: FilterBarShowcase,
+    tags: ["depth:1", "form", "navigation", "container"],
+  },
+  {
     id: "metric-card",
     label: "MetricCard",
     component: MetricCardShowcase,
@@ -772,13 +1003,6 @@ const items: Item[] = [
     label: "ResultPanel",
     component: ResultPanelShowcase,
     tags: ["depth:2", "container", "math", "data"],
-  },
-
-  {
-    id: "hopper",
-    label: "All Components",
-    component: HopperShowcase,
-    tags: [],
   },
 
   {
@@ -986,8 +1210,19 @@ const App: Component = () => {
       <nav class="showcase__sidebar">
         <div class="showcase__sidebar-head">
           <div class="showcase__brand">
-            <h1>Solid Components</h1>
-            <p>SolidJS Component Library</p>
+            <div class="showcase__brand-row">
+              <div>
+                <h1>Solid Components</h1>
+                <p>SolidJS Component Library</p>
+              </div>
+              <a
+                class="health-link"
+                href="#/health"
+                title="SUI health — ratchet metrics"
+              >
+                <Icon name="stethoscope" size="sm" />
+              </a>
+            </div>
             <ThemeSwitcher />
           </div>
 
@@ -1112,14 +1347,21 @@ const Root: Component = () => {
   });
   return (
     <Show
-      when={route().startsWith("#/layouts")}
+      when={route().startsWith("#/health")}
       fallback={
-        <Show when={route().startsWith("#/sandbox")} fallback={<App />}>
-          <Sandbox />
+        <Show
+          when={route().startsWith("#/layouts")}
+          fallback={
+            <Show when={route().startsWith("#/sandbox")} fallback={<App />}>
+              <Sandbox />
+            </Show>
+          }
+        >
+          <LayoutsGallery />
         </Show>
       }
     >
-      <LayoutsGallery />
+      <HealthView />
     </Show>
   );
 };

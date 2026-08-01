@@ -1,3 +1,5 @@
+import { find } from "../../fn";
+
 /**
  * Shared Intl.DateTimeFormat that emits the four parts we need:
  * short month name, 2-digit day, 24-hour clock hour, 2-digit minute.
@@ -16,7 +18,7 @@ const DATETIME_PARTS_FMT = new Intl.DateTimeFormat("en-US", {
 const pick = (
   parts: Intl.DateTimeFormatPart[],
   type: Intl.DateTimeFormatPartTypes,
-): string => parts.find((p) => p.type === type)?.value ?? "";
+): string => find((p) => p.type === type, parts)?.value ?? "";
 
 const normalizeHour = (h: string): string => (h === "24" ? "00" : h);
 

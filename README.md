@@ -16,12 +16,12 @@ npm run audit:styles # Reports inline `style={…}` repeats — candidates for v
 
 | Doc | What's in it | Read it when… |
 |---|---|---|
+| **`docs/BEST_PRACTICES.md`** | The distilled general expectations for how SUI components work: layers, curried variants, prop split, minimal surface, tokens, naming, lifecycle. | You want the rules on one page before diving into the deeper guides. |
 | **`COMPONENTS.md`** | Catalogue of every public component, its key props, and a usage example. | You need to find a component or remember its API. |
 | **`STYLE_GUIDE.md`** | Architecture: depth levels (Atomic / Depth 2 / Depth 3), curried-variant pattern, factory rules, when to compose vs extend. | You're authoring a new component. |
 | **`AGENT_GUIDE.md`** | Operating instructions for AI agents working in this repo: conventions, do/don'ts, how to add a component. | You're an AI assistant. |
 | **`DESIGN_LANGUAGE.md`** | Vocabulary glossary for drafting page mockups in the Sandbox — short phrases like "shrink-wrapped delineated sidebar" mapped to structural definitions and curried implementations. | You're producing or reading mockups (`#/sandbox/...`). |
 | **`CHANGELOG.md`** | Release notes per version. | You're cutting or auditing a release. |
-| **`TODO.md`** | Visual-migration checklist — components ported / pending from the legacy library. | You're planning migration work. |
 | **`docs/local-development.md`** | How to wire a downstream consumer to read SUI from source for readable Solid DevTools names + `autoname` signal labels. | You're iterating on SUI from a local consumer app and want devtools to show real component / signal names. |
 
 ## Repo map

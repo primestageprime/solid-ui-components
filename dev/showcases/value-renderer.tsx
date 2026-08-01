@@ -1,22 +1,13 @@
 import type { Component, JSX } from "solid-js";
 import { ValueRenderer } from "../../src/components/ValueRenderer";
-import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
+import { AccentBody } from "../../src/components/Text";
 
 // A small status-badge override used by the "custom dispatch" example. Not a
 // library atomic — host code owns what a "status" is and how to render it.
 const StatusPill: Component<{ label: string; color: string }> = (props) => (
-  <span
-    style={{
-      display: "inline-block",
-      padding: "2px 8px",
-      "border-radius": "10px",
-      "background-color": props.color,
-      color: "var(--sui-text-primary)",
-      "font-size": "0.75rem",
-      "font-weight": 600,
-    }}
-  >
+  <span class="demo-status-pill" style={{ "background-color": props.color }}>
     {props.label}
   </span>
 );
@@ -50,7 +41,7 @@ export const ValueRendererShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Primitives (zero-config)</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer label="String" value="Hello, world" />
           <ValueRenderer label="Number" value={1234.5678} />
           <ValueRenderer
@@ -62,7 +53,7 @@ export const ValueRendererShowcase: Component = () => {
           <ValueRenderer label="Boolean false" value={false} />
           <ValueRenderer label="Null" value={null} />
           <ValueRenderer label="Undefined" value={undefined} />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
@@ -71,20 +62,18 @@ export const ValueRendererShowcase: Component = () => {
           Pre-rendered JSX elements pass through the default dispatcher
           unchanged — detected via the <code>$$typeof</code> sentinel.
         </Text>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer
             label="Pre-rendered"
             value={
-              <span style={{ color: "var(--sui-accent)" }}>
-                pre-rendered JSX
-              </span>
+              <AccentBody>pre-rendered JSX</AccentBody>
             }
           />
           <ValueRenderer
             label="Bold"
             value={<strong>strong child JSX</strong>}
           />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
@@ -95,7 +84,7 @@ export const ValueRendererShowcase: Component = () => {
           <code>String(value)</code>. Supply a <code>renderValue</code> override
           for nicer formatting.
         </Text>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer label="Date" value={new Date(1_700_000_000_000)} />
           <ValueRenderer
             label="Map"
@@ -107,20 +96,20 @@ export const ValueRendererShowcase: Component = () => {
             }
           />
           <ValueRenderer label="Set" value={new Set([1, 2, 3])} />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Arrays</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer label="Numbers" value={[1.1, 2.22, 3.333, 4.4444]} />
           <ValueRenderer label="Strings" value={["alpha", "beta", "gamma"]} />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Objects (recursive dispatch)</h3>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer
             label="Context"
             value={{
@@ -140,7 +129,7 @@ export const ValueRendererShowcase: Component = () => {
               },
             }}
           />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
@@ -149,11 +138,11 @@ export const ValueRendererShowcase: Component = () => {
           When <code>label</code> is omitted, the component renders just the
           value — useful as a drop-in for JSX slots.
         </Text>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer value="Just the value" />
           <ValueRenderer value={42} />
           <ValueRenderer value={null} />
-        </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
@@ -163,7 +152,7 @@ export const ValueRendererShowcase: Component = () => {
           custom JSX for known types and <code>undefined</code> for everything
           else — the default dispatcher takes over for the fallback cases.
         </Text>
-        <Stack gap="sm">
+        <NarrowStack>
           <ValueRenderer
             label="Status"
             value="NOMINAL"
@@ -179,7 +168,7 @@ export const ValueRendererShowcase: Component = () => {
             value={{ name: "Sensor A", state: "WARNING", rpm: 1423.7 }}
             renderValue={statusAwareDispatch}
           />
-        </Stack>
+        </NarrowStack>
       </div>
     </div>
   );

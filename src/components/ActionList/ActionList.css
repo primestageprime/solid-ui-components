@@ -10,16 +10,11 @@
    it reads as part of the same surface rather than hovering above it.
    ============================================ */
 
-.sui-action-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sui-space-sm, 8px);
-}
-
+/* The wrapper column (NarrowStack) and the bar's row arrangement (ClusterRow)
+   are composed from Layout (see ActionList.tsx); this file keeps only the bar's
+   intrinsic accent-strip styling. The bar-count's margin-right:auto still pushes
+   the action buttons to the right within the ClusterRow. */
 .sui-action-list__bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sui-space-sm, 8px);
   padding: var(--sui-space-xs, 6px) var(--sui-space-sm, 8px);
   border: 1px solid var(--sui-accent);
   border-radius: var(--sui-radius-md, 8px);

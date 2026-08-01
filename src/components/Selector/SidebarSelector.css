@@ -1,30 +1,18 @@
 /* ============================================
    Sidebar Selector Component
 
-   VIEWPORT-LOCKED FLEX CHAIN (levels 5–6 of 7)
-   When placed inside a flex column parent (e.g. jtf-section__content),
-   the sidebar-selector participates in a full-height flex chain.
-   Every element in the chain needs: flex: 1 (grow to fill) +
-   min-height: 0 (allow shrinking below content).
-
-   The __layout is the pivot: a flex ROW whose children (__sidebar and
-   __selection) stretch vertically via align-items: stretch (the default).
-   The sidebar scrolls its card list; the selection hosts content that
-   manages its own scrolling (e.g. a table with sticky headers).
+   The VIEWPORT-LOCKED FLEX CHAIN is now composed from Layout variants:
+     .sidebar-selector            → FillColumnFlush     (flex:1; min-height:0; column)
+     .sidebar-selector__layout    → PaneRow             (row; fill; flex:1; min-height:0)
+     .sidebar-selector__sidebar   → NoShrinkScrollBox   (flex-shrink:0; overflow-y:auto; min-height:0)
+     .sidebar-selector__list      → Column              (flush flex column)
+     .sidebar-selector__selection → ClipFillColumnFlush (flex:1; min-width/height:0; overflow:hidden)
+   Only the non-geometry chrome (position anchor, fixed width via the
+   sidebarWidth prop, borders, bg, padding) remains in the rules below.
    ============================================ */
 
-/*
- * FLEX CHAIN (level 5 of 7) — flex column container
- * flex: 1 fills the parent (jtf-section__content).
- * min-height: 0 prevents content from forcing this element
- * to exceed its allocated space.
- */
 .sidebar-selector {
   position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .sidebar-selector__label {
@@ -36,35 +24,12 @@
   margin-bottom: 12px;
 }
 
-/*
- * FLEX CHAIN (level 6 of 7) — the ROW pivot
- * Switches from vertical (column) to horizontal (row) layout.
- * flex: 1 fills remaining height after the optional label.
- * min-height: 0 is critical here too — without it, the row's
- * intrinsic height (tallest child's content) would push past
- * the allocated space, defeating the viewport constraint.
- * Children stretch to this row's height via align-items: stretch.
- */
-.sidebar-selector__layout {
-  display: flex;
-  gap: 16px;
-  flex: 1;
-  min-height: 0;
-}
-
-/*
- * Sidebar card list — a scroll leaf.
- * flex-shrink: 0 + explicit width (via sidebarWidth prop) makes it
- * a fixed-width column. overflow-y: auto scrolls when cards exceed
- * the height allocated by the flex row.
- * min-height: 0 allows it to be shorter than its content.
- */
+/* Fixed-width sidebar chrome (frozen 280px width; the no-shrink + scroll
+   geometry comes from NoShrinkScrollBox). */
 .sidebar-selector__sidebar {
-  flex-shrink: 0;
-  overflow-y: auto;
+  width: 280px;
   border: 1px solid var(--sui-border);
   background: var(--sui-bg-secondary);
-  min-height: 0;
 }
 
 .sidebar-selector__sidebar::-webkit-scrollbar {
@@ -82,11 +47,6 @@
 
 .sidebar-selector__sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--sui-accent);
-}
-
-.sidebar-selector__list {
-  display: flex;
-  flex-direction: column;
 }
 
 /* Card button in sidebar */
@@ -122,45 +82,19 @@
   background: rgba(var(--sui-accent-rgb), 0.15);
 }
 
-/*
- * Selection display area — a flex column that hosts page content.
- * flex: 1 takes remaining horizontal space after the sidebar.
- * display: flex + flex-direction: column propagates the chain into
- * whatever renderSelection() provides (tabs, tables, forms, etc).
- * overflow: hidden prevents this element from scrolling — content
- * inside is expected to manage its own scroll (e.g. a BaseTable
- * with class="table-fill" that scrolls with sticky headers).
- * min-width: 0 prevents flex items from overflowing horizontally
- * (wide tables). min-height: 0 completes the vertical constraint.
- */
+/* Selection display chrome — the grow/clip/scroll-delegating geometry comes
+   from ClipFillColumnFlush; only bg/border/padding remain. renderSelection()'s
+   own content manages its scroll (e.g. a fill BaseTable with sticky headers). */
 .sidebar-selector__selection {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
   background: var(--sui-bg-secondary);
   border: 1px solid var(--sui-border);
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 /* ============================================
    Episode Card Component
+   .episode-card → TightStack (gap 4=xs); .episode-card__header → SpreadRow.
    ============================================ */
-
-.episode-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.episode-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
 
 .episode-card__number {
   font-size: 10px;
@@ -195,10 +129,8 @@
   min-height: 200px;
 }
 
+/* Centering geometry comes from CenteredStack; only the size + type remain. */
 .episode-selection__empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   height: 200px;
   color: var(--sui-text-muted);
   font-size: 13px;
@@ -229,10 +161,8 @@
   line-height: 1.3;
 }
 
+/* Row geometry comes from ClusterRow (gap 16→sm); only the margin remains. */
 .episode-selection__meta {
-  display: flex;
-  gap: 16px;
-  align-items: center;
   margin-bottom: 16px;
 }
 
@@ -255,4 +185,18 @@
   margin: 0;
   padding-top: 12px;
   border-top: 1px solid var(--sui-border);
+}
+
+/* Demo scaffold (SidebarSelectorDemo) — page wrapper + heading. */
+.episode-demo {
+  padding: 20px;
+  background: var(--sui-bg-deep);
+}
+
+.episode-demo__heading {
+  color: var(--sui-accent);
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }

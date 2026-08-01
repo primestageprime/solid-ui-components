@@ -1,0 +1,526 @@
+# Design decision tree
+
+Institutional memory for /design-options: WHY each SUI component gets chosen,
+keyed on UX / data-centric questions — not a flat component menu. The goal is
+to ask as FEW questions as possible: when a branch below (or a precedent at
+the bottom) already answers the decision, propose the component with its
+rationale and ask at most a confirming question.
+
+How to use (the /design-options skill drives this):
+
+1. Identify the decision category (page layout, left list, detail container…).
+2. Walk the tree with what you already know from the design/context — the
+   design doc usually answers most discriminators without asking.
+3. Ask ONLY the discriminators you cannot answer from context, batched into
+   one question set.
+4. Record the outcome as a precedent (bottom of this file) AND in mempalace,
+   with the answers that drove it — that's what makes the next ask smaller.
+
+Maintenance: when a decision doesn't fit any branch, that's a missing
+discriminator — extend the tree in the same change that records the precedent.
+
+---
+
+## Typography discipline (applies to EVERY decision below)
+
+All text renders through the `Text` family — `TextValue` / `TextLabel` /
+`TextTitle` / `TextBody` / `TextUnits` / `TextSublabel` (+ the curried
+specials in Text/variants.ts). Never raw `<span>`/`<strong>`/utility classes
+for content text, EVEN ON WORKSHOP BENCHES — benches drift into promotions,
+and un-thematic text is exactly the drift Peter watches for (2026-07-14).
+Emphasis is chosen by picking the variant (label > title > body > sublabel),
+not by bolding.
+
+Same discipline for ICONS: always the `Icon` component, outline variant,
+currentColor (thematic) — never emoji glyphs (colored emoji break the theme;
+"the clock looks weird" — Peter, 2026-07-14). Gap noted: no chain/link icon
+for dependency semantics yet — add one to Icon when dependency children ship.
+
+## Terseness (applies to EVERY decision below)
+
+Make displays as TERSE as possible by default (Peter, 2026-07-18). Do NOT add
+visual separators / section chrome — titled `BorderedSection` boxes, dividers,
+labeled bands — unless explicitly asked. Sections are conceptual: stack the
+content grids in a `ContentStack`; the tiles' own labels carry the grouping.
+Add separators only on request.
+
+## Layout purity (applies to EVERY decision below)
+
+All box-model geometry — rows, columns, gaps, alignment, spreads, fills,
+scrolls, pinned edges — is expressed by **composing Layout components**
+(`Stack`/`Row`/`Box` + their curried variants: `SpreadRow`, `ClusterRow`,
+`TightStack`, `GrowBox`, `FillColumn`, `ScrollColumn`, `TagRow`, …), never via
+`display:flex|grid`, `gap`, `justify-content`, `align-items`, `flex-*`, or
+`overflow` in a component's own CSS or inline style. When a card/list/panel
+decision below says "compose `SpreadRow` → …", that IS the layout-purity rule in
+action — the arrangement comes from the Layout vocabulary, and the only styling
+a Composite adds is via curried Atomic variants. Exempt: `layout`-tagged
+components (they ARE the vocabulary), SVG/canvas chart rendering, and the
+`position:absolute/fixed` anchoring of overlay controls (their internal
+rows/columns still compose Layout). If a geometry you need has no variant, add
+the named variant to `Layout/variants.ts` first, then compose it — the missing
+variant is the finding. Full statement: `STYLE_GUIDE.md` › *Layout Purity*;
+migration status: `docs/superpowers/plans/2026-07-14-layout-purity-migration.md`.
+
+## Page layout
+
+Discriminators:
+- **How many always-visible regions?** 1 → `Page` + Stack sections.
+  2 (master/detail) → `ResizableContainer` split or `ThreePanelLayout` with
+  one rail. 3 (list + detail + meta) → `ThreePanelLayout`.
+- **Do side regions trade off against each other?** (only one needed at a
+  time) → `TabbedSidePanel` instead of a second rail.
+- **Is this a full app screen or an embedded view?** Full app chrome →
+  `AppShell` wrapping; embedded → bare layout component.
+- **Should a region be user-resizable?** → wrap that region in
+  `ResizableContainer` (composes with any of the above).
+- **Which outermost archetype?** The root is either **Application** (fills
+  the viewport height; sections fill their container and scroll internally;
+  elements can pin to top/bottom edges) or **FixedWidthScrolling** (centered
+  max-width column, the document scrolls — the marketing-site model). Work
+  surfaces default to Application. On gallery benches, opt into Application
+  mode with `component-section--app` (dev/main.css) — the gallery is already
+  an application layout; the class extends the fill chain through the content
+  pane so the bench reaches the bottom of the screen. Never fake it with a
+  `height="78vh"`-style constant.
+
+## Left list (a rail of items you pick from / work through)
+
+Rails generally get a **title** (`SectionTitle`), with the count beside it
+(the FlashCount lozenge idiom) when the list length is meaningful. The title
+is PINNED — `FillColumn(title row, ScrollColumn(cards))` — so the rail keeps
+its identity while long lists scroll beneath.
+
+**One item, one home:** when a categorized rail exists on the same surface
+(right bar of blocked/claimed/etc.), items belonging to a category leave the
+queue rail — the queue shows only the UNRESOLVED remainder. No double
+representation (Peter, 2026-07-14, categorical-triage).
+
+The load-bearing discriminator is **how many statuses the items represent**,
+because status count encodes the user's workflow:
+
+- **1 status (homogeneous items)** — the list is purely "choose detail from a
+  list". Use the `List` primitive (`variant="default"`, `dividers`,
+  hand-wired onClick) — no chips, no machinery. Reason: any status affordance
+  would be noise; the row IS the label.
+- **2 statuses (binary, e.g. todo vs done)** — the list communicates
+  done-ness while you pick. Use `List variant="status"` (status dot +
+  secondary line) — a dot is enough for binary. Reason: a full status CHIP
+  spends rail width to say one bit.
+- **3+ statuses (multi-status, e.g. todo / complex / done)** — the list IS a
+  workflow surface: the user resolves the obvious items fast and returns to
+  the complex set for deeper operations. Use `ActionList` (status chips,
+  selection, batch actions, per-status tones). Reason: distinguishing WHICH
+  non-done state each item is in is the point; chips + tones carry that, and
+  the selection/action machinery supports the "come back and operate on the
+  complex set" pass.
+
+Secondary discriminators (each adds/changes a wrapper, not the core pick):
+- **Filtering needed?** Few items / short session → none. Text narrowing →
+  wrap in `QuickFilter`. Faceted/tag filtering → the app's filter bar idiom
+  (dside FilterBar precedent), or `FilterableTable` if it's tabular anyway.
+- **What is the sort?** User-owned priority (drag to reorder) → the list must
+  be sortable: `ActionList onSort` / `SortableList`. Derived (date, severity,
+  bucket) → sort in the projection, no reorder affordance.
+- **Should the rail be resizable?** Long titles / user preference varies →
+  wrap the rail in `ResizableContainer` (`directions=["right"]`). Fixed-width
+  rails truncate; only accept truncation when titles are previews and the
+  detail panel shows the full text anyway.
+
+### Sizing a fixed-width column (order matters)
+
+1. **Decide the card/row FORMAT first** — what each row contains (pill?
+   title? indicator icons? second line?). Width is a consequence of format,
+   never the other way around.
+2. **Then size the column so TYPICAL data is untruncated** (Peter's rule:
+   "I usually want to see untruncated data if I can"). For a rail of cards:
+   width of a typical title (5–8 words) + the status pill + a 1rem spacer.
+   Truncation is for outlier data, not the median case.
+
+## Card formats (compose from SUI elements — never hand-rolled boxes)
+
+Peter's taxonomy (2026-07-14), confirmed by every card built so far
+(WorkProgressCard, ExtractionBoard cards, WorkerCard, dside Focus sidebar
+cards):
+
+- **One-line card** — only text + status. Identifying text LEFT, status
+  RIGHT. Compose: `Surface`/`CardSurface` box → `SpreadRow` → `Text` left,
+  `StatusBadge`/`StatusChip` right.
+- **Two-line card** — the one-line content + a meta line: OWNERSHIP left,
+  TIMING/SIZE right. Compose: box → `TightStack` → [SpreadRow(identity,
+  status), SpreadRow(AssigneeIcon/owner name, Duration | NumberWithUnits)].
+- **Three-line card** — the two-line card with a SANDWICH of detail text in
+  the middle. Compose: box → `TightStack` → [identity/status row, muted
+  detail `Text` (truncated preview), ownership/timing row]. Live example:
+  dside Focus sidebar card (title + DOING badge / description / "Peter S" +
+  "30m").
+
+Positioning canon (Peter, 2026-07-14):
+- **The TITLE is the focus and owns the left edge — always.** Status is
+  usually a sort/group key, which makes it LESS important per-row, not more.
+- **Status per-row (trailing, right) only when the list is NOT grouped by
+  status** — there it marks where the grouping breaks / the exceptions.
+- **When the list IS sorted/grouped by status, don't repeat it per-row** —
+  show only the group BOUNDARIES, in preference order:
+  1. **Area** — separate lanes/sections per status (ExtractionBoard lanes,
+     dside's active vs done/won't-do split lists),
+  2. boundary markers — section headers / dividers,
+  3. per-row tags (last resort — redundant within a group).
+- Ownership bottom-left; quantitative (time/size/progress) bottom-right.
+- Detail text is always the middle sandwich, muted, preview-truncated.
+- Progress bars sit at the card bottom, full width (WorkProgressCard,
+  ExtractionBoard, WorkerCard).
+
+So the minimal set is ONE card family:
+
+```
+line 1:  title (the focus)          [status — only if list isn't status-grouped]
+mid:     detail sandwich            (optional)
+line n:  owner/claimant             timing · size   (optional)
+```
+
+Historical note: `ActionListItem` (2026-07-02) put a fixed-width status pill
+LEFT of the title. That predates this canon; treat it as that component's
+established look, not a pattern to copy into new card/list designs.
+
+## Detail container (the center "selected thing" region)
+
+- Sections of read-mostly fact → `InfoPanel` per section (title framing).
+- One editable primary object → app composition with `EditableTitle` /
+  `StatusChip` in a `SpreadRow` title bar (the ActionList detail idiom).
+- Transient/modal inspection (keeps list context) → `Modal`; mobile-ish
+  bottom drawer → `BottomSheet`.
+- **Provenance metadata (creator, timestamps)** → a muted sub-line directly
+  under the title bar — the two-line-card canon scaled up: ownership LEFT,
+  timing RIGHT (`SpreadRow(TextSublabel creator, TextSublabel created …)`).
+  Conditional facts (blockage, dependencies) get their own `InfoPanel`
+  sections that render ONLY when present — zero space in the common case
+  where the item is just title + one-line prompt. Chosen over a uniform
+  label→value details panel: rapid triage scans, it doesn't read.
+- **Panel with a persistent action row** (the actions must not drift as the
+  detail grows) → `FillColumn` filling the panel; the variable detail lives
+  in a `ScrollColumn` (scrolls internally); the action row is the last
+  child, pinned to the bottom. Reason: in a focused activity the action row
+  is the stable target the user's hands/eyes return to per item — never let
+  the panel scroll it away or let short content float it up.
+
+## Counts / metrics rail
+
+- Per-category tallies the user scans → `CountChip` stack (count + label).
+- One dominant fraction (x of y done) → `RingChart` or `StackedProgressBar`.
+- Remaining-work emphasis with severity → `GapCell` (tabular) /
+  `NumberWithUnits` + tone.
+
+## Categorized counts column (a rail of categories with counts and/or children)
+
+For a rail that breaks a collection into categories (blockage kinds, claim
+state, buckets): each category is a section —
+
+```
+CATEGORY LABEL                    [count]
+  ⏸ one-line child (click → select)
+  ⏸ one-line child
+NEXT CATEGORY                     [count]     ← count-only mode
+```
+
+- Header: category label left (muted), `CountChip` right (quantitative →
+  right, per the card canon).
+- Per category choose **children mode** (one-line, indented, glyph-prefixed,
+  click-to-select) or **count-only mode**. Children when the user acts on
+  individual members from the rail; count-only when the category is just a
+  gauge.
+- **Order categories by ACTIONABILITY** — the ones you can do the most
+  about at the top (Peter, 2026-07-14). For blockage rails: person-blocked
+  first (you can nudge them), snooze next (self-clears eventually),
+  dependency (count only), claimed-but-non-terminal last (count only —
+  someone else's to move). Actionable categories get children mode; the
+  rest count-only.
+- The "eligible" remainder does NOT belong in this rail — it IS the main
+  queue; surface its count in the top bar instead.
+- **Counts render as the thematic number lozenge** — `TagPill` plain-label
+  form — but DE-emphasized: the CATEGORY label carries the visual weight
+  (strong), the count stays muted. The count briefly lights up (TagPill
+  `active` as a ~700ms flash) when its VALUE CHANGES — animation marks
+  change, not steady-state importance (Peter, 2026-07-14).
+- **Child lines follow the card canon — [title (data)]**: title left (the
+  focus), the category's datum trailing right — person-blocked → glyph + the
+  FIRST WORD of the blocked-by string (convention: blocked_by starts with
+  the person, "Ryan — grant access"); snoozed → glyph + humanized time
+  REMAINING, compact ("2d4h", "1d2h", "45m").
+- Compose: `TightStack` of sections; header `SpreadRow(label, TagPill)`;
+  children muted one-line rows. No new component until a second consumer
+  demands one.
+
+## Buttons / actions
+
+The load-bearing discriminator is **whether the user is in a FOCUSED
+ACTIVITY** (working item-by-item through a queue: triage, review, grading):
+
+- **Focused activity → keyboard-driven.** Use `HotkeyButton` (armed
+  window-level key + click; the key is emphasized in the label, [c]laim) —
+  the button IS the hint for what to press to reach a category/action.
+  - **Letter keybindings by default** (mnemonic first letters).
+  - **Number keybindings when there are too many actions or the letters
+    conflict** (two categories starting with the same letter).
+- Casual/occasional actions → plain `Button` variants; no key chrome.
+- Batch actions over a selection → ActionList's built-in `actions` bar
+  (same HotkeyButton, list-scoped).
+- **The action row swaps CONTEXTUALLY with the selected item's state** —
+  forward actions (categorize) for items in the queue, inverse actions
+  (unblock/unsnooze/undepend/release) for already-categorized ones, showing
+  only the actions that apply. Forward actions ADVANCE to the next queue
+  item (the flow is the loop); inverse actions KEEP the item selected (you
+  navigated to it deliberately) as it re-enters the queue.
+
+## Association picker (choose N related items for the selected thing)
+
+When an action needs the user to pick multiple associations (dependencies,
+members, links), the work surface swaps into a PICKER MODE with two sections:
+
+- **Above the fold: the pending picks** — each with a remove Button
+  (danger-toned). Empty state says where to add from.
+- **Below: the full candidate list** wrapped in `QuickFilter` (text
+  narrowing) — each row `SpreadRow(name, SmallButton add)`. Picked items
+  leave the candidate list (no double representation, same rule as rails).
+- **Pinned confirm row** (`[f]inish`, HotkeyButton) creates the
+  associations in one commit-style step — which implicitly categorizes the
+  item. Nothing mutates until finish.
+- Keyboard discipline: window-level hotkeys defer to the filter input via
+  `isEditableTarget` (exported by HotkeyButton) — every bench-level key
+  listener must apply the same guard.
+
+Composed: FillColumn(title bar, Divider, ScrollColumn(pending InfoPanel,
+QuickFilter InfoPanel), confirm InfoPanel). Precedent: categorical-triage
+[d]epends picker (2026-07-14).
+
+The picker generalizes to **categorize input modes** — match the input
+surface to what the action needs (Peter, 2026-07-14):
+
+- **No input needed** (claim, later) → stay ONE-KEYSTROKE, apply immediately.
+  Don't build a surface for an action with an obvious default.
+- **One free-text fact** (block reason) → a single `ThemedInput`,
+  AUTO-FOCUSED on entry, placeholder teaching the convention (person-first),
+  **Enter commits** (the input owns focus, so Enter beats hotkeys); pinned
+  [f]inish for the mouse.
+- **A duration/quantity with common cases** (snooze) → preset HotkeyButtons
+  first ([1]/[3]/[7] days — number keys, one press commits), a picker
+  (`DatePicker`) below for the long tail + [f]inish.
+- **N associations** (depends) → the two-section picker above.
+
+All share the shell: FillColumn(title bar with mode hint, Divider,
+ScrollColumn(inputs), pinned confirm). Nothing mutates until commit.
+
+## Record rows in a section (list vs table)
+
+For a small collection displayed inside a settings/detail section, where each
+item carries a few facts and maybe an action (login methods, API keys,
+members). The load-bearing discriminator is **whether the same fields recur
+in comparable positions across rows** — recurring fields want COLUMN
+alignment; prose-like rows don't:
+
+- **1–2 fields per row, no recurring positions** → canon list rows:
+  `SpreadRow` (identity left, status/action trailing right). A table would
+  be aligning nothing.
+- **Recurring fields (method / identifier / action), few rows (bounded
+  catalog), sparse cells, no cross-row comparison** → `DataList`
+  (`DTable`/`DRow`/`DT`/`DD`): real table semantics so every field aligns in
+  its column, but no header row or striping — alignment without chrome the
+  data doesn't fill. Sparse cells (a value only some rows have) are exactly
+  what breaks `SpreadRow` here: different trailing content per row leaves
+  the right edge ragged; only a column grid aligns it.
+- **3+ uniform columns AND the user scans/compares across many rows** →
+  `BaseTable` (compact, header names the columns). The header earns its
+  space only when column meaning isn't obvious from the values.
+
+Row delineation (rows must read as ROWS, not float in the section —
+"floating out in the ether" is the failure mode). Choose by affordance:
+- **Default: hairline dividers** — `DRow border` (`List dividers` for the
+  list branch). The minimal mark of row-ness; the last row's rule also
+  separates the collection from what follows in the section.
+- **Zebra striping** (`BaseTable striped`) only when many rows / wide gaps
+  make the eye lose its row — noise at rail-of-3 scale.
+- **Boxed/card rows** only when the ROW ITSELF is a click target — a box
+  implies clickability; don't promise it when only an inner control acts.
+
+## Notification / activity panel (a popover feed hanging off a trigger)
+
+A bell/inbox popover is NOT just "a list in a panel" — the load-bearing
+discriminator is **whether the user acts on the collection, or only on
+individual items**:
+
+- **Items only** (read it, click through, done) → a plain `ScrollColumn` of
+  rows inside the `PopoverSurface`. No header, no footer — the trigger's badge
+  already says how many there are, and terseness wins.
+- **The collection too** (mark all read, clear, "see all") → the **inbox
+  shell**: `FillColumn` → pinned header (`SpreadRow`: label + de-emphasized
+  count lozenge) → `Divider` → `ScrollColumn(rows)` → `Divider` → pinned
+  footer action. Same pinned-action-row idiom as the detail-container branch:
+  the bulk action must not scroll away, and a header gives the panel identity
+  once it's tall enough to lose it.
+  - **Mount the footer from the handler's presence**, never as a disabled
+    control — no dead affordance in a popover that small.
+
+Row format inside the panel — a **media object**, not a card:
+`TopClusterRow(unread gutter, tone well, GrowTightStack(title/when row, detail,
+action))`. The discriminators against the card canon:
+
+- **Rows are unboxed at rest, boxed on hover.** A feed is SCANNED, and a stack
+  of bordered cards in a 340px popover reads as a ribbed slab (the complaint
+  that superseded the 2026-07-24 canon here). Hover chrome promises
+  clickability only when there is some.
+- **A leading glyph well replaces the box.** Something must make an unboxed row
+  read as a unit; a 28px tinted square does it at a fraction of a border's
+  visual cost, and it carries tone as a bonus.
+- **The unread slot is always rendered, only its fill changes** — read and
+  unread rows must share a text origin or the column jitters as things are read.
+- **Titles are `TextTitle`, never `TextValue`.** `TextValue` is 1.5rem/600, the
+  metric-readout variant; against a 0.75rem detail line it turns a long title
+  into a headline slab. This is the single most common way a dense panel goes
+  ugly.
+- **Inline CTAs use `Link`, not `NavLink`** — `NavLink` is a nav-RAIL item and
+  bakes `padding-left:16px`, so it silently indents past a sibling `TextButton`
+  branch. Wrap the action in a `ClusterRow` so it sizes to content and left-packs
+  (both branches are `inline-flex` and otherwise stretch as column children and
+  centre their own labels).
+
+Trigger state for ANY overlay control (the panel is invisible when closed, so
+the trigger is the only thing saying "this is open"):
+- Baseline: `.sui-dropdown--subtle.sui-dropdown--open` — transparent at rest,
+  faint accent wash on hover, accent tint + border while open. Every subtle
+  overlay trigger marks open the same way.
+- **Icon-only triggers add a second, colour-independent signal** — swap the
+  glyph `outline`→`solid`. A lone tinted 32px square is easy to miss, and the
+  tint alone dies under a monochrome/colourblind theme.
+- Size the trigger so a corner badge CLEARS the glyph rather than sitting on
+  it, and ring the badge in the background colour so it punches out of the
+  trigger's own tint when open.
+
+## Flow / stage visualization
+
+- Stage progression the user can act on → `DagChart` (nodes clickable,
+  `focusedNodeId` = current) — fits workflow DAGs (todo→doing→done and
+  branchier). Purely indicative progress → `ProgressCheck` /
+  `StackedProgressBar`.
+
+## Report / dashboard page sections (a report route: header + filters + data)
+
+Build order (COMMANDMENTS #16/#17): **sections first, responsive-gated, then
+components.** Design the vertical regions and land them as an empty skeleton
+(placeholder text per region) that renders well on a phone AND a 4K monitor
+before any content component goes in. Fill one region per round.
+
+Discriminators for the section breakdown:
+- **Header** is always its own band: report title (`SectionTitle`) + a muted
+  provenance sub-line (cadence · timestamp · audience, `TextSublabel` in a
+  `ClusterRow`) + purpose (`MutedBody`). (Provenance-metadata rule, above.)
+- **Filters** are always their own one-line band (`WrapRow` of `Select` /
+  `DatePicker`), directly under the header.
+- **Body grouping** — how many titled data sections below the filters?
+  - Scalar KPIs read differently from measure-splits → **two sections**:
+    `Summary` (the scalar tiles + target + trend) and `Breakdowns` (everything
+    that splits a measure across a dimension, incl. top-N rankings). Default.
+  - Rankings read differently from dimensional splits → **three sections**
+    (Summary / Rankings / Breakdowns).
+  - No meaningful grouping (few tiles, equal weight) → **one flat** dashboard
+    grid, no sub-section titles.
+- **Section container** — titled data sections use a curried `Section` variant
+  (`BorderedSection`); the responsive tile grid inside each is `CardGrid`
+  (KPIs) / `WideCardGrid` (chart/table tiles). Never a raw grid/factory.
+
+---
+
+## Precedents (append-only)
+
+Each entry: date · surface · decision · the discriminator answers · choice · why.
+
+- **2026-07-13 · workshop:categorical-triage · page layout** — regions: 3
+  always-visible (queue + card detail + counts); no region trade-off; embedded
+  bench view; resizability not yet requested → **ThreePanelLayout**
+  (topBar/left/center/right slots). Chosen over ResizableContainer split,
+  Page+Stack, TabbedSidePanel. Also the dside Focus anatomy — consistency.
+- **2026-07-14 · workshop:categorical-triage · left list (queue rail)** —
+  statuses: multi (TODO/DOING/DONE + blockage categories; the flow is
+  resolve-obvious-fast, revisit the complex set) → **ActionList**. Filtering:
+  none (the design's /triage is a one-at-a-time queue; Todo keeps the filter
+  bar). Sort: derived shared StatementOrder priority — defer is the "Later"
+  action, not drag, so no reorder affordance in the rail. Rail sizing:
+  **fixed width** (Peter) — rail rows are previews and the detail panel
+  shows the full title; matches dside Focus's fixed team rail.
+- **2026-07-14 · workshop:categorical-triage · queue card format** — cards
+  carry text + status only; queue is priority-sorted (not status-grouped) →
+  **one-line cards: title left (the focus), status trailing right**, composed
+  from InteractiveCard + SpreadRow + StatusChip; rail 380px per the sizing
+  rule (5–8-word title untruncated + pill + 1rem; longer titles WRAP, never
+  truncate). Supersedes the earlier ActionList pick for this rail — the card
+  canon (title-first) outranked the ActionListItem status-left look.
+- **2026-07-14 · workshop:categorical-triage · counts rail** — categorized
+  column ordered by actionability: blocked·person (children) →
+  blocked·snooze (children) → blocked·dependency (count) → claimed
+  non-terminal (count); eligible removed from the rail (it's the queue);
+  composed TightStack + SpreadRow + CountChip.
+- **2026-07-14 · workshop:categorical-triage · center (categorize surface)** —
+  focused activity → keyboard-driven: canon title bar (title left, StatusChip
+  right), Prompt InfoPanel, and a Categorize InfoPanel of HotkeyButtons
+  [c]laim [b]lock [s]nooze [d]epends [l]ater; applying a category advances
+  selection to the next item (the flow IS the loop). Letters don't conflict
+  at 5 actions. Right rail widened to 300px so category labels stay one line.
+- **2026-07-14 · workshop:categorical-triage · center panel structure** —
+  action row must stay put while detail varies per item → **FillColumn +
+  ScrollColumn(detail) + Categorize InfoPanel pinned last** (Peter: "buttons
+  stick to the bottom, detail panel scrolls internally"). The existing
+  page-structure variants already bake the flex/overflow plumbing — no
+  hand-rolled styles.
+- **2026-07-14 · workshop:categorical-triage · agentic release + no Later**
+  (Peter) — triage gains **[a]gentic**: one-keystroke release of an item to
+  the agent pipeline (dside's EXISTING `StatementTag::Agentic` → agent-owned
+  work stage; `Species` classifies claimants — no new backend field). Count
+  rail AGENTIC sits last (nothing for the human to do); Restore gains
+  [w]ithdraw. **"Later" is REMOVED** (supersedes the triage-route entry
+  above): triage actions change item STATE; deferral is just not deciding
+  (arrow-down skips) and queue ORDER belongs to the todo view's drag-sort.
+  Final row: [c]laim [a]gentic [b]lock [s]nooze [d]epends.
+- **2026-07-18 · reports/SR-01a (Daily Sales Orders Snapshot) · report page sections** — sections designed before components (COMMANDMENTS #17). Discriminators: scalar KPIs read differently from measure-splits, top-N not distinct enough from dimensional splits to warrant its own band → **4 sections: Header · Filters · Summary · Breakdowns** (top-N tiles live inside Breakdowns). Chosen over Summary/Rankings/Breakdowns (5) and flat dashboard (3). Skeleton: ScrollFillBox › ContentStack › [TightStack header, MutedBody filters band, BorderedSection "Summary", BorderedSection "Breakdowns"]; tile grids CardGrid/WideCardGrid. Landed empty-with-placeholders first, responsive-gated (phone 1-col / 4K fills) before component fill-in. Component picks (pending fill-in): breakdown tiles = Chart+BarSeries (horizontal bars); top-N = ranked DataTable; TOTAL/#ORDERS = MetricCard; vs-target = RingChart; trend = TrendSparkline.
+- **2026-07-23 · Auth/ManagedListSection · identities rows (list vs table)** —
+  fields recur in comparable positions (method / account / action); rows ≤3
+  (bounded by the connection catalog); cells sparse (email primary-only,
+  Remove secondary-only); no cross-row comparison → **DataList
+  (`DTable`/`DRow`/`DT`/`DD`)**. Chosen over BaseTable (header + column
+  machinery over 2 rows the data doesn't fill) and over the original
+  `ClusterRow` rows (ragged inline alignment — the complaint that triggered
+  the redesign; Adlai, via /design-options). SpreadRow rejected: sparse
+  trailing content per row leaves the right edge ragged. Delineation:
+  **`DRow border` dividers** — rows read as rows ("floating out in the
+  ether" without them); striping is noise at 2–3 rows, boxes would imply
+  row clickability that isn't there.
+- **2026-07-24 · SUI NotificationCenter · dropdown notification item format** —
+  item carries title + optional detail + optional CTA link; list is NOT
+  status-grouped → **three-line card canon: CompactSurface box → TightStack →
+  [SpreadRow(TextValue title left, trailing transient spinner as status),
+  MutedBody detail sandwich, accent action link]**. Non-interactive container
+  (CompactSurface, not InteractiveCard) because the click target is the explicit
+  CTA, not the whole row. Chosen over the original bare TightStack (too flat —
+  the complaint that triggered this) and over per-item dividers. Adlai, via team
+  execution. **SUPERSEDED 2026-07-27** — see below.
+- **2026-07-27 · SUI NotificationCenter · panel + item treatment + trigger
+  state** — supersedes the 2026-07-24 card canon for this surface. Diagnosis
+  first: the "ugly" was mostly ONE line — the title used `TextValue`
+  (1.5rem/600, the metric-readout variant) against a 0.75rem detail, a 2× jump
+  in a 340px popover; plus `ScrollColumn`'s gap collapsed so the CompactSurface
+  borders fused into a ribbed slab, and `tone` was declared in the props and
+  never rendered. Discriminators: the user acts on the COLLECTION (mark all
+  read), and the feed is scanned rather than picked through → **inbox shell**
+  (FillColumn: pinned header + count lozenge · ScrollColumn rows · pinned
+  footer) with **unboxed media-object rows** (unread gutter · 28px tone glyph
+  well · GrowTightStack), boxed only on hover. Chosen over: tone rail on a kept
+  CompactSurface, hairline divider rows (nothing binds a CTA to its own item),
+  and tone-tinted Warning/Info surfaces (spends the tint budget on tone when
+  tint is the better unread carrier). Adlai, via /design-options presented as
+  rendered HTML/CSS comparisons rather than an option menu — worth repeating
+  when the decision is visual rather than structural. Trigger: **tinted well +
+  outline→solid glyph**, chosen over well-only (the strict
+  `.sui-dropdown--subtle` precedent — too quiet on a lone icon button) and
+  glyph-only. Two findings fixed in the same change: `NavLink` bakes
+  `padding-left:16px` and was indenting the anchor CTA past the button branch
+  (→ `Link`), and no Layout variant both grew and kept a tight gap (→ added
+  `GrowTightStack`). `badgeTone` remains dead API — `CountBadge` is
+  deliberately single-tone per the #2 Rule.

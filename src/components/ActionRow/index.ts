@@ -1,4 +1,4 @@
-// Base (ActionRow) is intentionally NOT exported — use curried variants or createActionRow().
+// Base (ActionRow) is intentionally NOT exported — use curried variants ONLY (no create* factories at call sites — if the variant you need is missing, add it here).
 export { createActionRow } from "./ActionRow";
 export type {
   ActionRowDataProps,

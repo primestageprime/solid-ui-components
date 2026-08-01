@@ -11,6 +11,7 @@
 // active tint.
 // ============================================
 import { type Component, type JSX, Show, splitProps } from "solid-js";
+import { SpreadRow, WrappedClusterRow } from "../Layout/variants";
 import "./ResultDisplay.css";
 
 export interface ResultDisplayProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -59,16 +60,16 @@ export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
   return (
     <div class={rootClass()} {...others}>
       <Show when={local.label || local.sublabel}>
-        <div class="sui-result-display__header">
+        <SpreadRow class="sui-result-display__header">
           <Show when={local.label}>
             <h3 class="sui-result-display__label">{local.label}</h3>
           </Show>
           <Show when={local.sublabel}>
             <span class="sui-result-display__sublabel">{local.sublabel}</span>
           </Show>
-        </div>
+        </SpreadRow>
       </Show>
-      <div class="sui-result-display__row">
+      <WrappedClusterRow class="sui-result-display__row">
         <span
           class={valueClass()}
           style={local.valueColor ? { color: local.valueColor } : undefined}
@@ -79,7 +80,7 @@ export const ResultDisplay: Component<ResultDisplayProps> = (props) => {
           </Show>
         </span>
         {local.badge}
-      </div>
+      </WrappedClusterRow>
       {local.children}
     </div>
   );

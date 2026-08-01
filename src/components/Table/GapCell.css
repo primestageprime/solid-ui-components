@@ -1,0 +1,23 @@
+/* ============================================
+   GapCell — structural geometry for the count + %/bar stack. Severity color
+   rides the theme tokens; the fill bar is the COMPLETED fraction.
+   ============================================ */
+.sui-gap-cell { font-family: var(--sui-font-mono); line-height: 1.3; }
+/* Inline variant: pct + bar on one line (count moves to the title tooltip). */
+.sui-gap-cell--inline { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; }
+.sui-gap-cell--inline .sui-gap-cell__pct { font-variant-numeric: tabular-nums; }
+.sui-gap-cell__blank { font-family: var(--sui-font-mono); color: var(--sui-text-muted); }
+.sui-gap-cell__count { font-size: 13px; font-weight: 600; }
+.sui-gap-cell__meta { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.sui-gap-cell__bar {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: color-mix(in srgb, var(--sui-text-primary) 8%, transparent);
+  overflow: hidden; flex-shrink: 0;
+}
+.sui-gap-cell__fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.sui-gap-cell--success { color: var(--sui-success); }
+.sui-gap-cell--success .sui-gap-cell__fill { background: var(--sui-success); }
+.sui-gap-cell--warning { color: var(--sui-warning); }
+.sui-gap-cell--warning .sui-gap-cell__fill { background: var(--sui-warning); }
+.sui-gap-cell--danger { color: var(--sui-danger); }
+.sui-gap-cell--danger .sui-gap-cell__fill { background: var(--sui-danger); }

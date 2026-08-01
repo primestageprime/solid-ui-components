@@ -5,6 +5,7 @@ import {
   type DateRangePreset,
 } from "../../src/components/DateRangePicker";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 
 const PRESETS: DateRangePreset[] = [
   { label: "24h", days: 1 },
@@ -70,7 +71,8 @@ export const DateRangePickerShowcase: Component = () => {
 
       <div class="example-group">
         <h3>With presets</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           `presets` is caller-supplied. Each preset selects `[now - days, now]`.
         </div>
         <Stack>
@@ -81,11 +83,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={withPresets()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>No presets</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           Without `presets` the preset row is suppressed — click days to pick
           start, then end.
         </div>
@@ -93,11 +97,13 @@ export const DateRangePickerShowcase: Component = () => {
           <DateRangePicker value={bare} onChange={setBare} />
           <Debug range={bare()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Max-range constraint (30 days)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           `maxRangeDays={30}` disables days beyond the cap once an anchor is
           selected; preset selections are clamped to the same bound.
         </div>
@@ -110,11 +116,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={capped()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Time-of-day controls</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           Toggle "Set time" inside the popover to reveal the `HH:mm` inputs —
           the committed range then includes hours/minutes.
         </div>
@@ -126,11 +134,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={withTime()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Pinned timezone — America/Los_Angeles</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           `timeZone="America/Los_Angeles"` pins the trigger label, month header,
           calendar-day highlighting, and committed time-of-day selections to LA
           — regardless of the browser's local TZ. Useful when the host app
@@ -145,11 +155,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={tzLa()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Pinned timezone — America/New_York</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           Same component, `timeZone="America/New_York"`. Viewed side-by-side
           with the LA picker above, the trigger labels and highlighted cells may
           differ by one calendar day at TZ boundaries — this is the correctness
@@ -164,11 +176,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={tzNy()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Pinned timezone — UTC</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           `timeZone="UTC"` anchors all display and math to UTC — the
           deterministic choice for cross-region dashboards.
         </div>
@@ -181,11 +195,13 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={tzUtc()} />
         </Stack>
+        </NarrowStack>
       </div>
 
       <div class="example-group">
         <h3>Custom trigger class (class-merge demo)</h3>
-        <div class="text-meta" style={{ "margin-bottom": "12px" }}>
+        <NarrowStack>
+          <div class="text-meta">
           Custom `class` is APPENDED to the default `sui-drp__trigger` class —
           host overrides layer on top of default styling instead of replacing
           it. The demo class here adds a thicker accent border.
@@ -199,6 +215,7 @@ export const DateRangePickerShowcase: Component = () => {
           />
           <Debug range={custom()} />
         </Stack>
+        </NarrowStack>
       </div>
     </div>
   );

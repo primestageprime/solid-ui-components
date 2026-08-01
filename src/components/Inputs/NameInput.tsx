@@ -23,7 +23,9 @@ import {
   createSignal,
   createUniqueId,
 } from "solid-js";
+import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
+import { pipe, filter, join } from "../../fn";
 
 export interface NameInputProps
   extends Omit<
@@ -40,10 +42,13 @@ export const NameInput: Component<NameInputProps> = (props) => {
   const generatedId = createUniqueId();
   const inputId = () => local.id ?? generatedId;
 
-  const classes = () => ["themed-input", local.class].filter(Boolean).join(" ");
+  const classes = () =>
+    pipe(["themed-input", local.class], filter(Boolean), join(" "));
 
+  // Field column composed from the GrowColumn Layout variant; label keeps its
+  // own margin-bottom. Reuses ThemedInputs.css for visual parity.
   return (
-    <div class="themed-input-group">
+    <GrowColumn class="themed-input-group">
       {local.label && (
         <label class="themed-input-label" for={inputId()}>
           {local.label}
@@ -64,6 +69,6 @@ export const NameInput: Component<NameInputProps> = (props) => {
         readonly={readOnly()}
         onFocus={() => setReadOnly(false)}
       />
-    </div>
+    </GrowColumn>
   );
 };

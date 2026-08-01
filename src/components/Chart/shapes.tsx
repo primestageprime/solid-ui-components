@@ -8,6 +8,9 @@ export type Shape =
   | "circle"
   | "chevron"
   | "chevron-down"
+  | "diamond"
+  | "square"
+  | "pentagon"
   | "pin"
   | { path: string; viewBox?: [number, number] };
 
@@ -27,6 +30,13 @@ const CHEVRON_PATH = "M-6,4 L6,4 L0,-6 Z";
 const CHEVRON_DOWN_PATH = "M-6,-4 L6,-4 L0,6 Z";
 const PIN_PATH =
   "M0,-7 C-4,-7 -4,-3 0,2 C4,-3 4,-7 0,-7 Z M-1.5,-5 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0";
+// Filled diamond (◆): vertices at top/right/bottom/left.
+const DIAMOND_PATH = "M0,-7 L7,0 L0,7 L-7,0 Z";
+// Filled square (■), centered.
+const SQUARE_PATH = "M-6,-6 L6,-6 L6,6 L-6,6 Z";
+// Filled regular pentagon (⬠), apex up; vertices on a radius-7 circle.
+const PENTAGON_PATH =
+  "M0,-7 L6.657,-2.163 L4.114,5.663 L-4.114,5.663 L-6.657,-2.163 Z";
 const BUILTIN_VIEWBOX: [number, number] = [16, 16];
 
 /** Narrows a Shape to its custom-path variant, or undefined for built-in tags. */
@@ -35,11 +45,14 @@ const asCustomShape = (
 ): { path: string; viewBox?: [number, number] } | undefined =>
   typeof shape === "object" ? shape : undefined;
 
-/** True when `s` is one of the four supported Shape variants. */
+/** True when `s` is one of the supported Shape variants. */
 const isKnownShape = (s: unknown): boolean =>
   s === "circle" ||
   s === "chevron" ||
   s === "chevron-down" ||
+  s === "diamond" ||
+  s === "square" ||
+  s === "pentagon" ||
   s === "pin" ||
   (typeof s === "object" &&
     s !== null &&
@@ -67,6 +80,9 @@ interface ShapeGlyphProps {
   /** Optional stroke; defaults to none. */
   stroke?: string;
   strokeWidth?: number;
+  /** Outline-only: no fill, the shape's colour becomes its stroke. Works for
+   *  every shape (including `circle`). Used for the "unselected" glyph state. */
+  hollow?: boolean;
 }
 
 /**
@@ -84,9 +100,11 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
       <Show when={props.descriptor.shape === "circle"}>
         <circle
           r={size() / 2}
-          fill={props.descriptor.color}
-          stroke={stroke()}
-          stroke-width={strokeWidth()}
+          fill={props.hollow ? "none" : props.descriptor.color}
+          stroke={props.hollow ? props.descriptor.color : stroke()}
+          stroke-width={
+            props.hollow ? Math.max(1.5, strokeWidth()) : strokeWidth()
+          }
         />
       </Show>
       <Show when={props.descriptor.shape === "chevron"}>
@@ -97,6 +115,7 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           color={props.descriptor.color}
           stroke={stroke()}
           strokeWidth={strokeWidth()}
+          hollow={props.hollow}
         />
       </Show>
       <Show when={props.descriptor.shape === "chevron-down"}>
@@ -107,6 +126,40 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           color={props.descriptor.color}
           stroke={stroke()}
           strokeWidth={strokeWidth()}
+          hollow={props.hollow}
+        />
+      </Show>
+      <Show when={props.descriptor.shape === "diamond"}>
+        <PathScaled
+          path={DIAMOND_PATH}
+          viewBox={BUILTIN_VIEWBOX}
+          size={size()}
+          color={props.descriptor.color}
+          stroke={stroke()}
+          strokeWidth={strokeWidth()}
+          hollow={props.hollow}
+        />
+      </Show>
+      <Show when={props.descriptor.shape === "square"}>
+        <PathScaled
+          path={SQUARE_PATH}
+          viewBox={BUILTIN_VIEWBOX}
+          size={size()}
+          color={props.descriptor.color}
+          stroke={stroke()}
+          strokeWidth={strokeWidth()}
+          hollow={props.hollow}
+        />
+      </Show>
+      <Show when={props.descriptor.shape === "pentagon"}>
+        <PathScaled
+          path={PENTAGON_PATH}
+          viewBox={BUILTIN_VIEWBOX}
+          size={size()}
+          color={props.descriptor.color}
+          stroke={stroke()}
+          strokeWidth={strokeWidth()}
+          hollow={props.hollow}
         />
       </Show>
       <Show when={props.descriptor.shape === "pin"}>
@@ -118,6 +171,7 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
           stroke={stroke()}
           strokeWidth={strokeWidth()}
           fillRule="evenodd"
+          hollow={props.hollow}
         />
       </Show>
       <Show when={asCustomShape(props.descriptor.shape)}>
@@ -129,6 +183,7 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
             color={props.descriptor.color}
             stroke={stroke()}
             strokeWidth={strokeWidth()}
+            hollow={props.hollow}
           />
         )}
       </Show>
@@ -150,20 +205,19 @@ const PathScaled: Component<{
   stroke: string;
   strokeWidth: number;
   fillRule?: "none" | "evenodd" | "nonzero";
+  hollow?: boolean;
 }> = (props) => {
   const scale = () => props.size / Math.max(props.viewBox[0], props.viewBox[1]);
+  // Outline-only when `hollow` is set, or via the legacy fillRule="none" signal.
+  const strokeOnly = () => props.hollow === true || props.fillRule === "none";
   return (
     <path
       d={props.path}
       transform={`scale(${scale()})`}
-      fill={props.fillRule === "none" ? "none" : props.color}
+      fill={strokeOnly() ? "none" : props.color}
       fill-rule={props.fillRule === "evenodd" ? "evenodd" : undefined}
-      stroke={props.fillRule === "none" ? props.color : props.stroke}
-      stroke-width={
-        props.fillRule === "none"
-          ? Math.max(2, props.strokeWidth)
-          : props.strokeWidth
-      }
+      stroke={strokeOnly() ? props.color : props.stroke}
+      stroke-width={strokeOnly() ? Math.max(2, props.strokeWidth) : props.strokeWidth}
       stroke-linejoin="round"
       stroke-linecap="round"
     />

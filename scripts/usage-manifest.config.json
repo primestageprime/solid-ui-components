@@ -1,0 +1,13 @@
+{
+  "specifiers": ["@primestageprime/solid-ui-components", "solid-ui-components"],
+  "repos": {
+    "dside-work": "/Users/peter/Documents/clients/PrimeStage/dside/work",
+    "dside-ui": "/Users/peter/Documents/clients/PrimeStage/dside/dside-ui",
+    "amygdala-ui": "/Users/peter/Documents/clients/PrimeStage/amygdala/amygdala-ui",
+    "jtf-rust": "/Users/peter/Documents/clients/PrimeStage/jtf/jtf-rust",
+    "jtf-ui": "/Users/peter/Documents/clients/PrimeStage/jtf/jtf-ui",
+    "goose-ui": "/Users/peter/Documents/clients/PrimeStage/goose/goose-ui",
+    "thorcasting-ui": "/Users/peter/Documents/clients/PrimeStage/thorcasting/thorcasting-ui",
+    "wellappoint-ui": "/Users/peter/Documents/clients/PrimeStage/wellappoint/wellappoint-ui"
+  }
+}

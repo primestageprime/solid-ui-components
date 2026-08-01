@@ -24,13 +24,16 @@ const colsFor = (nodes: StatusFlowNode[]): Record<string, number> => {
 // ─── Fixtures ────────────────────────────────────────────────────────────
 
 const linearChain = (statuses: Record<string, string>): StatusFlowNode[] =>
-  Array.from({ length: 8 }, (_, i) => ({
-    id: `c${i + 1}`,
-    title: `Child ${i + 1}`,
-    status: statuses[`c${i + 1}`] ?? "TODO",
-    parentId: "p",
-    dependsOn: i === 0 ? undefined : [`c${i}`],
-  })).concat([{ id: "p", title: "Parent", status: "TODO" } as StatusFlowNode]);
+  Array.from(
+    { length: 8 },
+    (_, i): StatusFlowNode => ({
+      id: `c${i + 1}`,
+      title: `Child ${i + 1}`,
+      status: statuses[`c${i + 1}`] ?? "TODO",
+      parentId: "p",
+      dependsOn: i === 0 ? undefined : [`c${i}`],
+    }),
+  ).concat([{ id: "p", title: "Parent", status: "TODO" } as StatusFlowNode]);
 
 const broom = (statuses: Record<string, string>): StatusFlowNode[] => {
   const set = (id: string, deps?: string[]): StatusFlowNode => ({

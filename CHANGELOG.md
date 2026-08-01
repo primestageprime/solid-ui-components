@@ -2,6 +2,1549 @@
 
 ## [Unreleased]
 
+### Changed
+- **GitHub Issues is retired as the tracker; tasks live in dside.** Project tag
+  `sui` in the `primestage` space, resolved from the new `.dside-config` at the
+  repo root — note the tag deliberately does **not** match the directory name.
+  This follows the same shape as the `TODO.md` retirement in 0.113.0: every open
+  item was verified against the code before migrating, not filed blind.
+
+  | Source | Outcome |
+  |---|---|
+  | Issue #64 (function-first burn-down) | still real → dside #12291; closed on GitHub pointing there |
+  | PR #46 (DagChart cyclic layering) | **not superseded** — `main` still reads `p.y` directly in `layeringSourcesFirst` and still warns on zero-dim containers → dside #12292 |
+  | PR #18 (RelativeTime + LineChart) | open since 2026-05-21; neither symbol is exported today → dside #12293 |
+  | `open-work.md` cssTypedProps section | still real → dside #12294 |
+  | `open-work.md` prop-scale-audit policy call | still open → dside #12295 |
+  | `thorcasting-ui/docs/sui-gap-backlog.md` | 14 proposals, 3 shipped since (FileDropZone, ScenarioGlyph, ManagedListSection); remaining 11 verified absent from `src/index.ts` → dside #12296–#12301 |
+  | 23 plan docs under `docs/superpowers/plans/` | no open work — their checkbox counts are unreliable (unticked but shipped); `layout-purity-migration.md`, the one true running inventory, is 101/101 done |
+  | 56 `TODO`/`FIXME` markers in source | all false positives — `TODO` is a domain status value in the task-board components, not code debt |
+
+  **Pull requests are unaffected** and still live on GitHub. `docs/agents/`
+  `triage-labels.md` is deleted rather than ported: dside has no labels, no
+  priority and no in-progress state.
+
+- **`docs/handoffs/open-work.md` is retired**, and its durable content promoted
+  rather than deleted — only about a quarter of it was ever a task list:
+  - Ratchet mechanics, the showcase/test/depth-header requirements, the CI
+    `--ignore-scripts` and no-subprocess-in-vitest rules, and the
+    "no shipped caller cannot be established from inside this repo" trap →
+    `AGENT_GUIDE.md` § *The health ratchet will fail you*.
+  - The "explicitly out of scope — do not fix these" register → new
+    **ADR 0008**, `docs/adr/0008-deliberately-unfixed.md`.
+  - The BucketQueue `allKeys` / motion-seam hazards → **ADR 0004**, which had
+    been sitting as a 0-byte stub since 2026-07-27 and is now partially filled.
+
+  `CLAUDE.md` and `CONTEXT.md` updated so the deletion leaves no dangling
+  pointers; the three references from shipped BucketQueue plan/spec docs were
+  repointed at ADR 0004 and dside #12291.
+
+## 0.131.0
+
+### Added
+- **`BucketQueue` — per-item checkability in select mode.** `selectable` was
+  bucket-level only, so a consumer could not refuse an item that is
+  incompatible with what is *already* checked; the invalid selection was made,
+  and the failure only showed up (silently) on commit. Two new fail-open props
+  close that:
+  - **`isCheckable?: (item: T) => boolean`** — consulted only for rows in a
+    `selectable` bucket while select mode is on. A refused row is inert: no
+    toggle, and deliberately no fall-through to `onSelect`, which would swap
+    the consumer's detail pane in response to a click meant as a check.
+  - **`uncheckableReason?: (item: T) => string | undefined`** — the refused
+    row's `title`. A prop rather than the consumer's job because `renderItem`'s
+    output does not cover the check affordance, which is exactly what the user
+    is aiming at when the refusal happens.
+
+  A refused row **dims in place** and keeps its place in the roving-tabindex
+  sequence with `aria-disabled="true"`. Filtering refused rows out instead
+  would pull them from under the pointer mid-selection, leave the header count
+  disagreeing with the bucket, and delete rows from the arrow sequence for
+  keyboard users.
+
+  A predicate rather than a `checkableKeys` set on purpose: a positive set must
+  be exhaustive, so any item the consumer forgot would silently become
+  *un*selectable — a fail-closed, which is the same class of silent failure
+  this feature exists to remove.
+
+  Purely additive: omit both props and behavior is unchanged.
+  Design: `docs/superpowers/specs/2026-07-31-bucketqueue-item-checkability-design.md`.
+
+## 0.130.0
+
+### Changed
+- **`Dot.size` and `ChartCanvas.height` are numbers of px, not CSS strings**
+  (BREAKING for TS callers passing a string). Both were `number | string`,
+  coercing a number to px and passing a string through verbatim. ADR 0003 and
+  `scripts/prop-rubric.json` are explicit that geometry props must be semantic
+  — *"geometry lengths (width/height/min/max/size) are NEVER whitelisted; they
+  must become semantic (number/token) props"* — so the string arm is the
+  violation, not an affordance. `cssTypedProps` 14 → 12.
+  - **Nothing shipped used the string form.** The only string call sites in
+    existence were two of this repo's own tests (`createChartCanvas({ height:
+    "50vh" })` and `<Dot size="1.5rem" />`), and `STYLE_GUIDE.md`'s expansion
+    gate is explicit that test-only usage is not demand. Every consumer call
+    site passes a number already (`createChartCanvas({ height: 100 })`,
+    `<Dot size={8} />`).
+  - **If you need a viewport-relative chart height**, put a class on the
+    container rather than a `"50vh"` height — the prop is a baked per-variant
+    decision (`createChartCanvas({ height })`), not a call-site override.
+
+### Note on the remaining 12
+`Surface.minWidth`/`maxWidth` were listed in the prior handoff as part of this
+"no cross-repo entanglement" slice. **They are not** — a consumer declares its
+own `minWidth?: string; maxWidth?: string` wrapper and spreads it straight into
+`createSurface`'s output, so narrowing them breaks its typecheck exactly the way
+`DataTableContainer.maxHeight` does. Left for a coordinated bump.
+
+## 0.129.0
+
+### Fixed
+- **`Stack`/`Row` regain the `md` and `lg` gap steps, and `Surface.gap` stops
+  lying.** `SurfaceProps.gap` publicly accepted `"md"` and `"lg"`, then
+  collapsed anything non-`none` to `"sm"` before forwarding to the inner
+  `Stack`/`Row` — so `NoteCard`, `WideCard`, and every consumer variant built
+  with `createSurface({ gap: "md" })` rendered at 8px no matter what they
+  asked for. The `surface--gap-*` class Surface emits alongside it has no CSS
+  rule anywhere and never had one; it stays as the inert back-compat hook it
+  already was.
+  - The fix is to make the scale real rather than to narrow the type.
+    `.stack--gap-md`/`.row--gap-md` are **12px** and `.stack--gap-lg`/
+    `.row--gap-lg` are **16px**, continuing this repo's own 4/8/12/16 ramp and
+    matching `.grid--gap-md`/`.auto-stack-row--gap-md`, which have been 12px
+    all along — "the gap scale is `xs|sm`" was only ever true of
+    `Stack`/`Row`/`Sidebar`/`ProportionalStack`, never of `Grid`/`AutoStack`.
+  - `Surface.gap` now forwards **verbatim** and additionally accepts `"xs"`,
+    so its scale is exactly the `Stack`/`Row` scale plus `none`.
+  - **Visual change**: anything that already asked for `gap="md"`/`"lg"` moves
+    from 8px to its declared step. In this repo that is `NoteCard`, `WideCard`,
+    and the `split-queue-list` showcase's `DetailCard`. Nothing that asked for
+    `xs`/`sm`/`none` moves.
+  - This reverses the `xs|sm` trim from `928651f` (2026-06-26) and `9158c75`
+    (2026-07-17). Those landed on the finding that nothing depended on `md`/
+    `lg`; that finding did not survive contact with consumers. `thorcasting-ui`
+    carries a compatibility shim in `src/components/ui.tsx` re-implementing
+    `gap`/`align`/`justify` as inline styles over a full
+    `none|xs|sm|md|lg|xl|2xl` scale, headed *"SUI 0.80 regression"*, and
+    `jtf-ui`'s `NoxWidgets.tsx` builds a `createSurface({ … gap: "md" })` that
+    has been silently 8px. Consumers dropping that shim should note SUI's `lg`
+    is 16px where the shim used 20px.
+  - A `Layout.test.tsx` case now asserts each step against `Layout.css` itself,
+    not just the emitted class name — the class name alone would pass for a
+    step with no rule behind it, which is the exact failure
+    `internal/dom/assertModifierClass.ts` exists to catch.
+
+## 0.128.0
+
+### Added
+- **`BucketQueue`: collapsible buckets.** Two additive `Bucket` fields let a
+  **populated** bucket render as a click-to-expand summary line, which the
+  component previously only ever did for an **empty** one. `collapsible: true`
+  opts a bucket in; `collapsedByDefault: true` starts it collapsed and is
+  **ignored without `collapsible`**, since on its own it would strand the
+  bucket's items behind no affordance. Built for a staging pile — a discard
+  queue that must not dominate the bar but has to be openable to pull rows back
+  out before committing.
+  - The header becomes a `<button aria-expanded>` and takes a **tone-coloured
+    chevron in place of its tone dot**, in the dot's own 8px slot: labels stay
+    on one left edge and the bucket still carries exactly one role-coloured
+    mark, so nothing about a non-collapsible queue's rail changes.
+  - The state is the **component's own and sticky**. There is no
+    `expandedKeys`/`onToggleExpand` pair — expand/collapse never needs to leave
+    the component. `collapsedByDefault` applies only until the user first
+    toggles the bucket, after which their choice holds for the component's
+    life, **including across the bucket draining to empty and refilling**: if
+    the user opened the pile, they wanted it open, and emptying it elsewhere in
+    the consumer's UI does not silently re-close it.
+  - A collapsed bucket **sizes exactly as an empty one** — pinned to its
+    summary line, out of the weighted water-fill, and never `fill`ing, with
+    `capRows` moot — so those flags compose with no special-casing. Its rows
+    leave the keyboard sequence, and `selectedKey` is left untouched (`onSelect`
+    still only ever emits `null` from the triage advance).
+  - An **empty** `collapsible` bucket is indistinguishable from any other empty
+    bucket: its `emptyLabel`, its dot, and no toggle, because there is nothing
+    to expand into.
+  - `naturalHeights` / `allocateHeights` gain an optional `collapsed?: boolean[]`.
+    Both are exported public API; omitting it is byte-identical to before.
+
+### Fixed
+- **`BucketQueue`: a transfer into a bucket that renders no rows no longer
+  suppresses the source bucket's animation.** `play()` narrowed a batch of
+  transfers to those with a live destination row and then bailed on the
+  **whole batch** when none survived — so the vacated slot's gap-closing FLIP
+  went with it and every row beneath a departing one jumped. The FLIP pass is
+  independent of arrivals; only the arrival animation needs a destination
+  element. Reachable only via a collapsed bucket today (an item moving into an
+  *empty* bucket makes it populated, so it renders), but the bug was in the
+  choreographer, not the new feature. A row landing in a collapsed bucket now
+  closes its source gap as usual and pulses the destination's count so it is
+  seen being received. `MotionContext` gains `bucketEl` for this.
+
+### Changed
+- **`BucketQueue` internals split for the 500-line limit.** The header moved to
+  `BucketHeader.tsx` and the live-measurement concern (the row/header/empty-strip
+  `ResizeObserver` wiring) to `measurement.ts`. No public API change.
+
+## 0.127.0
+
+### Added
+- **`DateCell` accepts `timeZone`**, matching `DateTimeCell`'s semantics
+  exactly. Previously `DateCell`'s `format="iso"` path had no way to pin a
+  zone and fell through to the viewer's local one, so a UTC instant near
+  midnight could render as the wrong calendar day west of UTC. Unset behavior
+  is unchanged (host-local, matching pre-existing output). Closes #68.
+- **`ValueMatrix` / `PivotGrid`: `colLabel` / `rowLabel` widened to
+  `=> string | JSX.Element`.** Both already fed straight into JSX
+  (`TableColumn.header`, which already accepted `string | JSX.Element`; a bare
+  `<span>`), so the narrower `=> string` type blocked passing e.g.
+  `NumberWithUnits` in a column header for no runtime reason. Purely
+  additive — unblocks jtf-ui's `ComplianceThresholdTable`. Closes #69.
+
+### Fixed
+- **`SurfaceDataProps` documented in `COMPONENTS.md`.** Passing
+  `padding`/`radius`/`bg`/`borderColor`/etc. to a curried `Surface` variant
+  (e.g. `WarningSurface`) fails with TS2322 by design (ADR 0001 — visual
+  config is locked at curry time) — nothing previously told a caller why.
+  Closes #66.
+
+### Changed
+- **Function-first burn-down (#64), continued** — `dotChains` 54 → 33,
+  `collectionMethodCalls` 209 → 139, one component (folder) per commit:
+  `_contrastMath.ts`, `CashflowScrubChart/`, `ConversationTree.tsx`,
+  `AnimatedSwimlaneChart/`, `ThroughputChart.tsx`, `StatusFlowChart/`,
+  `SwimlaneChart/`. Adds `fn.every` (mirrors `fn.some`), used here and at
+  several other existing `.every(` call sites. Two native multi-key
+  `.sort()` comparators with no prior direct test coverage — a 3-key lane
+  reorder in `AnimatedSwimlaneChart` and a topological rank in
+  `StatusFlowChart`/`SwimlaneChart` — became chained stable `sortBy` passes
+  per `src/fn/README.md`'s two-key convention, extended to three; verified
+  differentially against the pre-refactor comparators (thousands of
+  randomized trials, 0 mismatches) rather than trusting the translation by
+  inspection alone.
+- **Two of the six issues staged for this burn-down had premises that
+  didn't survive contact with the code.** #45 (`Stack`/`Row` `gap` typed
+  `"xs"|"sm"`, claimed the runtime supports `md`/`lg`) — the `md`/`lg` CSS
+  was deliberately removed twice (`928651f`, `9158c75`) after audits found
+  nothing depended on it; widening the type without matching CSS would
+  reintroduce the exact silent-zero-gap bug `assertModifierClass` exists to
+  catch. #67 (`SpreadCenterRow`, see the corrected TODO.md row below) —
+  `SpreadRow` already bakes in `align: "center"` + `justify: "between"`, so
+  the requested variant would ship as a byte-identical duplicate. Neither
+  was closed unilaterally; both were left commented with the evidence for a
+  maintainer to close.
+
+- **Raising a health ceiling now requires `--reason="…"`**, recorded in
+  `scripts/health-baseline.json` under `_raises` so it outlives the commit
+  message.
+
+  `cssTypedProps` had **two** ways to grant an exemption: `scripts/prop-rubric.json`,
+  which demands a justification string and prints it in `--report`, and the
+  health baseline, which is just a number. The rubric's own header states the
+  manifest is the only route ("Peter ruled: no escape hatches") — but `67b89c7`,
+  message *"bless TableColumn.minWidth"*, raised the baseline 13 → 14 and never
+  touched the manifest. That reason is gone.
+
+  Fixed generally rather than per-metric, since the hole was in the baseline
+  mechanism, not in one metric.
+
+- **`TODO.md` is retired.** `CLAUDE.md` names GitHub Issues as the tracker, and
+  the file had not been touched since 2026-05-15 (68 items done, 4 open). Each
+  open item was verified before migrating rather than filed blind:
+
+  | Item | Outcome |
+  |---|---|
+  | `SurfaceDataProps` strips overrides | still real → issue #66 |
+  | `SpreadCenterRow` variant | **correction above** — re-investigation found `SpreadRow` already bakes in `align: "center"` (since the initial commit); `align` being in `RowOverrides` was true but beside the point → issue #67 |
+  | `ComplianceThresholdTable.label` widening | **misattributed** — the blocker is SUI's `ValueMatrix.colLabel: => string` → issue #69 |
+  | ISO-date locale shift in `routes/index.tsx` | **stale** — jtf-ui no longer uses `DateCell` there. Investigating it surfaced a real gap: `DateCell` has no `timeZone` prop while `DateTimeCell` does → issue #68 |
+
+  References in `README.md`, `CONTEXT.md` and `COMPONENTS.md` updated so the
+  deletion leaves no dangling pointers.
+
+- **`health` is now a required status check on `main`**, alongside `test`,
+  `typecheck` and `build`. It previously reported without gating, which is how
+  the ratchet drift below went unnoticed — a loosened ceiling never blocked
+  anything.
+
+  Contributor-visible consequence: a PR that *improves* a metric is now blocked
+  until the tightened baseline is committed (`npm run health --
+  --update-baseline`). That is the point — an unrecorded gain is one a later
+  change can undo. The failure message names the exact command.
+
+  `lint` remains ungated. Branch protection lives in repo settings, not in this
+  repo, so it is not visible from a checkout:
+  `gh api repos/primestageprime/solid-ui-components/branches/main/protection`.
+  Note `enforce_admins` is `false`, so an admin pushing directly to `main` still
+  bypasses all of these; the gate binds PR merges.
+
+### Fixed
+- **The health ratchet was drifting upward, not holding.** `--update-baseline`
+  rewrote *every* metric at once, and it was the only escape hatch — so
+  accepting one deliberate increase silently blessed every unrelated drift in
+  the same command. The git history shows the damage: `dotChains` was burned
+  down 127 → 55 and `collectionMethodCalls` 362 → 225 by real work, then both
+  crept back to **59 / 230** as side effects of commits about other things
+  (`e72db8f` "bless baseline for Auth composites", `6cc7609` "fix(themes):
+  button labels clear WCAG 4.5:1"). A ratchet whose most recent action was
+  loosening isn't a ratchet.
+
+  Three rules now hold it:
+
+  | | Behaviour |
+  |---|---|
+  | `--update-baseline` | **Only lowers.** Locks in gains; cannot raise any ceiling. |
+  | `--update-baseline=a,b` | Additionally permits `a` and `b` to rise — and nothing else. |
+  | an unnamed metric that rose | Fails the run, and **refuses the whole write** rather than applying it partially. |
+  | an improvement not locked in | Fails too, so a gain can't leak back later with CI green throughout. |
+
+  Unknown metric names are rejected up front, since a typo would otherwise fail
+  to bless silently and then report the "unexpected" regression.
+
+  Guarded by `scripts/health-ratchet.test.ts` (7 tests), each negative-tested by
+  reverting to the blanket write and confirming failure. `scripts/health.mjs`
+  gains `--baseline-path=` so those tests run against throwaway files instead of
+  mutating the committed baseline.
+
+### Changed
+- **CI no longer rebuilds SUI on every job.** `package.json`'s `prepare` runs
+  `npm run build`, and npm fires `prepare` on every root `npm ci` — bolting a
+  ~33s full client+server build onto the front of all five CI jobs, four of
+  which never read `dist/`. Measured on run `30478430052`: the `lint` job took
+  **55s, 33s of it building**, while Biome's actual work is 206ms. The `build`
+  job built twice (once via `prepare`, once explicitly), and `publish.yml`
+  built **three** times — `npm ci`, the Build step, and again when `npm publish`
+  fired `prepare` while packing.
+
+  All installs in both workflows now pass `--ignore-scripts`; the one job that
+  genuinely needs `dist` builds it explicitly. This is a workflow-only change —
+  no published artifact differs, and `prepare` still builds, because it is the
+  only lifecycle hook npm runs for consumers pinning SUI as a git dependency.
+
+  Verified in a clean clone with no `dist/` present: 2686 tests, `lint:ci`,
+  `tsc --noEmit`, `typecheck:dev` and `health` all pass. A new guard step in
+  `publish.yml` asserts `dist/{index.js,server.js,index.d.ts,index.css}` are
+  non-empty before packing, so deleting the Build step fails the publish
+  loudly instead of shipping an empty package.
+
+## 0.126.0
+
+### Fixed
+- **`dist/index.css` was 78.1% base64-encoded KaTeX fonts**, downloaded by every
+  user of every SUI-consuming app on first load, render-blocking — even though
+  four of the five consumers render no formulas at all.
+
+  | | Raw | gzip | brotli |
+  |---|---|---|---|
+  | Before | 1,843,596 | 1,044,358 | 885,277 |
+  | **After** | **384,820** | **89,466** | **70,460** |
+
+  A **92% reduction in transfer size**. The compression ratio was the tell: CSS
+  normally compresses to ~10–15% of raw, but this only reached 43%, because
+  base64 binary is already-compressed data gzip cannot squeeze.
+
+  Cause: a plain `import "katex/dist/katex.min.css"` in `MathFormula.tsx`.
+  **Vite's library mode inlines every referenced asset as a `data:` URI
+  regardless of size — `assetsInlineLimit` does not apply there** (verified:
+  setting it to 0 changed nothing). That embedded all 60 KaTeX font files, in
+  three formats. Inlining also defeats what `@font-face` does for free: fonts
+  stop downloading lazily, and format negotiation dies, so the woff + ttf
+  copies — 1,089,952 bytes — were pure waste to every modern browser, which
+  only ever uses woff2.
+
+  KaTeX's stylesheet now ships as `dist/katex.css` beside real font files in
+  `dist/fonts/`, wired in via an `@import` at the top of `dist/index.css`. Fonts
+  are fetched lazily, only when a formula actually paints, and only in the
+  format the browser picks — a consumer that renders no formulas now downloads
+  **zero** font bytes.
+
+  **Non-breaking**: consumers importing
+  `@primestageprime/solid-ui-components/index.css` need no changes. Bundlers
+  inline the `@import` at build time, so there is no extra round trip in
+  production. `MathFormula.tsx` keeps its import so `vite serve` and
+  source-linked consumers (`SUI_SOURCE_LINKED`) still style formulas — the
+  stub applies to library builds only.
+
+  See `docs/adr/0006-katex-css-fonts-not-inlined.md`; guarded by
+  `scripts/build-config.test.ts`.
+
+## 0.125.2
+
+### Fixed
+
+- **`lint`, `lint:ci` and `check` can no longer report success without having
+  run.** `@biomejs/biome` was declared in devDependencies and present in the
+  lockfile but **not installed**; verifying locally with `npx biome` resolved an
+  unrelated registry package called `biome` (v0.3.3) that exits 0 having linted
+  nothing. Every local "lint clean" was a different tool succeeding at nothing,
+  three lint findings reached `main`, and one let a release publish from a
+  commit whose CI then failed.
+
+  The defect is not "the tool was missing" — it is that **"tool absent" and
+  "tool ran, all clean" were indistinguishable at the call site.** That is
+  strictly worse than having no linter: a repo with no linter is honest about
+  it; a repo whose linter silently isn't there manufactures confidence.
+
+  These scripts now go through `scripts/lint-ci.mjs`, which resolves the
+  **scoped** package (so a stray `biome` on `PATH` or in the registry cannot
+  satisfy it), verifies the resolved name, prefers the package's own bin, and
+  **exits non-zero with instructions** if it cannot find the real thing.
+  Demonstrated against all three cases, including the one that normally goes
+  untested: passes clean (exit 0), fails on a real lint error (exit 1), and
+  fails loudly when `@biomejs/biome` is made unresolvable (exit 1, actionable
+  message) rather than passing vacuously.
+- **`AGENT_GUIDE.md`** records the hazard directly: never verify with
+  `npx <tool>`, run the repo's own scripts; when a check never fails, suspect
+  the checker; and a new gate must demonstrate three cases — clean, real
+  failure, and **tool unresolvable**.
+
+## 0.125.1
+
+### Changed
+
+- **Documentation correction — the 0.124.1 `FilterBar` cause was misattributed.**
+  That entry blamed SSR/hydration for the empty ref array. It was wrong: the
+  affected consumer runs `ssr: false` and never hydrates the component.
+  Object-identity churn through `For` was also tested and ruled out. The
+  changelog entry and the code comment now say the trigger is **unknown**, so
+  nobody hitting this later chases a hydration bug that cannot apply. The fix is
+  unchanged and does not depend on the answer — refusing a zero-width reading is
+  correct regardless of what produced it.
+- **`AGENT_GUIDE.md`** records the sharpest form of the browser-verification
+  trap: a DOM probe against rAF-scheduled geometry returns *identical* output
+  for a healthy build and a broken one, because in a hidden tab the measurement
+  never runs in either. Forcing a paint is what makes the numbers change; the
+  fix is what makes them correct once a paint happens. Includes the corollary
+  that any automated visual assertion from a headless or background context
+  passes vacuously unless it forces a paint or guards on `visibilityState`.
+
+## 0.125.0
+
+### Added
+
+- **Dev-time warning when a templated modifier class has no CSS rule behind
+  it.** `Stack`, `Row` and `Grid` build their modifier classes by string
+  template — `` `row--gap-${gap}` `` — so ANY value yields a class name, and a
+  value with no matching rule renders as **nothing at all**: no crash, no
+  fallback, just no spacing. A consumer passing `gap="md"` to `Row` (whose scale
+  is `xs | sm`) got `.row--gap-md`, and three pages rendered at zero gap for two
+  weeks before anyone noticed. The type system should catch this and normally
+  does; it didn't there because that consumer had no `typecheck` script and its
+  bundler strips types rather than checking them. Render is the last place left
+  to catch it, so that is where this looks.
+
+  The message names the component, the prop, the value and the dead class, so
+  it's actionable without a hunt, and it points at the fix (a named curried
+  variant rather than passing the prop at all). It fires **once per class**, and
+  it asks the STYLESHEET rather than a hard-coded list of valid values — the CSS
+  is the source of truth for which modifiers exist, so the check cannot drift
+  from it the way a duplicated list would.
+
+  Dev only: `import.meta.env.DEV` is statically replaced, so the whole thing
+  dead-codes out of a production bundle (verified — the warning text is absent
+  from `dist`). Also SSR-safe.
+
+  **A miss re-collects the stylesheets before warning.** Caching the class set
+  on the first call that sees any rule reported perfectly good classes as
+  missing when it happened to run before `Layout.css` arrived — observed
+  accusing `.stack--gap-sm` on a page where it plainly exists. A warning that
+  cries wolf gets muted, and then it protects nothing.
+
+## 0.124.1
+
+### Fixed
+
+- **`FilterBar` tier-three overflow did not fire in a real consumer — active
+  filters were clipped instead of collapsing.** The width measurement collected
+  per-group element refs into a positional array from inside the `For`
+  (`ref={(el) => { groupEls[i()] = el; }}`) and read `offsetWidth` from it.
+  In the affected consumer that array came back empty, so every width
+  read `0`, and **zero widths are indistinguishable from "everything fits"**: the
+  bar set `visibleGroups` to the total, rendered every group, and let the
+  `overflow: hidden` row clip the surplus. Measured in a real consumer at
+  1512px: eight groups, no chip, `scrollWidth` 1863 against `clientWidth` 1055,
+  four groups rendered outside the box — invisible, unremovable, and still
+  filtering. That is the exact failure the tier exists to prevent, and strictly
+  worse than the reflow it replaces, because reflow is at least honest.
+
+  It also could not recover: the widths were cached in a signal and re-measured
+  only on a group-count change, which re-measured into the same zeros. So a
+  resize, or removing a group, faithfully redid the arithmetic on stale numbers
+  and reached the same wrong answer.
+
+  The measurement now reads the **live DOM** —
+  `groupsRef.querySelectorAll(".sui-filter-bar__group")` — with no ref array and
+  therefore no ref-identity or ordering coupling to break. Two guards refuse to
+  cache a bad reading: the rendered element count must match the group count
+  (so nothing is measured while trimmed), and **any zero width aborts** rather
+  than latching. The single measurement taken on trust is replaced by a bounded
+  per-frame retry (20 frames), and `observeSize` re-measures when it has no
+  usable widths instead of recomputing against stale ones.
+
+  **The trigger is not understood, and is deliberately not claimed here.** An
+  earlier version of this entry blamed SSR/hydration; that was wrong — the
+  affected consumer runs `ssr: false` and never hydrates this component.
+  Object-identity churn through `For` was also tested and ruled out. If you are
+  reading this because you hit something similar, do not go looking for a
+  hydration bug. What is known is only that the positional ref array read empty
+  where the live DOM did not; the fix is shaped to be correct without knowing
+  why, which is why it refuses a zero-width reading rather than trying to time
+  the measurement better.
+
+## 0.124.0
+
+### Added
+
+- **`FilterBar`** (Depth 1) — promoted from the matchmaking workshop bench into
+  the catalog. A progressive-disclosure filter bar **height-locked to one line,
+  with every expansion rendered as an overlay**, so filtering never pushes the
+  content below it down — the reason it exists, and the fix for a chip bar that
+  reflows the page while you use it. **OR within a dimension, AND across
+  dimensions**, and an empty/absent group means *all*, matching
+  `MultiSelectFilter`'s empty-means-all so a consumer's cross-filtering state
+  layer needs no translation. Presentational and fully controlled: it never sees
+  rows and holds no filter state. Exports `FilterBarProps`, `FilterGroup`,
+  `FilterMember`.
+
+  Three changes from the bench version, each driven by a real consumer
+  requirement rather than the demo:
+  - **`FilterMember.count` is now optional.** An honest facet count for a member
+    of dimension *d* must be computed with *d*'s own filter excluded, or every
+    unselected member of an active dimension reads 0 and the picker looks broken
+    exactly when someone is switching selections. A required field that invites a
+    wrong answer is worse than an absent one — omit it rather than guess.
+  - **"Added but empty" is internal state, and `onAddFilter` is gone from the
+    API.** Picking a dimension from `(+)` is a disclosure detail, not a filter;
+    reporting it would force any consumer serialising filter state (e.g. to a
+    URL) to encode a half-made filter that means nothing to a reader of that URL.
+  - **Tier-three overflow is implemented.** The spec described three tiers; the
+    bench had two, because it never had enough dimensions to reach the third.
+    With eight active dimensions and a row that is `overflow: hidden`, trailing
+    groups were not collapsing — they were being **clipped**: invisible,
+    unremovable, and still filtering. That is worse than the reflow the bar
+    replaces, so trailing groups now collapse into a `+N` chip whose overlay
+    lists them, each reachable and removable. It is a width decision, measured
+    through `internal/dom/observeSize` (same approach as `OverflowNav`).
+
+### Fixed
+
+- **The published package now ships `src`, so its `source` export condition
+  resolves.** `exports` declared `"source": "./src/index.ts"` across 11 subpaths
+  while `files` was `["dist"]`, so the condition dangled for anyone installing
+  from the registry — invisible through a local symlink, where `src/` exists.
+  The condition was added deliberately for local consumers reading SUI from
+  source, so it is kept and honoured rather than dropped. Consumers that do not
+  request the `source` condition still resolve `dist` exactly as before, so the
+  per-module bundle win from 0.122.0 is untouched.
+
+### Changed
+
+- **`AGENT_GUIDE.md`** documents the browser-verification traps that nearly
+  caused a phantom regression to be reported: a tab that never laid out reports
+  a 0×0 viewport and coordinates in the hundreds of thousands, `rAF` is frozen
+  while a tab is hidden (so anything landing via `observeSize` waits for a frame
+  that never comes), and grid cards must be grouped by row before their heights
+  are compared.
+
+## 0.123.0
+
+### Added
+
+- **`WrapItemStack`, `LooseWrapRow`, `LooseCardGrid`** (Layout curried
+  variants). Purely additive — no existing variant or behaviour changed, no new
+  dependency, and the `--gap-xs` token is untouched (redefining 4px→8px would
+  collapse two scale steps across every consumer).
+  `WrapItemStack` holds ONE item in a `WrapRow` at its content's **natural**
+  width (`min-width:0; max-width:100%`, gap:xs). Deliberately **not** `flex:1`,
+  which is what separates it from every other `min-width:0` column
+  (`GrowStack`, `GrowTightStack`, `GrowColumn`, `ScrollColumn`, `GrowBox`): in a
+  WRAPPING row `flex:1` equalises the items, destroying the natural-width
+  packing a wrap row exists to do. Measured in a 600px row against a
+  567px-natural table — guards 567px, `GrowTightStack` 25px (crushed), bare
+  `TightStack` 567px; and with content wider than the row (1415px table) —
+  guards capped at 600 and scrolling internally, bare `TightStack` 1415px,
+  blowing the row out. Both guards are load-bearing.
+  `LooseWrapRow` and `LooseCardGrid` are the `sm` (8px) siblings of `WrapRow`
+  and `CardGrid`, which sit at `xs`. `LooseWrapRow` leaves `align` **unset**,
+  exactly as `WrapRow` does, so items take the flex default `stretch` and tiles
+  sharing a line render at equal height — the whole reason it exists rather
+  than reusing an `sm` wrap row that already ships (`WrappedClusterRow` centres
+  a short tile in a tall neighbour's band; `BaselineWrapRow` aligns by first
+  text line). `LooseCardGrid` keeps `CardGrid`'s auto-fit `minmax(280px, 1fr)`
+  tracks; only the gutter differs.
+
+### Fixed
+
+- **`MetricCard` fills its slot on both axes instead of shrink-wrapping.** It
+  was `display: inline-block`, so it filled its slot only when the slot happened
+  to match its content width; dropped into a grid cell, or inside a stretching
+  wrapper such as a `Tooltip` trigger, it rendered visibly narrower and ragged
+  beside un-wrapped siblings (measured on a report KPI row: triggers at
+  312/417px holding cards at 102–198px). `height: 100%` is the same defect on
+  the other axis — the wrapper already stretches to the row height but the card
+  stayed at its content height, so one taller sibling left the rest short
+  (triggers 106px, cards 79px). Both axes are fixed on the CARD, not by making
+  the trigger a flex container: that route was measured and rejected because it
+  stretches the card vertically but makes it shrink-wrap horizontally again as a
+  flex item, re-breaking the width (309px back to 213–217px), and it would stop
+  the trigger hugging its content — which is what places a glossed table header
+  inside a right-aligned `th`. Shrink-to-fit is unaffected where it applies: a
+  flex child sizes from `flex-basis: auto`, so a card in a flex row keeps its
+  content width (showcase: all 12 cards byte-identical on both axes). No API
+  change; a card that was shrink-wrapping inside a plain BLOCK container now
+  fills it — wrap it in a flex parent to restore the old sizing.
+- **`.sui-tooltip__trigger` inherits the text properties `font` does not
+  cover.** The trigger set `font: inherit`, but the shorthand covers only
+  family/size/weight/style/variant/line-height — not `text-transform`,
+  `letter-spacing`, `word-spacing` or `text-align` — and the trigger is a
+  Kobalte `<button>`, whose UA stylesheet resets them, so any content wrapped in
+  `<Tooltip>` lost an ancestor's casing and tracking. Most visible in table
+  headers, where `Table.css` pairs `text-transform: uppercase` with a
+  `letter-spacing` on every `th` rule. `text-align` is narrower than it looks:
+  the trigger is an inline-block, so while it hugs its text the ancestor's
+  alignment places the whole box; it surfaces once the content WRAPS — a
+  multi-word header in a narrow column fills that column and centres its text
+  inside what may be a right-aligned cell (measured: `Gross Profit Margin` in a
+  116px right-aligned `th` filled 114px and centred). The `--cell` modifier
+  still pins `left` for its own clip/ellipsis reasons. No API change.
+- **`BucketQueue` no longer constructs its own `ResizeObserver`.** It landed
+  after the 0.113.3 migration with a raw observer, putting `src` back to holding
+  one outside the primitive; it now routes through `observeSize`, so `src`
+  again contains exactly one `new ResizeObserver`, inside the primitive. Its
+  per-bucket row measurement (0.120.0) is unchanged — the re-pointing is now a
+  per-slot disposer map keyed by bucket rather than `unobserve`/`observe` on a
+  shared observer.
+
+### Changed
+
+- **`observeSize(el, cb, options?)`** takes an optional third argument,
+  forwarded verbatim to `observe()`. It exists for `{ box: "border-box" }`:
+  default content-box observation does not fire when only padding or a border
+  changes, so a callback measuring the BORDER box (`offsetHeight`) silently
+  stops responding to a themed padding change — no error, no warning, just stale
+  metrics. **Strictly additive**: omit it and behaviour is byte-identical, and no
+  existing caller changed. The change-guard and the rAF coalescing sit on the
+  single dispatch path, so they apply on the border-box path too — a `box`
+  option cannot become a way around the loop-safety the primitive exists for.
+- **`GrowStack` doc comment** now describes the variant rather than its first
+  call site — comment only, no API or behaviour change. It read "for a main
+  content column that takes its share of a two-column row", which excluded the
+  full-width page-column case it has always supported.
+
+## 0.122.0
+
+### Fixed
+- **Every consumer was bundling KaTeX and `d3-dag` whether or not it used them.**
+  A consumer importing a single `DefaultButton` shipped **332,999 bytes**, of
+  which **318 KB was libraries the button never calls** — KaTeX (~227 KB, via
+  `MathFormula`) and `d3-dag` (~63 KB, via `DagChart`). The same import is now
+  **14,938 bytes**, a 96% reduction.
+
+  Component-level tree-shaking was never the problem; Rollup was already
+  discarding the other 143 components correctly. The leak was that `katex` and
+  `d3-dag` declare no `sideEffects` in their own `package.json`, so a bundler
+  must keep their `import` statements even after discarding the only component
+  that used them — and from inside a single-file `dist` there is no way to undo
+  that.
+
+  The fix is entirely in build config: the client build now emits **one file per
+  module** (`output.preserveModules`) and the package **declares its side
+  effects** (`"sideEffects": ["**/*.css"]`). **No component source changed, and
+  no rendering behavior changed.**
+
+  ⚠️ **These two settings are a pair, and each is completely inert alone** —
+  `sideEffects` by itself measured zero change, `preserveModules` by itself
+  measured zero change. Removing either silently restores the 318 KB with no
+  test failure or visible symptom in this repo. `scripts/build-config.test.ts`
+  guards them; `docs/adr/0005-per-module-dist-and-sideeffects.md` records the
+  measurements and the rejected alternative (lazy `import()`, which was 7×
+  worse and made rendering async).
+
+  Consumer-visible packaging change: `dist` now contains ~1,300 files rather
+  than ~10. The `exports` map is unchanged, so the per-module files are present
+  but NOT addressable — this does not widen the public API. `.` still resolves
+  to `dist/index.js`, and `dist/index.css` is unaffected (still all-or-nothing;
+  per-component CSS remains a separate, unsolved problem).
+
+## 0.121.0
+
+Biome lint is now a CI gate, at **zero errors and zero warnings**. It had
+drifted to 15 errors and 37 warnings while `ci.yml` ran only
+test/typecheck/health/build, and the a11y errors among them were shipping to
+every consumer. The new `lint` job runs `lint:ci`
+(`biome lint src --error-on-warnings`) so the clean state ratchets, in the same
+spirit as `scripts/health.mjs`; plain `npm run lint` stays warning-tolerant for
+local iteration.
+
+Worth knowing about the new gate: Biome's a11y rules only analyze intrinsic
+(lowercase) JSX elements. SUI composes most markup from Layout variants —
+`<Grid>`, `<ClusterRow>`, `<NarrowStack>` — which are custom components and
+therefore invisible to those rules. Nine of the removed warnings were
+`biome-ignore` directives sitting on such components, where they could never
+have fired. **A green lint job is not a11y coverage.**
+
+### Fixed
+- **`ServiceHealthDot`'s sparkline popover was unreachable by keyboard.** The
+  root was a `<span>` revealing the popover on `mouseenter` only, so the age
+  readout and heartbeat sparkline — which exist nowhere else — were invisible
+  to keyboard and AT users. The root is now a `<button type="button">` with
+  `aria-expanded`, and `focus`/`blur` mirror `mouseenter`/`mouseleave`.
+  Activation stays a no-op: reaching the control is itself the reveal.
+- **`SlotCard`'s remove control could never be focused.** It was a `<span>`
+  with an `onClick`, while `SlotCard.css` already carried a `:focus-visible`
+  rule for it that could never match. It is now a `<button type="button">`
+  with an `aria-label`, so it is tab-reachable independently of the card's
+  `onSelect`.
+- **`SortableList.css` declared `.sui-sortable-list__grip` after the more
+  specific `--bare` variant rule.** Specificity still resolved it correctly, so
+  there is no visual change; the base rule now precedes its variants so the
+  cascade reads in ascending order.
+
+Both tag changes preserve every existing class name; only the element name
+differs, and the UA button chrome is reset so rendering is unchanged.
+
+### Changed
+- `EntityCard`, `FileDropZone` and `EditableTitle` carry documented
+  `biome-ignore` rationales where a native element is genuinely wrong —
+  `EntityCard` hosts its own remove `<button>` (nesting buttons is invalid
+  HTML), `FileDropZone` wraps the hidden `<input type="file">` it delegates to,
+  and `EditableTitle`'s fall-through label is pointer-only by design with the
+  keyboard route on its sibling branch.
+- `biome.json` gains scoped overrides: `src/fn/**` exempts `noArguments` (the
+  helpers dispatch on `arguments.length`, as `src/fn/README.md` describes), and
+  test files relax the a11y rules, `noExplicitAny` and
+  `noApproximativeNumericConstant` (π-shaped decimals are sample float data,
+  not constants).
+- Nine inert `biome-ignore` directives became plain comments. They sat on
+  custom components, which Biome does not analyze, so they suppressed nothing —
+  but their rationale is worth keeping, so the prose survives verbatim minus
+  the directive. Suppressions on raw DOM elements in the same files (e.g. the
+  pickers' `<button role="gridcell">`) are live and untouched.
+- Dead code removed: an unused `onSelect` parameter on `CensusView`'s
+  `buildColumns` (row activation is the Table's own `onRowClick`), an unused
+  `vi` import in `Toast.test`, an unused binding in `DistributionSparkline`'s
+  domain test, and an `as any` cast in `date-time.test` that the real
+  `string | JSX.Element` type never needed.
+
+## 0.120.0
+
+`BucketQueue` now measures a row per bucket rather than one for the whole bar,
+and a bucket can opt into absorbing the height nobody else wanted. Together
+these close a reported band of dead space under a queue in a fixed column.
+
+### Fixed
+- **`BucketQueue` sized every bucket from ONE row measurement**, so a queue
+  whose buckets have different row heights mis-sized all but the bucket the
+  sample came from. Reported from a pane with two single-line balance rows
+  (31px) above nineteen two-line config rows (50px): Configs' natural height
+  came out `32 + 19×31 + 2 = 623` instead of `984`, the water-fill decided it
+  was satisfied, and **138px of the 865px available was allocated to nobody** —
+  a band of dead space under a bucket whose own body was scrolling.
+
+  The queue now measures **one row per bucket** and sizes each from its own.
+  A bucket with nothing to measure yet borrows the topmost measured sibling
+  before falling back to the constant, and it **keeps its last real
+  measurement** when its rows are momentarily unmounted — rows are re-created
+  whenever `buckets` or `items` gets a new identity, and the replacement's
+  height only lands on the ResizeObserver's next delivery (never, in a
+  backgrounded tab), so dropping it made the bucket borrow a sibling's row
+  height mid-flight.
+
+  Rows must still be uniform *within* a bucket; they no longer need to match
+  *across* buckets.
+
+### Added
+- **`Bucket.fill?: boolean`** — absorb the leftover height instead of
+  shrink-wrapping to content. Once every bucket has been allocated up to its
+  natural height, whatever remains is split among the `fill` buckets in
+  proportion to `weight`.
+
+  Shrink-wrapping leaves the remainder unallocated, which is right for a bar
+  floating in a page and wrong for a queue in a fixed column with a control
+  pinned under it — there the remainder shows up as dead space above that
+  control, and it grows the shorter the list is. Fixing the measurement above
+  only closes that gap while the list happens to overflow.
+
+  ```tsx
+  const buckets: Bucket[] = [
+    // Meant to stay small: capped, and does not fill.
+    { key: "balance", label: "Balances", tone: "success", capRows: 3 },
+    // Reaches the bottom of the column whether it holds 3 configs or 30.
+    { key: "configs", label: "Configs", tone: "accent", fill: true },
+  ];
+  ```
+
+  Two rules: it **overrides `capRows` for that bucket** (the cap exists to stop
+  content-driven growth, not to refuse space nothing else wants), and only a
+  **populated** bucket fills — an empty one stays pinned to its summary line
+  rather than stretching a "nothing here" strip over half the pane. If every
+  `fill` bucket is empty the remainder is left unallocated, as before.
+
+  Purely additive: **a queue declaring no `fill` lays out exactly as it did in
+  0.119.0**, pinned by a test.
+- **`naturalHeights(input)` and `retainRowHeights(keys, measured, prev)`**
+  exported from `BucketQueue` alongside `allocateHeights` (with the
+  `NaturalInput` type), so the whole sizing model is available outside the
+  component. `AllocateInput` gains an optional `fills: boolean[]`.
+- **A `fill` bench in the dev showcase** — one-line Balances rows above
+  two-line Configs rows with a button pinned underneath, and toggles for
+  `fill`, row shape, and list length, so both defects are reproducible by eye.
+
+## 0.119.0
+
+Every SUI `Button` variant now clears WCAG 4.5:1 for its label, at rest and on
+hover, in all six themes. Getting there took a cascade fix, two new tokens, and
+a retune of two existing ones per theme — details below.
+
+### Fixed
+- **`variant="primary"` labels vanished on hover, in every theme.**
+  `.sui-btn:hover` sets a `color` for all buttons and sits at the same
+  specificity (0,3,0) as `.sui-btn--primary:hover`, so it won for any property
+  the variant rule didn't declare. The variant declared `background` but not
+  `color`, so the label rendered accent-on-accent-dim — **1.05:1** in the
+  default theme, i.e. the same colour as its own fill. The variant's rest-state
+  `color: #ffffff` was never involved; `:hover` outranks it.
+- **`variant="danger"` lost its danger semantics on hover** — same cascade trap,
+  so the label turned accent-blue over a red wash. It now stays
+  `var(--sui-danger)`.
+- **`--sui-accent` was used as label text** by `.sui-btn:hover`,
+  `.sui-btn--active`, and the `outlined` / `text` / `icon-only` variants —
+  despite `contrast.test.ts` documenting it as a fill token explicitly exempt
+  from passing as text. Those labels now use `--sui-accent-dim`, which is
+  retuned below to actually be text-safe on the surfaces buttons use.
+
+### Added
+- **`--sui-on-accent` / `--sui-on-warning`** — per-theme label colours for
+  accent and warning FILLS. A filled control needs its own label token: white
+  reads 3.68:1 on the default theme's accent and 1.82:1 on STAX's lime, so
+  there is no cross-theme constant that works. Dark themes resolve these to
+  `--sui-bg-deep`; light themes to white or ink. `_baseline.css` reads them with
+  a `#ffffff` fallback, so a third-party theme predating the tokens still
+  renders.
+- **`src/themes/__tests__/buttonHoverContrast.test.ts`** — two-layer contract,
+  covering every variant in both rest and hover states.
+  - *Layer 1, structural:* any `.sui-btn*:hover` rule that sets a `background`
+    must also set a `color`. Token-independent, so it fires on the next filled
+    variant added regardless of palette — this is the layer that stops
+    recurrence. `--ghost` is exempt with a recorded reason.
+  - *Layer 2, resolved cascade:* builds `_baseline.css` + theme CSS, resolves
+    each variant's `color`/`background` by specificity then document order,
+    composites with alpha, and asserts 4.5:1. `contrast.test.ts` cannot catch
+    this class of bug — it checks token *pairs*, and the bug was a token
+    becoming text by cascade accident.
+  - `PALETTE_DEBT` is the escape hatch for a pair the team decides not to fix.
+    It is currently **empty**. The contract is two-sided: an entry may not
+    regress below its recorded ratio, and once a palette change lifts it past
+    4.5:1 the test fails until the entry is deleted.
+- **`src/themes/__tests__/_contrastMath.ts` / `_cssRules.ts`** — WCAG colour
+  math extracted from `contrast.test.ts` and shared, so alpha compositing has
+  one implementation rather than two that can diverge, plus a small CSS rule
+  scanner. Two latent bugs fixed while extracting:
+  - `parseColor`'s `rgba(var(--x-rgb), a)` branch matched on `[^)]+`, which
+    cannot span the nested `var(...)` — that branch was dead code.
+  - `parseTokens` did not strip comments, so a comment mentioning a token by
+    name parsed as a declaration whose value ran to the next `;`, swallowing the
+    real declaration after it.
+
+  No token value exercised either path, so `contrast.test.ts`'s existing results
+  are unchanged.
+
+### Changed
+**Token values retuned.** `--sui-accent-dim` and `--sui-danger` were tuned to
+clear 4.5:1 on bare `--sui-bg-primary` and cleared it by so little that any
+tinted surface pushed them under — both are rendered as text on *their own*
+translucent washes (a button's hover fill), which tints the backdrop toward the
+label. Each moves away from its theme's page (lighter on dark themes, darker on
+light) by 1–17%; hues are preserved. `--sui-danger-rgb` moves in lockstep.
+
+| theme | `--sui-accent-dim` | `--sui-danger` |
+|---|---|---|
+| default | `#5585ef` → `#618ef0` | `#f05151` → `#f47979` |
+| hud | `#0099bb` → `#0a9dbe` | `#ff3366` → `#ff4e7b` |
+| bronze | `#a85234` → `#9e4d31` | `#a8443a` → `#953c33` |
+| bronze-dark | `#c56940` → `#ca754f` | `#d55b51` → `#dd7b72` |
+| stax | `#5f7a20` → `#5a741e` | `#b3372c` → `#a33228` |
+| colorblind | `#3888d3` → `#4a93d7` | `#e66100` → `#ea7723` |
+
+`colorblind`'s vermilion keeps its hue (a 4% lift toward white), so the
+blue/orange confusion-axis separation the CB-safe palette is built on is
+unchanged. `colorblind-modifier.css` carries the same new value.
+
+**Visible changes to expect:**
+- Filled `primary` and `warning` buttons in the four dark themes now carry a
+  near-black label instead of white — white never cleared 4.5:1 on those fills.
+- Hover labels on `default` / `ghost` / `outlined` / `icon-only` are the
+  text-safe accent rather than the raw accent: slightly deeper on light themes,
+  slightly brighter on dark.
+- `bronze`'s primary button fills with `--sui-accent-dim` and darkens on hover.
+  Its rust accent sits mid-lightness — white reads 3.90:1 on it and dark ink
+  4.18:1, so *no* label colour clears 4.5:1 and the fill had to move.
+- `stax`'s primary button now **lightens** on hover instead of darkening. Its
+  lime accent is very light, so the label is dark ink (7.67:1); darkening to
+  `--sui-accent-dim` would have dropped that label to 2.63:1.
+- `bronze` and `stax` warning buttons darken on hover. The shared 90%-warning
+  wash lightens against a light page, which cost the white label its margin.
+
+**Consumer note:** apps that hardcode these token values, or that override
+`.sui-btn--primary` / `.sui-btn--warning` colours locally, should re-check
+against the new tokens.
+
+## 0.118.0
+
+### Added
+- **`NotificationItem.actions` — any number of actions per notification.** Each
+  action carries its own `onClick`, `href`, `tone` (`accent`/`muted`/`danger`),
+  `icon`, and `disabled`, and renders in a wrapping row. Whether an action
+  closes the panel is now per-action: navigating ones do (you have left the
+  panel), in-place ones don't (you are still triaging), and `dismissPanel`
+  overrides either way. This is what lets a feed be cleared in one pass instead
+  of reopening the bell between every click.
+- **`NotificationItem.body` — consumer-owned row content.** A thunk rendering
+  arbitrary JSX between the detail line and the action row, for the rows a
+  string can't express (a progress bar, a diff, an avatar row). SUI still
+  renders the unread gutter, tone well, title row and action row on every row,
+  so a heterogeneous feed keeps scanning as one inbox rather than a pile of
+  cards. It is a **thunk**, not a `JSX.Element`, deliberately: feeds get built
+  as module-scope arrays, and JSX constructed there escapes the reactive root —
+  anything reactive inside would warn and silently stop tracking. The thunk
+  defers construction into the row's render.
+- **Six prefab action builders** — `viewAction(href, label?)`,
+  `dismissAction(fn, label?)`, `markReadAction(fn, label?)`,
+  `acceptAction(fn, label?)`, `declineAction(fn, label?)`,
+  `deleteAction(fn, label?)`. Builders that take the handler, per the `Table`
+  field-module precedent. None sets `dismissPanel` — the default already
+  resolves correctly for each. `NotificationAction` is public, so a consumer
+  needing a seventh writes an object literal.
+- **`Button` gained `tone="danger"`**, the destructive peer of `tone="accent"`.
+- **`ActionWrapRow`** — a wrapping Layout row that centres its cross-axis, for a
+  cluster of inline actions whose labels must share a line. `align` is
+  load-bearing, not cosmetic: an inline action renders as a bare anchor when it
+  navigates and a padded text button when it doesn't, and those have different
+  box heights — under `WrapRow`'s default stretch both boxes fill the line but
+  the anchor keeps its text at the top while the button centres its own, putting
+  the labels ~9px apart.
+- **`InboxPopoverSurface`** — `PopoverSurface`'s wider sibling (400–460px) for a
+  popover whose rows carry inline actions rather than being single-action menu
+  items. The **minWidth** is what does the work: the surface is shrink-to-fit, so
+  a wrapping action row wraps instead of forcing the box wider and a raised cap
+  is never reached. Plain menus and dropdowns keep the narrow 280–360px measure.
+
+### Changed
+- **`NotificationCenter.onAction` also makes the row body activatable.** It
+  keeps its old meaning (it is still the fallback for an action with no handler
+  of its own) and additionally wires `role="button"`, a tab stop, and
+  Enter/Space onto the row — but **only when supplied**, so a row without it
+  stays inert and advertises nothing. Same conditionally-interactive pattern as
+  `FocusLabelBand` and `HeatStream`.
+- **The `→` suffix now renders only on the `href` branch.** The arrow means
+  "this navigates"; on every action of a multi-action row it read as noise.
+  A non-`href` action's label is now unadorned.
+- **`NotificationCenter` split into `types.ts` / `actions.ts` /
+  `NotificationRow.tsx` / `NotificationCenter.tsx`.** Internal only — every
+  public name still resolves from the same import paths.
+
+### Fixed
+- **`Button`'s tone matrix now reaches text buttons.** `.sui-btn--tone-*` lives
+  in `Button.css` at the same `(0,1,0)` specificity as `.sui-btn--text` in
+  `themes/_baseline.css` — which `themes/loader.ts` injects into `<head>` at
+  runtime, *after* the bundled component CSS, so the variant won every tie.
+  `tone="muted"` on a `TextButton` therefore rendered **accent**, and any new
+  tone would have too. The text-variant tone rules now sit at `(0,2,0)` in the
+  baseline, the same specificity lift `.sui-btn.sui-btn--pill` already takes.
+  **Consumer-visible**: a `TextButton` explicitly passing `tone="muted"` now
+  renders muted instead of accent. No such call site existed in SUI.
+
+- **`NotificationCenter`'s panel no longer runs off the left edge of the
+  viewport.** The panel hangs from the trigger's right edge, so a trigger near
+  the left of the screen pushed the panel's left edge off-screen — already true
+  at the old 284px measure, and worse now the inbox is 400px. `computePosition`
+  clamps so the panel always keeps an 8px margin of viewport on its left, and
+  re-measures once mounted so the clamp uses the real width. A trigger in the
+  usual top-right header position is unaffected — its natural offset is already
+  inside the clamp.
+
+### Removed
+- **`NotificationCenterProps.badgeTone`.** It was declared, documented as
+  RESERVED, referenced nowhere, and rendered nothing — `CountBadge` is
+  deliberately single-tone per the #2 Rule. Passing it has never had an effect,
+  so removing it changes no rendering; it only stops the type advertising a
+  control that does not exist.
+
+### Deprecated
+- **`NotificationItem.action`** — superseded by `actions`, which folds it in as
+  a single-element list. Still honoured, and still closes the panel on
+  activation: an action with no `onClick` routes to `onAction(item)` exactly as
+  before, which is what keeps this release additive rather than breaking.
+## 0.117.0
+
+### Added
+
+- **`DistributionSparkline`** — the sparkline for a series whose SPREAD
+  matters, not just its direction. Draws a solid box for min..max with the
+  direction shading, two dashed rules for the percentile band, a hairline at
+  the mean, and the series clipped to the plot. `TrendSparkline` is unchanged
+  and remains the right answer when "which way is this heading" is the whole
+  question.
+
+  `yDomain` is **required**, and it is data rather than visual config:
+  auto-scaled, every range box fills its rect and the encoding says nothing.
+  The picture only means something when a whole set shares one domain — and
+  what counts as "the set" (every source, the filtered ones, one source over
+  time) is a modelling decision the client owns, so the component takes the
+  answer instead of guessing it. `p95DomainOf` and `extentDomainOf` ship
+  alongside as the two rules we reach for most; neither is imposed.
+
+  It has no size. The SVG fills its container in both axes and stretches, so
+  it absorbs height from its row and width from its column — the same
+  component serves a 28px table cell, a definition-list row and a 120px
+  dashboard tile with no size prop at any of those call sites. Strokes are
+  non-scaling, so a wide short cell does not produce fat horizontals and
+  hairline verticals. As space runs out the marks thin themselves out via
+  container queries (percentile rules below 100px wide or 40px tall, the mean
+  below 60px/24px), because four horizontal marks in a table row is mud.
+
+  Curried variant `P95Sparkline`; factory `createDistributionSparkline` for
+  currying others.
+
+  ```tsx
+  const axis = p95DomainOf(sources.map((s) => s.values));
+  <P95Sparkline values={source.values} yDomain={axis} />;
+  ```
+
+## 0.116.0
+
+### Added
+
+- **`FileDropZone`** — a drop target that is also a click-to-browse picker
+  (`FileDropTarget`, `CompactFileDropTarget`). It validates the extension,
+  shows a self-clearing rejection notice derived from `accept`
+  (`PDF only — drop a .pdf file`), and hands the file to the caller; upload,
+  parsing and results stay the caller's. Keyboard-operable (Enter/Space,
+  without the page scrolling under it) and `aria`-labelled. Owns a minimal
+  structural CSS file for the dashed outline, its drag-over/disabled states
+  and the two densities — the same documented exception `Fab` carries, because
+  a dashed target is not expressible as a `Surface` variant and the drag-over
+  highlight is a state of the component, not of the surface scale. Added
+  because two consumers had hand-rolled it, one of them carrying a code
+  comment asking upstream for exactly this.
+- **`SlotCard` gained an `error` slot, an `action` prop, and two templates.**
+  `error` is a danger-toned line at priority 1 (a failure reason never drops).
+  `action` (`{ label, onClick }`) mounts a trailing SUI-chosen ghost button on
+  templates configured for it — typed rather than a JSX slot so SUI keeps
+  owning the button variant — and its click never reaches the card's
+  `onSelect`. New templates: `DenseStatusNote` (`DenseStatusRow` plus the
+  failure line) and `TitleAssetProgress` (`TitleProgress` plus a
+  sub-identifier and the action). Together they cover a work queue's running,
+  queued and finished cards.
+- **`NoShrinkColumn`** — a Layout variant that keeps its intrinsic width in a
+  flex row (`flex-shrink:0`) while stacking its children. The column sibling
+  of `NoShrinkClusterRow`: pair it with `GrowColumn` when a fixed data column
+  (timestamps, IDs) sits beside a prose column that absorbs the slack.
+- **`SectionTable` + `TableSectionHeader`** — a table that groups its rows
+  under section headers, and the composable header itself (title + record
+  count on one line).
+- **`CashflowScrubChart` gained `yPadFraction`** — an optional tight,
+  zero-independent y-domain.
+
+### Fixed
+
+- **A `SlotCard` row whose every slot is absent now renders no element at
+  all**, so it costs neither markup nor the stack's gap. This is what lets a
+  template carry a conditional row (`DenseStatusNote`'s error line) without a
+  succeeded card growing a blank line.
+- **`SlotCard`'s overlay cards reserve room for their overlays.** The corner
+  badge and the remove glyph were landing on the first line of text as soon as
+  the text was long enough to reach the corners. The remove ✕ is now revealed
+  on hover or keyboard focus rather than always showing, so a resting list
+  isn't a wall of ✕.
+- **A vertical `Divider` collapsed to nothing in its most common host.**
+  `height: 100%` has no definite basis to resolve against in a flex row sized
+  by its content, so the rule simply didn't render. It now spans the row via
+  `align-self: stretch`, keeping `min-height: 100%` for parents that do have a
+  definite height.
+- **`observeSize` applied library-wide.** Every remaining measuring component
+  constructed a raw `ResizeObserver` writing signals synchronously, which
+  re-queues the observer inside the browser's own delivery phase and produces
+  "ResizeObserver loop completed with undelivered notifications" (several
+  offenders render many times per page — `ResponsiveMoney` once per money
+  cell, `createTruncationObserver` once per truncatable cell). Migrated:
+  `MultiSelectFilter`, `ResponsiveMoney`, `createTruncationObserver`,
+  `useContainerNarrow`, `ScrollRegion`, `OverflowNav`, `StaticSplitLayout`,
+  `MessageBubble`, `CashflowChart`, `AnimatedSwimlaneChart`, `SwimlaneChart`,
+  `ThroughputChart`, `StatusFlowChart`, `DagChart`. No public props changed
+  and no measurement logic moved — only the scheduling. (`BucketQueue`, which
+  landed on main after this work, still runs its own multi-element observer.)
+- **`MessageBubble` leaked its ResizeObserver** — it was never disconnected,
+  so the observer outlived every unmounted bubble. Now disposed via
+  `onCleanup`.
+- **`observeSize` tolerates entries without size data.** Polyfills and test
+  doubles dispatch minimal `{ target }` entries; the primitive falls back to
+  measuring the element rather than throwing on `contentRect.width`.
+
+## 0.115.0
+
+### Added
+- **`NotificationCenter` gained `when`, `read`, and `onMarkAllRead`.** `when` is
+  a pre-formatted relative time the consumer humanizes ("2m", "1d") — SUI ships
+  no date formatter, so the string crosses the boundary already rendered. `read`
+  drops an item's unread dot and removes it from the derived badge count.
+  `onMarkAllRead` is what MOUNTS the pinned footer action: omit it and neither
+  the footer nor its divider render, so the panel never shows a dead affordance.
+  `markAllReadLabel` overrides the wording. All three are optional and additive.
+- **`NotificationItem.tone` is now live.** It was declared in the props from the
+  start and never rendered. It now colours the row's glyph well and picks the
+  glyph (`info` → info, `task` → clock, `warning` → warning), defaulting to
+  `info`.
+- **`GrowTightStack`** — a Layout variant that grows to fill its share of a
+  parent row and may shrink past its content (`flex:1; min-width:0`) while
+  stacking its children with an `xs` gap. The tight sibling of `GrowStack`
+  (whose `sm` gap reads as separate sections) for the text column of a
+  media-object row. Added because the geometry had no variant — per the
+  layout-purity rule, the missing variant is the finding.
+
+### Changed
+- **`NotificationCenter`'s panel is now an inbox, not a card stack.** Pinned
+  header (label + de-emphasized count lozenge), scrolling rows, optional pinned
+  footer. Rows became unboxed media objects — unread gutter, tone glyph well,
+  text column — washed and bordered only on hover, so a long feed stays quiet at
+  rest. This supersedes the three-line `CompactSurface` card canon the component
+  shipped with; the only `Surface` in the panel is now the `PopoverSurface`.
+  Precedent recorded in `docs/agents/design-decision-tree.md`, which also gains
+  a *Notification / activity panel* branch it was missing.
+- **`NotificationCenter`'s bell now has hover and open states.** It previously
+  had neither — a bare transparent button, with nothing tying it to the panel
+  hanging off it. It now takes a faint accent wash on hover, and while open an
+  accent-tinted well with an accent border **plus** the glyph swapping
+  `outline`→`solid`. Two independent signals, so the state survives a monochrome
+  or colourblind theme. The open skin matches
+  `.sui-dropdown--subtle.sui-dropdown--open`. The trigger also gained a fixed
+  32px box so its corner badge clears the glyph instead of sitting on it, and
+  the badge is ringed in the background colour to punch out of the open tint.
+- **The derived badge count now excludes `read` items** as well as `transient`
+  ones. Unchanged for consumers that never set `read`.
+
+### Fixed
+- **`Link` now carries a type scale (13px/500) instead of inheriting one.** It
+  declared only colour, decoration, and cursor, and appears in no theme — so it
+  rendered at whatever font-size it happened to inherit, the document's 16px in
+  practice. Inside any dense component that made an inline link *larger than the
+  0.875rem title above it*, and made it silently disagree with a sibling
+  `TextButton` rendering the same affordance. 13px/500 matches `.sui-btn` in
+  `themes/_baseline.css` deliberately: a text button and an inline link are
+  alternate renderings of the same inline action — one navigates, one calls back
+  — so a component that picks between them by `href` presence must not change
+  size as a result. **Consumer-visible**: an app using `<Link>` in 16px prose
+  will see those links render at 13px; wrap them in the appropriate `Text`
+  variant if you want the prose scale back.
+- **`NotificationCenter`'s two action branches no longer sit at different
+  indents.** The `href` branch used `NavLink`, which is a nav-RAIL item and bakes
+  `padding-left:16px` — so a link CTA rendered ~16px right of a `TextButton` CTA
+  in the row above it. It now uses `Link` (the unpadded accent anchor, the right
+  atom for an inline CTA), and both branches are wrapped in a `ClusterRow` so
+  they size to their content and left-pack instead of stretching as column
+  children and centring their own labels.
+- **`NotificationCenter` item titles use `TextTitle` instead of `TextValue`.**
+  `TextValue` is `1.5rem/600` — the metric-readout variant, for numbers like
+  "42.3". Against the `0.75rem` detail line that was a 2× scale jump inside a
+  340px popover, so a long title rendered as a five-line headline slab.
+
+## 0.114.0
+
+### Added
+- **`fn.find`, `fn.findLast`, `fn.findIndex`, `fn.some`** — four more data-last
+  helpers in the same dual (curried / direct) shape as `map` and `filter`.
+  `find` and `findLast` carry the type-guard overload. `findLast` exists so a
+  backward search needs no `.reverse()` link, which the house style forbids.
+
+### Fixed
+- **`Icon`'s `edit` and `trash` glyphs are now visible in the gallery.** Both
+  existed in `ICON_PATHS` and were exported, but neither appeared in any
+  `ICON_GROUPS` array — and the showcase renders the groups, so the two were
+  undiscoverable to anyone browsing the icon set. A test now asserts that
+  `ICON_GROUPS` covers every `ICON_PATHS` entry exactly once, and that no group
+  lists a name with no path. No API change; both names already worked.
+- **Bucket sizing no longer assumes a particular `renderItem`.** Four fixes, all
+  in service of a consumer rendering whatever it likes:
+  `.bucket-queue__row:first-child` used `border-top: none`, making that one row
+  1px shorter than the rest — since sizing measures one row and multiplies by
+  the count, every bucket under-counted by `(rows − 1)` px and scrolled a sliver
+  it had room for (it now hides the border with `transparent` rather than
+  removing it); the measured row is taken from the first *populated* bucket
+  (bucket 0 is routinely empty, and measuring nothing left everything on the
+  `ROW_FALLBACK` constant); the empty strip is measured too, since `emptyLabel`
+  is consumer JSX and can wrap; and the `ResizeObserver` now watches the
+  row/header/strip rather than only the root, on the `border-box` — a theme
+  switch, a late web font or a changed `renderItem` resizes a row without
+  resizing the root, so a root-only content-box observer never re-fired.
+
+  **Known limitation:** the model measures one row and multiplies, so rows must
+  be uniform within a queue. A `renderItem` whose height varies per item makes
+  each bucket's natural height an estimate.
+
+### Changed
+- **BREAKING — `ProgressionQueue` is renamed `BucketQueue`.** 0.113.1 exported
+  `ProgressionQueue`; that name is gone, with no alias. "Progression" implied
+  stepwise forward movement the component never had — direction and distance
+  fall out of bucket order, and a move from bucket 3 to bucket 1 is not
+  special-cased. Renamed with it: the `sections` prop is now `buckets`, the
+  `ProgressionSection` type is now `Bucket`, and the `.prog-queue__*` /
+  `data-pq-*` hooks are now `.bucket-queue__*` / `data-bq-*` (`.prog-queue__section`
+  specifically becomes `.bucket-queue__bucket`). Consumers importing only
+  `SplitQueueList` are unaffected.
+- **BREAKING — `onSelect` widens to `(key: string | null) => void`.** `null`
+  means the worked bucket drained, so a consumer can clear its detail panel. It
+  fires only from the triage advance, never from a click. **`strict: true` does
+  not reliably catch this**: passing a Solid `Setter` directly
+  (`onSelect={setSelected}`) still compiles, because `Setter`'s overloads absorb
+  the wider parameter — and then stores `null` in your signal. Grep for
+  `onSelect={setX}` rather than trusting the compiler; the fixed form is
+  `onSelect={(k) => setSelected(k ?? undefined)}`.
+- **`BucketQueue` is now the library's single queue component.** It gains
+  multi-select grouping (`checkedKeys` / `onToggleCheck`, scoped to buckets
+  marked `selectable`), roving-focus keyboard navigation
+  (`focusedKey` / `onFocusChange`), `scrollToKey`, per-bucket `emptyLabel`, and
+  a transfer animation played whenever an item's `bucketOf` result changes.
+- **Moving the selected item advances the selection** to the next item still
+  waiting in the bucket it left (successor taken from the source bucket's
+  pre-move order, skipping anything that departed in the same batch). Processing
+  the tail falls back *up* rather than jumping to the top; draining the bucket
+  fires `onSelect(null)`. The roving tab stop follows; DOM focus deliberately
+  does not move.
+- **`renderItem` now returns bare content** — the row owns its padding, so a
+  selected row's accent bar can never touch consumer content and the header,
+  rows and empty strip share one left edge.
+- **Checked rows no longer paint a background fill.** Checking is a bulk action,
+  so the tint became a band of low-contrast rows that fought the hover fill. The
+  filled checkbox is now the entire treatment.
+- **A selected row no longer paints a background fill** — it keeps only the inset
+  accent bar, and hover owns the fill. The previous persistent fill sat behind
+  row text at too low a contrast.
+
+### Deprecated
+- **`SplitQueueList` is a compile shim over `BucketQueue`** and is removed in
+  the next major. It is **not** pixel-identical — the merged component draws its
+  own chrome. `topCapRows` maps to the resolved bucket's `capRows`;
+  `topOnly`, `topFloorRows`, `animationMs` and `rowHeight` are accepted but
+  ignored. `static` mode still delegates to
+  `StaticSplitLayout`, which is **not** deprecated.
+
+### Removed
+- `SplitQueueList`'s two-pane animation engine (`flight`, `play`, `flip`,
+  `arrival`, `animation`, and its `layout` module) — ~2,700 lines. Its
+  `keyboard` module was not removed — it moved (and was adapted) to
+  `BucketQueue/keyboard.ts`.
+
+### Migration
+Replace `resolved` / `unresolved` with one `items` array plus `bucketOf`:
+
+```tsx
+<BucketQueue<T>
+  buckets={[
+    { key: "done", label: "Categorized", tone: "success" },
+    { key: "todo", label: "Suggestions", tone: "accent", selectable: true },
+  ]}
+  items={[...resolved, ...unresolved]}
+  bucketOf={(i) => (isDone(i) ? "done" : "todo")}
+  keyOf={(i) => i.key}
+  renderItem={renderRow}
+/>
+```
+
+There is no `selectMode` prop — pass `checkedKeys` to turn select mode on.
+
+## 0.113.1
+
+### Fixed
+
+- **`NotificationCenter` overlay chrome moved to CSS.** 0.113.0 shipped the component with its trigger + corner-badge positioning as inline `style={{…}}` object literals, which regressed the `health` vision ratchet (`styleRubricViolations` 0→4, `inlineStyleSrc` 75→79) — ADR-0003's inline-style rubric can't categorize `position`/`display`/`cursor`/`border`. The static positioning chrome now lives in a minimal `NotificationCenter.css` (the same overlay-chrome exception `PopoverMenu`/`Dropdown`/`Toast`/`Fab` take); only the dynamic panel position rides inline via the computed `panelStyle()`. No public API or visual change.
+
+## 0.113.0
+
+### Added
+
+- **`NotificationCenter`** (Depth 3) — generic, router-agnostic notification center: a bell trigger with a rolling count badge and a dropdown of notification items (title + optional detail + optional CTA), built as a zero-CSS composite. Handles open/close (controlled **and** uncontrolled `open`), outside-click/Esc close, a busy spinner, and a polite `aria-live` announcement; the consumer supplies `items` and navigates via the `onAction` callback — no `@solidjs/router` dependency and no dependence on consumer CSS. Items render as the three-line card canon (`CompactSurface` → title row / muted detail / accent action). Extracted from thorcasting-ui. `badgeTone` and item `tone` are reserved in the exported types (a single non-danger treatment ships now — minimal-variant rule).
+- **`CountBadge`** (Badge family) — count-only rolling corner pill (composes `DigitRoller`) for overlaying a trigger's corner.
+- **`PopoverSurface`** Surface Curried Variant + **`Surface` `shadow` prop** — elevated floating panel (bg-elevated, hairline border, drop shadow, 280–360px wide) for overlay controls.
+- **`Icon` `bell` glyph** (outline + solid).
+- **`.sui-sr-only`** global utility — screen-reader-only clip technique for `aria-live` status regions.
+
+## 0.112.1
+
+### Fixed
+
+- **`setPointerCapture` no longer crashes a drag gesture when its element is disconnected.** `Chart.onPointerDown` called `setPointerCapture` on a stored `svgEl` ref (not `e.currentTarget`); when a reactive re-render or mid-gesture unmount detached that ref, Chromium threw `InvalidStateError`, which propagated uncaught through Solid's event delegation and crashed the consumer app (Vite overlay). The `?.` only guarded the method being absent (jsdom), not it throwing. New shared helper `safeSetPointerCapture()` swallows the two benign, expected failures — `InvalidStateError` (element disconnected) and `NotFoundError` (no active pointer) — and warns on anything else; all four capture sites (`Chart`, `DateAxis`, `ScrubChart`, `DagChart`) route through it, folding `DagChart`'s existing inline try/catch into the shared helper. (Log prefix changed from `[DagChart] setPointerCapture threw:` to `[SUI] setPointerCapture threw:`.)
+
+## 0.112.0
+
+### Added
+
+- **`Auth/` category — `ManagedListSection` + `DismissibleNoticeBanner`** (ruled 2026-07-22): user-confirmed Auth0 account linking (add/remove login methods, two-click confirms, first-use popup-retry) and the unlinked-sibling notice banner, migrated from thorcasting-ui. Both take the auth API via the `auth` Data Prop (structural `AuthApi` in `Auth/types.ts`) — dependency injection; SUI gains no dependency. Apps pass `authApi` from `@primestageprime/auth0-stdb-client`.
+- **`NoticeBar`** Surface Curried Variant — full-width flush informational bar (row, center, accent-tinted, radius none) for top-of-app notices.
+
+## 0.111.1
+
+### Fixed
+
+- Build fix: the barrel no longer exports an uncommitted module (0.111.0 failed to publish). No API change from 0.111.0.
+
+## 0.111.0
+
+### Added
+
+- **`BucketQueue<T>`** (ruled 2026-07-22) — a Composite (Depth 2) that stacks N always-present buckets into one full-height bar, bucketing items through their lifecycle as a progression (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). Every bucket shows its count at all times. **Sizing is a weighted water-fill measured in JS** (pure CSS can't express it): an empty bucket collapses to just its summary line; a populated bucket shrink-wraps; when the populated buckets overflow the height they share it by `weight`, each capped at its content, so a bucket that shrinks under its share hands the surplus back and the others expand to fill. Chrome is thematically **neutral** — the only role color is a **dot** beside each bucket label. Controlled, optional selection (`onSelect`/`selectedKey`); fills its parent's height or an explicit `height`. Generic over the item type: the consumer owns `buckets`, `items`, `bucketOf`, `keyOf`, `renderItem`. The pure sizing core is exported as `allocateHeights(input)`. Full docs in `COMPONENTS.md`.
+
+## 0.110.0
+
+### Changed
+
+- **`floatCol` displays the value AS GIVEN — it no longer rounds, and the `precision` prop is removed** (ruled 2026-07-22). Rounding a displayed number is a DATA decision, not a display one: it belongs at the storage/query layer (or the calculation function deriving the value) so every view of the same figure agrees, and so a table can't paper over storage imprecision. `floatCol` now groups thousands (pure presentation) and renders exactly the number it's handed. **BREAKING — `floatCol(source, { precision })` no longer compiles; move the rounding to where the value is produced.** If a float shows too many digits, round it in SQL / the store / the calc fn, not in the column.
+- **`aggregateCol` and `avgCol` drop `precision` too** — same rule. An aggregate's precision is the `combine` function's job: `avgCol` shows the RAW mean (a mean is rarely a clean number), so a rounded average is `aggregateCol(keys, (v) => Math.round(mean(v)), …)` — the rounding lives in the calculation, never a display knob.
+- The low-level `FloatCell` renderer is unchanged and keeps its `precision` prop — it's the primitive escape hatch (`col(…, "float")`, `columnHelpers`), not the curried column. The doctrine applies to the curried `floatCol`/`aggregateCol`/`avgCol` surface.
+
+## 0.109.0
+
+### Changed
+
+- **`FieldTable` runs on `table-layout: auto` — the width model IS the engine** (ruled 2026-07-21). Every column emits `width` = its MAX (auto layout's preferred width) and `min-width` = its MIN; the legacy auto algorithm distributes surplus over minimums ∝ (preferred − min), which is exactly the model's range-proportional rule. The table grows to Σmax and stops; between Σmin and Σmax variable columns shrink proportionally to their range; below Σmin the frame scrolls. Fixed layout (which cannot express min+max) and the 0.108.2 trailing spacer column are retired. Variable columns render their cells inside a size-contained clip block so nowrap content cannot inflate the minimum.
+- **Fill mode is shrink-to-fit** (ruled 2026-07-21) — a fill-mode `FieldTable` (no `maxRows`) hugs its content height when the rows fit, and shrinks to the container (inner scroll, sticky header) only when they overflow. Previously the frame carried `flex:1` and stretched a 4-row table into a full-height, mostly-empty panel. Fill mode still expects a definite-height flex parent as its budget; **dside/thorcasting re-eyeball item — fill tables that relied on the frame visually stretching now hug their rows.**
+- **Label floors budget the header tracking** (ruled 2026-07-21: headers ALWAYS keep the inter-column gap) — `BaseTable` headers render uppercase with `0.1em` letter-spacing (~0.17ch/glyph at the frame's mono basis) that the raw char-count floor never budgeted, so long-label fixed columns overflowed across the gap into the neighboring header ("CAPTURE EFFICIENCY" ran into "PROJECTED NOX"). The floor now costs labels at `ceil(length × 1.17)`. Label-floored columns are ~17% wider; header spill is structurally impossible.
+- **`statusCol` geometry derives from its mapping** — content-fit fixed at the longest badge label plus an 18px badge-chrome budget (the sm badge's own padding/border/letter-spacing, which the flat 9ch geometry never included — a 9-glyph VIOLATION badge is 82px and clipped in its 67px content box). The static 9ch geo remains only as the `col(…, "status")` fallback.
+
+### Added
+
+- **`fields.enumCol(key, values, { tone?, header? })`** (ruled 2026-07-21) — a small fixed-set string column: because the value set is known at configure time, geometry is content-fit FIXED at the longest member (a Before/During/After enum sizes to 6ch instead of textCol's 8–40ch flex). Floored at the header label; left-aligned plain word (not intCol's numbers, not statusCol's badges); null blank; off-set values render muted; any member over 20 characters throws at configure time pointing to `textCol`.
+- **Sized text set: `text5Col` / `text10Col` / `text15Col` / `text20Col`** (ruled 2026-07-21) — curried FIXED-width text columns for short strings whose length class is known (codes, phone numbers, short ids). Pick the smallest class the values fit, rounded up to the nearest 5; same ellipsis-with-tooltip cell as `textCol`, floored at the label.
+- **Sized name set: `name10Col` … `name30Col` and `identityLink10Col` … `identityLink30Col`** (ruled 2026-07-21) — the same 5-ch ladder for name columns and identity links (the identity column is usually the link). When the name population is known, pick the nearest class ≥ the longest legitimate value; unknown populations keep the survey-driven 50ch `nameCol`/`identityLinkCol` default.
+- **`col()` accepts the sized classes** — `"text5"`…`"text20"` and `"name10"`…`"name30"` join the escape hatch's named-geometry vocabulary (flowing alignment), so composite custom cells can be content-fit instead of riding the text flex.
+
+### Fixed
+
+- **Fill-mode `FieldTable` scrolls internally** — the `.sui-field-frame--fill` modifier makes the frame the definite-height flex context the composed fill table needs; the inner `ScrollFillColumn` is the single scroll owner (repro: NOx Report bottom bag table showed only its header).
+- **`col()` aligns like the real factory of its geometry** — numeric customs right-align (a dotted-header metric column read differently from its plain floatCol siblings); date/dateTime/selection/chart center; flowing text stays left.
+
+## 0.108.2
+
+### Fixed
+
+- **`FieldTable`: fixed columns stay fixed when the table stretches** — a trailing auto spacer column (empty header/cells, zero geometry) absorbs stretch slack; without it, `table-layout: fixed` inflated every width-carrying column proportionally (a stretched two-column table ballooned its 19ch timestamp). The spacer collapses to nothing at the table's minimum width.
+
+## 0.108.1
+
+### Fixed
+
+- **Field-table headers never overlap their neighbors** (ruled 2026-07-21), three mechanisms:
+  - **Label floor** — a column is never narrower than its own header label (`floorGeoAtLabel`; a "Postal Code" header over 5-digit data widens the column instead of painting over the next header). Every labeled factory floors its geometry.
+  - **Sort-glyph budget** — sortable mode widens every sortValue-carrying column by the 2ch indicator allowance (`resolveFields(…, { sortable })`), so the ▲/⇅ glyph never rides past the label.
+  - **Flexible width basis** — flexible (no-css) columns now emit their floored `minCh` (+ cell chrome) as a width; `table-layout: fixed` splits leftover space equally among width-less columns and ignores `minCh`, which made the floor invisible and ate the standard inter-column gap.
+- **Dev catalog panes stretch tables to the available width** — inspection surface, not dashboard tiles; the library's Σmax "tile" cap is unchanged for consumers.
+
+## 0.108.0
+
+### Added
+
+- **`fields.linkedCountCol(source, { href, header?, id?, tone? })`** (ruled 2026-07-20) — an integer drill-down count: a POSITIVE count links via `href`, zero/null renders the plain cell, never a dead link. Built as `withHref` over `intCol` (geometry, formatting, sort, null-blank, tone all inherited); the zero-has-no-destination gate is a count *semantic*, which is the scoped exception to the combinator-first ruling. Spec: `docs/superpowers/specs/2026-07-20-linked-count-col-design.md`.
+- **`fields.withHref` / `withHint` / `withWhen` column combinators** (ruled 2026-07-20) — function-first decoration of ANY built column, dual form like `fn`: `withHref(href, col)` links the cell (nullish href → plain cell); `withHint(text, col)` grows a dotted-underline tooltip on the header; `withWhen(pred, col)` renders the cell only when the predicate holds — per-row colspan takeovers collapse to predicate-gated columns (a partial week blanks its stats and shows the row action instead).
+- **`fields.group(label, [...members])`** (ruled 2026-07-20) — two-row spanned category headers as a fourth `FieldSpec` variant: the resolver stamps each member with the group label and BaseTable derives the colspan header row (ungrouped columns span both rows). The last "stays raw by design" demand falls — the JTF Table Catalog bench is 31/31 SUI-compliant.
+- **`fields.aggregateCol`** (ruled 2026-07-20) — generic aggregate column: the math (sum/mean/custom) is named at configure time, emphasis at int geometry.
+- **`EllipsisText` + `createTruncationObserver`** (ruled 2026-07-20) — "if and only if the ellipsis appears, there is a tooltip with the full value." A ResizeObserver-backed truncation hook re-measures on every reflow (the old mount/window-resize measurement went stale on container reflow); `LongTextCell`, `StringCell`, `IdCell`, and `listCol`'s +N-more all route through it.
+- **`fn.flatMap`, `fn.prop`, `fn.length`, `fn.lengthOf` + direct application form** (ruled 2026-07-18) — every `fn` helper now applies directly as `map(f, arr)` alongside the curried `map(f)`; function-first property access joins the module.
+- **`ACTION_ICONS`: `remove` → trash, `run_checks` → refresh** — the trailing remove-action and conditional run-action columns are now expressible with stock `actionCol`.
+- **Health ratchets: `dotChains` + `collectionMethodCalls`** (ruled 2026-07-18) — method chaining and bare collection-method calls are counted and may only go down; `src/fn/` is the sanctioned home for the native calls. ~20 trickle commits migrated existing chains onto `fn` composition.
+
+### Fixed
+
+- **Field tables: right-edge column clipping** — the `<table>` element kept the sans font family, so its ch-based `min-width` resolved ~4.5% wider than the frame's identical budget; `table-layout: fixed` stretched every column past its geometry and the frame clipped the last column mid-glyph (also the cause of overlapping headers on narrow panes). The table element now shares the frame's ONE ch basis (12px mono).
+- **`withHref`/`identityLinkCol`: nullish href renders the plain cell** — never a dead link (zero-count buckets, missing spreadsheet URLs).
+- **`PopoverMenu`: panel portals to `document.body`** so an `overflow: hidden` ancestor can't clip it; header-slot tests query the portalled panel.
+- **`Dropdown` self-themes via tokens** in component CSS.
+
+### Changed
+
+- **JTF Table Catalog bench: 31/31 SUI-compliant; the not-yet-curried demand rail is EMPTY.** The closing rulings (all 2026-07-20): row navigation collapses to the identity cell (`identityLinkCol` is the nav; FieldTable never grows `onRowClick`); per-row colspan collapses to `withWhen`-gated columns + a row action; the QaqcTriage "P% (N)" composite collapses to the linked count; NOx preview's added calls are REMOVED from the picker (they live in the bag table) so `createFieldSelection` covers selection entirely; a known-set string column is `statusCol`, never a flexing `textCol` — the identity column is the table's only flexible one.
+- Bench replicas migrated to fields registries: QaqcAssetTriage, Weekly QA/QC, NOx preview + report bag, Cached Vessel Calls, HourLevelDataTable (grouped), HourlyDataTable, Durability, 1000-Hour Manifest, MetricsStatsTable, MinMaxTable, VesselCallNox/RogDetail, NoxWidgets, Fortnight list, PowerLogCacheView.
+
+## 0.107.0
+
+### Added
+
+- **Table-level sorting** (ruled 2026-07-18) — **`SortableFieldTable`** (curried; or `sortable` on `FieldTable`): a sortable table makes every column sortable except types with no valid sort order (selection, actions, lists, charts); no per-column opt-out. Mechanics: `TableColumn.sortValue?: (row) => raw` — field accessors return JSX, so the comparator now reads the raw channel (this also fixes the silently broken sort on all pre-existing field columns); `fields.col()` takes `sortValue` as its 5th argument.
+- **`TableQuickFilter`** (ruled 2026-07-18) — the client-side filter module extracted from `FilterableTable`, composable with ANY table: fixed toolbar (input + shown-of-total count), children receive the filtered-rows accessor once so the composed table never remounts while typing. `FilterableTable` is now `BaseTable` composed with it. (Sibling: the generic `QuickFilter` collection filter is unchanged.)
+- **`fields.identityLinkCol(key, { href, glyph?, header? })`** (ruled 2026-07-18) — the IdentityLink cell: an entity with a detail page displays its name AS the link by default. Configure-time `href(row)`, optional `glyph(row)`, name geometry, accent ink, blank for empty names.
+- **`fn` namespace** (ruled 2026-07-18) — data-last functional utilities + typed `pipe` (12-arity overloads, NO untyped rest fallback — a mis-wired pipe is a compile error): `map`, `filter` (type-guard narrowing), `pluck`, `sortBy` (stable, non-mutating), `sum`, `mean`, `join`, `groupBy`. Self-contained under `src/fn/` (liftable to its own package); 16 call sites migrated off dot-chains.
+- **`fields.statusCol` / `fields.listCol` / `fields.avgCol`** (ruled 2026-07-18, shipped post-0.106) — curried badge-mapping cell, comma-list cell with +N-more overflow and full-list tooltip, and configured-keys row-mean cell (accent by default).
+
+### Changed
+
+- **Name columns are FIXED at 50ch** (ruled 2026-07-18) — names never get squeezed; `name`/`identityLink` geometry pins at the survey-backed 50ch cap and ellipsis clips only dirty data past it. The field frame now floors its table at the Σmin budget and scrolls the excess horizontally; the resolver's floor counts css-width columns at their full consumed width.
+- **Blank empties in fields** (ruled 2026-07-18) — `textCol`/`nameCol`/`statusCol`/`listCol`/`avgCol` render nullish values as blank, never an em-dash or EMPTY badge; visible placeholders are opt-in only where they carry meaning.
+- **Client guidance: curried variants ONLY** (ruled 2026-07-18) — every "use curried variants or `create*()`" note (26 barrels + AGENT_GUIDE) now reads curried variants only; the app-local factory path is removed from the docs. `create*` exports remain for existing consumers pending migration.
+- jtf-ui migrated: ViolationsPreview (SortableFieldTable + TableQuickFilter + identityLinkCol vessel, data-layer compliance tones), MissingInfoPreview (statusCol/listCol), FortnightReportBody OCR table, power-log-ocr avgCol. JTF Table Catalog bench: 15 of 32 SUI — the fortnight route group is fully migrated.
+
+## 0.106.0
+
+### ⚠ Breaking
+
+- **`fields.selectionCol` signature** — now takes a `FieldSelection` (from `createFieldSelection({ rows, key })`) instead of `(isSelected, toggle)` positional callbacks, in exchange for the select-all header and shift-range behavior. (The fields system was unreleased pre-0.106, so no production consumer breaks.)
+- **`fields.floatCol` precision** — moved from a positional second argument into the options object: `floatCol(key, { precision, tone })`.
+
+### Added
+
+- **Table fields system promoted** (ruled 2026-07-17) — exported from the barrel as the `fields` namespace + top-level **`FieldTable`**. A table is an ordered gesture of field ids resolved against a plain registry object; field types own ALL geometry in ch/em; call sites never see width/align/CSS. `FieldTable` owns the width-budget frame internally and adds `emptyMessage` and a semantic `maxRows` scroll cap (em-based, zoom-proportional). Dedicated `Table Fields` showcase; workshop bench retired.
+- **Tone treatment functions** (ruled 2026-07-17) — `intCol`/`floatCol`/`textCol` accept a configure-time `tone: (value, row) => Tone`; `Tone` (`default|success|warning|danger|accent|muted`) lives in `src/types.ts` as the shared semantic vocabulary. Clients name meanings; themes own colors.
+- **Generic selection** (ruled 2026-07-17) — `fields.createFieldSelection({ rows, key })` + `selectionCol(selection)`: select-all/none header checkbox (indeterminate over a partial selection) and shift-click range selection across the current sort order (Gmail semantics, keyed anchor; shift-mousedown suppresses the native text-selection smear).
+- **`Checkbox`: `indeterminate` prop** — semantic mixed-state for aggregate checkboxes; synced to the DOM property via ref, dash styling in every theme.
+- **`ValueMatrix`** (ruled 2026-07-17) — a row-axis × column-axis grid of computed values (NOT a row table): `rows`, `cols`, `value(row, col)`, configure-time `tone(value, row, col)` and `selected(row, col)`, null → em-dash, selected cell wears weight + a soft halo. `createValueMatrix` curries the mapping surface (`rowAxisLabel`/`rowLabel`/`colLabel`/`format`/`tone`) into a domain matrix (jtf's ComplianceThresholdTable is now a thin wrapper; fits thorcasting's viable-price × salaries grid). Dedicated showcase.
+- **`fields` humanize** — handles snake_case keys (`metric_id` → "Metric Id") alongside camelCase.
+
+### Changed
+
+- jtf-ui easy-tier tables migrated to `FieldTable`/fields registries (StatisticsSummary, MinMaxTable, ftir-gap-fill, power-log-ocr, FortnightReportBody's seven metric tables); every call-site width/align/color deleted. Field-type catalog for the remaining tiers: `docs/superpowers/plans/2026-07-17-field-type-catalog.md`.
+
+## 0.105.0
+
+### ⚠ Breaking
+
+- **`HeatStack` renders rows in input order** (first item at top). It previously reversed the array ("earliest at bottom"); Peter ruled that a bug — visual order now matches array order. Consumers relying on the bottom-up stacking must reverse their input.
+- **`TagInput` removed** — unused by every production consumer (dside, Amygdala, jtf, goose, wellappoint, thorcasting), pruned per the new production-repo prune rule.
+- **`BigNumberInput`: deprecated `prefix`/`sign` static-glyph props removed** (superseded by currency masking; no production caller).
+- **`MultiSelectFilter`: `optionWidthEstimate` tuning prop removed** (fit estimate fixed at ~90px/option; no production caller ever set it).
+
+### Added
+
+- **`ChartHeader`** — Composed (Depth 2), zero CSS. The standard chart title strip (mono accent title left, muted meta right, spread). `CompletionTimeline` now composes it, removing the last real inline-style cluster in src.
+- **`createDropdown` + `InlineSubtleDropdown`** — Dropdown gains the Overrides/DataProps split (`size`/`subtle` curried); `InlineSubtleDropdown` (sm, subtle) is the compact inline-picker form thorcasting configures by hand today.
+- **CONTEXT.md: `Structural` Primitive subkind** — chart/SVG-geometry primitives (axes, grids, series, bands) are now a defined third subkind alongside Atomic and Layout.
+- **Gallery chrome: `.demo-frame` / `.demo-cols`** — dashed demo frames and comparison columns for visualizing invisible layout components; `stack.tsx` and `row.tsx` showcases recomposed onto them (21 → 2 inline styles).
+- **`--sui-series-1..8` categorical data-viz palette** — every theme (default, HUD, bronze, colorblind) now declares eight fixed, CVD-validated series slots; callers colour chart series / legend swatches / category dots by `var(--sui-series-N)` instead of hardcoding hues. Eight is a hard cap; the status tokens (`--sui-success`/`--sui-warning`/`--sui-danger`) are reserved for meaning and never a series slot. See ADR 0003.
+- **`BaseTable`: `onRowHover` callback** — fires with the hovered row for cross-highlighting between a table and a linked chart.
+- **`Chart`: `responsive` prop** — fills the container width via a `viewBox` aspect ratio instead of a fixed pixel width.
+- **Inline-style rubric linter (`scripts/style-rubric.mjs`) + ADR 0003** — a compiler-API walker classifies every `src` inline style against a category allow-list (`scripts/style-rubric.json`); a static-literal inline is now a `styleRubricViolations` health violation (ratcheted at 0). Curried variants in `variants.ts` are the sanctioned home for static presentational config.
+- **Production usage manifest (`scripts/usage-manifest.mjs` + `docs/usage-manifest.json`)** — surveys which SUI exports each production consumer (dside, amygdala, jtf, goose, wellappoint, thorcasting) actually imports; `--check` guards the manifest against drift in the pre-push gate.
+- **12 curried variants promoted for the jtf-ui migration** (real call sites, no new props/components). Text: **`EmphasisBody`** / **`AccentEmphasisBody`** (inline bold 600, plain + accent), **`NoteText`** (italic sublabel note), **`WarningBody`** / **`SuccessBody`** (status-tinted body, joining `DangerBody`), **`DangerSublabel`** (inline error caption), **`CaptionLabel`** / **`AccentCaptionLabel`** (uppercase letter-spaced section captions, secondary + accent), and **`TopicTitle`** (`title` variant, `as="h4"` — the h4 level of the `PageTitle`/`SectionTitle`/`SubsectionTitle` heading series). Button: **`SmallOutlinedButton`** (outlined, sm). Modal: **`PrimaryConfirmationModal`** (md, clip, primary) / **`LargePrimaryConfirmationModal`** (lg sibling).
+
+### Changed
+
+- **Workshop benches count toward showcase purity** (ruling reversal): benches use curried SUI layouts/text for chrome like any showcase; inline styles only for genuinely dynamic experiment geometry.
+
+### Fixed
+
+- **`StackedProgressBar` segments actually stack now.** Solid silently drops the first of two computed keys in a style object literal, so the cumulative `left`/`bottom` offset never rendered — every segment sat at the start edge, overlapping, since the component's inception (found by the new test batch, verified in Chrome). Fixed with explicit per-orientation style objects; regression test asserts the offsets.
+- **`HotkeyButton.isEditableTarget`** now returns a real boolean (`isContentEditable ?? false`) instead of `undefined` for non-editable elements.
+
+### Added
+
+- **`npm run health`** — vision-adherence health check with a CI ratchet (`scripts/health.mjs` + `scripts/health-baseline.json`, new `health` job in ci.yml). Mechanical KPIs — bare hex colors in CSS/TSX, inline `style={{}}` counts in src and showcases, folders without tests, undocumented components, missing Depth headers — may only decrease; a deliberate increase requires committing an updated baseline. `--verbose` lists offenders, `--update-baseline` locks in improvements.
+
+### Removed
+
+- **`hopper.tsx` ("All Components") deleted from the gallery.** The legacy kitchen-sink showcase predated the workshop system; every component it demoed has a dedicated showcase.
+- **`animation-experiments.tsx` moved to `workshop:animation-lab`** — the animation R&D lab is now a proper bench (`dev/showcases/workshop/animation-lab.tsx`) with a strict lab contract in its header (named isolated experiments, real library internals only, leaf module, extract-then-A/B). Workshop benches are labs and are now exempt from the showcase-purity health KPI.
+
+### Fixed
+
+- **Token purity extended to TSX/TS: all remaining bare hex colors removed from src.** `SidebarSelector` demo fixtures, `MetricValueCell`'s violation default, `ConversationTree` bubble colors, `WorkProgressCard`'s bar palette, and `WarningTitle` now use `--sui-*` tokens (originals kept as fallbacks); the health scan now covers `.ts` files too. Static inline styles in `Section`, `CensusView`, and the `SidebarSelector` demo moved to their component CSS.
+- **`StatusCard` no longer crashes on mount when `ResizeObserver` is unavailable** (jsdom/SSR) — guarded like `MessageBubble`.
+- **Test coverage: 23 previously-untested component folders now have tests** (+125 tests; issue #48 phase 4 batches 1-2). 46 component headers gained explicit kind/depth declarations; 27 uncataloged components documented in COMPONENTS.md; worst showcases (recent-starred, progress-card, checkbox) recomposed with curried vocabulary.
+
+- **Token purity: all 25 bare hex colors removed from component CSS** (plus `GroupedTable`'s inline `#ff6b6b` → `var(--sui-danger)`). Every hardcoded color now derives from a `--sui-*` token with the original value as fallback: dark-text-on-accent → `var(--sui-bg-deep)` (Button/ActionRow/AssigneeChips, matching SegmentedControl's precedent), Alarm reds → `var(--sui-danger)`, MathFormula number gold and RecentStarred star colors → `var(--sui-warning)`, RecentStarred surface palette → bg/border/text tokens, Table info-tag blue → accent tokens, and derived shades (CashflowChart project/onetime bars, Table danger hover, Alarm count tint) via `color-mix()` on the token. Themes now retint these components; under the default theme values shift only marginally toward their semantic tokens.
+
+- **`Sparkline`** — Atomic (Depth 1). Generic inline SVG polyline sparkline with `line` and `sawtooth` modes; color is prop-driven (`var(--sui-accent)` default). Complements `TrendSparkline` (trend-colored) and `HeartbeatSparkline` (0..1 health strips).
+
+## 0.104.0
+
+### Added
+
+- **Choreography module (public API)** — `choreograph`/`step`/`weightedStep`/`commit` sequence named animation EFFECTS (`collapse`, `expand`, `fadeIn`, `fadeOut`, `slideDown`, `rollUp`, `glowIn`, `settleIn`) across components around an explicit state-commit point; targets are `data-anim` handles (spread via the `anim(handle)` helper). Weight-fractions of one timing budget; hidden-tab hardened. Exported from the root barrel.
+- **`GhostRow` / `IndentedGhostRow`** — de-emphasized clickable row (dim unless `selected`, pointer only when clickable; indented form for rail children). `createGhostRow` factory.
+- **`createIcon` + `InlineMetaIcon`** — Icon gains the Overrides/DataProps split (`variant`/`size` curried, `name` stays data); `InlineMetaIcon` (outline, xs) ships for icon-beside-sublabel meta rows.
+- **`createThreePanelLayout`** — geometry props (panel widths, height, aside cap) become curry-able Overrides so apps bake their layout rulings once.
+- **`NoWrapSublabel`** — Text variant with `white-space: nowrap` baked (trailing meta that must stay one line).
+
+### Changed
+
+- **Numeric counts roll by default.** `DigitRoller` now auto-tracks its previous value: a bare `<DigitRoller value={n}/>` rolls odometer-style (direction-aware) on every change — `previousValue` becomes an optional override for replaying a specific transition, and `animate` defaults to true (`animate={false}` opts out). `CountChip` and `TagPill` (purely-numeric plain labels) compose it internally, so every count in the library gets the roll with zero call-site changes. Caveat: the roll requires the component instance to SURVIVE the value change — lists that rebuild row objects each update must render with `<Index>`/stable keys, not `<For>` (see the new STYLE_GUIDE "List Identity" section).
+
+## 0.103.0
+
+### ⚠ BREAKING
+
+- **Layout Purity migration — the entire library recomposed.** All 95 components were migrated to the new Layout Purity commandment (STYLE_GUIDE.md): no component owns box-model geometry (`flex`/`grid`/`gap`/`align`/`justify`/`overflow`) — everything composes named `Layout` variants. Public **props are byte-identical** (zero call-signature changes), but the rendered **DOM wrapper structure and internal class names changed across the library**: consumer CSS that targets a component's internal classes or relies on its exact element nesting may break. Off-scale internal gaps (6/12/16px) were snapped to the `xs(4)`/`sm(8)` scale, so small visual spacing shifts are expected.
+- **`createBox`/`createStack`/`createRow` factories: caller `style` no longer clobbers baked style.** The factories previously shallow-merged, so a caller's `style` object wiped the variant's baked styles entirely — which shipped `ScrollYBox` (and every scroll variant) with its `overflow` silently deleted whenever a consumer passed `style={{ "max-height": … }}`. Styles now merge per-property (baked first, caller wins). Any consumer that depended on full-object clobbering will now see the variant's baked properties come through.
+
+### Added
+
+- **~28 new Layout variants + 2 primitives** — role-named vocabulary demanded by the migration, including `Grid`/`createGrid` and `AutoStackRow`/`AutoStackItem` (responsive 2-D primitives), `ClipBox`, `ScrollBox`, `ScrollFillBox`, `ScrollXBox`, `ScrollYBox`, `ScrollFillColumn`, `ClipFillColumnFlush`, `CenteredColumn`, `LabelValueGrid`, `ChipCluster`, `BaselineWrapRow`, `GrowClusterRow`, and more — each with a when-to-use comment in `Layout/variants.ts`.
+- **`Icon`: `pause`, `agent`, `dependency` glyphs.** `agent` (robot head) is the automated counterpart to `user`, mirroring dside's `Species: Human | Agent`.
+- **`HotkeyButton`: optional leading `icon` prop** (backwards compatible) — associates an action with its thematic glyph.
+- **`typecheck:dev` gate** — `tsconfig.dev.json` now compiles the dev gallery, and CI enforces it, so the Overrides/DataProps currying rules are type-checked at every call site including showcases.
+
+### Deprecated
+
+- **`ButtonGroup`** — tagged `layout` but deprecated; migrate to the curried variants shipped alongside. No breaking change; existing call sites keep working.
+
+### Fixed
+
+- **`Divider` — rendered nothing.** The CSS set `border:none` and a 1px box but never a color, so solid dividers were transparent and dashed/dotted had no border style at all. Now draws `var(--sui-border)` in all orientation/variant combinations.
+- **`Surface` — `active` state was invisible on variants with baked colors.** `bg`/`borderColor` are applied as inline styles, which silently overrode the `.surface--active` class, so `InteractiveCard active` (and any colored variant) never showed its selection. Active now owns background/border. Also themed the active colors (`--sui-accent` tokens replace hardcoded cyan).
+- **`BaseTable` / `DataTableContainer` / `SelectableTable` — `maxHeight` scroll actually scrolls.** Consequence of the style-merge fix above; `SelectableTable` additionally had a latent regression (it read a no-longer-overflowing container style) that the migration restored.
+
+## 0.102.0
+
+### Added
+
+- **`ScenarioGlyph`** — Atomic (Depth 1), Badge family. The accent-coloured, filled-or-hollow, **shaped** sibling of `ScenarioDot`: where `ScenarioDot` is always a circle, `ScenarioGlyph` renders any `ShapeGlyph` shape (`circle` / `chevron` / `diamond` / `square` / `pentagon` / …) so a scenario is recognisable by its **shape** as well as its colour — the same glyph on its chip, its calibrate column header, and its config-membership icons. `filled` → a solid glyph (the selected scenario / the drawn line); omitted → an outline only (unselected). Wraps the SVG-only `ShapeGlyph` primitive in an inline `<svg>` (with `overflow: visible` so a full-diameter hollow stroke never clips) so it drops into a text row exactly like `ScenarioDot`. Props: `color`, `shape`, `filled?`, `size?` (default 10), plus pass-through span attrs (`title` for hover). Data-only, no curried variant.
+
+### Changed
+
+- **`ShapeGlyph` — new built-in shapes + a `hollow` mode.** Added `diamond`, `square`, and `pentagon` to the built-in `Shape` union (centered in the 16×16 viewBox alongside `chevron`/`chevron-down`/`pin`). Added a `hollow?: boolean` prop that renders any shape — **including `circle`, which previously could not** — as an outline: no fill, the descriptor colour becomes a min-weight stroke. Strictly additive; existing filled call-sites (`PinMarkers`, `GhostPin`, chart markers) are unchanged.
+
+## 0.101.0
+
+### Added
+
+- **`ServiceHealthDot`** — Composite (Depth 2). 6px dot + name label for app-shell navbar liveness clusters. Alive: success color, opacity decays `max(0.15, 1 − (ageMs/staleThresholdMs) × 0.85)` toward the staleness horizon. Dead (`ageMs` null/undefined or ≥ threshold): danger color at full opacity with a 1s pulse animation. Hover reveals a popover with service name, age label, a `HeartbeatSparkline` (`state="connected"|"error"`), and a `Xs ago / now` footer. No internal clock — pure render of caller-supplied `ageMs` + `samples`; the 1 Hz tick and history accumulation live in the caller. No curried variant (all props are data). Key props: `name`, `ageMs`, `staleThresholdMs` (default 15 000), `samples`. Ports the hand-rolled `ServiceDot` from rhinotools/AppNav.tsx with inline hex colors swapped to `--sui-success` / `--sui-danger` / `--sui-text-muted` tokens.
+
+- **`CensusView`** — Composite (Depth 3). Bucketed census composition: tables grouped by size/access bucket, each rendered as a compact sticky-header `BaseTable`. Click-to-select opens a sticky `InfoPanel` detail rail with row counts (`NumberWithUnits`), field-type chips (`CountChip`), schema list, and an optional `actions` slot. Quick-filter (`QuickFilter`) narrows all buckets simultaneously. Gap column uses `GapCell`. Status badges mapped from `NormStatus` → `StatusBadge` variant. Exports: `CensusView`, `CensusTable`, `CensusColumn`, `NormStatus`, `CensusBucketId`, `CensusViewProps`, `CENSUS_BUCKETS`, `bucketOf`.
+
+- **`GapCell` / `gapSeverity`** — Remaining-work table cell for census/migration gap columns: bold count + percentage + a 40×4 completion bar, colored by severity ramp (0%→success, ≤50%→warning, >50%→danger). Blank when uncounted. Pure `gapSeverity()` function exported for tests/reuse.
+
+### Changed
+
+- **Docs/showcase coverage** — Added `TrendSparkline` showcase (up/down/flat fixtures, `yDomain` shared-scale example, live-appending signal demo) and registered it in the dev gallery. Added `COMPONENTS.md` entries for `RingChart`, `WorkerCard`, and `TrendSparkline` with APIs sourced directly from component source files.
+
+## 0.100.0
+
+### Added
+
+- **`AssigneeIcon` (`title` data prop)** — hover text carrying the FULL name (or a richer status line) behind the ambient initials; falls back to `initials` when omitted (previous behavior). Also feeds the `aria-label`. Initials are for the ambient display; `title` is for recovery — pass the full display name wherever a roster uses `deriveInitials`. Flows through `ActionListAssignee` (alias of `AssigneeIconProps`) with no ActionList change.
+
+## 0.99.0
+
+### Added
+
+- **`AssigneeIcon` (`size` Override + `createAssigneeIcon`)** — the outline person/AI glyph gains its first presentational knob: `size` (glyph height in px; width keeps the 25:23 box, and the SVG viewBox scales stroke + initials with it). Per the currying rule it is an Override — freeze it with `createAssigneeIcon({ size })` (new factory, with `AssigneeIconOverrides`/`AssigneeIconDataProps` split); the bare `AssigneeIcon` export is unchanged: zero-config, 23px row default, data props only (`initials`/`kind`/`active`). Motivating caller: dside's navbar presence cluster, which needs the same glyphs as its ActionList rows, just bigger.
+- **`composeTagPairs(tags, cfg)`** — pure, reusable helper in the Badge family (`src/components/Badge/tagPairs.ts`, exported from the family index and root barrel). Turns a flat list of `SourceTag` (`{ dim, value }`) into presentation-ready `ComposedTag`s for TagPill / ActionList tags. A pair rule (`{ parent, child }`) whose **both** dims are present collapses those two tags into ONE split lozenge of the two VALUES — the dim names drop out of sight but survive in the `title` for hover recovery (`customer:stax` + `project:jtf` → key `stax`, value `jtf`, title `customer: stax · project: jtf`, `sources` = `[parent, child]`). A dim present **without** its partner is not abbreviated and falls through to the labeled form (`key = dim`, `value = value`, title `dim: value`). Deterministic: pairs emit first in rule order, then the remaining labeled tags in input order — or by `cfg.order` (unknown dims after, stable) when given. Each source tag is consumed at most once; a duplicated dim pairs on its first occurrence and extras stay labeled. Pure, no DOM; empty inputs return `[]`.
+
+## 0.97.1
+
+### Fixed
+
+- **`<Chart>` — drag that leaves the plot** — a click-drag range selection now (1) still ends and **commits** when the mouse button is released **outside** the chart, and (2) reads a drag past an edge as "dragged to the end of the chart" instead of freezing the selection at the last in-bounds pixel. The `<svg>` takes **pointer capture** on `pointerdown`, so `pointermove`/`pointerup` keep firing after the pointer leaves its bounds; `pointerleave` no longer cancels an in-progress drag while capture is held; and drag extension maps the pointer through a plot-**clamped** x (the crosshair keeps the nullable mapping, so hover still hides off-plot). All capture calls are optional-chained (jsdom implements none). Affects any chart composing `<DragRangeSelect>` / `<CommitOnReleaseDragRangeSelect>`.
+
+## 0.97.0
+
+### Added
+
+- **Cashflow / money primitives** — new `ScenarioDot` badge, `ResponsiveMoney`, and an internal `money` formatting helper, plus refinements to `CashflowScrubChart`, `ScrubChart`, and `SplitQueueList` (decoupled balance line, scenario dots, responsive money rendering). Bundled into this release.
+- **`EditableTitle` / `ActionListItem` / `ActionList` — `editTrigger: "clickSelected"`** (third mode; still strictly non-breaking). The file-list rename idiom: a click on the title opens the inline editor **only when the row is already selected** — the first click on an unselected row falls through to row selection, and a second click on the now-selected title edits. Modifier clicks (shift/ctrl/meta/alt) never edit (they stay selection gestures), and `stopPropagation` keeps the already-selected row from re-toggling. `ActionListItem` feeds the row's selection state to `EditableTitle` via the new `rowSelected?: boolean` prop; `ActionList` already threads `selected`, so consumers only opt in by passing `editTrigger="clickSelected"`. `"singleClick"` (default) and `"doubleClick"` are unchanged.
+
+## 0.96.0
+
+### Added
+
+- **`ActionList` / `ActionListItem` / `EditableTitle`** — two opt-in, strictly non-breaking row affordances (consumers that pass neither prop see byte-identical behavior):
+  - **`editTrigger?: "singleClick" | "doubleClick"`** (default `"singleClick"`, today's behavior), threaded `ActionList → ActionListItem → EditableTitle` (new exported type `EditTrigger`). In `"doubleClick"` mode the title renders as a non-`<button>` element (`<span role="button">`) so a **single click falls through to row selection** while a **double click opens the inline editor**; Enter/Space keep the editor keyboard-reachable, and the hover dotted-underline affordance plus Enter/blur-commit / Escape-cancel lifecycle are unchanged. In the default mode the title stays a `<button>` and a single click edits, exactly as before.
+  - **`onOpen?: (id: string) => void`** on `ActionList` (`onOpen?: () => void` on `ActionListItem`). When provided, each row renders a small magnifying-glass icon button (inline SVG riding `currentColor`, matching the `StarToggle` icon idiom) in the meta cluster just left of the dismiss cap; clicking it calls `onOpen(id)` and never toggles row selection or opens the editor (`stopPropagation` + it is a `<button>`, already excluded from the row click target). It reveals on row hover via opacity only, honoring the geometry-stable hover invariant. Absent → no button renders.
+
 ## 0.94.2
 
 ### Fixed

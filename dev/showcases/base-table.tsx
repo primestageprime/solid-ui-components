@@ -9,6 +9,7 @@ import {
 import type { TableColumn } from "../../src/components/Table";
 import { IconOnlyButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
+import { NarrowStack } from "../../src/components/Layout";
 
 const sampleData = [
   {
@@ -240,7 +241,7 @@ export const BaseTableShowcase: Component = () => {
           </p>
           <BaseTable data={sampleData} columns={columns} />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Striped + Hoverable + Scroll
           </h3>
           <p class="text-meta">
@@ -255,7 +256,7 @@ export const BaseTableShowcase: Component = () => {
             maxHeight="300px"
           />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Composed — Compact + Sticky Header
           </h3>
           <p class="text-meta">
@@ -270,7 +271,7 @@ export const BaseTableShowcase: Component = () => {
             maxHeight="300px"
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Hover Row Actions</h3>
+          <h3 class="showcase-heading-gap">Composed — Hover Row Actions</h3>
           <p class="text-meta">
             Hover a row to reveal the trailing action. Clicking the action does
             not fire <code>onRowClick</code>.
@@ -287,36 +288,38 @@ export const BaseTableShowcase: Component = () => {
             )}
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Empty State</h3>
+          <h3 class="showcase-heading-gap">Composed — Empty State</h3>
           <BaseTable
             data={[]}
             columns={columns}
             emptyMessage="No vessels found"
           />
 
-          <h3 style={{ "margin-top": "24px" }}>Curried Variants</h3>
-          <div>
-            <CompactTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              CompactTable — compact, stickyHeader, maxHeight: "300px"
+          <h3 class="showcase-heading-gap">Curried Variants</h3>
+          <NarrowStack>
+            <div>
+              <CompactTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                CompactTable — compact, stickyHeader, maxHeight: "300px"
+              </div>
             </div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <StripedTable data={sampleData} columns={columns} />
-            <div class="text-meta">StripedTable — striped, hoverable</div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <StickyTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              StickyTable — stickyHeader, maxHeight: "400px"
+            <div>
+              <StripedTable data={sampleData} columns={columns} />
+              <div class="text-meta">StripedTable — striped, hoverable</div>
             </div>
-          </div>
-          <div style={{ "margin-top": "16px" }}>
-            <DataTable data={sampleData} columns={columns} />
-            <div class="text-meta">
-              DataTable — striped, hoverable, stickyHeader, fill
+            <div>
+              <StickyTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                StickyTable — stickyHeader, maxHeight: "400px"
+              </div>
             </div>
-          </div>
+            <div>
+              <DataTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                DataTable — striped, hoverable, stickyHeader, fill
+              </div>
+            </div>
+          </NarrowStack>
         </div>
         <div class="depth2-atoms">
           <h3>Props</h3>
@@ -347,7 +350,7 @@ export const BaseTableShowcase: Component = () => {
         </div>
       </div>
 
-      <h2 style={{ "margin-top": "32px" }}>Column Groups</h2>
+      <h2 class="showcase-heading-gap--lg">Column Groups</h2>
       <p class="text-meta">
         Columns with the same <code>group</code> string get merged under a
         colspan header. Ungrouped columns span both rows.
@@ -357,7 +360,7 @@ export const BaseTableShowcase: Component = () => {
           <h3>Composed — Grouped Headers</h3>
           <BaseTable data={groupedData} columns={groupedColumns} striped />
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Compact + Grouped</h3>
+          <h3 class="showcase-heading-gap">Composed — Compact + Grouped</h3>
           <BaseTable
             data={groupedData}
             columns={groupedColumns}

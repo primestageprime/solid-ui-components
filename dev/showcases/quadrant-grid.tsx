@@ -8,7 +8,7 @@ export const QuadrantGridShowcase: Component = () => (
       2×2 drop-zone grid. Each cell has a key, label, color, and child content.
       Use for prioritization matrices (Eisenhower, RICE, etc.).
     </p>
-    <div class="example-group" style={{ "max-width": "600px" }}>
+    <div class="example-group demo-maxw-600">
       <QuadrantGrid
         cells={[
           {

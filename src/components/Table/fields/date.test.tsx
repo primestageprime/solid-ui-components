@@ -1,0 +1,37 @@
+import type { JSX } from "solid-js";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, cleanup } from "@solidjs/testing-library";
+import { dateCol, geo } from "./date";
+
+afterEach(cleanup);
+
+interface Row {
+  createdAt: string;
+}
+
+describe("date field module", () => {
+  it("geo is a fixed 14ch column (min === max)", () => {
+    expect(geo).toEqual({ minCh: 10, maxCh: 10, padPx: 18, css: "calc(10ch + 18px)" });
+  });
+
+  it("dateCol builds a sortValue-carrying, center-aligned column at geo width", () => {
+    const col = dateCol<Row>("createdAt");
+    expect(col.id).toBe("createdAt");
+    expect(col.sortable).toBeUndefined(); // table-level mode flips it (ruled 2026-07-18)
+    expect(typeof col.sortValue).toBe("function");
+    expect(col.align).toBe("center");
+    expect(col.width).toBe(geo.css);
+    expect(col.geo).toBe(geo);
+  });
+
+  it("cell renders an ISO date", () => {
+    const col = dateCol<Row>("createdAt");
+    // Local (no "Z") noon so the rendered calendar date is timezone-stable.
+    const { container } = render(() => (
+      <>{(col.accessor as (row: Row) => JSX.Element)({ createdAt: "2026-07-15T12:00:00" })}</>
+    ));
+    expect(container.querySelector(".sui-value-date")?.textContent).toBe(
+      "2026-07-15",
+    );
+  });
+});

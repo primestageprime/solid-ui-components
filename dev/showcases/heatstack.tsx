@@ -323,13 +323,13 @@ export const HeatStackShowcase: Component = () => {
           <h3>Default — 8 Keys, Missing Streaks in C, D, F</h3>
           <HeatStack items={sampleItems} keys={KEYS} showLegend />
 
-          <h3 style={{ "margin-top": "24px" }}>
+          <h3 class="showcase-heading-gap">
             Top 5 Unknown (Not Yet Reported)
           </h3>
           <HeatStack items={partialUnknownItems} keys={KEYS} showLegend />
 
-          <h3 style={{ "margin-top": "24px" }}>Compact — 30 Rows</h3>
-          <div style={{ width: "80px" }}>
+          <h3 class="showcase-heading-gap">Compact — 30 Rows</h3>
+          <div class="heatstack-demo__compact">
             <HeatStack items={compactItems} keys={KEYS} variant="compact" />
           </div>
         </div>

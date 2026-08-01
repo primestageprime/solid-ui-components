@@ -23,6 +23,8 @@ import {
   isRunning,
   type WorkStatus,
 } from "../../src/components/WorkProgressCard";
+import { ClusterRow, NarrowStack } from "../../src/components/Layout";
+import { MonoMeta, MutedBody } from "../../src/components/Text";
 
 const CARD_W = 300;
 const CARD_H = 108;
@@ -35,12 +37,8 @@ const Slot: Component<{ children: any }> = (props) => (
 
 const Grid: Component<{ children: any }> = (props) => (
   <div
-    style={{
-      display: "grid",
-      "grid-template-columns": `repeat(3, ${CARD_W}px)`,
-      gap: "16px",
-      "justify-content": "start",
-    }}
+    class="work-progress-card-demo__grid"
+    style={{ "--wpc-card-w": `${CARD_W}px` }}
   >
     {props.children}
   </div>
@@ -160,20 +158,13 @@ const LiveTasks: Component = () => {
     now() >= endsAt ? [{ start: 0, end: endsAt }] : [{ start: 0 }];
 
   return (
-    <div
-      style={{
-        "margin-top": "32px",
-        display: "flex",
-        "flex-direction": "column",
-        gap: "12px",
-      }}
-    >
-      <div style={{ "font-size": "13px", color: "rgba(255,255,255,0.7)" }}>
+    <NarrowStack class="work-progress-card-demo__live">
+      <MutedBody>
         Live — three tasks started together (10s estimate). Actual accrues from
         work segments (<code>now − start</code>) while running and freezes when
         each ends.
-      </div>
-      <div style={{ display: "flex", gap: "8px", "align-items": "center" }}>
+      </MutedBody>
+      <ClusterRow>
         <button type="button" onClick={play}>
           {playing() ? "⏸ Pause" : "▶ Play"}
         </button>
@@ -183,16 +174,8 @@ const LiveTasks: Component = () => {
         <button type="button" onClick={reset}>
           ↺ Reset
         </button>
-        <span
-          style={{
-            "font-family": "ui-monospace, monospace",
-            color: "rgba(255,255,255,0.6)",
-            "margin-left": "8px",
-          }}
-        >
-          t = {now().toFixed(1)}s
-        </span>
-      </div>
+        <MonoMeta>t = {now().toFixed(1)}s</MonoMeta>
+      </ClusterRow>
       <Grid>
         <For each={SIM_TASKS}>
           {(task) => {
@@ -215,33 +198,19 @@ const LiveTasks: Component = () => {
           }}
         </For>
       </Grid>
-    </div>
+    </NarrowStack>
   );
 };
 
 export const WorkProgressCardShowcase: Component = () => (
-  <div
-    class="component-section--full"
-    style={{
-      padding: "24px",
-      display: "flex",
-      "flex-direction": "column",
-      gap: "16px",
-    }}
-  >
-    <div
-      style={{
-        "font-size": "14px",
-        color: "rgba(255,255,255,0.7)",
-        "max-width": "760px",
-      }}
-    >
+  <NarrowStack class="component-section--full work-progress-card-demo__page">
+    <MutedBody class="work-progress-card-demo__lede">
       Data-only card — pass <code>status</code>, <code>estimate</code>, and{" "}
       <code>actual</code>; the library derives the bar (blue in-progress, green
       complete, crimson over-budget, grey unused, ⚠/? for blocked/question). The
       nine states below are static; the live view drives <code>actual</code>{" "}
       from work segments off a clock.
-    </div>
+    </MutedBody>
     <Grid>
       <For each={STATES}>
         {(s) => (
@@ -259,5 +228,5 @@ export const WorkProgressCardShowcase: Component = () => (
       </For>
     </Grid>
     <LiveTasks />
-  </div>
+  </NarrowStack>
 );

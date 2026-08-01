@@ -2,16 +2,12 @@
    CheckboxField Component — Structural
    Control + (label / hint) row. Aligns the box to the first text line.
    ============================================ */
-.sui-checkbox-field {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
+/* The field row (control + text column) is composed from the TopClusterRow
+   Layout variant (align:start, gap 10→sm), and the label/hint stack from
+   TightStack (gap 2→xs) — no box-model geometry lives here now. Only the text
+   column's min-width:0 (not layout-purity-banned) remains so long labels/hints
+   can ellipsise/wrap. */
 .sui-checkbox-field__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   min-width: 0;
 }
 

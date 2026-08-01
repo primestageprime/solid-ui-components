@@ -7,22 +7,12 @@
    imports beyond composing SortableList + the curried IconOnlyButton.
    ============================================ */
 
+/* Card row (grip-content cluster), name/detail column, and the delete slot are
+   now composed from Layout variants (ClusterRow / ContentStack / ActionSlot).
+   Only the card's own width and the intrinsic control styling remain here. */
 .sui-mutable-list__card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
   width: 100%;
   min-width: 0;
-}
-
-/* Name (+ optional detail) — fills the row to the left of the delete button. */
-.sui-mutable-list__main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 /* The read-mode name: a transparent, text-like button that opens the editor.
@@ -86,7 +76,7 @@
    Keyed off the card so MutableList stays self-contained (no reach into
    SortableList's internal row class). */
 .sui-mutable-list__delete {
-  flex: none;
+  /* no-shrink comes from the wrapping ActionSlot; hidden until row hover/focus */
   opacity: 0;
   transition: opacity 0.12s ease;
   pointer-events: none;

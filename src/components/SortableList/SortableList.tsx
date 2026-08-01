@@ -31,6 +31,7 @@
 
 import { For, type JSX, Show } from "solid-js";
 import { createDnDReorder } from "../../hooks/createDnDReorder";
+import { NarrowStack } from "../Layout/variants";
 import { Surface } from "../Surface/Surface";
 import "./SortableList.css";
 
@@ -82,13 +83,21 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // placeholder tracks the cursor through the row gaps too, where a per-row
     // dragover never fires. The handler reads each row's live geometry via the
     // `data-dnd-id` stamps below.
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA <list>; a native <ul>/<ol> would require <li> children, but the rows are Surface components in a flex column — swapping would break the drag layout.
-    <div
+    // Column context comes from the composed NarrowStack (flex-column, sm gap).
+    // The DEPRECATED runtime numeric `gap` prop rides in on the
+    // --sui-sortable-gap custom property (a cssvar bridge — see SortableList.css,
+    // where a doubled-class rule wins over the Stack's sm gap); kept for zero
+    // breaking changes, not a scale value (same shape as ButtonGroup's runtime
+    // layout props).
+    // a11y — intentional ARIA <list>; a native <ul>/<ol> would require <li>
+    // children, but the rows are Surface components in a flex column —
+    // swapping would break the drag layout.
+    <NarrowStack
       class="sui-sortable-list"
       classList={{ "sui-sortable-list--bare": bare() }}
       role="list"
       aria-label={label()}
-      style={{ gap: `${props.gap ?? 8}px` }}
+      style={{ "--sui-sortable-gap": `${props.gap ?? 8}px` }}
       onDragOver={dnd.containerHandlers.onDragOver}
       onDrop={dnd.containerHandlers.onDrop}
     >
@@ -148,6 +157,9 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
                 onDragEnd={handlers().onDragEnd}
                 padding="none"
                 radius="md"
+                direction="row"
+                align="center"
+                gap="sm"
                 /* "bare" drops the inline bg + padding so the CSS below can
                    strip the chrome; the row content becomes the only surface. */
                 bg={bare() ? undefined : "var(--sui-bg-elevated)"}
@@ -164,6 +176,6 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
           );
         }}
       </For>
-    </div>
+    </NarrowStack>
   );
 }

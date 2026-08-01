@@ -18,6 +18,10 @@ import {
   withValueColor,
 } from "../../src/components/Table";
 import { Stack } from "../../src/components/Layout/Stack";
+import {
+  WrappedClusterRow,
+  ClusterRow,
+} from "../../src/components/Layout";
 
 const AccentFloat = withCellStyle(FloatCell, {
   color: "var(--sui-accent)",
@@ -26,7 +30,8 @@ const AccentFloat = withCellStyle(FloatCell, {
 const SmallDate = withCellStyle(DateCell, { fontSize: "0.75rem" });
 const NoxCell = withValueColor(
   FloatCell,
-  (v) => (v != null && v > 2.8 ? "var(--sui-danger)" : "var(--sui-success)"),
+  (v: number | null | undefined) =>
+    v != null && v > 2.8 ? "var(--sui-danger)" : "var(--sui-success)",
   { textAlign: "right" },
 );
 
@@ -59,7 +64,7 @@ export const CellRendererShowcase: Component = () => {
               "more..." toggle
             </div>
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="cell-renderers-demo__cell">
             <LongTextCell
               value="When clampLines is set, the cell uses CSS line-clamp and measures overflow at runtime. Width-dependent — shrink the browser to force truncation across multiple lines."
               clampLines={2}
@@ -70,7 +75,7 @@ export const CellRendererShowcase: Component = () => {
               value
             </div>
           </div>
-          <div style={{ "max-width": "320px" }}>
+          <div class="cell-renderers-demo__cell">
             <LongTextCell
               value="Char-count truncation with tooltip reveal instead of inline button."
               maxLength={40}
@@ -87,21 +92,14 @@ export const CellRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Tag Cell</h3>
         <Stack gap="sm">
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              "flex-wrap": "wrap",
-              "align-items": "center",
-            }}
-          >
+          <WrappedClusterRow>
             <TagCell value="Default" />
             <TagCell value="Primary" variant="primary" />
             <TagCell value="Success" variant="success" />
             <TagCell value="Warning" variant="warning" />
             <TagCell value="Danger" variant="danger" />
             <TagCell value="Info" variant="info" />
-          </div>
+          </WrappedClusterRow>
           <div class="text-meta">
             TagCell — uppercase tag with variant colors, clipped corners
           </div>
@@ -225,21 +223,14 @@ export const CellRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Status Cell</h3>
         <Stack gap="sm">
-          <div
-            style={{
-              display: "flex",
-              gap: "24px",
-              "flex-wrap": "wrap",
-              "align-items": "center",
-            }}
-          >
+          <WrappedClusterRow>
             <StatusCell value="active" />
             <StatusCell value="success" />
             <StatusCell value="warning" />
             <StatusCell value="error" />
             <StatusCell value="pending" />
             <StatusCell value="inactive" />
-          </div>
+          </WrappedClusterRow>
           <div class="text-meta">
             StatusCell — dot indicator + label, auto-mapped from value string
           </div>
@@ -249,13 +240,11 @@ export const CellRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Checkbox Cell</h3>
         <Stack gap="sm">
-          <div
-            style={{ display: "flex", gap: "24px", "align-items": "center" }}
-          >
+          <ClusterRow>
             <CheckboxCell value={true} />
             <CheckboxCell value={false} />
             <CheckboxCell value={true} disabled />
-          </div>
+          </ClusterRow>
           <div class="text-meta">
             CheckboxCell — HUD-styled checkbox, clipped corners
           </div>
@@ -265,14 +254,12 @@ export const CellRendererShowcase: Component = () => {
       <div class="example-group">
         <h3>Empty States</h3>
         <Stack gap="sm">
-          <div
-            style={{ display: "flex", gap: "24px", "align-items": "center" }}
-          >
+          <ClusterRow>
             <IdCell value={null} />
             <StringCell value={null} />
             <FloatCell value={null} />
             <DateCell value={null} />
-          </div>
+          </ClusterRow>
           <div class="text-meta">
             All cells show "—" for null/undefined/empty values
           </div>

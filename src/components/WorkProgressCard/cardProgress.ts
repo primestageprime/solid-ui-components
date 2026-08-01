@@ -37,32 +37,34 @@ export interface CardBar {
   sign: CardSign;
 }
 
-/** Palette — the single source of truth for the bar's styling choices. */
+/** Palette — the single source of truth for the bar's styling choices.
+ * All values are CSS color strings consumed via style props, so they may
+ * (and do) reference theme tokens; original hexes remain as fallbacks. */
 export const CARD_BAR_COLOR = {
-  fillActive: "#1c7ed6", //                  in-progress fill (blue)
-  fillDone: "#228b22", //                    complete fill (forest green)
-  remainder: "rgba(28, 126, 214, 0.30)", //  in-progress remainder (faded blue)
-  overrun: "#8b0a2e", //                     over-budget overrun (dark crimson)
-  unused: "#4b5563", //                      unused budget (dark grey)
-  empty: "rgba(140, 170, 210, 0.18)", //     no progress / stalled remainder (dim)
+  fillActive: "var(--sui-accent, #1c7ed6)", // in-progress fill
+  fillDone: "var(--sui-success, #228b22)", //  complete fill
+  remainder: "rgba(var(--sui-accent-rgb, 28, 126, 214), 0.30)", // in-progress remainder (faded)
+  overrun: "color-mix(in srgb, var(--sui-danger, #8b0a2e) 55%, black)", // over-budget overrun (dark)
+  unused: "var(--sui-text-muted, #4b5563)", // unused budget (grey)
+  empty: "rgba(140, 170, 210, 0.18)", //       no progress / stalled remainder (dim)
 } as const;
 
 /** ⚠ / ? sign badge color. */
-export const CARD_SIGN_COLOR = "#00d4ff";
+export const CARD_SIGN_COLOR = "var(--sui-accent, #00d4ff)";
 
 const STATUS_ACCENT: Record<WorkStatus, string> = {
   NEW: "rgba(255, 255, 255, 0.5)",
   TODO: "rgba(255, 255, 255, 0.5)",
-  DOING: "#00d4ff",
+  DOING: CARD_SIGN_COLOR,
   DONE: CARD_BAR_COLOR.fillDone,
-  BLOCKED: "#00d4ff",
-  QUESTION: "#00d4ff",
+  BLOCKED: CARD_SIGN_COLOR,
+  QUESTION: CARD_SIGN_COLOR,
   CLOSED: "rgba(255, 255, 255, 0.4)",
 };
 
 /** Border/label accent color for a status. */
 export function statusAccent(status: WorkStatus): string {
-  return STATUS_ACCENT[status] ?? "#00d4ff";
+  return STATUS_ACCENT[status] ?? CARD_SIGN_COLOR;
 }
 
 const emptyBar = (): CardBar => ({

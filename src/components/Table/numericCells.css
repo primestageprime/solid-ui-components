@@ -1,0 +1,59 @@
+/* Numeric value renderers (Money, Duration, Float, Int, MetricValue). Co-located
+   with numericCells.tsx so each travels with its own styling into any host —
+   table cell, <dd>, card slot. The right-alignment + tabular figures suit
+   column stacking but are harmless (and often still desirable) elsewhere. */
+
+/* Money Cell — fixed-width money value. Tabular figures + right alignment so
+   digits line up across rows; an inline `max-width` (derived from the column's
+   maxValue, see MoneyCell) caps it to its widest value. */
+.sui-value-money {
+  display: inline-block;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: var(--sui-success);
+  text-shadow: 0 0 10px rgba(var(--sui-success-rgb), 0.3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Duration Cell */
+.sui-value-duration {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--sui-accent);
+  padding: 2px 8px;
+  background: rgba(var(--sui-accent-rgb), 0.08);
+  border-left: 2px solid var(--sui-accent);
+}
+
+/* Metric Status Cell — uppercase status text with dynamic color */
+.sui-value-metric-status {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Metric Value Cell — compliance-colored number display */
+.sui-value-metric-value {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Float Cell */
+.sui-value-float {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: inherit;
+  text-align: right;
+}
+
+/* Int Cell */
+.sui-value-int {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  color: inherit;
+  text-align: right;
+}

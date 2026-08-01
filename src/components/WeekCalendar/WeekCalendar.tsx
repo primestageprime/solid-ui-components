@@ -89,31 +89,26 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
     return c.join(" ");
   };
 
+  // Root-level geometry rides on custom properties so the fixed sub-elements
+  // (corner, day headers, gutter, columns) need no inline styles of their own.
   const wrapperStyle = (): JSX.CSSProperties => ({
     "grid-template-columns": `${props.gutterWidth}px repeat(${props.days.length}, 1fr)`,
+    "--sui-wc-header-h": `${props.headerHeight}px`,
+    "--sui-wc-cal-h": `${calHeight()}px`,
   });
 
   return (
     <div class={wrapperClass()} style={wrapperStyle()}>
-      <div
-        class="sui-week-calendar__corner"
-        style={{ height: `${props.headerHeight}px` }}
-      />
+      <div class="sui-week-calendar__corner" />
       <For each={props.days}>
         {(d, i) => (
-          <div
-            class="sui-week-calendar__day-header"
-            style={{ height: `${props.headerHeight}px` }}
-          >
+          <div class="sui-week-calendar__day-header">
             {props.dayLabel ? props.dayLabel(d, i()) : d}
           </div>
         )}
       </For>
 
-      <div
-        class="sui-week-calendar__gutter"
-        style={{ height: `${calHeight()}px` }}
-      >
+      <div class="sui-week-calendar__gutter">
         <For each={hourMarks()}>
           {(h) => (
             <div
@@ -132,10 +127,7 @@ export const WeekCalendar: Component<WeekCalendarProps> = (rawProps) => {
         {(d) => {
           const dayBlocks = () => props.blocks.filter((b) => b.day === d);
           return (
-            <div
-              class="sui-week-calendar__column"
-              style={{ height: `${calHeight()}px` }}
-            >
+            <div class="sui-week-calendar__column">
               <For each={hourMarks().slice(1)}>
                 {(h) => (
                   <div

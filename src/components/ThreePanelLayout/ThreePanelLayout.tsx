@@ -6,7 +6,7 @@
 // Top-bar + three-column (left / center / right) layout scaffold
 // for alarm-lab / analysis-style pages.
 // ============================================
-import { type Component, type JSX, Show } from "solid-js";
+import { type Component, type JSX, Show, mergeProps } from "solid-js";
 import "./ThreePanelLayout.css";
 
 export interface ThreePanelLayoutProps {
@@ -117,3 +117,25 @@ export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
     </div>
   );
 };
+
+/** Presentational knobs — locked at variant-definition time (the currying
+ *  rule: panel widths/heights are DESIGN decisions, remembered in a curried
+ *  variant, never repeated at call sites). */
+export type ThreePanelLayoutOverrides = Pick<
+  ThreePanelLayoutProps,
+  "height" | "fullHeight" | "leftPanelWidth" | "rightPanelWidth" | "asideMaxHeight"
+>;
+
+/** Props that remain for consumers of a curried variant: the panels. */
+export type ThreePanelLayoutDataProps = Omit<
+  ThreePanelLayoutProps,
+  keyof ThreePanelLayoutOverrides
+>;
+
+/** Curry a ThreePanelLayout with its geometry baked (e.g. an app's
+ *  `TriageLayout = createThreePanelLayout({ leftPanelWidth: "380px" })`). */
+export function createThreePanelLayout(
+  defaults: Partial<Omit<ThreePanelLayoutProps, "children">>,
+): Component<ThreePanelLayoutDataProps> {
+  return (props) => <ThreePanelLayout {...mergeProps(defaults, props)} />;
+}

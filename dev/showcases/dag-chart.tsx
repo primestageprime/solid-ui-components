@@ -5,6 +5,8 @@ import type {
   DAGEdge,
   NodeRenderState,
 } from "../../src/components/DagChart";
+import { ClusterRow } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 
 type TaskNode = {
   label: string;
@@ -98,20 +100,7 @@ const STATUS_COLORS: Record<TaskNode["status"], string> = {
 const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
   if (state.kind === "collapsed") {
     return (
-      <div
-        style={{
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          width: "100%",
-          height: "100%",
-          "border-radius": "8px",
-          background: "var(--sui-bg-elevated)",
-          border: "1px dashed var(--sui-border-bright)",
-          color: "var(--sui-text-secondary)",
-          "font-size": "12px",
-        }}
-      >
+      <div class="dag-chart-demo__collapsed-node">
         +{state.collapsedCount} more
       </div>
     );
@@ -121,59 +110,26 @@ const renderTaskNode = (node: DAGNode<TaskNode>, state: NodeRenderState) => {
   const isAdjacent = state.kind === "adjacent";
   return (
     <div
-      style={{
-        display: "flex",
-        "flex-direction": "column",
-        gap: "4px",
-        width: "100%",
-        height: "100%",
-        padding: "8px 10px",
-        "border-radius": "8px",
-        background: isFocused
-          ? `rgba(var(--sui-success-rgb), 0.18)`
-          : "var(--sui-bg-elevated)",
-        border: `1px solid ${
-          isFocused
-            ? STATUS_COLORS[node.data.status]
-            : isAdjacent
-              ? "var(--sui-text-muted)"
-              : "var(--sui-border)"
-        }`,
-        color: "var(--sui-text-primary)",
-        "font-size": "12px",
-        "box-sizing": "border-box",
+      class="dag-chart-demo__node"
+      classList={{
+        "dag-chart-demo__node--focused": isFocused,
+        "dag-chart-demo__node--adjacent": isAdjacent,
       }}
+      style={{ "--dag-node-status": STATUS_COLORS[node.data.status] }}
     >
-      <div style={{ display: "flex", "align-items": "center", gap: "6px" }}>
-        <span
-          style={{
-            width: "8px",
-            height: "8px",
-            "border-radius": "50%",
-            background: STATUS_COLORS[node.data.status],
-            "flex-shrink": "0",
-          }}
-        />
-        <span style={{ "font-weight": "600", "font-size": "13px" }}>
-          {node.data.label}
-        </span>
-      </div>
+      <ClusterRow>
+        <span class="dag-chart-demo__dot" />
+        <span class="dag-chart-demo__node-label">{node.data.label}</span>
+      </ClusterRow>
       <Show when={node.data.sublabel || node.data.estimate}>
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            color: "var(--sui-text-secondary)",
-            "font-size": "11px",
-          }}
-        >
+        <ClusterRow>
           <Show when={node.data.sublabel}>
-            <span>{node.data.sublabel}</span>
+            <TextSublabel>{node.data.sublabel}</TextSublabel>
           </Show>
           <Show when={node.data.estimate}>
-            <span>· {node.data.estimate}</span>
+            <TextSublabel>· {node.data.estimate}</TextSublabel>
           </Show>
-        </div>
+        </ClusterRow>
       </Show>
     </div>
   );
@@ -192,13 +148,7 @@ export const DagChartShowcase: Component = () => {
       <div class="example-group">
         <h3>Vertical layout</h3>
         <p class="text-meta">5-node task graph rendered top-to-bottom.</p>
-        <div
-          style={{
-            height: "420px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "6px",
-          }}
-        >
+        <div class="dag-chart-demo__frame dag-chart-demo__frame--h420">
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -210,15 +160,9 @@ export const DagChartShowcase: Component = () => {
         </div>
       </div>
 
-      <div class="example-group" style={{ "margin-top": "32px" }}>
+      <div class="example-group showcase-heading-gap--lg">
         <h3>Horizontal layout</h3>
-        <div
-          style={{
-            height: "320px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "6px",
-          }}
-        >
+        <div class="dag-chart-demo__frame dag-chart-demo__frame--h320">
           <DagChart
             nodes={nodes}
             edges={edges}
@@ -230,15 +174,9 @@ export const DagChartShowcase: Component = () => {
         </div>
       </div>
 
-      <div class="example-group" style={{ "margin-top": "32px" }}>
+      <div class="example-group showcase-heading-gap--lg">
         <h3>Minimal (label + status only)</h3>
-        <div
-          style={{
-            height: "260px",
-            border: "1px solid var(--sui-border)",
-            "border-radius": "6px",
-          }}
-        >
+        <div class="dag-chart-demo__frame dag-chart-demo__frame--h260">
           <DagChart
             nodes={minimalNodes}
             edges={minimalEdges}

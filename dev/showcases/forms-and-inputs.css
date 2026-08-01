@@ -1,0 +1,18 @@
+/* Forms-and-inputs gallery — a form needs a realistic pane width to arrange
+   itself in, and ResponsiveMoney needs boxes of known width to step down
+   through. Both are gallery furniture: the components own everything else. */
+
+.form-demo-frame {
+  max-width: 780px;
+}
+
+.form-demo-frame--narrow {
+  max-width: 420px;
+}
+
+/* The annualised total sits in a squeezed summary slot, which is the whole
+   reason the figure abbreviates rather than truncating. */
+.form-demo-total {
+  width: 7rem;
+  text-align: right;
+}

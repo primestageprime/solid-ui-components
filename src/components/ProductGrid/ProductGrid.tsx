@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// ProductGrid — Pure Composite (Depth ≥ 2).
+// ProductGrid — Pure Composite (Depth 2).
 // Composes AreaFocusGrid + ProductGridCard + FocusLabelBand + StackedProgressBar.
 //
 // (Area × focus) pivot grid. Above-the-line items are solutions whose
@@ -33,6 +33,7 @@ import {
 } from "../AreaFocusGrid";
 import { ProductGridCard } from "../ProductGridCard";
 import { FocusLabelBand } from "../FocusLabelBand";
+import { pipe, filter, map, pluck, find, every, sum } from "../../fn";
 
 export interface ProductGridWorkCounts {
   todo: number;
@@ -142,12 +143,12 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const workOf = (id: string): ProductGridWorkCounts | undefined => {
     const w = props.work?.[id];
     if (w) return w;
-    return props.items.find((it) => it.id === id)?.work;
+    return find((it) => it.id === id, props.items)?.work;
   };
 
   // ----- derived state ------------------------------------------------------
   const aboveItems = createMemo(() =>
-    props.items.filter((it) => it.position === "above"),
+    filter((it) => it.position === "above", props.items),
   );
 
   const satisfiedById = createMemo(() => {
@@ -160,7 +161,7 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   const isNeedMet = (need: ProductGridItem): boolean => {
     if (!need.solvedBy || need.solvedBy.length === 0) return false;
     const lookup = satisfiedById();
-    return need.solvedBy.every((id) => lookup.get(id) === true);
+    return every((id) => lookup.get(id) === true, need.solvedBy);
   };
 
   const selectedItemIds = createMemo<Set<string>>(() => {
@@ -168,12 +169,14 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
     if (!sel) return new Set();
     if (sel.kind === "focus") {
       return new Set(
-        props.items
-          .filter((it) => it.area === sel.area && it.focus === sel.focus)
-          .map((it) => it.id),
+        pipe(
+          props.items,
+          filter((it) => it.area === sel.area && it.focus === sel.focus),
+          pluck("id"),
+        ),
       );
     }
-    const it = props.items.find((x) => x.id === sel.id);
+    const it = find((x) => x.id === sel.id, props.items);
     if (!it) return new Set();
     const ids = new Set<string>([sel.id]);
     if (it.position === "below") {
@@ -213,10 +216,13 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         {
           id: area,
           label: area,
-          focuses: Array.from(focusMap.keys()).map((focus) => ({
-            id: `${area}:${focus}`,
-            label: focus,
-          })),
+          focuses: pipe(
+            Array.from(focusMap.keys()),
+            map((focus) => ({
+              id: `${area}:${focus}`,
+              label: focus,
+            })),
+          ),
         },
       ];
     });
@@ -225,17 +231,19 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
   /** Look up the above/below items for one (area × focus) cell. */
   const bucketFor = (key: AreaFocusCellKey): FocusBucket => {
     const empty: FocusBucket = { above: [], below: [] };
-    const above = props.items.filter(
+    const above = filter(
       (it) =>
         it.area === key.area.label &&
         it.focus === key.focus.label &&
         it.position === "above",
+      props.items,
     );
-    const below = props.items.filter(
+    const below = filter(
       (it) =>
         it.area === key.area.label &&
         it.focus === key.focus.label &&
         it.position === "below",
+      props.items,
     );
     return above.length === 0 && below.length === 0 ? empty : { above, below };
   };
@@ -283,21 +291,19 @@ export const ProductGrid: Component<ProductGridProps> = (props) => {
         s.focus === key.focus.label
       );
     };
-    const aboveTotals = () =>
-      above.reduce(
-        (acc, it) => {
-          const w = workOf(it.id);
-          if (w) {
-            acc.todo += w.todo;
-            acc.doing += w.doing;
-            acc.done += w.done;
-          }
-          return acc;
-        },
-        { todo: 0, doing: 0, done: 0 },
+    const aboveTotals = () => {
+      const works = filter(
+        (w): w is ProductGridWorkCounts => !!w,
+        map((it) => workOf(it.id), above),
       );
+      return {
+        todo: sum(pluck("todo", works)),
+        doing: sum(pluck("doing", works)),
+        done: sum(pluck("done", works)),
+      };
+    };
     const aboveSegmentsAccessor = () => workSegments(aboveTotals());
-    const metCount = () => below.filter((n) => isNeedMet(n)).length;
+    const metCount = () => filter((n) => isNeedMet(n), below).length;
     const belowSegmentsAccessor = () => {
       const m = metCount();
       const u = below.length - m;

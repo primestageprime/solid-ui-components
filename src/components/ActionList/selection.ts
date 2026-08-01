@@ -7,6 +7,8 @@
 // `idRange` (dside-ui commit 39860ad) so the behaviour ActionList now owns
 // matches what the consumer had before it adopted the list.
 // ============================================
+import { filter } from "../../fn";
+
 export const idRange = (
   list: readonly string[],
   anchor: string | null,
@@ -43,8 +45,8 @@ export const foldRange = (
   const anchorSelected = anchor != null && current.includes(anchor);
   if (anchorSelected) {
     const merged = new Set([...current, ...range]);
-    return order.filter((x) => merged.has(x));
+    return filter((x) => merged.has(x), order);
   }
   const drop = new Set(range);
-  return current.filter((x) => !drop.has(x));
+  return filter((x) => !drop.has(x), current);
 };

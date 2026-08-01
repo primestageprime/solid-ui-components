@@ -35,8 +35,10 @@ import {
   onMount,
 } from "solid-js";
 import { scaleLinear } from "d3-scale";
+import { observeSize } from "../../internal/dom/observeSize";
 import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
+import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
 import { ScrubChartAxes } from "./ScrubChartAxes";
 import {
@@ -61,6 +63,7 @@ import type {
   ScrubChartProps,
 } from "./types";
 import "./ScrubChart.css";
+import { map, filter } from "../../fn";
 
 export type {
   ScrubChartContext,
@@ -96,13 +99,12 @@ export const ScrubChart = <C extends Cell>(
   let frameEl: HTMLDivElement | undefined;
   onMount(() => {
     if (!frameEl) return;
-    if (typeof ResizeObserver === "undefined") return;
-    const obs = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) setChartWidth(entry.contentRect.width);
-    });
-    obs.observe(frameEl);
-    onCleanup(() => obs.disconnect());
+    // observeSize change-guards and rAF-defers the write. Setting chartWidth
+    // synchronously inside the observer dispatch re-rendered the chart (and the
+    // page around it) mid-delivery, which re-queued this same observer and made
+    // the browser emit "ResizeObserver loop completed with undelivered
+    // notifications" during a window drag. See internal/dom/observeSize.
+    onCleanup(observeSize(frameEl, (size) => setChartWidth(size.width)));
   });
 
   // Vertical plot region — independent of y-axis width.
@@ -122,9 +124,10 @@ export const ScrubChart = <C extends Cell>(
   const yTicks = createMemo<{ value: number; y: number }[]>(() => {
     const s = yScale();
     if (!s) return [];
-    return s
-      .ticks(props.yTickCount ?? DEFAULT_Y_TICK_COUNT)
-      .map((v) => ({ value: v, y: s(v) }));
+    return map(
+      (v) => ({ value: v, y: s(v) }),
+      s.ticks(props.yTickCount ?? DEFAULT_Y_TICK_COUNT),
+    );
   });
 
   // Auto-sized y-axis column: just wide enough to fit the longest formatted
@@ -195,12 +198,12 @@ export const ScrubChart = <C extends Cell>(
     // Stride the chosen cadence's candidates if still over the cap.
     if (indices.length > maxTicks) {
       const stride = Math.ceil(indices.length / maxTicks);
-      indices = indices.filter((_, i) => i % stride === 0);
+      indices = filter((_, i) => i % stride === 0, indices);
     }
-    return indices.map((i) => ({
+    return map((i) => ({
       x: indexToX(i),
       label: fmt(props.cells[i], chosen),
-    }));
+    }), indices);
   });
 
   // ── Track the inner DateAxis's scroll position + viewport width so we
@@ -216,11 +219,9 @@ export const ScrubChart = <C extends Cell>(
     el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
       passive: true,
     });
-    if (typeof ResizeObserver !== "undefined") {
-      const ro = new ResizeObserver(() => setAxisViewportWidth(el.clientWidth));
-      ro.observe(el);
-      onCleanup(() => ro.disconnect());
-    }
+    // Re-measure clientWidth (NOT the observed content box) so the scrollbar
+    // accounting is unchanged; observeSize only governs when this runs.
+    onCleanup(observeSize(el, () => setAxisViewportWidth(el.clientWidth)));
   };
 
   // Recenter request — scroll the axis so the requested cell is centered.
@@ -231,16 +232,34 @@ export const ScrubChart = <C extends Cell>(
     const el = axisScrollEl;
     if (!el) return;
     const n = props.cells.length;
-    // Use the measured per-cell width (see windowCells) and clamp the target to
-    // the scrollable range, so centering on the last cell pins it to the right
-    // edge instead of overshooting.
-    const w = n > 0 && el.scrollWidth > 0 ? el.scrollWidth / n : cellWidth();
-    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-    const target = Math.min(
-      maxScroll,
-      Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
-    );
-    el.scrollTo({ left: target, behavior: "smooth" });
+    if (n === 0) return;
+    // A centerOn requested on first mount can fire BEFORE the ribbon has laid
+    // out its cells, when `scrollWidth` is still 0 (or equals clientWidth). At
+    // that point maxScroll clamps to 0 and the recenter collapses to a no-op —
+    // the ribbon stays parked at the first cell. Defer to the next frame(s)
+    // until the content is measurably scrollable, then position instantly
+    // (a long smooth animation from a cold offset looks janky); once laid out,
+    // an explicit recenter animates smoothly.
+    const MAX_LAYOUT_FRAMES = 12;
+    const canDefer = typeof requestAnimationFrame === "function";
+    const applyScroll = (attempt: number) => {
+      // Content not yet wider than the viewport → layout not ready; retry.
+      if (el.scrollWidth <= el.clientWidth && attempt < MAX_LAYOUT_FRAMES) {
+        if (canDefer) requestAnimationFrame(() => applyScroll(attempt + 1));
+        return;
+      }
+      // Use the measured per-cell width (see windowCells) and clamp the target
+      // to the scrollable range, so centering on the last cell pins it to the
+      // right edge instead of overshooting.
+      const w = el.scrollWidth > 0 ? el.scrollWidth / n : cellWidth();
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      const target = Math.min(
+        maxScroll,
+        Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
+      );
+      el.scrollTo({ left: target, behavior: attempt === 0 ? "smooth" : "auto" });
+    };
+    applyScroll(0);
   });
 
   // Map the axis's scroll window onto cell indices using the axis's ACTUAL
@@ -351,7 +370,7 @@ export const ScrubChart = <C extends Cell>(
     if (!chartGesture.panActive) {
       if (Math.abs(dx) < CHART_PAN_THRESHOLD_PX) return;
       chartGesture.panActive = true;
-      (e.currentTarget as Element).setPointerCapture?.(chartGesture.pointerId);
+      safeSetPointerCapture(e.currentTarget as Element, chartGesture.pointerId);
     }
     const pitch = dayPitch();
     if (pitch <= 0) return;
@@ -486,17 +505,33 @@ export const ScrubChart = <C extends Cell>(
       </div>
 
       {/* The detail ribbon (day-cell filmstrip) — scrub layer only. Plain
-          mode renders just the chart frame above. */}
+          mode renders just the chart frame above. An optional accent border
+          wraps the whole ribbon (identity cue) when `ribbonAccent` is set. */}
       <Show when={scrubOn()}>
-        <DateAxis<C>
-          cells={props.cells}
-          selected={selectedIdx()}
-          today={props.today}
-          cellWidth={cellWidth()}
-          onCellClick={(idx, cell) => emitScrub(idx, cell)}
-          renderCell={props.renderCell}
-          scrollableRef={handleAxisRef}
-        />
+        <div
+          class="sui-scrub-chart__ribbon"
+          style={
+            props.ribbonAccent
+              ? {
+                  border: `1px ${
+                    props.ribbonAccentDashed ? "dashed" : "solid"
+                  } ${props.ribbonAccent}`,
+                  "border-radius": "6px",
+                  overflow: "hidden",
+                }
+              : undefined
+          }
+        >
+          <DateAxis<C>
+            cells={props.cells}
+            selected={selectedIdx()}
+            today={props.today}
+            cellWidth={cellWidth()}
+            onCellClick={(idx, cell) => emitScrub(idx, cell)}
+            renderCell={props.renderCell}
+            scrollableRef={handleAxisRef}
+          />
+        </div>
       </Show>
     </div>
   );

@@ -1,6 +1,18 @@
 import { type Component, createSignal } from "solid-js";
-import { ConfirmationModal } from "../../src/components/Modal";
+import {
+  ConfirmationModal,
+  createConfirmationModal,
+} from "../../src/components/Modal";
 import { Button } from "../../src/components/Button/Button";
+import { MutedBody } from "../../src/components/Text";
+
+// Medium destructive confirm dialog — danger accent + danger confirm button at
+// md size. Curried at module top so the tone/size config stays off the call site.
+const MdDangerConfirmationModal = createConfirmationModal({
+  variant: "danger",
+  confirmVariant: "danger",
+  size: "md",
+});
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -46,114 +58,34 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             loadingLabel="Inserting..."
             loading={loading()}
           >
-            <table
-              style={{
-                width: "100%",
-                "border-collapse": "collapse",
-                "font-size": "0.8rem",
-                "font-family": "monospace",
-              }}
-            >
+            <table>
               <thead>
-                <tr
-                  style={{
-                    "border-bottom":
-                      "2px solid rgba(var(--sui-accent-rgb), 0.3)",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "8px",
-                      "text-align": "left",
-                      color: "var(--sui-accent)",
-                    }}
-                  >
-                    ID
-                  </th>
-                  <th
-                    style={{
-                      padding: "8px",
-                      "text-align": "left",
-                      color: "var(--sui-accent)",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    style={{
-                      padding: "8px",
-                      "text-align": "right",
-                      color: "var(--sui-accent)",
-                    }}
-                  >
-                    Value
-                  </th>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Value</th>
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  style={{
-                    "border-bottom":
-                      "1px solid rgba(var(--sui-accent-rgb), 0.1)",
-                  }}
-                >
-                  <td
-                    style={{ padding: "8px", color: "var(--sui-text-primary)" }}
-                  >
-                    001
-                  </td>
-                  <td
-                    style={{ padding: "8px", color: "var(--sui-text-primary)" }}
-                  >
-                    Engine A
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      "text-align": "right",
-                      color: "var(--sui-success)",
-                      "font-weight": "700",
-                    }}
-                  >
-                    450.0
-                  </td>
+                <tr>
+                  <td>001</td>
+                  <td>Engine A</td>
+                  <td>450.0</td>
                 </tr>
-                <tr
-                  style={{
-                    "border-bottom":
-                      "1px solid rgba(var(--sui-accent-rgb), 0.1)",
-                  }}
-                >
-                  <td
-                    style={{ padding: "8px", color: "var(--sui-text-primary)" }}
-                  >
-                    002
-                  </td>
-                  <td
-                    style={{ padding: "8px", color: "var(--sui-text-primary)" }}
-                  >
-                    Engine B
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      "text-align": "right",
-                      color: "var(--sui-success)",
-                      "font-weight": "700",
-                    }}
-                  >
-                    380.0
-                  </td>
+                <tr>
+                  <td>002</td>
+                  <td>Engine B</td>
+                  <td>380.0</td>
                 </tr>
               </tbody>
             </table>
           </ConfirmationModal>
 
-          <h3 style={{ "margin-top": "24px" }}>Composed — Danger Variant</h3>
+          <h3>Composed — Danger Variant</h3>
           <button class="demo-btn" onClick={() => setDangerOpen(true)}>
             Open Danger Confirm
           </button>
-          <ConfirmationModal
+          <MdDangerConfirmationModal
             open={dangerOpen()}
             onClose={() => setDangerOpen(false)}
             onConfirm={() => setDangerOpen(false)}
@@ -161,20 +93,9 @@ export const ConfirmationModalShowcase: Component<Depth2Props> = (props) => {
             subtitle="This action cannot be undone"
             description="Are you sure you want to delete the selected records?"
             confirmLabel="Delete"
-            confirmVariant="danger"
-            variant="danger"
-            size="md"
           >
-            <p
-              style={{
-                margin: "0",
-                color: "var(--sui-text-muted)",
-                "font-size": "0.875rem",
-              }}
-            >
-              3 records will be permanently removed.
-            </p>
-          </ConfirmationModal>
+            <MutedBody>3 records will be permanently removed.</MutedBody>
+          </MdDangerConfirmationModal>
         </div>
         <div class="depth2-atoms">
           <h3>Sub-Components</h3>

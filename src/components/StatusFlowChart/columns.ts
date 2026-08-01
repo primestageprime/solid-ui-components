@@ -4,6 +4,7 @@
 // and the chart figures out where to draw it. No positional hints in the
 // data. These three functions encapsulate that math and are unit-tested
 // in isolation so the rendering layer can stay thin.
+import { sortBy, filter, map, some, every } from "../../fn";
 
 export type StatusFlowNode = {
   id: string;
@@ -56,7 +57,7 @@ export function pickVisibleCols(
   breakpoints: StatusFlowBreakpoint[],
 ): number {
   if (breakpoints.length === 0) return 1;
-  const sorted = [...breakpoints].sort((a, b) => a.minWidth - b.minWidth);
+  const sorted = sortBy((b: StatusFlowBreakpoint) => b.minWidth)(breakpoints);
   let chosen = sorted[0].visibleCols;
   for (const bp of sorted) {
     if (containerWidth >= bp.minWidth) chosen = bp.visibleCols;
@@ -68,7 +69,7 @@ export function pickVisibleCols(
 /** Build a status → column-index map. Throws if a status appears in 2+ columns. */
 function indexStatuses(columns: StatusFlowColumn[]): Map<string, number> {
   const out = new Map<string, number>();
-  columns.forEach((c, i) => {
+  for (const [i, c] of columns.entries()) {
     for (const s of c.statuses) {
       if (out.has(s)) {
         throw new Error(
@@ -78,7 +79,7 @@ function indexStatuses(columns: StatusFlowColumn[]): Map<string, number> {
       }
       out.set(s, i);
     }
-  });
+  }
   return out;
 }
 
@@ -150,10 +151,10 @@ export function resolveParentStatuses(
   for (const n of nodes) {
     const children = childrenByParent.get(n.id);
     if (children && children.length > 0) {
-      const statuses = children.map((c) => c.status);
-      if (statuses.some((s) => s === centerStatus)) {
+      const statuses = map((c) => c.status, children);
+      if (some((s) => s === centerStatus, statuses)) {
         out.set(n.id, centerStatus);
-      } else if (statuses.every((s) => s === statuses[0])) {
+      } else if (every((s) => s === statuses[0], statuses)) {
         out.set(n.id, statuses[0]);
       } else {
         out.set(n.id, n.status);
@@ -188,7 +189,7 @@ export const STATUS_TO_COL: Record<string, number> = {
  * entries that reference ids outside the leaf set.
  */
 export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const byId = new Map(map((n) => [n.id, n], leaves));
   const remainingDeps = new Map<string, Set<string>>();
   for (const n of leaves) {
     const deps = new Set<string>();
@@ -205,8 +206,7 @@ export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
       if ((remainingDeps.get(n.id)?.size ?? 0) === 0) ready.push(n.id);
     }
     if (ready.length === 0) break; // cycle / unreachable — stop
-    ready.sort();
-    for (const id of ready) {
+    for (const id of sortBy((id: string) => id, ready)) {
       result.push(id);
       inResult.add(id);
       for (const [, deps] of remainingDeps) deps.delete(id);
@@ -217,15 +217,15 @@ export function topoSortAlpha(leaves: StatusFlowNode[]): string[] {
 
 /** Compute each leaf's topological depth via memoized recursion. */
 function topoDepths(leaves: StatusFlowNode[]): Map<string, number> {
-  const byId = new Map(leaves.map((n) => [n.id, n]));
+  const byId = new Map(map((n) => [n.id, n], leaves));
   const cache = new Map<string, number>();
   const visit = (id: string): number => {
     const hit = cache.get(id);
     if (hit !== undefined) return hit;
     const n = byId.get(id);
     if (!n) return 0;
-    const deps = (n.dependsOn ?? []).filter((d) => byId.has(d));
-    const d = deps.length === 0 ? 0 : Math.max(...deps.map(visit)) + 1;
+    const deps = filter((d) => byId.has(d), n.dependsOn ?? []);
+    const d = deps.length === 0 ? 0 : Math.max(...map(visit, deps)) + 1;
     cache.set(id, d);
     return d;
   };
@@ -253,16 +253,19 @@ export function computeColFor(
   if (n.status === "DOING") return 0;
 
   const leaves =
-    parentIds.size > 0 ? nodes.filter((node) => node.parentId) : nodes;
+    parentIds.size > 0 ? filter((node) => Boolean(node.parentId), nodes) : nodes;
   const depths = topoDepths(leaves);
   const myDepth = depths.get(n.id) ?? 0;
 
-  const sameStatus = leaves.filter((l) => l.status === n.status);
+  const sameStatus = filter((l) => l.status === n.status, leaves);
   const uniqueDepths = Array.from(
-    new Set(sameStatus.map((l) => depths.get(l.id) ?? 0)),
+    new Set(map((l) => depths.get(l.id) ?? 0, sameStatus)),
   );
-  uniqueDepths.sort((a, b) => (n.status === "DONE" ? b - a : a - b));
-  const rank = uniqueDepths.indexOf(myDepth) + 1; // 1-indexed
+  const sortedDepths = sortBy(
+    (d: number) => (n.status === "DONE" ? -d : d),
+    uniqueDepths,
+  );
+  const rank = sortedDepths.indexOf(myDepth) + 1; // 1-indexed
 
   return n.status === "DONE" ? -rank : rank;
 }

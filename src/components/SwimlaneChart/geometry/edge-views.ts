@@ -15,6 +15,7 @@ import type {
   SideBadges,
   SummaryLike,
 } from "./shared";
+import { map, filter, flatMap } from "../../../fn";
 
 export interface EdgeView {
   d: string;
@@ -55,7 +56,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
     ports,
     badgeRadius: BADGE_RADIUS,
   } = input;
-  const summariesById = new Map(summaries.map((s) => [s.id, s] as const));
+  const summariesById = new Map(map((s) => [s.id, s] as const, summaries));
   // Build the obstacle list once per layout — every visible node is a
   // potential obstacle for any edge that isn't anchored on it.
   const allRects: ObstacleRect[] = [];
@@ -101,7 +102,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
     const t = toPortY !== undefined ? { ...to, y: toPortY } : to;
     return bezierAvoidingObstacles(f, t, obstacles);
   };
-  const all = edges.flatMap((e) => {
+  const all = flatMap((e) => {
     // Skip synthetic anchor→summary edges — the boundary-badge memo
     // renders those independently as the side stub. Only real data
     // edges should produce dashed lines to/from the badges.
@@ -136,7 +137,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
         width: BADGE_RADIUS * 2,
         height: pillHeight,
       };
-      const obstacles = allRects.filter((r) => r.id !== e.targetId);
+      const obstacles = filter((r) => r.id !== e.targetId, allRects);
       const key = `${e.sourceId}|${e.targetId}`;
       // Both endpoints anchor at the visible node's row y. Bypassing
       // port-assignment on both sides keeps the corridor on the
@@ -202,7 +203,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
         width: BADGE_RADIUS * 2,
         height: pillHeight,
       };
-      const obstacles = allRects.filter((r) => r.id !== e.sourceId);
+      const obstacles = filter((r) => r.id !== e.sourceId, allRects);
       const key = `${e.sourceId}|${e.targetId}`;
       // Anchor both ports at the visible source's row y so corridor-
       // side selection stays in sync with the actual visual layout.
@@ -219,8 +220,9 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
 
     const t = positions.get(e.targetId);
     if (!t) return [];
-    const obstacles = allRects.filter(
+    const obstacles = filter(
       (r) => r.id !== e.sourceId && r.id !== e.targetId,
+      allRects,
     );
     // Path follows the edge's data direction (source -> target) so the
     // arrowhead (marker-end) lands at the target = dependent.
@@ -232,7 +234,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
         key,
       },
     ];
-  });
+  }, edges);
   // Dedup paths by key — the layout emits both the rewritten real
   // edge and a synthetic anchor→summary edge for boundary badges,
   // and we want exactly one path per (source, target) pair.

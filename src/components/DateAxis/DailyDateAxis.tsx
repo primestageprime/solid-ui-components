@@ -1,8 +1,10 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// DailyDateAxis — Composed (Depth 2). Curried variant that renders DateAxis (Depth 1).
 import { type Component, type JSX, createMemo } from "solid-js";
 import { DateAxis } from "./DateAxis";
 import { dailyCells, isSameCalendarDay, type Cell } from "./cells";
+import { findIndex } from "../../fn";
 import {
   dayCellContent,
   dayCellContext,
@@ -33,7 +35,7 @@ export const DailyDateAxis: Component<DailyDateAxisProps> = (props) => {
   const selectedIndex = createMemo(() => {
     if (props.selected === undefined) return undefined;
     const target = props.selected;
-    const idx = cells().findIndex((c) => isSameCalendarDay(c.start, target));
+    const idx = findIndex((c) => isSameCalendarDay(c.start, target), cells());
     return idx >= 0 ? idx : undefined;
   });
 

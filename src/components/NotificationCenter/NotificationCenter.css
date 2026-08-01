@@ -1,0 +1,167 @@
+/* NotificationCenter — overlay-control chrome only.
+ * Owns the static positioning of the trigger + its corner overlays (the overlay
+ * carve-out that PopoverMenu/Dropdown/Toast also take), the trigger's
+ * hover/open skin, and the inbox row's intrinsic decoration. ALL content
+ * arrangement still comes from composed Layout variants — the only geometry
+ * here is self-contained elements centering their own single glyph (allowed
+ * intrinsic element styling, same carve-out as CountBadge), never child
+ * arrangement. The dynamic panel position rides inline via panelStyle().
+ * No hand-rolled flex/grid/gap layout. */
+
+.sui-notification-center {
+  position: relative;
+  display: inline-block;
+}
+
+/* ============================================
+   Trigger — the bell
+   ============================================
+   Transparent until hover, tinted well + accent border while open. The open
+   skin matches `.sui-dropdown--subtle.sui-dropdown--open` so every subtle
+   overlay trigger in SUI marks "my panel is showing" the same way; the glyph
+   also swaps outline→solid in the component, giving a second signal that does
+   not depend on colour. */
+.sui-notification-center__trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Sized so the corner badge clears the glyph instead of sitting on it. */
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm, 4px);
+  cursor: pointer;
+  color: var(--sui-text-secondary);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sui-notification-center__trigger:hover {
+  background: rgba(var(--sui-accent-rgb), 0.06);
+  color: var(--sui-text-primary);
+}
+
+.sui-notification-center__trigger--open,
+.sui-notification-center__trigger--open:hover {
+  background: rgba(var(--sui-accent-rgb), 0.14);
+  border-color: var(--sui-accent);
+  color: var(--sui-accent);
+}
+
+/* Badge / spinner overlays anchored to the trigger's top-right corner. The
+ * badge carries a background-coloured ring so it punches out of the trigger's
+ * own tint when open. */
+.sui-notification-center__corner {
+  position: absolute;
+}
+
+.sui-notification-center__corner--busy {
+  top: 0;
+  right: 0;
+}
+
+.sui-notification-center__corner--badge {
+  top: -3px;
+  right: -5px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--sui-bg-primary);
+}
+
+/* ============================================
+   Panel — inbox shell
+   ============================================ */
+
+/* The popover is height-capped so a long feed scrolls INSIDE the panel (the
+ * ScrollColumn body) rather than growing past the viewport. Not child
+ * arrangement — a self-imposed size bound on the panel itself. */
+.sui-notification-center__panel {
+  max-height: min(28rem, 70vh);
+}
+
+/* ============================================
+   Row — media object (unread gutter · well · text)
+   ============================================ */
+
+/* Unboxed at rest; hover raises the wash + border so the row reads as a target
+ * only when it is one. Padding/background/border are decoration — the row's
+ * arrangement comes from the composed TopClusterRow. */
+.sui-notification-center__row {
+  padding: var(--sui-space-2-5, 10px);
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm, 4px);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.sui-notification-center__row:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: var(--sui-border);
+}
+
+/* Only an activatable row advertises itself as clickable — the row is
+ * interactive exactly when the consumer supplied `onAction`. */
+.sui-notification-center__row[role="button"] {
+  cursor: pointer;
+}
+
+/* Per-tone colour, consumed by the well below. Set on the row so a future
+ * tone-driven accent (rail, title colour) has a single source. */
+.sui-notification-center__row--info {
+  --sui-nc-tone: var(--sui-accent);
+  --sui-nc-tone-rgb: var(--sui-accent-rgb);
+}
+
+.sui-notification-center__row--warning {
+  --sui-nc-tone: var(--sui-warning);
+  --sui-nc-tone-rgb: var(--sui-warning-rgb);
+}
+
+.sui-notification-center__row--task {
+  --sui-nc-tone: var(--sui-text-muted);
+  --sui-nc-tone-rgb: 123, 138, 160;
+}
+
+/* Unread gutter dot. Always rendered so read and unread rows share a text
+ * origin — only its fill changes, never the layout. */
+.sui-notification-center__unread {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.sui-notification-center__unread--on {
+  background: var(--sui-accent);
+}
+
+/* Tone well — a self-contained tinted square centering its own glyph. This is
+ * what makes an unboxed row still read as a unit. inline-flex here is INTRINSIC
+ * element styling (STYLE_GUIDE › "Child arrangement vs intrinsic element
+ * styling"), the same carve-out CountBadge takes. */
+.sui-notification-center__well {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid rgba(var(--sui-nc-tone-rgb), 0.28);
+  border-radius: var(--sui-radius-sm, 4px);
+  background: rgba(var(--sui-nc-tone-rgb), 0.14);
+  color: var(--sui-nc-tone);
+}
+
+/* Timestamp must not wrap or be squeezed by a long title — the title wraps,
+ * the time stays whole. */
+.sui-notification-center__when {
+  white-space: nowrap;
+  flex-shrink: 0;
+}

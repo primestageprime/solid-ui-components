@@ -1,5 +1,9 @@
 import { Component, createMemo, createSignal, Show } from "solid-js";
-import { SectionTitle, MutedBody } from "../../src/components/Text";
+import { SectionTitle, MutedBody, TextSublabel } from "../../src/components/Text";
+import {
+  WrappedClusterRow,
+  TightCenteredColumn,
+} from "../../src/components/Layout";
 import { ActionListItem, type ActionListItemTone } from "../../src/components/ActionListItem";
 import {
   ActionList,
@@ -8,6 +12,11 @@ import {
   type ActionListTag,
 } from "../../src/components/ActionList";
 import { AssigneeIcon, deriveInitials } from "../../src/components/ParticipantAvatar";
+import {
+  composeTagPairs,
+  type SourceTag,
+  type TagDisplayConfig,
+} from "../../src/components/Badge";
 
 // ============================================================================
 // ActionList showcase — the promoted ListItem workshop bench.
@@ -50,52 +59,68 @@ const roster: { name: string; kind: "person" | "ai" }[] = [
 ];
 const rosterNames = roster.map((p) => p.name);
 
+/** A flat tag set whose customer/project and owner/assignee dims pair up, plus a
+ *  lone `priority` that has no partner rule and stays labeled. */
+const tagSource: SourceTag[] = [
+  { dim: "customer", value: "acme" },
+  { dim: "project", value: "apollo" },
+  { dim: "owner", value: "peter" },
+  { dim: "assignee", value: "ada" },
+  { dim: "priority", value: "high" },
+];
+const tagConfig: TagDisplayConfig = {
+  pairs: [
+    { parent: "customer", child: "project" },
+    { parent: "owner", child: "assignee" },
+  ],
+};
+
 const seedTasks: ActionListItemData[] = [
   {
     id: "t1",
     name: "deploy minute-level-hover",
     assignee: { initials: "P", kind: "person", active: true },
-    tags: [{ label: "stax:jtf", active: true }],
+    tags: [{ label: "acme:apollo", active: true }],
     status: "DONE",
   },
   {
     id: "t2",
     name: "Get creds to connect to sync spreadsheet",
-    tags: [{ label: "stax:jtf", active: true }],
+    tags: [{ label: "acme:apollo", active: true }],
     status: "DOING",
   },
   {
     id: "t3",
     name: "Initial user flow — how to add account?",
     assignee: { initials: "A", kind: "ai" },
-    tags: [{ label: "primestage:thorcasting", active: true }],
+    tags: [{ label: "globex:borealis", active: true }],
     status: "DOING",
   },
   {
     id: "t4",
     name: 'stray "today" indicator on chart',
     assignee: { initials: "A", kind: "ai" },
-    tags: [{ label: "primestage:thorcasting", active: true }],
+    tags: [{ label: "globex:borealis", active: true }],
     status: "TODO",
   },
   {
     id: "t5",
     name: "wire showcase filter to tag facets",
     assignee: { initials: "DA", kind: "ai" },
-    tags: [{ label: "primestage:dside" }],
+    tags: [{ label: "globex:cirrus" }],
     status: "TODO",
   },
   {
     id: "t6",
-    name: "backfill June hours into the STAX sheet",
+    name: "backfill June hours into the billing sheet",
     assignee: { initials: "P", kind: "person" },
-    tags: [{ label: "stax" }],
+    tags: [{ label: "acme" }],
     status: "TODO",
   },
   {
     id: "t7",
     name: "sketch swimlane card hover states",
-    tags: [{ label: "primestage:thorcasting" }],
+    tags: [{ label: "globex:borealis" }],
     status: "TODO",
   },
 ];
@@ -143,27 +168,27 @@ export const ActionListShowcase: Component = () => {
         { initials: "P", kind: "person", active: true },
         { initials: "DA", kind: "ai" },
       ],
-      tags: [{ key: "primestage", value: "dside", active: false }],
+      tags: [{ key: "globex", value: "cirrus", active: false }],
       status: "DOING",
     },
     {
       id: "d2",
-      name: "backfill STAX June hours",
+      name: "backfill June hours from the billing sheet",
       assignee: { initials: "P", kind: "person" },
-      tags: [{ label: "stax" }],
+      tags: [{ label: "acme" }],
       status: "TODO",
     },
     {
       id: "d3",
-      name: "thorcasting swimlane hovers",
+      name: "borealis swimlane hovers",
       assignee: { initials: "DA", kind: "ai" },
-      tags: [{ key: "primestage", value: "thorcasting" }],
+      tags: [{ key: "globex", value: "borealis" }],
       status: "TODO",
     },
     {
       id: "d4",
       name: "wire showcase filter to tag facets",
-      tags: [{ key: "primestage", value: "dside" }],
+      tags: [{ key: "globex", value: "cirrus" }],
       status: "TODO",
     },
   ]);
@@ -250,7 +275,7 @@ export const ActionListShowcase: Component = () => {
           statusOptions={STATUS_OPTIONS}
           tone={toneFor("TODO")}
           assignee={{ initials: "P", kind: "person", active: true }}
-          tags={[{ label: "stax", active: true }, { label: "jtf" }]}
+          tags={[{ label: "acme", active: true }, { label: "apollo" }]}
           onStatusChange={() => {}}
           onTitleChange={() => {}}
           onDismiss={() => {}}
@@ -264,7 +289,7 @@ export const ActionListShowcase: Component = () => {
         <ActionListItem
           title="with tags"
           tone={toneFor()}
-          tags={[{ label: "jtf" }, { label: "stax", active: true }]}
+          tags={[{ label: "apollo" }, { label: "acme", active: true }]}
         />
         <ActionListItem title="with status" status="DONE" tone={toneFor("DONE")} />
         <ActionListItem
@@ -272,7 +297,7 @@ export const ActionListShowcase: Component = () => {
           status="TODO"
           tone={toneFor("TODO")}
           assignee={{ initials: "P", kind: "person", active: true }}
-          tags={[{ label: "primestage" }]}
+          tags={[{ label: "globex" }]}
           onDismiss={() => {}}
         />
         <ActionListItem
@@ -280,9 +305,9 @@ export const ActionListShowcase: Component = () => {
           status="TODO"
           tone={toneFor("TODO")}
           tags={[
-            { label: "primestage:thorcasting", active: true },
-            { label: "primestage:dside" },
-            { label: "stax" },
+            { label: "globex:borealis", active: true },
+            { label: "globex:cirrus" },
+            { label: "acme" },
           ]}
           onDismiss={() => {}}
         />
@@ -295,7 +320,7 @@ export const ActionListShowcase: Component = () => {
             { initials: "DA", kind: "ai" },
             { initials: "AA", kind: "person" },
           ]}
-          tags={[{ label: "primestage:dside", active: true }]}
+          tags={[{ label: "globex:cirrus", active: true }]}
         />
       </div>
 
@@ -340,33 +365,18 @@ export const ActionListShowcase: Component = () => {
       </MutedBody>
       <div style={stackStyle}>
         <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "8px",
-            "min-height": "24px",
-            color: "var(--sui-accent)",
-            "font-size": "0.8125rem",
-          }}
+          class="action-list-demo__statusbar"
         >
-          <span style={{ opacity: 0.75 }}>{demoSel().length} selected</span>
+          <span class="action-list-demo__count">{demoSel().length} selected</span>
           <Show when={tagFilter()}>
-            <span style={{ opacity: 0.5 }}>·</span>
+            <span class="action-list-demo__sep">·</span>
             <span>
               filtering <b>{tagFilter()}</b> ({demoRows().length} of {demoTasks().length})
             </span>
             <button
               type="button"
               onClick={() => setTagFilter(null)}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--sui-border)",
-                "border-radius": "999px",
-                color: "inherit",
-                cursor: "pointer",
-                "line-height": 1,
-                padding: "0 6px",
-              }}
+              class="action-list-demo__reset"
               aria-label="Clear tag filter"
             >
               ×
@@ -401,19 +411,12 @@ export const ActionListShowcase: Component = () => {
       </MutedBody>
       <div style={stackStyle}>
         <div
-          style={{
-            display: "flex",
-            "align-items": "center",
-            gap: "8px",
-            "min-height": "24px",
-            color: "var(--sui-accent)",
-            "font-size": "0.8125rem",
-          }}
+          class="action-list-demo__statusbar"
         >
-          <span style={{ opacity: 0.75 }}>
+          <span class="action-list-demo__count">
             {replaceSel().length} selected [{replaceSel().join(", ")}]
           </span>
-          <span style={{ opacity: 0.5 }}>·</span>
+          <span class="action-list-demo__sep">·</span>
           <span>
             last gesture: <b>{lastGesture()}</b>
           </span>
@@ -443,25 +446,52 @@ export const ActionListShowcase: Component = () => {
         clash (<b>Ada Lovelace</b>, <b>Deep Agent</b>) keep a single letter. Hover any
         glyph for the full name.
       </MutedBody>
-      <div style={{ display: "flex", "align-items": "center", gap: "16px", "flex-wrap": "wrap" }}>
+      <WrappedClusterRow>
         {(() => {
           const initials = deriveInitials(rosterNames);
           return roster.map((person) => (
-            <div
-              style={{
-                display: "flex",
-                "flex-direction": "column",
-                "align-items": "center",
-                gap: "4px",
-                color: "var(--sui-text)",
-              }}
-              title={person.name}
-            >
+            <TightCenteredColumn title={person.name}>
               <AssigneeIcon initials={initials.get(person.name)!} kind={person.kind} />
-              <span style={{ "font-size": "0.75rem", opacity: 0.7 }}>{person.name}</span>
-            </div>
+              <TextSublabel>{person.name}</TextSublabel>
+            </TightCenteredColumn>
           ));
         })()}
+      </WrappedClusterRow>
+
+      <SectionTitle>Composed tag pairs — composeTagPairs</SectionTitle>
+      <MutedBody>
+        Apps carry tags as flat <code>dim:value</code> facts; showing every one as a
+        labeled pill is noise. <code>composeTagPairs(tags, cfg)</code> collapses a
+        configured pair (both dims present) into ONE split lozenge of the two VALUES —
+        the dim names drop out but survive in the hover <code>title</code>. Here
+        <code>customer:acme + project:apollo</code> becomes <b>acme │ apollo</b> and
+        <code>owner:peter + assignee:ada</code> becomes <b>peter │ ada</b>, while the
+        partnerless <code>priority:high</code> falls through to its labeled form. The
+        composed output drops straight onto ActionList's <code>tags</code>.
+      </MutedBody>
+      <div style={stackStyle}>
+        <MutedBody>
+          Raw in:{" "}
+          <code>{tagSource.map((t) => `${t.dim}:${t.value}`).join(", ")}</code>
+        </MutedBody>
+        <ActionListItem
+          title="composed tags — two pairs collapse, one leftover stays labeled"
+          tone={toneFor()}
+          tags={composeTagPairs(tagSource, tagConfig).map((t) => ({
+            key: t.key,
+            value: t.value,
+          }))}
+        />
+        <div class="action-list-demo__footer">
+          {composeTagPairs(tagSource, tagConfig).map((t) => (
+            <span>
+              <b>
+                {t.key} │ {t.value}
+              </b>{" "}
+              — <code>{t.title}</code>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

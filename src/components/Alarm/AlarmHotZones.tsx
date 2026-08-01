@@ -1,5 +1,6 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
+// AlarmHotZones — Structural (Depth 1). SVG chart slot; composes no library components.
 import { type Component, For } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import { useChart } from "../Chart/context";

@@ -6,6 +6,8 @@
 // padding/radius/bg/border. Factory: createSurface().
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import { Stack } from "../Layout/Stack";
+import { Row } from "../Layout/Row";
 import "./Surface.css";
 
 export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
@@ -15,9 +17,11 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   borderColor?: string;
   interactive?: boolean;
   active?: boolean;
+  shadow?: boolean;
   direction?: "row" | "column";
   align?: "start" | "center" | "stretch";
-  gap?: "none" | "sm" | "md" | "lg";
+  /** Forwarded verbatim to the inner Stack/Row — same scale, plus `none`. */
+  gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
 }
@@ -36,6 +40,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     "borderColor",
     "interactive",
     "active",
+    "shadow",
     "direction",
     "align",
     "gap",
@@ -55,17 +60,21 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     if (local.gap) classList.push(`surface--gap-${local.gap}`);
     if (local.interactive) classList.push("surface--interactive");
     if (local.active) classList.push("surface--active");
+    if (local.shadow) classList.push("surface--shadow");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
 
   const mergedStyle = (): JSX.CSSProperties | undefined => {
     const custom: JSX.CSSProperties = {};
-    if (local.bg) custom.background = local.bg;
-    if (local.borderColor) custom["border-color"] = local.borderColor;
+    // When active, .surface--active owns background/border — inline idle
+    // colors would override the class and make the active state invisible.
+    if (local.bg && !local.active) custom.background = local.bg;
+    if (local.borderColor && !local.active)
+      custom["border-color"] = local.borderColor;
     if (local.minWidth) custom["min-width"] = local.minWidth;
     if (local.maxWidth) custom["max-width"] = local.maxWidth;
-    if (!local.bg && !local.borderColor && !local.minWidth && !local.maxWidth)
+    if (Object.keys(custom).length === 0)
       return local.style as JSX.CSSProperties | undefined;
     const base = (
       typeof local.style === "object" ? local.style : {}
@@ -73,9 +82,36 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     return { ...base, ...custom };
   };
 
+  // Layout is delegated to a composed Stack/Row so Surface owns no
+  // flex/gap/align geometry (layout-purity). The surface--dir-/align-/gap-
+  // classes stay as inert back-compat hooks; the actual geometry lives on the
+  // inner Layout wrapper, present only when `direction` is set (a bare Surface,
+  // like every idle card, stays a plain block div — no wrapper). Surface's gap
+  // scale IS the Stack/Row scale, forwarded verbatim; `none` → no gap. It used
+  // to snap sm/md/lg → sm because Stack/Row had no md/lg step, which made the
+  // prop type a lie — every NoteCard/WideCard rendered 8px whatever you asked
+  // for. The column wrapper fills the surface height so bottom-pinned meta rows
+  // (margin-top:auto) still reach the card's bottom edge.
+  const laidOut = (): JSX.Element => {
+    if (!local.direction) return local.children as JSX.Element;
+    const gap = local.gap !== "none" ? local.gap : undefined;
+    if (local.direction === "row") {
+      return (
+        <Row gap={gap} align={local.align}>
+          {local.children}
+        </Row>
+      );
+    }
+    return (
+      <Stack gap={gap} align={local.align} fill>
+        {local.children}
+      </Stack>
+    );
+  };
+
   return (
     <div class={classes()} style={mergedStyle()} {...others}>
-      {local.children}
+      {laidOut()}
     </div>
   );
 };
@@ -88,6 +124,7 @@ export type SurfaceOverrides = Pick<
   | "bg"
   | "borderColor"
   | "interactive"
+  | "shadow"
   | "direction"
   | "align"
   | "gap"

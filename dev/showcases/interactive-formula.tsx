@@ -7,6 +7,7 @@ import {
 import { NumberWithUnits } from "../../src/components/DataDisplay";
 import { DTable, DT, DD } from "../../src/components/DataList";
 import { Stack } from "../../src/components/Layout/Stack";
+import { NarrowStack } from "../../src/components/Layout";
 
 interface Depth3Props {
   onNavigate?: (id: string) => void;
@@ -23,43 +24,45 @@ export const InteractiveFormulaShowcase: Component<Depth3Props> = (props) => {
       <div class="depth2-layout">
         <div class="depth2-composed">
           <h3>Composed</h3>
-          <div class="text-meta" style={{ "margin-bottom": "12px" }}>
-            Hover a variable in the formula or a table row — both highlight
-            together.
-          </div>
-          <FormulaProvider>
-            <Stack gap="sm">
-              <DTable>
-                <FormulaVarRow varId="nox">
-                  <DT>NOx</DT>
-                  <DD highlight>
-                    <NumberWithUnits value={8.42} units="ppm" />
-                  </DD>
-                </FormulaVarRow>
-                <FormulaVarRow varId="f2">
-                  <DT>F&#x2082;</DT>
-                  <DD>
-                    <NumberWithUnits
-                      value={2841.3}
-                      units="scfm"
-                      precision={1}
-                    />
-                  </DD>
-                </FormulaVarRow>
-                <FormulaVarRow varId="kw">
-                  <DT>Engine</DT>
-                  <DD>
-                    <NumberWithUnits value={1200} units="kW" />
-                  </DD>
-                </FormulaVarRow>
-              </DTable>
-              <MathFormula
-                latex={
-                  "\\frac{\\var{nox}{NOx} \\times \\var{f2}{F_2} \\times 2760}{836200 \\times \\var{kw}{kW}}"
-                }
-              />
-            </Stack>
-          </FormulaProvider>
+          <NarrowStack>
+            <div class="text-meta">
+              Hover a variable in the formula or a table row — both highlight
+              together.
+            </div>
+            <FormulaProvider>
+              <Stack gap="sm">
+                <DTable>
+                  <FormulaVarRow varId="nox">
+                    <DT>NOx</DT>
+                    <DD highlight>
+                      <NumberWithUnits value={8.42} units="ppm" />
+                    </DD>
+                  </FormulaVarRow>
+                  <FormulaVarRow varId="f2">
+                    <DT>F&#x2082;</DT>
+                    <DD>
+                      <NumberWithUnits
+                        value={2841.3}
+                        units="scfm"
+                        precision={1}
+                      />
+                    </DD>
+                  </FormulaVarRow>
+                  <FormulaVarRow varId="kw">
+                    <DT>Engine</DT>
+                    <DD>
+                      <NumberWithUnits value={1200} units="kW" />
+                    </DD>
+                  </FormulaVarRow>
+                </DTable>
+                <MathFormula
+                  latex={
+                    "\\frac{\\var{nox}{NOx} \\times \\var{f2}{F_2} \\times 2760}{836200 \\times \\var{kw}{kW}}"
+                  }
+                />
+              </Stack>
+            </FormulaProvider>
+          </NarrowStack>
         </div>
         <div class="depth2-atoms">
           <h3>Atomic</h3>

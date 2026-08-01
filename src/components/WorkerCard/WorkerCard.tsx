@@ -11,6 +11,7 @@
 import { type Component, type JSX, splitProps, Show } from "solid-js";
 import { Surface } from "../Surface/Surface";
 import { Text } from "../Text/Text";
+import { SpreadRow, ClusterRow, ClipBox } from "../Layout/variants";
 import "./WorkerCard.css";
 
 export type WorkerStatus =
@@ -215,8 +216,8 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
       {...others}
     >
       {/* Row 1: Identity */}
-      <div class="worker-card__identity">
-        <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
+      <SpreadRow class="worker-card__identity">
+        <ClusterRow>
           <Text as="span" class="worker-card__name" color={effectiveColor()}>
             W{local.slotId}
           </Text>
@@ -229,7 +230,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
           >
             {effectiveLabel()}
           </span>
-        </div>
+        </ClusterRow>
         <Text
           as="span"
           class="worker-card__timer"
@@ -239,10 +240,10 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
         >
           {formatTime(elapsed())}
         </Text>
-      </div>
+      </SpreadRow>
 
       {/* Row 2: History */}
-      <div class="worker-card__history">
+      <SpreadRow class="worker-card__history">
         <Text as="span">{local.jobsCompleted} jobs done</Text>
         <Show when={local.currentJob}>
           <Text as="span" color={CYAN}>
@@ -254,13 +255,13 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             {fmtNum(local.avgRatePerSec)} rec/s avg
           </Text>
         </Show>
-      </div>
+      </SpreadRow>
 
-      {/* Row 3: Plan (animated expand/collapse) */}
-      <div
+      {/* Row 3: Plan (animated expand/collapse) — ClipBox clips the max-height collapse */}
+      <ClipBox
         class={`worker-card__plan ${showPlan() ? "worker-card__plan--visible" : "worker-card__plan--hidden"}`}
       >
-        <div class="worker-card__plan-inner">
+        <SpreadRow class="worker-card__plan-inner">
           <Show
             when={isBatchMode()}
             fallback={<Text as="span">single stream</Text>}
@@ -279,14 +280,14 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             </Show>
             {local.columnCount ?? "?"} cols
           </Text>
-        </div>
-      </div>
+        </SpreadRow>
+      </ClipBox>
 
-      {/* Row 4: Progress (animated expand/collapse) */}
-      <div
+      {/* Row 4: Progress (animated expand/collapse) — ClipBox clips the collapse + the bar mask */}
+      <ClipBox
         class={`worker-card__progress ${isActive() ? "worker-card__progress--visible" : "worker-card__progress--hidden"}`}
       >
-        <div class="worker-card__bar-track">
+        <ClipBox class="worker-card__bar-track">
           <div
             class={`worker-card__bar-fill ${local.status === "extracting" ? "worker-card__bar-fill--extracting" : ""}`}
             style={{
@@ -294,7 +295,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
               background: barColor(),
             }}
           />
-        </div>
+        </ClipBox>
         <Show when={local.rows != null}>
           <Text as="div" class="worker-card__rows" color={CYAN}>
             {fmtNum(local.rows!)} rows
@@ -308,7 +309,7 @@ export const WorkerCard: Component<WorkerCardProps> = (props) => {
             </Show>
           </Text>
         </Show>
-      </div>
+      </ClipBox>
 
       {/* Idle state */}
       <Show when={local.status === "idle"}>

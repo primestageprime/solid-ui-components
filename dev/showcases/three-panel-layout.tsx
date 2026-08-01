@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
 import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
+import { NarrowStack } from "../../src/components/Layout";
+import { TextBody } from "../../src/components/Text";
 
 // A single frame inside the showcase so each variant renders at a bounded
 // height. The dev shell does not grant the component a viewport, so we set
@@ -7,55 +9,34 @@ import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
 const Frame: Component<{ label: string; children: any }> = (props) => (
   <div>
     <div class="text-meta">{props.label}</div>
-    <div style={{ height: "320px", border: "1px solid var(--sui-border)" }}>
-      {props.children}
-    </div>
+    <div class="three-panel-demo__pane">{props.children}</div>
   </div>
 );
 
 const DemoTopBar = () => (
   <>
-    <strong style={{ color: "var(--sui-accent)" }}>Alarm Lab</strong>
-    <span style={{ color: "var(--sui-text-secondary)" }}>/ Explanation</span>
+    <strong class="three-panel-demo__brand">Alarm Lab</strong>
+    <TextBody>/ Explanation</TextBody>
   </>
 );
 
 const DemoList: Component<{ title: string; items: string[] }> = (props) => (
   <>
-    <h4
-      style={{
-        margin: "0 0 8px 0",
-        color: "var(--sui-text-secondary)",
-        "font-size": "12px",
-        "text-transform": "uppercase",
-        "letter-spacing": "0.08em",
-      }}
-    >
-      {props.title}
-    </h4>
+    <h4 class="three-panel-demo__list-title">{props.title}</h4>
     {props.items.map((item) => (
-      <div
-        style={{
-          padding: "6px 8px",
-          background: "var(--sui-bg-secondary)",
-          "border-left": "2px solid var(--sui-accent)",
-          "font-size": "13px",
-        }}
-      >
-        {item}
-      </div>
+      <div class="three-panel-demo__list-item">{item}</div>
     ))}
   </>
 );
 
 const DemoCenter = () => (
   <>
-    <h2 style={{ margin: 0 }}>Alarm Explanation</h2>
-    <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
+    <h2 class="three-panel-demo__heading">Alarm Explanation</h2>
+    <p class="three-panel-demo__prose">
       Primary work area — this is where the main content lives. Scrolls
       independently of the side panels and the top bar.
     </p>
-    <p style={{ color: "var(--sui-text-secondary)", margin: 0 }}>
+    <p class="three-panel-demo__prose">
       Use this slot for DAG views, charts, tables, or any "main" content.
     </p>
   </>
@@ -173,19 +154,21 @@ export const ThreePanelLayoutShowcase: Component = () => {
 
       <div class="example-group">
         <h3>Explicit viewport height (caller-controlled)</h3>
-        <Frame label='height="100%"  — wrap in a container to get "viewport minus header"'>
-          <ThreePanelLayout
-            height="100%"
-            topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
-            centerPanel={<DemoCenter />}
-            rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
-          />
-        </Frame>
-        <p class="text-meta" style={{ "margin-top": "8px" }}>
-          For "viewport minus app header" pass{" "}
-          <code>height="calc(100vh - var(--app-header-height, 64px))"</code>.
-        </p>
+        <NarrowStack>
+          <Frame label='height="100%"  — wrap in a container to get "viewport minus header"'>
+            <ThreePanelLayout
+              height="100%"
+              topBar={<DemoTopBar />}
+              leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
+              centerPanel={<DemoCenter />}
+              rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
+            />
+          </Frame>
+          <p class="text-meta">
+            For "viewport minus app header" pass{" "}
+            <code>height="calc(100vh - var(--app-header-height, 64px))"</code>.
+          </p>
+        </NarrowStack>
       </div>
     </div>
   );

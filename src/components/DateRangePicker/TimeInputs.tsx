@@ -1,10 +1,11 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// DateRangePicker/TimeInputs — Internal (not exported from library root).
+// DateRangePicker/TimeInputs — Internal (Depth 1) (not exported from library root).
 // Native `type="time"` inputs — browser supplies hh:mm UI and validation.
 // ============================================
 import type { Accessor, Component } from "solid-js";
+import { ClusterRow } from "../Layout/variants";
 
 export interface TimeInputsProps {
   /** `HH:mm` 24-hour time string. */
@@ -15,7 +16,7 @@ export interface TimeInputsProps {
 }
 
 export const TimeInputs: Component<TimeInputsProps> = (props) => (
-  <div class="sui-drp__time-inputs">
+  <ClusterRow class="sui-drp__time-inputs">
     <input
       type="time"
       class="sui-drp__time-input"
@@ -29,5 +30,5 @@ export const TimeInputs: Component<TimeInputsProps> = (props) => (
       value={props.endTime()}
       onInput={(e) => props.onEndTimeChange(e.currentTarget.value)}
     />
-  </div>
+  </ClusterRow>
 );

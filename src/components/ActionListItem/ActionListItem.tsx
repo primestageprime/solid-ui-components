@@ -22,9 +22,14 @@
 //  - Dismiss is the flipped semicircle cap (border-radius 999px 0 0 999px) flush
 //    to the row's right edge via negative margins.
 // ============================================
-import { Component, For, Show } from "solid-js";
+import { type Component, For, Show, createSignal, onCleanup } from "solid-js";
+import {
+  ClusterRow,
+  NoShrinkClusterRow,
+  TightClusterRow,
+} from "../Layout/variants";
 import { StatusChip } from "../Badge/StatusChip";
-import { EditableTitle } from "../EditableTitle/EditableTitle";
+import { EditableTitle, type EditTrigger } from "../EditableTitle/EditableTitle";
 import { AssigneeIcon, type AssigneeIconProps } from "../ParticipantAvatar/AssigneeIcon";
 import { TagPill, type TagPillData } from "../Badge/TagPill";
 import "./ActionListItem.css";
@@ -51,8 +56,25 @@ export interface ActionListItemProps {
   onStatusChange?: (status: string) => void;
   /** Called when the user renames the row. When absent the title is inert. */
   onTitleChange?: (title: string) => void;
+  /** Which gesture opens the inline title editor. Default `"singleClick"`. In
+   *  `"doubleClick"` a single click on the title falls through to row selection
+   *  and a double click edits. In `"clickSelected"` a click edits only when the
+   *  row is already `selected` (else it falls through to selection) — the
+   *  file-list "click to select, click again to rename" idiom. See {@link EditTrigger}. */
+  editTrigger?: EditTrigger;
   /** Called on dismiss. When absent the × cap is hidden. */
   onDismiss?: () => void;
+  /** Require a two-step confirm before firing `onDismiss`. When true the first
+   *  click on the × cap ARMS it (the glyph flips to a danger-tinted ✓ and the
+   *  label becomes "Confirm delete"); a second click fires `onDismiss`. Arming
+   *  auto-cancels when the pointer leaves the row, on Escape, or after a few
+   *  seconds. Default false — the cap deletes on a single click, unchanged. */
+  confirmDismiss?: boolean;
+  /** Called when the row's "open" affordance is clicked. When present a small
+   *  magnifying-glass button renders in the meta cluster; clicking it fires this
+   *  and never toggles row selection or opens the inline editor. When absent, no
+   *  button renders. */
+  onOpen?: () => void;
   /** Whether the row is currently selected. Lights a persistent accent border +
    *  subtle accent fill (geometry-safe — the border already exists transparent). */
   selected?: boolean;
@@ -83,8 +105,50 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
     if (target?.closest("button, input, select, textarea, [role='listbox']")) return;
     props.onSelect(e);
   };
+  // Two-step delete confirmation (opt-in via `confirmDismiss`). The first click
+  // arms; a second confirms. Arming auto-cancels when the pointer leaves the
+  // row, on Escape, or after AUTO_CANCEL_MS — so a stray arm never lingers. The
+  // cap keeps its exact geometry either way (only glyph/colour change), so the
+  // row's hover-geometry invariant is preserved.
+  const AUTO_CANCEL_MS = 4000;
+  const [armed, setArmed] = createSignal(false);
+  let cancelTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearTimer = () => {
+    if (cancelTimer !== undefined) {
+      clearTimeout(cancelTimer);
+      cancelTimer = undefined;
+    }
+  };
+  const disarm = () => {
+    clearTimer();
+    setArmed(false);
+  };
+  onCleanup(clearTimer);
+  const onDismissClick = () => {
+    if (!props.confirmDismiss) {
+      props.onDismiss?.();
+      return;
+    }
+    if (armed()) {
+      disarm();
+      props.onDismiss?.();
+    } else {
+      setArmed(true);
+      clearTimer();
+      cancelTimer = setTimeout(disarm, AUTO_CANCEL_MS);
+    }
+  };
+  // Row layout is composed from Layout variants (layout-purity): the row is a
+  // ClusterRow (align:center, gap:sm — [chip, title, meta]), the meta cluster a
+  // NoShrinkClusterRow (flex:none, gap 6→sm), the assignee roster a
+  // TightClusterRow (gap 3→xs). The self-contained icon-button caps (open,
+  // dismiss) keep their intrinsic single-widget geometry — flex:none sizing and
+  // the dismiss cap's align-self:stretch + negative-margin semicircle are
+  // deliberately-local to this row (see the header note), not consumer-child
+  // arrangement. The hover-geometry invariant is untouched (only flex/gap/align
+  // moved to Layout classes; hover still changes colour/opacity only).
   return (
-    <div
+    <ClusterRow
       class="sui-action-list-item"
       classList={{
         "sui-action-list-item--dim": tone() === "dim",
@@ -95,6 +159,9 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
       role="listitem"
       aria-selected={props.onSelect ? !!props.selected : undefined}
       onClick={onRowClick}
+      onMouseLeave={() => {
+        if (armed()) disarm();
+      }}
     >
       <Show when={props.status}>
         <StatusChip
@@ -105,14 +172,19 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
           title={props.title}
         />
       </Show>
-      <EditableTitle title={props.title} onChange={props.onTitleChange} />
-      <span class="sui-action-list-item__meta">
+      <EditableTitle
+        title={props.title}
+        onChange={props.onTitleChange}
+        editTrigger={props.editTrigger}
+        rowSelected={props.selected}
+      />
+      <NoShrinkClusterRow class="sui-action-list-item__meta">
         <Show when={assignees().length > 0}>
-          <span class="sui-action-list-item__assignees">
+          <TightClusterRow class="sui-action-list-item__assignees">
             <For each={assignees()}>
               {(a) => <AssigneeIcon {...a} />}
             </For>
-          </span>
+          </TightClusterRow>
         </Show>
         <For each={props.tags ?? []}>
           {(tag) => (
@@ -130,17 +202,60 @@ export const ActionListItem: Component<ActionListItemProps> = (props) => {
             </Show>
           )}
         </For>
+        <Show when={props.onOpen}>
+          <button
+            type="button"
+            class="sui-action-list-item__open"
+            aria-label="Open"
+            title="Open"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onOpen?.();
+            }}
+          >
+            {/* Magnifying glass — inline SVG riding currentColor, matching the
+                library's StarToggle icon idiom (not an emoji, so it inherits the
+                row's thematic accent). */}
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <line
+                x1="12.6"
+                y1="12.6"
+                x2="17"
+                y2="17"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </Show>
         <Show when={props.onDismiss}>
           <button
             type="button"
             class="sui-action-list-item__dismiss"
-            aria-label={`Dismiss ${props.title}`}
-            onClick={() => props.onDismiss?.()}
+            classList={{ "sui-action-list-item__dismiss--armed": armed() }}
+            aria-label={armed() ? `Confirm delete ${props.title}` : `Dismiss ${props.title}`}
+            title={armed() ? "Confirm delete" : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDismissClick();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && armed()) disarm();
+            }}
           >
-            ×
+            {armed() ? "✓" : "×"}
           </button>
         </Show>
-      </span>
-    </div>
+      </NoShrinkClusterRow>
+    </ClusterRow>
   );
 };

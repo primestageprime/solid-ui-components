@@ -1,10 +1,11 @@
 /* ============================================
-   ActionRow — Structural
+   ActionRow — the column + rows are composed from Layout (NarrowStack /
+   ClusterRow / NoShrinkClusterRow / GrowBox / EndWrapRow, see ActionRow.tsx).
+   This file owns only intrinsic styling + the hover-reveal of the action bar.
+   Gaps were snapped to the xs/sm scale (root 6->sm, leading/trailing 6->sm,
+   actions 5->xs).
    ============================================ */
 .sui-action-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   padding: 6px 10px;
   border-radius: 4px;
   border: 1px solid var(--sui-border);
@@ -23,30 +24,8 @@
   background: rgba(var(--sui-accent-rgb), 0.08);
 }
 
-.sui-action-row__main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sui-action-row__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.sui-action-row__trailing,
-.sui-action-row__leading {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
+/* Hidden until the row is hovered/focused; the arrangement is EndWrapRow. */
 .sui-action-row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  justify-content: flex-end;
   visibility: hidden;
   min-height: 22px;
 }
@@ -68,7 +47,7 @@
 .sui-action-row__btn--accent {
   border-color: var(--sui-accent);
   background: var(--sui-accent);
-  color: #001018;
+  color: var(--sui-bg-deep, #001018);
 }
 .sui-action-row__btn--outline {
   border-color: var(--sui-accent);

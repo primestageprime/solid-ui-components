@@ -29,3 +29,19 @@ export const DangerConfirmationModal: Component<ConfirmationModalDataProps> =
     confirmVariant: "danger",
     variant: "danger",
   });
+
+/** Compact primary confirm dialog — md size, clipped corners, primary accent. */
+export const PrimaryConfirmationModal: Component<ConfirmationModalDataProps> =
+  createConfirmationModal({
+    size: "md",
+    corners: "clip",
+    variant: "primary",
+  });
+
+/** Large primary confirm dialog — lg size, otherwise identical to PrimaryConfirmationModal. */
+export const LargePrimaryConfirmationModal: Component<ConfirmationModalDataProps> =
+  createConfirmationModal({
+    size: "lg",
+    corners: "clip",
+    variant: "primary",
+  });

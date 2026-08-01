@@ -16,6 +16,7 @@
  */
 
 import type { DAGEdge } from "../DagChart/types";
+import { pipe, filter, map, sortBy } from "../../fn";
 
 // ---------------------------------------------------------------------------
 // Public input types — the client-facing JSON shape.
@@ -141,7 +142,10 @@ export function convertSwimlaneDagInput(
   const uniqueDepths = (bucket: "DONE" | "TODO"): number[] => {
     const set = new Set<number>();
     for (const n of byBucket[bucket]) set.add(depthMap.get(n.id) ?? 0);
-    return Array.from(set).sort((a, b) => (bucket === "DONE" ? b - a : a - b));
+    return sortBy(
+      (d: number) => (bucket === "DONE" ? -d : d),
+      Array.from(set),
+    );
   };
   const doneRanks = uniqueDepths("DONE");
   const todoRanks = uniqueDepths("TODO");
@@ -154,25 +158,30 @@ export function convertSwimlaneDagInput(
     return todoRanks.indexOf(depth) + 1;
   };
 
-  const nodes: ConvertedNode[] = input.nodes.map((n) => ({
-    id: n.id,
-    data: {
-      title: n.title,
-      subtitle: n.subtitle,
-      status: n.status,
-      bucket: bucketFor(n.status),
-      col: colFor(n),
-      badges: n.badges,
-      meta: n.meta,
-    },
-  }));
+  const nodes: ConvertedNode[] = map(
+    (n) => ({
+      id: n.id,
+      data: {
+        title: n.title,
+        subtitle: n.subtitle,
+        status: n.status,
+        bucket: bucketFor(n.status),
+        col: colFor(n),
+        badges: n.badges,
+        meta: n.meta,
+      },
+    }),
+    input.nodes,
+  );
 
   // Only dependency edges feed the chart's edge graph. Containment
   // edges are dropped here (they could be re-introduced later via a
   // separate decorative-edges field if a renderer wants them).
-  const edges: DAGEdge[] = input.edges
-    .filter((e) => (e.kind ?? "dependency") === "dependency")
-    .map((e) => ({ source: e.from, target: e.to }));
+  const edges: DAGEdge[] = pipe(
+    input.edges,
+    filter((e: SwimlaneDagEdge) => (e.kind ?? "dependency") === "dependency"),
+    map((e: SwimlaneDagEdge) => ({ source: e.from, target: e.to })),
+  );
 
   return {
     nodes,
@@ -189,7 +198,7 @@ function computeTopoDepths(
   nodes: SwimlaneDagNode[],
   edges: SwimlaneDagEdge[],
 ): Map<string, number> {
-  const visible = new Set(nodes.map((n) => n.id));
+  const visible = new Set(map((n) => n.id, nodes));
   const upstream = new Map<string, string[]>();
   for (const n of nodes) upstream.set(n.id, []);
   for (const e of edges) {
@@ -203,7 +212,7 @@ function computeTopoDepths(
     if (cached != null) return cached;
     memo.set(id, 0); // cycle guard
     const ups = upstream.get(id) ?? [];
-    const d = ups.length === 0 ? 0 : 1 + Math.max(...ups.map(visit));
+    const d = ups.length === 0 ? 0 : 1 + Math.max(...map(visit, ups));
     memo.set(id, d);
     return d;
   };
