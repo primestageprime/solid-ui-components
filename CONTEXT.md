@@ -102,7 +102,7 @@ A `--sui-*` CSS custom property defined in a **Theme**. Tokens cover colors, spa
 _Avoid_: theme variable, CSS custom property (verbose).
 
 **Migration**:
-The workflow of extracting a reusable pattern OUT of a Consumer App and INTO `solid-ui-components` as a new Primitive or Composite. Tracked in GitHub Issues (see `docs/agents/issue-tracker.md`); the 2026-05 migration sweep is recorded in `CHANGELOG.md` and git history.
+The workflow of extracting a reusable pattern OUT of a Consumer App and INTO `solid-ui-components` as a new Primitive or Composite. Tracked in dside under project `sui` (see `docs/agents/issue-tracker.md`); the 2026-05 migration sweep is recorded in `CHANGELOG.md` and git history.
 _Avoid_: Extraction, port.
 
 **Adoption**:

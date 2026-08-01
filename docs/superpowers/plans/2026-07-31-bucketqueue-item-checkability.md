@@ -15,7 +15,7 @@
 - **Fail open.** Omitting `isCheckable` (or returning `true`) must leave the component byte-identical to today. A missing predicate never blocks anything.
 - **Scope guard.** `isCheckable` is consulted **only** when `checkableIn(bucket)` is already true — i.e. select mode is on **and** the bucket declares `selectable: true`. Never outside that.
 - **No fall-through.** A refused row fires **neither** `onToggleCheck` nor `onSelect`. It is inert.
-- **`keyboard.ts` must not be modified.** Both activation paths already funnel through `activate`; the guard belongs there. `allKeys()` stays bucket-level — anything that removes rows from it strands the single tab stop on a row that renders nowhere and drops the whole queue out of the tab order (`docs/handoffs/open-work.md:97-101`, pinned by a test in `BucketQueue.keyboard.test.tsx`).
+- **`keyboard.ts` must not be modified.** Both activation paths already funnel through `activate`; the guard belongs there. `allKeys()` stays bucket-level — anything that removes rows from it strands the single tab stop on a row that renders nowhere and drops the whole queue out of the tab order (`docs/adr/0004-one-queue-component-and-the-motion-seam.md`, pinned by a test in `BucketQueue.keyboard.test.tsx`).
 - **No `.map()`/`.filter()`/`.reduce()`/`.find()` on collections in `src/`.** `collectionMethodCalls` and `dotChains` are ratcheted metrics. Use the combinators in `src/fn` (`find`, `map`, `filter`, `pipe`), imported from `"../../fn"`. This does **not** apply to `dev/` — `scripts/health.mjs` only walks `src/`.
 - **No hardcoded colors in `BucketQueue.css`.** `styling.test.ts` asserts `css` matches no `#rrggbb`. Use `--sui-*` tokens or unitless values (`opacity`).
 - **No inline `style={{}}` in `dev/showcases/`.** `showcaseStyleRubricViolations` is ratcheted at 0. Demo geometry goes in `dev/main.css` as a `.<component>-demo` class.
@@ -377,7 +377,7 @@ Expected: PASS — the new block plus every pre-existing BucketQueue test.
 npm run typecheck
 ```
 
-Expected: clean. If `find`'s callback parameter fails to infer, name the intermediate array as its own `const` first — TS cannot contextually type an `fn` callback when the array argument is a nested call expression (`docs/handoffs/open-work.md`).
+Expected: clean. If `find`'s callback parameter fails to infer, name the intermediate array as its own `const` first — TS cannot contextually type an `fn` callback when the array argument is a nested call expression (dside `sui` #12291).
 
 - [ ] **Step 12: Commit**
 

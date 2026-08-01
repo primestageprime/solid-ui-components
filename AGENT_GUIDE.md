@@ -394,6 +394,67 @@ Two related traps in the same family:
   and comparing their heights as if they shared one reports a phantom raggedness.
   Compare like with like, keyed on `getBoundingClientRect().top`.
 
+## The health ratchet will fail you — including for *improving* a metric
+
+`test`, `typecheck`, `build` and **`health`** all gate merges. `lint` runs but
+does not gate. `enforce_admins` is `false`, so a direct admin push to `main`
+bypasses everything — the gate binds PR merges.
+
+`scripts/health.mjs` enforces four rules (see `scripts/health-ratchet.mjs`):
+
+| Situation | Result |
+|---|---|
+| A metric rose | Fails. |
+| A metric improved and the ceiling wasn't tightened | **Also fails.** Run `npm run health -- --update-baseline` and commit the baseline **with** your change. |
+| `--update-baseline` (bare) | Only *lowers*. It cannot raise any ceiling. |
+| Raising a ceiling | Requires naming it **and** a reason: `--update-baseline=dotChains --reason="…"`. Recorded in the baseline under `_raises`. |
+
+### Other things that will bite
+
+- **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
+  at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
+  Same for `foldersWithoutTests`, `undocumentedComponents` (COMPONENTS.md),
+  `missingDepthHeaders` — all at 0.
+- **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
+  in the file, and it applies to **internal** component files too, not just
+  exported ones. A new `.tsx` under `src/components/` without a depth line in
+  its header comment fails `health` even when it is never exported from
+  `index.ts`. Caught `BucketHeader.tsx` on 2026-07-31.
+- **A showcase's geometry belongs in `dev/main.css`, not an inline `style={{}}`.**
+  `showcaseStyleRubricViolations` is ratcheted at **0** and flags any
+  un-manifested `style={{` in `dev/showcases/`, so a demo that sizes its own
+  container inline fails `health`. Add a `.<component>-demo` class to
+  `dev/main.css` and use that — see `.bucket-queue-fill-demo` /
+  `.bucket-queue-discard-demo` for the fixed-column-with-pinned-control shape.
+- **`scripts/health-history.json` is tracked and changes on every `npm run
+  health` run.** Commit it alongside health-affecting work rather than leaving
+  it dirty in a shared checkout.
+- **Shared checkout.** Stage only files you touched; never `git add -A`.
+- **CI installs with `--ignore-scripts`, so there is no `dist/`.** Everything in
+  the test/lint/typecheck/health jobs must work from source. See ADR 0007.
+- **Don't spawn subprocesses in the vitest suite.** Nine of them hung the `test`
+  job until CI cancelled it at 15 minutes. Test pure logic directly.
+- **CI is ~3× slower than local.** Set a per-test timeout, not a global one.
+- **`grep` is unreliable for the metric regexes.** Use `node` with the same
+  regex as `health.mjs`, and cross-check totals against `npm run health -- --verbose`.
+- **Biome's a11y rules only see intrinsic (lowercase) JSX elements.** A green
+  `lint` is **not** a11y coverage.
+- **Don't take a filed task's stated cause at face value.** Two issues in the
+  2026-07-29 handoff had premises that didn't survive contact with the code,
+  despite one claiming "Verified still valid." Check against current `git log` /
+  current CSS / current baked-in defaults before implementing.
+- **"No shipped caller" cannot be established from inside this repo.** Never
+  remove a published prop value on an audit of this repo alone — grep the
+  consumer checkouts under `~/gits/primestage/`, and note that some live inside
+  `*-workspace/` directories, so a top-level `*/src` loop reports a clean sweep
+  while missing them entirely. That trap is what made a 2026-07-30 finding look
+  solid enough to delete `Stack`/`Row`'s `md`/`lg` gaps, which had to be
+  restored in 0.129.0.
+
+**Some things are deliberately left broken-looking. Read
+`docs/adr/0008-deliberately-unfixed.md` before "fixing" a metric or a config
+oddity** — it lists what has already been evaluated and rejected, and why.
+
 ## Summary
 
 | Situation | Action |

@@ -172,7 +172,7 @@ gains `aria-disabled="true"`.
 - A keyboard or screen-reader user must be able to *reach* the row to learn why
   it is excluded. ARIA's guidance for disabled options in a listbox is
   keep-focusable + `aria-disabled`, not remove.
-- It sidesteps the `allKeys` hazard recorded in `docs/handoffs/open-work.md`
+- It sidesteps the `allKeys` hazard recorded in `docs/adr/0004-one-queue-component-and-the-motion-seam.md`
   (lines 97-101), pinned by a test in `BucketQueue.keyboard.test.tsx`:
   `allKeys()` is built from the ITEMS, and anything that hides rows without
   removing them from it strands the single tab stop on a row that renders

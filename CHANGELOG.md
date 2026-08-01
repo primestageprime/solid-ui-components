@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Changed
+- **GitHub Issues is retired as the tracker; tasks live in dside.** Project tag
+  `sui` in the `primestage` space, resolved from the new `.dside-config` at the
+  repo root — note the tag deliberately does **not** match the directory name.
+  This follows the same shape as the `TODO.md` retirement in 0.113.0: every open
+  item was verified against the code before migrating, not filed blind.
+
+  | Source | Outcome |
+  |---|---|
+  | Issue #64 (function-first burn-down) | still real → dside #12291; closed on GitHub pointing there |
+  | PR #46 (DagChart cyclic layering) | **not superseded** — `main` still reads `p.y` directly in `layeringSourcesFirst` and still warns on zero-dim containers → dside #12292 |
+  | PR #18 (RelativeTime + LineChart) | open since 2026-05-21; neither symbol is exported today → dside #12293 |
+  | `open-work.md` cssTypedProps section | still real → dside #12294 |
+  | `open-work.md` prop-scale-audit policy call | still open → dside #12295 |
+  | `thorcasting-ui/docs/sui-gap-backlog.md` | 14 proposals, 3 shipped since (FileDropZone, ScenarioGlyph, ManagedListSection); remaining 11 verified absent from `src/index.ts` → dside #12296–#12301 |
+  | 23 plan docs under `docs/superpowers/plans/` | no open work — their checkbox counts are unreliable (unticked but shipped); `layout-purity-migration.md`, the one true running inventory, is 101/101 done |
+  | 56 `TODO`/`FIXME` markers in source | all false positives — `TODO` is a domain status value in the task-board components, not code debt |
+
+  **Pull requests are unaffected** and still live on GitHub. `docs/agents/`
+  `triage-labels.md` is deleted rather than ported: dside has no labels, no
+  priority and no in-progress state.
+
+- **`docs/handoffs/open-work.md` is retired**, and its durable content promoted
+  rather than deleted — only about a quarter of it was ever a task list:
+  - Ratchet mechanics, the showcase/test/depth-header requirements, the CI
+    `--ignore-scripts` and no-subprocess-in-vitest rules, and the
+    "no shipped caller cannot be established from inside this repo" trap →
+    `AGENT_GUIDE.md` § *The health ratchet will fail you*.
+  - The "explicitly out of scope — do not fix these" register → new
+    **ADR 0008**, `docs/adr/0008-deliberately-unfixed.md`.
+  - The BucketQueue `allKeys` / motion-seam hazards → **ADR 0004**, which had
+    been sitting as a 0-byte stub since 2026-07-27 and is now partially filled.
+
+  `CLAUDE.md` and `CONTEXT.md` updated so the deletion leaves no dangling
+  pointers; the three references from shipped BucketQueue plan/spec docs were
+  repointed at ADR 0004 and dside #12291.
+
 ## 0.131.0
 
 ### Added
