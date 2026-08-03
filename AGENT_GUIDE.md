@@ -396,9 +396,10 @@ Two related traps in the same family:
 
 ## The health ratchet will fail you — including for *improving* a metric
 
-`test`, `typecheck`, `build` and **`health`** all gate merges. `lint` runs but
-does not gate. `enforce_admins` is `false`, so a direct admin push to `main`
-bypasses everything — the gate binds PR merges.
+`test`, `typecheck`, `build`, **`health`** and **`bundle-budget`** all gate
+merges. `lint` runs but does not gate. `enforce_admins` is `false`, so a direct
+admin push to `main` bypasses everything — the gate binds PR merges.
+`strict: true`, so a PR must also be up to date with `main` before it can merge.
 
 `scripts/health.mjs` enforces four rules (see `scripts/health-ratchet.mjs`):
 
@@ -408,6 +409,45 @@ bypasses everything — the gate binds PR merges.
 | A metric improved and the ceiling wasn't tightened | **Also fails.** Run `npm run health -- --update-baseline` and commit the baseline **with** your change. |
 | `--update-baseline` (bare) | Only *lowers*. It cannot raise any ceiling. |
 | Raising a ceiling | Requires naming it **and** a reason: `--update-baseline=dotChains --reason="…"`. Recorded in the baseline under `_raises`. |
+
+### `npm run bundle-budget` — the one that catches what `health` cannot
+
+**Gates merges** (own CI job, own status check). Separate ratchet, same rules
+(it reuses `health-ratchet.mjs`), different question: **what does a consumer
+actually ship?** It builds six real consumer apps against the real `dist/` and
+measures the output.
+
+```
+npm run bundle-budget                  # build + measure + check
+npm run bundle-budget -- --skip-build  # reuse an existing dist/ (much faster)
+```
+
+It is **not** part of `npm test` — it needs a full library build plus six Vite
+builds, so it is its own CI job rather than another assertion in the suite. Run
+it locally when you touch imports, the barrel, `vite.config.ts`, or
+`package.json` `exports`/`sideEffects`; CI runs it on every PR regardless.
+
+Two independent checks, and the distinction matters:
+
+| Check | Behaviour |
+|---|---|
+| **Contamination** — did `katex` / `d3-dag` / `kobalte` land in a bundle that never uses them? | Hard failure. **Never baselined**, because there is no acceptable amount of leaked KaTeX. |
+| **Size** — ratcheted in whole KB | Same four rules as `health`, including *improvements must be locked in*. |
+
+Sizes are compared in **KB, rounded up**, so dependency patches that shift a
+bundle by tens of bytes don't fail CI in either direction.
+
+**Why contamination is not merely "the size check, restated":** when this was
+validated by planting a `katex` import in `Button.tsx`, the SSR one-button
+bundle grew by **14 bytes** — katex is external there, so a bare unremovable
+`import "katex"` costs almost nothing on disk while still loading the whole
+library at Node startup. The size ratchet read it as "at ceiling". Only the
+contamination check caught it.
+
+`scripts/build-config.test.ts` is the cheap half of this and is in `npm test` —
+it asserts the ADR 0005 settings are still *written down*. It cannot catch a new
+eager import in SUI's own source, where both settings are still present and the
+bundle is ruined anyway. That is what this script is for.
 
 ### Other things that will bite
 

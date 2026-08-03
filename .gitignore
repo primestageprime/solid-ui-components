@@ -16,3 +16,4 @@ entities.json
 
 # usage-manifest incremental cache (regenerated per machine)
 scripts/.usage-manifest-cache.json
+.bundle-budget/

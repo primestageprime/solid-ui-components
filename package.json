@@ -17,7 +17,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "node": "./dist/server.js",
+      "node": "./dist/server/index.js",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
@@ -83,6 +83,7 @@
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "audit:scales": "node scripts/scale-audit.mjs",
     "health": "node scripts/health.mjs",
+    "bundle-budget": "node scripts/bundle-budget.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",

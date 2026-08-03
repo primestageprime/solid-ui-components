@@ -1,6 +1,6 @@
 name: CI
 
-# Three parallel pass/fail gates for every PR (and a backstop on direct
+# Parallel pass/fail gates for every PR (and a backstop on direct
 # pushes to main). Conventions — Node version, action versions, install
 # command, timeout — match `publish.yml` so the two workflows can be
 # maintained in lockstep.
@@ -120,7 +120,42 @@ jobs:
       # Catches errors that compile cleanly but fail to bundle (circular
       # module-level imports, unresolved aliases, etc.).
       #
-      # This is the ONE place in CI that needs a build, and with
-      # `--ignore-scripts` above it now happens once instead of twice —
+      # With `--ignore-scripts` above, this job builds once instead of twice —
       # previously `prepare` built during `npm ci` and this step built again.
+      # The `bundle-budget` job below builds too, but deliberately: see there.
       - run: npm run build
+
+  # Does the built package actually stay tree-shakeable for a CONSUMER?
+  #
+  # Distinct signal from `build` (which only asks whether the bundle is
+  # PRODUCIBLE) and from `test` (whose scripts/build-config.test.ts asserts the
+  # ADR 0005 settings are still written down). Neither can catch SUI's own
+  # source growing a new eager import that drags katex into every consumer with
+  # both settings still perfectly in place. This job builds six real consumer
+  # apps against the real dist/ and checks what came out.
+  #
+  # WHY THIS BUILDS AGAIN INSTEAD OF REUSING THE `build` JOB
+  # -------------------------------------------------------
+  # Reusing it would mean uploading/downloading dist/ as an artifact — ~1,300
+  # files, and the upload alone costs more than the ~33s rebuild. Its own job
+  # also means its own status check, matching this file's convention that a
+  # failure in one gate doesn't mask another, and the jobs run in parallel so
+  # wall-clock is unaffected. `npm run bundle-budget` does the build itself
+  # (hence no separate build step here, and no --skip-build).
+  bundle-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - run: npm ci --ignore-scripts
+      # Two checks, and only one of them is a ratchet:
+      #   • contamination (katex / d3-dag / kobalte in a bundle that never uses
+      #     them) — hard failure, never baselined
+      #   • size — ratcheted in whole KB via scripts/bundle-budget-baseline.json
+      # A deliberate size increase needs
+      #   npm run bundle-budget -- --update-baseline=<metric> --reason="…"
+      # committed alongside the change. See AGENT_GUIDE.md.
+      - run: npm run bundle-budget

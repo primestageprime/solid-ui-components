@@ -90,17 +90,73 @@ Checked against `docs/usage-manifest.json`:
   `thorcasting-ui`, `dside-work`) touches neither heavy component and gets the
   full reduction.
 
+## The server build had the same hole for two ADRs (fixed 2026-08-03)
+
+Everything above was applied to the **client** build only. `dist/server.js` —
+what the `"node"` export condition resolves to, i.e. what every SolidStart/SSR
+consumer actually imports — stayed a single 1,305,549-byte bundle with no
+`preserveModules`.
+
+It therefore reproduced this ADR's defect exactly. An SSR consumer importing one
+`DefaultButton`:
+
+| | SSR one-button bundle |
+|---|---|
+| single `dist/server.js` | 129,330 B |
+| per-module `dist/server/` | **953 B** |
+
+Rollup *did* shake the single bundle from 1.3 MB down to 129 KB — enough to look
+like tree-shaking was working, which is probably why it went unnoticed. What it
+could not remove was the same category of thing described above:
+
+- **inlined Kobalte** — popper and tooltip machinery (plus `@floating-ui/dom`)
+  in a bundle whose only component was a plain button. The server build inlines
+  Kobalte deliberately (`ssr.noExternal`, so its JSX recompiles SSR-safe), which
+  means Kobalte lands *inside* the bundle and needs module granularity to leave.
+- **bare `import "d3-dag"; import "katex";`** — surviving verbatim with no
+  bound identifier, the exact structurally-unremovable import this ADR is about.
+  Externals, so not bundled bytes, but still loaded at Node startup.
+
+The fix is the same setting, plus repointing the export:
+
+```
+output: { preserveModules: true, preserveModulesRoot: "src",
+          entryFileNames: "server/[name].js" }
+exports["."].node: "./dist/server/index.js"   // was ./dist/server.js
+```
+
+Verified end-to-end, not just by bundle size: `npm pack` → install the tarball
+into a clean project → `renderToString` a real component in Node returns correct
+markup. That check matters because per-module output writes Kobalte to
+`dist/server/node_modules/@kobalte/…`, and npm strips `node_modules` when
+packing a package *root* — it does **not** strip a nested one covered by
+`files: ["dist"]`. All 49 files survive; SSR renders.
+
+The export surface is unchanged at 726 names. (`Stack` and `Row` are absent from
+both the old and new server bundles — that is the deliberate "curried variants
+only" rule, not a packaging regression. Don't chase it.)
+
 ## Costs accepted
 
 - **`dist` goes from ~10 files to ~1,300** (465 JS + declarations). Slower
-  publish and install, more inodes. Judged worth 318 KB per consumer.
+  publish and install, more inodes. Judged worth 318 KB per consumer. The
+  per-module server build adds a further 456 files under `dist/server/`.
 - **The `exports` map still gates deep imports** — the per-module files are
   physically present but not addressable, so this does not widen the public API.
-- **CSS is unaffected and still all-or-nothing.** `dist/index.css` remains
-  ~1.8 MB; a consumer importing one component still gets every component's
-  styles. Declaring `**/*.css` side-effectful is what keeps those imports alive
-  (a bare `false` would ship unstyled components). Splitting CSS per component
-  is a separate, unsolved problem.
+- **CSS is unaffected and still all-or-nothing.** A consumer importing one
+  component still gets every component's styles. Declaring `**/*.css`
+  side-effectful is what keeps those imports alive (a bare `false` would ship
+  unstyled components). Splitting CSS per component is a separate, unsolved
+  problem.
+
+  `dist/index.css` is **388,337 B raw / 91,308 B gzip / 71,304 B brotli**
+  (measured 2026-08-03). The "~1.8 MB" this ADR originally quoted predates
+  [ADR 0006](0006-katex-css-fonts-not-inlined.md), which took the inlined KaTeX
+  fonts out — do not cite the old figure.
+
+  This is now **the dominant per-consumer cost by a wide margin**: the one-button
+  consumer pays 15 KB of JS and 388 KB of CSS. Any further bundle-size work on
+  this package should start here, not in the JS.
 
 ## The package also ships `src/`, and consumers must not read that as "linked"
 
@@ -136,3 +192,16 @@ reasoning inline. This is deliberate belt-and-braces: removing either setting
 produces no test failure, no type error, and no visible symptom in this repo —
 the damage lands only in downstream bundles, where nobody will connect it back
 to a config line deleted months earlier.
+
+That test guards the *config*. It cannot guard the *outcome*: SUI's own source
+can grow a new eager import that drags `katex` back into every consumer with
+both settings still perfectly in place. `npm run bundle-budget`
+(`scripts/bundle-budget.mjs`) closes that gap by building six real consumer apps
+against the real `dist/` and checking what came out — see AGENT_GUIDE.md.
+
+Its contamination check is deliberately **not** ratcheted, unlike its size
+check. Validated by planting a `katex` import in `Button.tsx`: the client
+one-button bundle went 15,403 B → 241,892 B, but the *SSR* one grew by only
+**14 bytes**, because katex is external in that build — an unremovable bare
+`import "katex"` costs nothing on disk while still loading the library at Node
+startup. Any size-based ceiling misses that; the contamination check does not.

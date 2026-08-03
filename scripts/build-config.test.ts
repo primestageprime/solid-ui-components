@@ -35,6 +35,37 @@ Measured on a consumer importing one Button:
 See docs/adr/0005-per-module-dist-and-sideeffects.md before changing either.
 `;
 
+// The SSR bundle needs the SAME pair, for the same reason. It was left as a
+// single dist/server.js until 2026-08-03, so every SolidStart consumer resolving
+// the "node" export condition kept the exact defect ADR 0005 fixed for the
+// browser: a one-button SSR bundle carried inlined Kobalte popper/tooltip code
+// plus unremovable bare `import "d3-dag"; import "katex"` statements.
+//
+// Measured on an SSR consumer importing one Button:
+//   single dist/server.js .......... 129,330 B
+//   per-module dist/server/ ............. 953 B
+//
+// Both builds must therefore set preserveModules — hence two assertions rather
+// than one loose match, which a single-build regression would still satisfy.
+const SERVER_WHY = `
+The SERVER build lost output.preserveModules.
+
+dist/server/ must stay one-file-per-module for the same reason dist/ does: it is
+what lets a consumer's bundler drop unused modules and the heavyweight imports
+(katex, d3-dag) they carry. As a single bundle those imports are structurally
+unremovable — Rollup keeps the bare \`import "katex"\` even after correctly
+discarding the only component that used it.
+
+Measured on an SSR consumer importing one Button:
+  single dist/server.js .......... 129,330 B
+  per-module dist/server/ ............. 953 B
+
+The "node" export condition points at ./dist/server/index.js, so this is the
+path every SolidStart/SSR consumer actually resolves.
+
+See docs/adr/0005-per-module-dist-and-sideeffects.md.
+`;
+
 describe("build config: the tree-shaking pair", () => {
   it("package.json declares sideEffects", () => {
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -51,6 +82,23 @@ describe("build config: the tree-shaking pair", () => {
     // Without the root, every emitted path is prefixed with `src/`, which
     // breaks the "." export mapping to ./dist/index.js.
     expect(cfg, WHY).toMatch(/preserveModulesRoot:\s*["']src["']/);
+  });
+
+  // Counting, rather than a second bare `toMatch`, is the point: one loose
+  // match is satisfied by EITHER build, so deleting the setting from the server
+  // build alone would leave the suite green — which is exactly how the SSR side
+  // went two ADRs without it.
+  it("BOTH the client and server builds set preserveModules", () => {
+    const cfg = readFileSync(join(root, "vite.config.ts"), "utf8");
+    const occurrences = cfg.match(/preserveModules:\s*true/g) ?? [];
+    expect(occurrences.length, SERVER_WHY).toBe(2);
+  });
+
+  it("the node export condition resolves to the per-module server entry", () => {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    // A stale "./dist/server.js" here silently re-ships the 129 KB bundle even
+    // with preserveModules on, because nothing would import the new entry.
+    expect(pkg.exports["."].node, SERVER_WHY).toBe("./dist/server/index.js");
   });
 });
 
