@@ -100,6 +100,34 @@ describe("build config: the tree-shaking pair", () => {
     // with preserveModules on, because nothing would import the new entry.
     expect(pkg.exports["."].node, SERVER_WHY).toBe("./dist/server/index.js");
   });
+
+  // Learned the hard way on PR #77: moving the SSR entry updated package.json
+  // and vite.config.ts but not publish.yml, whose pre-pack check still looked
+  // for dist/server.js. It correctly refused to publish — but only AFTER the
+  // merge, because publish.yml does not run on pull_request. Nothing in the PR
+  // gates could have caught it. This closes that, statically and for free.
+  it("publish.yml verifies the entrypoints that exports actually names", () => {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    const workflow = readFileSync(join(root, ".github/workflows/publish.yml"), "utf8");
+    const WHY_PUBLISH = `
+publish.yml's "Verify build output before packing" step must check the same
+paths package.json's exports map points at. When they drift, the failure lands
+on main after merge — publish.yml has no pull_request trigger — and the package
+either fails to publish or ships an exports target that does not exist.`;
+
+    // Scope to the `for f in …` list itself. The surrounding comments discuss
+    // the OLD dist/server.js path on purpose (that history is why the check
+    // exists), so matching the whole file would fail on its own documentation.
+    const checkList = workflow.match(/for f in ([^;]+); do/)?.[1] ?? "";
+    expect(checkList, WHY_PUBLISH).not.toBe("");
+
+    for (const target of [pkg.exports["."].node, pkg.exports["."].browser]) {
+      const path = target.replace(/^\.\//, "");
+      expect(checkList, `${WHY_PUBLISH}\n\nMissing: ${path}`).toContain(path);
+    }
+    // The old single-bundle path must be gone, not merely joined by the new one.
+    expect(checkList, WHY_PUBLISH).not.toMatch(/dist\/server\.js(\s|$)/);
+  });
 });
 
 // ============================================

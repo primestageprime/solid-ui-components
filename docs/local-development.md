@@ -142,7 +142,8 @@ Then run `SUI_SOURCE=1 vite` when you want source mode.
 - **SSR / Node consumers should not enable `source`.** The source-mode
   condition resolves to client-targeted TSX. If you SSR a consumer that
   imports SUI, leave `source` out of its server-side Vite config — the
-  existing `"node"` condition will continue to pull `dist/server.js`.
+  existing `"node"` condition will continue to pull the prebuilt SSR bundle
+  (`dist/server/index.js`).
 - **Source isn't currently shipped in the npm tarball.** This setup
   assumes you have SUI's working tree on disk (local link / file: /
   workspace). If we ever need to ship `src/` to npm consumers, add
