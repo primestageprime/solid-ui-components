@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Fixed
+- **DateAxis stops mistaking its own smooth scroll for the user's.** Clicking
+  the `ScrubChart` while the ribbon was still gliding moved the selection but
+  left the window band frozen — intermittently, and most often on the click
+  right after a big jump.
+
+  `DateAxis` recentres on `selected`, guarded by a 250 ms window that yields to
+  a user who is actively panning (`USER_SCROLL_GRACE_MS`). It flags its own
+  programmatic scroll so those frames don't count as user input — but it ended
+  that flag by *guessing* when the animation was over, and both guesses fired
+  while frames were still arriving:
+
+  | guess | why it was wrong |
+  |---|---|
+  | viewport reached the target (`\|scrollLeft − target\| <= 1`) | a smooth scroll keeps emitting sub-pixel settling frames after it arrives |
+  | 800 ms elapsed (`MAX_PROGRAMMATIC_SCROLL_MS`) | a long jump (~4,900 px measured) animates for longer than that |
+
+  Every frame landing after the flag cleared stamped `lastUserScrollAt`, so the
+  axis armed the grace window against itself and silently refused the *next*
+  recentre.
+
+  A programmatic scroll now ends when its frames **stop arriving**: each one
+  restarts a 150 ms inactivity countdown (`PROGRAMMATIC_SETTLE_MS`), which
+  covers a glide of any length plus its settling tail.
+  `MAX_PROGRAMMATIC_SCROLL_MS` survives only as a 2,500 ms backstop against a
+  stuck flag. No public API change.
+
 ## 0.132.0
 
 ### Fixed
