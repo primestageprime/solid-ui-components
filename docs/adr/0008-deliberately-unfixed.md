@@ -55,6 +55,22 @@ Load-bearing, not a leftover. Same ADR 0007, same guard test.
 Removing either re-adds ~318 KB to every consumer bundle. See
 [ADR 0005](0005-per-module-dist-and-sideeffects.md).
 
+**Both builds set `preserveModules` — the server one is not a copy-paste
+mistake.** It was added 2026-08-03; before that `dist/server.js` was a single
+bundle and an SSR consumer importing one button shipped 129,330 B instead of
+953 B. `scripts/build-config.test.ts` asserts the count is exactly 2, because a
+single loose match would be satisfied by either build alone.
+
+## `dist/server/node_modules/@kobalte/…` in the published tarball
+
+Looks like a packaging bug. It is not. The server build inlines Kobalte on
+purpose (`ssr.noExternal`, so its JSX is recompiled SSR-safe), and
+`preserveModules` necessarily writes those inlined modules to a path mirroring
+their source location. npm strips a *root* `node_modules` when packing but not a
+nested one covered by `files: ["dist"]` — verified by packing the tarball,
+installing it clean, and rendering a component in Node. Delete these and SSR
+breaks at import time.
+
 ## The KaTeX stub / copy / prepend trio in `vite.config.ts`
 
 Removing any one of the three silently restores ~1.4 MB to `dist/index.css`.

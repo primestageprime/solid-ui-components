@@ -185,8 +185,23 @@ export default defineConfig(({ command, mode }) => {
               external: SERVER_ROLLUP_EXTERNALS,
               output: {
                 format: "es",
-                entryFileNames: "server.js",
-                chunkFileNames: "server-[name]-[hash].js",
+                // SAME pair as the client build (see the note there and
+                // docs/adr/0005-per-module-dist-and-sideeffects.md). The SSR
+                // bundle was a single dist/server.js until 2026-08-03, which
+                // left every consumer resolving the "node" export condition
+                // with the exact defect ADR 0005 fixed for the browser: one
+                // button pulled in inlined Kobalte popper/tooltip code and bare
+                // `import "d3-dag"; import "katex"` statements that Rollup
+                // cannot remove from a single-file bundle. 129,330 B -> 953 B.
+                //
+                // Emitted under dist/server/ rather than as dist/server*.js so
+                // the module paths stay readable and cannot collide with the
+                // client build's output in the shared dist/ (emptyOutDir is
+                // false here — the client build runs first and owns the wipe).
+                preserveModules: true,
+                preserveModulesRoot: "src",
+                entryFileNames: "server/[name].js",
+                chunkFileNames: "server/[name]-[hash].js",
                 assetFileNames: (assetInfo) => {
                   // Drop the SSR-build's CSS; the client build already emits dist/index.css.
                   if (assetInfo.name && assetInfo.name.endsWith(".css")) {
