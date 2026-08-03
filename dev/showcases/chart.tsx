@@ -168,6 +168,52 @@ export const ChartShowcase: Component = () => {
             </ChartTooltip>
           </Chart>
 
+          <h3 class="showcase-heading-gap">
+            Wrapping tooltip (<code>maxWidth</code>)
+          </h3>
+          <p class="text-meta">
+            Default tooltips are a single <code>nowrap</code> line. Pass{" "}
+            <code>maxWidth</code> when the content is inherently multi-line — a
+            title, a timestamp range, a free-text message. Hover the right-hand
+            third: rather than overflow the chart, the tooltip flips to the left
+            of its anchor.
+          </p>
+          <Chart
+            width={640}
+            height={220}
+            xDomain={xDomain}
+            yDomain={[0, 100]}
+            margin={{ top: 12, right: 16, bottom: 28, left: 40 }}
+          >
+            <Grid />
+            <YAxis tickCount={5} tickFormat={(v) => `${v}%`} />
+            <XAxis tickCount={6} />
+            <LineSeries
+              data={series}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              strokeWidth={2}
+            />
+            <Crosshair
+              series={[{ data: series, x: (d) => d.t, y: (d) => d.v }]}
+            />
+            <ChartTooltip data={series} x={(d) => d.t} maxWidth={320}>
+              {(p) => (
+                <div>
+                  <div>
+                    <strong>Sample t{p.t}</strong>
+                  </div>
+                  <div>utilisation {p.v.toFixed(1)}%</div>
+                  <div>
+                    A deliberately long explanatory line, the kind an alarm or
+                    an annotation carries, so the wrap and the width cap are
+                    both visible here.
+                  </div>
+                </div>
+              )}
+            </ChartTooltip>
+          </Chart>
+
           <h3 class="showcase-heading-gap">Multi-series</h3>
           <p class="text-meta">
             Three independent <code>&lt;LineSeries&gt;</code> share the same

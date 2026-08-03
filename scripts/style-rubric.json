@@ -83,7 +83,8 @@
       "proportion"
     ],
     "src/components/Chart/Tooltip.tsx": [
-      "anchored"
+      "anchored",
+      "cssvar"
     ],
     "src/components/ChartCanvas/ChartCanvas.tsx": [
       "measured"
