@@ -2,7 +2,10 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Dropdown — Atomic (Depth 1)
-// Owns CSS (Dropdown.css), no component imports.
+// Owns CSS (Dropdown.css). Composes no other Primitive; `ShapeGlyph` is a
+// descriptor→SVG render helper (no state, no CSS of its own), which
+// CONTEXT.md's Primitive rule exempts — the rule is about composition, not
+// module boundaries.
 // Trigger button with popover listbox for single selection.
 // ============================================
 import {
@@ -17,6 +20,7 @@ import {
 } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import { find, findIndex } from "../../fn";
+import { ShapeGlyph, type Shape } from "../Chart/shapes";
 import "./Dropdown.css";
 
 export interface DropdownItem {
@@ -24,7 +28,51 @@ export interface DropdownItem {
   label: string;
   /** Optional indicator color (rendered as a dot) */
   color?: string;
+  /** Optional indicator shape. With `color`, renders that shape as a glyph
+   *  instead of the plain dot — for identities that are double-coded (colour
+   *  *and* shape) so they survive small sizes, colour-blindness and greyscale.
+   *  Without `shape`, `color` keeps rendering today's dot. */
+  shape?: Shape;
 }
+
+/** Nominal px box for a shape indicator. Matches `.sui-dropdown__dot` exactly:
+ *  `shape: "circle"` and a bare `color` are the same mark, so a list mixing
+ *  them must not look ragged. One nominal size for every shape, as the charts
+ *  do — a diamond reads a little lighter than a disc at equal width, and
+ *  compensating for that is what breaks circle/dot parity. */
+const INDICATOR_GLYPH_SIZE = 8;
+
+/** The per-item identity mark: a shape glyph when `shape` is set, else the
+ *  plain colour dot. Renders nothing without a `color`. */
+const Indicator: Component<{ color?: string; shape?: Shape }> = (props) => (
+  <Show when={props.color}>
+    {(color) => (
+      <Show
+        when={props.shape}
+        fallback={
+          <span class="sui-dropdown__dot" style={{ background: color() }} />
+        }
+      >
+        {(shape) => (
+          <svg
+            class="sui-dropdown__glyph"
+            width={INDICATOR_GLYPH_SIZE}
+            height={INDICATOR_GLYPH_SIZE}
+            viewBox={`0 0 ${INDICATOR_GLYPH_SIZE} ${INDICATOR_GLYPH_SIZE}`}
+            aria-hidden="true"
+          >
+            <ShapeGlyph
+              descriptor={{ color: color(), shape: shape() }}
+              cx={INDICATOR_GLYPH_SIZE / 2}
+              cy={INDICATOR_GLYPH_SIZE / 2}
+              size={INDICATOR_GLYPH_SIZE}
+            />
+          </svg>
+        )}
+      </Show>
+    )}
+  </Show>
+);
 
 export interface DropdownProps {
   /** Items to display in the dropdown menu */
@@ -191,12 +239,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         onClick={toggle}
         onKeyDown={onTriggerKeyDown}
       >
-        <Show when={selected()?.color}>
-          <span
-            class="sui-dropdown__dot"
-            style={{ background: selected()!.color }}
-          />
-        </Show>
+        <Indicator color={selected()?.color} shape={selected()?.shape} />
         <span class="sui-dropdown__label">
           {selected()?.label ?? merged.placeholder}
         </span>
@@ -224,12 +267,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
                 onClick={() => select(item.id)}
                 onKeyDown={(e) => onOptionKeyDown(e, index())}
               >
-                <Show when={item.color}>
-                  <span
-                    class="sui-dropdown__dot"
-                    style={{ background: item.color }}
-                  />
-                </Show>
+                <Indicator color={item.color} shape={item.shape} />
                 {item.label}
               </button>
             )}

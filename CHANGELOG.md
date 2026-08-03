@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added
+- **`Dropdown` items can carry a shape, not just a colour.** `DropdownItem`
+  gains `shape?: Shape` — the same union the charts use. With `color`, the item
+  renders that shape as its indicator instead of the plain dot, in the trigger
+  and the menu alike. `color` on its own still renders today's dot, so nothing
+  existing changes.
+
+  The gap this closes: some identities are deliberately double-coded, colour
+  *and* shape, so they stay distinguishable at 8px, under colour-blindness, and
+  in a greyscale screenshot. A colour dot alone throws away the half of that
+  encoding which survives those conditions.
+
+  This also retires a consumer workaround: wanting the shape in the trigger
+  previously meant drawing your own glyph beside the dropdown and hiding ours
+  with CSS reaching into `.sui-dropdown__trigger .sui-dropdown__dot` — coupling
+  to internal class names that only worked because trigger dots and item dots
+  happen to sit under different parents.
+
+  Reported by thorcasting-ui; dside #12483.
+
 ## 0.132.1
 
 ### Fixed

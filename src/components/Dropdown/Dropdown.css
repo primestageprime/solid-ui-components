@@ -54,6 +54,16 @@
   flex-shrink: 0;
 }
 
+/* Shape indicator — the dot's counterpart when an item carries a `shape`.
+   Same box as the dot, so `shape: "circle"` and a bare `color` are
+   indistinguishable and a list mixing them stays even. */
+.sui-dropdown__glyph {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  display: block;
+}
+
 /* Menu */
 .sui-dropdown__menu {
   position: absolute;

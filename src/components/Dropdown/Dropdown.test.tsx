@@ -1,5 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { Dropdown, type DropdownItem } from "./Dropdown";
 
 afterEach(cleanup);
@@ -99,5 +102,94 @@ describe("Dropdown — listbox a11y", () => {
     expect(container.querySelector('[role="listbox"]')).toBeNull();
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger);
+  });
+});
+
+describe("Dropdown — item indicators", () => {
+  const coded: DropdownItem[] = [
+    { id: "a", label: "Baseline", color: "#a855f7", shape: "circle" },
+    { id: "b", label: "Lean", color: "#22d3ee", shape: "diamond" },
+    { id: "c", label: "Plain", color: "#f97316" },
+    { id: "d", label: "Bare" },
+  ];
+
+  const mountCoded = () =>
+    render(() => <Dropdown items={coded} value="b" onChange={() => {}} />)
+      .container;
+
+  it("renders a dot for color alone and a glyph when a shape is set", async () => {
+    const container = mountCoded();
+    container
+      .querySelector<HTMLButtonElement>(".sui-dropdown__trigger")!
+      .click();
+    await tick();
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    // color + shape → svg glyph, no dot.
+    expect(options[0].querySelector(".sui-dropdown__glyph")).toBeTruthy();
+    expect(options[0].querySelector(".sui-dropdown__dot")).toBeNull();
+    // color alone → today's dot, unchanged.
+    expect(options[2].querySelector(".sui-dropdown__dot")).toBeTruthy();
+    expect(options[2].querySelector(".sui-dropdown__glyph")).toBeNull();
+    // no color → no indicator at all.
+    expect(options[3].querySelector(".sui-dropdown__dot")).toBeNull();
+    expect(options[3].querySelector(".sui-dropdown__glyph")).toBeNull();
+  });
+
+  it("draws the selected item's glyph in the trigger by default", () => {
+    const trigger = mountCoded().querySelector(".sui-dropdown__trigger")!;
+    const glyph = trigger.querySelector(".sui-dropdown__glyph");
+    expect(glyph).toBeTruthy();
+    // Decorative: the label carries the identity for assistive tech.
+    expect(glyph!.getAttribute("aria-hidden")).toBe("true");
+    expect(glyph!.querySelector("path")).toBeTruthy(); // diamond → path, not circle
+  });
+
+  it("sizes a shape glyph exactly like the dot it replaces", () => {
+    // `shape: "circle"` and a bare `color` are the same mark, so a list mixing
+    // them must not look ragged. jsdom applies no stylesheet, so a
+    // computed-style assertion would pass whatever the CSS says — read the two
+    // rules instead, and check the SVG's own box agrees with them.
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "./Dropdown.css"),
+      "utf8",
+    );
+    const boxOf = (selector: string) => {
+      const body = css.match(
+        new RegExp(`(?:^|\\n)\\s*\\${selector}\\s*\\{([^}]*)\\}`),
+      )?.[1];
+      if (!body) throw new Error(`rule not found: ${selector}`);
+      return {
+        width: body.match(/(?:^|;)\s*width:\s*([^;]+)/)?.[1].trim(),
+        height: body.match(/(?:^|;)\s*height:\s*([^;]+)/)?.[1].trim(),
+      };
+    };
+    const dot = boxOf(".sui-dropdown__dot");
+    expect(boxOf(".sui-dropdown__glyph")).toEqual(dot);
+
+    const glyph = mountCoded().querySelector(".sui-dropdown__glyph")!;
+    expect(`${glyph.getAttribute("width")}px`).toBe(dot.width);
+    expect(`${glyph.getAttribute("height")}px`).toBe(dot.height);
+  });
+
+  it("selecting an unmarked item leaves the trigger with no indicator", async () => {
+    const container = mountCoded();
+    const trigger = container.querySelector<HTMLButtonElement>(
+      ".sui-dropdown__trigger",
+    )!;
+    expect(trigger.querySelector(".sui-dropdown__glyph")).toBeTruthy();
+    // "Bare" carries neither colour nor shape, so the trigger shows no mark.
+    trigger.click();
+    await tick();
+    [...container.querySelectorAll<HTMLElement>('[role="option"]')][3].click();
+    // The item list is the controlled `value`'s source of truth; re-mounting at
+    // that id is what the parent would render.
+    cleanup();
+    const bare = render(() => (
+      <Dropdown items={coded} value="d" onChange={() => {}} />
+    )).container.querySelector(".sui-dropdown__trigger")!;
+    expect(bare.querySelector(".sui-dropdown__glyph")).toBeNull();
+    expect(bare.querySelector(".sui-dropdown__dot")).toBeNull();
   });
 });

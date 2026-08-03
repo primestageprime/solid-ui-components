@@ -1,9 +1,23 @@
 import { type Component, createSignal } from "solid-js";
-import { Dropdown, InlineSubtleDropdown } from "../../src/components/Dropdown";
+import {
+  Dropdown,
+  InlineSubtleDropdown,
+  type DropdownItem,
+} from "../../src/components/Dropdown";
 import { Stack } from "../../src/components/Layout/Stack";
+
+const SCENARIOS: DropdownItem[] = [
+  { id: "baseline", label: "Baseline", color: "#a855f7", shape: "circle" },
+  { id: "lean", label: "Lean", color: "#22d3ee", shape: "diamond" },
+  { id: "growth", label: "Growth", color: "#f97316", shape: "chevron" },
+  { id: "stress", label: "Stress", color: "#f43f5e", shape: "square" },
+  // No shape — falls back to the plain dot, as it always has.
+  { id: "draft", label: "Draft", color: "#94a3b8" },
+];
 
 export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");
+  const [scenario, setScenario] = createSignal<string>("lean");
   return (
     <div class="component-section">
       <h2>Dropdown — Primitive (Depth 0)</h2>
@@ -25,6 +39,23 @@ export const DropdownShowcase: Component = () => {
             ]}
           />
           <span class="text-meta">selected: {v()}</span>
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Shape indicators — double-coded identity</h3>
+        <p class="text-meta">
+          An item with <code>color</code> alone keeps the plain dot; adding{" "}
+          <code>shape</code> renders that shape as the indicator instead, in the
+          trigger and the menu alike. Colour plus shape stays legible at small
+          sizes, under colour-blindness, and in greyscale.
+        </p>
+        <Stack gap="sm" class="dropdown-demo">
+          <Dropdown
+            value={scenario()}
+            onChange={setScenario}
+            items={SCENARIOS}
+          />
         </Stack>
       </div>
 
