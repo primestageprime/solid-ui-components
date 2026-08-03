@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.133.0
+
 ### Added
 - **`Dropdown` items can carry a shape, not just a colour.** `DropdownItem`
   gains `shape?: Shape` — the same union the charts use. With `color`, the item
