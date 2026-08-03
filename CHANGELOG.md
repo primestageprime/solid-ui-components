@@ -2,6 +2,53 @@
 
 ## [Unreleased]
 
+## 0.132.0
+
+### Fixed
+- **SSR consumers stop shipping the whole library.** The client build has been
+  tree-shakeable since ADR 0005, but `dist/server.js` — what `exports["."].node`
+  resolves to, and therefore what every SolidStart/SSR consumer imports — was
+  left as a single 1,305,549-byte bundle. It reproduced the exact defect that
+  ADR describes.
+
+  | SSR consumer importing one `DefaultButton` | |
+  |---|---|
+  | before | 129,330 B |
+  | after | **953 B** |
+
+  It went unnoticed because Rollup *did* shake the bundle from 1.3 MB to 129 KB,
+  which looks like tree-shaking working. What it could not remove was inlined
+  Kobalte popper/tooltip machinery (plus `@floating-ui/dom`) in a bundle whose
+  only component was a plain button, and bare `import "d3-dag"; import "katex";`
+  statements surviving with no bound identifier.
+
+  **Consumer-visible change:** the `"node"` export target moved from
+  `./dist/server.js` to `./dist/server/index.js`. Consumers resolving through
+  the `exports` map — which is all of them — need no change. The public export
+  surface is unchanged at 726 names.
+
+  Verified end-to-end rather than by bundle size: `npm pack`, install the
+  tarball into a clean project, `renderToString` a real component in Node.
+
+### Added
+- **`npm run bundle-budget` — a tree-shaking gate that measures the real
+  thing.** `scripts/build-config.test.ts` asserts the ADR 0005 settings are
+  still *written down*; it cannot catch SUI's own source growing a new eager
+  import that drags KaTeX into every consumer with both settings still in
+  place. The new script builds six real consumer apps against the real `dist/`
+  and checks what came out. It gates merges as its own CI job.
+
+  Its contamination check is deliberately **not** ratcheted, unlike its size
+  check. Validated by planting a `katex` import in `Button.tsx`: the client
+  one-button bundle went 15,403 → 241,892 B, but the *SSR* one grew by **14
+  bytes**, because katex is external there — an unremovable bare import costs
+  nothing on disk while still loading the library at Node startup. Any
+  size-based ceiling misses that.
+
+  Sizes ratchet in whole KB (reusing `health-ratchet.mjs`, so the same four
+  rules apply) so dependency patches that shift a bundle by tens of bytes do not
+  fail CI in either direction.
+
 ### Changed
 - **GitHub Issues is retired as the tracker; tasks live in dside.** Project tag
   `sui` in the `primestage` space, resolved from the new `.dside-config` at the
