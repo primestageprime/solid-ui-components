@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.132.1
+
 ### Fixed
 - **DateAxis stops mistaking its own smooth scroll for the user's.** Clicking
   the `ScrubChart` while the ribbon was still gliding moved the selection but
