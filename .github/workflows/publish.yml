@@ -64,16 +64,30 @@ jobs:
       # `npm publish --ignore-scripts` below packs whatever it finds without
       # rebuilding. Deleting that step would therefore publish an empty
       # package — silently, since npm does not care. This asserts otherwise.
+      #
+      # Every path here must match an `exports` target in package.json. The SSR
+      # entry moved from `dist/server.js` to `dist/server/index.js` when the
+      # server build gained `preserveModules` (PR #77) — this list was missed,
+      # and correctly refused to publish rather than shipping a package whose
+      # "node" condition pointed at a file that no longer existed. Keep the two
+      # in sync.
       - name: Verify build output before packing
         run: |
-          for f in dist/index.js dist/server.js dist/index.d.ts dist/index.css; do
+          for f in dist/index.js dist/server/index.js dist/index.d.ts dist/index.css; do
             if [ ! -s "$f" ]; then
               echo "::error::$f is missing or empty — refusing to publish."
               echo "The Build step is what creates it; installs here use --ignore-scripts."
               exit 1
             fi
           done
-          echo "dist OK ($(find dist -type f | wc -l) files)"
+          # The SSR entry is per-module: it re-exports from sibling files and is
+          # useless without them, so a bare existence check on index.js alone
+          # would pass on a half-emitted dist.
+          if [ "$(find dist/server -name '*.js' | wc -l)" -lt 100 ]; then
+            echo "::error::dist/server/ has too few modules — the per-module SSR build did not complete."
+            exit 1
+          fi
+          echo "dist OK ($(find dist -type f | wc -l) files, $(find dist/server -name '*.js' | wc -l) server modules)"
 
       - name: Check if this version is already published
         id: check

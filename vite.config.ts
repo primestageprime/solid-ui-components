@@ -102,7 +102,8 @@ function prependKatexImport(): Plugin {
 
 // Build target selected via SUI_BUILD_TARGET env var.
 // - "client" (default): browser/ESM bundle with DOM-targeted Solid output. Emits dist/index.js.
-// - "server": Node/SSR-safe bundle built with solid-plugin ssr=true. Emits dist/server.js.
+// - "server": Node/SSR-safe bundle built with solid-plugin ssr=true. Emits
+//   dist/server/ (one file per module; entry dist/server/index.js).
 // Two sequential `vite build` invocations produce both bundles (see npm scripts).
 type BuildTarget = "client" | "server";
 
@@ -135,7 +136,7 @@ const CLIENT_ROLLUP_EXTERNALS: (string | RegExp)[] = [
 // throws "Client-only API called on the server side" at module load. The fix
 // is to let vite-plugin-solid (ssr: true) re-resolve kobalte through its
 // `"solid": "./dist/*/index.jsx"` condition and re-compile its JSX to
-// SSR-safe `ssr()` / `ssrElement()` calls as part of our dist/server.js.
+// SSR-safe `ssr()` / `ssrElement()` calls as part of our dist/server/ output.
 const SERVER_ROLLUP_EXTERNALS: (string | RegExp)[] = [...BASE_EXTERNALS];
 const SSR_EXTERNALS: string[] = [...BASE_EXTERNALS];
 
@@ -176,7 +177,7 @@ export default defineConfig(({ command, mode }) => {
       : isServerBuild
         ? {
             // SSR build — invoked via `vite build --ssr src/index.ts`.
-            // Produce dist/server.js alongside (not replacing) the client dist/index.js.
+            // Produce dist/server/ alongside (not replacing) the client dist/index.js.
             emptyOutDir: false,
             ssr: true,
             outDir: "dist",
