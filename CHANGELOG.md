@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.134.0
+
 ### Added
 - **`ChartTooltip` can wrap, and now stays inside the chart.** Two new props,
   both opt-in, so every existing tooltip renders exactly as before:
