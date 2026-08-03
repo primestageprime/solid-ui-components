@@ -87,11 +87,34 @@ const cellContainsTime = (cell: Cell, t: Date): boolean =>
 /** Threshold in ms within which a user-initiated scroll suppresses programmatic scroll. */
 const USER_SCROLL_GRACE_MS = 250;
 
-/** Safety net: clear the "programmatic scroll in flight" flag this long after a
- *  smooth-scroll begins, in case the user interrupts and we never reach the
- *  exact target (so the flag can't get stuck and swallow real user scrolls). A
- *  native smooth scroll across the viewport settles well within this. */
-const MAX_PROGRAMMATIC_SCROLL_MS = 800;
+/** A programmatic smooth scroll is over when its scroll events STOP ARRIVING —
+ *  not when the viewport first reaches the target, and not after a fixed wall
+ *  clock budget. Both of those guesses end the flag while the animation is
+ *  still emitting frames, and every frame that lands after it hits the
+ *  user-scroll branch below and stamps `lastUserScrollAt`. The axis then
+ *  attributes its OWN animation to the user, arms USER_SCROLL_GRACE_MS, and
+ *  silently refuses the next recentre-on-select: a click landing there moves
+ *  the selection but never scrolls to it, so the window band appears frozen.
+ *
+ *  Two ways that used to happen, both measured in the browser:
+ *   - reaching the target ends it, but sub-pixel settling frames keep coming;
+ *   - a long jump (~4900px here) animates for longer than the old 800ms cap,
+ *     which then fired mid-flight.
+ *
+ *  So: every frame of our own scroll restarts this countdown, and the scroll is
+ *  declared finished only once nothing has arrived for this long. Long enough
+ *  to bridge the gap between frames (including the slow settling tail), short
+ *  enough not to noticeably delay a user pan that begins right after a
+ *  recentre lands. */
+const PROGRAMMATIC_SETTLE_MS = 150;
+
+/** Absolute backstop, from the moment a scroll is requested. The inactivity
+ *  countdown above is the real end condition and fires first in every normal
+ *  case; this exists only so the flag cannot get stuck (and start swallowing
+ *  genuine user scrolls) if frames somehow never stop. Deliberately far longer
+ *  than any real smooth scroll — the previous 800ms was short enough to fire
+ *  during one, which is the bug described above. */
+const MAX_PROGRAMMATIC_SCROLL_MS = 2500;
 
 /** Pretty "Mon YYYY" formatter, UTC-anchored to match the cell start dates. */
 const formatMonthYear = (d: Date): string =>
@@ -126,18 +149,33 @@ export const DateAxis = <C extends Cell = Cell>(
   // must NOT be counted as user scrolls — otherwise each animation frame
   // re-arms the grace window and the *next* recentre (e.g. a click that lands
   // mid-flight) gets suppressed, so it can't take over. We flag the
-  // programmatic scroll, ignore its scroll events, and clear the flag once the
-  // viewport settles on the target (or the safety timer fires).
+  // programmatic scroll and ignore its scroll events until they stop arriving
+  // (see PROGRAMMATIC_SETTLE_MS).
   let programmaticScrollActive = false;
-  let programmaticTarget = 0;
   let programmaticTimer: ReturnType<typeof setTimeout> | undefined;
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const clearSettleTimer = () => {
+    if (settleTimer === undefined) return;
+    clearTimeout(settleTimer);
+    settleTimer = undefined;
+  };
 
   const endProgrammaticScroll = () => {
     programmaticScrollActive = false;
+    clearSettleTimer();
     if (programmaticTimer !== undefined) {
       clearTimeout(programmaticTimer);
       programmaticTimer = undefined;
     }
+  };
+
+  /** Restart the "our scroll has gone quiet" countdown. Called for every frame
+   *  of our own animation, so the flag outlives both the long mid-flight
+   *  stretch and the settling tail. See PROGRAMMATIC_SETTLE_MS. */
+  const scheduleProgrammaticClear = () => {
+    clearSettleTimer();
+    settleTimer = setTimeout(endProgrammaticScroll, PROGRAMMATIC_SETTLE_MS);
   };
 
   // ── Visible-window tracking → sticky month/year labels ─────────────────
@@ -208,8 +246,10 @@ export const DateAxis = <C extends Cell = Cell>(
     // `scrollTo` is unavailable in some test environments (JSDOM); fall back
     // to assigning `scrollLeft` directly. Real browsers always have scrollTo.
     if (typeof el.scrollTo === "function") {
-      programmaticTarget = target;
       programmaticScrollActive = true;
+      // A fresh recentre supersedes any pending settle countdown from the
+      // previous one — otherwise it could clear the flag mid-flight here.
+      clearSettleTimer();
       if (programmaticTimer !== undefined) clearTimeout(programmaticTimer);
       programmaticTimer = setTimeout(
         endProgrammaticScroll,
@@ -226,11 +266,10 @@ export const DateAxis = <C extends Cell = Cell>(
     if (!el) return;
     setScrollLeft(el.scrollLeft);
     if (programmaticScrollActive) {
-      // Our own smooth-scroll frame — don't treat it as a user scroll. Clear
-      // the flag once we've essentially landed on the target.
-      if (Math.abs(el.scrollLeft - programmaticTarget) <= 1) {
-        endProgrammaticScroll();
-      }
+      // Our own smooth-scroll frame — never a user scroll, wherever it is
+      // relative to the target. Push the "gone quiet" countdown out; the scroll
+      // ends when the frames do, not when the viewport first reaches the mark.
+      scheduleProgrammaticClear();
       return;
     }
     lastUserScrollAt = Date.now();

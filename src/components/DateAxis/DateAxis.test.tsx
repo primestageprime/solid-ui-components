@@ -168,6 +168,116 @@ describe("DateAxis recentre takeover", () => {
   });
 });
 
+describe("DateAxis recentre after a settling smooth scroll (regression)", () => {
+  // Repro for "the window band stops following clicks while the ribbon coasts
+  // to a stop". Reaching the target is not the end of a smooth scroll — the
+  // browser emits several more sub-pixel settling frames. The old code cleared
+  // the programmatic flag on arrival, so those trailing frames fell through to
+  // the user-scroll branch and stamped `lastUserScrollAt`, arming
+  // USER_SCROLL_GRACE_MS against the axis's own animation. The next selection
+  // change was then silently refused a recentre.
+  it("does not mistake its own settling frames for a user scroll", async () => {
+    const [sel, setSel] = createSignal(5);
+    const cells = dailyCells(d("2026-01-01"), d("2026-03-31"));
+    const { container } = render(() => (
+      <DateAxis
+        cells={cells}
+        selected={sel()}
+        cellWidth={40}
+        renderCell={noopRender}
+      />
+    ));
+    const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
+    Object.defineProperty(el, "clientWidth", {
+      configurable: true,
+      value: 200,
+    });
+    Object.defineProperty(el, "scrollWidth", {
+      configurable: true,
+      value: cells.length * 40,
+    });
+
+    // Record targets only — this stub drives the animation frames by hand below.
+    const targets: number[] = [];
+    el.scrollTo = ((opts: ScrollToOptions) => {
+      targets.push(opts.left as number);
+    }) as typeof el.scrollTo;
+
+    setSel(20);
+    await Promise.resolve();
+    expect(targets).toHaveLength(1);
+
+    // The animation arrives...
+    el.scrollLeft = targets[0];
+    el.dispatchEvent(new Event("scroll"));
+    // ...then keeps emitting settling frames, as a real smooth scroll does.
+    el.scrollLeft = targets[0] + 0.4;
+    el.dispatchEvent(new Event("scroll"));
+    el.scrollLeft = targets[0];
+    el.dispatchEvent(new Event("scroll"));
+
+    // A click landing in that tail must still recentre on the new selection.
+    setSel(60);
+    await Promise.resolve();
+    expect(targets).toHaveLength(2);
+    expect(targets[1]).toBeGreaterThan(targets[0]);
+  });
+
+  // The same misattribution through a second door, also measured in the
+  // browser: a long jump animates for longer than the old 800ms
+  // MAX_PROGRAMMATIC_SCROLL_MS cap, which then fired while frames were still
+  // arriving. Everything after it was read as a user scroll, so the next click
+  // was refused its recentre. The end condition is now inactivity, so an
+  // animation that keeps emitting frames keeps the flag.
+  it("keeps the flag through an animation longer than the safety backstop", async () => {
+    vi.useFakeTimers();
+    try {
+      const [sel, setSel] = createSignal(5);
+      const cells = dailyCells(d("2026-01-01"), d("2026-03-31"));
+      const { container } = render(() => (
+        <DateAxis
+          cells={cells}
+          selected={sel()}
+          cellWidth={40}
+          renderCell={noopRender}
+        />
+      ));
+      const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
+      Object.defineProperty(el, "clientWidth", {
+        configurable: true,
+        value: 200,
+      });
+      Object.defineProperty(el, "scrollWidth", {
+        configurable: true,
+        value: cells.length * 40,
+      });
+
+      const targets: number[] = [];
+      el.scrollTo = ((opts: ScrollToOptions) => {
+        targets.push(opts.left as number);
+      }) as typeof el.scrollTo;
+
+      setSel(20);
+      await Promise.resolve();
+      expect(targets).toHaveLength(1);
+
+      // A long glide: frames every 100ms for 1.2s, never reaching the target —
+      // well past the 800ms that used to end it prematurely.
+      for (let t = 0; t < 1200; t += 100) {
+        el.scrollLeft += 20;
+        el.dispatchEvent(new Event("scroll"));
+        vi.advanceTimersByTime(100);
+      }
+
+      setSel(60);
+      await Promise.resolve();
+      expect(targets).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("DateAxis recentre uses measured cell width (regression)", () => {
   it("scrolls fully to the end for the last cell when cells render wider than cellWidth", async () => {
     const [sel, setSel] = createSignal(0);
@@ -181,7 +291,10 @@ describe("DateAxis recentre uses measured cell width (regression)", () => {
       />
     ));
     const el = container.querySelector(".sui-date-axis")! as HTMLDivElement;
-    Object.defineProperty(el, "clientWidth", { configurable: true, value: 200 });
+    Object.defineProperty(el, "clientWidth", {
+      configurable: true,
+      value: 200,
+    });
     // Content-sized cells 60px wide — wider than the 40px cellWidth hint. The
     // old math (idx * cellWidth) targeted ~67% of maxScroll; the fix measures
     // the real per-cell width (scrollWidth / count) and reaches the end.
