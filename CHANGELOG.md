@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## 0.135.0
+
+### Fixed
+- **`HighlightSegments.onHover` now agrees with the band's own hover state.**
+  The visual hover was moved onto `ctx.hoverX()` — deliberately, because
+  sibling slots (PointSeries dots, the crosshair dot, PinMarkers chevrons)
+  intermittently capture pointer events and fire a spurious `pointerleave` on
+  the segment rect. `onHover` was left wired to that same unreliable
+  `onPointerEnter`/`onPointerLeave` pair, so the two halves reported different
+  things: the band stayed painted as hovered while the callback had already
+  said `null`. A consumer rendering detail for the hovered segment lost it
+  under a band that still looked hovered. Both now derive from the one memo.
+
+  Caught by amygdala-ui's `DotChart`, whose merged hover tooltip went blank
+  over an outlined alarm band.
+
+### Changed
+- **`HighlightSegments.onHover` no longer receives a `PointerEvent`.** Its
+  signature is `(segment: T | null) => void`. There is no event to pass —
+  the callback is derived from the chart's cursor position, not from a DOM
+  pointer event. `onClick`, `PinMarkers.onHover` and `TimelineBar.onBarHover`
+  are unchanged and still carry theirs. A caller using the second argument
+  gets a compile error rather than a silent `undefined`; read viewport
+  coordinates from your own listener on the chart container instead.
+
 ## 0.134.0
 
 ### Added
