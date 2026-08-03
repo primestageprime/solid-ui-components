@@ -36,7 +36,3 @@ moves to `docs/adr/` first. Handoffs are **not** a task list — that is dside.
 - `docs/adr/0008-deliberately-unfixed.md` — what is deliberately *not* to be
   "fixed", and why. Check it before driving any metric to zero.
 - The open dside tasks (`dside list --space-id 3 --project sui --status false`).
-
-## Memory
-
-Use `mempalace_search` whenever the user references past decisions, prior work, or context outside the current codebase. Filter by `--wing` when scope is clear.
