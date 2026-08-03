@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Added
+- **`ChartTooltip` can wrap, and now stays inside the chart.** Two new props,
+  both opt-in, so every existing tooltip renders exactly as before:
+
+  - `maxWidth` — caps the tooltip's width and lets its content wrap onto
+    several lines. Without it the tooltip stays the single `nowrap` line
+    `CompletionTimeline` and `ThroughputChart` are built around.
+  - `fallback` — content for when `data` is empty and there is no point to
+    describe, anchored to the hovered x itself. A chart can hold hoverable
+    annotations (alarm bands, timeline bars) that outlive its series, and
+    those still need to explain themselves when the series is empty.
+
+  Horizontal placement is now clamped, mirroring the y-clamp that was already
+  there: the tooltip prefers to sit right of its anchor, flips to the left of
+  it rather than overflow the chart's right edge, and pins to the left edge
+  when it is wider than the chart itself. This was a latent bug — `px()` had no
+  clamp at all — that `nowrap` hid by keeping tooltips narrow, so it had to
+  land with `maxWidth` rather than after it.
+
+  The gap this closes: a consumer whose chart carries its own hover detail had
+  no way to put that detail in our tooltip, so it rendered a second popup
+  beside ours with its own coordinate system. The two drifted apart with page
+  position and cursor-to-datum distance. dside #12494.
+
 ## 0.133.0
 
 ### Added

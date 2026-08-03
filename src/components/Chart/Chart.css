@@ -231,6 +231,15 @@
   z-index: 10;
 }
 
+/* Opt-in multi-line body — ChartTooltip's `maxWidth` prop, bridged in as
+   --sui-chart-tooltip-max-width. Without a cap, wrapping content would size to
+   whatever space is left of the chart's right edge and change width as it
+   moves, so the class and the variable are always set together. */
+.sui-chart__tooltip--wrap {
+  white-space: normal;
+  max-width: var(--sui-chart-tooltip-max-width);
+}
+
 /* Bars show a pointer only when a click handler is wired. */
 .sui-chart__bar--interactive {
   cursor: pointer;
