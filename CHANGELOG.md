@@ -72,6 +72,35 @@
   than an object replaces the computed base, silently discarding
   `grid-template-columns` / `--auto-stack-break` with no warning.
 
+- **First test coverage for `SelectableTable`** (`SelectableTable.test.tsx`, 35
+  tests). 295 lines, seven reactive primitives and six handlers, never mounted
+  by any test — the highest-logic-density entry in the
+  `componentsNeverRendered` backlog. Ratchet 47 → 46.
+
+  Selection is driven through the checkbox **label's `mousedown`**, not the
+  input's `change`: the component calls `preventDefault()` there so it can read
+  `shiftKey` and own the toggle, leaving `onChange` an empty function. A test
+  firing `change` would assert nothing and pass.
+
+  Two narrow rules are pinned as-is rather than as they arguably "should" be,
+  since changing either is a behaviour change to a public component: shift-click
+  only **adds** a range (it never clears one), and select-all / indeterminate
+  consider only the **currently rendered** rows, so a selection made before a
+  filter narrowed `data` survives — which is why `toggleAll` deletes ids
+  individually instead of assigning a fresh `Set`. `Clear` is deliberately the
+  opposite and drops everything.
+
+  Verified by mutation: five changes to the selection logic (empty-table
+  select-all guard, the indeterminate bound, deselect-all wiping off-screen
+  ids, the row-click checkbox guard, shift-range add→delete) each fail between
+  one and four tests.
+
+### Removed
+- **Dead shift-tracking listeners in `SelectableTable`.** A document-level
+  `keydown`/`keyup` pair, one per mounted table, maintained a `_shiftHeld` flag
+  that nothing read — shift-select takes `shiftKey` off the mousedown event.
+  No behaviour change; surfaced while writing the coverage above.
+
 ### Changed
 - **The health ratchet now fails on a metric with no ceiling recorded.**
   `classify()` skipped any metric whose baseline was `undefined` — "it has no
