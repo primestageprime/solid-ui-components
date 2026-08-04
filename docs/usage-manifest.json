@@ -2213,55 +2213,8 @@
     "dside-work": {
       "root": "/Users/peter/Documents/clients/PrimeStage/dside/work",
       "status": "ok",
-      "specifiers": [
-        "@primestageprime/solid-ui-components",
-        "@primestageprime/solid-ui-components/index.css",
-        "@primestageprime/solid-ui-components/themes/hud.css"
-      ],
-      "uses": {
-        "CardSurface": [
-          {
-            "file": "src/components/Checklist.tsx",
-            "line": 2,
-            "kind": "named"
-          }
-        ],
-        "CheckboxField": [
-          {
-            "file": "src/components/Checklist.tsx",
-            "line": 2,
-            "kind": "named"
-          }
-        ],
-        "SectionTitle": [
-          {
-            "file": "src/components/Checklist.tsx",
-            "line": 2,
-            "kind": "named"
-          }
-        ],
-        "SpacedStack": [
-          {
-            "file": "src/components/Checklist.tsx",
-            "line": 2,
-            "kind": "named"
-          }
-        ],
-        "index.css": [
-          {
-            "file": "src/App.tsx",
-            "line": 4,
-            "kind": "css"
-          }
-        ],
-        "themes/hud.css": [
-          {
-            "file": "src/App.tsx",
-            "line": 5,
-            "kind": "css"
-          }
-        ]
-      }
+      "specifiers": [],
+      "uses": {}
     },
     "goose-ui": {
       "root": "/Users/peter/Documents/clients/PrimeStage/goose/goose-ui",
@@ -2288,13 +2241,6 @@
         "AppShell": [
           {
             "file": "src/app.tsx",
-            "line": 12,
-            "kind": "named"
-          }
-        ],
-        "AreaSeries": [
-          {
-            "file": "src/components/ReportCharts.tsx",
             "line": 12,
             "kind": "named"
           }
@@ -2330,7 +2276,7 @@
         "CaptionLabel": [
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2340,7 +2286,7 @@
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -2455,6 +2401,36 @@
         ],
         "EmptyState": [
           {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 33,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlySalesOrders.tsx",
+            "line": 28,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReturnsCreditsReport.tsx",
+            "line": 30,
+            "kind": "named"
+          },
+          {
             "file": "src/components/SalesOrdersSnapshot.tsx",
             "line": 20,
             "kind": "named"
@@ -2524,7 +2500,7 @@
           },
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2534,27 +2510,27 @@
           },
           {
             "file": "src/components/GrossMarginReport.tsx",
-            "line": 17,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/InvoiceSnapshot.tsx",
-            "line": 17,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/MonthlyInvoiceRevenue.tsx",
             "line": 18,
             "kind": "named"
           },
           {
+            "file": "src/components/InventoryHealthReport.tsx",
+            "line": 33,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
             "file": "src/components/MonthlySalesOrders.tsx",
-            "line": 19,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -2564,7 +2540,7 @@
           },
           {
             "file": "src/components/ReturnsCreditsReport.tsx",
-            "line": 22,
+            "line": 30,
             "kind": "named"
           },
           {
@@ -2605,7 +2581,12 @@
         "LabeledDivider": [
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/POStatusReport.tsx",
+            "line": 21,
             "kind": "named"
           }
         ],
@@ -2626,7 +2607,7 @@
         "LooseCardGrid": [
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2635,8 +2616,13 @@
             "kind": "named"
           },
           {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -2678,7 +2664,7 @@
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -2700,7 +2686,7 @@
           },
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2714,8 +2700,13 @@
             "kind": "named"
           },
           {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -2776,7 +2767,7 @@
           },
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2786,7 +2777,12 @@
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 25,
             "kind": "named"
           },
           {
@@ -2837,6 +2833,16 @@
           {
             "file": "src/components/daysnapshot/FactFilterChips.tsx",
             "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/InventoryBreakdownTile.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MarginBreakdownTile.tsx",
+            "line": 20,
             "kind": "named"
           },
           {
@@ -2967,7 +2973,7 @@
           },
           {
             "file": "src/components/ExecDashboard.tsx",
-            "line": 43,
+            "line": 63,
             "kind": "named"
           },
           {
@@ -2982,22 +2988,22 @@
           },
           {
             "file": "src/components/GrossMarginReport.tsx",
-            "line": 17,
+            "line": 18,
             "kind": "named"
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
             "file": "src/components/InvoiceSnapshot.tsx",
-            "line": 17,
+            "line": 18,
             "kind": "named"
           },
           {
             "file": "src/components/MonthlyInvoiceRevenue.tsx",
-            "line": 18,
+            "line": 25,
             "kind": "named"
           },
           {
@@ -3007,7 +3013,7 @@
           },
           {
             "file": "src/components/MonthlySalesOrders.tsx",
-            "line": 19,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -3017,7 +3023,7 @@
           },
           {
             "file": "src/components/ReturnsCreditsReport.tsx",
-            "line": 22,
+            "line": 30,
             "kind": "named"
           },
           {
@@ -3060,6 +3066,16 @@
           {
             "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
             "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/InventoryBreakdownTile.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MarginBreakdownTile.tsx",
+            "line": 20,
             "kind": "named"
           }
         ],
@@ -3146,7 +3162,7 @@
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -3162,6 +3178,16 @@
           {
             "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
             "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/InventoryBreakdownTile.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MarginBreakdownTile.tsx",
+            "line": 20,
             "kind": "named"
           }
         ],
@@ -3247,6 +3273,16 @@
             "kind": "type"
           },
           {
+            "file": "src/components/daysnapshot/InventoryBreakdownTile.tsx",
+            "line": 22,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/daysnapshot/MarginBreakdownTile.tsx",
+            "line": 26,
+            "kind": "type"
+          },
+          {
             "file": "src/routes/overview.tsx",
             "line": 19,
             "kind": "type"
@@ -3265,7 +3301,7 @@
           },
           {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
             "kind": "named"
           },
           {
@@ -3281,6 +3317,16 @@
           {
             "file": "src/components/daysnapshot/FactBreakdownTile.tsx",
             "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/InventoryBreakdownTile.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/daysnapshot/MarginBreakdownTile.tsx",
+            "line": 20,
             "kind": "named"
           }
         ],
@@ -3464,8 +3510,33 @@
         ],
         "WrapItemStack": [
           {
+            "file": "src/components/GrossMarginReport.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/InventoryHealthReport.tsx",
-            "line": 19,
+            "line": 33,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/InvoiceSnapshot.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlyInvoiceRevenue.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MonthlySalesOrders.tsx",
+            "line": 28,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ReturnsCreditsReport.tsx",
+            "line": 30,
             "kind": "named"
           },
           {
@@ -4100,12 +4171,22 @@
         ],
         "Bucket": [
           {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "type"
+          },
+          {
             "file": "src/routes/tools/metric-sleuth.tsx",
             "line": 4,
             "kind": "type"
           }
         ],
         "BucketQueue": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
             "line": 4,
@@ -4120,6 +4201,11 @@
           }
         ],
         "CardSurface": [
+          {
+            "file": "src/components/MetricBandChart.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/MetricTimeseriesChart.tsx",
             "line": 4,
@@ -4465,7 +4551,7 @@
         "CompactFileDropTarget": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 146,
+            "line": 151,
             "kind": "named"
           }
         ],
@@ -4988,6 +5074,11 @@
           }
         ],
         "FillColumnFlush": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/ViolationsPreview.tsx",
             "line": 2,
@@ -5960,20 +6051,6 @@
             "kind": "named"
           }
         ],
-        "ProgressionQueue": [
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 4,
-            "kind": "named"
-          }
-        ],
-        "ProgressionSection": [
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 4,
-            "kind": "type"
-          }
-        ],
         "ProportionalItem": [
           {
             "file": "src/components/ui/layout.tsx",
@@ -6034,7 +6111,7 @@
         "ScrollRegion": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 146,
+            "line": 151,
             "kind": "named"
           }
         ],
@@ -6272,6 +6349,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/ViolationsPreview.tsx",
             "line": 2,
             "kind": "named"
@@ -6498,6 +6580,11 @@
           }
         ],
         "TableQuickFilter": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/ViolationsPreview.tsx",
             "line": 2,
@@ -7143,7 +7230,7 @@
         "TitleDotsMeta": [
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 146,
+            "line": 151,
             "kind": "named"
           }
         ],
@@ -7215,6 +7302,11 @@
           }
         ],
         "Tooltip": [
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 4,
+            "kind": "named"
+          },
           {
             "file": "src/components/fortnight/cells.tsx",
             "line": 2,
@@ -7452,12 +7544,12 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 60,
+            "line": 64,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 63,
+            "line": 67,
             "kind": "factory-call"
           },
           {
@@ -7523,6 +7615,16 @@
         ],
         "createChartCanvas": [
           {
+            "file": "src/components/MetricBandChart.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MetricBandChart.tsx",
+            "line": 13,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/components/MetricTimeseriesChart.tsx",
             "line": 4,
             "kind": "named"
@@ -7587,12 +7689,12 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 79,
+            "line": 83,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 81,
+            "line": 85,
             "kind": "factory-call"
           },
           {
@@ -7807,12 +7909,12 @@
           },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 49,
+            "line": 47,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 55,
+            "line": 53,
             "kind": "factory-call"
           },
           {
@@ -7878,27 +7980,27 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 72,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 74,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 76,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 86,
+            "line": 78,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 91,
+            "line": 80,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 90,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 95,
             "kind": "factory-call"
           },
           {
@@ -8018,7 +8120,7 @@
           },
           {
             "file": "src/routes/tools/metric-sleuth.tsx",
-            "line": 47,
+            "line": 45,
             "kind": "factory-call"
           },
           {
@@ -8324,16 +8426,6 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 100,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 102,
-            "kind": "factory-call"
-          },
-          {
-            "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 104,
             "kind": "factory-call"
           },
@@ -8389,12 +8481,12 @@
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 127,
+            "line": 126,
             "kind": "factory-call"
           },
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
-            "line": 129,
+            "line": 128,
             "kind": "factory-call"
           },
           {
@@ -8420,6 +8512,16 @@
           {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 139,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 141,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/fortnight/FortnightReportBody.tsx",
+            "line": 143,
             "kind": "factory-call"
           },
           {
@@ -9899,9 +10001,6 @@
       "jtf-ui",
       "thorcasting-ui"
     ],
-    "AreaSeries": [
-      "goose-ui"
-    ],
     "AsyncProgress": [
       "jtf-ui"
     ],
@@ -9971,7 +10070,6 @@
     ],
     "CardSurface": [
       "dside-ui",
-      "dside-work",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -10013,9 +10111,6 @@
     ],
     "Checkbox": [
       "jtf-ui"
-    ],
-    "CheckboxField": [
-      "dside-work"
     ],
     "ChipCluster": [
       "jtf-ui"
@@ -10507,12 +10602,6 @@
     "ProductGridWorkCounts": [
       "dside-ui"
     ],
-    "ProgressionQueue": [
-      "jtf-ui"
-    ],
-    "ProgressionSection": [
-      "jtf-ui"
-    ],
     "ProportionalItem": [
       "jtf-ui"
     ],
@@ -10568,7 +10657,6 @@
     ],
     "SectionTitle": [
       "dside-ui",
-      "dside-work",
       "goose-ui"
     ],
     "SegmentedControl": [
@@ -10633,9 +10721,6 @@
     ],
     "SourceTag": [
       "dside-ui"
-    ],
-    "SpacedStack": [
-      "dside-work"
     ],
     "SparklineTrend": [
       "goose-ui"
@@ -11097,7 +11182,6 @@
     "index.css": [
       "amygdala-ui",
       "dside-ui",
-      "dside-work",
       "goose-ui",
       "jtf-ui",
       "thorcasting-ui"
@@ -11134,7 +11218,6 @@
     ],
     "themes/hud.css": [
       "amygdala-ui",
-      "dside-work",
       "thorcasting-ui"
     ],
     "toaster": [
