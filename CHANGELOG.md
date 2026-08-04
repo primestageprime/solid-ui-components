@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.137.0
+
 ### Added
 - **`CashflowScrubChart` — `layer` on a `balanceSeries` entry, so a coincident
   overlay can paint ABOVE the primary balance line.**
