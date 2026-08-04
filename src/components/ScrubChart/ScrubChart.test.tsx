@@ -2,28 +2,9 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { ScrubChart, type ScrubChartContext } from "./ScrubChart";
 import { dailyCells, type Cell } from "../DateAxis";
+import { pointer } from "../../test-utils";
 
 const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
-
-/**
- * Dispatch a pointer-flavoured event with reliable clientX/clientY.
- * JSDOM's PointerEvent constructor ignores clientX in its init dict, so we
- * build a MouseEvent (which JSDOM honours) with the pointerXXX event type.
- */
-const firePointer = (
-  el: Element,
-  type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel",
-  init: { clientX: number; clientY: number; pointerId?: number },
-): void => {
-  const ev = new MouseEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    clientX: init.clientX,
-    clientY: init.clientY,
-  });
-  Object.defineProperty(ev, "pointerId", { value: init.pointerId ?? 1 });
-  el.dispatchEvent(ev);
-};
 
 describe("ScrubChart composition", () => {
   it("renders the chart frame, window overlay, and inner DateAxis", () => {
@@ -189,21 +170,10 @@ describe("ScrubChart chart-frame drag", () => {
 
     // 31 cells across 1200 px → dayPitch ≈ 38.71. cellWidth = 60. So a 100-px
     // graph drag should scroll the axis by 100 * (60 / 38.71) ≈ 155 px.
-    firePointer(overlay, "pointerdown", {
-      clientX: 600,
-      clientY: 100,
-      pointerId: 1,
-    });
-    firePointer(overlay, "pointermove", {
-      clientX: 700,
-      clientY: 100,
-      pointerId: 1,
-    });
-    firePointer(overlay, "pointerup", {
-      clientX: 700,
-      clientY: 100,
-      pointerId: 1,
-    });
+    const drag = pointer(overlay);
+    drag.down({ clientX: 600, clientY: 100 });
+    drag.move({ clientX: 700, clientY: 100 });
+    drag.up({ clientX: 700, clientY: 100 });
 
     expect(onScrub).not.toHaveBeenCalled();
     expect(axisEl.scrollLeft).toBeGreaterThan(140);
@@ -248,16 +218,9 @@ describe("ScrubChart chart-frame click", () => {
     // 31 cells across 1200 px → dayPitch ≈ 38.71. Cell 15's centre sits at
     // x ≈ 600; the pointer barely moves so the gesture stays under the 4-px
     // pan threshold and resolves as a click.
-    firePointer(overlay, "pointerdown", {
-      clientX: 600,
-      clientY: 100,
-      pointerId: 1,
-    });
-    firePointer(overlay, "pointerup", {
-      clientX: 601,
-      clientY: 100,
-      pointerId: 1,
-    });
+    const click = pointer(overlay);
+    click.down({ clientX: 600, clientY: 100 });
+    click.up({ clientX: 601, clientY: 100 });
 
     expect(onScrub).toHaveBeenCalledTimes(1);
     expect(onScrub.mock.calls[0][0]).toBe(15);
@@ -296,21 +259,10 @@ describe("ScrubChart chart-frame click", () => {
 
     // Drag well past threshold, then release. Even if the release x lands
     // back near the start (zero net displacement), the pan flag is sticky.
-    firePointer(overlay, "pointerdown", {
-      clientX: 600,
-      clientY: 100,
-      pointerId: 1,
-    });
-    firePointer(overlay, "pointermove", {
-      clientX: 700,
-      clientY: 100,
-      pointerId: 1,
-    });
-    firePointer(overlay, "pointerup", {
-      clientX: 600,
-      clientY: 100,
-      pointerId: 1,
-    });
+    const pan = pointer(overlay);
+    pan.down({ clientX: 600, clientY: 100 });
+    pan.move({ clientX: 700, clientY: 100 });
+    pan.up({ clientX: 600, clientY: 100 });
 
     expect(onScrub).not.toHaveBeenCalled();
   });
@@ -336,7 +288,7 @@ describe("ScrubChart hover plumbing", () => {
     const frame = container.querySelector(".sui-scrub-chart__frame")!;
     // No hover layer before any pointer activity.
     expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
-    firePointer(frame, "pointermove", { clientX: 200, clientY: 30 });
+    pointer(frame).move({ clientX: 200, clientY: 30 });
     const layer = container.querySelector(".sui-scrub-chart__hover-layer");
     expect(layer).toBeTruthy();
     const idx = Number(
@@ -344,7 +296,7 @@ describe("ScrubChart hover plumbing", () => {
     );
     expect(idx).toBeGreaterThanOrEqual(0);
     expect(idx).toBeLessThan(10);
-    frame.dispatchEvent(new MouseEvent("pointerleave", { bubbles: true }));
+    pointer(frame).leave();
     expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
   });
 
@@ -359,11 +311,10 @@ describe("ScrubChart hover plumbing", () => {
         renderHoverOverlay={() => <div data-testid="hover" />}
       />
     ));
-    firePointer(
-      container.querySelector(".sui-scrub-chart__frame")!,
-      "pointermove",
-      { clientX: 200, clientY: 30 },
-    );
+    pointer(container.querySelector(".sui-scrub-chart__frame")!).move({
+      clientX: 200,
+      clientY: 30,
+    });
     expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
   });
 });

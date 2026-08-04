@@ -2,6 +2,86 @@
 
 ## [Unreleased]
 
+### Added
+- **A shared DOM test harness — `src/test-utils/`** (`fakeSizer`, `fakeRects`,
+  `pointer`, `drag`, plus the existing `domStructure`, behind one barrel).
+  Test-only; no production source changed and no public API moved.
+
+  jsdom ships no `ResizeObserver`, no `matchMedia`, no `PointerEvent`, no
+  pointer-capture methods, no `DataTransfer`, and performs no layout. Every
+  test file worked around that privately: **16** carried a `ResizeObserver`
+  fake in **four incompatible shapes** (silent no-op / fire-on-observe /
+  recorder with a static registry / externally-triggerable), 8 spied on
+  `getBoundingClientRect` with 5 independent layout models, 5 copied the same
+  `makeDataTransfer` + `fireDrag` + `flush` trio verbatim, and 3 wrote their
+  own `firePointer` with mutually incompatible `pointerId` / `clientY`
+  conventions. A fix to any one never reached the others.
+
+  - **`observeSize.ts:90` is the only `new ResizeObserver` in the library**, so
+    one double at that global covers every measuring component.
+  - **`resize()` is awaitable.** `observeSize` defers its callback out of the
+    observer dispatch through rAF; the promise resolves once that frame and
+    Solid's flush have run, so a caller awaits once and asserts without
+    knowing the deferral exists. Its change-guard is real too — resizing twice
+    to the same rounded size delivers once.
+  - **`installRects` shares the installation, not the geometry.** The spy,
+    the delegate-to-original fallback and the restore dedupe; the policy stays
+    a parameter (`verticalRows` static and keyed by `data-dnd-id`, `liveFlow`
+    reflow-aware and keyed by DOM order) because those two models are
+    genuinely different and collapsing them would make the model the thing
+    needing its own tests.
+  - **`matchMedia` gets a `matches: false` default in `test-setup.ts`;
+    `ResizeObserver` deliberately does not.** All three `matchMedia` call
+    sites guard on `typeof`, so the default is behaviour-identical while
+    making the reduced-motion branch reachable at all. A default
+    `ResizeObserver` would not be: 25 test files render a measuring component
+    without stubbing anything, and delivering `{width: 0, height: 0}` would
+    flip `OverflowNav`, `FilterBar`, `ResponsiveMoney` and `SwimlaneChart`
+    into their collapsed branches mid-suite.
+  - `src/internal/dom/observeSize.test.ts` keeps its own lower-level double on
+    purpose — its subject *is* the scheduling the shared sizer hides.
+
+  Harness code is written function-first with hand-rolled save/restore rather
+  than `vi.spyOn`, because `src/test-utils/` is **not** excluded from
+  `scripts/health.mjs` (it skips only `.test.` files) and because keeping
+  vitest out of the module keeps it out of the published
+  `dist/test-utils/*.d.ts`. `dotChains` and `collectionMethodCalls` are
+  unchanged at 7 / 31.
+
+- **First test coverage for two previously-unreachable areas.** +54 tests.
+  - `SwimlaneChart` responsive collapse (`helpers.test.ts` 19,
+    `SwimlaneChart.responsive.test.tsx` 9). The entire container-width-driven
+    collapse path had never executed under test — `SwimlaneChart.test.tsx`
+    mounts every case with `responsiveCollapse={false}` and says so in its own
+    header. Thresholds are derived from `widthForDepth` rather than guessed.
+    Also documents a non-obvious transient: a node that re-enters while its
+    outgoing copy is still animating renders twice until `NODE_LEAVE_MS`
+    elapses, by design.
+  - `Combobox` (`Combobox.render.test.tsx`, 21). The component had **zero**
+    `render()` calls against 589 lines; the emphasis is the backspace wiring,
+    where `computeBackspaceAction` was exhaustively unit-tested but its
+    integration never was.
+
+### Fixed
+- **`Combobox.test.tsx`'s header no longer claims jsdom is broken repo-wide.**
+  It cited an `html-encoding-sniffer` / `ERR_REQUIRE_ESM` failure as the reason
+  the component had no render coverage. That no longer reproduces (verified
+  2026-08-04); the stale note was actively discouraging the tests the component
+  needed. The file stays pinned to the node environment only because its own
+  scope is genuinely DOM-free.
+
+### Known
+- **`<Combobox disabled>` still accepts typing** (dside `sui` #12528). The
+  trigger is correctly disabled (`disabled`, `data-disabled`, listbox will not
+  open); the text input is not, and carries no `disabled` / `aria-disabled` /
+  `data-disabled`. `ComboboxSingle.tsx:130` passes `disabled` straight to
+  Kobalte's `Input`, but Kobalte's root owns that prop and propagates through
+  context — and `disabled` is split into `local` at `Combobox.tsx:100`, so the
+  root never receives it. Left unfixed here: it is a behaviour change to a
+  public component and wants a deliberate a11y call (Kobalte may keep a
+  combobox input focusable on purpose, making `aria-disabled` + readonly the
+  right target). Pinned by a clearly-labelled test that goes red when fixed.
+
 ## 0.136.0
 
 ### Added

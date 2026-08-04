@@ -2,95 +2,61 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { DnDHierarchySortBar } from "./DnDHierarchySortBar";
+import {
+  makeDataTransfer,
+  fireDrag,
+  flush,
+  installRects,
+  liveFlow,
+} from "../../test-utils";
+
+let restoreRects: (() => void) | undefined;
 
 afterEach(() => {
   cleanup();
+  restoreRects?.();
+  restoreRects = undefined;
   vi.restoreAllMocks();
 });
-
-function makeDataTransfer() {
-  const store: Record<string, string> = {};
-  return {
-    effectAllowed: "",
-    dropEffect: "",
-    setData: (k: string, v: string) => {
-      store[k] = v;
-    },
-    getData: (k: string) => store[k] ?? "",
-    setDragImage: () => {},
-  };
-}
-function fireDrag(
-  el: Element,
-  type: string,
-  clientX: number,
-  dt: ReturnType<typeof makeDataTransfer>,
-) {
-  const ev = Object.assign(
-    new Event(type, { bubbles: true, cancelable: true }),
-    { clientX, clientY: 12, dataTransfer: dt },
-  );
-  el.dispatchEvent(ev);
-}
-const flush = () => new Promise((r) => setTimeout(r, 0));
 
 // Variable widths to surface any reflow hysteresis. Gap 8.
 const WIDTH: Record<string, number> = { A: 40, B: 80, C: 40, D: 80 };
 const GAP = 8;
+const PILL = ".sui-dnd-hierarchy-sort-bar__pill";
 
-// Live, reflow-aware geometry: each pill/placeholder's rect is derived from its
-// CURRENT position in DOM order (exactly like a browser after the row reflows).
 function pillEls(root: HTMLElement): HTMLElement[] {
-  return Array.from(
-    root.querySelectorAll(".sui-dnd-hierarchy-sort-bar__pill"),
-  ) as HTMLElement[];
+  return Array.from(root.querySelectorAll(PILL)) as HTMLElement[];
 }
-function labelOf(el: HTMLElement): string {
+function labelOf(el: Element): string {
   return (el.textContent ?? "").replace(/[⋮\s]/g, "");
 }
-function widthOf(el: HTMLElement, draggedLabel: string): number {
-  const isPlaceholder = el.classList.contains(
-    "sui-dnd-hierarchy-sort-bar__placeholder",
+
+// `liveFlow` recomputes positions from CURRENT DOM order on every rect query,
+// so as the component reorders its preview the rects move with it — the browser
+// behaviour this sweep exists to exercise. The placeholder assumes the dragged
+// pill's width, which is why `widthOf` closes over the dragged label.
+function installLiveLayout(root: HTMLElement, draggedLabel: string) {
+  restoreRects = installRects(
+    liveFlow(root, {
+      selector: PILL,
+      gap: GAP,
+      height: 24,
+      widthOf: (el) =>
+        el.classList.contains("sui-dnd-hierarchy-sort-bar__placeholder")
+          ? WIDTH[draggedLabel]
+          : (WIDTH[labelOf(el)] ?? 40),
+    }),
   );
-  return isPlaceholder ? WIDTH[draggedLabel] : (WIDTH[labelOf(el)] ?? 40);
 }
-function layout(root: HTMLElement, draggedLabel: string) {
-  let x = 0;
-  const rects = new Map<HTMLElement, { left: number; width: number }>();
+
+// Hit-testing now reads the installed rects rather than a second private copy
+// of the layout maths.
+function elementUnderX(root: HTMLElement, cx: number) {
   for (const el of pillEls(root)) {
-    const w = widthOf(el, draggedLabel);
-    rects.set(el, { left: x, width: w });
-    x += w + GAP;
-  }
-  return rects;
-}
-function elementUnderX(root: HTMLElement, draggedLabel: string, cx: number) {
-  const rects = layout(root, draggedLabel);
-  for (const [el, r] of rects) {
+    const r = el.getBoundingClientRect();
     if (cx >= r.left && cx <= r.left + r.width) return { el, rect: r };
   }
   return null;
-}
-function installLiveLayout(root: HTMLElement, draggedLabel: string) {
-  const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-    function (this: Element) {
-      const r = layout(root, draggedLabel).get(this as HTMLElement);
-      if (r)
-        return {
-          left: r.left,
-          top: 0,
-          width: r.width,
-          height: 24,
-          right: r.left + r.width,
-          bottom: 24,
-          x: r.left,
-          y: 0,
-          toJSON() {},
-        } as DOMRect;
-      return orig.call(this);
-    },
-  );
 }
 
 // Drag `drag`, sweeping the cursor from x=0 to the right edge in small steps,
@@ -116,9 +82,13 @@ async function sweepDrag(opts: {
 
   const src = pillEls(root).find((p) => labelOf(p) === opts.drag)!;
   // Grab point = centre of the dragged pill in the original (pre-drag) layout.
-  const srcRect0 = layout(root, opts.drag).get(src)!;
+  const srcRect0 = src.getBoundingClientRect();
   const startX = srcRect0.left + srcRect0.width / 2;
-  fireDrag(src, "dragstart", startX, dt);
+  fireDrag(src, "dragstart", {
+    clientX: startX,
+    clientY: 12,
+    dataTransfer: dt,
+  });
   await flush();
 
   // Continuous monotonic sweep from the grab point to the drop point — exactly
@@ -129,11 +99,21 @@ async function sweepDrag(opts: {
     step > 0 ? cx <= opts.finalX : cx >= opts.finalX;
     cx += step
   ) {
-    const hit = elementUnderX(root, opts.drag, cx);
-    if (hit) fireDrag(hit.el, "dragover", cx, dt);
+    const hit = elementUnderX(root, cx);
+    if (hit)
+      fireDrag(hit.el, "dragover", {
+        clientX: cx,
+        clientY: 12,
+        dataTransfer: dt,
+      });
   }
-  const dropHit = elementUnderX(root, opts.drag, opts.finalX);
-  if (dropHit) fireDrag(dropHit.el, "drop", opts.finalX, dt);
+  const dropHit = elementUnderX(root, opts.finalX);
+  if (dropHit)
+    fireDrag(dropHit.el, "drop", {
+      clientX: opts.finalX,
+      clientY: 12,
+      dataTransfer: dt,
+    });
 
   return onReorder.mock.calls.at(-1)?.[0] as string[] | undefined;
 }
