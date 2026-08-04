@@ -102,6 +102,23 @@
   No behaviour change; surfaced while writing the coverage above.
 
 ### Changed
+- **`SelectableTableProps` no longer declares six props its renderer cannot
+  honour** — `fill`, `fixedLayout`, `fit`, `spanRow`, `rowActions` and
+  `onRowHover` are `Omit`ted from the inherited `BaseTableProps`. Passing one
+  is now a type error rather than a silent no-op. **Potentially breaking**, but
+  every break it produces is a call site that was already doing nothing; no
+  consumer surveyed passes any of the six.
+
+  These were split from the four that were merely *unwired* (see Fixed) on
+  cost, not on convenience. `fixedLayout` and `fit` are one-line class toggles,
+  but `fixedLayout` only truncates when the cells also clip, and this renderer
+  sets no `overflow`/`text-overflow`/`white-space` from `column.width` or
+  `column.ellipsis` the way `BaseTable`'s `cellStyle` does — the class alone
+  would look implemented and do nothing visible. `fill` needs the frame *and*
+  the action-bar column to become flex-fill contexts, which jsdom cannot verify
+  at all. Add one back by implementing it and removing it from
+  `SelectableTableOmitted`, never by widening the type.
+
 - **The health ratchet now fails on a metric with no ceiling recorded.**
   `classify()` skipped any metric whose baseline was `undefined` — "it has no
   ceiling to compare against" — and `health.mjs` then printed *"✓ No
@@ -139,6 +156,27 @@
   pretended to answer. Backlog: dside `sui` #12541.
 
 ### Fixed
+- **`SelectableTable` honours `emptyMessage`, `compact`, `hoverable` and
+  `striped`, which it had silently discarded** (dside `sui` #12547). It gains
+  the empty state it never had: with zero rows it now replaces the table with
+  `.hud-table__empty` carrying the caller's message, falling back to
+  `BaseTable`'s "No data available".
+
+  `SelectableTableProps` extended `BaseTableProps` wholesale while `splitProps`
+  listed only the eleven props the renderer read. The rest fell into `others`
+  and Solid spread them onto the frame `div` — a clean typecheck, a stray DOM
+  attribute, and no behaviour. This was live: `netsuite_extract_rs`'s dashboard
+  passes `compact`, `hoverable` and
+  `emptyMessage="No tables match the current filters."` over filtered data, so
+  filtering to zero rows showed a bare header and the sentence explaining why
+  never rendered.
+
+  **Behaviour change — `stickyHeader` now defaults ON**, matching `BaseTable`
+  and the doc comment the two share. It read `if (local.stickyHeader)` here
+  against `!== false` there: one prop, one type, one doc, opposite defaults.
+  Pass `stickyHeader={false}` to opt out. The only known consumer call site
+  passes it explicitly and is unaffected.
+
 - **`Combobox.test.tsx`'s header no longer claims jsdom is broken repo-wide.**
   It cited an `html-encoding-sniffer` / `ERR_REQUIRE_ESM` failure as the reason
   the component had no render coverage. That no longer reproduces (verified

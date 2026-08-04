@@ -6,6 +6,14 @@
 // Table + checkbox selection + action bar.
 // NOTE: CSS removed — inherits Table.css via
 // BaseTable's shared stylesheet.
+//
+// Because the stylesheet is SHARED, the appearance
+// flags must behave identically here and in
+// BaseTable — same class, same default. Its props
+// are BaseTableProps MINUS what this renderer
+// cannot honour; widening that back without an
+// implementation is the bug fixed on 2026-08-04.
+// See `SelectableTableOmitted` in ./types.
 // ============================================
 import { splitProps, For, createMemo, Show, createEffect } from "solid-js";
 import { Dynamic } from "solid-js/web";
@@ -38,6 +46,10 @@ export function SelectableTable<T extends TableRow>(
     "columns",
     "maxHeight",
     "stickyHeader",
+    "striped",
+    "hoverable",
+    "compact",
+    "emptyMessage",
     "getRowClass",
     "onRowClick",
     "class",
@@ -49,9 +61,20 @@ export function SelectableTable<T extends TableRow>(
 
   const { selected, setSelected } = local.selectionStore;
 
+  // Every modifier here is the same class toggle BaseTable applies, against the
+  // same Table.css rules — these tables share one stylesheet, so a flag that
+  // means "denser" on one must mean it on the other. Until 2026-08-04 the four
+  // appearance flags were declared and dropped, and `stickyHeader` defaulted
+  // the OPPOSITE way to BaseTable's (truthy here, `!== false` there) from one
+  // shared prop with one shared doc comment.
   const classes = () => {
     const classList = ["hud-table", "hud-table--selectable"];
-    if (local.stickyHeader) classList.push("hud-table--sticky-header");
+    // Sticky by default, matching BaseTable: `stickyHeader={false}` opts out.
+    if (local.stickyHeader !== false)
+      classList.push("hud-table--sticky-header");
+    if (local.striped) classList.push("hud-table--striped");
+    if (local.hoverable) classList.push("hud-table--hoverable");
+    if (local.compact) classList.push("hud-table--compact");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -195,82 +218,94 @@ export function SelectableTable<T extends TableRow>(
             {local.resultCount.total.toLocaleString()}
           </div>
         )}
-        <table class="hud-table__table">
-          <thead class="hud-table__head">
-            <tr class="hud-table__row">
-              <th class="hud-table__header-cell hud-table__header-cell--checkbox">
-                <label class="hud-table__checkbox">
-                  <input
-                    type="checkbox"
-                    checked={allSelected()}
-                    ref={(el) =>
-                      createEffect(() => {
-                        el.indeterminate = someSelected();
-                      })
-                    }
-                    onChange={toggleAll}
-                  />
-                  <span class="hud-table__checkbox-indicator" />
-                </label>
-              </th>
-              <For each={local.columns}>
-                {(column) => (
-                  <th
-                    class="hud-table__header-cell"
-                    style={{
-                      width: column.width,
-                      "max-width": column.width,
-                      "text-align": column.align || "left",
-                    }}
-                  >
-                    {column.header}
-                  </th>
-                )}
-              </For>
-            </tr>
-          </thead>
-          <tbody class="hud-table__body">
-            <For each={local.data}>
-              {(row, rowIndex) => (
-                <tr
-                  class={`hud-table__row ${isRowSelected(row) ? "hud-table__row--selected" : ""} ${local.getRowClass?.(row, rowIndex()) || ""}`}
-                  onClick={(e) => handleRowClick(row, rowIndex(), e)}
-                  style={clickableCursor(!!local.onRowClick)}
-                >
-                  <td class="hud-table__cell hud-table__cell--checkbox">
-                    <label
-                      class="hud-table__checkbox"
-                      onMouseDown={(e) => {
-                        // Intercept before checkbox toggles — capture shiftKey and handle selection ourselves
-                        e.preventDefault();
-                        toggleRow(row, rowIndex(), e.shiftKey);
+        {/* Empty state, mirroring BaseTable: the whole table is replaced, so
+            the select-all checkbox goes with it — there is nothing to select.
+            `resultCount` stays above, since "Showing 0 of 2131" and the reason
+            why are more useful together than either alone. */}
+        <Show when={local.data.length === 0}>
+          <div class="hud-table__empty">
+            {local.emptyMessage || "No data available"}
+          </div>
+        </Show>
+
+        <Show when={local.data.length > 0}>
+          <table class="hud-table__table">
+            <thead class="hud-table__head">
+              <tr class="hud-table__row">
+                <th class="hud-table__header-cell hud-table__header-cell--checkbox">
+                  <label class="hud-table__checkbox">
+                    <input
+                      type="checkbox"
+                      checked={allSelected()}
+                      ref={(el) =>
+                        createEffect(() => {
+                          el.indeterminate = someSelected();
+                        })
+                      }
+                      onChange={toggleAll}
+                    />
+                    <span class="hud-table__checkbox-indicator" />
+                  </label>
+                </th>
+                <For each={local.columns}>
+                  {(column) => (
+                    <th
+                      class="hud-table__header-cell"
+                      style={{
+                        width: column.width,
+                        "max-width": column.width,
+                        "text-align": column.align || "left",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isRowSelected(row)}
-                        onChange={() => {
-                          /* handled by mousedown on label */
+                      {column.header}
+                    </th>
+                  )}
+                </For>
+              </tr>
+            </thead>
+            <tbody class="hud-table__body">
+              <For each={local.data}>
+                {(row, rowIndex) => (
+                  <tr
+                    class={`hud-table__row ${isRowSelected(row) ? "hud-table__row--selected" : ""} ${local.getRowClass?.(row, rowIndex()) || ""}`}
+                    onClick={(e) => handleRowClick(row, rowIndex(), e)}
+                    style={clickableCursor(!!local.onRowClick)}
+                  >
+                    <td class="hud-table__cell hud-table__cell--checkbox">
+                      <label
+                        class="hud-table__checkbox"
+                        onMouseDown={(e) => {
+                          // Intercept before checkbox toggles — capture shiftKey and handle selection ourselves
+                          e.preventDefault();
+                          toggleRow(row, rowIndex(), e.shiftKey);
                         }}
-                      />
-                      <span class="hud-table__checkbox-indicator" />
-                    </label>
-                  </td>
-                  <For each={local.columns}>
-                    {(column) => (
-                      <td
-                        class="hud-table__cell"
-                        style={{ "text-align": column.align || "left" }}
                       >
-                        {getCellValue(row, column)}
-                      </td>
-                    )}
-                  </For>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
+                        <input
+                          type="checkbox"
+                          checked={isRowSelected(row)}
+                          onChange={() => {
+                            /* handled by mousedown on label */
+                          }}
+                        />
+                        <span class="hud-table__checkbox-indicator" />
+                      </label>
+                    </td>
+                    <For each={local.columns}>
+                      {(column) => (
+                        <td
+                          class="hud-table__cell"
+                          style={{ "text-align": column.align || "left" }}
+                        >
+                          {getCellValue(row, column)}
+                        </td>
+                      )}
+                    </For>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
+        </Show>
       </Dynamic>
     </Column>
   );
