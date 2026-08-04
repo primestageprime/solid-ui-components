@@ -81,6 +81,12 @@
   color: var(--sui-danger);
 }
 
+/* A run that predates the metric — dimmed, so an em dash never reads as a
+   measured zero. */
+.health-cell--absent {
+  opacity: 0.35;
+}
+
 .health-cell__delta {
   font-size: 10px;
   opacity: 0.8;

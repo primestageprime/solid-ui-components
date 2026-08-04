@@ -476,6 +476,14 @@ bundle is ruined anyway. That is what this script is for.
   container inline fails `health`. Add a `.<component>-demo` class to
   `dev/main.css` and use that — see `.bucket-queue-fill-demo` /
   `.bucket-queue-discard-demo` for the fixed-column-with-pinned-control shape.
+- **`npm run typecheck` is NOT what CI's typecheck job runs.** The local script
+  is `tsc --noEmit` (source only); the CI job runs **`npm run typecheck:dev`**
+  (`tsconfig.dev.json`), which also covers `dev/` — the gallery, the workshop
+  benches and `dev/health-view.tsx`, which imports `scripts/*.json` directly and
+  so breaks when a metric is renamed. `npm run check` has the same gap. Run
+  `typecheck:dev` before pushing anything that touches `dev/` or a script's
+  JSON output; it caught this on the render-coverage PR after a clean local
+  `typecheck`.
 - **`scripts/health-history.json` is tracked and changes on every `npm run
   health` run.** Commit it alongside health-affecting work rather than leaving
   it dirty in a shared checkout.
