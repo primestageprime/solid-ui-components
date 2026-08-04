@@ -453,8 +453,18 @@ bundle is ruined anyway. That is what this script is for.
 
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
   at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
-  Same for `foldersWithoutTests`, `undocumentedComponents` (COMPONENTS.md),
-  `missingDepthHeaders` — all at 0.
+  Same for `undocumentedComponents` (COMPONENTS.md), `missingDepthHeaders` —
+  both at 0.
+- **A new component needs a test that mounts it.** `componentsNeverRendered`
+  (`scripts/render-coverage.mjs`) counts PascalCase `.tsx` modules under
+  `src/components/` that no test both *imports* (directly or through a barrel)
+  *and* writes as JSX. It is ratcheted at **50** and falls as coverage lands, so
+  adding a component without a `render()` fails `health` — name it with
+  `--update-baseline=componentsNeverRendered --reason="…"` only if you mean it.
+  `npm run render-coverage -- --list` prints the current backlog. This replaced
+  `foldersWithoutTests`, which read 0 for its whole life because a folder passed
+  on the mere presence of a `.test.` file — Combobox satisfied it with 589
+  untested lines.
 - **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
   in the file, and it applies to **internal** component files too, not just
   exported ones. A new `.tsx` under `src/components/` without a depth line in

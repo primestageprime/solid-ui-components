@@ -24,7 +24,10 @@ const ZERO_PRIORITY = {
   bareHexCss: 4,
   missingDepthHeaders: 3,
   undocumentedComponents: 2,
-  foldersWithoutTests: 1,
+  // Not zero yet (50 at the time of writing) so this never breaks a tie today.
+  // Listed anyway because when it does reach zero it becomes the likeliest of
+  // the lot to regress: every new component starts un-mounted.
+  componentsNeverRendered: 1,
 };
 
 if (!existsSync(HISTORY_PATH)) {
