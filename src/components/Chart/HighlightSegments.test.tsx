@@ -80,7 +80,12 @@ describe("HighlightSegments — callbacks", () => {
     expect(calls).toEqual([seg]);
   });
 
-  it("onHover receives null on pointer-leave", () => {
+  it("onHover follows the chart cursor entering and leaving the segment", () => {
+    // Driven by ctx.hoverX, not by the rect's pointer events: sibling slots
+    // (PointSeries dots, the crosshair dot, PinMarkers chevrons) intermittently
+    // capture the pointer and fire a spurious pointerleave on the rect. The
+    // visual hover state was moved onto hoverX for that reason; the callback
+    // has to come from the same place or the two report different things.
     const seg: HighlightSegment = {
       id: slotId("a"),
       start: 1,
@@ -88,13 +93,73 @@ describe("HighlightSegments — callbacks", () => {
       color: "#fff",
     };
     const calls: (HighlightSegment | null)[] = [];
-    const { container } = wrapper(() => (
-      <HighlightSegments data={[seg]} onHover={(s) => calls.push(s)} />
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      setHover = useChart().setHoverX;
+      return null;
+    };
+    wrapper(() => (
+      <>
+        <Probe />
+        <HighlightSegments data={[seg]} onHover={(s) => calls.push(s)} />
+      </>
     ));
-    const rect = container.querySelector(".sui-chart__highlight-segment")!;
-    fireEvent.pointerEnter(rect);
-    fireEvent.pointerLeave(rect);
+    setHover!(2); // inside [1, 3]
+    setHover!(9); // outside
     expect(calls).toEqual([seg, null]);
+  });
+
+  it("does not re-fire onHover while the cursor stays inside one segment", () => {
+    const seg: HighlightSegment = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      color: "#fff",
+    };
+    const calls: (HighlightSegment | null)[] = [];
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      setHover = useChart().setHoverX;
+      return null;
+    };
+    wrapper(() => (
+      <>
+        <Probe />
+        <HighlightSegments data={[seg]} onHover={(s) => calls.push(s)} />
+      </>
+    ));
+    setHover!(1.5);
+    setHover!(2);
+    setHover!(2.5);
+    expect(calls).toEqual([seg]);
+  });
+
+  it("keeps the visual hover state and onHover in agreement", () => {
+    // The defect this pins: the band stayed painted as hovered while the
+    // callback had already reported null, so a consumer rendering detail for
+    // the hovered segment lost it under a still-highlighted band.
+    const seg: HighlightSegment = {
+      id: slotId("a"),
+      start: 1,
+      end: 3,
+      color: "#fff",
+    };
+    let last: HighlightSegment | null = null;
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      setHover = useChart().setHoverX;
+      return null;
+    };
+    const { container } = wrapper(() => (
+      <>
+        <Probe />
+        <HighlightSegments data={[seg]} onHover={(s) => (last = s)} />
+      </>
+    ));
+    setHover!(2);
+    const rect = container.querySelector(".sui-chart__highlight-segment")!;
+    expect(rect.getAttribute("data-hovered")).toBe("true");
+    expect(last).toBe(seg);
   });
 });
 

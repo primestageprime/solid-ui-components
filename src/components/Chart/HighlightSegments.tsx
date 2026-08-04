@@ -3,10 +3,17 @@
 // HighlightSegments — Structural (Depth 1). SVG chart slot; composes no library components.
 // Optional `lanes` prop enables vertical lane-stacking; omitting it
 // renders full-height bands (mirrors TimelineBar).
-import { type Component, For, Show, createMemo, mergeProps } from "solid-js";
+import {
+  type Component,
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  mergeProps,
+} from "solid-js";
 import { clickableCursor } from "../../internal/style/clickable";
 import { useChart } from "./context";
-import type { ClickHandler, HoverHandler, Id } from "./slot-types";
+import type { ClickHandler, Id } from "./slot-types";
 import { find } from "../../fn";
 
 /**
@@ -64,7 +71,16 @@ export interface HighlightSegmentsProps<
   fillOpacity?: number;
   /** Pointer events. */
   onClick?: ClickHandler<T>;
-  onHover?: HoverHandler<T>;
+  /**
+   * Fires when the hovered segment changes, with the segment or `null`.
+   *
+   * Driven by the chart's cursor position, NOT by the rect's own pointer
+   * events — the same derivation the visual hover state uses, so the two can
+   * never disagree. That is also why no `PointerEvent` is handed back: there
+   * isn't one. A consumer that needs viewport coordinates should read them
+   * from its own listener on the chart container.
+   */
+  onHover?: (segment: T | null) => void;
   class?: string;
 }
 
@@ -93,6 +109,22 @@ export function HighlightSegments<
     const found = find((s) => hx >= s.start && hx <= s.end, merged.data);
     return found ? found.id : null;
   });
+
+  // `onHover` fires off the SAME memo as the visual state. It used to be wired
+  // to the rect's own onPointerEnter/onPointerLeave, which let the two
+  // disagree: the sibling slots described above steal the pointer and fire a
+  // spurious `pointerleave`, so the callback reported `null` — and a consumer
+  // rendering detail for the hovered segment lost it — while the band was
+  // still painted as hovered, because that half had already been moved onto
+  // `hoverX`. Half a fix reads as a flickering consumer.
+  createEffect<Id | null>((prev) => {
+    const id = hoveredId();
+    if (prev === id) return id;
+    const seg =
+      id === null ? null : (find((s) => s.id === id, merged.data) ?? null);
+    merged.onHover?.(seg);
+    return id;
+  }, null);
 
   return (
     <g
@@ -144,8 +176,6 @@ export function HighlightSegments<
                     : merged.fillOpacity)
                 }
                 onPointerDown={(e) => merged.onClick?.(seg, e)}
-                onPointerEnter={(e) => merged.onHover?.(seg, e)}
-                onPointerLeave={(e) => merged.onHover?.(null, e)}
                 style={clickableCursor(!!merged.onClick)}
               />
             </Show>
