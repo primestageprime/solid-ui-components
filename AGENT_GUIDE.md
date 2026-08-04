@@ -495,6 +495,51 @@ bundle is ruined anyway. That is what this script is for.
 `docs/adr/0008-deliberately-unfixed.md` before "fixing" a metric or a config
 oddity** — it lists what has already been evaluated and rejected, and why.
 
+## Don't hand-roll a DOM double — `src/test-utils/` has one
+
+jsdom ships no `ResizeObserver`, no `matchMedia`, no `PointerEvent`, no
+pointer-capture methods, no `DataTransfer`, and performs no layout (every rect
+is zero). Before 2026-08-04 each test file worked around that privately:
+**16 files** carried a `ResizeObserver` fake in **4 incompatible shapes**, 8
+spied on `getBoundingClientRect`, 5 copied the same three DnD helpers, 3 wrote
+their own `firePointer`. A fix to one never reached the others.
+
+Import from `../../test-utils` instead:
+
+| Need | Use |
+|---|---|
+| A component that measures itself | `installFakeSizer()` → `await sizer.resize(el, size)`, `sizer.observations`, `sizer.autoFire` |
+| Geometry (drag hit-tests, overflow) | `installRects(provider)` + `verticalRows(ids)` or `liveFlow(root, opts)`; `rectOf(box)` for a bespoke provider |
+| Pointer gestures | `pointer(el).down/move/up({ clientX, clientY })`, plus `installPointerCapture(el)` |
+| HTML5 drag and drop | `makeDataTransfer()`, `fireDrag()`, `flush()` |
+| DOM-structure regression | `domStructure(root)` |
+
+Three things worth knowing before you extend it:
+
+- **`resize()` is async on purpose.** `observeSize` defers its callback out of
+  the observer dispatch through rAF, so the promise resolves once that frame
+  and Solid's flush have run. Its change-guard is also real: resizing twice to
+  the same rounded size delivers once.
+- **`ResizeObserver` is opt-in, `matchMedia` is a default.** 25 test files
+  render a measuring component without stubbing anything, so `observeSize` is
+  a silent no-op in them; a global default would deliver `{ width: 0, height:
+  0 }` and flip `OverflowNav`, `FilterBar` and `SwimlaneChart` into their
+  collapsed branches mid-suite. `matchMedia` is different — every call site
+  guards on `typeof`, so a `matches: false` default changes nothing while
+  making the reduced-motion branch reachable at all.
+- **`src/test-utils/` is NOT excluded from the health ratchet.**
+  `scripts/health.mjs` skips only files whose name contains `.test.`, so these
+  modules are scanned like production source — `domStructure.ts` already
+  contributes 2 of the 7 `dotChains` and 2 of the 31 `collectionMethodCalls`.
+  Write harness code function-first (`src/fn`) and hand-roll save/restore
+  rather than reaching for `vi.spyOn`, which does not auto-restore here anyway
+  (`restoreMocks` is unset) and would put `vitest` into the published
+  `dist/test-utils/*.d.ts`.
+
+`src/internal/dom/observeSize.test.ts` deliberately keeps its own lower-level
+double: its subject *is* the scheduling, so it must observe the deferral the
+shared sizer hides. Don't migrate it.
+
 ## Summary
 
 | Situation | Action |

@@ -34,4 +34,34 @@ if (typeof HTMLCanvasElement !== "undefined") {
   } as HTMLCanvasElement["getContext"];
 }
 
+// jsdom ships no `matchMedia` either, so every media query in the library reads
+// as absent. All three call sites guard on that — `choreography.ts:88` and
+// `useMediaQuery.ts:20` test `typeof`, `BucketQueue.tsx:259` optional-calls —
+// and each resolves to `false`. Installing a default that reports `matches:
+// false` is therefore byte-identical to today's behaviour for every existing
+// test, while making the branch REACHABLE for the first time: a test can now
+// override this global and exercise reduced-motion, which was previously dead
+// code under jsdom.
+//
+// This one IS a global default, unlike the ResizeObserver double in
+// `test-utils/fakeSizer.ts`. The difference is that a default ResizeObserver
+// changes behaviour — twenty-five unstubbed tests would flip from never
+// measuring to measuring zero — whereas this default changes nothing.
+const stubMediaQueryList = (query: string): MediaQueryList =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+    // Deprecated pair — `useMediaQuery.ts:39` still falls back to them.
+    addListener: () => {},
+    removeListener: () => {},
+  }) as unknown as MediaQueryList;
+
+if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
+  window.matchMedia = stubMediaQueryList;
+}
+
 export {};

@@ -1,9 +1,14 @@
 // @vitest-environment node
 //
-// Pure-function suite — no DOM needed. The default jsdom environment is
-// currently broken in this repo (html-encoding-sniffer 6.0.0 + ESM-only
-// @exodus/bytes 1.15.0 → ERR_REQUIRE_ESM at worker start). Pinning this
-// file to node sidesteps the infra issue and matches the unit-only scope.
+// Pure-function suite — no DOM needed, so it runs in the cheaper node
+// environment.
+//
+// This header used to claim jsdom was broken repo-wide (html-encoding-sniffer
+// 6.0.0 + ESM-only @exodus/bytes 1.15.0 → ERR_REQUIRE_ESM at worker start).
+// That no longer reproduces — verified 2026-08-04 — and the stale note was
+// discouraging render coverage for a component that had none. The component
+// itself is now covered under jsdom in `Combobox.render.test.tsx`; keep this
+// file pinned to node only because its scope is genuinely DOM-free.
 import { describe, it, expect } from "vitest";
 import { computeBackspaceAction, type BackspaceState } from "./backspace";
 import type { ComboboxOption } from "./Combobox";

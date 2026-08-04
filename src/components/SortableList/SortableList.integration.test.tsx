@@ -2,81 +2,33 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { SortableList } from "./SortableList";
+import {
+  makeDataTransfer,
+  fireDrag,
+  flush,
+  installRects,
+  verticalRows,
+} from "../../test-utils";
+
+// Rect geometry is installed per-test and torn down here. `verticalRows` keys
+// each rect to the row's `data-dnd-id` rather than its DOM position, so the
+// geometry follows a node through the preview reflow — SortableList's hit test
+// assumes that.
+let restoreRects: (() => void) | undefined;
+const installVerticalLayout = (ids: string[]) => {
+  restoreRects = installRects(verticalRows(ids));
+};
 
 afterEach(() => {
   cleanup();
+  restoreRects?.();
+  restoreRects = undefined;
   vi.restoreAllMocks();
 });
-
-// ── Fake DnD plumbing ───────────────────────────────────────────────────────
-// jsdom has no DataTransfer/DragEvent; build a minimal stand-in (mirrors the
-// DnDHierarchySortBar integration test).
-function makeDataTransfer() {
-  const store: Record<string, string> = {};
-  return {
-    effectAllowed: "",
-    dropEffect: "",
-    setData: (k: string, v: string) => {
-      store[k] = v;
-    },
-    getData: (k: string) => store[k] ?? "",
-    setDragImage: () => {},
-  };
-}
-
-function fireDrag(
-  el: Element,
-  type: string,
-  opts: {
-    clientX?: number;
-    clientY?: number;
-    dataTransfer: ReturnType<typeof makeDataTransfer>;
-  },
-) {
-  const ev = Object.assign(
-    new Event(type, { bubbles: true, cancelable: true }),
-    {
-      clientX: opts.clientX ?? 0,
-      clientY: opts.clientY ?? 0,
-      dataTransfer: opts.dataTransfer,
-    },
-  );
-  el.dispatchEvent(ev);
-  return ev;
-}
-
-const flush = () => new Promise((r) => setTimeout(r, 0));
 
 interface Task {
   id: string;
   title: string;
-}
-
-// Vertical layout: each row 100px tall, no gap → row i occupies [i*100, i*100+100).
-// Geometry is keyed by the row's data-dnd-id so it follows the node through reflow.
-function installVerticalLayout(ids: string[]) {
-  const H = 100;
-  const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-    function (this: Element) {
-      const id = (this as HTMLElement).getAttribute?.("data-dnd-id");
-      if (id && ids.includes(id)) {
-        const top = ids.indexOf(id) * H;
-        return {
-          left: 0,
-          top,
-          width: 300,
-          height: H,
-          right: 300,
-          bottom: top + H,
-          x: 0,
-          y: top,
-          toJSON() {},
-        } as DOMRect;
-      }
-      return orig.call(this);
-    },
-  );
 }
 
 function findRow(container: HTMLElement, id: string): HTMLElement {
