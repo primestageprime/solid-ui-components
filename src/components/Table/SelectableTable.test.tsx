@@ -57,6 +57,11 @@ interface MountOptions {
   onRowClick?: (row: Row, index: number) => void;
   resultCount?: { shown: number; total: number };
   maxHeight?: string;
+  emptyMessage?: string;
+  stickyHeader?: boolean;
+  striped?: boolean;
+  hoverable?: boolean;
+  compact?: boolean;
 }
 
 const mount = (options: MountOptions = {}) => {
@@ -71,6 +76,11 @@ const mount = (options: MountOptions = {}) => {
       onRowClick={options.onRowClick}
       resultCount={options.resultCount}
       maxHeight={options.maxHeight}
+      emptyMessage={options.emptyMessage}
+      stickyHeader={options.stickyHeader}
+      striped={options.striped}
+      hoverable={options.hoverable}
+      compact={options.compact}
     />
   ));
 
@@ -81,6 +91,8 @@ const mount = (options: MountOptions = {}) => {
     bodyRows()[index].querySelector(".hud-table__checkbox") as HTMLElement;
   const headerBox = () =>
     container.querySelector("thead input[type=checkbox]") as HTMLInputElement;
+  /** The frame that carries every `hud-table--*` modifier. */
+  const frame = () => container.querySelector(".hud-table") as HTMLElement;
 
   return {
     container,
@@ -89,6 +101,9 @@ const mount = (options: MountOptions = {}) => {
     bodyRows,
     rowToggle,
     headerBox,
+    frame,
+    modifiers: () =>
+      [...frame().classList].filter((c) => c.startsWith("hud-table--")).sort(),
     /** Click row `index`'s checkbox, optionally with shift held. */
     toggle: (index: number, shiftKey = false) =>
       fireEvent.mouseDown(rowToggle(index), { shiftKey }),
@@ -201,10 +216,11 @@ describe("SelectableTable — select-all header", () => {
     expect(box.indeterminate).toBe(false);
   });
 
-  it("stays unchecked on an empty table rather than claiming all-of-nothing", () => {
-    const box = mount({ data: [] }).headerBox();
-    expect(box.checked).toBe(false);
-    expect(box.indeterminate).toBe(false);
+  it("is absent on an empty table — there is nothing to select", () => {
+    // Before 2026-08-04 this rendered a live, unchecked select-all over zero
+    // rows. The empty state now replaces the whole table, header included,
+    // which is what BaseTable has always done.
+    expect(mount({ data: [] }).headerBox()).toBeNull();
   });
 
   it("selects every rendered row", () => {
@@ -385,5 +401,117 @@ describe("SelectableTable — chrome", () => {
     expect(
       mount().container.querySelector(".hud-table--selectable"),
     ).not.toBeNull();
+  });
+});
+
+// ============================================
+// Props the interface DECLARED and the renderer DROPPED (fixed 2026-08-04).
+//
+// `SelectableTableProps` extended `BaseTableProps` wholesale, but `splitProps`
+// listed only what the renderer read, so every unlisted prop fell into `others`
+// and was spread onto the frame `div`: a clean typecheck, a real DOM attribute,
+// and no behaviour. The live case was netsuite_extract_rs's dashboard passing
+// `compact`, `hoverable` and an `emptyMessage` explaining its filters — over a
+// component with no empty state at all, so filtering to zero rows showed a bare
+// header and the sentence never rendered.
+//
+// The remaining six (`fill`, `fixedLayout`, `fit`, `spanRow`, `rowActions`,
+// `onRowHover`) are now Omitted from the interface rather than half-wired; see
+// the note on `SelectableTableOmitted` in types.ts for why each needs real work.
+// There is no test for them BECAUSE there is nothing to test — the guard is the
+// type, and it is checked by `npm run typecheck`.
+// ============================================
+describe("SelectableTable — the empty state", () => {
+  it("renders the caller's message when there are no rows", () => {
+    const t = mount({ data: [], emptyMessage: "No tables match the filters." });
+    expect(t.container.querySelector(".hud-table__empty")?.textContent).toBe(
+      "No tables match the filters.",
+    );
+  });
+
+  it("falls back to BaseTable's wording, so the two tables read alike", () => {
+    const t = mount({ data: [] });
+    expect(t.container.querySelector(".hud-table__empty")?.textContent).toBe(
+      "No data available",
+    );
+  });
+
+  it("replaces the table entirely rather than rendering an empty one", () => {
+    const t = mount({ data: [] });
+    expect(t.container.querySelector("table")).toBeNull();
+  });
+
+  it("shows no empty state while rows exist", () => {
+    expect(mount().container.querySelector(".hud-table__empty")).toBeNull();
+  });
+
+  it("keeps the result count visible alongside the empty message", () => {
+    // "Showing 0 of 2,131" and the reason why are more useful together.
+    const t = mount({ data: [], resultCount: { shown: 0, total: 2131 } });
+    expect(t.container.querySelector(".hud-table__result-count")).not.toBeNull();
+    expect(t.container.querySelector(".hud-table__empty")).not.toBeNull();
+  });
+});
+
+describe("SelectableTable — appearance flags reach the frame", () => {
+  // These are the exact class toggles BaseTable applies against the exact same
+  // Table.css rules; the two tables share one stylesheet, so a flag meaning
+  // "denser" on one has to mean it on the other. Asserting the class (not a
+  // computed style) is deliberate — jsdom applies no stylesheet, and the class
+  // IS the contract between component and CSS.
+  it("adds no modifiers beyond the defaults when no flag is passed", () => {
+    expect(mount().modifiers()).toEqual([
+      "hud-table--selectable",
+      "hud-table--sticky-header",
+    ]);
+  });
+
+  it.each([
+    ["striped", "hud-table--striped"],
+    ["hoverable", "hud-table--hoverable"],
+    ["compact", "hud-table--compact"],
+  ] as const)("%s adds %s", (prop, className) => {
+    expect(mount({ [prop]: true }).modifiers()).toContain(className);
+  });
+
+  it("carries several at once", () => {
+    const t = mount({ striped: true, hoverable: true, compact: true });
+    expect(t.modifiers()).toEqual([
+      "hud-table--compact",
+      "hud-table--hoverable",
+      "hud-table--selectable",
+      "hud-table--sticky-header",
+      "hud-table--striped",
+    ]);
+  });
+
+  it("leaves the flags off the DOM as stray attributes", () => {
+    // The bug's signature: an unlisted prop lands in `others` and Solid spreads
+    // it onto the element, so `compact` became a literal attribute. If one
+    // reappears here, a prop has been declared and not split off again.
+    const t = mount({ striped: true, hoverable: true, compact: true });
+    for (const attr of ["striped", "hoverable", "compact", "emptymessage"])
+      expect(t.frame().hasAttribute(attr)).toBe(false);
+  });
+});
+
+describe("SelectableTable — stickyHeader matches BaseTable's default", () => {
+  // Same prop name, same type, one shared doc comment — and until 2026-08-04
+  // opposite defaults: truthy here (off unless asked), `!== false` in BaseTable
+  // (on unless refused). BaseTable's is the documented one and wins.
+  it("is sticky when the prop is omitted", () => {
+    expect(mount().modifiers()).toContain("hud-table--sticky-header");
+  });
+
+  it("is sticky when passed true", () => {
+    expect(mount({ stickyHeader: true }).modifiers()).toContain(
+      "hud-table--sticky-header",
+    );
+  });
+
+  it("opts out only on an explicit false", () => {
+    expect(mount({ stickyHeader: false }).modifiers()).not.toContain(
+      "hud-table--sticky-header",
+    );
   });
 });

@@ -126,7 +126,40 @@ export interface SelectionAction<T> {
   onClick: (selectedIds: Set<string>, selectedRows: T[]) => void;
 }
 
-export interface SelectableTableProps<T> extends BaseTableProps<T> {
+/**
+ * Props `SelectableTable` declares but does not render. Each needs real work in
+ * its renderer, not a class toggle, so the interface drops them rather than
+ * half-implementing them:
+ *
+ * - `fixedLayout` / `fit` — the classes are one-liners, but `fixedLayout` is
+ *   only meaningful when cells also clip, and SelectableTable's cell style sets
+ *   no `overflow`/`text-overflow`/`white-space` from `column.width`/`ellipsis`
+ *   (contrast `BaseTable`'s `cellStyle`). Wiring the class alone would truncate
+ *   nothing while looking implemented.
+ * - `fill` — needs the frame AND the outer column to become flex-fill contexts
+ *   (`ClipFillColumnFlush` + `ScrollFillColumn`), and SelectableTable's outer
+ *   `Column` also carries the action bar. Structural, and unverifiable under
+ *   jsdom, which has no layout.
+ * - `spanRow` / `rowActions` — extra cells that must stay aligned with the
+ *   checkbox column's colspan.
+ * - `onRowHover` — no hover wiring on the body at all.
+ *
+ * They were silently accepted until 2026-08-04: `SelectableTableProps` extended
+ * `BaseTableProps` wholesale while `splitProps` listed only what the renderer
+ * read, so the rest landed in `others` and were spread onto the frame `div` —
+ * a clean typecheck and no behaviour. Add one back by IMPLEMENTING it and
+ * deleting it from this list, never by widening the type alone.
+ */
+type SelectableTableOmitted =
+  | "fill"
+  | "fixedLayout"
+  | "fit"
+  | "spanRow"
+  | "rowActions"
+  | "onRowHover";
+
+export interface SelectableTableProps<T>
+  extends Omit<BaseTableProps<T>, SelectableTableOmitted> {
   /** Function to extract unique ID from a row */
   getRowId: (row: T) => string;
   /** Selection store - pass in your own signal for persistence control */
