@@ -62,6 +62,37 @@
     where `computeBackspaceAction` was exhaustively unit-tested but its
     integration never was.
 
+- **Render coverage for the untested Layout primitives** (`Grid.test.tsx` 13,
+  `AutoStack.test.tsx` 14, `Sidebar.test.tsx` 23). `Sidebar` is the substantial
+  one — 170 lines of width signal, localStorage round-trip and three resize
+  paths, none of it previously executed. The mirrored direction for a
+  left-edge handle is now pinned on both the pointer and keyboard paths (two
+  independent sign flips that have to agree). `Grid` and `AutoStackRow` each
+  pin a sharp edge worth knowing about: passing `style` as a **string** rather
+  than an object replaces the computed base, silently discarding
+  `grid-template-columns` / `--auto-stack-break` with no warning.
+
+### Changed
+- **`foldersWithoutTests` is replaced by `componentsNeverRendered`**
+  (`scripts/render-coverage.mjs`, surfaced by `npm run render-coverage`). The
+  old metric read 0 across all 145 component folders and always had: a folder
+  passed on the mere presence of a file containing `.test.`, whatever that file
+  tested. `Combobox` satisfied it with 589 lines of component, zero `render()`
+  calls and a real defect (#12528) behind the green.
+
+  The replacement asks whether some test both **sees** a component module — a
+  relative import resolving to it, or to a barrel that re-exports it — **and
+  mounts** it, as the JSX tag of a PascalCase value it exports. Both halves are
+  load-bearing and are pinned by mutation in `render-coverage.test.ts`: drop
+  "must mount" and Combobox passes again (it imported a type); drop "must see"
+  and `Layout/Grid`'s tests vouch for `Chart/Grid`, a different component that
+  happens to share a name.
+
+  Ratcheted at **47** (50 at introduction, less the three Layout primitives
+  above). "Mounted once" is a floor, not coverage — depth is not mechanical and
+  does not belong in a ratchet — but it is the question the old metric only
+  pretended to answer. Backlog: dside `sui` #12541.
+
 ### Fixed
 - **`Combobox.test.tsx`'s header no longer claims jsdom is broken repo-wide.**
   It cited an `html-encoding-sniffer` / `ERR_REQUIRE_ESM` failure as the reason

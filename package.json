@@ -85,6 +85,7 @@
     "health": "node scripts/health.mjs",
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
+    "render-coverage": "node scripts/render-coverage.mjs",
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "usage-manifest": "node scripts/usage-manifest.mjs",

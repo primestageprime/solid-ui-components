@@ -11,7 +11,12 @@ import { Icon } from "../src/components/Icon";
 import { Sparkline } from "../src/components/Sparkline";
 import "./health-view.css";
 
-type Metrics = Record<string, number>;
+// A run only carries the metrics that existed when it ran, so a key is
+// genuinely absent from older entries — `foldersWithoutTests` was replaced by
+// `componentsNeverRendered` and the log spans both. Typing the value as
+// possibly-undefined is what forces every reader below to say what it shows for
+// a run that predates its column.
+type Metrics = Record<string, number | undefined>;
 type HistoryEntry = { at: string; metrics: Metrics; baseline?: Metrics };
 
 const baseline = baselineJson as Metrics;
@@ -22,15 +27,20 @@ const latestMetrics = history[history.length - 1]?.metrics ?? baseline;
 // Biggest offenders lead: columns and tiles sort by current value, descending,
 // so the zeros drift right as the ratchet does its job. Alphabetical tiebreak
 // keeps the boring (all-zero) tail stable between runs.
+const valueOf = (metrics: Metrics | undefined, key: string): number =>
+  metrics?.[key] ?? baseline[key] ?? 0;
+
 const METRIC_KEYS = Object.keys(baseline).sort(
   (a, b) =>
-    (latestMetrics[b] ?? baseline[b]) - (latestMetrics[a] ?? baseline[a]) ||
-    a.localeCompare(b),
+    valueOf(latestMetrics, b) - valueOf(latestMetrics, a) || a.localeCompare(b),
 );
 
 /** Chronological series for one metric, skipping runs that predate it. */
 const seriesFor = (key: string): number[] =>
-  history.filter((h) => h.metrics[key] != null).map((h) => h.metrics[key]);
+  history.flatMap((h) => {
+    const v = h.metrics[key];
+    return v == null ? [] : [v];
+  });
 
 // Rows render newest-first — the row you care about is the latest run.
 type HealthRow = HistoryEntry & { index: number };
@@ -48,7 +58,14 @@ const formatWhen = (iso: string): string => {
 
 /** Value cell colored against that run's recorded baseline: below the
  *  ceiling is an improvement, above it is a regression. */
-const metricCell = (value: number, base: number | undefined): JSX.Element => {
+const metricCell = (
+  value: number | undefined,
+  base: number | undefined,
+): JSX.Element => {
+  // A run that predates the metric has nothing to say about it — an em dash,
+  // not a 0, which would read as "we measured this and it was clean".
+  if (value === undefined)
+    return <span class="health-cell health-cell--absent">—</span>;
   const state =
     base === undefined || value === base
       ? "steady"
@@ -60,7 +77,9 @@ const metricCell = (value: number, base: number | undefined): JSX.Element => {
       {value}
       <Show when={state !== "steady"}>
         <span class="health-cell__delta">
-          {value > (base ?? 0) ? `+${value - (base ?? 0)}` : value - (base ?? 0)}
+          {value > (base ?? 0)
+            ? `+${value - (base ?? 0)}`
+            : value - (base ?? 0)}
         </span>
       </Show>
     </span>
@@ -97,9 +116,9 @@ export const HealthView: Component = () => (
         SUI Health
       </h1>
       <p class="health-view__subtitle">
-        Ratchet metrics from <code>scripts/health.mjs</code> — lower is
-        better, 0 is the goal. The committed baseline is the ceiling; runs
-        land here when a metric changes.
+        Ratchet metrics from <code>scripts/health.mjs</code> — lower is better,
+        0 is the goal. The committed baseline is the ceiling; runs land here
+        when a metric changes.
       </p>
     </header>
 
@@ -109,15 +128,15 @@ export const HealthView: Component = () => (
       <For each={METRIC_KEYS}>
         {(key) => {
           const values = seriesFor(key);
-          const start = values[0] ?? baseline[key];
-          const now = latest?.metrics[key] ?? baseline[key];
+          const now = valueOf(latest?.metrics, key);
+          const start = values[0] ?? now;
           return (
             <div class="health-summary-item">
               <span class="health-summary-item__label">{key}</span>
               {metricCell(now, baseline[key])}
               <Sparkline
                 class="health-summary-item__trend"
-                values={values.length > 0 ? values : [baseline[key]]}
+                values={values.length > 0 ? values : [now]}
                 width={168}
                 height={34}
                 color={now === 0 ? "var(--sui-success)" : "var(--sui-accent)"}

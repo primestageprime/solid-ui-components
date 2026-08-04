@@ -33,8 +33,12 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { run as runStyleRubric, runShowcases as runShowcaseRubric } from "./style-rubric.mjs";
+import {
+  run as runStyleRubric,
+  runShowcases as runShowcaseRubric,
+} from "./style-rubric.mjs";
 import { run as runShowcaseCoverage } from "./showcase-coverage.mjs";
+import { run as runRenderCoverage } from "./render-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 import { length, mapValues } from "./fn.mjs";
 import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
@@ -155,10 +159,7 @@ const ITERATION_METHODS =
 // ALREADY been converted to the style it exists to encourage — penalising the
 // fix and making those files impossible to clean. `xs.map(`, `a.b.map(` and
 // `xs?.map(` are all still matched; only a dot preceded by a dot is skipped.
-const METHOD_CALL = new RegExp(
-  `(?<!\\.)\\.(?:${ITERATION_METHODS})\\(`,
-  "g",
-);
+const METHOD_CALL = new RegExp(`(?<!\\.)\\.(?:${ITERATION_METHODS})\\(`, "g");
 
 hits.dotChains = [];
 hits.collectionMethodCalls = [];
@@ -179,12 +180,14 @@ for (const f of walk(
   }
 }
 
-const foldersWithoutTests = componentDirs.filter(
-  (d) =>
-    !readdirSync(join(root, "src/components", d)).some((f) =>
-      f.includes(".test."),
-    ),
-);
+// Component modules no test ever mounts (scripts/render-coverage.mjs). This
+// REPLACED `foldersWithoutTests`, which read 0 across all 145 folders and
+// always had: a folder passed as soon as some file in it contained `.test.`,
+// whatever that file tested. Combobox passed with 589 lines of component, zero
+// `render()` calls, and a real disabled-state defect (dside sui#12528) sitting
+// behind the green. Its replacement asks whether a test both SEES the module
+// and MOUNTS it — see that script's header for why both halves are needed.
+const { missing: componentsNeverRendered } = runRenderCoverage();
 
 const componentsDoc = readFileSync(join(root, "COMPONENTS.md"), "utf8");
 const undocumented = componentDirs.filter(
@@ -195,9 +198,7 @@ const missingDepth = [];
 for (const f of walk(
   join(root, "src/components"),
   (p) =>
-    p.endsWith(".tsx") &&
-    !p.includes(".test.") &&
-    /\/[A-Z][^/]*\.tsx$/.test(p),
+    p.endsWith(".tsx") && !p.includes(".test.") && /\/[A-Z][^/]*\.tsx$/.test(p),
 )) {
   if (!/Depth [0-9]/.test(readFileSync(f, "utf8")))
     missingDepth.push(f.replace(root + "/", ""));
@@ -245,7 +246,7 @@ const detail = {
   styleRubricViolations: styleRubricHits,
   showcaseStyleRubricViolations: showcaseRubricHits,
   cssTypedProps: propRubricHits,
-  foldersWithoutTests,
+  componentsNeverRendered,
   undocumentedComponents: undocumented,
   missingDepthHeaders: missingDepth,
   componentsWithoutShowcase,
@@ -328,11 +329,18 @@ if (verbose) {
 if (updateBaseline) {
   // All rule decisions live in scripts/health-ratchet.mjs so they can be tested
   // without running a health check; this branch is only I/O and exit codes.
-  const plan = planBaselineUpdate({ metrics, baseline, raisable, reason: reasonArg });
+  const plan = planBaselineUpdate({
+    metrics,
+    baseline,
+    raisable,
+    reason: reasonArg,
+  });
   if (plan.error) {
     const { kind, detail } = plan.error;
     if (kind === "unknown-metric") {
-      console.error(`\n✗ --update-baseline names unknown metric(s): ${detail.join(", ")}`);
+      console.error(
+        `\n✗ --update-baseline names unknown metric(s): ${detail.join(", ")}`,
+      );
       console.error(`  Known metrics: ${Object.keys(metrics).join(", ")}`);
     } else if (kind === "missing-reason") {
       console.error(
@@ -346,7 +354,9 @@ if (updateBaseline) {
       // blessed the named metrics but left an unnamed rise unrecorded would
       // report success while the ceiling it failed to raise still fails CI.
       console.error("\n✗ Refusing to update the baseline.");
-      console.error("  These metrics rose but were not named, so they cannot be blessed:");
+      console.error(
+        "  These metrics rose but were not named, so they cannot be blessed:",
+      );
       for (const { k, base, v } of detail)
         console.error(`    ${k}: ${base} → ${v} (+${v - base})`);
       console.error(
@@ -399,7 +409,9 @@ if (updateBaseline) {
   console.error(
     `\nFix the regression, or if the increase is deliberate and justified, name it:\n  npm run health -- --update-baseline=${unblessed
       .map(({ k }) => k)
-      .join(",")}\nThen commit the result. The bare flag will NOT raise a ceiling.`,
+      .join(
+        ",",
+      )}\nThen commit the result. The bare flag will NOT raise a ceiling.`,
   );
   process.exit(1);
 } else if (length(improvements) > 0) {

@@ -453,8 +453,18 @@ bundle is ruined anyway. That is what this script is for.
 
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
   at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
-  Same for `foldersWithoutTests`, `undocumentedComponents` (COMPONENTS.md),
-  `missingDepthHeaders` — all at 0.
+  Same for `undocumentedComponents` (COMPONENTS.md), `missingDepthHeaders` —
+  both at 0.
+- **A new component needs a test that mounts it.** `componentsNeverRendered`
+  (`scripts/render-coverage.mjs`) counts PascalCase `.tsx` modules under
+  `src/components/` that no test both *imports* (directly or through a barrel)
+  *and* writes as JSX. It is ratcheted at **50** and falls as coverage lands, so
+  adding a component without a `render()` fails `health` — name it with
+  `--update-baseline=componentsNeverRendered --reason="…"` only if you mean it.
+  `npm run render-coverage -- --list` prints the current backlog. This replaced
+  `foldersWithoutTests`, which read 0 for its whole life because a folder passed
+  on the mere presence of a `.test.` file — Combobox satisfied it with 589
+  untested lines.
 - **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
   in the file, and it applies to **internal** component files too, not just
   exported ones. A new `.tsx` under `src/components/` without a depth line in
@@ -466,6 +476,14 @@ bundle is ruined anyway. That is what this script is for.
   container inline fails `health`. Add a `.<component>-demo` class to
   `dev/main.css` and use that — see `.bucket-queue-fill-demo` /
   `.bucket-queue-discard-demo` for the fixed-column-with-pinned-control shape.
+- **`npm run typecheck` is NOT what CI's typecheck job runs.** The local script
+  is `tsc --noEmit` (source only); the CI job runs **`npm run typecheck:dev`**
+  (`tsconfig.dev.json`), which also covers `dev/` — the gallery, the workshop
+  benches and `dev/health-view.tsx`, which imports `scripts/*.json` directly and
+  so breaks when a metric is renamed. `npm run check` has the same gap. Run
+  `typecheck:dev` before pushing anything that touches `dev/` or a script's
+  JSON output; it caught this on the render-coverage PR after a clean local
+  `typecheck`.
 - **`scripts/health-history.json` is tracked and changes on every `npm run
   health` run.** Commit it alongside health-affecting work rather than leaving
   it dirty in a shared checkout.
