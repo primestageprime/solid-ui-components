@@ -3,6 +3,41 @@
 ## [Unreleased]
 
 ### Added
+- **`CashflowScrubChart` — `layer` on a `balanceSeries` entry, so a coincident
+  overlay can paint ABOVE the primary balance line.**
+
+  ```tsx
+  balanceSeries={[
+    { id: "range-hi", balanceCents: hi },                    // "under" (default)
+    { id: "comparison", balanceCents: comp, layer: "over" }, // above the primary
+  ]}
+  ```
+
+  SVG has no `z-index` — paint order is document order — and every overlay
+  series was rendered before the primary polyline, unconditionally. A dashed
+  scenario tracking the primary line exactly was therefore covered
+  pixel-for-pixel: reproduced in thorcasting-ui with both polylines carrying
+  BYTE-IDENTICAL 365-point strings, the chart reading as a single line. No
+  consumer-side fix existed — CSS cannot reorder SVG painting, and the
+  workaround (swap which line is "primary" via `balanceLineCells`) drags the
+  selected/hover/marker dots onto the overlay and loses `buildLineSegments`
+  null-gap breaking, since the primary line's `points` joins across holes.
+
+  - **Ordering is per-series, not a chart-level flag**, because the motivating
+    chart wants both at once: a range cone `"under"` and a comparison line
+    `"over"` in the same plot. A single boolean cannot say that.
+  - **Array order still decides z-order *within* each layer** — `layer` only
+    picks which side of the primary line a series sorts onto. Both layers
+    stay inside the same clip group, so nothing about clipping changes.
+  - **Default is `"under"`**, so every existing chart paints exactly as before.
+  - **Stroke width is now the thing to watch, not order.** SUI still defaults
+    series to 1.4 against the primary's 1.6; `"over"` inverts who wins an
+    overlap, so a series at or above the primary's width will cover it
+    completely. The new showcase uses 1.2 on purpose — the solid line reads on
+    both sides of the dashes, which is the point of putting it on top at all.
+
+  Deviation bands are untouched: they stay at the very back regardless of
+  their series' `layer`, since an area fill has no business over the lines.
 - **A shared DOM test harness — `src/test-utils/`** (`fakeSizer`, `fakeRects`,
   `pointer`, `drag`, plus the existing `domStructure`, behind one barrel).
   Test-only; no production source changed and no public API moved.
