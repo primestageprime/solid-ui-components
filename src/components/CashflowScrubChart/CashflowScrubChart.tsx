@@ -20,6 +20,10 @@
 // second account's running balance — pass `balanceSeries`. Each entry is a
 // `(cell, index) => number | null` accessor (null breaks the line into a
 // gap) plus a CSS class for styling; the y-domain widens to span them all.
+// Paint order is the array order, beneath the primary line — set
+// `layer: "over"` on a series to lift it above the primary instead, which is
+// what makes a dashed scenario laid exactly over the solid baseline readable
+// rather than hidden. Per-series, so one chart can hold both.
 // ============================================
 
 import {
@@ -129,7 +133,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
   // Largest |cashflow| across the strip — the 100%-height reference bar.
   const maxAbsCashflow = createMemo(() => {
-    const abs = map((c: CashflowCell) => Math.abs(c.cashflowCents), props.cells);
+    const abs = map(
+      (c: CashflowCell) => Math.abs(c.cashflowCents),
+      props.cells,
+    );
     return extentOf([0, ...abs])[1];
   });
 
@@ -193,13 +200,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       join(" "),
     );
 
-    // Extra balance lines (forecasts, prior periods, other accounts) drawn
-    // beneath the primary line. Each may break into multiple segments where
-    // its accessor returns null.
+    // Extra balance lines (forecasts, prior periods, other accounts). Each may
+    // break into multiple segments where its accessor returns null. `layer`
+    // sorts them into two groups — painted beneath the primary line by default,
+    // above it when the series asks for `"over"` (see CashflowBalanceSeries).
     const extraSeries = map(
       (s: CashflowBalanceSeries) => ({
         id: s.id,
         class: s.class,
+        over: s.layer === "over",
         segments: buildLineSegments(
           ctx.cells,
           ctx.cellToX,
@@ -208,6 +217,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         ),
       }),
       props.balanceSeries ?? [],
+    );
+    const seriesUnder = filter((s) => !s.over, extraSeries);
+    const seriesOver = filter((s) => s.over, extraSeries);
+    // One polyline set per series, shared by both layers.
+    const seriesLines = (list: typeof extraSeries) => (
+      <For each={list}>
+        {(series) => (
+          <For each={series.segments}>
+            {(seg) => (
+              <polyline
+                class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
+                  series.class ? ` ${series.class}` : ""
+                }`}
+                points={seg}
+              />
+            )}
+          </For>
+        )}
+      </For>
     );
 
     // Deviation bands — the coloured area between a `fill`-bearing series and
@@ -231,7 +259,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             points: run.points,
             overrideClass: overrideClass(run.sign),
           }),
-          buildDeviationBand(ctx.cells, ctx.cellToX, yToPlot, s.balanceCents, reference),
+          buildDeviationBand(
+            ctx.cells,
+            ctx.cellToX,
+            yToPlot,
+            s.balanceCents,
+            reference,
+          ),
         );
       }),
     );
@@ -328,21 +362,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             y1={zeroY}
             y2={zeroY}
           />
-          <For each={extraSeries}>
-            {(series) => (
-              <For each={series.segments}>
-                {(seg) => (
-                  <polyline
-                    class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
-                      series.class ? ` ${series.class}` : ""
-                    }`}
-                    points={seg}
-                  />
-                )}
-              </For>
-            )}
-          </For>
+          {seriesLines(seriesUnder)}
           <polyline class="sui-cashflow-scrub-chart__line" points={points} />
+          {/* `layer: "over"` series paint last so a dashed line laid exactly
+              over the solid primary stays visible instead of being buried. */}
+          {seriesLines(seriesOver)}
         </g>
         {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
             edge and the label stays fully visible. */}
@@ -407,10 +431,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         preserveAspectRatio="none"
       >
         <For
-          each={filter(
-            (m) => m.index >= 0 && m.index < ctx.cells.length,
-            list,
-          )}
+          each={filter((m) => m.index >= 0 && m.index < ctx.cells.length, list)}
         >
           {(m) => {
             const x = ctx.cellToX(m.index);
@@ -526,7 +547,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // A hollow dot for the primary line (from lineCells) + each overlay series
     // with a value.
     const primaryLineCell = lineCells()[idx];
-    const dotYs = primaryLineCell ? [yToPlot(primaryLineCell.balanceCents)] : [];
+    const dotYs = primaryLineCell
+      ? [yToPlot(primaryLineCell.balanceCents)]
+      : [];
     for (const s of props.balanceSeries ?? []) {
       const v = s.balanceCents(cell, idx);
       if (v != null) dotYs.push(yToPlot(v));

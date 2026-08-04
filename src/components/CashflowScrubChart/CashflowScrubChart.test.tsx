@@ -210,6 +210,70 @@ describe("CashflowScrubChart", () => {
       ).toBeGreaterThan(0);
     });
 
+    it('paints overlay series beneath the primary line, and above it with layer: "over"', () => {
+      const cells = makeCells(6);
+      const same = (c: CashflowCell) => c.balanceCents;
+      // Paint order IS z-order in SVG, so the assertion is about document
+      // order of the polylines within the clip group: a coincident dashed
+      // scenario is only visible when it comes after the primary line.
+      const lineOrder = (container: HTMLElement) =>
+        Array.from(
+          container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
+        ).map((el) =>
+          el.classList.contains("sui-cashflow-scrub-chart__line--series")
+            ? (el.getAttribute("class")?.split(" ").at(-1) ?? "series")
+            : "primary",
+        );
+
+      const under = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          balanceSeries={[{ id: "s", class: "dashed", balanceCents: same }]}
+        />
+      ));
+      expect(lineOrder(under.container)).toEqual(["dashed", "primary"]);
+
+      const over = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          balanceSeries={[
+            { id: "s", class: "dashed", balanceCents: same, layer: "over" },
+          ]}
+        />
+      ));
+      expect(lineOrder(over.container)).toEqual(["primary", "dashed"]);
+    });
+
+    it("keeps each layer in array order when the series are split the overlay series", () => {
+      const cells = makeCells(6);
+      const at = (delta: number) => (c: CashflowCell) => c.balanceCents + delta;
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          balanceSeries={[
+            { id: "a", class: "a", balanceCents: at(-1) },
+            { id: "b", class: "b", balanceCents: at(1), layer: "over" },
+            { id: "c", class: "c", balanceCents: at(-2) },
+            { id: "d", class: "d", balanceCents: at(2), layer: "over" },
+          ]}
+        />
+      ));
+      const order = Array.from(
+        container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
+      ).map((el) => el.getAttribute("class")?.split(" ").at(-1));
+      // under layer (array order) → primary → over layer (array order)
+      expect(order).toEqual([
+        "a",
+        "c",
+        "sui-cashflow-scrub-chart__line",
+        "b",
+        "d",
+      ]);
+    });
+
     it("keeps the full scrub layer by default (scrub omitted)", () => {
       const cells = makeCells(5);
       const { container } = render(() => (
@@ -298,11 +362,19 @@ describe("CashflowScrubChart", () => {
       expect(g).toBeTruthy();
       const label = g.querySelector(".sui-cashflow-scrub-chart__rule-label")!;
       expect(label.textContent).toBe("Today");
-      expect(g.querySelector(".sui-cashflow-scrub-chart__rule-line")).toBeTruthy();
+      expect(
+        g.querySelector(".sui-cashflow-scrub-chart__rule-line"),
+      ).toBeTruthy();
       // None of the instance-marker anatomy, and no click affordance.
-      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-flag")).toBeNull();
-      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-dot")).toBeNull();
-      expect(g.querySelector(".sui-cashflow-scrub-chart__marker-hit")).toBeNull();
+      expect(
+        g.querySelector(".sui-cashflow-scrub-chart__marker-flag"),
+      ).toBeNull();
+      expect(
+        g.querySelector(".sui-cashflow-scrub-chart__marker-dot"),
+      ).toBeNull();
+      expect(
+        g.querySelector(".sui-cashflow-scrub-chart__marker-hit"),
+      ).toBeNull();
       expect(g.getAttribute("role")).toBeNull();
       g.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       expect(onMarkerClick).not.toHaveBeenCalled();
@@ -469,12 +541,18 @@ describe("CashflowScrubChart hover", () => {
     dailyCells(
       d("2026-05-01"),
       d(`2026-05-${String(count).padStart(2, "0")}`),
-    ).map((cell, i) => ({ ...cell, cashflowCents: 0, balanceCents: i * 10_000 }));
+    ).map((cell, i) => ({
+      ...cell,
+      cashflowCents: 0,
+      balanceCents: i * 10_000,
+    }));
 
   const lineYs = (container: HTMLElement): number[] =>
-    (container
-      .querySelector(".sui-cashflow-scrub-chart__line")!
-      .getAttribute("points") ?? "")
+    (
+      container
+        .querySelector(".sui-cashflow-scrub-chart__line")!
+        .getAttribute("points") ?? ""
+    )
       .trim()
       .split(" ")
       .filter(Boolean)

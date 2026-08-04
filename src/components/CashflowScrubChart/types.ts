@@ -71,6 +71,22 @@ export interface CashflowBalanceSeries {
   /** Balance in cents for the cell at `index`, or `null` to break the line
    *  (e.g. to draw a forecast only for cells after `today`). */
   balanceCents: (cell: CashflowCell, index: number) => number | null;
+  /**
+   * Which side of the primary running-balance line this series paints on.
+   * `"under"` (the default) is the original behaviour — the primary line wins
+   * every overlap. `"over"` lifts this series above it.
+   *
+   * The knob exists for COINCIDENT lines: SVG has no z-index, so paint order
+   * is document order, and a dashed scenario that tracks the primary line
+   * exactly is covered pixel-for-pixel when drawn underneath. Over the top,
+   * both read — the solid line shows through the dashes.
+   *
+   * Ordering is per-series precisely so one chart can hold both (a range cone
+   * beneath, a comparison line above). Series keep their array order within
+   * each layer, so the array is still the z-order among overlays; this only
+   * picks which layer they sort into.
+   */
+  layer?: "under" | "over";
   /** When set, shade the variance between this series and a baseline line,
    *  green where this series is higher and red where lower. */
   fill?: CashflowSeriesFill;
@@ -130,7 +146,8 @@ export interface CashflowScrubChartProps {
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
   /** Extra balance lines overlaid on the chart. The y-domain widens to span
-   *  their values. Drawn beneath the primary running-balance line. */
+   *  their values. Drawn in array order beneath the primary running-balance
+   *  line, or above it for entries with `layer: "over"`. */
   balanceSeries?: CashflowBalanceSeries[];
   /**
    * Optional fixed upper y-bound, in **cents** (same semantics as

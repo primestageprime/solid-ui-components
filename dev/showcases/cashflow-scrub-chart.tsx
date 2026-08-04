@@ -6,6 +6,7 @@ import {
 import { dailyCells } from "../../src/components/DateAxis";
 import { ClusterRow } from "../../src/components/Layout";
 import { MutedBody } from "../../src/components/Text";
+import { Toggle } from "../../src/components/Toggle";
 
 // Deterministic stub for the demo. Real consumers wire this from their own
 // data source — CashflowScrubChart cares only about the per-day `cashflowCents`
@@ -67,6 +68,11 @@ const meanBalanceCents =
 const targetBalance = (_cell: CashflowCell, _i: number): number =>
   meanBalanceCents;
 
+// A scenario that tracks the actual balance EXACTLY — the case `layer` exists
+// for. Drawn underneath, the solid primary line covers it completely and the
+// chart looks like it only has one line.
+const coincidentScenario = (cell: CashflowCell): number => cell.balanceCents;
+
 const fmtDate = (d: Date): string =>
   d.toLocaleDateString("en-US", {
     weekday: "short",
@@ -95,6 +101,10 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [bandSelectedIdx, setBandSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
+  const [coincidentSelectedIdx, setCoincidentSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [scenarioOver, setScenarioOver] = createSignal(true);
 
   return (
     <div class="component-section component-section--full">
@@ -145,9 +155,9 @@ export const CashflowScrubChartShowcase: Component = () => {
         <p class="text-meta">
           Enable <code>hover</code> for a transient vertical crosshair that
           follows the pointer, a hollow dot on every line at that day, and a
-          tooltip card whose body you supply via{" "}
-          <code>renderHoverTooltip</code>. Coexists with the persistent scrub
-          selection (click still selects). Move the mouse across the chart.
+          tooltip card whose body you supply via <code>renderHoverTooltip</code>
+          . Coexists with the persistent scrub selection (click still selects).
+          Move the mouse across the chart.
         </p>
         <style>{`
           .demo-hover--optimistic {
@@ -257,21 +267,15 @@ export const CashflowScrubChartShowcase: Component = () => {
 
         <ClusterRow>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--actual"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--actual" />
             Actual
           </span>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--positive"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--positive" />
             Optimistic (+$400/day)
           </span>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--negative"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--negative" />
             Pessimistic (−$200/day)
           </span>
         </ClusterRow>
@@ -318,24 +322,70 @@ export const CashflowScrubChartShowcase: Component = () => {
 
         <ClusterRow>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--positive"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--positive" />
             Target above actual
           </span>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--negative"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-band cashflow-scrub-chart-demo__legend-band--negative" />
             Target below actual
           </span>
           <span>
-            <span
-              class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--muted"
-            />
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--muted" />
             Target line
           </span>
         </ClusterRow>
+      </div>
+
+      <div class="example-group">
+        <h3>Paint order (coincident lines)</h3>
+        <p class="text-meta">
+          Overlay series paint in array order <em>beneath</em> the primary
+          running-balance line, so a scenario that tracks the actual balance
+          exactly is hidden by it — the chart looks like it has one line. Set{" "}
+          <code>layer: "over"</code> on a series to lift it above the primary
+          instead: the dashes sit on the solid line and <strong>both</strong>{" "}
+          read at once. Toggle it below on a scenario whose values are identical
+          to the actual.
+        </p>
+
+        <style>{`
+          /* Deliberately narrower than the primary line (1.6) and a contrasting
+             hue, so laid on top the solid line still shows on both sides of
+             the dashes — the "both lines read at once" the prop is for. */
+          .demo-coincident-line {
+            stroke: var(--sui-warning, rgba(245, 158, 11, 0.95));
+            stroke-width: 1.2;
+            stroke-dasharray: 5 5;
+          }
+        `}</style>
+
+        <Toggle
+          label={'Scenario layer: "over"'}
+          checked={scenarioOver()}
+          onChange={() => setScenarioOver(!scenarioOver())}
+        />
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={coincidentSelectedIdx()}
+          onScrub={(i) => setCoincidentSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "scenario",
+              label: "Scenario (identical to actual)",
+              class: "demo-coincident-line",
+              balanceCents: coincidentScenario,
+              layer: scenarioOver() ? "over" : "under",
+            },
+          ]}
+        />
+
+        <MutedBody>
+          {scenarioOver()
+            ? 'layer: "over" — the dashed scenario paints over the solid actual, so both lines read.'
+            : 'layer: "under" (default) — the solid actual buries the dashed scenario.'}
+        </MutedBody>
       </div>
 
       <div class="example-group">
