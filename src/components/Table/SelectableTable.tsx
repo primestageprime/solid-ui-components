@@ -7,15 +7,7 @@
 // NOTE: CSS removed — inherits Table.css via
 // BaseTable's shared stylesheet.
 // ============================================
-import {
-  splitProps,
-  For,
-  createMemo,
-  Show,
-  createEffect,
-  onMount,
-  onCleanup,
-} from "solid-js";
+import { splitProps, For, createMemo, Show, createEffect } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { clickableCursor } from "../../internal/style/clickable";
 import {
@@ -36,22 +28,11 @@ import {
 export function SelectableTable<T extends TableRow>(
   props: SelectableTableProps<T>,
 ) {
-  // Track shift key state globally for shift-select
-  let _shiftHeld = false;
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Shift") _shiftHeld = true;
-  };
-  const onKeyUp = (e: KeyboardEvent) => {
-    if (e.key === "Shift") _shiftHeld = false;
-  };
-  onMount(() => {
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("keyup", onKeyUp);
-  });
-  onCleanup(() => {
-    document.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("keyup", onKeyUp);
-  });
+  // Shift-select reads `shiftKey` off the mousedown event in `toggleRow`. A
+  // pair of document-level keydown/keyup listeners used to track it into a
+  // `_shiftHeld` flag as well — written on every keystroke, read nowhere, one
+  // listener pair per mounted table. Removed 2026-08-04; the range selection it
+  // was meant to serve is covered in SelectableTable.test.tsx and unchanged.
   const [local, others] = splitProps(props, [
     "data",
     "columns",
@@ -75,7 +56,9 @@ export function SelectableTable<T extends TableRow>(
     return classList.join(" ");
   };
 
-  const allIds = createMemo(() => map((row) => local.getRowId(row), local.data));
+  const allIds = createMemo(() =>
+    map((row) => local.getRowId(row), local.data),
+  );
 
   const allSelected = createMemo(() => {
     const sel = selected();
