@@ -27,19 +27,32 @@ const delta = (k, base, v) => ({ k, base, v });
 
 /**
  * Classify every metric against the baseline.
- * @returns {{regressions: Array, improvements: Array}} — `base === undefined`
- *   (a brand-new metric) is neither; it has no ceiling to compare against.
+ *
+ * @returns {{regressions: Array, improvements: Array, unbaselined: string[]}}
+ *   A metric with `base === undefined` is neither a rise nor a gain — there is
+ *   nothing to compare it against — but it is NOT fine either, so it comes back
+ *   in its own list rather than being dropped. It used to be dropped, and
+ *   `componentsNeverRendered` was added, computed 50, and reported
+ *   "✓ No regressions, and every ceiling is tight" while enforcing nothing.
+ *   That is the same failure the ratchet already refuses in the other
+ *   direction: an unrecorded gain leaks back with CI green throughout, and a
+ *   metric with no ceiling never catches anything with CI green throughout.
+ *   Whoever adds one and forgets `--update-baseline` gets a decoration.
  */
 export function classify(metrics, baseline) {
   const regressions = [];
   const improvements = [];
+  const unbaselined = [];
   for (const [k, v] of Object.entries(metrics)) {
     const base = baseline?.[k];
-    if (base === undefined) continue;
+    if (base === undefined) {
+      unbaselined.push(k);
+      continue;
+    }
     if (v > base) regressions.push(delta(k, base, v));
     else if (v < base) improvements.push(delta(k, base, v));
   }
-  return { regressions, improvements };
+  return { regressions, improvements, unbaselined };
 }
 
 /**
