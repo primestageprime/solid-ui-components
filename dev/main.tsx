@@ -39,6 +39,7 @@ import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
 import { DividerShowcase } from "./showcases/divider";
 import { GhostRowShowcase } from "./showcases/ghost-row";
+import { NestedListShowcase } from "./showcases/nested-list";
 import { DotchartShowcase } from "./showcases/dotchart";
 import { HeatmapShowcase } from "./showcases/heatmap";
 import { HeatStreamShowcase } from "./showcases/heatstream";
@@ -327,6 +328,12 @@ const items: Item[] = [
     label: "GhostRow",
     component: GhostRowShowcase,
     tags: ["depth:1", "list", "indicator"],
+  },
+  {
+    id: "nested-list",
+    label: "NestedList",
+    component: NestedListShowcase,
+    tags: ["depth:1", "layout", "list"],
   },
   {
     id: "heatmap",

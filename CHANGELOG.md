@@ -2,6 +2,72 @@
 
 ## [Unreleased]
 
+## 0.136.0
+
+### Added
+- **`NestedList` / `NestedListItem` — the library's hierarchical-indent Layout
+  Primitive** (`src/components/Layout/NestedList.tsx`, owns `NestedList.css`).
+  Purely additive; nothing else changed shape.
+
+  There was no component expressing "this row is one level deeper than that
+  row", so consumers invented one. dside's Work Inspector reached for `GrowBox`
+  per child row — but `GrowBox` is `flex: 1 1 0%`, and as a direct child of a
+  COLUMN flex container that is *vertical* growth: every row stretched to
+  190.6px around 52px of content and read as gaps between the cards.
+  `.sui-nested-list__item` is `flex: 0 0 auto` precisely so that cannot recur.
+
+  - **Recursive by construction.** Depth comes from a Solid context the item
+    provides to its own `subtree` slot, so a recursive render function is just
+    the component wrapping itself — no `level` integer threaded through call
+    sites. An explicit 1-based `level` (the literal `aria-level` value)
+    **re-seeds** the context, which is what a virtualised list rendering row
+    4000 without its ancestors mounted needs. Level 1 = zero indent.
+  - **`role="list"` / `role="listitem"` + `aria-level`, deliberately NOT
+    `role="tree"`.** WAI-ARIA 1.2 lists `aria-level`/`aria-posinset`/
+    `aria-setsize` among `listitem`'s supported properties (nested lists are
+    their canonical use), so AT gets exact depth. `tree` carries the same
+    attributes but owes the full keyboard contract — roving tabindex, arrow
+    navigation, Home/End, typeahead, expand/collapse — and a Layout Primitive
+    that indents arbitrary children owns neither focus nor selection, so
+    claiming the role would promise navigation that does not exist.
+    `aria-expanded` is **not** emitted: it is unsupported on `listitem` and
+    belongs on the consumer's own twisty `<button>`. `setSize`/`posInSet` are
+    emitted only when supplied — with a complete DOM the AT computes them.
+  - **12px step** (`--sui-space-3`) plus a **1px `--sui-border` guide rail per
+    ancestor**. Because AT reads depth off `aria-level`, the pixels only have
+    to disambiguate depth for sighted users, and the rails — not the
+    whitespace — carry that signal. 12px is the smallest 4px-grid step that is
+    1.5x the `sm` (8px) sibling gap (so a level shift can never be misread as
+    a gap) and it halves `ThreadGroup`'s 24px cost: depth 8 is 96px, not 192px,
+    which is what matters in a ~380px side rail. Depth reads as geometry
+    (offset + rail count), never colour alone, and both tokens are defined by
+    every shipped theme.
+  - **Degrades past 8 levels rather than breaking.** Visual indent caps at
+    `NESTED_LIST_MAX_INDENT_STEPS` (8 = 96px) so a depth-30 node keeps its full
+    content width; the row gains `data-capped="true"` and a **dashed** vertical
+    rule at the content edge (a dash pattern, not a hue), and `aria-level`
+    keeps counting exactly. Levels below 1 clamp to 1 rather than emitting a
+    dead modifier class — `assertModifierClass` guards the indent classes, all
+    nine of which exist in CSS by construction.
+  - **No Override Props, so no factory and no curried variants** — every prop
+    is per-instance data. These ship as no-config shells like `AutoStackRow`
+    and `ProportionalStack`.
+
+  **The three existing insets are deliberately NOT re-expressed on it**
+  (noted in `ThreadGroup.tsx`, `GhostRow.tsx` and `COMPONENTS.md`):
+  `ThreadGroup`'s `depth x 24px`, `IndentedGhostRow`'s one-step inset and
+  `Section`'s `indent` are *visual* insets that convey nothing to assistive
+  tech, whereas this is a *semantic hierarchy* primitive. Rebasing
+  `ThreadGroup` would mean either widening `NestedList` with a configurable
+  step to fit one legacy consumer (Rule Zero forbids widening an API to
+  accommodate an existing call site) or adopting the 12px step, which silently
+  changes every shipped `ConversationTree` render — neither is non-breaking.
+  New hierarchies use `NestedList`; a fourth mechanism is not to be added.
+
+  Showcase: `dev/showcases/nested-list.tsx` (gallery → NestedList), covering
+  the recursive form, the flat/virtualised `level` override and a 14-level
+  chain through the cap.
+
 ## 0.135.0
 
 ### Fixed

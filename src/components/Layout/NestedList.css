@@ -1,0 +1,122 @@
+/* ============================================
+ * NestedList — the hierarchical-indent rail.
+ *
+ * STEP SIZE: --sui-space-3 (12px) per level.
+ *   ThreadGroup spends 24px of raw whitespace per level because whitespace is
+ *   its only depth cue. Here a 1px guide rail sits at every ancestor position,
+ *   so the eye locks onto rail POSITION and COUNT rather than onto the size of
+ *   a gap — the step only has to be big enough to keep two adjacent rails
+ *   apart and to out-read ordinary intra-row spacing. 12px is the smallest
+ *   4px-grid step that clears both: it is 1.5x the 8px `sm` gap used between
+ *   sibling elements (so a level shift can never be misread as a gap), and it
+ *   halves ThreadGroup's horizontal cost — depth 8 is 96px instead of 192px,
+ *   which is what matters in a ~380px side rail like dside's Work Inspector.
+ *
+ * DEPTH WITHOUT COLOUR: the cue is geometry — how far the row starts and how
+ * many rails precede it. `--sui-border` is the only paint, and it is defined
+ * by every shipped theme, so a light/dark swap re-tints the rails and changes
+ * nothing about legibility.
+ *
+ * DEGRADATION: indent is capped at 8 steps (see
+ * NESTED_LIST_MAX_INDENT_STEPS). Past that the row stops moving right — so a
+ * depth-30 node still has its full content width — `aria-level` keeps
+ * counting exactly, and the row is marked `--capped`, which adds a dashed
+ * vertical rule at the content edge meaning "more levels than are drawn".
+ * ============================================ */
+
+.sui-nested-list {
+  display: flex;
+  flex-direction: column;
+  /* No gap, deliberately: the guide rails are painted per row, so any gap
+     would chop them into dashes. Rows carry their own internal padding. */
+  min-width: 0;
+}
+
+.sui-nested-list__item {
+  display: flex;
+  flex-direction: column;
+  /* The bug this primitive exists to prevent: as a child of a COLUMN flex
+     container, `flex: 1` is VERTICAL growth, so a wrapper reached for as an
+     "indent" stretches every row to an equal share of the column height and
+     reads as gaps between cards. A hierarchy row is content-sized, always. */
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.sui-nested-list__row {
+  --sui-nested-list-step: var(--sui-space-3);
+  min-width: 0;
+  /* One 1px rail per ancestor: the gradient repeats every step, and
+     background-size clips it to exactly `steps` repetitions (see the
+     --indent-N rules), so the rail count IS the ancestor count. */
+  background-repeat: no-repeat;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--sui-border) 0 1px,
+    transparent 1px var(--sui-nested-list-step)
+  );
+  background-size: 0 100%;
+}
+
+/* Depth 0 (aria-level 1) — root rows: no indent, no rail. */
+.sui-nested-list__row--indent-0 {
+  padding-left: 0;
+  background-size: 0 100%;
+}
+
+.sui-nested-list__row--indent-1 {
+  padding-left: calc(var(--sui-nested-list-step) * 1);
+  background-size: calc(var(--sui-nested-list-step) * 1) 100%;
+}
+.sui-nested-list__row--indent-2 {
+  padding-left: calc(var(--sui-nested-list-step) * 2);
+  background-size: calc(var(--sui-nested-list-step) * 2) 100%;
+}
+.sui-nested-list__row--indent-3 {
+  padding-left: calc(var(--sui-nested-list-step) * 3);
+  background-size: calc(var(--sui-nested-list-step) * 3) 100%;
+}
+.sui-nested-list__row--indent-4 {
+  padding-left: calc(var(--sui-nested-list-step) * 4);
+  background-size: calc(var(--sui-nested-list-step) * 4) 100%;
+}
+.sui-nested-list__row--indent-5 {
+  padding-left: calc(var(--sui-nested-list-step) * 5);
+  background-size: calc(var(--sui-nested-list-step) * 5) 100%;
+}
+.sui-nested-list__row--indent-6 {
+  padding-left: calc(var(--sui-nested-list-step) * 6);
+  background-size: calc(var(--sui-nested-list-step) * 6) 100%;
+}
+.sui-nested-list__row--indent-7 {
+  padding-left: calc(var(--sui-nested-list-step) * 7);
+  background-size: calc(var(--sui-nested-list-step) * 7) 100%;
+}
+.sui-nested-list__row--indent-8 {
+  padding-left: calc(var(--sui-nested-list-step) * 8);
+  background-size: calc(var(--sui-nested-list-step) * 8) 100%;
+}
+
+/* Past the cap: same 8-step rail, plus a dashed vertical rule hard against the
+   content edge. Dash pattern (not colour, not hue) is the "levels elided here"
+   cue; `aria-level` remains exact for anything that needs the real number.
+   Source-ordered after --indent-8 so it wins at equal specificity. */
+.sui-nested-list__row--capped {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      var(--sui-border) 0 3px,
+      transparent 3px 6px
+    ),
+    repeating-linear-gradient(
+      to right,
+      var(--sui-border) 0 1px,
+      transparent 1px var(--sui-nested-list-step)
+    );
+  background-size:
+    1px 100%,
+    calc(var(--sui-nested-list-step) * 8) 100%;
+  background-position:
+    calc(var(--sui-nested-list-step) * 8 - 1px) 0,
+    0 0;
+}

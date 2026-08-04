@@ -5,7 +5,9 @@
 // TagPill's `active`), pointer cursor only when an onClick is wired.
 // Born from the triage bench's right-rail children and dependency links —
 // one-line ghost rows that select an item on click. `indent` (padding-as-
-// inset, an Override) nests the row under a rail heading.
+// inset, an Override) nests the row under a rail heading — a BINARY visual
+// inset, not recursive depth. For a real hierarchy (per-level indent +
+// aria-level) reach for Layout/NestedList instead.
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import "./GhostRow.css";

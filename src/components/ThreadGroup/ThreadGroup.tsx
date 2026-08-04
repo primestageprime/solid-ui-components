@@ -17,6 +17,13 @@
 // for data-driven inline style.
 //
 // Factory: createThreadGroup().
+//
+// NOT built on Layout/NestedList (2026-08-04): this depth padding is a VISUAL
+// inset that tells assistive tech nothing, whereas NestedList is the semantic
+// hierarchy primitive (role=listitem + aria-level). Rebasing this on it would
+// mean either widening NestedList with a configurable step for one legacy
+// consumer or changing every shipped ConversationTree render. New hierarchies
+// use NestedList — see COMPONENTS.md.
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import {

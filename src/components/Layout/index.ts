@@ -14,6 +14,14 @@ export type {
   ProportionalStackProps,
   ProportionalItemProps,
 } from "./ProportionalStack";
+// Hierarchical indent (role=list/listitem + aria-level). No-config shells:
+// every prop is per-instance data, so there is nothing to curry.
+export {
+  NestedList,
+  NestedListItem,
+  NESTED_LIST_MAX_INDENT_STEPS,
+} from "./NestedList";
+export type { NestedListProps, NestedListItemProps } from "./NestedList";
 // Responsive side-by-side -> stacked row (the "holy albatross"). No-config shell.
 export { AutoStackRow, AutoStackItem } from "./AutoStack";
 export type { AutoStackRowProps, AutoStackItemProps } from "./AutoStack";
