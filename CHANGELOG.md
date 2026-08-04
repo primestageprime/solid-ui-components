@@ -73,6 +73,22 @@
   `grid-template-columns` / `--auto-stack-break` with no warning.
 
 ### Changed
+- **The health ratchet now fails on a metric with no ceiling recorded.**
+  `classify()` skipped any metric whose baseline was `undefined` — "it has no
+  ceiling to compare against" — and `health.mjs` then printed *"✓ No
+  regressions, and every ceiling is tight"*. Observed live while adding
+  `componentsNeverRendered`: it computed 50, enforced nothing, and the run
+  congratulated itself. It was only harmless because the same change ran
+  `--update-baseline` immediately after.
+
+  This is the failure the ratchet already refuses in the other direction — an
+  unrecorded gain leaks back with CI green throughout; a metric with no ceiling
+  never catches anything with CI green throughout. `classify()` returns them as
+  `unbaselined`, the report marks them `✗ NO CEILING (enforcing nothing)`
+  instead of `(no baseline)`, and they fail alongside unrecorded improvements
+  under one message with one remedy. A recorded `0` is still the tightest
+  ceiling there is and is unaffected. (dside `sui` #12542)
+
 - **`foldersWithoutTests` is replaced by `componentsNeverRendered`**
   (`scripts/render-coverage.mjs`, surfaced by `npm run render-coverage`). The
   old metric read 0 across all 145 component folders and always had: a folder

@@ -24,6 +24,9 @@
 //   • an unnamed metric that rose still fails the run
 //   • an improvement that is not locked in ALSO fails, so gains cannot
 //     leak back later with CI green the whole way
+//   • a metric with NO ceiling recorded fails for the same reason: it
+//     enforces nothing, and the run used to report "every ceiling is
+//     tight" regardless (observed when componentsNeverRendered was added)
 //
 // Metrics are deliberately mechanical (no judgment calls) so the
 // numbers are reproducible. Sanctioned uses (var() fallbacks,
@@ -300,12 +303,12 @@ if (writeHistory && JSON.stringify(last?.metrics) !== JSON.stringify(metrics)) {
 }
 
 console.log("SUI health check (lower is better; 0 is the goal)\n");
-const { regressions, improvements } = classify(metrics, baseline);
+const { regressions, improvements, unbaselined } = classify(metrics, baseline);
 for (const [k, v] of Object.entries(metrics)) {
   const base = baseline?.[k];
   const status =
     base === undefined
-      ? "  (no baseline)"
+      ? "  ✗ NO CEILING (enforcing nothing)"
       : v > base
         ? `  ✗ REGRESSED (baseline ${base})`
         : v < base
@@ -414,15 +417,27 @@ if (updateBaseline) {
       )}\nThen commit the result. The bare flag will NOT raise a ceiling.`,
   );
   process.exit(1);
-} else if (length(improvements) > 0) {
+} else if (length(improvements) > 0 || length(unbaselined) > 0) {
+  // Two different ways to end a run with CI green and the ratchet not actually
+  // holding, with one remedy between them.
+  //
   // An improvement left unrecorded is an improvement that leaks back: the
   // ceiling stays high, so a later change can undo the gain with CI green.
-  // Failing here is what makes this a ratchet rather than a suggestion.
-  console.error("\n✗ Improvements are not locked in:");
+  //
+  // A metric with NO ceiling is worse — it never catches anything at all, and
+  // the run used to congratulate itself anyway. `componentsNeverRendered` was
+  // added, computed 50, and printed "every ceiling is tight" while enforcing
+  // nothing; it was only harmless because the same change happened to run
+  // `--update-baseline` straight after.
+  //
+  // Failing on both is what makes this a ratchet rather than a suggestion.
+  console.error("\n✗ Ceilings are not locked in:");
   for (const { k, base, v } of improvements)
-    console.error(`    ${k}: ${base} → ${v} (−${base - v})`);
+    console.error(`    ${k}: ${base} → ${v} (−${base - v}) — gain unrecorded`);
+  for (const k of unbaselined)
+    console.error(`    ${k}: currently ${metrics[k]} — NO ceiling recorded`);
   console.error(
-    "\nTighten the ceiling so the gain cannot be lost:\n  npm run health -- --update-baseline\nThen commit scripts/health-baseline.json.",
+    "\nRecord them so nothing can regress unnoticed:\n  npm run health -- --update-baseline\nThen commit scripts/health-baseline.json.",
   );
   process.exit(1);
 } else {

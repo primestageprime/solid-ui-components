@@ -48,14 +48,34 @@ const plan = (
   });
 
 describe("health ratchet: classify", () => {
-  it("splits rises from gains, and ignores metrics with no ceiling yet", () => {
-    const { regressions, improvements } = classify(
+  it("splits rises from gains, and reports metrics with no ceiling separately", () => {
+    const { regressions, improvements, unbaselined } = classify(
       { alpha: 12, beta: 18, gamma: 5 },
       BASE,
     );
     expect(regressions).toEqual([{ k: "alpha", base: 10, v: 12 }]);
     expect(improvements).toEqual([{ k: "beta", base: 20, v: 18 }]);
-    // `gamma` has no baseline — it is neither a rise nor a gain.
+    // `gamma` is neither a rise nor a gain — but it is not FINE either, and
+    // this list is the difference. It used to be dropped on the floor, which
+    // is how `componentsNeverRendered` was added, computed 50, and reported
+    // "✓ No regressions, and every ceiling is tight" while enforcing nothing.
+    expect(unbaselined).toEqual(["gamma"]);
+  });
+
+  it("treats a missing baseline file as every metric having no ceiling", () => {
+    const { regressions, improvements, unbaselined } = classify(
+      { alpha: 1, beta: 2 },
+      null,
+    );
+    expect(regressions).toEqual([]);
+    expect(improvements).toEqual([]);
+    expect(unbaselined).toEqual(["alpha", "beta"]);
+  });
+
+  it("does not treat a recorded zero as a missing ceiling", () => {
+    // `0` is the tightest ceiling there is, and the one most metrics aim for.
+    // A truthiness check here would report every clean metric as unenforced.
+    expect(classify({ alpha: 0 }, { alpha: 0 }).unbaselined).toEqual([]);
   });
 });
 
@@ -97,7 +117,11 @@ describe("health ratchet: raising demands a written reason", () => {
   });
 
   it("a named metric with a reason rises, and the reason is recorded", () => {
-    const r = plan({ alpha: 12, beta: 20 }, ["alpha"], "ch-unit column needs it");
+    const r = plan(
+      { alpha: 12, beta: 20 },
+      ["alpha"],
+      "ch-unit column needs it",
+    );
     expect(r.error).toBeUndefined();
     expect(r.next?.alpha).toBe(12);
     expect(r.raised).toEqual([["alpha", 12]]);
@@ -112,7 +136,12 @@ describe("health ratchet: raising demands a written reason", () => {
       ...BASE,
       _raises: { beta: { from: 19, to: 20, reason: "earlier decision" } },
     };
-    const r = plan({ alpha: 12, beta: 20 }, ["alpha"], "new decision", withHistory);
+    const r = plan(
+      { alpha: 12, beta: 20 },
+      ["alpha"],
+      "new decision",
+      withHistory,
+    );
     expect((r.next as any)._raises).toEqual({
       beta: { from: 19, to: 20, reason: "earlier decision" },
       alpha: { from: 10, to: 12, reason: "new decision" },
@@ -124,7 +153,10 @@ describe("health ratchet: raising demands a written reason", () => {
       ...BASE,
       _raises: { beta: { from: 19, to: 20, reason: "x" } },
     };
-    const { regressions, improvements } = classify({ alpha: 10, beta: 20 }, withHistory);
+    const { regressions, improvements } = classify(
+      { alpha: 10, beta: 20 },
+      withHistory,
+    );
     expect(regressions).toEqual([]);
     expect(improvements).toEqual([]);
   });
@@ -164,7 +196,8 @@ describe("health ratchet: the CLI is wired to these rules", () => {
     const metric = Object.entries(realBaseline).find(
       ([, v]) => typeof v === "number" && (v as number) > 5,
     );
-    if (!metric) throw new Error("no non-trivial metric in health-baseline.json");
+    if (!metric)
+      throw new Error("no non-trivial metric in health-baseline.json");
     const [name, value] = metric as [string, number];
 
     const dir = mkdtempSync(join(tmpdir(), "sui-ratchet-"));
