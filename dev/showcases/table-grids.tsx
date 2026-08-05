@@ -19,8 +19,17 @@ import {
   GroupBracket,
   type GroupBracketPosition,
 } from "../../src/components/GroupBracket";
-import { ContentStack, Column, StretchRow, GrowColumn } from "../../src/components/Layout";
-import { SubsectionTitle, TextSublabel, TextBody } from "../../src/components/Text";
+import {
+  ContentStack,
+  Column,
+  StretchRow,
+  GrowColumn,
+} from "../../src/components/Layout";
+import {
+  SubsectionTitle,
+  TextSublabel,
+  TextBody,
+} from "../../src/components/Text";
 import { SingleLine } from "../../src/components/SlotCard";
 import "./table-grids.css";
 
@@ -40,9 +49,18 @@ interface Booking {
 }
 
 const NAMES = [
-  "MSC Bellissima", "Aframax Horizon", "Pacific Trader", "Nordic Star",
-  "Coral Voyager", "Themis Leader", "Grand Aurora", "Pelican State",
-  "New Century", "Asian Dynasty", "Gulf Muttrah", "Del Monte Harvester",
+  "MSC Bellissima",
+  "Aframax Horizon",
+  "Pacific Trader",
+  "Nordic Star",
+  "Coral Voyager",
+  "Themis Leader",
+  "Grand Aurora",
+  "Pelican State",
+  "New Century",
+  "Asian Dynasty",
+  "Gulf Muttrah",
+  "Del Monte Harvester",
 ];
 
 const BOOKINGS: Booking[] = (() => {
@@ -112,11 +130,43 @@ const BRACKET_ROWS: BracketRow[] = RUNS.flatMap(({ terminal, length }, run) => {
 });
 
 const columns: TableColumn<Booking>[] = [
-  { id: "vessel", header: "Vessel", align: "left", ellipsis: true, contained: true, minWidth: "0", accessor: (r) => r.vessel },
-  { id: "terminal", header: "Terminal", align: "left", width: "9rem", accessor: (r) => r.terminal },
-  { id: "category", header: "Category", align: "left", width: "8rem", accessor: (r) => r.category },
-  { id: "berthHours", header: "Berth h", align: "right", width: "6rem", accessor: (r) => String(r.berthHours) },
-  { id: "teu", header: "TEU", align: "right", width: "7rem", accessor: (r) => r.teu.toLocaleString() },
+  {
+    id: "vessel",
+    header: "Vessel",
+    align: "left",
+    ellipsis: true,
+    contained: true,
+    minWidth: "0",
+    accessor: (r) => r.vessel,
+  },
+  {
+    id: "terminal",
+    header: "Terminal",
+    align: "left",
+    width: "9rem",
+    accessor: (r) => r.terminal,
+  },
+  {
+    id: "category",
+    header: "Category",
+    align: "left",
+    width: "8rem",
+    accessor: (r) => r.category,
+  },
+  {
+    id: "berthHours",
+    header: "Berth h",
+    align: "right",
+    width: "6rem",
+    accessor: (r) => String(r.berthHours),
+  },
+  {
+    id: "teu",
+    header: "TEU",
+    align: "right",
+    width: "7rem",
+    accessor: (r) => r.teu.toLocaleString(),
+  },
 ];
 
 // Grouped rows: the same bookings, grouped by terminal, with the group cell
@@ -130,11 +180,32 @@ const GROUPED = TERMINALS.flatMap((terminal) =>
 // The grouped view's columns: the terminal cell is rowspanned across its
 // members, the rest render per row.
 const groupedColumns = [
-  { id: "terminal", header: "Terminal", accessor: (r: Booking) => r.terminal, rowspan: true, width: "9rem" },
+  {
+    id: "terminal",
+    header: "Terminal",
+    accessor: (r: Booking) => r.terminal,
+    rowspan: true,
+    width: "9rem",
+  },
   { id: "vessel", header: "Vessel", accessor: (r: Booking) => r.vessel },
-  { id: "category", header: "Category", accessor: (r: Booking) => r.category, width: "8rem" },
-  { id: "berthHours", header: "Berth h", accessor: (r: Booking) => String(r.berthHours), width: "6rem" },
-  { id: "teu", header: "TEU", accessor: (r: Booking) => r.teu.toLocaleString(), width: "7rem" },
+  {
+    id: "category",
+    header: "Category",
+    accessor: (r: Booking) => r.category,
+    width: "8rem",
+  },
+  {
+    id: "berthHours",
+    header: "Berth h",
+    accessor: (r: Booking) => String(r.berthHours),
+    width: "6rem",
+  },
+  {
+    id: "teu",
+    header: "TEU",
+    accessor: (r: Booking) => r.teu.toLocaleString(),
+    width: "7rem",
+  },
 ];
 
 // Pivot: terminal × category, cells carrying the totals behind them.
@@ -166,7 +237,11 @@ interface TreemapInner {
   category: Category;
 }
 
-const TREEMAP: Array<{ key: Terminal; weight: number; children: TreemapInner[] }> = TERMINALS.map((t) => ({
+const TREEMAP: Array<{
+  key: Terminal;
+  weight: number;
+  children: TreemapInner[];
+}> = TERMINALS.map((t) => ({
   key: t,
   weight: teuOf(t),
   children: CATEGORIES.map((c) => ({
@@ -191,24 +266,50 @@ export const TableGridsShowcase: Component = () => {
       </p>
 
       <ContentStack>
-        <SubsectionTitle>GroupedTable</SubsectionTitle>
+        <SubsectionTitle>GroupedTable — DEPRECATED</SubsectionTitle>
         <TextSublabel>
-          Bookings grouped by terminal: the group cell spans its members' rows,
-          so the eye reads the group once rather than once per row.
+          Scheduled for removal (dside sui#12546): zero call sites in any
+          consumer. Nothing is wrong with it — it declares its own props rather
+          than extending BaseTableProps, which is the pattern the other
+          renderers were fixed to follow — it has simply never been used. Don't
+          reach for it in new code; if you need rowspan grouping, say so on the
+          task and it gets un-deprecated instead of removed. Bookings grouped by
+          terminal: the group cell spans its members' rows, so the eye reads the
+          group once rather than once per row.
         </TextSublabel>
         <div class="table-grid-frame">
-          <GroupedTable rows={GROUPED} columns={groupedColumns} compact stickyHeader maxHeight="320px" />
+          <GroupedTable
+            rows={GROUPED}
+            columns={groupedColumns}
+            compact
+            stickyHeader
+            maxHeight="320px"
+          />
         </div>
       </ContentStack>
 
       <ContentStack>
-        <SubsectionTitle>VirtualTable</SubsectionTitle>
+        <SubsectionTitle>VirtualTable — DEPRECATED</SubsectionTitle>
         <TextSublabel>
-          All {BOOKINGS.length} rows, but only the visible window is in the DOM —
-          scroll it; the row count never changes and the scrollbar is honest.
+          Scheduled for removal (dside sui#12546): zero call sites in any
+          consumer. It is NOT a drop-in for BaseTable, despite its props type
+          being a plain alias of BaseTableProps — compare the two above: this
+          one renders its own class namespace with padding, font and colour set
+          inline per cell instead of from the shared Table.css, and it ignores
+          four of the props it declares. If virtualisation is wanted again,
+          build it as an opt-in capability of BaseTable rather than reviving a
+          second table implementation. All {BOOKINGS.length} rows, but only the
+          visible window is in the DOM — scroll it; the row count never changes
+          and the scrollbar is honest.
         </TextSublabel>
         <div class="table-grid-frame">
-          <VirtualTable data={BOOKINGS} columns={columns} compact stickyHeader maxHeight="320px" />
+          <VirtualTable
+            data={BOOKINGS}
+            columns={columns}
+            compact
+            stickyHeader
+            maxHeight="320px"
+          />
         </div>
       </ContentStack>
 
@@ -220,9 +321,18 @@ export const TableGridsShowcase: Component = () => {
           filtering.
         </TextSublabel>
         <div class="table-grid-frame">
-          <TableQuickFilter data={BOOKINGS} placeholder="Filter by vessel, terminal, category…">
+          <TableQuickFilter
+            data={BOOKINGS}
+            placeholder="Filter by vessel, terminal, category…"
+          >
             {(filtered) => (
-              <VirtualTable data={filtered()} columns={columns} compact stickyHeader maxHeight="260px" />
+              <VirtualTable
+                data={filtered()}
+                columns={columns}
+                compact
+                stickyHeader
+                maxHeight="260px"
+              />
             )}
           </TableQuickFilter>
         </div>
@@ -249,8 +359,8 @@ export const TableGridsShowcase: Component = () => {
       <ContentStack>
         <SubsectionTitle>HeatPivotGrid</SubsectionTitle>
         <TextSublabel>
-          The same pivot, with each cell shaded by TEU against the busiest cell —
-          the caller supplies the heat, the grid supplies the scale.
+          The same pivot, with each cell shaded by TEU against the busiest cell
+          — the caller supplies the heat, the grid supplies the scale.
         </TextSublabel>
         <div class="table-grid-frame">
           <HeatPivotGrid
@@ -280,7 +390,9 @@ export const TableGridsShowcase: Component = () => {
             cell={cellOf}
             renderCell={(c) => <>{c.calls}</>}
             cellHref={(row, col, c) =>
-              c ? `#/table-grids?terminal=${encodeURIComponent(row)}&category=${col}` : undefined
+              c
+                ? `#/table-grids?terminal=${encodeURIComponent(row)}&category=${col}`
+                : undefined
             }
           />
         </div>
@@ -294,10 +406,14 @@ export const TableGridsShowcase: Component = () => {
         </TextSublabel>
         <div class="table-grid-frame table-grid-frame--narrow">
           <ScrollList>
-            <For each={[...BOOKINGS].sort((a, b) => b.teu - a.teu).slice(0, 40)}>
+            <For
+              each={[...BOOKINGS].sort((a, b) => b.teu - a.teu).slice(0, 40)}
+            >
               {(b) => (
                 <SingleLine
-                  values={{ text: `${b.vessel} · ${b.terminal} · ${b.teu.toLocaleString()} TEU` }}
+                  values={{
+                    text: `${b.vessel} · ${b.terminal} · ${b.teu.toLocaleString()} TEU`,
+                  }}
                   active={selected() === b.id}
                   onSelect={() => setSelected(b.id)}
                   maxWidth={420}
@@ -370,11 +486,15 @@ export const TableGridsShowcase: Component = () => {
         <div class="table-grid-frame table-grid-frame--narrow">
           <StaticSplitLayout
             items={BOOKINGS.slice(0, 8)}
-            renderItem={(b: Booking) => <TextBody>{`${b.vessel} · ${b.berthHours}h`}</TextBody>}
+            renderItem={(b: Booking) => (
+              <TextBody>{`${b.vessel} · ${b.berthHours}h`}</TextBody>
+            )}
             label="Awaiting berth"
             emptyLabel="All clear"
             capRows={4}
-            bottomContent={<TextSublabel>4 of 8 shown — the rest scroll</TextSublabel>}
+            bottomContent={
+              <TextSublabel>4 of 8 shown — the rest scroll</TextSublabel>
+            }
           />
         </div>
       </ContentStack>

@@ -10,8 +10,27 @@ import { clickableCursor } from "../../internal/style/clickable";
 import { type TableRow, getCellValue, tableContainerStyle } from "./types";
 import "./Table.css";
 
+// ── Deprecated 2026-08-04, scheduled for removal — dside `sui`#12546 ──────────
+// No caller anywhere: a survey of all seven repos depending on SUI, plus a
+// GitHub code search across the `primestageprime` org, found ZERO call sites
+// for GroupedTable. It has been shipped and exported since the early days and
+// nobody has ever reached for rowspan grouping.
+//
+// Unlike VirtualTable (deprecated in the same pass), NOTHING IS WRONG WITH
+// THIS COMPONENT. It declares its own nine props instead of extending
+// BaseTableProps, so it never made a promise it could not keep — it is the
+// pattern SelectableTable was just fixed to follow. This is purely a
+// no-callers removal, and if a caller appears the right response is to
+// un-deprecate it, not to rewrite it.
+//
+// Removal is staged: deprecated now, removed in a later release, so a consumer
+// on an older version gets a compiler warning before an error.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * A row of data with group key for rowspan grouping
+ *
+ * @deprecated Scheduled for removal (dside `sui`#12546) — see the note above.
  */
 export interface GroupedRow<T> {
   /** Unique group identifier - rows with same groupKey will be merged */
@@ -20,6 +39,7 @@ export interface GroupedRow<T> {
   data: T;
 }
 
+/** @deprecated Scheduled for removal (dside `sui`#12546). */
 export interface RowspanColumn<T> {
   id: string;
   /** Header content — plain text or any JSX. Rendered directly, matching TableColumn.header. */
@@ -32,6 +52,7 @@ export interface RowspanColumn<T> {
   align?: "left" | "center" | "right";
 }
 
+/** @deprecated Scheduled for removal (dside `sui`#12546). */
 export interface GroupedTableProps<T> {
   /** Pre-sorted rows with groupKey for rowspan grouping */
   rows: GroupedRow<T>[];
@@ -52,6 +73,11 @@ interface ProcessedRow<T> {
   groupSize: number;
 }
 
+/**
+ * @deprecated Scheduled for removal — no caller anywhere (dside `sui`#12546).
+ * Nothing is wrong with it; it simply has never been used. For a table without
+ * rowspan grouping, reach for `BaseTable` or `FieldTable`.
+ */
 export function GroupedTable<T extends TableRow>(props: GroupedTableProps<T>) {
   // Process rows to calculate rowspan info
   const processedRows = createMemo((): ProcessedRow<T>[] => {
