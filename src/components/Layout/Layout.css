@@ -126,20 +126,27 @@
 }
 
 /* ProportionalStack — children share the container by weight when over-budget,
-   shrink-wrap when under-budget. Always fills its parent on both axes. */
+   shrink-wrap when under-budget. Fills its parent's cross axis always; fills
+   the main axis too ONLY for --column (a vertical proportional split needs an
+   explicit height to divide among weighted rows). --row does NOT force
+   height: a horizontal toolbar row nested among column siblings (e.g. inside
+   a FillColumn) must size to its own content height, not claim the whole
+   remaining pane — block-level width:100% already comes for free without an
+   explicit rule, so --row only needs to NOT inherit height:100%. */
 .proportional-stack {
   display: flex;
   width: 100%;
-  height: 100%;
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
 }
 .proportional-stack--column {
   flex-direction: column;
+  height: 100%;
 }
 .proportional-stack--row {
   flex-direction: row;
+  height: auto;
 }
 
 .proportional-stack--gap-xs {

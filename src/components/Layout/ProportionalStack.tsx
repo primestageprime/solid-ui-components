@@ -62,6 +62,11 @@ export interface ProportionalItemProps
   weight?: number;
   /** Allow internal scroll when this item's share is too small for its content. Default true. */
   scrollWhenSmall?: boolean;
+  /** Caps how far this item grows, in character units (`ch`) — e.g. a name
+   *  field that should stop competing for space once it reaches a readable
+   *  length, handing any further leftover space to its siblings. Omit for
+   *  no cap. Ignored when `weight` is 0 (already fixed to its content). */
+  maxWidthCh?: number;
 }
 
 export const ProportionalItem: Component<ProportionalItemProps> = (
@@ -71,6 +76,7 @@ export const ProportionalItem: Component<ProportionalItemProps> = (
   const [local, others] = splitProps(props, [
     "weight",
     "scrollWhenSmall",
+    "maxWidthCh",
     "class",
     "style",
     "children",
@@ -88,6 +94,9 @@ export const ProportionalItem: Component<ProportionalItemProps> = (
   const flex = () =>
     local.weight === 0 ? "0 0 auto" : `${local.weight} 1 0px`;
   const baseStyle: JSX.CSSProperties = { flex: flex() };
+  if (local.maxWidthCh != null && local.weight !== 0) {
+    baseStyle["max-width"] = `${local.maxWidthCh}ch`;
+  }
   return (
     <div
       class={classes()}
