@@ -60,7 +60,17 @@ export interface FilterBarProps {
    * state to a URL never has to encode a half-made filter.
    */
   filters: FilterGroup[];
-  availableDimensions: { id: string; label: string }[];
+  /**
+   * `members` is OPTIONAL and additive: a dimension the caller can already
+   * enumerate values for (most of them — a distinct-values query, a static
+   * enum) should pass them here so the (+) menu's popover has something to
+   * show the moment the dimension goes pending, before any term is picked.
+   * Omit it and the pending group synthesizes with an empty member list (the
+   * pre-existing behavior) — the picker then has nothing to offer until the
+   * caller has some other way to seed one, which is the bug this field
+   * exists to close.
+   */
+  availableDimensions: { id: string; label: string; members?: FilterMember[] }[];
   scopeLabel: string;
   onRemoveFilter: (id: string) => void;
   onAddTerm: (id: string, value: string) => void;
@@ -109,14 +119,16 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
     const activeIds = new Set(fnMap((g: FilterGroup) => g.id, active));
     const extra = fnMap((id: string) => {
       const dim = fnFind(
-        (d: { id: string; label: string }) => d.id === id,
+        (d: { id: string; label: string; members?: FilterMember[] }) => d.id === id,
         props.availableDimensions,
       );
       return {
         id,
         label: dim?.label ?? id,
         terms: [],
-        members: [],
+        // Caller-supplied members if it has them (see the prop doc), else the
+        // pre-existing empty list.
+        members: dim?.members ?? [],
       } satisfies FilterGroup;
     }, fnFilter((id: string) => !activeIds.has(id), pending()));
     return [...active, ...extra];

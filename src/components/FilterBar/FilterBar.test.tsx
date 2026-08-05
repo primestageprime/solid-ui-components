@@ -91,6 +91,40 @@ describe("FilterBar", () => {
     expect(onRemoveFilter).not.toHaveBeenCalled();
   });
 
+  it("offers a pending dimension's caller-supplied members before any term is picked", () => {
+    // The bug this closes: a dimension picked from (+) renders with members:[]
+    // internally (previous test) UNLESS the caller supplied members alongside
+    // it in availableDimensions — then the pending group's own popover has
+    // something to show immediately, not just after a term already exists.
+    const onAddTerm = vi.fn();
+    const dimensionsWithMembers = [
+      {
+        id: "region",
+        label: "Region",
+        members: [
+          { value: "emea", label: "EMEA" },
+          { value: "amer", label: "AMER" },
+        ],
+      },
+      { id: "rep", label: "Rep" },
+    ];
+    const { getByLabelText, getByText } = render(() => (
+      <FilterBar
+        {...baseProps}
+        availableDimensions={dimensionsWithMembers}
+        filters={[]}
+        onAddTerm={onAddTerm}
+      />
+    ));
+    fireEvent.click(getByLabelText("Add a filter"));
+    // Picking a dimension from the (+) menu opens its group popover directly
+    // (addPending + openAt in one click) — no separate "Add a … term" click
+    // needed here, unlike the already-active-group case below.
+    fireEvent.click(getByText("Region"));
+    fireEvent.click(getByText("AMER"));
+    expect(onAddTerm).toHaveBeenCalledWith("region", "amer");
+  });
+
   it("reports a term add through onAddTerm, which is the caller's state edit", () => {
     const onAddTerm = vi.fn();
     const { getByLabelText, getByText } = render(() => (
