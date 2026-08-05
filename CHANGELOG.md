@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`componentsNeverRendered` counted two well-tested components as untested.**
+  `mountsAny` required a delimiter after the tag name — `\s`, `/`, `>` or `.` —
+  which is what stops `<WidgetPanel>` vouching for `Widget`. It omitted `<`, so
+  a mount carrying an explicit type argument matched nothing at all. Solid
+  components are generic functions and a test that pins a row shape writes the
+  parameter out, so `<BucketQueue<Item> …>` and
+  `<SplitQueueList<Row> …>` both read as *never rendered*.
+
+  `BucketQueue` has **five** test files mounting it. Both components sat at the
+  top of the risk ranking for the burn-down (dside `sui`#12541), so the metric
+  was about to send someone to write tests that already existed — the precise
+  failure mode `componentsNeverRendered` was introduced to end, since it
+  replaced `foldersWithoutTests` for reading a permanent false `0`.
+
+  The fix widens the delimiter class rather than loosening the match, so the
+  `<WidgetPanel>` guard still holds; three cases pin the generic forms. The
+  ceiling drops **46 → 44**, which is a measurement correction and not two
+  components' worth of new coverage — no test was written for either.
+
 ### Deprecated
 - **`VirtualTable` and `GroupedTable` are scheduled for removal** (dside
   `sui`#12546). Both still work and still ship; using either now raises an

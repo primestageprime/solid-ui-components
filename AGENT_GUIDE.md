@@ -458,10 +458,17 @@ bundle is ruined anyway. That is what this script is for.
 - **A new component needs a test that mounts it.** `componentsNeverRendered`
   (`scripts/render-coverage.mjs`) counts PascalCase `.tsx` modules under
   `src/components/` that no test both *imports* (directly or through a barrel)
-  *and* writes as JSX. It is ratcheted at **50** and falls as coverage lands, so
-  adding a component without a `render()` fails `health` — name it with
+  *and* writes as JSX. It started at **50** and falls as coverage lands (read
+  the live ceiling from `scripts/health-baseline.json`), so adding a component
+  without a `render()` fails `health` — name it with
   `--update-baseline=componentsNeverRendered --reason="…"` only if you mean it.
-  `npm run render-coverage -- --list` prints the current backlog. This replaced
+  `npm run render-coverage -- --list` prints the current backlog.
+  **"Writes as JSX" means a delimiter must follow the name** — one of
+  `whitespace / > . <`. The last is for an explicit type argument
+  (`<BucketQueue<Item> …>`); it was missing until 2026-08-04, which read two
+  well-tested generic components as never rendered. If you add a mounting form
+  the regex doesn't know, the metric will quietly tell you to write tests that
+  already exist — widen the class in `mountsAny` and pin it. This replaced
   `foldersWithoutTests`, which read 0 for its whole life because a folder passed
   on the mere presence of a `.test.` file — Combobox satisfied it with 589
   untested lines.
