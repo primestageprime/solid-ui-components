@@ -92,6 +92,13 @@ export const renderSingle = (
       options={local.options()}
       value={local.value?.() ?? undefined}
       onChange={handleChange}
+      // `disabled` belongs on the ROOT, not the parts. Kobalte splits it into
+      // FormControl context (it is in FORM_CONTROL_PROP_NAMES), and both Input
+      // and Trigger derive their rendered `disabled`/`aria-disabled` from that
+      // context. Passing it to a part feeds only that part's interaction
+      // guard, never its attributes — which is how the trigger came out
+      // disabled while the input stayed editable. dside sui#12528.
+      disabled={local.disabled}
       placeholder={placeholder()}
       optionValue="value"
       optionTextValue="label"
@@ -127,7 +134,6 @@ export const renderSingle = (
               value={inputValue()}
               onInput={(e) => updateInput(e.currentTarget.value)}
               onKeyDown={handleKeyDown}
-              disabled={local.disabled}
             />
             <Show when={state.selectedOptions().length > 0}>
               <button
@@ -145,10 +151,7 @@ export const renderSingle = (
                 />
               </button>
             </Show>
-            <KobalteCombobox.Trigger
-              class="sui-combobox__trigger"
-              disabled={local.disabled}
-            >
+            <KobalteCombobox.Trigger class="sui-combobox__trigger">
               <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
                 <svg
                   width={14}
