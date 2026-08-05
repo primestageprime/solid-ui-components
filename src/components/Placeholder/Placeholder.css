@@ -39,3 +39,18 @@
 .sui-placeholder--lg {
   min-height: 200px;
 }
+
+/* square tile presets — width locked to the same value as the height,
+   instead of filling the container (unlike the plain size presets above). */
+.sui-placeholder--square-sm {
+  width: 60px;
+  min-height: 60px;
+}
+.sui-placeholder--square-md {
+  width: 120px;
+  min-height: 120px;
+}
+.sui-placeholder--square-lg {
+  width: 200px;
+  min-height: 200px;
+}

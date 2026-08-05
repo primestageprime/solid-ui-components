@@ -12,9 +12,14 @@
 //     This is inherent to what "block" means, not a separate opt-in.
 // Plus tile `size` presets (sm/md/lg FIXED min-height) for grid tiles, which
 // deliberately do NOT grow — a dashboard tile has a size, a content block doesn't.
+// A `size` + `square` tile locks WIDTH to the same value as well — for a
+// thumbnail/avatar slot where the eventual content has a fixed aspect ratio.
+// (`SquareCard` looks like this shape by name but isn't — see
+// false-friends.md — hence a real one living here instead.)
 //
 // All of these are COMPILE-TIME config → use the curried variants (variants.ts:
-// FitPlaceholder / FillPlaceholder / BlockPlaceholder + Small/Medium/Large).
+// FitPlaceholder / FillPlaceholder / BlockPlaceholder + Small/Medium/Large +
+// SmallSquare/MediumSquare/LargeSquare).
 // The raw props on the base are escape hatches for SUI's OWN curried-variant
 // factories only — never for call sites. There is no `class`/`style` prop; a
 // call site that needs a shape this file doesn't have gets a new named variant
@@ -33,6 +38,10 @@ export interface PlaceholderProps {
   label: string;
   /** Tile min-height preset (fills width, fixed height — does not grow). Escape hatch — prefer Small/Medium/LargePlaceholder. */
   size?: PlaceholderSize;
+  /** Locks width to the same value as the `size` height instead of filling
+   *  the container — a fixed square tile. Ignored without `size`. Escape
+   *  hatch — prefer Small/Medium/LargeSquarePlaceholder. */
+  square?: boolean;
   /** Shrinkwrap to the label's width (else fill the container). Escape hatch. */
   fit?: boolean;
   /** Allow a taller, wrapping block that grows to fill remaining space (else a fixed-height single line). Escape hatch. */
@@ -42,7 +51,9 @@ export interface PlaceholderProps {
 export const Placeholder: Component<PlaceholderProps> = (props) => {
   const cls = () => {
     const c = ["sui-placeholder"];
-    if (props.size) {
+    if (props.size && props.square) {
+      c.push(`sui-placeholder--square-${props.size}`);
+    } else if (props.size) {
       c.push("sui-placeholder--fill", `sui-placeholder--${props.size}`);
     } else {
       c.push(props.fit ? "sui-placeholder--fit" : "sui-placeholder--fill");

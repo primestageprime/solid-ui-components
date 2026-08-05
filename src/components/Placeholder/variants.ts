@@ -37,3 +37,17 @@ export const MediumPlaceholder: Component<PlaceholderDataProps> =
 export const LargePlaceholder: Component<PlaceholderDataProps> = createPlaceholder(
   { size: "lg" },
 );
+
+// ── Square tile presets (fixed width AND height — a fixed aspect ratio) ──────
+
+/** 60px square tile — a small fixed-aspect slot (e.g. an avatar). */
+export const SmallSquarePlaceholder: Component<PlaceholderDataProps> =
+  createPlaceholder({ size: "sm", square: true });
+
+/** 120px square tile — a thumbnail slot. */
+export const MediumSquarePlaceholder: Component<PlaceholderDataProps> =
+  createPlaceholder({ size: "md", square: true });
+
+/** 200px square tile — a large fixed-aspect preview slot. */
+export const LargeSquarePlaceholder: Component<PlaceholderDataProps> =
+  createPlaceholder({ size: "lg", square: true });
