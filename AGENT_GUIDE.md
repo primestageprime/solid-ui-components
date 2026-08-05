@@ -472,6 +472,25 @@ bundle is ruined anyway. That is what this script is for.
   `foldersWithoutTests`, which read 0 for its whole life because a folder passed
   on the mere presence of a `.test.` file — Combobox satisfied it with 589
   untested lines.
+- **A component that never RUNS is a separate gate.** `componentsNeverExecuted`
+  (`scripts/execution-coverage.mjs`, baseline `scripts/execution-baseline.json`)
+  counts component modules with **zero executed functions** in a real coverage
+  run. It lives in the **`test`** CI job, not `health` — it needs the suite to
+  have run, and `health` must stay a fast static pass with no subprocess. Run it
+  locally as `npm run test:coverage && npm run execution-coverage`.
+
+  It is a **companion** to `componentsNeverRendered`, not a replacement, and the
+  two disagree on purpose: the static one asks *does a suite own this module*,
+  this one asks *is it dark*. `Chart/Crosshair` runs on every ThroughputChart
+  test but owns no suite; `DateRangePicker/TimeInputs` owns no suite **and**
+  never runs. Only the second is dark.
+
+  **It reads function coverage, never lines.** v8 attributes module
+  initialisation to the file, so an imported-but-never-rendered module reads as
+  partly covered — `GroupedTable` shows 1.8% of lines with 0 of 22 functions.
+  And do not "improve" it into a percentage threshold: the floor is zero for the
+  same reason `componentsNeverRendered`'s is, and any other number re-opens an
+  argument this ratchet refuses to have.
 - **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
   in the file, and it applies to **internal** component files too, not just
   exported ones. A new `.tsx` under `src/components/` without a depth line in

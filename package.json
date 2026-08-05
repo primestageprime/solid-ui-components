@@ -86,6 +86,7 @@
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
     "render-coverage": "node scripts/render-coverage.mjs",
+    "execution-coverage": "node scripts/execution-coverage.mjs",
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "usage-manifest": "node scripts/usage-manifest.mjs",
@@ -99,6 +100,7 @@
     "format:write": "biome format --write",
     "check": "node scripts/lint-ci.mjs lint src && tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },
   "keywords": [
@@ -121,6 +123,7 @@
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "d3-scale": "^4.0.2",
     "jsdom": "^26.1.0",
     "solid-devtools": "^0.34.5",

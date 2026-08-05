@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Added
+- **`componentsNeverExecuted` — a measured answer to "which components are
+  dark?"** (dside `sui`#12541). Tooling only; no library code changed. New gate
+  in the **`test`** CI job, baseline `scripts/execution-baseline.json` at **19**.
+
+  `componentsNeverRendered` is static, and a static rule cannot answer whether
+  code runs. The obvious extension — count a module as covered when a mounted
+  parent renders it — was measured against a real coverage run **before** being
+  written, and it was wrong in both directions on the first list it produced:
+  it would have cleared `TimeInputs` (0 of 7 functions ever called — it sits
+  behind a condition inside a Popover the tests open but never satisfy) and kept
+  `Section` (18 of 23) and `StaticSplitLayout` (21 of 25). Reachability in the
+  JSX is not execution. So this metric is measured, not inferred.
+
+  The two are **companions, not replacements**, and disagree on purpose: the
+  static one asks *does a suite own this module*, the new one asks *is it dark*.
+  `Chart/Crosshair` runs on every `ThroughputChart` test but owns no suite; only
+  `TimeInputs` is dark. Of the 37 modules with no owning suite, **18 execute
+  anyway and 19 do not** — and two of the 19 (`VirtualTable`, `GroupedTable`)
+  are slated for deletion, so the real backlog is 17.
+
+  It reads **function** coverage, never lines: v8 attributes module
+  initialisation to the file, so `GroupedTable` — zero call sites in this repo
+  or any consumer — still shows 1.8% of lines against 0 of 22 functions. The
+  floor is exactly zero rather than a percentage, for the same reason the older
+  metric's is: any other number re-opens a "how much is enough" argument the
+  ratchet deliberately refuses.
+
+  Cost, measured rather than estimated: the `test` job gains `--coverage`
+  (+8% wall locally, +19% CPU; ~+20s on a 2-core runner) and does not become the
+  critical path. It cannot live in `health` — that job is a fast static pass and
+  must not spawn the suite.
+
 ### Fixed
 - **`componentsNeverRendered` could not see the Curried Variant pattern**
   (dside `sui`#12541). Tooling only; no library code changed. Ceiling **44 → 37**.
