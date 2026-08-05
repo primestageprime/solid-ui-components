@@ -3,6 +3,34 @@
 ## [Unreleased]
 
 ### Fixed
+- **`componentsNeverRendered` could not see the Curried Variant pattern**
+  (dside `sui`#12541). Tooling only; no library code changed. Ceiling **44 → 37**.
+
+  A Primitive that ships a Factory exports no component value at all — the name
+  a test writes as JSX is born next door in `variants.ts`, where the Factory is
+  called with Override Props locked in. The rule matched JSX against names the
+  *module itself* exported, so `<ActionList>` never matched `createActionList`
+  and `ActionList.tsx` read as never rendered. It has **555 lines of tests that
+  mount it thirty-odd times**, and it was the top recommendation on the
+  burn-down ranking — the second time in two days this metric was about to send
+  someone to write tests that already existed (see 0.137.0's generic-JSX fix).
+  Seven modules were cleared: `ActionList`, `AnimatedSwimlaneChart`,
+  `ChartCanvas`, `AlertBox`, `FileDropZone`, `MessageBubble`, `ThreadGroup`.
+
+  Two adjacent holes closed with it. A module exporting **only** Factories
+  matched no PascalCase value and was `skipped` — dropped from the metric in
+  both directions, which is exactly the escape hatch the header claims is shut;
+  `FormulaDecomposition.tsx` had been sitting in it. And a Factory is as often
+  curried **inside a test** (`const Result = createFormulaResult(cfg)`) as in
+  `variants.ts`, so both now count.
+
+  Attribution stayed narrow rather than folder-wide: the alias must come from a
+  call to something imported through a relative specifier resolving to that
+  module, the test must still *see* the module, and a variant one test curries
+  for itself vouches for no other test. `Modal/variants.ts` curries two
+  factories from two modules, and `ConfirmationModal.tsx` correctly stays on
+  the list — nothing mounts any of its four variants. No module was newly
+  accused; the change is strictly a false-positive removal.
 - **The `usage-manifest` pre-push gate was inert on any machine but the one
   that wrote it** (dside `sui`#12565). Tooling only; no library code changed.
 
