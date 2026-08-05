@@ -67,7 +67,7 @@ const MANIFEST_PATH = path.join(REPO_ROOT, "docs", "usage-manifest.json");
 
 /** Where to look for consumers. The workspace holding this checkout, unless
  *  told otherwise — the one location both developers' layouts have in common. */
-const WORKSPACE_ROOT = process.env.SUI_WORKSPACE_ROOT
+export const WORKSPACE_ROOT = process.env.SUI_WORKSPACE_ROOT
   ? path.resolve(process.env.SUI_WORKSPACE_ROOT)
   : path.dirname(REPO_ROOT);
 

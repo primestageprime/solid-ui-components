@@ -28,8 +28,49 @@
   `npm run usage-manifest` when you want the survey — above all before deleting
   or renaming an export, which is the moment a stale one misleads you. The gate
   worth having asks "does any repo tracking `main` unpinned import a name this
-  push no longer exports?", which needs SUI's own export surface — the tool does
-  not compute it today. Designed and filed on dside `sui` 12565.
+  push no longer exports?" Designed and filed on dside `sui` 12565.
+
+  **Correction to the sentence that stood here:** this entry claimed the gate
+  "needs SUI's own export surface — the tool does not compute it today". That
+  was wrong. `scripts/export-usage-report.mjs` has computed it all along; see
+  the fix below. What is still genuinely missing is each consumer's declared
+  dependency **range**, which is what scopes the check to repos tracking `main`
+  unpinned rather than pinned to an old version.
+
+### Fixed
+- **`export-usage-report` missed namespace re-exports, and half the consumers**
+  (dside `sui` 12565). Tooling only; no library code changed.
+
+  Two independent defects in `scripts/export-usage-report.mjs`.
+
+  It matched `export * from "./x"` but not **`export * as ns from "./x"`**, so
+  `fn` and `fields` (`src/index.ts:78` and `:81`) were absent from the computed
+  surface. The visible consequence was a false alarm pointing at an innocent
+  consumer: `jtf-ui`'s legitimate `import { fields }` was the report's only
+  BROKEN import, and it was an artifact of the extractor. The namespace alias is
+  now added without recursing into the module, because its members are reachable
+  only as `ns.Member` — hoisting them would trade a false broken-import for a
+  false clean one.
+
+  Separately it discovered consumers itself, walking `resolve(repoRoot, "..",
+  "..")` to depth 3. That reaches `<ws>/dside/dside-ui` but stops one level short
+  of `<ws>/rhinotools/netsuite_extract_rs/ui`, so it reported **4 consumers where
+  `usage-manifest` finds 7** — the same machine-layout assumption 12565 was filed
+  about, surviving untouched in a second script. Discovery is now imported from
+  `usage-manifest.mjs` (`discoverRepos`, `WORKSPACE_ROOT`) rather than
+  reimplemented, so the two tools cannot disagree about who consumes SUI again.
+
+  Finding the missing three surfaced **three real broken imports**, all in
+  `migration-dashboard` (`netsuite_extract_rs/ui`), which tracks `main` unpinned
+  via `github:primestageprime/solid-ui-components`: `StatusBadge` (3 sites),
+  `HUDPanel` (2), `AlertBox` (1). None is an extractor artifact — `StatusBadge`
+  and `AlertBox` are bases their own barrels mark "intentionally NOT exported"
+  (use `createStatusBadge` / `createAlertBox`), and `HUDPanel` was removed from
+  the package root in 0.54.0. Reported, not fixed: the repair belongs in that
+  repo.
+
+  `scripts/export-usage-report.test.ts` is new and covers both re-export forms,
+  renames, the type/value split, and cycle termination.
 
 ## 0.140.0
 
