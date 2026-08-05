@@ -17,7 +17,9 @@
 //   (a) can see it — a relative import that resolves to the module, or to a
 //       barrel that re-exports it (transitively; tests import `./index`), and
 //   (b) mounts it — the JSX tag `<Name` appears, for a PascalCase value the
-//       module exports.
+//       module exports, OR for a Curried Variant of it (see `curriedExportsOf`:
+//       `variants.ts` calls the module's Factory, so `<ActionList>` runs
+//       `ActionList.tsx`).
 //
 // Both halves are load-bearing. Import alone is what let Combobox pass. JSX
 // alone would let `Layout/Grid`'s tests vouch for `Chart/Grid` — two different
@@ -141,6 +143,60 @@ export const mountsAny = (src, names) => {
   return names.some((n) => new RegExp(`<${n}[\\s/>.<]`).test(text));
 };
 
+/** Local name → the specifier it was imported from, for named value imports.
+ *  `import type` and inline `{ type Foo }` are skipped: a type cannot be called.
+ *  Default and namespace imports are not tracked — nothing in `src/` curries
+ *  through one, and guessing would cost precision for no coverage. */
+export const importBindingsOf = (src) => {
+  const out = new Map();
+  for (const m of stripComments(src).matchAll(
+    /import\s+(type\s+)?\{([^}]*)\}\s*from\s*["']([^"']+)["']/g,
+  )) {
+    if (m[1]) continue;
+    for (const part of m[2].split(",")) {
+      if (/^\s*type\s/.test(part)) continue;
+      const local = part
+        .trim()
+        .split(/\s+as\s+/)
+        .pop()
+        ?.trim();
+      if (local) out.set(local, m[3]);
+    }
+  }
+  return out;
+};
+
+/**
+ * PascalCase names a module binds by CALLING something — `const X = callee(…)`,
+ * with the callee's local name. The `export` is optional: a library Curried
+ * Variant is exported from `variants.ts`, but a test just as often curries the
+ * Factory inline (`const Result = createFormulaResult(cfg)`), and both mount.
+ *
+ * This is the Curried Variant shape (CONTEXT.md): a Factory lives in the
+ * Primitive's module, and the caller locks in Override Props.
+ * `ActionList.tsx` exports `createActionList` and no component at all; the name
+ * a test writes as JSX is born next door:
+ *
+ *   export const ActionList: Component<ActionListDataProps> =
+ *     createActionList({ statusTones: DEFAULT_STATUS_TONES });
+ *
+ * The optional type annotation between the name and `=` is why this is not a
+ * simple `=\s*callee\(` match.
+ */
+export const curriedBindingsOf = (src) =>
+  [
+    ...stripComments(src).matchAll(
+      /\bconst\s+([A-Z]\w*)\s*(?::[^=;]+)?=\s*([A-Za-z_$][\w$]*)\s*\(/g,
+    ),
+  ].map(([, name, callee]) => ({ name, callee }));
+
+/** Does the module ship a Factory? `create<Pascal>` is the naming convention
+ *  for one (CONTEXT.md). A module exporting only Factories exports no component
+ *  value, and would otherwise be skipped as "not a component module" — which is
+ *  the escape hatch this metric claims to have closed. */
+export const exportsFactory = (src) =>
+  /export\s+(?:const|function)\s+create[A-Z]\w*/.test(stripComments(src));
+
 /**
  * Which component modules no test ever mounts.
  *
@@ -200,18 +256,60 @@ export function analyse({ files, read }) {
     ]),
   );
 
+  // Curried Variant aliases: which module does a curried name stand in for?
+  // `variants.ts` calls a Factory the module exports, so `<ActionList>` runs
+  // every line of `ActionList.tsx` even though that module exports no component
+  // of its own. Only a call counts, and only through a relative specifier that
+  // resolves to the module — so the alias is evidence the module's code ran,
+  // not merely that two files share a folder.
+  const aliasesIn = (file) => {
+    const src = read(file);
+    const curried = curriedBindingsOf(src);
+    const out = new Map();
+    if (length(curried) === 0) return out;
+    const bindings = importBindingsOf(src);
+    for (const { name, callee } of curried) {
+      const spec = bindings.get(callee);
+      const target = spec ? resolveSpec(file, spec) : null;
+      if (!target) continue;
+      if (!out.has(target)) out.set(target, new Set());
+      out.get(target).add(name);
+    }
+    return out;
+  };
+
+  // A variant exported from a shared module is mountable by any test that can
+  // see the module; one a test curries for itself vouches only for that test.
+  // Keeping them apart is what stops test A's local `Result` from vouching for
+  // an unrelated `<Result>` in test B.
+  const shared = new Map();
+  for (const file of files) {
+    if (isTestPath(file)) continue;
+    for (const [target, names] of aliasesIn(file))
+      shared.set(target, new Set([...(shared.get(target) ?? []), ...names]));
+  }
+  const localTo = new Map(tests.map((t) => [t, aliasesIn(t)]));
+
   const entries = files.filter(isEntryPath).sort();
   const skipped = [];
   const missing = [];
   for (const entry of entries) {
-    const names = componentExportsOf(read(entry));
-    if (length(names) === 0) {
+    const src = read(entry);
+    const names = componentExportsOf(src);
+    // A Factory module exports no component but IS one — see `exportsFactory`.
+    if (length(names) === 0 && !exportsFactory(src)) {
       skipped.push(entry);
       continue;
     }
-    const mounted = tests.some(
-      (t) => visibleTo.get(t).has(entry) && mountsAny(read(t), names),
-    );
+    const mounted = tests.some((t) => {
+      if (!visibleTo.get(t).has(entry)) return false;
+      const mountable = new Set([
+        ...names,
+        ...(shared.get(entry) ?? []),
+        ...(localTo.get(t).get(entry) ?? []),
+      ]);
+      return mountsAny(read(t), [...mountable]);
+    });
     if (!mounted) missing.push(entry);
   }
   return { entries, missing, skipped };
