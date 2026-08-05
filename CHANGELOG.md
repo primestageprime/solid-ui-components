@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+Everything below is **merged to `main` but not published.** Publish is not
+tag-driven: it runs after every green CI on `main` and ships only when
+`package.json` names a version the registry lacks. `package.json` has read
+0.138.0 since that version went out, so the four PRs below have each triggered a
+publish run that found nothing to do. All four are tooling-only, which is why it
+went unnoticed. The next version bump releases them.
+
 ### Added
 - **`componentsNeverExecuted` — a measured answer to "which components are
   dark?"** (dside `sui`#12541). Tooling only; no library code changed. New gate
@@ -117,6 +124,12 @@
   ceiling drops **46 → 44**, which is a measurement correction and not two
   components' worth of new coverage — no test was written for either.
 
+## 0.138.0
+
+Published 2026-08-05 from commit `9ba00dd`. The version bump rode along with
+the FilterBar fix below rather than a `chore: release` commit, so this section
+was written after the fact — the package was already on the registry.
+
 ### Deprecated
 - **`VirtualTable` and `GroupedTable` are scheduled for removal** (dside
   `sui`#12546). Both still work and still ship; using either now raises an
@@ -157,6 +170,21 @@
   capabilities. Its headline benefit was making "grouped + selectable"
   expressible — and grouping has never had a caller, so the merge would have
   rewritten three renderers to enable a combination nobody has asked for.
+
+### Fixed
+- **`FilterBar`: a freshly-picked dimension could never be filled in from the
+  UI.** The `(+)` menu synthesises a pending group for a dimension that has no
+  term yet, and `renderGroups()` hardcoded `members: []` for it — so the
+  popover always read "no matches", and a filter could only ever be started
+  through a side channel such as a URL param.
+
+  Additive: an `availableDimensions` entry may now carry an optional `members`
+  list, used for the pending-group synthesis when present and falling back to
+  the empty list otherwise. No existing caller changes behaviour.
+
+  Found while porting `jtf-rth`s reports off `goose-ui`s `ReportFilterBar`,
+  which inherited the same bug from goose — the gap was always in `FilterBar`,
+  not in any one consumer.
 
 ## 0.137.0
 
