@@ -26,9 +26,11 @@
 // measured, not inferred.
 //
 // FUNCTIONS, NOT LINES. v8 attributes module INITIALISATION to the file, so a
-// module that is merely imported reads as partly covered: GroupedTable has zero
-// call sites in this repo or any consumer and still shows 1.8% of lines. Its
-// function coverage is 0/22, which is the truth. Every threshold discussion
+// module that is merely imported reads as partly covered: Table/GroupedTable
+// had zero call sites in this repo or any consumer and still showed 1.8% of
+// lines (measured 2026-08-04; the module was deleted shortly after, under dside
+// sui#12546). Its function coverage was 0/22, which is the truth. Every
+// threshold discussion
 // ("is 40% enough?") is avoided by asking only whether the count is ZERO — the
 // same floor `componentsNeverRendered` uses, for the same reason. Depth of
 // coverage is not mechanical and does not belong in a ratchet.

@@ -1,12 +1,11 @@
 // Tables and grids — the data-shaped components, over ONE dataset.
 //
-// A table with three invented rows teaches nothing: you can't see grouping,
-// virtualization, or a heat scale until the data is big and uneven enough to
-// need them. So everything here reads the same 400-berth booking set, and each
-// component shows the shape of it that component exists for.
+// A table with three invented rows teaches nothing: you can't see a filter
+// narrowing anything, or a heat scale, until the data is big and uneven enough
+// to need them. So everything here reads the same 400-berth booking set, and
+// each component shows the shape of it that component exists for.
 import { type Component, createSignal, For } from "solid-js";
-import { GroupedTable } from "../../src/components/Table/GroupedTable";
-import { VirtualTable } from "../../src/components/Table/VirtualTable";
+import { BaseTable } from "../../src/components/Table/BaseTable";
 import { TableQuickFilter } from "../../src/components/Table/TableQuickFilter";
 import { PivotGrid } from "../../src/components/PivotGrid/PivotGrid";
 import { HeatPivotGrid } from "../../src/components/PivotGrid/HeatPivotGrid";
@@ -169,45 +168,6 @@ const columns: TableColumn<Booking>[] = [
   },
 ];
 
-// Grouped rows: the same bookings, grouped by terminal, with the group cell
-// spanning its members' rows.
-const GROUPED = TERMINALS.flatMap((terminal) =>
-  BOOKINGS.filter((b) => b.terminal === terminal)
-    .slice(0, 5)
-    .map((b) => ({ groupKey: terminal, data: b })),
-);
-
-// The grouped view's columns: the terminal cell is rowspanned across its
-// members, the rest render per row.
-const groupedColumns = [
-  {
-    id: "terminal",
-    header: "Terminal",
-    accessor: (r: Booking) => r.terminal,
-    rowspan: true,
-    width: "9rem",
-  },
-  { id: "vessel", header: "Vessel", accessor: (r: Booking) => r.vessel },
-  {
-    id: "category",
-    header: "Category",
-    accessor: (r: Booking) => r.category,
-    width: "8rem",
-  },
-  {
-    id: "berthHours",
-    header: "Berth h",
-    accessor: (r: Booking) => String(r.berthHours),
-    width: "6rem",
-  },
-  {
-    id: "teu",
-    header: "TEU",
-    accessor: (r: Booking) => r.teu.toLocaleString(),
-    width: "7rem",
-  },
-];
-
 // Pivot: terminal × category, cells carrying the totals behind them.
 interface PivotCell {
   calls: number;
@@ -260,58 +220,10 @@ export const TableGridsShowcase: Component = () => {
       <p class="text-meta">
         {BOOKINGS.length} berth bookings across {TERMINALS.length} terminals and{" "}
         {CATEGORIES.length} categories. Each component below shows the shape of
-        that same data it exists for — grouping, virtualizing, pivoting,
-        filtering — rather than three invented rows that would look identical in
-        every one of them.
+        that same data it exists for — filtering, pivoting, ranking, bracketing
+        — rather than three invented rows that would look identical in every one
+        of them.
       </p>
-
-      <ContentStack>
-        <SubsectionTitle>GroupedTable — DEPRECATED</SubsectionTitle>
-        <TextSublabel>
-          Scheduled for removal (dside sui#12546): zero call sites in any
-          consumer. Nothing is wrong with it — it declares its own props rather
-          than extending BaseTableProps, which is the pattern the other
-          renderers were fixed to follow — it has simply never been used. Don't
-          reach for it in new code; if you need rowspan grouping, say so on the
-          task and it gets un-deprecated instead of removed. Bookings grouped by
-          terminal: the group cell spans its members' rows, so the eye reads the
-          group once rather than once per row.
-        </TextSublabel>
-        <div class="table-grid-frame">
-          <GroupedTable
-            rows={GROUPED}
-            columns={groupedColumns}
-            compact
-            stickyHeader
-            maxHeight="320px"
-          />
-        </div>
-      </ContentStack>
-
-      <ContentStack>
-        <SubsectionTitle>VirtualTable — DEPRECATED</SubsectionTitle>
-        <TextSublabel>
-          Scheduled for removal (dside sui#12546): zero call sites in any
-          consumer. It is NOT a drop-in for BaseTable, despite its props type
-          being a plain alias of BaseTableProps — compare the two above: this
-          one renders its own class namespace with padding, font and colour set
-          inline per cell instead of from the shared Table.css, and it ignores
-          four of the props it declares. If virtualisation is wanted again,
-          build it as an opt-in capability of BaseTable rather than reviving a
-          second table implementation. All {BOOKINGS.length} rows, but only the
-          visible window is in the DOM — scroll it; the row count never changes
-          and the scrollbar is honest.
-        </TextSublabel>
-        <div class="table-grid-frame">
-          <VirtualTable
-            data={BOOKINGS}
-            columns={columns}
-            compact
-            stickyHeader
-            maxHeight="320px"
-          />
-        </div>
-      </ContentStack>
 
       <ContentStack>
         <SubsectionTitle>TableQuickFilter</SubsectionTitle>
@@ -326,7 +238,7 @@ export const TableGridsShowcase: Component = () => {
             placeholder="Filter by vessel, terminal, category…"
           >
             {(filtered) => (
-              <VirtualTable
+              <BaseTable
                 data={filtered()}
                 columns={columns}
                 compact

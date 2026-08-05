@@ -487,7 +487,8 @@ bundle is ruined anyway. That is what this script is for.
 
   **It reads function coverage, never lines.** v8 attributes module
   initialisation to the file, so an imported-but-never-rendered module reads as
-  partly covered — `GroupedTable` shows 1.8% of lines with 0 of 22 functions.
+  partly covered — the now-deleted `Table/GroupedTable.tsx` showed 1.8% of lines
+  against 0 of 22 functions, measured on 2026-08-04 before its removal.
   And do not "improve" it into a percentage threshold: the floor is zero for the
   same reason `componentsNeverRendered`'s is, and any other number re-opens an
   argument this ratchet refuses to have.

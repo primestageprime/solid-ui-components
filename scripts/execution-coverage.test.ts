@@ -56,11 +56,14 @@ describe("analyse — the floor is zero", () => {
 
 describe("analyse — why lines would not do", () => {
   // v8 attributes module INITIALISATION to the file, so an imported-but-never-
-  // rendered module reads as partly covered. GroupedTable has zero call sites
-  // in this repo or any consumer and still shows 1.8% of LINES. Its function
-  // coverage is 0/22, which is the truth. The summary carries both; this metric
-  // reads only `functions`, and this test is what stops someone "simplifying"
-  // it to the line count.
+  // rendered module reads as partly covered. Table/GroupedTable had zero call
+  // sites in this repo or any consumer and still showed 1.8% of LINES; its
+  // function coverage was 0/22, which is the truth. These are its real numbers
+  // from 2026-08-04 — the module itself was deleted days later under dside
+  // sui#12546, and the case is kept here BECAUSE the file is gone: the summary
+  // carries both counts, this metric reads only `functions`, and this test is
+  // what stops someone "simplifying" it to the line count once the evidence is
+  // no longer standing in the tree.
   const GROUPED_TABLE = {
     functions: { covered: 0, total: 22 },
     lines: { covered: 4, total: 220, pct: 1.8 },

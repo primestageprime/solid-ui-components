@@ -1,14 +1,14 @@
 {
   "bareHexCss": 0,
   "bareHexTsx": 0,
-  "inlineStyleSrc": 70,
+  "inlineStyleSrc": 65,
   "inlineStyleShowcases": 20,
   "dotChains": 7,
   "collectionMethodCalls": 31,
   "styleRubricViolations": 0,
   "showcaseStyleRubricViolations": 0,
-  "cssTypedProps": 12,
-  "componentsNeverRendered": 37,
+  "cssTypedProps": 10,
+  "componentsNeverRendered": 35,
   "undocumentedComponents": 0,
   "missingDepthHeaders": 0,
   "componentsWithoutShowcase": 0
