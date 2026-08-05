@@ -514,6 +514,17 @@ bundle is ruined anyway. That is what this script is for.
 - **`scripts/health-history.json` is tracked and changes on every `npm run
   health` run.** Commit it alongside health-affecting work rather than leaving
   it dirty in a shared checkout.
+- **`docs/usage-manifest.json` is a REPORT, not a gate — and it does not tell
+  you your push is safe.** The `pre-push` check warns and never blocks (it
+  blocked until 2026-08-05, by which point it had refused four consecutive
+  unrelated pushes, all bypassed with `--no-verify`). Two things to know:
+  regenerate it with `npm run usage-manifest` **before deleting or renaming any
+  export**, because the committed copy drifts and a stale survey is worthless
+  for that decision; and understand that `--check` passing means only that the
+  file is fresh. It compares the manifest against consumer imports — SUI's own
+  exports appear on neither side — so removing an export that production still
+  imports passes cleanly. See dside `sui` 12565 for the gate that would catch
+  it.
 - **Shared checkout.** Stage only files you touched; never `git add -A`.
 - **CI installs with `--ignore-scripts`, so there is no `dist/`.** Everything in
   the test/lint/typecheck/health jobs must work from source. See ADR 0007.

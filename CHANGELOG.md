@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Changed
+- **The `usage-manifest` pre-push check warns instead of blocking** (dside
+  `sui` 12565). Tooling only; no library code changed.
+
+  It had refused four consecutive unrelated pushes, every one of which went
+  through with `--no-verify`. The last block was five **line numbers** moving in
+  `thorcasting-ui` because someone added three lines above an import — no export
+  was added or removed. A gate that trains you to bypass it is worse than no
+  gate.
+
+  It cannot be a gate in this shape for two reasons. It compares against
+  consumer **working copies** on whoever's machine is pushing — unpinned,
+  possibly mid-feature — so one developer's uncommitted work fails the other's
+  unrelated push, and the printed remedy ("regenerate and commit") would commit
+  a snapshot of that working tree into this repo.
+
+  More seriously, **it is silent on the change it exists to catch.** `--check`
+  compares the committed manifest against a fresh consumer scan; the manifest
+  records consumers' imports and never SUI's exports, so deleting an export
+  changes neither side. Remove something `thorcasting-ui` imports and the check
+  passes. It blocked the noise and permitted the harm.
+
+  `docs/usage-manifest.json` is now explicitly a **report**: regenerate it with
+  `npm run usage-manifest` when you want the survey — above all before deleting
+  or renaming an export, which is the moment a stale one misleads you. The gate
+  worth having asks "does any repo tracking `main` unpinned import a name this
+  push no longer exports?", which needs SUI's own export surface — the tool does
+  not compute it today. Designed and filed on dside `sui` 12565.
+
 ## 0.140.0
 
 ### Added

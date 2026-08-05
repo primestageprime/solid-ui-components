@@ -24,23 +24,52 @@ if ! npm run --silent health; then
   exit 1
 fi
 
-# Production usage manifest freshness — docs/usage-manifest.json must match
-# what the SUI-consuming production repos actually import (scripts/usage-manifest.mjs).
+# Production usage manifest freshness — does docs/usage-manifest.json still
+# match what the SUI-consuming production repos import (scripts/usage-manifest.mjs)?
+#
+# WARNS, never blocks (2026-08-05, dside sui 12565). It blocked until it had
+# refused four consecutive unrelated pushes, all of which went through with
+# --no-verify; a gate that trains you to bypass it is worse than no gate.
+#
+# Two reasons it cannot be a gate in this shape:
+#
+#   1. It compares against consumer WORKING COPIES on whoever's machine is
+#      pushing — unpinned, possibly mid-feature, possibly on another branch.
+#      The last block was five line numbers moving in thorcasting-ui because
+#      somebody added three lines above an import. Nothing about SUI changed.
+#      And the printed remedy ("regenerate and commit") would have committed a
+#      snapshot of another developer's working tree into this repo.
+#
+#   2. It is silent on the change it exists to catch. --check compares the
+#      committed manifest against a fresh consumer scan; deleting a SUI export
+#      changes NEITHER side, because the manifest records consumers' imports
+#      and not SUI's exports. Delete something thorcasting-ui imports and this
+#      check passes. It blocked the noise and permitted the harm.
+#
+# The gate worth having asks a different question — "does any repo that tracks
+# main unpinned import a name this push no longer exports?" — and needs SUI's
+# own export surface, which the tool does not currently compute. Filed on
+# dside sui 12565. Until then the manifest is a REPORT: regenerate it when you
+# want a survey, which is exactly when you are deciding whether an export is
+# safe to remove. Do not trust the committed copy without regenerating.
 echo "pre-push: SUI usage manifest freshness (scripts/usage-manifest.mjs --check)…"
 if ! node scripts/usage-manifest.mjs --check; then
   {
     echo ""
-    echo "══════════════════════════════════════════════════════════════"
-    echo " ✗ PUSH BLOCKED — docs/usage-manifest.json is stale"
+    echo "──────────────────────────────────────────────────────────────"
+    echo " ⚠ docs/usage-manifest.json is stale — NOT blocking this push"
     echo ""
-    echo " Production consumer imports changed since the manifest was"
-    echo " last generated (differences listed above). Regenerate it:"
+    echo " Consumer imports drifted since the manifest was generated"
+    echo " (differences listed above). Usually this is another repo's"
+    echo " working copy moving, and has nothing to do with your change."
+    echo ""
+    echo " Regenerate when you actually need the survey — above all"
+    echo " before deleting or renaming an export:"
     echo ""
     echo "   npm run usage-manifest"
-    echo "   git add docs/usage-manifest.json && git commit"
     echo ""
-    echo " then push again."
-    echo "══════════════════════════════════════════════════════════════"
+    echo " This check does NOT verify that your push keeps consumers"
+    echo " compiling. See dside sui 12565."
+    echo "──────────────────────────────────────────────────────────────"
   } >&2
-  exit 1
 fi
