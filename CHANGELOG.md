@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Added
+- **`BlockPlaceholder` now grows to fill remaining space in a flex column**
+  (`flex:1` baked into `.sui-placeholder--block`) — inherent to what "block"
+  means (an open content area has no natural height of its own), not a new
+  opt-in prop or variant. Previously every Placeholder shape settled at its
+  min-height regardless of leftover space, so a detail-pane placeholder above
+  a fixed-height caption row (e.g. a photo viewer above an applied-tags row)
+  couldn't visually occupy the space it represents. No new API surface —
+  `label` remains the only prop any curried variant exposes; there is still
+  no `class`/`style` on any of them.
+- **`MediaCard`** (`src/components/MediaCard/`) — a `Card`-family sibling of
+  `EntityCard` for a fixed-size thumbnail + name/tags/timestamp list card, a
+  shape neither `EntityCard` (pure layout, no image/tag-list region) nor
+  `ActionListItem` (has real tags but no image affordance by design) covers.
+  `tags` reuses `TagPill`/`TagPillData` directly. `filename`, when set,
+  renders as a native `title` tooltip on the `identifier` region — for when
+  `identifier` shows a friendly name distinct from the underlying file. Same
+  selection/hover-remove chrome as `EntityCard`. See `COMPONENTS.md` for the
+  full prop list.
+- **`FillBaselineSpreadRow`** — fill-width sibling of `BaselineSpreadRow`
+  (`src/components/Layout/variants.ts`). `justify:"between"` only has room to
+  push its two ends apart once the row itself spans its container, and `fill`
+  is a locked override baked at variant-definition time — a consumer can't
+  pass it to `BaselineSpreadRow` at the call site. For a page/panel header:
+  name on the left, an action/toggle pinned to the right edge.
+
+### Changed
+- **Theme `stax` renamed to `green`** (`src/themes/manifest.ts`,
+  `stax.css` → `green.css`, `package.json` export path). SUI shouldn't carry
+  a specific client's name; the theme itself (pine ink, lime accent) is
+  unchanged, only the id/displayName and file name moved. **Breaking** for any
+  consumer requesting the `"stax"` id directly — `jtf-ui`'s
+  `CURATED_THEMES`/`theme.ts` still reference it as of this writing and needs
+  a follow-up update.
+- **`loadTheme`/`getPersistedTheme` fall back to the `default` theme** (was
+  `hud`) when given an id the manifest doesn't have — e.g. a consumer still
+  compiled against `"stax"` after the rename above degrades to a known-good
+  theme instead of `THEMES[id]` being `undefined` and throwing.
+
 ### Deprecated
 - **`VirtualTable` and `GroupedTable` are scheduled for removal** (dside
   `sui`#12546). Both still work and still ship; using either now raises an

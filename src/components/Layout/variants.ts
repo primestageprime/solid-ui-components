@@ -171,6 +171,17 @@ export const BaselineSpreadRow: Component<RowDataProps> = createRow({
   justify: "between",
   gap: "sm",
 });
+// Fill-width sibling of BaselineSpreadRow — `justify:between` only has room
+// to push its two ends apart once the row itself spans its container, and
+// `fill` (width:100%; min-width:0) is a locked override baked at
+// variant-definition time, not a per-instance prop a consumer can pass. For
+// a page/panel header: a name on the left, an action/toggle pinned right.
+export const FillBaselineSpreadRow: Component<RowDataProps> = createRow({
+  align: "baseline",
+  justify: "between",
+  gap: "sm",
+  fill: true,
+});
 export const TightClusterRow: Component<RowDataProps> = createRow({
   gap: "xs",
   align: "center",

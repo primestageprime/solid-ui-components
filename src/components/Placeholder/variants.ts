@@ -15,7 +15,9 @@ export const FillPlaceholder: Component<PlaceholderDataProps> = createPlaceholde
   { fit: false, multiline: false },
 );
 
-/** Expands to fill its container, multi-line / tall. Paragraphs, content areas. */
+/** Expands to fill its container, multi-line / tall — an open block with no
+ *  natural height of its own, so it grows to fill remaining space in a flex
+ *  column. Paragraphs, content areas, detail panes. */
 export const BlockPlaceholder: Component<PlaceholderDataProps> = createPlaceholder(
   { fit: false, multiline: true },
 );

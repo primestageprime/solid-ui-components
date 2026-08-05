@@ -1,12 +1,12 @@
 /* ============================================
-   STAX Theme — Light, Engineering, Brand
+   Green Theme — Light, Engineering
    ============================================
-   Inspired by STAX Engineering brand: pine teal
-   chrome/ink, lime accent, ocean navy secondary,
-   cool off-white surfaces. System font stack.
+   Pine teal chrome/ink, lime accent, ocean navy
+   secondary, cool off-white surfaces. System font
+   stack.
 
    The baseline @import must stay first (CSS requires all
-   @import rules precede other rules); the stax overrides
+   @import rules precede other rules); the overrides
    later in this file still win over the imported baseline.
    ============================================ */
 @import "./_baseline.css";
@@ -49,7 +49,7 @@ body {
 }
 
 :root {
-  /* ---- Accent — STAX lime ----
+  /* ---- Accent — lime ----
      Raw lime on white is ~1.9:1, so the accent is reserved for fills next to
      dark ink; --sui-accent-dim is the text-safe darker lime (retuned to
      ~4.5:1+ on both bg-primary and bg-secondary, same hue/chroma as accent). */
@@ -178,7 +178,7 @@ body {
   color: var(--sui-bg-elevated);
 }
 
-/* Primary hover. STAX's lime accent is very light, so the primary button's
+/* Primary hover. The lime accent is very light, so the primary button's
    label is dark ink (7.67:1 on the accent) — which means the baseline's
    darken-on-hover to --sui-accent-dim would drop that label to 2.63:1. The
    fill LIGHTENS on hover instead, keeping the ink label and the lime identity;

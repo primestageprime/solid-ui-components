@@ -9,7 +9,11 @@ import { THEMES, type ThemeId } from "./manifest";
 const BASELINE_TAG_ID = "sui-baseline";
 const THEME_TAG_ID = "sui-theme";
 const STORAGE_KEY = "sui-theme";
-const DEFAULT_THEME: ThemeId = "hud";
+// Falls back to the theme literally named "Default" — not just any theme —
+// so a stale/removed id (e.g. a consumer still requesting a theme this
+// version of the manifest no longer has, like "stax" after its rename to
+// "green") degrades to a known-good look instead of throwing.
+const DEFAULT_THEME: ThemeId = "default";
 
 const hasDom = (): boolean => typeof document !== "undefined";
 
@@ -51,10 +55,17 @@ export const persistTheme = (id: ThemeId): void => {
 export const loadBaseline = (): void =>
   upsertStyleTag(BASELINE_TAG_ID, baselineCss);
 
-/** Ensures baseline is present, then swaps the active theme. */
+/**
+ * Ensures baseline is present, then swaps the active theme. `id` is typed as
+ * `ThemeId` for well-behaved TS callers, but a caller built against an older
+ * manifest can still pass a since-removed id as a plain string at runtime
+ * (TS types don't survive across package versions) — guarded so that degrades
+ * to the default theme instead of throwing on `THEMES[id]` being undefined.
+ */
 export const loadTheme = (id: ThemeId): void => {
   loadBaseline();
-  upsertStyleTag(THEME_TAG_ID, THEMES[id].css);
+  const resolvedId = isThemeId(id) ? id : DEFAULT_THEME;
+  upsertStyleTag(THEME_TAG_ID, THEMES[resolvedId].css);
 };
 
 export { THEMES };

@@ -42,9 +42,9 @@
       "source": "./src/themes/bronze-dark.css",
       "default": "./dist/themes/bronze-dark.css"
     },
-    "./themes/stax.css": {
-      "source": "./src/themes/stax.css",
-      "default": "./dist/themes/stax.css"
+    "./themes/green.css": {
+      "source": "./src/themes/green.css",
+      "default": "./dist/themes/green.css"
     },
     "./themes/colorblind.css": {
       "source": "./src/themes/colorblind.css",

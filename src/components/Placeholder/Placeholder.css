@@ -20,11 +20,16 @@
   min-height: 34px;
   white-space: nowrap;
 }
+/* A block has no natural height of its own — it grows to fill remaining
+   space in a flex column (a fixed-height sibling, e.g. a caption row, keeps
+   its own size; this one takes the rest). min-height stays a hard floor —
+   explicit min-height still clamps a flex item even at flex-basis:0%. */
 .sui-placeholder--block {
   min-height: 96px;
+  flex: 1;
 }
 
-/* tile size presets */
+/* tile size presets — a grid tile has a size; unlike --block it does NOT grow. */
 .sui-placeholder--sm {
   min-height: 60px;
 }

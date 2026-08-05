@@ -8,8 +8,12 @@ describe("theme loader (public API)", () => {
     expect(() => loadTheme("hud")).not.toThrow();
   });
 
-  it("getPersistedTheme falls back to hud without localStorage", () => {
-    expect(getPersistedTheme()).toBe("hud");
+  it("getPersistedTheme falls back to default without localStorage", () => {
+    expect(getPersistedTheme()).toBe("default");
+  });
+
+  it("loadTheme falls back to default for an id the manifest no longer has (e.g. a stale persisted/compiled id from a consumer on an older SUI version)", () => {
+    expect(() => loadTheme("stax" as unknown as keyof typeof THEMES)).not.toThrow();
   });
 
   it("persistTheme is a no-op without localStorage", () => {

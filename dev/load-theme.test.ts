@@ -57,7 +57,7 @@ describe("load-theme", () => {
 
   describe("persistence", () => {
     it("getPersistedTheme returns the default when nothing is stored", () => {
-      expect(getPersistedTheme()).toBe("hud");
+      expect(getPersistedTheme()).toBe("default");
     });
 
     it("persistTheme writes the theme id to localStorage", () => {
@@ -74,7 +74,7 @@ describe("load-theme", () => {
 
     it("getPersistedTheme falls back to the default for invalid stored values", () => {
       window.localStorage.setItem(STORAGE_KEY, "not-a-theme");
-      expect(getPersistedTheme()).toBe("hud");
+      expect(getPersistedTheme()).toBe("default");
     });
   });
 });

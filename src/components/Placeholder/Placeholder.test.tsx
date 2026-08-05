@@ -37,17 +37,22 @@ describe("Placeholder", () => {
     expect(el.classList.contains("sui-placeholder--line")).toBe(true);
   });
 
-  it("BlockPlaceholder fills width as a tall block", () => {
+  it("BlockPlaceholder fills width as an open, growing block", () => {
     const { container } = render(() => <BlockPlaceholder label="para" />);
     const el = box(container);
     expect(el.classList.contains("sui-placeholder--fill")).toBe(true);
+    // --block carries the grow-to-fill-remaining-space behavior inherently
+    // (flex:1 in Placeholder.css) — no separate opt-in prop/variant.
     expect(el.classList.contains("sui-placeholder--block")).toBe(true);
   });
 
-  it("a size preset applies the fill + size min-height classes", () => {
+  it("a size preset applies the fill + size min-height classes, and does not grow", () => {
     const { container } = render(() => <MediumPlaceholder label="KPI" />);
     const el = box(container);
     expect(el.classList.contains("sui-placeholder--fill")).toBe(true);
     expect(el.classList.contains("sui-placeholder--md")).toBe(true);
+    // A grid tile has a fixed size — unlike --block it must NOT also carry
+    // the grow behavior.
+    expect(el.classList.contains("sui-placeholder--block")).toBe(false);
   });
 });

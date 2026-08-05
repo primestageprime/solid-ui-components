@@ -54,6 +54,7 @@ export * from "./components/HotkeyButton";
 export * from "./components/Fab";
 export * from "./components/Card";
 export * from "./components/EntityCard";
+export * from "./components/MediaCard";
 export * from "./components/SlotCard";
 export * from "./components/DataDisplay";
 export * from "./components/Feedback";
