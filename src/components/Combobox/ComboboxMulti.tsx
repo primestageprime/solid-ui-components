@@ -184,6 +184,9 @@ export const renderMulti = (
       options={local.options()}
       value={local.value?.() ?? []}
       onChange={handleChange}
+      // On the ROOT, not the parts — see the note in ComboboxSingle.tsx.
+      // dside sui#12528.
+      disabled={local.disabled}
       placeholder={placeholder()}
       optionValue="value"
       optionTextValue="label"
@@ -271,12 +274,8 @@ export const renderMulti = (
                 value={inputValue()}
                 onInput={(e) => updateInput(e.currentTarget.value)}
                 onKeyDown={handleKeyDown}
-                disabled={local.disabled}
               />
-              <KobalteCombobox.Trigger
-                class="sui-combobox__trigger"
-                disabled={local.disabled}
-              >
+              <KobalteCombobox.Trigger class="sui-combobox__trigger">
                 <KobalteCombobox.Icon class="sui-combobox__trigger-icon">
                   <svg
                     width={14}

@@ -2,7 +2,37 @@
 
 ## [Unreleased]
 
+## 0.141.0
+
 ### Changed
+- **`<Combobox disabled>` now disables the text input, not just the trigger**
+  (dside `sui` 12528). Applies to both single and multi mode.
+
+  The dropdown button was disabled while the text field stayed fully editable
+  and focusable, carrying no `disabled`, `aria-disabled` or `data-disabled` at
+  all — so a disabled combobox still accepted typing, and `onInputChange` still
+  fired.
+
+  The cause is a Kobalte contract that is easy to get backwards: `disabled` is a
+  **root** prop (it is in Kobalte's `FORM_CONTROL_PROP_NAMES`), and the parts
+  derive their rendered state from the FormControl context the root populates.
+  Passing `disabled` to `Combobox.Input` or `Combobox.Trigger` directly feeds
+  only that part's *interaction guard* — never its attributes. Both components
+  were doing exactly that, and `disabled` was split into `local` so the root
+  never saw it. It now goes to the root, and the redundant part-level props are
+  gone so the next reader doesn't repeat the mistake.
+
+  The input gets native `disabled` **and** `aria-disabled`. That is Kobalte's
+  choice rather than ours — both come off the same `formControlContext
+  .isDisabled()` in its `ComboboxInput` — which settles the accessibility
+  question the ticket raised about `aria-disabled` + `readonly` as an
+  alternative.
+
+  A test asserting the old behaviour (`"leaves the text input editable when
+  disabled (known gap)"`, added by #84 to pin the defect) is replaced by tests
+  for the real contract. Multi mode, which had the identical bug, had no
+  disabled coverage at all and now has some.
+
 - **The `usage-manifest` pre-push check warns instead of blocking** (dside
   `sui` 12565). Tooling only; no library code changed.
 

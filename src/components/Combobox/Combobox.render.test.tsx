@@ -88,7 +88,9 @@ describe("Combobox — single mode", () => {
 
   it("disables the trigger when disabled", () => {
     const c = mountSingle({ disabled: true });
-    const trigger = c.querySelector(".sui-combobox__trigger") as HTMLButtonElement;
+    const trigger = c.querySelector(
+      ".sui-combobox__trigger",
+    ) as HTMLButtonElement;
     expect(trigger.disabled).toBe(true);
     expect(trigger.hasAttribute("data-disabled")).toBe(true);
   });
@@ -99,19 +101,33 @@ describe("Combobox — single mode", () => {
     expect(document.querySelector(".sui-combobox__content")).toBeNull();
   });
 
-  // KNOWN GAP — documents current behaviour, not desired behaviour.
+  // Replaces a test that pinned the opposite (dside sui#12528): `disabled`
+  // used to reach the trigger but not the input, because it was passed to
+  // Kobalte's Input part while Kobalte's ROOT owns `disabled` and propagates
+  // it through FormControl context. Passing it to Input feeds only the
+  // interaction guard, never the rendered attribute.
   //
-  // `disabled` reaches the trigger but NOT the text input: the input stays
-  // editable and carries no `disabled` / `aria-disabled` / `data-disabled`.
-  // ComboboxSingle.tsx:130 clearly intends otherwise — it passes
-  // `disabled={local.disabled}` straight to Kobalte's Input — but Kobalte's
-  // ROOT owns `disabled` and propagates it to the parts through context, and
-  // `disabled` is split into `local` (Combobox.tsx:100) so the root never
-  // receives it.
-  //
-  // When that is fixed, this test will fail. Delete it and assert `true`.
-  it("leaves the text input editable when disabled (known gap)", () => {
+  // Native `disabled` AND `aria-disabled` is Kobalte's own choice for a
+  // disabled combobox input, not ours — both come off
+  // `formControlContext.isDisabled()` in its ComboboxInput.
+  it("disables the text input when disabled", () => {
     const el = input(mountSingle({ disabled: true }));
+    expect(el.disabled).toBe(true);
+    expect(el.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("does not accept typing when disabled", () => {
+    // The user-visible symptom the ticket was filed for.
+    const onInputChange = vi.fn();
+    const c = mountSingle({ disabled: true, onInputChange });
+    const el = input(c);
+    expect(el.disabled).toBe(true);
+    fireEvent.input(el, { target: { value: "Al" } });
+    expect(onInputChange).not.toHaveBeenCalled();
+  });
+
+  it("leaves the text input editable when not disabled", () => {
+    const el = input(mountSingle());
     expect(el.disabled).toBe(false);
     expect(el.hasAttribute("aria-disabled")).toBe(false);
   });
@@ -125,7 +141,7 @@ describe("Combobox — single mode", () => {
 });
 
 describe("Combobox — multi mode", () => {
-  const mountMulti = (initial: ComboboxOption[] = []) => {
+  const mountMulti = (initial: ComboboxOption[] = [], disabled = false) => {
     const [options] = createSignal(OPTIONS);
     const [value, setValue] = createSignal<ComboboxOption[]>(initial);
     const onChange = vi.fn((next: ComboboxOption[]) => setValue(next));
@@ -136,6 +152,7 @@ describe("Combobox — multi mode", () => {
         value={value}
         onChange={onChange}
         placeholder="Pick some"
+        disabled={disabled}
       />
     ));
     return { c: container, onChange, value };
@@ -150,6 +167,29 @@ describe("Combobox — multi mode", () => {
   it("renders no chip list while nothing is selected", () => {
     const { c } = mountMulti();
     expect(chips(c).length).toBe(0);
+  });
+
+  // Multi carried the identical defect and the identical fix (dside sui#12528).
+  // It had no disabled coverage at all, so the bug was only ever observed in
+  // single mode.
+  it("disables both the text input and the trigger when disabled", () => {
+    const { c } = mountMulti([], true);
+    const el = input(c);
+    const trigger = c.querySelector(
+      ".sui-combobox__trigger",
+    ) as HTMLButtonElement;
+    expect(el.disabled).toBe(true);
+    expect(el.getAttribute("aria-disabled")).toBe("true");
+    expect(trigger.disabled).toBe(true);
+  });
+
+  it("leaves both editable when not disabled", () => {
+    const { c } = mountMulti();
+    const trigger = c.querySelector(
+      ".sui-combobox__trigger",
+    ) as HTMLButtonElement;
+    expect(input(c).disabled).toBe(false);
+    expect(trigger.disabled).toBe(false);
   });
 
   it("renders one chip per selected option", () => {
