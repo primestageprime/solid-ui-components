@@ -19,9 +19,9 @@
 //   • every EXPORTED interface / type-alias whose name ends in `Props`
 //     (the component public-contract convention), and
 //   • the Table column-def shapes — every named interface / object type-alias
-//     declared in the four designated column-def files (Table/types.ts,
-//     Table/columnHelpers.tsx, Table/GroupedTable.tsx,
-//     DataDisplay/StatsTable/StatsTable.tsx) even if not named *Props.
+//     declared in the three designated column-def files (Table/types.ts,
+//     Table/columnHelpers.tsx, DataDisplay/StatsTable/StatsTable.tsx) even if
+//     not named *Props.
 // Derived types (Pick<…>/Omit<…> — TypeReference, not an object literal) are
 // not re-inspected; their members are counted once at the source interface.
 //
@@ -63,7 +63,6 @@ export const GEOMETRY_PAINT_PROPS = new Set([
 const COLUMN_DEF_FILES = new Set([
   "src/components/Table/types.ts",
   "src/components/Table/columnHelpers.tsx",
-  "src/components/Table/GroupedTable.tsx",
   "src/components/DataDisplay/StatsTable/StatsTable.tsx",
 ]);
 

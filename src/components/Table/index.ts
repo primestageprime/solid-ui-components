@@ -1,6 +1,5 @@
 export * from "./types";
 export * from "./BaseTable";
-export * from "./GroupedTable";
 export { FilterableTable } from "./FilterableTable";
 export type { FilterableTableProps } from "./FilterableTable";
 export { SectionTable } from "./SectionTable";
@@ -15,4 +14,3 @@ export type { GapCellProps, GapSeverity } from "./GapCell";
 export * from "./DataTableContainer";
 export * from "./variants";
 export * from "./columnHelpers";
-export * from "./VirtualTable";

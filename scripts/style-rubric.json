@@ -160,14 +160,8 @@
     "src/components/Table/GapCell.tsx": [
       "proportion"
     ],
-    "src/components/Table/GroupedTable.tsx": [
-      "columnar"
-    ],
     "src/components/Table/SelectableTable.tsx": [
       "columnar"
-    ],
-    "src/components/Table/VirtualTable.tsx": [
-      "measured"
     ],
     "src/components/Table/fields/FieldTable.tsx": [
       "cssvar"

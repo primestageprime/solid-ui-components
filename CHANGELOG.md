@@ -2,17 +2,18 @@
 
 ## [Unreleased]
 
-Everything below is **merged to `main` but not published.** Publish is not
-tag-driven: it runs after every green CI on `main` and ships only when
-`package.json` names a version the registry lacks. `package.json` has read
-0.138.0 since that version went out, so the four PRs below have each triggered a
-publish run that found nothing to do. All four are tooling-only, which is why it
-went unnoticed. The next version bump releases them.
+## 0.139.0
+
+The first four entries had been sitting on `main` unpublished since 0.138.0:
+`package.json` still named a version the registry already had, so each of their
+publish runs correctly found nothing to do. All four are tooling-only, which is
+why it went unnoticed. This release carries the version bump that ships them.
 
 ### Added
 - **`componentsNeverExecuted` — a measured answer to "which components are
   dark?"** (dside `sui`#12541). Tooling only; no library code changed. New gate
-  in the **`test`** CI job, baseline `scripts/execution-baseline.json` at **19**.
+  in the **`test`** CI job, baseline `scripts/execution-baseline.json` at **17**
+  (19 when it landed; the Removed entry below took two more out).
 
   `componentsNeverRendered` is static, and a static rule cannot answer whether
   code runs. The obvious extension — count a module as covered when a mounted
@@ -28,11 +29,12 @@ went unnoticed. The next version bump releases them.
   `Chart/Crosshair` runs on every `ThroughputChart` test but owns no suite; only
   `TimeInputs` is dark. Of the 37 modules with no owning suite, **18 execute
   anyway and 19 do not** — and two of the 19 (`VirtualTable`, `GroupedTable`)
-  are slated for deletion, so the real backlog is 17.
+  are deleted in the Removed entry below, which is why the baseline lands at 17.
 
   It reads **function** coverage, never lines: v8 attributes module
   initialisation to the file, so `GroupedTable` — zero call sites in this repo
-  or any consumer — still shows 1.8% of lines against 0 of 22 functions. The
+  or any consumer — still showed 1.8% of lines against 0 of 22 functions when
+  it was measured on 2026-08-04, days before its deletion. The
   floor is exactly zero rather than a percentage, for the same reason the older
   metric's is: any other number re-opens a "how much is enough" argument the
   ratchet deliberately refuses.
@@ -123,6 +125,33 @@ went unnoticed. The next version bump releases them.
   `<WidgetPanel>` guard still holds; three cases pin the generic forms. The
   ceiling drops **46 → 44**, which is a measurement correction and not two
   components' worth of new coverage — no test was written for either.
+
+### Removed
+- **`VirtualTable` and `GroupedTable` are gone** (dside `sui`#12546), together
+  with `VirtualTableProps`, `GroupedRow` and `RowspanColumn`. This is a
+  **breaking change to the public export surface**, and the second half of the
+  two-stage removal: 0.138.0 below is the warning release, which shipped the
+  deprecation on its own before this break. See that entry for the survey
+  behind it — zero JSX call sites and zero named imports across all seven
+  SUI-dependent repos and an org-wide GitHub code search. Two later checks
+  agreed: `docs/usage-manifest.json` names neither component anywhere, and the
+  only call site left in this repo was a gallery section.
+
+  Removed with them: the `@tanstack/solid-virtual` **dependency** (its only
+  importer was `VirtualTable`), the `.sui-virtual-table__*` and
+  `.hud-grouped-table__*` rules in `Table.css`, both gallery sections, both
+  `COMPONENTS.md` entries, and the exemptions each carried in
+  `scripts/style-rubric.json` and `prop-rubric.mjs` — a component's exemptions
+  outliving the component is how a rubric quietly stops meaning anything. The
+  `TableQuickFilter` gallery section now renders its filtered rows through
+  `BaseTable`, which is what a caller should have been copying all along.
+
+  Four ceilings drop as a consequence, not as separate work: `cssTypedProps`
+  **12 → 10**, `inlineStyleSrc` **70 → 65**, `componentsNeverRendered`
+  **37 → 35**, `componentsNeverExecuted` **19 → 17**. Deleting dead code is the
+  only honest way a coverage ratchet ever falls without a test being written,
+  and it is worth saying plainly that no test was written here. The dark-module
+  backlog is **unchanged at 17** — these two were already discounted from it.
 
 ## 0.138.0
 

@@ -171,7 +171,7 @@ export interface SelectableTableProps<T>
 }
 
 /**
- * Shared accessor helper used by BaseTable, GroupedTable, SelectableTable.
+ * Shared accessor helper used by BaseTable and SelectableTable.
  * The result is always rendered directly as a table cell's content, so the
  * raw keyed value is surfaced as a `JSX.Element` (Solid renders strings,
  * numbers, and nullish values as-is at runtime).

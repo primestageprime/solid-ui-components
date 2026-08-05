@@ -1,6 +1,6 @@
 {
   "name": "@primestageprime/solid-ui-components",
-  "version": "0.138.0",
+  "version": "0.139.0",
   "description": "SolidJS UI Components Library",
   "repository": {
     "type": "git",
@@ -136,7 +136,6 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.13.12",
-    "@tanstack/solid-virtual": "^3.13.32",
     "d3-dag": "^1.2.1",
     "katex": "^0.17.0"
   }
