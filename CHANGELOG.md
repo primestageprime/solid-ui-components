@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+### Deprecated
+- **`VirtualTable` and `GroupedTable` are scheduled for removal** (dside
+  `sui`#12546). Both still work and still ship; using either now raises an
+  editor/compiler deprecation warning. Removal lands in a later release, so
+  there is a version in between that warns rather than breaks.
+
+  **Neither has a single caller.** Surveyed 2026-08-04 across all seven repos
+  depending on SUI (`jtf-ui`, `taskmaster-stdb-v2/ui`, `amygdala-ui`,
+  `dside-ui`, `netsuite_extract_rs/ui`, `rth_repair_portal/frontend`,
+  `thorcasting-ui`) and again via a GitHub code search over the whole
+  `primestageprime` org: zero JSX call sites, zero named imports. For scale,
+  the same survey counted 72 `FieldTable`/`SortableFieldTable` call sites and
+  55 `BaseTable`. The only trace of `VirtualTable` outside this repo is a stale
+  comment in `netsuite_extract_rs`'s dashboard sitting above code that now
+  renders a `SelectableTable` — that migration already happened.
+
+  **The two are deprecated for different reasons, and the distinction matters
+  if either is ever revived.** `GroupedTable` is a clean component: it declares
+  its own nine props rather than extending `BaseTableProps`, so it never made a
+  promise it could not keep — it is the pattern `SelectableTable` was just
+  fixed to follow. It is going solely because nobody uses it, and a single
+  caller speaking up on #12546 is enough to un-deprecate it as-is.
+
+  `VirtualTable` is not in that position. `VirtualTableProps<T> =
+  BaseTableProps<T>` told the compiler its interface was `BaseTable`'s, and its
+  docstring opened "Same API as BaseTable". Both were false: it renders its own
+  `sui-virtual-table__*` class namespace with padding, font-size,
+  text-transform, letter-spacing and colour set **inline per cell** instead of
+  from the shared `Table.css`, so substituting one for the other visibly
+  changes the table; and it ignores four of the props it declares (`spanRow`,
+  `rowActions`, `fixedLayout`, `fit`), which land in `others` and get spread
+  onto a `div` — the same silent-prop bug fixed in `SelectableTable` in 0.137.0,
+  never fixed here. If virtualisation is wanted again, build it as an opt-in
+  capability of `BaseTable` rather than reviving a second table implementation.
+
+  This is also what settled the architecture review's proposal to fold
+  selection, grouping and virtualisation into `BaseTable` as opt-in
+  capabilities. Its headline benefit was making "grouped + selectable"
+  expressible — and grouping has never had a caller, so the merge would have
+  rewritten three renderers to enable a combination nobody has asked for.
+
 ## 0.137.0
 
 ### Added

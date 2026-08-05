@@ -3,8 +3,32 @@
 // VirtualTable — Atomic (Depth 1). Native table markup; composes no library components.
 /**
  * VirtualTable — renders only visible rows using @tanstack/solid-virtual.
- * Same API as BaseTable but with virtual scrolling for large datasets.
  * Uses dynamic row measurement for correct behavior under browser zoom.
+ *
+ * @deprecated Scheduled for removal — no caller anywhere (dside `sui`#12546).
+ * A survey on 2026-08-04 of all seven repos depending on SUI, plus a
+ * GitHub code search across the `primestageprime` org, found **zero** call
+ * sites. The only trace outside this repo is a stale comment in
+ * `netsuite_extract_rs`'s dashboard above code that now renders a
+ * `SelectableTable` — someone already migrated off it.
+ *
+ * Its docstring used to open "Same API as BaseTable", and
+ * `VirtualTableProps<T> = BaseTableProps<T>` made that a compiler-blessed
+ * claim. It was never true in either direction:
+ *
+ *   - **Different appearance.** This renders `sui-virtual-table__*`, its own
+ *     class namespace with its own block in Table.css, and sets padding,
+ *     font-size, text-transform, letter-spacing and color INLINE per cell.
+ *     BaseTable renders `hud-table__*` and takes all of that from the shared
+ *     stylesheet. Swapping one for the other visibly changes the table.
+ *   - **Different behaviour.** It reads 12 of BaseTableProps' 16 props;
+ *     `spanRow`, `rowActions`, `fixedLayout` and `fit` land in `others` and
+ *     are spread onto a div, exactly the silent-prop bug fixed in
+ *     `SelectableTable` on 2026-08-04.
+ *
+ * If virtualisation is wanted again, build it as an opt-in capability of
+ * BaseTable rather than reviving a second table implementation. Do not extend
+ * this one.
  */
 import { For, Show, type JSX } from "solid-js";
 import { splitProps } from "solid-js";
@@ -20,8 +44,19 @@ import { pipe, filter, join } from "../../fn";
 const ROW_HEIGHT = 36; // estimated px before per-row measurement
 const OVERSCAN = 5; // rows rendered outside the viewport
 
+/**
+ * @deprecated Scheduled for removal (dside `sui`#12546) — see the file header.
+ * This alias is itself part of the problem: it asserts to the compiler that
+ * VirtualTable's interface IS BaseTable's, and it is not.
+ */
 export type VirtualTableProps<T> = BaseTableProps<T>;
 
+/**
+ * @deprecated Scheduled for removal — no caller anywhere (dside `sui`#12546).
+ * Not a drop-in for BaseTable despite the shared props type: different class
+ * namespace, different inline cell styling, and four declared props it ignores.
+ * See the file header for the full rationale.
+ */
 export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
   const [local, others] = splitProps(props, [
     "data",
@@ -74,7 +109,11 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
 
   return (
     <div
-      class={pipe(["sui-virtual-table", local.class], filter(Boolean), join(" "))}
+      class={pipe(
+        ["sui-virtual-table", local.class],
+        filter(Boolean),
+        join(" "),
+      )}
       {...others}
     >
       {/* Scrollable container — max-height inline only when the prop is set;
@@ -149,8 +188,7 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
                       data-index={virtualRow.index}
                       class={`sui-virtual-table__row ${rowClass()}`}
                       classList={{
-                        "sui-virtual-table__row--clickable":
-                          !!local.onRowClick,
+                        "sui-virtual-table__row--clickable": !!local.onRowClick,
                         "sui-virtual-table__row--striped":
                           local.striped && virtualRow.index % 2 === 1,
                         "sui-virtual-table__row--hoverable": local.hoverable,
@@ -190,4 +228,5 @@ export function VirtualTable<T>(props: VirtualTableProps<T>): JSX.Element {
   );
 }
 
+/** @deprecated Scheduled for removal (dside `sui`#12546). */
 export default VirtualTable;
