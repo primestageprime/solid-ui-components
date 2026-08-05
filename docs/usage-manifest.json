@@ -1,7 +1,6 @@
 {
   "repos": {
     "amygdala-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/amygdala/amygdala-ui",
       "status": "ok",
       "specifiers": [
         "solid-ui-components",
@@ -9,10 +8,60 @@
         "solid-ui-components/themes/hud.css"
       ],
       "uses": {
+        "AlarmBands": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "AlarmHotZones": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "AlarmStripeDefs": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "BottomSheet": [
+          {
+            "file": "src/components/nav/SheetSelect.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/mobile/AssetPickerSheet.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/EdgeTypeDetail.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "BoxDataProps": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
         "ButtonDataProps": [
           {
             "file": "src/components/filters/TimeRangeSelector.tsx",
             "line": 10,
+            "kind": "type"
+          },
+          {
+            "file": "src/pages/alarmLabV2/primitives/PillButton.tsx",
+            "line": 3,
             "kind": "type"
           },
           {
@@ -42,6 +91,11 @@
         ],
         "ChangeRenderer": [
           {
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
             "file": "src/components/renderers/StatusChangeCell.tsx",
             "line": 2,
             "kind": "named"
@@ -54,6 +108,73 @@
           {
             "file": "src/routes/dev/value-renderers.tsx",
             "line": 8,
+            "kind": "named"
+          }
+        ],
+        "Chart": [
+          {
+            "file": "src/components/charts/AlarmOperationalTimelineBar/AlarmOperationalTimelineBar.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/bridges/DragRangeAutoClear.test.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/HighlightLine/HighlightLine.tsx",
+            "line": 9,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "ChartContextValue": [
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "type"
+          }
+        ],
+        "ChartTooltip": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "Checkbox": [
+          {
+            "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ClusterRow": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "CollapsibleSection": [
+          {
+            "file": "src/pages/asset-problem-detail/InformationPanel.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -161,10 +282,68 @@
             "kind": "type"
           }
         ],
+        "CountChip": [
+          {
+            "file": "src/pages/alarmLabV2/TimeframeItem.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dev/v2-badge.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "Crosshair": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "CurrentValueIndicator": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "DangerAlert": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsShell.tsx",
+            "line": 12,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DataQualityShell.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
         "DateRange": [
           {
             "file": "src/hooks/useUrlDateRange.ts",
             "line": 3,
+            "kind": "type"
+          },
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 20,
+            "kind": "type"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsRealRightPane.tsx",
+            "line": 12,
             "kind": "type"
           },
           {
@@ -179,11 +358,21 @@
           },
           {
             "file": "src/routes/explorer.tsx",
-            "line": 12,
+            "line": 13,
             "kind": "type"
           }
         ],
         "DateRangePicker": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsRealRightPane.tsx",
+            "line": 11,
+            "kind": "named"
+          },
           {
             "file": "src/pages/explore/ExploreCanvasHeader.tsx",
             "line": 2,
@@ -207,6 +396,16 @@
         ],
         "DateRangePreset": [
           {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 20,
+            "kind": "type"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsRealRightPane.tsx",
+            "line": 12,
+            "kind": "type"
+          },
+          {
             "file": "src/pages/timeframes/components/TimeframeFilters.tsx",
             "line": 2,
             "kind": "type"
@@ -229,11 +428,120 @@
             "kind": "named"
           }
         ],
+        "Descriptor": [
+          {
+            "file": "src/components/charts/AnnotatedMetricCharts.tsx",
+            "line": 3,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/domain/boundsChevron.ts",
+            "line": 1,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/domain/factToDescriptor.ts",
+            "line": 1,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/mappers/pins.ts",
+            "line": 6,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/types.ts",
+            "line": 3,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/useDotChartState.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "Divider": [
+          {
+            "file": "src/pages/alarmLabV2/CausesPage.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/TestCaseList.tsx",
+            "line": 5,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dev/v2-divider.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "Dot": [
+          {
+            "file": "src/pages/alarmLabV2/AccuracyMetrics.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms-real/RecentsStarsPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dev/v2-badge.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "DragRangeSelect": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "Duration": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
         "DurationCell": [
           {
             "file": "src/components/renderers/DurationRenderer.tsx",
             "line": 3,
             "kind": "named"
+          }
+        ],
+        "EmptyState": [
+          {
+            "file": "src/components/charts/AdaptiveChartGrid.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/TimeframeList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dev/v2-empty-state.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "EmptyStateDataProps": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "type"
           }
         ],
         "FloatCell": [
@@ -243,10 +551,153 @@
             "kind": "named"
           }
         ],
+        "GhostArc": [
+          {
+            "file": "src/components/charts/DotChart/bridges/GhostArcBridge.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/bridges/GhostArcsBridge.tsx",
+            "line": 18,
+            "kind": "named"
+          }
+        ],
+        "GhostPin": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "Grid": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "GroupBracket": [
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "GroupBracketPosition": [
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
+            "kind": "type"
+          }
+        ],
+        "HighlightSegment": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/CorrelationBand.tsx",
+            "line": 24,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/useDotChartState.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "HighlightSegments": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/CorrelationBand.tsx",
+            "line": 18,
+            "kind": "named"
+          }
+        ],
+        "HotZone": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/alarms/clusters.ts",
+            "line": 1,
+            "kind": "type"
+          }
+        ],
         "IconOnlyButton": [
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          },
           {
             "file": "src/pages/asset-problem-detail/AssetProblemHeader.tsx",
             "line": 5,
+            "kind": "named"
+          }
+        ],
+        "Id": [
+          {
+            "file": "src/components/charts/DotChart/mappers/pins.ts",
+            "line": 6,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/useDotChartState.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "Legend": [
+          {
+            "file": "src/components/v2/ProblemRow.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "LegendItem": [
+          {
+            "file": "src/components/v2/ProblemRow.tsx",
+            "line": 3,
+            "kind": "type"
+          }
+        ],
+        "LineSeries": [
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "LinkPivotGrid": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsPivotGrid.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ListItem": [
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -254,6 +705,30 @@
           {
             "file": "src/components/renderers/StringRenderer.tsx",
             "line": 2,
+            "kind": "named"
+          }
+        ],
+        "MultiSelectFilter": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms/AlarmsLeftPane.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "MutedEmptyState": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DataQualityShell.tsx",
+            "line": 10,
             "kind": "named"
           }
         ],
@@ -271,6 +746,11 @@
         ],
         "OutlinedButton": [
           {
+            "file": "src/components/buttons/EmailLinkButton.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/pages/alarmLabV2/demos/ChartDemos.tsx",
             "line": 6,
             "kind": "named"
@@ -281,25 +761,55 @@
             "kind": "named"
           }
         ],
-        "PrimaryButton": [
+        "PillTabs": [
           {
-            "file": "src/auth/AuthProvider.tsx",
+            "file": "src/components/filters/TimeRangeSelector.tsx",
             "line": 10,
             "kind": "named"
+          }
+        ],
+        "Pin": [
+          {
+            "file": "src/components/charts/DotChart/mappers/pins.ts",
+            "line": 6,
+            "kind": "type"
           },
+          {
+            "file": "src/components/charts/DotChart/useDotChartState.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "PinMarkers": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
+        "PointSeries": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/OverlayPoints.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "PopoverMenu": [
+          {
+            "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "PrimaryButton": [
           {
             "file": "src/components/AuthorizationError.tsx",
             "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/AuthorizationRecoveryScreen.tsx",
-            "line": 3,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/layout/ErrorBoundary.tsx",
-            "line": 7,
             "kind": "named"
           },
           {
@@ -378,7 +888,46 @@
             "kind": "named"
           }
         ],
+        "Range": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/alarms/clusters.ts",
+            "line": 1,
+            "kind": "type"
+          }
+        ],
+        "ReferenceLine": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/CorrelationBand.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
         "RenderValueFn": [
+          {
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
+            "kind": "type"
+          },
           {
             "file": "src/components/renderers/StatusChangeCell.tsx",
             "line": 2,
@@ -402,8 +951,13 @@
         ],
         "ResizableContainer": [
           {
-            "file": "src/components/layout/ResizablePanel.tsx",
-            "line": 2,
+            "file": "src/components/layout/SidePanel.tsx",
+            "line": 9,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
             "kind": "named"
           },
           {
@@ -412,11 +966,32 @@
             "kind": "named"
           }
         ],
-        "ResizeDirection": [
+        "ResizableContainerProps": [
           {
-            "file": "src/components/layout/ResizablePanel.tsx",
-            "line": 2,
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
             "kind": "type"
+          }
+        ],
+        "RightDetailTabbedPanel": [
+          {
+            "file": "src/components/layout/TabbedSidePanel.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "RowDataProps": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "ScrollList": [
+          {
+            "file": "src/pages/alarms-real/AlarmsListPanel.tsx",
+            "line": 2,
+            "kind": "named"
           }
         ],
         "SecondaryButton": [
@@ -447,7 +1022,7 @@
           },
           {
             "file": "src/pages/alarmExplanation/ExplanationRightPanel.tsx",
-            "line": 14,
+            "line": 13,
             "kind": "named"
           },
           {
@@ -481,6 +1056,69 @@
             "kind": "named"
           }
         ],
+        "SectionDataProps": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "type"
+          }
+        ],
+        "SectionLabel": [
+          {
+            "file": "src/components/panels/SelectedOccurrencePanel.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmExplanation/ExplanationRightPanel.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/AccuracyMetrics.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/CandidateEdgesList.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/FactPillBar.tsx",
+            "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/TestCaseList.tsx",
+            "line": 5,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/TimeframeList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dev/v2-section-label.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "SegmentOption": [
+          {
+            "file": "src/components/v2/AssetCardV2.tsx",
+            "line": 12,
+            "kind": "type"
+          }
+        ],
+        "SegmentedControl": [
+          {
+            "file": "src/components/v2/AssetCardV2.tsx",
+            "line": 12,
+            "kind": "named"
+          }
+        ],
         "Select": [
           {
             "file": "src/components/filters/OperationalTimeframeSelector.tsx",
@@ -494,12 +1132,7 @@
           },
           {
             "file": "src/components/nav/GroupSelector.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/nav/MobileTimeSelector.tsx",
-            "line": 2,
+            "line": 3,
             "kind": "named"
           },
           {
@@ -513,8 +1146,18 @@
             "kind": "named"
           },
           {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsRealLeftPane.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
             "file": "src/pages/assets/AssetsPage.tsx",
-            "line": 28,
+            "line": 13,
             "kind": "named"
           },
           {
@@ -548,10 +1191,39 @@
             "kind": "named"
           }
         ],
+        "SelectOption": [
+          {
+            "file": "src/pages/alarms-grid/AlarmsGridShell.tsx",
+            "line": 20,
+            "kind": "type"
+          },
+          {
+            "file": "src/pages/alarms-real/AlarmsRealLeftPane.tsx",
+            "line": 3,
+            "kind": "type"
+          }
+        ],
+        "ShapeGlyph": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          }
+        ],
         "SmallGhostButton": [
+          {
+            "file": "src/pages/alarms/AlarmsRightPane.tsx",
+            "line": 7,
+            "kind": "named"
+          },
           {
             "file": "src/pages/explore/ExploreCanvasHeader.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/mobile/AssetPickerSheet.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -559,6 +1231,16 @@
           {
             "file": "src/pages/alarmLabV2/FlashbackControls.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarms/AlarmsRightPane.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/mobile/AssetPickerSheet.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -608,6 +1290,11 @@
             "kind": "named"
           },
           {
+            "file": "src/pages/mobile/AssetPickerSheet.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
             "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
             "line": 2,
             "kind": "named"
@@ -635,11 +1322,38 @@
             "kind": "named"
           }
         ],
-        "Toast": [
+        "TimelineBar": [
           {
-            "file": "src/routes/dev/ToastSection.tsx",
-            "line": 2,
+            "file": "src/components/charts/AlarmOperationalTimelineBar/AlarmOperationalTimelineBar.tsx",
+            "line": 10,
             "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/HighlightLine/HighlightLine.tsx",
+            "line": 9,
+            "kind": "named"
+          }
+        ],
+        "TimelineBarDatum": [
+          {
+            "file": "src/components/charts/AlarmOperationalTimelineBar/AlarmOperationalTimelineBar.tsx",
+            "line": 10,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/DotChart/mappers/timelineBars.ts",
+            "line": 6,
+            "kind": "type"
+          },
+          {
+            "file": "src/components/charts/HighlightLine/HighlightLine.tsx",
+            "line": 9,
+            "kind": "type"
           }
         ],
         "ToastList": [
@@ -647,22 +1361,12 @@
             "file": "src/components/Routes.tsx",
             "line": 1,
             "kind": "named"
-          },
-          {
-            "file": "src/routes/dev/ToastSection.tsx",
-            "line": 2,
-            "kind": "named"
           }
         ],
         "ToastRegion": [
           {
             "file": "src/components/Routes.tsx",
             "line": 1,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/dev/ToastSection.tsx",
-            "line": 2,
             "kind": "named"
           }
         ],
@@ -675,8 +1379,33 @@
         ],
         "Toggle": [
           {
-            "file": "src/components/forms/inputs/Checkbox/Checkbox.tsx",
-            "line": 2,
+            "file": "src/components/annotation/AnnotationControlsBar.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/nav/DropdownNav.tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/assets/AssetsPage.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/dev/AssetDashboard.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/dev/DevDashboard.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/dev/MockDashboard.tsx",
+            "line": 4,
             "kind": "named"
           },
           {
@@ -685,8 +1414,23 @@
             "kind": "named"
           },
           {
+            "file": "src/pages/explore/lenses/pivot/PivotCanvas.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
             "file": "src/pages/explore/lenses/timeframes/TimeframesCanvas.tsx",
             "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/Dashboard.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/components/EdgeTypeDetailHeader.tsx",
+            "line": 3,
             "kind": "named"
           }
         ],
@@ -722,13 +1466,23 @@
             "kind": "named"
           },
           {
+            "file": "src/components/shared/table/OperationalEdgesTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/suggestions/MatchDonut.tsx",
             "line": 1,
             "kind": "named"
           },
           {
             "file": "src/components/v2/AssetCard.tsx",
-            "line": 17,
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/v2/AssetCardV2.tsx",
+            "line": 12,
             "kind": "named"
           },
           {
@@ -745,12 +1499,34 @@
             "file": "src/pages/asset-problem-detail/AssetProblemHeader.tsx",
             "line": 5,
             "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/FlashbackEdgePanel.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
+            "line": 2,
+            "kind": "named"
           }
         ],
         "ValueRenderer": [
           {
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
             "file": "src/pages/v2/DerivedValuesPanel.tsx",
             "line": 3,
+            "kind": "named"
+          }
+        ],
+        "WarningAlert": [
+          {
+            "file": "src/pages/v2/EdgeTypeDetail.tsx",
+            "line": 11,
             "kind": "named"
           }
         ],
@@ -776,6 +1552,64 @@
             "kind": "named"
           }
         ],
+        "XAxis": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "YAxis": [
+          {
+            "file": "src/components/charts/DotChart/DotChart.tsx",
+            "line": 25,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/MultiSeriesLineChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "clampRanges": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "named"
+          }
+        ],
+        "createBox": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 34,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 37,
+            "kind": "factory-call"
+          }
+        ],
         "createButton": [
           {
             "file": "src/components/filters/TimeRangeSelector.tsx",
@@ -790,6 +1624,16 @@
           {
             "file": "src/components/filters/TimeRangeSelector.tsx",
             "line": 19,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/pages/alarmLabV2/primitives/PillButton.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/alarmLabV2/primitives/PillButton.tsx",
+            "line": 8,
             "kind": "factory-call"
           },
           {
@@ -818,6 +1662,63 @@
             "kind": "factory-call"
           }
         ],
+        "createEmptyState": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 44,
+            "kind": "factory-call"
+          }
+        ],
+        "createRow": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 40,
+            "kind": "factory-call"
+          }
+        ],
+        "createSection": [
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/suiVariants.ts",
+            "line": 28,
+            "kind": "factory-call"
+          }
+        ],
+        "findHotZones": [
+          {
+            "file": "src/components/alarms/clusters.ts",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "formatCompactDuration": [
+          {
+            "file": "src/components/panels/AlarmDetailsPanel.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "formatCompactRange": [
+          {
+            "file": "src/lib/utils/formatDuration.ts",
+            "line": 5,
+            "kind": "reexport"
+          }
+        ],
         "index.css": [
           {
             "file": "src/app.tsx",
@@ -825,7 +1726,19 @@
             "kind": "css"
           }
         ],
+        "padRanges": [
+          {
+            "file": "src/components/alarms/clusters.ts",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
         "showToast": [
+          {
+            "file": "src/components/v2/AssetCardV2.tsx",
+            "line": 12,
+            "kind": "named"
+          },
           {
             "file": "src/contexts/RemediationsContext/RemediationsProvider.tsx",
             "line": 19,
@@ -852,6 +1765,11 @@
             "kind": "named"
           },
           {
+            "file": "src/pages/v2/TimeframeSelectorPanel.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/dev/ToastSection.tsx",
             "line": 2,
             "kind": "named"
@@ -864,6 +1782,45 @@
           {
             "file": "src/routes/dev/vessel-type-toast.tsx",
             "line": 2,
+            "kind": "named"
+          }
+        ],
+        "slotId": [
+          {
+            "file": "src/components/charts/AlarmOperationalTimelineBar/AlarmOperationalTimelineBar.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/CorrelationBand.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/mappers/pins.ts",
+            "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/mappers/timelineBars.ts",
+            "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/useDotChartState.ts",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/HighlightLine/HighlightLine.tsx",
+            "line": 9,
+            "kind": "named"
+          }
+        ],
+        "subtractZones": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
             "kind": "named"
           }
         ],
@@ -895,11 +1852,42 @@
             "line": 2,
             "kind": "named"
           }
+        ],
+        "useChart": [
+          {
+            "file": "src/components/alarms/SuiAlarmOverlay.tsx",
+            "line": 11,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/bridges/DragRangeAutoClear.test.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/bridges/DragRangeAutoClear.tsx",
+            "line": 12,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/bridges/HoverBridge.tsx",
+            "line": 7,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/charts/DotChart/composites/CorrelationBand.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/pages/data-quality/DailyBarChart.tsx",
+            "line": 11,
+            "kind": "named"
+          }
         ]
       }
     },
     "dside-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/dside/dside-ui",
       "status": "ok",
       "specifiers": [
         "@primestageprime/solid-ui-components",
@@ -2211,13 +3199,11 @@
       }
     },
     "dside-work": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/dside/work",
       "status": "ok",
       "specifiers": [],
       "uses": {}
     },
     "goose-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/goose/goose-ui",
       "status": "ok",
       "specifiers": [
         "solid-ui-components",
@@ -4028,13 +5014,11 @@
       }
     },
     "jtf-rust": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/jtf/jtf-rust",
       "status": "ok",
       "specifiers": [],
       "uses": {}
     },
     "jtf-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/jtf/jtf-ui",
       "status": "ok",
       "specifiers": [
         "solid-ui-components",
@@ -8809,8 +9793,728 @@
         ]
       }
     },
+    "migration-dashboard": {
+      "status": "ok",
+      "specifiers": [
+        "solid-ui-components",
+        "solid-ui-components/index.css",
+        "solid-ui-components/themes/default.css"
+      ],
+      "uses": {
+        "AlertBox": [
+          {
+            "file": "src/components/SyncErrorBanner.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "BaseTable": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "ButtonGroup": [
+          {
+            "file": "src/components/FilterToggleGroup.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ClusterRow": [
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "CompletionEvent": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 16,
+            "kind": "type"
+          },
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
+        "CompletionTimeline": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "Dropdown": [
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "DropdownItem": [
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
+        "EmptyState": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "HUDPanel": [
+          {
+            "file": "src/components/ExportChecklist.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "InfoTitle": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "MetricCard": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "MonoValue": [
+          {
+            "file": "src/components/ExportChecklist.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/MigrationCell.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "MutedBody": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "NarrowStack": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/index.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/index.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/sales-reports.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "Page": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/index.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/index.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/sales-reports.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "PageTitle": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/index.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "PrimaryButton": [
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "ProgressCheck": [
+          {
+            "file": "src/components/MigrationCell.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "RingChart": [
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "SelectableTable": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "SelectionAction": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 16,
+            "kind": "type"
+          }
+        ],
+        "SmallGhostButton": [
+          {
+            "file": "src/components/FilterToggleGroup.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "SpreadRow": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "StatusBadge": [
+          {
+            "file": "src/components/ExportChecklist.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/StatusCell.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "StatusBadgeVariant": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 16,
+            "kind": "type"
+          }
+        ],
+        "TableColumn": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 16,
+            "kind": "type"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "type"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 23,
+            "kind": "type"
+          }
+        ],
+        "Tabs": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "TextBody": [
+          {
+            "file": "src/routes/diagnostics/catalog/[name].tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/index.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "TextLabel": [
+          {
+            "file": "src/components/ExportChecklist.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ThemedInput": [
+          {
+            "file": "src/components/TableFilter.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/diagnostics/catalog/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "ThroughputChart": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "ThroughputPoint": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 16,
+            "kind": "type"
+          },
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
+        "WorkerCard": [
+          {
+            "file": "src/routes/table/[name].tsx",
+            "line": 8,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "WorkerStatus": [
+          {
+            "file": "src/routes/worker-mockup.tsx",
+            "line": 4,
+            "kind": "type"
+          }
+        ],
+        "createRow": [
+          {
+            "file": "src/components/TightRow.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/TightRow.tsx",
+            "line": 3,
+            "kind": "factory-call"
+          }
+        ],
+        "createSection": [
+          {
+            "file": "src/components/DashboardSection.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/DashboardSection.tsx",
+            "line": 3,
+            "kind": "factory-call"
+          }
+        ],
+        "createSelectionStore": [
+          {
+            "file": "src/routes/dashboard.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "index.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 4,
+            "kind": "css"
+          }
+        ],
+        "themes/default.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 5,
+            "kind": "css"
+          }
+        ]
+      }
+    },
+    "rth-repair-portal-frontend": {
+      "status": "ok",
+      "specifiers": [
+        "solid-ui-components",
+        "solid-ui-components/index.css",
+        "solid-ui-components/themes/default.css"
+      ],
+      "uses": {
+        "AlarmOverlay": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "Chart": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "Grid": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "LineSeries": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "Pt": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "type"
+          }
+        ],
+        "RecentStarredSidebar": [
+          {
+            "file": "src/routes/cases/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "ReferenceLine": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "StarToggle": [
+          {
+            "file": "src/routes/cases/index.tsx",
+            "line": 10,
+            "kind": "named"
+          }
+        ],
+        "XAxis": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "YAxis": [
+          {
+            "file": "src/routes/demo-alarm.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "createRecentStarredStore": [
+          {
+            "file": "src/routes/cases/index.tsx",
+            "line": 10,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/cases/index.tsx",
+            "line": 19,
+            "kind": "factory-call"
+          }
+        ],
+        "index.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 4,
+            "kind": "css"
+          }
+        ],
+        "themes/default.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 5,
+            "kind": "css"
+          }
+        ]
+      }
+    },
+    "taskmaster-v2-ui": {
+      "status": "ok",
+      "specifiers": [
+        "solid-ui-components",
+        "solid-ui-components/index.css",
+        "solid-ui-components/themes/hud.css"
+      ],
+      "uses": {
+        "BaseTable": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "BurndownBar": [
+          {
+            "file": "src/lib/burndown.ts",
+            "line": 1,
+            "kind": "type"
+          }
+        ],
+        "BurndownChart": [
+          {
+            "file": "src/routes/burndown.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "DateTimeCell": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "GhostButton": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/pipeline.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/projects.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "NarrowStack": [
+          {
+            "file": "src/routes/hello.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "Page": [
+          {
+            "file": "src/app.tsx",
+            "line": 4,
+            "kind": "named"
+          }
+        ],
+        "PrimaryButton": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/pipeline.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/projects.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "SprintSelector": [
+          {
+            "file": "src/routes/burndown.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "TableColumn": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 10,
+            "kind": "type"
+          }
+        ],
+        "TextTitle": [
+          {
+            "file": "src/routes/hello.tsx",
+            "line": 1,
+            "kind": "named"
+          }
+        ],
+        "ThemedInput": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/projects.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "ThemedTextarea": [
+          {
+            "file": "src/routes/hopper.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/pipeline.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "index.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 5,
+            "kind": "css"
+          }
+        ],
+        "themes/hud.css": [
+          {
+            "file": "src/app.tsx",
+            "line": 6,
+            "kind": "css"
+          }
+        ]
+      }
+    },
     "thorcasting-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/thorcasting/thorcasting-ui",
       "status": "ok",
       "specifiers": [
         "@primestageprime/solid-ui-components",
@@ -8834,6 +10538,11 @@
             "file": "src/routes/settings.tsx",
             "line": 8,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/workshop.tsx",
+            "line": 28,
+            "kind": "named"
           }
         ],
         "AppShell": [
@@ -8851,17 +10560,37 @@
             "file": "src/routes/settings.tsx",
             "line": 8,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/workshop.tsx",
+            "line": 28,
+            "kind": "named"
           }
         ],
         "Badge": [
           {
+            "file": "src/components/screens/configure/configCard.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configure/suggestionCard.tsx",
+            "line": 47,
+            "kind": "named"
+          },
+          {
             "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 49,
             "kind": "named"
           },
           {
             "file": "src/components/screens/consoleParts.tsx",
             "line": 15,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/workshop/items/suggestionCardItem.tsx",
+            "line": 30,
             "kind": "named"
           },
           {
@@ -8896,13 +10625,8 @@
         ],
         "BaselineDot": [
           {
-            "file": "src/components/ScenarioChips.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "file": "src/components/screens/configure/scenarioContributionRailView.tsx",
+            "line": 10,
             "kind": "named"
           }
         ],
@@ -8911,12 +10635,24 @@
             "file": "src/components/screens/accountsSection.tsx",
             "line": 11,
             "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configure/balanceCard.tsx",
+            "line": 14,
+            "kind": "named"
           }
         ],
-        "BulkActionBar": [
+        "Bucket": [
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/screens/configure/queuePanel.tsx",
+            "line": 2,
+            "kind": "type"
+          }
+        ],
+        "BucketQueue": [
+          {
+            "file": "src/components/screens/configure/queuePanel.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
@@ -8929,6 +10665,16 @@
         ],
         "CashflowCell": [
           {
+            "file": "src/components/AppChart.tsx",
+            "line": 37,
+            "kind": "type"
+          },
+          {
+            "file": "src/lib/appChartModel.test.ts",
+            "line": 3,
+            "kind": "type"
+          },
+          {
             "file": "src/lib/appChartModel.ts",
             "line": 17,
             "kind": "type"
@@ -8937,14 +10683,19 @@
         "CashflowScrubChart": [
           {
             "file": "src/components/AppChart.tsx",
-            "line": 26,
+            "line": 37,
             "kind": "named"
           }
         ],
         "CodeBlock": [
           {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "file": "src/components/screens/configure/configCard.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/workshop/items/suggestionCardItem.tsx",
+            "line": 30,
             "kind": "named"
           },
           {
@@ -8979,6 +10730,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/screens/ledgerAddChange.tsx",
+            "line": 14,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/timeline.tsx",
             "line": 29,
             "kind": "named"
@@ -8994,12 +10750,7 @@
         "DangerAlert": [
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 10,
             "kind": "named"
           }
         ],
@@ -9063,10 +10814,22 @@
             "kind": "named"
           }
         ],
+        "DismissibleNoticeBanner": [
+          {
+            "file": "src/components/AppTopBar.tsx",
+            "line": 28,
+            "kind": "named"
+          }
+        ],
         "Dropdown": [
           {
             "file": "src/components/CompanySwitcher.tsx",
             "line": 9,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/ScenarioChips.tsx",
+            "line": 36,
             "kind": "named"
           },
           {
@@ -9108,32 +10871,25 @@
             "kind": "named"
           },
           {
-            "file": "src/components/screens/configure/queueToolbar.tsx",
-            "line": 2,
+            "file": "src/components/screens/configure/balanceCard.tsx",
+            "line": 14,
             "kind": "named"
           },
           {
-            "file": "src/routes/calibrate.tsx",
+            "file": "src/components/screens/configure/configCard.tsx",
             "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configure/queueToolbar.tsx",
+            "line": 2,
             "kind": "named"
           }
         ],
         "IconOnlyButton": [
           {
-            "file": "src/components/screens/configure/queueToolbar.tsx",
-            "line": 2,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
-            "kind": "named"
-          }
-        ],
-        "InfoTitle": [
-          {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/screens/configure/balanceCard.tsx",
+            "line": 14,
             "kind": "named"
           }
         ],
@@ -9145,7 +10901,12 @@
           },
           {
             "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 49,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/ledgerAddChange.tsx",
+            "line": 14,
             "kind": "named"
           },
           {
@@ -9154,8 +10915,30 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/console.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/deal.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/onboard.tsx",
+            "line": 3,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/timeline.tsx",
             "line": 29,
+            "kind": "named"
+          }
+        ],
+        "ManagedListSection": [
+          {
+            "file": "src/routes/settings.tsx",
+            "line": 8,
             "kind": "named"
           }
         ],
@@ -9246,24 +11029,31 @@
             "kind": "named"
           }
         ],
-        "OutlinedButton": [
+        "NotificationCenter": [
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/NotificationCenter.tsx",
+            "line": 9,
             "kind": "named"
+          }
+        ],
+        "NotificationItem": [
+          {
+            "file": "src/components/NotificationCenter.tsx",
+            "line": 9,
+            "kind": "type"
           }
         ],
         "OverflowNav": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 20,
+            "line": 28,
             "kind": "named"
           }
         ],
         "OverflowNavItem": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 20,
+            "line": 28,
             "kind": "type"
           }
         ],
@@ -9274,13 +11064,6 @@
             "kind": "named"
           }
         ],
-        "PendingBadge": [
-          {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
-            "kind": "named"
-          }
-        ],
         "RangeAmountGroup": [
           {
             "file": "src/components/screens/curriedFormFields.tsx",
@@ -9288,10 +11071,49 @@
             "kind": "named"
           }
         ],
+        "ResponsiveMoney": [
+          {
+            "file": "src/routes/calibrate.tsx",
+            "line": 16,
+            "kind": "named"
+          }
+        ],
+        "ScenarioGlyph": [
+          {
+            "file": "src/components/ScenarioChips.tsx",
+            "line": 36,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/calibrate.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/console.tsx",
+            "line": 19,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/deal.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/ledger.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/timeline.tsx",
+            "line": 29,
+            "kind": "named"
+          }
+        ],
         "SegmentedInput": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 20,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -9305,15 +11127,32 @@
             "kind": "named"
           },
           {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "file": "src/components/screens/configure/configCard.tsx",
+            "line": 16,
             "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configureConfigsPane.tsx",
+            "line": 49,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/interpretationPicker.tsx",
+            "line": 27,
+            "kind": "named"
+          }
+        ],
+        "Shape": [
+          {
+            "file": "src/lib/scenarioColors.ts",
+            "line": 40,
+            "kind": "type"
           }
         ],
         "SmallGhostButton": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 20,
+            "line": 28,
             "kind": "named"
           },
           {
@@ -9327,8 +11166,25 @@
             "kind": "named"
           },
           {
+            "file": "src/components/screens/ledgerAddChange.tsx",
+            "line": 14,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/settings.tsx",
             "line": 8,
+            "kind": "named"
+          }
+        ],
+        "SmallOutlinedButton": [
+          {
+            "file": "src/components/screens/configure/queueToolbar.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configureConfigsPane.tsx",
+            "line": 49,
             "kind": "named"
           }
         ],
@@ -9345,12 +11201,7 @@
           },
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 10,
             "kind": "named"
           },
           {
@@ -9379,22 +11230,10 @@
             "kind": "named"
           }
         ],
-        "SplitQueueList": [
-          {
-            "file": "src/components/screens/configure/queuePanel.tsx",
-            "line": 2,
-            "kind": "named"
-          }
-        ],
         "SpreadRow": [
           {
             "file": "src/components/screens/consoleParts.tsx",
             "line": 15,
-            "kind": "named"
-          },
-          {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
             "kind": "named"
           }
         ],
@@ -9413,12 +11252,7 @@
         "SuccessAlert": [
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 8,
-            "kind": "named"
-          },
-          {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 10,
             "kind": "named"
           }
         ],
@@ -9473,11 +11307,6 @@
             "kind": "named"
           },
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
-            "kind": "named"
-          },
-          {
             "file": "src/routes/settings.tsx",
             "line": 8,
             "kind": "named"
@@ -9486,7 +11315,7 @@
         "TextSublabel": [
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 8,
+            "line": 10,
             "kind": "named"
           },
           {
@@ -9578,8 +11407,13 @@
             "kind": "named"
           },
           {
+            "file": "src/components/screens/configure/configCard.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
             "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "line": 49,
             "kind": "named"
           },
           {
@@ -9630,13 +11464,6 @@
             "kind": "named"
           }
         ],
-        "TightStack": [
-          {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
-            "kind": "named"
-          }
-        ],
         "Toggle": [
           {
             "file": "src/components/YAxisControl.tsx",
@@ -9656,31 +11483,34 @@
         ],
         "TrendSparkline": [
           {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "file": "src/components/screens/configure/scenarioContributionRailView.tsx",
+            "line": 10,
             "kind": "named"
           },
           {
             "file": "src/routes/calibrate.tsx",
             "line": 16,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/ledger.tsx",
+            "line": 18,
+            "kind": "named"
           }
         ],
-        "ViolationBadge": [
+        "VerticalDivider": [
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/AppTopBar.tsx",
+            "line": 28,
             "kind": "named"
           }
         ],
         "WarningAlert": [
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/PickErrorBanner.tsx",
+            "line": 17,
             "kind": "named"
-          }
-        ],
-        "WarningBadge": [
+          },
           {
             "file": "src/routes/calibrate.tsx",
             "line": 16,
@@ -9704,6 +11534,13 @@
             "file": "src/lib/materializedWeekly.ts",
             "line": 11,
             "kind": "type"
+          }
+        ],
+        "advanceSelection": [
+          {
+            "file": "src/components/screens/configureConfigsPane.tsx",
+            "line": 49,
+            "kind": "named"
           }
         ],
         "createAppHeader": [
@@ -9755,7 +11592,7 @@
           },
           {
             "file": "src/components/screens/configure/queueToolbar.tsx",
-            "line": 6,
+            "line": 11,
             "kind": "factory-call"
           }
         ],
@@ -9784,6 +11621,16 @@
           }
         ],
         "createModal": [
+          {
+            "file": "src/components/screens/ledgerAddChange.tsx",
+            "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/ledgerAddChange.tsx",
+            "line": 38,
+            "kind": "factory-call"
+          },
           {
             "file": "src/components/ui.tsx",
             "line": 26,
@@ -9906,12 +11753,12 @@
         "styles.css": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 33,
+            "line": 44,
             "kind": "css"
           },
           {
             "file": "src/components/ChartScreen.tsx",
-            "line": 25,
+            "line": 26,
             "kind": "css"
           },
           {
@@ -9925,13 +11772,28 @@
             "kind": "css"
           },
           {
+            "file": "src/routes/console.tsx",
+            "line": 46,
+            "kind": "css"
+          },
+          {
+            "file": "src/routes/deal.tsx",
+            "line": 44,
+            "kind": "css"
+          },
+          {
+            "file": "src/routes/ledger.tsx",
+            "line": 51,
+            "kind": "css"
+          },
+          {
             "file": "src/routes/settings.tsx",
-            "line": 54,
+            "line": 60,
             "kind": "css"
           },
           {
             "file": "src/routes/timeline.tsx",
-            "line": 37,
+            "line": 40,
             "kind": "css"
           }
         ],
@@ -9944,20 +11806,24 @@
         ],
         "trendOf": [
           {
-            "file": "src/components/screens/configureConfigsPane.tsx",
-            "line": 45,
+            "file": "src/components/screens/configure/scenarioContributionRailView.tsx",
+            "line": 10,
             "kind": "named"
           },
           {
             "file": "src/routes/calibrate.tsx",
             "line": 16,
             "kind": "named"
+          },
+          {
+            "file": "src/routes/ledger.tsx",
+            "line": 18,
+            "kind": "named"
           }
         ]
       }
     },
     "wellappoint-ui": {
-      "root": "/Users/peter/Documents/clients/PrimeStage/wellappoint/wellappoint-ui",
       "status": "no-sui-dep",
       "specifiers": [],
       "uses": {}
@@ -9992,6 +11858,21 @@
     "ActionListTag": [
       "dside-ui"
     ],
+    "AlarmBands": [
+      "amygdala-ui"
+    ],
+    "AlarmHotZones": [
+      "amygdala-ui"
+    ],
+    "AlarmOverlay": [
+      "rth-repair-portal-frontend"
+    ],
+    "AlarmStripeDefs": [
+      "amygdala-ui"
+    ],
+    "AlertBox": [
+      "migration-dashboard"
+    ],
     "AppMain": [
       "goose-ui",
       "thorcasting-ui"
@@ -10016,6 +11897,8 @@
     "BaseTable": [
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "BaselineClusterRow": [
@@ -10036,27 +11919,37 @@
     "BoardTable": [
       "goose-ui"
     ],
+    "BottomSheet": [
+      "amygdala-ui"
+    ],
+    "BoxDataProps": [
+      "amygdala-ui"
+    ],
     "BoxedTabs": [
       "jtf-ui"
     ],
     "Bucket": [
-      "jtf-ui"
+      "jtf-ui",
+      "thorcasting-ui"
     ],
     "BucketQueue": [
-      "jtf-ui"
-    ],
-    "BulkActionBar": [
+      "jtf-ui",
       "thorcasting-ui"
     ],
     "BurndownBar": [
-      "dside-ui"
+      "dside-ui",
+      "taskmaster-v2-ui"
     ],
     "BurndownChart": [
-      "dside-ui"
+      "dside-ui",
+      "taskmaster-v2-ui"
     ],
     "ButtonDataProps": [
       "amygdala-ui",
       "dside-ui"
+    ],
+    "ButtonGroup": [
+      "migration-dashboard"
     ],
     "Candlestick": [
       "amygdala-ui"
@@ -10095,7 +11988,9 @@
       "amygdala-ui"
     ],
     "Chart": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
     ],
     "ChartCanvasLg": [
       "jtf-ui"
@@ -10106,10 +12001,15 @@
     "ChartCanvasMlg": [
       "jtf-ui"
     ],
+    "ChartContextValue": [
+      "amygdala-ui"
+    ],
     "ChartTooltip": [
+      "amygdala-ui",
       "goose-ui"
     ],
     "Checkbox": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "ChipCluster": [
@@ -10119,15 +12019,20 @@
       "goose-ui"
     ],
     "ClusterRow": [
+      "amygdala-ui",
       "dside-ui",
       "goose-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard"
     ],
     "CodeBlock": [
       "thorcasting-ui"
     ],
     "CollapsiblePanel": [
       "dside-ui"
+    ],
+    "CollapsibleSection": [
+      "amygdala-ui"
     ],
     "ColorVariant": [
       "thorcasting-ui"
@@ -10149,10 +12054,12 @@
       "jtf-ui"
     ],
     "CompletionEvent": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "CompletionTimeline": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "ComposedTag": [
       "dside-ui"
@@ -10173,10 +12080,17 @@
       "thorcasting-ui"
     ],
     "CountChip": [
+      "amygdala-ui",
       "thorcasting-ui"
+    ],
+    "Crosshair": [
+      "amygdala-ui"
     ],
     "CurrencyInput": [
       "thorcasting-ui"
+    ],
+    "CurrentValueIndicator": [
+      "amygdala-ui"
     ],
     "DAGEdge": [
       "dside-ui"
@@ -10203,6 +12117,7 @@
       "dside-ui"
     ],
     "DangerAlert": [
+      "amygdala-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -10250,6 +12165,7 @@
     "DateTimeCell": [
       "amygdala-ui",
       "jtf-ui",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "DayOfMonthPicker": [
@@ -10261,17 +12177,33 @@
     "DenseStatusNote": [
       "jtf-ui"
     ],
+    "Descriptor": [
+      "amygdala-ui"
+    ],
+    "DismissibleNoticeBanner": [
+      "thorcasting-ui"
+    ],
     "Divider": [
+      "amygdala-ui",
       "dside-ui",
       "jtf-ui"
     ],
     "Dot": [
+      "amygdala-ui",
       "jtf-ui"
     ],
+    "DragRangeSelect": [
+      "amygdala-ui"
+    ],
     "Dropdown": [
+      "migration-dashboard",
       "thorcasting-ui"
     ],
+    "DropdownItem": [
+      "migration-dashboard"
+    ],
     "Duration": [
+      "amygdala-ui",
       "dside-ui"
     ],
     "DurationCell": [
@@ -10285,9 +12217,14 @@
       "jtf-ui"
     ],
     "EmptyState": [
+      "amygdala-ui",
       "dside-ui",
       "goose-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard"
+    ],
+    "EmptyStateDataProps": [
+      "amygdala-ui"
     ],
     "EntityCard": [
       "jtf-ui"
@@ -10341,17 +12278,32 @@
     "GapCell": [
       "goose-ui"
     ],
+    "GhostArc": [
+      "amygdala-ui"
+    ],
     "GhostButton": [
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
+    ],
+    "GhostPin": [
+      "amygdala-ui"
     ],
     "GhostRow": [
       "dside-ui"
     ],
     "Grid": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
+    ],
+    "GroupBracket": [
+      "amygdala-ui"
+    ],
+    "GroupBracketPosition": [
+      "amygdala-ui"
     ],
     "GrowBox": [
       "jtf-ui"
@@ -10361,6 +12313,9 @@
     ],
     "GrowStack": [
       "goose-ui"
+    ],
+    "HUDPanel": [
+      "migration-dashboard"
     ],
     "HeatStreamGrid": [
       "jtf-ui"
@@ -10383,6 +12338,15 @@
     "HeatmapMultiRow": [
       "jtf-ui"
     ],
+    "HighlightSegment": [
+      "amygdala-ui"
+    ],
+    "HighlightSegments": [
+      "amygdala-ui"
+    ],
+    "HotZone": [
+      "amygdala-ui"
+    ],
     "HotkeyButton": [
       "dside-ui"
     ],
@@ -10400,6 +12364,9 @@
       "jtf-ui",
       "thorcasting-ui"
     ],
+    "Id": [
+      "amygdala-ui"
+    ],
     "IndentedGhostRow": [
       "dside-ui"
     ],
@@ -10411,7 +12378,7 @@
     ],
     "InfoTitle": [
       "jtf-ui",
-      "thorcasting-ui"
+      "migration-dashboard"
     ],
     "InlineChartErrorOverlay": [
       "jtf-ui"
@@ -10443,18 +12410,24 @@
       "jtf-ui"
     ],
     "Legend": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "LegendItem": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "LineSeries": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
     ],
     "LinkPivotGrid": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "ListItem": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "LongTextCell": [
@@ -10466,6 +12439,9 @@
     "LooseWrapRow": [
       "goose-ui"
     ],
+    "ManagedListSection": [
+      "thorcasting-ui"
+    ],
     "Markdown": [
       "dside-ui",
       "thorcasting-ui"
@@ -10476,6 +12452,7 @@
     "MetricCard": [
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "MetricValueCell": [
@@ -10490,12 +12467,14 @@
     "MonoValue": [
       "dside-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "MonthOfYearPicker": [
       "thorcasting-ui"
     ],
     "MultiSelectFilter": [
+      "amygdala-ui",
       "dside-ui",
       "goose-ui"
     ],
@@ -10505,9 +12484,11 @@
     "MutedBody": [
       "dside-ui",
       "goose-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard"
     ],
     "MutedEmptyState": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "NameInput": [
@@ -10518,6 +12499,8 @@
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "NavLink": [
@@ -10540,6 +12523,12 @@
     "NoteText": [
       "jtf-ui"
     ],
+    "NotificationCenter": [
+      "thorcasting-ui"
+    ],
+    "NotificationItem": [
+      "thorcasting-ui"
+    ],
     "NowrapBody": [
       "jtf-ui"
     ],
@@ -10551,8 +12540,7 @@
     ],
     "OutlinedButton": [
       "amygdala-ui",
-      "jtf-ui",
-      "thorcasting-ui"
+      "jtf-ui"
     ],
     "OverflowNav": [
       "thorcasting-ui"
@@ -10561,10 +12549,13 @@
       "thorcasting-ui"
     ],
     "Page": [
+      "migration-dashboard",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "PageTitle": [
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard"
     ],
     "PaneRow": [
       "goose-ui",
@@ -10573,19 +12564,31 @@
     "Participant": [
       "dside-ui"
     ],
-    "PendingBadge": [
-      "thorcasting-ui"
-    ],
     "PickCard": [
       "jtf-ui"
     ],
     "PillTabs": [
+      "amygdala-ui",
       "jtf-ui"
+    ],
+    "Pin": [
+      "amygdala-ui"
+    ],
+    "PinMarkers": [
+      "amygdala-ui"
+    ],
+    "PointSeries": [
+      "amygdala-ui"
+    ],
+    "PopoverMenu": [
+      "amygdala-ui"
     ],
     "PrimaryButton": [
       "amygdala-ui",
       "dside-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard",
+      "taskmaster-v2-ui"
     ],
     "PrimaryConfirmationModal": [
       "jtf-ui"
@@ -10602,14 +12605,23 @@
     "ProductGridWorkCounts": [
       "dside-ui"
     ],
+    "ProgressCheck": [
+      "migration-dashboard"
+    ],
     "ProportionalItem": [
       "jtf-ui"
     ],
     "ProportionalStack": [
       "jtf-ui"
     ],
+    "Pt": [
+      "rth-repair-portal-frontend"
+    ],
     "QuickFilter": [
       "dside-ui"
+    ],
+    "Range": [
+      "amygdala-ui"
     ],
     "RangeAmountGroup": [
       "thorcasting-ui"
@@ -10617,8 +12629,13 @@
     "RangeCountStatus": [
       "jtf-ui"
     ],
+    "RecentStarredSidebar": [
+      "rth-repair-portal-frontend"
+    ],
     "ReferenceLine": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
     ],
     "RenderValueFn": [
       "amygdala-ui"
@@ -10626,7 +12643,13 @@
     "ResizableContainer": [
       "amygdala-ui"
     ],
-    "ResizeDirection": [
+    "ResizableContainerProps": [
+      "amygdala-ui"
+    ],
+    "ResponsiveMoney": [
+      "thorcasting-ui"
+    ],
+    "RightDetailTabbedPanel": [
       "amygdala-ui"
     ],
     "RightPopoverMenu": [
@@ -10634,7 +12657,14 @@
       "jtf-ui"
     ],
     "RingChart": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
+    ],
+    "RowDataProps": [
+      "amygdala-ui"
+    ],
+    "ScenarioGlyph": [
+      "thorcasting-ui"
     ],
     "ScrollColumn": [
       "dside-ui",
@@ -10644,12 +12674,19 @@
       "goose-ui"
     ],
     "ScrollList": [
+      "amygdala-ui",
       "jtf-ui"
     ],
     "ScrollRegion": [
       "jtf-ui"
     ],
     "SecondaryButton": [
+      "amygdala-ui"
+    ],
+    "SectionDataProps": [
+      "amygdala-ui"
+    ],
+    "SectionLabel": [
       "amygdala-ui"
     ],
     "SectionTable": [
@@ -10659,7 +12696,11 @@
       "dside-ui",
       "goose-ui"
     ],
+    "SegmentOption": [
+      "amygdala-ui"
+    ],
     "SegmentedControl": [
+      "amygdala-ui",
       "goose-ui",
       "jtf-ui"
     ],
@@ -10672,8 +12713,21 @@
       "jtf-ui"
     ],
     "SelectOption": [
+      "amygdala-ui",
       "goose-ui",
       "jtf-ui"
+    ],
+    "SelectableTable": [
+      "migration-dashboard"
+    ],
+    "SelectionAction": [
+      "migration-dashboard"
+    ],
+    "Shape": [
+      "thorcasting-ui"
+    ],
+    "ShapeGlyph": [
+      "amygdala-ui"
     ],
     "Sidebar": [
       "jtf-ui"
@@ -10699,10 +12753,12 @@
       "amygdala-ui",
       "dside-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "SmallOutlinedButton": [
-      "jtf-ui"
+      "jtf-ui",
+      "thorcasting-ui"
     ],
     "SmallPrimaryButton": [
       "amygdala-ui",
@@ -10726,14 +12782,17 @@
       "goose-ui"
     ],
     "SplitQueueList": [
-      "dside-ui",
-      "thorcasting-ui"
+      "dside-ui"
     ],
     "SpreadRow": [
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
+    ],
+    "SprintSelector": [
+      "taskmaster-v2-ui"
     ],
     "SprintSummary": [
       "dside-ui"
@@ -10745,13 +12804,20 @@
     "StackedSegment": [
       "dside-ui"
     ],
+    "StarToggle": [
+      "rth-repair-portal-frontend"
+    ],
+    "StatusBadge": [
+      "migration-dashboard"
+    ],
     "StatusBadgeDataProps": [
       "dside-ui",
       "jtf-ui"
     ],
     "StatusBadgeVariant": [
       "goose-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "migration-dashboard"
     ],
     "StatusChip": [
       "dside-ui"
@@ -10817,6 +12883,8 @@
     "TableColumn": [
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "TableQuickFilter": [
@@ -10828,6 +12896,9 @@
     "TableStatus": [
       "goose-ui"
     ],
+    "Tabs": [
+      "migration-dashboard"
+    ],
     "TagDisplayConfig": [
       "dside-ui"
     ],
@@ -10838,6 +12909,7 @@
       "amygdala-ui",
       "dside-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "TextButton": [
@@ -10847,6 +12919,7 @@
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "TextSublabel": [
@@ -10858,6 +12931,7 @@
     "TextTitle": [
       "dside-ui",
       "jtf-ui",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "TextUnits": [
@@ -10882,6 +12956,8 @@
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "ThemedNumberInput": [
@@ -10890,17 +12966,20 @@
     ],
     "ThemedTextarea": [
       "dside-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "taskmaster-v2-ui"
     ],
     "ThreePanelLayout": [
       "amygdala-ui",
       "jtf-ui"
     ],
     "ThroughputChart": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "ThroughputPoint": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "TightCenteredColumn": [
       "jtf-ui"
@@ -10916,8 +12995,13 @@
     "TightStack": [
       "dside-ui",
       "goose-ui",
-      "jtf-ui",
-      "thorcasting-ui"
+      "jtf-ui"
+    ],
+    "TimelineBar": [
+      "amygdala-ui"
+    ],
+    "TimelineBarDatum": [
+      "amygdala-ui"
     ],
     "TitleAssetDate": [
       "jtf-ui"
@@ -10933,9 +13017,6 @@
     ],
     "TitledTimeRangeHeader": [
       "jtf-ui"
-    ],
-    "Toast": [
-      "amygdala-ui"
     ],
     "ToastList": [
       "amygdala-ui",
@@ -10985,18 +13066,16 @@
       "amygdala-ui"
     ],
     "VerticalDivider": [
-      "jtf-ui"
-    ],
-    "ViolationBadge": [
+      "jtf-ui",
       "thorcasting-ui"
     ],
     "WarningAlert": [
+      "amygdala-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
     "WarningBadge": [
-      "jtf-ui",
-      "thorcasting-ui"
+      "jtf-ui"
     ],
     "WarningBody": [
       "jtf-ui"
@@ -11026,10 +13105,12 @@
       "thorcasting-ui"
     ],
     "WorkerCard": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "WorkerStatus": [
-      "goose-ui"
+      "goose-ui",
+      "migration-dashboard"
     ],
     "WrapItemStack": [
       "goose-ui"
@@ -11043,16 +13124,26 @@
       "jtf-ui"
     ],
     "XAxis": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
     ],
     "YAxis": [
-      "goose-ui"
+      "amygdala-ui",
+      "goose-ui",
+      "rth-repair-portal-frontend"
+    ],
+    "advanceSelection": [
+      "thorcasting-ui"
     ],
     "anim": [
       "dside-ui"
     ],
     "choreograph": [
       "dside-ui"
+    ],
+    "clampRanges": [
+      "amygdala-ui"
     ],
     "collapse": [
       "dside-ui"
@@ -11076,6 +13167,7 @@
       "goose-ui"
     ],
     "createBox": [
+      "amygdala-ui",
       "jtf-ui",
       "thorcasting-ui"
     ],
@@ -11095,6 +13187,7 @@
       "jtf-ui"
     ],
     "createEmptyState": [
+      "amygdala-ui",
       "goose-ui",
       "thorcasting-ui"
     ],
@@ -11115,19 +13208,29 @@
       "jtf-ui",
       "thorcasting-ui"
     ],
+    "createRecentStarredStore": [
+      "rth-repair-portal-frontend"
+    ],
     "createRow": [
+      "amygdala-ui",
       "dside-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "createSection": [
+      "amygdala-ui",
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
       "thorcasting-ui"
     ],
     "createSegmentedControl": [
       "jtf-ui"
+    ],
+    "createSelectionStore": [
+      "migration-dashboard"
     ],
     "createStack": [
       "dside-ui",
@@ -11173,6 +13276,15 @@
     "fields": [
       "jtf-ui"
     ],
+    "findHotZones": [
+      "amygdala-ui"
+    ],
+    "formatCompactDuration": [
+      "amygdala-ui"
+    ],
+    "formatCompactRange": [
+      "amygdala-ui"
+    ],
     "fromSignal": [
       "jtf-ui"
     ],
@@ -11184,6 +13296,9 @@
       "dside-ui",
       "goose-ui",
       "jtf-ui",
+      "migration-dashboard",
+      "rth-repair-portal-frontend",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "isEditableTarget": [
@@ -11192,6 +13307,9 @@
     "loadTheme": [
       "goose-ui",
       "jtf-ui"
+    ],
+    "padRanges": [
+      "amygdala-ui"
     ],
     "parseWeekCalendarTime": [
       "dside-ui"
@@ -11204,20 +13322,29 @@
     "slideDown": [
       "dside-ui"
     ],
+    "slotId": [
+      "amygdala-ui"
+    ],
     "step": [
       "dside-ui"
     ],
     "styles.css": [
       "thorcasting-ui"
     ],
+    "subtractZones": [
+      "amygdala-ui"
+    ],
     "themes/colorblind-modifier.css": [
       "jtf-ui"
     ],
     "themes/default.css": [
-      "dside-ui"
+      "dside-ui",
+      "migration-dashboard",
+      "rth-repair-portal-frontend"
     ],
     "themes/hud.css": [
       "amygdala-ui",
+      "taskmaster-v2-ui",
       "thorcasting-ui"
     ],
     "toaster": [
@@ -11226,6 +13353,9 @@
     "trendOf": [
       "goose-ui",
       "thorcasting-ui"
+    ],
+    "useChart": [
+      "amygdala-ui"
     ]
   }
 }
