@@ -1,8 +1,18 @@
 import { type Component, createSignal } from "solid-js";
 import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { Stack } from "../../src/components/Layout/Stack";
+import { Row } from "../../src/components/Layout/Row";
 import { NarrowStack } from "../../src/components/Layout";
 import { Text } from "../../src/components/Text/Text";
+import { Button } from "../../src/components/Button/Button";
+import { Dropdown } from "../../src/components/Dropdown/Dropdown";
+
+/** Neighbours for the toolbar-size row — the controls a compact number input
+ *  has to line up with. */
+const SCALE_ITEMS = [
+  { id: "linear", label: "Linear" },
+  { id: "log", label: "Log" },
+];
 
 export const ThemedNumberInputShowcase: Component = () => {
   const [plain, setPlain] = createSignal<number | undefined>(undefined);
@@ -11,6 +21,8 @@ export const ThemedNumberInputShowcase: Component = () => {
   const [withError, setWithError] = createSignal<number | undefined>(-5);
   const [bounded, setBounded] = createSignal<number | undefined>(500);
   const [locked] = createSignal<number | undefined>(99);
+  const [compact, setCompact] = createSignal<number | undefined>(120);
+  const [scale, setScale] = createSignal("linear");
 
   const errorMessage = () =>
     (withError() ?? 0) < 0 ? "Value must be non-negative." : undefined;
@@ -114,6 +126,52 @@ export const ThemedNumberInputShowcase: Component = () => {
             Value: {bounded() === undefined ? "(none)" : String(bounded())}
           </Text>
         </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Toolbar size (`size="sm"`)</h3>
+        <NarrowStack>
+          <div class="text-meta">
+            29px tall, so it lines up with `Button size="sm"` and `Dropdown
+            size="sm"` in a dense row. The default `md` field is 43px — the
+            tallest control in the family — which is what made a number input
+            set the height of any toolbar it sat in. Compare the two rows: the
+            `sm` row is flush, the `md` row is not.
+          </div>
+          <Row gap="sm" align="center">
+            <div class="demo-maxw-240">
+              <ThemedNumberInput
+                name="y-max-sm"
+                size="sm"
+                value={compact}
+                onChange={setCompact}
+              />
+            </div>
+            <Dropdown
+              items={SCALE_ITEMS}
+              value={scale()}
+              onChange={setScale}
+              size="sm"
+            />
+            <Button size="sm">Apply</Button>
+          </Row>
+          <Row gap="sm" align="center">
+            <div class="demo-maxw-240">
+              <ThemedNumberInput
+                name="y-max-md"
+                value={compact}
+                onChange={setCompact}
+              />
+            </div>
+            <Dropdown
+              items={SCALE_ITEMS}
+              value={scale()}
+              onChange={setScale}
+              size="sm"
+            />
+            <Button size="sm">Apply</Button>
+          </Row>
+        </NarrowStack>
       </div>
 
       <div class="example-group">

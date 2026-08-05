@@ -45,6 +45,14 @@ interface ThemedNumberInputOwnProps {
   max?: number;
   /** Increment/decrement step (default `1`) — forwarded as kobalte's `step`. */
   step?: number;
+  /**
+   * Field size (default `"md"`). `"sm"` is the toolbar size — a 29px-tall
+   * field that lines up with `Button size="sm"` and `Dropdown size="sm"` in a
+   * dense row. The default 43px field is the tallest control in the family, so
+   * without this a number input sets the height of any row it sits in
+   * (dside `sui`#12583).
+   */
+  size?: "sm" | "md";
 }
 
 /** `ThemedNumberInput` combines the owned props with kobalte's forwarded root props. */
@@ -62,6 +70,7 @@ export type ThemedNumberInputProps = ThemedNumberInputOwnProps &
   >;
 
 const DEFAULT_STEP = 1;
+const DEFAULT_SIZE = "md";
 
 /**
  * Themed number input — styled to match `ThemedInput` / `ThemedTextarea`,
@@ -82,6 +91,9 @@ const DEFAULT_STEP = 1;
  *     step={50}
  *     errorMessage={rpmError()}
  *   />
+ *
+ *   // Toolbar size — 29px tall, lines up with <Button size="sm" />
+ *   <ThemedNumberInput name="y-max" size="sm" value={yMax} onChange={setYMax} />
  */
 export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
   const [local, rest] = splitProps(props, [
@@ -94,6 +106,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     "min",
     "max",
     "step",
+    "size",
   ]);
 
   const rawValue = (): number => local.value?.() ?? NaN;
@@ -105,11 +118,16 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
 
   const isInvalid = () => Boolean(local.errorMessage);
   const step = () => local.step ?? DEFAULT_STEP;
+  // The size modifier is always emitted (including `--md`), matching Button and
+  // Dropdown, so a theme can hook either size without depending on the absence
+  // of a class.
+  const rootClass = () =>
+    `sui-number-input sui-number-input--${local.size ?? DEFAULT_SIZE}`;
 
   return (
     <KobalteNumberField
       {...(rest as KobalteNumberFieldRootProps)}
-      class="sui-number-input"
+      class={rootClass()}
       name={local.name}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
