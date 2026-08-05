@@ -45,7 +45,12 @@ jobs:
         with:
           node-version: "20"
       - run: npm ci --ignore-scripts
-      - run: npm test
+      # Coverage rides along with the suite it already runs (~+20s on a 2-core
+      # runner) so `componentsNeverExecuted` can be MEASURED. It cannot live in
+      # the `health` job: that one is a fast static pass and must not spawn the
+      # suite. See scripts/execution-coverage.mjs.
+      - run: npm run test:coverage
+      - run: npm run execution-coverage
 
   lint:
     runs-on: ubuntu-latest

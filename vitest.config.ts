@@ -59,5 +59,18 @@ export default defineConfig({
       "scripts/**/*.{test,spec}.{ts,tsx}",
     ],
     setupFiles: ["./src/test-setup.ts"],
+    // Only produced under `npm run test:coverage`; `npm test` is unaffected.
+    // `all` is what makes a module nobody imports appear in the report at 0
+    // instead of being omitted — the whole point of the componentsNeverExecuted
+    // metric is the files nothing touches. Scoped to component modules so the
+    // report stays about the library surface.
+    coverage: {
+      provider: "v8",
+      include: ["src/components/**/*.{ts,tsx}"],
+      exclude: ["**/*.{test,spec}.{ts,tsx}"],
+      all: true,
+      reporter: ["text-summary", "json-summary"],
+      reportsDirectory: "./coverage",
+    },
   },
 });
