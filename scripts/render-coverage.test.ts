@@ -170,6 +170,34 @@ describe("mountsAny", () => {
   it("does not match a longer name that starts with the same letters", () => {
     expect(mountsAny(`render(() => <WidgetPanel />)`, ["Widget"])).toBe(false);
   });
+
+  // ── the generic-JSX blind spot, found 2026-08-04 ────────────────────────────
+  // Solid components are generic functions, and a test that pins a row shape
+  // writes the type argument out. The delimiter class omitted `<`, so every
+  // such mount read as no mount at all. It cost two components — BucketQueue
+  // (FIVE test files) and SplitQueueList — a place on the never-rendered list,
+  // and both ranked at the top of the risk order, so the burn-down would have
+  // sent someone to write tests that already existed.
+  it("counts a mount carrying an explicit type argument", () => {
+    expect(
+      mountsAny(`render(() => <Queue<Item> items={x} />)`, ["Queue"]),
+    ).toBe(true);
+  });
+
+  it("counts one whose type argument is an inline object shape", () => {
+    // The real call site in BucketQueue.keyboard.test.tsx.
+    const src = `render(() => <Queue<{ id: string; bucket: string }> items={x} />)`;
+    expect(mountsAny(src, ["Queue"])).toBe(true);
+  });
+
+  it("still refuses a longer name, generic or not", () => {
+    // The reason the fix is a WIDER DELIMITER CLASS and not a looser match:
+    // drop the delimiter entirely and `<QueuePanel<T>>` would vouch for
+    // `Queue`, trading a false negative for a false positive.
+    expect(mountsAny(`render(() => <QueuePanel<Item> />)`, ["Queue"])).toBe(
+      false,
+    );
+  });
 });
 
 describe("componentExportsOf", () => {

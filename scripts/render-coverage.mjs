@@ -111,11 +111,34 @@ export const componentExportsOf = (src) => {
   return [...names];
 };
 
-/** Does `src` mount any of `names` as JSX? `.` is allowed after the name so a
- *  compound call site (`<Combobox.Item>`) counts as mounting `Combobox`. */
+/**
+ * Does `src` mount any of `names` as JSX?
+ *
+ * The delimiter after the name decides it, and each character in the class is
+ * load-bearing:
+ *
+ *   `\s` `/` `>`  the ordinary forms — `<Foo prop>`, `<Foo/>`, `<Foo>`.
+ *   `.`           a compound call site: `<Combobox.Item>` mounts `Combobox`.
+ *   `<`           an explicit type argument: `<BucketQueue<Item> …>`. Solid
+ *                 components are generic functions, and a test that pins a row
+ *                 shape writes the parameter out. MISSING THIS READ AS "NEVER
+ *                 RENDERED" FOR TWO COMPONENTS THAT HAD SEVEN TEST FILES
+ *                 BETWEEN THEM — BucketQueue alone has five — and both sat near
+ *                 the top of the risk ranking, so the burn-down would have sent
+ *                 someone to write tests that already existed. Fixed 2026-08-04.
+ *
+ * Requiring a delimiter at all is what keeps `<FooBar>` from vouching for
+ * `Foo`, so the fix is a wider class, not a looser match.
+ *
+ * `<` costs a little precision in return: `Array<BucketQueue<Item>>` in a TYPE
+ * position also matches. That is the right side to err on — a false negative
+ * sends a reader to write tests that exist, while the type position is
+ * vanishingly rare for a component (they are values, not types) and would at
+ * worst let one module pass on a mention. Prefer under-reporting here.
+ */
 export const mountsAny = (src, names) => {
   const text = stripComments(src);
-  return names.some((n) => new RegExp(`<${n}[\\s/>.]`).test(text));
+  return names.some((n) => new RegExp(`<${n}[\\s/>.<]`).test(text));
 };
 
 /**
