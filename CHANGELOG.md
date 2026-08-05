@@ -3,6 +3,40 @@
 ## [Unreleased]
 
 ### Fixed
+- **The `usage-manifest` pre-push gate was inert on any machine but the one
+  that wrote it** (dside `sui`#12565). Tooling only; no library code changed.
+
+  `scripts/usage-manifest.config.json` held a map of name → **absolute path**,
+  all of them under one developer's home directory. Everywhere else each path
+  resolved `missing`, an all-missing branch fired, and `--check` returned
+  having compared nothing — printing a line that reads like a routine skip.
+
+  A local path override alone would not have fixed it: the emitted manifest
+  recorded each repo's absolute `root`, so `--check`'s comparison against the
+  committed file could never pass on a second machine even with correct paths.
+  Both halves are gone.
+
+  Consumers are now **discovered**: walk the parent of this checkout to depth 3
+  and take every `package.json` declaring a SUI specifier in a dependency map.
+  That survives both layouts in use (`<ws>/dside/dside-ui` and
+  `<ws>/dside-workspace/dside-ui`) with nobody editing paths for anyone else.
+  `SUI_WORKSPACE_ROOT` overrides where it looks.
+
+  It also **found three consumers the hand-written list never had** —
+  `taskmaster-v2-ui`, `rth-repair-portal-frontend`, and `migration-dashboard`
+  (`netsuite_extract_rs/ui`), the last being the only `SelectableTable` caller
+  in existence and the site of the silent-prop bug fixed in 0.137.0. The tool
+  built to survey consumers could not see the consumer whose bug prompted the
+  survey. Two of the three install via `github:`, tracking `main` with no
+  version gate, which makes them the most important to watch, not the least.
+
+  Repos are keyed by `package.json` `name` rather than directory, since three
+  of them live in a directory called `ui` or `frontend`. Regeneration
+  **merges**: a machine rewrites only the entries it can see and carries the
+  rest forward, so neither developer's push deletes the other's repos.
+  `--prune` is the deliberate way to drop a dead one. Discovery, merge and
+  naming are covered by 27 new cases.
+
 - **`componentsNeverRendered` counted two well-tested components as untested.**
   `mountsAny` required a delimiter after the tag name — `\s`, `/`, `>` or `.` —
   which is what stops `<WidgetPanel>` vouching for `Widget`. It omitted `<`, so
