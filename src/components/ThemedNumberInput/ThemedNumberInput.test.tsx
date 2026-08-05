@@ -56,6 +56,23 @@ describe("ThemedNumberInput", () => {
     expect(container.querySelector(".sui-number-input__error")).toBeTruthy();
   });
 
+  it("defaults to the md size modifier", () => {
+    const { container } = render(() => <ThemedNumberInput name="v" />);
+    expect(container.querySelector(".sui-number-input--md")).toBeTruthy();
+    expect(container.querySelector(".sui-number-input--sm")).toBeNull();
+  });
+
+  it("emits the sm size modifier for the toolbar size", () => {
+    // The height itself is CSS (jsdom has no layout) — see the Sizes block in
+    // ThemedNumberInput.css for the 29px arithmetic. What is testable here is
+    // that the prop reaches the class the stylesheet keys off.
+    const { container } = render(() => (
+      <ThemedNumberInput name="v" size="sm" />
+    ));
+    expect(container.querySelector(".sui-number-input--sm")).toBeTruthy();
+    expect(container.querySelector(".sui-number-input--md")).toBeNull();
+  });
+
   it("shows the description when there is no error", () => {
     const { getByText } = render(() => (
       <ThemedNumberInput name="v" description="hint text" />

@@ -109,6 +109,31 @@
   border-bottom: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
 }
 
+/* ── Sizes ───────────────────────────────────────────────────────────────
+   `md` (the default) is the form size and carries no rules of its own — the
+   base above IS md, and its total height is 43px: 1px border + 12px padding +
+   a 17px line box + 12px padding + 1px border.
+
+   `sm` is the toolbar size, pinned to 29px by the same arithmetic with 5px
+   padding, so the field lines up with `Button --sm` (6px + 17px + 6px, no
+   border) in a dense row. The line box is stated rather than left to the UA's
+   `normal` — at 43px a few tenths of drift are invisible, but a toolbar row
+   that has to match another control to the pixel cannot inherit its height
+   from a theme's font metrics. Ruled under dside sui 12583 — issue ids in this
+   file go without a leading hash, which the bareHexCss gate reads as a colour
+   literal. */
+.sui-number-input--sm .sui-number-input__input {
+  padding: 5px 8px;
+  line-height: 17px;
+}
+
+/* The stepper column is two stacked triggers sharing 27px of inner height, so
+   the 28px trigger floor would make each one wider than it is tall. */
+.sui-number-input--sm .sui-number-input__trigger {
+  min-width: 20px;
+  padding: 0 4px;
+}
+
 .sui-number-input__error {
   margin-top: 6px;
   font-size: 0.75rem;

@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added
+- **`ThemedNumberInput` takes a `size` prop** (`"sm" | "md"`, default `"md"` —
+  nothing existing moves). dside `sui`#12583.
+
+  It was the one control in the family that rendered at exactly one size:
+  `Button` has `--sm`, `Toggle` has `size="sm"`, `Dropdown` has `size="sm"`, but
+  a number input was fixed at 43px by a hardcoded `padding: 12px`, so it became
+  the tallest thing in any dense row and set that row's height. Thorcasting's
+  chart pages hit this — the strip above the chart measures 29px on six pages
+  and 43px on the two carrying a `YAxisControl`, dropping the chart 14px on
+  exactly the pages with no reason to differ.
+
+  `sm` is pinned to **29px** to match `Button --sm`: 1px border + 5px padding +
+  a 17px line box + 5px padding + 1px border, with the line box stated rather
+  than inherited from the UA's `normal` so a theme's font metrics cannot drift
+  a toolbar row. The stepper triggers drop from a 28px to a 20px floor, since
+  two stacked triggers sharing 27px of inner height would otherwise be wider
+  than they are tall.
+
+  The size modifier is now always emitted (`sui-number-input--md` as well as
+  `--sm`), matching `Button` and `Dropdown`, so a theme can hook either size
+  without keying off the absence of a class.
+
+  This unblocks removing thorcasting-ui's `.yaxis-control
+  .sui-number-input__input` override in `src/app.css`, which reaches into SUI's
+  internal class names. It is also the prerequisite for #12296 (porting
+  `YAxisControl` into SUI): a 43px number input is why the composed control
+  could not sit in a toolbar either.
+
 ## 0.139.0
 
 The first four entries had been sitting on `main` unpublished since 0.138.0:
