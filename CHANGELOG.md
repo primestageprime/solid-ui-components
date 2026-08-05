@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.140.0
+
 ### Added
 - **`ThemedNumberInput` takes a `size` prop** (`"sm" | "md"`, default `"md"` —
   nothing existing moves). dside `sui`#12583.
