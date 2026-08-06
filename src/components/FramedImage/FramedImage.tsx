@@ -24,7 +24,7 @@
 // for the two shapes that answer that: SquareThumbnail (fixed, cover) and
 // ContainedPhoto (fills container, contain).
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import { type Component, type JSX, For, Show, createEffect, createSignal, onCleanup, splitProps } from "solid-js";
 import "./FramedImage.css";
 
 export type ImageFit = "cover" | "contain";
@@ -48,6 +48,15 @@ export interface FramedImageProps {
    *  an overlay component positions itself `absolute; inset: 0` in its own
    *  CSS to fill it. */
   overlay?: JSX.Element;
+  /** Opt-in per-instance: instead of hard-cutting to a new `src`, the
+   *  incoming image fades in over the outgoing one (a dissolve/crossfade)
+   *  — for a slideshow or any view where `src` changes while the frame
+   *  stays mounted. Off by default; every existing single-`<img>` call
+   *  site is unaffected. Respects `prefers-reduced-motion` (instant swap,
+   *  no animation). */
+  crossfade?: boolean;
+  /** Crossfade duration in ms. Default 600. Ignored without `crossfade`. */
+  crossfadeDurationMs?: number;
   class?: string;
 }
 
@@ -59,12 +68,15 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     "squareSize",
     "rotationDegrees",
     "overlay",
+    "crossfade",
+    "crossfadeDurationMs",
     "class",
   ]);
 
   const classes = () => {
     const c = ["sui-framed-image", `sui-framed-image--${local.fit}`];
     if (local.squareSize != null) c.push("sui-framed-image--square");
+    if (local.crossfade) c.push("sui-framed-image--crossfade");
     if (local.class) c.push(local.class);
     return c.join(" ");
   };
@@ -78,12 +90,61 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     const vars: Record<string, string> = {};
     if (local.squareSize != null) vars["--sui-framed-image-size"] = `${local.squareSize}px`;
     if (local.rotationDegrees) vars["--sui-framed-image-rotation"] = `${local.rotationDegrees}deg`;
+    if (local.crossfadeDurationMs != null) {
+      vars["--sui-framed-image-crossfade-duration"] = `${local.crossfadeDurationMs}ms`;
+    }
     return vars as JSX.CSSProperties;
   };
 
+  // Crossfade keeps up to two stacked <img> layers (position:absolute via
+  // the --crossfade modifier class, see FramedImage.css): the outgoing src
+  // sits underneath at full opacity, the incoming one plays a one-shot
+  // fade-in over it, then the old layer is dropped once the fade's done —
+  // never accumulates beyond two. Seeded with the initial src so the FIRST
+  // render never fades against nothing.
+  const [layers, setLayers] = createSignal<{ src: string; alt: string; key: number }[]>(
+    local.crossfade ? [{ src: local.src, alt: local.alt, key: 0 }] : [],
+  );
+  let nextLayerKey = 1;
+  createEffect(() => {
+    const src = local.src;
+    // Captured HERE, once, into the layer itself — not read live from
+    // `local.alt` at render time. `local.alt` updates the INSTANT props
+    // change, same tick as `src`, so a shared live read would relabel the
+    // OUTGOING layer with the INCOMING photo's alt text for the whole
+    // crossfade — its pixels are still the old photo, its accessible name
+    // would already say the new one. Confirmed live: DOM inspection during
+    // a crossfade showed both stacked <img> tags reporting the new alt
+    // before this fix, despite the bottom layer's `src` still being the
+    // old image.
+    const alt = local.alt;
+    if (!local.crossfade) return;
+    setLayers((prev) => {
+      if (prev.length > 0 && prev[prev.length - 1].src === src) return prev;
+      return [...prev, { src, alt, key: nextLayerKey++ }];
+    });
+    const duration = local.crossfadeDurationMs ?? 600;
+    const timer = setTimeout(() => {
+      setLayers((prev) => (prev.length > 1 ? prev.slice(-1) : prev));
+    }, duration + 50);
+    onCleanup(() => clearTimeout(timer));
+  });
+
   return (
     <div class={classes()} style={cssVars()}>
-      <img src={local.src} alt={local.alt} />
+      <Show when={local.crossfade} fallback={<img src={local.src} alt={local.alt} />}>
+        <For each={layers()}>
+          {(layer, i) => (
+            <img
+              src={layer.src}
+              alt={layer.alt}
+              classList={{
+                "sui-framed-image__layer--entering": i() === layers().length - 1 && layers().length > 1,
+              }}
+            />
+          )}
+        </For>
+      </Show>
       {local.overlay}
     </div>
   );

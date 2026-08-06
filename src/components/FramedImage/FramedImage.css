@@ -37,3 +37,30 @@
 .sui-framed-image--contain img {
   object-fit: contain;
 }
+
+/* Crossfade: stack layers exactly on top of each other instead of the
+   default single-image document flow — only when opted in, so every other
+   FramedImage instance keeps its plain (non-absolute) single <img>. */
+.sui-framed-image--crossfade img {
+  position: absolute;
+  inset: 0;
+}
+
+.sui-framed-image__layer--entering {
+  animation: sui-framed-image-fade-in var(--sui-framed-image-crossfade-duration, 600ms) ease-in-out;
+}
+
+@keyframes sui-framed-image-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-framed-image__layer--entering {
+    animation: none;
+  }
+}
