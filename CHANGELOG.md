@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## 0.144.0
+
+### Removed
+- **`SidebarSelectorDemo` is no longer part of the public API.** It was a demo
+  harness, not a library component: zero props, a fixed `<h3>Episode
+  Selector</h3>`, and a hardcoded 79-line fixture of *Avatar: The Last
+  Airbender* episode records. `src/components/Selector/index.ts` is
+  `export * from "./SidebarSelector"`, so it reached the package root and was
+  importable.
+
+  It genuinely shipped — the fixture strings were in `dist/index113.js` and in
+  the 7627-byte SSR chunk. That chunk is now 5150 bytes. Its dead CSS
+  (`.episode-demo`, `.episode-demo__heading`) went with it.
+
+  The showcase that rendered it had already written down the reason it should
+  not exist: "a client that renders it inherits SUI's demo dataset, which is
+  never what a client wants." That showcase section is removed too; the section
+  above it already demonstrates the same three pieces against the showcase's
+  own fixture.
+
+  `EpisodeCard`, `EpisodeSelection` and their types are **kept**. Despite the
+  domain-flavoured naming they are a tested, showcased renderer pair the
+  showcase describes as packaged — a different question from this one.
+
+### Changed
+- `undocumentedExports` tightened 160 → 159 (the removed export was one of
+  them).
+
 ## 0.143.0
 
 ### Added

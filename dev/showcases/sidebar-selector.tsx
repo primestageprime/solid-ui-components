@@ -1,7 +1,6 @@
 import { type Component, createSignal } from "solid-js";
 import {
   SidebarSelector,
-  SidebarSelectorDemo,
   EpisodeCard,
   EpisodeSelection,
   type EpisodeCardData,
@@ -239,17 +238,6 @@ export const SidebarSelectorShowcase: Component = () => {
           height="320px"
           label="Season 1"
         />
-      </div>
-
-      <h3>SidebarSelectorDemo — the pre-wired demo export</h3>
-      <p class="text-meta">
-        The same three pieces wired together with their own fixture data, as a
-        single zero-prop component. It exists to demonstrate the family rather
-        than to be composed into an app: a client that renders it inherits SUI's
-        demo dataset, which is never what a client wants.
-      </p>
-      <div class="example-group">
-        <SidebarSelectorDemo />
       </div>
     </div>
   );
