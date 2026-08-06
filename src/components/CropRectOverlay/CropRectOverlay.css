@@ -6,14 +6,47 @@
   user-select: none;
 }
 
+/* Unselected rect: a plain outline + faint fill — still clickable to
+   select. (No dimmed-mask trick here, unlike the single-rect version this
+   replaced: with N simultaneous rects, each rect dimming everything
+   outside ITSELF would stack into a muddy over-darkened result between/
+   around them. A fill readably marks "this becomes an output image"
+   without fighting its neighbors.) */
 .sui-crop-overlay__rect {
   position: absolute;
   cursor: move;
   border: 1px solid var(--sui-accent);
-  /* A giant spread box-shadow, clipped by the overlay's own `overflow` via
-     the ancestor frame (FramedImage already sets overflow:hidden) — this
-     dims everything OUTSIDE the rect without a separate mask element. */
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  background: rgba(var(--sui-accent-rgb), 0.08);
+}
+
+.sui-crop-overlay__rect--selected {
+  border-width: 2px;
+  background: rgba(var(--sui-accent-rgb), 0.18);
+}
+
+/* Live in-progress draw — not yet a committed rect (no number badge, no
+   selected state; those only apply once release adds it to the list). */
+.sui-crop-overlay__rect--drawing {
+  border-style: dashed;
+}
+
+/* Numbers the rects in creation order — matches the "_1", "_2", ... suffix
+   each becomes on Apply, so it's legible up front how many sub-images this
+   will produce and which is which. */
+.sui-crop-overlay__badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  min-width: 16px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--sui-accent);
+  color: var(--sui-on-accent, #fff);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+  pointer-events: none;
 }
 
 .sui-crop-overlay__handle {

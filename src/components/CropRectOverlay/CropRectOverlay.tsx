@@ -3,17 +3,24 @@
 // Owns CSS (CropRectOverlay.css), no component imports.
 //
 // Draw-to-create, drag-to-move, corner-handles-to-resize freeform rectangle
-// selection over an image. Meant to be passed into FramedImage's `overlay`
-// slot, which sizes it to fill the frame.
+// selection over an image — MULTIPLE simultaneous rects (multi-crop: each
+// becomes its own output sub-image). Meant to be passed into FramedImage's
+// `overlay` slot, which sizes it to fill the frame.
 //
-// Coordinate contract: `rect` and `onRectChange` operate in the IMAGE's OWN
-// pixel space (0..naturalWidth, 0..naturalHeight) — never the frame's screen
-// pixels. `object-fit: contain` letterboxes a non-matching aspect ratio, so
-// the component reconstructs that letterboxed content box itself (from
-// `naturalWidth`/`naturalHeight` vs its own measured bounding box) and
-// clamps every drag into it. A caller that instead normalized against the
-// frame's own box would silently map drawn rects onto the letterbox bars —
-// this is the fix, not a convenience.
+// One rect is SELECTED at a time (numbered badge highlights, only it shows
+// resize handles): click a rect's body to select + start moving it; drag
+// empty space to draw a NEW rect (added, not replacing); Delete/Backspace
+// (wired by the caller, not here — see bestie's useCropEditing) removes
+// whichever is selected.
+//
+// Coordinate contract: rects (and everything in onRectsChange) live in the
+// IMAGE's OWN pixel space (0..naturalWidth, 0..naturalHeight) — never the
+// frame's screen pixels. `object-fit: contain` letterboxes a non-matching
+// aspect ratio, so the component reconstructs that letterboxed content box
+// itself (from `naturalWidth`/`naturalHeight` vs its own measured bounding
+// box) and clamps every drag into it. A caller that instead normalized
+// against the frame's own box would silently map drawn rects onto the
+// letterbox bars — this is the fix, not a convenience.
 // ============================================
 import { type Component, type JSX, For, Show, createSignal, onCleanup } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
@@ -32,9 +39,12 @@ export interface CropRectOverlayProps {
    *  between screen coordinates and the letterboxed content box. */
   naturalWidth: number;
   naturalHeight: number;
-  /** Current rect in image pixel space, or null (nothing drawn yet). */
-  rect: CropRect | null;
-  onRectChange: (rect: CropRect | null) => void;
+  /** All current rects, in image pixel space. */
+  rects: CropRect[];
+  onRectsChange: (rects: CropRect[]) => void;
+  /** Which rect is active for move/resize (shows handles). null = none. */
+  selectedIndex: number | null;
+  onSelectedIndexChange: (index: number | null) => void;
   class?: string;
 }
 
@@ -43,8 +53,8 @@ type ContentBox = { offsetX: number; offsetY: number; width: number; height: num
 type Corner = "nw" | "ne" | "sw" | "se";
 type DragMode =
   | { kind: "draw" }
-  | { kind: "move"; startRect: CropRect }
-  | { kind: "resize"; corner: Corner; startRect: CropRect };
+  | { kind: "move"; index: number; startRect: CropRect }
+  | { kind: "resize"; index: number; corner: Corner; startRect: CropRect };
 
 const CORNERS: Corner[] = ["nw", "ne", "sw", "se"];
 /** Below this (in image px), a "draw" drag reads as a stray click, not an
@@ -55,6 +65,10 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
   let rootRef: HTMLDivElement | undefined;
   const [dragMode, setDragMode] = createSignal<DragMode | null>(null);
   const [dragOrigin, setDragOrigin] = createSignal<Point | null>(null);
+  // The rect being drawn, live, before it's committed to props.rects on
+  // release — kept separate so drawing doesn't churn array indices for the
+  // OTHER already-placed rects mid-drag.
+  const [drawingRect, setDrawingRect] = createSignal<CropRect | null>(null);
 
   const contentBox = (): ContentBox | null => {
     if (!rootRef) return null;
@@ -80,6 +94,10 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
     height: Math.abs(b.y - a.y),
   });
 
+  const updateRectAt = (index: number, rect: CropRect) => {
+    props.onRectsChange(props.rects.map((r, i) => (i === index ? rect : r)));
+  };
+
   const onPointerMove = (e: PointerEvent) => {
     const mode = dragMode();
     const origin = dragOrigin();
@@ -88,7 +106,7 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
     const point = toImagePoint(e.clientX, e.clientY, box);
 
     if (mode.kind === "draw") {
-      props.onRectChange(normalizeRect(origin, point));
+      setDrawingRect(normalizeRect(origin, point));
       return;
     }
     if (mode.kind === "move") {
@@ -96,7 +114,7 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
       const dy = point.y - origin.y;
       const maxX = Math.max(0, props.naturalWidth - mode.startRect.width);
       const maxY = Math.max(0, props.naturalHeight - mode.startRect.height);
-      props.onRectChange({
+      updateRectAt(mode.index, {
         ...mode.startRect,
         x: clamp(mode.startRect.x + dx, 0, maxX),
         y: clamp(mode.startRect.y + dy, 0, maxY),
@@ -105,20 +123,24 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
     }
     // resize: the dragged corner follows the pointer, the opposite corner
     // stays put — normalizeRect handles the sign flip if it's dragged past.
-    const { startRect, corner } = mode;
+    const { startRect, corner, index } = mode;
     const fixed: Point = {
       x: corner.includes("e") ? startRect.x : startRect.x + startRect.width,
       y: corner.includes("s") ? startRect.y : startRect.y + startRect.height,
     };
-    props.onRectChange(normalizeRect(fixed, point));
+    updateRectAt(index, normalizeRect(fixed, point));
   };
 
   const endDrag = () => {
     const mode = dragMode();
-    if (mode?.kind === "draw" && props.rect) {
-      if (props.rect.width < MIN_DRAW_SIZE || props.rect.height < MIN_DRAW_SIZE) {
-        props.onRectChange(null);
+    if (mode?.kind === "draw") {
+      const rect = drawingRect();
+      if (rect && rect.width >= MIN_DRAW_SIZE && rect.height >= MIN_DRAW_SIZE) {
+        const newIndex = props.rects.length; // BEFORE appending — the new rect's index
+        props.onRectsChange([...props.rects, rect]);
+        props.onSelectedIndexChange(newIndex);
       }
+      setDrawingRect(null);
     }
     setDragMode(null);
     setDragOrigin(null);
@@ -139,48 +161,79 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
 
   onCleanup(endDrag);
 
-  // Anywhere the overlay isn't already showing the rect body or a handle —
-  // draws a new rect, replacing whatever was there.
+  // Anywhere the overlay isn't already showing a rect's body or a handle —
+  // draws a NEW rect, added alongside whatever's already there.
   const onBackgroundPointerDown = (e: PointerEvent) => startDrag({ kind: "draw" }, e);
 
-  const screenRect = () => {
-    const r = props.rect;
-    const box = contentBox();
-    if (!r || !box) return null;
-    return {
-      left: box.offsetX + r.x * box.scale,
-      top: box.offsetY + r.y * box.scale,
-      width: r.width * box.scale,
-      height: r.height * box.scale,
-    };
-  };
+  const toScreen = (r: CropRect, box: ContentBox) => ({
+    left: box.offsetX + r.x * box.scale,
+    top: box.offsetY + r.y * box.scale,
+    width: r.width * box.scale,
+    height: r.height * box.scale,
+  });
 
   const rootClass = () => pipe(["sui-crop-overlay", props.class], filter(Boolean), join(" "));
 
   return (
     <div ref={rootRef} class={rootClass()} onPointerDown={onBackgroundPointerDown}>
-      <Show when={screenRect()}>
-        {(box) => (
-          <div
-            class="sui-crop-overlay__rect"
-            style={{
-              left: `${box().left}px`,
-              top: `${box().top}px`,
-              width: `${box().width}px`,
-              height: `${box().height}px`,
-            } as JSX.CSSProperties}
-            onPointerDown={(e) => props.rect && startDrag({ kind: "move", startRect: props.rect }, e)}
-          >
-            <For each={CORNERS}>
-              {(corner) => (
+      <For each={props.rects}>
+        {(rect, index) => {
+          const box = () => contentBox();
+          const selected = () => props.selectedIndex === index();
+          return (
+            <Show when={box()}>
+              {(b) => (
                 <div
-                  class={`sui-crop-overlay__handle sui-crop-overlay__handle--${corner}`}
-                  onPointerDown={(e) => props.rect && startDrag({ kind: "resize", corner, startRect: props.rect }, e)}
-                />
+                  class={`sui-crop-overlay__rect${selected() ? " sui-crop-overlay__rect--selected" : ""}`}
+                  style={
+                    {
+                      left: `${toScreen(rect, b()).left}px`,
+                      top: `${toScreen(rect, b()).top}px`,
+                      width: `${toScreen(rect, b()).width}px`,
+                      height: `${toScreen(rect, b()).height}px`,
+                    } as JSX.CSSProperties
+                  }
+                  onPointerDown={(e) => {
+                    props.onSelectedIndexChange(index());
+                    startDrag({ kind: "move", index: index(), startRect: rect }, e);
+                  }}
+                >
+                  <span class="sui-crop-overlay__badge">{index() + 1}</span>
+                  <Show when={selected()}>
+                    <For each={CORNERS}>
+                      {(corner) => (
+                        <div
+                          class={`sui-crop-overlay__handle sui-crop-overlay__handle--${corner}`}
+                          onPointerDown={(e) => startDrag({ kind: "resize", index: index(), corner, startRect: rect }, e)}
+                        />
+                      )}
+                    </For>
+                  </Show>
+                </div>
               )}
-            </For>
-          </div>
-        )}
+            </Show>
+          );
+        }}
+      </For>
+      <Show when={drawingRect()}>
+        {(rect) => {
+          const b = contentBox();
+          if (!b) return null;
+          const screen = toScreen(rect(), b);
+          return (
+            <div
+              class="sui-crop-overlay__rect sui-crop-overlay__rect--drawing"
+              style={
+                {
+                  left: `${screen.left}px`,
+                  top: `${screen.top}px`,
+                  width: `${screen.width}px`,
+                  height: `${screen.height}px`,
+                } as JSX.CSSProperties
+              }
+            />
+          );
+        }}
       </Show>
     </div>
   );
