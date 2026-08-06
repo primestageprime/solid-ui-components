@@ -16,6 +16,13 @@
   cursor: not-allowed;
 }
 
+/* Bold label only — no fill/border change, unlike --active. Theme-
+   independent (typographic, not a color concern), so it lives here rather
+   than duplicated per-theme. */
+.sui-btn--emphasized {
+  font-weight: 700;
+}
+
 /* Sizes */
 .sui-btn--sm {
   padding: 6px 12px;

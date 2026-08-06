@@ -24,8 +24,15 @@ export interface ButtonProps
     | "pill";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
-  /** Active/selected state (absorbed from HUDButton) */
+  /** Active/selected state (absorbed from HUDButton) — a filled/toggled
+   *  look (background + border), for actual toggle controls. */
   active?: boolean;
+  /** Bold label text only — no fill, no border change. For "this option is
+   *  already chosen" in a list of otherwise-equal choices (e.g. a tag
+   *  that's applied to the item currently being viewed), where `active`'s
+   *  toggle-button look would misleadingly imply the button itself toggles
+   *  something when clicking it actually does something else (apply). */
+  emphasized?: boolean;
   /**
    * Lightweight tone matrix (orthogonal to `variant`) — useful for the
    * common "filled accent / outlined accent / muted" trio used by
@@ -40,6 +47,7 @@ export const Button: Component<ButtonProps> = (props) => {
     "size",
     "loading",
     "active",
+    "emphasized",
     "tone",
     "class",
     "children",
@@ -53,6 +61,7 @@ export const Button: Component<ButtonProps> = (props) => {
     if (local.tone) classList.push(`sui-btn--tone-${local.tone}`);
     if (local.loading) classList.push("sui-btn--loading");
     if (local.active) classList.push("sui-btn--active");
+    if (local.emphasized) classList.push("sui-btn--emphasized");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
