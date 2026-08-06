@@ -453,8 +453,18 @@ bundle is ruined anyway. That is what this script is for.
 
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
   at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
-  Same for `undocumentedComponents` (COMPONENTS.md), `missingDepthHeaders` —
-  both at 0.
+  Same for `missingDepthHeaders`.
+- **A new export needs to be named in COMPONENTS.md.** `undocumentedExports`
+  (`scripts/doc-coverage.mjs`) counts exported components and factories whose
+  name appears **nowhere** in the manifest. Ratcheted at a live ceiling (read
+  `scripts/health-baseline.json`; it started at **172 of 619**), so adding a
+  curried variant without a mention fails `health`. A mention anywhere counts —
+  prose, a bullet, or a code fence — you do not owe every variant its own
+  section. This replaced `undocumentedComponents`, which asked whether each of
+  the 145 *directory* names appeared anywhere in a 259KB file and so read 0 for
+  its whole life: `Chart` matched other components' prose, and a new variant in
+  an already-mentioned directory was never checked at all.
+  `npm run doc-coverage -- --list` prints the current backlog.
 - **A new component needs a test that mounts it.** `componentsNeverRendered`
   (`scripts/render-coverage.mjs`) counts PascalCase `.tsx` modules under
   `src/components/` that no test both *imports* (directly or through a barrel)

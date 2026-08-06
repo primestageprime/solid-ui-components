@@ -86,6 +86,7 @@
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
     "render-coverage": "node scripts/render-coverage.mjs",
+    "doc-coverage": "node scripts/doc-coverage.mjs",
     "execution-coverage": "node scripts/execution-coverage.mjs",
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",

@@ -33,9 +33,38 @@
     indistinguishable downstream from a real component that has none.
 
   Downstream of this and landing separately: generated prop tables for
-  COMPONENTS.md, an honest `undocumentedComponents` metric (the current one
-  passes 145/145 by testing whether a directory name appears anywhere in a
-  259KB file), and piece 2 of #12565's export-breakage gate.
+  COMPONENTS.md, and piece 2 of #12565's export-breakage gate. The honest
+  doc-coverage metric is the entry below.
+
+### Changed
+- **`undocumentedExports` replaces the `undocumentedComponents` health metric**
+  (dside `sui` 16389). Tooling only; nothing about the shipped library changes.
+
+  The old metric read **0** for its entire life. It asked whether each of the
+  145 `src/components/<Dir>` names appeared anywhere in `COMPONENTS.md`. Two
+  problems, and the second is the one that mattered:
+
+  - Directory names are short and generic, so they matched other components'
+    prose. 145 of 145 passed while **32 had no section of their own** —
+    `PivotGrid`, `FilterBar`, `DatePicker`, `CurrencyInput`, `EditableTitle`
+    among them.
+  - The granularity was wrong in a way no fix at the directory level reaches.
+    619 exported components and factories live in those directories, and adding
+    one to a directory already mentioned was **never checked at all** — the
+    common case, since a new curried variant lands in an existing family.
+    `Chart/` alone exports 40 names against one mention of "Chart".
+
+  Same question, correct subject: does each exported *name* appear in the
+  manifest? Measured at `049bb92`: **172 of 619 are named nowhere**, so that is
+  the new ceiling (`scripts/health-baseline.json`) and it ratchets down from
+  there. A mention anywhere still counts — see `docs/adr/0008` for why the bar
+  is deliberately not "has its own section", which would read 384.
+
+  The new metric also stops demanding documentation for components that are not
+  public API (`PivotTreemap`, `StatusFlowChart` export nothing today), and
+  starts demanding it for `create*` factories, which the manifest's own policy
+  tells callers to reach for. `npm run doc-coverage -- --list` prints the
+  backlog.
 
 ## 0.141.0
 

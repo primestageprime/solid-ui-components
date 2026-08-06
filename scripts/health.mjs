@@ -42,6 +42,7 @@ import {
 } from "./style-rubric.mjs";
 import { run as runShowcaseCoverage } from "./showcase-coverage.mjs";
 import { run as runRenderCoverage } from "./render-coverage.mjs";
+import { run as runDocCoverage } from "./doc-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 import { length, mapValues } from "./fn.mjs";
 import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
@@ -86,12 +87,6 @@ const isCommentLine = (l) => {
 // "bare" — not a token fallback.
 const bareHexIn = (l) =>
   /#[0-9a-fA-F]{3,8}\b/.test(l.replace(/var\([^)]*\)/g, ""));
-
-const componentDirs = readdirSync(join(root, "src/components"), {
-  withFileTypes: true,
-})
-  .filter((e) => e.isDirectory())
-  .map((e) => e.name);
 
 // ── metric collectors ─────────────────────────────────────────────────
 
@@ -192,10 +187,16 @@ for (const f of walk(
 // and MOUNTS it — see that script's header for why both halves are needed.
 const { missing: componentsNeverRendered } = runRenderCoverage();
 
-const componentsDoc = readFileSync(join(root, "COMPONENTS.md"), "utf8");
-const undocumented = componentDirs.filter(
-  (d) => !new RegExp(`\\b${d}\\b`).test(componentsDoc),
-);
+// Exported components and factories COMPONENTS.md never names
+// (scripts/doc-coverage.mjs). This REPLACED `undocumentedComponents`, which
+// read 0 across all 145 component DIRECTORIES because it asked only whether
+// each directory name appeared somewhere in a 259KB file — `Chart` and `Badge`
+// matched other components' prose, so 32 dirs passed with no section of their
+// own, and a new curried variant added to an already-mentioned directory was
+// never checked at all. Its replacement asks the same question of each of the
+// 619 exported NAMES; see that script's header for what it deliberately does
+// not ask, and why it counts factories where showcase coverage does not.
+const { missing: undocumentedExports } = runDocCoverage();
 
 const missingDepth = [];
 for (const f of walk(
@@ -250,7 +251,7 @@ const detail = {
   showcaseStyleRubricViolations: showcaseRubricHits,
   cssTypedProps: propRubricHits,
   componentsNeverRendered,
-  undocumentedComponents: undocumented,
+  undocumentedExports,
   missingDepthHeaders: missingDepth,
   componentsWithoutShowcase,
 };
