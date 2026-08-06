@@ -550,14 +550,14 @@ body {
   text-decoration: underline;
 }
 
+/* Same match-the-text-button-height fix as _baseline.css — see there. */
 .sui-btn--icon-only {
   background: transparent;
   border: none;
   color: var(--sui-accent-dim);
-  padding: 0;
-  width: 1.4rem;
-  height: 1.4rem;
-  min-width: 1.4rem;
+  padding: 8px;
+  aspect-ratio: 1;
+  min-width: 0;
 }
 
 .sui-btn--icon-only:hover:not(:disabled) {

@@ -19,3 +19,10 @@
   opacity: 0.85;
   font-size: 0.85em;
 }
+
+/* iconOnly mode — no label follows the icon, so the leading-icon spacing
+   above would just push it off-center in the square button. */
+.sui-hotkey-btn--icon-only .sui-hotkey-btn__icon {
+  margin-right: 0;
+  vertical-align: middle;
+}

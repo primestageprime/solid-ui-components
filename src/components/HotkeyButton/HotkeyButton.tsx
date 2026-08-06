@@ -9,6 +9,15 @@
 //
 // renders  Mark <u><b>D</b></u>one  and pressing `d` (with no input
 // focused and no modifier held) fires onTrigger.
+//
+// `iconOnly` — for an icon-only action that still needs a hotkey (crop,
+// rotate, ...): no visible text label, sized/styled like IconOnlyButton
+// (`variant="icon-only"`), `children` becomes the accessible name AND is
+// used to build a Tooltip reading "{children} ({HOTKEY})" — so an icon-only
+// hotkey button always tells you both what it does and how to trigger it
+// without a visible label taking up space in a tight row.
+//
+//   <HotkeyButton hotkey="c" icon="crop" iconOnly onTrigger={toggleCrop}>Crop</HotkeyButton>
 // ============================================
 import {
   type Component,
@@ -21,13 +30,21 @@ import {
 } from "solid-js";
 import { Button, type ButtonProps } from "../Button/Button";
 import { Icon, type IconName } from "../Icon";
+import { Tooltip } from "../Tooltip/Tooltip";
 import "./HotkeyButton.css";
 
 export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
   /** Single character that triggers this button (case-insensitive), e.g. "d". */
   hotkey: string;
-  /** Optional leading icon associating the action with its glyph. */
+  /** Optional leading icon associating the action with its glyph. Required
+   *  (in practice) when `iconOnly` is set — it's the only visible content. */
   icon?: IconName;
+  /**
+   * No visible text label — icon-only, `variant="icon-only"` sizing —
+   * `children` becomes the accessible name and the Tooltip content
+   * ("{children} ({HOTKEY})") instead of an inline label. Default false.
+   */
+  iconOnly?: boolean;
   /** Fired on click OR when the hotkey is pressed (while armed + enabled). */
   onTrigger?: (e: KeyboardEvent | MouseEvent) => void;
   /**
@@ -38,7 +55,8 @@ export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
    * wires the key themselves).
    */
   armed?: boolean;
-  /** Plain-text label; the first case-insensitive `hotkey` char is emphasized. */
+  /** Plain-text label; the first case-insensitive `hotkey` char is emphasized
+   *  (or, in `iconOnly` mode, the accessible name + Tooltip content). */
   children: string;
 }
 
@@ -61,11 +79,13 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
   const [local, others] = splitProps(merged, [
     "hotkey",
     "icon",
+    "iconOnly",
     "onTrigger",
     "armed",
     "children",
     "class",
     "disabled",
+    "variant",
   ]);
 
   // Split the label at the first case-insensitive occurrence of the hotkey so
@@ -105,40 +125,52 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
 
   const classes = () => {
     const list = ["sui-hotkey-btn"];
+    if (local.iconOnly) list.push("sui-hotkey-btn--icon-only");
     if (local.class) list.push(local.class);
     return list.join(" ");
   };
 
-  return (
+  const tooltipContent = () => `${local.children} (${(local.hotkey ?? "").toUpperCase()})`;
+
+  const button = (
     <Button
       {...others}
+      variant={local.iconOnly ? "icon-only" : local.variant}
       class={classes()}
       disabled={local.disabled}
+      aria-label={local.iconOnly ? local.children : undefined}
       onClick={fire as JSX.EventHandler<HTMLButtonElement, MouseEvent>}
     >
       {local.icon && (
         <Icon
           name={local.icon}
           variant="outline"
-          size="xs"
+          size={local.iconOnly ? "md" : "xs"}
           class="sui-hotkey-btn__icon"
         />
       )}
-      {/* Rendered tight on one line so the JSX compiler can't insert
-          whitespace text nodes between the segments (which would show as a
-          gap around the emphasized key, e.g. "D one" instead of "Done"). */}
-      <span class="sui-hotkey-btn__label">
-        {segments().before}
-        {segments().char && (
-          <span class="sui-hotkey-btn__key">{segments().char}</span>
-        )}
-        {segments().after}
-      </span>
-      {segments().hint && (
-        <span class="sui-hotkey-btn__hint">[{segments().hint}]</span>
+      {!local.iconOnly && (
+        <>
+          {/* Rendered tight on one line so the JSX compiler can't insert
+              whitespace text nodes between the segments (which would show as
+              a gap around the emphasized key, e.g. "D one" instead of
+              "Done"). */}
+          <span class="sui-hotkey-btn__label">
+            {segments().before}
+            {segments().char && (
+              <span class="sui-hotkey-btn__key">{segments().char}</span>
+            )}
+            {segments().after}
+          </span>
+          {segments().hint && (
+            <span class="sui-hotkey-btn__hint">[{segments().hint}]</span>
+          )}
+        </>
       )}
     </Button>
   );
+
+  return local.iconOnly ? <Tooltip content={tooltipContent()}>{button}</Tooltip> : button;
 };
 
 /** Props locked at variant-definition time. */

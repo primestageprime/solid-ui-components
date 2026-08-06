@@ -425,14 +425,17 @@ body {
   color: var(--sui-danger);
 }
 
+/* Square, but sized by the SAME padding+line-height math as a text button
+   (`.sui-btn`'s base 8px vertical padding) instead of a fixed px height —
+   so an icon-only button always matches its text-button siblings' height
+   in a row, including if the base font-size/line-height ever changes. */
 .sui-btn--icon-only {
   background: transparent;
   border: none;
   color: var(--sui-accent-dim);
-  padding: 0;
-  width: 1.4rem;
-  height: 1.4rem;
-  min-width: 1.4rem;
+  padding: 8px;
+  aspect-ratio: 1;
+  min-width: 0;
 }
 
 .sui-btn--icon-only:hover:not(:disabled) {
